@@ -1,0 +1,198 @@
+{
+  "format": "fdisbull-structure-composition-1",
+  "root": "confirm",
+  "contracts": {
+    "confirm": {
+      "format": "fdisbull-block-contract-1",
+      "name": "confirm",
+      "inputs": {},
+      "outputs": {},
+      "behavior": {
+        "kind": "service",
+        "service": "authored.confirm"
+      }
+    },
+    "commit": {
+      "format": "fdisbull-block-contract-1",
+      "name": "commit",
+      "inputs": {},
+      "outputs": {},
+      "behavior": {
+        "kind": "service",
+        "service": "authored.commit"
+      }
+    },
+    "scene": {
+      "format": "fdisbull-block-contract-1",
+      "name": "scene",
+      "inputs": {},
+      "outputs": {},
+      "behavior": {
+        "kind": "service",
+        "service": "authored.scene"
+      }
+    },
+    "sound": {
+      "format": "fdisbull-block-contract-1",
+      "name": "sound",
+      "inputs": {},
+      "outputs": {},
+      "behavior": {
+        "kind": "service",
+        "service": "authored.sound"
+      }
+    }
+  },
+  "phases": {
+    "confirm": {
+      "terminal": "complete",
+      "observations": {
+        "accepted": {
+          "condition": "request admitted",
+          "evidence": "authored-spec",
+          "after": []
+        },
+        "complete": {
+          "condition": "declared observable result present",
+          "evidence": "authored-spec",
+          "after": [
+            "accepted"
+          ]
+        }
+      }
+    },
+    "commit": {
+      "terminal": "committed",
+      "observations": {
+        "accepted": {
+          "condition": "request admitted",
+          "evidence": "authored-spec",
+          "after": []
+        },
+        "committed": {
+          "condition": "declared observable result present",
+          "evidence": "authored-spec",
+          "after": [
+            "accepted"
+          ]
+        }
+      }
+    },
+    "scene": {
+      "terminal": "ready",
+      "observations": {
+        "accepted": {
+          "condition": "request admitted",
+          "evidence": "authored-spec",
+          "after": []
+        },
+        "ready": {
+          "condition": "declared observable result present",
+          "evidence": "authored-spec",
+          "after": [
+            "accepted"
+          ]
+        }
+      }
+    },
+    "sound": {
+      "terminal": "finished",
+      "observations": {
+        "accepted": {
+          "condition": "request admitted",
+          "evidence": "authored-spec",
+          "after": []
+        },
+        "finished": {
+          "condition": "declared observable result present",
+          "evidence": "authored-spec",
+          "after": [
+            "accepted"
+          ]
+        }
+      }
+    }
+  },
+  "implementations": {
+    "confirm.original": {
+      "contract": "confirm",
+      "children": [
+        {
+          "slot": "commit",
+          "contract": "commit",
+          "owner": "parent",
+          "on_restore": "cancel",
+          "on_cancel": "cancel",
+          "after": []
+        },
+        {
+          "slot": "scene",
+          "contract": "scene",
+          "owner": "parent",
+          "on_restore": "cancel",
+          "on_cancel": "cancel",
+          "after": [
+            {
+              "slot": "commit",
+              "phase": "committed"
+            }
+          ]
+        },
+        {
+          "slot": "sound",
+          "contract": "sound",
+          "owner": "context",
+          "on_restore": "cancel",
+          "on_cancel": "cancel",
+          "after": []
+        }
+      ],
+      "complete_after": [
+        {
+          "slot": "commit",
+          "phase": "committed"
+        },
+        {
+          "slot": "scene",
+          "phase": "ready"
+        },
+        {
+          "slot": "sound",
+          "phase": "accepted"
+        }
+      ],
+      "evidence": "authored-provider"
+    },
+    "commit.original": {
+      "contract": "commit",
+      "children": [],
+      "complete_after": [],
+      "evidence": "authored-provider"
+    },
+    "scene.original": {
+      "contract": "scene",
+      "children": [],
+      "complete_after": [],
+      "evidence": "authored-provider"
+    },
+    "sound.original": {
+      "contract": "sound",
+      "children": [],
+      "complete_after": [],
+      "evidence": "authored-provider"
+    },
+    "confirm.replacement": {
+      "contract": "confirm",
+      "children": [],
+      "complete_after": [],
+      "evidence": "authored-provider"
+    }
+  },
+  "selection": {
+    "confirm": "confirm.original",
+    "commit": "commit.original",
+    "scene": "scene.original",
+    "sound": "sound.original"
+  },
+  "evidence": "authored-example"
+}

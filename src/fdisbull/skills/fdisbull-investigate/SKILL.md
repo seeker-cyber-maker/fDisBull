@@ -280,3 +280,4 @@ budget stop or unsupported operation as such, with the next useful action.
 For a human-readable review of established findings, use the companion
 `write-gamefaqs-guide` skill. Report what was actually observed, what remains a
 candidate, and which question or capability is now available.
+| KINT 6 code and Sherlock 7 PNG atlases | [KINT/Sherlock](references/kint6-sherlock7.md) |

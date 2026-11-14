@@ -126,3 +126,39 @@ suffix-based guess. A recovered private script or historical result is evidence
 to inspect, not automatic production support or permission to mutate media.
 Inspect a recovered script's top-level side effects before reusing a pure reader;
 an inventory script can create output even when one of its functions is pure.
+
+
+## Shipped DinoPark decoder modules
+
+Use `media-inspect --adapter dinopark-act`, `dinopark-pic` or `dinopark-abt` for
+complete bounded decoding and metadata/hash reports. Use `media-decode` for a
+selected private PNG/WAV export. ACT index and opacity planes are separate;
+colored previews require an explicit external PIC palette. Preserve padded PIC
+rows and raw six-bit palette bytes; choose host expansion explicitly. ABT WAV
+exports require caller-supplied `--sample-rate` and `--channels` or the explicit
+`--playback-profile dinopark-digpak-sbpro-mono-v1`. The profile preserves requested
+PCM timing separately from exact rational Sound Blaster device timing; it does
+not claim current-input native playback. `media-inspect --adapter
+dinopark-abt-playback` reports that binding; headerless ABT context stays explicit.
+
+Use `media-inspect --adapter dinopark-act-sequence` for sequence boundaries,
+authored operation names and unsupported runtime operations. `dinopark-animate`
+runs a bounded subset with explicit caller ticks; it does not infer wall-clock
+Hz, select palettes or render a scene. Native graphics and mixer audio require
+fresh normal-consumer observations with declared input/state policies. The
+optional bounded audio-capture backend controls observe stock PCM with speakers
+muted; closed/truncated capture windows are not sample completion receipts.
+
+Before calling a source malformed, distinguish a valid unsupported variant and
+an old reader limitation. DinoPark BUS/PEOPLE are valid UNCS resources rejected
+by a prior UNC2-only reader. An absent literal filename reference does not prove
+a resource is unused. Preserve exact rejected bytes and refusal details; never
+rewrite original resources or programs to compensate for a decoder mismatch.
+
+## Interplay MVE and Castles II sound libraries
+
+The catalog recognizes the canonical MVE header and links the explicit `mve`
+reader/framer. SLB remains a context candidate with `castles2-slb` directory and
+`castles2-slb-playback` timing bindings. Read [the scoped route](mve-slb.md)
+before framing or exporting. Decoder availability does not qualify original
+playback; unsupported codec families and opaque selectors stay recovery work.

@@ -1,0 +1,29 @@
+{
+  "format": "fdisbull-castles2-bob-sanitized-validation-1",
+  "date": "2026-11-10",
+  "input_scope": "User-supplied private Castles II GOG CD-edition source; original bytes excluded",
+  "resources": 97,
+  "valid_layouts": 97,
+  "original_total_bytes": 3781964,
+  "distinct_dimensions": 28,
+  "width_range": [
+    16,
+    320
+  ],
+  "height_range": [
+    9,
+    200
+  ],
+  "png_roundtrip_verified": 97,
+  "media_manifest_verified": 97,
+  "truncated_rejected": 97,
+  "extra_byte_rejected": 97,
+  "elapsed_s": 4.079,
+  "generated_png_total_bytes": 2161763,
+  "corpus_name_hash_digest": "d9f9def878fdf89200497bfe56fa87b9240262928d1bc17df23c1038fb7a7c68",
+  "authored_test_cases_passed": 14,
+  "original_game_rendering_parity": "not_established",
+  "full_suite": "not_run",
+  "hosted_ci": "not_run",
+  "commercial_assets_committed": false
+}

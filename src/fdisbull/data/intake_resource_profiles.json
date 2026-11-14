@@ -2434,5 +2434,46 @@
     "provenance": [
       "docs/INTAKE_MEDIA_COVERAGE.md"
     ]
+  },
+  {
+    "format_id": "context-castles2-slb",
+    "revision": 1,
+    "name": "Castles II SLB sample library (context candidate)",
+    "category": "resource-profile",
+    "endianness": "little",
+    "signatures": [],
+    "header_fields": [
+      {
+        "name": "footer",
+        "offset": "EOF-12",
+        "meaning": "Consumer selector, slot count and absolute directory offset",
+        "kind": "3*u32le"
+      },
+      {
+        "name": "slots",
+        "offset": "footer.directory_offset",
+        "meaning": "Occupied/empty slots; repeated keys retain original slot identity",
+        "kind": "slot_count*{u32le key,offset,length}"
+      }
+    ],
+    "detection": "consumer-context-only",
+    "context_hints": {
+      "game_markers": [
+        "castles2",
+        "castles-ii"
+      ],
+      "filename_patterns": [
+        "*.SLB"
+      ],
+      "companions": [
+        "Original executable and selected sound-driver profile for timing; duplicate-key selection needs original RNG context"
+      ]
+    },
+    "limitations": [
+      "Filename/game context is a routing hint, not a global signature. Explicit reader checks footer, complete slot extents and payload partition. Playback parameters require the separate consumer-qualified profile; no inferred kHz from footer values."
+    ],
+    "provenance": [
+      "docs/CASTLES2_MEDIA.md"
+    ]
   }
 ]

@@ -136,7 +136,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | --- | --- |
 | Verify this copy's version, build identity, decoders, debuggers and preflight expectations without running a target | [Capabilities catalog](docs/CAPABILITIES.md) · [Methodology determinism & preflight](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md) |
 | Understand an x86, ARM64 or Cortex-M executable without running it | [Disassemble, type and search](#disassemble-type-and-search) |
-| Unpack a local GOG DOS installer (including Inno 5.6.2 natively) on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Unpack a local GOG DOS installer (including Inno 5.5.7/5.6.2 natively) on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Rebuild a caller-captured packed Windows PE or GOG Galaxy UPX wrapper | [CHimpREC captured-image recovery](docs/CHIMPREC.md) · [GOG Galaxy workflow](docs/GOG_UNPACKING.md#galaxy-upx-wrappers) |
 | Identify an unfamiliar executable or media file, inspect MADS resources/dialogs, or prepare a compact cinematic variant | [Format modules and header catalog](docs/FILE_FORMAT_REGISTRY.md) · [MADS media & conversation model](docs/MADS_MEDIA_RUNTIME.md) |
 | Inventory one game or a collection, compare editions or inspect resource/media formats | [Collection intake](docs/TARGET_COLLECTION_INTAKE.md) · [TAS/AVI capture audit](docs/TAS_CAPTURE_AUDIT.md) |
@@ -448,12 +448,16 @@ notice-paused actions reconcile cleanly without silently replaying side effects.
   rooms and exits into the strict [`(z-world ...)` graph language](docs/Z_WORLD_LANGUAGE.md),
   and project exact-coordinate [Syndicate spatial Z scenes](docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md).
 
-## Direct guest interpreters: AGI, Z-machine and MADS
+## Direct guest interpreters: AGI, Z-machine MADS and KINT
 
 [Direct decoder modules](docs/DECODER_MODULES.md) (`decoder-modules`,
 `module-analyze`, `module-lift`) inspect interpreted game scripts in their own
 languages without creating an x86 disassembly project:
 
+- **KINT 6 / Sherlock 7:** inspects `.KE` guest instructions and virtual segment
+  declarations, and decodes documented [PNG tile/button/overlay atlases](docs/SHERLOCK7_MEDIA.md).
+  Static analysis and pixel extraction are available; execution and semantic
+  lifting remain separate work.
 - **Sierra AGI v2 (2.917):** combines the static [logic decoder](docs/AGI_LOGIC.md)
   (`agi-logic`), two-stage projectless [scene and resource census](docs/AGI_SCENE_CENSUS.md)
   (`agi-scenes`), compact `fdisbull-il-2` control-flow lifting, typed
@@ -581,3 +585,14 @@ project history is preserved in [historical snapshots](docs/PROJECT_HISTORY.md).
 
 No first-party distribution license has been selected. Public visibility does
 not grant an open-source license. See [third-party provenance](docs/THIRD_PARTY.md).
+
+
+### Structural investigation candidates
+
+`structure-scan` finds source-backed investigation avenues in extracted DOS/VM
+resources, NES/SNES ROMs and bounded console-ROM ZIPs. It keeps processor width,
+bank mapping, input/operation relationships and unresolved continuations explicit.
+Intent drafts and declared composition/trace checks support independent component
+reconstruction without presenting a structural match as a playable game.
+See [console and intent discovery](docs/STRUCTURE_CONSOLE_INTENTS.md) for the
+admitted profiles, agent commands and remaining execution boundaries.

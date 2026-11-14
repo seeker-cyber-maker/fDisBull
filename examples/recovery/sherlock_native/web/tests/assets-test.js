@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict');
+const A=require('../assets.js');
+const pixels=Uint8Array.from({length:46*1024},(_,i)=>(i+(i>>5))&15);
+const encoded=A.encodeSHI(pixels);
+assert.deepEqual(A.decodeSHI(encoded).pixels,pixels);
+assert.equal(encoded.length,23920);
+for(const value of [encoded.slice(0,-1),new Uint8Array(23921)])assert.throws(()=>A.decodeSHI(value));
+const wrong=encoded.slice();wrong[520]=5;assert.throws(()=>A.decodeSHI(wrong));
+assert.throws(()=>A.encodeSHI(Array(46*1024).fill(16)));
+for(const text of ['{"a":1,"a":2}','{"a":1,"\\u0061":2}','{"a":1.0}','{"a":1e0}','{"a":-0}','{"a":01}','{"a":9007199254740992}','{"a":"\\u0000"}','{"__proto__":{}}','[1,]','{}x','{"a":true} null'])assert.throws(()=>A.parseJSON(text),text);
+assert.deepEqual(A.parseJSON('{"a":[0,1,2,-1,true,false,null,"text"]}'),{a:[0,1,2,-1,true,false,null,'text']});
+assert.throws(()=>A.loadOriginalTable(new Uint8Array(100)));
+console.log('assets: SHI roundtrip, header/length/pixel controls and strict JSON controls passed');

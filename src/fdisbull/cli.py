@@ -14,36 +14,37 @@ from .output_limits import (
 )
 
 AGENT_SKILL_GUIDES = {
-    "SKILL.md": "Start here: investigation technique, cost/reward/confidence and evidence boundaries",
-    "references/contradiction-recovery.md": "Resolve a counterexample without weakening the claim: preserve failures, discriminate explanations and independently verify a repair",
-    "references/next-steps.md": "Turn a question into a probe: executable static/data recipes, result branches and failure recovery",
-    "references/analysis-types.md": "Use structural types and static accesses with explicit file/runtime address and RAM/ROM boundaries",
-    "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
-    "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
-    "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
-    "references/sweding.md": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
-    "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
-    "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
-    "references/workflows.md": "Choose static analysis, native debugging, scene, media/ROM, guest-module or UIL/UDC entry points",
-    "references/analysis-approach.md": "Choose what to analyze next using evidence, dependencies, information gain and cost",
-    "references/udl-uil-udc.md": "Qualify memory/desktop/Win16/web shells, console replay/synthesis, direct AGI/Zork profiles and DOS block layers",
-    "references/common-uil.md": "Compose indexed typed UIL, semantic catalogs, native modules/desktop shells and persistent packages",
-    "references/recovery-research.md": "Qualify research, retain reusable meanings and compare recovery depth and cost",
-    "references/semantic-contracts.md": "Recover complete intent contracts and compare facts, effects, time and projection losses",
-    "references/media-modules.md": "Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications",
-    "references/file-formats.md": "Identify file headers through SQLite format modules and frame native SMK2 with explicit decoder/runtime gates",
-    "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
-    "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
-    "references/formats-and-media.md": "Qualify containers, Mach-O/NE/LE/AIL/Cortex-M/ROM mappings, AVI capture audits and media reduction",
-    "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
-    "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
-    "references/task-framing.md": "Natural-language handoff contract, report levels and tool-use defaults",
-    "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
-    "references/dos-qemu-migration.md": "Select native QEMU DOS, check core execution, track migration slices and retain DOSBox fallback",
-    "references/dos-file-layers.md": "Prepare FreeDOS, capture a private D: workspace and manage checkpointed file generations",
-    "references/chip8-qemu.md": "Import an explicit CHIP-8 profile and inspect a bounded native QEMU CPU with source-bound checkpoints",
-    "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
-    "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
+    "SKILL.md": "Investigation method, costs and evidence boundaries",
+    "references/contradiction-recovery.md": "Preserve counterexamples and independently verify repairs",
+    "references/next-steps.md": "Choose executable probes, result branches and recovery",
+    "references/analysis-types.md": "Types, static accesses and file/runtime address boundaries",
+    "references/scenes.md": "Scene masks, recognition, readiness and named actions",
+    "references/methodology.md": "Evidence plans, independent workers and causal probes",
+    "references/runtime-navigation.md": "Movement, spatial policies, assistance and projections",
+    "references/sweding.md": "Equivalent intent across backings, timing and effects",
+    "references/reconstruction.md": "Original-to-UIL-to-target recovery and acceptance gates",
+    "references/proofs.md": "Bounded Z3 proofs, assumptions and counterexamples",
+    "references/workflows.md": "Static, debug, media, guest-module and UIL/UDC commands",
+    "references/analysis-approach.md": "Choose analysis by dependencies, information gain and cost",
+    "references/udl-uil-udc.md": "UIL/UDC shells, console replay and DOS/AGI/Zork backings",
+    "references/common-uil.md": "Typed UIL catalogs, native modules and persistent packages",
+    "references/recovery-research.md": "Research reuse, recovered meanings and scoped comparisons",
+    "references/semantic-contracts.md": "Intent facts, effects, timing and projection losses",
+    "references/media-modules.md": "Shipped media APIs and bounded missing-reader extensions",
+    "references/file-formats.md": "SQLite header catalog and bounded video framing",
+    "references/kint6-sherlock7.md": "KINT 6 guest code and Sherlock 7 PNG atlas profiles",
+    "references/scene-recovery.md": "UIL scene elements, source dependencies and residuals",
+    "references/source-and-concepts.md": "Pinned source catalogs, concepts and native claim limits",
+    "references/formats-and-media.md": "Containers, machine mappings, capture and media reduction",
+    "references/agi-scenes.md": "AGI resources, typed references and unqualified IR",
+    "references/binary-claim-verification.md": "Original-binary writer, value and behavior claim proofs",
+    "references/task-framing.md": "Handoff contracts, report levels and tool-use defaults",
+    "references/dos-drivers-and-qemm.md": "DOS driver roots, mixed LE and QEMM machine profiles",
+    "references/dos-qemu-migration.md": "QEMU DOS execution, migration gates and DOSBox fallback",
+    "references/dos-file-layers.md": "FreeDOS workspace captures and checkpointed file layers",
+    "references/chip8-qemu.md": "CHIP-8 QEMU profiles and source-bound checkpoints",
+    "references/desqview-and-memory-search.md": "DESQview cooperation and guarded persistent memory search",
+    "references/execution-event-search.md": "Execution candidates and bounded instruction predicates",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
@@ -118,8 +119,11 @@ METHODS = {
     "intake-inventory": "Inventory one or many private input roots through the format catalog; paths,[catalog_path,max_files,max_read_bytes,max_binary_bytes]; no extraction or input execution",
     "file-identify": "Identify executable/media headers and nested views with a bounded format registry; path,[catalog_path,max_binary_bytes]; no input execution",
     "smk-frame": "Frame bounded SMK2 video with native holds and unchanged audio; path,output,[keep_frames,max_output_bytes,ffmpeg,ffprobe,timeout]; independent decoding required",
+    "mve-frame": "Frame an admitted Interplay MVE with native holds and unchanged control/audio; path,output,[keep_frames,max_output_bytes,ffmpeg,timeout]; independent decoding required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number,index_path]",
     "media-extract": "Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]",
+    "media-decode": "Decode selected ACT/PIC/ABT images or explicitly profiled SLB/ABT audio into new private outputs; path,output,adapter,[index,slot,palette_path,palette_index,palette_policy,sample_rate,channels,playback_profile,max_output_bytes]",
+    "dinopark-animate": "Simulate a supported ACT sequence subset on explicit logical ticks; path,ticks,[program_indices,instruction_budget,display_mode,initial_time,initial_positions]; no rendering or native execution",
     "gog-list": "List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required",
     "gog-unpack": "Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required",
     "output-info": "Inspect an immutable private output artifact; artifact",
@@ -437,6 +441,13 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "structure-scan": "Read-only directory/ROM/console-ZIP leads; game_dir,output,[max_instructions,max_native,candidate_functions,max_console_views,console_profile]",
+    "structure-intents": "Page non-executable intent drafts from discovery; report,[offset,limit]",
+    "structure-compose": "Validate existing contracts and implementation-specific phase dependencies; spec",
+    "structure-trace": "Audit retained invocation/phase observations; spec,trace",
+    "structure-compare": "Compare exact contract outputs and ordered effects; expected,actual",
+    "structure-episode": "Classify selected local/navigation observations; episode",
+    "structure-info": "Inspect a retained discovery lead or bounded page; report,[lead_id,pattern,offset,limit]",
     "agi-scenes": "Read-only AGI scene census, not executable UIL; game_dir, profile, [stage,include_ir,include_text,max_updates,max_instructions,max_code_bytes]",
     "kq1-bow-intents": "Export one source-bound court intent with UDL and retained IR; game_dir,output,[uil,udl]",
     "kq1-bow-evaluate": "Evaluate court intent rules and engine requests; package,state or state_file,[event,event_file]; no native guest",
@@ -772,6 +783,10 @@ def invoke(method, params, debugger=None):
         from .smacker import frame_smk
 
         return frame_smk(**p)
+    if method == "mve-frame":
+        from .mve import frame_mve
+
+        return frame_mve(**p)
     if method == "capture-audit":
         from .capture_audit import audit_capture
 
@@ -780,6 +795,14 @@ def invoke(method, params, debugger=None):
         from .media import inspect_media, extract_media
 
         return (inspect_media if method == "media-inspect" else extract_media)(**p)
+    if method == "media-decode":
+        from .media import decode_media
+
+        return decode_media(**p)
+    if method == "dinopark-animate":
+        from .dinopark_media import simulate_animation
+
+        return simulate_animation(**p)
     if method in ("gog-list", "gog-unpack"):
         from .gog_unpack import list_gog, unpack_gog
 
@@ -1033,6 +1056,29 @@ def invoke(method, params, debugger=None):
         from .agi import inspect_logic
 
         return inspect_logic(**p)
+    if method == "structure-scan":
+        from .structure_discovery import scan_to_directory
+        return scan_to_directory(**p)
+    if method == "structure-intents":
+        from .structure_intents import draft_file
+        return draft_file(**p)
+    if method == "structure-compose":
+        from .structure_intents import composition_file
+        return composition_file(**p)
+    if method == "structure-trace":
+        from .structure_intents import audit_files
+        return audit_files(**p)
+    if method == "structure-compare":
+        from .structure_intents import compare_files
+        return compare_files(**p)
+    if method == "structure-episode":
+        from .structure_intents import read_json
+        from .structure_events import classify_episode
+        if set(p)!={"episode"}:raise ValueError("expected episode file")
+        return classify_episode(read_json(p["episode"]))
+    if method == "structure-info":
+        from .structure_discovery import read_findings
+        return read_findings(**p)
     if method == "agi-scenes":
         from .agi_scenes import inspect_scenes
 
@@ -1612,8 +1658,11 @@ def respond(request, default_project=None, debugger=None):
                 "chip8-packages",
                 "file-identify",
                 "smk-frame",
+                "mve-frame",
                 "media-inspect",
                 "media-extract",
+                "media-decode",
+                "dinopark-animate",
                 "agent-skill",
                 "identify",
                 "inspect",
@@ -1684,6 +1733,7 @@ def respond(request, default_project=None, debugger=None):
             "kq1-bow-intents",
             "kq1-bow-evaluate",
         }
+        standalone = standalone or request["method"] in {"structure-scan", "structure-info", "structure-intents", "structure-compose", "structure-trace", "structure-compare", "structure-episode", "agi-scenes", "kq1-bow-intents", "kq1-bow-evaluate"}
         if default_project is not None and isinstance(params, dict) and not standalone:
             params = {"project": default_project, **params}
         result = invoke(request["method"], params, debugger)
@@ -2801,6 +2851,13 @@ def parser():
     c.add_argument("--ffmpeg", default="ffmpeg")
     c.add_argument("--ffprobe", default="ffprobe")
     c.add_argument("--timeout", type=float, default=120)
+    c = sub.add_parser("mve-frame", help=METHODS["mve-frame"])
+    c.add_argument("path")
+    c.add_argument("output", help="New directory beneath an existing private parent outside Git")
+    c.add_argument("--keep-frames", type=int, default=32, help="Retain this many opening and ending images, with explicit bounded reference recovery")
+    c.add_argument("--max-movie-bytes", dest="mve_max_output_bytes", type=int, default=64 * 1024 * 1024)
+    c.add_argument("--ffmpeg", default="ffmpeg")
+    c.add_argument("--timeout", type=float, default=120)
     c = sub.add_parser("capture-audit", help=METHODS["capture-audit"])
     c.add_argument(
         "inputs", nargs="+", help="Finalized AVI files; each keeps its own clock"
@@ -2837,6 +2894,7 @@ def parser():
     )
     c.add_argument("--ffmpeg", default="ffmpeg")
     c.add_argument("--ffprobe", default="ffprobe")
+    from .media import INSPECT_ADAPTERS
     for name in ("media-inspect", "media-extract"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path")
@@ -2875,7 +2933,7 @@ def parser():
             )
         if name == "media-extract":
             c.add_argument("output")
-            c.add_argument("--member", required=True)
+            c.add_argument("--member", required=True, help="Inspected member name; PNG atlas adapters also accept all")
             c.add_argument(
                 "--max-payload-bytes",
                 dest="media_max_output_bytes",
@@ -2883,6 +2941,29 @@ def parser():
                 default=64 * 1024 * 1024,
                 help="Extracted member byte limit (1..67108864); separate from global JSON reply budget",
             )
+    c = sub.add_parser("media-decode", help=METHODS["media-decode"])
+    c.add_argument("path")
+    c.add_argument("output")
+    c.add_argument("--adapter", required=True, choices=("dinopark-act", "dinopark-pic", "dinopark-abt", "castles2-slb"))
+    c.add_argument("--index", type=int)
+    c.add_argument("--slot", type=int, help="Original Castles II SLB directory slot; no randomized key selection")
+    c.add_argument("--palette-path")
+    c.add_argument("--palette-index", type=int, default=0)
+    c.add_argument("--palette-policy", choices=("shift2", "replicate6"), default="shift2")
+    c.add_argument("--sample-rate", type=int)
+    c.add_argument("--channels", type=int, choices=(1, 2))
+    c.add_argument("--playback-profile", help="Explicit recovered consumer/driver profile; excludes --sample-rate/--channels")
+    c.add_argument("--max-decoded-output-bytes", dest="decode_max_output_bytes", type=int, default=64 * 1024 * 1024)
+    c = sub.add_parser("dinopark-animate", help=METHODS["dinopark-animate"])
+    c.add_argument("path")
+    c.add_argument("--tick", dest="ticks", action="append", type=int, required=True,
+                   help="Explicit logical tick; repeat for 1..128 bounded updates, no assumed Hz")
+    c.add_argument("--program", dest="program_indices", action="append", type=int)
+    c.add_argument("--instruction-budget", type=int, default=256)
+    c.add_argument("--display-mode", type=int, choices=(0, 1, 2, 3, 4), default=0)
+    c.add_argument("--initial-time", type=int, default=0)
+    c.add_argument("--initial-position", dest="initial_positions", nargs=2, action="append", type=int,
+                   metavar=("X", "Y"), help="One initial x/y pair per selected actor, in program order")
     for name in ("gog-list", "gog-unpack"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("path", help="local GOG Inno Setup offline installer")
@@ -3065,6 +3146,29 @@ def parser():
     c.add_argument("logic", type=int)
     c.add_argument("--profile", required=True, choices=["2.917"])
     c.add_argument("--max-instructions", type=int, default=1000)
+    c = sub.add_parser("structure-scan", help=METHODS["structure-scan"])
+    c.add_argument("game_dir")
+    c.add_argument("--output", required=True)
+    c.add_argument("--max-instructions", type=int, default=30000)
+    c.add_argument("--max-native", type=int, default=8)
+    c.add_argument("--candidate-functions", action="store_true")
+    c.add_argument("--max-file-bytes", type=int, default=32*1024*1024)
+    c.add_argument("--max-console-views", type=int, default=8)
+    c.add_argument("--console-profile")
+    c = sub.add_parser("structure-intents", help=METHODS["structure-intents"])
+    c.add_argument("report")
+    c.add_argument("--offset",type=int,default=0)
+    c.add_argument("--limit",type=int,default=5)
+    for command, fields in (("structure-compose",("spec",)),("structure-trace",("spec","trace")),
+                            ("structure-compare",("expected","actual")),("structure-episode",("episode",))):
+        c = sub.add_parser(command,help=METHODS[command])
+        for field in fields:c.add_argument(field)
+    c = sub.add_parser("structure-info", help=METHODS["structure-info"])
+    c.add_argument("report")
+    c.add_argument("--lead-id")
+    c.add_argument("--pattern")
+    c.add_argument("--offset", type=int, default=0)
+    c.add_argument("--limit", type=int, default=5)
     c = sub.add_parser("agi-scenes", help=METHODS["agi-scenes"])
     c.add_argument("game_dir")
     c.add_argument("--profile", required=True, choices=["2.917"])
@@ -3108,25 +3212,11 @@ def parser():
             c.add_argument("--function-index", type=int)
         else:
             c.add_argument("--state-file", required=True)
-            c.add_argument("--entry-offset", type=lambda s: int(s, 0), default=0)
-            c.add_argument(
-                "--stop-offset",
-                dest="stop_offsets",
-                action="append",
-                type=lambda s: int(s, 0),
-            )
-            c.add_argument(
-                "--stop-point",
-                dest="stop_points",
-                action="append",
-                help="LOGIC:OFFSET component boundary",
-            )
-            c.add_argument(
-                "--callee-entry",
-                dest="callee_entries",
-                action="append",
-                help="LOGIC:OFFSET cached scan-entry witness",
-            )
+            c.add_argument("--entry-offset", type=lambda s: int(s, 0),
+                           help="Optional module-specific entry; omit to use the module's own default")
+            c.add_argument("--stop-offset", dest="stop_offsets", action="append", type=lambda s: int(s, 0))
+            c.add_argument("--stop-point", dest="stop_points", action="append", help="LOGIC:OFFSET component boundary")
+            c.add_argument("--callee-entry", dest="callee_entries", action="append", help="LOGIC:OFFSET cached scan-entry witness")
             c.add_argument("--max-call-depth", type=int)
             c.add_argument("--control-flow", choices=["tree", "compact"])
             c.add_argument(
@@ -4024,8 +4114,12 @@ def _dispatch(args):
                 args[member_option] = index
     if command == "media-extract":
         args["max_output_bytes"] = args.pop("media_max_output_bytes")
+    if command == "media-decode":
+        args["max_output_bytes"] = args.pop("decode_max_output_bytes")
     if command == "smk-frame":
         args["max_output_bytes"] = args.pop("smk_max_output_bytes")
+    if command == "mve-frame":
+        args["max_output_bytes"] = args.pop("mve_max_output_bytes")
     if command == "capture-audit":
         args["max_output_bytes"] = args.pop("capture_max_output_bytes")
     if command.startswith(("udc-", "udl-")) and not command.startswith("udc-native-"):
