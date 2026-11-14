@@ -153,3 +153,96 @@ def test_actual_gui_spool_and_client_never_relaunch_action(tmp_path):
     assert action('POST',path,{})['http_status']==201
     assert action('POST',path,{})['http_status']==201
     assert len(child_calls)==1 and child_calls[0][1]['action_key']=='incident:1'
+
+
+def actual_spool_client(tmp_path,client_clock,child_runner,client_sleep=lambda seconds:None):
+    spec2=importlib.util.spec_from_file_location('gui_spool_retry_fixture',SCRIPTS/'production_gui_transport.py')
+    shim=importlib.util.module_from_spec(spec2);spec2.loader.exec_module(shim)
+    shim.provider=shim._load('production_transport.py');shim.source=shim._load('production_source_transport.py')
+    parent=tmp_path/'spool-parent';parent.mkdir(mode=0o700);spool_dir=parent/'spool';spool_dir.mkdir(mode=0o700);anchor=parent/'anchor.json'
+    history={'schema':'fdisbull-gui-history-1','sequence':0,'requests':{}}
+    files={spool_dir/'installation.json':shim._bytes({'installation_id':shim.INSTALLATION_ID,'volume_uuid':shim.CACHE_UUID}),
+           spool_dir/'history.json':shim._bytes(history),spool_dir/'lane.lock':b'',
+           anchor:shim._bytes({'installation_id':shim.INSTALLATION_ID,'sequence':0,'history_sha256':shim._digest(shim._bytes(history))})}
+    for path,data in files.items():path.write_bytes(data);path.chmod(0o600)
+    spool=shim.GuiSpool(spool_dir,anchor,mount=lambda s,a:True,clock=client_clock,
+        activation=lambda:{'allowed_kinds':['credential_probe','provider']},gui_check=lambda:True,
+        runner=child_runner,kick=lambda:None)
+    def ssh(argv,**kw):
+        doc=json.loads(kw['input_bytes'])
+        if doc['operation']=='submit':
+            result=spool.submit(doc['kind'],doc['request'],doc['expires_epoch'],doc['nonce'])
+            if result.get('status')=='pending':spool.worker()
+        else:result=spool.result(doc['request_id'])
+        return envelope(result)
+    client=setup(tmp_path,ssh,clock=client_clock,sleep=client_sleep)
+    return shim,spool,client
+
+
+def test_get_retries_once_after_only_completed_runner_unknown(tmp_path):
+    child_calls=[]
+    def child(argv,payload,timeout):
+        child_calls.append(json.loads(payload))
+        if len(child_calls)==1:
+            return {'returncode':1,'stdout':b'private child error','stderr':b'private trace',
+                    'timed_out':False,'overflow':False}
+        return {'returncode':0,'stdout':b'{"http_status":200,"data":{"id":43571017539},"request_id":"r-safe"}',
+                'stderr':b'', 'timed_out':False,'overflow':False}
+    now=[1000]
+    shim,spool,client=actual_spool_client(tmp_path,lambda:now[0],child)
+    provider=m.GuiProviderTransport('github',client)
+    response=provider.request('GET','/repos/seeker-cyber-maker/fDisBull/actions/runs/43571017539')
+    assert response=={'http_status':200,'data':{'id':43571017539},'request_id':'r-safe'}
+    history=spool._check()['requests']
+    terminal=[(key,value) for key,value in history.items() if value['phase']=='terminalunknown']
+    complete=[(key,value) for key,value in history.items() if value['phase']=='complete']
+    assert len(terminal)==len(complete)==1 and terminal[0][0]!=complete[0][0]
+    assert json.loads((spool.spool/(terminal[0][0]+'.done')).read_bytes())['reason']=='runner_nonzero'
+    assert json.loads((spool.spool/(terminal[0][0]+'.done')).read_bytes())['runner']=={
+        'returncode':1,'timed_out':False,'overflow':False}
+    assert b'private child error' not in b''.join(p.read_bytes() for p in spool.spool.iterdir() if p.is_file())
+    assert b'private trace' not in b''.join(p.read_bytes() for p in spool.spool.iterdir() if p.is_file())
+    assert len(child_calls)==2 and all(doc['method']=='GET' for doc in child_calls)
+
+
+def test_post_completed_unknown_is_never_retried(tmp_path):
+    child_calls=[]
+    def child(argv,payload,timeout):
+        child_calls.append(json.loads(payload))
+        return {'returncode':1,'stdout':b'private error','stderr':b'', 'timed_out':False,'overflow':False}
+    now=[1000]
+    shim,spool,client=actual_spool_client(tmp_path,lambda:now[0],child)
+    provider=m.GuiProviderTransport('github',client)
+    action=provider.for_action('incident:retry')
+    with pytest.raises(m.CompletedGuiFailure):
+        action('POST','/repos/seeker-cyber-maker/fDisBull/actions/jobs/20/rerun',{})
+    history=spool._check()['requests']
+    assert len(history)==1 and next(iter(history.values()))['phase']=='terminalunknown'
+    assert len(child_calls)==1 and child_calls[0]['method']=='POST'
+
+
+def test_held_unknown_get_is_not_retried(tmp_path):
+    now=[1000];child_calls=[]
+    def child(argv,payload,timeout):
+        child_calls.append(json.loads(payload))
+        raise TimeoutError('outer process cleanup uncertain')
+    shim,spool,client=actual_spool_client(tmp_path,lambda:now[0],child,
+                                          client_sleep=lambda seconds:now.__setitem__(0,now[0]+seconds))
+    provider=m.GuiProviderTransport('github',client)
+    with pytest.raises(RuntimeError,match='unknown'):
+        provider.request('GET','/repos/seeker-cyber-maker/fDisBull/actions/runs/43571017539')
+    history=spool._check()['requests']
+    assert len(history)==1 and next(iter(history.values()))['phase']=='started'
+    assert len(child_calls)==1 and child_calls[0]['method']=='GET'
+
+
+def test_gui_get_retry_budget_is_charged_conservatively(tmp_path):
+    spec_runtime=importlib.util.spec_from_file_location('gui_budget_runtime',SCRIPTS/'production_runtime.py')
+    runtime=importlib.util.module_from_spec(spec_runtime);spec_runtime.loader.exec_module(runtime)
+    class Raw:
+        request_budget=2
+        def reserve(self):return {'allowed':True,'next_refresh_at':1300}
+        def request(self,*args):self.calls=getattr(self,'calls',0)+1;return {'ok':True}
+    raw=Raw();gate=runtime._GatedTransport(raw,lambda:None,lambda:1000,'github')
+    assert gate.request('GET','/fixed/read')=={'ok':True}
+    assert gate.remaining==98 and raw.calls==1
