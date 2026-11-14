@@ -201,6 +201,8 @@ not supplied by a renderer update. Coordinate clicks, INT33 mapping, application
 readiness and completed guest frames remain separate. Full pixel hashes still
 come from `capture_display()`. All 127 promotion qualifications remain open.
 
+The bounded [public DESQview raw-checkpoint witness](DOS_QEMU_HANDOFF.md#public-desqview-checkpoints-and-fresh-physical-qualification-2026-11-14) now composes an attached automatic observer with standard raw save/load. Save suspends only its verified native control while paused; restore replaces the owner/epoch and requires fresh snapshot/certificate authority. Two original-guest endpoint pairs and eleven preservation cases passed locally. User/hook breakpoints, active raw layers, pending lifecycle stops and unreleased input still refuse. The original selected RAM window was unchanged before restore, so this is saved-window preservation; changed-RAM recovery has separate authored witnesses. Broader parity and default-switch gates remain open.
+
 ## Dependency-ordered slices
 
 | Slice | Transfer | Acceptance boundary |

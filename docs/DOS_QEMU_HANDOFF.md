@@ -6327,3 +6327,94 @@ the baseline. Private evidence and the one canonical package map are under
 `QEMU-DOSBox-Parity-20261110/physical-qualification-epoch-fix`; original-DESQview
 raw data stays on CACHE in `desqview-live-adapter-fdbda4c9-20261114`.
 See the [sanitized native receipt](evidence/desqview-automatic-physical-native-2026-11-14/verification.json).
+
+## Public DESQview checkpoints and fresh physical qualification (2026-11-14)
+
+Runtime candidate `daab62e573727eb2df64609cc9e0fac204ea16cf` composes the
+restricted standard raw-machine checkpoint API with the attached automatic
+DESQview observer. Saving temporarily removes only the exact verified
+tracker-owned lifecycle breakpoint from the native transport, keeps the guest
+paused, and repairs that control before publishing the artifact. Existing
+user/hook breakpoint, active-layer, pending-input and pending-lifecycle-stop
+refusals remain. Failed native coverage retires the advertised mappings and
+quarantines/closes the owner; ordinary unsupported-policy refusals do not.
+An uncertain control acknowledgement closes with the primary failure retained.
+One absolute budget covers admission, validation, snapshot work, repair,
+retirement and persistence.
+
+Restore replaces the native owner, retires the old tracker and creates a new
+capture epoch before fresh observation. The checkpoint does not serialize
+observer authority. Restored task/process generation zero means source-observed
+with earlier creation unknown; no native CREATE or continuing lifetime is
+manufactured from the saved handle.
+
+The [sanitized native receipt](evidence/desqview-public-checkpoint-native-2026-11-14/verification.json)
+records the following bounded local evidence:
+
+- The original-DESQview stopped guest preserves exact CPU, tracker, current
+  binding documents and a selected 734-byte RAM window across save. One public
+  step reaches a distinct CPU state. Public load reaps/replaces the old QEMU
+  process and restores the exact saved CPU/window.
+- Two automatic/independent endpoint pairs validate six binding claims, six
+  snapshots and six certificates, with 12 independent binding readback passes
+  and 364 immutable source bytes per endpoint. Post-restore task UUID,
+  process episode, snapshot, certificate and binding IDs are fresh even though
+  native handles and physical backings can agree.
+- An old snapshot cannot map into the new task; an old certificate cannot
+  qualify a fresh snapshot. Both public refusals preserve the mapping journal.
+  Separate-process immutable SQL/CAS checking finds two ended tasks, nine
+  closed bindings and zero current bindings. All three owned native/controller
+  processes are absent; original inputs and all 709 packaged payload files
+  remain unchanged.
+- The selected RAM window had **zero changed bytes** at the intervening CPU
+  endpoint. This original-guest trial demonstrates saved-window preservation,
+  not recovery of changed RAM. The separate authored raw checkpoint tests
+  demonstrate changed CPU/RAM/disk recovery.
+- Eleven native preservation cases pass with zero skips: existing DOS/CHIP-8
+  history/trial/selected-state/layer/hook/IRQ and failure compositions, public
+  raw project/machine restart through both backends, and paired authored
+  DOSBox-X/QEMU common controls.
+- The broad host run passed 3,347 tests with 12 native-input skips before the
+  final narrow coverage-failure correction. That correction has fresh 328-case
+  source and 328-case installed-prefix runs, both without skips; independent
+  review also passed all 33 dedicated cases. Counts overlap. The byte-association
+  receipt distinguishes the two tested source states instead of assigning the
+  broad run to the corrected SHA.
+
+The private tool-only wheel SHA-256 is
+`9761040d0db0bcb712feec9e6f56c8b5ab2b07e53d6526245d5cf4218caf9560`.
+The closed original-guest FDB SHA-256 is
+`601eec48cc20bad0ca8ec750ec290819d095ea33e53b924f3779215ce14ac241`.
+Original programs, raw observations, checkpoint bytes, FDB and CAS remain private
+outside Git. Private controls and receipts are indexed at
+`QEMU-DOSBox-Parity-20261110/checkpoint-physical-20261114/README.md` in the
+local studies workspace.
+
+DOSBox-X remains default and retained. No CI, native rebuild, release, MR merge
+or shared activation occurred. The user approved a bounded 2.5 GB CACHE storage
+waiver; allocated phase output was 1,901,174,784 bytes at closeout. This slice
+does not qualify whole-task RAM, allocation lifetime, continuous residency,
+protected LE checkpoint binding, broader driver/media/input/time compatibility
+or full DOSBox parity. Earlier physical relocation/reuse and LE evidence remain
+separate; the previous MR description is preserved in
+[milestones/archive/117-description-before-raw-checkpoint-20261114.md](milestones/archive/117-description-before-raw-checkpoint-20261114.md).
+
+### Separate historical public cold-reopen supplement
+
+The parallel read-only gate uses the previously qualified `fdbda4c9` wheel and
+its unchanged retained DESQview dataset, rather than the new checkpoint run.
+Two normal Project opens passed 1,044 alias queries and 87 historical views;
+41 selected cases passed through each of one-shot JSON and retained `serve`,
+with nine named CLI cases and 299 retained responses. Both JSON paths exported
+the selected 102-artifact set exactly (204 exports total): 42 detailed errors,
+30 certificates and 30 snapshots per path. A 4,096-byte bounded reply was
+recovered as its exact 18,471-byte completed output artifact without replay;
+unknown execution status remains unknown.
+
+The [sanitized supplement](evidence/desqview-public-cold-reopen-2026-11-14/public-cold-reopen.json)
+retains independent review and verifier provenance: executed `4bd489b9` and
+later stricter offline/future `12c285cc` are distinct. Canonical and cloned
+DB/CAS identities, all 1,538 object identities per catalog and all 709 frozen
+runtime files remain unchanged. The retained server is closed and sidecars
+are absent. This qualifies public persistence/query/export of that historical
+dataset only; it supplies no new native, checkpoint, epoch or parity authority.
