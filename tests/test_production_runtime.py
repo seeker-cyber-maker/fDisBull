@@ -178,6 +178,29 @@ def test_reservation_reused_then_renewed_after_long_listener():
     assert gate.request('GET','/x')['http_status']==200 and raw.reservations==2
 
 
+def test_remote_reservation_validated_after_delayed_gui_round_trip():
+    now=[1000.0]
+    class Delayed:
+        def reserve(self):
+            now[0]+=8
+            return {'allowed':True,'next_refresh_at':now[0]+300,'reason':'reserved'}
+    gate=r._GatedTransport(Delayed(),lambda:None,lambda:now[0],'github')
+    assert gate.prepare()['allowed'] is True
+    assert gate.expires==1308 and gate.remaining==100
+
+
+@pytest.mark.parametrize('expiry',[1007,1608])
+def test_delayed_reservation_still_rejects_expired_or_excessive_window(expiry):
+    now=[1000.0]
+    class Delayed:
+        def reserve(self):
+            now[0]+=8
+            return {'allowed':True,'next_refresh_at':expiry,'reason':'reserved'}
+    gate=r._GatedTransport(Delayed(),lambda:None,lambda:now[0],'github')
+    with pytest.raises(ValueError,match='invalid reservation'):gate.prepare()
+    assert gate.expires==0 and gate.remaining==0
+
+
 def test_unknown_cleanup_latches_before_controller_can_reconcile():
     runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=False
     class Host:

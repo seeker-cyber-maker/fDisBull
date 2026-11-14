@@ -64,7 +64,10 @@ class _GatedTransport:
         result=self.raw.reserve()
         if result.get('allowed') is True:
             expiry=result.get('next_refresh_at')
-            if type(expiry) not in (int,float) or not now<expiry<=now+301:raise ValueError('invalid reservation')
+            # The remote reservation starts during the round trip, rather than
+            # at the caller's earlier timestamp. Validate on receipt.
+            observed=self.clock()
+            if type(expiry) not in (int,float) or not observed<expiry<=observed+301:raise ValueError('invalid reservation')
             self.expires=expiry;self.remaining=100
         return result
     def _use(self,amount):
