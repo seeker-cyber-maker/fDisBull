@@ -279,10 +279,11 @@ def _env(work):
 def _run(argv,work,*,timeout=300,json_output=False,capture=False):
     process=subprocess.Popen([str(x) for x in argv],cwd=work,env=_env(work),stdin=subprocess.DEVNULL,
                              stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
-    sel=selectors.DefaultSelector();buffers={process.stdout:bytearray(),process.stderr:bytearray()}
-    for stream in buffers:sel.register(stream,selectors.EVENT_READ)
+    sel=None;buffers={process.stdout:bytearray(),process.stderr:bytearray()}
     deadline=time.monotonic()+timeout
     try:
+        sel=selectors.DefaultSelector()
+        for stream in buffers:sel.register(stream,selectors.EVENT_READ)
         while sel.get_map():
             remaining=deadline-time.monotonic()
             if remaining<=0:raise TimeoutError('verification command timed out')
@@ -300,7 +301,8 @@ def _run(argv,work,*,timeout=300,json_output=False,capture=False):
         except ProcessLookupError:pass
         process.wait();raise
     finally:
-        sel.close();process.stdout.close();process.stderr.close()
+        if sel is not None:sel.close()
+        process.stdout.close();process.stderr.close()
     stdout=bytes(buffers[process.stdout])
     if json_output:
         obj=json.loads(stdout)

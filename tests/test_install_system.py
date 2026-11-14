@@ -383,3 +383,19 @@ def test_selector_change_applied_before_error_is_observed_and_compensated(tmp_pa
     with pytest.raises(OSError,match='lost switch'):installer.activate(prefix,base)
     assert (base/'current').readlink()==Path('releases/old')
     assert installer.read_json(prefix/'INSTALLATION.json')==staged
+
+
+def test_runner_setup_error_also_reaps_the_owned_process(tmp_path,monkeypatch):
+    import subprocess
+    import sys
+    work=tmp_path/'work';work.mkdir();children=[];closed=[];popen=subprocess.Popen
+    def capture(*args,**kw):
+        process=popen(*args,**kw);children.append(process);return process
+    class BrokenSelector:
+        def register(self,*args):raise OSError('authored selector setup failure')
+        def close(self):closed.append(True)
+    monkeypatch.setattr(installer.subprocess,'Popen',capture)
+    monkeypatch.setattr(installer.selectors,'DefaultSelector',BrokenSelector)
+    with pytest.raises(OSError,match='selector setup'):
+        installer._run([sys.executable,'-c','import time; time.sleep(60)'],work)
+    assert len(children)==1 and children[0].poll() is not None and closed==[True]
