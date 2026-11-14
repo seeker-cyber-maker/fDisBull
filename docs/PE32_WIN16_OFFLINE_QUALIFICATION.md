@@ -19,13 +19,17 @@ fixtures in the selected runtime. Preserve the already accepted PE64/DOS kit.
    neither its label nor the presence of a manifest proves PE32 or Win16 support.
    The original full image is 1,239,330,025 bytes, SHA-256
    `2a4dee4b32c4a392f83fe187e65f82d452be6fac1b896f834f2d7361e849f2c0`;
-   verify the actual chosen donor and lineage before reuse. The previous archive
-   scan did not identify the Win16 or i686 components, so availability is open.
+   verify the actual chosen donor and lineage before reuse. A complete read-only
+   scan of that exact image reached EOF with 29,416 entries and 11 CPIO trailers
+   (member entry counts 21,266; eight empty; 8,144; six). The earlier scan that
+   stopped at the first trailer was incomplete and its absence claim is withdrawn.
 3. Inventory the complete relevant CPIO streams without extraction to determine
    whether the base actually contains a Wine 11 new-WoW64 runtime, Xvfb, Python,
    the x86-64 MinGW compiler and dependencies needed by `wine_guest/init.sh`,
-   plus Wine i386 `kernel32.dll`, `winevdm.exe`, and `krnl386.exe16`. See the
-   exact path expectations in `scripts/ci/retained-runtime-base.py` `REQUIRED`.
+   plus Wine i386 `kernel32.dll`, `winevdm.exe`, and `krnl386.exe16`. The complete
+   scan found all these paths and the i686 compiler and libraries in member 10;
+   Xvfb, Python 3.12 and x86-64 MinGW were found in member 1. See the exact path
+   expectations in `scripts/ci/retained-runtime-base.py` `REQUIRED`.
    The i686 compiler in that capability inventory is needed to build the PE32
    fixture, but guest init treats it as optional when the fixture is supplied
    externally. A filename inventory is admission evidence, not proof that Wine
@@ -36,9 +40,12 @@ fixtures in the selected runtime. Preserve the already accepted PE64/DOS kit.
    `fdisbull-chat-windows-recipe-v1` hash receipt. The existing 0966 recipe pins
    both its resources and output and must not be rewritten to fit another image.
 4. The Win16 build needs a separately available genuine Open Watcom SDK; it is
-   not required at guest runtime. The existing documented recipe expects Open
-   Watcom 1.9's Linux `wcc`, `wlink`, headers, libraries and `WATCOM` installation
-   at `/opt/watcom`. Inspect provenance and hash the SDK/toolchain first. If it is
+   not required at guest runtime. The complete archive scan found `/opt/watcom`
+   and its `binl/wcc` and `binl/wlink` in member 10. Their first 4 KiB identify
+   both as i386 ELF32 ET_EXEC with no PT_INTERP or PT_DYNAMIC: their ELF headers
+   indicate static linking, but Linux i386 compatibility and execution remain
+   untested. The documented recipe expects Open Watcom 1.9 headers, libraries,
+   and `WATCOM=/opt/watcom`. Inspect provenance and hash the SDK/toolchain first. If it is
    unavailable, record that blocker: obtaining and staging the official SDK is a
    separate authorized preparation, not a download during offline qualification.
    Existing installed or retained i686 MinGW must likewise be identity-checked.
