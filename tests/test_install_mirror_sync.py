@@ -4,6 +4,9 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import plistlib
+import shutil
+import sys
 import time
 
 import pytest
@@ -30,9 +33,11 @@ XML
     fake_admission_script.write_text('# Authored fixture; installer must never launch it.\n')
     state = m['root'] / 'service-state'
     plist = m['root'] / 'agent.plist'
-    args = ['/Users/tiga/miniconda/bin/python3', installer, '--hub', m['hub'],
+    git = shutil.which('git')
+    assert git is not None, 'Git executable is required for this integration fixture'
+    args = [sys.executable, installer, '--hub', m['hub'],
         '--cache', m['cache'], '--gitlab', 'https://fixture.invalid/repository.git', '--state-dir', state,
-        '--plist', plist, '--git', '/opt/homebrew/bin/git', '--python', '/Users/tiga/miniconda/bin/python3',
+        '--plist', plist, '--git', git, '--python', sys.executable,
         '--worker-source', fake_worker, '--storage-checker-source', fake_checker,
         '--storage-admission-script', fake_admission_script,
         '--diskutil', fake, '--volume', '/=TEST-UUID']
@@ -47,6 +52,7 @@ def test_installer_preview_apply_hook_and_disable(mirrors):
     assert not state.exists() and not plist.exists() and not (m['hub'] / 'hooks' / 'post-receive').exists()
     applied = cmd(*args, '--apply', env=m['env'])
     assert json.loads(applied.stdout)['launches_service'] is False
+    assert plistlib.loads(plist.read_bytes())['ProgramArguments'][0] == sys.executable
     assert not m['cache'].exists()
     assert (state / 'runtime' / 'mirror_sync_service.py').read_bytes() == fake_worker.read_bytes()
     config = json.loads((state / 'config.json').read_text())
@@ -124,7 +130,7 @@ def test_disable_retains_identical_files_that_predated_install(mirrors):
     spec.loader.exec_module(installer)
     hook = m['hub'] / 'hooks' / 'post-receive'
     hook_bytes = installer.hook_contents(state / 'wake')
-    plist_bytes = installer.plist_contents(Path('/Users/tiga/miniconda/bin/python3'),
+    plist_bytes = installer.plist_contents(Path(sys.executable),
         state / 'runtime' / 'mirror_sync_service.py', state / 'config.json', state, state / 'wake')
     hook.write_bytes(hook_bytes)
     hook.chmod(0o755)

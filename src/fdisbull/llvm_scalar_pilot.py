@@ -43,9 +43,9 @@ class _Builder:
         if not isinstance(value, dict) or set(value) != {'var'}:
             raise LLVMScalarError('Unsupported operand')
         ptr = self.tmp()
-        self.emit(f'{ptr} = getelementptr i8, ptr %state, i64 {self.slots[value["var"]]}')
+        self.emit(f'{ptr} = getelementptr i8, i8* %state, i64 {self.slots[value["var"]]}')
         out = self.tmp()
-        self.emit(f'{out} = load i8, ptr {ptr}')
+        self.emit(f'{out} = load i8, i8* {ptr}')
         return out
 
     def condition(self, cond):
@@ -98,15 +98,15 @@ class _Builder:
                 rhs = self.value(block['value'])
                 index = self.slots[block['var']]
                 ptr = self.tmp()
-                self.emit(f'{ptr} = getelementptr i8, ptr %state, i64 {index}')
+                self.emit(f'{ptr} = getelementptr i8, i8* %state, i64 {index}')
                 if op != 'set':
                     old = self.tmp()
-                    self.emit(f'{old} = load i8, ptr {ptr}')
+                    self.emit(f'{old} = load i8, i8* {ptr}')
                     result = self.tmp()
                     instr = 'add' if op == 'add' else 'sub'
                     self.emit(f'{result} = {instr} i8 {old}, {rhs}')
                     rhs = result
-                self.emit(f'store i8 {rhs}, ptr {ptr}')
+                self.emit(f'store i8 {rhs}, i8* {ptr}')
             else:
                 raise LLVMScalarError(f'Unsupported side effect or control operator: {op}')
 
@@ -130,7 +130,7 @@ def emit_llvm_scalar_v1(document, *, symbol='fdisbull_scalar'):
         raise LLVMScalarError('Only u8 and bool state supported (no silent truncation)')
     slots = sorted(document['variables'])
     builder = _Builder(slots)
-    builder.lines.extend([f'define void @{symbol}(ptr %state) {{', 'entry:'])
+    builder.lines.extend([f'define void @{symbol}(i8* %state) {{', 'entry:'])
     builder.blocks(document['body'])
     builder.emit('ret void')
     builder.lines.append('}')

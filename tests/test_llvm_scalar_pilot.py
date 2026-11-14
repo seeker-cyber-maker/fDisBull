@@ -32,8 +32,12 @@ def test_real_native_code_matches_reference(tmp_path):
     if not clang:pytest.skip('clang not installed: LLVM code emitted, no native qualification')
     p=program();result=emit_llvm_scalar_v1(p)
     ir=tmp_path/'sample.ll';so=tmp_path/'sample.so';ir.write_text(result['llvm_ir'])
-    subprocess.run([clang,'-O2','-shared','-fPIC','-x','ir',str(ir),'-o',str(so)],check=True,
-                   capture_output=True,text=True)
+    compiled=subprocess.run([clang,'-O2','-shared','-fPIC','-x','ir',str(ir),'-o',str(so)],
+                            capture_output=True,text=True)
+    assert compiled.returncode == 0, (
+        f'Clang failed with exit {compiled.returncode}\n'
+        f'stdout:\n{compiled.stdout}\nstderr:\n{compiled.stderr}'
+    )
     dll=ctypes.CDLL(str(so));fun=dll.fdisbull_scalar;fun.argtypes=[ctypes.POINTER(ctypes.c_ubyte)]
     for val in range(256):
         for enabled in (False,True):
