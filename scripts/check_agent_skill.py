@@ -27,7 +27,9 @@ FORMAT = "fdisbull-skill-index-1"
 SKILL_NAME = "fdisbull-investigate"
 SKILL_NAMES = (SKILL_NAME, "write-gamefaqs-guide")
 ENTRYPOINT = "SKILL.md"
-MAX_INDEX_GUIDES = 32
+# The recovered 33-guide catalog remains below4KiB on the wire.
+# Resource/response totals remain independently bounded below.
+MAX_INDEX_GUIDES = 64
 MAX_RESOURCE_BYTES = 64 * 1024
 MAX_RESPONSE_BYTES = 64 * 1024
 MAX_TOTAL_RESPONSE_BYTES = 4 * 1024 * 1024

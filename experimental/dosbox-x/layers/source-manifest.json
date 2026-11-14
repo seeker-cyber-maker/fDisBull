@@ -1,7 +1,7 @@
 {
   "feature": "Bounded automatic frame stepping and physical frame input; complete native keyboard state and frame ownership restoration",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "069fba0afbc7f8d0fad3a8e204362d4a2ed26877d28cec0298471aa50f0e3a41",
+  "patch_sha256": "0521dea481d1da97a34a869e7897b90bbe52c9d80e085bfa978dc381159f3bab",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -90,8 +90,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "sha256": "e5a136c5779972097bb317ff7901496130f835e49f4d5f3b9f8014ebcf6fbde2",
-      "size": 25145
+      "sha256": "2a6ac38b07ff987632660008045a8c5b1cd9cdc8716bbb4a7d85f394949ab458",
+      "size": 25456
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -192,6 +192,11 @@
       "path": "tools/headless_agent.py",
       "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7",
       "size": 9883
+    },
+    {
+      "path": "src/shell/shell.cpp",
+      "sha256": "38ab5378a7a36e00f68f10d31b07191709a65e084aaa456451b77388baca539e",
+      "size": 119965
     }
   ],
   "legacy_0_10_backend_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",

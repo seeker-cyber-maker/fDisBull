@@ -198,3 +198,12 @@ def test_receipt_is_private_non_overwriting_and_outside_checkout(tmp_path):
         gate._write_receipt(receipt, {"status": "replace"})
     with pytest.raises(gate.GateError, match="outside the repository"):
         gate._write_receipt(ROOT / "receipt.json", {"status": "forbidden"})
+
+
+def test_guide_count_is_bounded_before_resource_reads():
+    index, _ = good_bundle()
+    index['guides'] = [dict(index['guides'][0]) for _ in range(65)]
+    def forbidden(reference):
+        raise AssertionError('unbounded index must fail before fetching resources')
+    with pytest.raises(gate.GateError, match='exceeds its limit'):
+        gate.verify_index(index, forbidden)

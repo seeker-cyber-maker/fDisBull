@@ -7526,3 +7526,76 @@ index 0000000..31561fd
 +    except (OSError, ValueError, RuntimeError) as error:
 +        print(f"headless-agent: {error}", file=sys.stderr)
 +        raise SystemExit(1)
+diff --git a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
+--- a/src/agent/debugger/debugger_adapter.cpp
++++ b/src/agent/debugger/debugger_adapter.cpp
+@@ -737,7 +737,16 @@
+         return false;
+ 
+ #if C_DEBUG
+-    DOS_Terminate(dos.psp(), false, 0);
++    try {
++        DOS_Terminate(dos.psp(), false, 0);
++    } catch (int code) {
++        if (code != 7)
++            throw;
++        if (error != NULL)
++            *error = "DOS target cleanup interrupted by corrupt MCB chain (DOS error 7)";
++        // No successful stop certificate follows a partially completed memory walk.
++        return false;
++    }
+ 
+     // Keep the externally initiated exit equivalent to DOS INT 21h/AH=4Ch.
+     // DOS_Terminate owns PSP/vector restoration; the interrupt handler owns
+diff --git a/src/shell/shell.cpp b/src/shell/shell.cpp
+--- a/src/shell/shell.cpp
++++ b/src/shell/shell.cpp
+@@ -329,6 +329,25 @@
+ 	Uninstall();
+ }
+ 
++// Discard a debugger-owned corrupt guest instead of throwing int(7) from
++// this destructor while the host is already unwinding.
++static bool SHELL_FreeMemoryForExit(uint16_t segment)
++{
++#if defined(C_DOSBOX_AGENT)
++    try {
++        DOS_FreeProcessMemory(segment);
++    } catch (int code) {
++        if (code != 7 || !control || control->opt_agent_config.empty())
++            throw;
++        LOG_MSG("AGENT: shell cleanup interrupted by corrupt MCB chain (DOS error 7); discarding guest");
++        return false;
++    }
++#else
++    DOS_FreeProcessMemory(segment);
++#endif
++    return true;
++}
++
+ DOS_Shell::~DOS_Shell() {
+ 	if (bf != NULL) delete bf; /* free batch file */
+ 
+@@ -336,14 +355,15 @@
+ 	 * memory allocated by the shell is not automatically freed on termination.
+ 	 * files are not automatically closed */
+ 	if (free_your_own_psp && psp && psp->GetSegment()) {
+-		DOS_FreeProcessMemory(psp->GetSegment());
++        const bool memory_released = SHELL_FreeMemoryForExit(psp->GetSegment());
+         free_your_own_psp = false;
+-		/* NTS: DOS_PSP would ideally allow JFT handle operations regardless of whatever the
+-		 *      current PSP segment is, but that's not how the code is written */
+-		const uint16_t o_psp = dos.psp();
+-		dos.psp(psp->GetSegment());
+-		psp->CloseFiles();
+-		dos.psp(o_psp);
++        // A failed memory walk leaves process metadata unsafe to traverse.
++        if (memory_released) {
++            const uint16_t o_psp = dos.psp();
++            dos.psp(psp->GetSegment());
++            psp->CloseFiles();
++            dos.psp(o_psp);
++        }
+ 	}
+ 
+ 	if (psp->GetSegment() == shell_psp)

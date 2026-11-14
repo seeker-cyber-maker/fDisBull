@@ -915,3 +915,13 @@ it does not imply rollback or permission to retry. Output references are
 distinct from project debugger artifact IDs. The default store is the user data
 `fdisbull/output-artifacts` directory; `FDISBULL_OUTPUT_ARTIFACT_DIR` selects a
 private location outside Git. Artifacts are not automatically deleted.
+
+## Optional recovered tooling in the 0.35 source candidate
+
+The [recovered tooling integration](RECOVERED_TOOLS_035_INTEGRATION.md) records
+bounded Windows route fuzzing, explicit DOS launch/RTLink tools, source-only Drive
+backup/sync helpers, shutdown receipts and their historical origins. Discover the
+installed candidate before relying on these additions. Source inclusion does not
+install a Drive watcher or qualify a native backend. The route-fuzz and crash probes
+launch owned native processes only when explicitly invoked; the source-only tests
+do not launch a guest. Historical research reports and proposals retain their dates.

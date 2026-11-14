@@ -264,6 +264,7 @@ budget stop or unsupported operation as such, with the next useful action.
 | Exhaustive writer, absence or disputed mechanism claims | [binary claim verification](references/binary-claim-verification.md) |
 | Recover scene semantics; complete interaction contracts when required | [scene recovery](references/scene-recovery.md), [semantic contracts](references/semantic-contracts.md) |
 | Containers and bounded missing readers | [formats and media](references/formats-and-media.md), [media modules](references/media-modules.md) |
+| KINT 6 code and Sherlock 7 PNG atlases | [KINT/Sherlock](references/kint6-sherlock7.md) |
 | Source catalogs and concept searches | [source and concepts](references/source-and-concepts.md) |
 | AGI resource and scene recovery | [AGI scenes](references/agi-scenes.md) |
 | Typed UIL, generated backings and alternate implementations | [common UIL](references/common-uil.md), [UDL/UIL/UDC](references/udl-uil-udc.md), [sweding](references/sweding.md) |
@@ -280,4 +281,17 @@ budget stop or unsupported operation as such, with the next useful action.
 For a human-readable review of established findings, use the companion
 `write-gamefaqs-guide` skill. Report what was actually observed, what remains a
 candidate, and which question or capability is now available.
-| KINT 6 code and Sherlock 7 PNG atlases | [KINT/Sherlock](references/kint6-sherlock7.md) |
+
+
+## Deeper recovery and tooling references
+
+The existing `references/recovery-research.md` adds an initial documentation pass
+and provisional Z blueprints. For a consequential worker handoff,
+`references/methodology.md` separates role, supplied context and independent
+evidence; these optional deeper procedures are not a checklist for routine
+commands. It also covers bounded diagnostic entries when ordinary progression
+is unavailable. The existing sweding reference describes qualified equivalence
+across chosen backings. [Friction reports](references/friction-to-feature.md) are
+opt-in QA records; they do not add a mandatory approval gate or override the user's
+existing task authorization. DOS launch arguments and explicit read-only CD media
+are covered by the existing `references/formats-and-media.md` reference.

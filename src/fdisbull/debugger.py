@@ -5,13 +5,14 @@ import base64
 import hashlib
 import io
 import json
+from copy import deepcopy
 from pathlib import Path
 import struct
 import time
 import uuid
 import tempfile
 
-from .dosbox_rpc import DOSBoxRPC, DebuggerError
+from .dosbox_rpc import DOSBoxRPC, DebuggerError, DebuggerShutdownError
 from .dos_launch import LaunchAlias, guest_name
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
@@ -84,6 +85,29 @@ def _attach_runtime_tracking(session):
     from .runtime_tracking import AutomaticRuntimeTracker
     session._automatic_runtime_tracker = AutomaticRuntimeTracker(session)
     _tracking_callback(session, 'after_stop', 'session-start')
+
+
+def _tracking_before_rpc(session, method):
+    mutates = (method in {'execution.continue', 'execution.step', 'execution.pause',
+                          'memory.write', 'state.set_register', 'state.load',
+                          'session.stop', 'session.close'} or
+               method.startswith('input.') and not method.endswith('.state'))
+    if mutates:
+        _tracking_callback(session, 'before_execution', method)
+
+def _tracking_after_rpc(session, method, result):
+    if method not in ('execution.wait', 'session.status') or not isinstance(result, dict):
+        return
+    if result.get('running') is True:
+        return
+    state = result.get('state') or result.get('session', {}).get('state')
+    if state not in ('stopped', 'exited'):
+        return
+    session._automatic_runtime_stop = result
+    if state == 'exited':
+        _tracking_callback(session, 'close', 'native-target-exit')
+    elif method == 'execution.wait':
+        _tracking_callback(session, 'after_stop', 'execution.wait')
 
 
 DEBUG_DDL += LAYER_DDL
@@ -459,6 +483,7 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
         self.rpc = None
         self._launch_alias = None
         self.closed = False
+        self.close_receipt = None
         self.run_id = uuid.uuid4().hex
         self.version = project.version(version)
         if project.meta['format'] not in ('MZ', 'COM') or self.version['parent'] is not None:
@@ -523,20 +548,35 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
                     (self.run_id,self.version['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
+            if self.metadata.get('capabilities', {}).get('lifecycle', {}).get('dos_guest_exit') is True:
+                _attach_runtime_tracking(self)
             self._event('launch',result)
             project._live_debuggers.append(self)
-        except BaseException:
-            if self.rpc is not None:
-                self.rpc.close()
-            if self._launch_alias is not None:
-                self._launch_alias.close()
+        except BaseException as error:
+            # A failed observer/startup must not leave an owned transport alive,
+            # and cleanup must not replace the original uncertain result.
+            cleanup_errors = []
+            for phase, cleanup in (
+                    ('automatic-runtime-tracking', lambda: _tracking_callback(self, 'close', 'launch-failed')),
+                    ('rpc.close', lambda: self.rpc.close() if self.rpc is not None else None),
+                    ('launch-alias', lambda: self._launch_alias.close() if self._launch_alias is not None else None)):
+                try:
+                    cleanup()
+                except BaseException as cleanup_error:
+                    cleanup_errors.append({'phase': phase, 'type': type(cleanup_error).__name__})
+            if cleanup_errors:
+                error.launch_cleanup_errors = cleanup_errors
             raise
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
-        self.close()
+        try:
+            self.close()
+        except Exception:
+            if not args or args[0] is None:
+                raise
 
     def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,window=self.window,on_spawn=self._spawn_callback)
     def _transport_metadata(self):return {}
@@ -548,7 +588,10 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
     @property
     def machine(self):
         if not hasattr(self.rpc,'machine'):raise ValueError('This session has no outer machine context')
-        return self.rpc.machine.bind(self.project,self.run_id)
+        context=self.rpc.machine.bind(self.project,self.run_id)
+        if getattr(self,'_automatic_runtime_tracker',None) is not None:
+            context._automatic_runtime_parent=self
+        return context
 
     def contexts(self):
         primary='dos-cpu' if self.project.meta['format'] in ('MZ', 'COM') else 'process'
@@ -583,7 +626,14 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             if remaining<=0 or remaining < admission:
                 raise RpcAdmissionTimeout('Shared debugger host-time budget expired before RPC dispatch')
             options['timeout_ms']=min(getattr(self,'_rpc_timeout_cap_ms',None) or 15000,remaining)
-        return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
+        _tracking_before_rpc(self, method)
+        result = self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
+        try:
+            _tracking_after_rpc(self, method, result)
+        except Exception as error:
+            error.result = deepcopy(result)
+            raise
+        return result
 
     def _event(self, operation, evidence):
         if not hasattr(self, 'project'):
@@ -605,6 +655,12 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
         return {'run':self.run_id,'version':self.version['id'],'live':True,**result,'mapping':self.metadata,
                 'semantics':contract(self.metadata.get('backend','dosbox')),
                 'native_hooks_available':self.native_hooks_available}
+
+    def tracking_status(self):
+        tracker = getattr(self, '_automatic_runtime_tracker', None)
+        return (tracker.status() if tracker is not None else
+                dict(enabled=False, state='not-available', current_bindings=0,
+                     reason='automatic source tracking is unavailable for this session'))
 
     def _timing(self, enabled=None):
         if not self.rpc.capabilities.get('timing',{}).get('fast_forward'):
@@ -1014,6 +1070,7 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             if metadata.get(key) is not None:
                 self.metadata[key] = metadata[key]
         FrameTimelineSessionMixin._timeline_loaded(self)
+        _tracking_callback(self, 'after_stop', 'verified-checkpoint-restore')
         return result
 
     @timeline_locked
@@ -1211,9 +1268,13 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
     @timeline_locked
     def close(self):
         if self.closed:
-            return
+            receipt = deepcopy(getattr(self, 'close_receipt', None))
+            if receipt is not None and not receipt['closed']:
+                raise DebuggerShutdownError(receipt)
+            return receipt
         result = {'state':'interrupted'}
         cleanup_error = interrupted = None
+        native_stop = None
         def failed(phase, error):
             nonlocal cleanup_error
             result.setdefault('cleanup_errors', []).append(
@@ -1236,6 +1297,9 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             interrupted = error
             result = {'state':'interrupted','error':str(error)}
         finally:
+            native_stop = deepcopy(result)
+            cleanup('automatic-runtime-tracking',
+                    lambda: _tracking_callback(self, 'close', 'session-close'))
             try:
                 cleanup('rpc.close', lambda: self.rpc.close())
             finally:
@@ -1249,26 +1313,50 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
                 result['launch_alias_cleanup'] = cleanup('launch-alias', self._launch_alias.close)
             process = getattr(self.rpc, 'process', None)
             result['process_reaped'] = None
+            result['process_returncode'] = None
             if process is not None:
                 try:
-                    result['process_reaped'] = process.poll() is not None
+                    result['process_returncode'] = process.poll()
+                    result['process_reaped'] = result['process_returncode'] is not None
                 except BaseException as error:
                     failed('process-status', error)
-            try:
-                cleanup('close-receipt', lambda: self._event('close',result))
-                def record_ended():
-                    with self.project.transaction(True):
-                        self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
-                cleanup('run-ended', record_ended)
-            finally:
-                def remove_owner():
-                    if self in self.project._live_debuggers:
-                        self.project._live_debuggers.remove(self)
-                cleanup('live-registry', remove_owner)
+            def finalize():
+                result['run'] = self.run_id
+                result['format'] = 'fdisbull-shutdown-1'
+                result['guest_stop'] = deepcopy(native_stop)
+                result['guest_stop_complete'] = (native_stop.get('state') == 'exited'
+                                                 and not native_stop.get('running'))
+                code = result['process_returncode']
+                result['termination_signal'] = -code if type(code) is int and code < 0 else None
+                result['session_terminal'] = True
+                result['closed'] = (result['guest_stop_complete'] and result['process_reaped'] is True
+                                    and type(code) is int and code == 0 and not result.get('cleanup_errors'))
+                result['status'] = 'closed' if result['closed'] else 'interrupted'
+                result['state'] = 'exited' if result['closed'] else 'interrupted'
+                if not result['closed'] and getattr(self.rpc, 'close_evidence', None) is not None:
+                    result['diagnostics'] = deepcopy(self.rpc.close_evidence)
+                self.close_receipt = deepcopy(result)
+
+            def record_ended():
+                with self.project.transaction(True):
+                    self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
+            cleanup('run-ended', record_ended)
+            def remove_owner():
+                if self in self.project._live_debuggers:
+                    self.project._live_debuggers.remove(self)
+            cleanup('live-registry', remove_owner)
+            finalize()
+            cleanup('close-receipt', lambda: self._event('close',result))
+            finalize()
         if interrupted is not None:
+            interrupted.receipt = deepcopy(self.close_receipt)
             raise interrupted
         if cleanup_error is not None:
+            cleanup_error.receipt = deepcopy(self.close_receipt)
             raise cleanup_error
+        if not result['closed']:
+            raise DebuggerShutdownError(self.close_receipt)
+        return deepcopy(self.close_receipt)
 
 
 class DebugWorkspace:
@@ -1449,10 +1537,24 @@ class DebugWorkspace:
         if method=='debug-stop':
             if params:
                 raise ValueError('Unexpected stop options')
-            session.close()
-            self._join_async(run)
-            session.project.__exit__()
-            del self.sessions[run]
+            try:
+                try:
+                    receipt = session.close()
+                except Exception as error:
+                    receipt = getattr(error, 'receipt', None)
+                    if not isinstance(receipt, dict):
+                        raise
+            finally:
+                try:
+                    self._join_async(run)
+                finally:
+                    try:
+                        session.project.__exit__()
+                    finally:
+                        self.sessions.pop(run, None)
+            if isinstance(receipt, dict):
+                return {'run': run, 'closed': receipt['closed'], 'status': receipt['status'],
+                        'process_reaped': receipt['process_reaped'], 'receipt': receipt}
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
         operation=getattr(selected,methods[method],None)
@@ -1478,10 +1580,24 @@ class DebugWorkspace:
         return result
 
     def close(self):
-        for session in self.sessions.values():
+        failure = None
+        for session in tuple(self.sessions.values()):
             try:
                 session.close()
-                self._join_async(session.run_id)
+            except BaseException as error:
+                if failure is None:
+                    failure = error
             finally:
-                session.project.__exit__()
+                try:
+                    self._join_async(session.run_id)
+                except BaseException as error:
+                    if failure is None:
+                        failure = error
+                try:
+                    session.project.__exit__()
+                except BaseException as error:
+                    if failure is None:
+                        failure = error
         self.sessions.clear()
+        if failure is not None:
+            raise failure
