@@ -5,12 +5,14 @@ module never mutates main, merges, tags, releases, or installs software.
 """
 import base64
 import hashlib
+import http.client
 import importlib.util
 import json
 import os
 import platform
 from pathlib import Path
 import re
+import ssl
 import sys
 
 
@@ -66,6 +68,55 @@ def _read(path):
 def _digest(path):
     if path.is_symlink() or not path.is_file(): raise ValueError('protected source missing')
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+TOKEN_PROBE_FLAG='--gitlab-exact-token-probe'
+TOKEN_PROBE_SCHEMA='fdisbull-gitlab-token-probe-1'
+
+
+def _gitlab_exact_token_probe(token, *, https_factory=None):
+    """Fixed child-only TLS read; return no body, headers or exception text."""
+    failure={'schema':TOKEN_PROBE_SCHEMA,'status':'error'}
+    if (not isinstance(token,str) or not 1<=len(token)<=4096
+            or not token.isascii() or any(ord(c)<33 or ord(c)==127 for c in token)):
+        return failure
+    connection=None
+    try:
+        factory=https_factory or http.client.HTTPSConnection
+        connection=factory('gitlab.com',443,timeout=15,context=ssl.create_default_context())
+        connection.request('GET','/api/v4/user',headers={'Authorization':'Bearer '+token,'Accept':'application/json'})
+        response=connection.getresponse();code=response.status
+        if type(code) is not int or not 100<=code<=599:return failure
+        if code!=200:return {'schema':TOKEN_PROBE_SCHEMA,'status':'http','http_status':code}
+        body=response.read(65536)
+        if not isinstance(body,bytes) or len(body)>=65536:return failure
+        principal=json.loads(body)
+        if not isinstance(principal,dict):return failure
+        uid=principal.get('id');username=principal.get('username')
+        if type(uid) is not int or not 0<uid<2**63:uid=None
+        # Emit only the expected fixed username, never arbitrary server text.
+        if username!='TiGa-RCE':username=None
+        return {'schema':TOKEN_PROBE_SCHEMA,'status':'ok','http_status':200,'id':uid,'username':username}
+    except Exception:
+        return failure
+    finally:
+        if connection is not None:
+            try:connection.close()
+            except Exception:pass
+
+
+def _probe_main():
+    # The token is a bounded private stdin value, never an argv/env entry.
+    try:
+        raw=sys.stdin.buffer.read(8193)
+        if len(raw)>8192:raise ValueError('input too large')
+        value=json.loads(raw)
+        if not isinstance(value,dict) or set(value)!={'token'}:raise ValueError('invalid input')
+        result=_gitlab_exact_token_probe(value['token'])
+    except Exception:
+        result={'schema':TOKEN_PROBE_SCHEMA,'status':'error'}
+    sys.stdout.write(json.dumps(result,separators=(',',':'))+'\n')
+    return 0
 
 
 class CandidateRefPublisher:
@@ -219,39 +270,72 @@ class CandidateRefPublisher:
             raise ValueError('source changed during verification')
         return _write(path, value)
 
+    def _cli_principal(self, name, cmd, worktree, env):
+        try: result = self._run(cmd, cwd=worktree, env=env, timeout=15)
+        except Exception: raise RuntimeError('publisher account unavailable') from None
+        try: response = provider._parse(result['stdout'], False)
+        except (ValueError, RuntimeError, UnicodeError):
+            self._classify_failure(name, result)
+            raise RuntimeError('publisher account unavailable') from None
+        code, principal = response.get('http_status'), response.get('data')
+        if code in (401, 403, 429): self._stop(name, 'provider_http_' + str(code))
+        if result['returncode'] != 0 or code != 200:
+            self._classify_failure(name, result)
+            raise RuntimeError('publisher account unavailable')
+        if (not isinstance(principal, dict)
+                or name == 'github' and principal.get('login') != 'seeker-cyber-maker'
+                or name == 'gitlab' and (type(principal.get('id')) is not int or principal['id'] != 43957127
+                                         or principal.get('username') != 'TiGa-RCE')):
+            self._stop(name, 'provider_account_mismatch')
+
+    def _token(self, name, command, worktree):
+        try: result = self._run(command, cwd=worktree, env=_env(), timeout=15)
+        except Exception: self._stop(name, 'provider_authentication_required')
+        token = result['stdout'].strip()
+        if (result['returncode'] != 0 or not token or len(token) > 4096 or b'\n' in token or b'\r' in token):
+            self._stop(name, 'provider_authentication_required')
+        try: value = token.decode('ascii', 'strict')
+        except UnicodeError: self._stop(name, 'provider_authentication_required')
+        if any(ord(c)<33 or ord(c)==127 for c in value):self._stop(name, 'provider_authentication_required')
+        return value
+
+    def _gitlab_token_principal(self, token, worktree):
+        # The existing runner supervises the entire child lifetime, including
+        # stdin, DNS/TLS and response, and kills/reaps its owned group on timeout.
+        data=json.dumps({'token':token},separators=(',',':')).encode('ascii')
+        argv=[PINNED_INTERPRETER['path'],'-I',str(Path(__file__).resolve(strict=True)),TOKEN_PROBE_FLAG]
+        try: result=self.runner(argv,cwd=str(worktree),env=_env(),input_bytes=data,timeout=15)
+        except Exception:raise RuntimeError('publisher account unavailable') from None
+        if (not isinstance(result,dict) or type(result.get('returncode')) is not int or result['returncode']!=0
+                or result.get('timed_out') is not False or result.get('overflow') is not False
+                or not isinstance(result.get('stdout'),bytes) or len(result['stdout'])>4096
+                or not isinstance(result.get('stderr'),bytes) or len(result['stderr'])>legacy.LIMIT):
+            raise RuntimeError('publisher account unavailable')
+        try:value=json.loads(result['stdout'])
+        except (ValueError,UnicodeError):raise RuntimeError('publisher account unavailable') from None
+        if not isinstance(value,dict) or value.get('schema')!=TOKEN_PROBE_SCHEMA:
+            raise RuntimeError('publisher account unavailable')
+        if set(value)=={'schema','status','http_status'} and value.get('status')=='http':
+            code=value.get('http_status')
+            if type(code) is int and code in (401,403,429):self._stop('gitlab','provider_http_'+str(code))
+            raise RuntimeError('publisher account unavailable')
+        if (set(value)!={'schema','status','http_status','id','username'}
+                or value.get('status')!='ok' or type(value.get('http_status')) is not int or value['http_status']!=200):
+            raise RuntimeError('publisher account unavailable')
+        if type(value.get('id')) is not int or value['id']!=43957127 or value.get('username')!='TiGa-RCE':
+            self._stop('gitlab','provider_account_mismatch')
+
     def _credentials(self, worktree):
-        credentials = {}
-        for name, cmd in (('github', [GH_BIN, 'auth', 'token', '--hostname', 'github.com', '--user', 'seeker-cyber-maker', '--no-refresh']),
-                          ('gitlab', [GLAB_BIN, 'config', 'get', 'token', '--host', 'gitlab.com'])):
-            try:
-                r = self._run(cmd, cwd=worktree, env=_env(), timeout=15)
-            except RuntimeError:
-                self._stop(name, 'provider_authentication_required')
-            token = r['stdout'].strip()
-            if (r['returncode'] != 0 or not token or len(token) > 4096 or b'\n' in token or b'\r' in token):
-                self._stop(name, 'provider_authentication_required')
-            try: credentials[name] = token.decode('ascii', 'strict')
-            except UnicodeError: self._stop(name, 'provider_authentication_required')
-        for name, cmd, variable in (
-            ('github', [GH_BIN, 'api', '--hostname', 'github.com', '--include', 'user'], 'GH_TOKEN'),
-            ('gitlab', [GLAB_BIN, 'api', '--hostname', 'gitlab.com', '--include', 'user'], 'GITLAB_TOKEN')):
-            env = _env(); env[variable] = credentials[name]
-            r = self._run(cmd, cwd=worktree, env=env, timeout=15)
-            try: response = provider._parse(r['stdout'], False)
-            except (ValueError, RuntimeError, UnicodeError):
-                self._classify_failure(name, r)
-                raise RuntimeError('publisher account unavailable') from None
-            code, principal = response.get('http_status'), response.get('data')
-            if code in (401, 403, 429): self._stop(name, 'provider_http_' + str(code))
-            if r['returncode'] != 0 or code != 200:
-                self._classify_failure(name, r)
-                raise RuntimeError('publisher account unavailable')
-            if (not isinstance(principal, dict)
-                    or name == 'github' and principal.get('login') != 'seeker-cyber-maker'
-                    or name == 'gitlab' and (type(principal.get('id')) is not int or principal['id'] != 43957127
-                                             or principal.get('username') != 'TiGa-RCE')):
-                self._stop(name, 'provider_account_mismatch')
-        return credentials
+        # Preserve the fixed GitHub account/token validation. GitLab first uses
+        # glab's own stored OAuth session so its supported refresh can complete.
+        gh = self._token('github', [GH_BIN, 'auth', 'token', '--hostname', 'github.com',
+                                    '--user', 'seeker-cyber-maker', '--no-refresh'], worktree)
+        gh_env = _env(); gh_env['GH_TOKEN'] = gh
+        self._cli_principal('github', [GH_BIN, 'api', '--hostname', 'github.com', '--include', 'user'], worktree, gh_env)
+        self._cli_principal('gitlab', [GLAB_BIN, 'api', '--hostname', 'gitlab.com', '--include', 'user'], worktree, _env())
+        gl = self._token('gitlab', [GLAB_BIN, 'config', 'get', 'token', '--host', 'gitlab.com'], worktree)
+        self._gitlab_token_principal(gl, worktree)
+        return {'github': gh, 'gitlab': gl}
 
     def _remote_env(self, name, token):
         env = _env()
@@ -346,3 +430,9 @@ class CandidateRefPublisher:
         for name in REMOTES:
             if self._remote(proof, name, credentials[name]) is None: raise RuntimeError('candidate ref not observed')
         return self._result(proof)
+
+
+if __name__ == '__main__':
+    if sys.argv[1:] == [TOKEN_PROBE_FLAG]:
+        raise SystemExit(_probe_main())
+    raise SystemExit(2)

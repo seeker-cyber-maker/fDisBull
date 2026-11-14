@@ -84,7 +84,8 @@ def test_ordinary_job_requires_inventory_and_isolated_install_receipts():
     assert '--output "$kit_install_parent/guide-skill.json"' in offline
 
 
-def run_receipt(tmp_path, monkeypatch, source='candidate'):
+def run_receipt(tmp_path, monkeypatch, source='candidate', *, origin='gitlab'):
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', origin)
     monkeypatch.setenv('CI_COMMIT_SHA', source)
     monkeypatch.setenv('CI_PIPELINE_ID', '23')
     monkeypatch.setenv('CI_JOB_ID', '42')
@@ -109,6 +110,23 @@ def test_native_success_receipt_binds_source_backend_and_junit(tmp_path, monkeyp
     assert receipt['artifacts'][0]['path'] == 'backend'
     assert receipt['test_results'][0]['path'] == 'native-evidence/stable/tests.xml'
     assert len(receipt['test_results'][0]['sha256']) == 64
+
+
+def test_native_gitlab_fixture_ignores_parent_github_origin(tmp_path, monkeypatch):
+    evidence = tmp_path / 'native-evidence/stable'
+    evidence.mkdir(parents=True)
+    (evidence / 'backend-identity.json').write_text(json.dumps({'source_commit': 'candidate'}))
+    (evidence / 'tests.xml').write_text('<testsuites><testsuite tests="1"/></testsuites>')
+    (tmp_path / 'backend').write_bytes(b'backend')
+    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'github')
+    monkeypatch.setenv('FDISBULL_GITHUB_REPOSITORY', 'example/repository')
+    monkeypatch.setenv('FDISBULL_GITHUB_RUN_ID', '999')
+    result = run_receipt(tmp_path, monkeypatch)
+    assert result.returncode == 0, result.stderr
+    receipt = json.loads((tmp_path / 'artifacts/receipts/native-stable.json').read_text())
+    assert receipt['pipeline_id'] == '23' and receipt['job_id'] == '42'
+    assert receipt['job_name'] == 'native-debugger-stable'
+    assert 'repository' not in receipt and 'run_id' not in receipt
 
 
 def test_native_receipt_rejects_wrong_sha_and_missing_junit(tmp_path, monkeypatch):
@@ -146,10 +164,9 @@ def test_native_local_receipt_does_not_fabricate_gitlab_ids(tmp_path, monkeypatc
     (evidence / 'backend-identity.json').write_text(json.dumps({'source_commit': 'candidate'}))
     (evidence / 'tests.xml').write_text('<testsuites><testsuite tests="1"/></testsuites>')
     (tmp_path / 'backend').write_bytes(b'backend')
-    monkeypatch.setenv('FDISBULL_EXECUTION_ORIGIN', 'local-linux')
     monkeypatch.setenv('FDISBULL_LOCAL_RUN_ID', 'b4f5594b-2d10-4f1a-bd00-e25412e0f851')
     monkeypatch.setenv('FDISBULL_LOCAL_JOB_ID', '00000000-0000-4000-8000-000000000002')
-    result = run_receipt(tmp_path, monkeypatch)
+    result = run_receipt(tmp_path, monkeypatch, origin='local-linux')
     assert result.returncode == 0, result.stderr
     receipt = json.loads((tmp_path / 'artifacts/receipts/native-stable.json').read_text())
     assert receipt['execution_origin'] == 'local-linux'
