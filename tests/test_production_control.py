@@ -228,3 +228,13 @@ def test_missing_github_control_pins_cannot_produce_a_status(tmp_path):
     c = config(tmp_path); del c['github']
     with pytest.raises(ValueError, match='control identity missing'):
         control.ProductionService(c, None)
+
+
+def test_action_ledger_read_only_intent_lookup_binds_payload(tmp_path):
+    ledger=control.ActionLedger(tmp_path,clock=lambda:1234.5)
+    assert ledger.load_intent('retry') is None
+    claim=ledger.claim('retry_job','retry',{'target':{'run_id':'10'}})
+    path=Path(claim['receipt_path']);before=path.read_bytes()
+    result=ledger.load_intent('retry')
+    assert result['intent']=={'action':'retry_job','action_key':'retry','payload':{'target':{'run_id':'10'}},'created_epoch':1234.5}
+    assert result['receipt_path']==str(path) and path.read_bytes()==before

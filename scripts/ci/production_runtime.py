@@ -590,7 +590,9 @@ class Runtime:
             host=self._github_host(ledger)
             backend=github_module.GitHubRecoveryBackend(repository=REPO,control_sha=self.config['github']['control_sha'],
                 transport=self.transports['github'],source_binding=host.source_binding,resolve_dispatch=host.resolve_dispatch,
-                after_acceptance=lambda action,key,payload,proof:self._after_acceptance(host,action,key,payload,proof),workflow_id=417757453,**common)
+                after_acceptance=lambda action,key,payload,proof:self._after_acceptance(host,action,key,payload,proof),workflow_id=417757453,
+                load_intent=ledger.load_intent,sole_executor_authority=self.config['github']['sole_executor_authority'],
+                actor=self.config['github']['actor'],**common)
             return _SourceDispatchGuard(backend,lambda ref,sha:self._candidate_readback(ref,sha,incidentdir,deadline))
         if target['provider']=='gitlab':
             return gitlab_module.GitLabRecoveryBackend(transport=self.transports['gitlab'],

@@ -6,8 +6,11 @@ A transport's POST response must report the observed HTTP status explicitly;
 GitHub's rerun-job success is 201 with no response body.
 """
 import copy
+import datetime
+import math
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import re
 
@@ -21,7 +24,8 @@ class GitHubRecoveryBackend:
     def __init__(self, *, repository, control_sha, transport, source_binding,
                  retain, classify, health, emit, claim_action, save_acceptance, load_acceptance,
                  repair_infrastructure, repair_source, resolve_dispatch, reconcile_other,
-                 lease, required_artifacts, workflow_id, after_acceptance=None):
+                 lease, required_artifacts, workflow_id, after_acceptance=None,
+                 load_intent=None, sole_executor_authority=False, actor=None):
         if not isinstance(repository, str) or not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
             raise ValueError('invalid repository')
         if not isinstance(control_sha, str) or not re.fullmatch(r'[0-9a-f]{40}', control_sha):
@@ -41,6 +45,7 @@ class GitHubRecoveryBackend:
         self.repairs = {'repair_infrastructure': repair_infrastructure, 'repair_source': repair_source}
         self.resolve_dispatch = resolve_dispatch
         self.after_acceptance = after_acceptance
+        self.load_intent, self.sole_executor_authority, self.actor = load_intent, sole_executor_authority, actor
         self.reconcile_other, self.lease = reconcile_other, lease
         self.required_artifacts = frozenset(required_artifacts)
         self.base = '/repos/' + repository + '/actions'
@@ -71,13 +76,14 @@ class GitHubRecoveryBackend:
             raise ValueError('provider read unavailable')
         return envelope['data']
 
-    def _attempt_jobs(self, target):
+    def _attempt_jobs(self, target, *, capture_pages=None):
         jobs = []
         for page in range(1, 11):
             value = self._get(self.base + '/runs/' + target['run_id'] + '/attempts/' + target['run_attempt']
                                  + '/jobs?per_page=100&page=' + str(page))
             if type(value) is not dict or type(value.get('jobs')) is not list or type(value.get('total_count')) is not int:
                 raise ValueError('invalid attempt job list')
+            if capture_pages is not None:capture_pages.append(copy.deepcopy(value))
             jobs.extend(value['jobs'])
             if len(jobs) > value['total_count'] or len(value['jobs']) > 100:
                 raise ValueError('inconsistent attempt job list')
@@ -200,6 +206,82 @@ class GitHubRecoveryBackend:
         return (self.base + '/workflows/' + self.workflow_id + '/dispatches',
                 {'ref': old['ref'], 'inputs': {'nonce': nonce, 'candidate_sha': payload['source_sha']}}, 204)
 
+    def _canonical_retry_proof(self, key, payload, old, path, body, remote):
+        # The sole-executor assumption is explicit; a timestamp or name alone
+        # cannot establish who requested a provider mutation.
+        if (self.sole_executor_authority is not True or not callable(self.load_intent)
+                or not isinstance(self.actor,str) or not self.actor
+                or type(remote) is not dict or remote.get('action_key')!=key or remote.get('status')!='unknown'
+                or remote.get('request_sha256')!=_transport.request_digest('github','POST',path,body)):
+            return None
+        record=self.load_intent(key)
+        intent=record.get('intent') if isinstance(record,dict) else None
+        if (not isinstance(intent,dict) or set(intent)!={'action','action_key','payload','created_epoch'}
+                or intent['action']!='retry_job' or intent['action_key']!=key or intent['payload']!=payload
+                or type(intent['created_epoch']) not in (int,float) or not math.isfinite(intent['created_epoch'])
+                or not isinstance(record.get('receipt_path'),str) or not record['receipt_path']):return None
+        next_attempt=str(int(old['run_attempt'])+1)
+        latest=self._get(self.base+'/runs/'+old['run_id'])
+        run=self._get(self.base+'/runs/'+old['run_id']+'/attempts/'+next_attempt)
+        def same_run(item):
+            return (isinstance(item,dict) and str(item.get('id'))==old['run_id']
+                    and str(item.get('run_attempt'))==next_attempt and item.get('head_sha')==old['control_sha']
+                    and item.get('head_branch')==old['ref'].removeprefix('refs/heads/')
+                    and (item.get('repository') or {}).get('full_name')==old['repository']
+                    and (item.get('actor') or {}).get('login')==self.actor
+                    and (item.get('triggering_actor') or {}).get('login')==self.actor
+                    and str(item.get('workflow_id'))==self.workflow_id)
+        if not same_run(latest) or not same_run(run):return None
+        pages=[]
+        jobs=[job for job in self._attempt_jobs({**old,'run_attempt':next_attempt},capture_pages=pages)
+              if isinstance(job,dict) and job.get('name')==old['job_name']]
+        if len(jobs)!=1:return None
+        job=jobs[0];job_id=job.get('id')
+        if (isinstance(job_id,bool) or not isinstance(job_id,(str,int)) or not str(job_id).isascii()
+                or not str(job_id).isdecimal() or int(job_id)<=0 or str(job_id)==old['job_id']
+                or str(job.get('run_id'))!=old['run_id'] or job.get('head_sha')!=old['control_sha']):return None
+        canonical=self._get(self.base+'/jobs/'+str(job_id))
+        if (not isinstance(canonical,dict) or any(canonical.get(k)!=job.get(k)
+                for k in ('id','run_id','name','head_sha','created_at'))):return None
+        try:
+            created=canonical['created_at']
+            if not isinstance(created,str) or not created.endswith('Z'):return None
+            when=datetime.datetime.fromisoformat(created[:-1]+'+00:00').timestamp()
+            if not math.isfinite(when) or when<intent['created_epoch']:return None
+        except (KeyError,TypeError,ValueError,OverflowError):return None
+        def digest(value):
+            return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode('utf-8')).hexdigest()
+        hashes={'latest_run':digest(latest),'attempt':digest(run),'job_list_pages':digest(pages),'job':digest(canonical)}
+        return {'action':'retry_job','target':old,'request':{'method':'POST','path':path,'payload':body},
+                'canonical_origin':{'intent_receipt_path':record['receipt_path'],'intent_created_epoch':intent['created_epoch'],
+                                    'actor':self.actor,'triggering_actor':self.actor,'workflow_id':self.workflow_id,
+                                    'run_id':old['run_id'],'run_attempt':next_attempt,
+                                    'job_id':str(job_id),'job_created_at':created,'observation_sha256':hashes}}
+
+    def _valid_canonical_proof(self,proof,key,payload,old,path,body):
+        if (self.sole_executor_authority is not True or not callable(self.load_intent)
+                or not isinstance(proof,dict) or set(proof)!={'action','target','request','canonical_origin'}
+                or proof['action']!='retry_job' or proof['target']!=old
+                or proof['request']!={'method':'POST','path':path,'payload':body}):return False
+        origin=proof['canonical_origin'];record=self.load_intent(key)
+        intent=record.get('intent') if isinstance(record,dict) else None
+        if (not isinstance(origin,dict) or set(origin)!={'intent_receipt_path','intent_created_epoch','actor','triggering_actor','workflow_id','run_id','run_attempt','job_id','job_created_at','observation_sha256'}
+                or not isinstance(intent,dict) or intent.get('action')!='retry_job' or intent.get('action_key')!=key
+                or intent.get('payload')!=payload or intent.get('created_epoch')!=origin.get('intent_created_epoch')
+                or record.get('receipt_path')!=origin.get('intent_receipt_path') or origin.get('actor')!=self.actor
+                or origin.get('triggering_actor')!=self.actor or origin.get('workflow_id')!=self.workflow_id
+                or not isinstance(origin.get('observation_sha256'),dict)
+                or set(origin['observation_sha256'])!={'latest_run','attempt','job_list_pages','job'}
+                or any(not isinstance(v,str) or not re.fullmatch('[0-9a-f]{64}',v) for v in origin['observation_sha256'].values())
+                or origin.get('run_id')!=old['run_id'] or origin.get('run_attempt')!=str(int(old['run_attempt'])+1)
+                or not isinstance(origin.get('job_id'),str) or not origin['job_id'].isascii()
+                or not origin['job_id'].isdecimal() or int(origin['job_id'])<=0 or origin['job_id']==old['job_id']):return False
+        try:
+            created=origin['job_created_at']
+            return (isinstance(created,str) and created.endswith('Z')
+                    and datetime.datetime.fromisoformat(created[:-1]+'+00:00').timestamp()>=origin['intent_created_epoch'])
+        except (KeyError,TypeError,ValueError,OverflowError):return False
+
     def reconcile_action(self, action, key, payload):
         if self.lease() is not True:
             return None
@@ -211,13 +293,17 @@ class GitHubRecoveryBackend:
         if accepted is None:
             remote = self.transport.receipt(key)
             remote = remote.get('receipt') if type(remote) is dict else None
-            if type(remote) is not dict or remote.get('action_key') != key or remote.get('status') != 'accepted':
+            if type(remote) is not dict or remote.get('action_key') != key:
                 return None
             digest = _transport.request_digest('github', 'POST', path, body)
             if remote.get('request_sha256') != digest:
                 return None
-            envelope = remote.get('envelope')
-            proof = {'action': action, 'target': old, 'request': {'method': 'POST', 'path': path, 'payload': body}, 'envelope': envelope}
+            if remote.get('status') == 'accepted':
+                proof = {'action': action, 'target': old, 'request': {'method': 'POST', 'path': path, 'payload': body}, 'envelope': remote.get('envelope')}
+            elif action == 'retry_job' and remote.get('status') == 'unknown':
+                proof = self._canonical_retry_proof(key, payload, old, path, body, remote)
+                if proof is None:return None
+            else:return None
             receipt_path = self.save_acceptance(key, copy.deepcopy(proof))
             if not isinstance(receipt_path, str) or not receipt_path:
                 return None
@@ -226,19 +312,22 @@ class GitHubRecoveryBackend:
                 or not isinstance(accepted['receipt_path'], str) or not accepted['receipt_path']):
             return None
         proof = accepted['proof']
-        if (type(proof) is not dict or set(proof) != {'action', 'target', 'request', 'envelope'}
-                or proof['action'] != action or proof['target'] != old
-                or proof['request'] != {'method': 'POST', 'path': path, 'payload': body}
-                or type(proof['envelope']) is not dict
-                or set(proof['envelope']) != {'http_status', 'data', 'request_id'}
-                or proof['envelope']['http_status'] != accepted_status or proof['envelope']['data'] is not None
-                or proof['envelope']['request_id'] is not None and (not isinstance(proof['envelope']['request_id'], str)
-                    or not re.fullmatch(r'[A-Za-z0-9:._-]{1,128}', proof['envelope']['request_id']))):
-            return None
+        canonical = action == 'retry_job' and self._valid_canonical_proof(proof,key,payload,old,path,body)
+        if not canonical:
+            if (type(proof) is not dict or set(proof) != {'action', 'target', 'request', 'envelope'}
+                    or proof['action'] != action or proof['target'] != old
+                    or proof['request'] != {'method': 'POST', 'path': path, 'payload': body}
+                    or type(proof['envelope']) is not dict
+                    or set(proof['envelope']) != {'http_status', 'data', 'request_id'}
+                    or proof['envelope']['http_status'] != accepted_status or proof['envelope']['data'] is not None
+                    or proof['envelope']['request_id'] is not None and (not isinstance(proof['envelope']['request_id'], str)
+                        or not re.fullmatch(r'[A-Za-z0-9:._-]{1,128}', proof['envelope']['request_id']))):
+                return None
         if self.after_acceptance is not None:
             self.after_acceptance(action, key, copy.deepcopy(payload), copy.deepcopy(proof))
+        origin_kind = 'canonical-origin' if canonical else 'durable-accepted-action'
         pending = {'status': 'pending', 'receipt_path': accepted['receipt_path'],
-                   'origin_proof': {'verified': True, 'kind': 'durable-accepted-action',
+                   'origin_proof': {'verified': True, 'kind': origin_kind,
                                     'action_key': key, 'receipt_path': accepted['receipt_path']}}
         if action == 'start_pipeline':
             linked = self.resolve_dispatch(key, copy.deepcopy(proof), copy.deepcopy(payload))
@@ -282,11 +371,20 @@ class GitHubRecoveryBackend:
             return pending
         if len(candidates) != 1:
             return None
+        if canonical and (str(candidates[0].get('id')) != proof['canonical_origin']['job_id']
+                          or candidates[0].get('created_at') != proof['canonical_origin']['job_created_at']
+                          or (latest.get('actor') or {}).get('login') != self.actor
+                          or (run.get('actor') or {}).get('login') != self.actor
+                          or (latest.get('triggering_actor') or {}).get('login') != self.actor
+                          or (run.get('triggering_actor') or {}).get('login') != self.actor
+                          or str(latest.get('workflow_id')) != self.workflow_id
+                          or str(run.get('workflow_id')) != self.workflow_id):
+            return None
         new['job_id'] = str(candidates[0]['id'])
         try:
             self.observe(new)
         except ValueError:
             return pending
         return {'status': 'completed', 'target': new, 'receipt_path': accepted['receipt_path'],
-                'origin_proof': {'verified': True, 'kind': 'durable-accepted-action',
+                'origin_proof': {'verified': True, 'kind': origin_kind,
                                  'action_key': key, 'receipt_path': accepted['receipt_path']}}

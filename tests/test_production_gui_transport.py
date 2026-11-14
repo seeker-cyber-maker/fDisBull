@@ -1,7 +1,10 @@
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
+import sys
+import time
 
 import pytest
 
@@ -52,7 +55,7 @@ def test_historical_read_runs_only_fixed_collector_once(tmp_path):
     calls=[]
     def child(argv,data,timeout):
         calls.append((argv,json.loads(data)))
-        return {'returncode':0,'stdout':b'{"status":"complete","canonical":{}}',
+        return {'returncode':0,'stdout':b'{"status":"complete","canonical":{}}','stderr':b'',
                 'timed_out':False,'overflow':False}
     spool,kicks=installed(tmp_path,allowed=('credential_probe','canonical_read'),runner=child)
     request=spool.submit('canonical_read',canonical_read_doc(),1100,'a'*64)
@@ -87,7 +90,7 @@ def test_fixed_provider_argv_and_immutable_request(tmp_path):
     calls=[]
     def child(argv,data,timeout):
         calls.append((argv,json.loads(data),timeout))
-        return {'returncode':0,'stdout':b'{"http_status":200,"data":{"id":20},"request_id":null}', 'timed_out':False,'overflow':False}
+        return {'returncode':0,'stdout':b'{"http_status":200,"data":{"id":20},"request_id":null}', 'stderr':b'', 'timed_out':False,'overflow':False}
     spool,kicks=installed(tmp_path,runner=child);doc=provider_doc();request=spool.submit('provider',doc,1100,'a'*64)
     assert spool.worker()['status']=='complete'
     result=spool.result(request['request_id'])
@@ -98,12 +101,91 @@ def test_fixed_provider_argv_and_immutable_request(tmp_path):
 
 def test_unknown_started_never_relaunches(tmp_path):
     calls=[]
-    def child(argv,data,timeout):calls.append(argv);return {'returncode':0,'stdout':b'partial', 'timed_out':False,'overflow':False}
+    def child(argv,data,timeout):calls.append(argv);return {'returncode':0,'stdout':b'partial','stderr':b'', 'timed_out':False,'overflow':False}
     spool,kicks=installed(tmp_path,runner=child);doc=provider_doc();first=spool.submit('provider',doc,1100,'a'*64)
     assert spool.worker()['status']=='unknown' and spool.result(first['request_id'])['status']=='unknown'
-    assert spool.submit('provider',doc,1100,'a'*64)['phase']=='started'
+    assert spool.submit('provider',doc,1100,'a'*64)['phase']=='terminalunknown'
     assert spool.worker()['status']=='idle' and len(calls)==1 and kicks==['once']
-    with pytest.raises(RuntimeError,match='lane occupied'):spool.submit('credential_probe',{},1100,'b'*64)
+    assert spool.submit('provider',provider_doc(),1100,'b'*64)=={'status':'pending','request_id':'b'*64}
+
+
+@pytest.mark.parametrize('outcome,reason',[
+    ({'returncode':7,'stdout':b'secret stdout','stderr':b'secret stderr','timed_out':False,'overflow':False},'runner_nonzero'),
+    ({'returncode':0,'stdout':b'{bad-json','stderr':b'', 'timed_out':False,'overflow':False},'runner_invalid_json'),
+    ({'returncode':0,'stdout':b'{"error":"private details"}','stderr':b'', 'timed_out':False,'overflow':False},'runner_error'),
+])
+def test_cleanup_proven_runner_failure_closes_unknown_without_raw_output(tmp_path,outcome,reason):
+    spool,_=installed(tmp_path,runner=lambda *a,**k:outcome)
+    request=spool.submit('provider',provider_doc(),1100,'a'*64)
+    result=spool.worker()
+    assert result['status']=='unknown' and result['request_id']==request['request_id'] and result['reason']==reason
+    assert result['runner']=={'returncode':outcome['returncode'],'timed_out':outcome['timed_out'],
+                              'overflow':outcome['overflow']}
+    assert spool.result(request['request_id'])==result
+    assert spool.submit('provider',provider_doc(),1100,'a'*64)['phase']=='terminalunknown'
+    retained=b''.join(p.read_bytes() for p in spool.spool.iterdir() if p.is_file())
+    assert b'secret stdout' not in retained and b'secret stderr' not in retained and b'private details' not in retained
+
+
+def test_timeout_overflow_and_signalled_runner_results_remain_held(tmp_path):
+    outcomes=[{'returncode':-9,'stdout':b'', 'stderr':b'', 'timed_out':True,'overflow':False},
+              {'returncode':-9,'stdout':b'', 'stderr':b'', 'timed_out':False,'overflow':True},
+              {'returncode':-15,'stdout':b'', 'stderr':b'', 'timed_out':False,'overflow':False}]
+    for index,outcome in enumerate(outcomes):
+        root=tmp_path/str(index);root.mkdir()
+        spool,_=installed(root,runner=lambda *a,**k:outcome)
+        spool.submit('provider',provider_doc(),1100,'a'*64)
+        assert spool.worker()['status']=='unknown'
+        assert spool.submit('provider',provider_doc(),1100,'a'*64)['phase']=='started'
+        with pytest.raises(RuntimeError,match='lane occupied'):
+            spool.submit('provider',provider_doc(),1100,'b'*64)
+
+
+def test_nested_session_outlives_outer_timeout_so_gui_lane_stays_held(tmp_path):
+    inner_code="import time; time.sleep(0.7)"
+    outer_code=("import subprocess,sys,time; "
+                "p=subprocess.Popen([sys.executable,'-c',"+repr(inner_code)+"], "
+                "stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True); "
+                "print(p.pid,flush=True); time.sleep(5)")
+    inner_pid=[]
+    def runner(*args,**kwargs):
+        outcome=m.provider._source.run_command([sys.executable,'-c',outer_code],cwd='/',
+                                               env={'PATH':os.environ.get('PATH','/usr/bin:/bin')},timeout=0.2)
+        try:inner_pid.append(int(outcome['stdout'].strip()))
+        except (ValueError,KeyError,AttributeError):pass
+        return outcome
+    spool,_=installed(tmp_path,runner=runner)
+    request=spool.submit('provider',provider_doc(),1100,'a'*64)
+    try:
+        assert spool.worker()['status']=='unknown'
+        assert len(inner_pid)==1
+        os.kill(inner_pid[0],0)
+        assert spool.result(request['request_id'])['status']=='unknown'
+        with pytest.raises(RuntimeError,match='lane occupied'):
+            spool.submit('provider',provider_doc(),1100,'b'*64)
+        deadline=time.monotonic()+2
+        while time.monotonic()<deadline:
+            try:os.kill(inner_pid[0],0)
+            except ProcessLookupError:break
+            time.sleep(0.05)
+        else:pytest.fail('bounded nested test process did not self-exit')
+    finally:
+        if inner_pid:
+            deadline=time.monotonic()+2
+            while time.monotonic()<deadline:
+                try:os.kill(inner_pid[0],0)
+                except ProcessLookupError:break
+                time.sleep(0.05)
+
+
+def test_runner_exception_or_untrusted_return_keeps_started_lane(tmp_path):
+    for runner in (lambda *a,**k:(_ for _ in ()).throw(TimeoutError()),
+                   lambda *a,**k:{'returncode':0,'stdout':b'{}','timed_out':False,'overflow':False}):
+        root=tmp_path/str(len(list(tmp_path.iterdir())));root.mkdir()
+        spool,_=installed(root,runner=runner);spool.submit('provider',provider_doc(),1100,'a'*64)
+        assert spool.worker()['status']=='unknown'
+        assert spool.submit('provider',provider_doc(),1100,'a'*64)['phase']=='started'
+        with pytest.raises(RuntimeError,match='lane occupied'):spool.submit('credential_probe',{},1100,'b'*64)
 
 
 def test_kickstart_loss_never_reissues(tmp_path):
@@ -146,7 +228,7 @@ def test_explicit_overflow_and_retention_cap_do_not_launch(tmp_path,monkeypatch)
 
 def test_child_overflow_and_aqua_failure_preserve_unknown(tmp_path):
     calls=[]
-    def child(*args,**kwargs):calls.append(1);return {'returncode':0,'stdout':b'x','timed_out':False,'overflow':True}
+    def child(*args,**kwargs):calls.append(1);return {'returncode':0,'stdout':b'x','stderr':b'', 'timed_out':False,'overflow':True}
     spool,kicks=installed(tmp_path,runner=child,gui_check=lambda:False);request=spool.submit('provider',provider_doc(),1100,'a'*64)
     with pytest.raises(RuntimeError,match='Aqua'):spool.worker()
     assert not calls and spool.result(request['request_id'])['status']=='pending'
@@ -166,7 +248,7 @@ def test_arbitrary_commands_and_paths_refused(tmp_path,doc):
 
 
 def test_nonce_conflicts_refused_and_new_logical_read_allowed(tmp_path):
-    def child(argv,data,timeout):return {'returncode':0,'stdout':b'{"http_status":200,"data":{},"request_id":null}','timed_out':False,'overflow':False}
+    def child(argv,data,timeout):return {'returncode':0,'stdout':b'{"http_status":200,"data":{},"request_id":null}','stderr':b'','timed_out':False,'overflow':False}
     spool,kicks=installed(tmp_path,runner=child);doc=provider_doc()
     first=spool.submit('provider',doc,1100,'a'*64);assert spool.worker()['status']=='complete'
     with pytest.raises(ValueError,match='nonce conflicts'):spool.submit('provider',doc,1101,'a'*64)
@@ -188,7 +270,7 @@ def test_source_worker_command_is_fixed_not_supplied_by_request(tmp_path):
     calls=[]
     def child(argv,data,timeout):
         calls.append((argv,json.loads(data)))
-        return {'returncode':0,'stdout':b'{"result":{"status":"completed"}}','timed_out':False,'overflow':False}
+        return {'returncode':0,'stdout':b'{"result":{"status":"completed"}}','stderr':b'','timed_out':False,'overflow':False}
     spool,_=installed(tmp_path,runner=child);req=spool.submit('source',doc,1100,'a'*64)
     assert spool.worker()['status']=='complete'
     assert calls==[([m.SOURCE_PYTHON,'-I',str(m.BRIDGE/'production_source_transport.py')],doc)]
@@ -262,9 +344,79 @@ def cleanup_receipt(tmp_path,spool,key,clock,*,changes=None):
     return path,m._digest(path.read_bytes())
 
 
+def historical_post_fixture(tmp_path,spool,clock,monkeypatch):
+    state=tmp_path/'bridge-state';state.mkdir(mode=0o700)
+    anchor=tmp_path/'bridge-anchor.json'
+    record={'action_key':m.LOST_POST_ACTION_KEY,'request_sha256':m.LOST_POST_ACTION_SHA256,'status':'unknown'}
+    record_bytes=(json.dumps(record,sort_keys=True,separators=(',',':'))+'\n').encode()
+    record_path=state/m.LOST_POST_RECORD_NAME;record_path.write_bytes(record_bytes);record_path.chmod(0o600)
+    (state/'installation.json').write_bytes(m._bytes({'installation_id':m.provider.INSTALLATION_ID,
+                                                       'volume_uuid':m.provider.VOLUME_UUID}))
+    (state/'installation.json').chmod(0o600);(state/'actions.lock').write_bytes(b'');(state/'actions.lock').chmod(0o600)
+    anchor_value={'installation_id':m.provider.INSTALLATION_ID,'volume_uuid':m.provider.VOLUME_UUID,
+                  'sequence':1,'actions':{record_path.name:m._digest(record_bytes)}}
+    anchor.write_bytes(m._bytes(anchor_value));anchor.chmod(0o600)
+    monkeypatch.setattr(m.provider,'STATE_DIR',str(state));monkeypatch.setattr(m.provider,'ANCHOR_FILE',str(anchor))
+    monkeypatch.setattr(m.provider,'_mounted_codex',lambda state,anchor:True)
+    monkeypatch.setattr(m.provider,'request_digest',lambda provider,method,path,payload:m.LOST_POST_ACTION_SHA256)
+    pins={'production_gui_transport.py':'a'*64,'recovery_source.py':'b'*64}
+    spool.activation=lambda:{'allowed_kinds':['credential_probe','provider'],'modules':pins}
+    post={'operation':'request','provider':'github','method':'POST',
+          'path':m.provider.GH+'/jobs/20/rerun','payload':{},'action_key':m.LOST_POST_ACTION_KEY}
+    clock[0]=1000
+    spool.submit('provider',post,1100,m.LOST_POST_REQUEST_ID)
+    spool.runner=lambda *a,**k:(_ for _ in ()).throw(TimeoutError())
+    assert spool.worker()['status']=='unknown'
+    clock[0]=1200
+    now_value=clock[0]
+    scan=tmp_path/'post-scan.json';scan.write_bytes(b'filtered process scan: zero matching children');scan.chmod(0o600)
+    launch=tmp_path/'post-launch.json';launch.write_bytes(b'launchctl stopped; runs 30; last exit 0');launch.chmod(0o600)
+    entry=spool._check()['requests'][m.LOST_POST_REQUEST_ID]
+    value={'schema':'fdisbull-gui-post-cleanup-1','request_id':m.LOST_POST_REQUEST_ID,
+           'request_sha256':entry['request_sha256'],'history_sequence':spool._check()['sequence'],
+           'request_expiry':1100,'observed_epoch':now_value,
+           'helper_sha256':pins['production_gui_transport.py'],'recovery_source_sha256':pins['recovery_source.py'],
+           'launchagent':{'label':m.LABEL,'runs':30,'last_exit_code':0,'running':False,'pid':None},
+           'process_scan':{'matched_children':0,'path':str(scan),'sha256':m._digest(scan.read_bytes())},
+           'launchctl_evidence':{'path':str(launch),'sha256':m._digest(launch.read_bytes())},
+           'bridge_action_key':m.LOST_POST_ACTION_KEY,'bridge_request_sha256':m.LOST_POST_ACTION_SHA256,
+           'bridge_record_path':str(record_path),'bridge_record_sha256':m.LOST_POST_RECORD_SHA256,
+           'bridge_anchor_sequence':1,'bridge_anchor_sha256':m._digest(anchor.read_bytes())}
+    receipt=tmp_path/'post-cleanup-receipt.json';receipt.write_bytes(m._bytes(value));receipt.chmod(0o600)
+    return receipt,m._digest(receipt.read_bytes()),record_bytes,anchor.read_bytes(),pins
+
+
+def test_historical_post_reconciliation_is_local_unknown_and_preserves_bridge(tmp_path,monkeypatch):
+    now=[1000];spool,_=installed(tmp_path,allowed=('credential_probe','provider'),clock=lambda:now[0])
+    receipt,digest,record_before,anchor_before,_=historical_post_fixture(tmp_path,spool,now,monkeypatch)
+    request_before=(spool.spool/(m.LOST_POST_REQUEST_ID+'.request')).read_bytes()
+    started_before=(spool.spool/(m.LOST_POST_REQUEST_ID+'.started')).read_bytes()
+    result=spool.reconcile_expired_historical_post(receipt,digest)
+    assert result=={'status':'unknown','request_id':m.LOST_POST_REQUEST_ID,
+                    'reason':'operator_reconciled_post_cleanup'}
+    assert spool.result(m.LOST_POST_REQUEST_ID)==result
+    assert (spool.spool/(m.LOST_POST_REQUEST_ID+'.request')).read_bytes()==request_before
+    assert (spool.spool/(m.LOST_POST_REQUEST_ID+'.started')).read_bytes()==started_before
+    assert (spool.spool/(m.LOST_POST_REQUEST_ID+'.done')).is_file()
+    assert (Path(m.provider.STATE_DIR)/m.LOST_POST_RECORD_NAME).read_bytes()==record_before
+    assert Path(m.provider.ANCHOR_FILE).read_bytes()==anchor_before
+    assert spool.submit('provider',provider_doc(),1300,'b'*64)=={'status':'pending','request_id':'b'*64}
+
+
+def test_historical_post_reconciliation_rejects_wrong_bridge_record_and_receipt(tmp_path,monkeypatch):
+    now=[1000];spool,_=installed(tmp_path,allowed=('credential_probe','provider'),clock=lambda:now[0])
+    receipt,digest,_,_,_=historical_post_fixture(tmp_path,spool,now,monkeypatch)
+    record=Path(m.provider.STATE_DIR)/m.LOST_POST_RECORD_NAME
+    record.write_bytes(m._bytes({'action_key':m.LOST_POST_ACTION_KEY,
+                                 'request_sha256':m.LOST_POST_ACTION_SHA256,'status':'accepted'}))
+    with pytest.raises(RuntimeError):spool.reconcile_expired_historical_post(receipt,digest)
+    assert spool.result(m.LOST_POST_REQUEST_ID)['status']=='unknown'
+    assert not (spool.spool/(m.LOST_POST_REQUEST_ID+'.done')).exists()
+
+
 def test_operator_reconciles_only_expired_get_and_preserves_unknown(tmp_path):
     now=[1000];calls=[]
-    def child(*args,**kwargs):calls.append(1);return {'returncode':0,'stdout':b'invalid','timed_out':False,'overflow':False}
+    def child(*args,**kwargs):calls.append(1);raise TimeoutError()
     spool,kicks=installed(tmp_path,clock=lambda:now[0],runner=child)
     first=spool.submit('provider',provider_doc(),1100,'a'*64);assert spool.worker()['status']=='unknown'
     old_request=(spool.spool/('a'*64+'.request')).read_bytes();old_started=(spool.spool/('a'*64+'.started')).read_bytes()
@@ -299,7 +451,7 @@ def test_operator_cleanup_refuses_invalid_evidence(tmp_path,change):
 
 
 def test_operator_cleanup_refuses_mutation_probe_unexpired_and_unstarted(tmp_path):
-    def child(*a,**k):return {'returncode':0,'stdout':b'bad','timed_out':False,'overflow':False}
+    def child(*a,**k):raise TimeoutError()
     for name in ('post','probe','pending','unexpired'):(tmp_path/name).mkdir()
     now=[1000];spool,_=installed(tmp_path/'post',clock=lambda:now[0],runner=child)
     doc={'operation':'request','provider':'gitlab','method':'POST','path':m.provider.GL+'/jobs/20/retry','payload':{},'action_key':'post'}

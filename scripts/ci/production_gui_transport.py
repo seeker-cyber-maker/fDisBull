@@ -37,6 +37,11 @@ MAX_INPUT=32*1024*1024
 MAX_OUTPUT=2*1024*1024
 MAX_RETAINED=64*1024*1024
 MAX_SECONDS=600
+LOST_POST_REQUEST_ID='0316a157f2ec4a0b8985b67fdd9c3052a0fcc5cc501d8fcae97dbd9e9a3d6be8'
+LOST_POST_ACTION_KEY='3c39f4ca9987e2166bebe419f28d979ae9e73ae19a3d01310b7ebbc7c0ef97ad:2:retry_job'
+LOST_POST_ACTION_SHA256='48fe4c15922543bba43ba14d48c145730817158cb720dd19f29f6424cfb158d4'
+LOST_POST_RECORD_SHA256='1679430b5f78cefc370aa2f4f69c1ddd6405a6cab1be3b08b831e1f9819fc7c9'
+LOST_POST_RECORD_NAME='952ac1473c4c141b4fec74f0ce9608a0c600124a503b9924f15afe8f5831cb02.json'
 
 
 def _load(name):
@@ -60,6 +65,9 @@ def _bytes(value):
 
 
 def _digest(data):return hashlib.sha256(data).hexdigest()
+
+
+def _is_sha256(value):return isinstance(value,str) and re.fullmatch('[0-9a-f]{64}',value) is not None
 
 
 def _mount(spool,anchor):
@@ -135,6 +143,15 @@ def _request(kind,document):
                     and re.fullmatch('[0-9a-f]{64}',payload['source_prepare']['event_key'])):
                 source.identity.target(payload['target']);return
     raise ValueError('request outside fixed bridge contract')
+
+
+def _runner_cleanup_proven(value):
+    """Only normal bounded returns prove this worker process group is gone."""
+    return (type(value) is dict and set(value)=={'returncode','stdout','stderr','timed_out','overflow'}
+            and type(value.get('returncode')) is int and isinstance(value.get('stdout'),bytes)
+            and isinstance(value.get('stderr'),bytes) and type(value.get('timed_out')) is bool
+            and type(value.get('overflow')) is bool and value['returncode']>=0
+            and value['timed_out'] is False and value['overflow'] is False)
 
 
 def _child(argv,input_bytes,*,timeout=MAX_SECONDS):
@@ -256,17 +273,30 @@ class GuiSpool:
         for request_id,entry in history['requests'].items():
             if not re.fullmatch('[0-9a-f]{64}',request_id) or not isinstance(entry,dict):raise RuntimeError('invalid history')
             phase=entry.get('phase');req=self.spool/(request_id+'.request')
-            if phase not in ('submitted','started','complete','expired','reconciled-read') or _digest(_read(req,MAX_INPUT))!=entry.get('request_sha256'):
+            if phase not in ('submitted','started','complete','expired','reconciled-read','terminalunknown') or _digest(_read(req,MAX_INPUT))!=entry.get('request_sha256'):
                 raise RuntimeError('request history changed')
             expected.add(req.name)
-            if phase in ('started','complete','reconciled-read'):
+            if phase in ('started','complete','reconciled-read','terminalunknown'):
                 started=self.spool/(request_id+'.started')
                 if json.loads(_read(started,4096))!={'request_id':request_id,'request_sha256':entry['request_sha256']}:
                     raise RuntimeError('start history changed')
                 expected.add(started.name)
-            if phase in ('complete','expired'):
+            if phase in ('complete','expired','terminalunknown'):
                 done=self.spool/(request_id+'.done')
                 if _digest(_read(done,MAX_OUTPUT))!=entry.get('done_sha256'):raise RuntimeError('result history changed')
+                value=json.loads(_read(done,MAX_OUTPUT))
+                if phase=='terminalunknown' and (set(value) not in ({'status','request_id','reason'},
+                                                                       {'status','request_id','reason','runner'})
+                        or value.get('status')!='unknown' or value.get('request_id')!=request_id
+                        or value.get('reason') not in ('runner_nonzero','runner_invalid_json',
+                            'runner_error','runner_output_invalid','operator_reconciled_post_cleanup')):
+                    raise RuntimeError('terminal unknown result changed')
+                if 'runner' in value:
+                    run=value['runner']
+                    if (not isinstance(run,dict) or set(run)!={'returncode','timed_out','overflow'}
+                            or type(run.get('returncode')) is not int or type(run.get('timed_out')) is not bool
+                            or type(run.get('overflow')) is not bool):
+                        raise RuntimeError('terminal runner summary invalid')
                 expected.add(done.name)
             if phase=='reconciled-read':
                 cert=self.spool/(request_id+'.read-reconciliation.json')
@@ -279,6 +309,18 @@ class GuiSpool:
                         or value.get('result')!='unknown' or not isinstance(value.get('operator_receipt_text'),str)
                         or _digest(value['operator_receipt_text'].encode('utf-8'))!=value.get('operator_receipt_sha256')):
                     raise RuntimeError('read reconciliation binding invalid')
+                expected.add(cert.name)
+            if phase=='terminalunknown' and 'reconciliation_sha256' in entry:
+                cert=self.spool/(request_id+'.post-reconciliation.json')
+                content=_read(cert,16384)
+                if _digest(content)!=entry.get('reconciliation_sha256'):raise RuntimeError('post reconciliation changed')
+                value=json.loads(content)
+                if (not isinstance(value,dict) or set(value)!={'schema','request_id','request_sha256','result','operator_receipt_sha256','operator_receipt_text'}
+                        or value.get('schema')!='fdisbull-gui-post-reconciliation-1'
+                        or value.get('request_id')!=request_id or value.get('request_sha256')!=entry.get('request_sha256')
+                        or value.get('result')!='unknown' or not isinstance(value.get('operator_receipt_text'),str)
+                        or _digest(value['operator_receipt_text'].encode('utf-8'))!=value.get('operator_receipt_sha256')):
+                    raise RuntimeError('post reconciliation binding invalid')
                 expected.add(cert.name)
         if sum(v['phase'] in ('submitted','started') for v in history['requests'].values())>1:
             raise RuntimeError('multiple active spool lanes')
@@ -408,6 +450,133 @@ class GuiSpool:
             history['sequence']+=1;self._save(history)
             return {'status':'unknown','request_id':key,'reconciled':True}
 
+    def _finish_unknown(self,request_id,reason,runner_result=None):
+        if reason not in ('runner_nonzero','runner_invalid_json',
+                          'runner_error','runner_output_invalid'):
+            raise ValueError('unknown terminal reason invalid')
+        with self._locked():
+            history=self._check();entry=history['requests'].get(request_id)
+            if not isinstance(entry,dict) or entry.get('phase')!='started':
+                raise RuntimeError('start identity changed')
+            done={'status':'unknown','request_id':request_id,'reason':reason}
+            if runner_result is not None:
+                if not _runner_cleanup_proven(runner_result):raise ValueError('runner cleanup record invalid')
+                done['runner']={'returncode':runner_result['returncode'],'timed_out':runner_result['timed_out'],
+                                'overflow':runner_result['overflow']}
+            data=_bytes(done)
+            _exclusive(self.spool/(request_id+'.done'),data)
+            entry.update(phase='terminalunknown',done_sha256=_digest(data))
+            history['sequence']+=1;self._save(history)
+            return done
+
+    def _verify_lost_post_bridge_record(self,receipt,bridge):
+        expected_record=bridge.state/LOST_POST_RECORD_NAME
+        if str(expected_record)!=receipt.get('bridge_record_path'):
+            raise ValueError('historical bridge path mismatch')
+        history=bridge._ensure()
+        record_bytes=_read(expected_record,provider.MAX_INPUT)
+        if _digest(record_bytes)!=LOST_POST_RECORD_SHA256:
+            raise ValueError('historical bridge record changed')
+        record=json.loads(record_bytes)
+        if record!={'action_key':LOST_POST_ACTION_KEY,
+                    'request_sha256':LOST_POST_ACTION_SHA256,'status':'unknown'}:
+            raise ValueError('historical bridge action differs')
+        if history.get('actions',{}).get(expected_record.name)!=LOST_POST_RECORD_SHA256:
+            raise ValueError('historical bridge mirror differs')
+        anchor_bytes=_read(bridge.anchor,1024*1024)
+        if (history.get('sequence')!=receipt.get('bridge_anchor_sequence')
+                or _digest(anchor_bytes)!=receipt.get('bridge_anchor_sha256')):
+            raise ValueError('historical bridge anchor changed')
+
+    def reconcile_expired_historical_post(self,receipt_path,receipt_sha256):
+        """Close only the one lost historical retry POST; never infer acceptance."""
+        if not isinstance(receipt_sha256,str) or not re.fullmatch('[0-9a-f]{64}',receipt_sha256):
+            raise ValueError('operator receipt hash invalid')
+        receipt_path=Path(receipt_path)
+        if not receipt_path.is_absolute() or self.spool in receipt_path.parents:
+            raise ValueError('operator receipt path invalid')
+        receipt_bytes=_read(receipt_path,16384)
+        if _digest(receipt_bytes)!=receipt_sha256:raise ValueError('operator receipt hash mismatch')
+        receipt=json.loads(receipt_bytes)
+        required={'schema','request_id','request_sha256','history_sequence','request_expiry','observed_epoch',
+                  'helper_sha256','recovery_source_sha256','launchagent','process_scan','launchctl_evidence',
+                  'bridge_action_key','bridge_request_sha256','bridge_record_path','bridge_record_sha256',
+                  'bridge_anchor_sequence','bridge_anchor_sha256'}
+        if not isinstance(receipt,dict) or set(receipt)!=required or receipt.get('schema')!='fdisbull-gui-post-cleanup-1':
+            raise ValueError('operator receipt invalid')
+        key=receipt['request_id'];now=self.clock()
+        if (key!=LOST_POST_REQUEST_ID
+                or not isinstance(receipt['request_sha256'],str) or not re.fullmatch('[0-9a-f]{64}',receipt['request_sha256'])
+                or type(receipt['history_sequence']) is not int
+                or type(receipt['request_expiry']) not in (int,float) or type(receipt['observed_epoch']) not in (int,float)
+                or not math.isfinite(receipt['request_expiry']) or not math.isfinite(receipt['observed_epoch'])
+                or not receipt['request_expiry']<=receipt['observed_epoch']<=now
+                or now-receipt['observed_epoch']>300):
+            raise ValueError('operator receipt time or identity invalid')
+        launch=receipt['launchagent'];scan=receipt['process_scan'];launch_evidence=receipt['launchctl_evidence']
+        if (not isinstance(launch,dict) or set(launch)!={'label','runs','last_exit_code','running','pid'}
+                or launch.get('label')!=LABEL or type(launch.get('runs')) is not int or launch['runs']<1
+                or type(launch.get('last_exit_code')) is not int or launch['last_exit_code']!=0
+                or launch.get('running') is not False or launch.get('pid') is not None
+                or not isinstance(scan,dict) or set(scan)!={'matched_children','path','sha256'}
+                or type(scan.get('matched_children')) is not int or scan['matched_children']!=0
+                or not isinstance(launch_evidence,dict) or set(launch_evidence)!={'path','sha256'}):
+            raise ValueError('operator cleanup evidence invalid')
+        for item in (scan,launch_evidence):
+            path=Path(item['path']) if isinstance(item.get('path'),str) else Path('.')
+            if (not path.is_absolute() or self.spool in path.parents or not isinstance(item.get('sha256'),str)
+                    or not re.fullmatch('[0-9a-f]{64}',item['sha256'])
+                    or _digest(_read(path,65536))!=item['sha256']):
+                raise ValueError('operator evidence hash mismatch')
+        if (receipt.get('bridge_action_key')!=LOST_POST_ACTION_KEY
+                or receipt.get('bridge_request_sha256')!=LOST_POST_ACTION_SHA256
+                or receipt.get('bridge_record_sha256')!=LOST_POST_RECORD_SHA256
+                or type(receipt.get('bridge_anchor_sequence')) is not int
+                or not _is_sha256(receipt.get('bridge_anchor_sha256'))):
+            raise ValueError('historical action binding mismatch')
+        activation=self.activation()
+        pins=activation.get('modules',{})
+        if (not isinstance(pins,dict) or receipt['helper_sha256']!=pins.get('production_gui_transport.py')
+                or receipt['recovery_source_sha256']!=pins.get('recovery_source.py')
+                or any(not isinstance(receipt[k],str) or not re.fullmatch('[0-9a-f]{64}',receipt[k])
+                       for k in ('helper_sha256','recovery_source_sha256'))):
+            raise ValueError('cleanup source pin mismatch')
+        if provider is None:raise RuntimeError('provider bridge unavailable')
+        bridge=provider.ProviderBridge(provider.STATE_DIR,anchor_file=provider.ANCHOR_FILE)
+        with self._locked():
+            history=self._check();entry=history['requests'].get(key)
+            if (history['sequence']!=receipt['history_sequence'] or not isinstance(entry,dict)
+                    or entry.get('phase')!='started' or entry.get('request_sha256')!=receipt['request_sha256']):
+                raise ValueError('read history changed')
+            doc=json.loads(_read(self.spool/(key+'.request'),MAX_INPUT));request=doc.get('request')
+            if (doc.get('nonce')!=key or doc.get('kind')!='provider' or doc.get('expires_epoch')!=receipt['request_expiry']
+                    or not isinstance(request,dict)
+                    or set(request)!={'operation','provider','method','path','payload','action_key'}
+                    or request.get('operation')!='request' or request.get('provider')!='github'
+                    or request.get('method')!='POST' or request.get('action_key')!=LOST_POST_ACTION_KEY):
+                raise ValueError('not the historical retry POST')
+            _request('provider',request)
+            if provider.request_digest('github','POST',request['path'],request['payload'])!=LOST_POST_ACTION_SHA256:
+                raise ValueError('historical retry request digest differs')
+            with bridge._bridge_lock():
+                self._verify_lost_post_bridge_record(receipt,bridge)
+                latest=self.clock()
+                if latest<receipt['observed_epoch'] or latest-receipt['observed_epoch']>300:
+                    raise ValueError('operator cleanup evidence expired while waiting')
+                done={'status':'unknown','request_id':key,'reason':'operator_reconciled_post_cleanup'}
+                data=_bytes(done)
+                _exclusive(self.spool/(key+'.done'),data)
+                cert={'schema':'fdisbull-gui-post-reconciliation-1','request_id':key,
+                      'request_sha256':entry['request_sha256'],'result':'unknown',
+                      'operator_receipt_sha256':receipt_sha256,'operator_receipt_text':receipt_bytes.decode('utf-8')}
+                cert_bytes=_bytes(cert)
+                if len(cert_bytes)>16384:raise ValueError('operator receipt too large')
+                _exclusive(self.spool/(key+'.post-reconciliation.json'),cert_bytes)
+                entry.update(phase='terminalunknown',done_sha256=_digest(data),
+                             reconciliation_sha256=_digest(cert_bytes))
+                history['sequence']+=1;self._save(history)
+                return done
+
     def worker(self):
         if self.gui_check() is not True:raise RuntimeError('Aqua session unavailable')
         with self._locked():
@@ -430,6 +599,7 @@ class GuiSpool:
                  'canonical_read':'production_held_reconcile.py','credential_probe':'production_transport.py'}
         command=[('/usr/bin/python3' if doc['kind']=='provider' else SOURCE_PYTHON),'-I',
                  str(BRIDGE/targets[doc['kind']])]
+        cleanup_proven=False;terminal_reason=None
         try:
             self._check()
             remaining=doc['expires_epoch']-self.clock()
@@ -438,20 +608,29 @@ class GuiSpool:
                 value=self.probe(timeout=min(15,remaining))
                 if not isinstance(value,dict) or set(value)!={'available'} or type(value['available']) is not bool:
                     raise RuntimeError('credential probe outcome unknown')
-                outcome={'returncode':0,'stdout':_bytes(value),'timed_out':False,'overflow':False}
+                outcome={'returncode':0,'stdout':_bytes(value),'stderr':b'',
+                         'timed_out':False,'overflow':False}
             else:
                 outcome=self.runner(command,_bytes(doc['request']),timeout=min(MAX_SECONDS,remaining))
-            if (not isinstance(outcome,dict) or outcome.get('returncode')!=0 or outcome.get('timed_out') is not False
-                    or outcome.get('overflow') is not False or not isinstance(outcome.get('stdout'),bytes)
-                    or len(outcome['stdout'])>MAX_OUTPUT):raise RuntimeError('child result unknown')
-            value=json.loads(outcome['stdout'])
-            if not isinstance(value,dict) or 'error' in value:raise RuntimeError('child result unknown')
+            cleanup_proven=_runner_cleanup_proven(outcome)
+            if not cleanup_proven:raise RuntimeError('child result unknown')
+            if len(outcome['stdout'])+len(outcome['stderr'])>MAX_OUTPUT:
+                terminal_reason='runner_output_invalid'
+            elif outcome['returncode']!=0:terminal_reason='runner_nonzero'
+            if terminal_reason is not None:
+                return self._finish_unknown(key,terminal_reason,outcome)
+            try:value=json.loads(outcome['stdout'])
+            except (ValueError,UnicodeError):
+                return self._finish_unknown(key,'runner_invalid_json',outcome)
+            if not isinstance(value,dict) or 'error' in value:
+                return self._finish_unknown(key,'runner_error',outcome)
             done={'status':'complete','request_id':key,'result':value}
             data=_bytes(done)
-            if len(data)>MAX_OUTPUT:raise RuntimeError('result exceeds bound')
+            if len(data)>MAX_OUTPUT:
+                return self._finish_unknown(key,'runner_output_invalid',outcome)
         except Exception:
-            # A child may have mutated the provider before its result was lost.
-            # Preserve started without done forever; the caller reconciles.
+            # A thrown runner exception does not prove its owned process group
+            # has been reaped. Keep the lane held for local reconciliation.
             return {'status':'unknown','request_id':key}
         with self._locked():
             history=self._check();entry=history['requests'].get(key)

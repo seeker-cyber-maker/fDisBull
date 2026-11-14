@@ -135,7 +135,8 @@ def test_actual_gui_spool_and_client_never_relaunch_action(tmp_path):
     child_calls=[]
     def child(argv,payload,timeout):
         child_calls.append((argv,json.loads(payload)))
-        return {'returncode':0,'stdout':b'{"http_status":201,"data":null,"request_id":null}', 'timed_out':False,'overflow':False}
+        return {'returncode':0,'stdout':b'{"http_status":201,"data":null,"request_id":null}',
+                'stderr':b'', 'timed_out':False,'overflow':False}
     spool=shim.GuiSpool(spool_dir,anchor,mount=lambda s,a:True,clock=lambda:1000,activation=lambda:{'allowed_kinds':['credential_probe','provider']},
                         gui_check=lambda:True,runner=child,kick=lambda:None)
     def ssh(argv,**kw):
@@ -144,7 +145,9 @@ def test_actual_gui_spool_and_client_never_relaunch_action(tmp_path):
             result=spool.submit(doc['kind'],doc['request'],doc['expires_epoch'],doc['nonce']);spool.worker()
         else:result=spool.result(doc['request_id'])
         return envelope(result)
-    client=setup(tmp_path,ssh);provider=m.GuiProviderTransport('github',client)
+    now=[1000]
+    client=setup(tmp_path,ssh,clock=lambda:now[0],sleep=lambda seconds:now.__setitem__(0,now[0]+seconds))
+    provider=m.GuiProviderTransport('github',client)
     action=provider.for_action('incident:1')
     path='/repos/seeker-cyber-maker/fDisBull/actions/jobs/20/rerun'
     assert action('POST',path,{})['http_status']==201

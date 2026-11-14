@@ -9,6 +9,7 @@ from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -78,6 +79,16 @@ class ActionLedger:
             raise ValueError('acceptance exists without its original intent')
         write_json(path, {**binding, 'created_epoch': self.clock()}, exclusive=True)
         return {'durable': True, 'new': True, 'receipt_path': str(path)}
+
+    def load_intent(self, key):
+        path = self._path(key, '.intent.json')
+        if not path.exists(): return None
+        value = read_json(path)
+        if (set(value) != {'action', 'action_key', 'payload', 'created_epoch'}
+                or value['action_key'] != key or type(value['created_epoch']) not in (int, float)
+                or not math.isfinite(value['created_epoch'])):
+            raise ValueError('action intent invalid')
+        return {'intent': value, 'receipt_path': str(path)}
 
     def started(self, key):
         value = read_json(self._path(key, '.intent.json'))
