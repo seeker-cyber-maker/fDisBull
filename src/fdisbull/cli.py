@@ -180,7 +180,7 @@ METHODS = {
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
     "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
-    "debug-compare-runtime-functions": "Recover complete returning PE64 path families per runtime epoch; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms]",
+    "debug-compare-runtime-functions": "Recover complete returning PE64 path families; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms,execution_mode]",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
     "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
@@ -2425,6 +2425,8 @@ def parser():
             c.add_argument("--layer-paths", type=json.loads, required=True)
             c.add_argument("--contract", type=json.loads, required=True)
             c.add_argument("--timeout-ms", type=int, default=5000)
+            c.add_argument("--execution-mode", choices=("stable_leaf", "single_threaded_calls_smc"),
+                           default="stable_leaf")
         elif name == "debug-compare-runtime-code":
             c.add_argument("baseline_version", type=int)
             c.add_argument("layer_version", type=int)

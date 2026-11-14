@@ -156,10 +156,15 @@ def _arithmetic_flags(z, op, a, b, result, flags, fresh):
     return out
 
 
-def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side, deadline):
+def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side, deadline,
+             *, execution_code=None):
     regs, flags, memory = dict(initial), initial_flags, dict(initial_memory)
     domains, accesses, returns = [], [], []
     safety, alias_work = [], 0
+    calls, call_stack, obligations, code_writes = [], [], [], []
+    code_cells = set(execution_code or {})
+    code_versions = []
+    fetch_checks = 0
     runs = []
     for address in sorted(memory):
         if runs and runs[-1][1] == address:
@@ -189,6 +194,23 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
         if not z.is_bv_value(result):
             raise ValueError('Sampled expression is not concrete')
         return result.as_long()
+    def code_image():
+        return {hex(a): observed(memory[a]) for a in sorted(code_cells)}
+    if execution_code is not None:
+        code_versions.append({'after_event_index': None, 'bytes': code_image()})
+    def check_fetch(event, index):
+        nonlocal fetch_checks
+        raw = bytes.fromhex(event.get('execution_bytes', event.get('bytes', '')))
+        address = int(event['address'], 16)
+        if not 1 <= len(raw) <= 15 or any(address + k not in code_cells for k in range(len(raw))):
+            raise ValueError(f'Event {index}: instruction fetch outside declared code image')
+        for k, byte in enumerate(raw):
+            if observed(memory[address + k]) != byte:
+                raise ValueError(f'Event {index}: fetched byte contradicts evolving code image')
+        obligations.append({'kind': 'instruction_fetch', 'event_index': index,
+                            'prefix': z.And(*domains),
+                            'valid': z.And(*[memory[address + k] == byte for k, byte in enumerate(raw)])})
+        fetch_checks += 1
     decoder = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64 if bits == 64 else capstone.CS_MODE_32)
     decoder.detail = True
     for index, event in enumerate(events[:-1]):
@@ -206,6 +228,8 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
             raise ValueError(f'Event {index}: missing exact instruction')
         raw = bytes.fromhex(code)
         address = int(event['address'], 16)
+        if execution_code is not None:
+            check_fetch(event, index)
         native = list(decoder.disasm(raw, address))
         if len(native) != 1 or native[0].size != len(raw) or any(native[0].prefix):
             raise ValueError(f'Event {index}: unsupported decode or legacy prefix')
@@ -263,6 +287,29 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 byte_at(address + k) for k in reversed(range(width))])
             accesses.append(('read', address, width, value))
             return value
+        def write_memory(a, width, value):
+            nonlocal memory
+            accesses.append(('write', a, width, value))
+            sampled_code = execution_code is not None and any(observed(a) + k in code_cells for k in range(width))
+            if execution_code is not None and not sampled_code and not z.is_bv_value(z.simplify(a)):
+                obligations.append({'kind': 'symbolic_store_code_nonalias', 'event_index': index,
+                    'prefix': z.And(*domains),
+                    'valid': z.And(*[a + k != cell for k in range(width) for cell in code_cells])})
+            for k in range(width):
+                pointer = z.simplify(a + k)
+                byte = z.Extract(k * 8 + 7, k * 8, value)
+                if z.is_bv_value(pointer):
+                    if pointer.as_long() in memory:
+                        memory[pointer.as_long()] = byte
+                else:
+                    memory = {cell: z.If(pointer == cell, byte, old) for cell, old in memory.items()}
+            if sampled_code:
+                image = code_image()
+                obligations.append({'kind': 'stable_code_epoch', 'event_index': index,
+                    'prefix': z.And(*domains),
+                    'valid': z.And(*[memory[a] == image[hex(a)] for a in sorted(code_cells)])})
+                code_writes.append({'event_index': index, 'address': a, 'width': width, 'value': value})
+                code_versions.append({'after_event_index': index, 'bytes': image})
         def read(operand):
             if operand.type == X.X86_OP_REG:
                 return regs[reg_name(operand)]
@@ -280,10 +327,40 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                 raise ValueError(f'Event {index}: return target contradicts captured successor')
             # The observed caller is a path condition, not an inferred constant
             # value for arbitrary stack data. Bounds use only preceding guards.
-            domains.append(target == z.BitVecVal(next_address, bits))
+            if execution_code is None:
+                domains.append(target == z.BitVecVal(next_address, bits))
+            else:
+                if call_stack:
+                    frame = call_stack.pop()
+                    valid = z.And(stack_address == frame['stack_address'], target == frame['return_address'],
+                                  target == next_address)
+                else:
+                    if index != len(events) - 2:
+                        raise ValueError(f'Event {index}: outer RET is not the final completed instruction')
+                    valid = z.And(stack_address == initial['rsp'], target == next_address)
+                obligations.append({'kind': 'balanced_return', 'event_index': index,
+                                    'prefix': z.And(*domains), 'valid': valid})
             returns.append({'event_index': index, 'target': target,
-                            'stack_address': stack_address, 'width': width})
+                            'stack_address': stack_address, 'width': width,
+                            'call_depth': len(call_stack) if execution_code is not None else 0})
             regs[stack] = regs[stack] + width
+        elif execution_code is not None and raw[0] == 0xe8 and len(raw) == 5:
+            if bits != 64 or next_address != iced.near_branch_target or next_address not in code_cells:
+                raise ValueError(f'Event {index}: direct CALL must enter the declared internal code image')
+            if len(call_stack) >= 16:
+                raise ValueError('Internal CALL depth exceeds 16 frames')
+            stack_address, width = memory_location(regs['rsp'] - 8, 8)
+            if any(observed(stack_address) + k in code_cells for k in range(width)):
+                raise ValueError(f'Event {index}: CALL stack aliases the code image')
+            obligations.append({'kind': 'call_stack_code_nonalias', 'event_index': index,
+                'prefix': z.And(*domains),
+                'valid': z.And(*[stack_address + k != cell for k in range(width) for cell in code_cells])})
+            write_memory(stack_address, width, z.BitVecVal(sequential, 64))
+            regs['rsp'] = stack_address
+            frame = {'event_index': index, 'target': next_address, 'return_address': sequential,
+                     'stack_address': stack_address, 'depth': len(call_stack) + 1}
+            calls.append(frame)
+            call_stack.append(frame)
         elif iced.is_jcc_short_or_near or iced.is_jmp_short_or_near:
             predicate = _condition(z, condition_name(iced), flags)
             # Guard feasibility is checked against captured FLAGS, including equal target/fallthrough.
@@ -326,15 +403,7 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
                     a, width = location(dest)
                     value = (z.SignExt(width * 8 - value.size(), value) if value.size() < width * 8
                              else z.Extract(width * 8 - 1, 0, value))
-                    accesses.append(('write', a, width, value))
-                    for k in range(width):
-                        pointer = z.simplify(a + k)
-                        byte = z.Extract(k * 8 + 7, k * 8, value)
-                        if z.is_bv_value(pointer):
-                            if pointer.as_long() in memory:
-                                memory[pointer.as_long()] = byte
-                        else:
-                            memory = {cell: z.If(pointer == cell, byte, old) for cell, old in memory.items()}
+                    write_memory(a, width, value)
                 else:
                     raise ValueError(f'Event {index}: unsupported MOV destination')
             elif ins.mnemonic in ('add', 'sub', 'xor', 'and', 'or', 'cmp') and len(operands) == 2:
@@ -362,11 +431,17 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
             raise ValueError(f'Event {index}: FLAGS contradict regional model')
     if contract['live_flags'] & undefined:
         raise ValueError('Live FLAGS include undefined AF from a logical operation')
+    if execution_code is not None:
+        if call_stack:
+            raise ValueError('Internal CALL stack is not balanced at the caller boundary')
+        check_fetch(events[-1], len(events) - 1)
     if any(observed(memory[a]) != v for a, v in snapshots[1].items()):
         raise ValueError('Exit RAM snapshot contradicts modeled stores')
     return {'registers': regs, 'flags': flags, 'memory': memory,
             'domain': z.And(*domains), 'accesses': accesses, 'safety': safety,
-            'alias_byte_cell_operations': alias_work, 'returns': returns}
+            'alias_byte_cell_operations': alias_work, 'returns': returns,
+            'calls': calls, 'proof_obligations': obligations, 'code_writes': code_writes,
+            'code_versions': code_versions, 'fetch_checks': fetch_checks}
 
 
 def compare_pe_regions(baseline, layer, *, contract, same_source=False, correspondence=None,

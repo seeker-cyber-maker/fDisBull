@@ -181,3 +181,69 @@ and optional `timeout_ms`. Existing snapshots, native trace identities and
 earlier versions remain immutable. Whole-function results apply under the
 declared stable-epoch/call-frame/RAM contract; other threads, traps, devices,
 timing, external effects and module initialization/CLI behavior remain unknown.
+
+## Internal calls and mutation during a function
+
+The opt-in `execution_mode="single_threaded_calls_smc"` admits direct internal
+`E8 CALL` and unprefixed near `C3 RET`, with at most 16 nested frames. Each CALL
+writes its real return word through the ordinary byte-memory model. Every RET
+must prove both the matching LIFO stack slot and the expected return target;
+the outer RET must consume the original entry word and restore RSP + 8.
+Calls outside the declared code image, indirect calls and immediate/far returns
+remain unknown. The stable-leaf default keeps its earlier strict contract.
+
+Code is a separate, exact initial byte image, disjoint from the declared data
+RAM. Every fetch, including the terminal caller boundary, must agree with the
+image after all preceding stores. The proof checks these obligations under
+preceding guards; it does not assume a matching fetch to narrow away inputs.
+All final code bytes and ordered code writes remain observable effects. This
+profile therefore does not erase code-byte differences merely because they
+have not yet changed an output. Symbolic mutation is admitted only when the
+resulting complete code image is proved fixed under the preceding guards.
+
+The runtime path schema retains immutable native segments and every observed
+code version. Split a trace immediately after each instruction that writes code,
+capture the whole code span while stopped, then resume with the new capture.
+Each segment must contain at least two events; a sequence unable to supply that
+evidence remains unsupported by this binding interface. `after_event` counts
+completed instructions from the start of the combined path, with zero for the
+initial image. A store of identical bytes still requires a separate version.
+
+```python
+paths = [{
+    "segments": [{"trace": before_store_trace, "version": initial_version},
+                 {"trace": after_store_trace, "version": modified_version}],
+    "code_versions": [{"after_event": 0, "version": initial_version},
+                      {"after_event": 18, "version": modified_version}],
+    "memory": entry_exit_ram,
+}]
+result = project.debug_compare_runtime_functions(
+    initial_version, repeat_initial_version, paths, repeated_paths,
+    contract=call_frame_contract,
+    execution_mode="single_threaded_calls_smc", timeout_ms=10000)
+```
+
+Every segment is bound to its own RAM capture, immutable source, native run,
+runtime mapping and complete captured span. Execution overlays are excluded in
+this mode. Repeated probes retain separate captures even when their complete
+initial images match. The comparator composes events without changing native
+source identities, and checks the captured timeline against every modeled code
+write. Captures and their promoted interpretations keep `execution_proven=false`.
+Contractions hash and re-expand the exact segment-derived trace/RAM/code evidence.
+
+The model admits at most eight paths per family, 256 executed instructions per
+path, 512 code bytes and 256 declared data bytes. Complete feasible path coverage
+and every feasible path-pair effect comparison are still required. Solver
+deadlines, missing versions, stale fetches or unproved call/alias obligations
+cannot produce an equivalence result.
+
+`tests/fixtures/self_modifying_call_wine.S` is the known-source target used by
+`tests/test_smc_calls_wine.py`. An accepted input calls the same value helper
+before and after `prepare -> writer` changes its reachable constant from one to
+two. It writes `{x+1, x+2}` and returns `x+2`; unsigned inputs above ten leave the
+output untouched and return UINT64_MAX. Spill bytes and overwritten internal
+return slots remain visible after return. The native acceptance records guarded
+probe resets separately from guest-executed mutation, captures each code state,
+and checks complete recovery against an independent source specification after
+closing and reopening the project. Concurrent mutation, external calls, traps,
+devices, timing, other platforms and whole-module behavior remain unqualified.
