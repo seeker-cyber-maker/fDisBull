@@ -57,6 +57,41 @@ is global. An unrelated process END does not retire another qualified process.
 Unknown or malformed containment fails closed, and creation before attachment
 remains unknown. No custom guest helper is needed for this observer.
 
+Source availability and native lifetime continuity are separate qualifications.
+A typed `SourceMatchError` during source discovery withdraws current source
+bindings and exposes no partial source result. It can preserve existing native
+task/process episodes only when the owned lifecycle breakpoint, original
+manager coverage and stopped CPU context remain independently valid. A later
+unambiguous source observation can then publish fresh binding IDs under that
+same observed episode. Matching bytes, a reused numeric handle or an ambiguous
+placement alone cannot establish continuity. Source-only sessions retain their
+one-stop ceiling. Native containment, coverage, unexpected I/O and publication
+or journal failures still retire or fence unsafe state; explicit resume,
+restore, writes, parent execution and active layers retain their gap behavior.
+
+Each observation failure appends an `observation-error` runtime-tracking
+artifact with its phase, reason, exception type/module/message/causes, run,
+observation and task/process references, and the lifetime action taken. Live
+`tracking_status()["errors"]` contains the total count, last summary and at most
+16 recent artifact references. A later successful observation clears only the
+current error fields, not this history. The complete recorded errors remain
+available after cold Project reopen through `debug_artifacts` and
+`debug_export`; no running guest is required. If journal/error recording itself
+fails, the tracker must not describe that failure as durably recorded or permit
+execution with a stale current mapping. Error messages retain at most 8192
+characters and four cause summaries. A shortened message has an explicit
+truncation marker and the SHA-256 of its complete UTF-8 message. A failed history
+write is exposed as `errors.unrecorded`, not counted among persisted error
+references; current binding count is unknown while fenced. Recovery of the
+journal can permit final retirement, but does not silently remove that session's
+execution fence. Failure of pre-dispatch binding invalidation records phase
+`binding-invalidation-before-execution` and action `fence-before-dispatch`, then
+re-raises the original failure. The journal's still-open intervals are not
+presented as successfully withdrawn, and a later execution request is refused.
+These contracts are tested with
+authored fixtures; native relocation and native-handle reuse require separate
+observed qualification on the exact integrated candidate.
+
 ## Port provenance and current LE boundary
 
 The four module implementations originate in the private W7 source checkpoint

@@ -67,11 +67,20 @@ class AutomaticRuntimeTracker:
         self.closed = False
         self.busy = False
         self.sequence = 0
+        self.error_count = 0
+        self.error_history = []
+        self.unrecorded_error = None
+        self.fenced = False
         self.last = dict(state='initializing', enabled=True, current_bindings=0,
                          lifetime_qualification='unqualified')
 
     def status(self):
         return deepcopy(dict(self.last, closed=self.closed, observations=self.sequence,
+                             fenced=self.fenced,
+                             errors=dict(count=self.error_count,
+                                 last=self.error_history[-1] if self.error_history else None,
+                                 recent=self.error_history,
+                                 **({'unrecorded': self.unrecorded_error} if self.unrecorded_error else {})),
                              task_incarnations=list(self.tasks.values()),
                              process_episodes=[dict(value, key=key,
                                  task_aliases=[self.tasks[alias] for alias, owner in self.task_owners.items()
@@ -86,8 +95,68 @@ class AutomaticRuntimeTracker:
         return dict(kind='recorded', reference='local-runtime-tracking:' + artifact['artifact'],
                     sha256=hashlib.sha256(data).hexdigest())
 
+    def _error_detail(self, error):
+        def item(value):
+            try:
+                message = str(value)
+            except Exception:
+                message = '<exception message could not be rendered>'
+            result = dict(type=type(value).__name__, module=type(value).__module__, message=message[:8192])
+            if len(message) > 8192:
+                result.update(message_truncated=True,
+                              complete_message_sha256=hashlib.sha256(message.encode('utf-8', errors='replace')).hexdigest())
+            return result
+        result = item(error)
+        causes, seen = [], {id(error)}
+        cause = error.__cause__ or error.__context__
+        while cause is not None and id(cause) not in seen and len(causes) < 4:
+            seen.add(id(cause)); causes.append(item(cause))
+            cause = cause.__cause__ or cause.__context__
+        result['causes'] = causes
+        return result
+
+    def _fence_error(self, detail):
+        # A failed journal cannot authenticate a durable retirement. Keep the
+        # unresolved detail visible and prevent another native dispatch.
+        self.fenced = True
+        self.unrecorded_error = deepcopy(detail)
+        self.last.update(state='fenced', sources=[], current_bindings=None,
+                         lifetime_qualification='unqualified-journal-failure')
+
+    def _observation_error(self, phase, reason, error, lifetime_action):
+        detail = dict(phase=phase, reason=reason, error=self._error_detail(error),
+            observation=self.sequence, run=self.session.run_id,
+            capture_epoch=getattr(self.session, '_runtime_epoch', self.session.run_id),
+            task_incarnations=list(self.tasks.values()), process_episodes=deepcopy(self.processes),
+            lifetime_action=lifetime_action,
+            provider_source=deepcopy(self.provider.source_identity) if self.provider is not None else None)
+        try:
+            evidence = self._record('observation-error', detail)
+        except Exception as journal_error:
+            self._fence_error(dict(detail, recording_error=self._error_detail(journal_error)))
+            raise
+        summary = dict(reference=evidence['reference'], sha256=evidence['sha256'],
+                       phase=phase, type=type(error).__name__, lifetime_action=lifetime_action)
+        self.error_count += 1
+        self.error_history = (self.error_history + [summary])[-16:]
+        return summary
+
+    def _validate_native_coverage(self):
+        if self.provider is None:
+            return False
+        for identifier in self.internal_breakpoints:
+            point = self.session.breakpoints.get(identifier)
+            _require(isinstance(point, dict) and point.get('address') in
+                     (self.provider.hook_address, hex(self.provider.hook_address)) and
+                     point.get('access') == 'x' and point.get('length') == 1,
+                     'Native lifecycle hook was removed or replaced')
+        _require(bool(self.internal_breakpoints), 'Native lifecycle hook was removed')
+        self.provider.validate_coverage()
+        return True
+
     def _invalidate(self, reason):
         if not any(self.active_bindings.values()):
+            self.last.update(current_bindings=0, sources=[])
             return
         evidence = self._record('invalidate', dict(reason=reason, bindings=self.active_bindings))
         # A journal failure propagates before execution. Never dispatch with a
@@ -97,7 +166,7 @@ class AutomaticRuntimeTracker:
                 if bindings:
                     self.project.runtime_unmap(task, bindings, evidence)
         self.active_bindings = {}
-        self.last.update(state='invalidated-before-execution', current_bindings=0)
+        self.last.update(state='invalidated-before-execution', current_bindings=0, sources=[])
 
     def _end(self, reason, keys=None):
         selected = list(self.tasks) if keys is None else list(keys)
@@ -115,24 +184,34 @@ class AutomaticRuntimeTracker:
             self.task_owners.pop(key, None)
 
     def before_execution(self, reason):
+        if self.fenced:
+            raise RuntimeContainmentError('Runtime tracking journal is unavailable; native execution is fenced')
         if self.closed or self.busy:
             return
-        self._invalidate(reason)
+        try:
+            self._invalidate(reason)
+        except Exception as error:
+            self._observation_error('binding-invalidation-before-execution', reason, error,
+                                    'fence-before-dispatch')
+            self._fence_error(dict(phase='binding-invalidation-before-execution', reason=reason,
+                                   error=self._error_detail(error)))
+            raise
         if self.provider is not None:
             try:
-                points = self.session.breakpoints
-                for identifier in self.internal_breakpoints:
-                    point = points[identifier]
-                    if point.get('address') not in (self.provider.hook_address, hex(self.provider.hook_address)) or point.get('access') != 'x' or point.get('length') != 1:
-                        raise ValueError('native lifecycle hook was replaced')
-                if not self.internal_breakpoints:
-                    raise ValueError('native lifecycle hook was removed')
-                self.provider.validate_coverage()
-            except Exception:
-                self._end('native lifecycle coverage could not be verified before execution')
-                self.generations.clear()
-                self.observed_creations.clear()
-                self._drop_provider()
+                self._validate_native_coverage()
+            except Exception as error:
+                self._observation_error('native-coverage-before-execution', reason, error, 'retire-continuity')
+                try:
+                    self._end('native lifecycle coverage could not be verified before execution')
+                    self.generations.clear()
+                    self.observed_creations.clear()
+                    self._drop_provider()
+                except Exception as retirement_error:
+                    self._fence_error(dict(phase='lifetime-retirement-before-execution', reason=reason,
+                        error=self._error_detail(error), retirement_error=self._error_detail(retirement_error)))
+                    raise
+                self.last.update(state='unqualified', current_bindings=0, sources=[],
+                                 error_type=type(error).__name__, error=str(error))
         # QMP asynchronous running, restored history and writes are not covered
         # by our passive lifecycle breakpoint. Do not join across those gaps.
         if any(word in reason for word in ('resume', 'state.load', 'restore', 'write', 'reset', 'parent')):
@@ -350,9 +429,11 @@ class AutomaticRuntimeTracker:
                     binding_count=len(bindings), bindings=bindings)
 
     def after_stop(self, reason):
-        if self.closed or self.busy:
+        if self.closed or self.busy or self.fenced:
             return
         self.busy = True
+        self.sequence += 1
+        phase = 'binding-invalidation'
         try:
             self._invalidate('new stopped observation')
             if getattr(self.session, '_layer_active', None):
@@ -363,18 +444,41 @@ class AutomaticRuntimeTracker:
                 self.generations.clear()
                 self.observed_creations.clear()
                 self._drop_provider()
-                self.sequence += 1
                 self.last.update(state='unqualified', reason=reason, current_bindings=0,
                     sources=[], lifetime_qualification='unqualified-active-execution-layer',
                     error_type='RuntimeSourceLayerUnavailable',
                     error='Original-source runtime bindings are unavailable while execution layers are active',
                     executables_modified=False)
                 return
+            phase = 'native-provider-coverage'
             self._provider()
-            from .runtime_source_matching import discover
-            matches = discover(self.session)
+            self._validate_native_coverage()
+            source_context = deepcopy(self.session.registers())
+            phase = 'source-discovery'
+            from .runtime_source_matching import discover, SourceMatchError
+            try:
+                matches = discover(self.session)
+            except SourceMatchError as error:
+                # Source bytes can be unavailable or ambiguous even while the
+                # independently monitored OS lifetime remains continuous.
+                phase = 'source-context-revalidation'
+                _require(self.session.registers() == source_context,
+                         'Stopped CPU context changed during failed source discovery')
+                covered = self._validate_native_coverage()
+                action = ('preserved-native-provider' if covered else
+                          'preserved-owned-dos-launch' if self.owned_dos else 'retire-source-only')
+                phase = 'source-error-publication'
+                self._observation_error('source-discovery', reason, error, action)
+                if not covered and not self.owned_dos:
+                    self._end('Source evidence unavailable; source-only observation has no native lifetime')
+                self.last.update(state='source-unavailable', reason=reason, current_bindings=0,
+                    sources=[], error_type=type(error).__name__, error=str(error),
+                    lifetime_qualification=('native-lifecycle-since-attach' if covered else
+                        'owned-dos-launch' if self.owned_dos else 'one-stop-only'),
+                    executables_modified=False)
+                return
+            phase = 'source-publication'
             published = [self._publish(match) for match in matches]
-            self.sequence += 1
             self.last.update(state='qualified-stopped-bindings' if published else 'no-source-match',
                 reason=reason, current_bindings=sum(row['binding_count'] for row in published),
                 sources=published, lifetime_qualification=('native-lifecycle-since-attach' if self.provider else
@@ -383,16 +487,23 @@ class AutomaticRuntimeTracker:
             self.last.pop('error_type', None)
             self.last.pop('error', None)
         except Exception as error:
-            self._invalidate('incomplete stopped observation')
-            self._end('incomplete stopped observation; lifetime continuity retired')
-            self.generations.clear()
-            self.observed_creations.clear()
-            if self.provider is not None:
-                self._drop_provider()
-            self.last.update(state='unqualified', reason=reason, current_bindings=0,
+            if self.fenced:
+                raise
+            self._observation_error(phase, reason, error, 'retire-continuity')
+            try:
+                self._invalidate('incomplete stopped observation')
+                self._end('incomplete stopped observation; lifetime continuity retired')
+                self.generations.clear()
+                self.observed_creations.clear()
+                if self.provider is not None:
+                    self._drop_provider()
+            except Exception as retirement_error:
+                self._fence_error(dict(phase='lifetime-retirement', reason=reason,
+                    error=self._error_detail(error), retirement_error=self._error_detail(retirement_error)))
+                raise
+            self.last.update(state='unqualified', reason=reason, current_bindings=0, sources=[],
                 error_type=type(error).__name__, error=str(error), executables_modified=False)
-            # Detection is enrichment, never a reason to replay a completed
-            # action. Fail closed for facts while preserving debugger usability.
+            # Native actions are never replayed after failed enrichment.
         finally:
             self.busy = False
 
