@@ -133,3 +133,98 @@ def test_referenced_object_without_available_root_fails(tmp_path,roots):
     with pytest.raises(ValueError,match='missing'):
         backup.capture_fdb(db,[tmp_path/x for x in roots],tmp_path/'result',10)
     assert not (tmp_path/'result'/'manifest.json').exists()
+
+
+def _authored_database(path, value):
+    with sqlite3.connect(path) as connection:
+        connection.execute('CREATE TABLE authored(value TEXT)')
+        connection.execute('INSERT INTO authored VALUES(?)', (value,))
+
+
+def test_snapshot_publication_never_opens_substituted_output_database(tmp_path, monkeypatch):
+    source_dir=tmp_path/'source';source_dir.mkdir()
+    source=source_dir/'source.fdb';_authored_database(source,'selected')
+    unrelated=tmp_path/'unrelated.fdb';_authored_database(unrelated,'keep')
+    source_before=source.read_bytes(); unrelated_before=unrelated.read_bytes()
+    output=tmp_path/'backup';connect=sqlite3.connect
+    def substituted(database,*args,**kwargs):
+        if '?mode=ro' not in str(database):
+            (output/'project.fdb').symlink_to(unrelated)
+        return connect(database,*args,**kwargs)
+    monkeypatch.setattr(backup.sqlite3,'connect',substituted)
+    with pytest.raises((FileExistsError,ValueError)):
+        backup.capture_fdb(source,[],output,20)
+    assert source.read_bytes()==source_before
+    assert unrelated.read_bytes()==unrelated_before
+    assert not (output/'manifest.json').exists()
+    assert (output/'project.fdb').is_symlink()
+
+
+def test_directory_replacement_preserves_both_owned_and_unrelated_output(tmp_path, monkeypatch):
+    source_dir=tmp_path/'source';source_dir.mkdir()
+    source=source_dir/'source.fdb';_authored_database(source,'selected')
+    unrelated=tmp_path/'unrelated.fdb';_authored_database(unrelated,'keep')
+    original=unrelated.read_bytes(); source_before=source.read_bytes()
+    output=tmp_path/'backup';moved=tmp_path/'owned-moved';connect=sqlite3.connect
+    def replaced(database,*args,**kwargs):
+        if '?mode=ro' not in str(database):
+            output.rename(moved);output.mkdir()
+            (output/'project.fdb').write_bytes(original)
+        return connect(database,*args,**kwargs)
+    monkeypatch.setattr(backup.sqlite3,'connect',replaced)
+    with pytest.raises(ValueError,match='directory identity'):
+        backup.capture_fdb(source,[],output,20)
+    assert (output/'project.fdb').read_bytes()==original
+    assert source.read_bytes()==source_before and unrelated.read_bytes()==original
+    assert moved.is_dir()
+    assert not (output/'manifest.json').exists() and not (moved/'manifest.json').exists()
+
+
+def test_sqlite_resolved_source_is_bound_even_when_namespace_is_restored(tmp_path,monkeypatch):
+    source_dir=tmp_path/'source';source_dir.mkdir()
+    source=source_dir/'source.fdb';_authored_database(source,'selected')
+    other=tmp_path/'other.fdb';_authored_database(other,'outside-selection')
+    before=source.read_bytes();other_before=other.read_bytes();connect=sqlite3.connect
+    def restored(database,*args,**kwargs):
+        if '?mode=ro' in str(database):
+            saved=source_dir/'saved.fdb';source.rename(saved);source.symlink_to(other)
+            try: connection=connect(database,*args,**kwargs)
+            finally: source.unlink();saved.rename(source)
+            return connection
+        return connect(database,*args,**kwargs)
+    monkeypatch.setattr(backup.sqlite3,'connect',restored)
+    with pytest.raises(ValueError,match='database identity'):
+        backup.capture_fdb(source,[],tmp_path/'backup',20)
+    assert source.read_bytes()==before and other.read_bytes()==other_before
+    assert not (tmp_path/'backup'/'manifest.json').exists()
+
+
+def test_manifest_publication_does_not_replace_or_delete_an_existing_name(tmp_path,monkeypatch):
+    source_dir=tmp_path/'source';source_dir.mkdir()
+    source=source_dir/'source.fdb';_authored_database(source,'selected')
+    output=tmp_path/'backup';link=backup.os.link
+    def occupied(src,dst,*args,**kwargs):
+        if dst=='manifest.json':
+            (output/'manifest.json').write_bytes(b'keep unrelated metadata')
+        return link(src,dst,*args,**kwargs)
+    monkeypatch.setattr(backup.os,'link',occupied)
+    with pytest.raises(FileExistsError):backup.capture_fdb(source,[],output,20)
+    assert (output/'manifest.json').read_bytes()==b'keep unrelated metadata'
+
+
+def test_admitted_source_and_parent_inode_must_match_before_sqlite_reads(tmp_path,monkeypatch):
+    source_dir=tmp_path/'source';source_dir.mkdir()
+    source=source_dir/'selected.fdb';_authored_database(source,'selected')
+    file_stat=source.stat();parent_stat=source_dir.stat()
+    identity={'device':file_stat.st_dev,'inode':file_stat.st_ino,
+              'parent_device':parent_stat.st_dev,'parent_inode':parent_stat.st_ino}
+    output=tmp_path/'backup'
+    result=backup.capture_fdb(source,[],output,20,expected_source_identity=identity)
+    assert result['source']['name']=='selected.fdb'
+    def forbidden(*args,**kwargs):raise AssertionError('mismatched selection must not reach SQLite')
+    monkeypatch.setattr(backup.sqlite3,'connect',forbidden)
+    for field in identity:
+        different=dict(identity);different[field]+=1
+        with pytest.raises(ValueError,match='source identity changed'):
+            backup.capture_fdb(source,[],tmp_path/('wrong-'+field),20,expected_source_identity=different)
+        assert not (tmp_path/('wrong-'+field)/'manifest.json').exists()
