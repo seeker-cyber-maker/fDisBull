@@ -20,7 +20,7 @@ _R8 = dict(zip(('al','bl','cl','dl','sil','dil','bpl','spl'),
 
 def typed_loader_step(ins, *, z, registers, flags, undefined, teb, access,
                       simplify, fresh_af, opaque_store, on_call, on_return,
-                      on_branch, native_flags):
+                      on_branch, native_flags, vectors=None):
     """Apply one exact decoded instruction and return FLAGS and concrete PC.
 
     Memory callbacks must prove address safety under preceding guards, and
@@ -37,8 +37,16 @@ def typed_loader_step(ins, *, z, registers, flags, undefined, teb, access,
         if n in ('ah','bh','ch','dh') and op.size==1:return {'ah':'rax','bh':'rbx','ch':'rcx','dh':'rdx'}[n],8,8
         raise ValueError('Unmodeled loader register view')
     def reg_read(op):
+        if vectors is not None and ins.reg_name(op.reg).startswith('xmm'):
+            name=ins.reg_name(op.reg)
+            if name not in vectors or vectors[name].size()!=128:raise ValueError('Unmodeled exact XMM register')
+            return vectors[name]
         n,w,shift=reg(op);return regs[n] if w==64 else z.Extract(shift+w-1,shift,regs[n])
     def reg_write(op,value):
+        if vectors is not None and ins.reg_name(op.reg).startswith('xmm'):
+            name=ins.reg_name(op.reg)
+            if name not in vectors or value.size()!=128:raise ValueError('Unmodeled exact XMM register width')
+            vectors[name]=value;return
         n,w,shift=reg(op)
         if value.size()!=w:raise ValueError('Loader register operand width differs')
         if w==64:regs[n]=value
@@ -99,6 +107,23 @@ def typed_loader_step(ins, *, z, registers, flags, undefined, teb, access,
     elif mn.startswith('cmov') and len(ops)==2:
         value=read_op(ops[1]);old=read_op(ops[0]);condition=_condition(z,mn[4:],flags)
         write_op(ops[0],z.If(condition,value,old))
+    elif vectors is not None and mn=='movq' and len(ops)==2:
+        if ops[0].type==X.X86_OP_REG and ins.reg_name(ops[0].reg).startswith('xmm'):
+            value=read_op(ops[1]);value=z.Extract(63,0,value)if value.size()==128 else value
+            if value.size()!=64:raise ValueError('Exact MOVQ source must be64 bits')
+            write_op(ops[0],z.ZeroExt(64,value))
+        else:
+            value=read_op(ops[1])
+            if value.size()!=128:raise ValueError('Exact MOVQ source XMM required')
+            write_op(ops[0],z.Extract(63,0,value))
+    elif vectors is not None and mn=='punpcklqdq' and len(ops)==2:
+        low,high=read_op(ops[0]),read_op(ops[1])
+        if low.size()!=128 or high.size()!=128:raise ValueError('Exact PUNPCKLQDQ requires128-bit operands')
+        write_op(ops[0],z.Concat(z.Extract(63,0,high),z.Extract(63,0,low)))
+    elif vectors is not None and mn=='movups' and len(ops)==2:
+        value=read_op(ops[1])
+        if value.size()!=128:raise ValueError('Exact MOVUPS requires128-bit operands')
+        write_op(ops[0],value)
     elif mn in ('stmxcsr','fnstcw','movdqa','movups','movaps'):
         if not ops or ops[0].type!=X.X86_OP_MEM:raise ValueError('Only context-save floating stores are supported')
         pointer,width=loc(ops[0]);access('write',pointer,width,opaque_store(width))

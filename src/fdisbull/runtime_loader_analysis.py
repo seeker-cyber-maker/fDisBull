@@ -437,7 +437,7 @@ def _bind_loader_intervals(report, *, run, exe_image, dll_image, documents, rece
 
 
 def load_loader_evidence(project, dll_project, run_report, *, require_loader_capsules=False,
-                         require_loader_intervals=False):
+                         require_loader_intervals=False, require_process_attach=False):
     """Return hash-bound observations and source images for a semantic checker.
 
     Native equality at a loader gap is deliberately not a universal frame
@@ -445,6 +445,8 @@ def load_loader_evidence(project, dll_project, run_report, *, require_loader_cap
     """
     if require_loader_intervals and not require_loader_capsules:
         raise ValueError('Caller interval composition also requires verified dispatcher capsules')
+    if require_process_attach and not require_loader_intervals:
+        raise ValueError('Full process_attach also requires its dispatcher and derived caller intervals')
     if not isinstance(run_report, dict) or 'recovery' not in run_report:
         raise ValueError('Fresh full-range loader composition evidence is required')
     report = deepcopy(run_report); recovery = report['recovery']
@@ -724,9 +726,16 @@ def load_loader_evidence(project, dll_project, run_report, *, require_loader_cap
         documents=documents, receipts=receipts, protected=protected, terminal_sequence=exit_sequence) if require_loader_capsules else []
     loader_intervals = _bind_loader_intervals(report, run=run, exe_image=exe_image, dll_image=dll_image,
         documents=documents, receipts=receipts, protected=protected, capsules=loader_capsules) if require_loader_intervals else []
+    process_attach = None
+    if require_process_attach:
+        from .pe_process_attach_binding import bind_process_attach
+        process_attach = bind_process_attach(report, run=run, exe_image=exe_image, dll_image=dll_image,
+            documents=documents, receipts=receipts, protected=protected, capsules=loader_capsules,
+            intervals=loader_intervals)
     return {'format': 'fdisbull-runtime-loader-evidence-1', 'run': run, 'metadata': deepcopy(runtime),
         'exe': exe_image, 'dll': dll_image, 'documents': documents, 'receipts': receipts, 'report': report,
         'loader_capsules': loader_capsules,
         'loader_intervals': loader_intervals,
+        'loader_process_attach': process_attach,
         'subject_source_bytes': dll_raw if require_loader_capsules else None,
         'scope': 'Hash-bound native/source observations only; universal loader frame conditions require an explicit semantic contract'}

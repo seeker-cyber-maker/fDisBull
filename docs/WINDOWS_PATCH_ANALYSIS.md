@@ -199,6 +199,43 @@ earlier foreign initializers, FLS/notification callbacks, context transfer and
 stack clearing. The caller contracts retain these limits and exact expansion
 back to their original instruction/access evidence.
 
+`VERIFIED_PROCESS_ATTACH_ENVIRONMENT` also requires one complete retained
+`process_attach.part.0` invocation for the authored DLL. Selection follows the
+actual DDAG node in RCX to its module link and MODREF, and checks the source DLL
+base. The full capsule contains the identical retained MODULE instruction span;
+its attach tail is derived from that same execution rather than executed twice.
+Journal order, source generations, complete contexts and overlapping RAM bind
+the entry, nested view and original RET to their native snapshots.
+
+The source-bound verifier re-proves MODULE and composes every ordered read and
+write with the evolving caller memory. It proves the source DLL's complete
+normal leaf under explicit singleton DDAG, empty dependency/notification list,
+null activation context, debug-off, nonzero reserved argument and initial flag
+guards. No-import source identity alone is insufficient to establish those
+runtime guards. It proves the complete retained reciprocal initialization ring
+is preserved with the source node appended, LoadCount and attached/loading flag
+updates, arbitrary prior `current_modref` restoration, eight nonvolatile GPRs,
+RSP+8 and STATUS_SUCCESS. Application memory outside the DLL remains symbolic
+and framed; stack, list and other source-bound metadata retain their declared
+entry constraints.
+
+Integer `MOVQ`, `PUNPCKLQDQ` and `MOVUPS` model the exact 128-bit pointer pair
+stored in the new list entry. XMM0/1 are computed, including their preservation
+through the matched nested instructions, rather than seeded from observed
+output bytes. The separate bounded opaque context-save inputs for FP and
+XMM6..15 do not establish a lossless SIMD/FP-state theorem. Qualification checks
+an independent source specification and continuous concrete CPU replay against
+the actual Wine instructions, with negative cases for altered SIMD stores,
+list links, code versions, nested reads and ownership.
+
+This full leaf discharges the earlier attach-tail layout and saved caller-frame
+requirements within this invocation. It extends coverage inside the two attach
+outer intervals; all four complete loader/process-lifetime intervals remain
+conditional. Earlier metadata construction, other DLLs, notifications,
+dependencies, activation callbacks, exceptions, concurrency, context transfer
+and terminal OS behavior require additional coverage. The contraction records
+the full proof and its exact expansion references without removing those limits.
+
 The `fdisbull.patch_roles` helper adds a narrow context layer to the offline
 topology report. Given a raw Wine/QEMU PE trace, an owning `Project`, and one
 analyzed function entry, `observed_pe_import_roles` joins each observed call

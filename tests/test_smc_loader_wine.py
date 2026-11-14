@@ -22,6 +22,7 @@ from test_wine_loader_initialization import (
 )
 from test_wine_loader_dispatch import capture_loader_capsule
 from test_wine_loader_intervals import capture_loader_interval
+from test_wine_process_attach import capture_process_attach, derive_attach_success_tail
 
 
 def _replay_callback(document):
@@ -109,11 +110,23 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
     assert detach_rva == 0x31d10
     detach_function = [item for item in runtime_functions if item[0] == detach_rva]
     assert len(detach_function) == 1
+    outer_symbols = {}
+    for symbol_name, expected_rva in (('process_attach.part.0', 0x31a30), ('call_ldr_notifications', 0x2ca70)):
+        candidates = [s for s in loader_pe.symbols if s.name == symbol_name]
+        assert len(candidates) == 1
+        symbol = candidates[0]
+        rva = loader_pe.sections[symbol.section_idx - 1].virtual_address + symbol.value
+        assert rva == expected_rva
+        function = [item for item in runtime_functions if item[0] == rva]
+        assert len(function) == 1
+        outer_symbols[symbol_name] = {'begin_rva': hex(function[0][0]), 'end_rva': hex(function[0][1]),
+                                      'unwind_rva': hex(function[0][2])}
     loader_source = {'filename': loader_path.name, 'source_sha256': hashlib.sha256(loader_path.read_bytes()).hexdigest(),
         'preferred_image_base': hex(loader_pe.imagebase), 'module_init_rva': hex(module_init_rva),
         'pdata_rva': hex(exception.rva), 'pdata_size': exception.size,
         'runtime_function': {'begin_rva': hex(declared[0][0]), 'end_rva': hex(declared[0][1]),
                              'unwind_rva': hex(declared[0][2])},
+        'process_attach': outer_symbols,
         'intervals': {'attach_success_tail': {'start_rva': '0x31bf7', 'ret_rva': '0x31b2c'},
                       'detach_selection_prefix': {'start_rva': hex(detach_rva), 'call_rva': '0x31d56',
                           'end_rva': hex(module_init_rva), 'unwind_rva': hex(detach_function[0][2])}}}
@@ -409,6 +422,37 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                 assert read(dispatcher, 32) == source_prefix
                 row['loader_selection'].update(module=loader_module, entry_address=hex(dispatcher),
                     entry_prefix_hex=source_prefix.hex())
+                process_attach_address = int(loader_module['base'], 16) + 0x31a30
+                notification_address = int(loader_module['base'], 16) + 0x2ca70
+                attach_prefix = bytes(loader_pe.get_content_from_virtual_address(loader_pe.imagebase + 0x31a30, 32))
+                assert read(process_attach_address, 32) == attach_prefix
+                row['loader_process_attach_selection'] = {'source': loader_source,
+                    'entry_address': hex(process_attach_address), 'entry_prefix_hex': attach_prefix.hex(), 'candidates': []}
+
+                def select_process_attach():
+                    identifier = bp(process_attach_address)
+                    for _ in range(256):
+                        outcome = debug.run(timeout_ms=60000)
+                        assert outcome['outcome'] == 'breakpoint', outcome
+                        registers = debug.call('registers')
+                        assert int(registers['rip'], 16) == process_attach_address
+                        node = int(registers['general']['rcx'], 16)
+                        module_link = int.from_bytes(read(node, 8), 'little')
+                        assert module_link >= 0xa0
+                        wm = module_link - 0xa0
+                        raw = read(wm + 0x30, 8)
+                        selected = int.from_bytes(raw, 'little') == db
+                        receipt = recovery_artifact('process-attach-candidate-' +
+                            str(len(row['loader_process_attach_selection']['candidates'])), 'loader-process-attach-selection', {
+                                'format': 'fdisbull-wine-process-attach-selection-1', 'run': debug.run_id,
+                                'module': loader_module, 'source': loader_source, 'registers': registers,
+                                'node': hex(node), 'node_module_pointer': hex(module_link), 'modref': hex(wm),
+                                'base_pointer_address': hex(wm + 0x30), 'base_pointer_hex': raw.hex(), 'selected': selected})
+                        row['loader_process_attach_selection']['candidates'].append(receipt)
+                        if selected:
+                            delete(identifier)
+                            return outcome
+                    raise AssertionError('Selected process_attach exceeded its 256-invocation search budget')
 
                 def record_dispatcher_selection(registers, reason):
                     assert int(registers['rip'], 16) == dispatcher
@@ -424,22 +468,24 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                     row['loader_selection']['candidates'].append(receipt)
                     return actual_base == db and actual_reason == reason
 
-                def select_dispatcher(reason):
-                    identifier = bp(dispatcher)
-                    for index in range(256):
-                        outcome = debug.run(timeout_ms=60000)
-                        assert outcome['outcome'] == 'breakpoint', outcome
-                        registers = debug.call('registers')
-                        if record_dispatcher_selection(registers, reason):
-                            delete(identifier)
-                            return outcome
-                    raise AssertionError('The selected DLL dispatcher exceeded its 256-invocation search budget')
-
-                def capsule(reason, initial_gap):
+                def capsule(reason, initial_gap, *, whole_attach=False):
                     mode = 'attach' if reason == 1 else 'detach'
                     state = {'gap_before': initial_gap, 'callback_index': 0, 'last_return': None}
                     def boundary(kind, payload):
-                        if kind == 'callback_entry':
+                        if kind == 'module_entry':
+                            assert whole_attach and reason == 1
+                            assert record_dispatcher_selection(payload['registers'], 1)
+                            state['dispatcher_entry'] = snapshot('attach-dispatcher-entry')
+                            state['gap_before'] = state['dispatcher_entry']
+                            row['loader_outer_edges'].append(recovery_artifact('loader-to-attach-dispatcher', 'loader-outer-edge', {
+                                'before': before_dispatch, 'after': state['dispatcher_entry'],
+                                'scope': 'Opaque outer loader prefix; selected process_attach is retained separately'}))
+                        elif kind == 'module_observed':
+                            remember(payload['artifact'])
+                            row['loader_capsules'].append(payload['artifact'])
+                            state['capsule_document'] = payload['document']
+                            state['capsule_return'] = snapshot(mode + '-dispatcher-return')
+                        elif kind == 'callback_entry':
                             role = payload['source_role']
                             assert role in (('tls-attach', 'dll-attach') if reason == 1 else ('tls-detach', 'dll-detach'))
                             index = state['callback_index']
@@ -458,13 +504,56 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                             state['callback_index'] += 1
                     entry = debug.call('registers')
                     capsule_stack = int(entry['general']['rsp'], 16)
-                    modref = int(entry['general']['rcx'], 16)
+                    node = int(entry['general']['rcx'], 16) if whole_attach else None
+                    modref = int.from_bytes(read(node, 8), 'little') - 0xa0 if whole_attach else int(entry['general']['rcx'], 16)
                     extra = [{'role': 'dispatcher-stack', 'address': hex(capsule_stack - 4032), 'length': 4096},
                              {'role': 'wine-modref', 'address': hex(modref), 'length': 256},
                              {'role': 'teb-prefix', 'address': hex(teb), 'length': 256},
                              {'role': 'subject-pe-headers', 'address': hex(db), 'length': 1024},
                              {'role': 'subject-tls-directory', 'address': hex(db + tls_rva), 'length': 40},
                              {'role': 'subject-tls-callbacks', 'address': hex(callbacks), 'length': 16}]
+                    if whole_attach:
+                        peb = int.from_bytes(read(teb + 0x60, 8), 'little')
+                        ldr = int.from_bytes(read(peb + 0x18, 8), 'little')
+                        old_tail = int.from_bytes(read(ldr + 0x38, 8), 'little')
+                        head, previous = ldr + 0x30, ldr + 0x30
+                        cursor_node = int.from_bytes(read(head, 8), 'little')
+                        list_entries = []
+                        for index in range(33):
+                            if cursor_node == head:
+                                assert previous == old_tail
+                                break
+                            assert index < 32 and cursor_node not in (int(item['address'], 16) for item in list_entries)
+                            links = read(cursor_node, 16)
+                            assert int.from_bytes(links[8:], 'little') == previous
+                            list_entries.append({'role': 'initialization-list-node-' + str(index),
+                                                 'address': hex(cursor_node), 'length': 16})
+                            previous, cursor_node = cursor_node, int.from_bytes(links[:8], 'little')
+                        else:
+                            raise AssertionError('Existing initialization list exceeded its 32-node bound')
+                        extra[0] = {'role': 'outer-caller-stack', 'address': hex(capsule_stack - 4096), 'length': 4160}
+                        extra.extend([
+                            {'role': 'ddag-node', 'address': hex(node), 'length': 128},
+                            {'role': 'peb-prefix', 'address': hex(peb), 'length': 256},
+                            {'role': 'loader-data', 'address': hex(ldr), 'length': 256},
+                            {'role': 'prior-initialization-tail', 'address': hex(old_tail), 'length': 16},
+                            {'role': 'process-detaching', 'address': hex(int(loader_module['base'], 16) + 0x95938), 'length': 4},
+                            {'role': 'current-modref', 'address': hex(int(loader_module['base'], 16) + 0x958b8), 'length': 8},
+                            {'role': 'notification-sentinel', 'address': hex(int(loader_module['base'], 16) + 0x6d4e0), 'length': 16},
+                            {'role': 'module-debug-flags', 'address': hex(int(loader_module['base'], 16) + 0x6d5d0), 'length': 1},
+                            {'role': 'loader-debug-flags', 'address': hex(int(loader_module['base'], 16) + 0x6d5c0), 'length': 1}])
+                        extra.extend(list_entries)
+                        captured = capture_process_attach(debug, name=name + '-process-attach.json',
+                            entry_address=process_attach_address, module_entry_address=dispatcher,
+                            notification_entry_address=notification_address, dll_base=db,
+                            protected_ranges=recovery['protected_ranges'], extra_ranges=extra, module_extra_ranges=extra,
+                            subject_symbols=ds, subject_source_sha256=dll_hash, subject_module=loaded,
+                            loader_module=loader_module, on_boundary=boundary, max_steps=1024, timeout_ms=600000)
+                        remember(captured['artifact'])
+                        row['loader_process_attach'] = captured['artifact']
+                        state['full_process_attach'] = captured
+                        assert captured['document']['status'] == 'complete' and state['callback_index'] == 2
+                        return state
                     captured = capture_loader_capsule(debug, name=name + '-' + mode + '-dispatcher.json',
                         dll_base=db, protected_ranges=recovery['protected_ranges'], extra_ranges=extra,
                         entry_address=dispatcher, max_steps=2048, timeout_ms=600000,
@@ -480,31 +569,27 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                 milestone('before-tls')
                 debug.loader_control(stop_on_load=False)
                 before_dispatch = snapshot('before-loader-to-module-dispatch')
-                select_dispatcher(1)
-                dispatch_entry = snapshot('attach-dispatcher-entry')
-                row['loader_outer_edges'].append(recovery_artifact('loader-to-attach-dispatcher', 'loader-outer-edge', {
-                    'before': before_dispatch, 'after': dispatch_entry,
-                    'scope': 'Opaque loader prefix outside the complete MODULE_InitDLL capsule'}))
-                attach = capsule(1, dispatch_entry)
+                select_process_attach()
+                process_entry = snapshot('selected-process-attach-entry')
+                row['loader_process_attach_boundaries'] = {'entry_snapshot': process_entry}
+                attach = capsule(1, process_entry, whole_attach=True)
                 gap_before = attach['last_return']
-                tail_entry = debug.call('registers')
+                full_attach = attach['full_process_attach']
+                tail_first = full_attach['document']['module_span']['last_step'] + 1
+                tail_entry = full_attach['document']['steps'][tail_first]['event']['registers']
                 tail_pc, tail_stack = int(tail_entry['rip'], 16), int(tail_entry['general']['rsp'], 16)
                 assert tail_pc == int(loader_module['base'], 16) + 0x31bf7
-                tail_target = int.from_bytes(read(tail_stack + 0x78, 8), 'little')
                 selected_modref = int(attach['capsule_document']['selection']['modref'], 16)
-                tail = capture_loader_interval(debug, name=name + '-attach-success-tail.json',
-                    role='attach_success_tail', start_address=tail_pc, stop_address=tail_target,
-                    boundary_kind='ret', expected_stack_delta=0x80,
-                    protected_ranges=recovery['protected_ranges'],
+                tail = derive_attach_success_tail(debug, full_attach, name=name + '-attach-success-tail.json',
                     extra_ranges=[{'role': 'caller-frame', 'address': hex(tail_stack), 'length': 128},
                         {'role': 'selected-modref', 'address': hex(selected_modref), 'length': 256},
                         {'role': 'module-debug-flags', 'address': hex(int(loader_module['base'], 16) + 0x6d5d0), 'length': 1},
-                        {'role': 'current-modref', 'address': hex(int(loader_module['base'], 16) + 0x958b8), 'length': 8}],
-                    loader_module=loader_module, subject_module=loaded, subject_source_sha256=dll_hash,
-                    max_steps=32, timeout_ms=60000)
+                        {'role': 'current-modref', 'address': hex(int(loader_module['base'], 16) + 0x958b8), 'length': 8}])
                 remember(tail['artifact']); row['loader_intervals'].append(tail['artifact'])
+                attach['process_return'] = snapshot('attach-caller-return')
+                row['loader_process_attach_boundaries']['exit_snapshot'] = attach['process_return']
                 row['loader_interval_boundaries']['attach_success_tail'] = {
-                    'entry_snapshot': attach['capsule_return'], 'exit_snapshot': snapshot('attach-caller-return')}
+                    'entry_snapshot': attach['capsule_return'], 'exit_snapshot': attach['process_return']}
                 result = debug.run(timeout_ms=60000)
                 assert result['outcome'] == 'entry', result
                 assert debug.registers()['project_address'] == hex(symbols['smc_module_entry'])
@@ -673,22 +758,30 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
         for identifier, raw in artifacts.items(): assert _document(project, identifier)[1] == raw
         closed = [json.loads(r[0]) for r in project.db.execute("SELECT evidence FROM debug_events WHERE operation='close'")]
         assert len(closed) == 2 and all(r['process_reaped'] is True for r in closed)
-        from fdisbull.pe_loader_module_recovery import VERIFIED_CALLER_ENVIRONMENT, expand_loader_module_contraction
+        from fdisbull.pe_loader_module_recovery import VERIFIED_PROCESS_ATTACH_ENVIRONMENT, expand_loader_module_contraction
         from test_pe_loader_source_spec import verify_loader_module_source_spec
         from test_pe_wine_loader_source_spec import verify_wine_loader_source_spec
         from test_pe_wine_loader_interval_source_spec import verify_wine_loader_interval_source_spec
+        from test_pe_process_attach_source_spec import verify_process_attach_source_spec
         from test_wine_loader_dispatch_replay import replay_wine_loader_capsule
         from test_wine_loader_intervals import replay_wine_loader_interval
+        from test_wine_process_attach import replay_process_attach
         from fdisbull.pe_wine_loader_contracts import expand_wine_loader_contract
         from fdisbull.pe_wine_loader_intervals import expand_wine_loader_interval
+        from fdisbull.pe_wine_process_attach import expand_wine_process_attach
         with Project(evidence / 'wine-smc-dll.fdb') as subject:
             report['whole_module'] = {}
             caller_proofs = 0
+            full_attach_proofs = 0
             for name, row in report['runs'].items():
                 capsule_docs = {reference['artifact']: _document(project, reference['artifact'])[0]
                                 for reference in row['loader_capsules']}
                 interval_docs = {reference['artifact']: _document(project, reference['artifact'])[0]
                                  for reference in row['loader_intervals']}
+                process_attach_doc = _document(project, row['loader_process_attach']['artifact'])[0]
+                embedded_identifier = process_attach_doc['module_span']['artifact']['artifact']
+                report.setdefault('loader_process_attach_replays', {})[name] = replay_process_attach(
+                    process_attach_doc, module_capsule=capsule_docs[embedded_identifier])
                 assert sorted(document['role'] for document in interval_docs.values()) == [
                     'attach_success_tail', 'detach_selection_prefix']
                 report.setdefault('loader_capsule_replays', {})[name] = {
@@ -698,7 +791,7 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                     identifier: replay_wine_loader_interval(document)
                     for identifier, document in interval_docs.items()}
                 proof = project.debug_recover_loader_module(subject, row,
-                    environment_contract=VERIFIED_CALLER_ENVIRONMENT, loader_source=loader_path, timeout_ms=60000)
+                    environment_contract=VERIFIED_PROCESS_ATTACH_ENVIRONMENT, loader_source=loader_path, timeout_ms=60000)
                 report['whole_module'][name] = proof
                 save()
                 assert proof['status'] == 'recovered_under_environment_contract', proof.get('reason')
@@ -724,6 +817,31 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                         'interval': interval_doc, 'contract': contract}
                     caller_proofs += 1
                 report.setdefault('loader_interval_source_specs', {})[name] = interval_specs
+                full_attach = proof['loader_process_attach_contract']
+                assert full_attach['artifact'] == row['loader_process_attach']['artifact']
+                assert full_attach['coverage']['dispatcher_artifact'] == embedded_identifier
+                full_contract, full_proof = full_attach['contract'], full_attach['proof']
+                attach_dispatch = next(p for p in proof['loader_dispatch_contracts'] if p['phase'] == 'attach')
+                assert full_contract['module_contract'] == attach_dispatch['contract']
+                assert full_proof['module_contract']['source'] == attach_dispatch['proof']['source']
+                nested_source_spec = verify_wine_loader_source_spec(full_proof['module_contract'],
+                    contract=full_contract['module_contract'], capsule=capsule_docs[embedded_identifier])
+                report.setdefault('loader_process_attach_module_source_specs', {})[name] = nested_source_spec
+                assert full_proof['checks']['instructions'] == len(process_attach_doc['steps'])
+                assert full_proof['checks']['path_cover'] == 'complete'
+                assert set(full_proof['transfer']['vectors']) == {'xmm0', 'xmm1'}
+                assert len(full_proof['transfer']['protected_memory']) == 594
+                assert full_proof['code_versions'] == process_attach_doc['code_versions']
+                full_spec = verify_process_attach_source_spec(full_proof,
+                    contract=full_contract, observation=process_attach_doc)
+                assert full_spec['list_append']['new_node'] == int(full_contract['addresses']['modref'], 16) + 0x20
+                assert full_spec['list_append']['old_tail'] == int(full_contract['addresses']['old_tail'], 16)
+                assert expand_wine_process_attach(full_proof, process_attach_doc, full_contract,
+                    capsule_docs[embedded_identifier]) == {'capsule': process_attach_doc,
+                        'contract': full_contract, 'module_capsule': capsule_docs[embedded_identifier]}
+                assert proof['contraction']['process_attach_contract'] == full_proof['sha256']
+                report.setdefault('loader_process_attach_source_specs', {})[name] = full_spec
+                full_attach_proofs += 1
                 assert len(proof['remaining_loader_intervals']) == 4
                 assert sum(edge.get('status') == 'proved_native_dispatch_interval'
                            for edge in proof['environment_edges']) == 2
@@ -731,6 +849,7 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                 assert expand_loader_module_contraction(proof['contraction'], row) == row
                 report.setdefault('whole_module_source_specs', {})[name] = source_proof
             assert caller_proofs == 4
+            assert full_attach_proofs == 2
             assert report['whole_module']['baseline']['whole_module_recovery']['main']['exe_memory'] == \
                    report['whole_module']['repeat']['whole_module_recovery']['main']['exe_memory']
             assert report['whole_module']['baseline']['whole_module_recovery']['final_dll_memory'] == \

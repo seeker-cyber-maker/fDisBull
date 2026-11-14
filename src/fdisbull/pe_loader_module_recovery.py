@@ -29,6 +29,11 @@ VERIFIED_CALLER_ENVIRONMENT = {
     'dispatch': 'source_proved_dispatchers_and_detach_selection_outer_scheduling_observed',
     'memory_frame': 'source_proved_dispatcher_and_caller_intervals_outer_owned_memory_frame_assumed',
 }
+VERIFIED_PROCESS_ATTACH_ENVIRONMENT = {
+    **ENVIRONMENT,
+    'dispatch': 'source_proved_process_attach_leaf_dispatchers_and_detach_selection_outer_scheduling_observed',
+    'memory_frame': 'source_proved_process_attach_leaf_and_detach_fragments_outer_owned_memory_frame_assumed',
+}
 SCOPE = ('Whole authored PE64 module including the imported authored DLL TLS/DllMain '
          'initialization, report and teardown, and the exact captured Wine Set/GetLastError '
          'bodies, conditional on explicit loader dispatch, owned-memory frame, GS/TEB and '
@@ -122,15 +127,17 @@ def recover_loader_module(project, dll_project, evidence, *, environment_contrac
     result = {'format': 'fdisbull-pe-loader-module-recovery-1', 'status': 'unknown',
               'scope': SCOPE, 'whole_module_recovery': None, 'contraction': None}
     try:
-        if environment_contract not in (ENVIRONMENT, VERIFIED_LOADER_ENVIRONMENT, VERIFIED_CALLER_ENVIRONMENT):
+        if environment_contract not in (ENVIRONMENT, VERIFIED_LOADER_ENVIRONMENT, VERIFIED_CALLER_ENVIRONMENT,
+                                        VERIFIED_PROCESS_ATTACH_ENVIRONMENT):
             raise ValueError('Explicit loader dispatch, owned-memory frame, terminal and GS/TEB contracts are required')
         verified = environment_contract != ENVIRONMENT
-        caller_intervals = environment_contract == VERIFIED_CALLER_ENVIRONMENT
+        process_attach = environment_contract == VERIFIED_PROCESS_ATTACH_ENVIRONMENT
+        caller_intervals = environment_contract in (VERIFIED_CALLER_ENVIRONMENT, VERIFIED_PROCESS_ATTACH_ENVIRONMENT)
         if verified and not isinstance(loader_source, bytes):
             raise ValueError('Verified inner loader dispatch requires original Wine loader bytes')
         from .runtime_loader_analysis import load_loader_evidence
         bound = load_loader_evidence(project, dll_project, evidence, require_loader_capsules=verified,
-                                     require_loader_intervals=caller_intervals)
+                                     require_loader_intervals=caller_intervals, require_process_attach=process_attach)
         if verified:
             _bind_loader_source(bound, loader_source)
         bound['loader_source'] = loader_source if verified else None
@@ -201,7 +208,7 @@ def _recover(bound, result, deadline):
         raise ValueError('The source module requires one attach pair, report and detach pair')
     result['dll_contracts'] = proofs
     loader_dispatch_contracts = []
-    if result['environment_contract'] in (VERIFIED_LOADER_ENVIRONMENT, VERIFIED_CALLER_ENVIRONMENT):
+    if result['environment_contract'] != ENVIRONMENT:
         from .pe_wine_loader_contracts import build_wine_loader_contract, validate_wine_loader_capsule
         for capsule in bound['loader_capsules']:
             phase = capsule['phase']
@@ -238,7 +245,7 @@ def _recover(bound, result, deadline):
                     'limits': 'Capsule prefix/tail proved only inside MODULE_InitDLL; outer scheduling/frame/ExitProcess remain explicit'}})
     result['loader_dispatch_contracts'] = loader_dispatch_contracts
     caller_contracts = []
-    if result['environment_contract'] == VERIFIED_CALLER_ENVIRONMENT:
+    if result['environment_contract'] in (VERIFIED_CALLER_ENVIRONMENT, VERIFIED_PROCESS_ATTACH_ENVIRONMENT):
         from .pe_wine_loader_intervals import build_wine_loader_interval_contract, validate_wine_loader_interval
         from .pe_loader_caller_joins import join_caller_contract
         for fragment in bound['loader_intervals']:
@@ -269,6 +276,35 @@ def _recover(bound, result, deadline):
                     **deepcopy(fragment['boundaries']),
                     'limits': 'Source-linked caller metadata and saved-frame preconditions remain explicit; this fragment does not close the full outer interval'}})
     result['loader_caller_contracts'] = caller_contracts
+    full_attach = None
+    if result['environment_contract'] == VERIFIED_PROCESS_ATTACH_ENVIRONMENT:
+        from .pe_wine_process_attach import build_wine_process_attach_contract, validate_wine_process_attach
+        observation = bound['loader_process_attach']
+        capsule = observation['capsule']
+        module = bound['loader_capsules'][0]['capsule']
+        contract = build_wine_process_attach_contract(capsule, loader_source=bound['loader_source'],
+            subject_source=bound['subject_source_bytes'], module_capsule=module)
+        remaining = int((deadline-time.monotonic())*1000)
+        if remaining < 1:
+            raise ValueError('Whole module process_attach proof deadline exhausted')
+        proof = validate_wine_process_attach(capsule, contract=contract,
+            loader_source=bound['loader_source'], module_capsule=module, timeout_ms=min(remaining,60000))
+        if proof['status'] != 'proved_for_observed_wine_process_attach':
+            raise ValueError('Actual full process_attach leaf was not proved: '+proof.get('reason',proof['status']))
+        expected = _cells(proofs[1]['post_memory']); actual = _cells(proof['post_protected_memory'])
+        if any(actual.get(a) != expected[a] for a in range(ds['dll_data_start'],ds['dll_data_end'])):
+            raise ValueError('Full process_attach and authored callback transfers disagree')
+        # The nested exact MODULE proof is re-run by the full verifier. Its
+        # effects join each evolving outer live read and ordered write rather
+        # than resetting caller RAM to another native sample.
+        full_attach = {'artifact': observation['artifact'], 'contract': contract, 'proof': proof,
+            'coverage': {'dispatcher_artifact': observation['dispatcher_artifact'],
+                'selection_artifact': observation['selection_artifact'],
+                **deepcopy(observation['boundaries']),
+                'initialization_list': 'Complete retained reciprocal ring plus appended source DLL node',
+                'simd': 'Exact XMM0/1 128-bit pointer construction',
+                'limits': 'Source DLL leaf under explicit entry metadata/guards; full outer intervals remain conditional'}}
+    result['loader_process_attach_contract'] = full_attach
     entry_cells=_cells(get(recovery['entry'])['memory'])
     initialized_code=_cells([proofs[1]['post_code']])
     if any(entry_cells.get(a)!=b for a,b in initialized_code.items()):
@@ -394,12 +430,23 @@ def _recover(bound, result, deadline):
                  'exit_snapshot': caller['coverage']['exit_snapshot'],
                  'remaining_assumptions': deepcopy(caller['proof']['remaining_assumptions'])}
                 for caller in caller_contracts if caller['coverage']['partial_outer_edge'] == interval['label']]
+            if full_attach is not None and interval['label'] in ('loader-to-tls-attach','dll-return-to-exe-entry'):
+                interval['additional_process_attach_coverage'] = {
+                    'artifact': full_attach['artifact'], 'contract_sha256': full_attach['proof']['sha256'],
+                    'entry_snapshot': full_attach['coverage']['entry_snapshot'],
+                    'exit_snapshot': full_attach['coverage']['exit_snapshot'],
+                    'remaining_assumptions': deepcopy(full_attach['proof']['remaining_assumptions'])}
         result['whole_module_recovery']['loader_dispatch'] = {
             'proved_inner_edges': [p['coverage']['fully_discharged_edge'] for p in loader_dispatch_contracts],
             'outer_intervals_still_conditional': len(remaining_intervals),
             'source_sha256': hashlib.sha256(bound['loader_source']).hexdigest(),
             'scope': 'Exactly the captured normal MODULE_InitDLL attach/detach paths; no loader-wide frame or scheduling theorem'}
         result['whole_module_recovery']['loader_dispatch']['caller_fragments'] = [c['role'] for c in caller_contracts]
+        if full_attach is not None:
+            result['whole_module_recovery']['loader_dispatch']['process_attach'] = {
+                'status': full_attach['proof']['status'], 'artifact': full_attach['artifact'],
+                'instructions': full_attach['proof']['checks']['instructions'],
+                'scope': full_attach['coverage']['limits']}
     contraction = {'format': 'fdisbull-loader-module-contraction-1',
         'evidence_sha256': _digest(report), 'receipts_sha256': _digest(bound['receipts']),
         'callback_contracts': [p['sha256'] for p in proofs],
@@ -407,6 +454,7 @@ def _recover(bound, result, deadline):
         'environment_contract': deepcopy(result['environment_contract']), 'recovery_sha256': _digest(result['whole_module_recovery']),
         'loader_dispatch_contracts': [p['proof']['sha256'] for p in loader_dispatch_contracts],
         'caller_contracts': [p['proof']['sha256'] for p in caller_contracts],
+        'process_attach_contract': full_attach['proof']['sha256'] if full_attach else None,
         **({'loader_source_sha256': hashlib.sha256(bound['loader_source']).hexdigest(),
              'remaining_loader_intervals_sha256': _digest(result['remaining_loader_intervals'])} if loader_dispatch_contracts else {}),
         'expansion': 'Exact original reference bundle; owning project resolves its immutable native artifacts'}

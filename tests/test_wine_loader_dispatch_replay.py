@@ -6,7 +6,12 @@ claim that the debugger measured that hidden context at entry.
 """
 
 
-def replay_wine_loader_capsule(capsule):
+def replay_wine_loader_capsule(capsule, *, opaque_save_registers=None):
+    """Replay all instructions; optionally restrict opaque initial FP saves.
+
+    A computed vector excluded from the allowlist is never seeded from its
+    eventual store. Its producing instructions must establish the value.
+    """
     import capstone
     import unicorn
     from unicorn import x86_const as reg
@@ -50,8 +55,9 @@ def replay_wine_loader_capsule(capsule):
             value = int.from_bytes(bytes.fromhex(writes[0]['after_hex']), 'little')
             name = ('MXCSR' if ins.mnemonic == 'stmxcsr' else 'FPCW'
                     if ins.mnemonic == 'fnstcw' else ins.reg_name(ins.operands[1].reg).upper())
-            assert name not in opaque or opaque[name] == value, 'Hidden FP input changes inside the captured path'
-            opaque[name] = value
+            if opaque_save_registers is None or name in opaque_save_registers:
+                assert name not in opaque or opaque[name] == value, 'Hidden FP input changes inside the captured path'
+                opaque[name] = value
     for name, value in opaque.items():
         cpu.reg_write(getattr(reg, 'UC_X86_REG_' + name), value)
 
