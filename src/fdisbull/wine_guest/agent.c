@@ -861,6 +861,35 @@ static void context_diagnostics(void) {
     }
     puts("]}");
 }
+/* Passive snapshot of agent-owned controls at one pending debug event. This
+ * does not continue the event, read process memory or alter guard state. */
+static void control_inventory(void) {
+    if(!pending || exited) {puts("{\"error\":\"control-inventory-requires-pending-event\"}");return;}
+    printf("{\"format\":\"fdisbull-debug-controls-1\",\"pending_event\":{\"pending\":true,\"event\":%lu,\"process\":%lu,\"thread\":%lu,\"target_bits\":%u,\"state_revision\":%llu,\"module_revision\":%llu,\"continuation\":%lu,\"stepping_thread\":%lu,\"breakpoint_hit\":%d,\"guard_pending\":%s},\"breakpoints\":[",
+        ev.dwDebugEventCode,ev.dwProcessId,ev.dwThreadId,target_bits,state_revision,module_revision,
+        continuation,stepping_tid,hit,guard_pending?"true":"false");
+    unsigned count=0;
+    for(int i=0;i<MAX_BP;i++) if(bp[i].used)
+        printf("%s{\"id\":\"bp-%d\",\"address\":\"0x%llx\",\"original_hex\":\"%02x\",\"armed\":%s}",
+            count++?",":"",i,(unsigned long long)bp[i].address,bp[i].original,bp[i].armed?"true":"false");
+    printf("],\"watchpoints\":[");count=0;
+    for(int i=0;i<MAX_WATCH;i++) if(watches[i].used)
+        printf("%s{\"id\":\"wp-%d\",\"address\":\"0x%llx\",\"length\":%llu,\"access\":\"%s\"}",
+            count++?",":"",i,(unsigned long long)watches[i].address,
+            (unsigned long long)watches[i].length,watches[i].access);
+    printf("],\"overlays\":[");count=0;
+    for(int i=0;i<MAX_WATCH;i++) if(overlays[i].used)
+        printf("%s{\"index\":%d,\"address\":\"0x%llx\",\"length\":%llu}",
+            count++?",":"",i,(unsigned long long)overlays[i].address,(unsigned long long)overlays[i].length);
+    printf("],\"pages\":[");
+    for(int i=0;i<page_count;i++)
+        printf("%s{\"address\":\"0x%llx\",\"protection\":%lu,\"armed\":%s}",
+            i?",":"",(unsigned long long)pages[i].address,pages[i].protection,pages[i].armed?"true":"false");
+    printf("],\"threads\":[");count=0;
+    for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle)
+        printf("%s{\"id\":%lu,\"suspended\":%s}",count++?",":"",threads[i].id,threads[i].suspended?"true":"false");
+    puts("]}");
+}
 static HWND window;static LONG best_area;
 static int owned_foreground(void) {
     DWORD pid=0;HWND h=GetForegroundWindow();
@@ -917,6 +946,12 @@ int main(int argc,char **argv) {
                 puts("{\"error\":\"invalid-context-diagnostics-command\"}");continue;
             }
             context_diagnostics();
+        }
+        else if(!strcmp(op,"control-inventory")) {
+            if(strspn(line+strlen(op)," \r\n\t")!=strlen(line+strlen(op))) {
+                puts("{\"error\":\"invalid-control-inventory-command\"}");continue;
+            }
+            control_inventory();
         }
         else if(!strcmp(op,"registers")) {registers(context());puts("");}
         else if(!strcmp(op,"modules")) {module_state();}

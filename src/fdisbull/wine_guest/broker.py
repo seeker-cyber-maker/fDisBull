@@ -157,6 +157,9 @@ def invoke(method, params):
         raise ValueError('No live target')
     if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm','keyboard-state','modules'):
         command = method
+    elif method=='control-inventory':
+        if params:raise ValueError('Control inventory accepts no parameters')
+        command='control-inventory'
     elif method=='selector':
         command=f"selector {number(params['selector'],0,65535):x}"
     elif method=='context-diagnostics':
@@ -236,7 +239,7 @@ def identity():
                                      'opt/fdisbull/broker.py':__file__}.items() if Path(path).is_file()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
-      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,'win16_integer_pair':True,'process_profiles':['pe32','pe64']},
+      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,'control_inventory':True,'win16_integer_pair':True,'process_profiles':['pe32','pe64']},
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
 
 def main():
