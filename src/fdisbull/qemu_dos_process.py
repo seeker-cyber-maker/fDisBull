@@ -831,6 +831,22 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         self._checkpoint_entry_clean = False
         return result
 
+    def _close_failed_execution(self, error, reason, *, result=None):
+        """Retain an arrived stop and primary failure through terminal cleanup."""
+        if getattr(error, 'result', None) is None and result is not None:
+            error.result = result
+        if not getattr(self.vm, '_fdisbull_control_quarantine', None):
+            self.vm._fdisbull_control_quarantine = reason
+        from .qemu_machine import _tracking
+        try:
+            _tracking(self, 'close', reason)
+        except BaseException as retirement_error:
+            error.dos_process_tracking_retirement_error = type(retirement_error).__name__
+        try:
+            self.vm.close()
+        except BaseException as cleanup_error:
+            error.dos_process_cleanup_error = type(cleanup_error).__name__
+
     def _execute(self, command, timeout_ms):
         # A rejected queued-input/transaction request has not executed the
         # guest. Preserve its live process and queue for an explicit run or
@@ -842,16 +858,17 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         if not self._launching:
             from .qemu_save_stop import before_execute
             save_stop_before=before_execute(self,command)
+        result = None
         try:
             result = MachineContext._execute(self, command, timeout_ms)
             if save_stop_before is not None:
                 from .qemu_save_stop import after_execute
                 result=after_execute(self,result,save_stop_before)
-        except BaseException:
+        except BaseException as error:
             # Native execution can finish before its event is persisted. A
             # logging failure must not preserve an unobserved live process.
             if not self._launching:
-                self.vm.close()
+                self._close_failed_execution(error, 'failed DOS process execution publication', result=result)
             raise
         if not self._launching and result['outcome'] == 'exited':
             self.vm.close()
@@ -875,9 +892,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 except BaseException as error:
                     # The foreground process may already be gone. An invalid
                     # report cannot safely be retried or relabeled a success.
-                    if getattr(error, 'result', None) is None:
-                        error.result = result
-                    self.vm.close()
+                    self._close_failed_execution(error, 'failed DOS process return observation', result=result)
                     raise
                 finally:
                     self._set_deadline(previous_deadline)
