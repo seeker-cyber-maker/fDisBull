@@ -6102,3 +6102,89 @@ component04 boot, the historical DOSBox startup issue and overall parity remain
 open. The milestone does not permit DOSBox-X removal. Sanitized results are in
 [the acceptance receipt](evidence/qemu-dos-le-binding-2026-11-13/verification.json);
 private originals, FDB/CAS and byte-retaining traces stay outside Git.
+
+## 2026-11-14 — DESQview continuity integrated with protected LE source binding
+
+The reviewed `63da4cb7392157cf0d8e82e562655e09c541ec3a` three-file patch was
+integrated onto LE head `110430501f39c7ca15d7c44bf150159a985a2289`, preserving
+all three reviewed file hashes. Frozen combined runtime:
+`62d01df80274656f0dac6352068f54363338e9f8`.
+
+Typed source ambiguity withdraws source maps while independently validated
+native task/process coverage can retain its episode. Generic failures and lost
+coverage retire continuity; unavailable journaling fences dispatch. Detailed
+source errors remain private artifacts with a bounded recent status index.
+
+Combined review also found terminal disposal could replace a primary error and
+its arrived native-stop receipt. The DOS correction preserves that exception
+and result, quarantines before retirement/disposal, and adds secondary failure
+diagnostics. Eight authored host coupling cases cover source/coverage failures,
+journaling/disposal, helper return, scheduler refusal and native W/X cleanup.
+Five failure cases were demonstrated red across retained precursors; the other
+three preserve earlier behavior. Default QEMU-DOS and raw-machine routes remain
+distinct; simultaneous explicit tracker/LE attachment is host evidence only.
+
+One private flat install was used by both original-target campaigns. All **708
+runtime files** match source, wheel and install. Wheel SHA-256:
+`9d57314e541b6b14b0a0066a0a6911995a748c3b9f627a2a3b6f721daa192111`.
+The shared host interpreter is Python 3.13.13; its prefix is pinned separately
+from the private installation target. No duplicate or native build was needed.
+
+Fresh local acceptance on this exact runtime:
+
+- **3,238 host tests passed**, with 12 absent-native-input skips across 110 files.
+  All **1,275 Python source/test hashes** and HEAD stayed fixed. Focused source,
+  independent and installed selections each passed **264** cases; counts overlap.
+- **Ten native pytest cases passed**, zero skips: standard/virtual authored LE
+  traces, six composed DOS/CHIP-8 history/trial/selected-state/frame/layer/hook/
+  checkpoint/IRQ cases, and two actual SQLite publication-failure cases.
+- Independent authored cold audit reproduces relocated instruction identity,
+  four traces per profile, saved searches and outside-source refusal. Initial
+  MZ mappings stay unchanged, with no fabricated LE project/task identity.
+  Virtual clock brackets are stable.
+- Untouched Doom reached protected source after 14 observed startup stops.
+  Eight distinct traced sites and a ninth current-predicate boundary qualify
+  within a 149-byte bounding span. All nine source-byte/hash checks reproduce
+  directly, with 72 relocation-pointer witness checks. No observed instruction
+  overlaps a fixup; executed-relocation coverage belongs to the authored fixture.
+  Cold queries return eight/one matches, complete with no unknowns; four exports
+  are byte-identical. Step mask 7 suppresses IRQs/timers, and establishes no
+  retirement or IRQ/timer-transparent tracing claim.
+- A later ordinary Doom run advances source generation 1 to 2 and retains its
+  timeout stop. Its endpoint is real16, unpaged, with A20. Fresh protected-source
+  observation refuses that profile and keeps authority withdrawn. The earlier
+  separate-candidate GDT-only boundary is not substituted for this new result.
+
+Fresh original-DESQview acceptance uses that same source/wheel/install:
+
+- The same task UUID, process episode, generations, original source and virtual
+  coverage survive an independently observed physical code relocation.
+- Genuine numeric handle/process-key reuse creates a new registry UUID and
+  process incarnation, with task/process generations 1 to 3 and ordered native
+  END/CREATE evidence. This does not join the two lifetimes.
+- **35 detailed source errors**, **nine** same-task recoveries and **12** provider
+  coverage witnesses survive cold reopening. The latest-16 index remains exact;
+  all 35 artifacts export through the public Project API to private files.
+- Six stopped witnesses compare **364 immutable code bytes** each. The complete
+  734-byte runtime window has **15 mutable differences**. Whole-window/task RAM
+  restoration remains unqualified. Physical proof comes from the independent
+  stopped auditor; automatic-provider physical qualification stays `null`.
+- Six ended tasks and 30 bindings receive **180 each** endpoint, range and
+  closed-interval checks; zero bindings remain current. Canonical database,
+  original inputs, native binary, controls/modules and all 708 installed files
+  stay unchanged. The guest is closed/reaped and its OS PID is absent.
+
+The DESQview cold report is
+`8462fed57aba53727c3c4f96b3f6115542ce7a7ea9975fda8b960145bf59c382`;
+the owner postflight verifies all 708 source/wheel/install files and 19 imported
+module paths. These are fresh combined-build observations, separate from the
+older `63da4cb7` and `d8adf49d` receipts. Private launcher checks were adapted to
+the flat install; failed preflight/admission receipts remain preserved. New
+DESQview artifacts use admitted CACHE storage; existing evidence stays in place.
+
+DOSBox-X stays default and retained. No CI, release, MR merge, shared activation
+or native rebuild. Broader parity, paged/LDT/bridge LE source execution, LE-addressed
+layer/hook/checkpoint authority, IRQ/timer-transparent tracing and the remaining
+compatibility campaigns remain separate gates. See the
+[sanitized combined acceptance receipt](evidence/qemu-desqview-continuity-integration-2026-11-14/verification.json).
+Original executables, images, FDB/CAS and byte-retaining reports remain private.
