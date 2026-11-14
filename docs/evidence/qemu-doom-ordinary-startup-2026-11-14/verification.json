@@ -41,11 +41,14 @@
   "format": "fdisbull-ordinary-doom-startup-qualification-1",
   "gameplay": {
     "checkpoint": {
+      "allocation_change_character": "unknown",
       "attempted": true,
       "checkpoint_or_restore_qualified": false,
       "exception": "DOS process allocation ownership changed",
       "followup_virtual_advance_ns": 1000000000,
+      "fresh_changed_MCB_fields_recorded": false,
       "owner_CPU_process_unchanged": true,
+      "process_document_is_cached": true,
       "protected_PC_guard_reached": false,
       "raw_bypass": false,
       "states_after": 0,

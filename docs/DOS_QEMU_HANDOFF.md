@@ -6500,9 +6500,11 @@ boundary, not whole-game speed, wall time or a completed-frame claim. A
 separate one-second clock advance follows that measured interval for capture.
 
 The normal protected-game `save_state` attempt now exposes the actual next
-blocker: **`DOS process allocation ownership changed`**. CPU/process documents,
+blocker: **`DOS process allocation ownership changed`**. CPU/cached-process documents,
 PID and state-artifact count are unchanged after refusal; subsequent ordinary
 execution and stored gameplay still work. No checkpoint bypass is attempted.
+No fresh MCB chain is retained in that probe, so the changed field and reason
+remain unknown rather than being assumed a legitimate resize.
 The later protected-PC/source guard was not reached. Allocation evolution and
 truthful source/recovery authority must be qualified before claiming protected
 game checkpoint/restore or full analysis end-to-end equivalence.

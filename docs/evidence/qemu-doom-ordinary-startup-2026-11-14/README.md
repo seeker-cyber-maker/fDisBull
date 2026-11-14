@@ -83,10 +83,13 @@ DOS process allocation ownership changed
 
 That is the actual first failing guard. The later protected-PC/source-module
 guard is not reached, so it must not be reported as the observed failure.
-Before/after CPU and process documents and PID are equal; state-artifact count
+Before/after CPU and cached process documents and PID are equal; state-artifact count
 stays zero and the before/after images are identical. A subsequent one-second
 virtual advance succeeds and renders gameplay. The refusal preserves the
 owner; no raw snapshot bypass or fabricated source-restoration flag is used.
+The cached process document is not a fresh MCB scan. This trial does not record
+which allocation fields changed or distinguish a legitimate resize from other
+ownership changes.
 
 Next acceptance work must establish the extender's allocation evolution and
 truthful recovery/source authority. A raw whole-machine state and a source-bound
