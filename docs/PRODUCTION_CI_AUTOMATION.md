@@ -48,6 +48,17 @@ identities, then publishes. Every mutation has a durable intent. An uncertain
 response stops with its partial effects retained; read-only reconciliation never
 repeats a mutation. A successful CLI exit alone is not publication proof.
 
+After verified publication, the same pipeline copies the qualified chat ZIP to
+an exclusive, random, unlisted filename under `/srv/www/releases/ci-0.35.0/`.
+The scoped web server must serve that directory with `Cache-Control: no-store`;
+the service must have write access to this child directory. A separate delivery
+receipt binds the source, URL, size and hash to HEAD metadata, three exact range
+comparisons, a full download hash and an interrupted `Range`/`If-Range` resume
+hash. The pipeline reports the GitHub release URL separately from the download
+URL, and calls the run complete only after that receipt passes. A delivery
+failure retains the GitHub result, delivery intent and any partial file; it does
+not repeat publication. Each new URL needs fresh live verification.
+
 This code path must pass a real uninterrupted source-to-release run before
 being called operationally qualified. Historical operator-assisted closure does
 not qualify it. Publication and the active local installation retain separate
@@ -178,3 +189,11 @@ exact first/middle/tail bytes, a complete download hash and an actually
 interrupted `Range`/`If-Range` resumed hash. The successful existing archive's
 CDN check is not a blanket qualification for future URLs. Release, tag and
 system-wide application installation remain separate human-authorized steps.
+
+For the current 0.35.0 release, the user approved fresh-prefix installation and
+activation after the full release checks pass, retaining the previous prefix
+and exact selector for rollback. That approval supersedes earlier no-install
+instructions for older candidates; it does not make an unverified Mac backend
+qualified. The source-to-release controller does not yet implement application
+prefix assembly or activation. Record that implementation/host-qualification
+stage explicitly rather than treating it as a new permission requirement.

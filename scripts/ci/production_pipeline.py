@@ -9,19 +9,26 @@ import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import secrets
 import selectors
 import signal
+import stat
 import subprocess
 import sys
 import time
 import tomllib
 import uuid
+import urllib.request
+import zipfile
 
 REQUEST_ROOT = Path('/var/lib/fdisbull-ci/control/production')
 STATE_ROOT = Path('/var/lib/fdisbull-ci/control/recovery/production')
 DATA_ROOT = Path('/var/lib/fdisbull-ci')
 SOURCE_ROOT = Path('/var/lib/fdisbull-ci/control/production/sources')
 OUTPUT_ROOT = Path('/var/lib/fdisbull-ci/results/pipelines')
+DELIVERY_ROOT = Path('/srv/www/releases/ci-0.35.0')
+DELIVERY_ORIGIN = 'https://release.brewsterjennings.ca/ci-0.35.0'
+DELIVERY_AGENT = 'fDisBull-offline-kit/1.0'
 REPOSITORY = 'seeker-cyber-maker/fDisBull'
 REPOSITORY_URL = 'https://github.com/' + REPOSITORY + '.git'
 REPOSITORY_ID = 1431097789
@@ -542,6 +549,228 @@ def _release_manifest(request, output_root):
     return manifest_path, _digest(manifest_path), manifest
 
 
+class _NoDeliveryRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ValueError('delivery redirect not allowed')
+
+
+def _delivery_open(url, method, headers, deadline):
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError('delivery deadline expired')
+    request = urllib.request.Request(url, method=method, headers={
+        'User-Agent': DELIVERY_AGENT, 'Accept-Encoding': 'identity', **headers})
+    return urllib.request.build_opener(_NoDeliveryRedirect()).open(request, timeout=min(30, remaining))
+
+
+def _delivery_head(response, size):
+    if response.status != 200 or response.headers.get('Content-Length') != str(size):
+        raise ValueError('delivery HEAD length or status differs')
+    content_type = response.headers.get('Content-Type', '').split(';', 1)[0].strip().lower()
+    etag = response.headers.get('ETag', '')
+    modified = response.headers.get('Last-Modified', '')
+    cache_control = response.headers.get('Cache-Control', '')
+    if (content_type not in ('application/zip', 'application/x-zip-compressed')
+            or response.headers.get('Accept-Ranges', '').lower() != 'bytes'
+            or not etag.startswith('"') or not etag.endswith('"') or etag.startswith('W/')
+            or not modified or 'no-store' not in {part.strip().lower() for part in cache_control.split(',')}
+            or response.headers.get('Content-Encoding', 'identity').lower() != 'identity'):
+        raise ValueError('delivery HEAD metadata invalid')
+    return {'etag': etag, 'last_modified': modified, 'content_type': content_type,
+            'cache_control': cache_control}
+
+
+def _delivery_headers(response, metadata, *, status, length, content_range=None):
+    if (response.status != status or response.headers.get('Content-Length') != str(length)
+            or response.headers.get('ETag') != metadata['etag']
+            or response.headers.get('Last-Modified') != metadata['last_modified']
+            or response.headers.get('Cache-Control') != metadata['cache_control']
+            or response.headers.get('Content-Encoding', 'identity').lower() != 'identity'
+            or (content_range is not None and response.headers.get('Content-Range') != content_range)):
+        raise ValueError('delivery response identity or range differs')
+
+
+def _delivery_read(response, count, deadline, digest=None):
+    remaining = count
+    while remaining:
+        timeout = deadline - time.monotonic()
+        if timeout <= 0:
+            raise TimeoutError('delivery deadline expired')
+        # urllib's socket timeout otherwise remains fixed at connection time.
+        sock = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+        if sock is not None:
+            sock.settimeout(min(30, timeout))
+        block = response.read(min(1024 * 1024, remaining))
+        if not block or len(block) > remaining:
+            raise ValueError('delivery response truncated')
+        if digest is not None:
+            digest.update(block)
+        remaining -= len(block)
+        yield block
+
+
+def _delivery_hash(path, deadline):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        while True:
+            if time.monotonic() >= deadline:
+                raise TimeoutError('delivery hash deadline expired')
+            block = stream.read(1024 * 1024)
+            if not block:
+                return digest.hexdigest()
+            digest.update(block)
+
+
+def _delivery_archive_safety(path):
+    # Authored fixtures are the only fixtures in this qualified kit. Private
+    # projects, state and screenshots must not be delivered as archive members.
+    fixture_names = {'fixtures/oracle.exe', 'fixtures/selftest32.exe',
+                     'fixtures/ORACLE.EXE', 'fixtures/win16-profile.json'}
+    forbidden = {'.fdb', '.sqlite', '.sqlite3', '.db', '.sav', '.state',
+                 '.png', '.jpg', '.jpeg', '.gif', '.bmp'}
+    with zipfile.ZipFile(path) as archive:
+        seen = set()
+        for item in archive.infolist():
+            name = item.filename.rstrip('/')
+            parts = name.split('/')
+            if (not name or name in seen or parts[0] != 'fdisbull-chat-offline'
+                    or any(part in ('', '.', '..') or part.startswith('.') for part in parts) or '\\' in name):
+                raise ValueError('unsafe or duplicate delivery archive member')
+            mode = item.external_attr >> 16
+            if stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR):
+                raise ValueError('delivery archive contains a link or special file')
+            seen.add(name)
+            relative = '/'.join(parts[1:])
+            suffix = PurePosixPath(relative).suffix.lower()
+            if suffix in forbidden and relative != 'native/qemu/share/qemu/qemu-nsis.bmp':
+                raise ValueError('private project, state or image in delivery archive')
+            if relative == 'native/qemu/share/qemu/qemu-nsis.bmp':
+                if (item.file_size != 154542 or hashlib.sha256(archive.read(item)).hexdigest()
+                        != '93f79a2b6e0f97bc7b7c75ded89a3c4c7657af37c087cf067470771e0affda9c'):
+                    raise ValueError('QEMU distribution bitmap differs')
+            if relative.lower().startswith('fixtures/') and not item.is_dir() and relative not in fixture_names:
+                raise ValueError('unapproved private fixture in delivery archive')
+
+
+def _delivery_root_check():
+    if any(p.is_symlink() for p in (DELIVERY_ROOT, *DELIVERY_ROOT.parents)) or not DELIVERY_ROOT.is_dir():
+        raise ValueError('delivery root unavailable')
+    root_stat = DELIVERY_ROOT.stat()
+    if root_stat.st_uid != 0 or root_stat.st_mode & 0o022:
+        raise ValueError('delivery root must be root-owned and not group/world writable')
+
+
+def _deliver_kit(request, state_root, manifest, *, guard, health):
+    deadline = time.monotonic() + 600
+    _delivery_root_check()
+    if not SHA.fullmatch(request['source_sha']) or not isinstance(manifest.get('assets'), list):
+        raise ValueError('delivery manifest invalid')
+    candidates = [a for a in manifest['assets'] if a.get('name') == 'fdisbull-chat-offline.zip']
+    if len(candidates) != 1:
+        raise ValueError('qualified chat archive missing')
+    asset = candidates[0]
+    source = Path(asset['path'])
+    qualification = Path(request['output_root']) / 'qualification'
+    if (any(p.is_symlink() for p in (source, *source.parents)) or not source.is_file()
+            or not source.resolve().is_relative_to(qualification.resolve())
+            or type(asset.get('size')) is not int or not 3 <= asset['size'] <= 2_000_000_000
+            or not HEX.fullmatch(str(asset.get('sha256')))):
+        raise ValueError('unsafe qualified archive')
+    _delivery_archive_safety(source)
+    name = 'transfer-' + secrets.token_hex(16) + '-fdisbull-' + VERSION + '-' + request['source_sha'] + '-chat-offline.zip'
+    target = DELIVERY_ROOT / name
+    url = DELIVERY_ORIGIN + '/' + name
+    _write_once(state_root / 'delivery-intent.json', {
+        'schema': 'fdisbull-cdn-delivery-intent-1', 'source_sha': request['source_sha'],
+        'url': url, 'path': str(target), 'size': asset['size'], 'sha256': asset['sha256']})
+    guard()
+    if health().get('state') != 'healthy':
+        raise RuntimeError('host health unavailable before delivery')
+    srcfd = os.open(source, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+    try:
+        outfd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    except BaseException:
+        os.close(srcfd)
+        raise
+    copied = hashlib.sha256(); count = 0
+    with os.fdopen(srcfd, 'rb') as src, os.fdopen(outfd, 'wb') as dst:
+        before = os.fstat(src.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_size != asset['size']:
+            raise ValueError('qualified archive size changed')
+        while True:
+            if time.monotonic() >= deadline:
+                raise TimeoutError('delivery copy deadline expired')
+            block = src.read(1024 * 1024)
+            if not block:
+                break
+            count += len(block); copied.update(block); dst.write(block)
+        after = os.fstat(src.fileno())
+        if ((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
+                != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+                or count != asset['size'] or copied.hexdigest() != asset['sha256']):
+            raise ValueError('qualified archive changed during copy')
+        dst.flush(); os.fchmod(dst.fileno(), 0o444); os.fsync(dst.fileno())
+    directory_fd = os.open(DELIVERY_ROOT, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+    try: os.fsync(directory_fd)
+    finally: os.close(directory_fd)
+    if _delivery_hash(target, deadline) != asset['sha256'] or _delivery_hash(source, deadline) != asset['sha256']:
+        raise ValueError('delivery copy readback differs')
+    with _delivery_open(url, 'HEAD', {}, deadline) as response:
+        metadata = _delivery_head(response, asset['size'])
+    chunk = min(65536, max(1, asset['size'] // 3))
+    offsets = (0, (asset['size'] - chunk) // 2, asset['size'] - chunk)
+    for start in offsets:
+        end = start + chunk - 1
+        with _delivery_open(url, 'GET', {'Range': f'bytes={start}-{end}'}, deadline) as response:
+            _delivery_headers(response, metadata, status=206, length=chunk,
+                              content_range=f'bytes {start}-{end}/{asset["size"]}')
+            actual = b''.join(_delivery_read(response, chunk, deadline))
+        with source.open('rb') as original:
+            original.seek(start); expected = original.read(chunk)
+        if actual != expected:
+            raise ValueError('delivery range bytes differ')
+    full = hashlib.sha256()
+    with _delivery_open(url, 'GET', {}, deadline) as response:
+        _delivery_headers(response, metadata, status=200, length=asset['size'])
+        for _ in _delivery_read(response, asset['size'], deadline, full):
+            pass
+    if full.hexdigest() != asset['sha256']:
+        raise ValueError('delivery full download differs')
+    cut = min(262144, asset['size'] - 1)
+    resumed = hashlib.sha256()
+    # Close an actual incomplete 200 response, then resume that byte stream.
+    with _delivery_open(url, 'GET', {}, deadline) as response:
+        _delivery_headers(response, metadata, status=200, length=asset['size'])
+        for _ in _delivery_read(response, cut, deadline, resumed):
+            pass
+    with _delivery_open(url, 'GET', {'Range': f'bytes={cut}-', 'If-Range': metadata['etag']}, deadline) as response:
+        _delivery_headers(response, metadata, status=206, length=asset['size'] - cut,
+                          content_range=f'bytes {cut}-{asset["size"]-1}/{asset["size"]}')
+        for _ in _delivery_read(response, asset['size'] - cut, deadline, resumed):
+            pass
+    if resumed.hexdigest() != asset['sha256']:
+        raise ValueError('delivery resumed download differs')
+    with _delivery_open(url, 'HEAD', {}, deadline) as response:
+        if _delivery_head(response, asset['size']) != metadata:
+            raise ValueError('delivery metadata changed')
+    final_stat = target.lstat()
+    if (not stat.S_ISREG(final_stat.st_mode) or stat.S_IMODE(final_stat.st_mode) != 0o444
+            or final_stat.st_size != asset['size'] or _delivery_hash(target, deadline) != asset['sha256']
+            or _delivery_hash(source, deadline) != asset['sha256']):
+        raise ValueError('delivery file changed during public verification')
+    guard()
+    if health().get('state') != 'healthy':
+        raise RuntimeError('host health unavailable after delivery')
+    receipt = {'schema': 'fdisbull-cdn-delivery-1', 'status': 'passed',
+               'source_sha': request['source_sha'], 'url': url, 'path': str(target),
+               'size': asset['size'], 'sha256': asset['sha256'], **metadata,
+               'range_offsets': list(offsets), 'range_bytes': chunk,
+               'full_sha256': full.hexdigest(), 'resume_offset': cut,
+               'resume_sha256': resumed.hexdigest(), 'user_agent': DELIVERY_AGENT}
+    _write_once(state_root / 'delivery-receipt.json', receipt)
+    return receipt
+
+
 def _valid_publisher_result(value, request):
     if (not isinstance(value, dict) or value.get('status') != 'completed'
             or value.get('source_sha') != request['source_sha'] or value.get('tag') != TAG
@@ -550,15 +779,19 @@ def _valid_publisher_result(value, request):
     return value['release_url'] == f'https://github.com/{REPOSITORY}/releases/tag/{TAG}'
 
 
-def _write_result(path, request, status, *, release_url=None, reason=None, cleanup=None):
+def _write_result(path, request, status, *, release_url=None, download_url=None, delivery_receipt=None, reason=None, cleanup=None):
     value = {'schema': 'fdisbull-production-release-result-1',
              'request_sha256': request['_request_sha256'], 'status': status,
              'source_sha': request['source_sha'], 'tag': TAG,
-             'release_url': release_url if status == 'complete' else None,
+             'release_url': release_url, 'download_url': download_url,
+             'delivery_receipt': delivery_receipt,
              'reason': reason, 'cleanup': cleanup,
              'owned_cleanup_verified': isinstance(cleanup,dict) and cleanup.get('running_after')==0,
              'source_root': request['source_root'], 'output_root': request['output_root'],
              'observed_at': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    intent = path.parent / 'delivery-intent.json'
+    if intent.is_file() and not intent.is_symlink():
+        value['delivery_intent'] = {'path': str(intent), 'sha256': _digest(intent)}
     _write_once(path, value)
     return value
 
@@ -583,6 +816,25 @@ def run(request, state_root, *, guard, health, publisher, clock=time.time, sleep
                 or result.get('source_sha') != request['source_sha'] or result.get('tag') != TAG
                 or result.get('status') not in ('complete', 'attention')):
             raise ValueError('existing pipeline result binding mismatch')
+        if result['status'] == 'complete' and (not isinstance(result.get('download_url'), str)
+                or not isinstance(result.get('delivery_receipt'), dict)):
+            raise ValueError('existing completed result lacks CDN delivery proof')
+        if result['status'] == 'complete':
+            ref = result['delivery_receipt']
+            expected = state_root / 'delivery-receipt.json'
+            if (set(ref) != {'path', 'sha256'} or ref['path'] != str(expected)
+                    or not HEX.fullmatch(str(ref['sha256'])) or expected.is_symlink()
+                    or not expected.is_file() or _digest(expected) != ref['sha256']):
+                raise ValueError('existing CDN delivery receipt differs')
+            proof = _json_file(expected)
+            pattern = re.escape(DELIVERY_ORIGIN) + r'/transfer-[a-f0-9]{32}-fdisbull-' + re.escape(VERSION) + '-' + request['source_sha'] + r'-chat-offline\.zip'
+            if (proof.get('schema') != 'fdisbull-cdn-delivery-1' or proof.get('status') != 'passed'
+                    or proof.get('source_sha') != request['source_sha'] or proof.get('url') != result['download_url']
+                    or not re.fullmatch(pattern, str(result['download_url']))
+                    or proof.get('path') != str(DELIVERY_ROOT / result['download_url'].rsplit('/', 1)[-1])
+                    or not HEX.fullmatch(str(proof.get('sha256')))
+                    or proof.get('full_sha256') != proof['sha256'] or proof.get('resume_sha256') != proof['sha256']):
+                raise ValueError('existing CDN delivery proof invalid')
         return result
     if intent_path.exists() or intent_path.is_symlink():
         return _write_result(result_path, request, 'attention', reason='unknown-existing-intent')
@@ -592,6 +844,7 @@ def run(request, state_root, *, guard, health, publisher, clock=time.time, sleep
     deadline = time.monotonic() + request['deadline_seconds']
     output_root = Path(request['output_root'])
     run_id = None
+    release_url = None
     cleanup = {'checked':0,'stopped':0,'running_after':0,'scope':'before-driver'}
     try:
         guard()
@@ -617,15 +870,20 @@ def run(request, state_root, *, guard, health, publisher, clock=time.time, sleep
         guard()
         if time.monotonic() >= deadline:
             raise TimeoutError('pipeline deadline expired before publication')
-        manifest_path, manifest_sha, _ = _release_manifest(request, output_root)
+        manifest_path, manifest_sha, manifest = _release_manifest(request, output_root)
         _save_progress(state_root / 'last-progress.json', phase='publishing', request=request, run_id=run_id)
         published = publisher(request['key'], {'manifest_path': str(manifest_path),
                                                 'manifest_sha256': manifest_sha})
         if not _valid_publisher_result(published, request):
             return _write_result(result_path, request, 'attention', reason='release-publication-unverified',
                                  cleanup=cleanup)
-        return _write_result(result_path, request, 'complete', release_url=published['release_url'],
-                             cleanup=cleanup)
+        release_url = published['release_url']
+        _save_progress(state_root / 'last-progress.json', phase='cdn-delivery', request=request, run_id=run_id)
+        delivery = _deliver_kit(request, state_root, manifest, guard=guard, health=health)
+        return _write_result(result_path, request, 'complete', release_url=release_url,
+                             download_url=delivery['url'], delivery_receipt={
+                                 'path': str(state_root / 'delivery-receipt.json'),
+                                 'sha256': _digest(state_root / 'delivery-receipt.json')}, cleanup=cleanup)
     except BaseException as error:
         try:
             run_id = run_id or _read_run_id(output_root, request['source_sha'])
@@ -635,7 +893,8 @@ def run(request, state_root, *, guard, health, publisher, clock=time.time, sleep
         except BaseException:
             cleanup = {'status': 'unknown'}
         try:
-            return _write_result(result_path, request, 'attention', reason=type(error).__name__, cleanup=cleanup)
+            return _write_result(result_path, request, 'attention', release_url=release_url,
+                                 reason=type(error).__name__, cleanup=cleanup)
         except FileExistsError:
             return _json_file(result_path)
 

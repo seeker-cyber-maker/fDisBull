@@ -9,6 +9,15 @@
     "reserve-based stops removed; actual path and filesystem failures preserved"
   ],
   "date": "2026-11-14",
+  "delivery_continuation": {
+    "deployment": "Native27 components and Mac GUI release activation verified; live read-only release preflight ready; no CI or release begun.",
+    "focused_pipeline_release": "26 passed",
+    "implemented": "Qualified ZIP only, immutable unlisted copy under scoped ci-0.35.0 web root, HEAD/range/full/interrupted-resume SHA readbacks required before complete.",
+    "install_scope": "Direct human approval to install/activate0.35 after full release checks verified in coordinator useritem01a1db85-7b19-74b3-8602-7a3f72b65ca5. Implementation and Mac host-native qualification remain pending; no selector changed.",
+    "preserves_partial_effects": true,
+    "public_archive_verified": false,
+    "source_storage_followup": "Removed mandatory external storage_admit tool; pinned volume/mount guard remains; 22 source transport tests passed."
+  },
   "limitations": {
     "final_primary_source_freeze_pending": true,
     "live_unattended_pipeline_started": false,
