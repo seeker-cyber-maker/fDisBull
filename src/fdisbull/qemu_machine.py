@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 from copy import deepcopy
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import re
@@ -1448,43 +1449,144 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
             raise ValueError('Source-bound DOS processes are not eligible for machine checkpoints')
         if self.vm.machine_configuration.get('clock_profile', {}).get('profile') != 'standard':
             raise ValueError('Raw machine checkpoints require standard clock profiles')
-        if self.breakpoints:
-            raise ValueError('Remove machine breakpoints and watchpoints before checkpointing')
+        if getattr(self,'_automatic_internal_pending',None) is not None:
+            raise ValueError('Resolve the pending automatic lifecycle stop before checkpointing')
         if getattr(self,'_layer_active',None):
             raise ValueError('Clear native layers before checkpointing')
         if self.project.db.in_transaction:
             raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
         require_released_machine_input(self.vm)
+        tracker=getattr(self,'_automatic_runtime_tracker',None)
+        internal=set(getattr(tracker,'internal_breakpoints',()))
+        provider=getattr(tracker,'provider',None)
+        if self.breakpoints or internal or provider is not None:
+            if (tracker is None or tracker.session is not self or tracker.project is not self.project
+                    or tracker.closed or tracker.busy or tracker.fenced or provider is None
+                    or getattr(provider,'session',None) is not self or len(internal)!=1
+                    or set(self.breakpoints)!=internal or getattr(self,'_qemu_hooks',None)
+                    or type(provider.hook_address) is not int
+                    or any(not isinstance(point,dict)
+                           or type(point.get('kind')) is not int or type(point.get('address')) is not int
+                           or type(point.get('length')) is not int
+                           or point!=dict(address=provider.hook_address,kind=1,length=1,access='x',
+                                      owner='automatic-runtime-tracking')
+                           for point in self.breakpoints.values())):
+                raise ValueError('Remove machine breakpoints and watchpoints before checkpointing')
+            try:tracker._validate_native_coverage()
+            except BaseException as error:
+                # This is observed loss of native authority, not an unsupported
+                # user control. Do not leave its old source intervals current.
+                self.vm._fdisbull_control_quarantine='failed checkpoint lifecycle coverage'
+                try:self.close()
+                except BaseException as cleanup_error:error.machine_cleanup_error=type(cleanup_error).__name__
+                raise
+        return deepcopy(self.breakpoints)
+
+    def _checkpoint_remaining(self,deadline):
+        bounds=[deadline,getattr(self,'_deadline',None),getattr(self,'_rpc_deadline',None),
+                getattr(self.vm,'operation_deadline',None),
+                *[getattr(channel,'operation_deadline',None) for channel in
+                  (self.vm.qmp,self.vm.gdb) if channel is not None]]
+        remaining=int((min(value for value in bounds if value is not None)-time.monotonic())*1000)
+        if remaining<1:raise TimeoutError('Checkpoint operation deadline expired')
+        return min(600000,remaining)
+
+    @contextmanager
+    def _checkpoint_budget(self,deadline):
+        """Keep admission, observer checks, snapshot and retirement on one bound."""
+        owner=self.vm;initial_remote=owner.gdb
+        channels=[owner,owner.qmp,*([initial_remote] if initial_remote is not None else [])]
+        previous=[(channel,hasattr(channel,'operation_deadline'),getattr(channel,'operation_deadline',None))
+                  for channel in channels]
+        deadline=time.monotonic()+self._checkpoint_remaining(deadline)/1000
+        try:
+            for channel,_,_ in previous:channel.operation_deadline=deadline
+            yield deadline
+        finally:
+            if initial_remote is None and owner.gdb is not None:
+                owner.gdb.operation_deadline=previous[0][2]
+            for channel,had,value in previous:
+                if had:channel.operation_deadline=value
+                else:del channel.operation_deadline
+
+    @contextmanager
+    def _checkpoint_tracking_controls(self,points,deadline,*,repair):
+        """Exclude only this paused observer's remote controls, never its journal."""
+        if not points:
+            yield
+            return
+        owner=self.vm;process=owner.process;tracker=self._automatic_runtime_tracker
+        provider=tracker.provider;run=self.run_id;epoch=getattr(self,'_runtime_epoch',self.run_id)
+        self._checkpoint_remaining(deadline)
+        remote=self._stopped();attempted=False
+        def unchanged():
+            if (self.vm is not owner or owner.process is not process or process.poll() is not None
+                    or self._automatic_runtime_tracker is not tracker or tracker.provider is not provider
+                    or tracker.closed or tracker.busy or tracker.fenced
+                    or tracker.session is not self or tracker.project is not self.project
+                    or provider.session is not self or self.run_id!=run
+                    or getattr(self,'_runtime_epoch',self.run_id)!=epoch
+                    or self.breakpoints!=points or set(points)!=tracker.internal_breakpoints
+                    or getattr(self,'_automatic_internal_pending',None) is not None):
+                raise DebuggerError('Checkpoint observer control ownership changed')
+        try:
+            unchanged()
+            for point in points.values():
+                timeout=self._checkpoint_remaining(deadline);attempted=True
+                if remote.request(f'z1,{point["address"]:x},1',timeout_ms=timeout)!=b'OK':
+                    raise DebuggerError('Checkpoint observer breakpoint suspension failed')
+            yield
+            unchanged()
+            if repair:
+                for point in points.values():
+                    if remote.request(f'Z1,{point["address"]:x},1',
+                            timeout_ms=self._checkpoint_remaining(deadline))!=b'OK':
+                        raise DebuggerError('Checkpoint observer breakpoint restoration failed')
+                unchanged()
+        except BaseException:
+            if attempted:owner._fdisbull_control_quarantine='uncertain checkpoint observer controls'
+            raise
 
     @machine_operation
     def save_state(self,name='checkpoint.qcow2',*,max_bytes=None):
+        with self._checkpoint_budget(time.monotonic()+30) as deadline:
+            return self._save_checkpoint_locked(name,max_bytes,deadline)
+
+    def _save_checkpoint_locked(self,name,max_bytes,deadline):
         import uuid
         from .external_files import _file_name
         from .qemu_checkpoint import snapshot_job, validate_qcow_header
         _file_name(name)
-        self._checkpoint_preflight()
+        points=self._checkpoint_preflight()
         if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= 128*1024*1024):
             raise ValueError('Checkpoint byte budget must be 1..134217728')
         limit=max_bytes or 128*1024*1024
+        self._checkpoint_remaining(deadline)
         registers=self.registers()
         tag='fdb-'+uuid.uuid4().hex
         try:
-            snapshot_job(self.vm,'save',tag=tag,vmstate='disk0',devices=['disk0'])
-            path=self.vm.checkpoint_disk
-            if path.stat().st_size>limit:raise ValueError('Checkpoint exceeds its byte budget')
-            with path.open('rb') as stream:
-                data=stream.read(limit+1)
-            if len(data)>limit:raise ValueError('Checkpoint exceeds its byte budget')
-            validate_qcow_header(data[:104],self.vm.checkpoint_virtual_size)
+            with self._checkpoint_tracking_controls(points,deadline,repair=True):
+                snapshot_job(self.vm,'save',tag=tag,vmstate='disk0',devices=['disk0'],
+                             timeout_ms=self._checkpoint_remaining(deadline))
+                path=self.vm.checkpoint_disk
+                if path.stat().st_size>limit:raise ValueError('Checkpoint exceeds its byte budget')
+                with path.open('rb') as stream:
+                    data=stream.read(limit+1)
+                if len(data)>limit:raise ValueError('Checkpoint exceeds its byte budget')
+                validate_qcow_header(data[:104],self.vm.checkpoint_virtual_size)
             metadata=dict(format='fdisbull-qemu-raw-qcow2-v1',tag=tag,source_sha256=self.metadata['source_sha256'],
                 version_sha256=self.metadata['version_sha256'],backend=self.backend_id,
                 runtime_inputs=deepcopy(self.vm.inputs),machine_configuration=deepcopy(self.vm.machine_configuration),
                 guest_profile=deepcopy(self.guest_profile),registers=registers,
                 checkpoint_scope='restricted raw machine; one standalone writable qcow2 disk',
-                host_files_restored=False,source_binding_restored=False)
-            return self._artifact(name,'state',data,metadata)
-        except BaseException:
-            self.close()
+                host_files_restored=False,source_binding_restored=False,
+                runtime_tracking_controls_serialized=False)
+            saved=self._artifact(name,'state',data,metadata)
+            self._checkpoint_remaining(deadline)
+            return saved
+        except BaseException as error:
+            try:self.close()
+            except BaseException as cleanup_error:error.machine_cleanup_error=type(cleanup_error).__name__
             raise
 
     def load_state(self,artifact,*,timeout_ms=60000):
@@ -1499,7 +1601,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         try:
             if self.vm is not owner:
                 raise ValueError('Machine owner changed before checkpoint restore admission')
-            return self._load_checkpoint_locked(artifact,deadline)
+            with self._checkpoint_budget(deadline) as deadline:
+                return self._load_checkpoint_locked(artifact,deadline)
         finally:
             owner.lock.release()
 
@@ -1510,7 +1613,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
             if value<=0:raise TimeoutError('Checkpoint restore deadline expired')
             return min(600000,value)
         remaining()
-        self._checkpoint_preflight()
+        points=self._checkpoint_preflight()
         row=self.project.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
                                     (artifact,)).fetchone()
         if row is None or row['kind']!='state' or row['version']!=self.version['id']:
@@ -1527,16 +1630,18 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         remaining()
         old=self.vm;new=None
         try:
-            with tempfile.TemporaryDirectory(prefix='fdisbull-checkpoint-') as directory:
-                image=Path(directory)/'state.qcow2';image.write_bytes(data)
-                launch=dict(self._checkpoint_launch,timeout_ms=remaining())
-                new=QemuMachine(**launch,_checkpoint_image=image)
-            remaining()
-            if new.inputs != old.inputs or new.machine_configuration != old.machine_configuration:
-                raise DebuggerError('Fresh checkpoint machine differs from saved identity')
-            new.operation_deadline=deadline
-            new.qmp.operation_deadline=deadline
-            snapshot_job(new,'load',tag=metadata['tag'],vmstate='disk0',devices=['disk0'],timeout_ms=remaining())
+            with self._checkpoint_tracking_controls(points,deadline,repair=False):
+                with tempfile.TemporaryDirectory(prefix='fdisbull-checkpoint-') as directory:
+                    image=Path(directory)/'state.qcow2';image.write_bytes(data)
+                    launch=dict(self._checkpoint_launch,timeout_ms=remaining())
+                    new=QemuMachine(**launch,_checkpoint_image=image)
+                remaining()
+                if new.inputs != old.inputs or new.machine_configuration != old.machine_configuration:
+                    raise DebuggerError('Fresh checkpoint machine differs from saved identity')
+                new.operation_deadline=deadline
+                new.qmp.operation_deadline=deadline
+                if new.gdb is not None:new.gdb.operation_deadline=deadline
+                snapshot_job(new,'load',tag=metadata['tag'],vmstate='disk0',devices=['disk0'],timeout_ms=remaining())
             context=MachineContext(new)
             actual=context.registers();saved=metadata['registers']
             remaining()
@@ -1571,9 +1676,12 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
             new.operation_deadline=None;new.qmp.operation_deadline=None
             if new.gdb is not None:new.gdb.operation_deadline=None
             return result
-        except BaseException:
-            if new is not None:new.close()
-            self.close()
+        except BaseException as error:
+            if new is not None:
+                try:new.close()
+                except BaseException as cleanup_error:error.new_machine_cleanup_error=type(cleanup_error).__name__
+            try:self.close()
+            except BaseException as cleanup_error:error.machine_cleanup_error=type(cleanup_error).__name__
             raise
 
     def save_anchor_stone(self,name='anchor-stone.qcow2',*,max_bytes=None):

@@ -287,6 +287,7 @@
         "tests/test_protected_runtime.py",
         "tests/test_protected_runtime_native.py",
         "tests/test_qemu_checkpoint.py",
+        "tests/test_qemu_checkpoint_tracking.py",
         "tests/test_qemu_checkpoint_native.py",
         "tests/test_qemu_dos_checkpoint_native.py",
         "tests/test_qemu_dos_checkpoint_sessions_native.py",
@@ -312,7 +313,8 @@
         "Native VMState version 1 retains the bounded private arena, task identity and tombstones; version-3 host controls retain per-task stacks, shared hook traps, hit counts and pending hooks with fresh private layer IDs. Authored same-page cold restore passed in a separate Python process under standard and virtual/precise-retrace profiles. Dormant generation-zero and selected-B checkpoints also passed; full parity remains unqualified.",
         "Authored native cooperative scheduler cold restore passed in a separate Python process with a dormant protected INT61 frame, distinct CPU/x87 state and task-private RAM/fetch/hooks. Per-task x87 rounding of 1.5 to 1 and 2 and guest watchpoints with identical DR7 controls and different DR0 addresses survived switching and cold restore; an instrumented profile preserves virtual clock, precise retrace, VGA configuration and an audio observer with zero frames and zero drops, providing no PCM or audible playback evidence. General parity remains unqualified.",
         "Authored IRQ0 checkpoints passed before EOI with PIC in service and after EOI with the interrupted hardware frame dormant, including separate-process restore and quantum-three phase. A combined virtual-clock, precise-retrace, VGA configuration, x87 and audio-observer IRQ checkpoint witness passed across pre- and post-EOI cold restore; both audio windows contained zero frames and zero drops, providing no PCM or audible playback evidence.",
-        "API 3 permits a consistent nested IRQ stack or partially acknowledged cascade (slave EOI completed, master cascade EOI pending) in the native task checkpoint. Authored nested and partial-EOI cold restores passed locally for IRQ8 and IRQ1 policy targets; IRQ1 retains a pending handoff until outer EOI. The guest stops after A resumes, without a DOS-cleanup claim; no general hardware IRQ or vendor qualification follows."
+        "API 3 permits a consistent nested IRQ stack or partially acknowledged cascade (slave EOI completed, master cascade EOI pending) in the native task checkpoint. Authored nested and partial-EOI cold restores passed locally for IRQ8 and IRQ1 policy targets; IRQ1 retains a pending handoff until outer EOI. The guest stops after A resumes, without a DOS-cleanup claim; no general hardware IRQ or vendor qualification follows.",
+        "The restricted standard raw-machine profile admits only the exact live automatic DESQview lifecycle breakpoint during save/load. Saving suspends and restores its remote control while paused; user/hook breakpoints, active layers, pending lifecycle stops and unreleased input still refuse. Cold restore retires the old observer, replaces the owner and creates a fresh capture epoch; prior source bindings, snapshots and physical certificates are historical and require fresh stopped observation. This does not extend protected LE checkpoint binding, allocation lifetime or whole-task RAM authority. Native evidence is recorded separately in the handoff log; a test reference alone is not a qualification."
       ]
     },
     {

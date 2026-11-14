@@ -41,6 +41,16 @@ extension supplies guarded RAM and instruction-fetch views. The default-switch
 gate still requires qualification of the outstanding surfaces and compatibility
 campaigns.
 
+Restricted standard raw checkpoints can preserve an attached automatic
+DESQview observer. Save temporarily suspends only its verified lifecycle
+breakpoint while the guest remains paused, then repairs that control before
+publishing the checkpoint. User breakpoints, hooks, active layers, pending
+lifecycle stops and unreleased input still refuse. Restore replaces the native
+owner and capture epoch and retires the old task episodes; source bindings and
+physical certificates require fresh stopped observation. The checkpoint does
+not serialize observer authority. This path does not extend protected LE
+checkpoint binding or establish allocation lifetime or whole-task RAM parity.
+
 ## Select the execution environment
 
 | Backend | What executes | Input and scope |
