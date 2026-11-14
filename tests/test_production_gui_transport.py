@@ -142,10 +142,36 @@ def test_timeout_overflow_and_signalled_runner_results_remain_held(tmp_path):
             spool.submit('provider',provider_doc(),1100,'b'*64)
 
 
+def nested_process_exited(pid):
+    try:os.kill(pid,0)
+    except ProcessLookupError:return True
+    if sys.platform.startswith('linux'):
+        # An orphan can remain as a zombie under a non-reaping PID 1.
+        # Its exit is observed, but the child has not been reaped by us.
+        try:record=Path(f'/proc/{pid}/stat').read_text()
+        except FileNotFoundError:return True
+        state=record.rsplit(')',1)[1].strip().split()[0]
+        return state in ('Z','X')
+    return False
+
+
+def test_nested_process_linux_zombie_is_exited_not_running(monkeypatch):
+    monkeypatch.setattr(sys,'platform','linux')
+    monkeypatch.setattr(os,'kill',lambda pid,sig:None)
+    state=['S']
+    monkeypatch.setattr(Path,'read_text',lambda path:f'123 (inner) {state[0]} 1 2')
+    assert not nested_process_exited(123)
+    state[0]='Z'
+    assert nested_process_exited(123)
+
+
 def test_nested_session_outlives_outer_timeout_so_gui_lane_stays_held(tmp_path):
-    inner_code="import time; time.sleep(0.7)"
+    gate=tmp_path/'inner-exit-gate'
+    inner_code=("import pathlib,sys,time; gate=pathlib.Path(sys.argv[1]); "
+                "deadline=time.monotonic()+3; "
+                "exec('while not gate.exists() and time.monotonic()<deadline:\\n time.sleep(0.01)')")
     outer_code=("import subprocess,sys,time; "
-                "p=subprocess.Popen([sys.executable,'-c',"+repr(inner_code)+"], "
+                "p=subprocess.Popen([sys.executable,'-c',"+repr(inner_code)+","+repr(str(gate))+"], "
                 "stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True); "
                 "print(p.pid,flush=True); time.sleep(5)")
     inner_pid=[]
@@ -160,22 +186,25 @@ def test_nested_session_outlives_outer_timeout_so_gui_lane_stays_held(tmp_path):
     try:
         assert spool.worker()['status']=='unknown'
         assert len(inner_pid)==1
-        os.kill(inner_pid[0],0)
+        assert not nested_process_exited(inner_pid[0])
         assert spool.result(request['request_id'])['status']=='unknown'
         with pytest.raises(RuntimeError,match='lane occupied'):
             spool.submit('provider',provider_doc(),1100,'b'*64)
-        deadline=time.monotonic()+2
+        gate.touch()
+        deadline=time.monotonic()+4
         while time.monotonic()<deadline:
-            try:os.kill(inner_pid[0],0)
-            except ProcessLookupError:break
+            if nested_process_exited(inner_pid[0]):break
             time.sleep(0.05)
         else:pytest.fail('bounded nested test process did not self-exit')
+        assert spool.result(request['request_id'])['status']=='unknown'
+        with pytest.raises(RuntimeError,match='lane occupied'):
+            spool.submit('provider',provider_doc(),1100,'b'*64)
     finally:
+        gate.touch()
         if inner_pid:
-            deadline=time.monotonic()+2
+            deadline=time.monotonic()+4
             while time.monotonic()<deadline:
-                try:os.kill(inner_pid[0],0)
-                except ProcessLookupError:break
+                if nested_process_exited(inner_pid[0]):break
                 time.sleep(0.05)
 
 
