@@ -17,7 +17,10 @@ help and runtime preflight before starting; a missing prerequisite is incomplete
 not a passed gate. Use separate local execution identities and receipts. Local
 results do not establish a GitLab pipeline or hosted CI success.
 
-The retained GitLab workflow admits only explicit web/API pipelines. Every job
+The retained GitLab workflow admits only explicit web/API pipelines. The global
+`FDISBULL_DISABLE_CI=1` guard takes priority. A commit-message skip marker does
+not add a workflow veto to a later deliberate request; mirrors continue to use
+`ci.skip`, and push, merge-request and tag events are not admitted. Every job
 requires the `fdisbull-local-linux` runner tag, including the ordinary job; it
 must never fall back to hosted instance runners. A dedicated runner would need
 separate user authorization and setup before that route can run. No runner or

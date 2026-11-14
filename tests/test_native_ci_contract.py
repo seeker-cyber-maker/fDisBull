@@ -68,6 +68,19 @@ def test_api_rehearsal_omits_package_and_native_qualification_jobs():
     assert 'extends: .native_debugger_template' in ci_section('native-debugger-layers')
 
 
+def test_deliberate_gitlab_request_has_disable_guard_and_exact_source_allowlist():
+    workflow = ci_section('workflow')
+    conditions = [line.strip() for line in workflow.splitlines() if line.strip().startswith('- if:')]
+    assert conditions == [
+        '- if: \'$FDISBULL_DISABLE_CI == "1"\'',
+        '- if: \'$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"\'',
+    ]
+    assert 'CI_COMMIT_MESSAGE' not in workflow
+    assert workflow.rstrip().endswith('- when: never')
+    assert 'when: manual' in ci_section('native-qualification')
+    assert 'allow_failure: false' in ci_section('native-qualification')
+
+
 def test_ordinary_job_requires_inventory_and_isolated_install_receipts():
     script = (ROOT / 'scripts/ci/test-and-package.sh').read_text()
     smoke = (ROOT / 'scripts/ci/package-smoke.sh').read_text()
