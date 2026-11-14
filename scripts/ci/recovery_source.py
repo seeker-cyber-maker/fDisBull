@@ -1,14 +1,15 @@
 """Finite Codex worker for the isolated CI recovery source canary."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
+import selectors
 import signal
 import subprocess
 import sys
 import tempfile
-import threading
 import time
 
 LIMIT = 2 * 1024 * 1024
@@ -20,45 +21,74 @@ REMOTES = {'local-hub': '/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git',
 
 
 def run_command(argv, *, cwd, env=None, input_bytes=None, timeout=30):
-    """Drain bounded streams, killing only the owned process group on timeout/overflow."""
+    """Bound the complete subprocess lifetime, including a blocked stdin pipe."""
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError('finite positive command timeout required')
+    if input_bytes is not None and not isinstance(input_bytes, bytes):
+        raise ValueError('command input must be bytes')
+    deadline = time.monotonic() + timeout
     process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
     buffers = [bytearray(), bytearray()]
-    overflow = threading.Event()
-    def drain(stream, buffer):
-        while True:
-            chunk = stream.read(65536)
-            if not chunk: break
-            remaining = LIMIT - len(buffer)
-            if len(chunk) > remaining:
-                buffer.extend(chunk[:max(0, remaining)])
-                overflow.set()
-                try: os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError: pass
-            elif remaining:
-                buffer.extend(chunk)
-    threads = [threading.Thread(target=drain, args=(stream, buffer), daemon=True)
-               for stream, buffer in zip((process.stdout, process.stderr), buffers)]
-    for thread in threads: thread.start()
-    if input_bytes is not None:
-        try:
-            process.stdin.write(input_bytes)
-            process.stdin.close()
-        except BrokenPipeError:
-            pass
-    timed_out = False
-    try:
-        process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        timed_out = True
+    timed_out = overflow = False
+    selector = selectors.DefaultSelector()
+    streams = [process.stdout, process.stderr]
+    pending = memoryview(input_bytes or b''); written = 0
+    def kill_owned():
+        # The session leader is not reaped until after I/O ends. Its PID cannot
+        # be reused while this call still refers to its owned process group.
         try: os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError: pass
-        process.wait()
-    for thread in threads: thread.join(timeout=5)
-    if any(thread.is_alive() for thread in threads):
-        raise RuntimeError('owned process output did not close')
+    try:
+        for index, stream in enumerate(streams):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, index)
+        if process.stdin is not None:
+            streams.append(process.stdin)
+            if pending:
+                os.set_blocking(process.stdin.fileno(), False)
+                selector.register(process.stdin, selectors.EVENT_WRITE, 'input')
+            else:
+                process.stdin.close()
+        while selector.get_map():
+            remaining_time = deadline - time.monotonic()
+            if remaining_time <= 0:
+                timed_out = True; kill_owned(); break
+            for key, event in selector.select(min(0.1, remaining_time)):
+                stream = key.fileobj
+                if key.data == 'input':
+                    try:
+                        written += os.write(stream.fileno(), pending[written:written+65536])
+                    except BlockingIOError:
+                        continue
+                    except BrokenPipeError:
+                        written = len(pending)
+                    if written == len(pending):
+                        selector.unregister(stream); stream.close()
+                else:
+                    try: chunk = os.read(stream.fileno(), 65536)
+                    except BlockingIOError: continue
+                    if not chunk:
+                        selector.unregister(stream); stream.close(); continue
+                    buffer = buffers[key.data]; available = LIMIT - len(buffer)
+                    buffer.extend(chunk[:max(0, available)])
+                    if len(chunk) > available:
+                        overflow = True; kill_owned(); break
+            if overflow: break
+        try:
+            process.wait(timeout=5 if (timed_out or overflow) else max(0, deadline-time.monotonic()))
+        except subprocess.TimeoutExpired:
+            timed_out = True; kill_owned(); process.wait(timeout=5)
+    except BaseException:
+        kill_owned()
+        process.wait(timeout=5)
+        raise
+    finally:
+        selector.close()
+        for stream in streams:
+            if not stream.closed: stream.close()
     return {'returncode': process.returncode, 'stdout': bytes(buffers[0]), 'stderr': bytes(buffers[1]),
-            'timed_out': timed_out, 'overflow': overflow.is_set()}
+            'timed_out': timed_out, 'overflow': overflow}
 
 
 def _atomic(path, data):

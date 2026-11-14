@@ -1,0 +1,32 @@
+[Unit]
+Description=One finite fDisBull production CI recovery owner
+After=network-online.target tailscaled.service docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+Environment=XDG_CONFIG_HOME=/var/lib/fdisbull-ci/control/production/xdg
+Environment=XDG_CACHE_HOME=/var/lib/fdisbull-ci/control/production/cache
+ExecStart=/usr/bin/python3 /usr/local/libexec/fdisbull-ci-production.py run
+# Job and repair commands have their own finite budgets. If daemon-owned
+# worker cleanup is unknown, preserve the executor lease in attention hold
+# until the operator resolves it; do not kill it to admit another job.
+TimeoutStartSec=infinity
+TimeoutStopSec=infinity
+SendSIGKILL=no
+# The native owner drains its finite incident on SIGTERM. Never kill its
+# listener group while Docker workers may still own daemon-side containers.
+KillMode=process
+Restart=no
+Nice=10
+NoNewPrivileges=no
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/fdisbull-ci/control /var/lib/fdisbull-ci/results /var/lib/fdisbull-gh1-runner /var/lib/operations-health /var/lib/operations-alerts
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+StandardOutput=journal
+StandardError=journal
