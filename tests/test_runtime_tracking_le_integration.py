@@ -100,7 +100,11 @@ def assert_arrived_stop_fenced(o, error):
     assert tracker.status()['errors']['unrecorded']['recording_error']['type'] == 'OSError'
     assert s.dos_source_binding()['state'] == 'retired'
     assert not s.dos_source_binding()['live']
+    assert_future_controls_refused(o)
 
+
+def assert_future_controls_refused(o):
+    s = o.session
     counts = (len(o.intervals), len(o.peer.reads), len(o.peer.qmp_calls), len(o.tracking_controls))
     with pytest.raises(DebuggerError, match='quarantined'):
         s.step(timeout_ms=1000)
@@ -137,8 +141,8 @@ def test_disposal_failures_remain_secondary_to_original_tracker_error_and_stop(c
     assert_arrived_stop_fenced(o, caught.value)
 
 
-def test_invalid_parent_return_preserves_context_error_and_stop_when_disposal_fails(coupled):
-    o, s = coupled, coupled.session
+def return_breakpoint(o):
+    s = o.session
     return_address = o.peer.cpu['cs_base'] + o.peer.cpu['ip'] + 2
     request = o.peer.request
 
@@ -151,6 +155,12 @@ def test_invalid_parent_return_preserves_context_error_and_stop_when_disposal_fa
     o.peer.request = return_control
     identifier = s.breakpoint(return_address)['breakpoint_id']
     s._return_breakpoint = identifier
+    return identifier
+
+
+def test_invalid_parent_return_preserves_context_error_and_stop_when_disposal_fails(coupled):
+    o, s = coupled, coupled.session
+    identifier = return_breakpoint(o)
     s._ready = dict(helper_segment=s._process['parent_psp_segment'], exit_wait_ip=0)
 
     def failed_close():
@@ -168,13 +178,61 @@ def test_invalid_parent_return_preserves_context_error_and_stop_when_disposal_fa
     assert getattr(s.vm, '_fdisbull_control_quarantine', None)
     assert s.dos_source_binding()['state'] == 'retired'
     assert not s.dos_source_binding()['live']
+    assert_future_controls_refused(o)
 
-    counts = (len(o.intervals), len(o.peer.reads), len(o.peer.qmp_calls), len(o.tracking_controls))
-    with pytest.raises(DebuggerError, match='quarantined'):
+
+def test_scheduler_return_refusal_keeps_arrived_stop_when_disposal_fails(coupled):
+    o, s = coupled, coupled.session
+    identifier = return_breakpoint(o)
+    s._dos_scheduler = dict(enabled=True)
+
+    def failed_close():
+        o.closed.append(True)
+        raise RuntimeError('authored scheduler-return disposal failure')
+
+    s.vm.close = failed_close
+    with pytest.raises(DebuggerError, match='Disable the native scheduler') as caught:
         s.step(timeout_ms=1000)
-    with pytest.raises(DebuggerError, match='quarantined'):
-        s.run(timeout_ms=1000)
-    assert counts == (len(o.intervals), len(o.peer.reads), len(o.peer.qmp_calls), len(o.tracking_controls))
+    assert caught.value.result['outcome'] == 'breakpoint'
+    assert caught.value.result['session']['stop_reason']['native_reply'] == 'T05'
+    assert caught.value.result['breakpoints'] == [identifier]
+    assert caught.value.dos_process_cleanup_error == 'RuntimeError'
+    assert len(o.intervals) == 1 and len(o.closed) == 1
+    assert getattr(s.vm, '_fdisbull_control_quarantine', None)
+    assert s.dos_source_binding()['state'] == 'retired'
+    assert not s.dos_source_binding()['live']
+    assert_future_controls_refused(o)
+
+
+@pytest.mark.parametrize('reply', [b'W00', b'X09'])
+def test_native_exit_cleanup_failure_retains_arrived_exit_and_quarantines(coupled, reply):
+    o, s = coupled, coupled.session
+    failures = []
+
+    def native_exit(command, timeout_ms, **options):
+        assert command == 's' and 0 < timeout_ms <= 1000
+        o.intervals.append((command, timeout_ms))
+        return reply, False
+
+    def failed_close():
+        o.closed.append(True)
+        error = RuntimeError('authored exited-guest disposal failure')
+        failures.append(error)
+        raise error
+
+    o.peer.execute, s.vm.close = native_exit, failed_close
+    with pytest.raises(RuntimeError, match='exited-guest disposal failure') as caught:
+        s.step(timeout_ms=1000)
+    assert caught.value is failures[0]
+    assert getattr(caught.value, 'result', None) is not None
+    assert caught.value.result['outcome'] == 'exited'
+    assert caught.value.result['session']['stop_reason']['native_reply'] == reply.decode('ascii')
+    assert caught.value.dos_process_cleanup_error == 'RuntimeError'
+    assert len(o.intervals) == 1 and len(o.closed) == 2
+    assert getattr(s.vm, '_fdisbull_control_quarantine', None)
+    assert s.dos_source_binding()['state'] == 'retired'
+    assert not s.dos_source_binding()['live']
+    assert_future_controls_refused(o)
 
 
 def test_failed_provider_coverage_retires_tracker_continuity_without_rebinding_le(coupled):

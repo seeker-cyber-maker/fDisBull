@@ -871,14 +871,17 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 self._close_failed_execution(error, 'failed DOS process execution publication', result=result)
             raise
         if not self._launching and result['outcome'] == 'exited':
-            self.vm.close()
+            try:
+                self.vm.close()
+            except BaseException as error:
+                self._close_failed_execution(error, 'failed DOS native-exit cleanup', result=result)
+                raise
         if not self._launching and self._return_breakpoint is not None:
             ids = result['session']['stop_reason']['breakpoint_ids']
             if self._return_breakpoint in ids:
                 if (getattr(self,'_dos_scheduler',None) or {}).get('enabled'):
-                    self.vm.close()
                     error = DebuggerError('Disable the native scheduler before returning to DOS')
-                    error.result = result
+                    self._close_failed_execution(error, 'DOS return requires a disabled native scheduler', result=result)
                     raise error
                 previous_deadline = self._deadline
                 previous_vm = self.vm.operation_deadline
