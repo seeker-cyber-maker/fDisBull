@@ -350,15 +350,49 @@ class RcloneTransport:
         return {'verified': True, 'files': len(expected), 'verification': 'Drive MD5 and size'}
 
 
+def _tree_entries(directory, fd):
+    entries = scan_library({'root':str(directory), 'include_files':sorted(os.listdir(fd))}, root_fd=fd)
+    if any(entry['kind'] != 'file' for entry in entries.values()):
+        raise ValueError('Staged transfer trees cannot contain symlinks')
+    return entries
+
+
 def _proofs(directory):
-    result={}
-    for p in Path(directory).rglob('*'):
-        if p.is_file():
-            h=hashlib.md5()
-            with p.open('rb') as stream:
-                for block in iter(lambda:stream.read(1024*1024),b''):h.update(block)
-            result[p.relative_to(directory).as_posix()]={'size':p.stat().st_size,'md5':h.hexdigest()}
+    result = {}
+    with _directory_handle(directory) as fd:
+        for relative, entry in _tree_entries(directory, fd).items():
+            sha, md5 = hashlib.sha256(), hashlib.md5()
+            with _regular_reader(fd, relative, admitted=entry) as (reader, value):
+                for block in iter(lambda:reader.read(1024*1024), b''):
+                    sha.update(block); md5.update(block)
+            result[relative] = {'size':value.st_size, 'md5':md5.hexdigest(), 'sha256':sha.hexdigest()}
     return result
+
+
+def _stage_fdb(output, payload, commit, manifest):
+    # The returned capture manifest, not a fresh pathname inventory, determines
+    # the only eligible bytes. No unadmitted tree entry is linked or uploaded.
+    proofs = _proofs(output)
+    expected = {row['path']:row for row in [manifest['database'], *manifest['objects']]}
+    selected = {*expected, 'manifest.json'}
+    if not selected.issubset(proofs):
+        raise ValueError('FDB staging set differs from capture manifest')
+    # The backup writer retains its exclusive publication hard-link source
+    # (.manifest.partial). Keep it local; only manifest-declared payloads ship.
+    proofs = {relative:proofs[relative] for relative in sorted(selected)}
+    for relative, record in expected.items():
+        if any(proofs[relative][key] != record[key] for key in ('size','sha256')):
+            raise ValueError('FDB staged bytes differ from capture manifest')
+    with _directory_handle(output) as fd:
+        with _regular_reader(fd, 'manifest.json') as (reader, _):
+            data = reader.read()
+            if (json.loads(data) != manifest
+                    or hashlib.sha256(data).hexdigest() != proofs['manifest.json']['sha256']):
+                raise ValueError('FDB completion manifest differs from returned capture')
+    for relative, proof in proofs.items():
+        destination = (commit if relative == 'manifest.json' else payload) / relative
+        _verified_link(output/relative, destination, proof)
+    return proofs
 
 
 @contextmanager
@@ -387,46 +421,85 @@ def _signature(entry):
 
 
 def _fdb_inputs(repository):
-    root = _root(repository['root'])
-    if repository.get('identity') and _identity(root) != repository['identity']:
+    with _directory_handle(repository['root'], expected=repository.get('identity')) as fd:
+        return [(row['source'], row['roots']) for row in _fdb_admissions(repository, fd)]
+
+
+def _fdb_admissions(repository, root_fd):
+    if repository.get('identity') and _fd_identity(root_fd) != repository['identity']:
         raise ValueError('FDB repository identity changed')
-    projects = root / 'projects'
-    if not projects.is_dir() or projects.is_symlink():
-        raise ValueError('FDB projects directory is unavailable')
-    result = []
-    for base, dirs, files in os.walk(projects, followlinks=False):
-        if any((Path(base) / name).is_symlink() for name in dirs):
-            raise ValueError('FDB project directory symlinks must be registered explicitly')
-        for name in sorted(files):
-            if name.lower().endswith('.fdb'):
-                path = Path(base) / name
-                if path.is_symlink():
-                    raise ValueError('FDB project symlinks must be registered explicitly')
-                result.append((str(path), repository.get('objects_roots', [])))
-    registrations = root / 'registrations'
-    if registrations.exists():
-        for path in sorted(registrations.glob('*.json')):
-            if path.is_symlink():
-                raise ValueError('FDB registration must be a regular local file')
-            entry = json.loads(path.read_text())
-            result.append((entry['path'], entry.get('objects_roots', repository.get('objects_roots', []))))
-    unique = {}
-    for path, roots in result:
-        if path in unique and unique[path] != roots:
-            raise ValueError('Conflicting object-store registrations for FDB')
-        unique[path] = roots
-    return sorted(unique.items())
+    root = Path(repository['root']).expanduser().absolute()
+    entries = scan_library({'root':str(root), 'include_dirs':['projects']}, root_fd=root_fd)
+    selections = []
+    for relative, entry in entries.items():
+        if entry['kind'] == 'symlink':
+            raise ValueError('FDB project symlinks must be registered explicitly')
+        if relative.lower().endswith('.fdb'):
+            selections.append((str(root/relative), repository.get('objects_roots', []), relative, entry))
+    try:
+        registrations = _open_directory('registrations', parent=root_fd)
+    except ValueError:
+        try:os.stat('registrations', dir_fd=root_fd, follow_symlinks=False)
+        except FileNotFoundError:registrations = None
+        else:raise
+    if registrations is not None:
+        try:
+            for name in sorted(os.listdir(registrations)):
+                if name.endswith('.json'):
+                    with _regular_reader(registrations, name) as (reader, _):
+                        row = json.load(reader)
+                    source = str(Path(row['path']).expanduser().absolute())
+                    selections.append((source, row.get('objects_roots', repository.get('objects_roots', [])), None, None))
+        finally:os.close(registrations)
+    result = {}
+    for source, roots, relative, entry in selections:
+        with (_relative_parent(root_fd, relative) if relative is not None
+              else _absolute_parent(source)) as (parent, name):
+            with _regular_reader(parent, name) as (_, value):
+                if entry and (value.st_dev,value.st_ino) != (entry['device'],entry['inode']):
+                    raise ValueError('FDB source inode changed during admission')
+                identity = dict(device=value.st_dev, inode=value.st_ino,
+                                parent_device=os.fstat(parent).st_dev, parent_inode=os.fstat(parent).st_ino)
+            admitted = dict(source=source, roots=roots, relative=relative, identity=identity)
+        if source in result:
+            if result[source]['roots'] != roots or result[source]['identity'] != identity:
+                raise ValueError('Conflicting object-store registrations for FDB')
+            continue
+        result[source] = admitted
+    return [result[key] for key in sorted(result)]
 
 
-def _db_signature(path):
+@contextmanager
+def _absolute_parent(source):
+    source = Path(source).expanduser().absolute()
+    with _directory_handle(source.parent) as fd:
+        yield fd, source.name
+
+
+@contextmanager
+def _admitted_fdb_parent(root_fd, admitted):
+    with (_relative_parent(root_fd, admitted['relative']) if admitted['relative'] is not None
+          else _absolute_parent(admitted['source'])) as (parent, name):
+        value = os.stat(name, dir_fd=parent, follow_symlinks=False)
+        actual = dict(device=value.st_dev, inode=value.st_ino,
+                      parent_device=os.fstat(parent).st_dev, parent_inode=os.fstat(parent).st_ino)
+        if not stat.S_ISREG(value.st_mode) or actual != admitted['identity']:
+            raise ValueError('FDB selection differs from its admitted source or parent')
+        yield parent
+
+
+def _db_signature(path, *, parent_fd=None):
+    if parent_fd is None:
+        with _absolute_parent(path) as (fd, _):
+            return _db_signature(path, parent_fd=fd)
     result = []
+    name = Path(path).name
     for suffix in ('', '-wal'):
-        selected = Path(str(path) + suffix)
-        if selected.is_symlink():
-            raise ValueError('FDB/WAL symlink is unsupported')
-        if selected.exists():
-            s = selected.stat()
-            result.append((suffix, s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns))
+        try:value = os.stat(name+suffix, dir_fd=parent_fd, follow_symlinks=False)
+        except FileNotFoundError:continue
+        if not stat.S_ISREG(value.st_mode):
+            raise ValueError('FDB/WAL must be regular files without symlinks')
+        result.append((suffix, value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns))
     if not result or result[0][0] != '':
         raise ValueError('Registered FDB is unavailable')
     return json.dumps(result)
@@ -550,58 +623,72 @@ def _sync_library_from_root(config, db, directory, run, result, transport, root_
 
 
 def _sync_fdb_phase(config, db, directory, run, result, transport):
-    for source, roots in _fdb_inputs(config['fdb_repository']):
-        try:
-            result['phase']='capturing_and_uploading_fdb'
-            _atomic_json(Path(config['state_dir'])/'status.json',result)
-            signature = _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots))
-            identity = source_identity(source)
-            identifier = identity['project_id']
-            previous = db.execute('SELECT signature,generation FROM projects WHERE path=?',(source,)).fetchone()
-            if previous and previous[0] == signature:
-                prior=db.execute('SELECT value FROM metadata WHERE name=?',('project:'+source,)).fetchone()
-                if not prior:raise ValueError('FDB remote manifest reference is missing')
-                proof=json.loads(prior[0])
-                if proof.get('source') == identity:
-                    if transport.verify_files(proof['remote_path'],proof['expected']).get('verified') is not True:
-                        raise ValueError('Existing FDB generation remote verification failed')
-                    continue
-                # Older completion records lack the recoverable source name.
-                # Preserve them and publish one freshly labeled generation.
-            output = directory / ('fdb-'+identifier)
-            manifest = capture_fdb(source, roots, output, config.get('snapshot_timeout_seconds',120))
-            # Keep every complete project version independently
-            # restorable, including its exact private object subset.
-            generation = run
-            payload=directory/('fdb-payload-'+identifier)
-            commit=directory/('fdb-commit-'+identifier)
-            payload.mkdir();commit.mkdir()
-            for selected in output.rglob('*'):
-                if selected.is_file():
-                    relative=selected.relative_to(output)
-                    destination=(commit if relative.as_posix()=='manifest.json' else payload)/relative
-                    destination.parent.mkdir(parents=True,exist_ok=True)
-                    os.link(selected,destination)
-            remote_generation='fdb/projects/'+identifier+'/'+generation
-            uploaded = transport.put_tree(payload, remote_generation, run)
-            if uploaded.get('verified') is not True:
-                raise ValueError('FDB generation transfer was not verified')
-            committed=transport.put_tree(commit,remote_generation,run)
-            if committed.get('verified') is not True:
-                raise ValueError('FDB completion manifest transfer was not verified')
-            # If commits occurred during the backup, the current source
-            # signature is deliberately not marked as captured.
-            if _db_signature(source)+json.dumps(sorted(str(Path(p).absolute()) for p in roots)) == signature:
-                db.execute('INSERT OR REPLACE INTO projects VALUES (?,?,?)',(source,signature,generation))
-                db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('project:'+source,
-                           _json({'remote_path':remote_generation,'expected':_proofs(output),'source':identity})))
-                db.commit()
-            result['uploaded_files'] += uploaded.get('files',0)
-            result['projects'].append(dict(path=source, id=identifier, generation=generation,
-                                           manifest=manifest, verified=True))
-        except Exception as error:
-            db.rollback()
-            result['errors'].append(dict(source=source, type=type(error).__name__, message=str(error)))
+    bound = json.loads(db.execute('SELECT value FROM metadata WHERE name=?', ('binding',)).fetchone()[0])
+    with _directory_handle(config['fdb_repository']['root'], expected=bound['repository_observed_identity']) as root_fd:
+        admissions = _fdb_admissions(config['fdb_repository'], root_fd)
+        for admitted in admissions:
+            _sync_admitted_fdb(config, db, directory, run, result, transport, root_fd, admitted)
+        with _directory_handle(config['fdb_repository']['root'], expected=_fd_identity(root_fd)):
+            pass
+
+
+def _sync_admitted_fdb(config, db, directory, run, result, transport, root_fd, admitted):
+    source, roots = admitted['source'], admitted['roots']
+    selection = dict(repository_identity=_fd_identity(root_fd), source_identity=admitted['identity'])
+    def current_signature():
+        with _admitted_fdb_parent(root_fd, admitted) as parent:
+            return _db_signature(source, parent_fd=parent)+json.dumps(sorted(str(Path(p).absolute()) for p in roots))
+    try:
+        result['phase']='capturing_and_uploading_fdb'
+        _atomic_json(Path(config['state_dir'])/'status.json',result)
+        signature = current_signature()
+        identity = source_identity(source)
+        identifier = identity['project_id']
+        previous = db.execute('SELECT signature,generation FROM projects WHERE path=?',(source,)).fetchone()
+        if previous and previous[0] == signature:
+            prior=db.execute('SELECT value FROM metadata WHERE name=?',('project:'+source,)).fetchone()
+            if not prior:raise ValueError('FDB remote manifest reference is missing')
+            proof=json.loads(prior[0])
+            if proof.get('source') == identity and proof.get('source_selection') == selection:
+                if transport.verify_files(proof['remote_path'],proof['expected']).get('verified') is not True:
+                    raise ValueError('Existing FDB generation remote verification failed')
+                return
+            # Older completion records lack the recoverable source name or
+            # admitted inode binding. Preserve them and recapture once.
+        output = directory / ('fdb-'+identifier)
+        manifest = capture_fdb(source, roots, output, config.get('snapshot_timeout_seconds',120),
+                               expected_source_identity=admitted['identity'])
+        # A source/ancestor replacement must fail before any transport call.
+        with _directory_handle(config['fdb_repository']['root'], expected=_fd_identity(root_fd)):
+            pass
+        with _admitted_fdb_parent(root_fd, admitted):
+            pass
+        # Keep every complete project version independently
+        # restorable, including its exact private object subset.
+        generation = run
+        payload=directory/('fdb-payload-'+identifier)
+        commit=directory/('fdb-commit-'+identifier)
+        proofs = _stage_fdb(output, payload, commit, manifest)
+        remote_generation='fdb/projects/'+identifier+'/'+generation
+        uploaded = transport.put_tree(payload, remote_generation, run)
+        if uploaded.get('verified') is not True:
+            raise ValueError('FDB generation transfer was not verified')
+        committed=transport.put_tree(commit,remote_generation,run)
+        if committed.get('verified') is not True:
+            raise ValueError('FDB completion manifest transfer was not verified')
+        # If commits occurred during the backup, the current source
+        # signature is deliberately not marked as captured.
+        if current_signature() == signature:
+            db.execute('INSERT OR REPLACE INTO projects VALUES (?,?,?)',(source,signature,generation))
+            db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',('project:'+source,
+                       _json({'remote_path':remote_generation,'expected':proofs,'source':identity,'source_selection':selection})))
+            db.commit()
+        result['uploaded_files'] += uploaded.get('files',0)
+        result['projects'].append(dict(path=source, id=identifier, generation=generation,
+                                       manifest=manifest, verified=True))
+    except Exception as error:
+        db.rollback()
+        result['errors'].append(dict(source=source, type=type(error).__name__, message=str(error)))
 
 
 def run_once(config, transport=None):

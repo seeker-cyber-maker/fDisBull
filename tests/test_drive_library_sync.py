@@ -296,7 +296,8 @@ def test_fdb_upload_uses_consistent_snapshot_and_preserves_new_generations(tmp_p
     assert transport.remote[second_path]["project.fdb"]
 
 
-def test_legacy_fdb_proof_without_source_recaptures_once_then_reuses(tmp_path):
+@pytest.mark.parametrize('missing', ['source','source_selection'])
+def test_legacy_fdb_proof_without_source_binding_recaptures_once_then_reuses(tmp_path, missing):
     library_root=tmp_path/'library';(library_root/'targets').mkdir(parents=True)
     fdb_root=tmp_path/'fdb';_make_fdb_root(fdb_root)
     database=fdb_root/'projects'/'analysis.fdb'
@@ -316,7 +317,7 @@ def test_legacy_fdb_proof_without_source_recaptures_once_then_reuses(tmp_path):
     metadata_name='project:'+str(database)
     with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
         row=db.execute('SELECT value FROM metadata WHERE name=?',(metadata_name,)).fetchone()
-        proof=json.loads(row[0]);proof.pop('source',None)
+        proof=json.loads(row[0]);proof.pop(missing,None)
         db.execute('UPDATE metadata SET value=? WHERE name=?',
                    (json.dumps(proof,sort_keys=True,indent=2)+'\n',metadata_name))
 
@@ -859,3 +860,105 @@ def test_metadata_writes_refuse_symlink_ancestry_without_touching_sentinel(tmp_p
             sync._write_new(state/'new.json',b'new')
     assert sentinel.read_bytes()==b'untouched'
     assert list(outside.iterdir())==[sentinel]
+
+
+@pytest.mark.parametrize('ancestor', ['projects','repository','registered-parent'])
+def test_fdb_capture_refuses_admitted_ancestor_swap_even_when_restored(tmp_path, monkeypatch, ancestor):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    if ancestor=='registered-parent':
+        parent=tmp_path/'registered';parent.mkdir()
+        source=parent/'analysis.fdb'
+        (repository/'registrations').mkdir()
+        (repository/'registrations/external.json').write_text(json.dumps({'path':str(source)}))
+    else:
+        source=repository/'projects/analysis.fdb'
+        parent=repository if ancestor=='repository' else repository/'projects'
+    with sqlite3.connect(source) as db:
+        db.execute('CREATE TABLE facts(value TEXT)');db.execute("INSERT INTO facts VALUES ('admitted AAAA')")
+    source_before=source.read_bytes()
+    outside=tmp_path/'outside';outside.mkdir()
+    replacement=outside/source.relative_to(parent);replacement.parent.mkdir(parents=True,exist_ok=True)
+    with sqlite3.connect(replacement) as db:
+        db.execute('CREATE TABLE facts(value TEXT)');db.execute("INSERT INTO facts VALUES ('outside BBBB')")
+    outside_before=replacement.read_bytes()
+    parked=tmp_path/'parked-source-parent'
+    actual_capture=sync.capture_fdb;seen=[]
+    expected={'device':source.stat().st_dev,'inode':source.stat().st_ino,
+              'parent_device':source.parent.stat().st_dev,'parent_inode':source.parent.stat().st_ino}
+    def capture(path, roots, output, timeout, **kwargs):
+        seen.append(kwargs.get('expected_source_identity'))
+        assert kwargs['expected_source_identity']==expected
+        parent.rename(parked);parent.symlink_to(outside,target_is_directory=True)
+        try:return actual_capture(path,roots,output,timeout,**kwargs)
+        finally:
+            parent.unlink();parked.rename(parent)
+    monkeypatch.setattr(sync,'capture_fdb',capture)
+    transport=FakeTransport();config=_config(tmp_path,root,repository)
+    result=sync.run_once(config,transport)
+    assert seen==[expected] and result['status']=='partial'
+    assert not any(call[0].startswith('fdb/projects/') for call in transport.calls)
+    assert source.read_bytes()==source_before and replacement.read_bytes()==outside_before
+    assert not result['projects']
+
+
+def test_fdb_staging_refuses_snapshot_replacement_after_capture(tmp_path, monkeypatch):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    source=repository/'projects/analysis.fdb'
+    with sqlite3.connect(source) as db:db.execute('CREATE TABLE facts(v TEXT)')
+    original=source.read_bytes();actual_capture=sync.capture_fdb;preserved=[]
+    def capture(path, roots, output, timeout, **kwargs):
+        manifest=actual_capture(path,roots,output,timeout,**kwargs)
+        snapshot=Path(output)/'project.fdb';parked=snapshot.with_name('owned-original')
+        snapshot.rename(parked);snapshot.write_bytes(b'unadmitted replacement bytes')
+        preserved.append(parked)
+        return manifest
+    monkeypatch.setattr(sync,'capture_fdb',capture)
+    transport=FakeTransport()
+    result=sync.run_once(_config(tmp_path,root,repository),transport)
+    assert result['status']=='partial' and preserved and preserved[0].exists()
+    assert not any(call[0].startswith('fdb/projects/') for call in transport.calls)
+    assert source.read_bytes()==original
+
+
+def test_fdb_capture_allows_wal_commit_on_the_admitted_inode(tmp_path, monkeypatch):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    source=repository/'projects/analysis.fdb'
+    writer=sqlite3.connect(source)
+    try:
+        writer.execute('PRAGMA journal_mode=WAL')
+        writer.execute('CREATE TABLE facts(value TEXT)');writer.commit()
+        original_inode=source.stat().st_ino;actual_capture=sync.capture_fdb;committed=[]
+        def capture(path, roots, output, timeout, **kwargs):
+            assert kwargs['expected_source_identity']['inode']==original_inode
+            if not committed:
+                writer.execute("INSERT INTO facts VALUES ('committed after admission')");writer.commit()
+                committed.append(True)
+            return actual_capture(path,roots,output,timeout,**kwargs)
+        monkeypatch.setattr(sync,'capture_fdb',capture)
+        transport=FakeTransport();config=_config(tmp_path,root,repository)
+        result=sync.run_once(config,transport)
+        assert result['status']=='complete' and len(result['projects'])==1
+        generation=result['projects'][0]
+        remote=f"fdb/projects/{generation['id']}/{generation['generation']}"
+        assert set(transport.remote[remote])=={'project.fdb','manifest.json'}
+        restored=tmp_path/'restored.fdb';restored.write_bytes(transport.remote[remote]['project.fdb'])
+        with sqlite3.connect(restored) as reader:
+            assert reader.execute('SELECT value FROM facts').fetchall()==[('committed after admission',)]
+        # A concurrent commit invalidates the pre-capture signature, not the
+        # consistent snapshot. The next pass will recapture before state reuse.
+        with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+            assert db.execute('SELECT path FROM projects').fetchall()==[]
+        assert source.stat().st_ino==original_inode
+    finally:writer.close()
+
+
+def test_fdb_registration_of_an_existing_project_deduplicates_same_admission(tmp_path):
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    source=repository/'projects/analysis.fdb'
+    with sqlite3.connect(source) as db:db.execute('CREATE TABLE facts(v TEXT)')
+    (repository/'registrations').mkdir()
+    (repository/'registrations/duplicate.json').write_text(json.dumps({'path':str(source)}))
+    assert sync._fdb_inputs({'root':str(repository),'objects_roots':[]})==[(str(source),[])]

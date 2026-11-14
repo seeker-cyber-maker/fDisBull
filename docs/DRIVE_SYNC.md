@@ -170,6 +170,19 @@ before the library phase and records phase errors separately, so a library
 failure does not prevent an independent FDB attempt. Inspect each run's receipt
 for the actual outcome of both phases.
 
+The recovered 0.35 worker also pins FDB repository discovery and admits each
+project by its source and parent device/inode. It passes those four identities
+to the backup routine before SQLite reads; a project-directory or repository
+replacement cannot select another database and then hide by restoring the path.
+Explicit registrations outside the repository receive the same parent/source
+binding. WAL commits on the admitted inode remain eligible for consistent online
+backup; a changed signature prevents reuse of the pre-commit completion state.
+Older project proofs without `source_selection` require one new generation,
+with all earlier generations retained. Staged database/object hashes must match
+the returned capture manifest before anchored hard-link staging. Only its declared
+payloads and `manifest.json` ship; retained partial publication files stay local.
+These guarantees have authored local tests, not fresh live Drive qualification.
+
 Each FDB is a separate fresh generation, rather than a copy of its live file.
 The worker uses SQLite online backup to capture committed WAL state, then
 collects and SHA-256 verifies the recursively referenced external objects. It
