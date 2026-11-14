@@ -70,3 +70,37 @@ def test_public_api_sequence_restores_then_rebinds(monkeypatch, tmp_path):
     result = verify.verify_win16_authored(tmp_path / 'private.fdb', fixture, 'qemu', 'kernel', 'initramfs', win16_profile(sample_ne()))
     assert result['status'] == 'passed'
     assert calls == [('launch', None), ('breakpoint', 'ne:1:0x10'), ('save',), ('edit', 8), ('restore',), ('input',), ('close',), ('launch', 'saved'), ('input',), ('close',)]
+
+
+@pytest.mark.parametrize('fresh_counter,fresh_ip,click_ok', [(7, '0x401000', True), (8, '0x401000', True), (7, '0x401001', True), (7, '0x401000', False)])
+def test_pe32_fresh_restore_requires_rebinding_and_new_click(monkeypatch, tmp_path, fresh_counter, fresh_ip, click_ok):
+    """Scripted debugger boundary only; not native execution evidence."""
+    seen = []
+    class Debug:
+        def __init__(self, fresh): self.value = fresh_counter if fresh else 7; self.fresh = fresh
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def breakpoint(self, address): return {'bytes_verified': True}
+        def run(self, **kwargs): return {'outcome': 'breakpoint'}
+        def memory(self, address, *, length): return {'hex': self.value.to_bytes(4, 'little').hex()}
+        def trace(self, *args, **kwargs): return {'metadata': {'complete': True}}
+        def save_state(self, name): return {'artifact': 'saved'}
+        def click(self, *args, **kwargs):
+            seen.append('fresh-click' if self.fresh else 'first-click')
+            if not self.fresh or click_ok: self.value = 8
+        def load_state(self, artifact): self.value = 7
+        def registers(self): return {'project_address': fresh_ip}
+    def launch(*args, **kwargs):
+        seen.append(kwargs.get('state'))
+        return Debug(kwargs.get('state') is not None)
+    monkeypatch.setattr(verify, 'windows_debugger', launch)
+    monkeypatch.setattr(verify, 'wait_for_pe_frame', lambda debug: {'metadata': {'mode_id': 1}, 'sha256': 'a'*64})
+    def run():
+        return verify.verify_pe_oracle(None, tmp_path, tmp_path, 'kernel', 'runtime', 0x401000, 0x402000,
+                                       full_windows=True, fresh_restore=True)
+    if (fresh_counter, fresh_ip, click_ok) == (7, '0x401000', True):
+        assert run()['sha256'] == 'a'*64
+        assert seen == [None, 'first-click', 'saved', 'fresh-click']
+    else:
+        with pytest.raises(ValueError, match='fresh-session'):
+            run()

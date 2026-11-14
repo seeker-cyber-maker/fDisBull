@@ -228,6 +228,23 @@ def qualify_windows_program(output,*,qemu,kernel,runtime,fixture,expected_bits=3
             assert session.rpc.process.poll() is not None
             mark('owned-vm-and-spectator-closed-and-reaped')
         with Project(database) as reopened:
+            # Reopening the saved checkpoint starts a new VM and rebinds the
+            # original PE32 address map and owned breakpoint in a new session.
+            with reopened.debugger(qemu,game,backend='wine-qemu',kernel=kernel,initramfs=runtime,
+                                   version=1,window=True,memory_mib=8192,boot_timeout_ms=600000,
+                                   state=snapshot['artifact']) as fresh:
+                assert fresh.metadata['bits']==expected_bits
+                assert fresh.registers()['project_address']==hex(checkpoint)
+                assert fresh.memory(counter,length=4)['hex']=='07000000'
+                fresh_before=fresh.screenshot('fresh-restored.png',hooks=False)
+                assert fresh.frame_probe([[40,56]])['samples'][0]['rgb']==[224,160,32]
+                fresh.click(80,80,mode_id=fresh_before['metadata']['mode_id'])
+                assert fresh.run(timeout_ms=30000)['outcome']=='breakpoint'
+                assert fresh.memory(counter,length=4)['hex']=='08000000'
+                assert fresh.memory(exports['clicks'],length=4)['hex']=='01000000'
+                assert fresh.frame_probe([[40,56]])['samples'][0]['rgb']==[32,192,96]
+                mark('fresh-session-saved-state-rebound-and-click-replayed', state_artifact=snapshot['artifact'])
+            assert fresh.rpc.process.poll() is not None
             reopened.debug_export(final['artifact'],output/'final.png')
             reopened.debug_export(trace['artifact'],output/'checkpoint-trace.json')
             actual=Image.open(output/'final.png');assert actual.size==(320,200) and actual.getpixel((40,56))==(32,192,96)

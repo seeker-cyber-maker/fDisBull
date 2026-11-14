@@ -311,13 +311,15 @@ def confined(root, manifest):
 
 
 
-def windows_debugger(project, root, workspace, kernel, initramfs, *, full_windows=False):
+def windows_debugger(project, root, workspace, kernel, initramfs, *, full_windows=False, state=None):
     """Keep each included guest's explicit memory and cold-boot budget."""
-    return project.debugger(root / 'bin/qemu', workspace, kernel=kernel, initramfs=initramfs,
-                            memory_mib=8192 if full_windows else 4096, boot_timeout_ms=600000)
+    options = {'kernel': kernel, 'initramfs': initramfs,
+               'memory_mib': 8192 if full_windows else 4096, 'boot_timeout_ms': 600000}
+    if state is not None: options['state'] = state
+    return project.debugger(root / 'bin/qemu', workspace, **options)
 
 
-def verify_pe_oracle(project, root, workspace, kernel, initramfs, checkpoint, counter, *, full_windows=False):
+def verify_pe_oracle(project, root, workspace, kernel, initramfs, checkpoint, counter, *, full_windows=False, fresh_restore=False):
     """Run the authored PE64 contract through the normal resource-bound guest."""
     with windows_debugger(project, root, workspace, kernel, initramfs, full_windows=full_windows) as debug:
         bp=debug.breakpoint(checkpoint)
@@ -329,6 +331,14 @@ def verify_pe_oracle(project, root, workspace, kernel, initramfs, checkpoint, co
         if debug.run(timeout_ms=30000)['outcome'] != 'breakpoint' or debug.memory(counter,length=4)['hex'] != '08000000': raise ValueError('PE click failed')
         debug.load_state(state['artifact'])
         if debug.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE native restore failed')
+    if fresh_restore:
+        with windows_debugger(project, root, workspace, kernel, initramfs, full_windows=full_windows, state=state['artifact']) as fresh:
+            if fresh.memory(counter,length=4)['hex'] != '07000000': raise ValueError('PE fresh-session restore failed')
+            if fresh.registers()['project_address'] != hex(checkpoint): raise ValueError('PE fresh-session checkpoint differs')
+            fresh_frame=wait_for_pe_frame(fresh)
+            fresh.click(80,80,mode_id=fresh_frame['metadata']['mode_id'])
+            if fresh.run(timeout_ms=30000)['outcome'] != 'breakpoint' or fresh.memory(counter,length=4)['hex'] != '08000000':
+                raise ValueError('PE fresh-session physical input failed')
     return frame
 
 
@@ -477,7 +487,7 @@ def verify_extended_windows(root, workspace, kernel, windows_runtime, roles):
     with Project.create(pe_dir / 'pe32.fdb', pe) as project:
         project.analyze(start=exports['checkpoint'], max_instructions=64)
         image = verify_pe_oracle(project, root, pe_dir, kernel, windows_runtime,
-                                 exports['checkpoint'], exports['counter'], full_windows=True)
+                                 exports['checkpoint'], exports['counter'], full_windows=True, fresh_restore=True)
     profile_path = roles['win16_profile']
     if profile_path.stat().st_size > 65536:
         raise ValueError('Win16 profile exceeds size bound')
@@ -487,7 +497,7 @@ def verify_extended_windows(root, workspace, kernel, windows_runtime, roles):
     win16 = verify_win16_authored(ne_dir / 'win16.fdb', fixture, root / 'bin/qemu',
                                   kernel, windows_runtime, profile)
     return {'pe32': {'status': 'passed', 'fixture_sha256': digest(pe32),
-                     'screenshot_sha256': image['sha256']}, 'win16': win16}
+                     'screenshot_sha256': image['sha256'], 'fresh_session_restore_and_click': True}, 'win16': win16}
 
 
 def prepare_private_workspace(workspace):
