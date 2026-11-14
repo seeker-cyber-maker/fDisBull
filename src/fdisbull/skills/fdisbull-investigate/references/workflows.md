@@ -26,6 +26,8 @@ the runtime-navigation reference below; batch questions sharing a screen.
 
 | Need | Starting point | Evidence boundary |
 | --- | --- | --- |
+| Unsure which concrete probe to run or how to interpret its result | [next steps](next-steps.md) | Two executable recipes and bounded recovery branches; adapt arguments from observed state. |
+| Interpret a structure or locate candidate accesses | [types and addresses](analysis-types.md) | Authored layouts and static candidates, not observed runtime semantics. |
 | Resolve an unknown capability, changed setup or actual provider failure | `capabilities`, `methods`, `doctor` | Discover only the missing information; `doctor` runs separate runtime acceptance. Known operations can proceed directly. |
 | Unpack GOG installers, extract MZ/AGI members or audit AVI video | `media-modules`, `media-inspect`, `media-extract`, `gog-list`/`gog-unpack`, `capture-audit` | Non-executing structural extraction or full-frame RGBA hashing only; no guest clock mapping or execution proof. See [media-modules.md](media-modules.md). |
 | Identify or analyze an x86, ARM64 or Cortex-M binary | `identify`, `inspect`, `import`, `analyze`, `auto-analyze`, `analysis-status`, `functions`, `disasm`, `xrefs`, `render` | Static decoder facts and stored SQLite analysis only; candidate functions, indirect transfers and budget frontiers stay labeled. |
