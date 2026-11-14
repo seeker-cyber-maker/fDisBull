@@ -142,6 +142,37 @@ and teardown; it does not prove all Wine loader or ExitProcess effects. Run it
 only with a fresh external evidence directory and a matching runtime rebuilt
 from the current guest resources. Ordinary source tests do not certify it.
 
+`debug-recover-loader-module` can also consume complete native
+`MODULE_InitDLL` attach/detach capsules with `--loader-source` selecting the
+private original Wine `ntdll.dll`. Python callers select
+`fdisbull.pe_loader_module_recovery.VERIFIED_LOADER_ENVIRONMENT` and pass
+`loader_source=ntdll_path`. This explicit environment profile requires both capsules; it never substitutes a stored proof attachment
+for recomputation. Source PE headers, relocated TLS directory and callback
+array, WINE_MODREF selection, module generation and journal ownership bind the
+capsules to the same authored DLL and callback observations used by module
+recovery. Executed loader instructions must match the retained PE bytes.
+
+The bounded normal-path model accounts for the directory/header lookup, TLS
+loop, entry wrapper, context-save leaves and both source callbacks through the
+original outer RET. It proves indirect targets, arguments, guard coverage,
+balanced stack, nonvolatile GPRs, defined FLAGS, and restoration of the arbitrary
+prior TEB exception chain. `DllMain` returns BOOL 1; the enclosing dispatcher
+returns NTSTATUS 0. Every decoded memory access is checked against the native
+ledger. Outside the source callbacks, writes must remain within the declared
+stack frame or TEB exception-chain head, disjoint from the protected images,
+globals and IAT. Floating-point save values are opaque inputs with exact write
+footprints; hidden SIMD/x87 state is not certified.
+
+This discharges the two complete TLS-return-to-DllMain-entry intervals. Four
+outer loader/ExitProcess intervals still need explicit dispatch/frame or
+terminal assumptions, even where their capsule prefix or tail is proved.
+Mapping, initial import binding, hidden GS-base observation, exceptions,
+concurrency and other modules remain outside this proof. A contraction retains
+the capsule, code-version timeline, exact source contract and remaining
+assumptions for expansion. Native qualification adds independent source
+postconditions and complete concrete Unicorn replay; agreement on that one
+invocation is reported separately from the generic symbolic transfer.
+
 The `fdisbull.patch_roles` helper adds a narrow context layer to the offline
 topology report. Given a raw Wine/QEMU PE trace, an owning `Project`, and one
 analyzed function entry, `observed_pe_import_roles` joins each observed call

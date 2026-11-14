@@ -7,7 +7,12 @@ Callback replay checks the observed inputs; it is not a proof of Wine's loader.
 import base64
 import hashlib
 import json
+import os
+from pathlib import Path
+import struct
 import time
+
+import pytest
 
 from fdisbull.debug_semantics import normalize_trace, PE_TRACE_SEMANTICS
 from fdisbull.project import Project
@@ -15,6 +20,7 @@ from test_smc_function_wine import _inputs, _document
 from test_wine_loader_initialization import (
     inspect_loader_fixtures, verify_loader_observations, verify_executable_observations,
 )
+from test_wine_loader_dispatch import capture_loader_capsule
 
 
 def _replay_callback(document):
@@ -76,6 +82,30 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
     inspect_loader_fixtures(source, library)
     import lief
     pe, dll = lief.PE.parse(str(source)), lief.PE.parse(str(library))
+    loader_path = os.environ.get('FDISBULL_WINE_LOADER_SOURCE')
+    if not loader_path:
+        if os.environ.get('FDISBULL_REQUIRE_SMC_WINE') == '1':
+            pytest.fail('The loader capsule requires FDISBULL_WINE_LOADER_SOURCE')
+        pytest.skip('Select the frozen Wine ntdll.dll source for dispatcher capture')
+    loader_path = Path(loader_path).resolve(strict=True)
+    loader_pe = lief.PE.parse(str(loader_path))
+    assert loader_pe is not None and loader_pe.header.machine == lief.PE.Header.MACHINE_TYPES.AMD64
+    assert loader_pe.optional_header.magic == lief.PE.PE_TYPE.PE32_PLUS
+    selected_symbols = [s for s in loader_pe.symbols if s.name == 'MODULE_InitDLL']
+    assert len(selected_symbols) == 1
+    selected_symbol = selected_symbols[0]
+    module_init_rva = loader_pe.sections[selected_symbol.section_idx - 1].virtual_address + selected_symbol.value
+    assert module_init_rva == 0x31600
+    exception = loader_pe.data_directories[3]
+    pdata = bytes(loader_pe.get_content_from_virtual_address(loader_pe.imagebase + exception.rva, exception.size))
+    runtime_functions = [struct.unpack_from('<III', pdata, offset) for offset in range(0, len(pdata), 12)]
+    declared = [item for item in runtime_functions if item[0] == module_init_rva]
+    assert len(declared) == 1 and declared[0][0] < declared[0][1]
+    loader_source = {'filename': loader_path.name, 'source_sha256': hashlib.sha256(loader_path.read_bytes()).hexdigest(),
+        'preferred_image_base': hex(loader_pe.imagebase), 'module_init_rva': hex(module_init_rva),
+        'pdata_rva': hex(exception.rva), 'pdata_size': exception.size,
+        'runtime_function': {'begin_rva': hex(declared[0][0]), 'end_rva': hex(declared[0][1]),
+                             'unwind_rva': hex(declared[0][2])}}
     base, dll_base = pe.imagebase, dll.imagebase
     symbols = {e.name: base + e.address for e in pe.get_export().entries}
     dll_symbols = {e.name: dll_base + e.address for e in dll.get_export().entries}
@@ -101,6 +131,7 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
             row['recovery'] = {'format': 'fdisbull-native-loader-composition-evidence-1',
                 'protected_ranges': [], 'environment_ranges': [], 'snapshots': [],
                 'main_segments': [], 'transitions': [], 'calls': [], 'sequence': []}
+            row.update(loader_capsules=[], loader_selection={'source': loader_source, 'candidates': []}, loader_outer_edges=[])
             report['runs'][name] = row; save()
             with project.debugger(str(qemu), str(source.parent), kernel=str(kernel), initramfs=str(runtime),
                     files=[source.name, library.name], version=1, memory_mib=4096,
@@ -358,28 +389,88 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                         save()
                     return doc
 
+                loader_modules = [m for m in debug.call('modules')['modules'] if m['name'].casefold() == 'ntdll.dll']
+                assert len(loader_modules) == 1 and loader_modules[0]['bits'] == 64
+                loader_module = dict(loader_modules[0], source_sha256=loader_source['source_sha256'])
+                dispatcher = int(loader_module['base'], 16) + module_init_rva
+                source_prefix = bytes(loader_pe.get_content_from_virtual_address(loader_pe.imagebase + module_init_rva, 32))
+                assert read(dispatcher, 32) == source_prefix
+                row['loader_selection'].update(module=loader_module, entry_address=hex(dispatcher),
+                    entry_prefix_hex=source_prefix.hex())
+
+                def select_dispatcher(reason):
+                    identifier = bp(dispatcher)
+                    for index in range(256):
+                        outcome = debug.run(timeout_ms=60000)
+                        assert outcome['outcome'] == 'breakpoint', outcome
+                        registers = debug.call('registers')
+                        assert int(registers['rip'], 16) == dispatcher
+                        modref = int(registers['general']['rcx'], 16)
+                        actual_base = int.from_bytes(read(modref + 0x30, 8), 'little')
+                        actual_reason = int(registers['general']['rdx'], 16) & 0xffffffff
+                        receipt = recovery_artifact('dispatcher-candidate-' + str(len(row['loader_selection']['candidates'])),
+                            'loader-dispatch-selection', {'format': 'fdisbull-wine-loader-selection-1',
+                                'run': debug.run_id, 'module': loader_module, 'source': loader_source,
+                                'registers': registers, 'modref': hex(modref), 'base_pointer_address': hex(modref + 0x30),
+                                'base_pointer_hex': read(modref + 0x30, 8).hex(),
+                                'selected': actual_base == db and actual_reason == reason})
+                        row['loader_selection']['candidates'].append(receipt)
+                        if actual_base == db and actual_reason == reason:
+                            delete(identifier)
+                            return outcome
+                    raise AssertionError('The selected DLL dispatcher exceeded its 256-invocation search budget')
+
+                def capsule(reason, initial_gap):
+                    mode = 'attach' if reason == 1 else 'detach'
+                    state = {'gap_before': initial_gap, 'callback_index': 0, 'last_return': None}
+                    def boundary(kind, payload):
+                        if kind == 'callback_entry':
+                            role = payload['source_role']
+                            assert role in (('tls-attach', 'dll-attach') if reason == 1 else ('tls-detach', 'dll-detach'))
+                            index = state['callback_index']
+                            label = ('loader-to-tls-attach' if index == 0 else 'tls-return-to-dll-attach') if reason == 1 else 'exit-to-detach-' + str(index)
+                            after = snapshot(role + '-entry')
+                            transition(label, 'loader.dispatch-capsule', state['gap_before'], after,
+                                       {'outcome': 'native-dispatch', 'role': role})
+                        elif kind == 'callback_return':
+                            role = payload['source_role']
+                            payload['independent_replay'] = _replay_callback(payload)
+                            row['callbacks'].append(artifact(mode + '-capsule-' + role, 'dll-callback', payload))
+                            milestone('tls-attached' if role == 'tls-attach' else
+                                      'dll-attached' if role == 'dll-attach' else 'detached')
+                            state['gap_before'] = snapshot(role + '-return')
+                            state['last_return'] = state['gap_before']
+                            state['callback_index'] += 1
+                    entry = debug.call('registers')
+                    capsule_stack = int(entry['general']['rsp'], 16)
+                    modref = int(entry['general']['rcx'], 16)
+                    extra = [{'role': 'dispatcher-stack', 'address': hex(capsule_stack - 4032), 'length': 4096},
+                             {'role': 'wine-modref', 'address': hex(modref), 'length': 256},
+                             {'role': 'teb-prefix', 'address': hex(teb), 'length': 256},
+                             {'role': 'subject-pe-headers', 'address': hex(db), 'length': 1024},
+                             {'role': 'subject-tls-directory', 'address': hex(db + tls_rva), 'length': 40},
+                             {'role': 'subject-tls-callbacks', 'address': hex(callbacks), 'length': 16}]
+                    captured = capture_loader_capsule(debug, name=name + '-' + mode + '-dispatcher.json',
+                        dll_base=db, protected_ranges=recovery['protected_ranges'], extra_ranges=extra,
+                        entry_address=dispatcher, max_steps=2048, timeout_ms=600000,
+                        subject_symbols=ds, subject_source_sha256=dll_hash,
+                        subject_module=loaded, loader_module=loader_module, on_boundary=boundary)
+                    remember(captured['artifact'])
+                    row['loader_capsules'].append(captured['artifact'])
+                    assert captured['document']['status'] == 'complete' and state['callback_index'] == 2
+                    state['capsule_return'] = snapshot(mode + '-dispatcher-return')
+                    return state
+
                 milestone('before-tls')
-                tls_bp, main_bp = bp(ds['dll_tls_callback']), bp(ds['dll_entry'])
                 debug.loader_control(stop_on_load=False)
-                gap_before = snapshot('before-loader-to-tls')
-                result = debug.run(timeout_ms=60000)
-                assert result['outcome'] == 'breakpoint'
-                assert int(debug.call('registers')['rip'], 16) == ds['dll_tls_callback']
-                delete(tls_bp)
-                gap_after = snapshot('tls-attach-entry')
-                transition('loader-to-tls-attach', 'loader.run', gap_before, gap_after, result)
-                assert int(debug.call('registers')['general']['rdx'], 16) == 1
-                callback('tls-attach'); milestone('tls-attached')
-                gap_before = snapshot('tls-attach-return')
-                result = debug.run(timeout_ms=60000)
-                assert result['outcome'] == 'breakpoint'
-                assert int(debug.call('registers')['rip'], 16) == ds['dll_entry']
-                delete(main_bp)
-                gap_after = snapshot('dll-attach-entry')
-                transition('tls-return-to-dll-attach', 'loader.run', gap_before, gap_after, result)
-                assert int(debug.call('registers')['general']['rdx'], 16) == 1
-                callback('dll-attach'); milestone('dll-attached')
-                gap_before = snapshot('dll-attach-return')
+                before_dispatch = snapshot('before-loader-to-module-dispatch')
+                select_dispatcher(1)
+                dispatch_entry = snapshot('attach-dispatcher-entry')
+                row['loader_outer_edges'].append(recovery_artifact('loader-to-attach-dispatcher', 'loader-outer-edge', {
+                    'before': before_dispatch, 'after': dispatch_entry,
+                    'scope': 'Opaque loader prefix outside the complete MODULE_InitDLL capsule'}))
+                attach = capsule(1, dispatch_entry)
+                gap_before = attach['last_return']
                 result = debug.run(timeout_ms=60000)
                 assert result['outcome'] == 'entry', result
                 assert debug.registers()['project_address'] == hex(symbols['smc_module_entry'])
@@ -459,7 +550,6 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                 main_segment('main-to-exit', target=es['smc_exit_process_call'])
                 final_data = read(es['smc_data_start'], 32)
                 row['executable_data'] = {'entry': entry_data.hex(), 'final': final_data.hex()}
-                detach_bps = {bp(ds[n]): ds[n] for n in ('dll_tls_callback', 'dll_entry')}
                 exit_before = snapshot('exit-call-before')
                 exit_modules = debug.call('modules')
                 exit_resolution = resolve_loaded_export(exit_modules, 'kernel32.dll', 'ExitProcess', read)
@@ -482,18 +572,13 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
                     'return_address': hex(es['smc_module_unreachable']), 'iat_address': hex(runtime_iat['ExitProcess']),
                     'target': exit_resolution['target'], 'before': exit_before, 'entry': exit_entry,
                     'return': None, 'trace': row['exit_call'], 'implementation': None, 'callback': None})
-                gap_before = exit_entry
-                for index in range(2):
-                    result = debug.run(timeout_ms=60000)
-                    assert result['outcome'] == 'breakpoint', result
-                    registers = debug.call('registers'); ip = int(registers['rip'], 16)
-                    identifier = next(k for k, a in detach_bps.items() if a == ip)
-                    delete(identifier); del detach_bps[identifier]
-                    gap_after = snapshot('detach-' + str(index) + '-entry')
-                    transition('exit-to-detach-' + str(index), 'ExitProcess/loader.run', gap_before, gap_after, result)
-                    assert int(registers['general']['rdx'], 16) == 0
-                    callback('detach-' + str(index)); milestone('detached')
-                    gap_before = snapshot('detach-' + str(index) + '-return')
+                select_dispatcher(0)
+                dispatch_entry = snapshot('detach-dispatcher-entry')
+                row['loader_outer_edges'].append(recovery_artifact('exit-to-detach-dispatcher', 'loader-outer-edge', {
+                    'before': exit_entry, 'after': dispatch_entry,
+                    'scope': 'Opaque ExitProcess/loader prefix outside the complete MODULE_InitDLL capsule'}))
+                detached = capsule(0, exit_entry)
+                gap_before = detached['last_return']
                 result = debug.run(timeout_ms=60000)
                 assert result['outcome'] == 'exited' and result['session']['exit_code'] == 7, result
                 row['terminal'] = result
@@ -528,16 +613,37 @@ def test_real_wine_loader_dll_versions_and_actual_api_implementations():
         for identifier, raw in artifacts.items(): assert _document(project, identifier)[1] == raw
         closed = [json.loads(r[0]) for r in project.db.execute("SELECT evidence FROM debug_events WHERE operation='close'")]
         assert len(closed) == 2 and all(r['process_reaped'] is True for r in closed)
-        from fdisbull.pe_loader_module_recovery import ENVIRONMENT, expand_loader_module_contraction
+        from fdisbull.pe_loader_module_recovery import VERIFIED_LOADER_ENVIRONMENT, expand_loader_module_contraction
         from test_pe_loader_source_spec import verify_loader_module_source_spec
+        from test_pe_wine_loader_source_spec import verify_wine_loader_source_spec
+        from test_wine_loader_dispatch_replay import replay_wine_loader_capsule
+        from fdisbull.pe_wine_loader_contracts import expand_wine_loader_contract
         with Project(evidence / 'wine-smc-dll.fdb') as subject:
             report['whole_module'] = {}
             for name, row in report['runs'].items():
+                capsule_docs = {reference['artifact']: _document(project, reference['artifact'])[0]
+                                for reference in row['loader_capsules']}
+                report.setdefault('loader_capsule_replays', {})[name] = {
+                    identifier: replay_wine_loader_capsule(document)
+                    for identifier, document in capsule_docs.items()}
                 proof = project.debug_recover_loader_module(subject, row,
-                    environment_contract=ENVIRONMENT, timeout_ms=60000)
+                    environment_contract=VERIFIED_LOADER_ENVIRONMENT, loader_source=loader_path, timeout_ms=60000)
                 report['whole_module'][name] = proof
                 save()
                 assert proof['status'] == 'recovered_under_environment_contract', proof.get('reason')
+                dispatch_specs = []
+                assert len(proof['loader_dispatch_contracts']) == 2
+                for dispatch in proof['loader_dispatch_contracts']:
+                    capsule_doc = capsule_docs[dispatch['artifact']]
+                    contract, dispatch_proof = dispatch['contract'], dispatch['proof']
+                    dispatch_specs.append(verify_wine_loader_source_spec(dispatch_proof,
+                        contract=contract, capsule=capsule_doc))
+                    assert expand_wine_loader_contract(dispatch_proof, capsule_doc, contract) == {
+                        'capsule': capsule_doc, 'contract': contract}
+                report.setdefault('loader_dispatch_source_specs', {})[name] = dispatch_specs
+                assert len(proof['remaining_loader_intervals']) == 4
+                assert sum(edge.get('status') == 'proved_native_dispatch_interval'
+                           for edge in proof['environment_edges']) == 2
                 source_proof = verify_loader_module_source_spec(proof, symbols=row['runtime_symbols'])
                 assert expand_loader_module_contraction(proof['contraction'], row) == row
                 report.setdefault('whole_module_source_specs', {})[name] = source_proof

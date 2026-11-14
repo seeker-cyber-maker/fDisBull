@@ -5,6 +5,7 @@ import json
 
 from .wine_arch import validate_context
 from .wine_import_calls import resolve_loaded_export
+from .debug_semantics import PE_TRACE_SEMANTICS
 
 
 def _number(value):
@@ -97,8 +98,8 @@ def _resolve(resolution, modules, module, name):
         raise ValueError('Loaded-export resolution differs from its complete ledger')
 
 
-def _cells(rows):
-    if not isinstance(rows, list) or len(rows) > 64:
+def _cells(rows, *, maximum=2048, range_limit=64):
+    if not isinstance(rows, list) or len(rows) > range_limit:
         raise ValueError('Bounded snapshot ranges required')
     result = {}
     for row in rows:
@@ -109,7 +110,7 @@ def _cells(rows):
             if address + k in result:
                 raise ValueError('Snapshot ranges overlap')
             result[address + k] = byte
-    if len(result) > 2048:
+    if len(result) > maximum:
         raise ValueError('Snapshot byte budget exceeded')
     return result
 
@@ -126,7 +127,197 @@ def _native_exit(project, run, reported):
     return exits[0][0]
 
 
-def load_loader_evidence(project, dll_project, run_report):
+def _require_protected_memory_join(rows, expected, cells, label):
+    observed = _cells(rows, maximum=65536, range_limit=4096)
+    if not cells <= observed.keys() or any(observed[a] != expected[a] for a in cells):
+        raise ValueError('Dispatcher protected-memory boundary differs: ' + label)
+
+
+def _bind_loader_capsules(report, *, run, exe_image, dll_image, documents, receipts, protected, terminal_sequence):
+    """Bind both native dispatcher bodies to the exact journaled callbacks.
+
+    This establishes provenance and joins only. Instruction semantics and the
+    protected-memory frame are re-proved by the loader capsule verifier.
+    """
+    references = report.get('loader_capsules')
+    if not isinstance(references, list) or len(references) != 2:
+        raise ValueError('Verified loader composition requires both attach/detach capsules')
+    selection = report.get('loader_selection', {})
+    source = selection.get('source', {})
+    digest = source.get('source_sha256')
+    if not isinstance(digest, str) or len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
+        raise ValueError('Exact original Wine loader source identity is required')
+    def doc(reference, kind=None):
+        return _reference(reference, documents, receipts, kind)
+    def sequence(reference):
+        doc(reference)
+        return receipts[reference['artifact']]['sequence']
+    fields = ('name', 'base', 'size', 'bits', 'generation')
+    def same_module(a, b):
+        return all(a.get(k) == b.get(k) for k in fields)
+    candidates = [reference for reference in selection.get('candidates', [])
+                  if doc(reference, 'loader-dispatch-selection').get('selected') is True]
+    if len(candidates) != 2 or sequence(candidates[0]) >= sequence(candidates[1]):
+        raise ValueError('Both dispatcher capsules require their own ordered native selection')
+    def protected_rows(rows):
+        mapping = {}
+        for row in rows:
+            role, address, raw = row.get('role'), _number(row['address']), bytes.fromhex(row['hex'])
+            if role in mapping or role not in protected or protected[role] != (address, len(raw)):
+                raise ValueError('A capsule omits or rewrites a complete protected source range')
+            mapping[role] = (address, len(raw))
+        if mapping != protected:
+            raise ValueError('A capsule must observe every protected image, global and IAT word')
+        return _cells(rows)
+    result = []
+    outer_references = report.get('loader_outer_edges')
+    if not isinstance(outer_references, list) or len(outer_references) != 2:
+        raise ValueError('The complete outer loader/ExitProcess prefixes must remain explicit')
+    for index, reference in enumerate(references):
+        capsule = doc(reference, 'wine-loader-dispatch-capsule')
+        phase, reason = ('attach', 1) if index == 0 else ('detach', 0)
+        if (capsule.get('format') != 'fdisbull-wine-loader-dispatch-capsule-1'
+                or capsule.get('status') != 'complete' or capsule.get('semantics') != PE_TRACE_SEMANTICS
+                or capsule.get('run') != run or capsule.get('controller_source_sha256') != exe_image['sha256']
+                or capsule.get('subject_source_sha256') != dll_image['sha256']
+                or not same_module(capsule.get('subject_module', {}), dll_image['module'])
+                or not same_module(capsule.get('loader_module', {}), selection.get('module', {}))
+                or capsule['loader_module'].get('source_sha256') != digest
+                or capsule.get('summaries') != []):
+            raise ValueError('Dispatcher capsule source, owner, native run or completeness differs')
+        ranges = {r['role']: (_number(r['address']), r['length']) for r in capsule['protected_ranges']}
+        if len(ranges) != len(capsule['protected_ranges']) or ranges != protected:
+            raise ValueError('Dispatcher protected ranges differ from complete source definitions')
+        validate_context(capsule['entry'], 64); validate_context(capsule['exit'], 64)
+        selected = doc(candidates[index])
+        if (selected.get('run') != run or selected.get('source') != source
+                or selected.get('registers') != capsule['entry']
+                or not same_module(selected.get('module', {}), capsule['loader_module'])
+                or _number(selected['registers']['rip']) != _number(selection['entry_address'])
+                or _number(selected['modref']) != _number(capsule['selection']['modref'])
+                or _number(selected['base_pointer_address']) != _number(selected['modref']) + 0x30
+                or bytes.fromhex(selected['base_pointer_hex']) != _number(dll_image['base']).to_bytes(8, 'little')
+                or _number(capsule['entry']['general']['rdx']) & 0xffffffff != reason
+                or capsule['selection'].get('reason_low32') != reason
+                or _number(capsule['selection']['dll_base']) != _number(dll_image['base'])):
+            raise ValueError('Dispatcher source selection is detached from its actual invocation')
+        for state in (capsule['modules_before'], capsule['modules_after']):
+            for expected in (capsule['loader_module'], dll_image['module']):
+                owners = [m for m in state['modules'] if _number(m['base']) == _number(expected['base'])]
+                if len(owners) != 1 or not same_module(owners[0], expected):
+                    raise ValueError('Dispatcher source module generation changes within its capsule')
+        outer_reference = outer_references[index]
+        outer = doc(outer_reference, 'loader-outer-edge')
+        before = doc(outer['before'], 'loader-frame-snapshot')
+        after = doc(outer['after'], 'loader-frame-snapshot')
+        if (after['registers'] != capsule['entry']
+                or not sequence(outer['before']) < sequence(candidates[index]) < sequence(outer['after']) < sequence(outer_reference)
+                or sequence(outer_reference) >= sequence(reference)):
+            raise ValueError('An outer loader prefix is detached from its actual dispatcher entry')
+        if index == 0:
+            if (outer['before']['artifact'] != report['recovery']['snapshots'][0]['artifact']
+                    or outer['after']['artifact'] != doc(report['recovery']['transitions'][0])['before']['artifact']):
+                raise ValueError('The pre-dispatch initialization interval was omitted or replaced')
+        elif outer['before']['artifact'] != report['recovery']['calls'][-1]['entry']['artifact']:
+            raise ValueError('The ExitProcess prefix does not start at its actual imported entry')
+        framed = {a for role, (start, length) in protected.items()
+                  if index or not role.startswith('iat-') for a in range(start, start + length)}
+        a, b = _cells(before['memory']), _cells(after['memory'])
+        if not framed <= a.keys() or not framed <= b.keys() or any(a[p] != b[p] for p in framed):
+            raise ValueError('Observed outer dispatcher prefix violates its remaining source-memory frame')
+        return_snapshots = [r for r in report['recovery']['snapshots'] if
+            doc(r, 'loader-frame-snapshot').get('label') == phase + '-dispatcher-return']
+        if len(return_snapshots) != 1 or doc(return_snapshots[0])['registers'] != capsule['exit']:
+            raise ValueError('The dispatcher return needs its own actual outer-boundary snapshot')
+        if sequence(reference) >= sequence(return_snapshots[0]):
+            raise ValueError('Dispatcher return snapshot chronology differs')
+        steps = capsule.get('steps')
+        if not isinstance(steps, list) or not 1 <= len(steps) <= 2048:
+            raise ValueError('Dispatcher native instruction budget differs')
+        if steps[0]['event']['registers'] != capsule['entry'] or steps[-1]['after'] != capsule['exit']:
+            raise ValueError('Dispatcher entry/exit does not match its complete native body')
+        for step_index, step in enumerate(steps):
+            event = step['event']; validate_context(event['registers'], 64); validate_context(step['after'], 64)
+            identity, observation = event['identity'], event['observation']
+            if (event.get('project_address') is not None or identity.get('project_address') is not None
+                    or identity.get('source_version') != 1 or identity.get('context') != 'flat'
+                    or identity.get('runtime_address') != event['address'] or event['address'] != event['registers']['rip']
+                    or observation.get('registers_stage') != 'before-instruction'
+                    or observation.get('instruction_completed') is not True
+                    or event['registers']['thread'] != capsule['entry']['thread']
+                    or step['after']['thread'] != capsule['entry']['thread']
+                    or (step_index and event['registers'] != steps[step_index - 1]['after'])):
+                raise ValueError('Dispatcher steps rewrite their actual foreign-module native identity')
+            before, after = protected_rows(step['protected_before']), protected_rows(step['protected_after'])
+            if step_index and before != protected_rows(steps[step_index - 1]['protected_after']):
+                raise ValueError('Dispatcher protected-state prefix is discontinuous')
+            read = step['code_read']; raw = bytes.fromhex(read['hex'])
+            executed = bytes.fromhex(event.get('execution_bytes', event['bytes']))
+            address = _number(event['address'])
+            if (read['address'] != event['address'] or hashlib.sha256(raw).hexdigest() != read['sha256']
+                    or not raw.startswith(executed)):
+                raise ValueError('Dispatcher instruction differs from its exact hashed native read')
+            owners = [m for m in capsule['modules_before']['modules'] if _number(m['base']) <= address
+                      and address + len(executed) <= _number(m['base']) + m['size']]
+            if len(owners) != 1 or not same_module(read['module'], owners[0]):
+                raise ValueError('Dispatcher instruction lacks its exact loaded-module owner')
+        owned_cells = {a for start, length in protected.values() for a in range(start, start + length)}
+        initial_union = _cells(capsule['entry_memory'], maximum=65536, range_limit=4096)
+        final_union = _cells(capsule['exit_memory'], maximum=65536, range_limit=4096)
+        first_frame, last_frame = protected_rows(steps[0]['protected_before']), protected_rows(steps[-1]['protected_after'])
+        if (not owned_cells <= initial_union.keys() or not owned_cells <= final_union.keys()
+                or any(initial_union[a] != first_frame[a] or final_union[a] != last_frame[a] for a in owned_cells)):
+            raise ValueError('Dispatcher source-memory entry/return joins disagree despite their contexts')
+        _require_protected_memory_join(doc(outer['after'])['memory'], first_frame, owned_cells, 'entry snapshot')
+        _require_protected_memory_join(doc(return_snapshots[0])['memory'], last_frame, owned_cells, 'return snapshot')
+        callbacks = capsule.get('callbacks'); spans = capsule.get('callback_spans')
+        indices = (0, 1) if index == 0 else (3, 4)
+        if not isinstance(callbacks, list) or len(callbacks) != 2 or not isinstance(spans, list) or len(spans) != 2:
+            raise ValueError('Both authored callback bodies must be part of each dispatcher capsule')
+        callback_refs = [report['callbacks'][i] for i in indices]
+        order = [sequence(candidates[index]), *[sequence(r) for r in callback_refs], sequence(reference)]
+        if order != sorted(set(order)):
+            raise ValueError('Dispatcher selection/body/callback chronology differs from its native journal')
+        previous_last = -1
+        for position, (view, span, callback_ref) in enumerate(zip(callbacks, spans, callback_refs, strict=True)):
+            original = doc(callback_ref, 'dll-callback')
+            if ({k: v for k, v in view.items() if k != 'independent_replay'} !=
+                    {k: v for k, v in original.items() if k != 'independent_replay'}):
+                raise ValueError('Dispatcher callback view differs from its actual journaled source body')
+            first, last = span['first_step'], span['last_step']
+            expected_role = ('tls-' if position == 0 else 'dll-') + phase
+            if (type(first) is not int or type(last) is not int or not previous_last < first <= last < len(steps)
+                    or span['role'] != expected_role or original['source_role'] != expected_role):
+                raise ValueError('Dispatcher callback spans do not establish the source TLS/DllMain order')
+            body = steps[first:last + 1]
+            if (len(body) != len(original['steps']) or original['entry'] != body[0]['event']['registers']
+                    or original['exit'] != body[-1]['after'] or any(a['event'] != b['event'] or a['after'] != b['after']
+                       for a, b in zip(original['steps'], body, strict=True))):
+                raise ValueError('Dispatcher callback span is detached from its exact native instructions')
+            dll_cells = {a for role, (start, length) in protected.items() if role in ('dll-code', 'dll-data')
+                         for a in range(start, start + length)}
+            for native, capsule_step in zip(original['steps'], body, strict=True):
+                for field, capsule_field in (('memory_before', 'protected_before'), ('memory_after', 'protected_after')):
+                    a, b = _cells(native[field]), protected_rows(capsule_step[capsule_field])
+                    if not dll_cells <= a.keys() or any(a[p] != b[p] for p in dll_cells):
+                        raise ValueError('Dispatcher callback memory differs from its journaled source frame')
+            previous_last = last
+        edge = doc(report['recovery']['transitions'][1 if index == 0 else 4])
+        before, after = doc(edge['before']), doc(edge['after'])
+        left = protected_rows(steps[spans[0]['last_step']]['protected_after'])
+        right = protected_rows(steps[spans[1]['first_step']]['protected_before'])
+        _require_protected_memory_join(before['memory'], left, owned_cells, 'inner callback return')
+        _require_protected_memory_join(after['memory'], right, owned_cells, 'inner next callback entry')
+        result.append({'artifact': reference['artifact'], 'capsule': capsule, 'phase': phase,
+            'callback_artifacts': [r['artifact'] for r in callback_refs], 'selection_artifact': candidates[index]['artifact'],
+            'outer_prefix': deepcopy(outer_reference), 'entry_snapshot': deepcopy(outer['after']),
+            'exit_snapshot': deepcopy(return_snapshots[0]), 'outer_prefix_frame_bytes': len(framed)})
+    if sequence(references[0]) >= sequence(report['recovery']['entry']) or sequence(references[1]) >= terminal_sequence:
+        raise ValueError('Dispatcher capsules do not precede their main-entry/terminal boundaries')
+    return result
+
+
+def load_loader_evidence(project, dll_project, run_report, *, require_loader_capsules=False):
     """Return hash-bound observations and source images for a semantic checker.
 
     Native equality at a loader gap is deliberately not a universal frame
@@ -360,7 +551,7 @@ def load_loader_evidence(project, dll_project, run_report):
                 raise ValueError('Authored EXE step has an inconsistent source address identity')
     for ref in recovery['transitions']:
         transition = doc(ref, 'loader-frame-transition')
-        if transition.get('run') != run or transition.get('operation') not in ('loader.run', 'ExitProcess/loader.run'):
+        if transition.get('run') != run or transition.get('operation') not in ('loader.run', 'ExitProcess/loader.run', 'loader.dispatch-capsule'):
             raise ValueError('Unknown opaque-loader transition provenance')
         if sequence(transition['before']) >= sequence(ref) or (transition['after'] is not None and
                 not sequence(transition['before']) < sequence(transition['after']) < sequence(ref)):
@@ -407,6 +598,10 @@ def load_loader_evidence(project, dll_project, run_report):
     loader_documents = [documents[k] for k in sorted(receipts, key=lambda k: receipts[k]['sequence']) if receipts[k]['kind'] == 'loader-events']
     if any(row.get('lost_before') is not False for row in loader_documents) or [e for row in loader_documents for e in row['events']] != report['loader_events']:
         raise ValueError('Reported loader history differs from its complete native event artifacts')
+    loader_capsules = _bind_loader_capsules(report, run=run, exe_image=exe_image, dll_image=dll_image,
+        documents=documents, receipts=receipts, protected=protected, terminal_sequence=exit_sequence) if require_loader_capsules else []
     return {'format': 'fdisbull-runtime-loader-evidence-1', 'run': run, 'metadata': deepcopy(runtime),
         'exe': exe_image, 'dll': dll_image, 'documents': documents, 'receipts': receipts, 'report': report,
+        'loader_capsules': loader_capsules,
+        'subject_source_bytes': dll_raw if require_loader_capsules else None,
         'scope': 'Hash-bound native/source observations only; universal loader frame conditions require an explicit semantic contract'}

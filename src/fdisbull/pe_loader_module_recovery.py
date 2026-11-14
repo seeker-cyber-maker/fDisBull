@@ -19,6 +19,11 @@ ENVIRONMENT = {
     'termination': 'observed_exitprocess_no_return_low32_rcx',
     'segment_binding': 'explicit_win64_gs_teb_convention',
 }
+VERIFIED_LOADER_ENVIRONMENT = {
+    **ENVIRONMENT,
+    'dispatch': 'source_proved_module_initdll_inner_dispatch_outer_scheduling_observed',
+    'memory_frame': 'source_proved_inside_module_initdll_outer_owned_memory_frame_assumed',
+}
 SCOPE = ('Whole authored PE64 module including the imported authored DLL TLS/DllMain '
          'initialization, report and teardown, and the exact captured Wine Set/GetLastError '
          'bodies, conditional on explicit loader dispatch, owned-memory frame, GS/TEB and '
@@ -27,6 +32,16 @@ SCOPE = ('Whole authored PE64 module including the imported authored DLL TLS/Dll
 
 def _id(reference):
     return reference['artifact'] if isinstance(reference, dict) else reference
+
+
+def _bind_loader_source(bound, loader_source):
+    """Full frozen source identity must precede contract construction."""
+    actual = hashlib.sha256(loader_source).hexdigest()
+    expected = bound['report']['loader_selection']['source']['source_sha256']
+    if actual != expected or any(item['capsule']['loader_module'].get('source_sha256') != actual
+                                 for item in bound['loader_capsules']):
+        raise ValueError('Original Wine loader bytes differ from their native selected source identity')
+    return actual
 
 
 def _cells(rows):
@@ -88,7 +103,7 @@ def _require_owned_poststate(z, memory, expected, prove):
         raise ValueError('Authored code does not establish the universal DLL/code state required for teardown') from error
 
 
-def recover_loader_module(project, dll_project, evidence, *, environment_contract, timeout_ms=10000):
+def recover_loader_module(project, dll_project, evidence, *, environment_contract, loader_source=None, timeout_ms=10000):
     """Recompute all contracts from immutable evidence before composing them.
 
     A proof attachment is never accepted as an axiom. The native API and DLL
@@ -100,10 +115,16 @@ def recover_loader_module(project, dll_project, evidence, *, environment_contrac
     result = {'format': 'fdisbull-pe-loader-module-recovery-1', 'status': 'unknown',
               'scope': SCOPE, 'whole_module_recovery': None, 'contraction': None}
     try:
-        if environment_contract != ENVIRONMENT:
+        if environment_contract not in (ENVIRONMENT, VERIFIED_LOADER_ENVIRONMENT):
             raise ValueError('Explicit loader dispatch, owned-memory frame, terminal and GS/TEB contracts are required')
+        verified = environment_contract == VERIFIED_LOADER_ENVIRONMENT
+        if verified and not isinstance(loader_source, bytes):
+            raise ValueError('Verified inner loader dispatch requires original Wine loader bytes')
         from .runtime_loader_analysis import load_loader_evidence
-        bound = load_loader_evidence(project, dll_project, evidence)
+        bound = load_loader_evidence(project, dll_project, evidence, require_loader_capsules=verified)
+        if verified:
+            _bind_loader_source(bound, loader_source)
+        bound['loader_source'] = loader_source if verified else None
         result['evidence'] = deepcopy(bound['receipts'])
         result['environment_contract'] = deepcopy(environment_contract)
         return _recover(bound, result, time.monotonic() + timeout_ms / 1000)
@@ -170,6 +191,43 @@ def _recover(bound, result, deadline):
     if roles[:3] != ['tls-attach', 'dll-attach', 'report'] or sorted(roles[3:]) != ['dll-detach', 'tls-detach']:
         raise ValueError('The source module requires one attach pair, report and detach pair')
     result['dll_contracts'] = proofs
+    loader_dispatch_contracts = []
+    if result['environment_contract'] == VERIFIED_LOADER_ENVIRONMENT:
+        from .pe_wine_loader_contracts import build_wine_loader_contract, validate_wine_loader_capsule
+        for capsule in bound['loader_capsules']:
+            phase = capsule['phase']
+            kwargs = {} if phase == 'attach' else {
+                'entry_code': proofs[2]['post_code'],
+                'entry_globals': _rows({a: _cells(proofs[2]['post_memory'])[a]
+                    for a in range(ds['dll_data_start'], ds['dll_data_end'])})[0]}
+            contract = build_wine_loader_contract(capsule['capsule'], loader_source=bound['loader_source'],
+                subject_source=bound['subject_source_bytes'], **kwargs)
+            remaining = int((deadline - time.monotonic()) * 1000)
+            if remaining < 1:
+                raise ValueError('Whole module loader-capsule proof deadline exhausted')
+            proof = validate_wine_loader_capsule(capsule['capsule'], contract=contract,
+                loader_source=bound['loader_source'], timeout_ms=min(remaining, 60000))
+            if proof['status'] != 'proved_for_observed_wine_loader_capsule':
+                raise ValueError('Actual Wine dispatcher body was not proved: ' + proof.get('reason', proof['status']))
+            expected = proofs[1 if phase == 'attach' else 4]
+            actual_post = _cells(proof['post_globals'])
+            expected_post = _cells(expected['post_memory'])
+            if (any(actual_post[a] != expected_post[a] for a in actual_post)
+                    or proof['transfer']['post_code'] != expected['post_code']):
+                raise ValueError('Proved Wine dispatcher and composed authored callbacks disagree')
+            first, last = capsule['capsule']['callback_spans']
+            edge = 'tls-return-to-dll-attach' if phase == 'attach' else 'exit-to-detach-1'
+            loader_dispatch_contracts.append({'artifact': capsule['artifact'], 'phase': phase,
+                'contract': contract, 'proof': proof,
+                'coverage': {'fully_discharged_edge': edge,
+                    'inner_steps': [first['last_step'] + 1, last['first_step'] - 1],
+                    'prefix_steps': [0, first['first_step'] - 1],
+                    'tail_steps': [last['last_step'] + 1, len(capsule['capsule']['steps']) - 1],
+                    'callback_artifacts': capsule['callback_artifacts'],
+                    'outer_prefix': capsule['outer_prefix'], 'entry_snapshot': capsule['entry_snapshot'],
+                    'exit_snapshot': capsule['exit_snapshot'],
+                    'limits': 'Capsule prefix/tail proved only inside MODULE_InitDLL; outer scheduling/frame/ExitProcess remain explicit'}})
+    result['loader_dispatch_contracts'] = loader_dispatch_contracts
     entry_cells=_cells(get(recovery['entry'])['memory'])
     initialized_code=_cells([proofs[1]['post_code']])
     if any(entry_cells.get(a)!=b for a,b in initialized_code.items()):
@@ -206,12 +264,15 @@ def _recover(bound, result, deadline):
         # Before application entry the loader is allowed to resolve the EXE's
         # imports. The source-bound entry binding, not a guessed preservation
         # rule, establishes those words for authored code. The DLL has no imports.
+        dispatch = next((p for p in loader_dispatch_contracts if p['coverage']['fully_discharged_edge'] == label), None)
         framed = protected - {int(r['address'],16)+k for r in recovery['protected_ranges']
-            if r['role'].startswith('iat-') for k in range(r['length'])} if len(frame_checks)<3 else protected
+            if r['role'].startswith('iat-') for k in range(r['length'])} if len(frame_checks)<3 and dispatch is None else protected
         if not framed <= a.keys() or not framed <= b.keys() or any(a[p] != b[p] for p in framed):
             raise ValueError('Observed loader/ExitProcess execution violates the declared owned-memory frame')
         frame_checks.append({'artifact': _id(reference), 'label': transition['label'],
-            'status': 'observed_frame_agreement', 'proof_status': 'explicit_environment_assumption',
+            'status': 'proved_native_dispatch_interval' if dispatch else 'observed_frame_agreement',
+            'proof_status': 'source_proved_native_loader_capsule' if dispatch else 'explicit_environment_assumption',
+            **({'loader_contract_sha256': dispatch['proof']['sha256'], 'capsule_artifact': dispatch['artifact']} if dispatch else {}),
             'preserved_bytes': len(framed), 'machine_context': 'fresh, not preserved',
             'import_binding': 'observed entry initialization' if len(frame_checks)<3 else 'preserved'})
     result['environment_edges'] = frame_checks
@@ -268,12 +329,35 @@ def _recover(bound, result, deadline):
             'bytes':len(api_fixed),'sha256':_digest(_rows(api_fixed)),
             'noninterference':'Disjoint from all declared authored/main memory and code effects; opaque loader initialization remains conditional'},
         'callback_instruction_bound': sum(p['transfer']['termination_bound_instructions'] for p in proofs)},
-        remaining_assumptions=deepcopy(ENVIRONMENT))
+        remaining_assumptions=deepcopy(result['environment_contract']))
+    if loader_dispatch_contracts:
+        attach, detach = loader_dispatch_contracts
+        remaining_intervals = []
+        for edge, contract, endpoint, note in (
+            (frame_checks[0], attach, 'prefix', 'Initial DLL-load stop through dispatcher entry remains opaque; capsule entry to first TLS callback is proved'),
+            (frame_checks[2], attach, 'tail', 'Last attach callback through dispatcher return is proved; dispatcher return to EXE entry remains opaque'),
+            (frame_checks[3], detach, 'prefix', 'ExitProcess entry through detach dispatcher entry remains opaque; capsule entry to TLS detach is proved'),
+            (frame_checks[5], detach, 'tail', 'Last detach callback through dispatcher return is proved; dispatcher return to actual process exit remains opaque')):
+            remaining_intervals.append({'label': edge['label'], 'status': 'explicit_outer_environment_assumption',
+                'transition_artifact': edge['artifact'], 'capsule_artifact': contract['artifact'],
+                'proved_partial_steps': contract['coverage'][endpoint + '_steps'],
+                'dispatcher_boundary_snapshot': contract['coverage']['entry_snapshot' if endpoint == 'prefix' else 'exit_snapshot'],
+                **({'outer_prefix_artifact': contract['coverage']['outer_prefix']} if endpoint == 'prefix' else {}),
+                'scope': note})
+        result['remaining_loader_intervals'] = remaining_intervals
+        result['whole_module_recovery']['loader_dispatch'] = {
+            'proved_inner_edges': [p['coverage']['fully_discharged_edge'] for p in loader_dispatch_contracts],
+            'outer_intervals_still_conditional': len(remaining_intervals),
+            'source_sha256': hashlib.sha256(bound['loader_source']).hexdigest(),
+            'scope': 'Exactly the captured normal MODULE_InitDLL attach/detach paths; no loader-wide frame or scheduling theorem'}
     contraction = {'format': 'fdisbull-loader-module-contraction-1',
         'evidence_sha256': _digest(report), 'receipts_sha256': _digest(bound['receipts']),
         'callback_contracts': [p['sha256'] for p in proofs],
         'api_contracts': {k: v['sha256'] for k, v in api_proofs.items()},
-        'environment_contract': deepcopy(ENVIRONMENT), 'recovery_sha256': _digest(result['whole_module_recovery']),
+        'environment_contract': deepcopy(result['environment_contract']), 'recovery_sha256': _digest(result['whole_module_recovery']),
+        'loader_dispatch_contracts': [p['proof']['sha256'] for p in loader_dispatch_contracts],
+        **({'loader_source_sha256': hashlib.sha256(bound['loader_source']).hexdigest(),
+             'remaining_loader_intervals_sha256': _digest(result['remaining_loader_intervals'])} if loader_dispatch_contracts else {}),
         'expansion': 'Exact original reference bundle; owning project resolves its immutable native artifacts'}
     result['contraction'] = contraction | {'sha256': _digest(contraction)}
     result['sha256'] = _digest(result)
