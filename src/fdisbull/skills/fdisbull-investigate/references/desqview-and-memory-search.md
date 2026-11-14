@@ -3,6 +3,7 @@
 ## Contents
 
 - [Select the entry contract](#select-the-entry-contract)
+- [Use normal automatic tracking](#use-normal-automatic-tracking)
 - [Prepare a cooperative observation](#prepare-a-cooperative-observation)
 - [Capture and narrow a value](#capture-and-narrow-a-value)
 - [Apply a bounded edit](#apply-a-bounded-edit)
@@ -38,7 +39,64 @@ The project itself must be the original raw x86 boot image. The profile fixes
 one 486 CPU, 32 MiB, no network and a private snapshot disk. It never installs
 DESQview or modifies the caller image.
 
+## Use normal automatic tracking
+
+Start with the ordinary session over the original input. Normal DOS launches
+and full-machine sessions attach bounded automatic source/mapping tracking;
+custom guest probes, nonce reports and manual `runtime-map` calls are not
+prerequisites. For DESQview, use the admitted profile object above or
+`guest_profile="desqview"` with the default `\DV\DV.EXE` path. Keep one live
+owner and use its normal bounded execution and public input methods.
+
+Inspect the tracker after a useful stop:
+
+```json
+{"method":"debug-tracking","params":{"run":"RUN"}}
+```
+
+The Python equivalent is `session.tracking_status()`. Check current bindings,
+matched source spans, task/lifetime qualification and unsupported diagnostics.
+The tracker invalidates current relations before execution or input, compares
+source bytes at the stopped CPU, captures fresh page mappings and verifies
+linear bytes against their translated physical bytes before publishing new
+bindings. A source match qualifies only its compared extent; it does not
+recover the entire program or prove ownership of every allocation.
+
+The first passive DESQview provider supports one exact original DV2.8 build.
+It validates the selected vendor member, the observed INT15 path and original
+manager code/current-task linkage. A nonpatching execution breakpoint observes
+the manager's natural XDI lifecycle notifications. The tracker separates handle
+reuse into new incarnations; attaching to an existing task leaves its earlier
+creation unknown. A missing hook, provider failure, asynchronous resume,
+restored state, write or other observation gap retires the old episode.
+Matching bytes or a repeated handle do not reconnect that lifetime. Unsupported
+builds, formats, ambiguous matches and exhausted budgets stay unqualified; do
+not replace those diagnostics with guessed mappings. Native qualification of
+this path is separate from implementation and authored contract tests.
+
+For full-machine keyboard input, queue a public key or bounded US-layout ASCII
+text, then run through the normal bounded execution path:
+
+```json
+{"method":"debug-keyboard-press","params":{"run":"RUN","key":"enter"}}
+{"method":"debug-run","params":{"run":"RUN","timeout_ms":1000}}
+{"method":"debug-keyboard-state","params":{"run":"RUN"}}
+```
+
+Queued input is sent only after GDB execution is actually running, while the
+same lifecycle hook remains monitored. Queue acceptance or dispatch is not
+proof that the application consumed a key; inspect the resulting stored frame
+or relevant state. Pending events can remain after a breakpoint or deadline.
+Do not bypass this path with direct QMP `cont`/`send-key` while claiming the
+same monitored lifetime. Full-machine input currently has no mouse adapter or
+held-key lease support. See source documentation `docs/runtime-mappings.md`
+for registry queries and the separate explicit evidence interfaces.
+
 ## Prepare a cooperative observation
+
+This optional helper path investigates the helper's own API/report contract.
+Use it when that is the question; normal automatic tracking above does not
+require it and does not infer another application's identity from its report.
 
 Generate a unique 16-byte nonce and emit the authored helper into a private
 guest directory. Run it using the caller's already prepared guest workflow.
@@ -138,6 +196,23 @@ host interval is not a DESQview scheduling guarantee. Manual ticks also work
 at qualified single-CPU machine stops. No persistent unattended writer starts.
 
 ## Keep evidence scoped
+
+Automatic session tracking supplies its own captures and registry events.
+Use the explicit workflow below when recording a separately declared relation
+or qualifying a selected manual snapshot; it is not a required setup step for
+the automatic path.
+
+The persisted runtime mapping registry can keep separate task incarnations,
+bounded source-object relationships, aliases and map/restore events. Start with
+`runtime-objects` and `runtime-task-start`; direct `runtime-map` evidence is
+caller-recorded, not live authenticated. `runtime-map-snapshot` can check a
+local retained snapshot extent without treating its caller task label as a
+kernel allocation identity. Register the task with the observed capture epoch,
+then take the qualifying new snapshot; old captures cannot qualify a fresh
+incarnation. Query historical relations with `runtime-mappings`,
+`runtime-resolve` and `runtime-mapping-events`. Reused application numbers do not
+reuse an incarnation. A checkpoint restore creates fresh registry lifetimes and
+does not restore guest state. See source documentation `docs/runtime-mappings.md`.
 
 Separate configured image, parsed report, verified helper-ready stop, original
 kernel instruction witness and complete native environment qualification.

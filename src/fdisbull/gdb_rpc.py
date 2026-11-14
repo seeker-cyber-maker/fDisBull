@@ -91,12 +91,29 @@ class GDBRemote:
                 return reply
             except BaseException:self.close();raise
 
-    def execute(self,command,timeout_ms):
+    def execute(self,command,timeout_ms,*,on_continue=None):
         """Continue/step once; interrupt on expiry without replaying execution."""
+        if on_continue is not None and not callable(on_continue):
+            raise ValueError('Continue observer must be callable')
         deadline=time.monotonic()+timeout_ms/1000
         with self.lock:
             try:
                 self._send(command,deadline)
+                if on_continue is not None:
+                    try:
+                        on_continue(deadline)
+                    except BaseException as error:
+                        # Continue has already been sent. Stop if possible and
+                        # quarantine the channel; never resend the instruction.
+                        try:
+                            self.socket.sendall(b'\x03')
+                            self._packet(time.monotonic()+5)
+                        except BaseException:
+                            pass
+                        self.close()
+                        if isinstance(error,Exception):
+                            raise DebuggerError('Continue observer failed after dispatch; guest stopped or channel quarantined; do not replay: '+str(error)) from error
+                        raise
                 try:return self._packet(deadline),False
                 except (TimeoutError,socket.timeout):
                     self.socket.sendall(b'\x03')

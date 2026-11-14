@@ -141,6 +141,8 @@ def validate_source(project, document, *, version=None):
             region = project._mapping(selected['id'], address)
             if region is None or region.data[address-region.start:address-region.start+len(raw)] != raw:
                 raise ValueError('backing bytes differ from their source occurrence')
+            if block.get('bits') != project.decode_bits(address, selected['id']):
+                raise ValueError('backing decoder width differs from its source occurrence')
             if arm_source is not None:
                 file_offset = _arm_file_offset(address, raw, slice_identity, source_bytes, mappings)
                 if (block['provenance'].get('file_offset') != file_offset
@@ -156,7 +158,7 @@ def validate_source(project, document, *, version=None):
         def facts(capsule):
             return {'entries': capsule['entries'], 'complete': capsule['complete'],
                     'visits': capsule['budget']['visits'],
-                    'blocks': sorted((b['id'], b['context'], b['address'], b['bytes'], b['flow'],
+                    'blocks': sorted((b['id'], b['context'], b['address'], b['bytes'], b['flow'], b['bits'],
                                       sorted((e['kind'], e['target']) for e in b['exits']),
                                       sorted((e['source'], e['kind'], e['target']) for e in b['incoming']))
                                      for b in capsule['blocks'])}
@@ -205,6 +207,7 @@ class CodeBackingsMixin:
             if self.digest(self.regions(v)) != selected['sha256']:
                 raise ValueError('source image version digest mismatch')
             arm_source = _arm_macho_source(self, v) if arm_macho else None
+            object_modes = self.decode_regions(v)
             blocks, roots, incoming, problems, root_evidence = {}, [], {}, [], []
             used = 0
             for index, item in enumerate(requests):
@@ -251,6 +254,13 @@ class CodeBackingsMixin:
                     exits = [{'kind': edge['kind'], 'target': edge['target'],
                               'evidence': edge['evidence'], 'provenance': edge['provenance']}
                              for edge in by_source.get(node['id'], [])]
+                    unresolved_fixups = [record for record in node.get('le_fixups', [])
+                                         if record.get('applied') is False]
+                    if unresolved_fixups:
+                        problems.append({'kind': 'unresolved_relocation', 'entry_index': index,
+                                         'instruction': node['id'],
+                                         'detail': 'LE source fields have symbolic, unapplied relocations',
+                                         'relocations': deepcopy(unresolved_fixups)})
                     if node['id'] in blocks:
                         # A second bounded root may see less of the same graph.
                         known = {(e['kind'], e['target']) for e in blocks[node['id']]['exits']}
@@ -261,8 +271,9 @@ class CodeBackingsMixin:
                     region = self._mapping(v, a)
                     if region is None or region.data[a-region.start:a-region.start+len(raw)] != raw:
                         raise ValueError('stored instruction bytes differ from source version')
+                    bits = self.decode_bits(a, v)
                     if x86:
-                        decoder = ix.Decoder(self.bits, raw)
+                        decoder = ix.Decoder(bits, raw)
                         instruction = decoder.decode()
                         if instruction.is_invalid or instruction.len != len(raw) or len(raw) != node['size']:
                             raise ValueError('stored instruction is not a complete native encoding')
@@ -286,18 +297,23 @@ class CodeBackingsMixin:
                                   'source_sha256': self.meta['source_sha256'],
                                   'version_sha256': selected['sha256'], 'context': node['context'],
                                   'byte_roles': roles}
+                    if object_modes:
+                        provenance['decoder_context'] = f'{self.arch}:{bits}:little'
+                        provenance['le_fixups'] = deepcopy(node.get('le_fixups', []))
                     if arm_macho:
                         provenance.update(file_offset=file_offset,
                                           slice_relative_offset=file_offset - slice_identity['offset'])
                     blocks[node['id']] = {
-                        'id': node['id'], 'isa': self.arch, 'bits': self.bits,
+                        'id': node['id'], 'isa': self.arch, 'bits': bits,
                         'address': node['address'], 'context': node['context'],
                         'bytes': raw.hex(), 'sha256': hashlib.sha256(raw).hexdigest(),
                         'flow': node['flow'], 'instruction': {k: node[k] for k in ('size', 'mnemonic', 'operands')},
                         'exits': exits, 'references': deepcopy(node['references']),
                         'provenance': provenance,
-                        'effects': {'status': 'native_backing_residual',
-                                    'scope': 'Complete original native instruction, with its architectural effects retained; no UIL meaning inferred.'}}
+                        'effects': {'status': 'unresolved_native_relocation' if unresolved_fixups else 'native_backing_residual',
+                                    'scope': ('Source encoding has a symbolic LE relocation; execution-ready effects remain unknown.'
+                                              if unresolved_fixups else
+                                              'Complete original native instruction, with its architectural effects retained; no UIL meaning inferred.')}}
             for block in blocks.values():
                 block['incoming'] = list(incoming.get(block['id'], {}).values())
                 block['exits'].sort(key=lambda edge: (edge['kind'], edge['target']))

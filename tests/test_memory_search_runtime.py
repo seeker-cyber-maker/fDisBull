@@ -218,6 +218,30 @@ def test_same_cr3_different_pte_is_a_different_snapshot_identity(captured):
         project.memory_search_refine(search, second, mode='changed')
 
 
+def test_capture_rejects_backend_physical_linear_byte_disagreement(captured, monkeypatch):
+    project, session = captured
+    paged(session)
+    original = session.call
+    def disagree(method, params=None):
+        result = original(method, params)
+        if (method == 'memory.read' and params['address']['space'] == 'physical'
+                and int(params['address']['offset'], 0) == 0x5000):
+            result = dict(result, data_base64=base64.b64encode(b'\xff' * params['length']).decode())
+        return result
+    monkeypatch.setattr(session, 'call', disagree)
+    with pytest.raises(ValueError, match='physical bytes differ'):
+        snap(session)
+    assert not project.debug_artifacts()['artifacts']
+
+
+def test_capture_retains_full_physical_readback_receipt(captured):
+    project, session = captured
+    paged(session)
+    identifier = snap(session)
+    info = project.memory_snapshot_info(identifier)
+    assert info['capture']['physical_readback'] == dict(compared_bytes=8, verified=True)
+
+
 def test_page_accessed_dirty_activity_is_not_a_remap(captured):
     project, session = captured
     paged(session)

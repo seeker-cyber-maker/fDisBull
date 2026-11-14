@@ -15,6 +15,9 @@ import uuid
 
 MAX_ADDRESS = (1 << 64) - 1
 SCHEMA = 9
+# Semantic admission boundary, without a SQL layout change. Readers through
+# 0.34.1 accept at most9 and must not reinterpret object-mode/symbolic LE facts.
+LE_MODE_SCHEMA = 10
 
 
 def number(value):
@@ -94,9 +97,11 @@ from .proofs import ProofProjectMixin, PROOF_DDL
 from .snippet_links import SnippetLinksMixin, SNIPPET_DDL
 from .uil_store import CommonUILMixin
 from .cortex_m import CortexMMixin, DDL as CORTEX_M_DDL
+from .runtime_mappings import RuntimeMappingsMixin, RUNTIME_MAPPING_DDL
 
 
 class Project(
+    RuntimeMappingsMixin,
     CommonUILMixin,
     SnippetLinksMixin,
     TargetSourcesMixin,
@@ -140,8 +145,14 @@ class Project(
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
             if meta.get("application") != "fdisbull" or int(
                 meta.get("schema", -1)
-            ) not in (1, 2, 3, 4, 5, 6, 7, 8, SCHEMA):
+            ) not in (1, 2, 3, 4, 5, 6, 7, 8, SCHEMA, LE_MODE_SCHEMA):
                 raise ValueError("unsupported project schema")
+            declared_modes = json.loads(meta.get("loader_metadata", "{}")).get("decode_regions")
+            if declared_modes and int(meta["schema"]) < LE_MODE_SCHEMA:
+                raise ValueError("LE object decode modes require guarded project schema10; explicitly reimport this unguarded prototype")
+            if int(meta["schema"]) == LE_MODE_SCHEMA and (
+                    json.loads(meta.get("format", "null")) != "LE" or not declared_modes):
+                raise ValueError("project schema10 requires explicit LE object decode modes")
             if int(meta["schema"]) == 1:
                 self.db.executescript(
                     "BEGIN IMMEDIATE;"
@@ -156,7 +167,7 @@ class Project(
                 )
             else:
                 self.db.executescript(DOS_DDL)
-            if int(meta["schema"]) != SCHEMA:
+            if int(meta["schema"]) < SCHEMA:
                 self.db.executescript(
                     "BEGIN IMMEDIATE;"
                     + FACTS_DDL
@@ -182,15 +193,18 @@ class Project(
                 if k not in ("application", "schema")
             }
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
+            self._decode_regions_cache = {}
+            self._le_processor_cache = {}
             self.context = f"{self.arch}:{self.bits}:little" + (
                 ":ne" if self.meta["format"] == "NE" else ""
             )
-            self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL + SNIPPET_DDL)
-            if external and int(meta["schema"]) != SCHEMA:
+            self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL + SNIPPET_DDL + RUNTIME_MAPPING_DDL)
+            if external and int(meta["schema"]) < SCHEMA:
                 self.db.execute(
                     "UPDATE metadata SET value=? WHERE key='schema'", (str(SCHEMA),)
                 )
                 self.db.commit()
+            self.schema = int(self.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0])
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:
@@ -243,6 +257,12 @@ class Project(
             end = r.start + len(r.data)
         if not ordered or sum(len(r.data) for r in ordered) > 64 * 1024 * 1024:
             raise ValueError("empty image or mapped bytes exceed 64 MiB")
+        if "decode_regions" in image.metadata:
+            from .decode_modes import validate_regions
+            if image.format != "LE" or image.arch != "x86":
+                raise ValueError("object decode regions currently require an x86 LE image")
+            validate_regions(image.metadata["decode_regions"], image.regions, image.metadata["le"]["objects"])
+        project_schema = LE_MODE_SCHEMA if image.metadata.get("decode_regions") else SCHEMA
         target = Path(path).resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
         with target.open("xb"):
@@ -275,7 +295,7 @@ class Project(
                 }
                 db.executemany(
                     "INSERT INTO metadata VALUES (?,?)",
-                    [("application", "fdisbull"), ("schema", str(SCHEMA))]
+                    [("application", "fdisbull"), ("schema", str(project_schema))]
                     + [(k, json.dumps(v)) for k, v in meta.items()],
                 )
                 db.execute(
@@ -347,7 +367,7 @@ class Project(
                             "name": "fdisbull.load_image",
                             "version": __version__,
                         },
-                        "schema": SCHEMA,
+                        "schema": project.schema,
                     }
                     project.db.execute(
                         "INSERT INTO target_sources VALUES (?,?)",
@@ -425,6 +445,60 @@ class Project(
                 "SELECT * FROM regions WHERE version=? ORDER BY start", (version,)
             )
         ]
+
+    def decode_regions(self, version=None):
+        """Version-bound object modes; ``context`` remains the DB namespace.
+
+        Legacy/uniform images have no override and retain their existing mode.
+        An object declaration is never a claim about a live runtime selector.
+        """
+        v = self.version(version)["id"]
+        if v not in self._decode_regions_cache:
+            document = self._document(v)
+            items = document.get("decode_regions")
+            if items is None:
+                items = []
+            else:
+                from .decode_modes import validate_regions
+                items = validate_regions(items, self.regions(v), self.meta['loader_metadata']['le']['objects'])
+            self._decode_regions_cache[v] = items
+        return [dict(item) for item in self._decode_regions_cache[v]]
+
+    def decode_mode(self, address, version=None):
+        a = number(address)
+        return next((item for item in self.decode_regions(version)
+                     if item["start"] <= a < item["end"]), None)
+
+    def decode_bits(self, address, version=None):
+        mode = self.decode_mode(address, version)
+        return mode["bits"] if mode is not None else self.bits
+
+    def decoder_context(self, address, version=None):
+        return f"{self.arch}:{self.decode_bits(address, version)}:little"
+
+    def _le_processor(self, version):
+        modes = self.decode_regions(version)
+        if self.meta["format"] != "LE" or not modes:
+            return None
+        from .decode_modes import LEProcessor
+        if version not in self._le_processor_cache:
+            self._le_processor_cache[version] = LEProcessor(self.meta["loader_metadata"]["le"], modes)
+        return self._le_processor_cache[version]
+
+    def _instruction_following(self, version, address, size):
+        if self.meta["format"] == "NE":
+            from .ne import following
+            return following(address, size)
+        if self.meta["format"] == "LE":
+            processor = self._le_processor(version)
+            if processor is not None:
+                return processor.following(address, size)
+        mode = self.decode_mode(address, version)
+        following = address + size
+        if mode is not None and (following >= mode["end"]
+                                 or mode["bits"] == 16 and following - mode["start"] >= 65536):
+            return None
+        return following
 
     def managed(self, token=None, version=None, max_instructions=10000):
         from .managed import inspect_managed, disassemble_managed
@@ -841,6 +915,8 @@ class Project(
                         "comment_inherited_from": r["comment_inherited_from"],
                         "xrefs": self.xrefs(address_hex, "to", v["id"]),
                         "context": self.context,
+                        "decoder_bits": self.decode_bits(int(r["address"], 16), v["id"]),
+                        "decoder_context": self.decoder_context(int(r["address"], 16), v["id"]),
                     }
                 )
                 if predicate:
@@ -864,10 +940,22 @@ class Project(
                         if row["target"]
                         else None
                     )
+            le_processor = self._le_processor(v["id"])
+            if le_processor is not None:
+                for row in result:
+                    a = int(row["address"], 16)
+                    mode = self.decode_mode(a, v["id"])
+                    row["le_object_index"] = mode["object_index"]
+                    row["le_object_offset"] = a - mode["start"]
+                    row["le_fixups"] = le_processor.fixups_for(a, row["size"])
+                    row["operand_status"] = ("symbolic_unapplied_fixup"
+                                             if any(item.get("applied") is False for item in row["le_fixups"])
+                                             else "decoded_static_operand")
             return {
                 "title": self.meta["filename"],
                 "arch": self.arch,
                 "bits": self.bits,
+                "decode_regions": self.decode_regions(v["id"]),
                 "context": self.context,
                 "version": v["id"],
                 "sha256": v["sha256"],

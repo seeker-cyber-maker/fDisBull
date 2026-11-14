@@ -27,6 +27,42 @@ def file_hash(path):
     with Path(path).open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 
 
+def _tracking(session, operation, reason):
+    from .debugger import _tracking_callback
+    return _tracking_callback(session, operation, reason)
+
+
+def _before_machine_execution(session, reason):
+    parent = getattr(session, '_automatic_runtime_parent', None)
+    if parent is not None:
+        _tracking(parent, 'before_execution', 'parent-machine-' + reason)
+    _tracking(session, 'before_execution', reason)
+
+
+_QKEY = {'escape':'esc','esc':'esc','enter':'ret','space':'spc','pageup':'pgup',
+         'pagedown':'pgdn','kp5':'kp_5','-':'minus','=':'equal','[':'bracket_left',
+         ']':'bracket_right',';':'semicolon',"'":'apostrophe',',':'comma','.':'dot',
+         '/':'slash','\\':'backslash','`':'grave_accent'}
+_SHIFTED = dict(zip('!@#$%^&*()_+{}:"<>?|~', '1234567890-=[];\',./\\`'))
+_MAX_INTERNAL_STOPS = 256
+
+
+def _text_keys(text):
+    result = []
+    for char in text:
+        if char in '\r\n\t ':
+            key = {'\r':'enter','\n':'enter','\t':'tab',' ':'space'}[char]
+            modifiers = []
+        elif char.isascii() and char.isalpha():
+            key, modifiers = char.lower(), ['shift'] if char.isupper() else []
+        elif char in _SHIFTED:
+            key, modifiers = _SHIFTED[char], ['shift']
+        else:
+            key, modifiers = char, []
+        result.append([*modifiers, _QKEY.get(key, key)])
+    return result
+
+
 class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
@@ -145,11 +181,18 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
 
     def __init__(self,vm):
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
+        self._machine_input_queue=[]
+        self._machine_input_sequence=0
+        self._machine_input_delivered=0
+        self._machine_input_uncertain=0
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,code_layers=False,
             memory_translation='observed non-PAE 386 4-KiB pages; paused machine only',
             qemm_observation=False,
             stop_scope='all machine vCPUs',threads='machine vCPUs; not operating-system threads')
+        self.capabilities['input']=dict(keyboard='queued-QMP-US-ASCII',
+            delivery='requires running observed after bounded GDB continue; stop races remain explicit',
+            held_leases=False, mouse=False)
 
     def bind(self,project,run_id):
         self.project=project;self.run_id=run_id;return self
@@ -165,14 +208,97 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
     def pause(self):
         self.vm.qmp.call('stop');self.vm.machine_stopped=True
         self.vm.debugger()
+        _tracking(self, 'after_stop', 'machine-pause')
         return self.status()
 
     @machine_operation
     def resume(self):
+        _before_machine_execution(self, 'machine-resume-unmonitored')
+        tracker=getattr(self,'_automatic_runtime_tracker',None)
+        for identifier in list(getattr(tracker,'internal_breakpoints',set())):
+            if identifier in self.breakpoints:self.delete_breakpoint(identifier)
+        if tracker is not None:
+            tracker.internal_breakpoints.clear();tracker.provider=None
         if self.breakpoints:raise ValueError('Remove machine breakpoints before resuming guest services; use bounded machine run while they are active')
         if self.vm.gdb is not None:self.vm.gdb.close();self.vm.gdb=None
         self.vm.qmp.call('cont');self.vm.machine_stopped=False
         return self.status()
+
+    def tracking_status(self):
+        from .debugger import DebugSession
+        return DebugSession.tracking_status(self)
+
+    @property
+    def keyboard(self):
+        from .keyboard_input import GuestKeyboard
+        return GuestKeyboard(self)
+
+    def _queue_machine_keys(self, events, hold_ms, gap_ms):
+        queue=getattr(self,'_machine_input_queue',[])
+        if sum(len(item['events'])-item['next'] for item in queue)+len(events)>256:
+            raise ValueError('Machine keyboard queue exceeds256 key events')
+        _before_machine_execution(self, 'machine-input-queued')
+        self._machine_input_sequence=getattr(self,'_machine_input_sequence',0)+1
+        item=dict(id='machine-input-'+str(self._machine_input_sequence),events=events,
+                  next=0,hold_ms=hold_ms,gap_ms=gap_ms)
+        queue.append(item);self._machine_input_queue=queue
+        return dict(accepted=True,queued=True,input_id=item['id'],events=len(events),
+                    delivery='Python queue; requires running observed after bounded GDB continue',
+                    guest_consumption_proven=False)
+
+    @machine_operation
+    def keyboard_press(self,key,*,modifiers=(),hold_ms=40,gap_ms=40):
+        from .keyboard_input import validate_keyboard
+        validate_keyboard(key=key,modifiers=modifiers,hold_ms=hold_ms,gap_ms=gap_ms)
+        self._stopped()
+        return self._queue_machine_keys([[*modifiers,_QKEY.get(key,key)]],hold_ms,gap_ms)
+
+    @machine_operation
+    def keyboard_type(self,text,*,hold_ms=40,gap_ms=40):
+        from .keyboard_input import validate_keyboard
+        validate_keyboard(text=text,hold_ms=hold_ms,gap_ms=gap_ms)
+        self._stopped()
+        return self._queue_machine_keys(_text_keys(text),hold_ms,gap_ms)
+
+    @machine_operation
+    def keyboard_state(self):
+        pending=sum(len(item['events'])-item['next'] for item in getattr(self,'_machine_input_queue',[]))
+        return dict(keyboard=dict(pending_events=pending,owned_keys=[],
+                    dispatched_events=getattr(self,'_machine_input_delivered',0),
+                    uncertain_dispatched_events=getattr(self,'_machine_input_uncertain',0)),
+                    guest_consumption_proven=False)
+
+    def _drain_machine_input(self,deadline):
+        """Run only after the GDB continue packet, under the owning VM lock."""
+        queue=getattr(self,'_machine_input_queue',[])
+        admission=min(deadline,time.monotonic()+.05)
+        while queue and time.monotonic()<deadline:
+            remaining=max(1,int((deadline-time.monotonic())*1000))
+            if not self.vm.qmp.call('query-status',timeout_ms=remaining)['running']:
+                if time.monotonic()>=admission:return
+                time.sleep(min(.001,max(0,admission-time.monotonic())))
+                continue
+            if time.monotonic()>=deadline:return
+            remaining=max(1,int((deadline-time.monotonic())*1000))
+            item=queue[0]
+            event=item['events'][item['next']]
+            self.vm.qmp.call('send-key',dict(keys=[dict(type='qcode',data=key) for key in event],
+                **{'hold-time':item['hold_ms']}),timeout_ms=remaining)
+            item['next']+=1
+            self._machine_input_delivered=getattr(self,'_machine_input_delivered',0)+1
+            if item['next']==len(item['events']):queue.pop(0)
+            remaining=int((deadline-time.monotonic())*1000)
+            if remaining<1 or not self.vm.qmp.call('query-status',timeout_ms=max(1,remaining))['running']:
+                # The ACK does not prove guest consumption, and a breakpoint
+                # may race query-status/send-key. Never replay this key.
+                self._machine_input_uncertain=getattr(self,'_machine_input_uncertain',0)+1
+                return
+            wake=min(deadline,time.monotonic()+(item['hold_ms']+item['gap_ms'])/1000)
+            while time.monotonic()<wake:
+                remaining=max(1,int((deadline-time.monotonic())*1000))
+                if not self.vm.qmp.call('query-status',timeout_ms=remaining)['running']:return
+                time.sleep(min(.005,max(0,wake-time.monotonic())))
+            admission=min(deadline,time.monotonic()+.05)
 
     def _stopped(self):
         if self.vm.qmp.call('query-status')['running']:
@@ -268,8 +394,11 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
         if not data or len(data)!=len(expected):raise ValueError('Machine edit requires equally sized expected and replacement bytes')
         value=int(address,0) if isinstance(address,str) else address;remote=self._stopped()
         if remote.memory(value,len(data),space=space)!=expected:raise DebuggerError('Machine memory guard differs')
+        _before_machine_execution(self,'machine-write-memory')
+        self._automatic_internal_pending=None
         after=remote.memory(value,len(data),space=space,data=data)
         if after!=data:self.vm.close();raise DebuggerError('Machine memory readback differs')
+        _tracking(self,'after_stop','machine-write-memory')
         return dict(context='machine',address=hex(value),space=space,before_hex=expected_hex,after_hex=after.hex())
 
     @machine_operation
@@ -287,11 +416,15 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
             if before[name] is None or int(before[name],16)!=expected:raise DebuggerError('Machine register guard differs')
             edits[name]=value
         try:
+            _before_machine_execution(self,'machine-write-registers')
+            self._automatic_internal_pending=None
             for name,value in edits.items():remote.set_register(name,value)
             after=remote.registers()
             if any(int(after[name],16)!=value for name,value in edits.items()):raise DebuggerError('Machine register readback differs')
         except BaseException:self.vm.close();raise
-        return self.registers()
+        result=self.registers()
+        _tracking(self,'after_stop','machine-write-registers')
+        return result
 
     @machine_operation
     def breakpoint(self,address,*,access='x',length=1):
@@ -300,36 +433,147 @@ class MachineContext(DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchS
             raise ValueError('Invalid machine breakpoint')
         if access=='x' and length!=1:raise ValueError('Machine execution breakpoint length must be one')
         remote=self._stopped();kind={'x':1,'w':2,'r':3,'rw':4}[access]
-        if len(self.breakpoints)>=256 or any((r['kind'],r['address'],r['length'])==(kind,value,length) for r in self.breakpoints.values()):
+        owner='automatic-runtime-tracking' if getattr(self,'_automatic_tracking_callback_active',False) else 'user'
+        aliases=[r for r in self.breakpoints.values() if (r['kind'],r['address'],r['length'])==(kind,value,length)]
+        if len(self.breakpoints)>=256 or any(r.get('owner','user')==owner for r in aliases):
             raise ValueError('Duplicate machine breakpoint or breakpoint budget exceeded')
-        if remote.request(f'Z{kind},{value:x},{length:x}')!=b'OK':raise DebuggerError('Machine breakpoint rejected')
+        if not aliases and remote.request(f'Z{kind},{value:x},{length:x}')!=b'OK':raise DebuggerError('Machine breakpoint rejected')
         identifier='machine-bp-'+str(self.next_bp);self.next_bp+=1
-        self.breakpoints[identifier]=dict(address=value,kind=kind,length=length,access=access)
+        self.breakpoints[identifier]=dict(address=value,kind=kind,length=length,access=access,owner=owner)
         return dict(context='machine',breakpoint_id=identifier,address=hex(value),access=access,length=length,
                     address_space='selected-vCPU virtual address',guest_code_modified=False,mechanism='QEMU TCG breakpoint/watchpoint')
 
     @machine_operation
     def delete_breakpoint(self,breakpoint_id):
         record=self.breakpoints[breakpoint_id];remote=self._stopped()
-        if remote.request(f'z{record["kind"]},{record["address"]:x},{record["length"]:x}')!=b'OK':raise DebuggerError('Machine breakpoint removal failed')
+        aliases=[r for key,r in self.breakpoints.items() if key!=breakpoint_id and
+                 (r['kind'],r['address'],r['length'])==(record['kind'],record['address'],record['length'])]
+        if not aliases and remote.request(f'z{record["kind"]},{record["address"]:x},{record["length"]:x}')!=b'OK':raise DebuggerError('Machine breakpoint removal failed')
         del self.breakpoints[breakpoint_id]
         return dict(deleted=True,context='machine')
 
-    def _execute(self,command,timeout_ms):
-        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:raise ValueError('Machine timeout must be 1..600000 ms')
-        remote=self._stopped();reply,timed_out=remote.execute(command,timeout_ms)
-        if reply[:1] not in (b'T',b'S',b'W',b'X'):self.vm.close();raise DebuggerError('Invalid machine stop reply')
+    def _stop_result(self,reply,timed_out,command):
+        if reply[:1] not in (b'T',b'S',b'W',b'X'):
+            self.vm.close();raise DebuggerError('Invalid machine stop reply')
         self.vm.machine_stopped=True;native=reply.decode('ascii')
         regs=self.registers() if reply[:1] in (b'T',b'S') else None
         pc=int(regs['linear_pc'],16) if regs and regs['linear_pc'] else None
         watch=re.search(r'(?:^|;)(?:watch|rwatch|awatch):([0-9a-fA-F]+)',native)
-        ids=[key for key,bp in self.breakpoints.items() if bp['access']=='x' and bp['address']==pc or watch and bp['access']!='x' and bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
+        ids=[key for key,bp in self.breakpoints.items() if
+             bp['access']=='x' and bp['address']==pc or watch and bp['access']!='x' and
+             bp['address']<=int(watch.group(1),16)<bp['address']+bp['length']]
         signal=int(native[1:3],16)
-        kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
-        result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
-                    address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
+        kind=('exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else
+              'watchpoint' if watch else 'breakpoint' if ids else
+              'exception' if signal!=5 else 'step' if command=='s' else 'stopped')
+        result=dict(context='machine',outcome=kind,timed_out=timed_out,
+            session=dict(state='exited' if kind=='exited' else 'stopped',
+                stop_reason=dict(kind=kind,address=hex(pc) if pc is not None else None,
+                                 breakpoint_ids=ids,native_reply=native)),
+            registers=regs,breakpoints=ids)
         from .debug_semantics import normalize_stop
         result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome=kind)
+        return result
+
+    def _tracking_budget_stop(self,result,reason):
+        result=deepcopy(result)
+        result.update(outcome='tracking-budget',timed_out=reason=='deadline')
+        result['session']['stop_reason'].update(kind='tracking-budget',tracking_budget=reason)
+        from .debug_semantics import normalize_stop
+        result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome='tracking-budget')
+        return result
+
+    def _native_execute(self,remote,command,deadline):
+        remaining=int((deadline-time.monotonic())*1000)
+        if remaining<1:raise TimeoutError('Machine execution deadline reached before dispatch')
+        _before_machine_execution(self,'machine-gdb-'+('step' if command=='s' else 'run'))
+        remaining=int((deadline-time.monotonic())*1000)
+        if remaining<1:raise TimeoutError('Machine execution deadline reached during tracking invalidation')
+        if command=='c' and getattr(self,'_machine_input_queue',[]):
+            reply,timed_out=remote.execute(command,remaining,on_continue=self._drain_machine_input)
+        else:reply,timed_out=remote.execute(command,remaining)
+        return self._stop_result(reply,timed_out,command)
+
+    def _step_over_internal(self,remote,identifiers,deadline):
+        suspended=[]
+        try:
+            for identifier in identifiers:
+                bp=self.breakpoints.get(identifier)
+                if bp is None:continue
+                key=(bp['kind'],bp['address'],bp['length'])
+                if key in suspended:continue
+                if remote.request(f'z{bp["kind"]},{bp["address"]:x},{bp["length"]:x}')!=b'OK':
+                    raise DebuggerError('Internal breakpoint suspension failed')
+                suspended.append(key)
+            return self._native_execute(remote,'s',deadline)
+        finally:
+            for kind,address,length in suspended:
+                if not any((r['kind'],r['address'],r['length'])==(kind,address,length) for r in self.breakpoints.values()):continue
+                if remote.request(f'Z{kind},{address:x},{length:x}')!=b'OK':
+                    self.vm.close();raise DebuggerError('Internal breakpoint restoration failed; execution is quarantined')
+
+    def _execute(self,command,timeout_ms):
+        if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:
+            raise ValueError('Machine timeout must be1..600000ms')
+        remote=self._stopped();deadline=time.monotonic()+timeout_ms/1000
+        count=0;result=None
+        # A previous budget may have expired after observing the internal event
+        # but before executing its native instruction. Never count it twice.
+        pending=getattr(self,'_automatic_internal_pending',None)
+        if pending:
+            now=self.registers()
+            if now['registers']==pending['registers'] and now['linear_pc']==pending['pc']:
+                at_pc=[key for key,bp in self.breakpoints.items() if bp['access']=='x' and
+                       bp['address']==int(now['linear_pc'],16)]
+                try:result=self._step_over_internal(remote,at_pc,deadline)
+                except TimeoutError:result=self._tracking_budget_stop(pending['result'],'deadline')
+                else:self._automatic_internal_pending=None
+            else:self._automatic_internal_pending=None
+        while result is None or command=='c' and result['outcome']=='step':
+            try:result=self._native_execute(remote,command,deadline)
+            except TimeoutError:
+                if result is None:
+                    result=dict(context='machine',outcome='timeout',timed_out=True,
+                        session=dict(state='stopped',stop_reason=dict(kind='timeout',
+                            origin='deadline-before-dispatch')),registers=self.registers(),breakpoints=[])
+                break
+            while result['outcome']=='breakpoint':
+                tracker=getattr(self,'_automatic_runtime_tracker',None)
+                internal=set(getattr(tracker,'internal_breakpoints',set()))
+                matched=set(result['breakpoints'])
+                owned=matched&internal
+                user=matched-internal
+                if not owned:break
+                if count>=_MAX_INTERNAL_STOPS:
+                    result=self._tracking_budget_stop(result,'internal-event-count');break
+                if time.monotonic()>=deadline:
+                    result=self._tracking_budget_stop(result,'deadline');break
+                hide=_tracking(self,'internal_stop',result)
+                count+=1
+                self._automatic_internal_pending=dict(ids=sorted(matched),
+                    registers=deepcopy(result['registers']['registers']),
+                    pc=result['registers']['linear_pc'],result=deepcopy(result))
+                if user or not hide:
+                    if user:
+                        result['breakpoints']=sorted(user)
+                        result['session']['stop_reason']['breakpoint_ids']=sorted(user)
+                        result['automatic_breakpoints']=sorted(owned)
+                    break
+                try:result=self._step_over_internal(remote,sorted(matched),deadline)
+                except TimeoutError:
+                    result=self._tracking_budget_stop(self._automatic_internal_pending['result'],'deadline');break
+                self._automatic_internal_pending=None
+                if command=='s' or result['outcome']!='step':break
+                try:result=self._native_execute(remote,'c',deadline)
+                except TimeoutError:
+                    result=self._tracking_budget_stop(result,'deadline');break
+            if result['outcome']!='step' or command=='s':break
+        result['internal_tracking_stops']=count
+        result['pending_keyboard_events']=sum(len(i['events'])-i['next'] for i in getattr(self,'_machine_input_queue',[]))
+        result['uncertain_keyboard_events']=getattr(self,'_machine_input_uncertain',0)
+        self._automatic_runtime_stop=result
+        if result['outcome']=='exited':_tracking(self,'close','native-machine-exit')
+        else:_tracking(self,'after_stop','machine-'+result['outcome'])
         if self.project:self._event('machine-'+('step' if command=='s' else 'run'),result)
         return result
 
@@ -434,8 +678,13 @@ class MachineDebugSession(MachineContext):
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
                     (self.run_id,selected['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
+            from .debugger import _attach_runtime_tracking
+            _attach_runtime_tracking(self)
             project._live_debuggers.append(self)
-        except BaseException:vm.close();raise
+        except BaseException:
+            try:_tracking(self,'close','machine-launch-failed')
+            finally:vm.close()
+            raise
 
     def __enter__(self):return self
     def __exit__(self,*args):self.close()
@@ -450,6 +699,7 @@ class MachineDebugSession(MachineContext):
     def script_operations(self):
         return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','breakpoint','delete-breakpoint','trace','screenshot',
+                'keyboard.press','keyboard.type','keyboard.state',
                 'assert','status','write-memory','write-registers'}
     def script(self,*args,**kwargs):
         from .debugger import DebugSession
@@ -458,7 +708,13 @@ class MachineDebugSession(MachineContext):
     def close(self):
         if self.closed:return
         from .debugger import stamp
-        self.vm.close();self.closed=True
-        with self.project.transaction(True):
-            self.project.db.execute('UPDATE debug_runs SET ended=?,state=? WHERE id=?',(stamp(),'exited',self.run_id))
-        if self in self.project._live_debuggers:self.project._live_debuggers.remove(self)
+        try:
+            _tracking(self,'close','machine-session-close')
+        finally:
+            try:self.vm.close()
+            finally:
+                self.closed=True
+                self._machine_input_queue=[]
+                with self.project.transaction(True):
+                    self.project.db.execute('UPDATE debug_runs SET ended=?,state=? WHERE id=?',(stamp(),'exited',self.run_id))
+                if self in self.project._live_debuggers:self.project._live_debuggers.remove(self)

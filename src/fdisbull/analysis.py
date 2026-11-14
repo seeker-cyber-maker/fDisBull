@@ -46,6 +46,9 @@ class AnalysisMixin:
             for item in document['strings']:
                 item['address'] = region.start + item['file_offset']
         document['file_mappings']=image.metadata.get('file_mappings',[])
+        if 'decode_regions' in image.metadata:
+            from .decode_modes import validate_regions
+            document['decode_regions'] = validate_regions(image.metadata['decode_regions'], image.regions, image.metadata['le']['objects'])
         self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(version,json.dumps(document),image.source_bytes))
         self.db.execute('INSERT INTO analysis_state(version) VALUES (?)',(version,))
         self._index_symbols(version, document)
@@ -196,7 +199,7 @@ class AnalysisMixin:
         defined=self.db.execute('SELECT representation,size FROM definitions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
         symbol=self.db.execute("SELECT kind FROM symbols WHERE version=? AND address=? AND kind IN ('imports','recovered_import') LIMIT 1",(version,k(address))).fetchone()
         string=next((s for s in document.get('strings',[]) if s.get('address')==address),None)
-        width=self.bits//8
+        width=self.decode_bits(address,version)//8
         representation='scalar'
         value=None
         source='referenced mapped bytes'
@@ -241,7 +244,10 @@ class AnalysisMixin:
                 if self._add_xref(version,address,target,'pointer','static pointer value; candidate unless corroborated'):
                     self._queue_data(version,target,'pointer target')
                 # Promote only corroborated indirect control-flow, never an arbitrary pointer.
-                sources=self.db.execute("SELECT DISTINCT i.address,i.flow FROM xrefs x JOIN instructions i ON i.version=x.version AND i.context=x.context AND i.address=x.source JOIN operand_refs o ON o.version=x.version AND o.context=x.context AND o.source=x.source AND o.target=x.target WHERE x.version=? AND x.context=? AND x.target=? AND x.kind='data' AND i.flow IN ('indirect_call','indirect_jump') AND o.role='memory' AND o.width=?",(version,self.context,k(address),self.bits//8)).fetchall()
+                sources=self.db.execute("SELECT DISTINCT i.address,i.flow FROM xrefs x JOIN instructions i ON i.version=x.version AND i.context=x.context AND i.address=x.source JOIN operand_refs o ON o.version=x.version AND o.context=x.context AND o.source=x.source AND o.target=x.target WHERE x.version=? AND x.context=? AND x.target=? AND x.kind='data' AND i.flow IN ('indirect_call','indirect_jump') AND o.role='memory' AND o.width=?",(version,self.context,k(address),width)).fetchall()
+                if self.meta['format'] == 'LE' and self.decode_regions(version):
+                    sources = [item for item in sources
+                               if self.decode_bits(int(item['address'],16),version) == self.decode_bits(target,version)]
                 advanced=self.db.execute('SELECT 1 FROM metadata WHERE key=?',(f'advanced_enabled_{version}',)).fetchone()
                 if sources and target_region.executable and not advanced and self.arch != 'thumb':
                     for ins in sources:
@@ -275,6 +281,9 @@ class AnalysisMixin:
         budget=integer(max_instructions,'max_instructions',1,1_000_000)
         with self.transaction(True):
             v=self.version(version)['id']
+            le_processor = self._le_processor(v)
+            if le_processor is not None:
+                processor = le_processor
             self.db.execute('INSERT OR IGNORE INTO analysis_state(version) VALUES (?)',(v,))
             regions=self.regions(v)
             doc=self._document(v)
@@ -354,11 +363,8 @@ class AnalysisMixin:
                             inserted=self._add_xref(v,a,ref,'offset_candidate','immediate equals mapped address; heuristic offset')
                             self.db.execute('INSERT OR IGNORE INTO operand_refs VALUES (?,?,?,?,?,?,?)',(v,self.context,k(a),immediate['operand_index'],'offset_candidate',k(ref),None))
                             self._queue_data(v,ref,'mapped immediate candidate',reopen=bool(inserted))
-                    following=a+ins['size']
-                    if self.meta['format'] == 'NE':
-                        from .ne import following as ne_following
-                        following = ne_following(a, ins['size'])
-                    if flow in ('next','call','conditional','indirect_call') and executable(following):
+                    following=ins.get('next_address',self._instruction_following(v,a,ins['size']))
+                    if flow in ('next','call','conditional','indirect_call') and following is not None and executable(following):
                         self._queue_code(v,following,'fallthrough')
                         evidence=('permitted call-return fallthrough; return is assumed' if flow in ('call','indirect_call') else 'decoded conditional fallthrough' if flow=='conditional' else 'decoded straight-line fallthrough')
                         self._add_xref(v,a,following,'fallthrough',evidence)
@@ -423,7 +429,7 @@ class AnalysisMixin:
     def represent(self, address, representation, size=None, author='agent', version=None, max_instructions=10000,defer=False):
         from .project import number,integer
         a=self._address(address)
-        allowed={'code':1,'byte':1,'word':2,'dword':4,'qword':8,'pointer':self.bits//8,'ascii':None,'utf-16le':None,'unexplored':None}
+        allowed={'code':1,'byte':1,'word':2,'dword':4,'qword':8,'pointer':self.decode_bits(a,version)//8,'ascii':None,'utf-16le':None,'unexplored':None}
         if representation not in allowed:
             raise ValueError('representation must be code, byte, word, dword, qword, pointer, ascii, utf-16le or unexplored')
         if not isinstance(defer,bool):

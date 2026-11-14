@@ -66,6 +66,50 @@ def stamp():
     return now()
 
 
+def _tracking_callback(session, operation, reason, *args):
+    """Call the source observer without recursively observing its own reads."""
+    tracker = getattr(session, '_automatic_runtime_tracker', None)
+    if tracker is None or getattr(session, '_automatic_tracking_callback_active', False):
+        return None
+    session._automatic_tracking_callback_active = True
+    try:
+        return getattr(tracker, operation)(reason, *args)
+    finally:
+        session._automatic_tracking_callback_active = False
+
+
+def _attach_runtime_tracking(session):
+    if getattr(session, '_automatic_runtime_tracker', None) is not None:
+        return
+    from .runtime_tracking import AutomaticRuntimeTracker
+    session._automatic_runtime_tracker = AutomaticRuntimeTracker(session)
+    _tracking_callback(session, 'after_stop', 'session-start')
+
+
+def _tracking_before_rpc(session, method):
+    mutates = (method in {'execution.continue', 'execution.step', 'execution.pause',
+                          'memory.write', 'state.set_register', 'state.load',
+                          'session.stop', 'session.close'} or
+               method.startswith('input.') and not method.endswith('.state'))
+    if mutates:
+        _tracking_callback(session, 'before_execution', method)
+
+
+def _tracking_after_rpc(session, method, result):
+    if method not in ('execution.wait', 'session.status') or not isinstance(result, dict):
+        return
+    if result.get('running') is True:
+        return
+    state = result.get('state') or result.get('session', {}).get('state')
+    if state not in ('stopped', 'exited'):
+        return
+    session._automatic_runtime_stop = result
+    if state == 'exited':
+        _tracking_callback(session, 'close', 'native-target-exit')
+    elif method == 'execution.wait':
+        _tracking_callback(session, 'after_stop', 'execution.wait')
+
+
 DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
 DEBUG_DDL += SCENE_DDL
@@ -404,13 +448,17 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
                     (self.run_id,self.version['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
+            _attach_runtime_tracking(self)
             self._event('launch',result)
             project._live_debuggers.append(self)
         except BaseException:
-            if self.rpc is not None:
-                self.rpc.close()
-            if self._launch_alias is not None:
-                self._launch_alias.close()
+            try:
+                _tracking_callback(self, 'close', 'launch-failed')
+            finally:
+                if self.rpc is not None:
+                    self.rpc.close()
+                if self._launch_alias is not None:
+                    self._launch_alias.close()
             raise
 
     def __enter__(self):
@@ -429,7 +477,10 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
     @property
     def machine(self):
         if not hasattr(self.rpc,'machine'):raise ValueError('This session has no outer machine context')
-        return self.rpc.machine.bind(self.project,self.run_id)
+        context=self.rpc.machine.bind(self.project,self.run_id)
+        if getattr(self,'_automatic_runtime_tracker',None) is not None:
+            context._automatic_runtime_parent=self
+        return context
 
     def contexts(self):
         primary='dos-cpu' if self.project.meta['format'] in ('MZ', 'COM') else 'process'
@@ -464,7 +515,10 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             if remaining<=0 or remaining < admission:
                 raise RpcAdmissionTimeout('Shared debugger host-time budget expired before RPC dispatch')
             options['timeout_ms']=min(getattr(self,'_rpc_timeout_cap_ms',None) or 15000,remaining)
-        return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
+        _tracking_before_rpc(self, method)
+        result = self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
+        _tracking_after_rpc(self, method, result)
+        return result
 
     def _event(self, operation, evidence):
         if not hasattr(self, 'project'):
@@ -486,6 +540,12 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
         return {'run':self.run_id,'version':self.version['id'],'live':True,**result,'mapping':self.metadata,
                 'semantics':contract(self.metadata.get('backend','dosbox')),
                 'native_hooks_available':self.native_hooks_available}
+
+    def tracking_status(self):
+        tracker = getattr(self, '_automatic_runtime_tracker', None)
+        return (tracker.status() if tracker is not None else
+                dict(enabled=False, state='not-available', current_bindings=0,
+                     reason='automatic source tracking is unavailable for this session'))
 
     def _timing(self, enabled=None):
         if not self.rpc.capabilities.get('timing',{}).get('fast_forward'):
@@ -895,6 +955,7 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             if metadata.get(key) is not None:
                 self.metadata[key] = metadata[key]
         FrameTimelineSessionMixin._timeline_loaded(self)
+        _tracking_callback(self, 'after_stop', 'verified-checkpoint-restore')
         return result
 
     @timeline_locked
@@ -1117,6 +1178,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             interrupted = error
             result = {'state':'interrupted','error':str(error)}
         finally:
+            cleanup('automatic-runtime-tracking',
+                    lambda: _tracking_callback(self, 'close', 'session-close'))
             try:
                 cleanup('rpc.close', lambda: self.rpc.close())
             finally:
@@ -1242,7 +1305,7 @@ class DebugWorkspace:
                    'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
                    'debug-desqview-observe':'desqview_observe',
                    'debug-memory-translation':'memory_translation','debug-qemm-observe':'qemm_observe',
-                   'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-status':'status','debug-tracking':'tracking_status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',

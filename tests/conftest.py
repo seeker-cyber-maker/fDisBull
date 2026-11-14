@@ -1,8 +1,14 @@
 """Keep explicit native acceptance from succeeding through missing-backend skips."""
 import os
 from pathlib import Path
+import sys
 
 import pytest
+
+
+# Preserve the existing flat helper imports alongside ``tests.<module>``.
+# With an explicit local package, pytest otherwise adds only its parent.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 def pytest_addoption(parser):

@@ -103,7 +103,7 @@ can also be installed on its own. See the [user guide](docs/USER_GUIDE.md),
 Import x86 16/32/64, ARM64 or Armv7-M programs across supported containers and
 profiles:
 
-- **DOS & 16/32-bit Windows:** classic MZ, explicit COM, bounded 32-bit
+- **DOS & 16/32-bit Windows:** classic MZ, explicit COM, bounded mixed 16/32-bit
   [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
   [Win16 NE](docs/NE_LOADING.md) segments with logical `ne:seg:offset` addresses
   and symbolic relocations, OMF library signature catalogs (`omf-catalog`), and
@@ -132,6 +132,14 @@ profiles:
   Ghidra and `saturn-recomp`), mode-explicit SNES 65C816 decoding, and
   reusable [media adapters](docs/AGENT_QUICKSTART.md#reuse-media-readers)
   (`media-modules`, `media-inspect`, `media-extract`).
+
+The [runtime mapping registry](docs/runtime-mappings.md) keeps source objects,
+runtime aliases and task lifetimes separate. Its retained journal supports
+historical address lookup and map/restore checkpoints. Normal DOS and supported
+DESQview machine sessions automatically refresh stopped-state bindings from
+source bytes, page tables and physical byte readback, retiring them before
+execution. `debug-tracking` reports coverage and unsupported cases. A recorded mapping does not imply
+that the task is still live or that the mapping persisted between observations.
 
 The [format catalog](docs/FILE_FORMAT_REGISTRY.md) distinguishes a recognized
 header from an implemented decoder. Collection intake retains edition and
