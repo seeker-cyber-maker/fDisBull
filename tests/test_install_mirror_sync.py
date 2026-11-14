@@ -50,13 +50,7 @@ def test_installer_preview_apply_hook_and_disable(mirrors):
     assert not m['cache'].exists()
     assert (state / 'runtime' / 'mirror_sync_service.py').read_bytes() == fake_worker.read_bytes()
     config = json.loads((state / 'config.json').read_text())
-    assert config['storage'] == {
-        'python': '/Users/tiga/miniconda/bin/python3',
-        'checker': str(state / 'runtime' / 'mirror_storage_admit.py'),
-        'admission_script': str(m['root'] / 'authored-storage-admission.py'),
-        'expected_bytes': 1_000_000_000,
-        'reserve_bytes': 40_000_000_000,
-    }
+    assert config['storage'] == {'mode': 'none'}
     checker = state / 'runtime' / 'mirror_storage_admit.py'
     assert checker.read_bytes() == (m['root'] / 'authored-storage-checker.py').read_bytes()
     manifest = json.loads((state / 'install-manifest.json').read_text())
@@ -172,10 +166,6 @@ def test_installer_refuses_busy_worker_lock_without_changing_installed_files(mir
 
 
 @pytest.mark.parametrize('option,value', [
-    ('--storage-expected-bytes', '0'),
-    ('--storage-reserve-bytes', '39999999999'),
-    ('--storage-admission-script', 'relative.py'),
-    ('--storage-admission-script', '/missing/storage_admit.py'),
     ('--storage-checker-source', 'relative.py'),
 ])
 def test_installer_rejects_invalid_storage_options(mirrors, option, value):
@@ -217,8 +207,7 @@ def test_installer_storage_overrides_and_legacy_manifest_migration(mirrors):
     cmd(*args, '--storage-expected-bytes', '2000000000',
         '--storage-reserve-bytes', '50000000000', '--apply', env=m['env'])
     migrated = json.loads(config_path.read_text())
-    assert migrated['storage']['expected_bytes'] == 2_000_000_000
-    assert migrated['storage']['reserve_bytes'] == 50_000_000_000
+    assert migrated['storage'] == {'mode': 'none'}
     new_manifest = json.loads(manifest_path.read_text())
     assert new_manifest['storage_checker_sha256'] == hashlib.sha256(checker_path.read_bytes()).hexdigest()
     assert new_manifest['original_deny_current_branch'] == manifest['original_deny_current_branch']

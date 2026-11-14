@@ -40,29 +40,19 @@ alternate-object reference to the hub. It preserves objects needed for
 reconciliation without making the hub depend on it. Neither service operation
 nor disable deletes the cache or rewrites active worktrees.
 
-## Storage admission
+## Storage behavior
 
-The installed configuration requires the storage checker, canonical
-`storage_admit.py` path, a positive conservative allocation estimate, and a
-destination reserve of at least 40,000,000,000 bytes. The default estimate is
-1,000,000,000 new bytes for each growth phase, including its temporary objects;
-raise it before admitting larger transfers. This is admission, not a running
-quota or a guarantee that another application cannot consume the pool.
+Reserve-based admission was removed by user direction on 2026-11-14.
+Free-space values and legacy storage helper failures do not stop mirroring.
+Legacy storage options remain accepted for upgrade compatibility and have no
+admission effect. New configurations explicitly record `storage.mode: none`.
 
-Under the run lock, admission precedes cache creation, every fetch and every
-outbound push. The worker also rechecks after each fetch before advancing to
-another phase. The canonical helper checks CODEX/cache and the internal
-20 GB minimum. A separate observation requires the local hub's available space
-minus the same conservative estimate to retain 40 GB. Free-space figures are
-checked independently, never added across sibling APFS volumes. Automatic
-fetch-time maintenance/repacking is disabled to avoid an unplanned growth phase.
-
-Denial, a missing helper, timeout, or malformed receipt prevents the next growth
-operation. The latest `status.json` reports `storage-held`, the phase and its
-admission evidence; the previous reconciliation baseline and objects remain.
-Small status/lock updates are permitted. No cache deletion, reserve reduction
-or relocation is automatic. Restore capacity or explicitly revise a justified
-growth estimate before expecting the next scheduled attempt to proceed.
+Mounted-volume UUIDs, repository identities, global and per-peer locks,
+fast-forward ancestry checks, tag preservation and bounded command deadlines
+remain enforced. Missing or substituted volumes still stop the worker before
+Git operations. Fetch-time automatic maintenance remains disabled. The service
+never deletes caches or user files to recover space; actual I/O failures are
+reported as errors while preserving reconciliation state for recovery.
 
 ## Preview and install
 
@@ -104,7 +94,7 @@ Use the configured absolute Python executable from the installation preview
 if `python3` above is not the intended runtime. Initialization requires the
 external volumes to be present with their configured UUIDs. The worker owns its
 external cache marker, baseline and status; the installer does not manufacture
-a successful initialization receipt. Use normal storage admission before
+a successful initialization receipt. Review expected disk use before
 initializing or growing a substantial new cache.
 
 ## Observe and disable
@@ -167,3 +157,6 @@ hub container was below its destination reserve. That is a storage hold, not
 a passing propagation result. Restore capacity before normal synchronization;
 the installer can replace the small control payload without reinitializing
 the retained reconciliation baseline. No hosted CI was run for this correction.
+
+The historical storage-denial witnesses below describe the former policy;
+current tests verify mirroring without capacity admission.
