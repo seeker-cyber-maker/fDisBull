@@ -19,9 +19,12 @@ def test_lease_requires_matching_exclusive_flock_and_owner():
 def test_invalid_inherited_fd_binding_never_accepted(monkeypatch, tmp_path):
     lock = tmp_path/'lock'; lock.write_text('')
     monkeypatch.setattr(once, 'LOCK', lock)
-    monkeypatch.setattr(once.os, 'fstat', lambda fd: SimpleNamespace(st_dev=1, st_ino=2))
-    monkeypatch.setattr(once.os, 'getppid', lambda: 123)
-    assert once.verify_lease(5, 999, 1, 2) is False
+    with lock.open('rb') as stream:
+        actual = os.fstat(stream.fileno())
+        owner = os.getppid()
+        assert once.verify_lease(stream.fileno(), owner + 1, actual.st_dev, actual.st_ino) is False
+        assert once.verify_lease(stream.fileno(), owner, actual.st_dev + 1, actual.st_ino) is False
+        assert once.verify_lease(stream.fileno(), owner, actual.st_dev, actual.st_ino + 1) is False
 
 
 def test_workflow_routes_to_ordinary_wrapper_with_fixed_policy_and_limits():

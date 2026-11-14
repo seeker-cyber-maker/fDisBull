@@ -61,7 +61,8 @@ def test_direct_imports_are_narrow_and_ambiguous_mapping_refused():
 
 
 def test_selection_and_worker_disabled_without_approval_or_publisher(tmp_path):
-    server=s.SourceServer(repo=tmp_path,worktrees=tmp_path,state=tmp_path,guard=lambda:None)
+    server=s.SourceServer(repo=tmp_path,worktrees=tmp_path,state=tmp_path,guard=lambda:None,
+                          interpreter_check=lambda:dict(s.PINNED_INTERPRETER))
     bundle=make_bundle()
     with pytest.raises(RuntimeError,match='not approved'):server.prepare(bundle['target'],bundle)
     server.approved=True
@@ -178,7 +179,8 @@ def test_partial_provider_readback_cannot_complete_publication(tmp_path):
         def readback(self,*args):return {'verified':True,'source_sha':'c'*40,'candidate_ref':'codex/x',
                                         'receipt_path':'r','github':{'verified':True,'source_sha':'c'*40,'candidate_ref':'codex/x'}}
     server=s.SourceServer(repo=tmp_path,worktrees=tmp_path,state=tmp_path,guard=lambda:None,
-                          selection_policy_approved=True,publisher=Publisher())
+                          selection_policy_approved=True,publisher=Publisher(),
+                          interpreter_check=lambda:dict(s.PINNED_INTERPRETER))
     with pytest.raises(RuntimeError,match='dual-provider'):server._publisher_readback_only('k',{'source_sha':'c'*40,'candidate_ref':'codex/x'})
 
 
