@@ -12,7 +12,14 @@
     "source_commit": "3aaac41b1f73220568fc07b9d53f5ccd4307a242"
   },
   "focused_integrated_checks": "66 passed in1.33s",
+  "followup_checks": "30 installer/verifier tests passed after shared native command route binding",
   "game_files_states_databases_included": false,
+  "historical_installation_snapshot": {
+    "current_guidance": false,
+    "path": "docs/SYSTEM_INSTALLATION-0.31.1-HISTORY.md",
+    "preserved_from": "be68826e:docs/SYSTEM_INSTALLATION.md",
+    "sha256": "2f78bc175ac7c1a6c58bdc5f51b675fd9fbe13d8e9eb4674fa20fb1a86e4855e"
+  },
   "implemented": [
     "fresh evidence-bound prefix",
     "version-neutral payload and installed-wheel verifier",

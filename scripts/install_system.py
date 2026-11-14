@@ -467,6 +467,23 @@ def _switch(base,target):
     finally:os.close(fd)
 
 
+def _verify_backend_resolution(prefix,manifest,*,dosbox_route=Path('/usr/local/bin/fdisbull-dosbox'),
+                               qemu_route=Path('/usr/local/bin/fdisbull-qemu')):
+    required={'dosbox-x','dosbox-layers','qemu-system-x86_64'}
+    backends=manifest.get('backends',{})
+    if not required <= set(backends):raise ValueError('shared native command backends missing')
+    for name in required:
+        ref=backends[name];target=prefix/'backend/native-macos-arm64'/name
+        if ref.get('path')!=target.relative_to(prefix).as_posix() or not target.is_file() or digest(target)!=ref.get('sha256'):
+            raise ValueError('shared native command target mismatch')
+    if not dosbox_route.is_symlink() or dosbox_route.resolve()!=prefix/'backend/native-macos-arm64/dosbox-x':
+        raise ValueError('DOSBox command does not follow selected backend')
+    if (qemu_route.is_symlink() or not qemu_route.is_file()
+            or digest(qemu_route)!='e7117098fff41d16f7c07773f8ae7d4e6ddb29b74871b87e560ff18481679e01'):
+        raise ValueError('QEMU command is not the known selector-following wrapper')
+    return {'dosbox':str(dosbox_route),'qemu':str(qemu_route),'targets':sorted(required)}
+
+
 def _verify_resolution(base,prefix,version):
     """Prove the existing caller route is the known selector-following wrapper."""
     if base!=DEFAULT_BASE:raise ValueError('default command route is not configured for this base')
@@ -482,7 +499,9 @@ def _verify_resolution(base,prefix,version):
     for executable in (wrapper,user_wrapper,Path(route)):
         if _run([executable,'--version'],work,timeout=60,capture=True).decode('utf-8','strict').strip()!=version:
             raise ValueError('selector-following wrapper version differs')
-    return {'caller_path':route,'wrapper':str(wrapper),'wrapper_sha256':expected,'version':version,'prefix':str(prefix)}
+    backends=_verify_backend_resolution(prefix,read_json(prefix/'share/install-manifest.json'))
+    return {'caller_path':route,'wrapper':str(wrapper),'wrapper_sha256':expected,'version':version,
+            'prefix':str(prefix),'native_commands':backends}
 
 
 def activate(prefix,base):

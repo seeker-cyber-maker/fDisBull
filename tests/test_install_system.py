@@ -163,3 +163,19 @@ def test_bounded_runner_captures_real_command_and_rejects_failure(tmp_path):
     assert installer._run([sys.executable,'-c','import json; print(json.dumps({"ok": True}))'],work,json_output=True)=={'ok':True}
     with pytest.raises(ValueError,match='command failed'):
         installer._run([sys.executable,'-c','raise SystemExit(1)'],work)
+
+
+def test_existing_native_routes_require_all_selected_backend_targets(tmp_path):
+    prefix=tmp_path/'candidate';native=prefix/'backend/native-macos-arm64';native.mkdir(parents=True)
+    refs={}
+    for name in ('dosbox-x','dosbox-layers','qemu-system-x86_64'):
+        path=native/name;path.write_bytes(('authored route fixture '+name).encode())
+        refs[name]={'path':str(path.relative_to(prefix)),'sha256':installer.digest(path)}
+    link=tmp_path/'dosbox';link.symlink_to(native/'dosbox-x')
+    wrapper=tmp_path/'qemu';wrapper.write_text('#!/bin/sh\nset -eu\nROOT=$(CDPATH= cd /Users/Shared/fDisBull/current && pwd -P)\nexec "$ROOT/backend/native-macos-arm64/qemu-system-x86_64" "$@"\n')
+    assert installer._verify_backend_resolution(prefix,{'backends':refs},dosbox_route=link,qemu_route=wrapper)['targets']==sorted(refs)
+    with pytest.raises(ValueError,match='backends missing'):
+        installer._verify_backend_resolution(prefix,{'backends':{'qemu':refs['qemu-system-x86_64']}},dosbox_route=link,qemu_route=wrapper)
+    (native/'dosbox-x').write_bytes(b'changed')
+    with pytest.raises(ValueError,match='target mismatch'):
+        installer._verify_backend_resolution(prefix,{'backends':refs},dosbox_route=link,qemu_route=wrapper)

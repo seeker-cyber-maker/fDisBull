@@ -57,3 +57,7 @@ records. They qualify installer behavior, not a real 0.35.0 installation. A new
 release still requires actual Linux qualification, disconnected-kit acceptance,
 publication/download readback, fresh Mac native results and live activation
 readback before completion can be claimed.
+
+The [0.31.1 installation snapshot](SYSTEM_INSTALLATION-0.31.1-HISTORY.md) is
+preserved byte-for-byte for historical reference. Its active-selector statements
+and qualification results describe that older installation, not today's prefix.
