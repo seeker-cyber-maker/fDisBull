@@ -157,8 +157,11 @@ def request_digest(provider,method,path,payload):
 
 def _clean_env():
     blocked=('TOKEN','API_KEY','PASSWORD','SECRET','CREDENTIAL')
-    return {k:v for k,v in os.environ.items() if not any(x in k.upper() for x in blocked)
-            and k not in ('GH_HOST','GITLAB_HOST','GLAB_HOST','GH_REPO','GITLAB_REPO')}
+    env = {k:v for k,v in os.environ.items() if not any(x in k.upper() for x in blocked)
+            and k not in ('GH_HOST','GITLAB_HOST','GLAB_HOST','GH_REPO','GITLAB_REPO',
+                          'FORCE_COLOR','CLICOLOR_FORCE','GH_FORCE_TTY')}
+    env.update(NO_COLOR='1', CLICOLOR='0')
+    return env
 
 
 

@@ -73,7 +73,7 @@ def test_actual_checker_rejects_empty_receipts_and_exports_closed_evidence(case)
     assert (temp / 'artifacts/inventory.json').read_bytes() == (target / 'inventory.json').read_bytes()
 
 
-@pytest.mark.parametrize('problem', ['wrong_sha', 'wrong_runner', 'missing_run', 'bad_nonce', 'dirty', 'unmounted', 'space'])
+@pytest.mark.parametrize('problem', ['wrong_sha', 'wrong_runner', 'missing_run', 'bad_nonce', 'dirty', 'unmounted'])
 def test_invalid_observation_stops_before_export(case, monkeypatch, problem):
     run, candidate, host, env, _ = case
     options = {}
@@ -83,9 +83,17 @@ def test_invalid_observation_stops_before_export(case, monkeypatch, problem):
     if problem == 'bad_nonce': options['nonce'] = 'bad nonce'
     if problem == 'dirty': (candidate / 'source.txt').write_text('changed')
     if problem == 'unmounted': options['mounted'] = lambda _: False
-    if problem == 'space': monkeypatch.setattr(bootstrap.shutil, 'disk_usage', lambda _: SimpleNamespace(free=20_099_999_999))
     with pytest.raises(ValueError): run(**options)
     assert not any(host.iterdir())
+
+
+def test_storage_observation_does_not_enforce_a_fixed_reserve(case, monkeypatch):
+    run, _, _, _, _ = case
+    monkeypatch.setattr(bootstrap.shutil, 'disk_usage', lambda _: SimpleNamespace(free=32))
+    result = run()
+    assert result['stage'] == 'completed'
+    assert result['storage']['free_bytes'] == 32
+    assert result['storage']['reserve_enforced'] is False
 
 
 def test_no_overwrite_of_existing_export(case):

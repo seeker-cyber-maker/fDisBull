@@ -33,6 +33,16 @@
       "seconds": 53.7
     }
   ],
+  "predeployment_followup": {
+    "correction": "Provider and source environments suppress inherited forced terminal formatting; API output remains strict JSON. Legacy GitHub worker/bootstrap no longer enforce removed storage reserves.",
+    "focused_tests": {
+      "legacy_github_bootstrap_worker": "21 passed in5.69s",
+      "provider_source_release_gui": "182 passed in53.63s"
+    },
+    "full_pipeline_qualified": false,
+    "live_provider_mutation": false,
+    "observed_failure": "Authenticated GitHub /user HTTP200 output contained inherited forced ANSI colors; strict JSON parser refused it before Git push."
+  },
   "preserved_superseded_prototype": {
     "branch": "codex/ci-public-metadata-prototype-20261114",
     "commit": "75114464333fb96771e0e2fc6f1be6497e015d69",

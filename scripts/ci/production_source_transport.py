@@ -71,10 +71,10 @@ def _clean_env(env):
     markers = ('API_KEY', 'TOKEN', 'SECRET', 'PASSWORD', 'CREDENTIAL', 'AUTH', 'PROXY')
     cleaned = {k: v for k, v in env.items() if not any(x in k.upper() for x in markers)
                and not k.startswith(('GIT_', 'GH_', 'GLAB_', 'SSL_', 'CURL_'))
-               and k not in ('SSH_ASKPASS', 'GH_CONFIG_DIR', 'GLAB_CONFIG_DIR', 'REQUESTS_CA_BUNDLE')}
+               and k not in ('SSH_ASKPASS', 'GH_CONFIG_DIR', 'GLAB_CONFIG_DIR', 'REQUESTS_CA_BUNDLE', 'FORCE_COLOR', 'CLICOLOR_FORCE')}
     cleaned.update(GIT_TERMINAL_PROMPT='0', GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL='/dev/null',
                    GIT_CONFIG_COUNT='2', GIT_CONFIG_KEY_0='core.hooksPath', GIT_CONFIG_VALUE_0='/dev/null',
-                   GIT_CONFIG_KEY_1='core.fsmonitor', GIT_CONFIG_VALUE_1='false')
+                   GIT_CONFIG_KEY_1='core.fsmonitor', GIT_CONFIG_VALUE_1='false', NO_COLOR='1', CLICOLOR='0')
     return cleaned
 
 

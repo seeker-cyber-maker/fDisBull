@@ -76,6 +76,14 @@ def test_github_token_in_environment_only_and_no_headers_saved(tmp_path,monkeypa
     assert 'synthetic-token' not in b._file('gh').read_text()
 
 
+def test_provider_machine_output_ignores_inherited_terminal_coloring(monkeypatch):
+    for key in ('FORCE_COLOR', 'CLICOLOR_FORCE', 'GH_FORCE_TTY'):
+        monkeypatch.setenv(key, '1')
+    env = t._clean_env()
+    assert not {'FORCE_COLOR', 'CLICOLOR_FORCE', 'GH_FORCE_TTY'} & set(env)
+    assert env['NO_COLOR'] == '1' and env['CLICOLOR'] == '0'
+
+
 def test_original_ansi_job_log_is_captured_privately_without_terminal_output(tmp_path, capsys):
     raw = b'\x1b[32moriginal CI log\x1b[0m\n'
     runner = Runner(); runner.output = response(200, raw)
