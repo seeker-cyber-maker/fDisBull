@@ -52,7 +52,12 @@ member identity, size and hash. Segments are not flattened over each other.
 Depth, input, member, aggregate-output, file-count and cooperative-time bounds
 apply. Paths are checked before writing; case collisions, Windows devices,
 links, traversal and file/directory conflicts refuse. Output must be new. Failure
-removes only the directory created by the operation. Originals are never deleted.
+retains partial artifacts and reports the originally requested output path.
+Failure handling never recursively deletes an output pathname: another process
+may have renamed the owned directory and replaced that path. Existing outputs
+refuse reuse; select a new output path for another attempt. If another process
+moved the partial directory, its current location is not inferred. Originals are
+never deleted.
 
 `complete` concerns admitted layer traversal, not preservation or game readiness.
 Opaque executables and unsupported formats keep it false. An EXEPACK result has
@@ -169,3 +174,16 @@ References (primary format/implementation references, not runtime evidence):
 - MAME disk catalog: https://github.com/mamedev/mame/blob/master/hash/ibm5170.xml (drgsphere)
 - RBIL DOS version: https://fd.lod.bz/rbil/interrup/dos_kernel/2130.html
 - RBIL mouse status: https://fd.lod.bz/rbil/interrup/io_mouse/330000.html
+
+
+### Output preservation during failures
+
+Static extraction reports retained partial output in CLI refusal metadata and
+exception notes. No automatic cleanup deletes partial or replacement trees.
+Probe artifacts are created exclusively relative to an opened output-directory
+handle, so a rename keeps writes with the owned directory. Existing files,
+hardlinks and symlinks are never overwritten. A report-path collision returns an
+incomplete report with `report_write_error`; it does not replace that path.
+The explicit probe refuses before launch on hosts lacking these directory-handle
+operations. These output checks do not qualify target execution or make the
+emulator a security boundary.

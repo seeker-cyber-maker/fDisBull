@@ -11,7 +11,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import shutil
 import tempfile
 import time
 from typing import Callable
@@ -212,7 +211,8 @@ def unpack_layers(path, output, *, recursive=False, provider=None, track=None, l
     """Extract into an exclusively created private directory; never overwrite.
 
     The source is not deleted. Unsupported leaves are retained and reported.
-    A failed operation removes only the directory this call created.
+    A failed operation preserves partial output and refuses reuse. It never
+    recursively deletes a pathname that another process may have replaced.
     """
     if type(recursive) is not bool:
         raise ValueError('recursive must be boolean')
@@ -312,8 +312,17 @@ def unpack_layers(path, output, *, recursive=False, provider=None, track=None, l
         with (output/'layers.json').open('x',encoding='utf-8') as f:
             json.dump(manifest,f,indent=2,allow_nan=False); f.write('\n')
         return manifest
-    except BaseException:
-        shutil.rmtree(output)
+    except BaseException as error:
+        # Path identity can change while a long extraction is running. Keeping
+        # partial artifacts avoids deleting another actor's replacement tree.
+        error.partial_output = {
+            'requested_path': str(output),
+            'cleanup_performed': False,
+            'complete': False,
+            'reuse': 'select a new output path; existing output is never reused',
+        }
+        error.add_note('Partial extraction output was not deleted. Originally requested: '
+                       + str(output) + '. If moved by another process, its current path is unknown.')
         raise
 
 
@@ -334,7 +343,10 @@ def main():
             result=inspect_path(**args,limits=limits) if operation=='inspect' else unpack_layers(**args,limits=limits)
         print(json.dumps(result,allow_nan=False)); return 0
     except (ValueError,OSError,KeyError) as exc:
-        print(json.dumps({'status':'refused','error':str(exc),'executes_targets':False})); return 2
+        refusal = {'status':'refused','error':str(exc),'executes_targets':False}
+        if hasattr(exc, 'partial_output'):
+            refusal['partial_output'] = exc.partial_output
+        print(json.dumps(refusal)); return 2
 
 
 if __name__=='__main__':
