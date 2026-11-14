@@ -197,7 +197,25 @@ class GitHubHost:
                 or intent.get('nonce') != nonce or intent.get('request_sha256') != transport_contract.request_digest('github', 'POST', path, body)):
             raise ValueError('dispatch intent mismatch')
         accepted = self._accept(key, path, body, 204)
-        if accepted is None: return None
+        if accepted is None:
+            envelope=self.transport.receipt(key)
+            held=envelope.get('receipt') if isinstance(envelope,dict) else None
+            digest=transport_contract.request_digest('github','POST',path,body)
+            if (not isinstance(held,dict) or held.get('status')!='certified_not_sent'
+                    or key!=transport_contract.HELD_ACTION_KEY or digest!=transport_contract.HELD_REQUEST_SHA256
+                    or held.get('action_key')!=key or held.get('request_sha256')!=digest
+                    or held.get('old_record_sha256')!=transport_contract.HELD_RECORD_SHA256
+                    or not isinstance(held.get('verifier_cert_sha256'),str)
+                    or not re.fullmatch('[0-9a-f]{64}',held['verifier_cert_sha256'])):
+                return None
+            # The pinned bridge consumes the separately installed permit before
+            # this only possible POST. Unknown attempts never regain the permit.
+            self._lease()
+            response=self.transport.for_action(key)('POST',path,body)
+            if not isinstance(response,dict) or response.get('http_status')!=204 or response.get('data') is not None:
+                raise RuntimeError('certified dispatch outcome unknown')
+            accepted=self._accept(key,path,body,204)
+            if accepted is None:raise RuntimeError('certified dispatch acceptance unavailable')
         run = self._matching_run(nonce, intent['created_epoch'])
         if run is None: return None
         rid = str(run['id'])

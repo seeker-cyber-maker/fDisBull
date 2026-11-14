@@ -47,7 +47,7 @@ def test_plan_is_fixed_read_only_and_source_activation_is_opt_in(tmp_path, monke
     monkeypatch.setattr(installer, 'MAC_ANCHOR', Path('/Users/tiga/.local/state/fixed/anchor.json'))
     plan = installer.plan('mac', bundle, **_pins(bundle))
     assert plan['source_activation'] is False
-    assert len([item for item in plan['files'] if item['path'].endswith('.py')]) == 25
+    assert len([item for item in plan['files'] if item['path'].endswith('.py')]) == len(installer.MODULES)
     assert not (Path('/Volumes/CODEX/fixed')).exists()
     enabled = installer.plan('mac', bundle, **_pins(bundle), enable_source_review_approved=True)
     activation = [item for item in enabled['files'] if item.get('kind') == 'explicitly-approved-activation']
@@ -74,6 +74,8 @@ def test_vps_plan_keeps_service_disabled_and_active_policy_withheld_by_default(t
     assert any(item.get('kind') == 'explicitly-installed-qualification-input' for item in enabled['files'])
     config = installer._vps_config(installer.validate_bundle(bundle)['manifest'])
     assert config['enabled'] is False
+    assert config['gui_transport']=={'enabled':False,'state_dir':str(installer.VPS_STATE/'gui-client')}
+    assert any(item['path']==str(installer.VPS_STATE/'gui-client'/'client.lock') for item in withheld['files'])
     assert config['github']['control_sha'] == 'a' * 40
 
 
@@ -140,3 +142,19 @@ def test_apply_entrypoints_refuse_without_touching_fixed_targets(tmp_path, monke
     with pytest.raises(RuntimeError, match='preinstalled shared executor lock missing'):
         installer.apply_vps(bundle, **_pins(bundle))
     assert not (fake_root / 'libexec' / 'entry.py').exists()
+
+
+def test_source_activation_requires_existing_pinned_cache_parent(tmp_path,monkeypatch):
+    import plistlib
+    from types import SimpleNamespace
+    cache=tmp_path/'cache';cache.mkdir();parent=cache/'fdisbull-ci-builds'/'source-repair-worktrees';parent.mkdir(parents=True)
+    monkeypatch.setattr(installer,'MAC_CACHE_ROOT',cache);monkeypatch.setattr(installer,'MAC_SOURCE_WORKTREES',parent)
+    monkeypatch.setattr(installer.os.path,'ismount',lambda p:True)
+    info={'VolumeUUID':installer.MAC_CACHE_UUID,'MountPoint':str(cache),'Internal':False}
+    monkeypatch.setattr(installer.subprocess,'run',lambda *a,**kw:SimpleNamespace(stdout=plistlib.dumps(info)))
+    installer._validate_cache_source_parent()
+    info['VolumeUUID']='wrong-volume'
+    with pytest.raises(RuntimeError,match='volume mismatch'):installer._validate_cache_source_parent()
+    info['VolumeUUID']=installer.MAC_CACHE_UUID;parent.rmdir()
+    with pytest.raises(RuntimeError,match='parent is missing'):installer._validate_cache_source_parent()
+    assert not parent.exists()

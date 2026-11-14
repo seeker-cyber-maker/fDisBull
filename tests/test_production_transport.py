@@ -289,3 +289,123 @@ def test_wrong_gitlab_account_is_durable_shared_stop(tmp_path):
     _,_,_,scope=b._scope_state('gitlab')
     assert json.loads((scope/'state.json').read_text())['provider_stop']['reason']=='provider_account_mismatch'
     assert len(runner.calls)==1
+
+
+def held_fixture(tmp_path, monkeypatch):
+    import hashlib
+    runner=Runner(); b=bridge(tmp_path,runner)
+    key='fixture-held'; path=t.GH+'/workflows/417757453/dispatches'
+    payload={'ref':'codex/test','inputs':{'nonce':'a'*64,'candidate_sha':'b'*40}}
+    digest=t.request_digest('github','POST',path,payload)
+    monkeypatch.setattr(t,'HELD_ACTION_KEY',key);monkeypatch.setattr(t,'HELD_REQUEST_SHA256',digest)
+    old={'action_key':key,'request_sha256':digest,'status':'unknown'}
+    with b._bridge_lock():b._save_mirrored(b._file(key),old)
+    original=b._file(key).read_bytes()
+    old_sha=hashlib.sha256(original).hexdigest();monkeypatch.setattr(t,'HELD_RECORD_SHA256',old_sha)
+    verified={'schema':'fdisbull-held-no-send-certificate-1','verified':True,'action_key':key,'request_sha256':digest}
+    monkeypatch.setattr(t,'_verify_held_current_state',lambda bridge,canonical,host,repo,scope:None)
+    monkeypatch.setattr(t,'_verify_held',lambda facts,canonical:verified)
+    b.install_held_certificate({}, {})
+    return b,runner,key,path,payload,original
+
+
+def test_certified_held_dispatch_preserves_original_and_deduplicates(tmp_path,monkeypatch):
+    b,runner,key,path,payload,original=held_fixture(tmp_path,monkeypatch)
+    runner.output=response(204)
+    assert b.receipt(key)['status']=='certified_not_sent'
+    first=b.request('github','POST',path,payload,key)
+    assert first['http_status']==204
+    assert b._file(key).read_bytes()==original
+    assert b.receipt(key)['status']=='accepted'
+    assert b.request('github','POST',path,payload,key)==first
+    assert len(runner.calls)==2
+
+
+def test_certified_held_lost_response_is_never_resent(tmp_path,monkeypatch):
+    b,runner,key,path,payload,original=held_fixture(tmp_path,monkeypatch)
+    runner.output=b'invalid response'
+    with pytest.raises(RuntimeError):b.request('github','POST',path,payload,key)
+    assert b.receipt(key)['status']=='unknown'
+    assert b._file(key).read_bytes()==original
+    with pytest.raises(RuntimeError):b.request('github','POST',path,payload,key)
+    assert len(runner.calls)==2
+
+
+def test_stopped_provider_does_not_consume_certified_permit(tmp_path,monkeypatch):
+    b,runner,key,path,payload,_=held_fixture(tmp_path,monkeypatch)
+    host,repo,directory,scope=b._scope_state('github')
+    state=t._status._load_state(scope/'state.json',host.lower(),repo.lower())
+    state['provider_stop']={'reason':'provider_authentication_required','observed_at':1000}
+    t._status._write(scope/'state.json',state)
+    with pytest.raises(RuntimeError):b.request('github','POST',path,payload,key)
+    assert b.receipt(key)['status']=='certified_not_sent'
+    assert not runner.calls
+
+
+def test_held_certificate_install_rejects_unverified_and_duplicate(tmp_path,monkeypatch):
+    b,runner,key,path,payload,original=held_fixture(tmp_path,monkeypatch)
+    with pytest.raises(RuntimeError):b.install_held_certificate({}, {})
+    assert b._file(key).read_bytes()==original and not runner.calls
+    # The fixed source pin must be present; no implicit verifier trust.
+    monkeypatch.setattr(t,'HELD_VERIFIER_SHA256',None)
+    monkeypatch.undo()
+    with pytest.raises(RuntimeError):t._verify_held({}, {})
+
+
+def test_held_certificate_tampering_fails_closed(tmp_path,monkeypatch):
+    b,runner,key,path,payload,_=held_fixture(tmp_path,monkeypatch)
+    cert=b._held_read(key,'certificate');cert['verifier_certificate']['request_sha256']='f'*64
+    # Simulate an authorized state writer updating the mirror, to exercise the
+    # independent certificate hash check rather than only the outer anchor.
+    with b._bridge_lock():b._save_mirrored(b._held_path(key,'certificate'),cert)
+    with pytest.raises(ValueError):b.receipt(key)
+    with pytest.raises(ValueError):b.request('github','POST',path,payload,key)
+    assert not runner.calls
+
+
+
+def test_held_install_rejects_stale_post_snapshot_under_both_locks(tmp_path,monkeypatch):
+    b=bridge(tmp_path,Runner())
+    with b._bridge_lock():
+        b._save_mirrored(b._file(t.HELD_ACTION_KEY),{'status':'unknown'})
+        host,repo,_,scope=b._scope_state('github')
+        with b.status_api._locked(scope) as acquired:
+            assert acquired
+            with pytest.raises(RuntimeError,match='post-state mismatch'):
+                t._verify_held_current_state(b,{'mirror_post':{}},host,repo,scope)
+
+
+def test_rpc_action_cannot_occupy_held_internal_namespace(tmp_path):
+    runner=Runner();b=bridge(tmp_path,runner)
+    with pytest.raises(ValueError,match='reserved action key'):
+        b.request('github','POST',t.GH+'/jobs/22/rerun',{},'__held_certificate__:attack')
+    assert not runner.calls
+
+
+def test_pinned_held_verifier_rejects_invalid_facts_without_private_io():
+    with pytest.raises(RuntimeError,match='local_facts_schema_invalid'):
+        t._verify_held({}, {})
+
+
+def test_source_verifier_result_installs_in_mirrored_journal(tmp_path,monkeypatch):
+    # Real collector/verifier logic; prestate decoding and current filesystem
+    # snapshot are fixture stand-ins, so no historical private receipt is read.
+    import hashlib
+    p=Path(__file__).with_name('test_production_held_reconcile.py')
+    spec=importlib.util.spec_from_file_location('held_fixture',p)
+    fixture=importlib.util.module_from_spec(spec);spec.loader.exec_module(fixture)
+    canonical,source_sha=fixture.make_collected(monkeypatch)
+    assert source_sha==t.HELD_VERIFIER_SHA256
+    facts=fixture.make_facts(monkeypatch)
+    b=bridge(tmp_path,Runner());key=t.HELD_ACTION_KEY
+    with b._bridge_lock():
+        b._save_mirrored(b._file(key),{'action_key':key,'request_sha256':t.HELD_REQUEST_SHA256,'status':'unknown'})
+    monkeypatch.setattr(t,'HELD_RECORD_SHA256',hashlib.sha256(b._file(key).read_bytes()).hexdigest())
+    monkeypatch.setattr(t,'_verify_held_current_state',lambda bridge,doc,host,repo,scope:None)
+    monkeypatch.setattr(t,'_verify_held',lambda f,c:fixture.held.verify_no_send_certificate(f,c,expected_collector_sha256=source_sha))
+    receipt=b.install_held_certificate(facts,canonical)
+    assert receipt['status']=='certified_not_sent'
+    stored=b._held_read(key,'certificate')
+    assert stored['verifier_certificate']['mirror_post']==canonical['mirror_post']
+    assert receipt['verifier_cert_sha256']==hashlib.sha256(t._held_json(stored['verifier_certificate'])).hexdigest()
+    assert b._ensure()['actions'][b._held_path(key,'certificate').name]

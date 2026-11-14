@@ -29,6 +29,40 @@ def installed(tmp_path,*,allowed=('credential_probe','provider','source'),clock=
 def provider_doc():return {'operation':'request','provider':'gitlab','method':'GET','path':m.provider.GL+'/jobs/20','payload':None}
 
 
+def canonical_read_doc():
+    return {'operation':'canonical_read',
+            'action_key':'induced-missing-policy-23fa9831-20261114-01',
+            'request_sha256':'ac8a51ab8263044d78cf1c5726fdbb19851c2824197534b2c90fee244dea219d',
+            'prestate_sha256':'cd4326afdb1ce6dd848c6bba5b7e429c1168d2d82d834abb2089d0762ea4cf28'}
+
+
+def test_historical_read_requires_explicit_kind_and_exact_binding(tmp_path):
+    spool,kicks=installed(tmp_path,allowed=('credential_probe',))
+    with pytest.raises(RuntimeError,match='not approved'):
+        spool.submit('canonical_read',canonical_read_doc(),1100,'a'*64)
+    spool.activation=lambda:{'allowed_kinds':['credential_probe','canonical_read']}
+    for field in ('operation','action_key','request_sha256','prestate_sha256'):
+        changed=dict(canonical_read_doc());changed[field]='different'
+        with pytest.raises(ValueError,match='binding differs'):
+            spool.submit('canonical_read',changed,1100,'a'*64)
+    assert not kicks
+
+
+def test_historical_read_runs_only_fixed_collector_once(tmp_path):
+    calls=[]
+    def child(argv,data,timeout):
+        calls.append((argv,json.loads(data)))
+        return {'returncode':0,'stdout':b'{"status":"complete","canonical":{}}',
+                'timed_out':False,'overflow':False}
+    spool,kicks=installed(tmp_path,allowed=('credential_probe','canonical_read'),runner=child)
+    request=spool.submit('canonical_read',canonical_read_doc(),1100,'a'*64)
+    assert spool.worker()['status']=='complete'
+    assert spool.worker()['status']=='idle'
+    assert calls==[([m.SOURCE_PYTHON,'-I',str(m.BRIDGE/'production_held_reconcile.py')],canonical_read_doc())]
+    assert spool.result(request['request_id'])['result']['status']=='complete'
+    assert kicks==['once']
+
+
 def test_probe_only_default_and_no_credential_data_persisted(tmp_path):
     probe_calls=[]
     def probe(timeout):probe_calls.append(timeout);return {'available':True}

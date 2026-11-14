@@ -45,6 +45,9 @@ MAC_PROVIDER_STATE = Path('/Volumes/CODEX/Codex_Projects/fDisBull-targets-privat
 MAC_SOURCE_STATE = Path('/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-source-state')
 MAC_ANCHOR = Path('/Users/tiga/.local/state/fdisbull-ci-production/bridge-anchor.json')
 MAC_STATUS_STATE = Path('/Volumes/CODEX/Codex_Projects/fDisBull/.git/fdisbull-ci-status')
+MAC_CACHE_ROOT = Path('/Volumes/CACHE')
+MAC_CACHE_UUID = 'DB098A4B-7968-418F-8B20-61597F42392A'
+MAC_SOURCE_WORKTREES = MAC_CACHE_ROOT / 'fdisbull-ci-builds' / 'source-repair-worktrees'
 MAC_SOURCE_PYTHON = {'path': '/Users/tiga/miniconda/bin/python3', 'version': '3.13.13',
                      'sha256': '0f5374bca527c5a5e958ee94e03e55816a368533286e6315b8bf013da622fc61'}
 ACTIVATION_MODULES = ('production_source_transport.py', 'production_source_publish.py',
@@ -184,6 +187,7 @@ def plan(role, bundle, *, expected_control_sha, expected_manifest_sha256,
             {'path': str(MAC_SOURCE_STATE), 'mode': '0700', 'kind': 'empty-private-directory'},
         ]
         if enable_source_review_approved:
+            files.append({'path':str(MAC_SOURCE_WORKTREES),'kind':'required-existing-pinned-cache-worktrees'})
             files.append({'path': str(MAC_CODE / 'source-activation.json'), 'mode': '0600',
                           'kind': 'explicitly-approved-activation',
                           'module_sha256': {name: manifest['module_sha256'][name] for name in ACTIVATION_MODULES}})
@@ -200,6 +204,10 @@ def plan(role, bundle, *, expected_control_sha, expected_manifest_sha256,
         {'path': str(VPS_JOB_INPUTS), 'mode': '0700', 'kind': 'private-job-inputs'},
         {'path': str(VPS_STATE / 'installation.json'), 'mode': '0600', 'kind': 'genesis-marker'},
         {'path': str(VPS_STATE / 'failure-inbox.sqlite'), 'mode': '0600', 'kind': 'empty-durable-inbox'},
+        {'path': str(VPS_STATE / 'gui-client'), 'mode': '0700', 'kind': 'empty-gui-client-ledger'},
+        {'path': str(VPS_STATE / 'gui-client' / 'installation.json'), 'mode': '0600', 'kind': 'gui-client-marker'},
+        {'path': str(VPS_STATE / 'gui-client' / 'client.lock'), 'mode': '0600', 'kind': 'empty-gui-client-lock'},
+        {'path': str(VPS_STATE / 'gui-client' / 'history.json'), 'mode': '0600', 'kind': 'empty-gui-client-history'},
     ]
     if install_active_policy_input:
         files.append({'path': str(VPS_ACTIVE_POLICY), 'mode': '0644',
@@ -306,6 +314,16 @@ def _disk_uuid():
     return info.get('VolumeUUID')
 
 
+
+def _validate_cache_source_parent():
+    if not os.path.ismount(MAC_CACHE_ROOT) or MAC_CACHE_ROOT.is_symlink():
+        raise RuntimeError('pinned CACHE mount unavailable')
+    result=subprocess.run(['/usr/sbin/diskutil','info','-plist',str(MAC_CACHE_ROOT)],capture_output=True,timeout=15,check=True)
+    info=plistlib.loads(result.stdout)
+    if (info.get('VolumeUUID')!=MAC_CACHE_UUID or info.get('MountPoint')!=str(MAC_CACHE_ROOT)
+            or info.get('Internal') is not False):raise RuntimeError('pinned CACHE volume mismatch')
+    _safe_existing_path(MAC_SOURCE_WORKTREES,required=True,device=MAC_CACHE_ROOT.stat().st_dev)
+
 def _activation_bytes(module_hashes):
     value = {'schema': 'fdisbull-source-activation-1', 'approved': True,
              'selection_profile': 'single-failure-direct-imports-1', 'publisher': 'candidate-ref-v1',
@@ -320,7 +338,8 @@ def apply_mac(bundle, *, expected_control_sha, expected_manifest_sha256,
         raise RuntimeError('Mac install requires the local non-root operator')
     checked = validate_bundle(bundle)
     _externally_pinned(checked, expected_control_sha, expected_manifest_sha256)
-    # This identity gate runs before any mkdir, including the private anchor parent.
+    # These identity gates run before any mkdir, including the private anchor parent.
+    if enable_source_review_approved:_validate_cache_source_parent()
     if _disk_uuid() != CODEX_UUID:
         raise RuntimeError('pinned CODEX volume UUID mismatch')
     _safe_existing_path(CODEX_ROOT, required=True)
@@ -394,6 +413,7 @@ def _vps_config(manifest):
             'state_dir': str(VPS_STATE), 'export_root': str(VPS_EXPORTS),
             'executor_lock': str(VPS_EXECUTOR_LOCK), 'activated_epoch': int(time.time()),
             'max_incident_seconds': 28800, 'incident_test': False,
+            'gui_transport': {'enabled': False, 'state_dir': str(VPS_STATE / 'gui-client')},
             'github': {**VPS_GITHUB, 'control_sha': manifest['control_sha']},
             'module_sha256': manifest['module_sha256'],
             'entrypoint_sha256': manifest['entrypoint_sha256']}
@@ -434,6 +454,10 @@ def apply_vps(bundle, *, expected_control_sha, expected_manifest_sha256,
     marker = {'schema': 'fdisbull-production-state-1', 'installation_id': VPS_INSTALLATION_ID}
     _exclusive(VPS_STATE / 'installation.json',
                (json.dumps(marker, sort_keys=True, separators=(',', ':')) + '\n').encode(), 0o600)
+    _mkdir(VPS_STATE / 'gui-client', 0o700)
+    _exclusive(VPS_STATE / 'gui-client' / 'installation.json', b'{"schema":"fdisbull-gui-client-1"}\n', 0o600)
+    _exclusive(VPS_STATE / 'gui-client' / 'client.lock', b'', 0o600)
+    _exclusive(VPS_STATE / 'gui-client' / 'history.json', b'{"schema":"fdisbull-gui-client-history-1","entries":{}}\n', 0o600)
     _exclusive(VPS_CONFIG, (json.dumps(_vps_config(checked['manifest']), sort_keys=True,
                                       separators=(',', ':')) + '\n').encode(), 0o600)
     _write_tree(VPS_MODULES, checked['modules'])

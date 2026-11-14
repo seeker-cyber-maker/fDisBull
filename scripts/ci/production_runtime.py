@@ -28,6 +28,7 @@ policy_module=_module('production_policy.py')
 health_module=_module('offline-qualification.py')
 control_module=_module('production_control.py')
 source_module=_module('production_source_transport.py')
+gui_client_module=_module('production_gui_client.py')
 
 REPO='seeker-cyber-maker/fDisBull'
 BRIDGE='/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bridge/production_transport.py'
@@ -96,7 +97,7 @@ class _SourceDispatchGuard:
 class Runtime:
     def __init__(self,config,state_root,lease,*,trace_capture=None,clock=time.time,
                  transport_factory=None,host_factory=None,health_capture=None,incident_runner=None,
-                 lease_check=None,uid=None,sleeper=time.sleep,cleanup_runner=None,source_transport=None):
+                 lease_check=None,uid=None,sleeper=time.sleep,cleanup_runner=None,source_transport=None,gui_client_factory=None):
         self.config=dict(config);self.root=Path(state_root);self.lease=dict(lease);self.clock=clock
         self._uid=uid or os.geteuid
         if (self._uid()!=0 or self.config.get('bridge_path')!=BRIDGE
@@ -121,9 +122,18 @@ class Runtime:
         self._incident_runner=incident_runner or subprocess.run
         self._trace_capture=trace_capture;self._cleanup_unknown=False;self._cleanup_key=None;self._last_incident=None
         self._sleep=sleeper;self._cleanup_runner=cleanup_runner or transport_module._source.run_command
-        self.source=source_transport or source_module.SSHSourceTransport()
         self._guard(check_cleanup=False)
-        factory=transport_factory or (lambda provider:transport_module.SSHProviderTransport(provider,BRIDGE))
+        gui=self.config.get('gui_transport',{'enabled':False,'state_dir':str(self.root/'gui-client')})
+        if (not isinstance(gui,dict) or set(gui)!={'enabled','state_dir'} or type(gui['enabled']) is not bool
+                or gui['state_dir']!=str(self.root/'gui-client')):
+            raise ValueError('GUI transport configuration mismatch')
+        if gui['enabled']:
+            client=(gui_client_factory or gui_client_module.GuiClient)(gui['state_dir'])
+            factory=transport_factory or (lambda provider:gui_client_module.GuiProviderTransport(provider,client))
+            self.source=source_transport or gui_client_module.GuiSourceTransport(client)
+        else:
+            factory=transport_factory or (lambda provider:transport_module.SSHProviderTransport(provider,BRIDGE))
+            self.source=source_transport or source_module.SSHSourceTransport()
         self.transports={p:_GatedTransport(factory(p),self._guard,clock,p) for p in ('github','gitlab')}
         self.host_factory=host_factory or host_module.GitHubHost
         self._host=None

@@ -319,3 +319,21 @@ def test_server_rejects_oversized_input_before_factory(monkeypatch,capsys):
     monkeypatch.setattr(s,'server_factory',lambda:pytest.fail('factory must not run'))
     assert s.main()==1
     assert capsys.readouterr().out=='{"error":"source_operation_unavailable"}\n'
+
+
+def test_cache_worktree_parent_requires_exact_mounted_uuid(tmp_path,monkeypatch):
+    import plistlib
+    root=tmp_path/'cache';root.mkdir();worktrees=root/'source-repair-worktrees';worktrees.mkdir()
+    monkeypatch.setattr(s.os.path,'ismount',lambda path:True)
+    def runner(uuid,internal=False):
+        def call(argv,**kw):
+            assert argv==['/usr/sbin/diskutil','info','-plist',str(root)]
+            return {'returncode':0,'timed_out':False,'overflow':False,
+                    'stdout':plistlib.dumps({'VolumeUUID':uuid,'MountPoint':str(root),'Internal':internal})}
+        return call
+    assert s._cache_volume_ok(worktrees,root=root,runner=runner(s.CACHE_UUID)) is True
+    assert s._cache_volume_ok(worktrees,root=root,runner=runner('different')) is False
+    assert s._cache_volume_ok(worktrees,root=root,runner=runner(s.CACHE_UUID,True)) is False
+    assert s._cache_volume_ok(root/'missing',root=root,runner=runner(s.CACHE_UUID)) is False
+    monkeypatch.setattr(s.os.path,'ismount',lambda path:False)
+    assert s._cache_volume_ok(worktrees,root=root,runner=runner(s.CACHE_UUID)) is False

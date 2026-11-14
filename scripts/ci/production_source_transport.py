@@ -13,6 +13,7 @@ import importlib.util
 import json
 import os
 import platform
+import plistlib
 from pathlib import Path, PurePosixPath
 import re
 import signal
@@ -32,7 +33,8 @@ legacy = _load('production_source_runner', 'recovery_source.py')
 provider = _load('production_source_provider', 'production_transport.py')
 
 REPO = Path('/Volumes/CODEX/Codex_Projects/fDisBull')
-WORKTREES = Path('/Volumes/CODEX/Codex_Projects/fDisBull-worktrees')
+WORKTREES = Path('/Volumes/CACHE/fdisbull-ci-builds/source-repair-worktrees')
+CACHE_UUID = 'DB098A4B-7968-418F-8B20-61597F42392A'
 STATE = Path('/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-source-state')
 HELPER = '/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bridge/production_source_transport.py'
 ACTIVATION = Path('/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bridge/source-activation.json')
@@ -195,6 +197,22 @@ def direct_modules(test_source, tracked_sources):
     return result
 
 
+def _cache_volume_ok(worktrees, *, root=Path('/Volumes/CACHE'), runner=None):
+    """Read-only volume admission; the repair-worktree parent must pre-exist."""
+    root,worktrees=Path(root),Path(worktrees)
+    try:
+        if (not os.path.ismount(root) or root.is_symlink() or not worktrees.is_dir()
+                or root not in worktrees.parents or any(p.is_symlink() for p in (worktrees,*worktrees.parents))
+                or worktrees.stat().st_dev!=root.stat().st_dev):return False
+        result=(runner or legacy.run_command)(['/usr/sbin/diskutil','info','-plist',str(root)],cwd='/',timeout=12)
+        if (not isinstance(result,dict) or result.get('returncode')!=0 or result.get('timed_out') is not False
+                or result.get('overflow') is not False or not isinstance(result.get('stdout'),bytes)
+                or len(result['stdout'])>65536):return False
+        info=plistlib.loads(result['stdout'])
+        return info.get('VolumeUUID')==CACHE_UUID and info.get('MountPoint')==str(root) and info.get('Internal') is False
+    except (OSError,ValueError,TypeError,KeyError):return False
+
+
 class SourceServer:
     def __init__(self, *, repo=REPO, worktrees=WORKTREES, state=STATE, runner=None,
                  guard=None, selection_policy_approved=False, publisher=None, worker_class=source.ProductionSourceRepair,
@@ -214,9 +232,10 @@ class SourceServer:
         # Reuse the installed bridge's exact UUID/state/anchor validation.
         if platform.system() != 'Darwin': raise RuntimeError('Mac source host required')
         provider.ProviderBridge(provider.STATE_DIR)._ensure()
-        for path in (self.repo, self.worktrees, self.state):
+        for path in (self.repo, self.state):
             if any(p.is_symlink() for p in (path, *path.parents)) or not path.is_dir(): raise RuntimeError('source root unavailable')
             if path.stat().st_dev != Path('/Volumes/CODEX').stat().st_dev: raise RuntimeError('source root off CODEX')
+        if not _cache_volume_ok(self.worktrees):raise RuntimeError('pinned CACHE worktree parent unavailable')
         if self.state.stat().st_uid != os.getuid() or self.state.stat().st_mode & 0o077:
             raise RuntimeError('private source state unavailable')
 

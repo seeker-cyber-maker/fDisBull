@@ -28,7 +28,7 @@ LABEL='com.fdisbull.ci-gui-once'
 ACTIVATION=BRIDGE/'gui-activation.json'
 MODULES={'production_gui_transport.py','production_transport.py','production_source_transport.py',
          'production_source_publish.py','recovery_production.py','recovery_source_production.py',
-         'recovery_source.py','ci_status.py'}
+         'recovery_source.py','ci_status.py','production_held_reconcile.py'}
 UID=501
 GH_SHA256='258d12a00ca7939294c4b9a977eae72dc74882f8c4293012126f8d2da27e9d2e'
 LAUNCHCTL_SHA256='c09fb522287bee5483d281ccd145fda129cd5eba940e5716cc4a2f25c18299e3'
@@ -101,6 +101,14 @@ def _replace(path,data):
 def _request(kind,document):
     if not isinstance(document,dict):raise ValueError('invalid fixed request')
     if kind=='credential_probe' and document=={}:return
+    if kind=='canonical_read':
+        if document=={
+                'operation':'canonical_read',
+                'action_key':'induced-missing-policy-23fa9831-20261114-01',
+                'request_sha256':'ac8a51ab8263044d78cf1c5726fdbb19851c2824197534b2c90fee244dea219d',
+                'prestate_sha256':'cd4326afdb1ce6dd848c6bba5b7e429c1168d2d82d834abb2089d0762ea4cf28'}:
+            return
+        raise ValueError('historical reconciliation binding differs')
     if kind=='provider':
         op=document.get('operation')
         if op=='reserve' and set(document)=={'operation','provider'} and document['provider'] in ('github','gitlab'):return
@@ -150,7 +158,7 @@ def _activation():
             or value['schema']!='fdisbull-gui-activation-1' or not isinstance(value['allowed_kinds'],list)
             or not value['allowed_kinds'] or len(set(value['allowed_kinds']))!=len(value['allowed_kinds'])
             or 'credential_probe' not in value['allowed_kinds']
-            or not set(value['allowed_kinds'])<={'credential_probe','provider','source'}
+            or not set(value['allowed_kinds'])<={'credential_probe','provider','source','canonical_read'}
             or not isinstance(value['modules'],dict) or set(value['modules'])!=MODULES
             or not isinstance(value['interpreters'],dict) or set(value['interpreters'])!={'provider','source'}):
         raise RuntimeError('GUI activation invalid')
@@ -337,8 +345,10 @@ class GuiSpool:
         # Child input is the exact validated request only, never a shell command.
         # Keep original envelope immutable; create a separate bounded input file.
         # Existing helpers read a single JSON object from stdin.
+        targets={'provider':'production_transport.py','source':'production_source_transport.py',
+                 'canonical_read':'production_held_reconcile.py','credential_probe':'production_transport.py'}
         command=[('/usr/bin/python3' if doc['kind']=='provider' else SOURCE_PYTHON),'-I',
-                 str(BRIDGE/('production_transport.py' if doc['kind']=='provider' else 'production_source_transport.py'))]
+                 str(BRIDGE/targets[doc['kind']])]
         try:
             self._check()
             remaining=doc['expires_epoch']-self.clock()

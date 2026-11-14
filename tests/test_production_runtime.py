@@ -446,3 +446,23 @@ def test_initial_pending_without_acceptance_is_never_success(tmp_path):
     runtime._github_host=lambda:Host()
     with pytest.raises(RuntimeError,match='acceptance unknown'):
         runtime.initial_dispatch({'key':'initial','source_sha':'a'*40})
+
+
+def test_gui_transport_enabled_only_by_fixed_explicit_config(tmp_path,monkeypatch):
+    recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700)
+    export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
+    monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    cfg={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),
+         'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
+                   'control_sha':'a'*40,'ref':'codex/production-ci-recovery-20261113','profile':'ordinary',
+                   'sole_executor_authority':True,'export_root':str(export)},'module_sha256':hashes(),
+         'gui_transport':{'enabled':True,'state_dir':str(root/'gui-client')}}
+    clients=[]
+    def factory(path):clients.append(path);return object()
+    runtime=r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,gui_client_factory=factory)
+    assert clients==[str(root/'gui-client')]
+    assert isinstance(runtime.transports['github'].raw,r.gui_client_module.GuiProviderTransport)
+    assert isinstance(runtime.transports['gitlab'].raw,r.gui_client_module.GuiProviderTransport)
+    assert isinstance(runtime.source,r.gui_client_module.GuiSourceTransport)
+    cfg['gui_transport']['state_dir']='/tmp/not-approved'
+    with pytest.raises(ValueError,match='GUI transport'):r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,gui_client_factory=factory)

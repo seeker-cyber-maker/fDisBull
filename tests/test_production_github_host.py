@@ -197,3 +197,31 @@ def test_completed_selected_run_never_starts_listener(setup):
     with pytest.raises(ValueError, match='receipt unavailable'):
         obj.initial_dispatch(key,target['source_sha'])
     assert not started
+
+
+def test_only_exact_certified_historical_dispatch_can_resume_once(setup,monkeypatch):
+    obj,t,target,config,started,key,now=setup;t.unknown=True
+    with pytest.raises(TimeoutError):obj.initial_dispatch(key,target['source_sha'])
+    body={'ref':config['ref'],'inputs':{'nonce':hashlib.sha256(key.encode()).hexdigest(),'candidate_sha':target['source_sha']}}
+    digest=host.transport_contract.request_digest('github','POST',host.BASE+'/workflows/'+host.WORKFLOW+'/dispatches',body)
+    monkeypatch.setattr(host.transport_contract,'HELD_ACTION_KEY',key)
+    monkeypatch.setattr(host.transport_contract,'HELD_REQUEST_SHA256',digest)
+    monkeypatch.setattr(host.transport_contract,'HELD_RECORD_SHA256','d'*64)
+    t.receipts[key]={'action_key':key,'status':'certified_not_sent','request_sha256':digest,
+                     'old_record_sha256':'d'*64,'verifier_cert_sha256':'e'*64}
+    t.unknown=False
+    assert obj.reconcile_initial(key,target['source_sha'])['target']==target
+    assert len([x for x in t.calls if x[0]=='POST'])==2
+    assert obj.reconcile_initial(key,target['source_sha'])['target']==target
+    assert len([x for x in t.calls if x[0]=='POST'])==2
+
+
+def test_certificate_mismatch_never_resumes_dispatch(setup,monkeypatch):
+    obj,t,target,config,started,key,now=setup;t.unknown=True
+    with pytest.raises(TimeoutError):obj.initial_dispatch(key,target['source_sha'])
+    monkeypatch.setattr(host.transport_contract,'HELD_ACTION_KEY',key)
+    t.receipts[key]={'action_key':key,'status':'certified_not_sent','request_sha256':'0'*64,
+                     'old_record_sha256':'d'*64,'verifier_cert_sha256':'e'*64}
+    t.unknown=False
+    assert obj.reconcile_initial(key,target['source_sha']) is None
+    assert len([x for x in t.calls if x[0]=='POST'])==1 and not started

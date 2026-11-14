@@ -41,6 +41,59 @@ GH_BIN='/opt/homebrew/bin/gh'
 GLAB_BIN='/opt/homebrew/bin/glab'
 
 
+# This exception is deliberately restricted to the independently reviewed historical action.
+HELD_ACTION_KEY='induced-missing-policy-23fa9831-20261114-01'
+HELD_REQUEST_SHA256='ac8a51ab8263044d78cf1c5726fdbb19851c2824197534b2c90fee244dea219d'
+HELD_RECORD_SHA256='a420ce30cd10cecadd3440490a725d735dc5af427da1b5506c05dfe61adc8acf'
+HELD_OLD_BRIDGE_SHA256='eb9b3bedbe9d0cfff61ddddbb46b48f907ad767cabd6df38947dd7108f88d335'
+HELD_PRESTATE_SHA256='cd4326afdb1ce6dd848c6bba5b7e429c1168d2d82d834abb2089d0762ea4cf28'
+# Exact source of the reviewed, action-specific verifier.
+HELD_VERIFIER_SHA256='d84bfb30c0b090dfb1e3f2c39ee8e4aa8f430e405972739a146e1b74c118fe9d'
+
+
+def _held_json(value):
+    return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode('utf-8')
+
+
+def _verify_held_current_state(bridge,canonical,host,repo,scope):
+    # Caller holds both the bridge and shared status locks through installation.
+    post=canonical.get('mirror_post') if isinstance(canonical,dict) else None
+    if not isinstance(post,dict):raise RuntimeError('held post-state unavailable')
+    def read(path):
+        if path.is_symlink() or not path.is_file() or path.stat().st_size>MAX_INPUT:
+            raise RuntimeError('held post-state unavailable')
+        return path.read_bytes()
+    def sha(data):return hashlib.sha256(data).hexdigest()
+    anchor_bytes=read(bridge.anchor);anchor=json.loads(anchor_bytes)
+    action_bytes=read(bridge._file(HELD_ACTION_KEY));action=json.loads(action_bytes)
+    batch_bytes=read(bridge._file(BATCH_PREFIX+'github'));batch=json.loads(batch_bytes)
+    status_bytes=read(scope/'state.json')
+    status=bridge.status_api._load_state(scope/'state.json',host.lower(),repo.lower())
+    current={'anchor_sha256':sha(anchor_bytes),'sequence':anchor.get('sequence'),
+             'action_sha256':sha(action_bytes),'action_status':action.get('status'),
+             'action_request_sha256':action.get('request_sha256'),
+             'batch_sha256':sha(batch_bytes),'batch_remaining':batch.get('remaining'),
+             'provider_state_sha256':sha(status_bytes),
+             'provider_stop_reason':(status.get('provider_stop') or {}).get('reason'),
+             'provider_owner':status.get('owner'),'next_allowed_at':status.get('next_allowed_at'),
+             'installation_sha256':sha(read(bridge.state/'installation.json')),
+             'action_count':len(anchor.get('actions',{})),'actions':anchor.get('actions',{})}
+    if current!=post:raise RuntimeError('held post-state mismatch')
+
+
+def _verify_held(facts,canonical):
+    # Fixed adjacent source and exact reviewed bytes; no caller-supplied loader.
+    path=Path(__file__).with_name('production_held_reconcile.py')
+    if (not isinstance(HELD_VERIFIER_SHA256,str) or not re.fullmatch('[0-9a-f]{64}',HELD_VERIFIER_SHA256)
+            or path.is_symlink() or not path.is_file()):
+        raise RuntimeError('held verifier unavailable')
+    source=path.read_bytes()
+    if hashlib.sha256(source).hexdigest()!=HELD_VERIFIER_SHA256:raise RuntimeError('held verifier mismatch')
+    namespace={'__name__':'production_held_reconcile','__file__':str(path)}
+    exec(compile(source,str(path),'exec'),namespace)
+    return namespace['verify_no_send_certificate'](facts,canonical,expected_collector_sha256=HELD_VERIFIER_SHA256)
+
+
 class BudgetExceeded(RuntimeError):
     pass
 
@@ -245,7 +298,7 @@ class ProviderBridge:
                 self._save_mirrored(self._file(BATCH_PREFIX+provider),batch)
             return {k:result.get(k) for k in ('allowed','reason','next_refresh_at')}
 
-    def _send(self,provider,method,path,payload,raw):
+    def _send(self,provider,method,path,payload,raw,*,before_provider=None):
         # The shared lock excludes another owner/stop update until this one HTTP
         # response is known. The action lock is already held by request().
         host,repo,directory,scope=self._scope_state(provider)
@@ -262,6 +315,7 @@ class ProviderBridge:
                     or not batch['start']<=now<batch['expires'] or batch['expires']!=state['next_allowed_at']
                     or type(batch.get('remaining')) is not int or not 1<=batch['remaining']<=100):
                 raise RuntimeError('provider batch expired or stopped')
+            if before_provider is not None:before_provider()
             self._save_mirrored(batch_path,{**batch,'remaining':batch['remaining']-1})
             try:
                 response=self._call_provider(provider,method,path,payload,raw)
@@ -343,12 +397,95 @@ class ProviderBridge:
             self.status_api.record_provider_stop(repo=repo,host=host,owner=OWNER,reason='provider_account_mismatch',state_dir=directory,clock=self.clock)
             raise RuntimeError('GitLab account mismatch or unavailable')
 
+    def _held_path(self,key,kind):
+        if kind not in ('certificate','consumed','attempt','accepted'):raise ValueError('invalid held record')
+        return self._file('__held_'+kind+'__:'+hashlib.sha256(key.encode()).hexdigest())
+
+    def _held_read(self,key,kind):
+        path=self._held_path(key,kind)
+        if not path.exists() and not path.is_symlink():return None
+        if path.is_symlink() or not path.is_file() or path.stat().st_size>MAX_INPUT:raise ValueError('held journal unavailable')
+        value=json.loads(path.read_text())
+        if not isinstance(value,dict):raise ValueError('held journal malformed')
+        return value
+
+    def _held_append(self,key,kind,value):
+        path=self._held_path(key,kind)
+        if path.exists() or path.is_symlink():raise RuntimeError('held journal already exists')
+        self._save_mirrored(path,value)
+
+    def _held_certificate(self,key,original):
+        cert=self._held_read(key,'certificate')
+        if cert is None:return None
+        if (key!=HELD_ACTION_KEY or original!={'action_key':key,'request_sha256':HELD_REQUEST_SHA256,'status':'unknown'}
+                or hashlib.sha256(self._file(key).read_bytes()).hexdigest()!=HELD_RECORD_SHA256
+                or not isinstance(cert,dict) or set(cert)!={'schema','action_key','request_sha256','old_record_sha256','verifier_cert_sha256','verifier_certificate'}
+                or cert.get('schema')!='fdisbull-held-permit-1'
+                or cert.get('action_key')!=key or cert.get('request_sha256')!=HELD_REQUEST_SHA256
+                or cert.get('old_record_sha256')!=HELD_RECORD_SHA256
+                or not isinstance(cert.get('verifier_cert_sha256'),str)
+                or not re.fullmatch('[0-9a-f]{64}',cert['verifier_cert_sha256'])
+                or not isinstance(cert.get('verifier_certificate'),dict)
+                or hashlib.sha256(_held_json(cert['verifier_certificate'])).hexdigest()!=cert['verifier_cert_sha256']):
+            raise ValueError('held certificate binding mismatch')
+        return cert
+
+    def install_held_certificate(self,facts,canonical):
+        """Operator-only local method; deliberately absent from the RPC protocol."""
+        with self._bridge_lock():
+            path=self._file(HELD_ACTION_KEY)
+            if path.is_symlink() or not path.is_file():raise RuntimeError('held action unavailable')
+            original=json.loads(path.read_bytes())
+            if (original!={'action_key':HELD_ACTION_KEY,'request_sha256':HELD_REQUEST_SHA256,'status':'unknown'}
+                    or hashlib.sha256(path.read_bytes()).hexdigest()!=HELD_RECORD_SHA256):
+                raise RuntimeError('held original mismatch')
+            if any(self._held_read(HELD_ACTION_KEY,kind) is not None for kind in ('certificate','consumed','attempt','accepted')):
+                raise RuntimeError('held permit already recorded')
+            host,repo,_,scope=self._scope_state('github')
+            with self.status_api._locked(scope) as acquired:
+                if not acquired:raise RuntimeError('shared provider gate busy')
+                _verify_held_current_state(self,canonical,host,repo,scope)
+                result=_verify_held(facts,canonical)
+                if (not isinstance(result,dict) or result.get('schema')!='fdisbull-held-no-send-certificate-1'
+                        or result.get('verified') is not True or result.get('action_key')!=HELD_ACTION_KEY
+                        or result.get('request_sha256')!=HELD_REQUEST_SHA256):
+                    raise RuntimeError('held verification failed')
+                cert={'schema':'fdisbull-held-permit-1','action_key':HELD_ACTION_KEY,'request_sha256':HELD_REQUEST_SHA256,
+                      'old_record_sha256':HELD_RECORD_SHA256,'verifier_certificate':result,
+                      'verifier_cert_sha256':hashlib.sha256(_held_json(result)).hexdigest()}
+                if len(_held_json(cert))>=MAX_INPUT:raise RuntimeError('held certificate too large')
+                self._held_append(HELD_ACTION_KEY,'certificate',cert)
+                return self.receipt(HELD_ACTION_KEY)
+
     def receipt(self,key):
         self._ensure();path=self._file(key)
         if path.is_symlink(): raise RuntimeError('invalid receipt')
         if not path.exists(): return None
         value=json.loads(path.read_text())
         if value.get('action_key') != key: raise RuntimeError('receipt mismatch')
+        if key==HELD_ACTION_KEY and value.get('status')=='unknown':
+            cert=self._held_certificate(key,value)
+            if cert is not None:
+                consumed=self._held_read(key,'consumed');attempt=self._held_read(key,'attempt');accepted=self._held_read(key,'accepted')
+                if consumed is None and attempt is None and accepted is None:
+                    return {'action_key':key,'request_sha256':HELD_REQUEST_SHA256,'status':'certified_not_sent',
+                            'old_record_sha256':HELD_RECORD_SHA256,'verifier_cert_sha256':cert['verifier_cert_sha256']}
+                binding={'action_key':key,'request_sha256':HELD_REQUEST_SHA256,'old_record_sha256':HELD_RECORD_SHA256,
+                         'verifier_cert_sha256':cert['verifier_cert_sha256']}
+                if consumed!={'schema':'fdisbull-held-consumed-1',**binding}:raise ValueError('held permit journal mismatch')
+                if attempt is not None and attempt!={'schema':'fdisbull-held-attempt-1','status':'unknown',**binding}:
+                    raise ValueError('held attempt journal mismatch')
+                if accepted is not None:
+                    env=accepted.get('envelope')
+                    if (attempt is None or set(accepted)!={'schema','envelope',*binding}
+                            or accepted.get('schema')!='fdisbull-held-accepted-1'
+                            or any(accepted.get(k)!=v for k,v in binding.items())
+                            or not isinstance(env,dict) or set(env)!={'http_status','data','request_id'}
+                            or env['http_status']!=204 or env['data'] is not None
+                            or (env['request_id'] is not None and (not isinstance(env['request_id'],str)
+                                or not re.fullmatch(r'[A-Za-z0-9:._-]{1,128}',env['request_id'])))):
+                        raise ValueError('held acceptance mismatch')
+                    return {'action_key':key,'request_sha256':HELD_REQUEST_SHA256,'status':'accepted','envelope':accepted['envelope']}
         return value
 
     def request(self,provider,method,path,payload=None,action_key=None):
@@ -357,16 +494,36 @@ class ProviderBridge:
         if method=='GET':
             if action_key is not None: raise ValueError('unexpected action key')
             with self._bridge_lock(): return self._send(provider,method,path,payload,raw)
-        if isinstance(action_key,str) and action_key.startswith(BATCH_PREFIX):raise ValueError('reserved action key')
+        if isinstance(action_key,str) and action_key.startswith((BATCH_PREFIX,'__held_')):raise ValueError('reserved action key')
         record=self._file(action_key)
         try:
             with self._bridge_lock():
                 digest=request_digest(provider,method,path,payload)
-                old=self.receipt(action_key)
+                old_path=self._file(action_key)
+                old=json.loads(old_path.read_bytes()) if old_path.exists() else None
                 if old:
-                    if old.get('request_sha256')!=digest: raise RuntimeError('action key reused')
+                    if old.get('action_key')!=action_key or old.get('request_sha256')!=digest: raise RuntimeError('action key reused')
                     if old.get('status')=='accepted':return old['envelope']
-                    raise RuntimeError('previous action outcome unknown')
+                    if (provider!='github' or method!='POST' or action_key!=HELD_ACTION_KEY
+                            or digest!=HELD_REQUEST_SHA256
+                            or path!=GH+'/workflows/417757453/dispatches'):
+                        raise RuntimeError('previous action outcome unknown')
+                    cert=self._held_certificate(action_key,old)
+                    if cert is None:raise RuntimeError('previous action outcome unknown')
+                    binding={'action_key':action_key,'request_sha256':digest,'old_record_sha256':HELD_RECORD_SHA256,
+                             'verifier_cert_sha256':cert['verifier_cert_sha256']}
+                    if self._held_read(action_key,'consumed') is not None:
+                        projected=self.receipt(action_key)
+                        if projected.get('status')=='accepted':return projected['envelope']
+                        raise RuntimeError('held attempt outcome unknown')
+                    def consume():
+                        self._held_append(action_key,'consumed',{'schema':'fdisbull-held-consumed-1',**binding})
+                        self._held_append(action_key,'attempt',{'schema':'fdisbull-held-attempt-1','status':'unknown',**binding})
+                    response=self._send(provider,method,path,payload,raw,before_provider=consume)
+                    if response.get('http_status')!=204 or response.get('data') is not None:
+                        raise RuntimeError('held attempt outcome unknown')
+                    self._held_append(action_key,'accepted',{'schema':'fdisbull-held-accepted-1',**binding,'envelope':response})
+                    return response
                 intent={'action_key':action_key,'request_sha256':digest,'status':'unknown'}
                 self._save_mirrored(record,intent)
                 if provider=='gitlab':self._verify_gitlab_principal()
