@@ -1616,6 +1616,13 @@ def parser():
     )
     c.add_argument("--version-id", type=int, help="Selected project version")
     c.add_argument(
+        "--dot-mode",
+        "--window",
+        dest="window",
+        action="store_true",
+        help="Request a watch-only native DOSBox window (requires compatible backend and display)",
+    )
+    c.add_argument(
         "--spatial-mode", choices=["physical", "assisted", "story"], default="assisted"
     )
     for name in ("output-info", "output-read", "output-select", "output-export"):
@@ -3646,6 +3653,8 @@ def _dispatch(args):
         from .z_controller import serve as serve_z_controller
 
         options = {"spatial_mode": args["spatial_mode"]}
+        if args["window"]:
+            options["window"] = True
         if args["version_id"] is not None:
             options["version"] = args["version_id"]
         try:

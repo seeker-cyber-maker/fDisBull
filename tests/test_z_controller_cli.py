@@ -12,6 +12,68 @@ def arguments(actions, *extra):
             '--game-dir', 'private-game', '--actions', str(actions), *extra]
 
 
+def test_cli_help_and_other_commands_survive_z_controller_registration(capsys):
+    from fdisbull.cli import parser
+
+    for argv, expected in [(['--help'], 'z-controller'),
+                           (['z-controller', '--help'], '--actions')]:
+        with pytest.raises(SystemExit) as error:
+            main(argv)
+        assert error.value.code == 0
+        assert expected in capsys.readouterr().out
+    args = parser().parse_args(['debug', 'private.fdb', '--executable', 'backend',
+                               '--game-dir', 'private-game'])
+    assert args.command == 'debug' and args.window is False
+
+
+@pytest.mark.parametrize('flag', [None, '--dot-mode', '--window'],
+                         ids=['default-headless', 'dot-mode', 'window-alias'])
+def test_cli_display_selection_reaches_owned_runtime(tmp_path, monkeypatch, capsys, flag):
+    actions = tmp_path / 'actions.py'
+    actions.write_text("""
+def workspace(ctx):
+    return {'root': str(ctx.root)}
+ACTIONS = {'workspace': {'handler': workspace}}
+""")
+    root = tmp_path / 'workspace'
+    events = []
+
+    class Session:
+        def close(self):
+            events.append('session closed')
+
+    class Project:
+        def __init__(self, path):
+            events.append(('project opened', path))
+
+        def debugger(self, executable, game_dir, **options):
+            events.append(('runtime opened', executable, game_dir, options))
+            return Session()
+
+        def __exit__(self, *args):
+            events.append('project closed')
+
+    monkeypatch.setattr('fdisbull.project.Project', Project)
+    monkeypatch.setattr('sys.stdin', io.StringIO('{"verb":"workspace"}\n'))
+    extra = [] if flag is None else [flag]
+    assert main(arguments(actions, '--root', str(root), '--version-id', '3',
+                          '--spatial-mode', 'physical', *extra)) == 0
+    captured = capsys.readouterr()
+    rows = [json.loads(line) for line in captured.out.splitlines()]
+    assert len(rows) == 2
+    assert rows[0]['event'] == 'ready'
+    assert rows[0]['actions_path'] == str(actions)
+    assert rows[1]['ok'] is True and rows[1]['result'] == {'root': str(root)}
+    assert captured.err == ''
+    options = {'spatial_mode': 'physical', 'version': 3}
+    if flag is not None:
+        options['window'] = True
+    assert events == [
+        ('project opened', 'private.fdb'),
+        ('runtime opened', 'native-backend', 'private-game', options),
+        'session closed', 'project closed']
+
+
 def test_cli_retains_one_owner_and_passes_selected_launch_contract(tmp_path, monkeypatch, capsys):
     actions = tmp_path / 'actions.py'
     actions.write_text('''

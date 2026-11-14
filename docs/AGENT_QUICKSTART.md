@@ -363,6 +363,10 @@ fdisbull z-controller /private/work/analysis.fdb \
   --root /private/work --spatial-mode assisted
 ```
 
+Append `--dot-mode` (`--window` is an alias) to request the same watch-only
+native DOSBox window while retaining the controller. Headless remains the
+default; human input ownership requires separate support.
+
 The explicitly selected action file is **trusted arbitrary Python**, not recovered
 game data or a sandbox. A minimal authored `actions.py` is:
 

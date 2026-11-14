@@ -43,6 +43,15 @@ patch and launch with:
 fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --dot-mode
 ```
 
+The retained Z controller accepts the same opt-in display flag:
+
+```bash
+fdisbull z-controller dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --actions /private/work/actions.py --dot-mode
+```
+
+`--window` is an alias for both commands; omitting both flags keeps the
+headless launch contract.
+
 For `serve`, add `"window":true` to `debug-launch` parameters; in Python use
 `project.debugger(executable, game_dir, version=1, window=True)`. The native
 DOSBox IDA endpoint also accepts `--dot-mode` (`--window` remains an alias) / `window=True`. State-fork launches
