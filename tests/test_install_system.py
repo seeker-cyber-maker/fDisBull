@@ -328,6 +328,11 @@ def test_dead_leader_live_child_is_killed_on_owned_group_timeout(tmp_path,monkey
             with pytest.raises(TimeoutError):installer._run([sys.executable,'-c',code,str(pidfile)],work,timeout=.6)
         assert pidfile.is_file();child=int(pidfile.read_text())
         def live():
+            if sys.platform.startswith('linux'):
+                # Ordinary CI uses slim images; procps is not a prerequisite.
+                try:status=Path('/proc')/str(child)/'stat';raw=status.read_text()
+                except FileNotFoundError:return False
+                return raw.rsplit(')',1)[1].split()[0] not in ('Z','X')
             result=subprocess.run(['/bin/ps','-p',str(child),'-o','state='],capture_output=True,text=True,timeout=5)
             return bool(result.stdout.strip()) and not result.stdout.strip().startswith('Z')
         end=time.monotonic()+3
