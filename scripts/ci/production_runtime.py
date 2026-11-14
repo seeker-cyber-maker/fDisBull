@@ -4,9 +4,11 @@ import copy
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import time
 
@@ -52,12 +54,31 @@ def _private(path):
 
 class _GatedTransport:
     """Reuse only this process's still-current reservation; each HTTP costs budget."""
-    def __init__(self,raw,guard,clock,provider):
+    def __init__(self,raw,guard,clock,provider,*,sleeper=None,health=None,deadline=None):
         self.raw,self.guard,self.clock,self.provider=raw,guard,clock,provider
+        self.sleeper=time.sleep if sleeper is None else sleeper
+        self.health,self.deadline=health,deadline
+        if not callable(self.sleeper) or health is not None and not callable(health):
+            raise ValueError('invalid provider admission callbacks')
         self.expires=0;self.remaining=0
-    def prepare(self,minimum=1):
+    @staticmethod
+    def _window(value):
+        if type(value) not in (int,float) or not math.isfinite(value) or not 0<=value<=300:
+            raise ValueError('invalid provider execution window')
+        return value
+    def _deadline(self):
+        value=self.deadline() if callable(self.deadline) else self.deadline
+        if value is not None and (type(value) not in (int,float) or not math.isfinite(value)):
+            raise ValueError('invalid provider admission deadline')
+        return value
+    def prepare(self,minimum=1,minimum_seconds=0):
+        if type(minimum) is not int or not 1<=minimum<=100:raise ValueError('invalid provider request budget')
+        minimum_seconds=self._window(minimum_seconds)
         self.guard();now=self.clock()
-        if now<self.expires and self.remaining>=minimum:
+        deadline=self._deadline()
+        if deadline is not None and now+minimum_seconds>deadline:
+            return {'allowed':False,'reason':'deadline','next_refresh_at':deadline}
+        if now<self.expires and self.remaining>=minimum and self.expires-now>=minimum_seconds:
             return {'allowed':True,'reason':'active_batch','next_refresh_at':self.expires}
         if now<self.expires:
             return {'allowed':False,'reason':'cooldown','next_refresh_at':self.expires}
@@ -69,20 +90,52 @@ class _GatedTransport:
             observed=self.clock()
             if type(expiry) not in (int,float) or not observed<expiry<=observed+301:raise ValueError('invalid reservation')
             self.expires=expiry;self.remaining=100
+            deadline=self._deadline()
+            if deadline is not None and observed+minimum_seconds>deadline:
+                return {'allowed':False,'reason':'deadline','next_refresh_at':deadline}
+            if expiry-observed<minimum_seconds:
+                return {'allowed':False,'reason':'cooldown','next_refresh_at':expiry}
         return result
-    def _use(self,amount):
-        result=self.prepare(amount)
-        if result.get('allowed') is not True:raise RuntimeError('provider reservation unavailable')
-        self.remaining-=amount
+    def _use(self,amount,minimum_seconds=0):
+        minimum_seconds=self._window(minimum_seconds)
+        wait_deadline=self.clock()+360
+        while True:
+            deadline=self._deadline()
+            if deadline is not None:wait_deadline=min(wait_deadline,deadline-minimum_seconds)
+            if self.clock()>wait_deadline:raise TimeoutError('finite provider admission deadline expired')
+            result=self.prepare(amount,minimum_seconds)
+            deadline=self._deadline()
+            if deadline is not None:wait_deadline=min(wait_deadline,deadline-minimum_seconds)
+            if self.clock()>wait_deadline:raise TimeoutError('finite provider admission deadline expired')
+            if result.get('allowed') is True:
+                self.remaining-=amount;return
+            if not minimum_seconds or result.get('reason') not in ('cooldown','busy'):
+                raise RuntimeError('provider reservation unavailable')
+            refresh=result.get('next_refresh_at');now=self.clock()
+            if type(refresh) not in (int,float) or not math.isfinite(refresh) or not now<refresh<=wait_deadline:
+                raise TimeoutError('provider reservation cannot fit admission deadline')
+            self.guard()
+            if self.health is not None:
+                health=self.health()
+                if not isinstance(health,dict) or health.get('state')!='healthy':
+                    raise RuntimeError('production health unavailable during provider admission')
+            deadline=self._deadline()
+            if deadline is not None:wait_deadline=min(wait_deadline,deadline-minimum_seconds)
+            now=self.clock()
+            if now>wait_deadline:raise TimeoutError('finite provider admission deadline expired')
+            if now<refresh:
+                delay=min(60,refresh-now,wait_deadline-now)
+                if delay<=0:raise TimeoutError('finite provider admission deadline expired')
+                self.sleeper(delay)
     def request(self,method,path,payload=None):
         if method!='GET':raise ValueError('POST needs action binding')
         amount=getattr(self.raw,'request_budget',1)
         if type(amount) is not int or not 1<=amount<=2:raise ValueError('invalid provider request budget')
-        self._use(amount);return self.raw.request(method,path,payload)
+        self._use(amount,getattr(self.raw,'request_window_seconds',0));return self.raw.request(method,path,payload)
     def for_action(self,key):
         def post(method,path,payload=None):
             if method!='POST':raise ValueError('action POST required')
-            self._use(2 if self.provider=='gitlab' else 1)
+            self._use(2 if self.provider=='gitlab' else 1,getattr(self.raw,'action_window_seconds',0))
             return self.raw.for_action(key)(method,path,payload)
         return post
     def receipt(self,key):self.guard();return self.raw.receipt(key)
@@ -109,7 +162,9 @@ class Runtime:
                 or self.config.get('state_dir')!=str(RECOVERY/'production')
                 or self.root!=Path(self.config['state_dir']) or self.config.get('export_root')!=str(EXPORT)
                 or self.config.get('executor_lock')!=str(LOCK)
-                or type(self.config.get('incident_test',False)) is not bool):
+                or type(self.config.get('incident_test',False)) is not bool
+                or type(self.config.get('max_incident_seconds')) is not int
+                or not 60<=self.config['max_incident_seconds']<=28800):
             raise ValueError('runtime installation pins mismatch')
         gh=self.config.get('github')
         if (not isinstance(gh,dict) or gh.get('repository')!=REPO or str(gh.get('workflow_id'))!='417757453'
@@ -127,6 +182,8 @@ class Runtime:
         self._incident_runner=incident_runner or subprocess.run
         self._trace_capture=trace_capture;self._cleanup_unknown=False;self._cleanup_key=None;self._last_incident=None
         self._sleep=sleeper;self._cleanup_runner=cleanup_runner or transport_module._source.run_command
+        self._admission_deadline=self.clock()+self.config['max_incident_seconds']
+        self._admission_scopes={p:self._admission_deadline for p in ('github','gitlab')}
         self._guard(check_cleanup=False)
         gui=self.config.get('gui_transport',{'enabled':False,'state_dir':str(self.root/'gui-client')})
         if (not isinstance(gui,dict) or set(gui)!={'enabled','state_dir'} or type(gui['enabled']) is not bool
@@ -139,7 +196,9 @@ class Runtime:
         else:
             factory=transport_factory or (lambda provider:transport_module.SSHProviderTransport(provider,BRIDGE))
             self.source=source_transport or source_module.SSHSourceTransport()
-        self.transports={p:_GatedTransport(factory(p),self._guard,clock,p) for p in ('github','gitlab')}
+        self.transports={p:_GatedTransport(factory(p),self._guard,clock,p,sleeper=self._sleep,
+                        health=self.health,deadline=lambda p=p:min(self._admission_deadline,self._admission_scopes[p]))
+                        for p in ('github','gitlab')}
         self.host_factory=host_factory or host_module.GitHubHost
         self._host=None
 
@@ -274,7 +333,25 @@ class Runtime:
             if not CLEANUP_BLOCKER.exists() and not CLEANUP_BLOCKER.is_symlink():safe=self._verify_cleanup()
 
     def prepare(self,manifest):
-        return self.transports[manifest['initial_target']['provider']].prepare(25)
+        provider=manifest['initial_target']['provider']
+        gate=self.transports[provider]
+        deadline=manifest.get('deadline_epoch')
+        if deadline is not None:
+            if type(deadline) not in (int,float) or not math.isfinite(deadline):raise ValueError('invalid incident admission deadline')
+            if 'incident_id' in manifest:
+                target=production.target(manifest['initial_target'])
+                if (not isinstance(manifest['incident_id'],str) or not re.fullmatch(r'[0-9a-f]{64}',manifest['incident_id'])
+                        or target!=manifest['initial_target'] or provider not in ('github','gitlab')
+                        or manifest.get('project')!=target.get('repository',target.get('project_id'))):
+                    raise ValueError('full incident admission manifest required')
+                self._admission_deadline=min(self._admission_deadline,deadline)
+            # Provider-only preflight/initial phases have their own explicit
+            # bounds. A later phase may replace that bound, never the lifetime
+            # or a real incident deadline. _use latches its own bounded wait.
+            self._admission_scopes[provider]=min(self._admission_deadline,deadline)
+        elif 'incident_id' in manifest:
+            raise ValueError('full incident admission deadline required')
+        return gate.prepare(25,getattr(gate.raw,'request_window_seconds',0))
 
     def finish_batch(self,manifest):
         gate=self.transports[manifest['initial_target']['provider']]
@@ -416,6 +493,139 @@ class Runtime:
         else:control_module.write_json(path,value,exclusive=True)
         return {'verified':True,'allowed':True,'native':native,'manual_gate_qualified':native,'receipt_path':str(path),'target':target}
 
+    @staticmethod
+    def _attention_bytes(path,maximum=262144):
+        path=Path(path)
+        if any(p.is_symlink() for p in (path,*path.parents)):
+            raise ValueError('unsafe controller attention file')
+        initial=path.lstat()
+        if (not stat.S_ISREG(initial.st_mode) or initial.st_uid!=os.geteuid()
+                or initial.st_mode&0o077 or initial.st_nlink!=1 or initial.st_size>maximum):
+            raise ValueError('private controller attention file required')
+        fd=os.open(path,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0))
+        with os.fdopen(fd,'rb') as stream:
+            before=os.fstat(stream.fileno())
+            if (not stat.S_ISREG(before.st_mode) or before.st_uid!=os.geteuid()
+                    or before.st_mode&0o077 or before.st_nlink!=1 or before.st_size>maximum
+                    or (initial.st_dev,initial.st_ino)!=(before.st_dev,before.st_ino)):
+                raise ValueError('private controller attention file required')
+            data=stream.read(maximum+1);after=os.fstat(stream.fileno());current=path.lstat()
+        fields=('st_dev','st_ino','st_mode','st_uid','st_nlink','st_size','st_mtime_ns','st_ctime_ns')
+        if len(data)>maximum or any(getattr(before,k)!=getattr(after,k) or getattr(before,k)!=getattr(current,k) for k in fields):
+            raise ValueError('controller attention file changed')
+        return data
+
+    @staticmethod
+    def _attention_write(path,data):
+        fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_NOFOLLOW',0),0o400)
+        with os.fdopen(fd,'wb') as stream:
+            stream.write(data);stream.flush();os.fsync(stream.fileno())
+        directory=os.open(path.parent,os.O_RDONLY|getattr(os,'O_DIRECTORY',0))
+        try:os.fsync(directory)
+        finally:os.close(directory)
+
+    def _controller_attention(self,incident,state):
+        """Journal only an unobserved controller stop; no job outcome is asserted."""
+        self._guard(check_cleanup=False)
+        encode=lambda value:json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+        if (not isinstance(incident,str) or not re.fullmatch(r'[a-f0-9]{64}',incident)
+                or self.root!=RECOVERY/'production' or self.config.get('state_dir')!=str(self.root)):
+            raise ValueError('controller attention incident identity invalid')
+        directory=self.root/'incidents'/incident
+        for path in (self.root,self.root/'incidents',directory):
+            if any(p.is_symlink() for p in (path,*path.parents)):
+                raise ValueError('unsafe controller attention directory')
+            info=path.stat()
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid() or info.st_mode&0o077:
+                raise ValueError('private controller attention directory required')
+        manifest_data=self._attention_bytes(directory/'manifest.json')
+        manifest=json.loads(manifest_data)
+        state_data=self._attention_bytes(directory/'state.json')
+        if encode(json.loads(state_data))!=encode(state):
+            raise ValueError('controller attention state differs from disk')
+        keys={'manifest','target','status','phase','reason','observations','evidence','actions',
+              'classifications','health','counts','notifications'}
+        if (type(state) is not dict or set(state)!=keys or encode(state['manifest'])!=encode(manifest)
+                or type(manifest) is not dict or manifest.get('incident_id')!=incident
+                or state['status']!='attention' or state['phase']!='attention'
+                or state['reason']!='observation-unknown-or-mismatch'
+                or any(type(state[k]) is not list or state[k] for k in
+                       ('observations','evidence','actions','classifications','health'))
+                or type(state['counts']) is not dict or set(state['counts'])!={'infrastructure','source'}
+                or any(type(v) is not int or v!=0 for v in state['counts'].values())
+                or type(state['notifications']) is not list):
+            raise ValueError('controller attention is not a first observation stop')
+        target=production.target(manifest.get('initial_target'))
+        gh=self.config['github']
+        if (state['target']!=target or manifest['initial_target']!=target or target['provider']!='github'
+                or manifest.get('project')!=REPO or target['repository']!=REPO or gh.get('repository')!=REPO
+                or target['control_sha']!=gh.get('control_sha') or target['ref']!=gh.get('ref')
+                or target['runner_id']!='21' or target['job_name']!='qualification'
+                or gh.get('profile')!='ordinary' or str(gh.get('runner_id'))!='21'
+                or str(gh.get('workflow_id'))!='417757453' or gh.get('sole_executor_authority') is not True):
+            raise ValueError('controller attention manifest or target differs')
+        snapshot=directory/'controller-attention-state.json'
+        binding=directory/'controller-attention-binding.json'
+        test=self.config.get('incident_test') is True
+        if not snapshot.exists() and not snapshot.is_symlink():
+            if binding.exists() or binding.is_symlink() or state['notifications']:
+                raise ValueError('controller attention first snapshot unavailable')
+            self._attention_write(snapshot,state_data)
+            pin={'schema':'fdisbull-controller-attention-binding-1','incident_id':incident,
+                 'manifest_sha256':hashlib.sha256(manifest_data).hexdigest(),
+                 'snapshot_sha256':hashlib.sha256(state_data).hexdigest(),'test':test}
+            self._attention_write(binding,encode(pin)+b'\n')
+        snapshot_data=self._attention_bytes(snapshot)
+        pin_data=self._attention_bytes(binding);pin=json.loads(pin_data)
+        expected={'schema':'fdisbull-controller-attention-binding-1','incident_id':incident,
+                  'manifest_sha256':hashlib.sha256(manifest_data).hexdigest(),
+                  'snapshot_sha256':hashlib.sha256(snapshot_data).hexdigest(),'test':test}
+        original=json.loads(snapshot_data)
+        if (pin_data!=encode(expected)+b'\n'
+                or type(original) is not dict or original.get('notifications')!=[]
+                or encode({k:v for k,v in original.items() if k!='notifications'})!=encode({k:v for k,v in state.items() if k!='notifications'})):
+            raise ValueError('controller attention snapshot binding changed')
+        key='controller-attention:'+incident
+        native_id='ci_'+hashlib.sha256(key.encode()).hexdigest()[:40]
+        event_id='conn_'+native_id+'_attention'
+        receipt={'stage':'journaled','phase':'attention','incident_id':native_id,'event_id':event_id,
+                 'execution_performed':False,'snapshot_sha256':pin['snapshot_sha256']}
+        for notice in state['notifications']:
+            if (type(notice) is not dict or notice.get('phase')!='attention'
+                    or not (set(notice)=={'phase','journal_receipt'} and encode(notice['journal_receipt'])==encode(receipt)
+                            or set(notice)=={'phase','error'} and isinstance(notice['error'],str)
+                            and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,100}',notice['error']))):
+                raise ValueError('controller attention notification bookkeeping differs')
+        event={'dedupe_key':key,'phase':'attention','reason':'ci_executor_unavailable','test':test,
+               'context':{'provider':target['provider'],'project':manifest['project'],'run_id':target['run_id'],
+                          'job_id':target['job_id'],'commit_sha':target['source_sha'],
+                          'job_name':target['job_name'],'receipt_path':str(snapshot)}}
+        payload=encode(event)
+        for attempt in range(2):
+            self._guard(check_cleanup=False)
+            if (self._attention_bytes(snapshot)!=snapshot_data or self._attention_bytes(binding)!=pin_data
+                    or self._attention_bytes(directory/'manifest.json')!=manifest_data
+                    or encode(json.loads(self._attention_bytes(directory/'state.json')))!=encode(state)):
+                raise ValueError('controller attention changed before journal append')
+            try:
+                result=self._incident_runner(['sudo','-n','-u','operations-alerts','/usr/bin/python3',
+                    '/usr/local/libexec/ci_incident.py','append'],input=payload,capture_output=True,timeout=30,check=False)
+            except (OSError,subprocess.SubprocessError):
+                if attempt==0:continue
+                raise RuntimeError('controller attention journal unavailable') from None
+            try:reply=json.loads(result.stdout)
+            except (AttributeError,TypeError,ValueError):
+                if attempt==0:continue
+                raise RuntimeError('controller attention journal unavailable') from None
+            if (type(result.returncode) is not int or result.returncode!=0 or type(reply) is not dict
+                    or set(reply)!={'stage','phase','incident_id','event_id','execution_performed','already_present','delivery_status'}
+                    or any(reply.get(k)!=receipt[k] for k in ('stage','phase','incident_id','event_id'))
+                    or reply.get('execution_performed') is not False or type(reply.get('already_present')) is not bool
+                    or reply.get('delivery_status')!='not_observed_here'):
+                raise RuntimeError('controller attention journal reply rejected')
+            return receipt
+        raise RuntimeError('controller attention journal unavailable')
+
     def _emit(self,incident,phase,state,*,attention_reason='ci_repair_failed'):
         if phase not in ('down','attention','complete'):return {'stage':'local-journal-only','phase':phase}
         evidence=state.get('evidence',[]);observations=state.get('observations',[])
@@ -424,7 +634,9 @@ class Runtime:
         pairs=[(o,e) for o in observations for e in evidence if o.get('status')==expected
                and e.get('job_status')==expected and e.get('status')=='export-verified'
                and e.get('target')=={k:o.get(k) for k in production.SCHEMAS[o.get('provider')] }]
-        if not pairs:return {'stage':'local-journal-only','phase':phase}
+        if not pairs:
+            if phase=='attention':return self._controller_attention(incident,state)
+            return {'stage':'local-journal-only','phase':phase}
         observation,retained=pairs[-1] if phase=='complete' else pairs[0]
         receipt=Path(retained['receipt_path'])
         if (not receipt.is_absolute() or RECOVERY not in receipt.parents or not receipt.is_file()

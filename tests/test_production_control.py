@@ -202,6 +202,19 @@ def test_initial_propagation_wait_reconciles_without_resetting_deadline(tmp_path
     assert request['created_epoch'] == 100
 
 
+def test_provider_admission_propagates_actual_initial_deadline(tmp_path, monkeypatch):
+    c = config(tmp_path); seen = []; checked = []
+    class Runtime:
+        def prepare(self, manifest): seen.append(manifest); return {'allowed': True}
+        def health(self): pytest.fail('ready admission does not require a wait health check')
+    runtime = Runtime()
+    monkeypatch.setattr(control, 'check_worker_cleanup', lambda value: checked.append(value))
+    service = control.ProductionService(c, lambda *args: runtime, clock=lambda: 1000)
+    service._await_provider(runtime, 'github', 1450)
+    assert seen == [{'initial_target': {'provider': 'github'}, 'deadline_epoch': 1450}]
+    assert checked == [runtime]
+
+
 @pytest.mark.parametrize('body', ['', '{', '{"status":"success","verified":true}'])
 def test_torn_or_unbound_initial_marker_never_suppresses_pending_work(tmp_path, body):
     c = config(tmp_path); c['initial_request'] = {'key': 'qualification-1', 'source_sha': 'a' * 40}

@@ -186,9 +186,16 @@ class GuiClient:
 
 class GuiProviderTransport:
     request_budget=2
+    # Reserve enough batch lifetime for both bounded GET HTTP starts, including
+    # GUI handoff/result lookup between them; this is not a reply deadline.
+    request_window_seconds=180
+    action_window_seconds=75  # One action-bound POST; no POST replay.
     def __init__(self,provider,client):
         if provider not in ('github','gitlab'):raise ValueError('invalid provider')
         self.provider,self.client=provider,client
+        # GitLab verifies its pinned principal with a charged GET (up to 30s)
+        # before the single POST, after the GUI handoff. Both starts must fit.
+        self.action_window_seconds=110 if provider=='gitlab' else 75
     def request(self,method,path,payload=None):
         if method!='GET':raise ValueError('POST requires action binding')
         doc={'operation':'request','provider':self.provider,'method':method,'path':path,'payload':payload}
