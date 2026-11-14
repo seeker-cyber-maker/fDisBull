@@ -2,7 +2,7 @@
 
 **Designed by a human, refined by agents, and operated by agents.**
 
-**fDisBull** (`0.34.1` / `v0.34.1`) is an agent-first reverse-engineering,
+**fDisBull** is an agent-first reverse-engineering,
 headless native-debugging, scene-automation, and semantic-reconstruction
 (`UDL` → `UIL` → `UDC`) pipeline. It is not a human GUI disassembler—with over
 400 structured CLI/JSON methods, no human is meant to operate its low-level
@@ -11,6 +11,10 @@ media inspection, live emulator control, memory/event narrowing, state-binding,
 and Z3-checked code generation, leaving the agent only **a few bounded judgment
 decisions** along an automated seven-stage pipeline while giving the human
 clear milestone reports, visual evidence, and explicit approval gates.
+
+The intended next release is **0.35.0**, currently in integration. Follow the
+[release process](docs/RELEASE_PROCESS.md) and [current status](docs/RELEASE_STATUS.md)
+for qualification, package delivery and installation evidence.
 
 ## Built to minimize token usage and survive long investigations
 
@@ -92,7 +96,7 @@ stage that proves the answer:
    - **Human goal:** *"Have a coordinator and worker subagents map out an entire binary's subsystems in parallel without duplicating probes or burning millions of tokens on raw dumps."*
    - **Agent execution:** A single controller owns the live headless guest while parallel workers pull bounded, non-overlapping questions from the persistent dependency queue (`work-queue`, `run-work`), inspect shared `.fdb` facts and 64 KiB-capped `out-<sha256>` slices (`output-select`), and commit verified types, xrefs, and concepts back to SQLite.
 
-**Current release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
+**Previous tagged release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
 preflight and build identity (`--version-json`, `preflight`), the top-level
 `fdisbull` skill router, the
 [7-stage methodology determinism review and Dragster A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
@@ -513,9 +517,10 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 
 ## Status, testing and history
 
-GitLab (`brewster-jennings-group/fdisbull`) and the local Git hub are the
-release and CI authority. GitHub (`seeker-cyber-maker/fDisBull`) is inactive
-following the user's reported account flag. Read
+Original GitHub [`seeker-cyber-maker/fDisBull`](https://github.com/seeker-cyber-maker/fDisBull)
+is the source, review and release authority. The local hub and GitLab preserve
+recovery copies. n8n owns finite CI and release execution. Start with the
+[release process](docs/RELEASE_PROCESS.md), then read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
 [methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),

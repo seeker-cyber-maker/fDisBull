@@ -1,6 +1,25 @@
 # Release records and qualification
 
-## 0.34.1 and 0.34.0 tagged (local release line)
+## 0.35.0 integration in progress (2026-11-14)
+
+The intended next version is **0.35.0**. Follow the [release process](RELEASE_PROCESS.md)
+for ownership and the required source-through-install sequence. Original GitHub
+`seeker-cyber-maker/fDisBull` is the authority; GitLab and the local hub are recovery
+copies. Source integration, n8n's finished CI continuation, exact-candidate
+ordinary/native qualification and disconnected package acceptance remain separate
+open gates. No 0.35.0 tag, publication or installation is established by this entry.
+
+The integration branch is `codex/release-0.35.0-integration-20261114`. Its contribution
+disposition will be frozen before n8n qualifies the candidate. n8n's existing control
+state owns the current release record; its canonical record link is not yet supplied.
+Historical records below retain their original dates and provider scope.
+
+Current local identity must be checked independently: on 2026-11-14 both supported
+wrappers resolve the shared selector, whose `0.34.1` local candidate source is
+`3aaac41`, distinct from the immutable `v0.34.1` source `011f1b8c`. This is not a
+verified tagged-release installation; installation acceptance remains open.
+
+## Historical: 0.34.1 and 0.34.0 tagged (local release line)
 
 The `0.34.1` source is tagged `v0.34.1` (`011f1b8c`), building on `v0.34.0`
 (`32f3e4ea`) and `v0.33.0` (`bdd096f9`). It integrates:
