@@ -205,6 +205,8 @@ def prepare(config, stage, resolver=ldd_dependencies):
                                       'strip_version': strip_version, 'transformations': transformations}, indent=2) + '\n')
     inventory = {'schema': 'fdisbull-chat-offline-inventory-v1', 'profile': 'shared',
                  'identities': config['identities'], 'wheel_versions': pins, 'files': entries}
+    if config.get('windows_acceptance') is not None:
+        inventory['windows_acceptance'] = config['windows_acceptance']
     output = stage / 'inventory.json'
     output.write_text(json.dumps(inventory, indent=2) + '\n')
     # Validate the full inventory using the same checks as the archive builder.

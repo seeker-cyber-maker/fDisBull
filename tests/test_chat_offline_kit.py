@@ -252,3 +252,32 @@ def test_python_wrapper_sets_builtin_locale_and_utf8_before_loader(tmp_path, mod
     if module is not None: expected += [b'-m', module.encode()]
     assert values[5:] == expected + [b'-c', b'pass']
     assert 'PYTHONCOERCECLOCALE' not in kit.wrapper('lib/loader', 'native/qemu', qemu=True)
+
+
+def test_extended_windows_roles_require_explicit_shared_profile(tmp_path):
+    path, data = inventory(tmp_path)
+    item = dict(data['files'][0], destination='artifacts/pe32', role='pe32_fixture')
+    data['files'].append(item)
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='explicit acceptance'):
+        kit.load_inventory(path)
+    data['windows_acceptance'] = 'pe64-pe32-win16'
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='incompatible'):
+        kit.load_inventory(path)
+    data['profile'] = 'shared'
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='exactly one'):
+        kit.load_inventory(path)
+
+
+def test_shared_extended_inventory_accepts_three_explicit_roles(tmp_path):
+    path, data = inventory(tmp_path)
+    data['profile'] = 'shared'
+    data['windows_acceptance'] = 'pe64-pe32-win16'
+    data['files'] = [item for item in data['files'] if item['role'] not in ('wine_initramfs', 'dos_initramfs')]
+    for role, dest in [('runtime_base', 'runtime/base.cpio.xz'), ('runtime_recipe', 'runtime/recipe.json'), ('runtime_preparer', 'tools/preparer.py'), ('windows_runtime_base', 'runtime/windows-base.cpio.xz'), ('windows_runtime_recipe', 'runtime/windows-recipe.json'), ('pe32_fixture', 'artifacts/pe32.exe'), ('win16_fixture', 'artifacts/win16.exe'), ('win16_profile', 'artifacts/win16.json')]:
+        source = tmp_path / role; source.write_bytes(b'fixture')
+        data['files'].append(dict(source=str(source), destination=dest, role=role, sha256=kit.sha256(source), size=source.stat().st_size))
+    path.write_text(json.dumps(data))
+    assert kit.load_inventory(path)[0]['windows_acceptance'] == 'pe64-pe32-win16'

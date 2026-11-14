@@ -125,6 +125,15 @@ def load_inventory(path):
     profile = inventory.get('profile', 'prebuilt')
     if profile not in ('prebuilt', 'shared'):
         raise ValueError('unknown profile')
+    acceptance = inventory.get('windows_acceptance')
+    extra_roles = {'pe32_fixture', 'win16_fixture', 'win16_profile'}
+    if acceptance is None:
+        if extra_roles & roles.keys():
+            raise ValueError('extended Windows roles require explicit acceptance profile')
+    elif acceptance != 'pe64-pe32-win16' or profile != 'shared':
+        raise ValueError('unknown or incompatible Windows acceptance profile')
+    elif any(len(roles.get(role, [])) != 1 for role in extra_roles):
+        raise ValueError('extended Windows acceptance requires exactly one of each fixture and profile')
     required = REQUIRED_ROLES if profile == 'prebuilt' else (REQUIRED_ROLES - {'wine_initramfs', 'dos_initramfs'}) | {'runtime_base', 'runtime_recipe', 'runtime_preparer', 'windows_runtime_base', 'windows_runtime_recipe'}
     if profile == 'shared' and ({'wine_initramfs', 'dos_initramfs'} & roles.keys()):
         raise ValueError('shared profile must not contain prebuilt initramfs')
@@ -320,6 +329,8 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
                   'wheel_artifacts': [{'name': Path(x['destination']).name, 'sha256': x['sha256'], 'size': x['size']} for x in inventory['files'] if x['destination'].startswith('wheels/')],
                   'files': [{k: v for k, v in x.items() if k != 'source'} for x in delivered] + generated,
                   'qualification': 'not-qualified-by-builder'}
+        if inventory.get('windows_acceptance') is not None:
+            public['windows_acceptance'] = inventory['windows_acceptance']
         (root / 'MANIFEST.json').write_text(json.dumps(public, indent=2, sort_keys=True) + '\n')
         if compression == 'zip':
             with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED, allowZip64=True) as archive:

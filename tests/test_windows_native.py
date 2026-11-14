@@ -80,6 +80,18 @@ def qualify_windows_program(output,*,qemu,kernel,runtime,fixture,expected_bits=3
                 assert (before['metadata']['width'],before['metadata']['height'])==(320,200)
                 assert session.frame_probe([[40,56]])['samples'][0]['rgb']==[224,160,32]
                 mark('checkpoint-before-input-and-original-orange-frame',state=state(),breakpoint=bp)
+                # Positive native state round trip, distinct from the pending/
+                # held-key refusal checks below. The write is diagnostic and
+                # is undone by restoring the captured machine state.
+                snapshot=session.save_state('pe32-positive.sav')
+                session.write_memory(counter,'29000000',expected_hex='07000000')
+                assert read(counter)==41
+                restored=session.load_state(snapshot['artifact'])
+                assert restored['state']=='stopped' and state()=={'counter':7,'keys':0,'clicks':0,'last_key':0}
+                assert session.registers()['project_address']==hex(checkpoint)
+                receipt['full_VM_snapshot_positive_test']=True
+                receipt['assistance'].append('Guarded counter edit 7->41 was undone by native state restore.')
+                mark('positive-native-save-guarded-mutation-and-restore',snapshot=snapshot,restored=restored)
 
                 with pytest.raises(ValueError,match='expected bytes'):
                     session.write_memory(counter,'29000000',expected_hex='08000000')

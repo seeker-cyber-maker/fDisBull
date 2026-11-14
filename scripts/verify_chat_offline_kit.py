@@ -351,6 +351,145 @@ def verify_windows_profiles(root, workspace, kernel, compact_runtime, windows_ru
     return images
 
 
+WIN16_SOURCE_SHA256 = '6ee49d3a128a1a8f52c64ca64cc7dd47929008122ce3b339c8a06c70311a74f8'
+WIN16_MARKER = bytes.fromhex('b85713b86824b89a36')
+WIN16_STATE = bytes.fromhex('4644425731075354415445')
+
+
+def validate_win16_profile(fixture, profile):
+    """Validate the authored fixture's source declaration and NE marker binding."""
+    from fdisbull.udc_memory_win16_shell import inspect_windows_ne
+    data = Path(fixture).read_bytes()
+    ne = inspect_windows_ne(data)
+    if not isinstance(profile, dict) or profile.get('format') != 'fdisbull-authored-win16-oracle-1':
+        raise ValueError('Win16 authored profile missing')
+    if profile.get('source_sha256') != WIN16_SOURCE_SHA256 or profile.get('executable_sha256') != hashlib.sha256(data).hexdigest():
+        raise ValueError('Win16 authored fixture identity differs')
+    def locate(marker, segment):
+        start=segment['file_offset']; payload=data[start:start+segment['file_bytes']]
+        offset=payload.find(marker)
+        if offset < 0 or payload.find(marker,offset+1) >= 0 or data.count(marker) != 1:
+            raise ValueError('Win16 authored marker is not unique in its declared segment')
+        return offset
+    code=ne['segments'][ne['entry']['segment']-1]; ds=ne['segments'][ne['automatic_data_segment']-1]
+    checkpoint='ne:%d:%#x' % (code['index'],locate(WIN16_MARKER,code))
+    counter='ne:%d:%#x' % (ds['index'],locate(WIN16_STATE,ds)+5)
+    expected_frame={'width':320,'height':200,'sample':[40,56],
+                    'initial_rgb':[224,160,32],'after_right_rgb':[32,192,96]}
+    if (profile.get('entry') != 'ne:%d:%#x' % (ne['entry']['segment'],ne['entry']['offset'])
+            or profile.get('checkpoint') != checkpoint or profile.get('counter') != counter
+            or profile.get('checkpoint_hex') != WIN16_MARKER.hex() or profile.get('counter_initial_hex') != '07'
+            or profile.get('frame') != expected_frame):
+        raise ValueError('Win16 authored profile differs from fixture bytes')
+    return {'checkpoint':checkpoint,'counter':counter,'frame':expected_frame}
+
+
+def verify_win16_authored(project_path, fixture, qemu, kernel, initramfs, profile):
+    """Run one bounded authored NE round trip, including fresh-session restore."""
+    from fdisbull.project import Project
+    fixture=Path(fixture); game=fixture.parent
+    bound=validate_win16_profile(fixture,profile); counter=bound['counter']; checkpoint=bound['checkpoint']
+    frame_spec=bound['frame']; point=frame_spec['sample']
+    def read(debug): return debug.memory(counter,length=1)['hex']
+    def frame(debug, name, expected):
+        shot=debug.screenshot(name,hooks=False)
+        if (shot['metadata'].get('width'),shot['metadata'].get('height')) != (frame_spec['width'],frame_spec['height']):
+            raise ValueError('Win16 frame dimensions differ')
+        if debug.frame_probe([point])['samples'][0]['rgb'] != expected:
+            raise ValueError('Win16 expected client pixel missing')
+        return shot
+    def right(debug):
+        queued=debug.keyboard_press('right',hold_ms=40,gap_ms=40)
+        if queued.get('queued') != 2: raise ValueError('Win16 key input was not queued')
+        result=debug.run(timeout_ms=30000)
+        if result.get('outcome') != 'breakpoint' or read(debug) != '08':
+            raise ValueError('Win16 key transition did not commit at checkpoint')
+        return frame(debug,'win16-after-right.png',frame_spec['after_right_rgb'])
+    options={'kernel':kernel,'initramfs':initramfs,'files':[fixture.name],
+             'window':True,'memory_mib':8192,'boot_timeout_ms':600000}
+    with Project.create(project_path,fixture,image='ne') as project:
+        project.analyze(max_instructions=64)
+        with project.debugger(qemu,game,**options) as debug:
+            if debug.metadata.get('original_entry_verified') is not True:
+                raise ValueError('Win16 original entry not qualified')
+            bp=debug.breakpoint(checkpoint)
+            if not bp.get('bytes_verified') or debug.run(timeout_ms=60000).get('outcome') != 'breakpoint':
+                raise ValueError('Win16 authored breakpoint failed')
+            if read(debug) != '07': raise ValueError('Win16 initial counter differs')
+            initial=frame(debug,'win16-before.png',frame_spec['initial_rgb'])
+            trace=debug.trace('win16-trace.json',count=1,timeout_ms=20000)
+            if not trace['metadata'].get('complete') or trace['metadata'].get('event_count') != 1:
+                raise ValueError('Win16 completed instruction trace missing')
+            saved=debug.save_state('win16-positive.sav')
+            debug.write_memory(counter,'08',expected_hex='07')
+            if read(debug) != '08': raise ValueError('Win16 diagnostic mutation failed')
+            restored=debug.load_state(saved['artifact'])
+            if restored.get('state') != 'stopped' or read(debug) != '07':
+                raise ValueError('Win16 same-session restore failed')
+            frame(debug,'win16-restored.png',frame_spec['initial_rgb'])
+            after=right(debug)
+        artifact=saved['artifact']
+    # A new project and new VM must requalify the original saved selector state.
+    with Project(project_path) as reopened:
+        with reopened.debugger(qemu,game,state=artifact,**options) as fresh:
+            if fresh.metadata.get('original_entry_verified') is not True or read(fresh) != '07': raise ValueError('Win16 fresh-session restore differs')
+            frame(fresh,'win16-fresh-restored.png',frame_spec['initial_rgb'])
+            fresh_after=right(fresh)
+    return {'status':'passed','fixture_sha256':profile['executable_sha256'],
+            'source_sha256_declared':profile['source_sha256'],
+            'initial_screenshot_sha256':initial['sha256'], 'after_screenshot_sha256':after['sha256'],
+            'fresh_after_screenshot_sha256':fresh_after['sha256'],
+            'assistance':['guarded counter mutation before same-session restore'],
+            'scope':'authored NE fixture; Wine16 source-bound selectors; not general compatibility'}
+
+
+def extended_windows_roles(manifest, roles):
+    acceptance = manifest.get('windows_acceptance')
+    extra = ('pe32_fixture', 'win16_fixture', 'win16_profile')
+    if acceptance is None:
+        if any(roles.get(role) for role in extra):
+            raise ValueError('extended Windows roles without acceptance profile')
+        return None
+    if acceptance != 'pe64-pe32-win16' or manifest.get('profile') != 'shared':
+        raise ValueError('unknown or incompatible Windows acceptance profile')
+    return {role: required(roles, role) for role in extra}
+
+
+def verify_extended_windows(root, workspace, kernel, windows_runtime, roles):
+    from fdisbull.project import Project
+    import lief
+    pe32 = roles['pe32_fixture']
+    data = pe32.read_bytes()
+    if len(data) < 64 or data[:2] != b'MZ':
+        raise ValueError('PE32 oracle missing DOS header')
+    offset = struct.unpack_from('<I', data, 60)[0]
+    if offset + 26 > len(data) or data[offset:offset+4] != b'PE\0\0' or struct.unpack_from('<H', data, offset+4)[0] != 0x14c or struct.unpack_from('<H', data, offset+24)[0] != 0x10b:
+        raise ValueError('PE32 oracle must be x86 PE32')
+    binary = lief.PE.parse(str(pe32))
+    if binary is None or binary.get_export() is None:
+        raise ValueError('PE32 oracle exports missing')
+    base = binary.optional_header.imagebase
+    exports = {entry.name: base + entry.address for entry in binary.get_export().entries}
+    if not {'checkpoint', 'counter', 'keys', 'clicks', 'last_key'} <= exports.keys():
+        raise ValueError('PE32 authored oracle exports missing')
+    pe_dir = workspace / 'windows-pe32'; pe_dir.mkdir()
+    pe = pe_dir / 'oracle.exe'; pe.write_bytes(data)
+    with Project.create(pe_dir / 'pe32.fdb', pe) as project:
+        project.analyze(start=exports['checkpoint'], max_instructions=64)
+        image = verify_pe_oracle(project, root, pe_dir, kernel, windows_runtime,
+                                 exports['checkpoint'], exports['counter'], full_windows=True)
+    profile_path = roles['win16_profile']
+    if profile_path.stat().st_size > 65536:
+        raise ValueError('Win16 profile exceeds size bound')
+    profile = json.loads(profile_path.read_text())
+    ne_dir = workspace / 'windows-win16'; ne_dir.mkdir()
+    fixture = ne_dir / 'ORACLE.EXE'; fixture.write_bytes(roles['win16_fixture'].read_bytes())
+    win16 = verify_win16_authored(ne_dir / 'win16.fdb', fixture, root / 'bin/qemu',
+                                  kernel, windows_runtime, profile)
+    return {'pe32': {'status': 'passed', 'fixture_sha256': digest(pe32),
+                     'screenshot_sha256': image['sha256']}, 'win16': win16}
+
+
 def prepare_private_workspace(workspace):
     """Create new private consumer directories without reusing caller paths."""
     paths={name:workspace/name.lower() for name in
@@ -384,6 +523,7 @@ def verify(root, workspace, archive):
     if archive.stat().st_size > 2_000_000_000:
         raise ValueError('Archive exceeds 2 GB limit')
     manifest, roles = inventory(root)
+    extended = extended_windows_roles(manifest, roles)
     verify_archive(archive, root)
     confined(root, manifest)
     for role in ('python', 'dosbox', 'qemu', 'kernel', 'runtime_base', 'runtime_recipe', 'runtime_preparer', 'windows_runtime_base', 'windows_runtime_recipe', 'pe_fixture'):
@@ -433,7 +573,8 @@ def verify(root, workspace, archive):
         if debug.memory('1000:0100',length=1)['hex'] != '00': raise ValueError('DOS restore failed')
     frames=verify_windows_profiles(root,workspace,required(roles,'kernel'),runtime['wine'],
                                   windows_runtime,required(roles,'pe_fixture'))
-    return {'schema':'fdisbull-chat-consumer-verification-v1','status':'passed',
+    extended_result = verify_extended_windows(root, workspace, required(roles, 'kernel'), windows_runtime, extended) if extended else None
+    result = {'schema':'fdisbull-chat-consumer-verification-v1','status':'passed',
             'archive_sha256':digest(archive),'manifest_sha256':digest(root/'MANIFEST.json'),
             'source_commit':manifest.get('identities',{}).get('source_commit'),
             'test_source_commit':manifest.get('identities',{}).get('test_source_commit'),
@@ -453,6 +594,10 @@ def verify(root, workspace, archive):
                 'skill_fdisbull','skill_gamefaqs')},
             'dos_screenshot_sha256':dos_image['sha256'],'pe_screenshot_sha256':frames['wine']['sha256'],
             'profiles':['dos','wine','player','z3']}
+    if extended_result is not None:
+        result['windows_native_qualification'].update(scope='authored PE64, PE32 and Win16 oracles', pe32='passed', win16='passed')
+        result['extended_windows'] = extended_result
+    return result
 
 
 
