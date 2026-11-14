@@ -87,11 +87,16 @@ def canonical_identity(env, request):
             'runner_id': '21', 'job_name': 'qualification', 'control_sha': sha, 'ref': ref}
 
 
-def sanitized_env(env, identity, source_sha):
+def sanitized_env(env, identity, source_sha, candidate):
     forbidden = ('TOKEN', 'SECRET', 'PASSWORD', 'CREDENTIAL', 'API_KEY', 'AUTH', 'PROXY')
     result = {k: v for k, v in env.items() if not any(x in k.upper() for x in forbidden)}
     for key in ('CI_PIPELINE_ID', 'CI_JOB_ID', 'CI_RUNNER_ID'): result.pop(key, None)
+    candidate = Path(candidate).resolve(strict=True)
+    builds_dir = candidate.parent
+    if not candidate.is_dir() or builds_dir == candidate or not os.access(builds_dir, os.W_OK):
+        raise ValueError('candidate builds parent unavailable')
     result.update(FDISBULL_EXECUTION_ORIGIN='github', CI_COMMIT_SHA=source_sha, CI_JOB_NAME='qualification',
+                  CI_PROJECT_DIR=str(candidate), CI_BUILDS_DIR=str(builds_dir),
                   FDISBULL_GITHUB_REPOSITORY=identity['repository'], FDISBULL_GITHUB_CONTROL_REF=identity['ref'],
                   FDISBULL_GITHUB_CONTROL_SHA=identity['control_sha'])
     for key in ('run_id', 'run_attempt', 'job_id', 'runner_id'):
@@ -234,7 +239,7 @@ def execute(candidate, source_sha, nonce, output, *, env, request, policy_sha, r
         bootstrap._write_exclusive(staging / 'qualification.log', message)
         code, log_meta = 1, {'total_bytes': len(message), 'retained_bytes': len(message), 'truncated': False}
     else:
-        child_env = sanitized_env(env, identity, source_sha)
+        child_env = sanitized_env(env, identity, source_sha, candidate)
         system_result = system_preparer(child_env, staging / 'system-preparation.log')
         if not isinstance(system_result, dict) or system_result.get('status') not in ('passed', 'failed'):
             raise ValueError('system preparation outcome unknown')

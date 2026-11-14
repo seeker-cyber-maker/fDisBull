@@ -20,6 +20,17 @@ HELPER='/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bri
 PYTHON='/Users/tiga/miniconda/bin/python3'
 MAX_REQUEST=32*1024*1024
 MAX_REPLY=2*1024*1024
+TERMINAL_UNKNOWN_REASONS={'runner_nonzero','runner_invalid_json','runner_error','runner_output_invalid',
+                         'operator_reconciled_post_cleanup'}
+
+
+class CompletedGuiFailure(RuntimeError):
+    """The GUI child returned normally, but its operation result is unknown."""
+    def __init__(self,reason,returncode):
+        if reason not in TERMINAL_UNKNOWN_REASONS or type(returncode) is not int or returncode<0:
+            raise ValueError('invalid completed GUI failure')
+        self.reason,self.returncode=reason,returncode
+        super().__init__('GUI child completed with unknown operation result')
 
 
 def _bytes(value):return (json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
@@ -129,19 +140,36 @@ class GuiClient:
                 value=result.get('result')
                 if not isinstance(value,dict):raise RuntimeError('GUI result invalid')
                 return value
+            if result.get('status')=='unknown' and self._completed_unknown(result,nonce):
+                raise CompletedGuiFailure(result['reason'],result['runner']['returncode'])
             if result.get('status') in ('missing','expired'):raise RuntimeError('GUI action outcome unknown')
             if result.get('status') not in ('pending','unknown'):raise RuntimeError('GUI result invalid')
             if self.clock()>=intent['expires_epoch']:raise RuntimeError('GUI action outcome unknown')
             self.sleep(min(2,max(0,intent['expires_epoch']-self.clock())))
 
+    @staticmethod
+    def _completed_unknown(result,nonce):
+        if (set(result)!={'status','request_id','reason','runner'} or result.get('request_id')!=nonce
+                or result.get('reason') not in TERMINAL_UNKNOWN_REASONS):return False
+        runner=result['runner']
+        return (isinstance(runner,dict) and set(runner)=={'returncode','timed_out','overflow'}
+                and type(runner.get('returncode')) is int and runner['returncode']>=0
+                and runner.get('timed_out') is False and runner.get('overflow') is False)
+
 
 class GuiProviderTransport:
+    request_budget=2
     def __init__(self,provider,client):
         if provider not in ('github','gitlab'):raise ValueError('invalid provider')
         self.provider,self.client=provider,client
     def request(self,method,path,payload=None):
         if method!='GET':raise ValueError('POST requires action binding')
-        return self.client.call('provider',{'operation':'request','provider':self.provider,'method':method,'path':path,'payload':payload},timeout=60)
+        doc={'operation':'request','provider':self.provider,'method':method,'path':path,'payload':payload}
+        try:return self.client.call('provider',doc,timeout=60)
+        except CompletedGuiFailure:
+            # A fresh nonce buys one read-only retry. A second unknown or any
+            # uncertain child start is surfaced to the caller without replay.
+            return self.client.call('provider',doc,timeout=60)
     def for_action(self,key):
         def request(method,path,payload=None):
             if method!='POST':raise ValueError('action binding is POST only')

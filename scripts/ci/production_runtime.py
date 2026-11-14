@@ -76,7 +76,9 @@ class _GatedTransport:
         self.remaining-=amount
     def request(self,method,path,payload=None):
         if method!='GET':raise ValueError('POST needs action binding')
-        self._use(1);return self.raw.request(method,path,payload)
+        amount=getattr(self.raw,'request_budget',1)
+        if type(amount) is not int or not 1<=amount<=2:raise ValueError('invalid provider request budget')
+        self._use(amount);return self.raw.request(method,path,payload)
     def for_action(self,key):
         def post(method,path,payload=None):
             if method!='POST':raise ValueError('action POST required')
