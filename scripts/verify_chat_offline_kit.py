@@ -248,29 +248,29 @@ def wait_for_pe_frame(debug, timeout_ms=15000):
         return remaining
 
     while True:
-        probe = debug.call('frame.probe', timeout_ms=remaining_ms())
         remaining_ms()
-        if probe.get('available') is True:
-            if not (type(probe.get('width')) is int and 1 <= probe['width'] <= 1920 and type(probe.get('height')) is int and 1 <= probe['height'] <= 1080):
-                raise ValueError('Invalid PE frame dimensions')
-            previous_deadline = getattr(debug, '_rpc_deadline', None)
-            debug._rpc_deadline = min(deadline, previous_deadline) if previous_deadline is not None else deadline
-            try:
-                frame = debug.screenshot('pe.png')
-            finally:
-                debug._rpc_deadline = previous_deadline
-            remaining_ms()
-            row = debug.project.db.execute('SELECT data,sha256 FROM debug_artifacts WHERE id=?', (frame['artifact'],)).fetchone()
-            if row is None or hashlib.sha256(bytes(row['data'])).hexdigest() != row['sha256']:
-                raise ValueError('Missing or corrupt PE screenshot artifact')
-            from PIL import Image
-            with Image.open(io.BytesIO(bytes(row['data']))) as image:
-                extrema = image.convert('RGB').getextrema()
-            remaining_ms()
-            if any(low != high for low, high in extrema):
-                return frame
-        elif probe.get('available') is not False:
-            raise ValueError('Invalid PE frame probe')
+        previous_deadline = getattr(debug, '_rpc_deadline', None)
+        debug._rpc_deadline = min(deadline, previous_deadline) if previous_deadline is not None else deadline
+        try:
+            frame = debug.screenshot('pe.png', hooks=False)
+        finally:
+            debug._rpc_deadline = previous_deadline
+        remaining_ms()
+        metadata = frame['metadata']; width=metadata.get('width'); height=metadata.get('height')
+        if not (type(width) is int and 1 <= width <= 1920 and type(height) is int and 1 <= height <= 1080):
+            raise ValueError('Invalid PE frame dimensions')
+        row = debug.project.db.execute('SELECT data,sha256 FROM debug_artifacts WHERE id=?', (frame['artifact'],)).fetchone()
+        if (row is None or hashlib.sha256(bytes(row['data'])).hexdigest() != row['sha256']
+                or frame.get('sha256') != row['sha256']):
+            raise ValueError('Missing or corrupt PE screenshot artifact')
+        from PIL import Image
+        with Image.open(io.BytesIO(bytes(row['data']))) as image:
+            if image.format != 'PNG' or image.size != (width,height):
+                raise ValueError('Invalid PE screenshot dimensions or format')
+            extrema = image.convert('RGB').getextrema()
+        remaining_ms()
+        if any(low != high for low, high in extrema):
+            return frame
         # The oracle calls UpdateWindow before reaching its checkpoint. Never
         # resume the guest here: doing so would consume the intentional stop.
         time.sleep(min(0.1, remaining_ms() / 1000))

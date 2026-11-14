@@ -253,23 +253,23 @@ class OracleDebug:
         self.project = SimpleNamespace(db=db)
         self.captures = 0
 
-    def call(self, method, *, timeout_ms):
-        assert method == 'frame.probe' and timeout_ms > 0
-        return {'available':True, 'width':320, 'height':200}
+    def call(self, *args, **kwargs):
+        pytest.fail('Frame readiness must use the supported public screenshot API')
 
     def screenshot(self, name, *, grid=False, grid_step=32, hooks=False):
         from PIL import Image
         from fdisbull.wine_debugger import PEDebugSession
         inspect.signature(PEDebugSession.screenshot).bind(self, name, grid=grid, grid_step=grid_step, hooks=hooks)
-        assert name == 'pe.png' and self._rpc_deadline is not None
+        assert name == 'pe.png' and self._rpc_deadline is not None and hooks is False
         painted = next(self.images)
-        image = Image.new('RGB', (3, 3), 'black')
-        if painted: image.putpixel((1, 1), (255, 160, 32))
+        image = Image.new('RGB', (3, 3), painted if isinstance(painted,str) else 'black')
+        if painted is True: image.putpixel((1, 1), (255, 160, 32))
         data = io.BytesIO(); image.save(data, format='PNG'); payload = data.getvalue()
         self.captures += 1
         self.project.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?)',
                                 (self.captures, payload, hashlib.sha256(payload).hexdigest()))
-        return {'artifact':self.captures, 'metadata':{'mode_id':'oracle'}}
+        return {'artifact':self.captures, 'sha256':hashlib.sha256(payload).hexdigest(),
+                'metadata':{'mode_id':'oracle','width':3,'height':3}}
 
     def run(self, **kwargs):
         pytest.fail('A readiness poll must not resume the stopped oracle')
@@ -287,11 +287,12 @@ def test_oracle_wait_polls_blank_then_returns_exact_painted_artifact(monkeypatch
     assert debug.captures == 2
 
 
-def test_oracle_wait_fails_bounded_for_blank_frame(monkeypatch):
+@pytest.mark.parametrize('solid', [False,'orange'])
+def test_oracle_wait_fails_bounded_for_solid_frame(monkeypatch,solid):
     now = [0.0]
     monkeypatch.setattr(verifier.time, 'monotonic', lambda: now[0])
     monkeypatch.setattr(verifier.time, 'sleep', lambda seconds: now.__setitem__(0, now[0] + seconds))
-    debug = OracleDebug([False] * 10)
+    debug = OracleDebug([solid] * 10)
     with pytest.raises(ValueError, match='deadline'):
         verifier.wait_for_pe_frame(debug, 250)
     assert 1 <= debug.captures <= 4
@@ -299,13 +300,49 @@ def test_oracle_wait_fails_bounded_for_blank_frame(monkeypatch):
         verifier.wait_for_pe_frame(debug, 0)
 
 
-@pytest.mark.parametrize('operation', ['call', 'screenshot'])
-def test_oracle_wait_propagates_debugger_errors(operation):
+def test_oracle_wait_propagates_screenshot_errors_and_restores_caller_deadline():
     debug = OracleDebug([True])
+    previous=verifier.time.monotonic()+5;debug._rpc_deadline=previous
     def failed(*args, **kwargs):
+        assert debug._rpc_deadline==previous
         raise RuntimeError('debugger stopped unexpectedly')
-    setattr(debug, operation, failed)
+    debug.screenshot=failed
     with pytest.raises(RuntimeError, match='stopped unexpectedly'):
+        verifier.wait_for_pe_frame(debug)
+    assert debug._rpc_deadline==previous
+
+
+@pytest.mark.parametrize('width,height', [(1921,3),(3,1081),(True,3),(0,3)])
+def test_oracle_wait_rejects_invalid_returned_dimensions(width,height):
+    debug=OracleDebug([True]);screenshot=debug.screenshot
+    def invalid(*args,**kwargs):
+        frame=screenshot(*args,**kwargs);frame['metadata'].update(width=width,height=height)
+        return frame
+    debug.screenshot=invalid
+    with pytest.raises(ValueError,match='Invalid PE frame dimensions'):
+        verifier.wait_for_pe_frame(debug)
+
+
+def test_oracle_wait_rejects_png_dimensions_differing_from_metadata():
+    debug=OracleDebug([True]);screenshot=debug.screenshot
+    def invalid(*args,**kwargs):
+        frame=screenshot(*args,**kwargs);frame['metadata']['width']=4
+        return frame
+    debug.screenshot=invalid
+    with pytest.raises(ValueError,match='Invalid PE screenshot dimensions'):
+        verifier.wait_for_pe_frame(debug)
+
+
+@pytest.mark.parametrize('corruption', ['stored','returned'])
+def test_oracle_wait_rejects_corrupt_stored_or_returned_artifact_hash(corruption):
+    debug=OracleDebug([True]);screenshot=debug.screenshot
+    def invalid(*args,**kwargs):
+        frame=screenshot(*args,**kwargs)
+        if corruption=='stored':debug.project.db.execute('UPDATE debug_artifacts SET sha256=?',('0'*64,))
+        else:frame['sha256']='0'*64
+        return frame
+    debug.screenshot=invalid
+    with pytest.raises(ValueError,match='Missing or corrupt PE screenshot artifact'):
         verifier.wait_for_pe_frame(debug)
 
 
