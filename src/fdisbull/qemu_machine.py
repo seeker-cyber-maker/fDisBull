@@ -41,6 +41,7 @@ from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_c
                            machine_retrace_arguments, admit_retrace)
 from .qemu_vga_configuration import (QemuVgaConfigurationMixin, VGA_CONFIGURATION_COMMANDS,
                                     validate_vga_configuration_parameters)
+from .qemu_wait import QemuWaitMixin, validate_qemu_wait_parameters
 
 
 def file_hash(path):
@@ -626,7 +627,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
                      QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
-                     DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
+                     QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
 
@@ -635,6 +636,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     clock_observe=machine_io_operation(MachineClockMixin.clock_observe)
     clock_advance=machine_clock_operation(MachineClockMixin.clock_advance)
     _clock_advance_with_hooks=machine_clock_operation(MachineClockMixin._clock_advance_with_hooks)
+    wait=machine_trace_operation(QemuWaitMixin.wait,label='Observation wait',
+        parameter_validator=validate_qemu_wait_parameters)
     capture_surface=machine_io_operation(QemuSurfaceMixin.capture_surface)
     audio_start=machine_io_operation(QemuAudioMixin.audio_start,close_on_timeout=True)
     audio_observe=machine_io_operation(QemuAudioMixin.audio_observe)
@@ -701,6 +704,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             retrace_wait=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                           and RETRACE_COMMANDS | VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
             virtual_clock_budget=virtual,
+            observation_wait=virtual and VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             host_clock_sync=virtual and VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_input_schedule=virtual and INPUT_SCHEDULE_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             virtual_keyboard_press=(virtual and KEYBOARD_PRESS_COMMANDS | INPUT_SCHEDULE_COMMANDS
@@ -1694,7 +1698,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         return super().trace(name,count=count,timeout_ms=timeout_ms,bits=selected_bits)
     @property
     def script_operations(self):
-        return {'step','run','registers','memory','memory-translation','qemm-observe','desqview-observe',
+        return {'step','run','wait','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','breakpoint','delete-breakpoint','trace','screenshot',
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
                 'audio-start','audio-observe','audio-stop','capture-audio',

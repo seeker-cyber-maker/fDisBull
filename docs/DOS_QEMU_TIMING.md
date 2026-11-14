@@ -559,3 +559,27 @@ for the raw vector, shared deadline, history validation and failure evidence.
 - [Python monotonic clocks and sleep](https://docs.python.org/3.13/library/time.html)
   document the host primitives. Actual timestamps and waits are retained because
   a requested sleep duration is not a precise scheduling guarantee.
+
+## Observation-driven native waits
+
+The existing `debug-wait`, Python `wait(...)` and saved-script `wait` routes
+support the explicit QEMU virtual-clock profile. Memory, numeric register and
+numeric status predicates are sampled while stopped. `guest_ms` and `slice_ms`
+mean milliseconds in `QEMU_CLOCK_VIRTUAL`; results retain integer nanoseconds,
+the native clock epoch, each poll and arrived stop. They do not represent
+DOSBox measured time, instruction completion, input consumption or completed
+frames. Native `fast_forward` defaults to false; an explicit true refuses.
+
+Memory observations use explicit machine addresses and `space='physical'`
+(default) or `space='virtual'`; segmented `cs` and implicit source addresses
+refuse. Virtual observations pin their admitted CPU/page-table context.
+A single host deadline includes lock admission, observation, execution and
+persistence. Hooks, native stops and exit/TSR evidence take precedence over
+another readiness poll. A native exit that closes the clock channel before
+its terminal read retains the original exception and arrived `error.result`,
+with incomplete clock progress in `error.wait_result`; elapsed time is not
+invented for that terminal interval.
+
+A matched predicate can precede the scheduled release of a held key. Inspect
+owned input and explicitly finish or recover it before checkpointing. A wait
+never silently cancels, replays or releases an interrupted input batch.

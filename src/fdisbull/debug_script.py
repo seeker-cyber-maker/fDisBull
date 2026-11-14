@@ -339,7 +339,11 @@ def validate_script(script, *, session=None):
                         validate_keyboard(**checked)
                     if op=='wait':
                         from .debug_wait import validate_wait
-                        if getattr(owner,'scene_time_basis',None)=='host':
+                        if (backend or actual) in ('qemu-machine','qemu-dos'):
+                            from .qemu_wait import validate_qemu_wait_parameters, validate_qemu_wait_session
+                            validate_qemu_wait_parameters(**params)
+                            if session is not None:validate_qemu_wait_session(session)
+                        elif getattr(owner,'scene_time_basis',None)=='host':
                             checked=dict(params)
                             active=checked.pop('active_ms',None);legacy=checked.pop('guest_ms',None)
                             if (active is None)==(legacy is None):
@@ -510,7 +514,7 @@ def validate_script(script, *, session=None):
         guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-click',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
-                 'clock-observe','clock-advance','memory-rule-run','capture-surface','screenshot',
+                 'clock-observe','clock-advance','wait','memory-rule-run','capture-surface','screenshot',
                  'audio-start','audio-observe','audio-stop','capture-audio',
                  'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
