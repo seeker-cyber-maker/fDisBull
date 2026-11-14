@@ -139,6 +139,26 @@ generation can identify its exact restorable payload set. Existing uploads under
 reference them. New payloads use the content-addressed layout. Source deletions
 are not propagated as remote deletions.
 
+The recovered 0.35 source now pins the admitted library root and traverses each
+selected directory through no-follow directory handles. A capture must match
+that exact scan entry's device, inode, size and nanosecond modification/change
+times; source-handle checks and an independent staged SHA-256 readback precede
+its receipt. Replacing an intermediate directory, even temporarily and restoring
+it before the final scan, cannot redirect a capture to outside bytes. Root
+identity and the selected namespace are checked again before manifest publication.
+This is a stable-file capture contract, not a filesystem-wide snapshot.
+
+Capture receipts now include `source_selection` (root identity, relative name
+and scan signature). Earlier completion or retry receipts without that binding
+are retained but recaptured once from the admitted source before reuse. This can
+add one local capture and immutable remote object; it never removes old payloads
+or manifests. Bound retry captures still reuse hard links after hash/inode checks.
+Stage creation, links and metadata writes use pinned directory handles and
+exclusive file creation. A conflicting or replaced destination refuses the
+operation; incomplete artifacts remain available for inspection rather than
+being removed automatically. These are authored local race-test guarantees;
+they do not establish deployment of the updated worker or new cloud acceptance.
+
 A successful transfer requires Drive size and MD5 readback for every submitted
 file; missing or mismatched hashes refuse completion. A transfer or manifest
 failure must not advance local success state. Verified local captures are cached
