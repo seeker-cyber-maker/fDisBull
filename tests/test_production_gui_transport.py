@@ -14,7 +14,7 @@ m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 m.provider=m._load('production_transport.py');m.source=m._load('production_source_transport.py')
 
 
-def installed(tmp_path,*,allowed=('credential_probe','provider','source'),clock=lambda:1000,kick=None,runner=None,gui_check=None,probe=None):
+def installed(tmp_path,*,allowed=('credential_probe','provider','source'),clock=lambda:1000,kick=None,runner=None,gui_check=None,probe=None,**extra):
     parent=tmp_path/'control';parent.mkdir(mode=0o700,exist_ok=True)
     spool=parent/'spool';spool.mkdir(mode=0o700,exist_ok=True);anchor=parent/'anchor.json'
     marker={'installation_id':m.INSTALLATION_ID,'volume_uuid':m.CACHE_UUID}
@@ -25,7 +25,8 @@ def installed(tmp_path,*,allowed=('credential_probe','provider','source'),clock=
     kicks=[]
     def default_kick():kicks.append('once')
     obj=m.GuiSpool(spool,anchor,mount=lambda s,a:True,clock=clock,kick=kick or default_kick,runner=runner,
-                   activation=lambda:{'allowed_kinds':list(allowed)},gui_check=gui_check or (lambda:True),probe=probe)
+                   activation=lambda:{'allowed_kinds':list(allowed)},gui_check=gui_check or (lambda:True),probe=probe,
+                   handshake_seconds=extra.pop('handshake_seconds',0),**extra)
     return obj,kicks
 
 
@@ -490,3 +491,103 @@ def test_reconciled_read_certificate_tampering_fails_closed(tmp_path):
     path,digest=cleanup_receipt(tmp_path,spool,'a'*64,now);spool.reconcile_expired_read(path,digest)
     cert=spool.spool/('a'*64+'.read-reconciliation.json');cert.write_bytes(b'{}')
     with pytest.raises(RuntimeError,match='read reconciliation changed'):spool.result('a'*64)
+
+
+def test_handshake_wakes_same_submitted_request_after_prior_worker_exits(tmp_path,monkeypatch):
+    import threading
+    monkeypatch.setattr(m,'HANDSHAKE_INTERVAL',0.01)
+    workers=[];kicks=[];calls=[];holder={}
+    def kick():
+        kicks.append(1)
+        if len(kicks)==2:
+            thread=threading.Thread(target=lambda:holder['spool'].worker());workers.append(thread);thread.start()
+    def child(*args,**kwargs):
+        calls.append(1)
+        return {'returncode':0,'stdout':b'{"http_status":200,"data":{},"request_id":null}',
+                'stderr':b'','timed_out':False,'overflow':False}
+    spool,_=installed(tmp_path,kick=kick,runner=child,handshake_seconds=1);holder['spool']=spool
+    result=spool.submit('provider',provider_doc(),1100,'a'*64)
+    for worker in workers:worker.join(timeout=2);assert not worker.is_alive()
+    assert result['status']=='pending' and len(kicks)==2 and len(calls)==1
+    assert spool.result('a'*64)['status']=='complete'
+    assert spool.worker()['status']=='idle' and len(calls)==1
+
+
+def test_handshake_does_not_repeat_after_ambiguous_wakeup(tmp_path,monkeypatch):
+    monkeypatch.setattr(m,'HANDSHAKE_INTERVAL',0.01);kicks=[]
+    def kick():
+        kicks.append(1)
+        if len(kicks)==2:raise TimeoutError('unknown wake outcome')
+    spool,_=installed(tmp_path,kick=kick,handshake_seconds=1)
+    assert spool.submit('provider',provider_doc(),1100,'a'*64)['status']=='unknown'
+    assert len(kicks)==2 and spool.result('a'*64)['status']=='pending'
+    assert spool.submit('provider',provider_doc(),1100,'a'*64)['phase']=='submitted'
+    assert len(kicks)==2
+
+
+def test_result_atomically_expires_submitted_before_any_child_starts(tmp_path):
+    now=[1000];calls=[]
+    spool,_=installed(tmp_path,clock=lambda:now[0],runner=lambda *a,**k:calls.append(1))
+    spool.submit('provider',provider_doc(),1001,'a'*64);now[0]=1001
+    assert spool.result('a'*64)=={'status':'expired','request_id':'a'*64}
+    assert spool.worker()['status']=='idle' and calls==[]
+    assert not (spool.spool/('a'*64+'.started')).exists()
+    assert spool.submit('provider',provider_doc(),1100,'b'*64)['status']=='pending'
+
+
+def test_concurrent_workers_cross_started_boundary_once(tmp_path,monkeypatch):
+    import threading
+    monkeypatch.setattr(m,'HANDSHAKE_INTERVAL',0.01)
+    workers=[];calls=[];holder={}
+    def kick():
+        if not workers:
+            for _ in range(4):
+                thread=threading.Thread(target=lambda:holder['spool'].worker());workers.append(thread);thread.start()
+    def child(*args,**kwargs):
+        calls.append(1)
+        return {'returncode':0,'stdout':b'{"http_status":200,"data":{},"request_id":null}',
+                'stderr':b'','timed_out':False,'overflow':False}
+    spool,_=installed(tmp_path,kick=kick,runner=child,handshake_seconds=1);holder['spool']=spool
+    spool.submit('provider',provider_doc(),1100,'a'*64)
+    for worker in workers:worker.join(timeout=2);assert not worker.is_alive()
+    assert len(workers)==4 and calls==[1]
+    assert spool.result('a'*64)['status']=='complete'
+
+
+def test_handshake_never_kicks_again_after_started_unknown(tmp_path,monkeypatch):
+    import threading
+    monkeypatch.setattr(m,'HANDSHAKE_INTERVAL',0.01)
+    workers=[];kicks=[];calls=[];holder={}
+    def kick():
+        kicks.append(1)
+        if len(kicks)==1:
+            thread=threading.Thread(target=lambda:holder['spool'].worker());workers.append(thread);thread.start()
+    def child(*args,**kwargs):
+        calls.append(1)
+        return {'returncode':-9,'stdout':b'','stderr':b'','timed_out':True,'overflow':False}
+    spool,_=installed(tmp_path,kick=kick,runner=child,handshake_seconds=1);holder['spool']=spool
+    spool.submit('provider',provider_doc(),1100,'a'*64)
+    for worker in workers:worker.join(timeout=2);assert not worker.is_alive()
+    assert kicks==[1] and calls==[1]
+    assert spool.result('a'*64)=={'status':'unknown','request_id':'a'*64}
+    assert spool.submit('provider',provider_doc(),1100,'a'*64)['phase']=='started' and kicks==[1]
+
+
+def test_handshake_expiry_closes_before_any_second_kick(tmp_path):
+    now=[1000.0];mono=[0.0];kicks=[]
+    def sleep(seconds):now[0]+=seconds;mono[0]+=seconds
+    spool,_=installed(tmp_path,clock=lambda:now[0],monotonic=lambda:mono[0],sleep=sleep,
+                      handshake_seconds=2,kick=lambda:kicks.append(1))
+    spool.submit('provider',provider_doc(),1001,'a'*64)
+    assert kicks==[1] and spool.result('a'*64)=={'status':'expired','request_id':'a'*64}
+    assert not (spool.spool/('a'*64+'.started')).exists()
+
+
+def test_handshake_wake_budget_is_finite(tmp_path):
+    now=[1000.0];mono=[0.0];kicks=[]
+    def sleep(seconds):now[0]+=seconds;mono[0]+=seconds
+    spool,_=installed(tmp_path,clock=lambda:now[0],monotonic=lambda:mono[0],sleep=sleep,
+                      handshake_seconds=2,kick=lambda:kicks.append(1))
+    spool.submit('provider',provider_doc(),1100,'a'*64)
+    assert mono[0]==2 and kicks==[1,1]
+    assert spool.result('a'*64)=={'status':'pending','request_id':'a'*64}
