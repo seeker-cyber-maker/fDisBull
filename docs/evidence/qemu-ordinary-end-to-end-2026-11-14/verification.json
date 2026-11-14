@@ -1,0 +1,417 @@
+{
+  "constraints": {
+    "no_ci": true,
+    "no_default_switch": true,
+    "no_merge": true,
+    "no_native_rebuild": true,
+    "no_private_target_bytes": true,
+    "no_release": true,
+    "no_shared_activation": true
+  },
+  "date": "2026-11-14",
+  "default_backend": "dosbox",
+  "desqview_further_work": "deferred unless required by an ordinary DOS blocker",
+  "dosbox_retained": true,
+  "file_services": {
+    "asset_and_open_handle_cases_passed": 2,
+    "scope": "relative asset, modification/rename, open handle/position cold restore after moving host root; not arbitrary game-save compatibility",
+    "target_kind": "authored COM witnesses"
+  },
+  "format": "fdisbull-ordinary-qemu-migration-evidence-1",
+  "limitations": [
+    "No completed-guest-frame, exact cross-backend timing or arbitrary input consumption claim",
+    "No full protected-game startup/recovery qualification",
+    "Private same-Mac kit is not relocatable/offline delivery",
+    "Broader legacy scenes/frame probes/mouse/audio/media/device/fallback campaigns remain open",
+    "Counts overlap and do not measure completion percentage"
+  ],
+  "native_consumer": {
+    "corrected_case": {
+      "clock_unchanged_during_export": true,
+      "cold_wait_ns": 0,
+      "one_wait_event_before_after_export": true,
+      "output_export_without_native_replay": true,
+      "recovered_bytes": 90344,
+      "recovered_sha256": "9cd70cac81b9f863fbdb33495379c021ed9f3096d0c1291187522a8ab18725f1",
+      "saved_script_wait_ns": 182000000
+    },
+    "main_actual_wait": {
+      "complete": true,
+      "elapsed_virtual_ns": 432000000,
+      "first_slice_ns": 132000000,
+      "later_slices_ns": 50000000,
+      "matched": true,
+      "native_intervals": 7,
+      "outcome": "predicate",
+      "raw_event_bytes": 98038,
+      "raw_event_sha256": "79657ebd777f4445912a6a9c32df93d219a02c57a304fe9f54b1e377a13fa000"
+    },
+    "main_run_failure": "Test consumer mistook bounded delivery complete=false for execution failure",
+    "production_changed": false,
+    "source_commit": "0ee7780fc5785f72a0a1b6dc9a7a93b8baf72e22",
+    "test_sha256": "619c08921855563d84ba01c5bbf3fb33cb772ab2ae5f4e17158e0f78b8fe00a5"
+  },
+  "paired_workloads": [
+    {
+      "cold_paired_restore": "failed on retained DOSBox-X reference",
+      "paired_observations_per_backend": 7,
+      "result": "passed fresh complete round/reset/genuine exit",
+      "target": "original ATTT.COM"
+    },
+    {
+      "caller_explicit_input_recovery": true,
+      "expected_scores": [
+        25,
+        12,
+        0
+      ],
+      "expected_total": 37,
+      "paired_observations_per_backend": 8,
+      "result": "passed complete scoring/RNG/genuine exit",
+      "target": "original Five Dice COM"
+    },
+    {
+      "paired_manual_observations_per_backend": 8,
+      "result": "passed manual growth/direction/run-pause/genuine exit",
+      "target": "original Snake MZ",
+      "timing_comparison": "positive progression and pause stability per backend; no exact cross-backend tick equality",
+      "uses_component04_directory_route": true
+    }
+  ],
+  "priority": "Ordinary public DOS end-to-end workflows before additional DESQview or architecture features",
+  "replacement_qualified": false,
+  "retained_gates": {
+    "ordinary_doom": {
+      "all_deadlines_exact": true,
+      "arguments": "-nosound -nomouse",
+      "checkpoint_attempted": false,
+      "controller": "8c19f03c11507218659f3bae3d4d8514c053730d2156d91997110a0d104968ef",
+      "cpu_registers_change": true,
+      "elapsed_virtual_ns": 90000000000,
+      "frames": 9,
+      "hard_controller_seconds": 180,
+      "hard_timeout": {
+        "bytes": 70,
+        "sha256": "4fd8951b71016797c86b89c0e8bc316b490ccfaffb0f7cd1df2783ab6358b67d"
+      },
+      "hardkill_bypassed_normal_finally": true,
+      "irq_timer_mask_changed": false,
+      "known_pids_and_group_absent": true,
+      "last_visible_stage": "R_Init",
+      "le_binding": false,
+      "leading_hypothesis": "Expensive FreeDOS FAT-chain traversal during backward WAD seeks; not yet a proved PC/function or progress match",
+      "menu_input_attempted": false,
+      "next_diagnostic": "Observe bounded DOS WAD seek/read entry and return progress before changing FAT layout",
+      "normal_cleanup_claim": false,
+      "original_sha256": {
+        "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+        "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+      },
+      "originals_copies_runtime_dependencies_unchanged": true,
+      "postmortem": {
+        "bytes": 19990,
+        "sha256": "913a8aa37980d68802576dd77acd6d614e6fbc3c9411ac233d4831ec8e533fab"
+      },
+      "previous_probe01": "Separate controller rejection of out-of-range 60000ms action; not an emulator failure",
+      "private_cpu_or_epoch_writes": false,
+      "probe": {
+        "bytes": 304068,
+        "sha256": "761586571ecdcf9af5029a274e5680a30fd1fdcbeb40553eb1f8f720acf3b72d"
+      },
+      "result": "did not reach title/gameplay during bounded ordinary probe",
+      "root_cause": "unknown",
+      "virtual_advances": 9
+    },
+    "strict_attt_cold_restore": {
+      "display_all_black": true,
+      "display_size": [
+        360,
+        400
+      ],
+      "junit": {
+        "bytes": 4525,
+        "sha256": "3a10c35aaa8d52e7a28fb4ba3113238fda9c977b84a1b2f38fd86b1b13fa72ee"
+      },
+      "observed_bda_hex": "00280000080000",
+      "oracle_preserved": true,
+      "record": {
+        "bytes": 950,
+        "sha256": "9355a0a92c84ce2e7bd0c6e935630e61fb9991ef38799757a54292edd5f80e67"
+      },
+      "repeated_on_corrected_runtime": false,
+      "result": "failed reference display",
+      "root_cause": "unknown",
+      "runtime_commit": "daab62e573727eb2df64609cc9e0fac204ea16cf",
+      "wheel_sha256": "9761040d0db0bcb712feec9e6f56c8b5ab2b07e53d6526245d5cf4218caf9560"
+    }
+  },
+  "runtime": {
+    "commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+    "manifest": {
+      "bytes": 78209,
+      "sha256": "0d791caa7fa3b50afac0850cace2717ef916ce77bf9e3c355bb372dd5702c2bb"
+    },
+    "payload_files": 710,
+    "source_wheel_install_equal": true,
+    "wheel_sha256": "0e9199f5fb0c3bf908aafc41177b6ad1743da1894ec774a95567cea2164b5762"
+  },
+  "same_mac_kit": {
+    "absolute_homebrew_dependencies": true,
+    "copied_bytes": 59482928,
+    "copied_files": 93,
+    "copied_members_currently_match": true,
+    "manifest": {
+      "bytes": 168649,
+      "sha256": "7fcaa6bc8fea9e2c1f91a2cf997b3b5cb6dbc945ec3b81d56f311659ce464557"
+    },
+    "portable_or_offline": false
+  },
+  "verification": {
+    "host": {
+      "passed": 3434,
+      "record": {
+        "bytes": 10405,
+        "sha256": "fecdebfaccfe641eaa794d62c3dd869cbe7108cee74a5645c930c0ea968cd6d8"
+      },
+      "skipped": 12,
+      "source_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+      "source_hash_count": 1285,
+      "source_hashes_unchanged": true
+    },
+    "native_corrected_consumer": {
+      "cases": [
+        {
+          "name": "test_original_game_json_wait_saved_script_and_cold_evidence",
+          "status": "passed"
+        }
+      ],
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 1
+      },
+      "dependencies_unchanged": true,
+      "junit": {
+        "bytes": 380,
+        "sha256": "b637e09afdfa2f7550841bed0e5cc8e416e6711192bb11c0768cf4a971b95a47"
+      },
+      "record": {
+        "bytes": 736,
+        "label": "native-wait-delivery-07",
+        "sha256": "8f80db7d4abf87a6db89cba4f9cbd0f73a5a50600279be1a4300ec2d444e2b5c"
+      },
+      "returncode": 0,
+      "runtime_payload_unchanged": true,
+      "test_files_unchanged": true
+    },
+    "native_final": {
+      "cases": [
+        {
+          "name": "test_native_irq_checkpoint_history_rewinds_branches_and_cold_restores",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_experiment_restores_private_irq_and_held_keys",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_experiment_full_restore_recovers_frozen_projection_and_keeps_frame_dag",
+          "status": "passed"
+        },
+        {
+          "name": "test_history_active_layers_frame_rng_branch_and_cold_project_reopen",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_anchor_restores_keys_layers_hook_and_rng",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_experiment_restore_thaws_cpu_undo_and_retains_frame_dag",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_run_event_failure_invalidates_owner_and_retains_observed_completion[machine-run]",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_run_event_failure_invalidates_owner_and_retains_observed_completion[dos-process-return]",
+          "status": "passed"
+        },
+        {
+          "name": "test_public_raw_checkpoint_survives_project_and_machine_restart[qemu-machine]",
+          "status": "passed"
+        },
+        {
+          "name": "test_public_raw_checkpoint_survives_project_and_machine_restart[qemu-dos]",
+          "status": "passed"
+        },
+        {
+          "name": "test_paired_authored_com_core_register_memory_breakpoint_step_and_history",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_tic_tac_toe_one_physical_move_has_paired_com_state",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_tic_tac_toe_cold_restore_winning_round_and_guest_exit",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_tic_tac_toe_fresh_complete_round_reset_and_guest_exit_are_paired",
+          "status": "passed"
+        },
+        {
+          "name": "test_paired_original_five_dice_completed_game_and_rng",
+          "status": "passed"
+        },
+        {
+          "name": "test_paired_original_snake_keyboard_growth_clock_and_exit",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_game_json_wait_saved_script_and_cold_evidence",
+          "status": "passed"
+        },
+        {
+          "name": "test_workspace_subdirectory_override_sets_relative_asset_directory",
+          "status": "passed"
+        },
+        {
+          "name": "test_workspace_cold_restore_keeps_open_position_without_original_root",
+          "status": "passed"
+        }
+      ],
+      "configuration": {
+        "bytes": 27014,
+        "sha256": "8d7cfcca93446e85a5a1bda86ef7a8c9d826a0a93185930072f29b3ca014d7b9"
+      },
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 19
+      },
+      "dependencies_unchanged": true,
+      "junit": {
+        "bytes": 3109,
+        "sha256": "0555c8c073bfa9a4d690fe24048628ccf0b3b41c2ea04822e39a09155ff2874e"
+      },
+      "record": {
+        "bytes": 2574,
+        "sha256": "6bc2433ab0188caf308993bfafb7a4d992f77733cba7cd99ac716806907cd5b9"
+      },
+      "returncode": 0,
+      "runtime_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+      "runtime_payload_unchanged": true,
+      "test_files_unchanged": true
+    },
+    "native_main": {
+      "cases": [
+        {
+          "name": "test_native_irq_checkpoint_history_rewinds_branches_and_cold_restores",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_experiment_restores_private_irq_and_held_keys",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_experiment_full_restore_recovers_frozen_projection_and_keeps_frame_dag",
+          "status": "passed"
+        },
+        {
+          "name": "test_history_active_layers_frame_rng_branch_and_cold_project_reopen",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_anchor_restores_keys_layers_hook_and_rng",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_experiment_restore_thaws_cpu_undo_and_retains_frame_dag",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_run_event_failure_invalidates_owner_and_retains_observed_completion[machine-run]",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_run_event_failure_invalidates_owner_and_retains_observed_completion[dos-process-return]",
+          "status": "passed"
+        },
+        {
+          "name": "test_public_raw_checkpoint_survives_project_and_machine_restart[qemu-machine]",
+          "status": "passed"
+        },
+        {
+          "name": "test_public_raw_checkpoint_survives_project_and_machine_restart[qemu-dos]",
+          "status": "passed"
+        },
+        {
+          "name": "test_paired_authored_com_core_register_memory_breakpoint_step_and_history",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_tic_tac_toe_one_physical_move_has_paired_com_state",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_tic_tac_toe_cold_restore_winning_round_and_guest_exit",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_tic_tac_toe_fresh_complete_round_reset_and_guest_exit_are_paired",
+          "status": "passed"
+        },
+        {
+          "name": "test_paired_original_five_dice_completed_game_and_rng",
+          "status": "passed"
+        },
+        {
+          "name": "test_paired_original_snake_keyboard_growth_clock_and_exit",
+          "status": "passed"
+        },
+        {
+          "name": "test_original_game_json_wait_saved_script_and_cold_evidence",
+          "status": "failed"
+        },
+        {
+          "name": "test_workspace_subdirectory_override_sets_relative_asset_directory",
+          "status": "passed"
+        },
+        {
+          "name": "test_workspace_cold_restore_keeps_open_position_without_original_root",
+          "status": "passed"
+        }
+      ],
+      "counts": {
+        "errors": 0,
+        "failures": 1,
+        "skipped": 0,
+        "tests": 19
+      },
+      "dependencies_unchanged": true,
+      "junit": {
+        "bytes": 5311,
+        "sha256": "cd69c5871aaaa9bc7955b596b775be5b3f4f5007ceddf9244fd46d1ab08d91e4"
+      },
+      "record": {
+        "bytes": 2575,
+        "label": "native-corrected-06",
+        "sha256": "99f75ecb15dc7251f07a919bbb7b91dbd2e3b7e5213efbaa7d94aead3b8cbfad"
+      },
+      "returncode": 1,
+      "runtime_payload_unchanged": true,
+      "test_files_unchanged": true
+    },
+    "owned_groups_absent_at_final_readback": [
+      29573,
+      32843,
+      35230,
+      45414
+    ]
+  }
+}

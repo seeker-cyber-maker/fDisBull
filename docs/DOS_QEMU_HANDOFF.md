@@ -6418,3 +6418,48 @@ DB/CAS identities, all 1,538 object identities per catalog and all 709 frozen
 runtime files remain unchanged. The retained server is closed and sidecars
 are absent. This qualifies public persistence/query/export of that historical
 dataset only; it supplies no new native, checkpoint, epoch or parity authority.
+
+## Ordinary end-to-end migration priority (2026-11-14)
+
+The user's current priority is a usable ordinary QEMU DOS workflow before more
+DESQview, CHIP-8 or conversion features. Further DESQview completion is deferred
+unless it blocks that path. **There is still no 1:1 DOSBox-X replacement
+qualification. DOSBox-X remains the default and retained backend.**
+
+The [ordinary workflow gate](evidence/qemu-ordinary-end-to-end-2026-11-14/README.md)
+records fresh complete same-input ATTT, Five Dice and Snake comparisons,
+directory/relative-asset and open-handle restore witnesses, and the port of
+existing observation-driven waits to explicit QEMU virtual time. An actual
+input-cutoff failure drove the wait correction: a verified fresh fixed input
+plan and a readiness poll share the first bounded clock slice, preserving the
+total budget, actual dispatch evidence and explicit recovery requirements.
+JSON/saved-script waits, exact bounded-response recovery without replay, cold
+reopen, checkpoint and genuine guest exit are exercised locally.
+
+Runtime `29f45ab69374ed5ac604a70c4fecd385492f1d5d` has 710 identical committed
+source/wheel/install payload members. The private same-Mac native kit copies
+93 files but still relies on external host tools and absolute Homebrew
+libraries; portable/offline delivery is not qualified. Later test/docs-only
+commits preserve that frozen runtime rather than assigning old native results
+to changed implementation bytes.
+
+Two important gates remain visible. An ordinary unassisted Doom directory
+launch with `-nosound -nomouse` reaches `R_Init`, then nine stopped captures
+across 90 virtual seconds show only alternating cursor imagery. No menu input
+or checkpoint is attempted; a finite 180-second controller deadline ends the
+owned group. Register changes and exact native clock deadlines rule out an
+assumed frozen CPU or fabricated clock progress, but do not establish the
+cause. Separately, a strict paired ATTT cold-restore comparison on the older
+`daab62e5` package fails on the retained DOSBox-X display: scalar win state is
+correct while the image is black in mode 0 / 40 columns. Its strict oracle is
+retained; the passing fresh paired round is a different workflow.
+
+Next acceptance work is ordinary protected-game startup and observable
+menu-to-gameplay input/display, then public mid-program/cross-session recovery
+and a matched DOSBox-X comparison. Broader legacy scene/frame/mouse,
+audio/media/timing, device and fallback gates remain open. Preserve the existing
+trials, histories, selected undo, frame ownership, task-private layers, hooks,
+RNG/checkpoints and IRQ behavior while closing these gaps. No CI, native
+rebuild, release, merge, default switch or shared activation is part of this
+slice. The previous MR description is preserved in
+[the archive](milestones/archive/117-description-before-ordinary-end-to-end-20261114.md).
