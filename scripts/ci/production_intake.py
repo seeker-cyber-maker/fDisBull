@@ -545,7 +545,8 @@ class FailureInbox:
             raise ValueError('invalid receipt actor/time')
         if not isinstance(payload, dict) or set(payload) - {
             'kind', 'reason', 'status', 'provider_receipt_path', 'canonical_status',
-            'canonical_source_sha', 'observed_epoch', 'verification', 'claim_expires_epoch'
+            'canonical_source_sha', 'observed_epoch', 'verification', 'claim_expires_epoch',
+            'parent_event_key', 'parent_state_path', 'parent_state_sha256', 'evidence_receipt_path', 'evidence_receipt_sha256'
         }:
             raise ValueError('receipt fields are not allowlisted')
         if not isinstance(payload.get('kind'), str) or not payload['kind'] or len(payload['kind']) > 64:
@@ -555,6 +556,10 @@ class FailureInbox:
                 raise ValueError('invalid receipt value')
             if key == 'observed_epoch' and _epoch(value) is None:
                 raise ValueError('invalid receipt epoch')
+            if key in ('parent_event_key','parent_state_sha256','evidence_receipt_sha256') and (not isinstance(value,str) or not _HASH.fullmatch(value)):
+                raise ValueError('invalid related evidence hash')
+            if key in ('parent_state_path','evidence_receipt_path') and (not isinstance(value,str) or not Path(value).is_absolute() or '..' in Path(value).parts):
+                raise ValueError('invalid related evidence path')
             if key == 'canonical_source_sha' and (not isinstance(value, str) or not _SHA.fullmatch(value)):
                 raise ValueError('invalid receipt source sha')
             if key in ('reason', 'status', 'provider_receipt_path', 'canonical_status', 'verification') and not isinstance(value, str):
@@ -601,6 +606,28 @@ class FailureInbox:
             return {'event_key': key, 'state': 'pending', 'duplicate': False}
         except Exception:
             if self.db.in_transaction: self.db.execute('ROLLBACK')
+            raise
+
+    def related_attention(self, candidate, proof, *, now=None):
+        """Close only an unclaimed pending hint linked to a terminal parent."""
+        self._validate_candidate(candidate)
+        fields={'parent_event_key','parent_state_path','parent_state_sha256','evidence_receipt_path','evidence_receipt_sha256'}
+        if not isinstance(proof,dict) or set(proof)!=fields or proof['parent_event_key']==candidate['event_key']:
+            raise ValueError('invalid related incident proof')
+        now=time.time() if now is None else now
+        self.db.execute('BEGIN IMMEDIATE')
+        try:
+            parent=self.db.execute('SELECT state FROM events WHERE event_key=?',(proof['parent_event_key'],)).fetchone()
+            child=self.db.execute('SELECT descriptor,state FROM events WHERE event_key=?',(candidate['event_key'],)).fetchone()
+            if (not parent or parent[0] not in ('complete','attention') or not child
+                    or bytes(child[0])!=_json_bytes(candidate) or child[1]!='pending'):
+                self.db.execute('COMMIT');return False
+            self.db.execute("UPDATE events SET state='attention' WHERE event_key=? AND state='pending'",(candidate['event_key'],))
+            self._receipt(candidate['event_key'],'attention','intake',
+                          {'kind':'related_failed_attempt','status':'attention','verification':'retained_canonical_failure',**proof},now)
+            self.db.execute('COMMIT');return True
+        except Exception:
+            if self.db.in_transaction:self.db.execute('ROLLBACK')
             raise
 
     def claim(self, owner, *, now=None, lease_seconds=300):

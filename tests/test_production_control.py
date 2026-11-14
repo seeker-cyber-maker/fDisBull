@@ -238,3 +238,136 @@ def test_action_ledger_read_only_intent_lookup_binds_payload(tmp_path):
     result=ledger.load_intent('retry')
     assert result['intent']=={'action':'retry_job','action_key':'retry','payload':{'target':{'run_id':'10'}},'created_epoch':1234.5}
     assert result['receipt_path']==str(path) and path.read_bytes()==before
+
+
+def related_setup(tmp_path):
+    import test_production_runtime as runtime_fixture
+    import test_production_evidence as evidence_fixture
+
+    c = config(tmp_path)
+    service = control.ProductionService(c, None)
+    root = Path(c['export_root'])
+    target = {'provider': 'github', 'repository': 'seeker-cyber-maker/fDisBull',
+              'run_id': '11', 'run_attempt': '2', 'job_id': '23', 'source_sha': 'a' * 40,
+              'job_name': 'qualification', 'runner_id': '21', 'ref': c['github']['ref'], 'control_sha': 'c' * 40}
+    parent_target = dict(target, run_attempt='1', job_id='22')
+    runtime_fixture.make_export(root, parent_target, 'failed', 'd' * 64)
+    runtime_fixture.make_export(root, target, 'failed', 'd' * 64)
+    candidates = control.export_candidates(root, 1, limit=32, gitlab_project_id='88349936',
+                                            github_repository='seeker-cyber-maker/fDisBull')['candidates']
+    parent = next(x for x in candidates if x['job_id'] == '22')
+    child = next(x for x in candidates if x['job_id'] == '23')
+    directory = Path(c['state_dir']) / 'incidents' / parent['event_key']
+    directory.mkdir(mode=0o700, parents=True)
+    observation = {**target, 'status': 'failed'}
+    ev = evidence_fixture.m.ProductionEvidence(root / 'github', directory / 'evidence', 'ordinary', evidence_fixture.capture)(observation, ['tests'])
+    manifest = {'incident_id': parent['event_key']}
+    state = {'manifest': manifest, 'status': 'attention', 'target': target,
+             'observations': [observation], 'evidence': [ev]}
+    control.write_json(directory / 'manifest.json', manifest)
+    control.write_json(directory / 'state.json', state)
+    with service._inbox() as inbox:
+        inbox.enqueue(parent, now=2)
+        inbox.claim(control.OWNER, now=3)
+        inbox.attention(parent['event_key'], control.OWNER,
+                        {'kind': 'controller_attention', 'status': 'attention',
+                         'provider_receipt_path': str(directory / 'state.json')}, now=4)
+    return service, parent, child, directory
+
+
+def test_related_failure_closes_with_verified_parent_evidence_and_readonly_status(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    assert service.status()['pending_work'] is False
+    with service._inbox() as inbox:
+        assert inbox.get(child['event_key']) is None
+        service._discover(inbox)
+        row = inbox.get(child['event_key'])
+        assert row['state'] == 'attention'
+        payload = row['receipt']['payload']
+        assert payload['kind'] == 'related_failed_attempt'
+        assert payload['parent_event_key'] == parent['event_key']
+        assert payload['parent_state_path'] == str(directory / 'state.json')
+        assert Path(payload['evidence_receipt_path']).is_file()
+        service._discover(inbox)
+        assert inbox.get(child['event_key']) == row
+    assert service.status()['pending_work'] is False
+
+
+def test_related_export_tampering_does_not_suppress(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    folder = Path(child['metadata_path']).parent
+    (folder / 'exported/artifacts/recovery/diagnostic.json').write_text('changed')
+    assert service.status()['pending_work'] is True
+    with service._inbox() as inbox:
+        service._discover(inbox)
+        assert inbox.get(child['event_key'])['state'] == 'pending'
+
+
+def test_related_claim_is_never_overridden(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    with service._inbox() as inbox:
+        inbox.enqueue(child, now=5)
+        inbox.claim(control.OWNER, now=6)
+        service._discover(inbox)
+        assert inbox.get(child['event_key'])['state'] == 'claimed'
+    assert service.status()['pending_work'] is True
+
+
+def test_missing_parent_evidence_stays_pending(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    receipt = next((directory / 'evidence').glob('*.evidence.json'))
+    receipt.rename(receipt.with_suffix('.preserved'))
+    assert service.status()['pending_work'] is True
+    with service._inbox() as inbox:
+        service._discover(inbox)
+        assert inbox.get(child['event_key'])['state'] == 'pending'
+
+
+def test_changed_job_metadata_remains_discoverable(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    path = Path(child['metadata_path'])
+    metadata = json.loads(path.read_bytes())
+    metadata['qualification_exit_code'] = 2
+    path.write_text(json.dumps(metadata))
+    assert service.status()['pending_work'] is True
+    with service._inbox() as inbox:
+        service._discover(inbox)
+        assert inbox.get(child['event_key'])['state'] == 'pending'
+
+
+def test_unrelated_same_run_and_source_remains_discoverable(tmp_path):
+    import test_production_runtime as runtime_fixture
+    service, parent, child, directory = related_setup(tmp_path)
+    target = {'provider': 'github', 'repository': 'seeker-cyber-maker/fDisBull',
+              'run_id': '11', 'run_attempt': '3', 'job_id': '24', 'source_sha': 'a' * 40,
+              'job_name': 'qualification', 'runner_id': '21', 'ref': service.config['github']['ref'],
+              'control_sha': 'c' * 40}
+    runtime_fixture.make_export(Path(service.config['export_root']), target, 'failed', 'd' * 64)
+    assert service.status()['pending_work'] is True
+    with service._inbox() as inbox:
+        service._discover(inbox)
+        rows = inbox.db.execute("SELECT descriptor,state FROM events WHERE state='pending'").fetchall()
+        assert len(rows) == 1 and json.loads(bytes(rows[0][0]))['job_id'] == '24'
+
+
+def test_related_expired_claim_stays_needs_reconciliation(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    with service._inbox() as inbox:
+        inbox.enqueue(child, now=5)
+        inbox.claim(control.OWNER, now=6, lease_seconds=1)
+        inbox.claim(control.OWNER, now=8)
+        service._discover(inbox)
+        assert inbox.get(child['event_key'])['state'] == 'needs_reconciliation'
+    assert service.status()['pending_work'] is True
+
+
+def test_parent_terminal_receipt_mismatch_fails_closed(tmp_path):
+    service, parent, child, directory = related_setup(tmp_path)
+    path = directory / 'state.json'
+    data = json.loads(path.read_text())
+    data['status'] = 'complete'
+    path.write_text(json.dumps(data))
+    assert service.status()['pending_work'] is True
+    with service._inbox() as inbox:
+        service._discover(inbox)
+        assert inbox.get(child['event_key'])['state'] == 'pending'
