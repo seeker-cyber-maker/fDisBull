@@ -6,7 +6,7 @@ CLAIM = ('Observed sampled bytes only; pointer roles and meaning are not inferre
 MAX_ARGUMENTS = 7
 MAX_SAMPLE_BYTES = 256
 MAX_RANGES = 4
-MAX_PREVIEW_BYTES = 16
+MAX_PREVIEW_BYTES = 15
 
 
 def _rows(contract, key):
