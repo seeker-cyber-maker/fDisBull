@@ -37,12 +37,6 @@ class WorkerError(Exception):
         self.code = code
 
 
-class StorageHeld(WorkerError):
-    def __init__(self, receipt: dict):
-        super().__init__("storage admission refused mirror growth", code=2)
-        self.receipt = receipt
-
-
 def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
@@ -108,16 +102,11 @@ class Git:
         self.env = _clean_git_env()
         self.config = config
 
-    def admit(self, phase: str) -> None:
-        if self.config is not None:
-            _admit_storage(self.config, self.deadline, phase)
-
     def run(self, *args: str, cwd: Path | None = None, check: bool = True,
             input_data: str | None = None) -> str:
         fetching = bool(args and args[0] == "fetch")
         if fetching:
-            self.admit("before-fetch")
-            # Keep admission scoped to the transfer, without an implicit repack.
+            # Avoid implicit maintenance during bounded transfers.
             args = ("-c", "gc.auto=0", "-c", "maintenance.auto=false",
                     "-c", "fetch.writeCommitGraph=false", *args)
         remaining = self.deadline - time.monotonic()
@@ -136,8 +125,6 @@ class Git:
         if check and result.returncode:
             # Do not retain or print remote stderr; it can contain transport details.
             raise WorkerError(f"git command failed ({args[0] if args else 'unknown'}, exit {result.returncode})")
-        if fetching:
-            self.admit("after-fetch")
         return result.stdout.strip()
 
 
@@ -152,9 +139,9 @@ def _load_config(path: Path) -> dict:
     cfg = _read_json(path)
     required = {
         "format", "git", "hub", "gitlab", "cache", "state_dir", "volumes",
-        "command_timeout_s", "run_timeout_s", "storage",
+        "command_timeout_s", "run_timeout_s",
     }
-    if set(cfg) - {"github"} != required or cfg.get("format") != SCHEMA:
+    if set(cfg) - {"github", "storage"} != required or cfg.get("format") != SCHEMA:
         raise WorkerError("config keys or schema do not match fdisbull-mirror-sync-1", code=2)
     for key in ("git", "hub", "cache", "state_dir"):
         if not isinstance(cfg[key], str) or not Path(cfg[key]).is_absolute():
@@ -182,20 +169,8 @@ def _load_config(path: Path) -> dict:
             raise WorkerError(f"{key} must be a positive integer", code=2)
     if cfg["command_timeout_s"] > 45 or cfg["run_timeout_s"] > 55:
         raise WorkerError("timeouts exceed the service bounds (45s command, 55s run)", code=2)
-    storage = cfg["storage"]
-    if not isinstance(storage, dict) or set(storage) != {
-            "python", "checker", "admission_script", "expected_bytes", "reserve_bytes"}:
-        raise WorkerError("storage admission configuration is required", code=2)
-    for name in ("python", "checker", "admission_script"):
-        if not isinstance(storage[name], str) or not Path(storage[name]).is_absolute():
-            raise WorkerError("storage admission paths must be absolute", code=2)
-        if not Path(storage[name]).is_file():
-            raise WorkerError("storage admission executable or script is unavailable", code=2)
-    for name in ("expected_bytes", "reserve_bytes"):
-        if type(storage[name]) is not int or not 0 < storage[name] <= 2**63 - 1:
-            raise WorkerError("storage admission byte bounds must be positive integers", code=2)
-    if storage["reserve_bytes"] < 40_000_000_000:
-        raise WorkerError("mirror growth requires the 40 GB destination reserve", code=2)
+    # Legacy storage fields are accepted for managed upgrades but never executed.
+    # Mounted volume identity remains mandatory and independent of free capacity.
     if "github" in cfg:
         peer = cfg["github"]
         if not isinstance(peer, dict) or set(peer) != {"url", "cache", "state_dir", "tag_exceptions"}:
@@ -236,67 +211,6 @@ def _github_config(cfg: dict) -> dict:
             "gitlab": peer["url"], "cache": peer["cache"],
             "state_dir": peer["state_dir"], "_peer_kind": "github",
             "_tag_exceptions": peer["tag_exceptions"]}
-
-
-def _admit_storage(cfg: dict, deadline: float, phase: str) -> None:
-    policy = cfg["storage"]
-    parent = Path(cfg["cache"]).parent
-    while not parent.exists() and parent != parent.parent:
-        parent = parent.parent
-    command = [policy["python"], policy["checker"],
-               "--admission-script", policy["admission_script"], "--path", str(parent),
-               "--hub", cfg["hub"], "--expected-bytes", str(policy["expected_bytes"]),
-               "--destination-reserve-bytes", str(policy["reserve_bytes"]),
-               "--timeout-seconds", "5"]
-    remaining = deadline - time.monotonic()
-    base = {"phase": phase, "expected_bytes": policy["expected_bytes"],
-            "reserve_bytes": policy["reserve_bytes"]}
-    if remaining <= 0:
-        raise StorageHeld(dict(base, reasons=["storage admission deadline expired"]))
-    try:
-        reply = subprocess.run(command, capture_output=True, text=True,
-                               timeout=min(8.0, remaining), check=False, env=_clean_git_env())
-        if len(reply.stdout) > 65536:
-            raise ValueError("oversized response")
-        receipt = json.loads(reply.stdout)
-        if (not isinstance(receipt, dict)
-                or receipt.get("format") != "fdisbull-mirror-storage-1"
-                or type(receipt.get("admitted")) is not bool
-                or receipt.get("expected_bytes") != policy["expected_bytes"]
-                or receipt.get("reserve_bytes") != policy["reserve_bytes"]
-                or receipt.get("cache_path") != str(parent.resolve())
-                or receipt.get("hub_path") != str(Path(cfg["hub"]).resolve())
-                or not isinstance(receipt.get("reasons"), list)
-                or any(not isinstance(reason, str) for reason in receipt["reasons"])):
-            raise ValueError("invalid response")
-        if receipt["admitted"]:
-            cache, hub = receipt.get("cache_receipt"), receipt.get("hub_receipt")
-            if (receipt["reasons"] or not isinstance(cache, dict) or not isinstance(hub, dict)
-                    or cache.get("admitted") is not True
-                    or cache.get("path") != str(parent.resolve())
-                    or cache.get("expected_bytes") != policy["expected_bytes"]
-                    or cache.get("destination_target_bytes") != policy["reserve_bytes"]):
-                raise ValueError("incoherent positive admission")
-            for key in ("destination_pool_free_bytes", "destination_minimum_bytes",
-                        "internal_free_bytes", "internal_minimum_bytes"):
-                if type(cache.get(key)) is not int or cache[key] < 0:
-                    raise ValueError("invalid cache capacity evidence")
-            for key in ("free_bytes", "after_expected_bytes", "reserve_bytes", "minimum_bytes"):
-                if type(hub.get(key)) is not int or hub[key] < 0:
-                    raise ValueError("invalid hub capacity evidence")
-            if (cache["destination_minimum_bytes"] < 20_000_000_000
-                    or cache["internal_minimum_bytes"] < 20_000_000_000
-                    or cache["internal_free_bytes"] < cache["internal_minimum_bytes"]
-                    or cache["destination_pool_free_bytes"] - policy["expected_bytes"] < policy["reserve_bytes"]
-                    or hub["reserve_bytes"] != policy["reserve_bytes"]
-                    or hub["minimum_bytes"] < 20_000_000_000
-                    or hub["after_expected_bytes"] != hub["free_bytes"] - policy["expected_bytes"]
-                    or hub["after_expected_bytes"] < policy["reserve_bytes"]):
-                raise ValueError("capacity evidence does not admit growth")
-    except (OSError, subprocess.TimeoutExpired, ValueError):
-        raise StorageHeld(dict(base, reasons=["storage admission unavailable or invalid"]))
-    if reply.returncode != 0 or not receipt["admitted"]:
-        raise StorageHeld(dict(base, admission=receipt))
 
 
 def _validate_volumes(cfg: dict, deadline: float) -> None:
@@ -668,7 +582,6 @@ def _sync_refs(git: Git, cfg: dict, state: dict, state_path: Path,
                 holds.append({"ref": ref, "reason": "hub-branch-checked-out"})
                 continue
         remote = "hub" if dst_side == "hub" else "gitlab"
-        git.admit("before-push-" + dst_side)
         creating = dst_oid is None
         if creating:
             _record_pending_create(state, dst_side, ref, src_oid)
@@ -814,7 +727,6 @@ def _run(cfg: dict, initialize: bool = False, *, deadline: float,
             fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return 3, {"status": "lock-busy", "at": _now()}
-        _admit_storage(cfg, deadline, "before-cache")
         cache, state_path = _ensure_cache(cfg, executable, initialize, deadline)
         git = Git(executable, cache, deadline, cfg["command_timeout_s"], cfg)
         run_id = uuid.uuid4().hex
@@ -965,13 +877,6 @@ def main(argv: list[str] | None = None) -> int:
             raise WorkerError("initialization modes are mutually exclusive", code=2)
         code, result = _run_topology(cfg, args.initialize, initialize_github=args.initialize_github,
                                      deadline=deadline)
-    except StorageHeld as exc:
-        result = {"status": "storage-held", "storage": exc.receipt, "at": _now()}
-        if cfg is not None:
-            safe_dir = _safe_existing_state_dir(cfg)
-            if safe_dir is not None:
-                _atomic_json(safe_dir / "status.json", result, create_parent=False)
-        code = exc.code
     except WorkerError as exc:
         result = {"status": "error", "error": str(exc), "at": _now()}
         if cfg is not None:

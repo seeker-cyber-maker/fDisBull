@@ -28,8 +28,7 @@ DEFAULT_CACHE = '/Volumes/CODEX/Codex_Projects/active/fDisBull-mirror-sync/trans
 DEFAULT_GITLAB = 'https://gitlab.com/brewster-jennings-group/fdisbull.git'
 DEFAULT_STORAGE_ADMISSION_SCRIPT = '/Users/tiga/.codex/bin/storage_admit.py'
 DEFAULT_STORAGE_EXPECTED_BYTES = 1_000_000_000
-DEFAULT_STORAGE_RESERVE_BYTES = 40_000_000_000
-MIN_STORAGE_RESERVE_BYTES = 40_000_000_000
+DEFAULT_STORAGE_RESERVE_BYTES = 0
 DEFAULT_VOLUMES = [('/Volumes/CODEX', '5DB767EC-4FB1-4B21-82B2-80B994B827E8'),
                    ('/Volumes/GitHub', '340727DA-0AC5-46F5-AD9B-29DB8CADD25A')]
 
@@ -184,14 +183,7 @@ def build_plan(args):
     python = absolute(args.python)
     worker_source = absolute(args.worker_source)
     checker_source = absolute(args.storage_checker_source)
-    admission_script = absolute(args.storage_admission_script)
     diskutil = absolute(args.diskutil)
-    if (type(args.storage_expected_bytes) is not int or args.storage_expected_bytes <= 0
-            or type(args.storage_reserve_bytes) is not int
-            or args.storage_reserve_bytes < MIN_STORAGE_RESERVE_BYTES):
-        raise ValueError('Storage estimate must be positive and reserve must be at least 40 GB')
-    if not admission_script.is_file():
-        raise ValueError('Storage admission script is not available: ' + str(admission_script))
     volumes = [parse_volume(value) for value in args.volume] if args.volume else [
         {'path': path, 'uuid': uuid} for path, uuid in DEFAULT_VOLUMES]
     if len({v['path'] for v in volumes}) != len(volumes):
@@ -228,10 +220,7 @@ def build_plan(args):
         raise ValueError('Existing post-receive hook is not an identical managed hook')
     payload = dict(format=FORMAT, git=str(git), hub=str(hub), gitlab=args.gitlab, cache=str(cache),
                    state_dir=str(state), volumes=volumes, command_timeout_s=45, run_timeout_s=55,
-                   storage=dict(python=str(python), checker=str(checker),
-                       admission_script=str(admission_script),
-                       expected_bytes=args.storage_expected_bytes,
-                       reserve_bytes=args.storage_reserve_bytes))
+                   storage=dict(mode='none'))
     remote = urlsplit(args.gitlab)
     if remote.hostname and (remote.hostname.lower() == 'github.com'
                             or remote.hostname.lower().endswith('.github.com')):
