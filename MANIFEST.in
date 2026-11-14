@@ -48,6 +48,7 @@ include tests/offline_win16_oracle.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
 include tests/fixtures/protected_mode_mouse.S
+recursive-include tests/fixtures *.S
 include tests/fixtures/kyra_debug_core.cpp
 include tests/fixtures/zcode_agent_driver.cpp
 include tests/ida_rpc_vectors.json
@@ -142,7 +143,7 @@ include docs/evidence/integration-025/zork.json
 include docs/evidence/integration-025/dinopark.json
 include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
-recursive-include scripts *.py *.c *.sh *.txt
+recursive-include scripts *.py *.c *.sh *.txt *.cjs
 include scripts/drive_sync_watcher.swift
 include scripts/ci/RECOVERY.md
 include scripts/ci/fdisbull-ci-production.service

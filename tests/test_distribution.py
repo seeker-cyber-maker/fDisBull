@@ -1565,3 +1565,11 @@ def test_source_package_requires_recovered_compiler_seams(tmp_path, resource):
     source_archive(archive, tuple(p for p in REQUIRED_SOURCE_FILES if p != missing))
     with pytest.raises(ValueError, match=re.escape(missing)):
         checker['check_archive'](archive)
+
+
+def test_tool_zip_selects_all_tracked_runtime_and_test_support():
+    root = Path(__file__).resolve().parents[1]
+    build = runpy.run_path(str(root / "scripts/build_release.py"))
+    gate = runpy.run_path(str(root / "scripts/check_package_payloads.py"))
+    selected = {path.relative_to(root).as_posix() for path in build["release_files"](root)}
+    assert set(gate["tracked_payload"](root)) <= selected
