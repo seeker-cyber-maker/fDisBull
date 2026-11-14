@@ -1,7 +1,9 @@
 """Authored fixtures; no commercial payloads or prior-run result inheritance."""
 from dataclasses import replace
 import io
+import hashlib
 import json
+import os
 from pathlib import Path
 import stat
 import struct
@@ -65,7 +67,8 @@ def test_zip_crc_and_size_budget(tmp_path):
     with pytest.raises(Exception):zip_payload(bytes(data),s,e,limit=100)
     p=tmp_path/'bad.zip';p.write_bytes(data);dest=tmp_path/'out'
     with pytest.raises(Exception):unpack_layers(p,dest)
-    assert not dest.exists() and p.read_bytes()==data
+    assert dest.is_dir() and p.read_bytes()==data
+    with pytest.raises(FileExistsError):unpack_layers(p,dest)
 
 
 def test_recursive_zip_provenance_and_no_overwrite(tmp_path):
@@ -83,9 +86,9 @@ def test_depth_and_global_limits(tmp_path):
     r=unpack_layers(p,tmp_path/'depth',recursive=True,limits=Limits(max_depth=0))
     assert not r['complete'] and r['layers'][-1]['status']=='depth-limit'
     with pytest.raises(ValueError,match='global'):unpack_layers(p,tmp_path/'count',recursive=True,limits=Limits(max_files=1))
-    assert not (tmp_path/'count').exists()
+    assert (tmp_path/'count').is_dir()
     with pytest.raises(ValueError):unpack_layers(p,tmp_path/'bytes',limits=Limits(max_total=1))
-    assert not (tmp_path/'bytes').exists()
+    assert (tmp_path/'bytes').is_dir()
 
 
 def test_prefix_collision_and_symlink_input(tmp_path):
@@ -241,3 +244,108 @@ def test_static_extraction_never_launches_a_process(tmp_path,monkeypatch):
     report=unpack_layers(p,tmp_path/'out',recursive=True)
     assert report['executes_targets'] is False
     assert report['layers'][-1]['status']=='opaque-executable'
+
+
+def test_failed_extraction_keeps_renamed_output_and_unrelated_replacement(tmp_path, monkeypatch):
+    import fdisbull.unpack as module
+    source = tmp_path/'authored.zip';source.write_bytes(archive([('payload.txt',b'authored')]))
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    output, parked = tmp_path/'output', tmp_path/'parked-owned'
+    def replace_then_fail(*args, **kwargs):
+        output.rename(parked)
+        output.mkdir()
+        (output/'unrelated.txt').write_bytes(b'must survive')
+        raise ValueError('authored extraction failure')
+    monkeypatch.setattr(module, 'zip_payload', replace_then_fail)
+    with pytest.raises(ValueError, match='authored extraction failure') as error:
+        unpack_layers(source, output)
+    assert error.value.partial_output['cleanup_performed'] is False
+    assert error.value.partial_output['requested_path'] == str(output)
+    assert parked.is_dir() and (parked/'layer-0000').is_dir()
+    assert (output/'unrelated.txt').read_bytes() == b'must survive'
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
+    with pytest.raises(FileExistsError):unpack_layers(source, output)
+
+
+def test_extraction_cli_reports_retained_partial_output(tmp_path, monkeypatch, capsys):
+    import sys
+    import fdisbull.unpack as module
+    source = tmp_path/'authored.zip';source.write_bytes(archive([('payload.txt',b'authored')]))
+    output = tmp_path/'output'
+    monkeypatch.setattr(sys, 'argv', ['fdisbull-unpack', 'extract', str(source), str(output), '--max-total', '1'])
+    assert module.main() == 2
+    report = json.loads(capsys.readouterr().out)
+    assert report['status'] == 'refused'
+    assert report['partial_output']['requested_path'] == str(output)
+    assert report['partial_output']['cleanup_performed'] is False and output.is_dir()
+
+
+@pytest.mark.skipif(os.open not in os.supports_dir_fd, reason='owned probe output requires directory handles')
+def test_probe_report_cannot_follow_a_link_to_original_input(tmp_path, monkeypatch):
+    import fdisbull.installer_probe as module
+    source = tmp_path/'AUTH.COM';source.write_bytes(b'\xc3')
+    backend = tmp_path/'BACKEND';backend.write_bytes(b'authored inert placeholder')
+    output = tmp_path/'output'
+    def startup_failure(*args, **kwargs):
+        (output/'probe.json').symlink_to(source)
+        raise ValueError('authored startup failure; no process started')
+    monkeypatch.setattr(module, 'DOSBoxRPC', startup_failure)
+    report = module.probe_installer(source, output, executable=backend, max_fetches=1)
+    assert report['status'] == 'incomplete' and report['originals_unchanged'] is True
+    assert report['report_write_error'].startswith('FileExistsError:')
+    assert source.read_bytes() == b'\xc3' and (output/'probe.json').is_symlink()
+    with pytest.raises(FileExistsError):
+        module.probe_installer(source, output, executable=backend, max_fetches=1)
+
+
+@pytest.mark.skipif(os.open not in os.supports_dir_fd, reason='owned probe output requires directory handles')
+def test_probe_report_stays_with_owned_directory_after_rename(tmp_path, monkeypatch):
+    import fdisbull.installer_probe as module
+    source = tmp_path/'AUTH.COM';source.write_bytes(b'\xc3')
+    backend = tmp_path/'BACKEND';backend.write_bytes(b'authored inert placeholder')
+    output, parked = tmp_path/'output', tmp_path/'parked-owned'
+    def startup_failure(*args, **kwargs):
+        output.rename(parked)
+        output.mkdir()
+        (output/'unrelated.txt').write_bytes(b'must survive')
+        raise ValueError('authored startup failure; no process started')
+    monkeypatch.setattr(module, 'DOSBoxRPC', startup_failure)
+    report = module.probe_installer(source, output, executable=backend, max_fetches=1)
+    assert report['status'] == 'incomplete' and report['originals_unchanged'] is True
+    assert json.loads((parked/'probe.json').read_text()) == report
+    assert (output/'unrelated.txt').read_bytes() == b'must survive'
+    assert not (output/'probe.json').exists() and source.read_bytes() == b'\xc3'
+
+
+@pytest.mark.parametrize('name', ['probe.json', 'conventional-memory.bin'])
+@pytest.mark.parametrize('link', [False, True])
+@pytest.mark.skipif(os.open not in os.supports_dir_fd, reason='owned probe output requires directory handles')
+def test_probe_artifact_creation_preserves_existing_file_or_link(tmp_path, name, link):
+    import os
+    from fdisbull.installer_probe import _write_owned_artifact
+    output = tmp_path/'output';output.mkdir()
+    original = tmp_path/'original';original.write_bytes(b'unchanged original')
+    selected = output/name
+    if link:selected.symlink_to(original)
+    else:selected.write_bytes(b'preexisting artifact')
+    fd = os.open(output, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+    try:
+        with pytest.raises(FileExistsError):
+            _write_owned_artifact(fd, name, b'must not replace')
+    finally:os.close(fd)
+    assert original.read_bytes() == b'unchanged original'
+    assert selected.is_symlink() if link else selected.read_bytes() == b'preexisting artifact'
+
+
+def test_probe_refuses_before_output_or_launch_without_owned_directory_operations(tmp_path, monkeypatch):
+    import fdisbull.installer_probe as module
+    source = tmp_path/'AUTH.COM';source.write_bytes(b'\xc3')
+    backend = tmp_path/'BACKEND';backend.write_bytes(b'authored inert placeholder')
+    output = tmp_path/'output'
+    def forbidden(*args, **kwargs):
+        raise AssertionError('unsupported output platform must not launch a backend')
+    monkeypatch.setattr(module, 'DOSBoxRPC', forbidden)
+    monkeypatch.setattr(module.os, 'supports_dir_fd', set())
+    with pytest.raises(ValueError, match='output handles are unavailable'):
+        module.probe_installer(source, output, executable=backend, max_fetches=1)
+    assert not output.exists() and source.read_bytes() == b'\xc3'

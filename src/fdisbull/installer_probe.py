@@ -10,6 +10,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -122,13 +123,23 @@ class TraceObserver:
                 'generic_unpacking':'changed-code capture, not a universal runnable EXE rebuilder'}
 
 
+def _write_owned_artifact(directory_fd, name, payload):
+    """Create one artifact in the pinned output directory, never follow links."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0)
+    fd = os.open(name, flags, 0o600, dir_fd=directory_fd)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(payload)
+
+
 def probe_installer(path,output, *, executable,arguments=(),companions=(),
                     max_fetches=50000,timeout_seconds=60,stop_offset=None,fast_forward=False):
     """Run only the explicit target in a throwaway, bounded emulated environment.
 
     Output includes private conventional-memory captures. Do not publish them.
     No target-supplied autoexec/config is admitted. Unknown emulator failures are
-    not automatically retried. Cancellation closes the owned backend.
+    not automatically retried. Cancellation closes the owned backend. Artifact
+    writes stay with the opened output directory if it is renamed, refuse
+    existing files/links, and retain partial output after failure.
     """
     if type(fast_forward) is not bool:
         raise ValueError('fast_forward must be boolean')
@@ -154,9 +165,14 @@ def probe_installer(path,output, *, executable,arguments=(),companions=(),
     image=target.read_bytes();m=mz_info(image) if image[:2]==b'MZ' else None
     if m is None and (target.suffix.lower()!='.com' or len(image)>65280):
         raise ValueError('admit DOS MZ or bounded COM only')
+    backend_sha256 = hash_file(exe)
+    if os.open not in os.supports_dir_fd:
+        raise ValueError('Owned probe output handles are unavailable on this platform')
     output.mkdir(mode=0o700)
+    output_fd = os.open(output, os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0)
+                        | getattr(os, 'O_NOFOLLOW', 0))
     report={'format':'fdisbull-installer-probe-1','status':'not_started','source_files':identities,
-            'backend_sha256':hash_file(exe),'executes_target':True,
+            'backend_sha256':backend_sha256,'executes_target':True,
             'environment':'owned headless DOSBox, scratch C drive only; emulated hardware, not host inventory',
             'limits':{'max_fetches':max_fetches,'host_seconds':timeout_seconds},'fast_forward_requested':fast_forward,
             'original_entry_established':False,'rebuilt_runnable_executable':False}
@@ -227,7 +243,7 @@ def probe_installer(path,output, *, executable,arguments=(),companions=(),
             # Capture at the actual stopped boundary, not at a past candidate PC.
             if report['status']!='guest_exit':
                 capture=memory();report['final_registers']=call('state.get_registers')
-                (output/'conventional-memory.bin').write_bytes(capture)
+                _write_owned_artifact(output_fd, 'conventional-memory.bin', capture)
                 report['capture_sha256']=hashlib.sha256(capture).hexdigest()
                 report['changed_memory_bytes']=sum(a!=b for a,b in zip(baseline,capture))
                 report['capture_scope']='stopped-boundary RAM, includes stack/data/unpacker; not an unrelocated EXE'
@@ -236,14 +252,22 @@ def probe_installer(path,output, *, executable,arguments=(),companions=(),
     except (ValueError,OSError,TimeoutError,KeyError) as exc:
         report.update(status='incomplete',error=f'{type(exc).__name__}: {exc}')
     finally:
-        if observer is not None:report.update(observer.report())
-        if rpc is not None:
-            process=rpc.process;rpc.close()
-            report['owned_process_reaped']=process.poll() is not None
-        report['host_elapsed_seconds']=round(time.monotonic()-started,3)
-        report['originals_unchanged']=all(i['identity']==file_identity(p) and i['sha256']==hash_file(p)
-            for p,i in zip(sources,identities))
-        (output/'probe.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
+        try:
+            if observer is not None:report.update(observer.report())
+            if rpc is not None:
+                process=rpc.process;rpc.close()
+                report['owned_process_reaped']=process.poll() is not None
+            report['host_elapsed_seconds']=round(time.monotonic()-started,3)
+            report['originals_unchanged']=all(i['identity']==file_identity(p) and i['sha256']==hash_file(p)
+                for p,i in zip(sources,identities))
+            try:
+                _write_owned_artifact(output_fd, 'probe.json',
+                    (json.dumps(report,indent=2,allow_nan=False)+'\n').encode('utf-8'))
+            except OSError as error:
+                report.update(status='incomplete',
+                    report_write_error=f'{type(error).__name__}: probe report was not overwritten')
+        finally:
+            os.close(output_fd)
     return report
 
 
