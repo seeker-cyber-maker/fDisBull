@@ -37,6 +37,7 @@ MAX_INPUT=32*1024*1024
 MAX_OUTPUT=2*1024*1024
 MAX_RETAINED=64*1024*1024
 MAX_SECONDS=600
+HANDSHAKE_INTERVAL=1.0
 LOST_POST_REQUEST_ID='0316a157f2ec4a0b8985b67fdd9c3052a0fcc5cc501d8fcae97dbd9e9a3d6be8'
 LOST_POST_ACTION_KEY='3c39f4ca9987e2166bebe419f28d979ae9e73ae19a3d01310b7ebbc7c0ef97ad:2:retry_job'
 LOST_POST_ACTION_SHA256='48fe4c15922543bba43ba14d48c145730817158cb720dd19f29f6424cfb158d4'
@@ -240,11 +241,14 @@ def credential_availability(*,runner=None,timeout=15,activation_check=None):
 
 
 class GuiSpool:
-    def __init__(self,spool=SPOOL,anchor=ANCHOR,*,mount=None,clock=time.time,kick=None,runner=None,activation=None,probe=None,gui_check=None):
+    def __init__(self,spool=SPOOL,anchor=ANCHOR,*,mount=None,clock=time.time,kick=None,runner=None,activation=None,probe=None,gui_check=None,
+                 handshake_seconds=10,monotonic=time.monotonic,sleep=time.sleep):
         self.spool=Path(spool);self.anchor=Path(anchor);self.mount=mount or _mount;self.clock=clock
         self.kick=kick or self._kick;self.runner=runner or _child
         self.activation=activation or _activation;self.probe=probe or credential_availability
         self.gui_check=gui_check or _aqua_session
+        if type(handshake_seconds) not in (int,float) or not 0<=handshake_seconds<=10:raise ValueError('invalid handshake bound')
+        self.handshake_seconds=handshake_seconds;self.monotonic=monotonic;self.sleep=sleep
 
     def _check(self):
         if not self.mount(self.spool,self.anchor):raise RuntimeError('CACHE mount unavailable')
@@ -342,10 +346,39 @@ class GuiSpool:
         _replace(self.anchor,_bytes({'installation_id':INSTALLATION_ID,'sequence':history['sequence'],'history_sha256':_digest(data)}))
         self._check()
 
-    def _kick(self):
-        result=subprocess.run(['/bin/launchctl','kickstart','gui/501/'+LABEL],capture_output=True,timeout=15,check=False)
+    def _kick(self,timeout=15):
+        result=subprocess.run(['/bin/launchctl','kickstart','gui/501/'+LABEL],capture_output=True,timeout=timeout,check=False)
         if result.returncode!=0 or len(result.stdout)>65536 or len(result.stderr)>65536:
             raise RuntimeError('kickstart outcome unknown')
+
+    def _expire_submitted(self,history,key,entry):
+        # Caller holds the lane lock; no worker has crossed the started marker.
+        done={'status':'expired','request_id':key};data=_bytes(done)
+        _exclusive(self.spool/(key+'.done'),data);entry.update(phase='expired',done_sha256=_digest(data))
+        history['sequence']+=1;self._save(history)
+        return done
+
+    def _start_handshake(self,key):
+        # A prior launchd worker may still be exiting after publishing its
+        # result. Wake the *same unstarted request* while time remains; never
+        # kill a worker or reissue a provider operation. A failed/ambiguous kick
+        # exits immediately, and every kick follows a successful predecessor.
+        deadline=self.monotonic()+self.handshake_seconds
+        while self.monotonic()<deadline:
+            self.sleep(min(HANDSHAKE_INTERVAL,max(0,deadline-self.monotonic())))
+            with self._locked():
+                history=self._check();entry=history['requests'].get(key)
+                if not isinstance(entry,dict):raise RuntimeError('submitted request unavailable')
+                if entry.get('phase')!='submitted':return
+                doc=json.loads(_read(self.spool/(key+'.request'),MAX_INPUT))
+                if self.clock()>=doc['expires_epoch']:
+                    self._expire_submitted(history,key,entry);return
+                remaining=deadline-self.monotonic()
+                if remaining<=0:return
+                # Keep the lock across the non-destructive kick so no child can
+                # cross the durable start boundary between the check and wake.
+                if self.kick==self._kick:self.kick(timeout=min(2,remaining))
+                else:self.kick()  # injectable test kick
 
     def submit(self,kind,document,expires_epoch,nonce):
         if kind not in self.activation().get('allowed_kinds',[]):raise RuntimeError('GUI kind not approved')
@@ -367,9 +400,11 @@ class GuiSpool:
             _exclusive(self.spool/(request_id+'.request'),content)
             history['requests'][request_id]={'phase':'submitted','request_sha256':_digest(content)}
             history['sequence']+=1;self._save(history)
-        # Never repeat kickstart after an ambiguous response. The request remains
-        # submitted even if launchctl raises or the caller disconnects.
-        try:self.kick()
+        # Only successful kicks may be followed by a bounded wake handshake.
+        # An ambiguous kick returns unknown without any further kick.
+        try:
+            self.kick()
+            self._start_handshake(request_id)
         except Exception:return {'status':'unknown','request_id':request_id}
         return {'status':'pending','request_id':request_id}
 
@@ -379,7 +414,10 @@ class GuiSpool:
             history=self._check();item=history['requests'].get(request_id)
             if item is None:return {'status':'missing'}
             if item['phase'] in ('started','reconciled-read'):return {'status':'unknown','request_id':request_id}
-            if item['phase']=='submitted':return {'status':'pending','request_id':request_id}
+            if item['phase']=='submitted':
+                doc=json.loads(_read(self.spool/(request_id+'.request'),MAX_INPUT))
+                if self.clock()>=doc['expires_epoch']:return self._expire_submitted(history,request_id,item)
+                return {'status':'pending','request_id':request_id}
             return json.loads(_read(self.spool/(request_id+'.done'),MAX_OUTPUT))
 
     def reconcile_expired_read(self,receipt_path,receipt_sha256):
@@ -587,9 +625,7 @@ class GuiSpool:
             _request(doc['kind'],doc['request'])
             if doc['kind'] not in self.activation().get('allowed_kinds',[]):raise RuntimeError('GUI kind not approved')
             if self.clock()>=doc['expires_epoch']:
-                done={'status':'expired','request_id':key};data=_bytes(done)
-                _exclusive(self.spool/(key+'.done'),data);entry.update(phase='expired',done_sha256=_digest(data))
-                history['sequence']+=1;self._save(history);return done
+                return self._expire_submitted(history,key,entry)
             _exclusive(self.spool/(key+'.started'),_bytes({'request_id':key,'request_sha256':entry['request_sha256']}))
             entry['phase']='started';history['sequence']+=1;self._save(history)
         # Child input is the exact validated request only, never a shell command.
