@@ -4,7 +4,7 @@ The user has authorized integrating all unique eligible work. The finite
 [historical audit](SOURCE_CONSOLIDATION_AUDIT_0.35.md) is complete. Its initial 44 unique
 tip rows overlapped and were deduplicated into the capability groups below, not
 44 releases. All recovered groups now have source implementations in integration
-`27838f79`; that does not freeze or qualify the release candidate. New active
+`9f91a90c`; that does not freeze or qualify the release candidate. New active
 feature work is outside this finite recovery set. Private games, saves, states,
 FDBs and original-byte assets remain excluded; historical reports and proposals retain their original scope.
 
@@ -19,9 +19,11 @@ FDBs and original-byte assets remain excluded; historical reports and proposals 
 | Civ variants, arithmetic and source-bound examples | `0eaf75d1`, `1f8d2636`, `6b44cb06`, `9a16c5ec`, `cb976470` | Included through `b86f1d2f`/`b1c21ed5`, with overlapping histories deduplicated and newer signed ABI/IL-v2/table behavior retained. Private images, states and original-byte atlases remain excluded. |
 | LLVM scalar, optional ASM-to-C, influence, CHIP-8/SNES slices and Colonization helpers | `02eb26f4`, `fcef2877`, `9df57f8f`, `3e437a9e`, `3e5900ee`, `3136d2fa` | Included through the same UDC integration with bounded emitter/adapter/example contracts and authored source checks. See [UDC scope](RECOVERED_UDC_ADAPTERS_0.35.md); optional tool invocation and native/runtime acceptance are separate. |
 | DOSBox lifecycle, owned shutdown, RPC tracking, fuzzing, friction, crash recovery and RTLink launch profiles | `1e3c1ca8`, `1e837a20`, `e2f6b2d3`, `bc1bcee6`, `d2d78717`, `d87ae33e`, `e795a9ff`, remaining `35f7dffb` hooks | Tools contribution `e78ac8dc` merged at `f14bbc22`, retaining bounded diagnostics, truthful shutdown receipts, owned debugger cleanup and current launch contracts. The recorded pure/source selection passed 336 tests with six native-input skips; no backend launch or service activation follows from that port. |
-| Drive library sync and FDB backup | `b3f9dead` | Included with tools; `b5bdde1d` and `170aa463` are integrated through `27838f79`. Pinned source selections, bound retry/completion receipts and manifest-checked staging have 57 focused authored Drive/backup passes on the contribution tree. Legacy unbound proofs recapture once while prior copies remain preserved. The final SQLite source-preservation followup below is still open. |
+| Drive library sync and FDB backup | `b3f9dead` | Included with tools; `b5bdde1d` and `170aa463` are integrated through `27838f79`. Legacy unbound proofs recapture once while prior copies remain preserved. Final preservation contribution `3efac6a6` merged at `7f39932d`, with measured-host portability tests `01d32fb2` included as `9f91a90c`. Actual main/WAL identities, private descriptor aliases and held manifest publication were independently reviewed; see [descriptor binding](FDB_BACKUP_DESCRIPTOR_BINDING.md) and the measured host boundary below. |
 | Historical guides, reports and proposals | `09ab554c`, `22903caf`, `46f95e96`, `464bdc5c`, `5d9118ae`, `641b7e95`, `874f0a8b`, `b57f51d5`, `ae39d078`, `cbeb6ce6`, `da5f55a0`, `f8a70aad` | Sanitized and reconciled through `e78ac8dc`/`f14bbc22`. Dated observations and design proposals remain historical; importing them does not establish current runtime qualification or implement every proposal. See [tools mapping](RECOVERED_TOOLS_035_INTEGRATION.md). |
 | Deliberate GitLab web/API behavior after skip markers | branch-tree intent at `263cfcca` | n8n owner correction `be68826e` is integrated: global disable has priority, only web/API admits, pushes/MRs/tags never admit, and native blocking gates plus `ci.skip` mirrors remain. The historical tip itself added zlib headers; the behavior comes from the reviewed tree and owner correction. |
+| Complete tracked source-package inventory | `4f90c55e` | Tool-ZIP/sdist patterns now include the 22 missing eligible tracked files: 15 CommonJS helpers, the Swift watcher and six authored assembly fixtures. A full tracked-inventory regression is included. Preliminary four-artifact tool-only/exact-payload checks passed 734 checks; the final composite artifacts still need rebuilding. |
+| Bounded selective QEMU guide replies | `f02c4ba3` | Split the input/display material into a linked selective reference, preserving all content and the existing 64 KiB reply cap. Focused guide/reply checks passed 82 tests with five optional-input skips; this is not QEMU runtime acceptance. |
 | Recoverable installer and exact selector restoration | owner installer line through `736cb7c6` | Integrated at `4684a8dc`, alongside the owner CI correction; 88 fresh focused checks on that root covered installer/CI recovery. This supplies installation behavior, not evidence of a new installation or final package acceptance. |
 
 Endpoint authentication/checkpoint selector fixes (`dd7c43a4`/`ed4750a7`) are
@@ -36,17 +38,29 @@ are implemented in the combined source. Draft [GitHub PR #87](https://github.com
 remains the review vehicle. Group-specific checks above evaluate their recorded
 source revisions; they are not final combined-SHA acceptance or a progress score.
 
-One source-preservation followup remains under review in `scripts/fdb_backup.py`:
-bind SQLite's actual main-file descriptor across a regular-file A→B→A swap,
-hold the manifest inode/hash proof, and retain private stages instead of
-pathname check/unlink cleanup. This is a bounded correction to the implemented
-backup group, not an unimplemented recovered capability.
+The final FDB source-preservation correction is integrated at `7f39932d`.
+Independent authored macOS checks cover actual SQLite main/WAL descriptor
+admission, held source transactions, immutable read-only alias preflight before
+writable destination access, immutable completed snapshot scans, exclusive held
+manifest inode/hash proof and retention of stages without pathname cleanup.
+Portability tests measure alias support instead of assuming it: the observed
+Linux SQLite 3.45.1 canonicalizes aliases and is refused before writable SQLite
+access. The latest owner component selection recorded 82 passes and two
+expected host-case skips; skips do not establish successful backup support. This
+is measured macOS acceptance, not general Linux/Windows backup support. SHM
+reader marks are recomputable cache metadata; main/WAL content preservation does not claim byte-identical SHM. See the [binding contract](FDB_BACKUP_DESCRIPTOR_BINDING.md).
 
-Final combined source and package checks also remain pending. The package pass
-includes correcting the tool-ZIP/sdist inventory for 22 eligible tracked files
-(15 CommonJS scripts, the Swift watcher and six authored assembly fixtures),
-then checking the complete tracked inventory. The source is not frozen until
-the preservation followup and those combined/package checks are complete.
+The package-inventory correction `4f90c55e` is also integrated. Preliminary
+four-artifact tool-only/exact-payload checks passed 734 checks; final combined
+source/package checks and a composite artifact rebuild remain pending.
+
+The remaining implementation gate is n8n's strict installer-input route for
+`iced-x86` 1.21.0: the official distribution has no Darwin arm64 wheel. The route
+must retain official source-distribution provenance and the source-built wheel's
+identity. Wait for that
+owner component to finish and integrate, then rebuild/check the final composite,
+freeze one source SHA and hand it off. This is a concrete delivery dependency,
+not an unimplemented recovered group or a new generic permission gate.
 
 After that freeze, hand n8n one clean primary-GitHub 0.35.0 ref/full SHA.
 Exact-SHA ordinary/native Linux CI, backend/runtime acceptance, complete offline

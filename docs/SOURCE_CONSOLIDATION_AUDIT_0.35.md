@@ -26,7 +26,7 @@ activation proposals remain preserved without being merged into the release.
 ## Current integration disposition
 
 All deduplicated recovered groups now have source implementations through
-integration `27838f79`. The initial counts above remain unchanged as historical
+integration `9f91a90c`. The initial counts above remain unchanged as historical
 classification; the 44 rows below are not 44 still-open adaptations.
 
 | Recovered group | Integrated source and followup |
@@ -35,13 +35,17 @@ classification; the 44 rows below are not 44 still-open adaptations.
 | Media/intake/installer profiles | `e06b5d66` merged at `39514391`; preservation fix `bf46036a` included |
 | UDC/compiler/backing/example adapters | `b86f1d2f` merged at `b1c21ed5`; final emitted-data receipt fix `6dafd643` included as `57e97691` |
 | Tools, bounded lifecycle/fuzzing/friction/RTLink and sanitized historical guidance | `e78ac8dc` merged at `f14bbc22` |
-| Drive source-selection and FDB admission/staging corrections | `b5bdde1d` and `170aa463`, integrated through `27838f79` |
+| Drive source-selection and FDB admission/staging corrections | `b5bdde1d` and `170aa463` through `27838f79`; final main/WAL/manifest preservation `3efac6a6` merged at `7f39932d`, with host-measured portability tests at `9f91a90c` |
+| Complete tracked source-package inventory | `4f90c55e` closes the 22 eligible tracked-file omissions; preliminary four-artifact checks passed 734 tests, with final composite rebuild pending |
+| Selective QEMU guide reply budget | `f02c4ba3` preserves content in linked references and the existing 64 KiB cap; 82 focused passes and five optional-input skips |
 | n8n owner CI policy and recoverable installer/selector corrections | `be68826e` and installer line through `736cb7c6`, included through `4684a8dc`; 88 fresh focused root checks |
 
 See the [current capability mapping](RECOVERED_CAPABILITY_INTEGRATION_0.35.md)
-for source-bound checks and limitations. One final FDB source-preservation
-followup remains under review, followed by final combined/package checks; the
-candidate is not frozen. Exact-SHA CI/native/offline acceptance, release and
+for source-bound checks and limitations. Final FDB preservation is integrated
+and independently checked on authored macOS fixtures; [descriptor binding](FDB_BACKUP_DESCRIPTOR_BINDING.md)
+explicitly records measured Linux SQLite refusal and the SHM-cache caveat. The
+Darwin arm64 dependency-input component and final composite checks remain open;
+the candidate is not frozen. Exact-SHA CI/native/offline acceptance, release and
 installation remain separate gates. Existing draft GitHub PR #87 is retained.
 
 ## Initial unique-source findings (historical)
@@ -103,13 +107,15 @@ and OIDs remain preserved.
 
 The integrate-all authorization has been applied to the eligible recovered
 source groups. No additional generic scope or permission decision is required.
-The one source-preservation followup in `scripts/fdb_backup.py` still needs
-review/integration: actual SQLite main-file descriptor admission across a
-regular-file A→B→A swap, held manifest inode/hash proof, and retained private
-stages instead of pathname check/unlink cleanup. Final combined source/package
-checks also remain pending, including correction and full regression of the
-eligible tool-ZIP/sdist inventory. These are the remaining source-freeze gates,
-not 44 missing recovered implementations.
+Final FDB preservation is integrated through `7f39932d` and the 22-file package
+inventory correction through `4f90c55e`. The remaining code gate is n8n's strict
+`iced-x86` 1.21.0 installer-input route: official source-distribution provenance
+plus an identified source-built wheel for Darwin arm64, for which no official
+wheel is supplied. Finish/integrate that owner component, then rebuild and check
+the final composite artifacts before source freeze and handoff. Preliminary
+four-artifact tool-only/exact-payload checks passed 734 tests; they are not the
+final rebuild or exact-candidate qualification. These are concrete delivery
+steps, not 44 missing recovered implementations.
 
 The endpoint-authentication/checkpoint-selector contribution `dd7c43a4` is
 included through integration merge `2ca96ea7`; its focused checks passed with

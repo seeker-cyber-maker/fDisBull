@@ -11,8 +11,22 @@ open gates. No 0.35.0 tag, publication or installation is established by this en
 
 The integration branch is `codex/release-0.35.0-integration-20261114`. The [contribution disposition](CONTRIBUTION_DISPOSITION_0.35.md) records included,
 equivalent and preserved/open work. The [historical audit](SOURCE_CONSOLIDATION_AUDIT_0.35.md)
-is complete; required unique adaptations must close before candidate freeze. n8n's existing control
-state owns the current release record; its canonical record link is not yet supplied.
+is complete and all recovered source groups are implemented through `9f91a90c`.
+Final FDB preservation is integrated (`3efac6a6` / `7f39932d`) with independently
+checked macOS main/WAL and manifest preservation; [its host contract](FDB_BACKUP_DESCRIPTOR_BINDING.md)
+records deliberate measured Linux SQLite refusal and the SHM-cache caveat.
+The 22-file source-package inventory correction `4f90c55e` and selective QEMU
+guide budget correction `f02c4ba3` are included. Preliminary four-artifact
+tool-only/exact-payload checks passed 734 tests; a final composite rebuild is
+still pending.
+
+The remaining code gate is n8n's strict official-sdist/source-built-wheel
+installer-input route for `iced-x86` 1.21.0, which has no official Darwin arm64
+wheel. Finish and integrate that component with source/wheel provenance, then
+perform final combined/package checks, freeze one source SHA and hand it off.
+Exact-candidate ordinary/native/offline qualification, publication and fresh
+shared installation remain separate pending gates. n8n's existing control state
+owns the release record; its canonical record link is not yet supplied.
 Historical records below retain their original dates and provider scope.
 
 Current local identity must be checked independently: on 2026-11-14 both supported
