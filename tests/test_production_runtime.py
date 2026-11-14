@@ -2,7 +2,9 @@ import base64
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
+import sqlite3
 import sys
 import time
 from types import SimpleNamespace
@@ -24,6 +26,266 @@ def hashes():
         if name=='ci_status.py' and not path.exists():path=SCRIPTS.parent/name
         result[name]=hashlib.sha256(path.read_bytes()).hexdigest()
     return result
+
+
+class AttentionJournal:
+    """Isolated native-protocol fixture; it never calls a sender or live journal."""
+    def __init__(self,path,incident):
+        self.db=sqlite3.connect(path);self.db.execute('CREATE TABLE events (id TEXT PRIMARY KEY, payload BLOB)')
+        self.incident=incident;self.payloads=[];self.lose_first_ack=False
+
+    def __call__(self,argv,**kwargs):
+        assert argv[-2:]==['/usr/local/libexec/ci_incident.py','append']
+        payload=kwargs['input'];self.payloads.append(payload);event=json.loads(payload)
+        assert set(event)=={'dedupe_key','phase','reason','test','context'}
+        assert event['dedupe_key']=='controller-attention:'+self.incident.name
+        assert event['phase']=='attention' and event['reason']=='ci_executor_unavailable'
+        assert set(event['context'])=={'provider','project','run_id','job_id','commit_sha','job_name','receipt_path'}
+        assert event['context']['receipt_path']==str(self.incident/'controller-attention-state.json')
+        native_id='ci_'+hashlib.sha256(event['dedupe_key'].encode()).hexdigest()[:40]
+        event_id='conn_'+native_id+'_attention'
+        old=self.db.execute('SELECT payload FROM events WHERE id=?',(event_id,)).fetchone()
+        if old:assert old[0]==payload
+        else:self.db.execute('INSERT INTO events VALUES (?,?)',(event_id,payload));self.db.commit()
+        if self.lose_first_ack and len(self.payloads)==1:
+            return SimpleNamespace(returncode=1,stdout=b'')
+        return SimpleNamespace(returncode=0,stdout=json.dumps({'stage':'journaled','event_id':event_id,
+            'incident_id':native_id,'phase':'attention','already_present':old is not None,
+            'delivery_status':'not_observed_here','execution_performed':False}).encode())
+
+
+@pytest.fixture
+def controller_attention(tmp_path,monkeypatch):
+    recovery=tmp_path/'recovery';recovery.mkdir(mode=0o700)
+    root=recovery/'production';root.mkdir(mode=0o700)
+    incidents=root/'incidents';incidents.mkdir(mode=0o700)
+    key='d'*64;incident=incidents/key;incident.mkdir(mode=0o700)
+    export=tmp_path/'results';export.mkdir();lock=tmp_path/'executor.lock';lock.touch()
+    monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
+            'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
+    manifest={'incident_id':key,'project':r.REPO,'initial_target':target,'required_artifacts':sorted(r.evidence_module.ORDINARY),
+              'deadline_epoch':time.time()+600,'max_infrastructure_repairs':1,'max_source_repairs':1}
+    state={'manifest':manifest,'target':dict(target),'status':'attention','phase':'attention',
+           'reason':'observation-unknown-or-mismatch','observations':[],'evidence':[],'actions':[],
+           'classifications':[],'health':[],'counts':{'infrastructure':0,'source':0},'notifications':[]}
+    calls=[]
+    def forbidden(*args,**kwargs):
+        calls.append('external/work');pytest.fail('notification must not call provider, health, model, job or repair')
+    sentinel=SimpleNamespace(reserve=forbidden,request=forbidden,for_action=forbidden,prepare=forbidden,repair=forbidden)
+    config={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),
+            'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
+                      'control_sha':target['control_sha'],'ref':target['ref'],'profile':'ordinary','sole_executor_authority':True,
+                      'export_root':str(export)},'module_sha256':hashes(),'incident_test':True,'max_incident_seconds':600}
+    journal=AttentionJournal(tmp_path/'journal.sqlite',incident)
+    runtime=r.Runtime(config,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,
+        lease_check=lambda:True,transport_factory=lambda provider:sentinel,source_transport=sentinel,
+        host_factory=forbidden,health_capture=forbidden,incident_runner=journal)
+    def save(value):r.control_module.write_json(incident/'state.json',value)
+    r.control_module.write_json(incident/'manifest.json',manifest,exclusive=True);save(state)
+    yield SimpleNamespace(runtime=runtime,key=key,incident=incident,state=state,manifest=manifest,save=save,
+                          journal=journal,calls=calls,forbidden=forbidden)
+    journal.db.close()
+
+
+def test_first_observation_unknown_journals_only_controller_attention(controller_attention):
+    f=controller_attention;state=json.loads(json.dumps(f.state));state['status']='pending';state['phase']='observe';state.pop('reason')
+    f.save(state);observed=[]
+    def unknown(target):observed.append(target);raise RuntimeError('canonical observation unavailable')
+    backend=SimpleNamespace(observe=unknown,emit=lambda phase,current:f.runtime._emit(f.key,phase,current),
+                            health=f.forbidden,perform=f.forbidden,classify=f.forbidden,retain=f.forbidden)
+    controller=r.control_module.RecoveryController(f.incident/'state.json',f.manifest,backend)
+    f.runtime._cleanup_unknown=True  # Notification-only guards do not operate an uncertain worker.
+    final=controller.step()
+    assert len(observed)==1 and final['reason']=='observation-unknown-or-mismatch'
+    assert [n['phase'] for n in final['notifications']]==['attention']
+    assert final['notifications'][0]['journal_receipt']['stage']=='journaled'
+    assert controller.step()==final and len(observed)==1
+    assert f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert [json.loads(p)['phase'] for p in f.journal.payloads]==['attention']
+    event=json.loads(f.journal.payloads[0]);assert event['test'] is True
+    assert event['context']['commit_sha']==f.state['target']['source_sha'] and not f.calls
+    snapshot=json.loads((f.incident/'controller-attention-state.json').read_text())
+    assert snapshot['notifications']==[] and snapshot['observations']==snapshot['evidence']==snapshot['actions']==[]
+
+
+def test_controller_attention_reentry_latches_original_bytes_and_event(controller_attention):
+    f=controller_attention;receipt=f.runtime._emit(f.key,'attention',f.state)
+    snapshot=f.incident/'controller-attention-state.json';original=snapshot.read_bytes();identity=snapshot.stat()
+    assert original==(f.incident/'state.json').read_bytes()
+    current=json.loads(json.dumps(f.state));current['notifications']=[{'phase':'attention','journal_receipt':receipt}]
+    f.save(current)
+    assert f.runtime._emit(f.key,'attention',current)==receipt
+    current['notifications'].append({'phase':'attention','error':'RuntimeError'});f.save(current)
+    assert f.runtime._emit(f.key,'attention',current)==receipt
+    assert snapshot.read_bytes()==original and snapshot.stat().st_ino==identity.st_ino
+    assert snapshot.stat().st_mtime_ns==identity.st_mtime_ns
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert not f.calls
+
+
+def test_controller_attention_keeps_configured_test_flag_immutable(controller_attention):
+    f=controller_attention;f.runtime.config['incident_test']=False
+    f.runtime._emit(f.key,'attention',f.state)
+    assert json.loads(f.journal.payloads[0])['test'] is False
+    f.journal.payloads.clear();f.runtime.config['incident_test']=True
+    with pytest.raises(ValueError,match='snapshot binding changed'):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+def test_verified_paired_attention_keeps_existing_lifecycle_contract(controller_attention):
+    f=controller_attention;receipt=f.incident/'paired-evidence.json';receipt.write_text('{}');receipt.chmod(0o600)
+    target=f.state['target'];state={'observations':[{**target,'status':'failed'}],
+        'evidence':[{'status':'export-verified','job_status':'failed','target':target,'receipt_path':str(receipt)}]}
+    events=[]
+    f.runtime._incident_runner=lambda *args,**kwargs:events.append(json.loads(kwargs['input'])) or SimpleNamespace(returncode=0)
+    assert f.runtime._emit(f.key,'attention',state)=={'stage':'journaled','phase':'attention'}
+    assert events[0]['dedupe_key']==f.key and events[0]['reason']=='ci_repair_failed'
+    assert events[0]['context']['receipt_path']==str(receipt)
+    assert not (f.incident/'controller-attention-state.json').exists()
+
+
+@pytest.mark.parametrize('field,value',[
+    ('reason','health-unknown'),('status','complete'),('phase','observe'),
+    ('observations',{}),('evidence',{}),('actions',[{}]),('classifications',[{}]),('health',[{}]),
+    ('counts',{'infrastructure':False,'source':0}),('counts',{'infrastructure':1,'source':0}),
+    ('counts',{'infrastructure':0,'source':0,'other':0}),('notifications',[{'phase':'attention','error':'RuntimeError'}]),
+])
+def test_controller_attention_refuses_noninitial_or_worked_state(controller_attention,field,value):
+    f=controller_attention;f.state[field]=value;f.save(f.state)
+    with pytest.raises((ValueError,TypeError)):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads and not (f.incident/'controller-attention-state.json').exists() and not f.calls
+
+
+@pytest.mark.parametrize('change',['manifest-id','manifest-project','disk-manifest','target','extra-target','profile'])
+def test_controller_attention_requires_actual_manifest_and_full_target(controller_attention,change):
+    f=controller_attention
+    if change=='manifest-id':f.state['manifest']['incident_id']='e'*64
+    elif change=='manifest-project':f.state['manifest']['project']='other/project'
+    elif change=='disk-manifest':
+        altered={**f.manifest,'project':'other/project'};r.control_module.write_json(f.incident/'manifest.json',altered)
+    elif change=='target':f.state['target']['source_sha']='f'*40
+    elif change=='extra-target':f.state['target']['unexpected']='field'
+    else:f.runtime.config['github']['profile']='native'
+    if change in ('manifest-id','manifest-project'):r.control_module.write_json(f.incident/'manifest.json',f.state['manifest'])
+    f.save(f.state)
+    with pytest.raises(ValueError):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads and not f.calls
+
+
+@pytest.mark.parametrize('filename',['manifest.json','state.json','controller-attention-state.json','controller-attention-binding.json'])
+@pytest.mark.parametrize('kind',['mode','symlink','special'])
+def test_controller_attention_refuses_unsafe_private_files(controller_attention,filename,kind):
+    f=controller_attention
+    if filename.startswith('controller-attention'):f.runtime._emit(f.key,'attention',f.state)
+    f.journal.payloads.clear();path=f.incident/filename
+    if kind=='mode':path.chmod(0o644)
+    else:
+        saved=path.with_name(filename+'.original');path.rename(saved)
+        if kind=='symlink':path.symlink_to(saved)
+        else:os.mkfifo(path,0o600)
+    with pytest.raises(ValueError):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+def test_controller_attention_requires_owner_lease_source_and_exact_disk_state(controller_attention,monkeypatch):
+    f=controller_attention
+    with monkeypatch.context() as patch:
+        patch.setattr(r.os,'geteuid',lambda:f.incident.stat().st_uid+1)
+        with pytest.raises(ValueError,match='private'):f.runtime._emit(f.key,'attention',f.state)
+    f.runtime._lease_check=lambda:False
+    with pytest.raises(RuntimeError,match='lease'):f.runtime._emit(f.key,'attention',f.state)
+    f.runtime._lease_check=lambda:True
+    f.runtime.hashes['production_runtime.py']='0'*64
+    with pytest.raises(RuntimeError,match='source identity'):f.runtime._emit(f.key,'attention',f.state)
+    f.runtime.hashes=hashes();f.state['reason']='changed-only-in-memory'
+    with pytest.raises(ValueError,match='differs from disk'):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+@pytest.mark.parametrize('value',[False,0.0])
+def test_controller_attention_disk_equality_preserves_strict_zero_count_type(controller_attention,value):
+    f=controller_attention;disk=json.loads(json.dumps(f.state));disk['counts']['infrastructure']=value;f.save(disk)
+    with pytest.raises(ValueError,match='differs from disk'):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads and not (f.incident/'controller-attention-state.json').exists()
+
+
+def test_controller_attention_rejects_private_file_with_another_owner(controller_attention,monkeypatch):
+    f=controller_attention;actual_fstat=r.os.fstat
+    def another_owner(fd):
+        info=actual_fstat(fd)
+        return SimpleNamespace(st_mode=info.st_mode,st_uid=info.st_uid+1,st_nlink=info.st_nlink,
+                               st_size=info.st_size,st_dev=info.st_dev,st_ino=info.st_ino)
+    monkeypatch.setattr(r.os,'fstat',another_owner)
+    with pytest.raises(ValueError,match='private controller attention file'):
+        f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+@pytest.mark.parametrize('kind',['mode','symlink','incident-id'])
+def test_controller_attention_rejects_unsafe_incident_directory(controller_attention,kind):
+    f=controller_attention;key=f.key
+    if kind=='mode':f.incident.chmod(0o755)
+    elif kind=='symlink':
+        other=f.incident.with_name('original');f.incident.rename(other);f.incident.symlink_to(other,target_is_directory=True)
+    else:key='D'*64
+    with pytest.raises(ValueError):f.runtime._emit(key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+@pytest.mark.parametrize('change',['snapshot-bytes','binding-bytes','manifest-bytes','work','bookkeeping'])
+def test_controller_attention_refuses_snapshot_tampering_or_reentry_work(controller_attention,change):
+    f=controller_attention;receipt=f.runtime._emit(f.key,'attention',f.state);f.journal.payloads.clear()
+    if change in ('snapshot-bytes','binding-bytes','manifest-bytes'):
+        filename={'snapshot-bytes':'controller-attention-state.json','binding-bytes':'controller-attention-binding.json','manifest-bytes':'manifest.json'}[change]
+        path=f.incident/filename;path.chmod(0o600);path.write_bytes(path.read_bytes()+b' ')
+    elif change=='work':f.state['actions']=[{}];f.save(f.state)
+    else:f.state['notifications']=[{'phase':'down','journal_receipt':receipt}];f.save(f.state)
+    with pytest.raises(ValueError):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+def test_controller_attention_lost_append_ack_retries_identical_payload_once(controller_attention):
+    f=controller_attention;f.journal.lose_first_ack=True
+    assert f.runtime._emit(f.key,'attention',f.state)['stage']=='journaled'
+    assert len(f.journal.payloads)==2 and f.journal.payloads[0]==f.journal.payloads[1]
+    assert f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1 and not f.calls
+
+
+def test_controller_attention_rechecks_snapshot_before_uncertain_append_retry(controller_attention):
+    f=controller_attention;calls=[]
+    def runner(*args,**kwargs):
+        calls.append(kwargs['input']);path=f.incident/'controller-attention-state.json'
+        path.chmod(0o600);path.write_bytes(path.read_bytes()+b' ')
+        return SimpleNamespace(returncode=1,stdout=b'')
+    f.runtime._incident_runner=runner
+    with pytest.raises(ValueError,match='changed before journal append'):
+        f.runtime._emit(f.key,'attention',f.state)
+    assert len(calls)==1
+
+
+@pytest.mark.parametrize('failure',['runner','unstructured','structured','wrong-id','wrong-event','wrong-phase','wrong-stage','execution','execution-int'])
+def test_controller_attention_never_reports_journaled_without_native_reply(controller_attention,failure):
+    f=controller_attention;calls=[]
+    def runner(*args,**kwargs):
+        calls.append(kwargs['input'])
+        if failure=='runner':raise OSError('append unavailable')
+        if failure=='unstructured':return SimpleNamespace(returncode=1,stdout=b'unknown')
+        if failure=='structured':return SimpleNamespace(returncode=1,stdout=b'{"stage":"rejected"}')
+        key='controller-attention:'+f.key;native='ci_'+hashlib.sha256(key.encode()).hexdigest()[:40]
+        reply={'stage':'journaled','incident_id':native,'event_id':'conn_'+native+'_attention',
+               'phase':'attention','already_present':False,'delivery_status':'not_observed_here','execution_performed':False}
+        if failure=='wrong-id':reply['incident_id']='ci_'+'0'*40
+        elif failure=='wrong-event':reply['event_id']='conn_'+native+'_down'
+        elif failure=='wrong-phase':reply['phase']='down'
+        elif failure=='wrong-stage':reply['stage']='delivered'
+        else:reply['execution_performed']=0 if failure=='execution-int' else True
+        return SimpleNamespace(returncode=0,stdout=json.dumps(reply).encode())
+    f.runtime._incident_runner=runner
+    with pytest.raises(RuntimeError):f.runtime._emit(f.key,'attention',f.state)
+    assert len(calls)==(2 if failure in ('runner','unstructured') else 1)
+    assert len(set(calls))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==0
+    assert not f.calls
 
 
 def test_runtime_transfers_production_sized_closed_junit_to_source_validator(tmp_path, monkeypatch):
@@ -176,6 +438,261 @@ def test_reservation_reused_then_renewed_after_long_listener():
     assert gate.request('GET','/x')['http_status']==200 and raw.reservations==1
     now[0]=1301
     assert gate.request('GET','/x')['http_status']==200 and raw.reservations==2
+
+
+def test_delayed_gui_read_renews_expiring_batch_before_one_http_call():
+    now=[1280.0];sleeps=[];guards=[]
+    class Raw:
+        request_budget=2
+        request_window_seconds=180
+        def __init__(self):self.expiry=1300.0;self.reservations=[];self.http_calls=0
+        def reserve(self):
+            self.reservations.append(now[0]);self.expiry=now[0]+300
+            return {'allowed':True,'reason':'reserved','next_refresh_at':self.expiry}
+        def request(self,*args):
+            now[0]+=20  # The GUI handoff occurs after the local admission check.
+            if now[0]>=self.expiry:raise RuntimeError('remote batch expired before HTTP')
+            self.http_calls+=1;return {'http_status':200,'data':{}}
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    raw=Raw();gate=r._GatedTransport(raw,lambda:guards.append(now[0]),lambda:now[0],'github')
+    gate.expires=1300.0;gate.remaining=88
+    gate.sleeper=sleep;gate.health=lambda:{'state':'healthy'}
+    assert gate.request('GET','/fixed/read')['http_status']==200
+    assert raw.reservations==[1300.0] and sleeps==[20.0] and raw.http_calls==1
+    assert gate.remaining==98 and guards
+
+
+def test_actual_gui_two_get_http_starts_fit_fresh_window_not_reply_deadline():
+    now=[1280.0];batch=[1300.0];starts=[];reservations=[];sleeps=[];health=[]
+    class Client:
+        def call(self,kind,doc,**kwargs):
+            assert kind=='provider' and kwargs['timeout']==60
+            if doc['operation']=='reserve':
+                reservations.append(now[0]);batch[0]=now[0]+300
+                return {'allowed':True,'next_refresh_at':batch[0],'reason':'reserved'}
+            assert doc['method']=='GET'
+            now[0]+=60;starts.append(now[0]);assert now[0]<batch[0]
+            now[0]+=45  # Retained result lookup may finish after the start window.
+            if len(starts)==1:raise r.gui_client_module.CompletedGuiFailure('runner_nonzero',1)
+            return {'http_status':200,'data':{}}
+    raw=r.gui_client_module.GuiProviderTransport('github',Client())
+    assert raw.request_window_seconds==180 and raw.action_window_seconds==75 and raw.request_budget==2
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github',sleeper=sleep,
+                           health=lambda:health.append(now[0]) or {'state':'healthy'},deadline=2000)
+    gate.expires=1300;gate.remaining=88
+    assert gate.request('GET','/fixed/read')['http_status']==200
+    assert reservations==[1300] and sleeps==[20] and health==[1280]
+    assert starts==[1360,1465] and starts[-1]-reservations[0]==165
+    assert now[0]-reservations[0]==210 and gate.remaining==98
+
+
+def test_gui_post_is_sent_once_even_if_reply_finishes_after_batch_expiry():
+    now=[1220.0];starts=[]
+    class Client:
+        def call(self,kind,doc,**kwargs):
+            assert doc['method']=='POST' and kwargs['key']=='provider-action:owned'
+            now[0]+=60;starts.append(now[0]);assert now[0]<1300
+            now[0]+=45
+            return {'http_status':201,'data':None}
+    raw=r.gui_client_module.GuiProviderTransport('github',Client())
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github');gate.expires=1300;gate.remaining=88
+    assert gate.for_action('owned')('POST','/fixed/action',{})['http_status']==201
+    assert starts==[1280] and now[0]==1325 and gate.remaining==87
+
+
+def test_gui_post_completed_failure_is_not_replayed():
+    calls=[]
+    class Client:
+        def call(self,*args,**kwargs):calls.append((args,kwargs));raise r.gui_client_module.CompletedGuiFailure('runner_nonzero',1)
+    raw=r.gui_client_module.GuiProviderTransport('github',Client())
+    gate=r._GatedTransport(raw,lambda:None,lambda:1000,'github');gate.expires=1300;gate.remaining=100
+    with pytest.raises(r.gui_client_module.CompletedGuiFailure):gate.for_action('owned')('POST','/fixed/action',{})
+    assert len(calls)==1 and gate.remaining==99
+
+
+def test_gitlab_action_window_covers_actual_principal_get_then_post(tmp_path):
+    import contextlib
+    now=[1220.0];batch=[1300.0];starts=[];reserves=[];sleeps=[]
+    bridge=object.__new__(r.transport_module.ProviderBridge)
+    bridge.principal=(43957127,'TiGa-RCE');bridge._ensure=lambda:None
+    bridge._bridge_lock=contextlib.nullcontext
+    bridge._file=lambda key:tmp_path/(hashlib.sha256(key.encode()).hexdigest()+'.json')
+    bridge._save_mirrored=lambda path,value:path.write_text(json.dumps(value))
+    def send(provider,method,path,payload,raw):
+        if now[0]>=batch[0]:raise RuntimeError('remote batch expired before GitLab '+method)
+        starts.append((method,path,now[0]))
+        if method=='GET':
+            assert path=='user';now[0]+=30
+            return {'http_status':200,'data':{'id':43957127,'username':'TiGa-RCE'},'request_id':None}
+        return {'http_status':201,'data':{'id':23},'request_id':None}
+    bridge._send=send
+    class Client:
+        def call(self,kind,doc,**kwargs):
+            assert kind=='provider'
+            if doc['operation']=='reserve':
+                reserves.append(now[0]);batch[0]=now[0]+300
+                return {'allowed':True,'next_refresh_at':batch[0]}
+            now[0]+=60  # GUI handoff before actual ProviderBridge.request().
+            return bridge.request(doc['provider'],doc['method'],doc['path'],doc['payload'],doc['action_key'])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    raw=r.gui_client_module.GuiProviderTransport('gitlab',Client())
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'gitlab',sleeper=sleep,health=lambda:{'state':'healthy'})
+    gate.expires=1300;gate.remaining=88
+    assert gate.for_action('owned')('POST','/projects/88349936/jobs/22/retry',{})['data']=={'id':23}
+    assert raw.action_window_seconds==110 and raw.request_window_seconds==180
+    assert reserves==[1300] and sleeps==[60,20]
+    assert starts==[('GET','user',1360),('POST','/projects/88349936/jobs/22/retry',1390)]
+    assert gate.remaining==98
+
+
+@pytest.mark.parametrize('unhealthy',[False,True])
+def test_window_wait_checks_health_and_renews_only_at_normal_expiry(unhealthy):
+    now=[1200.0];sleeps=[];health=[];reserves=[];http=[];guards=[]
+    class Raw:
+        request_budget=2;request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);return {'allowed':True,'next_refresh_at':now[0]+300}
+        def request(self,*args):http.append(now[0]);return {'http_status':200}
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    def check_health():health.append(now[0]);return {'state':'unhealthy' if unhealthy else 'healthy'}
+    gate=r._GatedTransport(Raw(),lambda:guards.append(now[0]),lambda:now[0],'github',sleeper=sleep,health=check_health)
+    gate.expires=1300;gate.remaining=88
+    assert gate.prepare(2,180)=={'allowed':False,'reason':'cooldown','next_refresh_at':1300}
+    if unhealthy:
+        with pytest.raises(RuntimeError,match='health'):gate.request('GET','/fixed/read')
+        assert not sleeps and not reserves and not http
+    else:
+        assert gate.request('GET','/fixed/read')['http_status']==200
+        assert sleeps==[60,40] and health==[1200,1260] and reserves==[1300] and http==[1300]
+    assert guards
+
+
+def test_exhausted_gui_count_waits_for_expiry_then_denied_reservation_sends_no_http():
+    now=[1280.0];reserves=[];http=[];sleeps=[]
+    class Raw:
+        request_budget=2;request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);return {'allowed':False,'reason':'quota'}
+        def request(self,*args):http.append(args);raise AssertionError('denied provider call')
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,health=lambda:{'state':'healthy'})
+    gate.expires=1300;gate.remaining=1
+    with pytest.raises(RuntimeError,match='reservation unavailable'):gate.request('GET','/fixed/read')
+    assert reserves==[1300] and sleeps==[20] and not http and gate.remaining==1
+
+
+def test_new_reservation_must_still_fit_declared_execution_window():
+    now=[1000.0];reserves=[]
+    class Raw:
+        def reserve(self):reserves.append(now[0]);now[0]+=10;return {'allowed':True,'next_refresh_at':1100}
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github')
+    assert gate.prepare(2,180)=={'allowed':False,'reason':'cooldown','next_refresh_at':1100}
+    assert gate.expires==1100 and gate.remaining==100 and reserves==[1000]
+
+
+@pytest.mark.parametrize('window',[True,'180',-1,301,float('inf'),float('nan')])
+def test_invalid_execution_window_never_reserves_or_calls_provider(window):
+    def forbidden(*args):pytest.fail('invalid window must not reserve or call provider')
+    raw=SimpleNamespace(request_window_seconds=window,reserve=forbidden,request=forbidden)
+    gate=r._GatedTransport(raw,lambda:None,lambda:1000,'github')
+    with pytest.raises(ValueError,match='execution window'):gate.request('GET','/fixed/read')
+
+
+def test_window_wait_refuses_expiry_beyond_incident_deadline_minus_window():
+    now=[1000.0];calls=[]
+    raw=SimpleNamespace(request_window_seconds=180,reserve=lambda:calls.append('reserve'),request=lambda *args:calls.append('http'))
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github',sleeper=lambda seconds:calls.append('sleep'),
+                           health=lambda:{'state':'healthy'},deadline=1250)
+    gate.expires=1100;gate.remaining=88  # Latest viable admission is 1070.
+    with pytest.raises(TimeoutError,match='cannot fit'):gate.request('GET','/fixed/read')
+    assert not calls and now[0]==1000
+
+
+def test_delayed_renewal_cannot_start_http_after_actual_incident_deadline_margin():
+    now=[1200.0];sleeps=[];reserves=[];http=[]
+    class Raw:
+        request_window_seconds=180
+        def reserve(self):
+            reserves.append(now[0]);now[0]+=30
+            return {'allowed':True,'next_refresh_at':now[0]+300}
+        def request(self,*args):http.append(now[0])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,
+                           health=lambda:{'state':'healthy'},deadline=1500)
+    gate.expires=1300;gate.remaining=88
+    with pytest.raises(TimeoutError,match='admission deadline'):gate.request('GET','/fixed/read')
+    assert sleeps==[60,40] and reserves==[1300] and now[0]==1330 and not http
+
+
+def test_window_admission_has_one_360_second_bound_without_early_reservation_reset():
+    now=[1000.0];sleeps=[];reserves=[];http=[]
+    class Raw:
+        request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);return {'allowed':True,'next_refresh_at':now[0]+100}
+        def request(self,*args):http.append(now[0])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,health=lambda:{'state':'healthy'})
+    with pytest.raises(TimeoutError,match='cannot fit'):gate.request('GET','/fixed/read')
+    assert reserves==[1000,1100,1200,1300] and now[0]==1300
+    assert all(0<seconds<=60 for seconds in sleeps) and not http
+
+
+def test_runtime_lifetime_admission_deadline_only_narrows(controller_attention):
+    f=controller_attention;now=[1000.0];raw=SimpleNamespace(request_window_seconds=180)
+    runtime=r.Runtime(f.runtime.config,f.runtime.root,f.runtime.lease,uid=lambda:0,lease_check=lambda:True,
+                      clock=lambda:now[0],transport_factory=lambda provider:raw,source_transport=object())
+    assert runtime._admission_deadline==1600
+    gate=runtime.transports['github'];gate.expires=1700;gate.remaining=100
+    manifest={**f.manifest,'deadline_epoch':1300}
+    assert runtime.prepare(manifest)['allowed']
+    assert runtime._admission_deadline==1300
+    assert runtime.prepare({**manifest,'deadline_epoch':1500})['allowed']
+    assert runtime._admission_deadline==1300
+    now[0]=1121
+    assert runtime.prepare({'initial_target':{'provider':'github'}})['reason']=='deadline'
+    with pytest.raises(TimeoutError):gate.request('GET','/must-not-start')
+
+
+def test_provider_preflight_360_can_transition_to_later_eight_hour_source_intent(controller_attention):
+    f=controller_attention;now=[1000.0];reserves=[];reads=[]
+    def reserve():
+        reserves.append(now[0]);return {'allowed':True,'next_refresh_at':now[0]+300}
+    def request(*args):
+        reads.append((now[0],args));return {'http_status':200,'data':{}}
+    raw=SimpleNamespace(request_window_seconds=180,reserve=reserve,request=request)
+    config={**f.runtime.config,'max_incident_seconds':28800}
+    runtime=r.Runtime(config,f.runtime.root,f.runtime.lease,uid=lambda:0,lease_check=lambda:True,
+                      clock=lambda:now[0],transport_factory=lambda provider:raw,source_transport=object())
+    gate=runtime.transports['github'];gate.expires=1300;gate.remaining=100
+    assert runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':now[0]+360})['allowed']
+    assert runtime._admission_scopes['github']==1360 and runtime._admission_deadline==29800
+    now[0]+=1
+    source_intent={'created_epoch':now[0],'deadline_seconds':28800}
+    initial_deadline=source_intent['created_epoch']+source_intent['deadline_seconds']
+    assert runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':initial_deadline})['allowed']
+    assert runtime._admission_scopes['github']==29800 and runtime._admission_deadline==29800
+    now[0]=1720  # A completed 12-minute job may still be observed normally.
+    assert runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':initial_deadline})['allowed']
+    assert gate.request('GET','/completed-job')['http_status']==200
+    assert reserves==[1720] and reads==[(1720,('GET','/completed-job',None))]
+    # Once a true incident is supplied, neither later admission nor manifest
+    # calls may extend its actual deadline.
+    runtime.prepare({**f.manifest,'deadline_epoch':2000})
+    runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':initial_deadline})
+    assert runtime._admission_scopes['github']==runtime._admission_deadline==2000
+
+
+def test_in_progress_window_wait_cannot_extend_its_original_scope():
+    now=[1000.0];scope=[1300.0];sleeps=[];reserves=[];http=[]
+    class Raw:
+        request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);now[0]+=30;return {'allowed':True,'next_refresh_at':now[0]+300}
+        def request(self,*args):http.append(now[0])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds;scope[0]=2000
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,
+                           health=lambda:{'state':'healthy'},deadline=lambda:scope[0])
+    gate.expires=1100;gate.remaining=88
+    with pytest.raises(TimeoutError,match='admission deadline'):gate.request('GET','/must-not-start')
+    assert sleeps==[60,40] and reserves==[1100] and now[0]==1130 and not http
 
 
 def test_remote_reservation_validated_after_delayed_gui_round_trip():
@@ -479,7 +996,7 @@ def test_gui_transport_enabled_only_by_fixed_explicit_config(tmp_path,monkeypatc
          'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
                    'control_sha':'a'*40,'ref':'codex/production-ci-recovery-20261113','profile':'ordinary',
                    'sole_executor_authority':True,'export_root':str(export)},'module_sha256':hashes(),
-         'gui_transport':{'enabled':True,'state_dir':str(root/'gui-client')}}
+         'gui_transport':{'enabled':True,'state_dir':str(root/'gui-client')},'max_incident_seconds':600}
     clients=[]
     def factory(path):clients.append(path);return object()
     runtime=r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,gui_client_factory=factory)

@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import sys
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -231,6 +233,59 @@ def test_expiry_closes_without_child_launch(tmp_path):
     request=spool.submit('provider',provider_doc(),1001,'a'*64);now[0]=1001
     assert spool.worker()['status']=='expired' and spool.result(request['request_id'])['status']=='expired' and not calls
 
+
+
+def test_result_waits_for_atomic_history_and_anchor_update(tmp_path,monkeypatch):
+    spool,_=installed(tmp_path,probe=lambda **kwargs:{'available':True})
+    spool.submit('credential_probe',{},1100,'a'*64)
+    history_replaced=threading.Event();release_writer=threading.Event();reader_started=threading.Event()
+    real_replace=m._replace
+    def pause_after_history(path,data):
+        real_replace(path,data)
+        if path==spool.spool/'history.json':
+            history_replaced.set()
+            if not release_writer.wait(5):raise RuntimeError('test writer timed out')
+    monkeypatch.setattr(m,'_replace',pause_after_history)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        writer=executor.submit(spool.worker)
+        try:
+            assert history_replaced.wait(5)
+            def read_result():
+                reader_started.set()
+                return spool.result('b'*64)
+            reader=executor.submit(read_result)
+            assert reader_started.wait(5)
+            with pytest.raises(TimeoutError):reader.result(timeout=0.2)
+        finally:
+            release_writer.set()
+        assert writer.result(timeout=5)['status']=='complete'
+        assert reader.result(timeout=5)=={'status':'missing'}
+
+
+@pytest.mark.parametrize('unsafe', ['symlink','hardlink','mode'])
+def test_unsafe_lane_lock_refuses_before_use(tmp_path,unsafe):
+    spool,_=installed(tmp_path)
+    lock=spool.spool/'lane.lock'
+    if unsafe=='symlink':
+        target=tmp_path/'target';target.write_bytes(b'');target.chmod(0o600)
+        lock.unlink();lock.symlink_to(target)
+    elif unsafe=='hardlink':
+        os.link(lock,tmp_path/'other-link')
+    else:lock.chmod(0o644)
+    with pytest.raises((RuntimeError,OSError)):
+        spool.result('b'*64)
+
+
+def test_fifo_lane_lock_refused_before_open(tmp_path,monkeypatch):
+    spool,_=installed(tmp_path)
+    lock=spool.spool/'lane.lock';lock.unlink();os.mkfifo(lock,0o600)
+    real_open=m.os.open
+    def reject_lock_open(path,*args,**kwargs):
+        assert path!=lock, 'unsafe lock must be rejected before open'
+        return real_open(path,*args,**kwargs)
+    monkeypatch.setattr(m.os,'open',reject_lock_open)
+    with pytest.raises(RuntimeError,match='unsafe lane lock'):
+        spool.result('b'*64)
 
 def test_wrong_volume_missing_or_changed_state_refuses(tmp_path):
     spool,kicks=installed(tmp_path);spool.mount=lambda *args:False

@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import plistlib
 import re
+import stat
 import subprocess
 import sys
 import time
@@ -333,10 +334,30 @@ class GuiSpool:
         return history
 
     def _locked(self):
-        self._check()
-        fd=os.open(self.spool/'lane.lock',os.O_RDWR|getattr(os,'O_NOFOLLOW',0))
-        stream=os.fdopen(fd,'r+');fcntl.flock(stream,fcntl.LOCK_EX)
-        try:self._check()
+        # Check only stable acquisition prerequisites before waiting: the
+        # ledger and its anchor may be between replacements under this lock.
+        if not self.mount(self.spool,self.anchor):raise RuntimeError('CACHE mount unavailable')
+        if (any(x.is_symlink() for x in (self.spool,*self.spool.parents)) or not self.spool.is_dir()
+                or self.spool.stat().st_uid!=os.getuid() or self.spool.stat().st_mode&0o077):
+            raise RuntimeError('private spool unavailable')
+        lock=self.spool/'lane.lock'
+        before=lock.lstat()
+        if (not stat.S_ISREG(before.st_mode) or before.st_uid!=os.getuid() or before.st_mode&0o077
+                or before.st_nlink!=1 or before.st_size>4096):raise RuntimeError('unsafe lane lock')
+        fd=os.open(lock,os.O_RDWR|getattr(os,'O_NOFOLLOW',0))
+        stream=os.fdopen(fd,'r+')
+        def check_lock():
+            info=os.fstat(stream.fileno());path_info=lock.lstat()
+            if (not stat.S_ISREG(info.st_mode) or not stat.S_ISREG(path_info.st_mode)
+                    or info.st_uid!=os.getuid() or info.st_mode&0o077 or info.st_nlink!=1
+                    or info.st_size>4096 or (info.st_dev,info.st_ino)!=(path_info.st_dev,path_info.st_ino)
+                    or (info.st_dev,info.st_ino)!=(before.st_dev,before.st_ino)):
+                raise RuntimeError('unsafe lane lock')
+        try:
+            check_lock()
+            fcntl.flock(stream,fcntl.LOCK_EX)
+            check_lock()
+            self._check()
         except BaseException:stream.close();raise
         return stream
 

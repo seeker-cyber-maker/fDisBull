@@ -439,7 +439,7 @@ class ProductionService:
 
     def _await_provider(self, runtime, provider, deadline):
         while self.clock() < deadline:
-            reservation = runtime.prepare({'initial_target': {'provider': provider}})
+            reservation = runtime.prepare({'initial_target': {'provider': provider}, 'deadline_epoch': deadline})
             check_worker_cleanup(runtime)
             if reservation.get('allowed') is True: return
             if reservation.get('reason') not in ('cooldown', 'busy'):
