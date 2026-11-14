@@ -1,0 +1,339 @@
+{
+  "cancel_trace": [
+    {
+      "actions_after": 0,
+      "actions_before": 0,
+      "after_phase": 2,
+      "before_phase": 1,
+      "frame": 2905,
+      "pc": "0x80a67d"
+    },
+    {
+      "actions_after": 0,
+      "actions_before": 0,
+      "after_phase": 3,
+      "before_phase": 2,
+      "frame": 2907,
+      "pc": "0x80a7c1"
+    },
+    {
+      "actions_after": 0,
+      "actions_before": 0,
+      "after_phase": 0,
+      "before_phase": 3,
+      "frame": 2909,
+      "pc": "0x80c03a"
+    }
+  ],
+  "checkpoint_count": 82,
+  "final_item_state": {
+    "count": 0,
+    "owner": 65535
+  },
+  "final_serial": 1810,
+  "journal_sha256": "c6178d0ac5ae72862d0cf81262d6a2208d7a368ef693d2283b93d24c38624f7f",
+  "main_steps": 1809,
+  "modal": [
+    [
+      2861,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2862,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2863,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2864,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2865,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2866,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2867,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2868,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2869,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2870,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2871,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2872,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2873,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2874,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2875,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2876,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2877,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2878,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2879,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2880,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2881,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2882,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2883,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2884,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2885,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2886,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2887,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2888,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2889,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2890,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2891,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2892,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2893,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2894,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2895,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2896,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2897,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2898,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2899,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2900,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2901,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2902,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2903,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2904,
+      "0x80a67d",
+      1,
+      1
+    ],
+    [
+      2905,
+      "0x80a67d",
+      1,
+      2
+    ],
+    [
+      2907,
+      "0x80a7c1",
+      2,
+      3
+    ],
+    [
+      2909,
+      "0x80c03a",
+      3,
+      0
+    ]
+  ],
+  "native_sha256": "367de36149bcad9d38ac550b42e145715d080dd01a220c176f441a500e585aee",
+  "neutrality": "82 checkpoint digests; 7 selected unmodified RAM/images plus five final hashes",
+  "private_receipt_sha256": "bd5f4b971715561ea52064b336195be8a417a6b96b5659b27bf9784229d8fa65",
+  "program_sha256": "b3f991904e66fd2c9148338a68508581f4f85804c3afd4bd4bb4200c948d7d2f",
+  "result": "passed",
+  "scope": "sparse 82 checkpoint comparisons; full title-seeded main/modal input journal",
+  "source_elements": {
+    "actor_entity_bytes": 8938,
+    "actor_fields": 33292,
+    "camera_words": 328,
+    "collision_elements": 103812,
+    "cursor_words": 902,
+    "item_bytes": 820,
+    "sprite_fields": 15580,
+    "task_fields": 18696,
+    "text_bytes": 194,
+    "window_fields": 2354
+  },
+  "source_receipt_sha256": "01dfa981c481efbd43cce3b2e9773e9c1026c52584774f0238858a6b90a61b01"
+}

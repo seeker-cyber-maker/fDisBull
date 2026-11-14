@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "case": "rng",
+      "intervention": "none: title plus observed input prefix",
+      "retries": 2,
+      "return_code": 1,
+      "uil_failure": 15,
+      "unchanged_elements_compared": 299286
+    },
+    {
+      "case": "reserved",
+      "intervention": "none: title plus observed input prefix",
+      "retries": 2,
+      "return_code": 1,
+      "uil_failure": 1,
+      "unchanged_elements_compared": 299286
+    },
+    {
+      "case": "stale-task",
+      "intervention": "diagnostic forged native state; not original reachability",
+      "retries": 2,
+      "return_code": 1,
+      "uil_failure": 46,
+      "unchanged_elements_compared": 299286
+    },
+    {
+      "case": "stale-cursor",
+      "intervention": "diagnostic forged native state; not original reachability",
+      "retries": 2,
+      "return_code": 1,
+      "uil_failure": 46,
+      "unchanged_elements_compared": 299286
+    }
+  ],
+  "limits": [
+    "RNG refusal is expected, not source-equivalent continuation.",
+    "Forged stale-state cases test admission guards only."
+  ],
+  "native_sha256": "5c41baa40314f51b2d8a2dc60965b5780605c095380a73e8a7b3fbc4ed8f3a4b",
+  "private_receipt_sha256": "d1a955b647c06e6f88b83befafdd4632d3f125216c650c9e9de97a096de8f922",
+  "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+  "result": "passed",
+  "state_elements": 149643,
+  "title_seeded_prefix_updates": 3903,
+  "unchanged_elements_compared": 1197144
+}

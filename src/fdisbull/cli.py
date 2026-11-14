@@ -44,6 +44,7 @@ AGENT_SKILL_GUIDES = {
     "references/chip8-qemu.md": "Import an explicit CHIP-8 profile and inspect a bounded native QEMU CPU with source-bound checkpoints",
     "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
     "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
+    'references/block-orchestration.md': 'Compose program blocks with pinned ABI, placement and typed fixups',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = "fdisbull-investigate"
@@ -502,6 +503,13 @@ METHODS = {
     "bind-source": "Bind exact source or explicitly approved divergent layer; path,[version,approval]",
     "new-source-analysis": "Explicitly create a separate analysis without changing this one; path,destination,[version]",
     "help": "List methods; all project operations require project path",
+    'udc-dos-define': 'Define a bounded DOS COM compiler from native blocks and fixed data; name,native_definition,[data,references,parent,author]',
+    'udc-dos-info': 'Read a standard DOS compiler definition; definition,[include_blocks]',
+    'udc-dos-implementation': 'Register an immutable straight-line replacement; definition,block,code,expected_block_revision,[purpose,projection,references,parent,author]',
+    'udc-dos-implementation-info': 'Inspect a pinned DOS block implementation; implementation',
+    'udc-dos-compile': 'Generate a DOS COM/MZ with selected blocks and checked reference fixups; definition,[implementations,entry,block_order,assumptions,code_base,container]',
+    'zmachine-udc-capture': 'Capture a private immutable Z-machine v3 source scaffold; path,[max_instructions]',
+    'zmachine-udc-compile': 'Emit exact story or fixed-footprint scalar experiment; definition|definition_file,[edits,edits_file,mode,assumptions,assumptions_file]',
 }
 
 from .udc_api import METHODS as BLOCK_METHODS
@@ -879,6 +887,27 @@ def invoke(method, params, debugger=None):
         from .desqview_runtime import invoke as desqview_invoke
 
         return desqview_invoke(method, p)
+    if method in ('zmachine-udc-capture', 'zmachine-udc-compile'):
+        from .zmachine_udc import capture_zmachine_definition, compile_zmachine_definition
+        if method == 'zmachine-udc-capture':
+            from .zmachine import MAX_STORY_FILE
+            path = p.pop('path')
+            with Path(path).open('rb') as stream:
+                story = stream.read(MAX_STORY_FILE + 1)
+            return capture_zmachine_definition(story, **p)
+        for field in ('definition', 'edits', 'assumptions'):
+            filename = p.pop(field + '_file', None)
+            if filename is not None:
+                path = Path(filename)
+                if field in p or not path.is_file() or path.stat().st_size > 4*1024*1024:
+                    raise ValueError('expected one JSON argument file at most 4 MiB')
+                with path.open('rb') as stream:
+                    payload = stream.read(4*1024*1024 + 1)
+                if len(payload) > 4*1024*1024:
+                    raise ValueError('JSON argument file exceeds 4 MiB')
+                p[field] = json.loads(payload)
+        return compile_zmachine_definition(**p)
+
     from .project import Project, number
 
     for field in ("base", "entry"):
@@ -1249,8 +1278,14 @@ def invoke(method, params, debugger=None):
             "udc-native-capture",
             "udc-native-info",
             "udc-native-compile",
+            'udc-dos-define',
+            'udc-dos-info',
+            'udc-dos-implementation',
+            'udc-dos-implementation-info',
+            'udc-dos-compile',
         ):
-            for field in ("assumptions", "order", "block_order", "entry_references"):
+            for field in ("assumptions", "order", "block_order", "entry_references",
+                          "data", "references", "projection", "implementations"):
                 filename = p.pop(field + "_file", None)
                 if filename is not None:
                     path = Path(filename)
@@ -1579,6 +1614,8 @@ def respond(request, default_project=None, debugger=None):
                 "module-lift",
                 "zmachine-disasm",
                 "zmachine-analyze",
+                "zmachine-udc-capture",
+                "zmachine-udc-compile",
                 "le-driver-inspect",
                 "le-driver-disasm",
                 "qemm-config",
@@ -2253,6 +2290,9 @@ def parser():
     c.add_argument("--output", required=True)
     sub.add_parser("shadowrun-ai-profiles", help=METHODS["shadowrun-ai-profiles"])
     c = sub.add_parser("shadowrun-snes-build", help=METHODS["shadowrun-snes-build"])
+    c.add_argument('--profile', choices=['static-morgue','live-morgue','npc-intro','scripted-intro','opening'], default='static-morgue')
+    c.add_argument('--hardware-mode', choices=['disabled','seeded'], default='disabled')
+    c.add_argument('--hardware-seed', type=lambda value:int(value,0), default=1)
     c.add_argument("--rom", dest="rom_path", required=True)
     c.add_argument("--ram", required=True)
     c.add_argument("--save-ram", required=True)
@@ -3100,6 +3140,12 @@ def parser():
         "--entry", dest="entry_points", action="append", type=lambda s: int(s, 0)
     )
     c.add_argument("--max-instructions", type=int, default=10000)
+    c=sub.add_parser('zmachine-udc-capture',help=METHODS['zmachine-udc-capture'])
+    c.add_argument('path');c.add_argument('--max-instructions',type=int,default=10000)
+    c=sub.add_parser('zmachine-udc-compile',help=METHODS['zmachine-udc-compile'])
+    c.add_argument('definition_file')
+    c.add_argument('--mode',choices=('original-layout','experiment'),default='original-layout')
+    c.add_argument('--edits',dest='edits_file');c.add_argument('--assumptions',dest='assumptions_file')
     c = sub.add_parser("decoder-check", help=METHODS["decoder-check"])
     c.add_argument("data")
     c.add_argument("--bits", type=int, choices=[16, 32, 64], default=64)
@@ -3120,6 +3166,33 @@ def parser():
             c.add_argument("--order", dest="order_file")
             c.add_argument("--entry-references", dest="entry_references_file")
             c.add_argument("--base", type=lambda s: int(s, 0), default=0)
+    for name in ('udc-dos-define', 'udc-dos-info', 'udc-dos-implementation',
+                 'udc-dos-implementation-info', 'udc-dos-compile'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name == 'udc-dos-define':
+            c.add_argument('name'); c.add_argument('native_definition')
+            c.add_argument('--data', dest='data_file'); c.add_argument('--references', dest='references_file')
+            c.add_argument('--parent'); c.add_argument('--author', default='agent')
+        elif name == 'udc-dos-implementation-info':
+            c.add_argument('implementation')
+        else:
+            c.add_argument('definition')
+            if name == 'udc-dos-info':
+                c.add_argument('--full', dest='include_blocks', action='store_true')
+            elif name == 'udc-dos-implementation':
+                c.add_argument('block'); c.add_argument('code')
+                c.add_argument('--expected-block-revision', required=True)
+                c.add_argument('--purpose', choices=('experiment', 'register-equivalence'), default='experiment')
+                c.add_argument('--projection', dest='projection_file')
+                c.add_argument('--references', dest='references_file')
+                c.add_argument('--parent'); c.add_argument('--author', default='agent')
+            else:
+                c.add_argument('--implementations', dest='implementations_file')
+                c.add_argument('--entry'); c.add_argument('--block-order', dest='block_order_file')
+                c.add_argument('--assumptions', dest='assumptions_file')
+                c.add_argument('--code-base', type=lambda s:int(s,0))
+                c.add_argument('--container', choices=('com', 'mz'), default='com')
+
     for name in ("udc-native-capture", "udc-native-info", "udc-native-compile"):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("project")
@@ -3977,7 +4050,7 @@ def _dispatch(args):
         args["max_output_bytes"] = args.pop("smk_max_output_bytes")
     if command == "capture-audit":
         args["max_output_bytes"] = args.pop("capture_max_output_bytes")
-    if command.startswith(("udc-", "udl-")) and not command.startswith("udc-native-"):
+    if command.startswith(("udc-", "udl-")) and not command.startswith(("udc-native-", "udc-dos-")):
         return _udc_command(command, args)
     if command in (
         "story-info",

@@ -1,0 +1,38 @@
+{
+  "actual_cli_profiles": {
+    "live": {
+      "executable_sha256": "412ddfe50f06447ef1511312be13f48e0379e8519d2cc497bb134702530df704",
+      "exit_code": 0,
+      "receipt_sha256": "a8997d4a15bc9f7ea01e2e6abe96183cdfda6991d2bee8274e0b19c80fe21584",
+      "render": {
+        "completed_updates": 200,
+        "player_x": 1647,
+        "player_y": 1780,
+        "player_z": 256,
+        "stopped": true
+      },
+      "snapshot_sha256": "9461992435bd2063fb5936b06d3c3004a0ad0f5e4ad834204ac840b27c873ac0",
+      "stderr": ""
+    },
+    "npc": {
+      "executable_sha256": "412ddfe50f06447ef1511312be13f48e0379e8519d2cc497bb134702530df704",
+      "exit_code": 0,
+      "receipt_sha256": "3f646b705bbbe7febe0a37cfed8378a64bc994aff8a7b0fee1ca6bbb8ce76781",
+      "render": {
+        "completed_updates": 30,
+        "player_x": 2000,
+        "player_y": 1886,
+        "player_z": 256,
+        "stopped": true
+      },
+      "snapshot_sha256": "b999d266db478bbfc103e0c16a5deecea8063d6d7b3fbe78450193174d2bb7e5",
+      "stderr": ""
+    }
+  },
+  "format": "fdisbull-snes-live-native-cli-1",
+  "limits": [
+    "live-morgue assumes captured7Ftables/camera/scene;200updatesisananalysisbudget",
+    "npc-intro is two selected noncolliding coordinate-target controllers and kinematics; fullrenderflags/scripts/animationexcluded",
+    "all snapshots fromstorednative state;livekeyboardunverified"
+  ]
+}

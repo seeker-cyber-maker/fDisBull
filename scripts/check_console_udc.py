@@ -301,6 +301,36 @@ class SnesTraceEvent(C.Structure):
     _fields_ = [(name,C.c_uint32) for name in
                 ('kind','pc','address','value','a','x','y','s','d','p','db','opcode')]
 
+class SnesControllerSample(C.Structure):
+    _fields_ = [(name,C.c_uint32) for name in ('kind','serial','held','previous','edge','actor')]
+
+class SnesHardwareSample(C.Structure):
+    _fields_ = [(name,C.c_uint32) for name in (
+        'ordinal','serial','boundary','caller','task','return_pc','parent_return',
+        'seed_before','nmi_low','nmi_high','beam_h','beam_v','latch','result','seed_after','seen')]
+
+class SnesHardwareModal(C.Structure):
+    _fields_ = [(name,C.c_uint32) for name in ('boundary','serial','kind','pc')]
+
+def controller_journal_summary(samples, dropped):
+    grouped={}
+    for sample in samples:
+        if sample['kind'] in ('modal','conversation'):
+            continue  # Multiple selector polls in one main-loop pass are expected.
+        grouped.setdefault((sample['kind'],sample['serial']),[]).append(
+            (sample['held'],sample['previous'],sample['edge'],sample['actor']))
+    keys=lambda items:[{'kind':kind,'serial':serial} for kind,serial in items]
+    serials={sample['serial'] for sample in samples}
+    disagreements=[serial for serial in sorted(serials)
+                   if ('main',serial) in grouped and ('player',serial) in grouped
+                   and {v[0] for v in grouped['main',serial]}!={v[0] for v in grouped['player',serial]}]
+    return {'format':'snes-main-loop-controller-journal-1',
+            'phase':'main before 80:9D9D with 80:963A JSR return 963C; player before 80:DE91; modal or typed conversation after its 9D9D calls; serial is latest 80:962E checkpoint',
+            'dropped':dropped,'samples':samples,
+            'duplicate_serials':keys([key for key,items in grouped.items() if len(items)>1]),
+            'conflicting_serials':keys([key for key,items in grouped.items() if len(set(items))>1]),
+            'consumer_disagreements':disagreements}
+
 
 def snes_range(value):
     if value is None:
@@ -312,6 +342,17 @@ def snes_range(value):
     if not 0<=lo<hi<=0x1000000:
         raise ValueError('SNES trace range outside 24-bit bus')
     return lo,hi
+
+
+def checkpoint_plan(pc, selected, frames, limit=4):
+    if pc is None and selected is None:return []
+    if (type(pc) is not int or not 0<pc<=0xffffff or selected is None
+            or type(limit) is not int or not 1<=limit<=8):
+        raise ValueError('SNES checkpoint requires a 24-bit PC, selected frames and limit1..8')
+    result=frame_numbers(selected,frames)
+    if len(result)>6000:raise ValueError('at most 6000 checkpoint video frames')
+    if len(result)>128 and limit!=1:raise ValueError('more than 128 checkpoint frames requires limit 1')
+    return result
 
 
 def controller_buttons(system):
@@ -470,6 +511,44 @@ def worker(args):
     images = []
     ram_images = []
     snes_trace=[]
+    checkpoint_frames=checkpoint_plan(args.snes_checkpoint_pc,args.snes_checkpoint_frames,args.frames,args.snes_checkpoint_limit)
+    checkpoints=[]
+    controller_samples=[]
+    controller_dropped=0
+    hardware_samples=[]
+    hardware_modals=[]
+    hardware_dropped=0
+    hardware_modal_dropped=0
+    if checkpoint_frames:
+        if args.system!='snes':raise ValueError('SNES checkpoint requires SNES')
+        lib.fdisbull_snes_checkpoint_config.argtypes=[C.c_uint32,C.c_uint32]
+        lib.fdisbull_snes_checkpoint_clear.argtypes=[]
+        lib.fdisbull_snes_checkpoint_count.restype=C.c_uint32
+        lib.fdisbull_snes_checkpoint_dropped.restype=C.c_uint32
+        lib.fdisbull_snes_checkpoint_ram.argtypes=[C.c_uint32]
+        lib.fdisbull_snes_checkpoint_ram.restype=C.c_void_p
+        lib.fdisbull_snes_checkpoint_registers.argtypes=[C.c_uint32]
+        lib.fdisbull_snes_checkpoint_registers.restype=C.POINTER(SnesTraceEvent)
+        lib.fdisbull_snes_checkpoint_serial.argtypes=[C.c_uint32]
+        lib.fdisbull_snes_checkpoint_serial.restype=C.c_uint32
+        lib.fdisbull_snes_checkpoint_config(args.snes_checkpoint_pc,args.snes_checkpoint_limit)
+    if args.snes_controller_journal:
+        lib.fdisbull_snes_controller_config.argtypes=[C.c_uint32]
+        lib.fdisbull_snes_controller_clear.argtypes=[]
+        lib.fdisbull_snes_controller_count.restype=C.c_uint32
+        lib.fdisbull_snes_controller_dropped.restype=C.c_uint32
+        lib.fdisbull_snes_controller_samples.restype=C.POINTER(SnesControllerSample)
+        lib.fdisbull_snes_controller_config(1)
+    if args.snes_hardware_journal:
+        lib.fdisbull_snes_hardware_config.argtypes=[C.c_uint32,C.c_uint32]
+        lib.fdisbull_snes_hardware_clear.argtypes=[]
+        for name in ('count','dropped','busy','modal_count','modal_dropped'):
+            getattr(lib,'fdisbull_snes_hardware_'+name).restype=C.c_uint32
+        lib.fdisbull_snes_hardware_samples.restype=C.POINTER(SnesHardwareSample)
+        lib.fdisbull_snes_hardware_modals.restype=C.POINTER(SnesHardwareModal)
+        lib.fdisbull_snes_hardware_modal_ram.argtypes=[C.c_uint32]
+        lib.fdisbull_snes_hardware_modal_ram.restype=C.c_void_p
+        lib.fdisbull_snes_hardware_config(1,int(args.snes_modal_ram))
     if args.snes_trace_frames:
         if args.system!='snes': raise ValueError('SNES trace requires SNES')
         start,end=(int(x) for x in args.snes_trace_frames.split(':'))
@@ -501,7 +580,64 @@ def worker(args):
                                 'data_sha256': sha(data)})
         if args.snes_trace_frames and start<=i<end:
             configure(pc_lo,pc_hi,wr_lo,wr_hi,65536)
+        if checkpoint_frames:lib.fdisbull_snes_checkpoint_clear()
+        if args.snes_controller_journal:lib.fdisbull_snes_controller_clear()
+        if args.snes_hardware_journal:lib.fdisbull_snes_hardware_clear()
         lib.retro_run()
+        if i in checkpoint_frames:
+            count=lib.fdisbull_snes_checkpoint_count();dropped=lib.fdisbull_snes_checkpoint_dropped()
+            if count>args.snes_checkpoint_limit:raise ValueError('checkpoint count exceeds configured limit')
+            captures=[]
+            for j in range(count):
+                pointer=lib.fdisbull_snes_checkpoint_ram(j)
+                registers=lib.fdisbull_snes_checkpoint_registers(j)
+                if not pointer or not registers:raise ValueError('checkpoint data missing')
+                raw=C.string_at(pointer,131072);serial=lib.fdisbull_snes_checkpoint_serial(j)
+                name=None
+                if not args.snes_checkpoint_digests:
+                    name=f'checkpoint-{i:06d}-{j:02d}.bin';(out/name).write_bytes(raw)
+                captures.append({'file':name,'size':len(raw),'sha256':sha(raw),'serial':serial,
+                                 'registers':{k:getattr(registers.contents,k) for k,_ in SnesTraceEvent._fields_}})
+            checkpoints.append({'video_frame':i,'dropped':dropped,'captures':captures})
+        if args.snes_controller_journal:
+            count=lib.fdisbull_snes_controller_count()
+            controller_dropped+=lib.fdisbull_snes_controller_dropped()
+            if count>32:raise ValueError('controller sample count exceeds bound')
+            samples=lib.fdisbull_snes_controller_samples()
+            for j in range(count):
+                sample=samples[j]
+                if sample.kind not in (1,2,3,4,5,6):raise ValueError('unknown controller consumer')
+                controller_samples.append({'video_frame':i,'kind':{1:'main',2:'player',3:'modal',4:'conversation',5:'conversation',6:'conversation'}[sample.kind],
+                                           'serial':sample.serial,'held':sample.held,'previous':sample.previous,
+                                           'edge':sample.edge,'actor':sample.actor if sample.kind==2 else None,
+                                           **({'pc':sample.actor} if sample.kind>=3 else {}),
+                                           **({'context':{4:'primary',5:'keyword',6:'exit'}[sample.kind]} if sample.kind>=4 else {}),
+                                           **({'source_return':{4:0x91ac,5:0x922f}[sample.kind]} if sample.kind in (4,5) else {})})
+        if args.snes_hardware_journal:
+            count=lib.fdisbull_snes_hardware_count()
+            hardware_dropped+=lib.fdisbull_snes_hardware_dropped()
+            if count>1024:raise ValueError('hardware sample count exceeds bound')
+            samples=lib.fdisbull_snes_hardware_samples()
+            for j in range(count):
+                sample=samples[j]
+                row={name:getattr(sample,name) for name in (
+                    'ordinal','serial','boundary','caller','nmi_low','nmi_high','beam_h','beam_v')}
+                row.update({'video_frame':i,'context':sample.task if sample.caller==3 else 0xffff,
+                            'verification':{name:getattr(sample,name) for name in (
+                                'task','return_pc','parent_return','seed_before','latch','result','seed_after','seen')}})
+                hardware_samples.append(row)
+            count=lib.fdisbull_snes_hardware_modal_count()
+            hardware_modal_dropped+=lib.fdisbull_snes_hardware_modal_dropped()
+            if count>32:raise ValueError('modal sample count exceeds bound')
+            modals=lib.fdisbull_snes_hardware_modals()
+            for j in range(count):
+                row={name:getattr(modals[j],name) for name in ('boundary','serial','kind','pc')}
+                pointer=lib.fdisbull_snes_hardware_modal_ram(j)
+                if not pointer:raise ValueError('modal RAM missing')
+                raw=C.string_at(pointer,131072)
+                name=f'modal-{row["boundary"]:06d}.bin';(out/name).write_bytes(raw)
+                row.update({'video_frame':i,'file':name,'size':len(raw),'sha256':sha(raw)})
+                hardware_modals.append(row)
         if args.snes_trace_frames and start<=i<end:
             count=lib.fdisbull_snes_trace_count();dropped=lib.fdisbull_snes_trace_dropped()
             events=lib.fdisbull_snes_trace_events()
@@ -547,6 +683,27 @@ def worker(args):
             'last_opcode_pc_for_writes':True,'frames':snes_trace},separators=(',',':'))+'\n').encode()
         (out/'snes_trace.json').write_bytes(trace_data)
         snes_trace_hash=sha(trace_data)
+    controller_hash=None
+    if args.snes_controller_journal:
+        journal=controller_journal_summary(controller_samples,controller_dropped)
+        journal_data=(json.dumps(journal,separators=(',',':'))+'\n').encode()
+        (out/'controller_journal.json').write_bytes(journal_data)
+        controller_hash=sha(journal_data)
+    hardware_hash=None
+    if args.snes_hardware_journal:
+        journal={'format':'snes-shadowrun-hardware-journal-1',
+                 'scope':'all C530 calls from boot; raw reads only are replay inputs; verification fields and modal RAM never gameplay inputs',
+                 'read_order':[{'pc':0x80c536,'address':0x2137,'field':'latch'},
+                               {'pc':0x80c53c,'address':0x7e1c92,'field':'nmi_low'},
+                               {'pc':0x80c542,'address':0x213c,'field':'beam_h'},
+                               {'pc':0x80c549,'address':0x7e1c93,'field':'nmi_high'},
+                               {'pc':0x80c54f,'address':0x213d,'field':'beam_v'}],
+                 'boundary_phase':'increments at every accepted main or modal/controller conversation sample; player samples excluded',
+                 'dropped':hardware_dropped,'incomplete_at_end':lib.fdisbull_snes_hardware_busy(),
+                 'modal_dropped':hardware_modal_dropped,'samples':hardware_samples,'modals':hardware_modals,
+                 'rom_sha256':sha(rom),'core_sha256':core_hash,'controller_journal_sha256':controller_hash}
+        raw=(json.dumps(journal,separators=(',',':'))+'\n').encode()
+        (out/'hardware_journal.json').write_bytes(raw);hardware_hash=sha(raw)
     if frame[0] is None:
         raise RuntimeError('core produced no video frame')
     raw, width, height, pitch, fmt = frame[0]
@@ -584,6 +741,10 @@ def worker(args):
     receipt.update({'save_ram_size': len(save_memory), 'save_ram_sha256': sha(save_memory) if save_memory else None,
                     'frame_ram':ram_images,
                     'snes_trace_sha256':snes_trace_hash,
+                    'snes_controller_journal_sha256':controller_hash,
+                    'snes_hardware_journal_sha256':hardware_hash,
+                    'snes_checkpoints':{'pc':args.snes_checkpoint_pc,'phase':'before selected opcode at instruction entry; video frame identifies containing retro_run','frames':checkpoints} if checkpoint_frames else None,
+                    'snes_checkpoint_digests_only':bool(args.snes_checkpoint_digests),
                     'snes_trace_filters':{'frames':args.snes_trace_frames,'pc':args.snes_trace_pc,'write':args.snes_trace_write} if snes_trace_hash else None,
                     'save_ram_byte_order': 'raw core bytes; address mapping not validated',
                     'audio_capture': captured_audio, 'frame_images': images,
@@ -613,7 +774,7 @@ def main():
     parser.add_argument('--rom', required=True)
     parser.add_argument('--system', required=True, choices=['nes', 'genesis', 'snes'])
     parser.add_argument('--frames', required=True, type=int)
-    parser.add_argument('--inputs', help='JSON list of start/end exclusive frame ranges and Libretro button names')
+    parser.add_argument('--inputs', help='Path to a JSON file of start/end exclusive frame ranges and Libretro button names')
     parser.add_argument('--input-map', help='JSON mapping semantic button names to Libretro IDs')
     parser.add_argument('--feedback-policy',help='Finite read-only publication controller policy; incompatible with static inputs or RAM patches')
     parser.add_argument('--watch', help='JSON raw RAM slices: name, offset, length, optional memory_id (0 save RAM or default2 system RAM)')
@@ -624,6 +785,13 @@ def main():
     parser.add_argument('--snes-trace-frames', help='Bounded frame start:exclusive-end (at most 120)')
     parser.add_argument('--snes-trace-pc', help='24-bit opcode address start:exclusive-end')
     parser.add_argument('--snes-trace-write', help='24-bit direct bus write address start:exclusive-end')
+    parser.add_argument('--snes-checkpoint-pc',type=lambda x:int(x,0),help='Instruction-entry PC for private WRAM checkpoints; requires matching instrumented core')
+    parser.add_argument('--snes-checkpoint-frames',help='At most 6000 checkpoint video frames; more than 128 requires limit 1; each capture uses 128 KiB')
+    parser.add_argument('--snes-checkpoint-limit',type=int,default=4,help='At most1..8 checkpoints per video frame; dropped count retained')
+    parser.add_argument('--snes-checkpoint-digests',action='store_true',help='Keep checkpoint hashes and metadata without writing private WRAM snapshots')
+    parser.add_argument('--snes-controller-journal',action='store_true',help='Observe main-loop held/previous controller words with a compatible core')
+    parser.add_argument('--snes-hardware-journal',action='store_true',help='Observe every Shadowrun C530 hardware read with a compatible core; raw journal stays private')
+    parser.add_argument('--snes-modal-ram',action='store_true',help='Keep private RAM at every observed modal/conversation input boundary; requires hardware journal')
     parser.add_argument('--output', required=True)
     parser.add_argument('--timeout', type=float, default=60)
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
@@ -632,6 +800,15 @@ def main():
         parser.error('frames must be 1..10000 and timeout 0..600 seconds')
     try:
         frame_numbers(args.frame_images, args.frames)
+        checkpoint_plan(args.snes_checkpoint_pc,args.snes_checkpoint_frames,args.frames,args.snes_checkpoint_limit)
+        if args.snes_checkpoint_digests and (args.system!='snes' or args.snes_checkpoint_pc is None or not args.snes_checkpoint_frames):
+            raise ValueError('checkpoint digests require SNES checkpoints')
+        if args.snes_controller_journal and (args.system!='snes' or args.snes_checkpoint_pc!=0x80962e or not args.snes_checkpoint_frames):
+            raise ValueError('controller journal requires SNES 80:962E checkpoints')
+        if args.snes_hardware_journal and not args.snes_controller_journal:
+            raise ValueError('hardware journal requires SNES controller journal')
+        if args.snes_modal_ram and not args.snes_hardware_journal:
+            raise ValueError('modal RAM requires hardware journal')
         if len(frame_numbers(args.frame_ram, args.frames)) > 64:
             raise ValueError('at most 64 full RAM snapshots')
     except ValueError as exc:

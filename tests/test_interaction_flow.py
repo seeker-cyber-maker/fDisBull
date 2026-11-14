@@ -97,3 +97,26 @@ def test_null_resume_global_stop_and_unexpected_return():
     r = execute_il(p, {'$x': 7})
     assert r['status'] == 'refused' and r['error'] == 'unexpected return without continuation'
     assert r['state'] == {'$x': 7} and r['events'] == [] and r['visited'] == []
+
+
+def test_recovered_signed_arithmetic_and_ge_transfer_preserve_compact_flow():
+    document = {'format': 'fdisbull-il-2', 'role': 'uil',
+        'variables': {'$x': {'type': 'i16', 'initial': -32768}},
+        'resources': {}, 'entry': 'start', 'continuations': {
+            'start': {'body': [
+                {'id': 'divide', 'op': 'divide', 'var': '$x', 'value': -1}],
+                'transfer': {'op': 'if',
+                    'condition': {'op': 'ge', 'left': {'var': '$x'}, 'right': 0},
+                    'then': 'unexpected', 'else': 'wrapped'}},
+            'unexpected': {'body': [{'id': 'wrong', 'op': 'set', 'var': '$x', 'value': 42}],
+                'transfer': {'op': 'return'}},
+            'wrapped': {'body': [{'id': 'multiply', 'op': 'multiply', 'var': '$x', 'value': -1}],
+                'transfer': {'op': 'return'}}}}
+    result = execute_il(document)
+    assert result['status'] == 'complete'
+    assert result['state'] == {'$x': -32768}
+    assert result['visited'] == ['start', 'divide', 'wrapped', 'multiply']
+    document['continuations']['start']['body'][0]['value'] = 0
+    refused = execute_il(document)
+    assert refused['status'] == 'refused'
+    assert refused['state'] == {'$x': -32768} and refused['events'] == []

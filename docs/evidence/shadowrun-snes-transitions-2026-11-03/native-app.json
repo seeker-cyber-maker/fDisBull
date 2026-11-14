@@ -1,0 +1,66 @@
+{
+  "cases": {
+    "rng-refusal": {
+      "input_updates": 3904,
+      "png_sha256": "28f660618567f9fa92c12b4b3a498b3545ea6247e9bcd971ea055e98eda80643",
+      "render": {
+        "completed_updates": 3903,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": true
+      }
+    },
+    "street-prefix": {
+      "input_updates": 3903,
+      "png_sha256": "43a39e262dbc6951eca5677c4db26dc598f9c8dd7a5657d1bc2c0be89dda48af",
+      "render": {
+        "completed_updates": 3903,
+        "player_x": 2600,
+        "player_y": 1684,
+        "player_z": 347,
+        "stopped": false
+      }
+    }
+  },
+  "executable_readback_verified": true,
+  "frontend_sha256": "57fd14d149320dee2561a14b0aeffc76e4c2558e24f872a3541773c3e7fc0fb5",
+  "frontend_source_sha256": "2e5051bfb5589e23c2cb5cf9fb3d7a3c26228995f62faa71bfce021a28eac613",
+  "limits": [
+    "Adapted source-actor view, no original artwork.",
+    "Title runtime reaches first street update; source RNG refusal stops continuation.",
+    "Conversation components qualified separately; no live conversation screenshot or keyboard/onscreen qualification."
+  ],
+  "native_core": {
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "dylib_sha256": "5c41baa40314f51b2d8a2dc60965b5780605c095380a73e8a7b3fbc4ed8f3a4b",
+    "entry": "shadowrun_snes_frame",
+    "format": "fdisbull-macos-native-1",
+    "header": "fdisbull_native.h",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ],
+    "integer_model": "cc65-int16-long32",
+    "logical_input_bits": 8,
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+    "seed_sha256": "7f34b4bfc86c91daab5f17f2ffab9f4af029781eefa3ad1601f417e8ba4aef4d",
+    "source_sha256": "d40e6ee8b7f59aab5b1139bd70ada0e23f5d5d05d7fd33a51b9cba5c213e1df2",
+    "unsupported_status": "shadowrun_snes_frame_status"
+  },
+  "private_receipt_sha256": "8d31fb88d32ac80f82e230a352cde795494e69b1a1b7559930171761794c5b3e",
+  "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+  "result": "passed_bounded_app",
+  "seed_file_sha256": "b4e1f10638ff41438277af970f7611423f936081bebc708636d359c357bdd20b",
+  "seed_state_sha256": "7f34b4bfc86c91daab5f17f2ffab9f4af029781eefa3ad1601f417e8ba4aef4d"
+}

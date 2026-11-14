@@ -581,3 +581,7 @@ project history is preserved in [historical snapshots](docs/PROJECT_HISTORY.md).
 
 No first-party distribution license has been selected. Public visibility does
 not grant an open-source license. See [third-party provenance](docs/THIRD_PARTY.md).
+
+Recovered bounded compiler and analysis seams are documented in the
+[0.35 adapter integration map](docs/RECOVERED_UDC_ADAPTERS_0.35.md), including
+source identities, private-input exclusions and qualification limits.

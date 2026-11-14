@@ -1,0 +1,49 @@
+{
+  "format": "shadowrun-snes-scripted-checkpoint-1",
+  "result": "passed",
+  "receipt_sha256": "3c6b6f7290c8a20c5755b6b25fe81a29afc8f0a0aa60a69cfbad7cea8fe86593",
+  "seed_sha256": "e4cf82bc4d2d58d28cda9ae9d90d51cf4287e9e8bf0d3c860097a1a5ce2f0ca9",
+  "core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+  "program_sha256": "a2145fa6f9298a33c0fb5eee27c4a7f79346b6efd8fd2dfd3b58dacdd24c510b",
+  "source_hashes": {
+    "scripts/check_shadowrun_snes_scripted.py": "f5a0d0d314a998a79d16f78f4ba833b872f5c9433cb8336f654a7817448427ca",
+    "src/fdisbull/game_sources/shadowrun_snes_npc.c": "92791e23113af79d8b14873bb15a7703ed4d67b13780b22115f84a24a89d4e14",
+    "src/fdisbull/game_sources/shadowrun_snes_script.c": "6f228fc8d10cb3b3083f5eb068a699deb87528a2ffb267aab55e2b388ebb5623",
+    "src/fdisbull/shadowrun_snes_scripted.py": "2104aa297b242c007bf39d31c2ff725f9beb4839a0f75b87029c57554d14ed1c"
+  },
+  "native_build": {
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "format": "fdisbull-macos-native-1",
+    "program_sha256": "a2145fa6f9298a33c0fb5eee27c4a7f79346b6efd8fd2dfd3b58dacdd24c510b",
+    "source_sha256": "af52a27814085ae5f6be163d5ef50dd9cd938804577b588dca74d7d85b98d44b",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "dylib_sha256": "777b21fffe88d80979c58c9caa95fafb0f7fb5ddd2977e595477ad78251d0c9a",
+    "seed_sha256": "e02b3ae5c312d33310592c5fc3c5e9f0d6b48f090f4ad9747dbd1e16f0b73608",
+    "integer_model": "cc65-int16-long32",
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "header": "fdisbull_native.h",
+    "entry": "shadowrun_snes_frame",
+    "unsupported_status": "shadowrun_snes_frame_status",
+    "logical_input_bits": 8,
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ]
+  },
+  "clock": "consecutive instruction-entry checkpoints at 80:962E",
+  "scope": "active task scheduler plus three actor slice, not whole scene; no rendering/audio equivalence",
+  "source_checkpoints": 60,
+  "source_fields": 17920,
+  "native_elements": 4300506,
+  "first_divergence": null,
+  "budget_rollback_verified": true,
+  "private_receipt_sha256": "c104f02b199b20fcdc9008b9d64e8eac2ff17153407b30031aaeb6a6b9c9e549"
+}

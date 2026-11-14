@@ -25,53 +25,92 @@ def generate_c(module, symbol='udc_block'):
     ``symbol`` names the emitted function so several blocks can coexist in one
     link unit; the default preserves the single-block ABI.
     """
-    program=module['program'];validate_il(program);variables=program['variables']
-    adapter=module.get('state_adapter');inputs=sorted(variables) if adapter is None else list(adapter['inputs'])
-    outputs=sorted(variables) if adapter is None else list(adapter['outputs'])
-    names={n:'v'+str(i) for i,n in enumerate(sorted(variables))};lines=[];serial=[0]
-    def value(v):return names[v['var']] if isinstance(v,dict) else _literal(v)
+    program = module['program']
+    validate_il(program)
+    variables = program['variables']
+    adapter = module.get('state_adapter')
+    inputs = sorted(variables) if adapter is None else list(adapter['inputs'])
+    outputs = sorted(variables) if adapter is None else list(adapter['outputs'])
+    names = {n: 'v' + str(i) for i, n in enumerate(sorted(variables))}
+    lines = []
+    serial = [0]
+
+    def value(v):
+        return names[v['var']] if isinstance(v, dict) else _literal(v)
+
     def condition(c):
-        op=c['op']
-        if op=='eq':return '('+value(c['left'])+' == '+value(c['right'])+')'
-        if op=='bit_test':return '((((unsigned long long)'+value(c['value'])+') >> '+str(c['bit'])+') & 1ULL)'
-        if op=='not':return '!('+condition(c['condition'])+')'
-        return '('+' && '.join(condition(x) for x in c['conditions'])+')'
-    def emit(body,indent='  '):
+        op = c['op']
+        if op == 'eq':
+            return '(' + value(c['left']) + ' == ' + value(c['right']) + ')'
+        if op == 'ge':
+            return '(' + value(c['left']) + ' >= ' + value(c['right']) + ')'
+        if op == 'bit_test':
+            return '((((unsigned long long)' + value(c['value']) + ') >> ' + str(c['bit']) + ') & 1ULL)'
+        if op == 'not':
+            return '!(' + condition(c['condition']) + ')'
+        return '(' + ' && '.join((condition(x) for x in c['conditions'])) + ')'
+
+    def emit(body, indent='  '):
         for node in body:
-            op=node['op']
-            if op=='if':
-                lines.append(indent+'if ('+condition(node['condition'])+') {');emit(node['then'],indent+'  ');lines.append(indent+'} else {');emit(node['else'],indent+'  ');lines.append(indent+'}')
-            elif op=='require':lines.append(indent+'if (!('+condition(node['condition'])+')) return 1ULL<<32;')
-            elif op in ('set','add','subtract'):
-                var=node['var'];typ=variables[var]['type'];name=names[var];operand=value(node['value']);serial[0]+=1;temp='t'+str(serial[0])
-                bits=1 if typ=='bool' else int(typ[1:]);mask=(1<<bits)-1
-                if op=='set':
-                    low,high=(-(1<<(bits-1)),(1<<(bits-1))-1) if typ.startswith('i') else (0,mask)
-                    lines.append(indent+'long long '+temp+' = '+operand+';')
-                    lines.append(indent+'if ('+temp+' < '+_literal(low)+' || '+temp+' > '+_literal(high)+') return 1ULL<<32;')
-                    lines.append(indent+name+' = '+temp+';')
+            op = node['op']
+            if op == 'if':
+                lines.append(indent + 'if (' + condition(node['condition']) + ') {')
+                emit(node['then'], indent + '  ')
+                lines.append(indent + '} else {')
+                emit(node['else'], indent + '  ')
+                lines.append(indent + '}')
+            elif op == 'require':
+                lines.append(indent + 'if (!(' + condition(node['condition']) + ')) return 1ULL<<32;')
+            elif op in ('set', 'add', 'subtract', 'multiply', 'divide'):
+                var = node['var']
+                typ = variables[var]['type']
+                name = names[var]
+                operand = value(node['value'])
+                serial[0] += 1
+                temp = 't' + str(serial[0])
+                bits = 1 if typ == 'bool' else int(typ[1:])
+                mask = (1 << bits) - 1
+                if op == 'set':
+                    low, high = (-(1 << bits - 1), (1 << bits - 1) - 1) if typ.startswith('i') else (0, mask)
+                    lines.append(indent + 'long long ' + temp + ' = ' + operand + ';')
+                    lines.append(indent + 'if (' + temp + ' < ' + _literal(low) + ' || ' + temp + ' > ' + _literal(high) + ') return 1ULL<<32;')
+                    lines.append(indent + name + ' = ' + temp + ';')
                 else:
-                    sign='+' if op=='add' else '-'
-                    lines.append(indent+'unsigned long long '+temp+' = ((unsigned long long)'+name+' '+sign+' (unsigned long long)('+operand+')) & '+str(mask)+'ULL;')
-                    expr=('('+temp+' >= '+str(1<<(bits-1))+'ULL ? (long long)'+temp+' - '+str(1<<bits)+'LL : (long long)'+temp+')') if typ.startswith('i') else '(long long)'+temp
-                    lines.append(indent+name+' = '+expr+';')
-            else:raise ValueError('C backend supports pure scalar UIL only')
-    _check(isinstance(symbol,str) and symbol.isidentifier(),'C block symbol must be an identifier')
-    lines.append('__attribute__((used,visibility("default"))) unsigned long long '+symbol+'(const unsigned short *in, unsigned short *out) {')
+                    if op == 'multiply':
+                        expression = '((unsigned long long)(' + name + ') * (unsigned long long)(' + operand + '))'
+                    elif op == 'divide':
+                        lines.append(indent + 'if ((' + operand + ') == 0) return 1ULL<<32;')
+                        expression = '(unsigned long long)((long long)(' + name + ') / (long long)(' + operand + '))'
+                    else:
+                        sign = '+' if op == 'add' else '-'
+                        expression = '((unsigned long long)' + name + ' ' + sign + ' (unsigned long long)(' + operand + '))'
+                    lines.append(indent + 'unsigned long long ' + temp + ' = ' + expression + ' & ' + str(mask) + 'ULL;')
+                    expr = '(' + temp + ' >= ' + str(1 << bits - 1) + 'ULL ? (long long)' + temp + ' - ' + str(1 << bits) + 'LL : (long long)' + temp + ')' if typ.startswith('i') else '(long long)' + temp
+                    lines.append(indent + name + ' = ' + expr + ';')
+            else:
+                raise ValueError('C backend supports pure scalar UIL only')
+    _check(isinstance(symbol, str) and symbol.isidentifier(), 'C block symbol must be an identifier')
+    lines.append('__attribute__((used,visibility("default"))) unsigned long long ' + symbol + '(const unsigned short *in, unsigned short *out) {')
     for n in sorted(variables):
-        typ=variables[n]['type'];_check(typ in ('bool','u8','i8','u16','i16'),'C backend supports logical byte/word types only')
+        typ = variables[n]['type']
+        _check(typ in ('bool', 'u8', 'i8', 'u16', 'i16'), 'C backend supports logical byte/word types only')
         if n in inputs:
-            expression='in['+str(inputs.index(n))+']'
-            if typ=='i16':expression='('+expression+' >= 32768 ? (long long)'+expression+' - 65536LL : (long long)'+expression+')'
-            elif typ=='i8':expression='(('+expression+' & 255) >= 128 ? (long long)('+expression+' & 255) - 256LL : (long long)('+expression+' & 255))'
-            elif typ in ('u8','bool'):expression='('+expression+' & '+('255' if typ=='u8' else '1')+')'
-        else:expression=_literal(variables[n]['initial'])
-        lines.append('  long long '+names[n]+' = '+expression+';')
+            expression = 'in[' + str(inputs.index(n)) + ']'
+            if typ == 'i16':
+                expression = '(' + expression + ' >= 32768 ? (long long)' + expression + ' - 65536LL : (long long)' + expression + ')'
+            elif typ == 'i8':
+                expression = '((' + expression + ' & 255) >= 128 ? (long long)(' + expression + ' & 255) - 256LL : (long long)(' + expression + ' & 255))'
+            elif typ in ('u8', 'bool'):
+                expression = '(' + expression + ' & ' + ('255' if typ == 'u8' else '1') + ')'
+        else:
+            expression = _literal(variables[n]['initial'])
+        lines.append('  long long ' + names[n] + ' = ' + expression + ';')
     emit(program['body'])
-    for i,n in enumerate(outputs):lines.append('  out['+str(i)+'] = (unsigned short)((unsigned long long)'+names[n]+' & 65535ULL);')
-    lines.append('  return (unsigned long long)'+(names[module['return']] if module.get('return') is not None else '0')+' & 65535ULL;')
+    for i, n in enumerate(outputs):
+        lines.append('  out[' + str(i) + '] = (unsigned short)((unsigned long long)' + names[n] + ' & 65535ULL);')
+    lines.append('  return (unsigned long long)' + (names[module['return']] if module.get('return') is not None else '0') + ' & 65535ULL;')
     lines.append('}')
-    return '\n'.join(lines)+'\n',inputs,outputs
+    return ('\n'.join(lines) + '\n', inputs, outputs)
 
 
 def compile_c(module,compiler,*,symbol='udc_block'):

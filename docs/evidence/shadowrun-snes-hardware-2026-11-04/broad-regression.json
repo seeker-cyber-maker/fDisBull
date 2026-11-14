@@ -1,0 +1,200 @@
+{
+  "baseline_junit_sha256": "93be71d6a304d0d3fe66b0b74cf1a93b6429c4b8ac1872aae2add9334f5582a1",
+  "baseline_message_comparison": {
+    "changed_cases": [],
+    "comparison_count": 26,
+    "normalization": "Use full XML element exception lines starting E; replace only exact prior/current pytest temporary roots. Truncated message attributes are excluded.",
+    "normalized_exception_lines_equal": true,
+    "same_cases_and_kinds": true
+  },
+  "baseline_non_green_same_cases_and_types": true,
+  "counts": {
+    "errors": "23",
+    "failures": "3",
+    "skipped": "142",
+    "tests": "4458",
+    "time": "386.625"
+  },
+  "junit_sha256": "56a35d5b69d02648648a2832f8a04d179489acf7d4dd495579329fa131179de2",
+  "limits": [
+    "Broad macOS suite remains non-green; no hosted/native Linux CI or release claim."
+  ],
+  "non_green_cases": [
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_bad_limits_are_rejected[0]",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_bad_limits_are_rejected[100001]",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_bad_limits_are_rejected[2]",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_bad_limits_are_rejected[True]",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_conflicting_version_requirement_indices_do_not_prove_a_module",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_duplicate_versioned_export_names_remain_separate",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_fno_plt_uses_glob_dat_without_fabricating_a_stub",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_got_slots_come_from_actual_relocations_and_keep_module_proof",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_limits_cap_metadata_and_path_lists_with_warnings",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_plt_stubs_are_native_validated_not_fixed_stride_guesses",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_rel_encoding_does_not_claim_an_explicit_zero_addend",
+      "type": null
+    },
+    {
+      "class": "tests.test_elf_metadata",
+      "kind": "error",
+      "name": "test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution",
+      "type": null
+    },
+    {
+      "class": "tests.test_inspection",
+      "kind": "failure",
+      "name": "test_actual_elf_exports_and_unresolved_imports_are_honest",
+      "type": null
+    },
+    {
+      "class": "tests.test_loading",
+      "kind": "failure",
+      "name": "test_real_elf_retains_entry_and_named_function",
+      "type": null
+    },
+    {
+      "class": "tests.test_media_modules",
+      "kind": "failure",
+      "name": "test_resource_ambiguity_and_directory_bounds",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_import_name_patch_replaces_old_symbol_alias_and_contract",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_linux_calls_xrefs_and_shared_bulk_effects[got]",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_linux_calls_xrefs_and_shared_bulk_effects[plt]",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_patched_got_disk_pointer_does_not_become_an_internal_call[got]",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_public_linkage_json_methods_and_refresh_return_structured_results",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes",
+      "type": null
+    },
+    {
+      "class": "tests.test_platform_calls",
+      "kind": "error",
+      "name": "test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child",
+      "type": null
+    }
+  ],
+  "passed": 4290,
+  "post_suite_documentation_readback": {
+    "excluded_failed_gate": "A preliminary installed-package skill checker was invoked with the prepared non-installed Python and correctly failed. It was not a source-skill or installed-candidate success.",
+    "post_broad_documentation_delta": [
+      {
+        "after_sha256": "d434241e10a7d4af4fd2956c0b1667199f2ae98d2ad112979b39b4acbb22da50",
+        "before_sha256": "354628b0555a315259081931c285840e243f221ccfe2e63dc5c76d5ee93382d1",
+        "file": "src/fdisbull/skills/fdisbull-investigate/references/analysis-approach.md"
+      }
+    ],
+    "reason": "New retained-body/selector-scratch analysis lesson discovered after broad run; documentation only; original runtime/source comparisons unchanged.",
+    "resource_sha256": "d434241e10a7d4af4fd2956c0b1667199f2ae98d2ad112979b39b4acbb22da50",
+    "result": "passed",
+    "runtime_checker_and_test_source_unchanged_since_broad_suite": true,
+    "source_cli_resource_matches_file": true,
+    "validation": "Current source CLI resource exact byte readback plus skill-creator quick_validate; installed-wheel skills gate follows exact commit packaging."
+  },
+  "source_inventory_sha256": "a00f3a484508b5c3cfd516ad106fd24a7af55b0c3d0ba1e947e5890f8d8323c5",
+  "source_unchanged": true,
+  "status": "baseline_non_green"
+}

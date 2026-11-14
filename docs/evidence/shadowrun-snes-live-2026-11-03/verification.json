@@ -1,0 +1,70 @@
+{
+  "analysis_budget_check": {
+    "accepted_updates": 200,
+    "format": "shadowrun-snes-live-cap-check-1",
+    "native_elements": 1005865,
+    "native_receipt_sha256": "2078e3d8dfb7c597092ad57be4559cb1312c1d25a4bcf83d509f7588870158c6",
+    "native_rollback_verified": true,
+    "refused_update": 201,
+    "repeat_refusal": true,
+    "scope": "analysis budget and native rollback only; source comparison ended at frame 3190",
+    "source_receipt_sha256": "a9256b85f2658b6d17cc01de27b4760bb7bc4c3b0028990a1ae4388812e58cb4"
+  },
+  "analysis_budget_receipt_sha256": "f3fbc0a9b96687aecde68786c5b55232cce9983932b121e0268526625e38b7a7",
+  "checks": {
+    "long": {
+      "core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+      "first_divergence": null,
+      "logical_steps": 191,
+      "native_elements": 951360,
+      "program_sha256": "ee9b1243fcf4792bcabf1640734f30274ff22d45398d3e2bf08c0a050af96799",
+      "receipt_sha256": "86fb51bbb9b9d6ff633c7200838ffa9bdb562e4549ec3cb0478b6e5d8fbfffe2",
+      "result": "passed",
+      "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+      "scope": "prepared scene; player and collision arrays, not autonomous NPC or scripts",
+      "seed_sha256": "0032d4c7e01fce638a8ef653be6ab94871d7aa51ce48bb65d5d7b1444f791211",
+      "source_compared": 63,
+      "source_receipt_sha256": "a9256b85f2658b6d17cc01de27b4760bb7bc4c3b0028990a1ae4388812e58cb4"
+    },
+    "npc_demo": {
+      "core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+      "first_divergence": {
+        "frame": 2031,
+        "kind": "model refused"
+      },
+      "native_elements": 1815,
+      "program_sha256": "5e798700c53ac8a43a253f3b224c87b56be21d2c3280fb926318691a591f171b",
+      "receipt_sha256": "2bf0574174ac6fc3cb1cc86ef21c6da8f24751a2c95401ff327b66d2f795330d",
+      "result": "unsupported",
+      "rollback_verified": true,
+      "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+      "scope": "two noncolliding NPC projections seeded at frame 2000; no future source inputs, script dispatch, animation or rendering flags",
+      "seed_sha256": "faa776f34a5b2d9f0aad328ffc44d9d4065523a77caf3d412d46b2d9258f52ab",
+      "source_compared": 30,
+      "source_receipt_sha256": "b703e8f6c9e4a94641eafa73d5dc183f52f70f763c43d60f78a52162aa704628"
+    },
+    "short": {
+      "core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+      "first_divergence": null,
+      "logical_steps": 61,
+      "native_elements": 307210,
+      "program_sha256": "ee9b1243fcf4792bcabf1640734f30274ff22d45398d3e2bf08c0a050af96799",
+      "receipt_sha256": "e2541892860a7062baafea45f7468d87393f53598fad5a5f4b3cf70fca96bed5",
+      "result": "passed",
+      "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+      "scope": "prepared scene; player and collision arrays, not autonomous NPC or scripts",
+      "seed_sha256": "0032d4c7e01fce638a8ef653be6ab94871d7aa51ce48bb65d5d7b1444f791211",
+      "source_compared": 61,
+      "source_receipt_sha256": "b805b26d51dbeedfead1d4519bce74ea9c9108cdc8983a0cef90aa667fcfa44c"
+    }
+  },
+  "claim": "bounded observed source routes and independently compared compiler edge; not unrestricted scene/NPC/script behavior",
+  "comparison_fields": [
+    "six player fields",
+    "twelve 44-slot actor arrays",
+    "active actor order",
+    "all five dynamic collision arrays"
+  ],
+  "date": "2026-11-03",
+  "format": "fdisbull-snes-live-research-verification-1"
+}

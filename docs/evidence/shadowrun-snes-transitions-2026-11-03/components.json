@@ -1,0 +1,421 @@
+{
+  "components": {
+    "body_source": {
+      "evidence": {
+        "cases": [
+          {
+            "cursor_match": true,
+            "decode_match": true,
+            "decoded_bytes_including_zero": 69,
+            "layout_status": 1,
+            "pointer": "5fad",
+            "processed_match": true,
+            "source_post_fb03_sha256": "638c89da125e3200b61487525facc1f7177c9744b8c668dcebfd2170dae2473e",
+            "source_pre_fb03_sha256": "c6214b7ab69ae9c8ea0d4acf8b8421d2916375d32d9474e7a8b6c5ee3390a7ec",
+            "subpixel_match": true
+          },
+          {
+            "cursor_match": true,
+            "decode_match": true,
+            "decoded_bytes_including_zero": 53,
+            "layout_status": 1,
+            "pointer": "603f",
+            "processed_match": true,
+            "source_post_fb03_sha256": "61a65de1c2a045d56a6f5b374db78741562aac7246b124321c314798d2b8f6cc",
+            "source_pre_fb03_sha256": "09aad01ab91174859ab6813bc50295b48126895a4fcb1b1444e861192cbe4ac9",
+            "subpixel_match": true
+          },
+          {
+            "cursor_match": true,
+            "decode_match": true,
+            "decoded_bytes_including_zero": 98,
+            "layout_status": 1,
+            "pointer": "600e",
+            "processed_match": true,
+            "source_post_fb03_sha256": "b4cd566f15d982bcc6a2c4fdee574539b8b9128cee0369a1441a2bc0a2533375",
+            "source_pre_fb03_sha256": "3fafe6d960eea5de8c85846a2482606c03f444d5ec1b7302630aa155bf61934c",
+            "subpixel_match": true
+          }
+        ],
+        "result": "passed",
+        "scope": "three source-pointer pre/post FB03 cases; excludes pixel and timing equivalence",
+        "source_sha256": "f3cf75a779514b21088fd8c51d3ed769fee5268f51a204707ed94c4ec5f0eb68"
+      },
+      "receipt_sha256": "d094a8a97b870c7d97f7e655219951ddcea0a0e8b4570f8924db5e45fe6c1fe1"
+    },
+    "compiled_components": {
+      "evidence": {
+        "components": {
+          "rng": {
+            "cases": [
+              {
+                "case": "observed-task22",
+                "native_uil_elements": 9,
+                "source_checks": {
+                  "next_seed": true,
+                  "result_word": true
+                },
+                "source_entry_sha256": "4697ae023d32fea8bcd9eb651f4b46eb855b8ed6446d1a14c7b236ddd315098a",
+                "source_post_sha256": "4697ae023d32fea8bcd9eb651f4b46eb855b8ed6446d1a14c7b236ddd315098a"
+              }
+            ],
+            "native_dylib_sha256": "7efced6196f23710ef0a0c6893d17af61b1b20e61a55dc6f140e2c3e9dd2782d",
+            "native_receipt_sha256": "d4eb8d7819f0c901fc5ef30a6e22301d714ff06b667b2009f0949fe90aaee6a9",
+            "program_sha256": "3fa75c31d0a02771cb56812da1b2bf1f62b9a410a471a875a71af2918307e1fd",
+            "source_sha256": "13e8c101557403c5a763dfb582a79b7e455f846acb2fdf1eb8869ae6b3ade23b"
+          },
+          "text": {
+            "cases": [
+              {
+                "case": "5fad",
+                "native_uil_elements": 284,
+                "source_checks": {
+                  "cursor": true,
+                  "processed_bytes_and_terminator": true,
+                  "style_scratch": true,
+                  "subpixel": true,
+                  "window_style_preserved": true
+                },
+                "source_entry_sha256": "c6214b7ab69ae9c8ea0d4acf8b8421d2916375d32d9474e7a8b6c5ee3390a7ec",
+                "source_post_sha256": "638c89da125e3200b61487525facc1f7177c9744b8c668dcebfd2170dae2473e"
+              },
+              {
+                "case": "603f",
+                "native_uil_elements": 284,
+                "source_checks": {
+                  "cursor": true,
+                  "processed_bytes_and_terminator": true,
+                  "style_scratch": true,
+                  "subpixel": true,
+                  "window_style_preserved": true
+                },
+                "source_entry_sha256": "09aad01ab91174859ab6813bc50295b48126895a4fcb1b1444e861192cbe4ac9",
+                "source_post_sha256": "61a65de1c2a045d56a6f5b374db78741562aac7246b124321c314798d2b8f6cc"
+              },
+              {
+                "case": "600e",
+                "native_uil_elements": 284,
+                "source_checks": {
+                  "cursor": true,
+                  "processed_bytes_and_terminator": true,
+                  "style_scratch": true,
+                  "subpixel": true,
+                  "window_style_preserved": true
+                },
+                "source_entry_sha256": "3fafe6d960eea5de8c85846a2482606c03f444d5ec1b7302630aa155bf61934c",
+                "source_post_sha256": "b4cd566f15d982bcc6a2c4fdee574539b8b9128cee0369a1441a2bc0a2533375"
+              }
+            ],
+            "native_dylib_sha256": "1b90fd7ff89421bf4c3a83e660e15a13a2b70d7d526cb5a578a951711ebf8725",
+            "native_receipt_sha256": "de350fb8cbfad2c941d9376df695e6696748361bdf0686b0e987b8dc43b57d15",
+            "program_sha256": "2c86f88bab9cbc4458df00c2743b433cdb6ee01f83cee599c5172d3f02bc1c9b",
+            "source_sha256": "f3cf75a779514b21088fd8c51d3ed769fee5268f51a204707ed94c4ec5f0eb68"
+          },
+          "vertical": {
+            "cases": [
+              {
+                "case": "5292",
+                "native_uil_elements": 131083,
+                "source_checks": {
+                  "carry_result": true,
+                  "hit": true,
+                  "scratch_words": true
+                },
+                "source_entry_sha256": "5d30b26156b8764c31c2db9857c75909238090c904eae1434375e4263e7210f5",
+                "source_post_sha256": "1907bb31d0c2597cfb51d450991a9ef40dfe8cb15ebff1bc8c8d66178c8c5bb2"
+              },
+              {
+                "case": "5296",
+                "native_uil_elements": 131083,
+                "source_checks": {
+                  "carry_result": true,
+                  "hit": true,
+                  "scratch_words": true
+                },
+                "source_entry_sha256": "f23f013dc9f9f481d93d23d07ecf5a2a9a99900e87e82261dfe69f3e086fb3b3",
+                "source_post_sha256": "003bc6a694d7a14e612a4692ee4d50b57f3eb7b7c4f3f7578f40eab1cbffe102"
+              }
+            ],
+            "native_dylib_sha256": "0ba918f1ef09646c4ce3cbed02d34897eee4d01dac25a7ff07dba4ee776df9db",
+            "native_receipt_sha256": "2f101be952007a0a4f77c81009d209ad20279404d120218a04e7605761128ca1",
+            "program_sha256": "8adda4b779d8f773573ad8efdc235e85817590a8385a54322484b64641639d8f",
+            "source_sha256": "52dbdef34ceaf1096d7d1f0586ed8c75c8419d25ac656f1f0d7a98112f95bb8e"
+          }
+        },
+        "format": "shadowrun-snes-private-native-component-qualification-1",
+        "observer_trace_sha256": "4697ae023d32fea8bcd9eb651f4b46eb855b8ed6446d1a14c7b236ddd315098a",
+        "result": "passed",
+        "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "scope": "component-fed original entry/return comparisons; RNG hardware readings are verification only, not runtime inputs; no original graphics, full clock, or full route parity"
+      },
+      "receipt_sha256": "fbf7f0801a310630e06aeeb5093bc8609e2dc4c1461d4e734ffc36cd0d345896"
+    },
+    "dynamic_guard": {
+      "evidence": {
+        "evidence_sha256": {
+          "conversation-continuous/controller_journal.json": "629f39e113e1da979aacb36a64c0ca6b5212b77c1f24552e454807f53e7c6827",
+          "first-pass-order-b1-2/snes_trace.json": "871543bdf006f8a6d2c5b1f968c719b79b983d060e946e937d39e1a2063fe608",
+          "first-pass-order-grid-2/snes_trace.json": "b26646c2229ccb52394d65ce025009128a0559e5ba9b39be3c8fa07a21bcf7bc",
+          "first-transition-main/checkpoint-004847-00.bin": "541d638cd5d9ea3d3701ec072aaac7dd8efb23abcbd1f6a441dfbbb8a8d8472e",
+          "first-transition-main/checkpoint-004848-00.bin": "c0523e3fd7efebbb401bcd095efe2a5043d60d456c0b5b01139b3d58d33ae258",
+          "first-transition-nodef2-writer/snes_trace.json": "ed5d0e019f7236cf61cb80d04b7e61491d4cb4f46f6979fc4e12c5dde431ac6d"
+        },
+        "first_main": {
+          "cursor_mode": 0,
+          "forced_motion": 0,
+          "player": "0056",
+          "scene_request": "FFFF",
+          "serial": 3478,
+          "target": "FFFF",
+          "task_current": "FFFF",
+          "task_head": "0006",
+          "video_frame": 4847
+        },
+        "format": "shadowrun-snes-post-transition-dynamic-guard-1",
+        "next_main": {
+          "serial": 3479,
+          "task_current": "0006",
+          "video_frame": 4848
+        },
+        "ordering": [
+          "963A input poll",
+          "963D BE3D returns with cursor mode zero",
+          "9640 BF0B returns with no target",
+          "9643 C1B3 sees negative current and only primes head",
+          "9646 8000 examines ROM trigger boxes",
+          "964B CC1B returns for FFFF request",
+          "9650 DE5E returns for zero forced motion",
+          "9653 AF51 calls 81:8799 dynamic rebuild before actor physics"
+        ],
+        "raw_dynamic_bytes_equal": false,
+        "required_guards": "at each first post-load pass require cursor closed, target negative, current task negative, scene request FFFF, and forced-motion zero; refuse any VM/native or alternate dynamic-grid consumer before completed 8799 rebuild; compare static state and resume raw dynamic comparison after rebuild",
+        "result": "observed",
+        "scope": "one ordinary scene 1F arrival; direct opcode/bus writes, no DMA or other untraced consumers claimed",
+        "trace_scope": "zero-drop selected PC traces show no 81:86E5/8686 or 80:8371 in frames 4847\u20134848 and show 81:8799 on frame4848; alternate indirect or NMI consumers are not exhaustively ruled out",
+        "writer": {
+          "detail": "CPU decompression changes old-room dynamic node storage; positive malformed links also exist",
+          "next_word": "FF3F",
+          "node_offset": "00F2",
+          "pc": "80:9EB7",
+          "video_frame": 4843
+        }
+      },
+      "receipt_sha256": "55a6b5bc7d43d0c69a48686c4003a20003bda103142432a7d017b3a6471e1e33"
+    },
+    "rng_source": {
+      "evidence": {
+        "capture_receipt_sha256": "2342460c899e1c4b4c567058af278dc9e1535845597da0888ac366ab9f934589",
+        "core_sha256": "ff52784a457b866b2d1757f757c6c967fd04d437309b21905cc0f66309c9ff9a",
+        "cpuexec_sha256": "e61c60996f0ccc83b36e049c8f73a27c7fae0bba7d017d6b929233c16b2394c5",
+        "dropped": 0,
+        "entry_seed": 212,
+        "format": "source-snes-rng-observation-1",
+        "getset_sha256": "a6faa524486bef821868eb0cb9e12d1eccc584402a7c6511871be05e4c2a66f4",
+        "neutrality": "4045 checkpoint serial/frame/hash comparisons; fifteen selected WRAM/images and five final hashes match previous independently qualified observer",
+        "nmi_high_at_read": 105,
+        "nmi_low_at_read": 17,
+        "ppu_horizontal_read": 172,
+        "ppu_latch_read": 255,
+        "ppu_vertical_read": 57,
+        "scope": "task 0x22 frame5293, verification only; no gameplay input substitution",
+        "source_next_seed": 129,
+        "source_result_word": 47120,
+        "standalone_transform_matches": true,
+        "trace_sha256": "4697ae023d32fea8bcd9eb651f4b46eb855b8ed6446d1a14c7b236ddd315098a"
+      },
+      "receipt_sha256": "fa00500304b4cdcbd9a6cc805d214d572c6c1ae21855ab942a4889e731588eef"
+    },
+    "rooms": {
+      "evidence": {
+        "cases": [
+          {
+            "actor_tasks": [
+              [
+                86,
+                473,
+                0
+              ],
+              [
+                84,
+                173,
+                2
+              ],
+              [
+                82,
+                378,
+                4
+              ],
+              [
+                80,
+                210,
+                6
+              ]
+            ],
+            "compared": {
+              "actor_fields": 56,
+              "actor_order": 4,
+              "node_next": 92,
+              "node_records": 92,
+              "persistent_bytes": 3761,
+              "scene_words": 13,
+              "static_heads": 512,
+              "static_owners": 40,
+              "static_records": 240,
+              "task_callback": 48,
+              "task_delay": 48,
+              "task_flags": 48,
+              "task_frame": 48,
+              "task_heap": 1996,
+              "task_heap_first_header": 4,
+              "task_link": 48,
+              "task_list_current": 1,
+              "task_list_free": 1,
+              "task_list_head": 1,
+              "task_next": 48,
+              "task_wait": 48,
+              "zone_bytes": 86
+            },
+            "post_source_sha256": "541d638cd5d9ea3d3701ec072aaac7dd8efb23abcbd1f6a441dfbbb8a8d8472e",
+            "pre_source_sha256": "8b5c518ee5c6c30a9621dd587c9ff6c9bb899aee0d8f04e5f7ea2eb9d39bd0a6",
+            "scene": 31,
+            "status": "passed"
+          },
+          {
+            "actor_tasks": [
+              [
+                86,
+                473,
+                0
+              ],
+              [
+                84,
+                697,
+                2
+              ],
+              [
+                82,
+                693,
+                4
+              ],
+              [
+                80,
+                700,
+                6
+              ],
+              [
+                78,
+                321,
+                8
+              ],
+              [
+                76,
+                49,
+                10
+              ],
+              [
+                74,
+                618,
+                12
+              ],
+              [
+                72,
+                212,
+                14
+              ],
+              [
+                70,
+                618,
+                16
+              ],
+              [
+                68,
+                686,
+                18
+              ],
+              [
+                66,
+                679,
+                20
+              ],
+              [
+                64,
+                705,
+                22
+              ],
+              [
+                62,
+                532,
+                24
+              ],
+              [
+                60,
+                464,
+                26
+              ]
+            ],
+            "compared": {
+              "actor_fields": 196,
+              "actor_order": 14,
+              "node_next": 550,
+              "node_records": 550,
+              "persistent_bytes": 3761,
+              "scene_words": 13,
+              "static_heads": 512,
+              "static_owners": 282,
+              "static_records": 1692,
+              "task_callback": 48,
+              "task_delay": 48,
+              "task_flags": 48,
+              "task_frame": 48,
+              "task_heap": 1996,
+              "task_heap_first_header": 4,
+              "task_link": 48,
+              "task_list_current": 1,
+              "task_list_free": 1,
+              "task_list_head": 1,
+              "task_next": 48,
+              "task_wait": 48,
+              "zone_bytes": 1084
+            },
+            "post_source_sha256": "14787d85465896327372a0e3e19502c3bcfd25401f1b9e38cf661e9782b10bf4",
+            "pre_source_sha256": "4e4d709c63f8de3a57ae2958d1ccb1a21dda7b0e7591070d00811450c63e07e7",
+            "scene": 1,
+            "status": "passed"
+          }
+        ],
+        "format": "shadowrun-snes-transition-component-1",
+        "newgame_extension": {
+          "compared_bytes": 232,
+          "first_main_sha256": "4af5e56bea7f16881567d4f73a9ca276493aeab0853ab3178d51e74e2c10f4d9",
+          "source_title_sha256": "15caaf78faed99408c783119ac5e1703da066b904e5570dd895b7bcb49db9d93",
+          "status": "passed"
+        },
+        "result": "passed",
+        "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "scope": "source-seeded staged transition component; before-A44C input only; later WRAM comparison only; presentation/audio excluded",
+        "source_hashes": {
+          "src/fdisbull/game_sources/shadowrun_snes_scene_collision.c": "ab2c8eae0ab0db135e89d35fb785f88fd70a3ff2ab001f9f1da5949b26b13370",
+          "src/fdisbull/game_sources/shadowrun_snes_scene_init.c": "efca6f82b7148cedda5a5135eb72ee85b7b5d78b95319a8812565ed64d0f1ad4",
+          "src/fdisbull/game_sources/shadowrun_snes_script.c": "f022d5f0d9f66ee498a5f1666db64c685b37675299f46424a3708e4f539ec29d",
+          "src/fdisbull/game_sources/shadowrun_snes_task_init.c": "0265de0c212f877e5ad7ebf7628618c8d16fa37860e767f57185ab77a78cbcdb",
+          "src/fdisbull/game_sources/shadowrun_snes_transition.c": "0ac1cb4ae4b31c7f00f14f2a77bc5406e98b44c95e0ad6c5d3883f2a71f728cc",
+          "src/fdisbull/shadowrun_snes_transition.py": "b422b88bef88726c547458e5b7bb5f6e7813d3041ca31f639b6d4f9271471512"
+        }
+      },
+      "receipt_sha256": "21846bdfd3881bb13622ecdbd4e9916d688d04875eff3c24f5c77c65c4fc77c1"
+    }
+  },
+  "excluded_evidence": [
+    "An early provisional component receipt was overwritten by a filename collision; its reconstruction is historical only. Fresh immutable receipt 05 is the acceptance evidence."
+  ],
+  "limits": [
+    "Component entry states are source-fed diagnostics, not additional title-runtime seeds.",
+    "Raw RNG observations were used only for component verification; callback 63 remains unsupported."
+  ],
+  "result": "passed_bounded_components",
+  "skill_review": {
+    "frontmatter_validator": "passed",
+    "independent_forward_review": "Action selection and claim boundaries usable; clarified alternate-path liveness and conditional hardware-input replay.",
+    "limits": "Read-only scenario review; not a new original-game execution."
+  }
+}

@@ -969,6 +969,15 @@ WINDOWS_RUNTIME_FILES=tuple('src/fdisbull/'+name for name in WINDOWS_RUNTIME_MOD
 REQUIRED_SOURCE_FILES+=WINDOWS_RUNTIME_FILES
 
 
+RECOVERED_UDC_RESOURCES = runpy.run_path(
+    str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py')
+)['REQUIRED_RECOVERED_UDC_RESOURCES']
+REQUIRED_SOURCE_FILES += tuple(
+    'src/fdisbull/' + name for name in sorted(RECOVERED_UDC_RESOURCES)
+    if 'src/fdisbull/' + name not in REQUIRED_SOURCE_FILES
+)
+
+
 def source_archive(path, files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path, "w") as output:
         for required in files:
@@ -1524,3 +1533,16 @@ def test_authored_windows_source_contracts_include_both_fixtures(tmp_path):
         source_archive(archive, tuple(item for item in REQUIRED_SOURCE_FILES if item != missing))
         with pytest.raises(ValueError, match=re.escape(missing)):
             checker["check_archive"](archive)
+
+
+@pytest.mark.parametrize('resource', ['dos_udc.py','dos_mz_udc.py','zmachine_udc.py',
+    'uil_record.py','llvm_scalar_pilot.py','influence_pilot.py','dcc_asm_c.py',
+    'ghidra_asm_c.py','reko_asm_c.py','data/FdisbullGhidraAsmC.txt',
+    'shadowrun_snes_dialogue.py','game_sources/shadowrun_snes_transition.c'])
+def test_source_package_requires_recovered_compiler_seams(tmp_path, resource):
+    checker = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))
+    archive = tmp_path / 'fdisbull-recovered-source.zip'
+    missing = 'src/fdisbull/' + resource
+    source_archive(archive, tuple(p for p in REQUIRED_SOURCE_FILES if p != missing))
+    with pytest.raises(ValueError, match=re.escape(missing)):
+        checker['check_archive'](archive)

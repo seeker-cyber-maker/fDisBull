@@ -1,0 +1,69 @@
+{
+  "status": "passed",
+  "build": {
+    "format": "fdisbull-shadowrun-snes-macos-1",
+    "architecture": "arm64",
+    "profile": "scripted-intro",
+    "capture": {
+      "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+      "wram_sha256": "e4cf82bc4d2d58d28cda9ae9d90d51cf4287e9e8bf0d3c860097a1a5ce2f0ca9",
+      "actor_slots": [
+        68,
+        70,
+        78
+      ],
+      "clock": "one source main-loop pass",
+      "scope": "60 logical passes; bounded active task scheduler, actor slots 44/46/4E and slot 42 action-0 animation; other actor effects and rendering excluded"
+    },
+    "program_sha256": "a2145fa6f9298a33c0fb5eee27c4a7f79346b6efd8fd2dfd3b58dacdd24c510b",
+    "seed_sha256": "dbe7cc6c59dd4af7427fe081f6d808840650346bf11568c32adbe056a730d951",
+    "native_core": {
+      "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+      "compiler_version": "Homebrew clang version 23.1.4",
+      "macho_cputype": "arm64",
+      "macho_filetype": "dylib",
+      "format": "fdisbull-macos-native-1",
+      "program_sha256": "a2145fa6f9298a33c0fb5eee27c4a7f79346b6efd8fd2dfd3b58dacdd24c510b",
+      "source_sha256": "af52a27814085ae5f6be163d5ef50dd9cd938804577b588dca74d7d85b98d44b",
+      "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+      "dylib_sha256": "777b21fffe88d80979c58c9caa95fafb0f7fb5ddd2977e595477ad78251d0c9a",
+      "seed_sha256": "e02b3ae5c312d33310592c5fc3c5e9f0d6b48f090f4ad9747dbd1e16f0b73608",
+      "integer_model": "cc65-int16-long32",
+      "architecture": "arm64",
+      "artifact": "libfdisbull_native.dylib",
+      "header": "fdisbull_native.h",
+      "entry": "shadowrun_snes_frame",
+      "unsupported_status": "shadowrun_snes_frame_status",
+      "logical_input_bits": 8,
+      "immutable_regions": [
+        {
+          "id": 0,
+          "length": 1048576,
+          "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+          "storage": "caller-ROM"
+        }
+      ]
+    },
+    "frontend_source_sha256": "1cec349764e853cfb92739ef1bd3ce5cb195765e3a2d6ef77872ad62cf09bc7e",
+    "frontend_sha256": "ef54bd8391fb22ffa2f96b5d5545dea45a63f29d21d857426c8c76bb57941075",
+    "display": "authored world-coordinate grid and selected actor markers; no original camera or artwork",
+    "limits": [
+      "prepared source scene; bounded source projection",
+      "source script transitions and full scene progression unqualified",
+      "unsupported states stop with the complete native state unchanged",
+      "private build embeds captured game data; do not publish",
+      "host requests 60 Hz; no full-game or presentation equivalence claim",
+      "source-seeded NPC/task projection on logical main-loop passes; source video pacing and APU audio delivery excluded"
+    ]
+  },
+  "render": {
+    "completed_updates": 60,
+    "stopped": true,
+    "player_x": 2004,
+    "player_y": 1918,
+    "player_z": 256
+  },
+  "matches_independent_native": true,
+  "render_png_sha256": "8e4f6c3f3513d2bb5f1a543527bb79537b4eed257b441beaa0c1ea94a4d0b6c2",
+  "onscreen_window_and_keyboard": "unverified"
+}

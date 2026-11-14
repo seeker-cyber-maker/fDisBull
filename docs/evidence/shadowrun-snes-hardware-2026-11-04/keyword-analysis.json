@@ -1,0 +1,132 @@
+{
+  "catalogue": {
+    "combined_taught_named_ids": 50,
+    "conversation_entries": 731,
+    "conversation_roots": 139,
+    "dialogue_taught_ids": 49,
+    "keyword_slots": 64,
+    "named_keywords": 53,
+    "record_end_exclusive": 430767,
+    "record_start": 426176,
+    "spare_slots": 11
+  },
+  "claim": "The source conversation and script catalogues contain no teaching site for these three named keywords. Norbert and Scalper retain dedicated responses; Arena has none. Ordinary learned-keyword selection cannot expose an unlearned ID.",
+  "format": "shadowrun-snes-keyword-audit-1",
+  "keywords": [
+    {
+      "classification": "no teaching site in audited catalogues",
+      "dedicated_responses": [],
+      "dialogue_teaching_sites": [],
+      "id": 3,
+      "name": "Arena",
+      "native_learn_sites": []
+    },
+    {
+      "classification": "no teaching site in audited catalogues",
+      "dedicated_responses": [
+        {
+          "entry_offset": 429203,
+          "record": 35961,
+          "script": null,
+          "selector": 36,
+          "tag": 21,
+          "text_pointer": 4508
+        },
+        {
+          "entry_offset": 429478,
+          "record": 36238,
+          "script": null,
+          "selector": 36,
+          "tag": 74,
+          "text_pointer": 4508
+        },
+        {
+          "entry_offset": 429418,
+          "record": 36178,
+          "script": null,
+          "selector": 36,
+          "tag": 116,
+          "text_pointer": 22700
+        },
+        {
+          "entry_offset": 428249,
+          "record": 35002,
+          "script": null,
+          "selector": 36,
+          "tag": 117,
+          "text_pointer": 22700
+        }
+      ],
+      "dialogue_teaching_sites": [],
+      "id": 36,
+      "name": "Norbert",
+      "native_learn_sites": []
+    },
+    {
+      "classification": "no teaching site in audited catalogues",
+      "dedicated_responses": [
+        {
+          "entry_offset": 428606,
+          "record": 35366,
+          "script": null,
+          "selector": 41,
+          "tag": 77,
+          "text_pointer": 15193
+        },
+        {
+          "entry_offset": 428279,
+          "record": 35039,
+          "script": null,
+          "selector": 41,
+          "tag": 80,
+          "text_pointer": 15193
+        }
+      ],
+      "dialogue_teaching_sites": [],
+      "id": 41,
+      "name": "Scalper",
+      "native_learn_sites": []
+    }
+  ],
+  "limits": [
+    "Static conservative CFG coverage is not proof that every decoded instruction is reachable in ordinary play.",
+    "No whole-game native control-flow or arbitrary indirect-write proof; memory corruption, debug intervention and other editions are excluded.",
+    "Dedicated response records were not reached by an ordinary gameplay route. No keyword was injected or unlocked."
+  ],
+  "result": "pass-bounded-static",
+  "script_sha256": "2590d3c685cdc966df557a662158ca42850e67447f07aab594adeac24e445fcf",
+  "scripts": {
+    "fixed_raw_keyword_store_sites": [],
+    "native_learn_sites": [
+      {
+        "keyword": 7,
+        "offset": 947140,
+        "pc": 360,
+        "script": 158
+      },
+      {
+        "keyword": 8,
+        "offset": 996011,
+        "pc": 203,
+        "script": 196
+      },
+      {
+        "keyword": 14,
+        "offset": 909375,
+        "pc": 4,
+        "script": 414
+      },
+      {
+        "keyword": 22,
+        "offset": 949884,
+        "pc": 15,
+        "script": 850
+      }
+    ],
+    "roots": 936,
+    "unique_reachable_instruction_addresses": 46273,
+    "unresolved_frontier": 0,
+    "valid_opcode_handlers": 73
+  },
+  "source_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4"
+}
