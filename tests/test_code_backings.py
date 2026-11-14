@@ -117,6 +117,49 @@ def test_native_facts_and_self_contained_revision_integrity_are_checked(tmp_path
             project.code_backings([0x1002])
 
 
+def test_new_pointer_fact_invalidates_capture_but_label_change_does_not(tmp_path):
+    with _project(tmp_path, code='b80610eb0190f4') as project:
+        original = project.code_backings([0x1000])
+        assert validate_source(project, original)['status'] == 'source_valid'
+        project.db.execute('INSERT INTO operand_refs VALUES (?,?,?,?,?,?,?)',
+                           (1, project.context, '0000000000001000', 1,
+                            'address', '0000000000001006', 2))
+        with pytest.raises(ValueError, match='graph differs'):
+            validate_source(project, original)
+        updated = project.code_backings([0x1000])
+        assert validate_source(project, updated)['status'] == 'source_valid'
+        project.annotate(0x1006, 'known_stop', kind='name')
+        assert validate_source(project, updated)['status'] == 'source_valid'
+
+
+def test_interior_external_caller_is_retained_and_new_caller_invalidates_capture(tmp_path):
+    # Initial entry 0100 and later-discovered entry 0108 both target interior 0104.
+    source = tmp_path/'INTERIOR.COM'; source.write_bytes(bytes.fromhex('eb02909090c39090ebfa'))
+    with Project.create(tmp_path/'interior.fdb', source, image='com') as project:
+        project.analyze(start='1000:0102')
+        before = project.code_backings(['1000:0102'])
+        project.analyze(start='1000:0108')
+        after = project.code_backings(['1000:0102'])
+        interior = next(b for b in after['blocks'] if b['address'] == '0x10104')
+        assert any(e['source'] == 'x86:16:little:cs=1000@0x10100'
+                   and e['kind'] == 'branch' for e in interior['incoming'])
+        assert after['incoming_inventory']['complete']
+        assert after['complete']
+        with pytest.raises(ValueError, match='graph differs'):
+            validate_source(project, before)
+        assert validate_source(project, after)['status'] == 'source_valid'
+
+
+def test_reverse_reference_budget_never_reports_complete(tmp_path, monkeypatch):
+    import fdisbull.code_backings as module
+    monkeypatch.setattr(module, '_MAX_STORED_INCOMING', 1)
+    with _project(tmp_path) as project:
+        captured = project.code_backings([0x1000])
+        assert not captured['complete']
+        assert captured['incoming_inventory'] == {'limit': 1, 'examined': 1, 'complete': False}
+        assert any(problem['kind'] == 'incoming_budget' for problem in captured['unresolved'])
+
+
 def test_project_and_json_methods_capture_and_emit_the_same_bound_layout(tmp_path):
     with _project(tmp_path, bits=32) as project:
         result = project.code_layout([0x1002, 0x1003], base=0x200, assumptions=ASSUMPTIONS)

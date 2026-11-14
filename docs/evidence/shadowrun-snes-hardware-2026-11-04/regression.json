@@ -1,0 +1,140 @@
+{
+  "cases": [
+    {
+      "accepted": true,
+      "duration_seconds": 43.68307495798217,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "pickup",
+      "private_receipt_sha256": "14f75d7b73bc4fd8646dc61dab84338e641db745d2fe1b884a16801b0680cf7d",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 1973
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 42.100476040970534,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "scalpel",
+      "private_receipt_sha256": "fb1b4d63a91ebd4adf5e06d2162d10fe3f31f36076b575318aef6711ccf84e14",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 1928
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 55.928317125013564,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "repeat",
+      "private_receipt_sha256": "ce077eccf5a7a70c703f6a36a4dbb61f14801a49e358c427635ac7cdefe8fa57",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 2128
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 66.73430175002431,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "door",
+      "private_receipt_sha256": "5b8c12010b01b16683eac04581e10c047bf06cbeef90781adae1d40c2bdd2d57",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 2363
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 92.32066766702337,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "disabled-prefix",
+      "private_receipt_sha256": "0b6fe151a6927c181f7040fbfcef209cbaf8551b1bb3e8c28e82451b0faa21f7",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 3764
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 93.7748387499596,
+      "expected_return": 1,
+      "first_divergence": {
+        "conversation_bridge_fault": 0,
+        "conversation_phase": 0,
+        "conversation_request": 0,
+        "failure": 15,
+        "interaction_fault": 0,
+        "kind": "unsupported",
+        "native_callback": 99,
+        "native_return": 1,
+        "opening_phase": 0,
+        "retry_return": 1,
+        "rollback_verified": true,
+        "sample": "main",
+        "serial": 3764,
+        "task": 34,
+        "transition_stage": 8,
+        "transition_status": 1,
+        "vm_opcode": 88,
+        "vm_pc": 36
+      },
+      "name": "disabled-rng-refusal",
+      "private_receipt_sha256": "d32c026a31d814d281c771335feaf1a8b38bc2a27b6e00ff320cf21cfcc051de",
+      "result": "bounded",
+      "return_code": 1,
+      "source_checkpoints": 3764
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 26.788158749986906,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "opening",
+      "private_receipt_sha256": "699d48ee9f3583d5f2e705cf7259f3e4a3ffe6c491acf632979d11929260f849",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 1615
+    },
+    {
+      "accepted": true,
+      "duration_seconds": 31.0932829999947,
+      "expected_return": 0,
+      "first_divergence": null,
+      "name": "scripted",
+      "private_receipt_sha256": "10b57f1d406e465d38ffe6edf356ed4ec6832abb1d61fc4a3315e0764d1eebad",
+      "result": "passed",
+      "return_code": 0,
+      "source_checkpoints": 60
+    }
+  ],
+  "native_build": {
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "dylib_sha256": "4dd58ef4c418ba27d254efe3051f21e430705e4246df6765ada1cb3d40bf451a",
+    "entry": "shadowrun_snes_frame",
+    "format": "fdisbull-macos-native-1",
+    "header": "fdisbull_native.h",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ],
+    "integer_model": "cc65-int16-long32",
+    "logical_input_bits": 8,
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "program_sha256": "119e86c2c742c35550d1a367b4a3e32c57175254323b3aeeee3bf84f42967e27",
+    "seed_sha256": "fb4f0bb969b25aa606bad34fa51db0363321b4d5d4977f82d3b5d998b14b9b94",
+    "source_sha256": "5ba73d6c9d2e5f1706b87bd4cbd117ebb69117b1e596267ceb038be3ec4b09ce",
+    "unsupported_status": "shadowrun_snes_frame_status"
+  },
+  "private_receipt_sha256": "349e9eb03b693e6e414981f1b184a42568700571d37a7892512ddcc4e3295231",
+  "result": "passed"
+}

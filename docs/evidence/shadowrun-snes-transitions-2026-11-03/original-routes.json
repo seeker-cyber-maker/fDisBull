@@ -1,0 +1,48 @@
+{
+  "limits": [
+    "One pinned SNES9x family; not independent hardware.",
+    "No memory patches in original runs.",
+    "Native replay is qualified only to the prefix boundary in prefix-comparison.json."
+  ],
+  "result": "qualified_original_references",
+  "routes": [
+    {
+      "checkpoint_baseline_sha256": "a2b9a835d184491fe430775412cf2a9b492dcf7c2a09afb9c750cb1ed7ed95ea",
+      "checkpoint_drops": 0,
+      "claim": "Original-only ordinary-input reference, not a passed full native replay.",
+      "controller_drops": 0,
+      "controller_journal_sha256": "629f39e113e1da979aacb36a64c0ca6b5212b77c1f24552e454807f53e7c6827",
+      "core_sha256": "90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8",
+      "original_receipt_sha256": "4c680f466f47e5213b93ceafe49e3b538b909602aee5f2bc7c15cc0af61b78e1",
+      "route": "ask-keyword-17-exit",
+      "sample_counts": {
+        "conversation": 268,
+        "main": 4044,
+        "modal": 139,
+        "player": 2192
+      },
+      "selected_ram_and_image_frames": 15,
+      "source_checkpoints": 4045,
+      "unmodified_baseline_sha256": "82d4a5e31387fd8c64ca08e55eb875d7a53064061ba8516e80d3609a44948cf5"
+    },
+    {
+      "checkpoint_baseline_sha256": "06926320ba5684a3afd43e74a52712e813e17e014ba0a2c80e36b2f7252860a6",
+      "checkpoint_drops": 0,
+      "claim": "Original-only ordinary-input reference, not a passed full native replay.",
+      "controller_drops": 0,
+      "controller_journal_sha256": "2096065185e2fd39812828e90f43d26280dbca779975a27ee2d02640a6e97a75",
+      "core_sha256": "90dbc10961060011c3e470ddf81acdb45c4a1afe0ac07f8e889dac54ac3f2ca8",
+      "original_receipt_sha256": "7316d478a0e431c85d6cec28cb57d98e20f6b7682d64b7ef8a87dfde2a9f4da7",
+      "route": "talk-keyword-10-cancel",
+      "sample_counts": {
+        "conversation": 327,
+        "main": 3992,
+        "modal": 139,
+        "player": 2140
+      },
+      "selected_ram_and_image_frames": 16,
+      "source_checkpoints": 3993,
+      "unmodified_baseline_sha256": "1afb8b84a95327bbcf023014f1299a0a568de32ad98dbd0a277eb615fc54c30e"
+    }
+  ]
+}

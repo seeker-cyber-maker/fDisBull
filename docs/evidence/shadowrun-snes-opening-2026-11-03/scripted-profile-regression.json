@@ -1,0 +1,49 @@
+{
+  "budget_rollback_verified": true,
+  "clock": "consecutive instruction-entry checkpoints at 80:962E",
+  "core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+  "first_divergence": null,
+  "format": "shadowrun-snes-scripted-checkpoint-1",
+  "native_build": {
+    "architecture": "arm64",
+    "artifact": "libfdisbull_native.dylib",
+    "compiler_sha256": "a3f510aa37c9a3082649435e39e3f7c808b6696bb62f077b141c271b5aa783a2",
+    "compiler_version": "Homebrew clang version 23.1.4",
+    "dylib_sha256": "49b3c045ed05c5a42c5f710b278f10814ce5744a68c7f9c663c78f87618009d5",
+    "entry": "shadowrun_snes_frame",
+    "format": "fdisbull-macos-native-1",
+    "header": "fdisbull_native.h",
+    "header_sha256": "3c856be845d4600157fdb01dd05d1aa26dbf5810144f00f71000962c48321b40",
+    "immutable_regions": [
+      {
+        "id": 0,
+        "length": 1048576,
+        "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+        "storage": "caller-ROM"
+      }
+    ],
+    "integer_model": "cc65-int16-long32",
+    "logical_input_bits": 8,
+    "macho_cputype": "arm64",
+    "macho_filetype": "dylib",
+    "program_sha256": "c3bb76cc5d098dc97fb738cb59afb23f63d764e82b8298b681c0bb3672711a61",
+    "seed_sha256": "0c02ff57a15d368f6be9e44c4f52082bd5a6f7d1826d61f19f7484fb362ee11c",
+    "source_sha256": "7152f952480a98294c6d4262ffce3e53e7394b7f63354eaaddc26db7945e7027",
+    "unsupported_status": "shadowrun_snes_frame_status"
+  },
+  "native_elements": 4318524,
+  "private_receipt_sha256": "76bdb4d86e6feb8cf0f9faf688c7310985e5d0a3a32aaf513340def369fb5661",
+  "program_sha256": "c3bb76cc5d098dc97fb738cb59afb23f63d764e82b8298b681c0bb3672711a61",
+  "receipt_sha256": "3c6b6f7290c8a20c5755b6b25fe81a29afc8f0a0aa60a69cfbad7cea8fe86593",
+  "result": "passed",
+  "scope": "active task scheduler plus three actor slice, not whole scene; no rendering/audio equivalence",
+  "seed_sha256": "e4cf82bc4d2d58d28cda9ae9d90d51cf4287e9e8bf0d3c860097a1a5ce2f0ca9",
+  "source_checkpoints": 60,
+  "source_fields": 17920,
+  "source_hashes": {
+    "scripts/check_shadowrun_snes_scripted.py": "f5a0d0d314a998a79d16f78f4ba833b872f5c9433cb8336f654a7817448427ca",
+    "src/fdisbull/game_sources/shadowrun_snes_npc.c": "b23059c3fdb1b2232795d31d1c5dc340c81fe13077057ca9c942fc8cf6943e8a",
+    "src/fdisbull/game_sources/shadowrun_snes_script.c": "86115a4a0817795af18964488f42b1ddf2a95fb51350b43589de8b8b0037ef8c",
+    "src/fdisbull/shadowrun_snes_scripted.py": "2104aa297b242c007bf39d31c2ff725f9beb4839a0f75b87029c57554d14ed1c"
+  }
+}

@@ -84,6 +84,7 @@ from .facts import FactsMixin, FACTS_DDL
 from .memory import MemoryMixin
 from .cfg import CFGMixin
 from .code_backings import CodeBackingsMixin
+from .dos_udc_project import DOSUDCProjectMixin
 from .typesystem import TypeSystemMixin, TYPE_DDL
 from .external_files import ExternalFilesMixin, EXTERNAL_FILES_DDL
 from .file_references import FileReferencesMixin, FILE_REFERENCES_DDL
@@ -101,6 +102,7 @@ from .runtime_mappings import RuntimeMappingsMixin, RUNTIME_MAPPING_DDL
 
 
 class Project(
+    DOSUDCProjectMixin,
     RuntimeMappingsMixin,
     CommonUILMixin,
     SnippetLinksMixin,

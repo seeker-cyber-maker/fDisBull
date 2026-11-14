@@ -596,3 +596,7 @@ Intent drafts and declared composition/trace checks support independent componen
 reconstruction without presenting a structural match as a playable game.
 See [console and intent discovery](docs/STRUCTURE_CONSOLE_INTENTS.md) for the
 admitted profiles, agent commands and remaining execution boundaries.
+
+Recovered bounded compiler and analysis seams are documented in the
+[0.35 adapter integration map](docs/RECOVERED_UDC_ADAPTERS_0.35.md), including
+source identities, private-input exclusions and qualification limits.
