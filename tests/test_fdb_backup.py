@@ -14,25 +14,6 @@ backup=importlib.util.module_from_spec(spec);spec.loader.exec_module(backup)
 
 
 
-@pytest.fixture(scope='session')
-def descriptor_alias_supported(tmp_path_factory):
-    probe=tmp_path_factory.mktemp('sqlite-descriptor-alias')
-    source=probe/'source';source.mkdir();database=source/'probe.fdb'
-    _authored_database(database,'probe')
-    try:
-        backup.capture_fdb(database,[],probe/'backup',20)
-    except ValueError as error:
-        if 'descriptor-alias namespace' in str(error): return False
-        raise
-    return True
-
-
-@pytest.fixture
-def require_descriptor_alias(descriptor_alias_supported):
-    if not descriptor_alias_supported:
-        pytest.skip('Measured SQLite VFS canonicalizes descriptor aliases; private backup is fail-closed on this host')
-
-
 @pytest.mark.usefixtures('require_descriptor_alias')
 def test_online_snapshot_includes_committed_wal_and_nested_closure(tmp_path):
     source=tmp_path/'source';source.mkdir();store=tmp_path/'store';objects=TargetStore(store)

@@ -262,6 +262,7 @@ def test_failed_transfer_does_not_mark_source_as_synced(tmp_path):
     }
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_fdb_upload_uses_consistent_snapshot_and_preserves_new_generations(tmp_path):
     library_root = tmp_path / "library"
     (library_root / "targets").mkdir(parents=True)
@@ -297,6 +298,7 @@ def test_fdb_upload_uses_consistent_snapshot_and_preserves_new_generations(tmp_p
 
 
 @pytest.mark.parametrize('missing', ['source','source_selection'])
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_legacy_fdb_proof_without_source_binding_recaptures_once_then_reuses(tmp_path, missing):
     library_root=tmp_path/'library';(library_root/'targets').mkdir(parents=True)
     fdb_root=tmp_path/'fdb';_make_fdb_root(fdb_root)
@@ -364,6 +366,7 @@ def test_failed_library_manifest_keeps_source_pending_for_retry(tmp_path):
     assert any(p.startswith('library/manifests/') for p in transport.remote)
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_fdb_completion_manifest_is_sent_only_after_payload_verifies(tmp_path):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     repository=tmp_path/'fdb';_make_fdb_root(repository)
@@ -515,6 +518,7 @@ def test_unbound_legacy_receipt_is_recaptured_without_changing_old_remote_bytes(
     assert first['status']=='complete'
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_fdb_backup_completes_when_library_payload_transfer_fails(tmp_path):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     (root/'targets'/'payload.com').write_bytes(b'intake')
@@ -545,6 +549,7 @@ def test_fdb_backup_completes_when_library_payload_transfer_fails(tmp_path):
     assert not any(path.startswith('library/manifests/') for path in transport.remote)
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_fdb_backup_completes_when_library_rescan_detects_churn(tmp_path):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     (root/'targets'/'initial.com').write_bytes(b'initial')
@@ -575,6 +580,7 @@ def test_fdb_backup_completes_when_library_rescan_detects_churn(tmp_path):
     assert not any(path.startswith('library/manifests/') for path in transport.remote)
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_failed_fdb_state_pair_is_rolled_back_before_library_commit(tmp_path, monkeypatch):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     (root/'targets'/'payload.com').write_bytes(b'intake continues')
@@ -902,6 +908,7 @@ def test_fdb_capture_refuses_admitted_ancestor_swap_even_when_restored(tmp_path,
     assert not result['projects']
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_fdb_staging_refuses_snapshot_replacement_after_capture(tmp_path, monkeypatch):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     repository=tmp_path/'fdb';_make_fdb_root(repository)
@@ -922,6 +929,7 @@ def test_fdb_staging_refuses_snapshot_replacement_after_capture(tmp_path, monkey
     assert source.read_bytes()==original
 
 
+@pytest.mark.usefixtures('require_descriptor_alias')
 def test_fdb_capture_allows_wal_commit_on_the_admitted_inode(tmp_path, monkeypatch):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     repository=tmp_path/'fdb';_make_fdb_root(repository)
@@ -962,3 +970,49 @@ def test_fdb_registration_of_an_existing_project_deduplicates_same_admission(tmp
     (repository/'registrations').mkdir()
     (repository/'registrations/duplicate.json').write_text(json.dumps({'path':str(source)}))
     assert sync._fdb_inputs({'root':str(repository),'objects_roots':[]})==[(str(source),[])]
+
+
+@pytest.mark.parametrize('simulate_canonicalization',[False,True])
+def test_unsupported_fdb_capture_never_transports_or_certifies_a_generation(
+        tmp_path,monkeypatch,descriptor_alias_supported,simulate_canonicalization):
+    if descriptor_alias_supported and not simulate_canonicalization:
+        pytest.skip('Actual host retains descriptor aliases; simulated refusal still runs')
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    source=repository/'projects/analysis.fdb'
+    writer=sqlite3.connect(source)
+    try:
+        writer.execute('PRAGMA journal_mode=WAL')
+        writer.execute('CREATE TABLE facts(v TEXT)')
+        writer.execute("INSERT INTO facts VALUES ('committed WAL must survive')");writer.commit()
+        wal=Path(str(source)+'-wal');before=(source.read_bytes(),wal.read_bytes())
+        if simulate_canonicalization:
+            # The actual child and SQLite connection run. Emulate only the VFS
+            # filename canonicalization and forbid any writable SQLite connect.
+            import subprocess
+            run=subprocess.run
+            code=r'''import importlib.util,sys
+spec=importlib.util.spec_from_file_location('w',sys.argv[1]);w=importlib.util.module_from_spec(spec);spec.loader.exec_module(w)
+connect=w.sqlite3.connect;snapshot=sys.argv[sys.argv.index('--snapshot')+1]
+def canonicalized(database,*args,**kwargs):
+    if '?mode=rw' in str(database): raise AssertionError('unsupported alias must not reach writable SQLite')
+    if '&immutable=1' in str(database): database='file:'+snapshot+'?mode=ro&immutable=1'
+    return connect(database,*args,**kwargs)
+w.sqlite3.connect=canonicalized
+raise SystemExit(w.main(sys.argv[2:]))
+'''
+            def invoke(command,**kwargs):
+                return run([command[0],'-I','-S','-B','-c',code,command[4],*command[5:]],**kwargs)
+            monkeypatch.setattr(subprocess,'run',invoke)
+        transport=FakeTransport();config=_config(tmp_path,root,repository)
+        result=sync.run_once(config,transport)
+        assert result['status']=='partial' and result['projects']==[]
+        assert any('descriptor-alias namespace' in error['message'] for error in result['errors'])
+        assert not any(call[0].startswith('fdb/projects/') for call in transport.calls)
+        assert not any(path.startswith('fdb/projects/') for path in transport.remote)
+        assert (source.read_bytes(),wal.read_bytes())==before
+        with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as state:
+            assert state.execute('SELECT path FROM projects').fetchall()==[]
+            assert state.execute("SELECT name FROM metadata WHERE name LIKE 'project:%'").fetchall()==[]
+    finally:
+        writer.close()
