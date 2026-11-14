@@ -36,7 +36,7 @@ classification; the 44 rows below are not 44 still-open adaptations.
 | UDC/compiler/backing/example adapters | `b86f1d2f` merged at `b1c21ed5`; final emitted-data receipt fix `6dafd643` included as `57e97691` |
 | Tools, bounded lifecycle/fuzzing/friction/RTLink and sanitized historical guidance | `e78ac8dc` merged at `f14bbc22` |
 | Drive source-selection and FDB admission/staging corrections | `b5bdde1d` and `170aa463` through `27838f79`; final main/WAL/manifest preservation `3efac6a6` merged at `7f39932d`, with host-measured portability tests at `9f91a90c` |
-| Complete tracked source-package inventory | `4f90c55e` closes the 22 eligible tracked-file omissions; preliminary four-artifact checks passed 734 tests, with final composite rebuild pending |
+| Complete tracked source-package inventory | `4f90c55e` closes the 22 eligible tracked-file omissions; four-artifact checks passed at `734000d9` and `9f91a90c`; fresh clean-source receipts bind the final handoff |
 | Selective QEMU guide reply budget | `f02c4ba3` preserves content in linked references and the existing 64 KiB cap; 82 focused passes and five optional-input skips |
 | n8n owner CI policy and recoverable installer/selector corrections | `be68826e` and installer line through `736cb7c6`, included through `4684a8dc`; 88 fresh focused root checks |
 
@@ -44,8 +44,8 @@ See the [current capability mapping](RECOVERED_CAPABILITY_INTEGRATION_0.35.md)
 for source-bound checks and limitations. Final FDB preservation is integrated
 and independently checked on authored macOS fixtures; [descriptor binding](FDB_BACKUP_DESCRIPTOR_BINDING.md)
 explicitly records measured Linux SQLite refusal and the SHM-cache caveat. The
-Darwin arm64 dependency-input component and final composite checks remain open;
-the candidate is not frozen. Exact-SHA CI/native/offline acceptance, release and
+Darwin arm64 dependency-input component `c7e8670d` is integrated at `74440ea5`;
+final clean-source receipts bind the candidate handed to n8n. Exact-SHA CI/native/offline acceptance, release and
 installation remain separate gates. Existing draft GitHub PR #87 is retained.
 
 ## Initial unique-source findings (historical)
@@ -108,14 +108,14 @@ and OIDs remain preserved.
 The integrate-all authorization has been applied to the eligible recovered
 source groups. No additional generic scope or permission decision is required.
 Final FDB preservation is integrated through `7f39932d` and the 22-file package
-inventory correction through `4f90c55e`. The remaining code gate is n8n's strict
-`iced-x86` 1.21.0 installer-input route: official source-distribution provenance
-plus an identified source-built wheel for Darwin arm64, for which no official
-wheel is supplied. Finish/integrate that owner component, then rebuild and check
-the final composite artifacts before source freeze and handoff. Preliminary
-four-artifact tool-only/exact-payload checks passed 734 tests; they are not the
-final rebuild or exact-candidate qualification. These are concrete delivery
-steps, not 44 missing recovered implementations.
+inventory correction through `4f90c55e`. The finished owner installer-input
+component `c7e8670d` is integrated at `74440ea5`; it retains official-sdist and
+source-built Darwin arm64 wheel provenance. Local installer/verifier/pipeline/
+package checks passed 104 cases. Actual dependency build/import acceptance
+remains separate from the source protocol. Four-artifact tool-only/exact-payload
+checks passed at `734000d9` and `9f91a90c`; final clean-source receipts bind the
+frozen handoff. These are completed source integrations and concrete delivery
+gates, not 44 missing recovered implementations.
 
 The endpoint-authentication/checkpoint-selector contribution `dd7c43a4` is
 included through integration merge `2ca96ea7`; its focused checks passed with

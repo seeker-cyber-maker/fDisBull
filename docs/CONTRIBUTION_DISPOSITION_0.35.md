@@ -2,9 +2,8 @@
 
 This records the finite integration pass on 2026-11-14. The integration branch
 is `codex/release-0.35.0-integration-20261114`, reviewed here through
-`9f91a90c95fb388cffddb4cb2c603937411d5713`, based on primary GitHub main
-`829453ecae3fb0de236dbdd95be85a554efd1fb7`. It is **not yet a frozen release
-candidate**. See the [release process](RELEASE_PROCESS.md) and
+`74440ea5`, based on primary GitHub main
+`829453ecae3fb0de236dbdd95be85a554efd1fb7`. The recovered source consolidation is complete; exact-candidate qualification remains open. See the [release process](RELEASE_PROCESS.md) and
 [release status](RELEASE_STATUS.md). No preserved contribution is qualified merely
 because its branch was mirrored or its files parse.
 
@@ -25,8 +24,9 @@ because its branch was mirrored or its files parse.
 | Recovered tools, owned shutdown and historical guidance | `e78ac8dc` | Integrated at `f14bbc22`; source-only Drive/FDB, RTLink, fuzzing/friction and backend lifecycle ports, plus sanitized historical guidance. No service/native activation is implied. |
 | Pinned Drive library and FDB selections | `b5bdde1d` / `170aa463` | Integrated through `27838f79`; exact admitted source/parent bindings and manifest-checked staging. Final SQLite preservation `3efac6a6` merged at `7f39932d`; portability tests `01d32fb2` are included as `9f91a90c`. See the measured host boundary below. |
 | Owner CI and recoverable installer corrections | `be68826e` / installer line through `736cb7c6` | Included through `4684a8dc`; 88 fresh focused root checks covered installer/CI recovery. Native/package/release/install acceptance remains separate. |
-| Complete eligible source-package inventory | `4f90c55e` | Fixed tool-ZIP/sdist patterns for 22 tracked CommonJS/Swift/assembly files and added full tracked-inventory regression; preliminary four-artifact checks passed 734 tests, with final composite rebuild pending. |
+| Complete eligible source-package inventory | `4f90c55e` | Fixed tool-ZIP/sdist patterns for 22 tracked CommonJS/Swift/assembly files and added full tracked-inventory regression; four-artifact checks passed at `734000d9` and `9f91a90c`; fresh clean-source receipts bind the final handoff. |
 | QEMU selective guide reply budget | `f02c4ba3` | Preserved all content in linked selective references and retained the 64 KiB cap; 82 focused tests passed with five optional-input skips. |
+| Source-built Darwin arm64 dependency inputs | `c7e8670d` | Integrated at `74440ea5`; official-sdist and locally built wheel provenance retained separately, with actual build/import acceptance still required. |
 | Intended version and current installation documentation | This integration line | Core/player/runtime metadata now 0.35.0. Historical installation notes remain historical; current shared 0.34.1 local candidate is not attributed to the old tag. |
 
 ## Equivalent or superseded work, with provenance retained
@@ -63,7 +63,7 @@ n8n froze `codex/ci-end-to-end-stabilization-20261114` at
 `adef0021cf5dc39c66601e9afadedf188dfb8a9f`. That immutable local source is now
 integrated; its live worktree/index were not swept. The owner corrected the plain-output parser failure. Exact canonical branch
 `adef0021` readback is verified on primary GitHub, GitLab and the local hub.
-The Darwin arm64 dependency-input component and final composite source/package checks below still prevent a final freeze.
+The finished Darwin arm64 dependency-input component is integrated; final clean-source receipts and n8n qualification remain separate gates.
 
 The public-metadata transport prototype
 `75114464333fb96771e0e2fc6f1be6497e015d69` is separately preserved on primary as
@@ -120,13 +120,19 @@ canonicalizing Linux SQLite 3.45.1 refuses before writable access; no Linux or
 native Windows backup acceptance is inferred. SHM reader marks are cache
 metadata, with no byte-identity claim. See [FDB descriptor binding](FDB_BACKUP_DESCRIPTOR_BINDING.md).
 
-The 22-file tool-ZIP/sdist inventory correction `4f90c55e` is integrated;
-preliminary four-artifact tool-only/exact-payload checks passed 734 tests. Final
-combined checks and a composite rebuild are still required. The remaining code
-gate is n8n's strict official-sdist/source-built-wheel installer-input route for
-`iced-x86` 1.21.0, whose official distribution lacks a Darwin arm64 wheel. Its
-source and built-wheel provenance must be retained and the finished owner
-component integrated before final rebuild, source freeze and handoff.
+The 22-file tool-ZIP/sdist inventory correction `4f90c55e` is integrated.
+Four-artifact tool-only and exact tracked-payload checks passed at `734000d9`
+and again at `9f91a90c`, including the companion SQLite worker and split guides.
+The finished installer-input component `c7e8670d` is integrated at `74440ea5`;
+104 local installer/verifier/pipeline/package checks passed. It retains official
+source-distribution, source-built wheel, build-log and toolchain identities
+without labeling that wheel an official PyPI binary. Actual Mac wheel import
+and native qualification still require their own successful evidence.
+
+All recovered source implementations and known integration corrections are
+included. The final clean-source package receipts bind the frozen handoff;
+source completion does not establish native, offline or installation acceptance.
+
 Draft [GitHub PR #87](https://github.com/seeker-cyber-maker/fDisBull/pull/87)
 remains the existing review; this status update does not publish or install it.
 

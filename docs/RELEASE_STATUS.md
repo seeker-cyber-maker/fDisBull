@@ -1,13 +1,12 @@
 # Release records and qualification
 
-## 0.35.0 integration in progress (2026-11-14)
+## 0.35.0 source consolidated; qualification pending (2026-11-14)
 
 The intended next version is **0.35.0**. Follow the [release process](RELEASE_PROCESS.md)
 for ownership and the required source-through-install sequence. Original GitHub
 `seeker-cyber-maker/fDisBull` is the authority; GitLab and the local hub are recovery
-copies. Source integration, exact-candidate
-ordinary/native qualification and disconnected package acceptance remain separate
-open gates. No 0.35.0 tag, publication or installation is established by this entry.
+copies. Recovered source integration is complete; exact-candidate ordinary/native
+qualification and disconnected package acceptance remain separate open gates. No 0.35.0 tag, publication or installation is established by this entry.
 
 The integration branch is `codex/release-0.35.0-integration-20261114`. The [contribution disposition](CONTRIBUTION_DISPOSITION_0.35.md) records included,
 equivalent and preserved/open work. The [historical audit](SOURCE_CONSOLIDATION_AUDIT_0.35.md)
@@ -17,13 +16,15 @@ checked macOS main/WAL and manifest preservation; [its host contract](FDB_BACKUP
 records deliberate measured Linux SQLite refusal and the SHM-cache caveat.
 The 22-file source-package inventory correction `4f90c55e` and selective QEMU
 guide budget correction `f02c4ba3` are included. Preliminary four-artifact
-tool-only/exact-payload checks passed 734 tests; a final composite rebuild is
-still pending.
+tool-only/exact-payload checks passed on source `734000d9` and `9f91a90c`.
+A fresh clean-source artifact receipt binds the final handoff.
 
-The remaining code gate is n8n's strict official-sdist/source-built-wheel
-installer-input route for `iced-x86` 1.21.0, which has no official Darwin arm64
-wheel. Finish and integrate that component with source/wheel provenance, then
-perform final combined/package checks, freeze one source SHA and hand it off.
+The finished installer-input component `c7e8670d` is integrated at `74440ea5`,
+retaining official source-distribution and locally built Darwin arm64 wheel
+provenance separately. Its local installer/verifier/pipeline/package selection
+passed 104 checks. Actual dependency import and native qualification still
+require successful evidence. Final clean-source artifact receipts bind one
+frozen source SHA for n8n's existing release record and qualification sequence.
 Exact-candidate ordinary/native/offline qualification, publication and fresh
 shared installation remain separate pending gates. n8n's existing control state
 owns the release record; its canonical record link is not yet supplied.
