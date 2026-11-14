@@ -1,5 +1,10 @@
 # Ordinary QEMU DOS workflows: local migration gate
 
+Follow-up: [ordinary Doom startup/input qualification](../qemu-doom-ordinary-startup-2026-11-14/README.md)
+now demonstrates menus, a fresh game and movement. The earlier 90-second
+`R_Init` result below remains its bounded historical observation; the newly
+observed blocker is allocation-aware protected checkpoint ownership.
+
 **QEMU is not yet qualified as a 1:1 DOSBox-X replacement.** DOSBox-X remains
 the default and retained backend. Ordinary launch, input, readiness, display,
 file access, recovery and exit take priority over further DESQview, CHIP-8 or

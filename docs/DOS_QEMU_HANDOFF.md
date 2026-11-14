@@ -6472,3 +6472,55 @@ live vendor-task restoration is inferred from reopening that data. Final
 test/documentation source preserves the `29f45ab6` runtime bytes and committed
 `0ee7780f` consumer test. The clean final native selection passes all 19 cases
 with zero skips; failed/earlier candidate receipts remain separately retained.
+
+## Ordinary Doom gameplay and allocation-aware checkpoint gap (2026-11-14)
+
+The [new local startup/input gate](evidence/qemu-doom-ordinary-startup-2026-11-14/README.md)
+supersedes a permanent-stall interpretation of the earlier 90-virtual-second
+`R_Init` observation. The unchanged `29f45ab6` runtime reaches Doom's built-in
+gameplay demo under a longer bounded public run. Candidate `43b7da39` then
+passes six individually inspected physical keys through main/episode/skill
+menus, fresh E1M1, forward movement and turning, with `-nosound -nomouse`.
+No LE binding, IRQ-mask change, guest-code/RAM/register edit or prepared-state
+injection is used.
+
+Observed WAD backward seeks are followed by successful reads costing roughly
+10.6–10.9 million counted instructions, compared with 8,582–55,282 for nearby
+reads. The new FAT builder prefers 4 KiB clusters for new volumes at least
+32 MiB only when complete file/directory allocation fits, retaining the prior
+layout otherwise. Smaller volumes, limits, parser and retained-checkpoint
+paths remain unchanged. Independent review caught and corrected a FAT-size
+rounding oscillation before packaging.
+
+A matched public write-watchpoint comparison reaches the first BDA mode-13
+write after original MZ entry at 1,666,377,668 native icount increments on the
+earlier layout, versus 254,130,371 on the candidate: 213.296341504 versus
+32.528687488 QEMU virtual seconds. This is a measured graphics-initialization
+boundary, not whole-game speed, wall time or a completed-frame claim. A
+separate one-second clock advance follows that measured interval for capture.
+
+The normal protected-game `save_state` attempt now exposes the actual next
+blocker: **`DOS process allocation ownership changed`**. CPU/process documents,
+PID and state-artifact count are unchanged after refusal; subsequent ordinary
+execution and stored gameplay still work. No checkpoint bypass is attempted.
+The later protected-PC/source guard was not reached. Allocation evolution and
+truthful source/recovery authority must be qualified before claiming protected
+game checkpoint/restore or full analysis end-to-end equivalence.
+
+All 710 runtime payload members match committed source, private wheel and
+install. The tool-only wheel SHA-256 is
+`630e97c7d1bed4f2e821547b8d1e97e5312ebecb9108328e1185920bc00ef37e`.
+The existing native QEMU is reused. Fresh checks pass 27 focused/176 affected
+host cases (overlapping), plus 23 native cases with zero skips. Native coverage
+preserves the prior history/trial/selected-undo/frame/task-private-layer/hook/
+RNG/checkpoint/IRQ compositions and adds workspace CRUD and real short-write/
+full-disk refusal/restore witnesses. The 1 GiB supervisor-estimate interruption
+in an earlier gameplay probe remains separately retained; the completed run
+uses a corrected 3 GiB estimate and normal close/reap.
+
+DOSBox-X remains default and retained; DESQview completion is deferred unless
+it blocks ordinary DOS. Protected recovery, Doom guest exit, audio/mouse,
+portable delivery, the older strict DOSBox-X cold-reference display gap and
+broader compatibility remain open. No CI, native rebuild, release, merge or
+shared activation occurred. The prior MR description is preserved in
+[the archive](milestones/archive/117-description-before-doom-startup-20261114.md).

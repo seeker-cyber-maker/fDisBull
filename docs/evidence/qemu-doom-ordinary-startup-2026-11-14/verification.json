@@ -1,0 +1,264 @@
+{
+  "IRQ_mask_changes": false,
+  "LE_binding": false,
+  "arguments": "-nosound -nomouse",
+  "date": "2026-11-14",
+  "default_backend": "dosbox",
+  "desqview_completion": "deferred unless an ordinary DOS blocker",
+  "earlier_trials": {
+    "free_startup_original_29": {
+      "built_in_demo_observed": true,
+      "record": {
+        "bytes": 32255,
+        "sha256": "7073b48c79fc7504c6e5a9ffb6d3025889fa75215390874eb00fee0d97172d83"
+      }
+    },
+    "inspected_action_window_expiry": {
+      "not_product_failure": true,
+      "record": {
+        "bytes": 197052,
+        "sha256": "c6fd729989a985a4c05fdc9ee223e3731e7493fbe07f5b561462b1cd1c92d62c"
+      }
+    },
+    "startup_90s": "Retained exact observation; permanent stall not established",
+    "successful_candidate05_declared_bytes": 3221225472,
+    "supervisor_interrupted_04": {
+      "checkpoint_attempted": false,
+      "completed_menu_newgame_only": true,
+      "declared_bytes": 1073741824,
+      "derived_closeout": {
+        "bytes": 14505,
+        "sha256": "46feadb6979fab8ded189764f4dcc8befd8f5794664a42d7504851662dc4b027"
+      },
+      "no_host_OOM_or_product_failure_inference": true,
+      "record": {
+        "bytes": 263182,
+        "sha256": "f49d65080c4ec89009d92695d43877d738e5935588a824895273274b137365ae"
+      },
+      "termination": "owned group RSS exceeded estimate; SIGTERM"
+    }
+  },
+  "format": "fdisbull-ordinary-doom-startup-qualification-1",
+  "gameplay": {
+    "checkpoint": {
+      "attempted": true,
+      "checkpoint_or_restore_qualified": false,
+      "exception": "DOS process allocation ownership changed",
+      "followup_virtual_advance_ns": 1000000000,
+      "owner_CPU_process_unchanged": true,
+      "protected_PC_guard_reached": false,
+      "raw_bypass": false,
+      "states_after": 0,
+      "states_before": 0,
+      "status": "refused"
+    },
+    "guest_exit_attempted": false,
+    "native_edges_each": 2,
+    "normal_close_reap": true,
+    "observations": [
+      "built-in demo",
+      "main NewGame menu",
+      "episode1 menu",
+      "HurtMePlenty menu",
+      "fresh E1M1",
+      "forward movement",
+      "right turn",
+      "unchanged capture after refusal",
+      "gameplay after subsequent1s advance"
+    ],
+    "originals_and_package_unchanged": true,
+    "physical_keys": [
+      "escape",
+      "enter",
+      "enter",
+      "enter",
+      "up",
+      "right"
+    ],
+    "protected_gameplay": true,
+    "record": {
+      "bytes": 483472,
+      "sha256": "77763bbd3547d39f4a8a9db63396997d860d9552815b93cc98d25086a0981809"
+    },
+    "remaining_owned_members": [],
+    "runtime_commit": "43b7da3957ab94f18271eab2876ac01888919555",
+    "stored_frames": 9
+  },
+  "graphics_initialization": [
+    {
+      "boundary": "First observed BDA0x449 mode13 write after original MZ entry, public nonpatching write watchpoint",
+      "counted_instructions": 1666377668,
+      "geometry": {
+        "disk_sha256": "9d9b90f11ef6851f890442de7b38bae5e8b85f78e89c803cb1304aefdd716b9a",
+        "fat_sectors": 254,
+        "sector_bytes": 512,
+        "sectors_per_cluster": 1
+      },
+      "mode_write_observations": [
+        "03",
+        "13"
+      ],
+      "normal_cleanup": true,
+      "post_boundary_capture_advance_ns": 1000000000,
+      "record": {
+        "bytes": 78048,
+        "sha256": "5e8de028fae29503029451fbb4026fa84ee176b8b1f5769802d8652907f0f7c9"
+      },
+      "role": "baseline",
+      "runtime_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+      "startup_clock_budget_armed": false,
+      "virtual_ns": 213296341504
+    },
+    {
+      "boundary": "First observed BDA0x449 mode13 write after original MZ entry, public nonpatching write watchpoint",
+      "counted_instructions": 254130371,
+      "geometry": {
+        "disk_sha256": "f0ee16bf29276d54c3d0434fb2a7a88cb316cd9b9d6d096d9aabb60509732df8",
+        "fat_sectors": 32,
+        "sector_bytes": 512,
+        "sectors_per_cluster": 8
+      },
+      "mode_write_observations": [
+        "03",
+        "13"
+      ],
+      "normal_cleanup": true,
+      "post_boundary_capture_advance_ns": 1000000000,
+      "record": {
+        "bytes": 78079,
+        "sha256": "b72a8850abe396515b6fa003a1c18b0d7bc868bc9345d4b8fad770449ad2d14a"
+      },
+      "role": "candidate",
+      "runtime_commit": "43b7da3957ab94f18271eab2876ac01888919555",
+      "startup_clock_budget_armed": false,
+      "virtual_ns": 32528687488
+    }
+  ],
+  "graphics_instruction_ratio": 6.55717638723315,
+  "graphics_measurement_limits": [
+    "Not wall-time speed",
+    "Not a completed-frame boundary",
+    "Not whole-game timing or IRQ transparency",
+    "Whole-machine icount includes interrupts; not architectural retirement"
+  ],
+  "guest_RAM_register_or_code_edits": false,
+  "independent_graphics_comparison": {
+    "bytes": 10213,
+    "sha256": "ecd3b1169eed26d4ffa0902a68de62bd446511b71e31e1bc585135f5db91faef"
+  },
+  "next_acceptance": "Establish extender allocation evolution and truthful protected-game checkpoint/source recovery authority",
+  "no_CI": true,
+  "no_default_switch": true,
+  "no_merge": true,
+  "no_native_rebuild": true,
+  "no_release": true,
+  "no_shared_activation": true,
+  "observed_IO": {
+    "carry_clear_all": true,
+    "expensive_backward_read_icount": [
+      10925442,
+      10590818
+    ],
+    "file": "DOOM.WAD",
+    "handle": 5,
+    "initial_to_first_call_continuity": "one unsampled8192-byte advance; do not infer initial position as first read start",
+    "kernel_symbol_attribution": false,
+    "other_read_icount_range": [
+      8582,
+      55282
+    ],
+    "paired_calls": 16,
+    "reads": 9,
+    "record": {
+      "bytes": 1437547,
+      "sha256": "caf35d6156ced0de1ba76e35f4b7589be62e8373cfa40948f66550e10f1835c0"
+    },
+    "returned_buffers_compared_to_original": false,
+    "runtime_commit": "29f45ab69374ed5ac604a70c4fecd385492f1d5d",
+    "seeks": 7
+  },
+  "only_changed_runtime_member_from_29f": "fdisbull/dos_workspace_fat.py",
+  "open_gates": [
+    "Protected Doom midgame checkpoint/restore",
+    "Doom guest exit",
+    "Audio/mouse/device/media/timing compatibility",
+    "Portable/offline delivery",
+    "Older strict DOSBox-X ATTT cold-restore reference display discrepancy",
+    "General1:1 DOSBox-X replacement"
+  ],
+  "ordinary_public_launch": true,
+  "original_inputs_sha256": {
+    "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+    "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+  },
+  "package_manifest": {
+    "bytes": 78221,
+    "sha256": "6c4a231284b3941fb4bb86b7d4d8feac68a00a6cda526578dd378186c88d09b0"
+  },
+  "prepared_state": false,
+  "private_originals_images_states_FDB_CAS_excluded": true,
+  "replacement_qualified": false,
+  "runtime_commit": "43b7da3957ab94f18271eab2876ac01888919555",
+  "runtime_files": 710,
+  "source_wheel_install_equal": true,
+  "verification": {
+    "affected": {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 176
+      },
+      "junit": {
+        "bytes": 24059,
+        "sha256": "d0a6238aacd95ad402c97be97040bedf47b1c32b59355ac6f8d9bbaac9e905a4"
+      }
+    },
+    "counts_overlap_not_completion_percentage": true,
+    "focused": {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 27
+      },
+      "junit": {
+        "bytes": 3867,
+        "sha256": "6ef93a105d32000a642a8cdb143f17416af9aac76be636b2f08c96dc8484ca17"
+      }
+    },
+    "native": {
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 23
+      },
+      "dependencies_unchanged": true,
+      "junit": {
+        "bytes": 3686,
+        "sha256": "50a7d97fc05074c3e4e96491920a069265029bc9052eaca6fbd2f7b515c419c4"
+      },
+      "record": {
+        "bytes": 2788,
+        "sha256": "e3e33821448784f3ed076116d8332f2bb607e9220500b4e1ec6e6c79f4bf293e"
+      },
+      "runtime_unchanged": true,
+      "test_files_unchanged": true
+    },
+    "rejected_geometry": {
+      "counts": {
+        "errors": 0,
+        "failures": 2,
+        "skipped": 0,
+        "tests": 2
+      },
+      "junit": {
+        "bytes": 1537,
+        "sha256": "d238f15a45f11d39464584c4eeaca461e974547b52dff804c8dd7910c4ce0de4"
+      },
+      "never_packaged": true
+    }
+  },
+  "wheel_sha256": "630e97c7d1bed4f2e821547b8d1e97e5312ebecb9108328e1185920bc00ef37e"
+}
