@@ -6188,3 +6188,58 @@ layer/hook/checkpoint authority, IRQ/timer-transparent tracing and the remaining
 compatibility campaigns remain separate gates. See the
 [sanitized combined acceptance receipt](evidence/qemu-desqview-continuity-integration-2026-11-14/verification.json).
 Original executables, images, FDB/CAS and byte-retaining reports remain private.
+
+## 2026-11-14: automatic DESQview physical proof, host verified; native pending
+
+Runtime `72423fadd263b579ba2193d960f1e35d83fba9df` adds
+`DesqviewProvider.qualify_physical` to automatic source-snapshot publication.
+Two fresh linear/physical passes compare every captured byte, including fixups,
+while rechecking the original native task/process identity, source/version,
+run/epoch, stopped CPU and uncached page mappings. Certificates cover bounded
+source captures only; manager-wide physical identity, whole task RAM and
+allocation lifetime remain unqualified. Physical placement never enters task
+or process keys. See [the contract](runtime-mappings.md).
+
+The tracker records the certificate before publishing mappings. The registry
+checks its owned local artifact, snapshot, task-native identity, page coverage
+and exact bytes, then retains per-binding proof. Disjoint fragments may share
+a certificate; overlapping reuse or reuse after withdrawal is refused. A typed
+physical-only miss withdraws partial maps and preserves an episode only after
+independent CPU/lifecycle revalidation. Identity/owner/epoch drift and transport
+failures retire unsafe continuity. Registry checkpoint restore retains the old
+certificate as historical evidence and requires fresh proof.
+
+Fresh host verification on this runtime:
+
+- **3,315 passed / 12 input-dependent native skips**, 113 files, all **1,279**
+  Python source/test hashes unchanged.
+- **297 installed-wheel cases passed**, zero skips, plus an independent
+  **161-case** host review. These selections overlap the broader suite.
+- **709 runtime files** match Git source, wheel and one private flat install;
+  all **20 critical modules** import from that prefix. Wheel SHA-256:
+  `10b82f1f7c9f8e008199d66693f8b00ded479f300799c9827fb5e95b64c86035`.
+- A final-observation owner/epoch race was reproduced before the fix; both
+  drift cases now refuse. One ten-second observer budget intersects inherited
+  deadlines and restores VM/QMP/GDB bounds; it is separate from an unexported
+  raw-machine execution timeout.
+
+**No fresh native test ran.** The heavy-job launcher refused both attempts
+with `macOS reports warning memory pressure`, including the retry after the
+host processes exited. Both returned exit2 with no ticket and no guest start.
+Current heavy-job policy was honored; there was no alternate launch or CI.
+
+Pending on the same frozen wheel: eight native preservation/failure cases,
+the two authored LE profiles, and original-DESQview automatic certificates
+compared with independent stopped physical witnesses through same-task
+relocation, real handle reuse, source-error recovery and cold reopen. Private
+controls and package receipts are under
+`QEMU-DOSBox-Parity-20261110/physical-qualification`; the independent acceptance
+plan is on CACHE at `desqview-automatic-proof-controls-20261114`.
+Prior `62d01df8` native results remain historical and do not qualify this runtime.
+
+Trials, histories, shared replay, task-private layers, hooks, checkpoints and
+IRQs retain their host contracts; fresh native preservation remains pending.
+DOSBox-X remains default and retained, with the selector, installation manifest
+and seven DOSBox payload hashes unchanged. No CI, native rebuild, release, MR
+merge or shared activation. Overall parity and DOSBox-X removal are unqualified.
+See the [sanitized host receipt](evidence/desqview-automatic-physical-2026-11-14/verification.json).
