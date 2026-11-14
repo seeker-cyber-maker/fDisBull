@@ -41,6 +41,7 @@ AGENT_SKILL_GUIDES = {
     "references/task-framing.md": "Handoff contracts, report levels and tool-use defaults",
     "references/dos-drivers-and-qemm.md": "DOS driver roots, mixed LE and QEMM machine profiles",
     "references/dos-qemu-migration.md": "QEMU DOS execution, migration gates and DOSBox fallback",
+    "references/dos-qemu-input-display.md": "QEMU scheduled input, retrace and display observations",
     "references/dos-file-layers.md": "FreeDOS workspace captures and checkpointed file layers",
     "references/chip8-qemu.md": "CHIP-8 QEMU profiles and source-bound checkpoints",
     "references/desqview-and-memory-search.md": "DESQview cooperation and guarded persistent memory search",

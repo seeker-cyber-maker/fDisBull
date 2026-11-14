@@ -207,3 +207,14 @@ def test_guide_count_is_bounded_before_resource_reads():
         raise AssertionError('unbounded index must fail before fetching resources')
     with pytest.raises(gate.GateError, match='exceeds its limit'):
         gate.verify_index(index, forbidden)
+
+
+@pytest.mark.parametrize('reference', [
+    path.relative_to(ROOT / 'src/fdisbull/skills/fdisbull-investigate').as_posix()
+    for path in sorted((ROOT / 'src/fdisbull/skills/fdisbull-investigate').rglob('*.md'))
+])
+def test_selective_resources_fit_the_cli_reply_budget(reference):
+    from fdisbull.cli import invoke
+    result = invoke('agent-skill', {'reference': reference})
+    reply = json.dumps({'id': None, 'ok': True, 'result': result}).encode('utf-8')
+    assert len(reply) <= gate.MAX_RESPONSE_BYTES, reference
