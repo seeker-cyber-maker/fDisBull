@@ -1,0 +1,58 @@
+{
+  "base_commit": "e5784e6876c14d8f0f959b8888b8c1260d093a9c",
+  "limits": {
+    "get_start_window_seconds": 180,
+    "github_post_start_window_seconds": 75,
+    "gitlab_action_start_window_seconds": 110,
+    "provider_cooldown_unchanged": true,
+    "single_admission_wait_seconds": 360,
+    "sleep_slice_seconds": 60
+  },
+  "live_status_at_source_freeze": {
+    "job_id": "132475751747",
+    "repair_and_recovery_qualified": false,
+    "run_attempt": "1",
+    "run_id": "43604381587",
+    "source_sha": "c59ba55bf5b541a4c99932905e8562c950f9c3c5",
+    "status": "Expected missing-policy failure exported; canonical retention held",
+    "workflow_control_sha": "e2b4fd7f4a492685bd8ccbf27ac7b2a7cc9dfa78"
+  },
+  "regressions": [
+    "Near-expiry GUI handoff formerly reached expired remote batch; normal renewal now precedes HTTP starts",
+    "GitLab principal GET plus POST needs a larger start window; no POST replay",
+    "Provider-only preflight must not permanently shorten the later qualification phase",
+    "In-progress wait and full incident deadline cannot extend",
+    "First unobserved controller stop journals only attention; no job failure or recovery inferred",
+    "Native reserved namespace validated before replay, preserving ordinary Down/Recovered transitions"
+  ],
+  "release_performed": false,
+  "schema": "fdisbull-focused-control-verification-1",
+  "scope": "Local controller admission and native journal protocol; no hosted/native/package qualification",
+  "sources": {
+    "scripts/ci/operations/ci_incident.py": "a07fd7302c21995d8ca40309ee5c5e95027f6581b4ffde85bbeb98c862ea2adb",
+    "scripts/ci/operations/notification_journal.py": "95247afa38d58accb570f2c102f7d8f9ee582aeb6db0b862e3ba1a2a5a774276",
+    "scripts/ci/production_control.py": "8962787a61ef255da56396f269949135328e7721da639c160656a5d9a27fcf38",
+    "scripts/ci/production_gui_client.py": "88fe05ab57e0cae107505ea63f06a0633fb20ab5f163ac78d12de5d34be167cb",
+    "scripts/ci/production_runtime.py": "afdbdab2ee951682376e6da86c9279fb3a2348639385def164c26a64a8ef84c9"
+  },
+  "system_installation_changed": false,
+  "unqualified": [
+    "Live deployment and same-key reconciliation",
+    "Full ordinary/native Linux qualification",
+    "PE32 and Win16 original-process checks",
+    "Rebuilt self-contained no-network kit",
+    "Notification delivery"
+  ],
+  "verification": [
+    {
+      "command": "python -B -m pytest -q -p no:cacheprovider tests/test_production_runtime.py tests/test_production_gui_client.py tests/test_production_gui_transport.py tests/test_production_control.py tests/test_ci_recovery.py tests/test_production_recovery.py tests/test_recovery_github.py tests/test_recovery_gitlab_production.py tests/test_ci_incident_operations.py",
+      "junit_sha256": "804b6e4b2a6134de2a8ddfc34d5ba4f9a7521e1e8c67c3d376f15ad795a25a46",
+      "result": "318 passed in 53.27s"
+    },
+    {
+      "command": "python -B -m pytest -q -p no:cacheprovider tests/test_production_runtime.py::test_provider_preflight_360_can_transition_to_later_eight_hour_source_intent",
+      "result": "1 passed in 0.29s",
+      "scope": "Final strengthened test executes one read after twelve minutes"
+    }
+  ]
+}

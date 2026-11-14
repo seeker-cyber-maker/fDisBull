@@ -170,6 +170,9 @@ def invoke(method, params):
     elif method=='loader-events':
         if set(params)-{'after','limit'}:raise ValueError('Invalid loader history options')
         command=f"loader-events {number(params.get('after',0),0,2**64-1)} {number(params.get('limit',256),1,256)}"
+    elif method=='control-inventory':
+        if params:raise ValueError('Control inventory accepts no parameters')
+        command='control-inventory'
     elif method=='selector':
         command=f"selector {number(params['selector'],0,65535):x}"
     elif method=='context-diagnostics':
@@ -249,7 +252,7 @@ def identity():
                                      'opt/fdisbull/broker.py':__file__}.items() if Path(path).is_file()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
-      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,
+      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,'control_inventory':True,
                       'early_loader':True,'loader_events':True,'thread_info':True,'win16_integer_pair':True,'process_profiles':['pe32','pe64']},
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
 

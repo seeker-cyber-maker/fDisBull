@@ -1,6 +1,7 @@
 """The release gate must detect omissions without a hand-maintained file list."""
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import re
 import subprocess
 import zipfile
 
@@ -215,3 +216,58 @@ def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path
     selected = {p.relative_to(tmp_path) for p in builder.release_files(tmp_path)}
     assert expected <= selected
     assert not any(p.name == "qemu-system-x86_64" for p in selected)
+
+
+def test_ci_control_assets_in_real_sdist_and_tool_payload(tmp_path):
+    """Both source artifacts must carry exact tracked CI control assets."""
+    import runpy
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    assets = (
+        "scripts/ci/RECOVERY.md",
+        "scripts/ci/fdisbull-ci-production.service",
+        "scripts/ci/qualification-policy.json",
+    )
+    source = {name: (root / name).read_bytes() for name in assets}
+    source.update({
+        "src/fdisbull/__init__.py": b"core\n",
+        "player/fdisbull_player/__init__.py": b"player\n",
+    })
+    fixture = tmp_path / "source"
+    fixture.mkdir()
+    (fixture / "MANIFEST.in").write_bytes((root / "MANIFEST.in").read_bytes())
+    (fixture / "setup.py").write_text(
+        'from setuptools import setup\nsetup(name="fdisbull", version="0.0.0", packages=[])\n'
+    )
+    (fixture / "pyproject.toml").write_text(
+        '[build-system]\nrequires = ["setuptools>=68"]\nbuild-backend = "setuptools.build_meta"\n'
+    )
+    for name, data in source.items():
+        path = fixture / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    output = tmp_path / "dist"
+    output.mkdir()
+    subprocess.run(
+        [sys.executable, "-c", "import setuptools.build_meta, sys; setuptools.build_meta.build_sdist(sys.argv[1])", str(output)],
+        cwd=fixture, check=True, capture_output=True,
+    )
+    archives = list(output.glob("*.tar.gz"))
+    assert len(archives) == 1
+    sdist = gate.archive_payload(archives[0])
+    build_release = runpy.run_path(str(root / "scripts/build_release.py"))
+    tool_files = {p.relative_to(root).as_posix() for p in build_release["release_files"](root)}
+    tool = {"fdisbull-0.0.0/" + name: data for name, data in source.items() if name in tool_files}
+    for kind, archive in (("sdist", sdist), ("tool", tool)):
+        gate.check_payload(source, archive, kind)
+        for name in assets:
+            member = "fdisbull-0.0.0/" + name
+            missing = dict(archive)
+            del missing[member]
+            with pytest.raises(ValueError, match="missing=.*" + re.escape(name)):
+                gate.check_payload(source, missing, kind)
+            changed = dict(archive)
+            changed[member] = b"altered"
+            with pytest.raises(ValueError, match="changed=.*" + re.escape(name)):
+                gate.check_payload(source, changed, kind)

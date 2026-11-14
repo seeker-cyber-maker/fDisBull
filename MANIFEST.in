@@ -44,6 +44,7 @@ recursive-include src/fdisbull/skills *.md
 recursive-include skills/dos-target-media-rip *.md *.py
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
+include tests/offline_win16_oracle.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
 include tests/fixtures/protected_mode_mouse.S
@@ -141,6 +142,9 @@ include docs/evidence/integration-025/dinopark.json
 include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
 recursive-include scripts *.py *.c *.sh *.txt
+include scripts/ci/RECOVERY.md
+include scripts/ci/fdisbull-ci-production.service
+include scripts/ci/qualification-policy.json
 prune examples
 prune fixtures/behavior-curriculum
 prune history

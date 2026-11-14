@@ -25,18 +25,18 @@ credentials are created by this policy. Native qualification remains behind a
 blocking manual start and requires stable, layers, unified and summary jobs.
 Source configuration does not prove runner registration or provider settings.
 
-Apply the storage admission rules before image pulls, builds and each material
-growth phase. Use bounded external workspaces and finite commands; a rejected
-admission stops new bulk work. A local Linux run, including any emulation,
-records its actual platform and must not be presented as hosted CI.
+Use bounded external workspaces and finite commands. A local Linux run,
+including any emulation, records its actual platform and must not be presented
+as hosted CI.
 
 The direct runner uses the guarded `container` command on this Mac. It snapshots
 a clean candidate into separate shallow Git clones, pins the pulled amd64 image
-by digest, and retains logs, stopped containers and failed attempts. It admits
-both the result filesystem and the CACHE container store before growth. It
+by digest, and retains logs, stopped containers and failed attempts. It records
+free-space and allocation estimates for the result filesystem and, when
+separate, the CACHE container store. These figures are telemetry only. It
 never mounts the original checkout's Git credentials or private game directory.
 The snapshot mount is read-only. Source, build, temporary and package-install
-work uses the Linux guest filesystem, whose backing disk is in that admitted
+work uses the Linux guest filesystem, whose backing disk is in that observed
 external container store. Only selected regular evidence files cross back to
 the writable host result directory; a guest postcheck must confirm the exact
 commit and unchanged tracked source before a leg is completed. This avoids
@@ -50,7 +50,7 @@ python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile layers
 # Prepare the pinned QEMU/Wine/DOS inputs in the dedicated build worker.
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified-prepare
-# Recheck space; retain exports before any explicitly approved worker cleanup.
+# Continue the same run; retain exports before any explicitly approved worker cleanup.
 # This reuses the completed preparation from this exact source and run.
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile unified
 python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull-ci-CANDIDATE --profile qualify
@@ -58,14 +58,12 @@ python scripts/ci/local-linux.py --output /Volumes/CACHE/AppleContainer/fdisbull
 
 `--profile all` explicitly starts the four qualification legs and their separate
 unified preparation stage; heavy work is never automatic on a push or MR.
-The default allocation estimates are 12 GB for ordinary, 14 GB for stable,
+The default allocation telemetry is 12 GB for ordinary, 14 GB for stable,
 18 GB for layers, 35 GB for unified preparation and 8 GB for unified acceptance.
-The destination reserve defaults to 40 GB and each worker has a two-hour wall
-timeout. `--expected-bytes` explicitly overrides the estimate for each newly
-executed stage. Choose a conservative estimate for the actual work; a bounded
-local run may explicitly use the user-authorized 20 GB minimum. Completed
-preparation does not reserve its compiler workspace again when resumed.
-Storage is admission-only, not a running quota.
+`--expected-bytes` overrides the recorded estimate for each newly executed
+stage. `--reserve-bytes` is retained for command compatibility and is recorded
+only as telemetry. Each worker has a two-hour wall timeout. Completed
+preparation does not repeat its estimate when resumed.
 Inspect the retained log after failure; no automatic retry or cleanup occurs.
 Do not overwrite a failed run or reuse it for a changed commit.
 
@@ -223,3 +221,36 @@ Missing runs, incomplete pages, mismatched SHAs, stale data and provider errors 
 Authentication/access failures, rate limits, CI quota exhaustion and confirmed account restrictions stop refreshes through a persisted `provider_stop`. Do not repeatedly retry, change accounts/repositories, weaken checks or push empty commits to evade the condition. Resolve normal provider access first.
 
 Do not start watchers, scheduled checks or monitoring services without a separate user request. Source fixes, CI qualification, review readiness, merging and releasing remain separate gates.
+
+## Finite agent waits and controller handoffs
+
+Reviewers must not remain active solely to wait for another CI chat. Read the
+owner's existing receipt first. At most one bounded chat wait of up to 60 seconds
+is appropriate for an imminent result; do not renew it merely because the owner
+is active or its cursor changed. If the required result is unavailable, publish
+the completed review, name the missing evidence and its owner, and end the turn
+or continue independent authorized work. Resume review when concrete new evidence
+is available. This rule does not stop an authorized finite worker or replace the
+existing n8n service with a chat-based polling loop.
+
+The CI owner maintains one durable current-state handoff in the existing control
+records. Include the incident, run and attempt, exact application and workflow
+commits, owner, current stage, last substantive progress time, stage deadline,
+next action, blocker and paths to retained results. Repeated status reads and
+additional passing test counts are not substantive progress by themselves.
+
+Controller stages need finite deadlines and explicit success, failure or
+attention outcomes. A timeout must retain the original action intent and evidence;
+it must not authorize replay of an uncertain mutation. A completed job must not
+leave an idle holder retaining the executor indefinitely. Before releasing or
+transferring ownership, reconcile live workers and unresolved actions under the
+existing executor protocol. Report controller attention through the existing
+deduplicated notification route, including failures before job-evidence capture.
+
+When a verifier rejects a completed export, preserve it and correct the verifier
+against that real evidence without weakening failure detection. Reuse the export
+where source identity and completeness remain valid; do not rebuild merely to
+repair receipt interpretation. Record operator-assisted reconciliation separately
+from automatic recovery. A fix, a successful rehearsal and a recovered production
+incident are distinct outcomes. These are required behaviors, not a declaration
+that the current deployment has passed them.

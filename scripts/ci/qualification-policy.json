@@ -1,0 +1,15 @@
+{
+  "schema": "fdisbull-ci-qualification-policy-1",
+  "profile": "ordinary",
+  "repository": "seeker-cyber-maker/fDisBull",
+  "runner_id": 21,
+  "cpus": 2,
+  "memory_mib": 9216,
+  "additional_swap": false,
+  "required_artifacts": [
+    "artifacts/ordinary/tests.xml",
+    "artifacts/ordinary/required-contracts.xml",
+    "artifacts/receipts/package-payloads.json",
+    "artifacts/receipts/ordinary.json"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "changed_source_sha256": {
+    "scripts/ci/production-ci.py": "253b43e9ba0909a7da29655416b473b810709783a00d0db981a91c1705f607be",
+    "scripts/ci/production_runtime.py": "90af7d4e30e70c0daf1563f15a84a1dafb2a24ac03a5bcc25306e41cab706f3a",
+    "tests/test_production_ci_entrypoint.py": "378fc7257a95c9bb06cd38540f52dcb54883f7a9daa3b9eae82a23669dceb96e",
+    "tests/test_production_runtime.py": "0908daa5c64aa88593f0f3c4e334ff4e9145ff2044fa38ca384859a86ee046a5"
+  },
+  "claim_limits": {
+    "automatic_production_recovery_qualified": false,
+    "native_or_offline_kit_qualification_of_this_source": false,
+    "new_live_controller_stop_case_started": false,
+    "release_or_install_authorized_by_this_evidence": false,
+    "whole_retry_incident_closure_from_initial_api": false
+  },
+  "date": "2026-11-14",
+  "private_wrapper_retirement_sha256": "daf03338edaa49e7182c878e58accbf47eef5f4c5fad87036d6cb8ae1d353854",
+  "retained_real_case": {
+    "application_sha": "c59ba55bf5b541a4c99932905e8562c950f9c3c5",
+    "attempt": "2",
+    "closure": "operator-assisted",
+    "closure_sha256": "19ec9f1d9aac4521b5b88a8fc03a6695d6cea9b1ef0b617f7743a8559877cd42",
+    "delivered_once": [
+      "down",
+      "attention",
+      "recovered"
+    ],
+    "independent_delivery_sha256": "26fe098d959d09623ef13a843922e1f66bb993442792d3549c88d8d7601361ad",
+    "job_id": "132498683205",
+    "ordinary_job": "success",
+    "ordinary_tests": {
+      "passed": 11998,
+      "passing_subtests": 2379,
+      "skipped": 418
+    },
+    "original_controller_attention_unchanged": true,
+    "packages_verified": 4,
+    "quiet_ownership_seconds": 468.28493547439575,
+    "quiet_ownership_sha256": "595dccfc8d65bb7f76caea52fd6935de1ebc8837a50508ea39717033bd52684d",
+    "required_contracts_passed": 26,
+    "run_id": "43604381587",
+    "workflow_sha": "e2b4fd7f4a492685bd8ccbf27ac7b2a7cc9dfa78"
+  },
+  "schema": "fdisbull-controller-stop-verification-1",
+  "scope": "focused local controller changes; retained ordinary Linux evidence is from its own application commit",
+  "verification": {
+    "command": "python3 -m pytest -q tests/test_production_ci_entrypoint.py tests/test_production_runtime.py tests/test_production_control.py tests/test_production_evidence.py tests/test_production_github_host.py tests/test_production_gui_client.py tests/test_install_production_control.py tests/test_ci_incident_operations.py",
+    "exit_code": 0,
+    "native_runner_and_ownership_in_tests": "temporary journals and controlled fakes; not live CI",
+    "passed": 300,
+    "regressions": [
+      "Original stop identity survives Runtime, cleanup and cron handlers",
+      "Both exact maintenance schemas suppress notification with validated metadata",
+      "Terminal initial attempt needs complete accepted-dispatch, source-binding, listener and fresh cleanup chain before safe release",
+      "Unresolved later action survives generic clean initial-listener cleanup",
+      "Unknown ownership latches before failing snapshot reads as well as writes",
+      "Journal acknowledgment loss uses bounded identical append retry; delivery remains unknown here"
+    ],
+    "seconds": 53.03
+  }
+}

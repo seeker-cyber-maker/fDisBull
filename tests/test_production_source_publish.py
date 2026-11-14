@@ -1,0 +1,319 @@
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+spec=importlib.util.spec_from_file_location('source_publish',Path(__file__).parents[1]/'scripts/ci/production_source_publish.py')
+p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
+
+
+@pytest.fixture
+def fixture(tmp_path):
+    event='d'*64;key='incident:repair';base='a'*40;new='b'*40;ref='codex/ci-repair-'+event
+    state=tmp_path/'state';state.mkdir();worktrees=tmp_path/'worktrees';worktrees.mkdir()
+    work=worktrees/('ci-repair-'+event);work.mkdir();eventdir=state/event;eventdir.mkdir()
+    action=eventdir/('source-'+hashlib.sha256(key.encode()).hexdigest());action.mkdir()
+    blobs={'src/fdisbull/foo.py':b'old source','tests/test_foo.py':b'protected test',
+           'scripts/check_ci_qualification.py':b'protected verifier',
+           'scripts/ci/execution_identity.py':b'protected identity','pyproject.toml':b'protected config'}
+    for path in ('tests/test_foo.py','scripts/check_ci_qualification.py','scripts/ci/execution_identity.py','pyproject.toml'):
+        item=work/path;item.parent.mkdir(parents=True,exist_ok=True);item.write_bytes(blobs[path])
+    digest=lambda path:hashlib.sha256(blobs[path]).hexdigest()
+    policy={'source_sha':base,'candidate_ref':ref,'allowed_paths':['src/fdisbull/foo.py'],
+            'source_hashes':{'src/fdisbull/foo.py':digest('src/fdisbull/foo.py')},
+            'test_hashes':{'tests/test_foo.py':digest('tests/test_foo.py')},
+            'verifier_hashes':{x:digest(x) for x in ('scripts/check_ci_qualification.py','scripts/ci/execution_identity.py','pyproject.toml')},
+            'reproducer_argv':['python','-m','pytest','-q','tests/test_foo.py::test_bad'], 'max_diff_bytes':65536}
+    (eventdir/'prepared.json').write_text(json.dumps({'schema':'fdisbull-source-reproducer-1','selection_profile':'single-failure-direct-imports-1',
+                                                     'event_key':event,'status':'verified_reproducer','target':{'source_sha':base},
+                                                     'node':'tests/test_foo.py::test_bad','worktree':str(work),'policy':policy,
+                                                     'baseline_interpreter':dict(p.PINNED_INTERPRETER)}))
+    local={'status':'completed','source_sha':new,'base_sha':base,'candidate_ref':ref,
+           'receipt_path':str(action/'final.json'),'publication':'unpublished'}
+    for name,value in [('intent.json',{'key':key,'source_sha':base,'candidate_ref':ref}),
+                       ('baseline.json',{'exit_code':1,'test_hashes':policy['test_hashes']}),
+                       ('worker.json',{'status':'completed'}),('local.json',local)]:
+        (action/name).write_text(json.dumps(value))
+    calls=[];remote={'github':None,'gitlab':None};flags={'wrong':False,'timeout':False,'timeout_provider':None,'timeout_after_push':False,'rewrite':False,'wrong_gitlab':False,'stops':[], 'http_status':None, 'empty_token':False, 'gitlab_http_status':None, 'bearer_status':200, 'bearer_wrong':False, 'bearer_overflow':False, 'probe_timeout':False, 'https_calls':[]}
+    def runner(argv,**kwargs):
+        calls.append((list(argv),dict(kwargs['env'])))
+        assert all('secret-gh' not in x and 'secret-gl' not in x for x in argv)
+        ret=0;out=b'';timed=False
+        if argv[0]==p.PINNED_INTERPRETER['path'] and argv[-1]==p.TOKEN_PROBE_FLAG:
+            assert argv==[p.PINNED_INTERPRETER['path'],'-I',str(Path(p.__file__).resolve()),p.TOKEN_PROBE_FLAG]
+            assert kwargs['timeout']==15 and b'secret-gl' in kwargs['input_bytes']
+            assert not any('secret-gl' in str(value) for value in kwargs['env'].values())
+            token=json.loads(kwargs['input_bytes'])['token']
+            out=json.dumps(p._gitlab_exact_token_probe(token,https_factory=Connection)).encode()
+            timed=flags['probe_timeout']
+        elif argv[0] == p.sys.executable and argv[1:4]==['-m','pytest','-q']:
+            assert kwargs['env']['PYTEST_DISABLE_PLUGIN_AUTOLOAD']=='1';out=b'1 passed in 0.01s'
+        elif argv[0]==p.GH_BIN and argv[1:3]==['auth','token']:out=b'' if flags['empty_token'] else b'secret-gh\n'
+        elif argv[0]==p.GLAB_BIN and argv[1:4]==['config','get','token']:out=b'secret-gl\n'
+        elif argv[0]==p.GH_BIN:
+            assert kwargs['env']['GH_TOKEN']=='secret-gh'
+            status=flags['http_status'] or 200
+            out=('HTTP/2 '+str(status)+' OK\r\n\r\n').encode()+json.dumps({'login':'wrong' if flags['wrong'] else 'seeker-cyber-maker'}).encode()
+        elif argv[0]==p.GLAB_BIN:
+            assert argv==[p.GLAB_BIN,'api','--hostname','gitlab.com','--include','user']
+            assert not any(k in kwargs['env'] for k in ('GITLAB_TOKEN','GLAB_TOKEN','GITLAB_ACCESS_TOKEN','GLAB_IS_OAUTH2'))
+            status=flags['gitlab_http_status'] or 200
+            out=('HTTP/2 '+str(status)+' OK\r\n\r\n').encode()+json.dumps({'id':43957127,'username':'other' if flags['wrong_gitlab'] else 'TiGa-RCE'}).encode()
+        elif argv[0]==p.GIT_BIN:
+            cmd=argv[3:];actionname=cmd[0]
+            if actionname=='config':ret=0 if flags['rewrite'] else 1;out=b'rewrite' if flags['rewrite'] else b''
+            elif actionname=='rev-parse':out=(new if cmd[1]=='HEAD' else base).encode()
+            elif actionname=='branch':out=ref.encode()
+            elif actionname=='status':out=b''
+            elif actionname=='rev-list':out=(new+' '+base).encode()
+            elif actionname=='log':out=('Recovery-Action-Key: '+key).encode()
+            elif actionname=='diff-tree':out=b'src/fdisbull/foo.py'
+            elif actionname=='diff':out=b'diff fixture'
+            elif actionname=='show':out=blobs[cmd[1].split(':',1)[1]]
+            elif actionname in ('ls-remote','push'):
+                provider='github' if any('github.com' in part for part in cmd) else 'gitlab'
+                values=' '.join(kwargs['env'].values())
+                assert 'Authorization: Basic' in values and kwargs['env']['GIT_CONFIG_GLOBAL']=='/dev/null'
+                if actionname=='ls-remote':
+                    out=((remote[provider]+'\trefs/heads/'+ref+'\n').encode() if remote[provider] else b'')
+                elif flags['timeout'] or flags['timeout_provider']==provider:
+                    if flags['timeout_after_push']:remote[provider]=new
+                    timed=True
+                else:remote[provider]=new
+            else:raise AssertionError(cmd)
+        else:raise AssertionError(argv)
+        return {'returncode':ret,'timed_out':timed,'overflow':False,'stdout':out,'stderr':b''}
+    def stop(name,reason):
+        flags['stops'].append((name,reason));return True
+    class Response:
+        @property
+        def status(self):return flags['bearer_status']
+        def read(self,limit):
+            assert limit==65536
+            if flags['bearer_overflow']:return b'x'*limit
+            return json.dumps({'id':43957127,'username':'other' if flags['bearer_wrong'] else 'TiGa-RCE'}).encode()
+    class Connection:
+        def __init__(self,host,port,*,timeout,context):
+            assert host=='gitlab.com' and port==443 and timeout==15 and context.check_hostname and context.verify_mode==p.ssl.CERT_REQUIRED
+            self.entry={'host':host,'port':port,'timeout':timeout,'closed':False};flags['https_calls'].append(self.entry)
+        def request(self,method,path,*,headers):self.entry.update(method=method,path=path,headers=headers)
+        def getresponse(self):return Response()
+        def close(self):self.entry['closed']=True
+    pub=p.CandidateRefPublisher(worktrees,state,guard=lambda:None,runner=runner,
+                                provider_admit=lambda name:not flags['stops'],provider_stop=stop)
+    return pub,key,local,calls,remote,flags,action
+
+
+def test_exact_candidate_pushes_only_dedicated_refs_and_readbacks(fixture):
+    pub,key,local,calls,remote,flags,action=fixture
+    result=pub(key,local)
+    assert result['verified'] and all(result[x]['verified'] for x in ('github','gitlab'))
+    assert pub.readback(key,{**local,'publication':result})['verified']
+    pushes=[args for args,env in calls if args[0]==p.GIT_BIN and args[3]=='push']
+    assert len(pushes)==2 and all('--force' not in args for args in pushes)
+    assert all(args[-1].endswith(':refs/heads/'+local['candidate_ref']) for args in pushes)
+    gh=next(args for args in pushes if any('github.com' in x for x in args))
+    gl=next(args for args in pushes if any('gitlab.com' in x for x in args))
+    assert '--push-option=ci.skip' in gl and not any(x.startswith('--push-option') for x in gh)
+    for file in action.glob('publish-*-intent.json'):
+        assert 'secret-' not in file.read_text()
+
+
+def test_wrong_principal_and_rewrite_refuse_before_mutation(fixture):
+    pub,key,local,calls,remote,flags,action=fixture
+    flags['wrong']=True
+    with pytest.raises(RuntimeError,match='account mismatch'):pub(key,local)
+    assert not any(args[0]==p.GIT_BIN and args[3]=='push' for args,env in calls)
+    assert flags['stops']==[('github','provider_account_mismatch')]
+    with pytest.raises(RuntimeError,match='status stopped'):pub(key,local)
+    assert not any(args[0]==p.GIT_BIN and args[3]=='push' for args,env in calls)
+
+
+def test_unknown_push_is_never_repeated(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;flags['timeout']=True
+    with pytest.raises(RuntimeError,match='unknown'):pub(key,local)
+    assert (action/'publish-github-intent.json').is_file()
+    flags['timeout']=False
+    with pytest.raises(RuntimeError,match='reconcile only'):pub(key,local)
+    assert len([args for args,env in calls if args[0]==p.GIT_BIN and args[3]=='push'])==1
+    with pytest.raises(ValueError):pub.readback(key,local)
+
+
+def test_divergent_candidate_ref_never_overwritten(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;remote['github']='f'*40
+    with pytest.raises(RuntimeError,match='differs'):pub(key,local)
+    assert not any(args[0]==p.GIT_BIN and args[3]=='push' for args,env in calls)
+
+
+def test_unknown_gitlab_response_recovers_only_by_both_readbacks(fixture):
+    pub,key,local,calls,remote,flags,action=fixture
+    flags['timeout_provider']='gitlab';flags['timeout_after_push']=True
+    with pytest.raises(RuntimeError,match='unknown'):pub(key,local)
+    assert remote['github']==remote['gitlab']==local['source_sha']
+    assert (action/'publish-github-intent.json').is_file() and (action/'publish-gitlab-intent.json').is_file()
+    assert pub.readback(key,local)['verified']
+    assert len([args for args,env in calls if args[0]==p.GIT_BIN and args[3]=='push'])==2
+
+
+def test_bad_reproducer_prevents_authentication_and_push(fixture):
+    pub,key,local,calls,remote,flags,action=fixture
+    original=pub.runner
+    def fail_pytest(argv,**kwargs):
+        if argv[0]==p.sys.executable:return {'returncode':1,'timed_out':False,'overflow':False,'stdout':b'1 failed','stderr':b''}
+        return original(argv,**kwargs)
+    pub.runner=fail_pytest
+    with pytest.raises(RuntimeError,match='reproducer'):pub(key,local)
+    assert not any(args[0] in (p.GH_BIN,p.GLAB_BIN) for args,env in calls)
+
+
+def test_wrong_gitlab_principal_refuses_before_either_push(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;flags['wrong_gitlab']=True
+    with pytest.raises(RuntimeError,match='account mismatch'):pub(key,local)
+    assert not any(args[0]==p.GIT_BIN and args[3]=='push' for args,env in calls)
+    assert not (action/'publication-intent.json').exists()
+    assert flags['stops']==[('gitlab','provider_account_mismatch')]
+    assert not flags['https_calls'] and not any(argv[:4]==[p.GLAB_BIN,'config','get','token'] for argv,env in calls)
+
+
+def test_git_rewrite_refuses_before_auth_or_push(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;flags['rewrite']=True
+    with pytest.raises(RuntimeError,match='unsafe'):pub(key,local)
+    assert not any(args[0] in (p.GH_BIN,p.GLAB_BIN) for args,env in calls)
+
+
+@pytest.mark.parametrize('status',[401,403,429])
+def test_provider_http_restrictions_persist_shared_stop(fixture,status):
+    pub,key,local,calls,remote,flags,action=fixture;flags['http_status']=status
+    with pytest.raises(RuntimeError,match='provider stopped'):pub(key,local)
+    assert flags['stops']==[('github','provider_http_'+str(status))]
+    assert not any(args[0]==p.GIT_BIN and args[3]=='push' for args,env in calls)
+
+
+def test_missing_token_persists_shared_stop(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;flags['empty_token']=True
+    with pytest.raises(RuntimeError,match='provider stopped'):pub(key,local)
+    assert flags['stops']==[('github','provider_authentication_required')]
+    assert not any(args[0]==p.GIT_BIN and args[3]=='push' for args,env in calls)
+
+
+def test_push_403_persists_stop_and_never_replays(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;original=pub.runner
+    def deny(argv,**kwargs):
+        if argv[0]==p.GIT_BIN and argv[3]=='push':
+            calls.append((list(argv),dict(kwargs['env'])))
+            return {'returncode':128,'timed_out':False,'overflow':False,'stdout':b'',
+                    'stderr':b'fatal: requested URL returned error: 403'}
+        return original(argv,**kwargs)
+    pub.runner=deny
+    with pytest.raises(RuntimeError,match='provider stopped'):pub(key,local)
+    assert flags['stops']==[('github','provider_http_403')]
+    assert (action/'publish-github-intent.json').exists()
+    with pytest.raises(RuntimeError,match='status stopped'):pub(key,local)
+    assert len([args for args,env in calls if args[0]==p.GIT_BIN and args[3]=='push'])==1
+
+
+def test_oauth_refresh_precedes_exact_token_bearer_check_and_git_push(fixture,monkeypatch,capsys):
+    pub,key,local,calls,remote,flags,action=fixture
+    for name in ('GITLAB_TOKEN','GLAB_TOKEN','GLAB_IS_OAUTH2','HTTPS_PROXY','GITLAB_ACCESS_TOKEN'):
+        monkeypatch.setenv(name,'unsafe-inherited-value')
+    assert pub(key,local)['verified']
+    api=next(i for i,(argv,env) in enumerate(calls) if argv[:2]==[p.GLAB_BIN,'api'])
+    token=next(i for i,(argv,env) in enumerate(calls) if argv[:4]==[p.GLAB_BIN,'config','get','token'])
+    assert api<token
+    assert len(flags['https_calls'])==1
+    check=flags['https_calls'][0]
+    assert check['method']=='GET' and check['path']=='/api/v4/user' and check['closed'] is True
+    assert check['headers']['Authorization']=='Bearer secret-gl'
+    assert 'secret-gl' not in capsys.readouterr().out
+    # The same exact checked token is used in Git's scoped Authorization env.
+    gl_push=next(env for argv,env in calls if argv[0]==p.GIT_BIN and argv[3]=='push' and any('gitlab.com' in a for a in argv))
+    import base64
+    expected=base64.b64encode(b'oauth2:secret-gl').decode()
+    assert any(value=='Authorization: Basic '+expected for value in gl_push.values())
+
+
+@pytest.mark.parametrize('status',[401,403,429])
+def test_stored_oauth_principal_http_stop_precedes_token_fetch(fixture,status):
+    pub,key,local,calls,remote,flags,action=fixture;flags['gitlab_http_status']=status
+    with pytest.raises(RuntimeError,match='provider stopped'):pub(key,local)
+    assert flags['stops']==[('gitlab','provider_http_'+str(status))]
+    assert not flags['https_calls'] and not any(argv[:4]==[p.GLAB_BIN,'config','get','token'] for argv,env in calls)
+    assert not any(argv[0]==p.GIT_BIN and argv[3]=='push' for argv,env in calls)
+
+
+@pytest.mark.parametrize('status',[401,403,429])
+def test_exact_bearer_http_stop_closes_connection_and_prevents_publication(fixture,status):
+    pub,key,local,calls,remote,flags,action=fixture;flags['bearer_status']=status
+    with pytest.raises(RuntimeError,match='provider stopped'):pub(key,local)
+    assert flags['stops']==[('gitlab','provider_http_'+str(status))]
+    assert flags['https_calls'][0]['closed'] is True and not (action/'publication-intent.json').exists()
+    assert not any(argv[0]==p.GIT_BIN and argv[3]=='push' for argv,env in calls)
+
+
+@pytest.mark.parametrize('mode',['redirect','overflow','wrong_principal'])
+def test_bearer_untrusted_response_never_publishes(fixture,mode):
+    pub,key,local,calls,remote,flags,action=fixture
+    if mode=='redirect':flags['bearer_status']=302
+    if mode=='overflow':flags['bearer_overflow']=True
+    if mode=='wrong_principal':flags['bearer_wrong']=True
+    with pytest.raises(RuntimeError):pub(key,local)
+    assert len(flags['https_calls'])==1 and flags['https_calls'][0]['closed'] is True
+    assert not (action/'publication-intent.json').exists()
+    assert not any(argv[0]==p.GIT_BIN and argv[3]=='push' for argv,env in calls)
+    if mode=='wrong_principal':assert flags['stops']==[('gitlab','provider_account_mismatch')]
+
+
+def test_bearer_transport_exception_is_sanitized(fixture,capsys):
+    pub,key,local,calls,remote,flags,action=fixture;original=pub.runner
+    def fail(argv,**kwargs):
+        if argv[-1]==p.TOKEN_PROBE_FLAG:raise RuntimeError('secret-gl private socket failure')
+        return original(argv,**kwargs)
+    pub.runner=fail
+    with pytest.raises(RuntimeError,match='publisher account unavailable') as exc:pub(key,local)
+    assert 'secret-gl' not in str(exc.value) and 'secret-gl' not in capsys.readouterr().out
+    assert not (action/'publication-intent.json').exists()
+
+
+def test_gitlab_stored_cli_failure_is_sanitized_and_never_fetches_token(fixture,capsys):
+    pub,key,local,calls,remote,flags,action=fixture;original=pub.runner
+    def fail(argv,**kwargs):
+        if argv[:2]==[p.GLAB_BIN,'api']:raise RuntimeError('secret-gl private diagnostic')
+        return original(argv,**kwargs)
+    pub.runner=fail
+    with pytest.raises(RuntimeError,match='publisher account unavailable') as exc:pub(key,local)
+    assert 'secret-gl' not in str(exc.value) and 'secret-gl' not in capsys.readouterr().out
+    assert not flags['https_calls'] and not any(argv[:4]==[p.GLAB_BIN,'config','get','token'] for argv,env in calls)
+    assert not (action/'publication-intent.json').exists()
+
+
+def test_bearer_request_exception_always_closes():
+    seen=[]
+    class BrokenConnection:
+        def __init__(self,*args,**kwargs):self.closed=False;seen.append(self)
+        def request(self,*args,**kwargs):raise RuntimeError('private secret-gl')
+        def close(self):self.closed=True
+    result=p._gitlab_exact_token_probe('secret-gl',https_factory=BrokenConnection)
+    assert result=={'schema':p.TOKEN_PROBE_SCHEMA,'status':'error'} and len(seen)==1 and seen[0].closed
+    assert 'secret-gl' not in json.dumps(result)
+
+
+def test_bearer_child_timeout_never_publishes(fixture):
+    pub,key,local,calls,remote,flags,action=fixture;flags['probe_timeout']=True
+    with pytest.raises(RuntimeError,match='publisher account unavailable'):pub(key,local)
+    assert not (action/'publication-intent.json').exists()
+    assert not any(argv[0]==p.GIT_BIN and argv[3]=='push' for argv,env in calls)
+
+
+def test_probe_main_has_bounded_input_and_only_safe_output(monkeypatch,capsys):
+    import io
+    monkeypatch.setattr(p.sys,'stdin',SimpleNamespace(buffer=io.BytesIO(b'{"token":"secret-gl"}')))
+    monkeypatch.setattr(p,'_gitlab_exact_token_probe',lambda token:{'schema':p.TOKEN_PROBE_SCHEMA,'status':'ok','http_status':200,'id':43957127,'username':'TiGa-RCE'})
+    assert p._probe_main()==0
+    output=capsys.readouterr().out
+    assert 'secret-gl' not in output and json.loads(output)['id']==43957127
+    monkeypatch.setattr(p.sys,'stdin',SimpleNamespace(buffer=io.BytesIO(b'x'*8193)))
+    assert p._probe_main()==0
+    assert json.loads(capsys.readouterr().out)=={'schema':p.TOKEN_PROBE_SCHEMA,'status':'error'}
