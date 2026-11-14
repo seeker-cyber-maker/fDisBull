@@ -489,3 +489,33 @@ def test_gui_transport_enabled_only_by_fixed_explicit_config(tmp_path,monkeypatc
     assert isinstance(runtime.source,r.gui_client_module.GuiSourceTransport)
     cfg['gui_transport']['state_dir']='/tmp/not-approved'
     with pytest.raises(ValueError,match='GUI transport'):r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,gui_client_factory=factory)
+
+
+def test_initial_incident_reuses_verified_capture_without_provider_recapture(tmp_path,monkeypatch):
+    root=tmp_path/'production';root.mkdir(mode=0o700)
+    export=tmp_path/'results';export.mkdir();monkeypatch.setattr(r,'EXPORT',export)
+    target=dict(fixtures.GH);target['ref']='codex/production-ci-recovery-20261113'
+    make_export(export,target,'failed','c'*64)
+    observation={**target,'status':'failed'};request={'key':'initial-fixture','source_sha':target['source_sha']}
+    initial=hashlib.sha256(('initial:'+request['key']).encode()).hexdigest()
+    evidence_dir=root/'initial'/initial/'evidence';evidence_dir.mkdir(parents=True,mode=0o700)
+    evidence=r.evidence_module.ProductionEvidence(export/'github',evidence_dir,'ordinary',fixtures.capture)(observation,fixtures.REQ)
+    receipt=Path(evidence['receipt_path']);value={'schema':'fdisbull-initial-qualification-1','request':request,
+        'verified':True,'status':'failed','target':target,'receipt_path':str(receipt),
+        'receipt_sha256':hashlib.sha256(receipt.read_bytes()).hexdigest()}
+    fixtures.write(root/'initial-result.json',value)
+    runtime=object.__new__(r.Runtime);runtime.root=root;runtime.config={'initial_request':request}
+    class Host:
+        def capture_provider(self,obs):raise AssertionError('unexpected provider recapture')
+    runtime._github_host=lambda:Host()
+    incident=root/'incidents'/'evidence';incident.mkdir(parents=True,mode=0o700)
+    result=runtime._evidence(target,incident)(observation,fixtures.REQ)
+    assert result['status']=='export-verified' and result['diagnostic']['target']==target
+    assert Path(result['receipt_path']).parent==incident
+    trace=next(evidence_dir.glob('*.trace'));trace.write_bytes(b'tampered private trace')
+    with pytest.raises(ValueError,match='initial capture hash mismatch'):
+        runtime._evidence(target,incident)(observation,fixtures.REQ)
+    trace.write_bytes(b'original trace')
+    meta=next(evidence_dir.glob('*.provider.json'));meta.write_text('{}')
+    with pytest.raises(ValueError,match='initial capture hash mismatch'):
+        runtime._evidence(target,incident)(observation,fixtures.REQ)

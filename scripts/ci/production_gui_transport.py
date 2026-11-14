@@ -8,6 +8,7 @@ import fcntl
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
 import plistlib
@@ -255,10 +256,10 @@ class GuiSpool:
         for request_id,entry in history['requests'].items():
             if not re.fullmatch('[0-9a-f]{64}',request_id) or not isinstance(entry,dict):raise RuntimeError('invalid history')
             phase=entry.get('phase');req=self.spool/(request_id+'.request')
-            if phase not in ('submitted','started','complete','expired') or _digest(_read(req,MAX_INPUT))!=entry.get('request_sha256'):
+            if phase not in ('submitted','started','complete','expired','reconciled-read') or _digest(_read(req,MAX_INPUT))!=entry.get('request_sha256'):
                 raise RuntimeError('request history changed')
             expected.add(req.name)
-            if phase in ('started','complete'):
+            if phase in ('started','complete','reconciled-read'):
                 started=self.spool/(request_id+'.started')
                 if json.loads(_read(started,4096))!={'request_id':request_id,'request_sha256':entry['request_sha256']}:
                     raise RuntimeError('start history changed')
@@ -267,6 +268,18 @@ class GuiSpool:
                 done=self.spool/(request_id+'.done')
                 if _digest(_read(done,MAX_OUTPUT))!=entry.get('done_sha256'):raise RuntimeError('result history changed')
                 expected.add(done.name)
+            if phase=='reconciled-read':
+                cert=self.spool/(request_id+'.read-reconciliation.json')
+                content=_read(cert,16384)
+                if _digest(content)!=entry.get('reconciliation_sha256'):raise RuntimeError('read reconciliation changed')
+                value=json.loads(content)
+                if (not isinstance(value,dict) or set(value)!={'schema','request_id','request_sha256','result','operator_receipt_sha256','operator_receipt_text'}
+                        or value.get('schema')!='fdisbull-gui-read-reconciliation-1'
+                        or value.get('request_id')!=request_id or value.get('request_sha256')!=entry.get('request_sha256')
+                        or value.get('result')!='unknown' or not isinstance(value.get('operator_receipt_text'),str)
+                        or _digest(value['operator_receipt_text'].encode('utf-8'))!=value.get('operator_receipt_sha256')):
+                    raise RuntimeError('read reconciliation binding invalid')
+                expected.add(cert.name)
         if sum(v['phase'] in ('submitted','started') for v in history['requests'].values())>1:
             raise RuntimeError('multiple active spool lanes')
         actual={p.name for p in self.spool.iterdir()}
@@ -323,9 +336,77 @@ class GuiSpool:
         with self._locked():
             history=self._check();item=history['requests'].get(request_id)
             if item is None:return {'status':'missing'}
-            if item['phase']=='started':return {'status':'unknown','request_id':request_id}
+            if item['phase'] in ('started','reconciled-read'):return {'status':'unknown','request_id':request_id}
             if item['phase']=='submitted':return {'status':'pending','request_id':request_id}
             return json.loads(_read(self.spool/(request_id+'.done'),MAX_OUTPUT))
+
+    def reconcile_expired_read(self,receipt_path,receipt_sha256):
+        """Operator-only: close a verified dead GET lane, preserving unknown outcome.
+
+        This method is intentionally not exposed through main() or the GUI RPC.
+        The caller independently collects and verifies the bounded process and
+        launchctl evidence recorded in the private receipt.
+        """
+        if not isinstance(receipt_sha256,str) or not re.fullmatch('[0-9a-f]{64}',receipt_sha256):
+            raise ValueError('operator receipt hash invalid')
+        receipt_path=Path(receipt_path)
+        if not receipt_path.is_absolute() or self.spool in receipt_path.parents:
+            raise ValueError('operator receipt path invalid')
+        receipt_bytes=_read(receipt_path,16384)
+        if _digest(receipt_bytes)!=receipt_sha256:raise ValueError('operator receipt hash mismatch')
+        receipt=json.loads(receipt_bytes)
+        required={'schema','request_id','request_sha256','history_sequence','request_expiry','observed_epoch',
+                  'helper_sha256','recovery_source_sha256','launchagent','process_scan','launchctl_evidence'}
+        if not isinstance(receipt,dict) or set(receipt)!=required or receipt.get('schema')!='fdisbull-gui-read-cleanup-1':
+            raise ValueError('operator receipt invalid')
+        key=receipt['request_id'];now=self.clock()
+        if (not isinstance(key,str) or not re.fullmatch('[0-9a-f]{64}',key)
+                or not isinstance(receipt['request_sha256'],str) or not re.fullmatch('[0-9a-f]{64}',receipt['request_sha256'])
+                or type(receipt['history_sequence']) is not int
+                or type(receipt['request_expiry']) not in (int,float) or type(receipt['observed_epoch']) not in (int,float)
+                or not math.isfinite(receipt['request_expiry']) or not math.isfinite(receipt['observed_epoch'])
+                or not receipt['request_expiry']<=receipt['observed_epoch']<=now
+                or now-receipt['observed_epoch']>300):
+            raise ValueError('operator receipt time or identity invalid')
+        launch=receipt['launchagent'];scan=receipt['process_scan'];launch_evidence=receipt['launchctl_evidence']
+        if (not isinstance(launch,dict) or set(launch)!={'label','runs','last_exit_code','running','pid'}
+                or launch['label']!=LABEL or type(launch['runs']) is not int or launch['runs']<1
+                or type(launch['last_exit_code']) is not int or launch['last_exit_code']!=0 or launch['running'] is not False or launch['pid'] is not None
+                or not isinstance(scan,dict) or set(scan)!={'matched_children','path','sha256'}
+                or type(scan['matched_children']) is not int or scan['matched_children']!=0
+                or not isinstance(launch_evidence,dict) or set(launch_evidence)!={'path','sha256'}):
+            raise ValueError('operator cleanup evidence invalid')
+        for item in (scan,launch_evidence):
+            path=Path(item['path']) if isinstance(item.get('path'),str) else Path('.')
+            if (not path.is_absolute() or self.spool in path.parents or not isinstance(item.get('sha256'),str)
+                    or not re.fullmatch('[0-9a-f]{64}',item['sha256'])
+                    or _digest(_read(path,65536))!=item['sha256']):raise ValueError('operator evidence hash mismatch')
+        with self._locked():
+            history=self._check();entry=history['requests'].get(key)
+            if (history['sequence']!=receipt['history_sequence'] or not isinstance(entry,dict)
+                    or entry.get('phase')!='started' or entry.get('request_sha256')!=receipt['request_sha256']):
+                raise ValueError('read history changed')
+            doc=json.loads(_read(self.spool/(key+'.request'),MAX_INPUT));request=doc.get('request')
+            if (doc.get('nonce')!=key or doc.get('kind')!='provider' or doc.get('expires_epoch')!=receipt['request_expiry']
+                    or not isinstance(request,dict) or set(request)!={'operation','provider','method','path','payload'}
+                    or request.get('operation')!='request' or request.get('method')!='GET' or request.get('payload') is not None):
+                raise ValueError('not an expired provider GET')
+            _request('provider',request)
+            pins=self.activation().get('modules',{})
+            if (not isinstance(pins,dict) or receipt['helper_sha256']!=pins.get('production_gui_transport.py')
+                    or receipt['recovery_source_sha256']!=pins.get('recovery_source.py')
+                    or any(not isinstance(receipt[k],str) or not re.fullmatch('[0-9a-f]{64}',receipt[k])
+                           for k in ('helper_sha256','recovery_source_sha256'))):
+                raise ValueError('cleanup source pin mismatch')
+            cert={'schema':'fdisbull-gui-read-reconciliation-1','request_id':key,
+                  'request_sha256':entry['request_sha256'],'result':'unknown',
+                  'operator_receipt_sha256':receipt_sha256,'operator_receipt_text':receipt_bytes.decode('utf-8')}
+            data=_bytes(cert)
+            if len(data)>16384:raise ValueError('operator receipt too large')
+            _exclusive(self.spool/(key+'.read-reconciliation.json'),data)
+            entry.update(phase='reconciled-read',reconciliation_sha256=_digest(data))
+            history['sequence']+=1;self._save(history)
+            return {'status':'unknown','request_id':key,'reconciled':True}
 
     def worker(self):
         if self.gui_check() is not True:raise RuntimeError('Aqua session unavailable')

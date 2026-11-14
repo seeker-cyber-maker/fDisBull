@@ -315,10 +315,52 @@ class Runtime:
         return {'verified':True,'target':target,'job_status':observation['status'],
                 'metadata':{'pipeline':pipe,'job':job},'trace':self._trace(target)}
 
+    def _initial_capture(self,observation):
+        """Reuse only the exact already verified initial job's private capture."""
+        path=self.root/'initial-result.json'
+        if not path.exists() and not path.is_symlink():return None
+        value=control_module.read_json(path)
+        if not isinstance(value,dict) or value.get('target')!={k:observation[k] for k in production.SCHEMAS[observation['provider']]}:
+            return None
+        request=self.config.get('initial_request')
+        if (set(value)!={'schema','request','verified','status','target','receipt_path','receipt_sha256'}
+                or value['schema']!='fdisbull-initial-qualification-1' or value['verified'] is not True
+                or value['request']!=request or not isinstance(request,dict)
+                or set(request)!={'key','source_sha'} or not isinstance(request['key'],str) or not request['key']
+                or request['source_sha']!=value['target']['source_sha']
+                or value['status']!=observation['status'] or value['status'] not in ('failed','success')):
+            raise ValueError('initial capture binding unavailable')
+        initial=hashlib.sha256(('initial:'+request['key']).encode()).hexdigest()
+        directory=self.root/'initial'/initial/'evidence'
+        target=value['target'];name=hashlib.sha256(json.dumps({'target':target,'status':value['status']},sort_keys=True,separators=(',',':')).encode()).hexdigest()
+        receipt=directory/(name+'.evidence.json');metadata=directory/(name+'.provider.json');trace=directory/(name+'.trace')
+        if str(receipt)!=value['receipt_path']:raise ValueError('initial capture path mismatch')
+        def read_private(p,limit):
+            p=evidence_module._regular(p)
+            if p.stat().st_mode&0o077 or p.stat().st_uid!=os.geteuid() or p.stat().st_size>limit:
+                raise ValueError('initial capture unavailable')
+            return p.read_bytes()
+        receipt_bytes=read_private(receipt,65536)
+        if hashlib.sha256(receipt_bytes).hexdigest()!=value['receipt_sha256']:raise ValueError('initial receipt changed')
+        record=json.loads(receipt_bytes);metadata_bytes=read_private(metadata,131072);trace_bytes=read_private(trace,1024*1024)
+        folder=EXPORT/'github'/target['run_id']/target['run_attempt']/'qualification'/target['job_id']
+        if (not isinstance(record,dict) or record.get('schema')!='fdisbull-production-evidence-1'
+                or record.get('target')!=target or record.get('job_status')!=value['status']
+                or record.get('export_job_sha256')!=evidence_module._digest(evidence_module._regular(folder/'job.json'))
+                or record.get('inventory_sha256')!=evidence_module._digest(evidence_module._regular(folder/'inventory.json'))
+                or record.get('provider_metadata_sha256')!=hashlib.sha256(metadata_bytes).hexdigest()
+                or record.get('provider_trace_sha256')!=hashlib.sha256(trace_bytes).hexdigest()):
+            raise ValueError('initial capture hash mismatch')
+        return {'verified':True,'target':target,'job_status':value['status'],
+                'metadata':json.loads(metadata_bytes),'trace':trace_bytes}
+
     def _evidence(self,target,private):
         profile=self._profile(target);root=EXPORT/'github' if target['provider']=='github' else EXPORT
         capture=self._github_host().capture_provider if target['provider']=='github' else self._capture_gitlab
-        return evidence_module.ProductionEvidence(root,_private(private),profile,capture)
+        def capture_or_initial(observation):
+            retained=self._initial_capture(observation) if observation['provider']=='github' else None
+            return retained if retained is not None else capture(observation)
+        return evidence_module.ProductionEvidence(root,_private(private),profile,capture_or_initial)
 
     @staticmethod
     def _profile(target):

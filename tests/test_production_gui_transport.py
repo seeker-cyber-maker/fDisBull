@@ -241,3 +241,100 @@ def test_real_bounded_child_marks_aggregate_output_overflow():
     code="import sys; sys.stdout.buffer.write(b'x'*1100000); sys.stderr.buffer.write(b'y'*1100000)"
     result=m._child([sys.executable,'-I','-c',code],b'',timeout=5)
     assert result['overflow'] is True and len(result['stdout'])+len(result['stderr'])>m.MAX_OUTPUT
+
+
+def cleanup_receipt(tmp_path,spool,key,clock,*,changes=None):
+    pins={'production_gui_transport.py':'a'*64,'recovery_source.py':'b'*64}
+    spool.activation=lambda:{'allowed_kinds':['credential_probe','provider','source'],'modules':pins}
+    scan=tmp_path/'scan.json';scan.write_bytes(b'filtered empty process scan');scan.chmod(0o600)
+    launch=tmp_path/'launch.json';launch.write_bytes(b'filtered stopped launchagent');launch.chmod(0o600)
+    entry=spool._check()['requests'][key]
+    request=json.loads((spool.spool/(key+'.request')).read_bytes())
+    value={'schema':'fdisbull-gui-read-cleanup-1','request_id':key,'request_sha256':entry['request_sha256'],
+           'history_sequence':spool._check()['sequence'],'request_expiry':request['expires_epoch'],
+           'observed_epoch':clock[0],'helper_sha256':pins['production_gui_transport.py'],
+           'recovery_source_sha256':pins['recovery_source.py'],
+           'launchagent':{'label':m.LABEL,'runs':30,'last_exit_code':0,'running':False,'pid':None},
+           'process_scan':{'matched_children':0,'path':str(scan),'sha256':m._digest(scan.read_bytes())},
+           'launchctl_evidence':{'path':str(launch),'sha256':m._digest(launch.read_bytes())}}
+    if changes:changes(value)
+    path=tmp_path/'operator-receipt.json';path.write_bytes(m._bytes(value));path.chmod(0o600)
+    return path,m._digest(path.read_bytes())
+
+
+def test_operator_reconciles_only_expired_get_and_preserves_unknown(tmp_path):
+    now=[1000];calls=[]
+    def child(*args,**kwargs):calls.append(1);return {'returncode':0,'stdout':b'invalid','timed_out':False,'overflow':False}
+    spool,kicks=installed(tmp_path,clock=lambda:now[0],runner=child)
+    first=spool.submit('provider',provider_doc(),1100,'a'*64);assert spool.worker()['status']=='unknown'
+    old_request=(spool.spool/('a'*64+'.request')).read_bytes();old_started=(spool.spool/('a'*64+'.started')).read_bytes()
+    now[0]=1200;path,digest=cleanup_receipt(tmp_path,spool,'a'*64,now)
+    assert spool.reconcile_expired_read(path,digest)=={'status':'unknown','request_id':'a'*64,'reconciled':True}
+    assert spool.result('a'*64)=={'status':'unknown','request_id':'a'*64}
+    assert (spool.spool/('a'*64+'.request')).read_bytes()==old_request
+    assert (spool.spool/('a'*64+'.started')).read_bytes()==old_started
+    assert not (spool.spool/('a'*64+'.done')).exists()
+    assert spool.submit('provider',provider_doc(),1300,'b'*64)['status']=='pending'
+    with pytest.raises(ValueError,match='invalid expiry'):
+        spool.submit('provider',provider_doc(),1100,'a'*64)
+    assert calls==[1] and kicks==['once','once']
+
+
+@pytest.mark.parametrize('change',[
+    lambda v:v.update(history_sequence=v['history_sequence']+1),
+    lambda v:v.update(request_sha256='f'*64),
+    lambda v:v.update(request_expiry=1300),
+    lambda v:v['launchagent'].update(running=True,pid=1),
+    lambda v:v['process_scan'].update(matched_children=1),
+    lambda v:v.update(helper_sha256='f'*64),
+    lambda v:v['launchctl_evidence'].update(sha256='0'*64),
+])
+def test_operator_cleanup_refuses_invalid_evidence(tmp_path,change):
+    now=[1000];spool,_=installed(tmp_path,clock=lambda:now[0],runner=lambda *a,**k:{'returncode':0,'stdout':b'bad','timed_out':False,'overflow':False})
+    spool.submit('provider',provider_doc(),1100,'a'*64);spool.worker();now[0]=1200
+    path,digest=cleanup_receipt(tmp_path,spool,'a'*64,now,changes=change)
+    with pytest.raises(ValueError):spool.reconcile_expired_read(path,digest)
+    assert spool.result('a'*64)['status']=='unknown'
+    with pytest.raises(RuntimeError,match='lane occupied'):spool.submit('credential_probe',{},1300,'b'*64)
+
+
+def test_operator_cleanup_refuses_mutation_probe_unexpired_and_unstarted(tmp_path):
+    def child(*a,**k):return {'returncode':0,'stdout':b'bad','timed_out':False,'overflow':False}
+    for name in ('post','probe','pending','unexpired'):(tmp_path/name).mkdir()
+    now=[1000];spool,_=installed(tmp_path/'post',clock=lambda:now[0],runner=child)
+    doc={'operation':'request','provider':'gitlab','method':'POST','path':m.provider.GL+'/jobs/20/retry','payload':{},'action_key':'post'}
+    spool.submit('provider',doc,1100,'a'*64);spool.worker();now[0]=1200
+    path,digest=cleanup_receipt(tmp_path/'post',spool,'a'*64,now)
+    with pytest.raises(ValueError,match='provider GET'):spool.reconcile_expired_read(path,digest)
+    now=[1000];spool,_=installed(tmp_path/'probe',clock=lambda:now[0],probe=lambda **kwargs:None)
+    spool.submit('credential_probe',{},1100,'b'*64);spool.worker();now[0]=1200
+    path,digest=cleanup_receipt(tmp_path/'probe',spool,'b'*64,now)
+    with pytest.raises(ValueError,match='provider GET'):spool.reconcile_expired_read(path,digest)
+    now=[1000];spool,_=installed(tmp_path/'pending',clock=lambda:now[0])
+    spool.submit('provider',provider_doc(),1100,'c'*64);now[0]=1200
+    path,digest=cleanup_receipt(tmp_path/'pending',spool,'c'*64,now)
+    with pytest.raises(ValueError,match='history changed'):spool.reconcile_expired_read(path,digest)
+    now=[1000];spool,_=installed(tmp_path/'unexpired',clock=lambda:now[0],runner=child)
+    spool.submit('provider',provider_doc(),1100,'d'*64);spool.worker()
+    path,digest=cleanup_receipt(tmp_path/'unexpired',spool,'d'*64,now)
+    with pytest.raises(ValueError,match='time or identity'):spool.reconcile_expired_read(path,digest)
+
+
+def test_operator_cleanup_refuses_source_worker(tmp_path):
+    now=[1000]
+    target={'provider':'gitlab','project_id':'88349936','pipeline_id':'10','job_id':'20','source_sha':'a'*40,
+            'job_name':'test-and-package','runner_id':'58990209','ref':'main'}
+    doc={'operation':'repair','key':'incident:repair','payload':{'target':target,'source_prepare':{'event_key':'c'*64}}}
+    spool,_=installed(tmp_path,clock=lambda:now[0],runner=lambda *a,**k:{'returncode':0,'stdout':b'bad','timed_out':False,'overflow':False})
+    spool.submit('source',doc,1100,'a'*64);spool.worker();now[0]=1200
+    path,digest=cleanup_receipt(tmp_path,spool,'a'*64,now)
+    with pytest.raises(ValueError,match='provider GET'):spool.reconcile_expired_read(path,digest)
+    assert spool.result('a'*64)['status']=='unknown'
+
+
+def test_reconciled_read_certificate_tampering_fails_closed(tmp_path):
+    now=[1000];spool,_=installed(tmp_path,clock=lambda:now[0],runner=lambda *a,**k:{'returncode':0,'stdout':b'bad','timed_out':False,'overflow':False})
+    spool.submit('provider',provider_doc(),1100,'a'*64);spool.worker();now[0]=1200
+    path,digest=cleanup_receipt(tmp_path,spool,'a'*64,now);spool.reconcile_expired_read(path,digest)
+    cert=spool.spool/('a'*64+'.read-reconciliation.json');cert.write_bytes(b'{}')
+    with pytest.raises(RuntimeError,match='read reconciliation changed'):spool.result('a'*64)
