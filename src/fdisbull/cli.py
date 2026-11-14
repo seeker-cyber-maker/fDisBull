@@ -182,6 +182,7 @@ METHODS = {
     "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
     "debug-compare-runtime-functions": "Recover complete returning PE64 path families; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms,execution_mode]",
     "debug-compare-runtime-modules": "Recover PE entry through observed ExitProcess under imported-call contracts; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms]",
+    "debug-recover-loader-module": "Compose proved DLL callbacks, actual Wine API implementations and authored PE entry under explicit environment contracts; dll_project,evidence,environment_contract,[timeout_ms]",
     "debug-import-call": "Observe one supported PE64 import CALL; optional Set/GetLastError implementation proof; run,[name,memory_ranges,code_ranges,timeout_ms,trace_implementation]",
     "debug-loader-control": "Select stops before continuing PE64 DLL-load events in process-create mode; run,stop_on_load",
     "debug-loader-events": "Read bounded native loader history with explicit retention gaps; run,[after,limit]",
@@ -1039,6 +1040,7 @@ def invoke(method, params, debugger=None):
         "debug-compare-runtime-code",
         "debug-compare-runtime-functions",
         "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
     ):
         if debugger is None:
             raise ValueError(
@@ -1120,6 +1122,7 @@ def invoke(method, params, debugger=None):
             "debug-compare-runtime-code",
             "debug-compare-runtime-functions",
         "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
             "runtime-version-info",
         ):
             return getattr(db, method.replace("-", "_"))(**p)
@@ -2414,6 +2417,7 @@ def parser():
         "debug-compare-runtime-code",
         "debug-compare-runtime-functions",
         "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2427,6 +2431,11 @@ def parser():
         elif name == "debug-trace-view":
             c.add_argument("artifact")
             c.add_argument("--version", type=int, required=True)
+        elif name == "debug-recover-loader-module":
+            c.add_argument("dll_project")
+            c.add_argument("--evidence", type=json.loads, required=True)
+            c.add_argument("--environment-contract", type=json.loads, required=True)
+            c.add_argument("--timeout-ms", type=int, default=30000)
         elif name in ("debug-compare-runtime-functions", "debug-compare-runtime-modules"):
             c.add_argument("baseline_version", type=int)
             c.add_argument("layer_version", type=int)

@@ -54,6 +54,43 @@ adapter must preserve.
 
 ### Actual Wine implementations and early loader observations
 
+`debug-recover-loader-module` / `Project.debug_recover_loader_module` adds a
+separate conditional composition lane for the authored EXE and TLS DLL. It
+loads the two original source projects, checks the actual debug-event journal,
+source RVA/export/import/TLS identities and immutable native artifacts, and
+recomputes all callback and Wine API proofs. Missing complete EXE segments,
+source/run swaps or detached call/return contexts cannot qualify.
+
+`pe_dll_contracts.validate_dll_callback` uses typed 32/64-bit instruction
+semantics to prove complete TLS attach, DllMain attach, report and detach
+transfers. The event count ranges over every safe log slot `0..7`; other global
+bytes, irrelevant GPRs and defined FLAGS remain symbolic. It proves memory
+safety under preceding guards, complete path coverage, matching RET, bounded
+termination, ordered memory effects and each code-writing epoch. Its generic
+postcondition is specialized with the predecessor invariant to establish the
+next callback's globals/code. An independent source specification checks these
+transfers, including all defined flag bits. Logical OR leaves AF undefined.
+
+The EXE's complete instruction stream then composes the report transfer and
+the exact verified Set/Get implementations at their own observed call frames.
+It keeps every GPR/FLAGS and declared byte effect, including the architectural
+return-slot writes, and checks every native prefix memory snapshot. Recovery
+includes original data initialization, DLL code changes `1→2→3`, the report,
+four last-error API pairs, teardown and actual exit. A contraction preserves
+the exact original artifact-reference bundle and proof identities; the owning
+projects retain the native instructions, assumptions and bytes.
+
+The caller must explicitly supply `pe_loader_module_recovery.ENVIRONMENT`.
+Across opaque loader/ExitProcess gaps, machine contexts and stack frames are
+fresh. Only the declared owned code/global/IAT frame is carried; before EXE
+entry, IAT resolution is an observed named-export initialization relation.
+Paired native snapshots check that environment contract for the captured runs;
+they do not prove Wine's general noninterference. Dispatch, the GS/TEB
+convention and ExitProcess's terminal environment relation remain explicit.
+Final DLL RAM is the state after the last observed callback, not a fabricated
+postmortem read. Other libraries, hidden OS/CPU state, concurrency, faults,
+devices, timing and Microsoft Windows remain outside this conditional proof.
+
 `debug-import-call` / `PEDebugSession.import_call` accepts
 `trace_implementation=true` for PE64 `SetLastError` and `GetLastError`.
 The observer follows the loaded kernel32 thunks and leaf instructions through

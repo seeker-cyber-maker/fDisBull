@@ -157,7 +157,7 @@ def _arithmetic_flags(z, op, a, b, result, flags, fresh):
 
 
 def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, snapshots, side, deadline,
-             *, execution_code=None, external_handler=None):
+             *, execution_code=None, external_handler=None, state_observer=None):
     regs, flags, memory = dict(initial), initial_flags, dict(initial_memory)
     domains, accesses, returns = [], [], []
     safety, alias_work = [], 0
@@ -229,6 +229,8 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
         if time.monotonic() >= deadline:
             raise ValueError('Total regional proof deadline exhausted during model construction')
         following = events[index + 1]
+        if state_observer is not None:
+            state_observer(index, 'before', regs, flags, memory, observed)
         if event['observation'].get('instruction_completed') is not True:
             raise ValueError(f'Event {index}: incomplete instruction')
         _, _, thread = _state(event, bits)
@@ -475,6 +477,8 @@ def _execute(z, trace, bits, initial, initial_flags, initial_memory, contract, s
         mask = 0xffffffff ^ undefined
         if observed(flags & z.BitVecVal(mask, 32)) != next_flags & mask:
             raise ValueError(f'Event {index}: FLAGS contradict regional model')
+        if state_observer is not None:
+            state_observer(index, 'after', regs, flags, memory, observed)
     if contract['live_flags'] & undefined:
         raise ValueError('Live FLAGS include undefined AF from a logical operation')
     if execution_code is not None:
