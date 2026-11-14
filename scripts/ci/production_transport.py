@@ -12,7 +12,9 @@ import re
 import sys
 import time
 from contextlib import contextmanager
-from urllib.parse import parse_qsl
+from urllib.error import HTTPError, URLError
+from urllib.parse import parse_qsl, urlsplit
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 _spec=importlib.util.spec_from_file_location('recovery_source',Path(__file__).with_name('recovery_source.py'))
 _source=importlib.util.module_from_spec(_spec);_spec.loader.exec_module(_source)
@@ -100,6 +102,13 @@ class BudgetExceeded(RuntimeError):
 
 class ProviderStop(RuntimeError):
     pass
+
+
+class PublicGitHubMetadataError(RuntimeError):
+    """A public metadata request failed without an authenticated fallback."""
+    def __init__(self, reason, status=None):
+        self.reason, self.status = reason, status
+        super().__init__('public GitHub metadata unavailable')
 
 
 def _ref(value):
@@ -574,6 +583,109 @@ class SSHProviderTransport:
     def receipt(self,key): return self._call({'operation':'receipt','action_key':key})
 
     def reserve(self): return self._call({'operation':'reserve','provider':self.provider})
+
+
+class _NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _public_metadata_opener():
+    return build_opener(_NoRedirect())
+
+
+class PublicGitHubMetadataTransport:
+    """Use unauthenticated HTTPS for allowlisted GitHub metadata only."""
+    API = 'https://api.github.com'
+    LIMIT = _source.LIMIT
+    TIMEOUT = 30
+
+    def __init__(self, authenticated, admission, *, opener=None):
+        if getattr(authenticated, 'provider', None) != 'github' or getattr(admission, 'provider', 'github') != 'github':
+            raise ValueError('GitHub authenticated transport required')
+        if not callable(getattr(authenticated, 'request', None)) or not callable(getattr(admission, 'reserve', None)):
+            raise ValueError('authenticated transport and provider admission required')
+        self.authenticated, self.admission = authenticated, admission
+        self.opener = opener or _public_metadata_opener()
+        self.provider = 'github'
+        # Preserve the existing gated transport's conservative windows when the
+        # authenticated leg uses the GUI spool.
+        self.request_budget = getattr(authenticated, 'request_budget', 1)
+        self.request_window_seconds = getattr(authenticated, 'request_window_seconds', 0)
+        self.action_window_seconds = getattr(authenticated, 'action_window_seconds', 0)
+
+    @staticmethod
+    def _public_path(path, kind):
+        if kind != 'json':
+            return False
+        root = path.partition('?')[0]
+        return not (re.fullmatch(GH + r'/runs/' + NUM + r'/artifacts', root)
+                    or re.fullmatch(GH + r'/artifacts/' + NUM, root))
+
+    @staticmethod
+    def _request_id(headers):
+        value = headers.get('X-GitHub-Request-Id') or headers.get('X-Request-Id')
+        return value if isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9:._-]{1,128}', value) else None
+
+    def _public_get(self, path):
+        url = self.API + path
+        request = Request(url, headers={'Accept': 'application/vnd.github+json'}, method='GET')
+        try:
+            response = self.opener.open(request, timeout=self.TIMEOUT)
+        except HTTPError as error:
+            try:
+                status = error.code
+                request_id = self._request_id(error.headers or {})
+            finally:
+                error.close()
+            raise PublicGitHubMetadataError('http_error', status) from None
+        except (OSError, TimeoutError, URLError, ValueError):
+            raise PublicGitHubMetadataError('transport') from None
+        try:
+            final = urlsplit(response.geturl())
+            requested = urlsplit(url)
+            if (final.scheme != 'https' or final.hostname != 'api.github.com' or final.port is not None
+                    or final.username is not None or final.password is not None
+                    or final.path != requested.path or final.query != requested.query):
+                raise PublicGitHubMetadataError('redirect_rejected')
+            status = response.getcode()
+            if type(status) is not int or status != 200:
+                raise PublicGitHubMetadataError('http_error', status if type(status) is int else None)
+            body = response.read(self.LIMIT + 1)
+            if not isinstance(body, bytes) or len(body) > self.LIMIT:
+                raise PublicGitHubMetadataError('response_too_large')
+            value = json.loads(body)
+            if not isinstance(value, (dict, list)):
+                raise PublicGitHubMetadataError('invalid_json_shape')
+            return {'http_status': status, 'data': _redact(value),
+                    'request_id': self._request_id(response.headers)}
+        except PublicGitHubMetadataError:
+            raise
+        except (OSError, TimeoutError, ValueError, UnicodeError, TypeError, AttributeError):
+            raise PublicGitHubMetadataError('invalid_response') from None
+        finally:
+            response.close()
+
+    def request(self, method, path, payload=None):
+        kind = validate(self.provider, method, path, payload)
+        if method == 'GET' and self._public_path(path, kind):
+            return self._public_get(path)
+        return self.authenticated.request(method, path, payload)
+
+    def for_action(self, key):
+        authenticated_action = self.authenticated.for_action(key)
+        def request(method, path, payload=None):
+            if method != 'POST':
+                raise ValueError('action POST required')
+            validate(self.provider, method, path, payload)
+            return authenticated_action(method, path, payload)
+        return request
+
+    def receipt(self, key):
+        return self.authenticated.receipt(key)
+
+    def reserve(self):
+        return self.admission.reserve()
 
 
 def main():

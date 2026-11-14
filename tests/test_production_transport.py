@@ -2,6 +2,7 @@ import importlib.util
 import base64
 import json
 from pathlib import Path
+from urllib.error import HTTPError
 
 import pytest
 
@@ -268,6 +269,116 @@ def test_ssh_reserve_uses_fixed_structured_request():
     client=t.SSHProviderTransport('gitlab','/Volumes/CODEX/private/bridge.py',runner=runner)
     assert client.reserve()['allowed'] is True
     assert calls==[{'operation':'reserve','provider':'gitlab'}]
+
+
+class PublicResponse:
+    def __init__(self, body=b'{"id":1}', status=200, url=None, headers=None):
+        self.body, self.status = body, status
+        self.url = url or 'https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/1'
+        self.headers = headers or {'X-GitHub-Request-Id': 'public-1'}
+        self.read_limit = None
+        self.closed = False
+    def geturl(self): return self.url
+    def getcode(self): return self.status
+    def read(self, maximum):
+        self.read_limit = maximum
+        return self.body[:maximum]
+    def close(self): self.closed = True
+
+
+class PublicOpener:
+    def __init__(self, response): self.response, self.calls = response, []
+    def open(self, request, timeout):
+        self.calls.append((request, timeout))
+        if isinstance(self.response, BaseException): raise self.response
+        return self.response
+
+
+class AuthenticatedStub:
+    provider = 'github'
+    request_budget = 2
+    request_window_seconds = 180
+    action_window_seconds = 75
+    def __init__(self): self.calls = []
+    def request(self, *args): self.calls.append(('request', args)); return {'authenticated': True}
+    def for_action(self, key):
+        def perform(*args): self.calls.append(('action', key, args)); return {'action': True}
+        return perform
+    def receipt(self, key): self.calls.append(('receipt', key)); return {'receipt': True}
+
+
+class AdmissionStub:
+    def __init__(self): self.calls = 0
+    def reserve(self): self.calls += 1; return {'allowed': True}
+
+
+def public_transport(response):
+    authenticated, admission = AuthenticatedStub(), AdmissionStub()
+    opener = PublicOpener(response)
+    client = t.PublicGitHubMetadataTransport(authenticated, admission, opener=opener)
+    return client, authenticated, admission, opener
+
+
+def test_public_metadata_uses_fixed_anonymous_https_and_redacts_response():
+    path = t.GH + '/runs/43604381587/attempts/2'
+    response = PublicResponse(b'{"id":1,"token":"private","runner":{"secret":"x","id":2}}',
+                             url='https://api.github.com' + path)
+    client, auth, _, opener = public_transport(response)
+    assert client.request('GET', path) == {
+        'http_status': 200, 'data': {'id': 1, 'runner': {'id': 2}}, 'request_id': 'public-1'}
+    request, timeout = opener.calls[0]
+    assert request.full_url == 'https://api.github.com' + path
+    assert request.get_header('Authorization') is None
+    assert timeout == 30 and response.read_limit == t._source.LIMIT + 1 and response.closed
+    assert not auth.calls
+    assert (client.request_budget, client.request_window_seconds, client.action_window_seconds) == (2, 180, 75)
+
+
+def test_public_metadata_keeps_raw_logs_artifacts_and_mutations_authenticated():
+    client, auth, admission, opener = public_transport(PublicResponse())
+    log = t.GH + '/jobs/132498683205/logs'
+    artifacts = t.GH + '/runs/43604381587/artifacts'
+    artifact = t.GH + '/artifacts/1234'
+    assert client.request('GET', log) == {'authenticated': True}
+    assert client.request('GET', artifacts) == {'authenticated': True}
+    assert client.request('GET', artifact) == {'authenticated': True}
+    body = {'ref': 'codex/control', 'inputs': {'nonce': 'n', 'candidate_sha': 'a' * 40}}
+    assert client.for_action('action-1')('POST', t.GH + '/workflows/417757453/dispatches', body) == {'action': True}
+    assert client.receipt('action-1') == {'receipt': True}
+    assert client.reserve() == {'allowed': True}
+    assert [call[0] for call in auth.calls] == ['request', 'request', 'request', 'action', 'receipt']
+    assert admission.calls == 1 and opener.calls == []
+
+
+@pytest.mark.parametrize('response', [
+    PublicResponse(b'not-json'),
+    PublicResponse(b'x' * (t._source.LIMIT + 1)),
+    PublicResponse(b'{"id":1}', status=403),
+    PublicResponse(b'{"id":1}', status=429),
+    PublicResponse(b'{"id":1}', url='https://example.invalid/repos/seeker-cyber-maker/fDisBull/actions/runs/1'),
+])
+def test_public_metadata_failures_are_terminal_without_authenticated_fallback(response):
+    client, auth, _, _ = public_transport(response)
+    with pytest.raises(t.PublicGitHubMetadataError):
+        client.request('GET', t.GH + '/runs/1')
+    assert not auth.calls
+
+
+def test_public_metadata_http_error_is_terminal_without_fallback():
+    error = HTTPError('https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/1',
+                      403, 'Forbidden', {}, None)
+    client, auth, _, _ = public_transport(error)
+    with pytest.raises(t.PublicGitHubMetadataError) as caught:
+        client.request('GET', t.GH + '/runs/1')
+    assert caught.value.reason == 'http_error' and caught.value.status == 403
+    assert not auth.calls
+
+
+def test_public_metadata_allowlist_rejects_unapproved_path_before_network():
+    client, auth, _, opener = public_transport(PublicResponse())
+    with pytest.raises(ValueError):
+        client.request('GET', t.GH + '/runs/1/attempts/1/jobs/1')
+    assert not opener.calls and not auth.calls
 
 
 def test_github_auth_failure_durably_stops_shared_provider(tmp_path):
