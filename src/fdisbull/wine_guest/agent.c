@@ -16,7 +16,7 @@ static DWORD continuation=DBG_CONTINUE, exit_code=0;
 static DWORD stepping_tid;
 static uintptr_t image_base;
 static struct { uintptr_t address; BYTE original; int used, armed; } bp[MAX_BP];
-static struct { DWORD id; HANDLE handle; int suspended; } threads[MAX_THREADS];
+static struct { DWORD id; HANDLE handle; int suspended; uintptr_t teb; DWORD teb_event; } threads[MAX_THREADS];
 static char reason[32]="entry";
 static uintptr_t stop_address, raw_stop_address;
 static uintptr_t access_address, scratch;
@@ -30,9 +30,20 @@ static unsigned target_bits;
 static int ne_carrier;
 static DWORD image_entry_rva;
 #define MAX_MODULES 256
-static struct {uintptr_t base;DWORD size;unsigned bits;ULONGLONG generation;int loaded;char name[256];} modules[MAX_MODULES];
+static struct {uintptr_t base;DWORD size;unsigned bits;ULONGLONG generation;int loaded;char name[256];
+    DWORD entry_rva,tls_rva,tls_size;int header_details_observed;} modules[MAX_MODULES];
 static ULONGLONG module_revision;
 static ULONGLONG state_revision;
+static int early_loader,loader_stop_loads,loader_entry_reached;
+#define MAX_LOADER_EVENTS 256
+typedef struct {
+    ULONGLONG sequence,module_revision;DWORD process,thread,event;
+    uintptr_t base,start_address,stopped_pc;DWORD size,bits,entry_rva,tls_rva,tls_size;
+    ULONGLONG generation;int header_details_observed,paused;
+    char kind[24],name[256];
+} LoaderObservation;
+static LoaderObservation loader_events[MAX_LOADER_EVENTS];
+static ULONGLONG loader_sequence;
 typedef struct {uintptr_t address;int module;ULONGLONG generation;} RemoteExport;
 static RemoteExport pause_entry32,pause_break32;
 static DWORD pause_thread;
@@ -118,6 +129,26 @@ static void module_loaded(uintptr_t base,HANDLE file) {
         if(machine==IMAGE_FILE_MACHINE_I386 && magic==IMAGE_NT_OPTIONAL_HDR32_MAGIC) modules[slot].bits=32;
         if(machine==IMAGE_FILE_MACHINE_AMD64 && magic==IMAGE_NT_OPTIONAL_HDR64_MAGIC) modules[slot].bits=64;
         if(modules[slot].bits) modules[slot].size=size;
+        /* These are observed PE header declarations, not evidence that an
+         * entry point or TLS callback has run. Extra reads are opt-in only. */
+        if(early_loader && modules[slot].bits) {
+            WORD optional_size=0;DWORD directories=0,entry=0,tls[2]={0,0};
+            DWORD directory_offset=modules[slot].bits==64?112:96;
+            DWORD count_offset=modules[slot].bits==64?108:92;
+            uintptr_t optional=base+dos.e_lfanew+24;
+            if(ReadProcessMemory(pi.hProcess,(void*)(base+dos.e_lfanew+20),&optional_size,2,&got) && got==2 &&
+               optional_size>=directory_offset &&
+               (DWORD64)dos.e_lfanew+24+optional_size<=size &&
+               ReadProcessMemory(pi.hProcess,(void*)(optional+16),&entry,4,&got) && got==4 &&
+               ReadProcessMemory(pi.hProcess,(void*)(optional+count_offset),&directories,4,&got) && got==4 &&
+               entry<size &&
+               (directories<=9 || (optional_size>=directory_offset+80 &&
+                 ReadProcessMemory(pi.hProcess,(void*)(optional+directory_offset+72),tls,8,&got) && got==8 &&
+                 tls[0]<=size && tls[1]<=size-tls[0]))) {
+                modules[slot].entry_rva=entry;modules[slot].tls_rva=tls[0];modules[slot].tls_size=tls[1];
+                modules[slot].header_details_observed=1;
+            }
+        }
     }
 }
 static void module_unloaded(uintptr_t base) {
@@ -130,9 +161,52 @@ static void module_state(void) {
     unsigned count=0;
     for(int i=0;i<MAX_MODULES;i++) if(modules[i].loaded) {
         printf("%s{\"base\":\"0x%llx\",\"size\":%lu,\"bits\":%u,\"generation\":%llu,\"name\":",count++?",":"",(unsigned long long)modules[i].base,modules[i].size,modules[i].bits,modules[i].generation);
-        json_text(modules[i].name);putchar('}');
+        json_text(modules[i].name);
+        if(early_loader) printf(",\"pe_header_observed\":%s,\"entry_rva\":%lu,\"tls_rva\":%lu,\"tls_size\":%lu",
+            modules[i].header_details_observed?"true":"false",modules[i].entry_rva,modules[i].tls_rva,modules[i].tls_size);
+        putchar('}');
     }
     puts("]}");
+}
+/* Bounded cursor history. A gap is explicit; no lost prefix is called complete. */
+static void loader_record(const char *kind,DWORD event,uintptr_t base,uintptr_t start,uintptr_t pc,int paused) {
+    if(!early_loader) return;
+    ULONGLONG sequence=++loader_sequence;
+    LoaderObservation *item=&loader_events[(sequence-1)%MAX_LOADER_EVENTS];
+    memset(item,0,sizeof(*item));item->sequence=sequence;item->module_revision=module_revision;
+    item->process=ev.dwProcessId;item->thread=ev.dwThreadId;item->event=event;
+    item->base=base;item->start_address=start;item->stopped_pc=pc;item->paused=paused;
+    strcpy(item->kind,kind);
+    for(int i=0;i<MAX_MODULES;i++) if(modules[i].loaded && modules[i].base==base) {
+        item->size=modules[i].size;item->bits=modules[i].bits;item->generation=modules[i].generation;
+        item->entry_rva=modules[i].entry_rva;item->tls_rva=modules[i].tls_rva;item->tls_size=modules[i].tls_size;
+        item->header_details_observed=modules[i].header_details_observed;strcpy(item->name,modules[i].name);break;
+    }
+}
+static void loader_settings(void) {
+    printf("{\"profile\":\"%s\",\"phase\":\"%s\",\"stop_on_load\":%s,\"entry_reached\":%s,\"event_sequence\":%llu}",
+        early_loader?"pe-before-loader":"pe-entry",early_loader&&!loader_entry_reached?"before-entry":"entry-reached",
+        loader_stop_loads?"true":"false",loader_entry_reached?"true":"false",loader_sequence);
+}
+static void loader_history(ULONGLONG after,unsigned limit) {
+    if(after>loader_sequence) {puts("{\"error\":\"loader-cursor-ahead\"}");return;}
+    ULONGLONG oldest=loader_sequence>=MAX_LOADER_EVENTS?loader_sequence-MAX_LOADER_EVENTS+1:1;
+    ULONGLONG next=after<oldest?oldest:after+1;
+    unsigned count=0;
+    printf("{\"format\":\"fdisbull-wine-loader-events-1\",\"oldest_sequence\":%llu,\"latest_sequence\":%llu,\"lost_before\":%s,\"events\":[",
+        oldest,loader_sequence,after<oldest-1?"true":"false");
+    for(ULONGLONG n=next;n<=loader_sequence && count<limit;n++) {
+        LoaderObservation *item=&loader_events[(n-1)%MAX_LOADER_EVENTS];
+        printf("%s{\"sequence\":%llu,\"kind\":",count++?",":"",item->sequence);json_text(item->kind);
+        printf(",\"native_event\":%lu,\"process\":%lu,\"thread\":%lu,\"module_revision\":%llu,\"base\":\"0x%llx\",\"size\":%lu,\"bits\":%lu,\"module_generation\":%llu,\"name\":",
+            item->event,item->process,item->thread,item->module_revision,(unsigned long long)item->base,item->size,item->bits,item->generation);
+        json_text(item->name);
+        printf(",\"start_address\":\"0x%llx\",\"stopped_pc\":\"0x%llx\",\"paused_before_continue\":%s,\"pe_header_observed\":%s,\"entry_rva\":%lu,\"declared_entry\":\"0x%llx\",\"tls_rva\":%lu,\"tls_size\":%lu}",
+            (unsigned long long)item->start_address,(unsigned long long)item->stopped_pc,item->paused?"true":"false",
+            item->header_details_observed?"true":"false",item->entry_rva,
+            (unsigned long long)(item->entry_rva?item->base+item->entry_rva:0),item->tls_rva,item->tls_size);
+    }
+    printf("],\"next_after\":%llu,\"control\":",count?next+count-1:after);loader_settings();puts("}");
 }
 /* Read only bounded, actually loaded I386 PE exports. A host ntdll pointer is
  * not a valid WOW64 thread entry: Wine11 truncates that 64-bit start address. */
@@ -316,6 +390,24 @@ static void addthread(DWORD id,HANDLE h) {
 static HANDLE thread(DWORD id) {
     for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle && threads[i].id==id) return threads[i].handle;
     fatal("unknown-thread"); return NULL;
+}
+static void remember_teb(DWORD id,void *teb,DWORD event) {
+    for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle && threads[i].id==id) {
+        threads[i].teb=(uintptr_t)teb;threads[i].teb_event=event;return;
+    }
+    fatal("thread-teb-identity");
+}
+static void thread_information(void) {
+    for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle && threads[i].id==ev.dwThreadId && threads[i].teb) {
+        printf("{\"format\":\"fdisbull-wine-thread-info-1\",\"process\":%lu,\"thread\":%lu,\"bits\":%u,\"teb\":\"0x%llx\",\"teb_source\":\"%s.lpThreadLocalBase\",\"gs_base_register_observed\":false,\"gs_base\":",
+            ev.dwProcessId,threads[i].id,target_bits,(unsigned long long)threads[i].teb,
+            threads[i].teb_event==CREATE_PROCESS_DEBUG_EVENT?"CREATE_PROCESS_DEBUG_EVENT":"CREATE_THREAD_DEBUG_EVENT");
+        if(target_bits==64) printf("\"0x%llx\"",(unsigned long long)threads[i].teb);else printf("null");
+        printf(",\"gs_base_source\":\"%s\",\"state_revision\":%llu}",
+            target_bits==64?"Win64 user-mode TEB convention; debug-event TEB observed":"Not inferred for PE32/WOW64",state_revision);
+        puts("");return;
+    }
+    puts("{\"error\":\"selected-thread-teb-unavailable\"}");
 }
 static TargetContext context(void) {
     TargetContext c;memset(&c,0,sizeof(c));
@@ -548,7 +640,8 @@ static int install(uintptr_t addr,int slot) {
     if(!writemem(addr,&cc,1)) return 0;
     bp[slot].address=addr;bp[slot].used=bp[slot].armed=1;return 1;
 }
-/* Return a stopped exception/exit. Administrative events are always drained. */
+/* Administrative events drain by default. The early-loader profile can leave
+ * a CREATE_PROCESS/LOAD_DLL event pending for observation before continuation. */
 static int wait_event(DWORD timeout,int pausing) {
     ULONGLONG deadline=GetTickCount64()+timeout;
     do {
@@ -565,18 +658,40 @@ static int wait_event(DWORD timeout,int pausing) {
             target_bits=process_bits();
             module_loaded(image_base,ev.u.CreateProcessInfo.hFile);
             addthread(ev.dwThreadId,ev.u.CreateProcessInfo.hThread);
+            remember_teb(ev.dwThreadId,ev.u.CreateProcessInfo.lpThreadLocalBase,CREATE_PROCESS_DEBUG_EVENT);
             if(ev.u.CreateProcessInfo.hFile) CloseHandle(ev.u.CreateProcessInfo.hFile);
+            if(early_loader) {
+                if(target_bits!=64) fatal("early-loader-profile-requires-pe64");
+                TargetContext current=context();stop_address=raw_stop_address=(uintptr_t)context_ip(&current);
+                strcpy(reason,"process-create");
+                loader_record("process-create",CREATE_PROCESS_DEBUG_EVENT,image_base,
+                    (uintptr_t)ev.u.CreateProcessInfo.lpStartAddress,stop_address,1);
+            }
             /* Entry breakpoint slot zero is installed by main using observed base. */
             return 2;
-        case CREATE_THREAD_DEBUG_EVENT:addthread(ev.dwThreadId,ev.u.CreateThread.hThread);break;
+        case CREATE_THREAD_DEBUG_EVENT:
+            addthread(ev.dwThreadId,ev.u.CreateThread.hThread);
+            remember_teb(ev.dwThreadId,ev.u.CreateThread.lpThreadLocalBase,CREATE_THREAD_DEBUG_EVENT);break;
         case EXIT_THREAD_DEBUG_EVENT:
             if(pause_pending && ev.dwThreadId==pause_thread) fatal("pause-helper-exited-before-breakpoint");
             for(int i=0;i<MAX_THREADS;i++) if(threads[i].handle && threads[i].id==ev.dwThreadId) {
                 CloseHandle(threads[i].handle);memset(&threads[i],0,sizeof(threads[i]));
             } break;
-        case LOAD_DLL_DEBUG_EVENT:module_loaded((uintptr_t)ev.u.LoadDll.lpBaseOfDll,ev.u.LoadDll.hFile);if(ev.u.LoadDll.hFile) CloseHandle(ev.u.LoadDll.hFile);break;
-        case UNLOAD_DLL_DEBUG_EVENT:module_unloaded((uintptr_t)ev.u.UnloadDll.lpBaseOfDll);break;
+        case LOAD_DLL_DEBUG_EVENT: {
+            uintptr_t base=(uintptr_t)ev.u.LoadDll.lpBaseOfDll;
+            module_loaded(base,ev.u.LoadDll.hFile);if(ev.u.LoadDll.hFile) CloseHandle(ev.u.LoadDll.hFile);
+            if(early_loader) {
+                TargetContext current=context();uintptr_t pc=(uintptr_t)context_ip(&current);
+                loader_record("dll-load",LOAD_DLL_DEBUG_EVENT,base,0,pc,loader_stop_loads);
+                if(loader_stop_loads) {stop_address=raw_stop_address=pc;strcpy(reason,"dll-load");return 1;}
+            }
+            break;
+        }
+        case UNLOAD_DLL_DEBUG_EVENT:
+            loader_record("dll-unload",UNLOAD_DLL_DEBUG_EVENT,(uintptr_t)ev.u.UnloadDll.lpBaseOfDll,0,0,0);
+            module_unloaded((uintptr_t)ev.u.UnloadDll.lpBaseOfDll);break;
         case EXIT_PROCESS_DEBUG_EVENT:
+            loader_record("process-exit",EXIT_PROCESS_DEBUG_EVENT,image_base,0,0,0);
             exited=1;exit_code=ev.u.ExitProcess.dwExitCode;strcpy(reason,"exited");resume_event();return 1;
         case EXCEPTION_DEBUG_EVENT: {
             DWORD code=ev.u.Exception.ExceptionRecord.ExceptionCode;
@@ -607,10 +722,28 @@ static int wait_event(DWORD timeout,int pausing) {
                     TargetContext c=context();
                     if(!writemem(stop_address,&bp[i].original,1)) fatal("restore-breakpoint-byte");
                     bp[i].armed=0;context_set_ip(&c,stop_address);setcontrolcontext(&c);hit=i;
-                    strcpy(reason,initializing?(ne_carrier?"carrier-entry":"entry"):"breakpoint");return 1;
+                    strcpy(reason,initializing&&i==0?(ne_carrier?"carrier-entry":"entry"):"breakpoint");
+                    if(early_loader && i==0) {
+                        loader_entry_reached=1;initializing=0;bp[0].used=0;hit=-1;
+                        loader_record("pe-entry",EXCEPTION_DEBUG_EVENT,image_base,stop_address,stop_address,1);
+                    }
+                    return 1;
                 }
                 if(pausing && target_bits!=32) {strcpy(reason,"timeout");return 1;}
-                if(initializing) break; /* Wine loader's initial break. */
+                if(initializing) {
+                    /* Preserve the early-profile observation even when the
+                     * ordinary Wine loader break is administratively drained. */
+                    if(early_loader) {
+                        uintptr_t base=0;
+                        for(int i=0;i<MAX_MODULES;i++) if(modules[i].loaded &&
+                            modules[i].base<=stop_address && stop_address-modules[i].base<modules[i].size) {
+                            base=modules[i].base;break;
+                        }
+                        TargetContext current=context();
+                        loader_record("loader-breakpoint",EXCEPTION_DEBUG_EVENT,base,0,(uintptr_t)context_ip(&current),0);
+                    }
+                    break;
+                }
             }
             if(code==EXCEPTION_SINGLE_STEP) {strcpy(reason,"step");return 1;}
             continuation=DBG_EXCEPTION_NOT_HANDLED;strcpy(reason,"exception");return 1;
@@ -658,6 +791,7 @@ static void state(void) {
         ev.dwDebugEventCode==EXCEPTION_DEBUG_EVENT?ev.u.Exception.ExceptionRecord.ExceptionCode:0,
         ev.dwDebugEventCode==EXCEPTION_DEBUG_EVENT?ev.u.Exception.dwFirstChance:0,
         (unsigned long long)access_address,(unsigned long long)access_code,!strcmp(reason,"memory-access")?"true":"false",exit_code);
+    if(early_loader) {printf(",\"loader\":");loader_settings();}
     if(target_bits==32 && pause_sequence) {
         printf(",\"pause_helper\":{\"mechanism\":\"observed-target32-ntdll-export\",\"sequence\":%llu,\"thread\":%lu,\"entry\":\"0x%llx\",\"breakpoint\":\"0x%llx\",\"module_base\":\"0x%llx\",\"module_generation\":%llu,\"pending\":%s,\"verified_breakpoint\":%s}",
             pause_sequence,pause_thread,(unsigned long long)pause_entry32.address,(unsigned long long)pause_break32.address,
@@ -879,8 +1013,13 @@ static int frame(RECT *r,POINT *p) {
     p->x=p->y=0;return ClientToScreen(window,p);
 }
 int main(int argc,char **argv) {
-    if(argc!=3) return 64;
+    if(argc!=3 && argc!=4) return 64;
+    if(argc==4) {
+        if(strcmp(argv[3],"--stop-before-loader")) return 64;
+        early_loader=loader_stop_loads=1;
+    }
     ne_carrier=!strcmp(argv[2],"ne");
+    if(early_loader && ne_carrier) return 64;
     if(!ne_carrier && (!strtoull(argv[2],NULL,0) || strtoull(argv[2],NULL,0)>0xffffffffULL)) return 64;
     STARTUPINFOA si={0};si.cb=sizeof(si);char command[2048];
     if(snprintf(command,sizeof(command),"\"%s\"",argv[1])>=(int)sizeof(command)) return 64;
@@ -895,10 +1034,12 @@ int main(int argc,char **argv) {
     if(!CreateProcessA(NULL,command,NULL,NULL,TRUE,DEBUG_ONLY_THIS_PROCESS,NULL,NULL,&si,&pi)) fatal("create-process");
     CloseHandle(nul);
     if(wait_event(10000,0)!=2 || !install(image_base+(ne_carrier?image_entry_rva:strtoull(argv[2],NULL,0)),0)) fatal("install-entry-breakpoint");
-    resume_event();if(!wait_event(30000,0) || hit!=0) fatal("entry-breakpoint");
-    bp[0].used=0;hit=-1;initializing=0;
-    if(target_bits==32) prepare_pause32();
-    printf("{\"image_base\":\"0x%llx\",\"pid\":%lu,\"architecture\":\"x86-%u\",\"bits\":%u,\"launch_profile\":\"%s\",\"session\":",(unsigned long long)image_base,pi.dwProcessId,target_bits,target_bits,ne_carrier?"win16-ne-carrier":"pe-original");state();printf("}\n");
+    if(!early_loader) {
+        resume_event();if(!wait_event(30000,0) || hit!=0) fatal("entry-breakpoint");
+        bp[0].used=0;hit=-1;initializing=0;loader_entry_reached=1;
+        if(target_bits==32) prepare_pause32();
+    }
+    printf("{\"image_base\":\"0x%llx\",\"pid\":%lu,\"architecture\":\"x86-%u\",\"bits\":%u,\"launch_profile\":\"%s\",\"session\":",(unsigned long long)image_base,pi.dwProcessId,target_bits,target_bits,early_loader?"pe-before-loader":ne_carrier?"win16-ne-carrier":"pe-original");state();printf("}\n");
     static char line[140000];
     while(fgets(line,sizeof(line),stdin)) {
         char op[32]={0},arg[131074]={0};unsigned long long addr=0;unsigned n=0;
@@ -906,6 +1047,21 @@ int main(int argc,char **argv) {
         if(!strcmp(op,"close")) {unsigned released=input_cleanup();TerminateProcess(pi.hProcess,0);printf("{\"state\":\"closed\",\"released_to_OS\":%u}\n",released);break;}
         if(!strcmp(op,"status")) {state();puts("");continue;}
         if(!strcmp(op,"keyboard-state")) {input_state();puts("");continue;}
+        if(!strcmp(op,"loader-events")) {
+            unsigned limit=0;unsigned long long after=0;int consumed=0;
+            if(sscanf(line,"%*s %llu %u%n",&after,&limit,&consumed)!=2 || !limit || limit>256 ||
+               strspn(line+consumed," \r\n\t")!=strlen(line+consumed)) puts("{\"error\":\"invalid-loader-events-command\"}");
+            else loader_history(after,limit);
+            continue;
+        }
+        if(!strcmp(op,"loader-control")) {
+            unsigned enabled=2;int consumed=0;
+            if(!early_loader) puts("{\"error\":\"early-loader-profile-required\"}");
+            else if(sscanf(line,"%*s %u%n",&enabled,&consumed)!=1 || enabled>1 ||
+                    strspn(line+consumed," \r\n\t")!=strlen(line+consumed)) puts("{\"error\":\"invalid-loader-control-command\"}");
+            else {loader_stop_loads=(int)enabled;loader_settings();puts("");}
+            continue;
+        }
         if(exited) {puts("{\"error\":\"process-exited\"}");continue;}
         if(!strcmp(op,"context-diagnostics")) {
             char action[16];unsigned enabled;int consumed=0;
@@ -919,6 +1075,7 @@ int main(int argc,char **argv) {
             context_diagnostics();
         }
         else if(!strcmp(op,"registers")) {registers(context());puts("");}
+        else if(!strcmp(op,"thread-info")) {thread_information();}
         else if(!strcmp(op,"modules")) {module_state();}
         else if(!strcmp(op,"selector") && sscanf(line,"%*s %llx",&addr)==1 && addr && addr<=65535 && target_bits==32) {
             WOW64_LDT_ENTRY entry;

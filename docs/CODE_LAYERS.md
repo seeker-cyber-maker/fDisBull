@@ -131,6 +131,10 @@ For repeated checks, arm both hooks with `once=False` and an explicit `max_hits`
 
 ## Self-modification, snapshots, and temporal evidence
 
+Fresh authored DOS and Wine/QEMU acceptance, including relocated self-writes,
+same-value stores, explicit rebasing and whole-VM restore, is recorded in
+[self-modifying-code verification](VERIFICATION-SMC-LAYERS-2026-11-13.md).
+
 Execution layers retain guards on underlying RAM. Before decoding, the normal core checks overlay guards in the next 15-byte instruction window. A changed guard stops with `outcome="layer_conflict"` before executing that window. Because this covers the maximum architectural instruction length, a nearby guarded byte can cause a conservative stop slightly before the modified instruction. Device/DMA and protected-mode execution are outside this profile.
 
 Inspect both views, then use `debug.capture_code(address, length=..., view="ram"|"execute")` to save a `code-snapshot` artifact. These runtime disassemblies retain bytes, hashes, view, generation, and active IDs. Static instructions and versions remain untouched. Disable the stale execution layer, capture the changed RAM, and create a new guarded definition if you want to rebase the theory.

@@ -185,6 +185,15 @@ METHODS = {
     "dos-services": "List DOS/BIOS/audio contracts or describe a vector with pre-call registers",
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
+    "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
+    "debug-compare-runtime-functions": "Recover complete returning PE64 path families; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms,execution_mode]",
+    "debug-compare-runtime-modules": "Recover PE entry through observed ExitProcess under imported-call contracts; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms]",
+    "debug-recover-loader-module": "Compose proved DLL callbacks, actual Wine APIs and optional captured loader dispatch under explicit remaining environment contracts; dll_project,evidence,environment_contract,[loader_source,timeout_ms]",
+    "debug-import-call": "Observe one supported PE64 import CALL; optional Set/GetLastError implementation proof; run,[name,memory_ranges,code_ranges,timeout_ms,trace_implementation]",
+    "debug-loader-control": "Select stops before continuing PE64 DLL-load events in process-create mode; run,stop_on_load",
+    "debug-loader-events": "Read bounded native loader history with explicit retention gaps; run,[after,limit]",
+    "debug-thread-info": "Observe selected-thread debug-event TEB; hidden GS-base register remains unobserved; run",
+    "debug-capture-module-entry": "Capture original PE data/IAT at actual post-loader entry; run,data_ranges,[name]",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms,qemu_transport,qemu_firmware]",
     "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
@@ -202,7 +211,7 @@ METHODS = {
     "debug-chip8-tick": "Apply explicit stopped CHIP-8 timer ticks without advancing CPU or virtual time; run,ticks",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,loader_mode,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
@@ -313,6 +322,7 @@ METHODS = {
     "debug-trace": "Store bounded CPU trace with source mappings (QEMU DOS supports initial-dos or an explicit embedded-le binding); run,[name,count,timeout_ms,fast_forward,source_view]",
     "debug-trace-until": "Stop at a qualified DOS source boundary (QEMU supports initial-dos or an explicit embedded-le binding; action is DOSBox-only); run,until,[regions,max_steps,timeout_ms,name,action,label,source_view]",
     "debug-memory": "Read project-mapped runtime bytes; run,address,[cs,length]",
+    "debug-stack-memory": "Observe a bounded window around the stopped Wine thread's stack pointer; run,[offset,length]",
     "debug-write-memory": "Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex",
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",
     "debug-save-state": "Compatibility name for saving a full native Anchor Stone; run,[name,max_bytes]",
@@ -1196,6 +1206,10 @@ def invoke(method, params, debugger=None):
         "debug-experiment-info",
         "debug-promote-code",
         "debug-trace-view",
+        "debug-compare-runtime-code",
+        "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
     ):
         if debugger is None:
             raise ValueError(
@@ -1280,6 +1294,10 @@ def invoke(method, params, debugger=None):
             "debug-experiment-info",
             "debug-promote-code",
             "debug-trace-view",
+            "debug-compare-runtime-code",
+            "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
             "runtime-version-info",
         ):
             return getattr(db, method.replace("-", "_"))(**p)
@@ -2607,6 +2625,10 @@ def parser():
         "debug-experiment-info",
         "debug-promote-code",
         "debug-trace-view",
+        "debug-compare-runtime-code",
+        "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2620,6 +2642,33 @@ def parser():
         elif name == "debug-trace-view":
             c.add_argument("artifact")
             c.add_argument("--version", type=int, required=True)
+        elif name == "debug-recover-loader-module":
+            c.add_argument("dll_project")
+            c.add_argument("--evidence", type=json.loads, required=True)
+            c.add_argument("--environment-contract", type=json.loads, required=True)
+            c.add_argument("--loader-source", help="Private original Wine ntdll.dll for captured dispatch proofs")
+            c.add_argument("--timeout-ms", type=int, default=30000)
+        elif name in ("debug-compare-runtime-functions", "debug-compare-runtime-modules"):
+            c.add_argument("baseline_version", type=int)
+            c.add_argument("layer_version", type=int)
+            c.add_argument("--baseline-paths", type=json.loads, required=True)
+            c.add_argument("--layer-paths", type=json.loads, required=True)
+            c.add_argument("--contract", type=json.loads, required=True)
+            c.add_argument("--timeout-ms", type=int,
+                           default=10000 if name == "debug-compare-runtime-modules" else 5000)
+            if name == "debug-compare-runtime-functions":
+                c.add_argument("--execution-mode", choices=("stable_leaf", "single_threaded_calls_smc"),
+                               default="stable_leaf")
+        elif name == "debug-compare-runtime-code":
+            c.add_argument("baseline_version", type=int)
+            c.add_argument("layer_version", type=int)
+            c.add_argument("baseline_trace")
+            c.add_argument("layer_trace")
+            c.add_argument("--contract", type=json.loads, required=True)
+            c.add_argument("--correspondence", type=json.loads)
+            c.add_argument("--baseline-memory", type=json.loads)
+            c.add_argument("--layer-memory", type=json.loads)
+            c.add_argument("--timeout-ms", type=int, default=1000)
         elif name == "debug-promote-code":
             c.add_argument("artifact")
             c.add_argument("--label", default="runtime interpretation")

@@ -11,6 +11,7 @@ import json
 import time
 
 from .external_files import _file_name
+from .behavior_diff import compare_trace_topology, normalized_trace_event as _trace_event
 
 
 def encoded(value):
@@ -59,29 +60,28 @@ def _stop_value(run):
     return {'outcome': run['outcome'], 'stop_reason': without_ids(stop)}
 
 
-def _trace_event(event):
-    # Runtime mappings and host/layer generations are provenance, not CPU changes.
-    result = {key: event[key] for key in (
-        'project_address', 'project_segmented_address', 'address', 'instruction',
-        'bytes', 'ram_bytes', 'execution_bytes', 'registers', 'register_changes', 'completed',
-        'cpu_mode', 'code_bits', 'stack_bits') if key in event}
-    if isinstance(event.get('address'), dict) and event.get('execution_bytes'):
-        from iced_x86 import Decoder
-        from .debug_semantics import trace_decode_bits
-        bits=trace_decode_bits(event)
-        if bits is None:return result
-        raw = bytes.fromhex(event['execution_bytes'])
-        instruction = Decoder(bits, raw, ip=int(event['address']['offset'], 16)).decode()
-        if not instruction.is_invalid:
-            # DOS records a 15-byte lookahead. Later instructions are not part of this fetch.
-            for name in ('ram_bytes', 'execution_bytes'):
-                if name in result:
-                    result[name] = result[name][:instruction.len * 2]
-    return result
+def _changed_byte_runs(left_hex, right_hex):
+    left, right = bytes.fromhex(left_hex), bytes.fromhex(right_hex)
+    if len(left) != len(right):
+        raise ValueError('Experiment memory capture length differs')
+    runs = []
+    start = None
+    for offset, (a, b) in enumerate(zip(left, right, strict=True)):
+        if a != b and start is None:
+            start = offset
+        elif a == b and start is not None:
+            runs.append({'offset': start, 'length': offset - start})
+            start = None
+    if start is not None:
+        runs.append({'offset': start, 'length': len(left) - start})
+    return {'runs': runs[:64], 'run_count': len(runs), 'changed_bytes': sum(r['length'] for r in runs),
+            'runs_truncated': len(runs) > 64}
 
 
-def compare_trials(baseline, layer):
+def compare_trials(baseline, layer, *, same_source=False):
     """Compare captured observations only; an incomplete run cannot prove equality."""
+    if type(same_source) is not bool:
+        raise ValueError('same_source must be boolean')
     # Pair only captures of the same operation/range. zip alone silently loses
     # unmatched evidence and can turn malformed trial records into false equality.
     for field in ('memory','traces','screenshots','observations'):
@@ -107,10 +107,12 @@ def compare_trials(baseline, layer):
     registers = [{'field': key, 'baseline': left.get(key), 'layer': right.get(key)}
                  for key in sorted(left.keys() | right.keys()) if left.get(key) != right.get(key)]
     memory = [{'observation': index, 'address': a['project_address'],
-               'baseline_hex': a['hex'], 'layer_hex': b['hex']}
+               'baseline_hex': a['hex'], 'layer_hex': b['hex'],
+               'changed': _changed_byte_runs(a['hex'], b['hex'])}
               for index, (a, b) in enumerate(zip(baseline['memory'], layer['memory'])) if a['hex'] != b['hex']]
     traces = []
     for a, b in zip(baseline['traces'], layer['traces']):
+        topology = compare_trace_topology(a, b, same_source=same_source)
         difference = None
         for index, (before, after) in enumerate(zip(a['events'], b['events'])):
             x, y = _trace_event(before), _trace_event(after)
@@ -122,6 +124,7 @@ def compare_trials(baseline, layer):
                        'baseline_count': len(a['events']), 'layer_count': len(b['events']),
                        'count_differs': len(a['events']) != len(b['events']),
                        'first_observed_difference': difference,
+                       'topology': topology,
                        'semantics': a['semantics']})
     screenshots = [{'step': a['step'], 'baseline_artifact': a['artifact'], 'layer_artifact': b['artifact'],
                     'different': a['sha256'] != b['sha256']}
@@ -130,9 +133,24 @@ def compare_trials(baseline, layer):
              for a, b in zip(baseline.get('observations', []), layer.get('observations', [])) if a['value'] != b['value']]
     different = bool(registers or memory or any(t['first_observed_difference'] or t['count_differs'] for t in traces)
                      or any(s['different'] for s in screenshots) or steps)
+    observed_effect = bool(registers or memory or steps or any(s['different'] for s in screenshots)
+                           or any(t['topology']['observed_register_difference'] for t in traces))
+    effect_sampled = bool(left and right or baseline['memory'] and layer['memory'] or
+                          baseline['screenshots'] and layer['screenshots'] or
+                          baseline.get('observations') and layer.get('observations') or
+                          any(t['topology']['observed_register_difference'] is not None for t in traces))
+    code_values = [t['topology']['code_difference'] for t in traces]
+    path_values = [t['topology']['control_flow_difference'] for t in traces]
     return {'complete': bool(complete), 'observed_difference': different if complete else None,
+            'observed_effect_difference': (True if complete and observed_effect else
+                                           False if complete and effect_sampled else None),
+            'code_difference': (True if any(value is True for value in code_values) else
+                                None if not code_values or any(value is None for value in code_values) else False),
+            'control_flow_difference': (True if any(value is True for value in path_values) else
+                                        None if not path_values or any(value is None for value in path_values) else False),
+            'semantic_equivalence': None,
             'registers': registers, 'memory': memory, 'traces': traces, 'screenshots': screenshots, 'steps': steps,
-            'scope': 'Captured observations and positional trace prefixes; no claim of deterministic replay or full coverage'}
+            'scope': 'Captured observations and bounded trace-site alignment; no claim of deterministic replay, full memory coverage or semantic equivalence'}
 
 
 class ExperimentProjectMixin:
@@ -360,8 +378,11 @@ class ExperimentSessionMixin:
                 data = bytes(row['data'])
                 if hashlib.sha256(data).hexdigest() != row['sha256']:
                     raise ValueError('Stored trace hash mismatch')
+                trace_document = json.loads(data)
                 trial['traces'].append({'step': record['index'], 'artifact': result['artifact'],
-                                        'events': json.loads(data)['events'], 'semantics': document['trace_semantics']})
+                                        'events': trace_document['events'],
+                                        'requested_count': trace_document.get('requested_count'),
+                                        'semantics': document['trace_semantics']})
             if record['op'] in ('screenshot', 'click-frame') and result:
                 frame = result['frame'] if record['op'] == 'click-frame' else result
                 trial['screenshots'].append({'step': record['index'], 'artifact': frame['artifact'], 'sha256': frame['sha256']})
@@ -393,7 +414,7 @@ class ExperimentSessionMixin:
                     result['error'] = {'type': 'ScriptFailure', 'trial': name, 'step': result[name]['script_error']}
                     break
             if result['baseline'] is not None and result['layer'] is not None:
-                result['comparison'] = compare_trials(result['baseline'], result['layer'])
+                result['comparison'] = compare_trials(result['baseline'], result['layer'], same_source=True)
                 result['ok'] = result['comparison']['complete']
         except Exception as error:
             result['error'] = {'type': type(error).__name__, 'message': str(error)}

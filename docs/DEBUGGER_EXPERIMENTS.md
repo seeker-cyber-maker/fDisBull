@@ -99,8 +99,11 @@ observations differed.
 
 Differences include register fields, memory hex, image hashes and the first
 observed difference in each pair of traces, paired by route step and event index.
-This is positional comparison of bounded evidence, not trace alignment after a
-divergent loop. DOS's 15-byte fetch lookahead is truncated to the decoded current
+The [bounded behavior diff prototype](BEHAVIOR_PATCH_DIFF.md) additionally maps
+shared trace sites, divergent spans and evidenced rejoin sites. It separates
+code-byte differences from sampled state and control-path changes. Repeated loop
+sites without a unique anchor stay unresolved rather than becoming a guessed
+rejoin. DOS's 15-byte fetch lookahead is truncated to the decoded current
 instruction for comparison; a patch to a later instruction is not reported as
 having executed early. Raw trace artifacts retain their original evidence.
 DOS records pre-execution fetches, with the final record pending; PE records

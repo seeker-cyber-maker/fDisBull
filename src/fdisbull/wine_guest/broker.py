@@ -140,9 +140,13 @@ def invoke(method, params):
     if method == 'session.start':
         if process is not None:
             raise ValueError('This VM already owns a target')
-        directory, target = stage_files(params)
         profile=params.get('profile','pe')
         if profile not in ('pe','ne'):raise ValueError('Unsupported Windows launch profile')
+        early=params.get('stop_before_loader',False)
+        if type(early) is not bool:raise ValueError('stop_before_loader must be boolean')
+        if early and (profile!='pe' or params.get('bits',64)!=64):
+            raise ValueError('Early loader observation requires the PE64 launch profile')
+        directory, target = stage_files(params)
         entry='ne' if profile=='ne' else hex(number(params['entry_rva'],1,0xffffffff))
         for name in ('prefix', 'runtime', 'cache'):
             Path('/work', name).mkdir(mode=0o700, exist_ok=True)
@@ -150,13 +154,22 @@ def invoke(method, params):
             # Cold prefixes under translated QEMU can exceed three minutes.
             # Keep setup bounded and fail before launching any target on error.
             subprocess.run(['wineboot', '-u'], stdin=subprocess.DEVNULL, stdout=log, stderr=log, timeout=300, check=True)
-            process = subprocess.Popen(['wine', '/opt/fdisbull/agent.exe', 'Z:\\work\\game\\'+target, entry],
+            command=['wine', '/opt/fdisbull/agent.exe', 'Z:\\work\\game\\'+target, entry]
+            if early:command.append('--stop-before-loader')
+            process = subprocess.Popen(command,
                 cwd=directory, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log)
         return response(90)
     if process is None:
         raise ValueError('No live target')
-    if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm','keyboard-state','modules'):
+    if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm','keyboard-state','modules','thread-info'):
         command = method
+    elif method=='loader-control':
+        if set(params)!={'stop_on_load'} or type(params['stop_on_load']) is not bool:
+            raise ValueError('Loader control requires only boolean stop_on_load')
+        command='loader-control '+str(int(params['stop_on_load']))
+    elif method=='loader-events':
+        if set(params)-{'after','limit'}:raise ValueError('Invalid loader history options')
+        command=f"loader-events {number(params.get('after',0),0,2**64-1)} {number(params.get('limit',256),1,256)}"
     elif method=='selector':
         command=f"selector {number(params['selector'],0,65535):x}"
     elif method=='context-diagnostics':
@@ -236,7 +249,8 @@ def identity():
                                      'opt/fdisbull/broker.py':__file__}.items() if Path(path).is_file()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
-      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,'win16_integer_pair':True,'process_profiles':['pe32','pe64']},
+      'capabilities':{'windows_ui':True,'keyboard':True,'execution_slices':True,'frame_revision':True,'context_diagnostics':True,
+                      'early_loader':True,'loader_events':True,'thread_info':True,'win16_integer_pair':True,'process_profiles':['pe32','pe64']},
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
 
 def main():

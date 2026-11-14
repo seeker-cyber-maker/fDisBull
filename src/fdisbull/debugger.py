@@ -112,7 +112,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                  guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None, qemu_retrace=None,
                  qemu_checkpoint_tool=None,
                  dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None,
-                 dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None):
+                 dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None, loader_mode='entry'):
+        if loader_mode not in ('entry','process-create'):
+            raise ValueError('loader_mode must be entry or process-create')
+        if loader_mode!='entry' and (self.meta['format']!='PE' or self.bits!=64 or backend not in (None,'wine-qemu')):
+            raise ValueError('process-create loader mode requires the native PE64 Wine backend')
         if game_dir is None:
             if backend != 'qemu-dos':
                 raise ValueError('This backend requires an explicit game_dir')
@@ -247,7 +251,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                 raise ValueError('PE32/PE64 Wine/QEMU launch requires kernel and prepared initramfs')
             from .wine_debugger import PEDebugSession
             return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib,
+                loader_mode=loader_mode)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
@@ -1369,6 +1374,7 @@ class DebugWorkspace:
                    'debug-dos-task-scheduler-disable':'dos_task_scheduler_disable',
                    'debug-dos-task-preemption':'dos_task_preemption',
                    'debug-status':'status','debug-tracking':'tracking_status','debug-dos-process':'dos_process_info','debug-dos-source-admit':'dos_source_admit','debug-dos-source-bind':'dos_source_bind','debug-dos-source-binding':'dos_source_binding','debug-dos-source-unbind':'dos_source_unbind','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-loader-control':'loader_control','debug-loader-events':'loader_events','debug-thread-info':'thread_info',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',
@@ -1380,7 +1386,7 @@ class DebugWorkspace:
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-trace-until':'trace_until',
                    'debug-screenshot-hooks':'screenshot_hooks',
-                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
+                   'debug-memory':'memory','debug-stack-memory':'stack_memory','debug-import-call':'import_call','debug-capture-module-entry':'capture_module_entry','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
