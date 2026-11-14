@@ -14,11 +14,13 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import stat
 import time
 from urllib.parse import quote
 
 from production_intake import FailureInbox, export_candidates
 from recovery import RecoveryController, production
+import production_evidence as evidence_verifier
 
 
 OWNER = '01a1692b-22ce-7b13-9d7d-05b2d4de529e'
@@ -192,12 +194,160 @@ class ProductionService:
         self._state_guard()
         return FailureInbox(self.root / 'failure-inbox.sqlite', max_events=1024)
 
+    def _private_bytes(self, path, root, maximum):
+        path, root = Path(path), Path(root)
+        if not path.is_absolute() or root not in path.parents or '..' in path.parts:
+            raise ValueError('private path outside incident')
+        for part in (path, *path.parents):
+            if part.is_symlink():
+                raise ValueError('symlink in private path')
+            if part == root:
+                break
+        for part in (root, *path.relative_to(root).parents):
+            directory = root if part == root else root / part
+            if directory.is_dir() and (directory.stat().st_uid != os.getuid() or directory.stat().st_mode & 0o077):
+                raise ValueError('private directory ownership unknown')
+        fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+        try:
+            before = os.fstat(fd)
+            if (not stat.S_ISREG(before.st_mode) or before.st_uid != os.getuid()
+                    or before.st_mode & 0o077 or not 0 < before.st_size <= maximum):
+                raise ValueError('private file ownership or size unknown')
+            with os.fdopen(fd, 'rb', closefd=False) as stream:
+                data = stream.read(maximum + 1)
+            after = os.fstat(fd)
+            if len(data) != before.st_size or (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns):
+                raise ValueError('private file changed')
+            return data
+        finally:
+            os.close(fd)
+
+    def _related_index(self, db):
+        rows = db.execute("SELECT event_key,state,latest_receipt FROM events WHERE state IN ('complete','attention') LIMIT 1025").fetchall()
+        if len(rows) > 1024:
+            return []
+        result = []
+        for key, terminal, seq in rows:
+            try:
+                if not re.fullmatch('[0-9a-f]{64}', key):
+                    continue
+                directory = self.root / 'incidents' / key
+                state_path = directory / 'state.json'
+                data = self._private_bytes(state_path, directory, 4 * 1024 * 1024)
+                state = json.loads(data)
+                manifest = json.loads(self._private_bytes(directory / 'manifest.json', directory, 65536))
+                row = db.execute('SELECT payload FROM receipts WHERE event_key=? AND seq=?', (key, seq)).fetchone()
+                receipt = json.loads(bytes(row[0]))
+                if (state.get('status') != terminal or state.get('manifest') != manifest
+                        or manifest.get('incident_id') != key or receipt.get('kind') != 'controller_' + terminal
+                        or receipt.get('status') != terminal or receipt.get('provider_receipt_path') != str(state_path)):
+                    continue
+                observations, records = state.get('observations'), state.get('evidence')
+                if not isinstance(observations, list) or not isinstance(records, list) or len(observations) > 1024 or len(records) > 1024:
+                    continue
+                failed = []
+                for obs in observations:
+                    if isinstance(obs, dict) and obs.get('status') == 'failed':
+                        try:
+                            failed.append(production.target({k: obs[k] for k in production.SCHEMAS[obs['provider']]}))
+                        except (KeyError, ValueError, TypeError):
+                            continue
+                for ev in records:
+                    if (not isinstance(ev, dict) or ev.get('status') != 'export-verified' or ev.get('job_status') != 'failed'
+                            or any(ev.get(k) is not True for k in ('host_export_verified', 'closed_inventory_verified', 'source_postcheck_verified', 'provider_trace_verified'))):
+                        continue
+                    try:
+                        target = production.target(ev['target'])
+                        if target not in failed or target['provider'] not in ('github', 'gitlab'):
+                            continue
+                        if target['provider'] == 'github' and not production.candidate_checkout_proof(ev, target):
+                            continue
+                        result.append((key, state_path, hashlib.sha256(data).hexdigest(), directory, target, ev))
+                    except (KeyError, ValueError, TypeError):
+                        continue
+            except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+                continue
+        return result
+
+    def _related_match(self, candidate, index):
+        for key, state_path, state_hash, directory, target, ev in index:
+            try:
+                if key == candidate['event_key'] or candidate['reported_status'] != 'failed':
+                    continue
+                if (candidate['provider'] != target['provider'] or candidate['job_id'] != target['job_id']
+                        or candidate['source_sha'] != target['source_sha'] or candidate['job_name'] != target['job_name']):
+                    continue
+                if target['provider'] == 'github':
+                    if (candidate['project_or_repository'] != target['repository'] or candidate['run_id'] != target['run_id']
+                            or candidate['attempt'] != target['run_attempt']
+                            or any(candidate['producer_fields'].get(k) != target[k] for k in ('runner_id', 'ref', 'control_sha'))):
+                        continue
+                    folder = Path(self.config['export_root']) / 'github' / target['run_id'] / target['run_attempt'] / 'qualification' / target['job_id']
+                else:
+                    if candidate['project_or_repository'] != target['project_id'] or candidate['run_id'] != target['pipeline_id']:
+                        continue
+                    folder = Path(self.config['export_root']) / target['pipeline_id'] / target['job_id']
+                if (candidate['metadata_path'] != str(folder / 'job.json')
+                        or candidate['inventory']['path'] != str(folder / 'inventory.json')
+                        or candidate['source_postcheck']['path'] != str(folder / 'source-postcheck.json')):
+                    continue
+                receipt_path = Path(ev['receipt_path'])
+                if receipt_path.parent != directory / 'evidence' or not receipt_path.name.endswith('.evidence.json'):
+                    continue
+                receipt_bytes = self._private_bytes(receipt_path, directory, 65536)
+                receipt = json.loads(receipt_bytes)
+                if (receipt.get('schema') != 'fdisbull-production-evidence-1' or receipt.get('target') != target
+                        or receipt.get('job_status') != 'failed' or receipt.get('export_job_sha256') != candidate['metadata_sha256']
+                        or receipt.get('inventory_sha256') != candidate['inventory']['sha256']):
+                    continue
+                prefix = receipt_path.name[:-len('.evidence.json')]
+                metadata_bytes = self._private_bytes(receipt_path.parent / (prefix + '.provider.json'), directory, 131072)
+                trace = self._private_bytes(receipt_path.parent / (prefix + '.trace'), directory, 1024 * 1024)
+                if (hashlib.sha256(metadata_bytes).hexdigest() != receipt.get('provider_metadata_sha256')
+                        or hashlib.sha256(trace).hexdigest() != receipt.get('provider_trace_sha256')):
+                    continue
+                evidence_verifier._provider_metadata(json.loads(metadata_bytes), target, 'failed')
+                meta = evidence_verifier._read(folder / 'job.json', 65536)
+                inventory = evidence_verifier._read(folder / 'inventory.json', 1024 * 1024)
+                if (evidence_verifier._digest(folder / 'job.json') != receipt['export_job_sha256']
+                        or evidence_verifier._digest(folder / 'inventory.json') != receipt['inventory_sha256']
+                        or not isinstance(inventory, list) or len(inventory) > 4096
+                        or sum(item.get('size', 0) for item in inventory if isinstance(item, dict) and type(item.get('size')) is int) > 256 * 1024 * 1024):
+                    continue
+                if target['provider'] == 'github':
+                    if (meta.get('job_status') != 'failed' or meta.get('export_success') is not True
+                            or any(str(meta.get(k)) != str(target[k]) for k in target if k != 'provider')):
+                        continue
+                    for name in ('candidate-start.json', 'caller-health.json', 'source-postcheck.json', 'inventory.json', 'qualification.log', 'system-preparation.json', 'system-preparation.log'):
+                        item = evidence_verifier._regular(folder / name)
+                        binding = meta.get(name)
+                        if (not isinstance(binding, dict) or item.stat().st_size > 4 * 1024 * 1024
+                                or binding.get('size') != item.stat().st_size or binding.get('sha256') != evidence_verifier._digest(item)):
+                            raise ValueError('control changed')
+                else:
+                    evidence_verifier.ovh.verify_job_export(Path(self.config['export_root']), target['pipeline_id'], target['job_id'], target['source_sha'], target['job_name'], expected_job_status='failed')
+                post = evidence_verifier._read(folder / 'source-postcheck.json', 65536)
+                if (post.get('source_commit') != target['source_sha'] or post.get('expected_source_commit') != target['source_sha']
+                        or post.get('tracked_worktree_dirty') is not False or post.get('export_success') is not True):
+                    continue
+                evidence_verifier._closed(folder / 'exported', inventory, meta.get('files'))
+                return {'parent_event_key': key, 'parent_state_path': str(state_path), 'parent_state_sha256': state_hash,
+                        'evidence_receipt_path': str(receipt_path), 'evidence_receipt_sha256': hashlib.sha256(receipt_bytes).hexdigest()}
+            except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
+                continue
+        return None
+
     def _discover(self, inbox):
         result = self.discover(self.config['export_root'], self.config['activated_epoch'],
                                limit=32, gitlab_project_id='88349936',
                                github_repository='seeker-cyber-maker/fDisBull')
+        index = self._related_index(inbox.db)
         for candidate in result['candidates']:
-            inbox.enqueue(candidate, now=self.clock())
+            item = inbox.enqueue(candidate, now=self.clock())
+            if item['state'] == 'pending':
+                proof = self._related_match(candidate, index)
+                if proof is not None:
+                    inbox.related_attention(candidate, proof, now=self.clock())
         return result
 
     def status(self):
@@ -214,11 +364,13 @@ class ProductionService:
         try:
             database.execute('PRAGMA query_only=ON')
             records = database.execute('SELECT event_key,state FROM events').fetchall()
+            index = self._related_index(database)
         finally:
             database.close()
         known = {key for key, state in records}
         queued = (any(state in ('pending', 'claimed', 'needs_reconciliation') for key, state in records)
-                  or any(item['event_key'] not in known for item in discovered['candidates']))
+                  or any(item['event_key'] not in known and self._related_match(item, index) is None
+                         for item in discovered['candidates']))
         active = read_json(self.active_path) if self.active_path.exists() else None
         running = active is not None and active.get('status') not in TERMINAL
         initial = self.config.get('initial_request') is not None and self._initial_result() is None
@@ -283,6 +435,7 @@ class ProductionService:
             raise ValueError('inbox terminal state mismatch')
         active.update(status=state['status'], reason=state.get('reason'), finished_epoch=self.clock())
         write_json(self.active_path, active)
+        self._discover(inbox)
 
     def _await_provider(self, runtime, provider, deadline):
         while self.clock() < deadline:
