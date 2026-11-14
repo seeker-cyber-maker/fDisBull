@@ -2,7 +2,7 @@
 
 **Designed by a human, refined by agents, and operated by agents.**
 
-**fDisBull** (`0.34.1` / `v0.34.1`) is an agent-first reverse-engineering,
+**fDisBull** is an agent-first reverse-engineering,
 headless native-debugging, scene-automation, and semantic-reconstruction
 (`UDL` → `UIL` → `UDC`) pipeline. It is not a human GUI disassembler—with over
 400 structured CLI/JSON methods, no human is meant to operate its low-level
@@ -11,6 +11,10 @@ media inspection, live emulator control, memory/event narrowing, state-binding,
 and Z3-checked code generation, leaving the agent only **a few bounded judgment
 decisions** along an automated seven-stage pipeline while giving the human
 clear milestone reports, visual evidence, and explicit approval gates.
+
+The intended next release is **0.35.0**, currently in integration. Follow the
+[release process](docs/RELEASE_PROCESS.md) and [current status](docs/RELEASE_STATUS.md)
+for qualification, package delivery and installation evidence.
 
 ## Built to minimize token usage and survive long investigations
 
@@ -92,7 +96,7 @@ stage that proves the answer:
    - **Human goal:** *"Have a coordinator and worker subagents map out an entire binary's subsystems in parallel without duplicating probes or burning millions of tokens on raw dumps."*
    - **Agent execution:** A single controller owns the live headless guest while parallel workers pull bounded, non-overlapping questions from the persistent dependency queue (`work-queue`, `run-work`), inspect shared `.fdb` facts and 64 KiB-capped `out-<sha256>` slices (`output-select`), and commit verified types, xrefs, and concepts back to SQLite.
 
-**Current release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
+**Previous tagged release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
 preflight and build identity (`--version-json`, `preflight`), the top-level
 `fdisbull` skill router, the
 [7-stage methodology determinism review and Dragster A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
@@ -140,6 +144,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
 | Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
 | Inspect DOS `.SYS` drivers, QEMM/v86 mappings, DESQview modules, or narrow changing memory values | [DOS drivers & QEMM](docs/DOS_DRIVERS_AND_QEMM.md) · [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
+| Explore CHIP-8 CPU, pixels, keys and timers with an experimental native backend | [CHIP-8 QEMU profile](docs/CHIP8_QEMU.md) |
 | Find code or register values associated with an action, or stop at an instruction predicate | [Execution event searching](docs/EXECUTION_EVENT_SEARCH.md) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Rewind execution, branch frame inputs, test code layers or run partial-RNG delta experiments | [Layers, states, rewind and experiments](#layers-states-rewind-and-experiments) |
@@ -289,7 +294,11 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   and mouse delivery, stored screenshots, and selected-PSP `guest_exit` versus
   `guest_tsr` termination tracking. Headless operation is the default;
   `--dot-mode` opens a watch-only window on compatible builds. A separate
-  Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
+  Linux/QEMU path retains DOSBox inside a guest. The experimental
+  [native QEMU DOS alternative](docs/DOS_QEMU_MIGRATION.md) boots a DOS disk
+  directly and launches original COM/MZ programs with observed entry, exit and
+  TSR identity. The [migration log](docs/DOS_QEMU_HANDOFF.md) tracks the remaining
+  slices; DOSBox remains the default and a selectable fallback.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
   retaining explicit CPU-mode and address-space limits.
@@ -301,6 +310,30 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   instructions and register values across actions. Agent headless launches
   disable the quit confirmation and mute audio; visible launch preferences
   remain separate.
+- **CHIP-8 targets:** [pinned conversion intake](docs/CHIP8_CONVERSION_INTAKE.md)
+  verifies one classic corpus member before creating a private project. A
+  [declared ISA/environment closure](docs/CHIP8_PACKAGE_CLOSURE.md) binds compatible
+  package definitions to that exact source; [source maps](docs/CHIP8_SOURCE_MAP_UDL.md)
+  retain bounded original-word and typed UDL candidates. An explicit [classic profile](docs/CHIP8_QEMU.md) adds
+  persistent disassembly and a separately built QEMU backend for stepping,
+  registers, RAM, breakpoints and native checkpoints. An optional device build
+  adds monochrome frames, held keys and virtual-clock timers. A further native
+  extension supports the declared 34-family classic instruction profile and
+  restores an explicit seeded RNG alongside CPU/RAM and device state. Bounded
+  layer, paused-hook and v4 full-checkpoint history witnesses passed locally on
+  macOS arm64. A separate v5 runtime adds bounded full-checkpoint histories at
+  native 60 Hz virtual-tick sample stops, with immutable PNGs and hash-bound
+  pixel/checkpoint state; 16 native cases passed locally. The sample records
+  actual callback lateness and does not claim VBlank, guest-frame completion,
+  or historical timing. A separate v6 extension adds owned hexadecimal keypad
+  edges, indexed frame input and checkpointed input restore without reinjection.
+  Histories require the explicit checkpoint tool. Optional v6 lossless frame
+  checkpoint delta witnesses passed locally on macOS arm64. A separate v6
+  selected CPU/RAM undo is freeze-only; eleven bounded native witnesses passed
+  locally on macOS arm64. Full recovery is required before execution. Bounded
+  v6 [comparative trials](docs/DEBUGGER_EXPERIMENTS.md#chip-8-v6-comparative-trials)
+  also passed authored native witnesses locally. Automatic replay, complete game
+  compatibility and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped
@@ -513,9 +546,10 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 
 ## Status, testing and history
 
-GitLab (`brewster-jennings-group/fdisbull`) and the local Git hub are the
-release and CI authority; GitHub (`seeker-cyber-maker/fDisBull`) is an active
-public peer mirror. Read
+Original GitHub [`seeker-cyber-maker/fDisBull`](https://github.com/seeker-cyber-maker/fDisBull)
+is the source, review and release authority. The local hub and GitLab preserve
+recovery copies. n8n owns finite CI and release execution. Start with the
+[release process](docs/RELEASE_PROCESS.md), then read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
 [methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),

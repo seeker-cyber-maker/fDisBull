@@ -15,6 +15,9 @@ from .output_limits import (
 
 AGENT_SKILL_GUIDES = {
     "SKILL.md": "Start here: investigation technique, cost/reward/confidence and evidence boundaries",
+    "references/contradiction-recovery.md": "Resolve a counterexample without weakening the claim: preserve failures, discriminate explanations and independently verify a repair",
+    "references/next-steps.md": "Turn a question into a probe: executable static/data recipes, result branches and failure recovery",
+    "references/analysis-types.md": "Use structural types and static accesses with explicit file/runtime address and RAM/ROM boundaries",
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
     "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
     "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
@@ -36,6 +39,9 @@ AGENT_SKILL_GUIDES = {
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
     "references/task-framing.md": "Natural-language handoff contract, report levels and tool-use defaults",
     "references/dos-drivers-and-qemm.md": "Analyze DOS device roots and mixed LE objects; qualify a QEMM-configured full-machine guest",
+    "references/dos-qemu-migration.md": "Select native QEMU DOS, check core execution, track migration slices and retain DOSBox fallback",
+    "references/dos-file-layers.md": "Prepare FreeDOS, capture a private D: workspace and manage checkpointed file generations",
+    "references/chip8-qemu.md": "Import an explicit CHIP-8 profile and inspect a bounded native QEMU CPU with source-bound checkpoints",
     "references/desqview-and-memory-search.md": "Inspect DESQview interfaces/modules, cooperate through an authored helper, and run persistent memory searches with bounded guarded edits",
     "references/execution-event-search.md": "Find action-specific code/register candidates and stop at bounded instruction predicates",
 }
@@ -179,27 +185,71 @@ METHODS = {
     "dos-services": "List DOS/BIOS/audio contracts or describe a vector with pre-call registers",
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
-    "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]",
+    "debug-compare-runtime-code": "Compare captured PE64 temporal regions with unchanged trace evidence; baseline_version,layer_version,baseline_trace,layer_trace,contract,[correspondence,baseline_memory,layer_memory,timeout_ms]",
+    "debug-compare-runtime-functions": "Recover complete returning PE64 path families; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms,execution_mode]",
+    "debug-compare-runtime-modules": "Recover PE entry through observed ExitProcess under imported-call contracts; baseline_version,layer_version,baseline_paths,layer_paths,contract,[timeout_ms]",
+    "debug-recover-loader-module": "Compose proved DLL callbacks, actual Wine APIs and optional captured loader dispatch under explicit remaining environment contracts; dll_project,evidence,environment_contract,[loader_source,timeout_ms]",
+    "debug-import-call": "Observe one supported PE64 import CALL; optional Set/GetLastError implementation proof; run,[name,memory_ranges,code_ranges,timeout_ms,trace_implementation]",
+    "debug-loader-control": "Select stops before continuing PE64 DLL-load events in process-create mode; run,stop_on_load",
+    "debug-loader-events": "Read bounded native loader history with explicit retention gaps; run,[after,limit]",
+    "debug-thread-info": "Observe selected-thread debug-event TEB; hidden GS-base register remains unobserved; run",
+    "debug-capture-module-entry": "Capture original PE data/IAT at actual post-loader entry; run,data_ranges,[name]",
+    "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms,qemu_transport,qemu_firmware]",
     "preflight": "Report installation capability readiness without execution; expectations",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
     "runtime-version-info": "Inspect temporal capture/edit provenance for a byte version; [version]",
-    "debug-controls": "Inspect owned breakpoint/watch/hook definitions for experiment capture; run",
+    "debug-controls": "Inspect owned breakpoint/watch/hook definitions and layer controls for experiment capture; run",
     "debug-save-experiment": "Capture a native checkpoint, controls, script and observations; run,name,[script,script_id,observations]",
     "debug-experiments": "List immutable saved experiments; [version]",
     "debug-experiment-info": "Inspect a saved experiment and verify its identities offline; artifact",
     "debug-restore-experiment": "Restore native state, layers, breakpoints, watches and hook hit counts; run,experiment",
-    "debug-compare-experiment": "Run baseline and an explicit layer stack, save differences and restore baseline; run,experiment,layers,[timeout_ms]",
+    "debug-compare-experiment": "Compare a bounded script from the same full checkpoint with a candidate layer stack; native DOS/CHIP-8 require final full baseline recovery; run,experiment,layers,[timeout_ms]",
     "debug-contexts": "List explicit DOS/process and outer-machine execution contexts; run",
+    "debug-chip8-seed-rng": "Seed the stopped native CHIP-8 RNG without executing CPU instructions; run,seed",
+    "debug-chip8-environment": "Observe stopped CHIP-8 pixels, keypad and 60 Hz timer state; run",
+    "debug-chip8-keypad": "Set the complete held CHIP-8 hex-key list without running; run,keys",
+    "debug-chip8-tick": "Apply explicit stopped CHIP-8 timer ticks without advancing CPU or virtual time; run,ticks",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,game_dir,[version,backend,guest_profile,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,loader_mode,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
+    "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
+    "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
+    "debug-audio-start": "Start a bounded native PC-speaker PCM capture window without running; run,[max_frames]",
+    "debug-audio-observe": "Observe native retained PCM frames and callback timestamps; run",
+    "debug-audio-stop": "Stop native audio capture without flushing or advancing the machine; run",
+    "debug-capture-audio": "Save retained native PCM as WAV with stopped clock brackets; run,[name]",
+    "debug-display-start": "Start native completed-renderer observation at an explicit virtual cadence; run,[period_ns]",
+    "debug-display-observe": "Observe the latest retained renderer publication and its age; run",
+    "debug-display-probe": "Read ordered RGB samples from one retained renderer publication without refresh; run,points,[window,update_id,timeout_ms] (requires renderer_probe)",
+    "debug-vga-configuration": "Observe current VGA configuration and its retained publication stamp without rendering; run,[timeout_ms] (requires vga_configuration)",
+    "debug-display-stop": "Stop renderer observation without refreshing or advancing the machine; run",
+    "debug-capture-display": "Save a retained renderer publication without refresh; run,[name,after_update] (guest frame completion unknown)",
+    "debug-retrace-observe": "Observe stopped native precise VGA retrace phase and timing generation; run,[timeout_ms] (guest frame completion unknown)",
+    "debug-retrace-wait": "Continue once toward the next precise VGA retrace edge and verify its timing generation; run,[edge,timeout_ms] (preserves earlier stops)",
+    "debug-clock-sync-start": "Start an owned 1:1 virtual/host monotonic clock mapping without execution; run,[tolerance_ns,max_lag_ns,max_wait_ns,timeout_ms]",
+    "debug-clock-sync-observe": "Observe accumulated drift in the owned clock mapping without execution; run,[timeout_ms]",
+    "debug-clock-sync-step": "Automatically choose one bounded guest catch-up or stopped host wait; run,[timeout_ms] (preserves earlier stops)",
+    "debug-clock-sync-stop": "Stop the owned clock mapping between sync calls without guest execution; run,[timeout_ms]",
+    "debug-mouse-move-relative": "Queue owned physical PS/2 movement; run,dx,dy (dispatches during bounded QEMU run)",
+    "debug-mouse-button-down": "Queue a physical mouse make and own its lease; run,button",
+    "debug-mouse-button-up": "Queue the matching physical mouse release; run,lease",
+    "debug-mouse-button-click": "Passively arm a native timed physical button click without requested motion; run,[button,hold_ms] (requires virtual_mouse_click; caller chooses execution)",
+    "debug-mouse-move-mapped": "Passively arm exact relative input from a caller-declared pixel scale, bound to a stopped retained publication and VGA configuration; run,dx_pixels,dy_pixels,counts_per_pixel,window,update_id,configuration_generation,[timeout_ms] (requires mapped_mouse_motion; actual guest pointer movement unknown)",
+    "debug-input-state": "Observe owned QEMU pending edges and held leases; run (not guest consumption)",
+    "debug-input-schedule": "Arm the pending physical batch at a native virtual delay without running; run,delta_ns",
+    "debug-input-schedule-observe": "Read the owned native input dispatch/cancellation receipt; run (not guest consumption)",
+    "debug-input-schedule-retrace": "Arm queued physical input for the strictly next precise VGA retrace edge; run,[edge,timeout_ms] (timing changes cancel before delivery)",
+    "debug-input-cancel-pending": "Cancel only unsent QEMU edges; run (accepted holds remain owned)",
+    "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib]; does not boot or qualify DOS",
+    "dos-migration": "Inspect DOSBox-to-QEMU capability slices and retained fallback; [details,surface,slice]; no runtime execution",
     "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
     "le-driver-disasm": "Bounded object-relative LE driver view; path,object_number,[offset,max_instructions,abi]",
     "qemm-config": "Preview or validate an unconditional QEMM CONFIG.SYS without editing files; [config_file,config_sys,qemm_path,options,validate_only]",
     "qemm-profile": "Bind a QEMM guest profile to CONFIG.SYS and driver bytes in a caller-owned FAT12/16 boot image; boot_image,[config_sys,driver_path]",
     "qpi-probe": "Export an authored read-only DOS QPI observation helper; output,[mode]",
     "qpi-report": "Read a bounded guest-produced QPI report; path,[include_pages]",
-    "debug-memory-translation": "Observe an x86 machine linear-to-physical page walk at the current stop; run,address,[context]",
+    "debug-memory-translation": "Observe an x86 page walk or read one verified RAM backing layer at the current stop; run,address,[context,length]",
     "debug-memory-snapshot": "Capture an immutable paused DOS memory range with run/task/mapping identity; run,address,length,[space,task_id,name,context]",
     "debug-memory-apply": "Apply one owned memory edit plan with fresh context/expected-byte guards and readback; run,plan,[context]",
     "memory-snapshot-info": "Inspect a retained private memory snapshot and capture provenance; snapshot",
@@ -221,7 +271,28 @@ METHODS = {
     "desqview-module-inspect": "Inspect raw DVdx or caller-described older DESQview modules; path,[expected_type,expected_version]",
     "debug-desqview-observe": "Read a stopped DESQview report, optionally verifying authored helper/nonce/ready PC; run,address,[space,probe_base,expected_nonce,context]",
     "debug-qemm-observe": "Read a QPI report from stopped machine memory; run,address,[length,context]",
+    "debug-tracking": "Automatic stopped-state source bindings and lifetime diagnostics; run,[context]",
     "debug-status": "Live debugger status and address mapping; run",
+    "debug-dos-process": "Read observed native DOS PSP, source mapping, driver registration and exit/residency evidence; run",
+    "debug-dos-source-admit": "Match a fresh stopped unpaged protected32 LE/GDT/fixup source view without changing the MZ binding; run,[name,max_compare_bytes,max_scan_bytes,timeout_ms,expected_source_sha256]",
+    "debug-dos-source-bind": "Install an owned protected32 LE source revalidation recipe; run,[name,max_compare_bytes,max_scan_bytes,timeout_ms,expected_source_sha256]",
+    "debug-dos-source-binding": "Inspect or refresh the owned LE source relation; run,[refresh,timeout_ms]",
+    "debug-dos-source-unbind": "Retire the LE source recipe without changing guest controls; run,[timeout_ms]",
+    "debug-dos-task-bind": "Bind the current native DOS COM/MZ task to its cooperating monitor anchor; run,anchor_address,expected_monitor",
+    "debug-dos-task-observe": "Observe the current cooperating monitor task against the bound native DOS task; run",
+    "debug-dos-task-switching": "Enable native cooperating-monitor task-private views for the bound DOS process; run",
+    "debug-dos-task-register": "Register one cooperating DOS task lifetime and its private physical pages; run,cookie,incarnation,[pages]",
+    "debug-dos-task-layer-patch": "Define a guarded task-private RAM or fetch patch; run,name,address,expected_hex,data_hex,[kind,task,activate]",
+    "debug-dos-task-layers": "Inspect or replace one cooperating task's private layer stack; run,[active,task,conflict]",
+    "debug-dos-task-memory": "Inspect an explicit task-private or shared base memory view; run,address,[length,task,view]",
+    "debug-dos-task-retire": "Retire one registered cooperating task lifetime; run,task",
+    "debug-dos-task-scheduler": "Initialize the native DOS CPU scheduler for the current task; run",
+    "debug-dos-task-fork": "Admit a registered DOS task with a cloned CPU context and explicit source entry and stack; run,task,entry,stack,[registers,eflags]",
+    "debug-dos-task-context": "Inspect a selected or dormant native DOS task CPU context; run,[task]",
+    "debug-dos-task-runnable": "Change a registered native DOS task's runnable state; run,task,[runnable]",
+    "debug-dos-task-scheduler-observe": "Inspect the native DOS task scheduler and run queue; run",
+    "debug-dos-task-scheduler-disable": "Disable the native DOS task scheduler at a supported stop; run",
+    "debug-dos-task-preemption": "Configure native PIC timer/IRQ preemption after real guest EOI; run,[enabled,irq,quantum]",
     "debug-registers": "Live CPU registers with project address mapping; run",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
     "debug-layer-info": "Inspect an immutable layer definition; layer",
@@ -229,12 +300,12 @@ METHODS = {
     "debug-events": "Read the persisted runtime event timeline; run,[after,limit]",
     "debug-layer-stack": "Inspect or replace the active ordered layer stack; run,[active]",
     "debug-layer-enable": "Enable or disable a saved layer; run,layer,[enabled]",
-    "debug-layer-patch": "Create and optionally activate a guarded RAM/execute patch; run,name,address,expected_hex,data_hex,[kind,activate]",
-    "debug-code": "Decode observed RAM or effective instruction-fetch bytes; run,address,[cs,length,view]",
-    "debug-capture-code": "Save a temporal code view as an immutable project artifact; run,address,[cs,length,view,name]",
+    "debug-layer-patch": "Create and optionally activate a guarded RAM/execute patch; run,name,address,expected_hex,data_hex,[kind,activate,space]",
+    "debug-code": "Decode observed RAM or effective instruction-fetch bytes; run,address,[cs,length,view,space]",
+    "debug-capture-code": "Save a temporal code view as an immutable project artifact; run,address,[cs,length,view,name,space]",
     "debug-branch": "Invert or force an observed 16-bit Jcc using an execution layer; run,name,address,[mode,activate]",
     "debug-cave": "Create an execution-only code cave with normalized far return; run,name,address,code_hex,return_to,[activate]",
-    "debug-hook": "Attach bounded declarative actions to a breakpoint; run,address,actions,[once,max_hits,cs,access,length]",
+    "debug-hook": "Attach bounded actions to a breakpoint or watchpoint; run,address,actions,[once,max_hits,cs,access,length,space]",
     "debug-hooks": "Inspect active breakpoint actions and hit counts; run",
     "debug-delete-hook": "Remove an owned hook and its native breakpoints; run,hook",
     "debug-breakpoint": "Translate execution or data access breakpoint; run,address,[cs,access,length]",
@@ -243,36 +314,53 @@ METHODS = {
     "debug-click": "Queue a screenshot-pixel mouse click; run,x,y,[button,hold_ms,mode_id]",
     "debug-keyboard-press": "Queue a guest keyboard press/release; run,key,[modifiers,hold_ms,gap_ms]",
     "debug-keyboard-type": "Queue 1..64 US-layout ASCII characters; run,text,[hold_ms,gap_ms]",
-    "debug-keyboard-state": "Inspect queued guest keyboard events and owned keys; run",
+    "debug-keyboard-state": "Inspect guest keyboard events or CHIP-8 logical frame-key ownership; run",
     "debug-click-frame": "Capture and label the chosen point, then queue its frame-mode-bound click; run,x,y,[name,grid_step,button,hold_ms,mode_id]",
     "debug-screenshot": "Store an actual guest PNG with optional grid, DOS hooks and negotiated native encoding; run,[name,grid,grid_step,hooks,encoding]",
     "debug-screenshot-hooks": "Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]",
     "debug-grid": "Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]",
-    "debug-trace": "Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]",
-    "debug-trace-until": "Stop at a current instruction predicate in qualified real-mode DOS; run,until,[regions,max_steps,timeout_ms,name,action,label]",
+    "debug-trace": "Store bounded CPU trace with source mappings (QEMU DOS supports initial-dos or an explicit embedded-le binding); run,[name,count,timeout_ms,fast_forward,source_view]",
+    "debug-trace-until": "Stop at a qualified DOS source boundary (QEMU supports initial-dos or an explicit embedded-le binding; action is DOSBox-only); run,until,[regions,max_steps,timeout_ms,name,action,label,source_view]",
     "debug-memory": "Read project-mapped runtime bytes; run,address,[cs,length]",
+    "debug-stack-memory": "Observe a bounded window around the stopped Wine thread's stack pointer; run,[offset,length]",
     "debug-write-memory": "Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex",
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",
     "debug-save-state": "Compatibility name for saving a full native Anchor Stone; run,[name,max_bytes]",
     "debug-load-state": "Compatibility name for loading an Anchor Stone; run,artifact",
-    "debug-rewind-start": "Start bounded native DOS Anchor Stone history; run,[max_steps,max_bytes]",
-    "debug-rewind-status": "Inspect the live Anchor Stone history cursor, budgets and validity; run",
-    "debug-rewind-record": "Capture an Anchor Stone before each bounded next-fetch interval and advance; run,[count,timeout_ms]",
-    "debug-rewind": "Jump to an earlier full Anchor Stone in legacy history; run,[count]",
+    "debug-rewind-start": "Start bounded native checkpoint history; run,[max_steps,max_bytes]; QEMU DOS/CHIP-8 also accept [history,timeout_ms]",
+    "debug-rewind-status": "Inspect history cursor, budgets and validity; run; QEMU DOS/CHIP-8 accept [history] for persistent history",
+    "debug-rewind-record": "Record DOSBox fetch intervals or QEMU DOS/CHIP-8 full checkpoints; run,[count,timeout_ms]; QEMU adds advance=step|capture",
+    "debug-rewind": "Restore an earlier full checkpoint; run,[count]; QEMU DOS/CHIP-8 also accept [history,node,timeout_ms]",
     "debug-save-anchor-stone": "Save a full native Anchor Stone; run,[name,max_bytes]",
     "debug-load-anchor-stone": "Jump directly to a compatible Anchor Stone; run,artifact",
     "debug-anchor-stone-info": "Inspect a saved Anchor Stone offline; artifact",
-    "debug-delta-start": "Experimental delta rewind with one full native Anchor Stone; run,ranges,[max_steps,max_bytes]",
+    "debug-delta-start": "Selected CPU/RAM history with a full recovery anchor; native DOS/CHIP-8 select registers and freeze after undo; run,ranges,[registers,max_steps,max_bytes,timeout_ms]",
     "debug-delta-status": "Inspect selected-state delta scope, cursor, costs and execution guard; run",
-    "debug-delta-record": "Record selected CPU/RAM changes at DOS next-fetch or Wine completed-instruction boundaries; run,[count,timeout_ms]",
-    "debug-delta-rewind": "Undo selected CPU/RAM deltas; optional policy preserves declared state and explicitly permits experimental partial continuation; run,[count,policy]",
+    "debug-delta-record": "Record selected CPU/RAM intervals; native DOS/CHIP-8 observe single-step stops without retirement proof, DOSBox next-fetch and Wine completed-instruction boundaries; run,[count,timeout_ms]",
+    "debug-delta-rewind": "Undo selected CPU/RAM deltas with an experimental preservation policy; native DOS/CHIP-8 freeze until full recovery and refuse partial resume; run,[count,policy,timeout_ms]",
     "debug-delta-recover": "Load the recovery Anchor Stone and clear the partial-state guard; run",
-    "debug-frame-advance": "Advance native DOS completed renderer frames without recording; run,[frames,timeout_ms]",
-    "debug-frame-inputs": "Apply physical keyboard edges at a stopped frame boundary; run,edges",
-    "debug-timeline-start": "Start bounded native frame/input history with full or lossless delta retention; run,[max_frames,max_bytes,max_state_bytes,max_image_bytes,max_captures,storage_mode,keyframe_interval]",
+    "debug-workspace-status": "Inspect the native DOS private directory workspace and last sealed generation; run",
+    "debug-workspace-files": "Inspect sealed base/effective/diff file generations; run,[generation,view]",
+    "debug-workspace-read": "Read a file from a retained DOS workspace generation; run,path,[generation]",
+    "debug-workspace-seal": "Save a complete native VM/C:/D: checkpoint and seal its committed FAT generation; run,[name,timeout_ms]",
+    "debug-workspace-export": "Export a coherently admitted sealed file to a new exclusive destination; run,path,new_destination,[generation]",
+    "debug-workspace-keep": "Keep a witnessed new sealed output without replacing original files; run,path,new_destination,[generation]",
+    "debug-workspace-edit": "Stage a new immutable workspace generation without changing the live VM; run,generation,operation,[path,data_hex,offset,size,destination,expected_sha256,timeout_ms]",
+    "debug-workspace-save-output": "Capture and export caller-attested closed/flushed output from a qualified stopped FreeDOS workspace; run,path,new_destination,closed_and_flushed,[timeout_ms]",
+    "debug-workspace-provenance-start": "Arm native evidence for one root D: save; run,path,[mode,temporary_path,predecessor,timeout_ms]",
+    "debug-workspace-provenance-status": "Inspect the owned native guest-create ledger and optional keep policy; run,[timeout_ms]",
+    "debug-workspace-provenance-capture": "Seal and verify native guest-create evidence against exact FAT bytes; run,[timeout_ms]",
+    "debug-workspace-provenance-stop": "Persist and disarm the native guest-create observer; run,[timeout_ms]",
+    "debug-workspace-keep-policy": "Opt in one witnessed save path to versioned keeps at explicit seals; run,path,directory,[mode,temporary_path,predecessor,safe_stop,timeout_ms]",
+    "debug-workspace-keep-policy-enabled": "Enable or disable a host keep policy independently of guest rewind; run,policy,enabled,[timeout_ms]",
+    "freedos-runtime-info": "Verify a selected FreeDOS runtime component; [path], or FDISBULL_FREEDOS_RUNTIME",
+    "freedos-runtime-prepare": "Build a new private FreeDOS runtime component from locked inputs; boot_image,kernel_package,freecom_package,output,mtools_dir",
+    "debug-frame-advance": "Advance native DOS renderer updates or CHIP-8 60 Hz samples without recording; run,[frames,timeout_ms]",
+    "debug-frame-inputs": "Apply owned DOS keyboard or CHIP-8 hex-key edges at a stopped boundary; run,edges; requires frame-key ownership",
+    "debug-timeline-start": "Start bounded full/delta frame history; CHIP-8 deltas require v6 and preserve native 60 Hz samples; run,[storage_mode,keyframe_interval,timeline,timeout_ms]",
     "debug-timeline-status": "Inspect live frame history, cursor, input log, retained bytes and validity; run",
-    "debug-timeline-advance": "Advance and automatically capture each native frame, with optional frame input edges; run,[frames,inputs,timeout_ms]",
-    "debug-timeline-rewind": "Restore a recent full frame state; explicit policy can preserve declared runtime RAM as an experiment; run,[frames,policy]",
+    "debug-timeline-advance": "Capture DOS renderer updates or CHIP-8 60 Hz samples; run,[frames,inputs,timeout_ms]; indexed input requires native frame-key ownership",
+    "debug-timeline-rewind": "Restore full frame state; run,[frames]; DOSBox adds partial policy; QEMU DOS/CHIP-8 add [timeline,point,timeout_ms], frames=0 restores current point",
     "debug-timeline-stop": "Stop automatic recording and release its live cache; run",
     "debug-timeline-pin": "Persist the current cached frame as a durable Anchor Stone without recapture; run,[name]",
     "debug-timeline-image": "Export the current cached guest PNG, including after rewind; run,[name]",
@@ -403,6 +491,13 @@ METHODS = {
     "storage-info": "Read-only storage inventory; project",
     "migrate-external": "Explicitly create an external-storage derivative; project,destination",
     "source-info": "Recorded target size/SHA-256, loader provenance and current availability; [version]",
+    "chip8-intake": "Create a G0 project from an exact pinned classic CHIP-8 corpus member; path,project,manifest_path,manifest_sha256,member,[profile]; no execution",
+    "chip8-intake-info": "Reverify stored CHIP-8 G0 source/member/profile identity; [version,expected_manifest_sha256,expected_intake_sha256]; no execution",
+    "chip8-packages": "Inspect exact versioned CHIP-8 ISA/environment declarations; no project or execution",
+    "chip8-closure-resolve": "Resolve and persist a G0-bound compatible declared package closure; environment,[version,requirements,pins,runtime,include_analysis,expected_intake_sha256]; no execution",
+    "chip8-closure-info": "Reverify an immutable CHIP-8 package closure and its source dependencies; closure,[version,expected_intake_sha256]; no execution",
+    "chip8-source-map": "Map a G0/G1-bound original CHIP-8 source to bounded contexts and typed UDL candidates; closure,[max_instructions,max_states,max_call_depth,version,expected_intake_sha256]; no execution or semantic proof",
+    "chip8-source-map-info": "Reverify a private original-source map, spans, contexts and typed candidates without decoding; mapping,[version,expected_intake_sha256]",
     "source-candidate": "Inspect candidate identity without attaching; path,[version]",
     "bind-source": "Bind exact source or explicitly approved divergent layer; path,[version,approval]",
     "new-source-analysis": "Explicitly create a separate analysis without changing this one; path,destination,[version]",
@@ -421,6 +516,61 @@ METHODS["source-info"] = (
 )
 
 
+METHODS.update({
+    'runtime-objects': 'List source-bound LE objects or mapped regions for runtime relationships; [version]',
+    'runtime-task-start': 'Record a fresh task incarnation; run,external_id,evidence,[version,capture_epoch]',
+    'runtime-task-end': 'End one task incarnation without deleting history; task,evidence',
+    'runtime-map': 'Record a caller-supplied bounded object relationship; task,object_id,object_offset,length,linear_start,evidence,[physical_start,selector,mapping_context,replace]',
+    'runtime-map-snapshot': "Bind only a local snapshot's compared object extent; task,snapshot,object_id,object_offset,length,[snapshot_offset,replace]",
+    'runtime-unmap': 'Close explicitly selected active binding lifetimes; task,bindings,evidence',
+    'runtime-map-checkpoint': "Record the selected task's current binding set; task,evidence",
+    'runtime-map-restore': 'Restore a same-task checkpoint as fresh binding lifetimes; task,checkpoint,evidence',
+    'runtime-mappings': "Inspect a task's current or historical recorded relationships; task,[at,offset,limit]",
+    'runtime-tasks': 'Page persisted task incarnations; [run,offset,limit]',
+    'runtime-resolve': 'Return every matching bounded relationship without guessing ownership; task,address,[space,at,selector]',
+    'runtime-mapping-events': 'Page append-only task mapping history; task,[after,limit]',
+})
+
+RUNTIME_MAPPING_WRITES = frozenset((
+    "runtime-task-start", "runtime-task-end", "runtime-map", "runtime-map-snapshot",
+    "runtime-unmap", "runtime-map-checkpoint", "runtime-map-restore",
+))
+RUNTIME_MAPPING_METHODS = RUNTIME_MAPPING_WRITES | frozenset((
+    "runtime-objects", "runtime-tasks", "runtime-mappings", "runtime-resolve", "runtime-mapping-events",
+))
+
+
+def _runtime_mapping_parameters(method, params):
+    """CLI definitions are bounded data, never a recipe to execute."""
+    if "definition_file" not in params:
+        return params
+    if method not in RUNTIME_MAPPING_WRITES or set(params) != {"definition_file"}:
+        raise ValueError("runtime mapping definition_file cannot be combined with other parameters")
+    path = Path(params["definition_file"])
+    maximum = 4 * 1024 * 1024
+    if not path.is_file() or path.stat().st_size > maximum:
+        raise ValueError("expected one runtime mapping JSON definition file at most 4 MiB")
+    with path.open("rb") as stream:
+        raw = stream.read(maximum + 1)
+    if len(raw) > maximum:
+        raise ValueError("runtime mapping definition exceeds 4 MiB")
+    def unique(pairs):
+        result = {}
+        for name, value in pairs:
+            if name in result:
+                raise ValueError("duplicate runtime mapping definition key: " + name)
+            result[name] = value
+        return result
+    def finite(value):
+        raise ValueError("nonfinite runtime mapping definition value: " + value)
+    definition = json.loads(raw.decode("utf-8"), object_pairs_hook=unique, parse_constant=finite)
+    if not isinstance(definition, dict):
+        raise ValueError("runtime mapping definition must be a JSON object")
+    if "project" in definition or "definition_file" in definition:
+        raise ValueError("runtime mapping definition cannot override project or definition_file")
+    return definition
+
+
 def source_catalog_request(method, params):
     """Select the source-catalog API only when its catalog argument is present."""
     return (
@@ -436,6 +586,11 @@ def invoke(method, params, debugger=None):
     if not isinstance(params, dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method == "chip8-packages":
+        from .chip8_packages import catalog
+        if p:
+            raise ValueError("chip8-packages accepts no parameters")
+        return catalog()
     if source_catalog_request(method, p):
         from .source_api import invoke as source_invoke
 
@@ -618,6 +773,26 @@ def invoke(method, params, debugger=None):
         from .capabilities import capabilities
 
         return capabilities(**p)
+    if method == "dos-profile":
+        from .qemu_dos import prepare_dos_profile
+
+        return prepare_dos_profile(**p)
+    if method == "dos-migration":
+        from .dos_migration import migration_status
+
+        return migration_status(**p)
+    if method == "freedos-runtime-info":
+        from .freedos_runtime import runtime_info
+
+        return runtime_info(**p)
+    if method == "freedos-runtime-prepare":
+        import subprocess
+        from .freedos_runtime import prepare_runtime
+
+        try:
+            return prepare_runtime(**p)
+        except subprocess.SubprocessError as error:
+            raise ValueError("FreeDOS runtime preparation failed: " + str(error)) from error
     if method in ("macos-snapshot", "macos-session", "macos-session-recover"):
         from .macos_capture import NativeCapture
 
@@ -958,6 +1133,10 @@ def invoke(method, params, debugger=None):
     project = p.pop("project", None)
     if not project:
         raise ValueError("project path is required")
+    if method in RUNTIME_MAPPING_METHODS:
+        p = _runtime_mapping_parameters(method, p)
+        with Project(project) as db:
+            return getattr(db, method.replace("-", "_"))(**p)
     if method == "storage-info":
         from .target_storage import storage_report
 
@@ -1027,6 +1206,10 @@ def invoke(method, params, debugger=None):
         "debug-experiment-info",
         "debug-promote-code",
         "debug-trace-view",
+        "debug-compare-runtime-code",
+        "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
     ):
         if debugger is None:
             raise ValueError(
@@ -1039,6 +1222,11 @@ def invoke(method, params, debugger=None):
             raise ValueError("path is required for import")
         with Project.create(project, binary, **p) as db:
             return db.status()
+    if method == "chip8-intake":
+        from .chip8_intake import create_intake
+
+        with create_intake(project, **p) as db:
+            return db.chip8_intake_info()
     with Project(project) as db:
         if method in (
             "memory-snapshot-info",
@@ -1078,9 +1266,10 @@ def invoke(method, params, debugger=None):
             return getattr(db, method.replace("-", "_"))(**p)
         if method in BLOCK_METHODS:
             from .udc_api import invoke as invoke_block
-
-            return invoke_block(db, method, p)
-        if method in ("source-info", "source-candidate", "bind-source"):
+            return invoke_block(db,method,p)
+        if method in ("source-info", "source-candidate", "bind-source", "chip8-intake-info",
+                      "chip8-closure-resolve", "chip8-closure-info", "chip8-source-map",
+                      "chip8-source-map-info"):
             return getattr(db, method.replace("-", "_"))(**p)
         if method == "new-source-analysis":
             p["project"] = p.pop("destination")
@@ -1105,6 +1294,10 @@ def invoke(method, params, debugger=None):
             "debug-experiment-info",
             "debug-promote-code",
             "debug-trace-view",
+            "debug-compare-runtime-code",
+            "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
             "runtime-version-info",
         ):
             return getattr(db, method.replace("-", "_"))(**p)
@@ -1360,9 +1553,12 @@ def respond(request, default_project=None, debugger=None):
                 "macos-session",
                 "macos-session-recover",
                 "capabilities",
+                "dos-profile",
+                "dos-migration",
                 "media-modules",
                 "format-modules",
                 "intake-inventory",
+                "chip8-packages",
                 "file-identify",
                 "smk-frame",
                 "media-inspect",
@@ -1957,6 +2153,22 @@ def parser():
     c.add_argument("--analyze-headless")
     c.add_argument("--lldb")
     c.add_argument("--java")
+    c = sub.add_parser("dos-profile", help=METHODS["dos-profile"])
+    c.add_argument("boot_image")
+    c.add_argument("--cpu", choices=["486", "max"], default="486")
+    c.add_argument("--memory-mib", type=int, default=32)
+    c = sub.add_parser("dos-migration", help=METHODS["dos-migration"])
+    c.add_argument("--details", action="store_true")
+    c.add_argument("--surface")
+    c.add_argument("--slice")
+    c = sub.add_parser("freedos-runtime-info", help=METHODS["freedos-runtime-info"])
+    c.add_argument("--path", help="Component directory; defaults to FDISBULL_FREEDOS_RUNTIME")
+    c = sub.add_parser("freedos-runtime-prepare", help=METHODS["freedos-runtime-prepare"])
+    c.add_argument("boot_image")
+    c.add_argument("kernel_package")
+    c.add_argument("freecom_package")
+    c.add_argument("output", help="New private component directory")
+    c.add_argument("--mtools-dir", required=True)
     c = sub.add_parser("macos-snapshot", help=METHODS["macos-snapshot"])
     c.add_argument("bundle_id")
     c = sub.add_parser("macos-session", help=METHODS["macos-session"])
@@ -2159,13 +2371,15 @@ def parser():
     c.add_argument("--max-depth", type=int, default=32)
     c = sub.add_parser("doctor", help=METHODS["doctor"])
     c.add_argument(
-        "--backend", choices=["dosbox", "dosbox-qemu", "wine-qemu"], required=True
+        "--backend", choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu"], required=True
     )
     c.add_argument("--executable", required=True)
     c.add_argument("--kernel")
     c.add_argument("--initramfs")
     c.add_argument("--output")
     c.add_argument("--boot-timeout-ms", type=int, default=240000)
+    c.add_argument("--qemu-transport", choices=["unix", "pipe"])
+    c.add_argument("--qemu-firmware")
     c = sub.add_parser("preflight", help=METHODS["preflight"])
     c.add_argument("--expectations", required=True)
     c.add_argument("--output")
@@ -2199,34 +2413,50 @@ def parser():
     c = sub.add_parser("qpi-report", help=METHODS["qpi-report"])
     c.add_argument("path")
     c.add_argument("--include-pages", action="store_true")
-    c = sub.add_parser("desqview-profile", help=METHODS["desqview-profile"])
-    c.add_argument("boot_image")
-    c.add_argument("--program", default=r"\DV\DV.EXE")
-    c.add_argument("--module", dest="modules", action="append")
-    c.add_argument("--qemm", action="store_true")
-    c.add_argument("--startup")
-    c = sub.add_parser("desqview-probe", help=METHODS["desqview-probe"])
-    c.add_argument("output")
-    c.add_argument("--mode", choices=["file", "breakpoint"], default="file")
-    c.add_argument("--yields", type=int, default=0)
-    c.add_argument("--nonce")
-    c = sub.add_parser("desqview-report", help=METHODS["desqview-report"])
-    c.add_argument("path")
-    c = sub.add_parser(
-        "desqview-module-inspect", help=METHODS["desqview-module-inspect"]
-    )
-    c.add_argument("path")
-    c.add_argument("--expected-type")
-    c.add_argument("--expected-version", type=lambda value: int(value, 0))
-    for name in (
-        "memory-snapshot-info",
-        "memory-search-start",
-        "memory-search-refine",
-        "memory-search-results",
-        "memory-edit-plan",
-        "memory-rule-create",
-        "memory-rule-info",
-    ):
+    c = sub.add_parser('desqview-profile', help=METHODS['desqview-profile'])
+    c.add_argument('boot_image')
+    c.add_argument('--program', default=r'\DV\DV.EXE')
+    c.add_argument('--module', dest='modules', action='append')
+    c.add_argument('--qemm', action='store_true')
+    c.add_argument('--startup')
+    c = sub.add_parser('desqview-probe', help=METHODS['desqview-probe'])
+    c.add_argument('output')
+    c.add_argument('--mode', choices=['file','breakpoint'], default='file')
+    c.add_argument('--yields', type=int, default=0)
+    c.add_argument('--nonce')
+    c = sub.add_parser('desqview-report', help=METHODS['desqview-report'])
+    c.add_argument('path')
+    c = sub.add_parser('desqview-module-inspect', help=METHODS['desqview-module-inspect'])
+    c.add_argument('path')
+    c.add_argument('--expected-type')
+    c.add_argument('--expected-version', type=lambda value: int(value,0))
+    for name in sorted(RUNTIME_MAPPING_METHODS):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument('project')
+        if name in RUNTIME_MAPPING_WRITES:
+            c.add_argument('--definition-file', required=True,
+                           help='UTF-8 JSON object containing operation parameters; at most4MiB')
+        elif name == 'runtime-objects':
+            c.add_argument('--version', type=int)
+        elif name == 'runtime-tasks':
+            c.add_argument('--run')
+            c.add_argument('--offset', type=int, default=0)
+            c.add_argument('--limit', type=int, default=100)
+        else:
+            c.add_argument('task')
+            if name == 'runtime-mapping-events':
+                c.add_argument('--after', type=int, default=0)
+                c.add_argument('--limit', type=int, default=100)
+            else:
+                c.add_argument('--at', type=int)
+            if name == 'runtime-mappings':
+                c.add_argument('--offset', type=int, default=0)
+                c.add_argument('--limit', type=int, default=256)
+            if name == 'runtime-resolve':
+                c.add_argument('address', type=lambda value: int(value,0))
+                c.add_argument('--space', choices=['linear','physical','preferred','selector'], default='linear')
+                c.add_argument('--selector', type=lambda value: int(value,0))
+    for name in ('memory-snapshot-info','memory-search-start','memory-search-refine','memory-search-results','memory-edit-plan','memory-rule-create','memory-rule-info'):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("project")
         c.add_argument(
@@ -2327,38 +2557,37 @@ def parser():
     )
     c.add_argument("project")
     c.add_argument("--executable", required=True)
-    c.add_argument("--game-dir", required=True)
-    c.add_argument(
-        "--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB"
-    )
+    c.add_argument("--game-dir", help="Target directory; qemu-dos defaults to the captured caller workspace")
+    c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
-    c.add_argument(
-        "--guest-profile",
-        choices=["qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
-        help="Admit and pin a QEMM/DESQview raw DOS boot image (qemu-machine only; JSON accepts an explicit prepared profile)",
-    )
+    c.add_argument("--guest-profile", choices=["dos", "dos-pc-v1", "qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
+                   help="Admit and pin a DOS/QEMM/DESQview boot image (native QEMU only; dos profile uses qemu-dos)")
+    c.add_argument("--qemu-transport", choices=["unix", "pipe"],
+                   help="Native QEMU control transport; pipe needs no Unix sockets")
+    c.add_argument("--qemu-firmware", help="Explicit QEMU firmware directory (-L), recorded in runtime identity")
+    c.add_argument("--qemu-clock", choices=["standard", "instruction", "virtual"],
+                   help="Explicit native clock profile; virtual requires the fDisBull QEMU clock extension")
+    c.add_argument("--qemu-audio", choices=["off", "pc-speaker"],
+                   help="Explicit native audio profile; pc-speaker requires virtual clock and audio extension")
+    c.add_argument("--qemu-retrace", choices=["standard", "precise"],
+                   help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
+    c.add_argument("--qemu-checkpoint-tool",
+                   help="Explicit qemu-img executable for native machine and DOS process checkpoints")
+    c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
+    c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
+    c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")
+    c.add_argument("--dos-arguments", help="Exact CP437 command-tail string for the DOS program, including any leading space")
+    c.add_argument("--freedos-runtime", help="Versioned minimal FreeDOS component; default selector FDISBULL_FREEDOS_RUNTIME")
+    c.add_argument("--dos-directory", help="Workspace root; defaults to game_dir, or the captured caller workspace when game_dir is omitted")
+    c.add_argument("--dos-file-mode", choices=["checkpointed", "live"], help="Native file-layer mode; live mode currently refuses")
+    c.add_argument("--dos-generation", help="Activate a retained staged workspace generation at cold launch")
     c.add_argument(
         "--backend",
-        choices=[
-            "dosbox",
-            "dosbox-qemu",
-            "wine-qemu",
-            "ida-wine-qemu",
-            "qemu-machine",
-            "wine-ne",
-            "scummvm-agi",
-            "scummvm-gob",
-            "scummvm-kyra",
-        ],
+        choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "qemu-chip8", "wine-ne",
+                 "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
     )
-    c.add_argument(
-        "--game-id",
-        help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol",
-    )
-    c.add_argument(
-        "--language",
-        help="Explicit Gob language code, for example us (English US) or it",
-    )
+    c.add_argument("--game-id", help="Explicit ScummVM engine/game ID")
+    c.add_argument("--language", help="Explicit Gob language code")
     c.add_argument("--platform", help="Explicit Gob game platform, for example dos")
     c.add_argument(
         "--remote-server",
@@ -2396,6 +2625,10 @@ def parser():
         "debug-experiment-info",
         "debug-promote-code",
         "debug-trace-view",
+        "debug-compare-runtime-code",
+        "debug-compare-runtime-functions",
+        "debug-compare-runtime-modules",
+        "debug-recover-loader-module",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
@@ -2409,6 +2642,33 @@ def parser():
         elif name == "debug-trace-view":
             c.add_argument("artifact")
             c.add_argument("--version", type=int, required=True)
+        elif name == "debug-recover-loader-module":
+            c.add_argument("dll_project")
+            c.add_argument("--evidence", type=json.loads, required=True)
+            c.add_argument("--environment-contract", type=json.loads, required=True)
+            c.add_argument("--loader-source", help="Private original Wine ntdll.dll for captured dispatch proofs")
+            c.add_argument("--timeout-ms", type=int, default=30000)
+        elif name in ("debug-compare-runtime-functions", "debug-compare-runtime-modules"):
+            c.add_argument("baseline_version", type=int)
+            c.add_argument("layer_version", type=int)
+            c.add_argument("--baseline-paths", type=json.loads, required=True)
+            c.add_argument("--layer-paths", type=json.loads, required=True)
+            c.add_argument("--contract", type=json.loads, required=True)
+            c.add_argument("--timeout-ms", type=int,
+                           default=10000 if name == "debug-compare-runtime-modules" else 5000)
+            if name == "debug-compare-runtime-functions":
+                c.add_argument("--execution-mode", choices=("stable_leaf", "single_threaded_calls_smc"),
+                               default="stable_leaf")
+        elif name == "debug-compare-runtime-code":
+            c.add_argument("baseline_version", type=int)
+            c.add_argument("layer_version", type=int)
+            c.add_argument("baseline_trace")
+            c.add_argument("layer_trace")
+            c.add_argument("--contract", type=json.loads, required=True)
+            c.add_argument("--correspondence", type=json.loads)
+            c.add_argument("--baseline-memory", type=json.loads)
+            c.add_argument("--layer-memory", type=json.loads)
+            c.add_argument("--timeout-ms", type=int, default=1000)
         elif name == "debug-promote-code":
             c.add_argument("artifact")
             c.add_argument("--label", default="runtime interpretation")
@@ -2657,6 +2917,46 @@ def parser():
                 type=json.loads,
                 help="Exact source-candidate receipt, only after user approval of this base and candidate",
             )
+    c = sub.add_parser("chip8-intake", help=METHODS["chip8-intake"])
+    c.add_argument("path")
+    c.add_argument("project")
+    c.add_argument("--manifest-path", required=True)
+    c.add_argument("--manifest-sha256", required=True)
+    c.add_argument("--member", required=True)
+    c.add_argument("--profile", choices=["chip8-classic-pilot-default-v1"])
+    c = sub.add_parser("chip8-intake-info", help=METHODS["chip8-intake-info"])
+    c.add_argument("project")
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-manifest-sha256")
+    c.add_argument("--expected-intake-sha256")
+    sub.add_parser("chip8-packages", help=METHODS["chip8-packages"])
+    c = sub.add_parser("chip8-closure-resolve", help=METHODS["chip8-closure-resolve"])
+    c.add_argument("project")
+    c.add_argument("--environment", required=True)
+    c.add_argument("--version", type=int)
+    c.add_argument("--requirements", type=json.loads)
+    c.add_argument("--pins", type=json.loads)
+    c.add_argument("--runtime", type=json.loads)
+    c.add_argument("--include-analysis", action="store_true")
+    c.add_argument("--expected-intake-sha256")
+    c = sub.add_parser("chip8-closure-info", help=METHODS["chip8-closure-info"])
+    c.add_argument("project")
+    c.add_argument("closure")
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-intake-sha256")
+    c = sub.add_parser("chip8-source-map", help=METHODS["chip8-source-map"])
+    c.add_argument("project")
+    c.add_argument("closure")
+    c.add_argument("--max-instructions", type=int)
+    c.add_argument("--max-states", type=int)
+    c.add_argument("--max-call-depth", type=int)
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-intake-sha256")
+    c = sub.add_parser("chip8-source-map-info", help=METHODS["chip8-source-map-info"])
+    c.add_argument("project")
+    c.add_argument("mapping")
+    c.add_argument("--version", type=int)
+    c.add_argument("--expected-intake-sha256")
     c = sub.add_parser(
         "import", help="create project from executable or explicit raw code"
     )
@@ -2664,8 +2964,8 @@ def parser():
     c.add_argument("project")
     c.add_argument(
         "--profile",
-        choices=["cortex-m"],
-        help="explicit Cortex-M flash with Armv7-M vectors (not Armv8-M Security)",
+        choices=["cortex-m", "chip8-classic-pilot-default-v1"],
+        help="explicit Cortex-M vector image or bounded classic CHIP-8 ROM profile",
     )
     c.add_argument(
         "--vector-count",
@@ -2674,7 +2974,7 @@ def parser():
     )
     c.add_argument(
         "--arch",
-        choices=["x86", "arm64", "thumb"],
+        choices=["x86", "arm64", "thumb", "chip8"],
         help="explicit raw mode (bypasses executable loader)",
     )
     c.add_argument("--bits", type=int, choices=[16, 32, 64])

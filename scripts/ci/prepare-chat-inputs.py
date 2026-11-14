@@ -111,6 +111,38 @@ def full_windows_base(manifest, root):
     return path
 
 
+def extended_windows_inputs(manifest, root, output, env):
+    """Bind the authored fixtures; legacy PE64-only output requires an explicit choice."""
+    acceptance = env.get('FDISBULL_CHAT_WINDOWS_ACCEPTANCE', 'pe64-pe32-win16')
+    if acceptance == 'pe64':
+        return None, []
+    if acceptance != 'pe64-pe32-win16':
+        raise ValueError('Unknown chat Windows acceptance profile')
+    ref = (manifest.get('retained_base') or {}).get('pe32_fixture')
+    if not isinstance(ref, dict) or ref.get('path') != 'native-evidence/pe/selftest32.exe':
+        raise ValueError('Source-bound prepared PE32 fixture required')
+    pe32 = root / ref['path']
+    if not pe32.is_file() or identity(pe32) != {k: ref.get(k) for k in ('sha256', 'size')}:
+        raise ValueError('Source-bound prepared PE32 fixture missing or changed')
+    supplied = env.get('FDISBULL_NE_AUTHORED_FIXTURE')
+    if not supplied:
+        raise ValueError('FDISBULL_NE_AUTHORED_FIXTURE is required for extended Windows acceptance')
+    win16 = Path(supplied)
+    if not win16.is_absolute() or not win16.is_file():
+        raise ValueError('Authored Win16 fixture must be an absolute regular file')
+    oracle = load_module('chat_win16_oracle', root / 'tests/offline_windows_oracles.py')
+    profile = oracle.win16_profile(win16.read_bytes())
+    profile_path = output / 'win16-profile.json'
+    with profile_path.open('x') as stream:
+        json.dump(profile, stream, indent=2)
+        stream.write('\n')
+    return acceptance, [
+        {'source': str(pe32.resolve()), 'destination': 'fixtures/selftest32.exe', 'role': 'pe32_fixture'},
+        {'source': str(win16.resolve()), 'destination': 'fixtures/ORACLE.EXE', 'role': 'win16_fixture'},
+        {'source': str(profile_path.resolve()), 'destination': 'fixtures/win16-profile.json', 'role': 'win16_profile'},
+    ]
+
+
 def main():
     if sys.platform != 'linux' or sys.version_info[:3] != (3, 13, 5):
         raise ValueError('Linux CPython 3.13.5 required')
@@ -135,6 +167,7 @@ def main():
     tool_source = only((ROOT / 'dist').glob('fdisbull-*-tool.zip'), 'tool source ZIP')
     CHAT.mkdir(parents=True, exist_ok=True)
     EVIDENCE.mkdir(parents=True, exist_ok=True)
+    windows_acceptance, extended_inputs = extended_windows_inputs(manifest, ROOT, CHAT, os.environ)
     strip = Path('/usr/bin/strip')
     strip_version = subprocess.run([str(strip), '--version'], check=True, capture_output=True, text=True).stdout.splitlines()[0]
     copies = CHAT / 'native'
@@ -181,6 +214,7 @@ def main():
               item(ROOT/'native-evidence/layers/backend-identity.json','receipts/dosbox.json','dosbox_receipt'),
               item(ROOT/'native-evidence/pe/backend-identity.json','receipts/qemu.json','qemu_receipt'),
               item(ROOT/'native-evidence/pe/runtime-packages.txt','receipts/wine-packages.txt','wine_receipt')]
+    inputs.extend(extended_inputs)
     for entry in manifest['firmware']:
         p = ROOT / entry['path']
         relative = p.relative_to(ROOT / 'native-evidence/pe/firmware').as_posix()
@@ -197,6 +231,8 @@ def main():
               'identities':{'source_commit':sha, 'test_source_commit':sha, 'python':'3.13.5',
                             'qemu':'9.2.4', 'wine':wine, 'version':version['fdisbull']},
               'wheel_versions':version, 'inputs':inputs}
+    if windows_acceptance is not None:
+        config['windows_acceptance'] = windows_acceptance
     (CHAT / 'stage').mkdir()
     (CHAT / 'config.json').write_text(json.dumps(config, indent=2) + '\n')
 

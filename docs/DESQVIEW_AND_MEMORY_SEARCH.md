@@ -51,13 +51,39 @@ no vendor instructions.
 
 ### Memory identity and edit behavior
 
-Every linear snapshot requires an explicit `task_id` representing one observed
-task lifetime. fDisBull includes the full region's 386 page translations in
+Every linear base-view snapshot requires an explicit `task_id` representing one
+observed task lifetime; this legacy label is caller-declared. fDisBull includes the full region's 386 page translations in
 its identity. Reusing CR3 while changing a PTE therefore invalidates a search;
 accessed/dirty activity alone does not. A state restore also changes the capture
 epoch. Physical snapshots have physical-address identity, which still does not
 identify an application allocation. Callers must end a search when its task or
 allocation dies, including reuse that has the same page mapping.
+
+The candidate native QEMU interface adds `memory_snapshot(..., view='base' |
+'ram' | 'execute')`; `base` is the legacy debugger view. An explicit `ram` or
+`execute` view in a native task-private session requires the selected task's
+actual registered native `task_id`, not a caller-chosen label. Its capture binds
+the native task lifetime and selected view, backing and generation to the live
+run and epoch. `execute` is for inspection; rule edits require the `ram` view.
+A different selected task, changed view identity or stale epoch must refuse
+before a rule tick or write. A checkpoint restore changes ownership: retain the
+old rule as evidence, then take a fresh snapshot and create a new rule rather
+than replaying the old one.
+
+A native rule applies verified guarded edits as immutable rule-owned RAM
+overlays above the authored task RAM and fetch layers; the other task's private
+view and the shared base are separate. Each tick uses fresh values and records
+its result. On the explicit virtual clock, the first tick is immediate and
+subsequent intervals use bounded native timer ownership. An encountered hook is
+dispatched once and stops the interval without an extra tick; other nonordinary
+stops also preserve their actual cause and do not trigger replay. This remains
+host-assisted control, not unattended scheduling or vendor multitasker parity.
+A bounded authored native IRQ witness passed locally: explicit physical RAM
+view, guest-mutated A private value and rule-overlay replacement, unchanged B
+and shared base, and cold restore retaining IRQ state, hooks and layers. The
+old rule refused after restore and a fresh rule succeeded above its retained
+overlay. A fresh bounded regression passed 1,159 tests across 72 files with no
+failures, errors or skips. This does not establish vendor multitasker parity.
 
 Searches accept 1-, 2-, 4- or 8-byte integers, signed/unsigned interpretation,
 little/big endian, explicit stride and a fixed display bias. For example,
@@ -65,7 +91,8 @@ little/big endian, explicit stride and a fixed display bias. For example,
 interpretation, with no silent wrapping or automatic alternation between
 encodings. Start separate searches when comparing encoding hypotheses.
 
-The maximum snapshot is 16 MiB. Candidate and interval limits bound search
+The maximum base-view snapshot is 16 MiB; explicit native RAM/execute views
+are limited to 64 KiB. Candidate and interval limits bound search
 work and serialized state; callers can select smaller regions or a larger
 stride. All snapshots, search states, edit plans and rule progress use the
 existing private debugger artifact store. Their hashes detect inconsistency;

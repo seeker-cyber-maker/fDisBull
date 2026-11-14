@@ -30,9 +30,11 @@ def ldd_dependencies(path, ldd):
         out = run([str(ldd), str(path)])
     except subprocess.CalledProcessError as exc:
         text = (exc.stdout or '') + (exc.stderr or '')
-        if 'statically linked' in text or 'not a dynamic executable' in text:
+        if text.strip() in ('statically linked', 'not a dynamic executable'):
             return {}
         raise ValueError(f'ldd failed for {path}: {text.strip()}') from exc
+    if out.strip() == 'statically linked':
+        return {}
     found = {}
     for line in out.splitlines():
         line = line.strip()
@@ -98,7 +100,7 @@ def prepare(config, stage, resolver=ldd_dependencies):
     roles = {}
     origins = {}
     def add(source, dest, role='payload'):
-        dest = str(kit.destination(dest))
+        dest = str(kit.destination(dest, role=role))
         source = Path(source).resolve(strict=True)
         if not source.is_file():
             raise ValueError(f'not a regular input: {source}')
@@ -203,6 +205,8 @@ def prepare(config, stage, resolver=ldd_dependencies):
                                       'strip_version': strip_version, 'transformations': transformations}, indent=2) + '\n')
     inventory = {'schema': 'fdisbull-chat-offline-inventory-v1', 'profile': 'shared',
                  'identities': config['identities'], 'wheel_versions': pins, 'files': entries}
+    if config.get('windows_acceptance') is not None:
+        inventory['windows_acceptance'] = config['windows_acceptance']
     output = stage / 'inventory.json'
     output.write_text(json.dumps(inventory, indent=2) + '\n')
     # Validate the full inventory using the same checks as the archive builder.

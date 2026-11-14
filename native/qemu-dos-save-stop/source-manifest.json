@@ -1,0 +1,110 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "opt-in safe-stop selection for native FreeDOS save keeps",
+  "base": {
+    "qemu_version": "10.0.13",
+    "runtime": "native-runtime/guest-write-provenance-runtime",
+    "prerequisite_package": "native/qemu-dos-save-operations",
+    "prerequisite_patch": "native/qemu-dos-save-operations/qemu-10.0.13-fdisbull-dos-save-operations-v2.patch",
+    "prerequisite_patch_sha256": "8d7ac0a56445afe2ad47e9aaaa8977579ce8d1c559616a0f85bf3c5864f23339"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-dos-save-stop-v1.patch",
+    "sha256": "468f3bf0f1adb8f7d9f1dc11b822e983e180d892cbe1573a09a2f91dc583d195",
+    "modified_file_count": 7,
+    "files": [
+      {
+        "path": "qapi/fdisbull-dos-provenance.json",
+        "before_sha256": "e2710ddc9375c3f058b138aab7cd98a07b1341b5f4a14400e7fa8514da9135eb",
+        "after_sha256": "b27ebfb2d8918a7b10b6af964af0b7aa83807cc00c0f08041c357e7f90d51969"
+      },
+      {
+        "path": "target/i386/fdisbull-dos-provenance.c",
+        "before_sha256": "d45254bdbcf2a85a25f4130f996438171f2dad98843f1973c486320dbde576e3",
+        "after_sha256": "5a61ccaae8c42b68c8c73ed7ec48f9f829c2fed51fb97e034768f96c6f17b152"
+      },
+      {
+        "path": "target/i386/fdisbull-dos-provenance.h",
+        "before_sha256": "6a49522ffa0232b9e9b19a2282da75c008ba7ba30ed1859c6392b243c720091a",
+        "after_sha256": "bbd4772d9b09398a5b711574f598de8353d1b7a5171465a5e2eb031cf15fd317"
+      },
+      {
+        "path": "system/runstate.c",
+        "before_sha256": "bfa61480aef35f21dd8a8cac47c2f002875873ec37c1b746f27a3a41a21dbd1a",
+        "after_sha256": "5ddff907e14352c465a42977a05909e96e6d1b5a18ff6763e2cbc8ab2a02f388"
+      },
+      {
+        "path": "system/fdisbull-clock.c",
+        "before_sha256": "d53fcac4515c11972eb4c8976da70f22251f3247cf8aae5a901d2fcbd4feb541",
+        "after_sha256": "9fe6def372de904c8fabfd314c72260ae1b9b6dd596db122eeb4c25495e81398"
+      },
+      {
+        "path": "include/system/fdisbull-clock.h",
+        "before_sha256": "7cf52e4f49129bcda561f46788eae86529b370e271f0714e96fa8e781533f3ad",
+        "after_sha256": "165d8dfa219b50cb9c5f17422d4d5893feed8582edeeca40393d900e6d285c4c"
+      },
+      {
+        "path": "include/system/fdisbull-dos-save-stop.h",
+        "before_sha256": null,
+        "after_sha256": "e89c180a730107c9bb774a5bd32636794a08d746db38d5ef64062d4bf4d294bf"
+      }
+    ],
+    "applied_verification": {
+      "seeded_base_files": 6,
+      "new_files": 1,
+      "base_hashes_unchanged": true,
+      "applied_matches_candidate": true,
+      "receipt": "R/save-stop-patch-replay-receipt.json",
+      "result": "patch applied to an isolated copy containing only its six existing N23 files; all seven patched outputs matched the N24 source hashes"
+    }
+  },
+  "api": {
+    "commands": [
+      "x-fdisbull-set-dos-save-stop",
+      "x-fdisbull-query-dos-save-stop",
+      "x-fdisbull-ack-dos-save-stop"
+    ],
+    "stop_model": "qemu-pc-dos-save-stop-v1",
+    "stop_receipt_api_version": 1,
+    "save_witness_v1_v2_wire_unchanged": true,
+    "vmstate": "native save-witness parent VMState schema version 3, minimum version 3; same-binary N24 restore only",
+    "trigger": "one opt-in stop attempt at a matching completed AH=0Dh return only when the v2 save witness is valid and ready; enabling at an already-ready ledger does not synthesize a stop",
+    "stop_boundary": "the native IRET helper records its return CS:IP/SS:SP and requests cpu_stop_current; the main-loop handler records PAUSED only if that request wins, otherwise records a preempted receipt"
+  },
+  "build": {
+    "runtime": "native-runtime/save-safe-stop-runtime",
+    "source": "native-runtime/save-safe-stop-runtime/qemu-10.0.13",
+    "build_dir": "native-runtime/save-safe-stop-runtime/build-n24",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "../qemu-10.0.13/configure --target-list=x86_64-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../qemu-10.0.13/pc-bios --prefix=<save-safe-stop-runtime>/build-n24/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "environment": {
+      "TMPDIR": "<save-safe-stop-runtime>/tmp-n24"
+    },
+    "build_command": "/Users/tiga/miniconda/bin/ninja -C build-n24 -j4 qemu-system-x86_64",
+    "candidate_binary_sha256": "8af033a259892808dd5b15b524f64145aa17a6dcf3a774dc6e8d2985c31e4d27",
+    "build_log": "R/native-runtime/save-safe-stop-runtime/build-n24-02.log",
+    "build_result": "Build 02 compiled and linked successfully after replacing a target-specific include in common runstate with a registered callback."
+  },
+  "qualification": {
+    "status": "bounded N24 native save-safe-stop suite passed; broader preservation qualification owned by root",
+    "ci": false,
+    "cross_binary_restore_qualified": false,
+    "native_cases": 12,
+    "native_passed": 12,
+    "native_failures": 0,
+    "native_skipped": 0,
+    "native_receipt": "R/save-stop-native-01.log",
+    "native_duration_seconds": 23.48,
+    "native_scope": "one native save-observer flow with opt-in safe stop at completed AH=0Dh; BP/hook conflict precedence, pending IRET checkpoint behavior, script/trial/internal-path suppression, and journal failure handling."
+  },
+  "limits": [
+    "Safe stop is disabled by default and applies only to explicit public workspace save-keep runs.",
+    "A stop attempt is one-shot. A settled receipt must be persisted and ACKed before reconfiguration; repeated eligible flush before ACK invalidates auxiliary stop control.",
+    "A pending stop handoff is not checkpointable. Settled consumed/preempted receipts and policy are preserved in N24 VMState; a restored receipt is not replayed.",
+    "The native receipt records the exact returned source location but does not claim guest instruction retirement beyond the IRET boundary.",
+    "Preexisting debugger, single-step, breakpoint, active clock-budget, or display-frame stop ownership is preserved and reported as preemption/conflict.",
+    "Same-binary N24 restore only; no N23-to-N24 or cross-binary native VMState compatibility claim.",
+    "No hosted CI, cross-architecture, DOSBox parity, or default automatic keep claim."
+  ]
+}

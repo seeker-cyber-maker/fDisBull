@@ -14,6 +14,44 @@ CREATE TABLE IF NOT EXISTS target_sources(
 
 
 class TargetSourcesMixin:
+    def chip8_source_map(self, closure, max_instructions=256, max_states=2048,
+                         max_call_depth=16, version=None, expected_intake_sha256=None):
+        """Build a bounded original-source map and typed UDL candidates."""
+        from .chip8_source_map import build
+        return build(self, closure, max_instructions=max_instructions,
+                     max_states=max_states, max_call_depth=max_call_depth,
+                     version=version, expected_intake_sha256=expected_intake_sha256)
+
+    def chip8_source_map_info(self, mapping, version=None, expected_intake_sha256=None):
+        """Inspect a pinned source map without decoding or guest execution."""
+        from .chip8_source_map import info
+        return info(self, mapping, version=version,
+                    expected_intake_sha256=expected_intake_sha256)
+
+    def chip8_closure_resolve(self, environment, version=None, requirements=None,
+                             pins=None, runtime=None, include_analysis=False,
+                             expected_intake_sha256=None):
+        """Resolve exact declared ISA/environment dependencies for a G0 source."""
+        from .chip8_packages import resolve
+        return resolve(self, environment=environment, version=version,
+                       requirements=requirements, pins=pins, runtime=runtime,
+                       include_analysis=include_analysis,
+                       expected_intake_sha256=expected_intake_sha256)
+
+    def chip8_closure_info(self, closure, version=None, expected_intake_sha256=None):
+        """Reverify an immutable source-bound package closure without execution."""
+        from .chip8_packages import info
+        return info(self, closure, version=version,
+                    expected_intake_sha256=expected_intake_sha256)
+
+    def chip8_intake_info(self, version=None, expected_manifest_sha256=None,
+                          expected_intake_sha256=None):
+        """Reverify one exact original CHIP-8 corpus intake without execution."""
+        from .chip8_intake import inspect_project
+        return inspect_project(self, version=version,
+                               expected_manifest_sha256=expected_manifest_sha256,
+                               expected_intake_sha256=expected_intake_sha256)
+
     def _external_text(self, value):
         return self.db.store.put(value) if hasattr(self.db, 'store') else value
 

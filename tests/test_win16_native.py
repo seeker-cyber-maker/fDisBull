@@ -160,7 +160,7 @@ def qualify_win16_snake(output,*,qemu,kernel,runtime,fixture,initial,debug_probe
       mark('retained-source-static-ne-entry',entry=project.meta['entry'])
       with project.debugger(qemu,GAME,backend='wine-qemu',kernel=kernel,initramfs=runtime,files=['PROGRAM.EXE','INITIAL.BIN'],window=True,boot_timeout_ms=600000,memory_mib=8192) as session:
        receipt['adapter_sha256']=hashlib.sha256(Path(adapter_source_file).read_bytes()).hexdigest();receipt['runtime_inputs']=session.metadata['runtime_inputs'];receipt['guest_runtime']=session.metadata['guest_runtime'];receipt['qemu_command']=session.rpc.command
-       entry=session.registers();assert entry['project_address']=='ne:2:0xa568' and entry['cpu_mode']=='protected16';assert session.rpc.capabilities['save_states'] is False
+       entry=session.registers();assert entry['project_address']=='ne:2:0xa568' and entry['cpu_mode']=='protected16';assert session.rpc.capabilities['save_states'] is True
        assert session.rpc.capabilities['register_edit'] is True and session.metadata['general_register_writes'] is True
        mark('actual-original-ne-entry',qemu_pid=session.rpc.process.pid,registers=entry,bindings=list(session.bindings.values()))
        if gpr_probe:

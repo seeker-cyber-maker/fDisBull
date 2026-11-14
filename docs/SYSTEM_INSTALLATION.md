@@ -1,4 +1,22 @@
-# fDisBull 0.31.1 — local shared Mac installation
+# System installation
+
+## Current observation (2026-11-14)
+
+Both `/Users/tiga/.local/bin/fdisbull` and `/usr/local/bin/fdisbull` route
+through `/Users/Shared/fDisBull/current`. The selector currently points to
+`releases/0.34.1-3aaac41`; its receipt records version `0.34.1`, source
+`3aaac41b1f73220568fc07b9d53f5ccd4307a242` and status `local_candidate`.
+This differs from immutable tag `v0.34.1` at
+`011f1b8cb281edda208026aee9cdb238b800b2d7`. A version string alone does not
+establish installed release identity. `check_local_install.py` correctly requires
+`active_verified`; this current candidate does not meet that gate.
+
+The intended next release is 0.35.0; source integration and exact-package install
+acceptance remain open. Follow the [release process](RELEASE_PROCESS.md) and
+[current release status](RELEASE_STATUS.md). No installation is performed by
+updating these records.
+
+## Historical: fDisBull 0.31.1 local shared Mac installation
 
 The active selector `/Users/Shared/fDisBull/current` points to
 `/Users/Shared/fDisBull/releases/0.31.1-27b388d`, source

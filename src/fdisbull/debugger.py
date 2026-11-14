@@ -66,6 +66,26 @@ def stamp():
     return now()
 
 
+def _tracking_callback(session, operation, reason, *args):
+    """Observe a stopped session without recursively observing tracker reads."""
+    tracker = getattr(session, '_automatic_runtime_tracker', None)
+    if tracker is None or getattr(session, '_automatic_tracking_callback_active', False):
+        return None
+    session._automatic_tracking_callback_active = True
+    try:
+        return getattr(tracker, operation)(reason, *args)
+    finally:
+        session._automatic_tracking_callback_active = False
+
+
+def _attach_runtime_tracking(session):
+    if getattr(session, '_automatic_runtime_tracker', None) is not None:
+        return
+    from .runtime_tracking import AutomaticRuntimeTracker
+    session._automatic_runtime_tracker = AutomaticRuntimeTracker(session)
+    _tracking_callback(session, 'after_stop', 'session-start')
+
+
 DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
 DEBUG_DDL += SCENE_DDL
@@ -74,19 +94,69 @@ DEBUG_DDL += MACRO_DDL
 
 
 class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemorySearchProjectMixin, SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
-    def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None):
+    def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000, guest_profile=None,
+                transport='unix', firmware=None, clock_profile='standard', audio_profile='off',
+                retrace_profile='standard', checkpoint_tool=None, _on_spawn=None):
         if self.meta['format'] == 'NE':
             raise ValueError('NE static projects cannot launch through the raw machine backend')
         from .qemu_machine import MachineDebugSession
+        checkpoint_options = {} if checkpoint_tool is None else {'checkpoint_tool': checkpoint_tool}
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,
-                                   boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile)
+                                   boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
+                                   transport=transport,firmware=firmware,clock_profile=clock_profile,audio_profile=audio_profile,
+                                   retrace_profile=retrace_profile,_on_spawn=_on_spawn,**checkpoint_options)
 
-    def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
+    def debugger(self, executable, game_dir=None, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
-                 guest_profile=None):
-        if guest_profile is not None and backend != 'qemu-machine':
-            raise ValueError('guest_profile requires the qemu-machine full-system backend')
+                 guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None, qemu_retrace=None,
+                 qemu_checkpoint_tool=None,
+                 dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None,
+                 dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None, loader_mode='entry'):
+        if loader_mode not in ('entry','process-create'):
+            raise ValueError('loader_mode must be entry or process-create')
+        if loader_mode!='entry' and (self.meta['format']!='PE' or self.bits!=64 or backend not in (None,'wine-qemu')):
+            raise ValueError('process-create loader mode requires the native PE64 Wine backend')
+        if game_dir is None:
+            if backend != 'qemu-dos':
+                raise ValueError('This backend requires an explicit game_dir')
+            game_dir = str(Path.cwd().resolve())
+        dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments,
+                               dos_directory, dos_file_mode, freedos_runtime, dos_generation)
+        if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
+            raise ValueError('DOS process boot/staging options require backend=qemu-dos')
+        if backend == 'qemu-chip8':
+            if (any(value is not None for value in
+                    (kernel, initramfs, files, state, remote_server, spatial_mode,
+                     memory_mib, dot_mode, game_id, language, platform, guest_profile,
+                     qemu_transport, qemu_firmware, qemu_clock, qemu_audio, qemu_retrace))
+                    or window or fair_play):
+                raise ValueError('qemu-chip8 uses its explicit headless CPU profile without DOS/PC or device options')
+            from .qemu_chip8 import Chip8DebugSession
+            return Chip8DebugSession(self, executable, rom=Path(game_dir) / self.meta['filename'],
+                version=version, timeout_ms=boot_timeout_ms,
+                checkpoint_tool=qemu_checkpoint_tool, _on_spawn=_on_spawn)
+        if self.meta.get('arch') == 'chip8':
+            raise ValueError('CHIP-8 execution requires explicit backend=qemu-chip8')
+        if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
+            raise ValueError('guest_profile requires a native QEMU full-system backend')
+        if any(value is not None for value in (qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace)) and backend not in ('qemu-machine','qemu-dos'):
+            raise ValueError('qemu_transport, qemu_firmware, qemu_clock, qemu_audio and qemu_retrace require a native QEMU backend')
+        if qemu_checkpoint_tool is not None:
+            if backend not in ('qemu-machine','qemu-dos'):
+                raise ValueError('qemu_checkpoint_tool requires a native QEMU backend')
+            if self.meta['format'] != 'raw' and not (backend == 'qemu-dos' and self.meta['format'] in ('COM', 'MZ')):
+                raise ValueError('Native QEMU checkpoints require a raw machine or DOS COM/MZ process')
+        if qemu_transport is not None and qemu_transport not in ('unix','pipe'):
+            raise ValueError('qemu_transport must be unix or pipe')
+        if qemu_clock is not None and qemu_clock not in ('standard','instruction','virtual'):
+            raise ValueError('qemu_clock must be standard, instruction or virtual')
+        if qemu_audio is not None:
+            from .qemu_audio import machine_audio_configuration
+            machine_audio_configuration(qemu_audio,qemu_clock or 'standard')
+        if qemu_retrace is not None:
+            from .qemu_retrace import machine_retrace_configuration
+            machine_retrace_configuration(qemu_retrace,qemu_clock or 'standard')
         if dot_mode is not None:
             if type(dot_mode) is not bool:raise ValueError('dot_mode must be boolean')
             if window and not dot_mode:raise ValueError('Conflicting window and dot_mode options')
@@ -137,11 +207,31 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             raise ValueError('window must be boolean')
         if window and backend not in (None,'dosbox','wine-qemu'):
             raise ValueError('dot-mode requires native DOSBox or a Windows spectator backend')
-        if backend=='qemu-machine':
+        if backend in ('qemu-machine','qemu-dos'):
             if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
                 raise ValueError('Raw boot launch uses its project image without guest-controller options')
-            return self.machine(executable,boot_image=Path(game_dir)/self.meta['filename'],version=version,
-                                boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile)
+            options=dict(boot_image=Path(game_dir)/self.meta['filename'],version=version,
+                         boot_timeout_ms=boot_timeout_ms,guest_profile=guest_profile,
+                         transport=qemu_transport or 'unix',firmware=qemu_firmware,
+                         clock_profile='standard' if qemu_clock is None else qemu_clock,
+                         audio_profile='off' if qemu_audio is None else qemu_audio,
+                         retrace_profile='standard' if qemu_retrace is None else qemu_retrace,_on_spawn=_on_spawn)
+            if qemu_checkpoint_tool is not None:
+                options['checkpoint_tool'] = qemu_checkpoint_tool
+            if backend=='qemu-dos':
+                if self.meta['format'] in ('COM', 'MZ'):
+                    from .qemu_dos_process import QemuDOSProcessSession
+                    options['boot_image'] = dos_boot_image
+                    return QemuDOSProcessSession(self, executable, game_dir,
+                        mcopy=dos_mcopy, startup_batch='FDAUTO.BAT' if dos_startup_batch is None else dos_startup_batch,
+                        arguments='' if dos_arguments is None else dos_arguments,
+                        directory=dos_directory, file_mode=dos_file_mode, freedos_runtime=freedos_runtime,
+                        generation=dos_generation, **options)
+                if any(value is not None for value in dos_process_options):
+                    raise ValueError('DOS process options require a COM/MZ project; raw boot uses its own source disk')
+                from .qemu_dos import QemuDOSSession
+                return QemuDOSSession(self,executable,**options)
+            return self.machine(executable,**options)
         if backend=='dosbox-qemu':
             if kernel is None or initramfs is None or state is not None or remote_server is not None:
                 raise ValueError('DOSBox/QEMU launch requires kernel and prepared initramfs; load native states after launch')
@@ -161,7 +251,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                 raise ValueError('PE32/PE64 Wine/QEMU launch requires kernel and prepared initramfs')
             from .wine_debugger import PEDebugSession
             return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib)
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,window=window,memory_mib=memory_mib,
+                loader_mode=loader_mode)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
@@ -217,6 +308,32 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if metadata.get('format')=='fdisbull-qemu-native-1':
             from .wine_state import state_info
             return state_info(self,artifact)
+        if metadata.get('format') in ('fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1'):
+            from .qemu_dos_checkpoint import _json, _sha, _unarchive
+            machine, bundle = _unarchive(data)
+            if metadata.get('sidecar_sha256') != _sha(_json(bundle)):
+                raise ValueError('Process checkpoint sidecar identity differs')
+            if metadata['format'] == 'fdisbull-qemu-dos-workspace-qcow2-v1':
+                from .qemu_workspace import validate_workspace
+                if (bundle.get('format') != metadata['format']
+                        or metadata.get('workspace_state_present') is not True
+                        or metadata.get('workspace') != bundle.get('workspace')):
+                    raise ValueError('File-aware checkpoint metadata differs')
+                validate_workspace(self, bundle.get('workspace'), row['version'])
+            return dict(artifact=artifact, version=row['version'], sha256=row['sha256'], size=len(data),
+                        metadata=metadata,
+                        components=[dict(name='machine.qcow2', size=len(machine)),
+                                    dict(name='process.json', size=len(_json(bundle)))],
+                        scope='stopped DOS process, private disk, layers and debugger controls')
+        qemu_raw = metadata.get('format') == 'fdisbull-qemu-raw-qcow2-v1'
+        qemu_dos_entry = metadata.get('format') == 'fdisbull-qemu-dos-entry-qcow2-v1'
+        if qemu_raw or qemu_dos_entry:
+            if data[:4] != b'QFI\xfb':
+                raise ValueError('Invalid native QEMU QCOW2 checkpoint header')
+            return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
+                    'metadata':metadata,'components':[{'name':'standalone-qcow2','size':len(data)}],
+                    'scope':('restricted raw QEMU machine and private disk' if qemu_raw
+                             else 'original DOS process entry in the same owned session')}
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             components = [{'name':i.filename,'size':i.file_size,'compressed_size':i.compress_size} for i in archive.infolist()]
         return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
@@ -227,6 +344,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
+        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1'):
+            raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
         if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):
@@ -1157,6 +1276,7 @@ class DebugWorkspace:
     def __init__(self):
         self.sessions = {}
         self.async_runs = {}
+        self.startup_workspace = str(Path.cwd().resolve())
 
     def _async_result(self, run, operation, wait_ms=0):
         bounded(wait_ms,'wait_ms',0,1000)
@@ -1218,6 +1338,8 @@ class DebugWorkspace:
     def invoke(self, method, project, params):
         from .project import Project
         if method=='debug-launch':
+            if params.get('backend') == 'qemu-dos' and params.get('game_dir') is None:
+                params['game_dir'] = self.startup_workspace
             db = Project(project)
             try:
                 session = db.debugger(**params)
@@ -1242,7 +1364,17 @@ class DebugWorkspace:
                    'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
                    'debug-desqview-observe':'desqview_observe',
                    'debug-memory-translation':'memory_translation','debug-qemm-observe':'qemm_observe',
-                   'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-dos-task-bind':'dos_task_bind','debug-dos-task-observe':'dos_task_observe',
+                   'debug-dos-task-switching':'dos_task_switching','debug-dos-task-register':'dos_task_register',
+                   'debug-dos-task-layer-patch':'dos_task_layer_patch','debug-dos-task-layers':'dos_task_layers',
+                   'debug-dos-task-memory':'dos_task_memory','debug-dos-task-retire':'dos_task_retire',
+                   'debug-dos-task-scheduler':'dos_task_scheduler','debug-dos-task-fork':'dos_task_fork',
+                   'debug-dos-task-context':'dos_task_context','debug-dos-task-runnable':'dos_task_runnable',
+                   'debug-dos-task-scheduler-observe':'dos_task_scheduler_observe',
+                   'debug-dos-task-scheduler-disable':'dos_task_scheduler_disable',
+                   'debug-dos-task-preemption':'dos_task_preemption',
+                   'debug-status':'status','debug-tracking':'tracking_status','debug-dos-process':'dos_process_info','debug-dos-source-admit':'dos_source_admit','debug-dos-source-bind':'dos_source_bind','debug-dos-source-binding':'dos_source_binding','debug-dos-source-unbind':'dos_source_unbind','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-loader-control':'loader_control','debug-loader-events':'loader_events','debug-thread-info':'thread_info',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',
@@ -1254,7 +1386,7 @@ class DebugWorkspace:
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-trace-until':'trace_until',
                    'debug-screenshot-hooks':'screenshot_hooks',
-                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
+                   'debug-memory':'memory','debug-stack-memory':'stack_memory','debug-import-call':'import_call','debug-capture-module-entry':'capture_module_entry','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
@@ -1272,14 +1404,47 @@ class DebugWorkspace:
                         'debug-timeline-advance':'timeline_advance','debug-timeline-rewind':'timeline_rewind',
                         'debug-timeline-stop':'timeline_stop','debug-timeline-pin':'timeline_pin',
                         'debug-timeline-image':'timeline_image'})
+        methods.update({'debug-workspace-status':'workspace_status',
+                        'debug-workspace-files':'workspace_files','debug-workspace-read':'workspace_read',
+                        'debug-workspace-seal':'workspace_seal','debug-workspace-export':'workspace_export',
+                        'debug-workspace-keep':'workspace_keep','debug-workspace-edit':'workspace_edit',
+                        'debug-workspace-save-output':'workspace_save_output',
+                        'debug-workspace-provenance-start':'workspace_provenance_start',
+                        'debug-workspace-provenance-status':'workspace_provenance_status',
+                        'debug-workspace-provenance-capture':'workspace_provenance_capture',
+                        'debug-workspace-provenance-stop':'workspace_provenance_stop',
+                        'debug-workspace-keep-policy':'workspace_keep_policy',
+                        'debug-workspace-keep-policy-enabled':'workspace_keep_policy_enabled'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
                         'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
                         'debug-runtime-memory':'runtime_memory','debug-write-runtime-memory':'write_runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
+        methods.update({'debug-clock-observe':'clock_observe','debug-clock-advance':'clock_advance',
+                        'debug-capture-surface':'capture_surface',
+                        'debug-audio-start':'audio_start','debug-audio-observe':'audio_observe',
+                        'debug-audio-stop':'audio_stop','debug-capture-audio':'capture_audio',
+                        'debug-display-start':'display_start','debug-display-observe':'display_observe',
+                        'debug-display-stop':'display_stop','debug-capture-display':'capture_display',
+                        'debug-display-probe':'display_probe',
+                        'debug-vga-configuration':'vga_configuration_observe',
+                        'debug-retrace-observe':'retrace_observe',
+                        'debug-retrace-wait':'retrace_wait',
+                        'debug-clock-sync-start':'clock_sync_start','debug-clock-sync-observe':'clock_sync_observe',
+                        'debug-clock-sync-step':'clock_sync_step','debug-clock-sync-stop':'clock_sync_stop',
+                        'debug-mouse-move-relative':'mouse_move_relative','debug-mouse-button-down':'mouse_button_down',
+                        'debug-mouse-move-mapped':'mouse_move_mapped',
+                        'debug-mouse-button-up':'mouse_button_up','debug-mouse-button-click':'mouse_button_click',
+                        'debug-input-state':'input_state',
+                        'debug-input-cancel-pending':'input_cancel_pending',
+                        'debug-input-schedule':'input_schedule','debug-input-schedule-observe':'input_schedule_observe',
+                        'debug-input-schedule-retrace':'input_schedule_retrace'})
         methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
                         'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
         methods.update({'debug-spatial-policy':'spatial_policy','debug-spatial-action':'spatial_action'})
+        methods.update({'debug-chip8-environment':'chip8_environment',
+                        'debug-chip8-keypad':'chip8_keypad','debug-chip8-tick':'chip8_tick',
+                        'debug-chip8-seed-rng':'chip8_seed_rng'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:
@@ -1291,8 +1456,26 @@ class DebugWorkspace:
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
         operation=getattr(selected,methods[method],None)
-        if operation is None:raise ValueError('Operation is unavailable in the selected execution context')
-        return operation(**params)
+        if operation is None:
+            if getattr(session,'metadata',{}).get('backend')=='qemu-dos':
+                from .dos_migration import unavailable_operation
+                raise ValueError(unavailable_operation(method))
+            raise ValueError('Operation is unavailable in the selected execution context')
+        if method == 'debug-workspace-edit' and 'data_hex' in params:
+            if 'data' in params:
+                raise ValueError('Use only data_hex for JSON workspace edits')
+            encoded = params.pop('data_hex')
+            if not isinstance(encoded, str):
+                raise ValueError('Workspace data_hex must be a hexadecimal string')
+            try:
+                params['data'] = bytes.fromhex(encoded)
+            except ValueError:
+                raise ValueError('Workspace data_hex is malformed') from None
+        result = operation(**params)
+        if method == 'debug-workspace-read':
+            result = dict(result)
+            result['data_hex'] = result.pop('data').hex()
+        return result
 
     def close(self):
         for session in self.sessions.values():

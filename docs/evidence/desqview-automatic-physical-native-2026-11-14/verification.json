@@ -1,0 +1,285 @@
+{
+  "cold_reader": {
+    "base_controls": {
+      "file": "ADAPTER-FREEZE.json",
+      "sha256": "53b66c0d841f3d0b17399ae4f4d67db42cb08c48ffe77986dc0e57edab7e1c59",
+      "size": 5128
+    },
+    "current_root_checks": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 164
+    },
+    "independent_review": {
+      "file": "desqview-adapter-v2-independent-review.json",
+      "sha256": "4f9a83e8ef87cf2715e6d99075c3102de19335123fe1188a78ef2e7603726071",
+      "size": 5822
+    },
+    "root_receipt": {
+      "file": "adapter-v2-root-01.xml",
+      "sha256": "4c2d9448cbb8c76142cad5e62fef369a7f98ef42a10cbde27b49a182263fbaa4",
+      "size": 26245
+    },
+    "test_scope": "133 shared controls plus 30 authored v2 controls and one retained-native-JSON metadata-shape check; no new guest execution",
+    "v1_preserved": true,
+    "v2_change": "One comparison now matches complete raw CPU dictionaries, following actual frozen producer; no wrapper compatibility or dropped fields",
+    "v2_controls": {
+      "file": "COLD-ADAPTER-V2-FREEZE.json",
+      "sha256": "d77965385ee018fb8cf2cd3851c3bb9b1da0ccf41678b8501b2817786e9bd8f7",
+      "size": 1906
+    }
+  },
+  "correction": {
+    "human_authorized_separate_corrected_candidate": true,
+    "independent_diagnosis": {
+      "file": "desqview-epoch-failure-independent-01.json",
+      "sha256": "ce8180ee84cf5c258c4e0f5dbf12c257a4283a344d839fbc9c18d798ff3ab688",
+      "size": 9936
+    },
+    "independent_review": {
+      "file": "independent-source-review.json",
+      "sha256": "4c0b1502fb7598ffadfa3dcb0a7dce5fccca34b79fc87d6227ed00c0bd5469ea",
+      "size": 7672
+    },
+    "other_708_runtime_members_unchanged": true,
+    "previous_aggregate": {
+      "file": "FROZEN-VERIFICATION.json",
+      "sha256": "c79a81c6d87f1de355ecbdc6f73942051967c67df9bc58f0fc154fb00f6fec2f",
+      "size": 3600
+    },
+    "previous_bindings_certificates_witnesses": 0,
+    "previous_native_result": "failed-closed-initial-epoch-mismatch",
+    "previous_runtime": "72423fadd263b579ba2193d960f1e35d83fba9df",
+    "previous_wheel_and_failed_evidence_preserved": true,
+    "production_change": "Exactly two missing-attribute epoch fallbacks now use session.run_id, matching snapshots and tracker; no private epoch initialization",
+    "regression_red": {
+      "file": "default-epoch-diagnostic-01-result.json",
+      "sha256": "ec5f19bd7487c09e7a649dd499953b022b57fd3433ee137ab862a5b4692183a7",
+      "size": 2462
+    }
+  },
+  "date": "2026-11-14",
+  "desqview": {
+    "automatic_report": {
+      "file": "desqview-independent-automatic-native-01.json",
+      "sha256": "73413802fb11b25f988cd8363a3d32793aaef133fb50a8d951b7b5db8d25b3d7",
+      "size": 17733
+    },
+    "cas_objects_read": 26,
+    "closed_registry": {
+      "bindings": 30,
+      "closed_interval_exclusions": 180,
+      "current_bindings": 0,
+      "endpoint_queries": 180,
+      "mechanism": "Independent immutable SQLite journal/range predicates; not a new public Project reopen",
+      "range_exclusions": 180,
+      "tasks": 6
+    },
+    "cold_error_count": 42,
+    "combined_automatic_and_independent_gate": true,
+    "coverage_witnesses": 16,
+    "database_and_image_unchanged": true,
+    "full_window_length": 734,
+    "full_window_restoration": false,
+    "guest_reaped": true,
+    "immutable_code_bytes_per_endpoint": [
+      364,
+      364,
+      364,
+      364,
+      364,
+      364
+    ],
+    "independent_binding_readback_passes": 36,
+    "independent_gates": {
+      "automatic_provider_physical_qualification": null,
+      "cold_source_error_history_after_recovery": true,
+      "independent_stopped_physical_readback": true,
+      "native_handle_reuse": true,
+      "same_task_physical_relocation": true
+    },
+    "independent_raw_audit": {
+      "file": "desqview-independent-native-audit-01.json",
+      "sha256": "150dbbf7fd7031d06ac230a41329f20acb93c003a75b3fe643d305fc92268aa0",
+      "size": 17162
+    },
+    "independent_reader_automatic_gate": null,
+    "independent_report": {
+      "file": "desqview-independent-continuity-native-01.json",
+      "sha256": "aaacb221c17ec31345837ecfbd604e820d6645eb4c334cb6fc1e82e6526c3c22",
+      "size": 411005
+    },
+    "initial_session_without_checkpoint_restore_qualified": true,
+    "mutable_offsets_differ": 9,
+    "native_handle_reuses": 1,
+    "owned_group_absent": true,
+    "owner_aggregate": {
+      "file": "VERIFICATION.json",
+      "sha256": "fb63696f9bbdb1d0513b03fa23a94d62742418ac5f65d1129947abcb21c5ebf8",
+      "size": 5179
+    },
+    "physical_relocations": 1,
+    "retained_paired_endpoints": 6,
+    "source_database_sha256": "46ce0ef9a0f1006b68362884cdf78dcbf80ca6a97f2ee1639a5d6017902168a8",
+    "source_error_recovery_associations": 15,
+    "validated_certificates": 18,
+    "validated_current_binding_claims": 18,
+    "validated_snapshots": 18,
+    "whole_allocated_task_ram_restoration": null
+  },
+  "doom": {
+    "canonical_bytes": 24,
+    "count_sites": 8,
+    "direct_original_matches": 9,
+    "executed_fixup_overlaps": 0,
+    "hot_cold_cas_exports_equal": 4,
+    "independent_receipt": {
+      "file": "doom-independent-native-audit-01.json",
+      "sha256": "4c26318403ac03b62ff4612a77ba987b65de57596647e5d98d37738adc2f10f1",
+      "size": 10173
+    },
+    "irqs_and_timers_masked": true,
+    "ordinary_boundary": {
+      "binding_generation_after": 2,
+      "binding_generation_before": 1,
+      "capture_epoch_unchanged": true,
+      "endpoint_cpu_mode": "protected",
+      "explicit_refresh_qualified": false,
+      "outcome": "timeout",
+      "refresh_reason": "LE binding GDT identity changed",
+      "same_binding_handle": true,
+      "scope": "Stopped endpoints only; intervening instructions and OS/task continuity unobserved",
+      "source_authority_withdrawn": true,
+      "withdrawal_reason": "operation budget expired before source revalidation"
+    },
+    "pointer_checks": 72,
+    "predicate_exact_current_and_closed_query_complete": true,
+    "predicate_requested_count_complete": false,
+    "startup_observations": 22,
+    "step_mask": 7,
+    "zero_step_predicate_sites": 1
+  },
+  "format": "fdisbull-desqview-automatic-physical-native-acceptance-1",
+  "host": {
+    "hashes_unchanged": true,
+    "independent_focused_cases": 313,
+    "installed": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 299
+    },
+    "installed_receipt": {
+      "file": "installed-host-01.xml",
+      "sha256": "3a6077c4ae55abbd81988afb577719ee138b52a0f2ff542d561fba1d61db1f3d",
+      "size": 44356
+    },
+    "passed": 3317,
+    "precommit_test_bytes_equal_committed_runtime": {
+      "file": "host-commit-byte-association.json",
+      "sha256": "0cc1b9d660af4e1a9da9a26095b355bc9b102a33c724d6ff70bc6d33b31a651c",
+      "size": 495
+    },
+    "receipt": {
+      "file": "host-source-epoch-fix-01-13cc8e-result.json",
+      "sha256": "eeab0c3061f39bf9c03951c5aa65db978f8ff4e5fd318a5c5e39bdcfdf6ed91c",
+      "size": 10211
+    },
+    "selected_files": 114,
+    "selections_overlap": true,
+    "skipped": 12,
+    "source_test_hashes": 1280
+  },
+  "limits": [
+    "Exact observed source captures under monitored native identities; no continuous residency, instruction retirement or allocation-lifetime proof.",
+    "Six paired endpoints validate 18 selected complete-current binding claims; this is not exhaustive program or whole-task RAM parity.",
+    "The full734-byte window has9 mutable offsets outside364 immutable code bytes; whole-window restoration is not established.",
+    "Doom stepping masks IRQs/timers; its ordinary run withdraws on budget expiry and refuses changed GDT identity.",
+    "The old72423fad native failure remains failed; the corrected candidate is a separate wheel.",
+    "Broader QEMU-DOS/DOSBox-X parity and DOSBox-X removal remain unqualified."
+  ],
+  "native_preservation": {
+    "cases": 10,
+    "independent": {
+      "file": "native-independent-readback-01.json",
+      "sha256": "4f4a17b46bc9cc24e35aed2c278678dcd1b2b58cc2ea64472fe63406875dd1e0",
+      "size": 21089
+    },
+    "results": [
+      {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 8
+        },
+        "mode": "preservation",
+        "receipt": {
+          "file": "native-preservation-01-result.json",
+          "sha256": "82c93915445b1eed80b7fd1bca73c723a7fed1750cc60d141d50c26d72e025a1",
+          "size": 3174
+        }
+      },
+      {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "mode": "authored-standard",
+        "receipt": {
+          "file": "native-authored-standard-01-result.json",
+          "sha256": "a7d6de5156ab891545f1d0a564a3a71c9d315f2be24821fc9e34dcdcaf33e668",
+          "size": 2319
+        }
+      },
+      {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "mode": "authored-virtual",
+        "receipt": {
+          "file": "native-authored-virtual-01-result.json",
+          "sha256": "fbb71f1057aa261ab51c4afef980e5a396e9392a8a048dae238a14f94f9e4577",
+          "size": 2319
+        }
+      }
+    ],
+    "scope": "Named DOS/CHIP8 trials, histories, replay, selected state, layers, hooks, checkpoints and IRQ compositions plus authored protected LE profiles"
+  },
+  "operations": {
+    "bounded_owned_controllers": true,
+    "default_readback": {
+      "file": "default-final.json",
+      "sha256": "c83b1cc323996ef4f9a7603a1f422a7c6bc5a18c852badfc43059a8be1cca790",
+      "size": 2475
+    },
+    "dosbox_x_default_retained": true,
+    "memory_guard_waiver_explicit": true,
+    "no_ci": true,
+    "no_mr_merge": true,
+    "no_native_rebuild": true,
+    "no_release": true,
+    "no_shared_activation": true,
+    "storage_admission_passed": true
+  },
+  "package": {
+    "canonical_manifest": {
+      "file": "package-fdbda4c9.json",
+      "sha256": "b7f965981719d7513e78add10ec8715bdf0ce0a9065a725e0616406ac6a90a3b",
+      "size": 78128
+    },
+    "critical_imports": 20,
+    "helper_sha256": "5b9c5539573ec4f8f835766cd4ba3cad1d399b8559c5c1ebe08b881beb210308",
+    "runtime_files": 709,
+    "source_wheel_installed_equal": true,
+    "wheel_sha256": "b9f64a8234cb28928cf20facd4df19869604d4a0a0db6da7b05be0aaf73dac36"
+  },
+  "runtime_commit": "fdbda4c94e2dab8fc5a772a33732f3fc019d2259",
+  "status": "pass-bounded-native-qualification"
+}

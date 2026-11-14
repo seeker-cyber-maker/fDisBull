@@ -6,6 +6,7 @@ import inspect
 import json
 import re
 import time
+from functools import wraps
 
 from .debugger import bounded
 from .operation_budget import rpc_budget
@@ -26,6 +27,21 @@ OPERATIONS = {
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
+    'mouse.move-relative':'mouse_move_relative','mouse.button-down':'mouse_button_down','mouse.button-up':'mouse_button_up',
+    'mouse.button-click':'mouse_button_click',
+    'mouse.move-mapped':'mouse_move_mapped',
+    'input-state':'input_state','input-cancel-pending':'input_cancel_pending',
+    'input-schedule':'input_schedule','input-schedule-observe':'input_schedule_observe',
+    'input-schedule-retrace':'input_schedule_retrace',
+    'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
+    'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
+    'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
+    'display-probe':'display_probe',
+    'vga-configuration':'vga_configuration_observe',
+    'retrace-observe':'retrace_observe',
+    'retrace-wait':'retrace_wait',
+    'clock-sync-start':'clock_sync_start','clock-sync-observe':'clock_sync_observe',
+    'clock-sync-step':'clock_sync_step','clock-sync-stop':'clock_sync_stop',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
     'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
     'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory','write-runtime-memory':'write_runtime_memory',
@@ -63,7 +79,7 @@ def validate_script(script, *, session=None):
             or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
-    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine')
+    supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine','qemu-dos','qemu-chip8')
     if backend is not None and backend not in supported_backends:
         raise ValueError('Unsupported explicit script backend; omit it for the legacy DOS grammar')
     owner=session if session is not None else DebugSession
@@ -83,6 +99,12 @@ def validate_script(script, *, session=None):
         elif backend=='qemu-machine':
             from .qemu_machine import MachineDebugSession
             owner=MachineDebugSession
+        elif backend=='qemu-dos':
+            from .qemu_dos_process import QemuDOSProcessSession
+            owner=QemuDOSProcessSession
+        elif backend=='qemu-chip8':
+            from .qemu_chip8 import Chip8DebugSession
+            owner=Chip8DebugSession
         elif backend=='scummvm-kyra':
             from .scummvm_kyra import ScummVMKyraSession
             owner=ScummVMKyraSession
@@ -93,6 +115,14 @@ def validate_script(script, *, session=None):
             from .scummvm_debugger import ScummVMAGISession
             owner=ScummVMAGISession
     outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
+    if (backend or actual) == 'qemu-dos':
+        # DOS return/residency leave the owned machine alive. Preserve the
+        # separate 'exited' outcome for native machine termination.
+        outcomes|={'guest_exit','guest_tsr'}
+    if (backend or actual) in ('qemu-machine','qemu-dos'):
+        outcomes.add('hook')
+    if (backend or actual) == 'qemu-chip8':
+        outcomes|={'hook','key_wait','layer_conflict','exception','stopped'}
     if (backend or actual) in ('scummvm-agi','scummvm-gob','scummvm-kyra'):
         outcomes|={'budget','cycle','layer_conflict'}
     if len(json.dumps(script,allow_nan=False).encode()) > 1024*1024:
@@ -123,12 +153,22 @@ def validate_script(script, *, session=None):
                     if set(params) != {'value','equals'}:
                         raise ValueError('assert requires value and equals')
                 elif op in OPERATIONS:
-                    if op=='trace-until' and (backend or actual) not in (None,'dosbox','dosbox-qemu'):
-                        raise ValueError('Live trace-until requires the DOSBox boundary adapter')
-                    if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine'):
+                    if op=='trace-until' and (backend or actual) not in (None,'dosbox','dosbox-qemu','qemu-dos'):
+                        raise ValueError('Live trace-until requires a qualified DOS boundary adapter')
+                    if op in ('memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','desqview-observe') and (backend or actual) not in (None,'dosbox','dosbox-x','dosbox-qemu','qemu-machine','qemu-dos'):
                         raise ValueError('Unsupported operation for this backend: '+op)
-                    if op == 'memory-rule-run' and (backend or actual) == 'qemu-machine':
-                        raise ValueError('Periodic memory rules require DOSBox guest-time control')
+                    if op == 'memory-rule-run' and (backend or actual) in ('qemu-machine','qemu-dos'):
+                        from .memory_rules import MAX_TICKS
+                        for key,limits in (('ticks',(1,MAX_TICKS)),('interval_ms',(1,60000)),
+                                           ('timeout_ms',(1,60000))):
+                            value=params.get(key)
+                            if key in params and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits)
+                        if session is not None:
+                            from .qemu_memory_rules import admit_native_rule_run
+                            admit_native_rule_run(session)
+                    if op in ('save-state','load-state') and (backend or actual) in ('qemu-machine','qemu-dos'):
+                        raise ValueError('Unsupported operation for native QEMU scripts: '+op)
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary
@@ -143,6 +183,10 @@ def validate_script(script, *, session=None):
                     signature = inspect.signature(operation)
                     if session is None:signature.bind(None,**params)
                     else:signature.bind(**params)
+                    if op in ('trace','trace-until') and (backend or actual)=='qemu-dos':
+                        from .qemu_dos_trace import _select_source_view, _validate_source_view
+                        if session is None:_validate_source_view(params.get('source_view'))
+                        else:_select_source_view(session,params.get('source_view'))
                     if op=='trace-until':
                         # This first adapter admits literal predicates/actions.
                         # Validate the entire descriptor before an earlier step
@@ -156,35 +200,118 @@ def validate_script(script, *, session=None):
                             elif isinstance(value,list):
                                 for child in value:literal(child)
                         literal(params)
-                        validate_trace_until(**params)
+                        descriptor=dict(params)
+                        if (backend or actual)=='qemu-dos':descriptor.pop('source_view',None)
+                        validate_trace_until(**descriptor)
+                        from .execution_clock import clock_predicates
+                        if clock_predicates(params['until']):
+                            if (backend or actual) != 'qemu-dos':
+                                raise ValueError('Live virtual-time-range requires the native qemu-dos virtual clock profile')
+                            if session is not None:
+                                from .qemu_clock import _configuration
+                                if _configuration(session.vm)['profile'] != 'virtual':
+                                    raise ValueError('Live virtual-time-range requires the QEMU virtual clock profile')
+                        if (backend or actual) == 'qemu-dos' and params.get('action') is not None:
+                            raise ValueError('Native DOS trace-until queued input actions require clock/input causal-boundary support; queue physical edges and run to a boundary before tracing')
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
+                        if (op.startswith('rewind') and (backend or actual) in ('qemu-dos','qemu-chip8')
+                                and session is not None):
+                            if not getattr(session,'capabilities',{}).get('rewind'):
+                                message=('Native history scripts require enabled full process checkpoints'
+                                         if (backend or actual)=='qemu-dos' else
+                                         'CHIP-8 history scripts require enabled full checkpoints')
+                                raise ValueError(message)
+                            if session.project.db.in_transaction:
+                                raise ValueError('Native history scripts require a project outside a caller-owned transaction')
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
-                        if op=='delta-start':limits['max_bytes']=(1,2*1024**3)
+                        if op=='delta-start' and (backend or actual)!='qemu-chip8':limits['max_bytes']=(1,2*1024**3)
+                        if op=='rewind-start' and (backend or actual) in ('qemu-dos','qemu-chip8'):
+                            limits['max_bytes']=(1,1024**3)
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
+                        if (backend or actual) in ('qemu-dos','qemu-chip8') and op=='rewind-record':
+                            advance=params.get('advance','step')
+                            if not (isinstance(advance,str) and advance.startswith('$')) and advance not in ('step','capture'):
+                                raise ValueError('Native rewind advance must be step or capture')
+                            if advance=='capture' and type(params.get('count',1)) is int and params.get('count',1)!=1:
+                                raise ValueError('Explicit checkpoint capture records one stopped boundary')
                     if op=='delta-start':
                         from .debug_cpu_deltas import validate_ranges
                         validate_ranges(params['ranges'],allow_references=True)
+                        if (backend or actual)=='qemu-chip8':
+                            from .chip8_cpu_undo_runtime import validate_ranges as chip8_ranges, validate_registers
+                            chip8_ranges(params['ranges'],allow_references=True)
+                            validate_registers(params.get('registers'),allow_references=True)
+                    if op in ('delta-start','delta-record','delta-rewind','delta-recover') and (backend or actual)=='qemu-chip8':
+                        if session is not None:
+                            if not getattr(session,'capabilities',{}).get('selected_cpu_ram_undo'):
+                                raise ValueError('CHIP-8 selected CPU/RAM undo requires v6 and a checkpoint tool')
+                            if session.project.db.in_transaction:
+                                raise ValueError('CHIP-8 selected CPU/RAM scripts require no caller transaction')
+                        if op=='delta-recover' and 'timeout_ms' in params:
+                            value=params['timeout_ms']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,'timeout_ms',1,600000)
                     if op=='delta-rewind' and 'policy' in params:
                         from .debug_cpu_deltas import validate_policy
-                        validate_policy(params['policy'],allow_references=True)
+                        selected_registers=None
+                        if (backend or actual)=='qemu-chip8':
+                            from .chip8_cpu_undo_runtime import REGISTERS, validate_ranges as chip8_ranges
+                            selected_registers=REGISTERS
+                            if isinstance(params['policy'],dict) and params['policy'].get('preserve_memory') not in (None,[]):
+                                chip8_ranges(params['policy']['preserve_memory'],allow_references=True)
+                        validate_policy(params['policy'],registers=selected_registers,allow_references=True)
+                        if ((backend or actual) in ('qemu-dos','qemu-chip8') and isinstance(params['policy'],dict)
+                                and params['policy'].get('allow_partial_resume') is True):
+                            raise ValueError('Native selected CPU/RAM undo does not permit partial resume')
                     if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
                         from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
+                        native_frames = (backend or actual) in ('qemu-dos','qemu-chip8')
+                        chip8_frames = (backend or actual) == 'qemu-chip8'
+                        if chip8_frames:
+                            from .chip8_keys import validate_edges, validate_schedule
+                            if op == 'timeline-rewind' and params.get('policy') not in (None, {}):
+                                raise ValueError('CHIP-8 frame histories restore full checkpoints without partial policies')
+                            if op == 'timeline-start':
+                                if params.get('period_ns',16666667) != 16666667:
+                                    raise ValueError('CHIP-8 frame histories require the native 60 Hz sampling period')
+                                if (session is not None and params.get('storage_mode','full') == 'delta'
+                                        and not getattr(session,'capabilities',{}).get('frame_delta_storage')):
+                                    raise ValueError('CHIP-8 lossless delta storage requires native v6 and a checkpoint tool')
+                        if native_frames:
+                            if (op == 'frame-inputs' or op == 'timeline-advance'
+                                    and params.get('inputs') not in (None, [])):
+                                if session is not None and not getattr(session,'capabilities',{}).get('frame_key_ownership'):
+                                    raise ValueError('Native frame key input requires its ownership extension')
+                            if session is not None and op in ('frame-advance','timeline-start',
+                                    'timeline-advance','timeline-rewind','timeline-pin'):
+                                if not getattr(session,'capabilities',{}).get('frame_timeline'):
+                                    raise ValueError('Native frame histories require the renderer-frame fence and full checkpoints')
+                                if session.project.db.in_transaction:
+                                    raise ValueError('Native frame histories require a project outside a caller-owned transaction')
+                            if op == 'timeline-rewind' and params.get('policy') is not None and not chip8_frames:
+                                raise ValueError('Native renderer histories restore full checkpoints; partial policies are unqualified')
                         limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
                                 'max_frames':(1,4096),'max_captures':(1,65536),'keyframe_interval':(1,128),
                                 'max_bytes':(1,256*1024*1024),
                                 'max_state_bytes':(1,256*1024*1024),
                                 'max_image_bytes':(1,16*1024*1024),
                                 'timeout_ms':(1,600000)}
+                        if native_frames:
+                            limits.update(frames=(1,128), max_frames=(1,128),
+                                max_captures=(1,128), max_bytes=(1,1024**3),
+                                max_state_bytes=(1,128*1024**2),
+                                period_ns=(1000000,1000000000))
+                            if op == 'timeline-rewind': limits['frames']=(0,128)
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
                         if op=='frame-inputs':validate_edges(params['edges'],allow_references=True)
                         if op=='timeline-advance' and params.get('inputs') is not None:
                             validate_schedule(params['inputs'],params.get('frames',1),allow_references=True)
-                        if op=='timeline-rewind' and params.get('policy') is not None:
+                        if op=='timeline-rewind' and params.get('policy') is not None and not chip8_frames:
                             validate_timeline_policy(params['policy'],allow_references=True)
                         if op in ('timeline-pin','timeline-image') and 'name' in params:
                             if not (isinstance(params['name'],str) and params['name'].startswith('$')):
@@ -192,12 +319,18 @@ def validate_script(script, *, session=None):
                                 _file_name(params['name'])
                         if op=='timeline-start':
                             validate_storage(params.get('storage_mode','full'), params.get('keyframe_interval',8), allow_references=True)
-                            sizes=[params.get('max_state_bytes',8*1024**2),
+                            sizes=[params.get('max_state_bytes',(128 if native_frames else 8)*1024**2),
                                    params.get('max_image_bytes',2*1024**2),
-                                   params.get('max_bytes',64*1024**2)]
+                                   params.get('max_bytes',(512 if native_frames else 64)*1024**2)]
                             if all(type(value) is int for value in sizes) and sum(sizes[:2])>sizes[2]:
                                 raise ValueError('Frame timeline byte budget cannot reserve one state and image')
                     if op in ('keyboard.press','keyboard.type'):
+                        if (backend or actual) in ('qemu-machine','qemu-dos'):
+                            capability = ('virtual_keyboard_type' if op=='keyboard.type'
+                                          else 'virtual_keyboard_press')
+                            if session is not None and not getattr(session,'capabilities',{}).get(capability):
+                                operation = 'text' if op=='keyboard.type' else 'press'
+                                raise ValueError('Timed keyboard '+operation+' requires its native extension and a qualified guest clock (explicit virtual profile)')
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference
                         # must not hide a malformed static hold, gap or modifier.
@@ -206,7 +339,11 @@ def validate_script(script, *, session=None):
                         validate_keyboard(**checked)
                     if op=='wait':
                         from .debug_wait import validate_wait
-                        if getattr(owner,'scene_time_basis',None)=='host':
+                        if (backend or actual) in ('qemu-machine','qemu-dos'):
+                            from .qemu_wait import validate_qemu_wait_parameters, validate_qemu_wait_session
+                            validate_qemu_wait_parameters(**params)
+                            if session is not None:validate_qemu_wait_session(session)
+                        elif getattr(owner,'scene_time_basis',None)=='host':
                             checked=dict(params)
                             active=checked.pop('active_ms',None);legacy=checked.pop('guest_ms',None)
                             if (active is None)==(legacy is None):
@@ -236,13 +373,127 @@ def validate_script(script, *, session=None):
                             value=params.get(key)
                             if value is not None and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits)
+                    if op=='clock-advance':
+                        from .qemu_clock import MAX_CLOCK_BUDGET_NS
+                        for key,limits in (('delta_ns',(1,MAX_CLOCK_BUDGET_NS)),
+                                           ('timeout_ms',(1,600000))):
+                            value=params.get(key)
+                            if key in params and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits)
+                        if session is not None and not getattr(session,'capabilities',{}).get('virtual_clock_budget'):
+                            raise ValueError('clock-advance requires the explicit QEMU virtual clock profile')
+                    if op in ('input-schedule','input-schedule-observe'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('virtual_input_schedule'):
+                            raise ValueError('Input scheduling requires the native input extension and virtual clock')
+                        if op=='input-schedule':
+                            value=params['delta_ns']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                from .qemu_input_schedule import validate_input_delay
+                                validate_input_delay(value)
+                    if op=='input-schedule-retrace':
+                        if session is not None and not getattr(session,'capabilities',{}).get('retrace_input_schedule'):
+                            raise ValueError('Retrace input scheduling requires the native extension and explicit precise retrace profile')
+                        from .qemu_input_schedule import validate_retrace_input_parameters
+                        literal={key:value for key,value in params.items()
+                                 if key in ('edge','timeout_ms')
+                                 and not (isinstance(value,str) and value.startswith('$'))}
+                        validate_retrace_input_parameters(**literal)
+                    if op in ('audio-start','audio-observe','audio-stop','capture-audio'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('audio_capture'):
+                            raise ValueError('Audio operations require the explicit QEMU pc-speaker audio profile')
+                        if op=='audio-start' and 'max_frames' in params:
+                            value=params['max_frames']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                from .qemu_audio import validate_audio_capacity
+                                validate_audio_capacity(value)
+                    if op in ('display-start','display-observe','display-stop','capture-display'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('renderer_capture'):
+                            raise ValueError('Renderer operations require the native display extension and virtual clock')
+                        from .qemu_display import validate_display_period, validate_after_update
+                        for key,validator in (('period_ns',validate_display_period),('after_update',validate_after_update)):
+                            if key in params:
+                                value=params[key]
+                                if not (isinstance(value,str) and value.startswith('$')):validator(value)
+                    if op=='retrace-observe':
+                        if session is not None and not getattr(session,'capabilities',{}).get('retrace_observation'):
+                            raise ValueError('retrace-observe requires the explicit native precise retrace profile')
+                        if 'timeout_ms' in params:
+                            value=params['timeout_ms']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,'timeout_ms',1,600000)
+                    if op=='display-probe':
+                        if session is not None and not getattr(session,'capabilities',{}).get('renderer_probe'):
+                            raise ValueError('Renderer probe requires its native extension and virtual clock')
+                        from .qemu_display import validate_display_probe_parameters
+                        validate_display_probe_parameters(**params, allow_references=True)
+                    if op=='vga-configuration':
+                        if session is not None and not getattr(session,'capabilities',{}).get('vga_configuration'):
+                            raise ValueError('VGA configuration requires its native extension and virtual/precise profiles')
+                        from .qemu_vga_configuration import validate_vga_configuration_parameters
+                        validate_vga_configuration_parameters(**params, allow_references=True)
+                    if op=='retrace-wait':
+                        if session is not None and not getattr(session,'capabilities',{}).get('retrace_wait'):
+                            raise ValueError('retrace-wait requires the explicit native precise retrace profile')
+                        from .qemu_retrace import validate_retrace_wait_parameters
+                        literal={key:value for key,value in params.items()
+                                 if not (isinstance(value,str) and value.startswith('$'))}
+                        validate_retrace_wait_parameters(**literal)
+                    if op in ('clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('host_clock_sync'):
+                            raise ValueError('Host clock synchronization requires the explicit QEMU virtual clock profile')
+                        # Validate every literal before earlier mutations. A start
+                        # in this same script may establish the live mapping later.
+                        from .qemu_clock_sync import validate_clock_sync_options
+                        literal={key:value for key,value in params.items()
+                                 if not (isinstance(value,str) and value.startswith('$'))}
+                        validate_clock_sync_options(**literal)
                     if op=='move':
                         from .movement import validate_movement, _call
                         _call(params['start']);_call(params['stop'])
                         validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
                     if op=='keyboard.key-down':
                         from .keyboard_input import KEYS
-                        if params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
+                        if not isinstance(params['key'],str) or params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
+                    if op=='mouse.move-relative':
+                        values=[]
+                        for axis in ('dx','dy'):
+                            value=params[axis]
+                            if isinstance(value,str) and value.startswith('$'):continue
+                            bounded(value,axis,-32767,32767);values.append(value)
+                        if len(values)==2 and values==[0,0]:raise ValueError('Relative mouse movement requires a nonzero delta')
+                    if op=='mouse.button-down':
+                        if params['button'] not in ('left','middle','right'):
+                            raise ValueError('Unknown physical mouse button')
+                    if op=='mouse.button-click':
+                        if session is not None and not getattr(session,'capabilities',{}).get('virtual_mouse_click'):
+                            raise ValueError('Timed physical mouse click requires its native extension and explicit virtual clock profile')
+                        from .qemu_mouse_click import validate_mouse_click_parameters
+                        # A result reference in one field cannot hide another
+                        # field's invalid literal before earlier script effects.
+                        samples={'button':'left','hold_ms':80}
+                        checked={key:(samples[key] if isinstance(value,str) and value.startswith('$') else value)
+                                 for key,value in params.items()}
+                        validate_mouse_click_parameters(**checked)
+                    if op=='mouse.move-mapped':
+                        if session is not None and not getattr(session,'capabilities',{}).get('mapped_mouse_motion'):
+                            raise ValueError('Mapped mouse motion requires its native extension and explicit virtual/precise profiles')
+                        from .qemu_mapped_mouse import validate_mapped_mouse_parameters
+                        validate_mapped_mouse_parameters(**params, allow_references=True)
+                    if (op in ('mouse.button-up','keyboard.key-up')
+                            and (backend or actual) in ('qemu-machine','qemu-dos')):
+                        lease=params['lease']
+                        if not (isinstance(lease,str) and lease.startswith('$')):
+                            if type(lease) is not str or not 1<=len(lease)<=128:
+                                raise ValueError('Expected an owned unused physical input lease')
+                    if op in ('capture-surface','capture-audio','capture-display') and 'name' in params:
+                        name=params['name']
+                        if not (isinstance(name,str) and name.startswith('$')):
+                            from .external_files import _file_name
+                            _file_name(name)
+                    if op in ('capture-surface','capture-display') and params.get('max_bytes') is not None:
+                        value=params['max_bytes']
+                        if not (isinstance(value,str) and value.startswith('$')):
+                            bounded(value,'max_bytes',1,16*1024**2)
                     if op=='screenshot-hooks' and params.get('configuration') is not None:
                         from .screenshot_hooks import validate_configuration
                         validate_configuration(params['configuration'])
@@ -254,13 +505,52 @@ def validate_script(script, *, session=None):
     visit(script['steps'])
     if not expanded:
         raise ValueError('Script must contain at least one operation')
+    if (session is not None
+            and getattr(session, 'metadata', {}).get('runtime_profile') == 'dos-exec-load-only-v1'
+            and any(step['op'] in ('trace', 'trace-until') for step in expanded)
+            and session.project.db.in_transaction):
+        raise ValueError('Source tracing requires a project outside a caller-owned transaction')
+    if session is not None and (backend or actual) in ('qemu-machine','qemu-dos'):
+        guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-click',
+                 'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
+                 'input-schedule-retrace',
+                 'clock-observe','clock-advance','wait','memory-rule-run','capture-surface','screenshot',
+                 'audio-start','audio-observe','audio-stop','capture-audio',
+                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
+                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
+        project=getattr(session,'project',None)
+        if project is not None and project.db.in_transaction:
+            pending=(any(step['op']=='run' for step in expanded)
+                     and getattr(session,'_input_pending',lambda:False)())
+            if pending or any(step['op'] in guarded for step in expanded):
+                raise ValueError('Native QEMU input/media observation requires a project outside a caller-owned transaction')
     return expanded
 
 
+def _suppress_automatic_keeps(function):
+    """Resolve the QEMU controller lazily for non-QEMU script users."""
+    @wraps(function)
+    def invoke(*args, **kwargs):
+        from .qemu_save_stop import no_automatic_keeps
+        return no_automatic_keeps(function)(*args, **kwargs)
+    return invoke
+
+
 @rpc_budget
+@_suppress_automatic_keeps
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
+    started = time.monotonic()
+    deadline = min(started+timeout_ms/1000, session._rpc_deadline)
     steps = validate_script(script, session=session) # Reject malformed later steps before any guest mutation.
+    # Check literal clock identities against the live native epoch before an
+    # earlier script step can write or continue. Recheck at trace admission as
+    # well: an earlier execution may have invalidated the process or clock.
+    for step in steps:
+        if step['op'] == 'trace-until':
+            from .execution_clock import clock_predicates
+            if clock_predicates(step['until']):
+                session._trace_clock_preflight(step['until'])
     for step in steps:
         if step['op']=='delta-rewind' and 'policy' in step:
             from .debug_cpu_deltas import validate_policy
@@ -276,8 +566,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
     frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
                         'timeline-rewind','timeline-pin','timeline-image'}
-    capabilities = getattr(getattr(session,'rpc',None),'capabilities',{})
-    if any(step['op'] in frame_operations for step in steps):
+    native_frames = getattr(session,'metadata',{}).get('backend') in ('qemu-dos','qemu-chip8')
+    capabilities = (getattr(session,'capabilities',{}) if native_frames else
+                    getattr(getattr(session,'rpc',None),'capabilities',{}))
+    if any(step['op'] in frame_operations and not (native_frames and step['op']=='frame-inputs') for step in steps):
         if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
             raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
@@ -291,7 +583,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     restore_operations = {'load-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
     def frame_owned_keys():
         from .keyboard_input import KEYS
-        result = session.call('input.keyboard.state')
+        result = session.keyboard_state() if native_frames else session.call('input.keyboard.state')
         keyboard = result.get('keyboard') if isinstance(result,dict) else None
         keys = keyboard.get('frame_keys') if isinstance(keyboard,dict) else None
         if not isinstance(keys,list) or any(not isinstance(key,str) or key not in KEYS for key in keys):
@@ -301,9 +593,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             raise ValueError('Native frame input ownership contains duplicate keys')
         return normalized
     frame_owned_before = None
-    track_restored_input = (isinstance(capabilities,dict) and capabilities.get('frame_timeline')
+    native_key_tracking = native_frames and bool(capabilities.get('frame_key_ownership'))
+    track_restored_input = ((not native_frames or native_key_tracking) and isinstance(capabilities,dict) and capabilities.get('frame_timeline')
                            and any(step['op'] in restore_operations for step in steps))
-    if track_restored_input:
+    track_native_edges = native_key_tracking and any(step['op'] in ('frame-inputs','timeline-advance') for step in steps)
+    if track_restored_input or track_native_edges:
         # A full-state restore can introduce held input without dispatching
         # an edge. Existing entry ownership remains the caller's responsibility.
         try:
@@ -315,9 +609,41 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             # The delta guard deliberately refuses this query. Keep ownership
             # unknown while allowing the script's full recovery operation.
     frame_restore_attempted = False
+    frame_restore_completed = False
+    native_frame_touched = False
+    entry_released = set()
+    entry_reacquired = set()
+
+    def record_accepted_frame_edges(receipt):
+        if not isinstance(receipt, dict) or frame_owned_before is None:
+            return
+        from .qemu_frame_keys import _CANONICAL
+        for edge in receipt.get('edges', []):
+            if not isinstance(edge,dict) or type(edge.get('pressed')) is not bool:
+                continue
+            key = _CANONICAL.get(edge.get('key'),edge.get('key'))
+            key = 'escape' if key == 'esc' else key
+            if key not in frame_owned_before:
+                continue
+            if edge['pressed']:
+                if key in entry_released:
+                    entry_reacquired.add(key)
+            else:
+                entry_released.add(key)
+
+    def record_frame_result(op, result):
+        if op == 'frame-inputs':
+            record_accepted_frame_edges(result)
+        elif op == 'timeline-advance' and isinstance(result,dict):
+            for item in result.get('frames',[]):
+                if isinstance(item,dict):
+                    record_accepted_frame_edges(item.get('frame',{}).get('input'))
+            for receipt in result.get('pending_inputs',[]):
+                record_accepted_frame_edges(receipt)
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+    if time.monotonic() >= deadline:
+        raise TimeoutError('Script host-time budget expired before route publication')
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
-    started = time.monotonic(); deadline = started+timeout_ms/1000
     results = dict(bindings or {}); records = []; failure = None
     owned_before=set(getattr(session,'_keyboard_leases',{}));keyboard_touched=False
 
@@ -342,10 +668,45 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if native_key_tracking and step['op']=='frame-inputs':
+                params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
+            if native_frames and step['op'] in ('delta-start','delta-record','delta-rewind','delta-recover'):
+                params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
+            if step['op']=='input-schedule-retrace':
+                # Validate resolved options before the budget clamp can turn
+                # an invalid supplied timeout into a valid remaining integer.
+                from .qemu_input_schedule import validate_retrace_input_parameters
+                validate_retrace_input_parameters(**params)
+            if (step['op']=='keyboard.press'
+                    and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
+                from .qemu_keyboard_press import validate_keyboard_press_parameters
+                validate_keyboard_press_parameters(**params)
+            if (step['op']=='keyboard.type'
+                    and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
+                from .qemu_keyboard_type import validate_keyboard_type_parameters
+                validate_keyboard_type_parameters(**params)
+            if step['op']=='mouse.button-click':
+                from .qemu_mouse_click import validate_mouse_click_parameters
+                validate_mouse_click_parameters(**params)
+            if step['op']=='mouse.move-mapped':
+                from .qemu_mapped_mouse import validate_mapped_mouse_parameters
+                validate_mapped_mouse_parameters(**params)
+            if step['op']=='display-probe':
+                from .qemu_display import validate_display_probe_parameters
+                validate_display_probe_parameters(**params)
+            if step['op']=='vga-configuration':
+                from .qemu_vga_configuration import validate_vga_configuration_parameters
+                validate_vga_configuration_parameters(**params)
+            if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
+                             'input-schedule-retrace','display-probe','vga-configuration','mouse.move-mapped',
+                             'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
+                             'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
-                if requested is None:requested=remaining
+                if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration','mouse.move-mapped') else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
+            if (step['op']=='memory-rule-run'
+                    and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
+                params['timeout_ms']=min(params.get('timeout_ms',10000),remaining,60000)
             if step['op']=='assert':
                 if params['value'] != params['equals']:
                     raise ValueError(f"Assertion failed: {params['value']!r} != {params['equals']!r}")
@@ -354,18 +715,34 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # Record intended input before dispatch so an uncertain failure
                 # follows the same terminal cleanup as legacy keyboard input.
                 prior_input_touched = keyboard_touched
+                frame_edges = ((step['op']=='frame-inputs' and params['edges'])
+                        or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or [])))
+                if frame_edges and native_key_tracking:
+                    native_frame_touched = True
                 if ((step['op'].startswith('keyboard.') and step['op']!='keyboard.state')
+                        or step['op'].startswith('mouse.') or step['op'] in ('input-cancel-pending','input-schedule','input-schedule-retrace')
                         or (step['op']=='trace-until' and params.get('action') is not None)
-                        or (step['op']=='frame-inputs' and params['edges'])
-                        or (step['op']=='timeline-advance' and any(item['edges'] for item in params.get('inputs') or []))):
+                        or (frame_edges and not native_key_tracking)):
                     keyboard_touched=True
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
+                if native_key_tracking:
+                    record_frame_result(step['op'],result)
+                if track_restored_input and step['op'] in restore_operations:
+                    frame_restore_completed = True
                 if (step['op']=='trace-until' and result.get('action',{}).get('dispatch')
                         in ('not_requested','not_dispatched','skipped_initial_match')):
                     keyboard_touched = prior_input_touched
             record['result'] = result
+            if native_frames and step['op'] in ('timeline-advance','frame-advance'):
+                if (not isinstance(result,dict) or result.get('outcome') != 'completed'
+                        or result.get('completed_frames') != params.get('frames',1)):
+                    raise ValueError('Frame advancement stopped before completing the requested native frame boundaries')
+            if native_frames and step['op']=='delta-record':
+                if (not isinstance(result,dict) or result.get('outcome') != 'completed'
+                        or result.get('recorded_count') != params.get('count',1)):
+                    raise ValueError('Selected CPU/RAM recording stopped before the requested native intervals')
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
                 raise ValueError('Wait did not match: '+result.get('outcome','incomplete'))
             if step['op']=='trace-until' and not (result.get('complete') and result.get('matched') and result.get('exact_stop')):
@@ -378,8 +755,12 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Run expected {expected}, observed {result['outcome']}")
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
-            if step['op']=='step' and not result.get('completed'):
-                raise ValueError('Engine step stopped before the requested instruction boundary count')
+            if step['op']=='step':
+                native_machine = getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos','qemu-chip8')
+                complete = (result.get('outcome')=='step' and result.get('timed_out') is False
+                            if native_machine else result.get('completed'))
+                if not complete:
+                    raise ValueError('Step stopped before the requested instruction boundary')
             if step['op']=='engine-cycle' and result.get('outcome')!='cycle':
                 raise ValueError('Engine did not reach the requested cycle boundary')
             if _after_step is not None:_after_step(step,result)
@@ -399,13 +780,15 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             break
     cleanup=None
     restored_input_held = restore_ownership_unknown = False
-    if failure and frame_restore_attempted and not keyboard_touched:
+    if failure and (frame_restore_attempted or native_frame_touched) and not keyboard_touched:
         try:
             current = frame_owned_keys()
             if frame_owned_before is None:
                 restore_ownership_unknown = bool(current)
             else:
-                restored_input_held = bool(current - frame_owned_before)
+                restored_input_held = bool(current - frame_owned_before
+                    or current.intersection(entry_reacquired)
+                    or native_key_tracking and frame_restore_completed and current)
         except Exception:
             # An attempted restore with no verifiable ownership readback must
             # not leave a failed route free to resume an unknown held key.

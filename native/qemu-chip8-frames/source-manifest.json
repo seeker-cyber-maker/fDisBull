@@ -1,0 +1,205 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Native token-bound CHIP-8 virtual 60 Hz timer-tick frame sampling fence",
+  "implementation_status": "v5 source configured and built locally for macOS arm64; final native frame-history, compatibility and integrated preservation checks passed",
+  "base": {
+    "qemu_version": "10.0.13",
+    "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "patch_parent": "native/qemu-chip8-layers/qemu-10.0.13-fdisbull-chip8-layers-v4.patch",
+    "patch_parent_sha256": "68a41f55450a3c66a61c0c8fa5ca49450957f96e92f93aed602635b23fb55cd6",
+    "patch_parent_manifest_sha256": "9fc196a2119ec470fbad3c5ad00dae13575d31dfc6a1389691ea8092e9f710d9",
+    "applies_to": "QEMU source after sealed CHIP-8 v1 CPU, v2 devices, v3 classic/RNG, and v4 RAM/fetch layers patches"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-chip8-frames-v5.patch",
+    "sha256": "7dfbb94ee30de832b1521d187a1d2607bfb6cb9fca5b1a6fc098d46539bc5c28",
+    "modified_file_count": 6,
+    "files": [
+      {
+        "path": "qapi/misc.json",
+        "before_sha256": "3279b4aaa1628fe41ccf9ecba9faaa7de5e6d91cd57ba2b78a6853518fb3dcc1",
+        "after_sha256": "d7659d992196e703cda8b09991c6835f5d776d655aa7648958f9e6a7976aee1f"
+      },
+      {
+        "path": "system/qmp-chip8.c",
+        "before_sha256": "5c15efbe8d663a7ccb4c1628f8098212599e212e1e35f2a77df5863de1482c4b",
+        "after_sha256": "5ba0b8902d487f3d6fb9a1144a6d4d1c3e2b4f9da12827c3da1bc51023850141"
+      },
+      {
+        "path": "target/chip8/cpu.c",
+        "before_sha256": "c6dc315b11016ea2e5d9bdc3c5e40159738cfe20ed9f23b2046fc170eeaa5c3f",
+        "after_sha256": "7819619a56349a2b7c374490dcf00952612213fc01a674f75a349e23dab4d478"
+      },
+      {
+        "path": "target/chip8/cpu.h",
+        "before_sha256": "de83d2c2f8384ca2aea435bc9a4ad28e6d1b4b3bcc56919c74c648bed1db93d1",
+        "after_sha256": "8ffaa5c71b65d81c089056123dfc0ed4322493c7a454e21ad34ffc49f6cedc96"
+      },
+      {
+        "path": "target/chip8/helper.c",
+        "before_sha256": "6b2c87b2e0e86d86178fdca3dd8578efc4f52a6121728140747a8254d8169b18",
+        "after_sha256": "bb97919b02aaaf2a542c217b2ca04b41dad4dcbe34e2e43c57b0af4d4186dcc7"
+      },
+      {
+        "path": "target/chip8/vmstate.c",
+        "before_sha256": "0caba13bca94ff1f7be2d61d8150a7921a81bd9a9aeb590b29df15473b1fa243",
+        "after_sha256": "cbe69aa87c66e01c4c6935a4c26f29873a357a50156bd899747c4e9164455474"
+      }
+    ]
+  },
+  "target": {
+    "qemu_target": "chip8-softmmu",
+    "machine": "chip8-test",
+    "cpu_model": "chip8-cpu",
+    "profile": "chip8-classic-pilot-default-v1",
+    "cpu_subset": "fdisbull-chip8-frames-5",
+    "environment_model": "fdisbull-chip8-display-keypad-timers-rng-layers-frames-4",
+    "frame_model": "fdisbull-chip8-native-frame-sample-1",
+    "frame_boundary": "Exactly one due QEMU virtual 60 Hz timer tick; not guest drawing completion, VGA update, VBlank, or wall-clock cadence.",
+    "commands": {
+      "arm": "x-chip8-arm-frame(token:str,expected-state-generation:uint64,expected-virtual-ticks:uint64,expected-deadline-ns:uint64)",
+      "query": "query-chip8-frame(token?:str)",
+      "cancel": "x-chip8-cancel-frame(token:str,expected-control-generation:uint64)",
+      "receipt": "Chip8FrameInfo"
+    },
+    "receipt_fields": [
+      "model",
+      "subset",
+      "environment-model",
+      "state",
+      "token",
+      "control-generation",
+      "state-generation",
+      "baseline-virtual-ticks",
+      "baseline-deadline-ns",
+      "completed-virtual-ticks",
+      "completed-deadline-ns",
+      "sampled-virtual-now-ns",
+      "phase-numerator",
+      "frame-generation",
+      "pixels-hex",
+      "pixels-sha256",
+      "stop-pending",
+      "stop-owned",
+      "stop-consumed",
+      "faulted",
+      "key-wait",
+      "layer-conflict"
+    ],
+    "receipt_semantics": {
+      "state": "idle, armed, or completed",
+      "pending_sample": "Timer callback consumes one due tick, latches pixels and clock fields, then suppresses further tick processing until cancel. state stays armed; stop-pending=true; ownership/consumed=false.",
+      "completed_sample": "Next CHIP-8 helper entry first checks layer/backing, sticky fault, and key-wait stop ownership; if clear it consumes the pending fence and raises EXCP_DEBUG before the next instruction takes effect.",
+      "deadline": "completed-deadline-ns is the consumed deadline and equals baseline-deadline-ns. next-deadline advances by the rational phase. sampled-virtual-now-ns is the actual timer callback time and may be later.",
+      "generation": "state-generation is the sample-latched CPU state generation while pending/completed; arm/cancel change frame control generation only.",
+      "higher_priority_stop": "A user breakpoint/hook before the helper can win. Such a stop leaves the fence unconsumed; host must cancel before dispatch. GDB signal alone never proves a frame.",
+      "cancel": "Requires matching token/control generation; increments control generation, clears public fence fields without reverting clock/pixels, and rearms existing absolute deadline. Same cancellation is idempotent."
+    },
+    "checkpoint": "VMState version 5/minimum 5. pre-save and pre-load refuse any non-idle fence; fence/token/control state are not serialized. post-load clears ephemeral frame ownership and retains existing v5 architectural display/timer/tick state.",
+    "scope_limits": [
+      "One stopped TCG vCPU only.",
+      "No additional display device, renderer publication, VBlank model, wall-time claim, or guest-frame completion claim.",
+      "Host owns hook and breakpoint dispatch.",
+      "Cross-binary VMState compatibility is not claimed."
+    ]
+  },
+  "build": {
+    "runtime": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112",
+    "source": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112",
+    "base_source": "/Volumes/CACHE/fdisbull-ci-builds/chip8-layers-runtime-20261112",
+    "build_dir": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/build-frames",
+    "tmpdir": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/tmp-frames",
+    "target": "chip8-softmmu",
+    "accelerator": "TCG",
+    "configure_cwd": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/build-frames",
+    "configure_command": "TMPDIR=/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/tmp-frames ../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/build-frames/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_cwd": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112",
+    "build_command": "TMPDIR=/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/tmp-frames /Users/tiga/miniconda/bin/ninja -C /Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/build-frames -j4 qemu-system-chip8",
+    "candidate_binary": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112/build-frames/qemu-system-chip8",
+    "candidate_binary_sha256": "5388cd16dcdf1fe06457f02a93460ac128a15ba079eeedefd04acd21da992288",
+    "candidate_binary_size": 6280776,
+    "configure_status": "passed",
+    "build_status": "passed",
+    "build_note": "First compile attempt found and corrected an optional QAPI argument signature and bounded token-copy function. The first translator compile emitted an unrelated HAVE_CMPXCHG128 undefined-macro warning.",
+    "storage_admission": {
+      "admitted": true,
+      "estimate_bytes": 1800000000,
+      "destination_reserve_bytes": 20000000000,
+      "admission_path": "/Volumes/CACHE/fdisbull-ci-builds"
+    },
+    "ci": false,
+    "other_host_build": false
+  },
+  "verification": {
+    "qapi_and_build": "QAPI generation occurred during configure/Ninja; build linked qemu-system-chip8.",
+    "native_tests": {
+      "status": "passed",
+      "tests_run_by_patch_author": false,
+      "cases": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "platform": "macOS arm64",
+      "receipt": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-native-final-03.xml",
+        "log_path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-native-final-03.log"
+      }
+    },
+    "integrated_preservation": {
+      "status": "passed",
+      "cases": 3243,
+      "files": 193,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "predeclared_deselections": 2,
+      "python_files": 1211,
+      "source_unchanged": true,
+      "elapsed_seconds": 811.3179557323456,
+      "result": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-preservation-final-04-result.json",
+        "sha256": "3ac9337947e2fd6d8028679062b6aae8b780317632a98bd15faad74dc717d739"
+      },
+      "xml": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-preservation-final-04.xml",
+        "sha256": "29a6dbcd76c1fb607dff7150ee63dbec97648e184dc4020ccb9cc765e900212a"
+      },
+      "log": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-preservation-final-04.log",
+        "sha256": "8e1a95b44305665d9c5e36bc754c28b4f40e98a42b1c43c055f222a2c6157ffb"
+      },
+      "source_hashes": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-tested-source-hashes-04.json",
+        "sha256": "0602a649cffe405935a2849141a07902de4c2c4d28f0817de147183ddf8163f1"
+      }
+    },
+    "cross_binary_vmstate_restore_qualified": false,
+    "ci": false,
+    "retained_compatibility": {
+      "status": "passed",
+      "cases": 72,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "platform": "macOS arm64",
+      "receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-compat-final-02.xml",
+      "scope": "retained classic/device/layers/history cases; one obsolete v1-only CLS refusal deselected"
+    },
+    "host_deadline_repair": {
+      "scope": "bounded recovery reservation within existing caller allowance; tiny pre-dispatch refusal preserves owner; actual overrun fails closed",
+      "focused_tests": 18,
+      "receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frames-deadline-fixed-02.xml",
+      "hard_wall_clock_return_bound": false,
+      "shared_gdb_emergency_recovery_limit_seconds": 5
+    }
+  },
+  "applied_verification": {
+    "status": "passed",
+    "receipt": "R/chip8-frames-patch-replay-01.json",
+    "patch_sha256": "7dfbb94ee30de832b1521d187a1d2607bfb6cb9fca5b1a6fc098d46539bc5c28",
+    "replayed_file_count": 6,
+    "method": "Copied only the six touched v4 files into an isolated replay subset, applied patch -p1 --batch, and compared all six resulting file hashes to the built v5 source.",
+    "replay_revision": 1,
+    "all_hashes_match": true
+  }
+}

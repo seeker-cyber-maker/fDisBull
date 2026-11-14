@@ -1,0 +1,527 @@
+--- a/accel/tcg/icount-common.c
++++ b/accel/tcg/icount-common.c
+@@ -28,6 +28,7 @@
+ #include "qapi/error.h"
+ #include "qemu/error-report.h"
+ #include "system/cpus.h"
++#include "system/fdisbull-clock.h"
+ #include "system/qtest.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/option.h"
+@@ -301,7 +302,7 @@
+      * Nothing to do if the VM is stopped: QEMU_CLOCK_VIRTUAL timers
+      * do not fire, so computing the deadline does not make sense.
+      */
+-    if (!runstate_is_running()) {
++    if (!runstate_is_running() || fdisbull_clock_stop_pending()) {
+         return;
+     }
+ 
+@@ -461,6 +462,7 @@
+     if (time_shift >= 0) {
+         timers_state.icount_time_shift = time_shift;
+         icount_enable_precise();
++        fdisbull_clock_set_icount_profile(time_shift == 7 && !sleep && !align);
+         return true;
+     }
+ 
+--- /dev/null
++++ b/include/system/fdisbull-clock.h
+@@ -0,0 +1,14 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* Experimental fDisBull native virtual-clock extension, protocol version 1. */
++#ifndef SYSTEM_FDISBULL_CLOCK_H
++#define SYSTEM_FDISBULL_CLOCK_H
++
++#include "qapi/qapi-types-run-state.h"
++
++void fdisbull_clock_set_icount_profile(bool supported);
++bool fdisbull_clock_stop_pending(void);
++void fdisbull_clock_handle_stop_request(void);
++void fdisbull_clock_on_runstate_change(RunState state);
++void fdisbull_clock_on_reset(void);
++
++#endif
+--- a/qapi/run-state.json
++++ b/qapi/run-state.json
+@@ -131,6 +131,102 @@
+ ##
+ { 'command': 'query-status', 'returns': 'StatusInfo',
+   'allow-preconfig': true }
++
++##
++# @FdisbullClockBudgetState:
++#
++# Experimental fDisBull virtual-clock budget lifecycle.
++#
++# @idle: No budget has been armed.
++# @armed: A virtual timer is pending; the VM has not been resumed by this API.
++# @fired: The timer fired and requested a deferred native stop.
++# @stopped: The VM stopped, either before the timer or after it fired.
++# @cancelled: The matching stopped budget has been disarmed and acknowledged.
++# @invalidated: Reset or an unsupported runstate invalidated this process.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullClockBudgetState',
++  'data': [ 'idle', 'armed', 'fired', 'stopped', 'cancelled', 'invalidated' ] }
++
++##
++# @FdisbullClockInfo:
++#
++# Versioned native QEMU_CLOCK_VIRTUAL observation and budget receipt.
++#
++# @api-version: Private extension protocol version, currently 1.
++# @epoch: Process-local clock epoch, starting at 1; invalidation changes it.
++# @virtual-ns: Native virtual clock value, without an instruction conversion.
++# @running: Whether QEMU is in the running state.
++# @status: Native runstate at observation.
++# @budget-supported: Whether the fixed-icount single-vCPU profile is eligible.
++# @pending-stop: A native budget stop has not yet been consumed or satisfied.
++# @budget-state: Latest budget state.
++# @budget-token: Caller token for the latest budget, when present.
++# @budget-start-ns: Virtual time at arming.
++# @budget-deadline-ns: Absolute native virtual timer deadline.
++# @budget-fired-ns: Virtual time observed by the timer callback, if it fired.
++# @budget-stopped-ns: Virtual time after CPUs stopped or paused cancellation.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullClockInfo',
++  'data': { 'api-version': 'int', 'epoch': 'uint64', 'virtual-ns': 'int',
++            'running': 'bool', 'status': 'RunState',
++            'budget-supported': 'bool', 'pending-stop': 'bool',
++            'budget-state': 'FdisbullClockBudgetState',
++            '*budget-token': 'str', '*budget-start-ns': 'int',
++            '*budget-deadline-ns': 'int', '*budget-fired-ns': 'int',
++            '*budget-stopped-ns': 'int' } }
++
++##
++# @x-fdisbull-query-clock:
++#
++# Observe the native virtual clock without advancing it or resuming the VM.
++# Stopped observations are the supported stable observation contract.
++#
++# Returns: A version-1 native clock and budget record.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-clock', 'returns': 'FdisbullClockInfo' }
++
++##
++# @x-fdisbull-arm-clock-budget:
++#
++# Arm one ordinary virtual timer while one fixed-icount vCPU is stopped.
++# The caller separately owns exactly one GDB continue.  This command never
++# resumes the VM and does not set the clock.  Migration remains blocked
++# after the first successful arm.  Reset/restore invalidates the extension.
++#
++# @delta-ns: Positive virtual nanoseconds, at most 60000000000.
++# @token: New caller token, 1 through 128 bytes, used for cancellation.
++#
++# Returns: The accepted deadline and native state.  Timer expiry requests a
++#     stop; it does not promise an exact arbitrary-nanosecond cutoff.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-clock-budget',
++  'data': { 'delta-ns': 'int', 'token': 'str' },
++  'returns': 'FdisbullClockInfo' }
++
++##
++# @x-fdisbull-cancel-clock-budget:
++#
++# Disarm and acknowledge the matching budget while stopped, retaining its
++# fired/stopped observations.  A pending deferred stop is an error; the
++# controller must close an uncertain VM instead of resuming it.
++#
++# @token: Token of the budget to cancel.  Repeating an already-completed
++#     cancellation with this token is safe while still stopped.
++#
++# Returns: A cancelled receipt with pending-stop false.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-cancel-clock-budget',
++  'data': { 'token': 'str' }, 'returns': 'FdisbullClockInfo' }
+ 
+ ##
+ # @SHUTDOWN:
+--- /dev/null
++++ b/system/fdisbull-clock.c
+@@ -0,0 +1,331 @@
++/*
++ * Experimental fDisBull native virtual-clock extension, protocol version 1.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * A read observes QEMU_CLOCK_VIRTUAL.  A budget adds an ordinary virtual
++ * timer; it never writes the clock or resumes the guest.  The controller
++ * owns the matching GDB continue and the host-side failure deadline.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/core/cpu.h"
++#include "migration/blocker.h"
++#include "migration/misc.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qemu/main-loop.h"
++#include "qemu/timer.h"
++#include "system/cpus.h"
++#include "system/fdisbull-clock.h"
++#include "system/replay.h"
++#include "system/runstate.h"
++
++#define FDISBULL_CLOCK_API_VERSION 1
++#define FDISBULL_CLOCK_MAX_DELTA_NS INT64_C(60000000000)
++#define FDISBULL_CLOCK_MAX_TOKEN_BYTES 128
++
++/* All live accesses are serialized by BQL.  Configuration precedes CPUs. */
++static struct {
++    bool initialized;
++    bool icount_profile;
++    bool invalidated;
++    bool pending_stop;
++    uint64_t epoch;
++    QEMUTimer timer;
++    Error *migration_blocker;
++    FdisbullClockBudgetState state;
++    char *token;
++    int64_t start_ns;
++    int64_t deadline_ns;
++    bool has_fired;
++    int64_t fired_ns;
++    bool has_stopped;
++    int64_t stopped_ns;
++} clock_state = {
++    .epoch = 1,
++    .state = FDISBULL_CLOCK_BUDGET_STATE_IDLE,
++};
++
++static bool fdisbull_clock_safe_state(RunState state)
++{
++    return state == RUN_STATE_PRELAUNCH || state == RUN_STATE_DEBUG ||
++           state == RUN_STATE_PAUSED;
++}
++
++static bool fdisbull_clock_single_cpu(bool require_stopped)
++{
++    CPUState *cpu;
++    unsigned count = 0;
++
++    CPU_FOREACH(cpu) {
++        count++;
++        if (count > 1 || (require_stopped && !cpu->stopped)) {
++            return false;
++        }
++    }
++    return count == 1;
++}
++
++static bool fdisbull_clock_budget_supported(void)
++{
++    return clock_state.icount_profile && !clock_state.invalidated &&
++           replay_mode == REPLAY_MODE_NONE && !migration_is_running() &&
++           fdisbull_clock_single_cpu(false);
++}
++
++void fdisbull_clock_set_icount_profile(bool supported)
++{
++    clock_state.icount_profile = supported;
++}
++
++bool fdisbull_clock_stop_pending(void)
++{
++    CPUState *cpu;
++
++    if (clock_state.pending_stop) {
++        return true;
++    }
++    /*
++     * A debugger trap stops the CPU before the main loop changes runstate.
++     * main_loop_wait() can try an idle warp in that interval.  After the
++     * native clock has been admitted, do not turn any debugger stop into
++     * a jump to a clock, audio, display or ordinary PIT timer.  This also
++     * applies to a normal GDB continue without an armed clock budget.
++     * A merely halted CPU must still be allowed to warp.
++     */
++    if (clock_state.initialized && clock_state.icount_profile) {
++        CPU_FOREACH(cpu) {
++            if (cpu->stop || cpu->stopped) {
++                return true;
++            }
++        }
++    }
++    return false;
++}
++
++static void fdisbull_clock_invalidate(void)
++{
++    if (!clock_state.initialized) {
++        return;
++    }
++    assert(bql_locked());
++    timer_del(&clock_state.timer);
++    clock_state.invalidated = true;
++    clock_state.state = FDISBULL_CLOCK_BUDGET_STATE_INVALIDATED;
++    if (clock_state.epoch != UINT64_MAX) {
++        clock_state.epoch++;
++    }
++    /* A pending stop is consumed only by an actual stop or the main loop. */
++}
++
++void fdisbull_clock_on_reset(void)
++{
++    fdisbull_clock_invalidate();
++}
++
++void fdisbull_clock_on_runstate_change(RunState state)
++{
++    if (state != RUN_STATE_RUNNING && !fdisbull_clock_safe_state(state) &&
++        !clock_state.invalidated) {
++        fdisbull_clock_invalidate();
++    }
++}
++
++static void fdisbull_clock_vm_state_change(void *opaque, bool running,
++                                         RunState state)
++{
++    assert(bql_locked());
++    if (running) {
++        return;
++    }
++
++    /* vm_state_notify(false) follows pause_all_vcpus() in do_vm_stop(). */
++    timer_del(&clock_state.timer);
++    if (clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
++        clock_state.state = FDISBULL_CLOCK_BUDGET_STATE_STOPPED;
++        clock_state.has_stopped = true;
++        clock_state.stopped_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    }
++
++    /*
++     * This request belongs only to this extension, not vmstop_requested.
++     * Once CPUs have stopped it is satisfied, including an earlier debugger
++     * stop.  Clearing it here prevents a queued request affecting a later c.
++     */
++    clock_state.pending_stop = false;
++}
++
++static void fdisbull_clock_timer_cb(void *opaque)
++{
++    assert(bql_locked());
++    assert(qemu_in_vcpu_thread());
++    if (clock_state.state != FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        !runstate_is_running()) {
++        return;
++    }
++
++    /* An already-requested debugger/CPU stop wins a simultaneous deadline. */
++    if (current_cpu->stop || current_cpu->stopped) {
++        return;
++    }
++
++    clock_state.has_fired = true;
++    clock_state.fired_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    clock_state.state = FDISBULL_CLOCK_BUDGET_STATE_FIRED;
++    clock_state.pending_stop = true;
++    cpu_stop_current();
++    qemu_notify_event();
++}
++
++void fdisbull_clock_handle_stop_request(void)
++{
++    assert(bql_locked());
++    if (!clock_state.pending_stop) {
++        return;
++    }
++
++    /* Called outside timer dispatch.  Disabling VIRTUAL here cannot wait
++     * for this function's own timer callback.  Existing debug requests are
++     * handled first, preserving their original GDB stop packet. */
++    if (runstate_is_running()) {
++        vm_stop(RUN_STATE_PAUSED);
++    }
++    clock_state.pending_stop = false;
++}
++
++static void fdisbull_clock_init(void)
++{
++    assert(bql_locked());
++    if (clock_state.initialized) {
++        return;
++    }
++    clock_state.initialized = true;
++    timer_init_ns(&clock_state.timer, QEMU_CLOCK_VIRTUAL,
++                  fdisbull_clock_timer_cb, NULL);
++    qemu_add_vm_change_state_handler(fdisbull_clock_vm_state_change, NULL);
++    fdisbull_clock_on_runstate_change(runstate_get());
++}
++
++static FdisbullClockInfo *fdisbull_clock_info(void)
++{
++    FdisbullClockInfo *info = g_new0(FdisbullClockInfo, 1);
++
++    assert(bql_locked());
++    info->api_version = FDISBULL_CLOCK_API_VERSION;
++    info->epoch = clock_state.epoch;
++    info->virtual_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    info->running = runstate_is_running();
++    info->status = runstate_get();
++    info->budget_supported = fdisbull_clock_budget_supported();
++    info->pending_stop = clock_state.pending_stop;
++    info->budget_state = clock_state.state;
++    info->budget_token = g_strdup(clock_state.token);
++    info->has_budget_start_ns = clock_state.token != NULL;
++    info->budget_start_ns = clock_state.start_ns;
++    info->has_budget_deadline_ns = clock_state.token != NULL;
++    info->budget_deadline_ns = clock_state.deadline_ns;
++    info->has_budget_fired_ns = clock_state.has_fired;
++    info->budget_fired_ns = clock_state.fired_ns;
++    info->has_budget_stopped_ns = clock_state.has_stopped;
++    info->budget_stopped_ns = clock_state.stopped_ns;
++    return info;
++}
++
++FdisbullClockInfo *qmp_x_fdisbull_query_clock(Error **errp)
++{
++    fdisbull_clock_init();
++    return fdisbull_clock_info();
++}
++
++static bool fdisbull_clock_require_stopped(Error **errp)
++{
++    if (clock_state.pending_stop) {
++        error_setg(errp, "fDisBull clock stop is still pending; close the VM");
++        return false;
++    }
++    if (!fdisbull_clock_safe_state(runstate_get()) ||
++        !fdisbull_clock_single_cpu(true)) {
++        error_setg(errp, "fDisBull clock command requires one stopped vCPU");
++        return false;
++    }
++    if (clock_state.invalidated) {
++        error_setg(errp, "fDisBull clock epoch invalidated; close the VM");
++        return false;
++    }
++    return true;
++}
++
++FdisbullClockInfo *qmp_x_fdisbull_arm_clock_budget(int64_t delta_ns,
++                                                 const char *token,
++                                                 Error **errp)
++{
++    int64_t now;
++
++    fdisbull_clock_init();
++    if (!fdisbull_clock_require_stopped(errp)) {
++        return NULL;
++    }
++    if (!fdisbull_clock_budget_supported()) {
++        error_setg(errp, "fDisBull clock budgets require fixed icount shift=7, "
++                   "align=off,sleep=off, one vCPU and no replay/migration");
++        return NULL;
++    }
++    if (clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
++        error_setg(errp, "fDisBull clock budget already active");
++        return NULL;
++    }
++    if (!token[0] || strlen(token) > FDISBULL_CLOCK_MAX_TOKEN_BYTES ||
++        (clock_state.token && !strcmp(token, clock_state.token))) {
++        error_setg(errp, "fDisBull clock budget requires a new token "
++                   "of 1..128 bytes");
++        return NULL;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (delta_ns < 1 || delta_ns > FDISBULL_CLOCK_MAX_DELTA_NS || now < 0 ||
++        now > INT64_MAX - delta_ns) {
++        error_setg(errp, "fDisBull clock delta must be 1..60000000000 ns "
++                   "without signed clock overflow");
++        return NULL;
++    }
++    if (!clock_state.migration_blocker) {
++        error_setg(&clock_state.migration_blocker,
++                   "fDisBull virtual-clock budgets do not support migration");
++        if (migrate_add_blocker(&clock_state.migration_blocker, errp) < 0) {
++            return NULL;
++        }
++    }
++
++    g_free(clock_state.token);
++    clock_state.token = g_strdup(token);
++    clock_state.start_ns = now;
++    clock_state.deadline_ns = now + delta_ns;
++    clock_state.has_fired = false;
++    clock_state.has_stopped = false;
++    clock_state.state = FDISBULL_CLOCK_BUDGET_STATE_ARMED;
++    timer_mod_ns(&clock_state.timer, clock_state.deadline_ns);
++    return fdisbull_clock_info();
++}
++
++FdisbullClockInfo *qmp_x_fdisbull_cancel_clock_budget(const char *token,
++                                                    Error **errp)
++{
++    fdisbull_clock_init();
++    if (!fdisbull_clock_require_stopped(errp)) {
++        return NULL;
++    }
++    if (!clock_state.token || strcmp(token, clock_state.token)) {
++        error_setg(errp, "fDisBull clock budget token mismatch");
++        return NULL;
++    }
++
++    timer_del(&clock_state.timer);
++    clock_state.state = FDISBULL_CLOCK_BUDGET_STATE_CANCELLED;
++    if (!clock_state.has_stopped) {
++        clock_state.has_stopped = true;
++        clock_state.stopped_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    }
++    return fdisbull_clock_info();
++}
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -14,6 +14,7 @@
+   'datadir.c',
+   'dirtylimit.c',
+   'dma-helpers.c',
++  'fdisbull-clock.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -52,6 +52,7 @@
+ #include "qom/object.h"
+ #include "qom/object_interfaces.h"
+ #include "system/cpus.h"
++#include "system/fdisbull-clock.h"
+ #include "system/qtest.h"
+ #include "system/replay.h"
+ #include "system/reset.h"
+@@ -246,6 +247,7 @@
+     }
+ 
+     current_run_state = new_state;
++    fdisbull_clock_on_runstate_change(new_state);
+ }
+ 
+ RunState runstate_get(void)
+@@ -510,6 +512,7 @@
+     MachineClass *mc;
+     ResetType type;
+ 
++    fdisbull_clock_on_reset();
+     mc = current_machine ? MACHINE_GET_CLASS(current_machine) : NULL;
+ 
+     cpu_synchronize_all_states();
+@@ -776,6 +779,7 @@
+     if (qemu_debug_requested()) {
+         vm_stop(RUN_STATE_DEBUG);
+     }
++    fdisbull_clock_handle_stop_request();
+     if (qemu_suspend_requested()) {
+         qemu_system_suspend();
+     }

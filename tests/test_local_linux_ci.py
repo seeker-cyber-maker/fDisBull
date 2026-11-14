@@ -129,7 +129,7 @@ def test_interrupted_process_stops_only_its_own_named_container(tmp_path, monkey
     assert stop_log.read_text().splitlines() == ['stop owned-job', 'inspect owned-job']
 
 
-def test_separate_container_store_gets_own_storage_admission(tmp_path, monkeypatch):
+def test_separate_container_store_storage_is_observed_without_reserve_refusal(tmp_path, monkeypatch):
     output = tmp_path / 'codex'
     output.mkdir()
     store = Path('/Volumes/CACHE/AppleContainer')
@@ -139,12 +139,14 @@ def test_separate_container_store_gets_own_storage_admission(tmp_path, monkeypat
             return SimpleNamespace(st_dev=987654)
         return real_stat(path, *args, **kwargs)
     calls = []
-    def admit(path, expected, reserve):
+    def observe(path, expected, reserve):
         calls.append((path, expected, reserve))
-        return {'admitted': True}
+        return {'free_bytes': 1, 'expected_bytes': expected, 'reserve_bytes': reserve,
+                'storage_status': 'observed', 'reserve_enforced': False}
     monkeypatch.setattr(runner.os, 'stat', stat)
-    monkeypatch.setattr(runner, 'admit', admit)
-    results = runner.admit_destinations(output, 123, 456)
+    monkeypatch.setattr(runner.shutil, 'disk_usage', lambda path: SimpleNamespace(free=1))
+    monkeypatch.setattr(runner, 'storage_observation', observe)
+    results = runner.observe_destinations(output, 123, 456)
     assert calls == [(output, 123, 456), (store, 123, 456)]
     assert set(results) == {'output', 'container_store'}
 
@@ -168,7 +170,7 @@ def test_resume_rejects_process_receipt_without_completed_marker(tmp_path, monke
         return real_relative(path, *others)
     monkeypatch.setattr(Path, 'is_relative_to', permitted_relative)
     monkeypatch.setattr(runner, 'source_identity', lambda path: (sha, 'fixture'))
-    monkeypatch.setattr(runner, 'admit_destinations', lambda *args: {})
+    monkeypatch.setattr(runner, 'observe_destinations', lambda *args: {})
     args = SimpleNamespace(source=source, output=run, expected_bytes=1,
                            reserve_bytes=20_000_000_000, profile='ordinary', timeout=1)
     with pytest.raises(ValueError, match='Failed attempt retained'):
@@ -176,7 +178,7 @@ def test_resume_rejects_process_receipt_without_completed_marker(tmp_path, monke
     assert not (run / 'ordinary/completed.json').exists()
 
 
-def test_same_pool_storage_is_admitted_once(tmp_path, monkeypatch):
+def test_same_pool_storage_is_observed_once(tmp_path, monkeypatch):
     output = tmp_path / 'cache-output'
     output.mkdir()
     store = Path('/Volumes/CACHE/AppleContainer')
@@ -188,9 +190,18 @@ def test_same_pool_storage_is_admitted_once(tmp_path, monkeypatch):
         return real_stat(path, *args, **kwargs)
     calls = []
     monkeypatch.setattr(runner.os, 'stat', stat)
-    monkeypatch.setattr(runner, 'admit', lambda path, expected, reserve: calls.append(path) or {'admitted': True})
-    assert set(runner.admit_destinations(output, 123, 456)) == {'output'}
+    monkeypatch.setattr(runner, 'storage_observation', lambda path, expected, reserve: calls.append(path) or {'storage_status': 'observed'})
+    assert set(runner.observe_destinations(output, 123, 456)) == {'output'}
     assert calls == [output]
+
+
+def test_storage_observation_rejects_missing_or_symlink_destination(tmp_path):
+    with pytest.raises(ValueError, match='destination unavailable'):
+        runner.storage_observation(tmp_path / 'missing', 0, 0)
+    link = tmp_path / 'link'
+    link.symlink_to(tmp_path, target_is_directory=True)
+    with pytest.raises(ValueError, match='destination unavailable'):
+        runner.storage_observation(link, 0, 0)
 
 
 def test_local_unified_preparation_precedes_direct_acceptance():
@@ -276,7 +287,7 @@ def test_readback_qualification_does_not_request_bulk_storage_or_start_workers(t
                         True if path == run and other == (Path('/Volumes/CACHE'),)
                         else original_relative(path, *other))
     monkeypatch.setattr(runner, 'source_identity', lambda path: (sha, 'fixture'))
-    monkeypatch.setattr(runner, 'admit_destinations', lambda *a: pytest.fail('Readback requested bulk allocation'))
+    monkeypatch.setattr(runner, 'observe_destinations', lambda *a: pytest.fail('Readback requested bulk allocation'))
     commands = []
     monkeypatch.setattr(runner.subprocess, 'run', lambda command, **kwargs: commands.append(command))
     runner.execute(SimpleNamespace(source=source, output=run, profile='qualify',

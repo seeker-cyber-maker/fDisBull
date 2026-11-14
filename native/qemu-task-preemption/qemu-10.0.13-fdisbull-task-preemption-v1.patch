@@ -1,0 +1,1389 @@
+--- a/hw/i386/x86-cpu.c
++++ b/hw/i386/x86-cpu.c
+@@ -86,6 +86,45 @@
+     return intno;
+ }
+ 
++int cpu_get_pic_interrupt_info(CPUX86State *env, X86PICInterruptInfo *info)
++{
++    X86CPU *cpu = env_archcpu(env);
++    PICIRQInfo pic_info = {0};
++    int intno;
++
++    if (info) {
++        memset(info, 0, sizeof(*info));
++        info->source = X86_PIC_INTERRUPT_NONE;
++    }
++    if (!kvm_irqchip_in_kernel() && !whpx_apic_in_platform()) {
++        intno = apic_get_interrupt(cpu->apic_state);
++        if (intno >= 0) {
++            if (info) {
++                info->source = X86_PIC_INTERRUPT_APIC;
++                info->vector = intno;
++            }
++            return intno;
++        }
++        if (!apic_accept_pic_intr(cpu->apic_state)) {
++            return -1;
++        }
++    }
++
++    intno = pic_read_irq_info(isa_pic, &pic_info);
++    if (info) {
++        info->source = X86_PIC_INTERRUPT_8259;
++        info->acknowledged = pic_info.acknowledged;
++        info->spurious = pic_info.spurious;
++        info->slave = pic_info.slave;
++        info->master_auto_eoi = pic_info.master_auto_eoi;
++        info->slave_auto_eoi = pic_info.slave_auto_eoi;
++        info->irq = pic_info.irq;
++        info->master_irq = pic_info.master_irq;
++        info->vector = pic_info.vector;
++    }
++    return intno;
++}
++
+ DeviceState *cpu_get_current_apic(void)
+ {
+     if (current_cpu) {
+--- a/hw/intc/i8259.c
++++ b/hw/intc/i8259.c
+@@ -57,6 +57,43 @@
+ #endif
+ PICCommonState *isa_pic;
+ static PICCommonState *slave_pic;
++static PICPreemptionObserver preemption_observer;
++
++void i8259_set_preemption_observer(PICPreemptionObserver observer)
++{
++    preemption_observer = observer;
++}
++
++bool pic_get_preemption_state(PICPreemptionState *state)
++{
++    if (!state || !isa_pic || !slave_pic) {
++        return false;
++    }
++    *state = (PICPreemptionState) {
++        .present = true,
++        .master_auto_eoi = isa_pic->auto_eoi,
++        .slave_auto_eoi = slave_pic->auto_eoi,
++        .master_special_fully_nested = isa_pic->special_fully_nested_mode,
++        .slave_special_fully_nested = slave_pic->special_fully_nested_mode,
++        .master_special_mask = isa_pic->special_mask,
++        .slave_special_mask = slave_pic->special_mask,
++        .master_poll = isa_pic->poll,
++        .slave_poll = slave_pic->poll,
++        .master_single_mode = isa_pic->single_mode,
++        .slave_single_mode = slave_pic->single_mode,
++        .master_init_state = isa_pic->init_state,
++        .slave_init_state = slave_pic->init_state,
++        .master_mask = isa_pic->imr,
++        .master_irr = isa_pic->irr,
++        .master_isr = isa_pic->isr,
++        .master_irq_base = isa_pic->irq_base,
++        .slave_mask = slave_pic->imr,
++        .slave_irr = slave_pic->irr,
++        .slave_isr = slave_pic->isr,
++        .slave_irq_base = slave_pic->irq_base,
++    };
++    return true;
++}
+ 
+ /* return the highest priority found in mask (highest = smallest
+    number). Return 8 if no irq */
+@@ -173,11 +210,21 @@
+     pic_update_irq(s);
+ }
+ 
+-int pic_read_irq(PICCommonState *s)
++int pic_read_irq_info(PICCommonState *s, PICIRQInfo *info)
+ {
+     int irq, intno;
+ 
++    if (info) {
++        memset(info, 0, sizeof(*info));
++        info->master_auto_eoi = s->auto_eoi;
++        info->slave_auto_eoi = slave_pic ? slave_pic->auto_eoi : false;
++    }
++
+     irq = pic_get_irq(s);
++    if (info) {
++        info->valid = true;
++        info->master_irq = irq >= 0 ? irq : 7;
++    }
+     if (irq >= 0) {
+         int irq2;
+ 
+@@ -185,21 +232,43 @@
+             irq2 = pic_get_irq(slave_pic);
+             if (irq2 >= 0) {
+                 pic_intack(slave_pic, irq2);
++                if (info) {
++                    info->acknowledged = true;
++                    info->slave = true;
++                    info->irq = irq2 + 8;
++                }
+             } else {
+                 /* spurious IRQ on slave controller */
+                 irq2 = 7;
++                if (info) {
++                    info->spurious = true;
++                    info->irq = 15;
++                }
+             }
+             intno = slave_pic->irq_base + irq2;
+             pic_intack(s, irq);
++            if (info) {
++                info->vector = intno;
++            }
+             irq = irq2 + 8;
+         } else {
+             intno = s->irq_base + irq;
+             pic_intack(s, irq);
++            if (info) {
++                info->acknowledged = true;
++                info->irq = irq;
++                info->vector = intno;
++            }
+         }
+     } else {
+         /* spurious IRQ on host controller */
+         irq = 7;
+         intno = s->irq_base + irq;
++        if (info) {
++            info->spurious = true;
++            info->irq = 7;
++            info->vector = intno;
++        }
+     }
+ 
+ #ifdef DEBUG_IRQ_LATENCY
+@@ -213,6 +282,11 @@
+     return intno;
+ }
+ 
++int pic_read_irq(PICCommonState *s)
++{
++    return pic_read_irq_info(s, NULL);
++}
++
+ static void pic_init_reset(PICCommonState *s)
+ {
+     pic_reset_common(s);
+@@ -235,6 +309,14 @@
+     uint32_t addr = addr64;
+     uint32_t val = val64;
+     int priority, cmd, irq;
++    uint8_t old_irq_base = s->irq_base;
++    uint8_t old_auto_eoi = s->auto_eoi;
++    uint8_t old_nested = s->special_fully_nested_mode;
++    uint8_t old_single_mode = s->single_mode;
++    uint8_t old_init_state = s->init_state;
++    uint8_t old_special_mask = s->special_mask;
++    uint8_t old_poll = s->poll;
++    uint8_t old_isr = s->isr;
+ 
+     trace_pic_ioport_write(s->master, addr, val);
+ 
+@@ -319,6 +401,25 @@
+             break;
+         }
+     }
++
++    if (addr == 0 && !(val & 0x18) &&
++        ((val >> 5) == 1 || (val >> 5) == 3 ||
++         (val >> 5) == 5 || (val >> 5) == 7)) {
++        uint8_t cleared = old_isr & ~s->isr;
++        for (unsigned i = 0; i < 8; i++) {
++            if ((cleared & (1u << i)) && preemption_observer) {
++                preemption_observer(s, PIC_PREEMPTION_EVENT_EOI,
++                                    s->master, i);
++            }
++        }
++    }
++    if ((old_irq_base != s->irq_base || old_auto_eoi != s->auto_eoi ||
++         old_nested != s->special_fully_nested_mode ||
++         old_single_mode != s->single_mode || old_init_state != s->init_state ||
++         old_special_mask != s->special_mask || old_poll != s->poll) &&
++        preemption_observer) {
++        preemption_observer(s, PIC_PREEMPTION_EVENT_CONFIG, s->master, 0);
++    }
+ }
+ 
+ static uint64_t pic_ioport_read(void *opaque, hwaddr addr,
+@@ -332,6 +433,10 @@
+         if (ret >= 0) {
+             pic_intack(s, ret);
+             ret |= 0x80;
++            if (preemption_observer) {
++                preemption_observer(s, PIC_PREEMPTION_EVENT_POLL_ACK,
++                                    s->master, ret & 7);
++            }
+         } else {
+             ret = 0;
+         }
+--- a/include/hw/intc/i8259.h
++++ b/include/hw/intc/i8259.h
+@@ -1,9 +1,58 @@
+ #ifndef HW_I8259_H
+ #define HW_I8259_H
++
++#include <stdbool.h>
++#include <stdint.h>
+ 
+ /* i8259.c */
+ 
+ typedef struct PICCommonState PICCommonState;
++
++typedef struct PICIRQInfo {
++    bool valid;
++    bool acknowledged;
++    bool spurious;
++    bool slave;
++    bool master_auto_eoi;
++    bool slave_auto_eoi;
++    uint8_t irq;
++    uint8_t master_irq;
++    uint8_t vector;
++} PICIRQInfo;
++
++typedef struct PICPreemptionState {
++    bool present;
++    bool master_auto_eoi;
++    bool slave_auto_eoi;
++    bool master_special_fully_nested;
++    bool slave_special_fully_nested;
++    bool master_special_mask;
++    bool slave_special_mask;
++    bool master_poll;
++    bool slave_poll;
++    bool master_single_mode;
++    bool slave_single_mode;
++    uint8_t master_init_state;
++    uint8_t slave_init_state;
++    uint8_t master_mask;
++    uint8_t master_irr;
++    uint8_t master_isr;
++    uint8_t master_irq_base;
++    uint8_t slave_mask;
++    uint8_t slave_irr;
++    uint8_t slave_isr;
++    uint8_t slave_irq_base;
++} PICPreemptionState;
++
++typedef enum PICPreemptionEvent {
++    PIC_PREEMPTION_EVENT_EOI,
++    PIC_PREEMPTION_EVENT_CONFIG,
++    PIC_PREEMPTION_EVENT_POLL_ACK,
++} PICPreemptionEvent;
++
++typedef void (*PICPreemptionObserver)(PICCommonState *pic,
++                                     PICPreemptionEvent event,
++                                     bool master, uint8_t irq);
+ 
+ extern PICCommonState *isa_pic;
+ 
+@@ -18,5 +67,8 @@
+ qemu_irq *kvm_i8259_init(ISABus *bus);
+ int pic_get_output(PICCommonState *s);
+ int pic_read_irq(PICCommonState *s);
++int pic_read_irq_info(PICCommonState *s, PICIRQInfo *info);
++bool pic_get_preemption_state(PICPreemptionState *state);
++void i8259_set_preemption_observer(PICPreemptionObserver observer);
+ 
+ #endif
+--- a/qapi/fdisbull-task-scheduler.json
++++ b/qapi/fdisbull-task-scheduler.json
+@@ -34,6 +34,12 @@
+ # @width: Operand width in bytes.
+ # @error-code-present: Whether delivery pushed an error code.
+ # @error-code: Error code value when present.
++# @pic-irq-valid: Whether this frame owns a real acknowledged 8259 IRQ.
++# @pic-controller: PIC identity, 0 for master and 1 for slave.
++# @pic-irq: Acknowledged PIC input line.
++# @pic-vector: Vector delivered for the PIC line.
++# @pic-ack-sequence: Monotonic native acknowledgement sequence.
++# @pic-eoi-seen: Whether the guest has issued the matching EOI.
+ ##
+ { 'struct': 'FdisbullTaskInterruptFrame',
+   'data': { 'sequence': 'uint64', 'vector': 'uint32', 'kind': 'str',
+@@ -42,7 +48,68 @@
+             'frame-ss-selector': 'uint32', 'frame-ss-base': 'uint64',
+             'frame-sp-mask': 'uint64', 'frame-size': 'uint32',
+             'backing-count': 'uint32', 'backing-pages': [ 'uint64' ],
+-            'error-code-present': 'bool', 'error-code': 'uint32' } }
++            'error-code-present': 'bool', 'error-code': 'uint32',
++            'pic-irq-valid': 'bool', 'pic-controller': 'uint32',
++            'pic-irq': 'uint32', 'pic-vector': 'uint32',
++            'pic-ack-sequence': 'uint64', 'pic-eoi-seen': 'bool' } }
++
++##
++# @FdisbullTaskPicPreemptionInfo:
++# Opt-in real 8259 preemption policy, counters, PIC snapshot and outstanding
++# acknowledgement-to-frame binding.
++#
++# @model: Preemption implementation identifier.
++# @enabled: Whether native PIC preemption is active.
++# @irq: Configured direct master PIC line.
++# @quantum: EOI count required before a scheduling attempt.
++# @quantum-progress: EOI count in the current quantum.
++# @pending: Whether a post-EOI handoff awaits the native boundary.
++# @ack-count: Lifetime count of bound target IRQ acknowledgements.
++# @eoi-count: Lifetime count of matched target EOIs.
++# @preemption-count: Lifetime count of completed task switches from EOI.
++# @last-valid: Whether a completed task switch is recorded.
++# @last-irq: IRQ line for the last completed switch.
++# @last-vector: Delivered vector for the last completed switch.
++# @last-from-uuid: Source task UUID for the last completed switch.
++# @last-from-cookie: Source task cookie for the last completed switch.
++# @last-from-incarnation: Source task lifetime.
++# @last-to-uuid: Destination task UUID for the last completed switch.
++# @last-to-cookie: Destination task cookie.
++# @last-to-incarnation: Destination task lifetime.
++# @pic-mask: Master PIC mask.
++# @pic-irr: Master PIC request register.
++# @pic-isr: Master PIC in-service register.
++# @pic-irq-base: Master PIC vector base.
++# @slave-mask: Slave PIC mask.
++# @slave-irr: Slave PIC request register.
++# @slave-isr: Slave PIC in-service register.
++# @slave-irq-base: Slave PIC vector base.
++# @inflight: Whether an acknowledged target IRQ still awaits EOI.
++# @inflight-irq: Outstanding target IRQ line.
++# @inflight-vector: Outstanding target IRQ vector.
++# @inflight-uuid: Task UUID owning the IRQ frame.
++# @inflight-cookie: Task cookie owning the IRQ frame.
++# @inflight-incarnation: Task lifetime owning the IRQ frame.
++# @inflight-sequence: Acknowledgement sequence bound to the IRQ frame.
++# @inflight-frame-sequence: Native interrupt-frame sequence.
++##
++{ 'struct': 'FdisbullTaskPicPreemptionInfo',
++  'data': { 'model': 'str', 'enabled': 'bool', 'irq': 'uint32',
++            'quantum': 'uint32', 'quantum-progress': 'uint32',
++            'pending': 'bool', 'ack-count': 'uint64', 'eoi-count': 'uint64',
++            'preemption-count': 'uint64', 'last-valid': 'bool',
++            'last-irq': 'uint32', 'last-vector': 'uint32',
++            'last-from-uuid': 'str', 'last-from-cookie': 'uint64',
++            'last-from-incarnation': 'uint64', 'last-to-uuid': 'str',
++            'last-to-cookie': 'uint64', 'last-to-incarnation': 'uint64',
++            'pic-mask': 'uint32', 'pic-irr': 'uint32', 'pic-isr': 'uint32',
++            'pic-irq-base': 'uint32', 'slave-mask': 'uint32',
++            'slave-irr': 'uint32', 'slave-isr': 'uint32',
++            'slave-irq-base': 'uint32', 'inflight': 'bool',
++            'inflight-irq': 'uint32', 'inflight-vector': 'uint32',
++            'inflight-uuid': 'str', 'inflight-cookie': 'uint64',
++            'inflight-incarnation': 'uint64', 'inflight-sequence': 'uint64',
++            'inflight-frame-sequence': 'uint64' } }
+ 
+ ##
+ # @FdisbullTaskSchedulerSlot:
+@@ -96,6 +163,7 @@
+ # @yield-vector: Cooperative yield interrupt vector.
+ # @block-vector: Cooperative block/finish interrupt vector.
+ # @pending-irq-count: Machine-level pending interrupt count.
++# @preemption: Native PIC preemption policy and live PIC receipts.
+ # @tasks: CPU-bound native slots.
+ # @fault: Present when a native ownership check revoked scheduling.
+ ##
+@@ -108,6 +176,7 @@
+             'selected-incarnation': 'uint64', 'runqueue-generation': 'uint64',
+             'yield-vector': 'uint32', 'block-vector': 'uint32',
+             'pending-irq-count': 'uint32',
++            'preemption': 'FdisbullTaskPicPreemptionInfo',
+             'tasks': [ 'FdisbullTaskSchedulerSlot' ] } }
+ 
+ ##
+@@ -235,3 +304,17 @@
+ ##
+ { 'command': 'x-fdisbull-task-scheduler-disable',
+   'returns': 'FdisbullTaskSchedulerStatusInfo' }
++
++##
++# @x-fdisbull-task-preemption-configure:
++# Opt in or out of task preemption on a selected real master-8259 IRQ. The
++# omitted quantum defaults to one matched acknowledgement/EOI pair.
++#
++# @enabled: Whether PIC-EOI-driven preemption is enabled.
++# @irq: Master PIC input line, 0..7 except cascade line 2.
++# @quantum: Number of matched EOI pairs before a scheduling attempt; 1..65535.
++##
++{ 'command': 'x-fdisbull-task-preemption-configure',
++  'data': { 'enabled': 'bool', 'irq': 'uint8',
++            '*quantum': 'uint32' },
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
+--- a/target/i386/cpu.h
++++ b/target/i386/cpu.h
+@@ -2376,6 +2376,23 @@
+ hwaddr x86_cpu_get_phys_page_attrs_debug(CPUState *cpu, vaddr addr,
+                                          MemTxAttrs *attrs);
+ int cpu_get_pic_interrupt(CPUX86State *s);
++typedef struct X86PICInterruptInfo {
++    uint32_t source;
++    bool acknowledged;
++    bool spurious;
++    bool slave;
++    bool master_auto_eoi;
++    bool slave_auto_eoi;
++    uint8_t irq;
++    uint8_t master_irq;
++    uint8_t vector;
++} X86PICInterruptInfo;
++enum {
++    X86_PIC_INTERRUPT_NONE,
++    X86_PIC_INTERRUPT_8259,
++    X86_PIC_INTERRUPT_APIC,
++};
++int cpu_get_pic_interrupt_info(CPUX86State *s, X86PICInterruptInfo *info);
+ 
+ /* MS-DOS compatibility mode FPU exception support */
+ void x86_register_ferr_irq(qemu_irq irq);
+--- a/target/i386/fdisbull-task-private.c
++++ b/target/i386/fdisbull-task-private.c
+@@ -23,6 +23,7 @@
+ #include "system/fdisbull-task-context.h"
+ #include "system/fdisbull-task-private.h"
+ #include "target/i386/fdisbull-task-scheduler.h"
++#include "hw/intc/i8259.h"
+ #include "system/runstate.h"
+ #include "system/tcg.h"
+ 
+@@ -70,6 +71,11 @@
+     uint32_t width;
+     bool error_code_present;
+     uint32_t error_code;
++    bool pic_irq_valid;
++    uint8_t pic_irq;
++    uint8_t pic_vector;
++    uint64_t pic_ack_sequence;
++    bool pic_eoi_seen;
+ } TaskFrameState;
+ 
+ typedef struct TaskCpuContext {
+@@ -167,6 +173,33 @@
+     uint8_t frame_depth[TASK_MAX];
+     TaskCpuContext contexts[TASK_MAX];
+     TaskFrameState frames[TASK_MAX * TASK_FRAME_DEPTH];
++    bool pic_preemption_enabled;
++    uint8_t pic_preemption_irq;
++    uint32_t pic_preemption_quantum;
++    uint32_t pic_preemption_progress;
++    bool pic_preemption_pending;
++    uint64_t pic_ack_count;
++    uint64_t pic_eoi_count;
++    uint64_t pic_preemption_count;
++    bool pic_last_valid;
++    uint8_t pic_last_irq;
++    uint8_t pic_last_vector;
++    uint8_t pic_last_from_slot;
++    uint8_t pic_last_to_slot;
++    bool pic_inflight;
++    uint8_t pic_inflight_slot;
++    uint8_t pic_inflight_irq;
++    uint8_t pic_inflight_vector;
++    uint64_t pic_inflight_sequence;
++    uint64_t pic_inflight_frame_sequence;
++    uint8_t pic_pending_irq;
++    uint8_t pic_pending_vector;
++    bool pic_fault_pending;
++    uint8_t frame_pic_irq_valid[TASK_MAX * TASK_FRAME_DEPTH];
++    uint8_t frame_pic_irq[TASK_MAX * TASK_FRAME_DEPTH];
++    uint8_t frame_pic_vector[TASK_MAX * TASK_FRAME_DEPTH];
++    uint8_t frame_pic_eoi_seen[TASK_MAX * TASK_FRAME_DEPTH];
++    uint64_t frame_pic_ack_sequence[TASK_MAX * TASK_FRAME_DEPTH];
+ } TaskMigrationState;
+ 
+ static TaskState tasks[TASK_MAX];
+@@ -193,6 +226,28 @@
+ static uint64_t scheduler_generation = 1;
+ static uint64_t frame_sequence;
+ static char *scheduler_fault;
++static bool pic_preemption_enabled;
++static uint8_t pic_preemption_irq;
++static uint32_t pic_preemption_quantum = 1;
++static uint32_t pic_preemption_progress;
++static bool pic_preemption_pending;
++static uint64_t pic_ack_count;
++static uint64_t pic_eoi_count;
++static uint64_t pic_preemption_count;
++static bool pic_last_valid;
++static uint8_t pic_last_irq;
++static uint8_t pic_last_vector;
++static uint8_t pic_last_from_slot = UINT8_MAX;
++static uint8_t pic_last_to_slot = UINT8_MAX;
++static bool pic_inflight;
++static uint8_t pic_inflight_slot = UINT8_MAX;
++static uint8_t pic_inflight_irq;
++static uint8_t pic_inflight_vector;
++static uint64_t pic_inflight_sequence;
++static uint64_t pic_inflight_frame_sequence;
++static uint8_t pic_pending_irq;
++static uint8_t pic_pending_vector;
++static bool pic_preemption_fault_pending;
+ static QemuMutex task_lock;
+ static gsize task_lock_initialized;
+ 
+@@ -354,12 +409,84 @@
+     error_setg(errp, "FDISBULL_TASK_PRECONDITION: %s", why);
+ }
+ 
++static bool pic_preemption_mode_supported(const PICPreemptionState *pic,
++                                          uint8_t irq, Error **errp)
++{
++    if (!pic || !pic->present || irq > 7 || irq == 2 ||
++        pic->master_auto_eoi || pic->slave_auto_eoi ||
++        pic->master_special_fully_nested || pic->slave_special_fully_nested ||
++        pic->master_special_mask || pic->slave_special_mask ||
++        pic->master_poll || pic->slave_poll ||
++        pic->master_single_mode || pic->slave_single_mode ||
++        pic->master_init_state || pic->slave_init_state) {
++        task_error(errp, "PIC preemption requires normal dual-8259 mode, a direct master IRQ other than cascade IRQ2, no polling, and no auto-EOI");
++        return false;
++    }
++    return true;
++}
++
+ static void task_request_debug(CPUState *cpu)
+ {
+     bool acquired = !bql_locked();
+     if (acquired) bql_lock();
+     cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
+     if (acquired) bql_unlock();
++}
++
++static void task_pic_preemption_fault(CPUState *cpu, const char *reason)
++{
++    g_free(scheduler_fault);
++    scheduler_fault = g_strdup(reason);
++    g_free(task_fault);
++    task_fault = g_strdup(reason);
++    pic_preemption_enabled = false;
++    pic_preemption_pending = false;
++    pic_preemption_fault_pending = true;
++    i8259_set_preemption_observer(NULL);
++    if (cpu) {
++        task_request_debug(cpu);
++        cpu_exit(cpu);
++    }
++}
++
++static TaskFrameState *task_pic_inflight_frame(void)
++{
++    if (!pic_inflight || pic_inflight_slot >= TASK_MAX ||
++        !tasks[pic_inflight_slot].used) {
++        return NULL;
++    }
++    TaskState *task = &tasks[pic_inflight_slot];
++    for (int i = task->frame_depth - 1; i >= 0; i--) {
++        TaskFrameState *frame = &task->frames[i];
++        if (frame->sequence == pic_inflight_frame_sequence) {
++            return frame;
++        }
++    }
++    return NULL;
++}
++
++static bool task_pic_inflight_matches_pic(Error **errp)
++{
++    PICPreemptionState pic = {0};
++    TaskFrameState *frame = task_pic_inflight_frame();
++    if (!pic_inflight || pic_inflight_slot >= TASK_MAX ||
++        scheduler_selected != pic_inflight_slot || !frame ||
++        !frame->pic_irq_valid || frame->pic_eoi_seen ||
++        frame->pic_irq != pic_inflight_irq ||
++        frame->pic_vector != pic_inflight_vector ||
++        frame->pic_ack_sequence != pic_inflight_sequence ||
++        frame->sequence != pic_inflight_frame_sequence ||
++        !pic_get_preemption_state(&pic) ||
++        !pic_preemption_mode_supported(&pic, pic_preemption_irq, errp) ||
++        !(pic.master_isr & (1u << pic_inflight_irq)) ||
++        pic.master_irq_base + pic_inflight_irq != pic_inflight_vector ||
++        pic_inflight_irq != pic_preemption_irq) {
++        if (!errp || !*errp) {
++            task_error(errp, "in-flight PIC acknowledgement does not match its native task frame and master ISR bit");
++        }
++        return false;
++    }
++    return true;
+ }
+ 
+ static bool generation_room(Error **errp)
+@@ -884,6 +1011,11 @@
+         digest_u32(sum, f->backing_count);
+         for (unsigned b = 0; b < 2; b++) digest_u64(sum, f->backing_page[b]);
+         digest_u32(sum, f->error_code_present); digest_u32(sum, f->error_code);
++        if (f->pic_irq_valid) {
++            digest_u32(sum, 1); digest_u32(sum, f->pic_irq);
++            digest_u32(sum, f->pic_vector); digest_u64(sum, f->pic_ack_sequence);
++            digest_u32(sum, f->pic_eoi_seen);
++        }
+     }
+     return g_strdup(g_checksum_get_string(sum));
+ }
+@@ -904,13 +1036,76 @@
+     return out;
+ }
+ 
++static FdisbullTaskPicPreemptionInfo *pic_preemption_info_new(void)
++{
++    FdisbullTaskPicPreemptionInfo *out =
++        g_new0(FdisbullTaskPicPreemptionInfo, 1);
++    PICPreemptionState pic = {0};
++
++    out->model = g_strdup("qemu-pc-pic-preemption-v1");
++    out->enabled = pic_preemption_enabled;
++    out->irq = pic_preemption_irq;
++    out->quantum = pic_preemption_quantum;
++    out->quantum_progress = pic_preemption_progress;
++    out->pending = pic_preemption_pending;
++    out->ack_count = pic_ack_count;
++    out->eoi_count = pic_eoi_count;
++    out->preemption_count = pic_preemption_count;
++    out->last_valid = pic_last_valid;
++    out->last_irq = pic_last_irq;
++    out->last_vector = pic_last_vector;
++    out->last_from_uuid = g_strdup("");
++    out->last_to_uuid = g_strdup("");
++    out->inflight = pic_inflight;
++    out->inflight_uuid = g_strdup("");
++    if (pic_get_preemption_state(&pic)) {
++        out->pic_mask = pic.master_mask;
++        out->pic_irr = pic.master_irr;
++        out->pic_isr = pic.master_isr;
++        out->pic_irq_base = pic.master_irq_base;
++        out->slave_mask = pic.slave_mask;
++        out->slave_irr = pic.slave_irr;
++        out->slave_isr = pic.slave_isr;
++        out->slave_irq_base = pic.slave_irq_base;
++    }
++    if (pic_last_valid && pic_last_from_slot < TASK_MAX &&
++        pic_last_to_slot < TASK_MAX) {
++        TaskState *from = &tasks[pic_last_from_slot];
++        TaskState *to = &tasks[pic_last_to_slot];
++        if (from->used && to->used) {
++            g_free(out->last_from_uuid);
++            out->last_from_uuid = g_strdup(from->uuid);
++            out->last_from_cookie = from->cookie;
++            out->last_from_incarnation = from->incarnation;
++            g_free(out->last_to_uuid);
++            out->last_to_uuid = g_strdup(to->uuid);
++            out->last_to_cookie = to->cookie;
++            out->last_to_incarnation = to->incarnation;
++        }
++    }
++    if (pic_inflight && pic_inflight_slot < TASK_MAX &&
++        tasks[pic_inflight_slot].used) {
++        TaskState *task = &tasks[pic_inflight_slot];
++        g_free(out->inflight_uuid);
++        out->inflight_uuid = g_strdup(task->uuid);
++        out->inflight_cookie = task->cookie;
++        out->inflight_incarnation = task->incarnation;
++        out->inflight_irq = pic_inflight_irq;
++        out->inflight_vector = pic_inflight_vector;
++        out->inflight_sequence = pic_inflight_sequence;
++        out->inflight_frame_sequence = pic_inflight_frame_sequence;
++    }
++    return out;
++}
++
+ static FdisbullTaskSchedulerStatusInfo *scheduler_status_new(void)
+ {
+     FdisbullTaskSchedulerStatusInfo *out = g_new0(FdisbullTaskSchedulerStatusInfo, 1);
+-    out->model = g_strdup("qemu-pc-task-scheduler-v1"); out->api_version = 1;
++    out->model = g_strdup("qemu-pc-task-scheduler-v1"); out->api_version = 2;
+     out->epoch = epoch_highwater; out->generation = generation_highwater;
+     out->enabled = scheduler_enabled; out->yield_vector = 0x60; out->block_vector = 0x62;
+     out->pending_switch = scheduler_switch_pending;
++    out->preemption = pic_preemption_info_new();
+     if (scheduler_fault) out->fault = g_strdup(scheduler_fault);
+     out->runqueue_generation = scheduler_generation;
+     CPUState *owner = NULL; CPU_FOREACH(owner) { break; }
+@@ -982,6 +1177,12 @@
+     }
+     out->error_code_present = frame->error_code_present;
+     out->error_code = frame->error_code;
++    out->pic_irq_valid = frame->pic_irq_valid;
++    out->pic_controller = 0; /* 0 = master 8259; slave cascade is unsupported. */
++    out->pic_irq = frame->pic_irq;
++    out->pic_vector = frame->pic_vector;
++    out->pic_ack_sequence = frame->pic_ack_sequence;
++    out->pic_eoi_seen = frame->pic_eoi_seen;
+     return out;
+ }
+ 
+@@ -1035,7 +1236,10 @@
+ {
+     TaskMigrationState *state = opaque;
+     if (g_atomic_int_get(&pending_task) >= 0 || g_atomic_int_get(&pending_fault) ||
+-        scheduler_switch_pending) {
++        scheduler_switch_pending || pic_preemption_pending ||
++        pic_preemption_fault_pending ||
++        (pic_preemption_enabled && pic_inflight &&
++         !task_pic_inflight_matches_pic(NULL))) {
+         return -EBUSY;
+     }
+     memset(state->task_used, 0, sizeof(state->task_used));
+@@ -1051,6 +1255,28 @@
+     state->scheduler_selected = scheduler_selected;
+     state->scheduler_generation = scheduler_generation;
+     state->frame_sequence = frame_sequence;
++    state->pic_preemption_enabled = pic_preemption_enabled;
++    state->pic_preemption_irq = pic_preemption_irq;
++    state->pic_preemption_quantum = pic_preemption_quantum;
++    state->pic_preemption_progress = pic_preemption_progress;
++    state->pic_preemption_pending = pic_preemption_pending;
++    state->pic_ack_count = pic_ack_count;
++    state->pic_eoi_count = pic_eoi_count;
++    state->pic_preemption_count = pic_preemption_count;
++    state->pic_last_valid = pic_last_valid;
++    state->pic_last_irq = pic_last_irq;
++    state->pic_last_vector = pic_last_vector;
++    state->pic_last_from_slot = pic_last_from_slot;
++    state->pic_last_to_slot = pic_last_to_slot;
++    state->pic_inflight = pic_inflight;
++    state->pic_inflight_slot = pic_inflight_slot;
++    state->pic_inflight_irq = pic_inflight_irq;
++    state->pic_inflight_vector = pic_inflight_vector;
++    state->pic_inflight_sequence = pic_inflight_sequence;
++    state->pic_inflight_frame_sequence = pic_inflight_frame_sequence;
++    state->pic_pending_irq = pic_pending_irq;
++    state->pic_pending_vector = pic_pending_vector;
++    state->pic_fault_pending = pic_preemption_fault_pending;
+     memset(state->cpu_bound, 0, sizeof(state->cpu_bound));
+     memset(state->runnable, 0, sizeof(state->runnable));
+     memset(state->blocked, 0, sizeof(state->blocked));
+@@ -1058,6 +1284,11 @@
+     memset(state->frame_depth, 0, sizeof(state->frame_depth));
+     memset(state->contexts, 0, sizeof(state->contexts));
+     memset(state->frames, 0, sizeof(state->frames));
++    memset(state->frame_pic_irq_valid, 0, sizeof(state->frame_pic_irq_valid));
++    memset(state->frame_pic_irq, 0, sizeof(state->frame_pic_irq));
++    memset(state->frame_pic_vector, 0, sizeof(state->frame_pic_vector));
++    memset(state->frame_pic_eoi_seen, 0, sizeof(state->frame_pic_eoi_seen));
++    memset(state->frame_pic_ack_sequence, 0, sizeof(state->frame_pic_ack_sequence));
+     for (int ti = 0; ti < TASK_MAX; ti++) {
+         TaskState *task = &tasks[ti];
+         state->task_used[ti] = task->used;
+@@ -1078,6 +1309,14 @@
+             state->context_valid[ti] = snapshot.valid;
+             state->frame_depth[ti] = task->frame_depth;
+             memcpy(&state->frames[ti * TASK_FRAME_DEPTH], task->frames, sizeof(task->frames));
++            for (unsigned fi = 0; fi < task->frame_depth; fi++) {
++                unsigned fidx = ti * TASK_FRAME_DEPTH + fi;
++                state->frame_pic_irq_valid[fidx] = task->frames[fi].pic_irq_valid;
++                state->frame_pic_irq[fidx] = task->frames[fi].pic_irq;
++                state->frame_pic_vector[fidx] = task->frames[fi].pic_vector;
++                state->frame_pic_eoi_seen[fidx] = task->frames[fi].pic_eoi_seen;
++                state->frame_pic_ack_sequence[fidx] = task->frames[fi].pic_ack_sequence;
++            }
+         }
+         if (!task->used) {
+             continue;
+@@ -1121,6 +1360,24 @@
+         state->epoch == UINT64_MAX || state->generation == UINT64_MAX ||
+         (state->selected >= TASK_MAX && state->selected != UINT8_MAX) ||
+         state->exec_count > TASK_MAX_EXEC_BYTES) {
++        return -EINVAL;
++    }
++    if (version_id >= 4 &&
++        (state->pic_preemption_pending || state->pic_fault_pending ||
++         state->pic_preemption_irq > 7 || state->pic_preemption_irq == 2 ||
++         !state->pic_preemption_quantum || state->pic_preemption_quantum > 65535 ||
++         state->pic_preemption_progress >= state->pic_preemption_quantum ||
++         state->pic_ack_count < state->pic_eoi_count ||
++         state->pic_ack_count - state->pic_eoi_count != (state->pic_inflight ? 1 : 0) ||
++         (state->pic_preemption_enabled &&
++          (!state->scheduler_enabled || !state->scheduler_prepared)) ||
++         (state->pic_inflight &&
++          (!state->pic_preemption_enabled || state->pic_inflight_slot >= TASK_MAX ||
++           state->pic_inflight_slot != state->scheduler_selected ||
++           state->pic_inflight_irq != state->pic_preemption_irq ||
++           !state->pic_inflight_sequence ||
++           state->pic_inflight_sequence != state->pic_ack_count ||
++           !state->pic_inflight_frame_sequence)))) {
+         return -EINVAL;
+     }
+     TaskState restored[TASK_MAX] = {0};
+@@ -1184,6 +1441,41 @@
+             }
+             task->frame_depth = state->frame_depth[i];
+             memcpy(task->frames, &state->frames[i * TASK_FRAME_DEPTH], sizeof(task->frames));
++            if (version_id >= 4) {
++                for (unsigned f = 0; f < task->frame_depth; f++) {
++                    unsigned fidx = i * TASK_FRAME_DEPTH + f;
++                    if (state->frame_pic_irq_valid[fidx] > 1 ||
++                        state->frame_pic_eoi_seen[fidx] > 1 ||
++                        (state->frame_pic_irq_valid[fidx] &&
++                         (state->frame_pic_irq[fidx] > 7 ||
++                          state->frame_pic_irq[fidx] == 2 ||
++                          !state->frame_pic_ack_sequence[fidx] ||
++                          !task->frames[f].kind ||
++                          task->frames[f].vector != state->frame_pic_vector[fidx])) ||
++                        (!state->frame_pic_irq_valid[fidx] &&
++                         (state->frame_pic_irq[fidx] || state->frame_pic_vector[fidx] ||
++                          state->frame_pic_eoi_seen[fidx] ||
++                          state->frame_pic_ack_sequence[fidx]))) {
++                        return -EINVAL;
++                    }
++                    task->frames[f].pic_irq_valid = state->frame_pic_irq_valid[fidx];
++                    task->frames[f].pic_irq = state->frame_pic_irq[fidx];
++                    task->frames[f].pic_vector = state->frame_pic_vector[fidx];
++                    task->frames[f].pic_eoi_seen = state->frame_pic_eoi_seen[fidx];
++                    task->frames[f].pic_ack_sequence = state->frame_pic_ack_sequence[fidx];
++                }
++            } else {
++                /* Version 3 streams predate PIC metadata.  The destination
++                 * migration_state is process-global, so its untransmitted
++                 * v4 fields must never leak into restored frames. */
++                for (unsigned f = 0; f < task->frame_depth; f++) {
++                    task->frames[f].pic_irq_valid = false;
++                    task->frames[f].pic_irq = 0;
++                    task->frames[f].pic_vector = 0;
++                    task->frames[f].pic_ack_sequence = 0;
++                    task->frames[f].pic_eoi_seen = false;
++                }
++            }
+         }
+         task->page_count = state->page_count[i];
+         task->execute = byte_map_new();
+@@ -1234,6 +1526,35 @@
+         return -EINVAL;
+     }
+     if (state->selected == UINT8_MAX && state->enabled) return -EINVAL;
++    if (version_id >= 4) {
++        if (state->pic_last_valid &&
++            (state->pic_last_irq > 7 || state->pic_last_irq == 2 ||
++             state->pic_last_from_slot >= TASK_MAX || state->pic_last_to_slot >= TASK_MAX ||
++             !restored[state->pic_last_from_slot].used ||
++             !restored[state->pic_last_to_slot].used)) return -EINVAL;
++        if (!state->pic_last_valid &&
++            (state->pic_last_irq || state->pic_last_vector ||
++             state->pic_last_from_slot != UINT8_MAX ||
++             state->pic_last_to_slot != UINT8_MAX)) return -EINVAL;
++        if (state->pic_inflight) {
++            uint8_t slot = state->pic_inflight_slot;
++            bool found = false;
++            if (!restored[slot].used || restored[slot].retired ||
++                !restored[slot].cpu_bound || !state->frame_depth[slot]) return -EINVAL;
++            for (unsigned f = 0; f < state->frame_depth[slot]; f++) {
++                unsigned fidx = slot * TASK_FRAME_DEPTH + f;
++                if (state->frames[fidx].sequence == state->pic_inflight_frame_sequence &&
++                    state->frame_pic_irq_valid[fidx] &&
++                    !state->frame_pic_eoi_seen[fidx] &&
++                    state->frame_pic_irq[fidx] == state->pic_inflight_irq &&
++                    state->frame_pic_vector[fidx] == state->pic_inflight_vector &&
++                    state->frame_pic_ack_sequence[fidx] == state->pic_inflight_sequence) {
++                    found = true;
++                }
++            }
++            if (!found) return -EINVAL;
++        }
++    }
+     if (version_id >= 2) {
+         if ((state->scheduler_enabled &&
+              (state->scheduler_selected >= TASK_MAX ||
+@@ -1285,6 +1606,50 @@
+         scheduler_generation = 1;
+         frame_sequence = 0;
+     }
++    if (version_id >= 4) {
++        pic_preemption_enabled = state->pic_preemption_enabled;
++        pic_preemption_irq = state->pic_preemption_irq;
++        pic_preemption_quantum = state->pic_preemption_quantum;
++        pic_preemption_progress = state->pic_preemption_progress;
++        pic_preemption_pending = false;
++        pic_ack_count = state->pic_ack_count;
++        pic_eoi_count = state->pic_eoi_count;
++        pic_preemption_count = state->pic_preemption_count;
++        pic_last_valid = state->pic_last_valid;
++        pic_last_irq = state->pic_last_irq;
++        pic_last_vector = state->pic_last_vector;
++        pic_last_from_slot = state->pic_last_from_slot;
++        pic_last_to_slot = state->pic_last_to_slot;
++        pic_inflight = state->pic_inflight;
++        pic_inflight_slot = state->pic_inflight ? state->pic_inflight_slot : UINT8_MAX;
++        pic_inflight_irq = state->pic_inflight_irq;
++        pic_inflight_vector = state->pic_inflight_vector;
++        pic_inflight_sequence = state->pic_inflight_sequence;
++        pic_inflight_frame_sequence = state->pic_inflight_frame_sequence;
++        pic_pending_irq = state->pic_pending_irq;
++        pic_pending_vector = state->pic_pending_vector;
++        pic_preemption_fault_pending = false;
++        i8259_set_preemption_observer(pic_preemption_enabled ?
++                                      fdisbull_task_scheduler_pic_observer : NULL);
++        if (pic_preemption_enabled && pic_inflight &&
++            !task_pic_inflight_matches_pic(NULL)) {
++            return -EINVAL;
++        }
++    } else {
++        pic_preemption_enabled = false;
++        pic_preemption_irq = 0;
++        pic_preemption_quantum = 1;
++        pic_preemption_progress = 0;
++        pic_preemption_pending = false;
++        pic_ack_count = pic_eoi_count = pic_preemption_count = 0;
++        pic_last_valid = pic_inflight = false;
++        pic_last_irq = pic_last_vector = pic_inflight_irq = pic_inflight_vector = 0;
++        pic_last_from_slot = pic_last_to_slot = pic_inflight_slot = UINT8_MAX;
++        pic_inflight_sequence = pic_inflight_frame_sequence = 0;
++        pic_pending_irq = pic_pending_vector = 0;
++        pic_preemption_fault_pending = false;
++        i8259_set_preemption_observer(NULL);
++    }
+     migration_state.anchor_address = state->anchor_address;
+     migration_state.sequence = state->sequence;
+     epoch_highwater = MAX(epoch_highwater, state->epoch) + 1;
+@@ -1292,6 +1657,7 @@
+     state->epoch = epoch_highwater;
+     state->generation = generation_highwater;
+     g_clear_pointer(&task_fault, g_free);
++    g_clear_pointer(&scheduler_fault, g_free);
+     if (version_id >= 2 && selected_task < TASK_MAX &&
+         tasks[selected_task].cpu_bound && tasks[selected_task].cpu_valid) {
+         CPUState *cpu = first_cpu;
+@@ -1389,7 +1755,7 @@
+ 
+ static const VMStateDescription vmstate_fdisbull_task_private = {
+     .name = "fdisbull/task-private",
+-    .version_id = 3,
++    .version_id = 4,
+     .minimum_version_id = 1,
+     .pre_save = migration_pre_save,
+     .post_load = migration_post_load,
+@@ -1432,6 +1798,38 @@
+         VMSTATE_STRUCT_ARRAY(frames, TaskMigrationState,
+                              TASK_MAX * TASK_FRAME_DEPTH, 2,
+                              vmstate_task_frame, TaskFrameState),
++        VMSTATE_BOOL_V(pic_preemption_enabled, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_preemption_irq, TaskMigrationState, 4),
++        VMSTATE_UINT32_V(pic_preemption_quantum, TaskMigrationState, 4),
++        VMSTATE_UINT32_V(pic_preemption_progress, TaskMigrationState, 4),
++        VMSTATE_BOOL_V(pic_preemption_pending, TaskMigrationState, 4),
++        VMSTATE_UINT64_V(pic_ack_count, TaskMigrationState, 4),
++        VMSTATE_UINT64_V(pic_eoi_count, TaskMigrationState, 4),
++        VMSTATE_UINT64_V(pic_preemption_count, TaskMigrationState, 4),
++        VMSTATE_BOOL_V(pic_last_valid, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_last_irq, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_last_vector, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_last_from_slot, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_last_to_slot, TaskMigrationState, 4),
++        VMSTATE_BOOL_V(pic_inflight, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_inflight_slot, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_inflight_irq, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_inflight_vector, TaskMigrationState, 4),
++        VMSTATE_UINT64_V(pic_inflight_sequence, TaskMigrationState, 4),
++        VMSTATE_UINT64_V(pic_inflight_frame_sequence, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_pending_irq, TaskMigrationState, 4),
++        VMSTATE_UINT8_V(pic_pending_vector, TaskMigrationState, 4),
++        VMSTATE_BOOL_V(pic_fault_pending, TaskMigrationState, 4),
++        VMSTATE_UINT8_ARRAY_V(frame_pic_irq_valid, TaskMigrationState,
++                              TASK_MAX * TASK_FRAME_DEPTH, 4),
++        VMSTATE_UINT8_ARRAY_V(frame_pic_irq, TaskMigrationState,
++                              TASK_MAX * TASK_FRAME_DEPTH, 4),
++        VMSTATE_UINT8_ARRAY_V(frame_pic_vector, TaskMigrationState,
++                              TASK_MAX * TASK_FRAME_DEPTH, 4),
++        VMSTATE_UINT8_ARRAY_V(frame_pic_eoi_seen, TaskMigrationState,
++                              TASK_MAX * TASK_FRAME_DEPTH, 4),
++        VMSTATE_UINT64_ARRAY_V(frame_pic_ack_sequence, TaskMigrationState,
++                               TASK_MAX * TASK_FRAME_DEPTH, 4),
+         VMSTATE_END_OF_LIST()
+     }
+ };
+@@ -1542,6 +1940,15 @@
+     g_atomic_int_set(&pending_task, -1);
+     g_atomic_int_set(&pending_fault, 0);
+     g_clear_pointer(&task_fault, g_free);
++    pic_preemption_enabled = false;
++    pic_preemption_pending = false;
++    pic_preemption_progress = 0;
++    pic_inflight = false;
++    pic_inflight_slot = UINT8_MAX;
++    pic_inflight_sequence = pic_inflight_frame_sequence = 0;
++    pic_pending_irq = pic_pending_vector = 0;
++    pic_preemption_fault_pending = false;
++    i8259_set_preemption_observer(NULL);
+     if (generation_highwater != UINT64_MAX) {
+         generation_highwater++;
+     }
+@@ -1558,6 +1965,13 @@
+     if (size != 2 || addr != 0 || value != TASK_PORT_VALUE ||
+         !task_manager_ready || !monitor_enabled ||
+         !read_anchor(&uuid, &sequence, &cookie, &incarnation, NULL)) {
++        g_atomic_int_set(&pending_fault, 1);
++        if (current_cpu) cpu_exit(current_cpu);
++        return;
++    }
++    if (scheduler_enabled) {
++        g_clear_pointer(&task_fault, g_free);
++        task_fault = g_strdup("guest task-anchor doorbells cannot select CPU contexts while the native scheduler is enabled");
+         g_atomic_int_set(&pending_fault, 1);
+         if (current_cpu) cpu_exit(current_cpu);
+         return;
+@@ -1671,6 +2085,139 @@
+     return -1;
+ }
+ 
++void fdisbull_task_scheduler_pic_observer(PICCommonState *pic,
++                                          PICPreemptionEvent event,
++                                          bool master, uint8_t irq)
++{
++    CPUState *cpu = current_cpu;
++    PICPreemptionState state = {0};
++    TaskFrameState *frame;
++    g_autoptr(Error) err = NULL;
++
++    if (!pic_preemption_enabled) {
++        return;
++    }
++    if (event == PIC_PREEMPTION_EVENT_CONFIG) {
++        task_pic_preemption_fault(cpu,
++            "8259 PIC was reinitialized or changed into an unsupported mode while preemption was enabled");
++        return;
++    }
++    if (event == PIC_PREEMPTION_EVENT_POLL_ACK) {
++        task_pic_preemption_fault(cpu,
++            "8259 poll-mode acknowledgement is unsupported for task preemption");
++        return;
++    }
++    if (event != PIC_PREEMPTION_EVENT_EOI) {
++        return;
++    }
++    if (!master) {
++        task_pic_preemption_fault(cpu,
++            "slave-PIC cascade EOI is unsupported for task preemption");
++        return;
++    }
++    if (irq != pic_preemption_irq) {
++        return;
++    }
++    frame = task_pic_inflight_frame();
++    if (!pic_inflight || scheduler_selected != pic_inflight_slot || !frame ||
++        !frame->pic_irq_valid || frame->pic_eoi_seen ||
++        frame->pic_irq != pic_inflight_irq ||
++        frame->pic_vector != pic_inflight_vector ||
++        frame->pic_ack_sequence != pic_inflight_sequence ||
++        frame->sequence != pic_inflight_frame_sequence ||
++        pic_inflight_irq != pic_preemption_irq) {
++        task_pic_preemption_fault(cpu,
++            "PIC EOI did not match the selected task's outstanding IRQ frame");
++        return;
++    }
++    if (!frame || !pic_get_preemption_state(&state) ||
++        (state.master_isr & (1u << irq))) {
++        task_pic_preemption_fault(cpu,
++            "master PIC EOI did not clear the tracked in-service line");
++        return;
++    }
++    if (pic_eoi_count == UINT64_MAX) {
++        task_pic_preemption_fault(cpu, "PIC EOI counter exhausted");
++        return;
++    }
++    frame->pic_eoi_seen = true;
++    pic_eoi_count++;
++    pic_inflight = false;
++    pic_inflight_slot = UINT8_MAX;
++    pic_inflight_sequence = 0;
++    pic_inflight_frame_sequence = 0;
++    if (pic_preemption_progress >= pic_preemption_quantum - 1) {
++        pic_preemption_progress = 0;
++        pic_pending_irq = pic_preemption_irq;
++        pic_pending_vector = frame->pic_vector;
++        pic_preemption_pending = true;
++        if (cpu) {
++            cpu_exit(cpu);
++        }
++    } else {
++        pic_preemption_progress++;
++    }
++}
++
++void fdisbull_task_scheduler_hardirq_delivered(
++    CPUState *cpu, int intno, const X86PICInterruptInfo *info)
++{
++    PICPreemptionState pic = {0};
++    TaskState *task;
++    TaskFrameState *frame;
++    g_autoptr(Error) err = NULL;
++
++    if (!pic_preemption_enabled || !scheduler_enabled) {
++        return;
++    }
++    if (!info || info->source != X86_PIC_INTERRUPT_8259 ||
++        info->spurious || !info->acknowledged || info->slave ||
++        info->master_irq == 2 || info->master_auto_eoi ||
++        info->slave_auto_eoi || intno != info->vector) {
++        task_pic_preemption_fault(cpu,
++            "accepted hard interrupt was spurious, APIC, slave-cascade, auto-EOI, or otherwise outside the supported master-PIC path");
++        return;
++    }
++    if (!pic_get_preemption_state(&pic) ||
++        !pic_preemption_mode_supported(&pic, pic_preemption_irq, &err)) {
++        task_pic_preemption_fault(cpu, err ? error_get_pretty(err) :
++            "master PIC state is unavailable or unsupported");
++        return;
++    }
++    if (info->irq != pic_preemption_irq) {
++        return;
++    }
++    if (pic_inflight || pic_ack_count == UINT64_MAX ||
++        scheduler_selected >= TASK_MAX ||
++        !tasks[scheduler_selected].cpu_bound ||
++        tasks[scheduler_selected].retired ||
++        !tasks[scheduler_selected].frame_depth) {
++        task_pic_preemption_fault(cpu,
++            "target PIC IRQ acknowledgement cannot be bound to a unique active native task frame");
++        return;
++    }
++    task = &tasks[scheduler_selected];
++    frame = &task->frames[task->frame_depth - 1];
++    if (frame->kind != 1 || frame->vector != (uint32_t)intno ||
++        frame->pic_irq_valid) {
++        task_pic_preemption_fault(cpu,
++            "target PIC IRQ has no matching newly-created hardware frame");
++        return;
++    }
++    pic_ack_count++;
++    frame->pic_irq_valid = true;
++    frame->pic_irq = info->irq;
++    frame->pic_vector = info->vector;
++    frame->pic_ack_sequence = pic_ack_count;
++    frame->pic_eoi_seen = false;
++    pic_inflight = true;
++    pic_inflight_slot = scheduler_selected;
++    pic_inflight_irq = info->irq;
++    pic_inflight_vector = info->vector;
++    pic_inflight_sequence = pic_ack_count;
++    pic_inflight_frame_sequence = frame->sequence;
++}
++
+ static void task_scheduler_debug_stop(CPUState *cpu)
+ {
+     task_request_debug(cpu);
+@@ -1744,10 +2291,57 @@
+ bool fdisbull_task_scheduler_resume(CPUState *cpu)
+ {
+     int next;
++    bool step_dispatch_pending;
+     if (!scheduler_enabled) return false;
++    step_dispatch_pending = cpu->exception_index == EXCP_DEBUG ||
++        (cpu->interrupt_request & CPU_INTERRUPT_DEBUG);
++    if (pic_preemption_enabled && pic_inflight) {
++        g_autoptr(Error) err = NULL;
++        if (!task_pic_inflight_matches_pic(&err)) {
++            task_pic_preemption_fault(cpu, err ? error_get_pretty(err) :
++                "restored PIC ISR state does not match the native in-flight IRQ frame");
++            return true;
++        }
++    }
++    if (pic_preemption_pending) {
++        int from = scheduler_selected;
++        if (from >= TASK_MAX || !tasks[from].cpu_bound ||
++            !tasks[from].cpu_valid) {
++            task_pic_preemption_fault(cpu,
++                "pending PIC-EOI preemption has no valid source CPU context or counter capacity");
++            return true;
++        }
++        lock_init(); qemu_mutex_lock(&task_lock);
++        task_cpu_context_capture(&tasks[from].cpu, &X86_CPU(cpu)->env,
++                                 false, 0);
++        tasks[from].cpu_valid = true;
++        next = task_scheduler_next(from);
++        pic_preemption_pending = false;
++        if (next < 0 || next == from) {
++            qemu_mutex_unlock(&task_lock);
++            return false;
++        }
++        if (pic_preemption_count == UINT64_MAX) {
++            qemu_mutex_unlock(&task_lock);
++            task_pic_preemption_fault(cpu, "PIC preemption counter exhausted");
++            return true;
++        }
++        bool switched = task_scheduler_select(cpu, next,
++            cpu->singlestep_enabled || step_dispatch_pending,
++            step_dispatch_pending);
++        if (switched) {
++            pic_preemption_count++;
++            pic_last_valid = true;
++            pic_last_irq = pic_pending_irq;
++            pic_last_vector = pic_pending_vector;
++            pic_last_from_slot = from;
++            pic_last_to_slot = next;
++        }
++        qemu_mutex_unlock(&task_lock);
++        return switched;
++    }
+     /* Do not queue another native idle stop while a debugger stop is pending. */
+-    if (cpu->exception_index == EXCP_DEBUG ||
+-        (cpu->interrupt_request & CPU_INTERRUPT_DEBUG)) return false;
++    if (step_dispatch_pending) return false;
+     if (scheduler_selected < TASK_MAX && !scheduler_switch_pending &&
+         tasks[scheduler_selected].runnable && !tasks[scheduler_selected].blocked &&
+         !tasks[scheduler_selected].retired) return false;
+@@ -1778,6 +2372,11 @@
+     CPUState *cs = CPU(cpu);
+     int current, next;
+     if (!scheduler_enabled || !is_int || (intno != 0x60 && intno != 0x62)) return false;
++    if (pic_preemption_enabled && pic_inflight) {
++        task_pic_preemption_fault(cs,
++            "cooperative task switch or block is forbidden before the real PIC EOI");
++        return true;
++    }
+     lock_init(); qemu_mutex_lock(&task_lock);
+     current = scheduler_selected;
+     if (current >= TASK_MAX || !tasks[current].cpu_bound ||
+@@ -2574,6 +3173,65 @@
+     return scheduler_status_new();
+ }
+ 
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_preemption_configure(
++    bool enabled, uint8_t irq, bool has_quantum, uint32_t quantum,
++    Error **errp)
++{
++    PICPreemptionState pic = {0};
++    bool changed;
++    if (!stopped_single_tcg(errp) || !scheduler_prepared || !scheduler_enabled) {
++        if ((!errp || !*errp) && (!scheduler_prepared || !scheduler_enabled)) {
++            task_error(errp, "native task scheduling must be enabled before PIC preemption configuration");
++        }
++        return NULL;
++    }
++    if (scheduler_switch_pending) {
++        task_error(errp, "cannot configure PIC preemption with a queued native task switch");
++        return NULL;
++    }
++    if (!has_quantum) quantum = 1;
++    if (irq > 7 || irq == 2 || quantum < 1 || quantum > 65535) {
++        task_error(errp, "PIC preemption requires a direct master IRQ other than 2 and quantum 1..65535");
++        return NULL;
++    }
++    if (pic_preemption_pending || pic_inflight) {
++        task_error(errp, "cannot change PIC preemption policy during a pending handoff or un-EOI'd frame");
++        return NULL;
++    }
++    if (enabled) {
++        if (!pic_get_preemption_state(&pic) ||
++            !pic_preemption_mode_supported(&pic, irq, errp)) {
++            if ((!errp || !*errp)) {
++                task_error(errp, "8259 PIC state is unavailable");
++            }
++            return NULL;
++        }
++        if (pic.master_isr & (1u << irq)) {
++            task_error(errp, "cannot enable preemption while the selected PIC IRQ is already in service");
++            return NULL;
++        }
++    }
++    changed = pic_preemption_enabled != enabled || pic_preemption_irq != irq ||
++        pic_preemption_quantum != quantum;
++    if (!changed) return scheduler_status_new();
++    if (scheduler_generation == UINT64_MAX || !generation_room(errp)) {
++        if ((!errp || !*errp)) task_error(errp, "native scheduler generation exhausted");
++        return NULL;
++    }
++    pic_preemption_enabled = enabled;
++    pic_preemption_irq = irq;
++    pic_preemption_quantum = quantum;
++    pic_preemption_progress = 0;
++    pic_preemption_pending = false;
++    pic_pending_irq = pic_pending_vector = 0;
++    pic_preemption_fault_pending = false;
++    i8259_set_preemption_observer(enabled ?
++                                  fdisbull_task_scheduler_pic_observer : NULL);
++    scheduler_generation++;
++    generation_highwater++;
++    return scheduler_status_new();
++}
++
+ FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_slot_capture(
+     const char *uuid, uint64_t cookie, uint64_t incarnation,
+     FdisbullTaskPageList *pages, Error **errp)
+@@ -2673,6 +3331,11 @@
+     int ti;
+     if (!stopped_single_tcg(errp) || !scheduler_key(uuid, cookie, incarnation, &ti, errp)) return NULL;
+     if (tasks[ti].retired) { task_error(errp, "retired slot cannot be scheduled"); return NULL; }
++    if (!runnable && pic_preemption_enabled && pic_inflight &&
++        pic_inflight_slot == ti) {
++        task_error(errp, "cannot block the task that owns an un-EOI'd PIC frame");
++        return NULL;
++    }
+     if (tasks[ti].runnable != runnable) { tasks[ti].runnable = runnable; tasks[ti].blocked = !runnable; scheduler_generation++; }
+     if (scheduler_selected == ti && !runnable) scheduler_switch_pending = true;
+     else if (runnable && scheduler_enabled &&
+@@ -2711,6 +3374,10 @@
+         return NULL;
+     }
+     if (scheduler_switch_pending) { task_error(errp, "cannot disable with a pending task switch"); return NULL; }
++    if (pic_preemption_enabled || pic_preemption_pending || pic_inflight) {
++        task_error(errp, "cannot disable scheduling during a pending PIC handoff or un-EOI'd hardware frame");
++        return NULL;
++    }
+     for (int i = 0; i < TASK_MAX; i++) {
+         if (tasks[i].cpu_bound && tasks[i].frame_depth) {
+             task_error(errp, "cannot disable while a task owns interrupt frames"); return NULL;
+@@ -2732,6 +3399,11 @@
+     if (scheduler_enabled && scheduler_selected == ti) {
+         qemu_mutex_unlock(&task_lock);
+         task_error(errp, "selected native CPU task cannot be retired while scheduler is enabled");
++        return NULL;
++    }
++    if (pic_inflight && pic_inflight_slot == ti) {
++        qemu_mutex_unlock(&task_lock);
++        task_error(errp, "cannot retire a task with an un-EOI'd PIC interrupt frame");
+         return NULL;
+     }
+     if (!generation_room(errp)) { qemu_mutex_unlock(&task_lock); return NULL; }
+--- a/target/i386/fdisbull-task-scheduler.h
++++ b/target/i386/fdisbull-task-scheduler.h
+@@ -2,11 +2,17 @@
+ #define TARGET_I386_FDISBULL_TASK_SCHEDULER_H
+ 
+ #include "target/i386/cpu.h"
++#include "hw/intc/i8259.h"
+ 
+ #ifndef CONFIG_USER_ONLY
+ bool fdisbull_task_scheduler_handle_interrupt(X86CPU *cpu, int intno,
+                                                int is_int,
+                                                target_ulong next_eip);
++void fdisbull_task_scheduler_hardirq_delivered(CPUState *cpu, int intno,
++                                               const X86PICInterruptInfo *info);
++void fdisbull_task_scheduler_pic_observer(PICCommonState *pic,
++                                         PICPreemptionEvent event,
++                                         bool master, uint8_t irq);
+ bool fdisbull_task_scheduler_preflight_frame(CPUState *cpu,
+                                               target_ulong ss_base,
+                                               target_ulong stack_pointer,
+--- a/target/i386/tcg/system/seg_helper.c
++++ b/target/i386/tcg/system/seg_helper.c
+@@ -26,6 +26,9 @@
+ #include "exec/cpu_ldst.h"
+ #include "tcg/helper-tcg.h"
+ #include "../seg_helper.h"
++#ifndef CONFIG_USER_ONLY
++#include "target/i386/fdisbull-task-scheduler.h"
++#endif
+ 
+ void helper_syscall(CPUX86State *env, int next_eip_addend)
+ {
+@@ -201,14 +204,20 @@
+         do_interrupt_x86_hardirq(env, EXCP12_MCHK, 0);
+         break;
+     case CPU_INTERRUPT_HARD:
++    {
+         cpu_svm_check_intercept_param(env, SVM_EXIT_INTR, 0, 0);
+         cs->interrupt_request &= ~(CPU_INTERRUPT_HARD |
+                                    CPU_INTERRUPT_VIRQ);
+-        intno = cpu_get_pic_interrupt(env);
++        X86PICInterruptInfo irq_info;
++        intno = cpu_get_pic_interrupt_info(env, &irq_info);
+         qemu_log_mask(CPU_LOG_INT,
+                       "Servicing hardware INT=0x%02x\n", intno);
+         do_interrupt_x86_hardirq(env, intno, 1);
+-        break;
++#ifndef CONFIG_USER_ONLY
++        fdisbull_task_scheduler_hardirq_delivered(cs, intno, &irq_info);
++#endif
++        break;
++    }
+     case CPU_INTERRUPT_VIRQ:
+         cpu_svm_check_intercept_param(env, SVM_EXIT_VINTR, 0, 0);
+         intno = x86_ldl_phys(cs, env->vm_vmcb

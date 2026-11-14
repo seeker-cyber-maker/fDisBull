@@ -35,6 +35,21 @@ def execution_identity():
             validate_boat_receipt_identity(proof)
             result.update(boat_sandbox_id=sandbox, boat_worker_receipt=proof)
         return result
+    if origin == 'github':
+        repo = os.environ.get('FDISBULL_GITHUB_REPOSITORY', '')
+        ref = os.environ.get('FDISBULL_GITHUB_CONTROL_REF', '')
+        control = os.environ.get('FDISBULL_GITHUB_CONTROL_SHA', '')
+        ids = {key: os.environ.get('FDISBULL_GITHUB_' + key.upper(), '')
+               for key in ('run_id', 'run_attempt', 'job_id', 'runner_id')}
+        if (not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo)
+                or not re.fullmatch(r'[0-9a-f]{40}', control)
+                or not re.fullmatch(r'[A-Za-z0-9_./-]{1,200}', ref)
+                or '..' in ref or ref.startswith(('/', '-')) or ref.endswith(('/', '.'))
+                or any(not re.fullmatch(r'[1-9][0-9]*', value) for value in ids.values())
+                or os.environ.get('CI_JOB_NAME') != 'qualification'):
+            raise ValueError('Invalid canonical GitHub identity')
+        return {'execution_origin': 'github', 'repository': repo, **ids,
+                'control_sha': control, 'ref': ref, 'job_name': 'qualification'}
     if origin != 'gitlab':
         raise ValueError('Unknown execution origin')
     return {'pipeline_id': os.environ['CI_PIPELINE_ID'],

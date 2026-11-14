@@ -1,0 +1,91 @@
+{
+  "capabilities_implemented": [
+    "one finite n8n-owned VPS job using the existing serial Docker runner, without hosted CI polling",
+    "ordinary and declared native legs followed by a source-free network-none offline consumer",
+    "full PE32 and Win16 fixture/profile requirements and explicit legacy-only opt-out",
+    "packaged CLI import, bounded analysis and reopened persisted project",
+    "draft-first six-asset release with source/consumer/package links, explicit named credential context and authoritative readback",
+    "read-only reconciliation without mutation replay, owned-label cleanup and durable terminal attention",
+    "reserve-based stops removed; actual path and filesystem failures preserved"
+  ],
+  "date": "2026-11-14",
+  "limitations": {
+    "final_primary_source_freeze_pending": true,
+    "live_unattended_pipeline_started": false,
+    "native_qualification_of_final_integrated_source": false,
+    "offline_consumer_of_final_integrated_source": false,
+    "release_or_application_installation_performed": false
+  },
+  "local_verification": [
+    {
+      "passed": 499,
+      "scope": "CI/release integration plus native/package contracts",
+      "seconds": 76.86
+    },
+    {
+      "passed": 322,
+      "scope": "final pipeline/publication/service/qualification input fixes",
+      "seconds": 16.2
+    },
+    {
+      "passed": 252,
+      "scope": "final GUI/publication/runtime integration",
+      "seconds": 53.7
+    }
+  ],
+  "predeployment_followup": {
+    "correction": "Provider and source environments suppress inherited forced terminal formatting; API output remains strict JSON. Legacy GitHub worker/bootstrap no longer enforce removed storage reserves.",
+    "focused_tests": {
+      "legacy_github_bootstrap_worker": "21 passed in5.69s",
+      "provider_source_release_gui": "182 passed in53.63s"
+    },
+    "full_pipeline_qualified": false,
+    "live_provider_mutation": false,
+    "observed_failure": "Authenticated GitHub /user HTTP200 output contained inherited forced ANSI colors; strict JSON parser refused it before Git push."
+  },
+  "preserved_superseded_prototype": {
+    "branch": "codex/ci-public-metadata-prototype-20261114",
+    "commit": "75114464333fb96771e0e2fc6f1be6497e015d69",
+    "disposition": "parked: the direct VPS pipeline removes hosted provider waiting entirely, so the alternative public-metadata polling transport is unnecessary for this release path",
+    "included_in_release_path": false
+  },
+  "retained_native_inputs": {
+    "all_declared_private_fixture_hashes_recovered": true,
+    "full_helper_verified": true,
+    "manifest_sha256": "acb818f655f0d2fc7b7482c6bf8ff8d5e2a137f98a66ca36662bbc2202016fac",
+    "qualification_claimed": false,
+    "ready_receipt_sha256": "df3b72a17a12a953600caf2f68c5d5409033807e4e885ecaf9598ee0614ee00c",
+    "required_os_capabilities": [
+      "wine64",
+      "dos",
+      "pe32",
+      "win16-guards"
+    ]
+  },
+  "schema": "fdisbull-production-pipeline-source-verification-1",
+  "source_cli_prototype": {
+    "commands": [
+      "import",
+      "analyze",
+      "status"
+    ],
+    "fixture_sha256": "419ddca7a484fee079460325c7a9ffcb85eaf4c689409978d96a57f4612501af",
+    "persisted_instructions": 8,
+    "scope": "real source CLI and installed genuine decoders; not packaged/offline qualification",
+    "status": "passed"
+  },
+  "source_files": {
+    "scripts/check_ci_qualification.py": "3649210ca736d73e26807001b7631d36e7b6d991ce219d562847ca54221e18ed",
+    "scripts/ci/boat-linux.py": "83cf96d8ea4f7f00b7d4dd81e4ce99032a3cde8944a1ec13076e58903198ef51",
+    "scripts/ci/prepare-chat-inputs.py": "ac1d5d1408a1002ff2637dddcad38354e141b41e7ffa986bbb0847197454115a",
+    "scripts/ci/production_control.py": "586cb922401102766fe8cd4493ddd49926a90595bdf36ee74dcc2cbf079d97cc",
+    "scripts/ci/production_gui_client.py": "9a682447ab7852f1481843c58635ceb4efe919a993e2573f9fa0d584c4bed985",
+    "scripts/ci/production_gui_transport.py": "923e14e465d31ac983e38b38353e43ad8e5ad81ceaae2329b162a9275012cf1c",
+    "scripts/ci/production_pipeline.py": "47c6b6b6d23f88e55c1e16c52e2ab31b72a2a61da24d1d70a2952c1989708eb3",
+    "scripts/ci/production_release.py": "7ef944002d7e7473cfaf7e2b9e9e99079526432b85b685a02a71ce7f2e3ad101",
+    "scripts/ci/production_runtime.py": "79d2e91470ef42f3a7b58d53770ed9eb3e9cf0bf2b31d847082b53f6f091ac2c",
+    "scripts/verify_chat_offline_kit.py": "53289ef0d988211996db7c78433c2b6d5852ddc2aef55dfb47feff81ee2ca272"
+  },
+  "source_parent": "3486ff55",
+  "status": "source-ready-for-integration-and-live-qualification"
+}

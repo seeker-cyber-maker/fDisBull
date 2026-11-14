@@ -1,0 +1,1879 @@
+{
+  "format": "fdisbull-dosbox-qemu-migration-inventory-1",
+  "inventory_base": "089c1841c415eb2b5cdfa90d03b6291a07f73919",
+  "default_backend": "dosbox",
+  "native_backend": "qemu-dos",
+  "retained_fallback_backends": [
+    "dosbox",
+    "dosbox-qemu"
+  ],
+  "policy": {
+    "automatic_runtime_fallback": false,
+    "dosbox_retirement_allowed": false,
+    "all_inventory_rows_required_before_default_switch": true,
+    "requirements": [
+      "Explicit non-silent backend selection",
+      "Per-surface native acceptance and DOSBox regression evidence",
+      "Qualified same-input observable comparisons, with declared semantic differences",
+      "Real OS/driver/game compatibility evidence beyond bare-metal fixtures",
+      "Cold restore/restart and fallback rehearsal; never load a DOSBox native state as QEMU state",
+      "Retain DOSBox until native parity, recovery rehearsal and a separate removal review pass"
+    ]
+  },
+  "status_legend": {
+    "partial": "Native machinery or reused host code exists with material semantic/API gaps; no parity claim",
+    "pending": "No native equivalent in the audited starting revision",
+    "retained_host_code": "Independent host/static code remains; rerun affected integration witnesses",
+    "planned_addition_not_legacy_capability": "Discussed addition, not an existing capability that a method inventory can certify"
+  },
+  "qualification_notice": "Source inventory and test references are not evidence of runtime parity. Qualification is explicit per surface and compatibility campaign.",
+  "slices": [
+    {
+      "id": "core",
+      "order": 0,
+      "title": "Owned QEMU lifecycle and CPU controls",
+      "depends_on": [],
+      "gate": "Explicit backend selection, bounded transport, process cleanup, stopped inspection, physical/virtual RAM, guarded registers/RAM, native breakpoint/watchpoint and stored capture; retain DOSBox choices.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_debugger.py",
+        "tests/test_dos_migration.py",
+        "tests/test_qemu_doctor.py",
+        "tests/test_qemu_dos.py",
+        "tests/test_qemu_dos_native.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_qemu_pipe.py",
+        "tests/test_runtime_code.py",
+        "tests/test_qemu_operation_deadlines.py",
+        "tests/test_qemu_dosbox_parity_native.py"
+      ],
+      "scope_limits": [
+        "Machine context is available; this does not establish DOS source-address mapping, legacy reply schema, guest process lifecycle or drop-in parity.",
+        "Raw MachineContext.run is host-time bounded and returns machine stops. The COM/MZ process session separately verifies parent return for guest_exit/guest_tsr; neither path supplies guest_ms/fast_forward/stop_on_hook semantics.",
+        "Raw native QEMU exposes one machine context. dosbox-qemu exposes a DOS CPU plus its surrounding Linux machine; those are different CPUs and cannot be renamed into one native DOS context.",
+        "The legacy public DOS route intentionally refuses direct writes (use RAM layers, runtime bindings or edited checkpoints); machine context already permits explicit guarded edits. Preserve legacy refusal and expose new context semantics explicitly.",
+        "qemu-machine has its own explicit bounded script grammar and operation set. The full legacy DOS script vocabulary is not supported merely because script() exists."
+      ]
+    },
+    {
+      "id": "dos-process",
+      "order": 1,
+      "title": "Actual DOS boot, source-bound programs and resident drivers",
+      "depends_on": [
+        "core"
+      ],
+      "gate": "Boot a real DOS image; admit supplied COM/MZ bytes; observe relocation/PSP/entry, child/parent termination and TSR distinction; pin guest profile and observed task/page mappings.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_debugger.py",
+        "tests/test_desqview_memory_native.py",
+        "tests/test_desqview_runtime.py",
+        "tests/test_dos_launch.py",
+        "tests/test_dos_memory.py",
+        "tests/test_dos_qemu.py",
+        "tests/test_memory_rules.py",
+        "tests/test_memory_search_runtime.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_qemu_dos_native.py",
+        "tests/test_qemm_runtime.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_dos_process_helper.py",
+        "tests/test_dos_process_image.py",
+        "tests/test_qemu_dos_process.py",
+        "tests/test_qemu_dos_process_native.py",
+        "tests/test_qemu_dos_process_lifecycle.py",
+        "tests/test_qemu_dos_tasks.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py",
+        "tests/test_qemu_dos_task_views.py",
+        "tests/test_qemu_dos_alias_task_layers_native.py",
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_native.py",
+        "tests/test_qemu_dos_irq_preemption_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_quantum_native.py",
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
+      ],
+      "scope_limits": [
+        "Original COM/MZ projects launch through real DOS EXEC with a separate private boot disk. Observed PSP/MCB, ordered MZ relocations, exact loader stack writes and native entry establish the initial source map; controls retain machine addresses.",
+        "Nonce-bound parent return and DOS AH=4Dh distinguish selected process exit/residency. Resident mappings intersect observed retained allocations; machine close and uncertain observations invalidate live ownership and capture epochs.",
+        "Entry requires observed real mode. Stopped protected/V86 ownership can include bounded remapped RAM under the native architectural-context extension. An explicit FDBTASK1 cooperating monitor supplies task lifetime through UUID, cookie, incarnation and DOS process nonce; this is not an inferred QEMM/DESQview task. Arbitrary DPMI and vendor scheduler/driver combinations remain unqualified.",
+        "Device-header registration and an authored SYS initialization marker qualify only those observations, not arbitrary device I/O. Game assets/drivers must already be present in the image; existing startup/configuration bytes are preserved.",
+        "A cooperating monitor commits an even FDBTASK1 anchor with OUTW port 0xf1db value 0x4446; guest retains CPU/frame scheduling. Local authored same-page A-to-B-to-A-to-B-to-A, invalid-commit, reset and checkpoint witnesses passed on the native x86 TCG build; vendor task scheduling remains unqualified.",
+        "Opt-in native cooperative scheduler has a local authored V86 witness for INT60 yield, INT62 block, separate task contexts and CPU-created protected interrupt frames. Same-source/allocation forks only; no vendor scheduler or timer/IRQ preemption qualification.",
+        "Separate opt-in native PIC preemption observes real master PIC acknowledgement and matching guest EOI before switching; bounded authored IRQ0 PIT and IRQ1 i8042 witnesses passed, including IF/PIC-mask deferral. Isolated MOV SS interrupt-shadow behavior with a pending IRQ and general vendor/IRQ timing parity remain unqualified.",
+        "API 3 admits slave PIC IRQs 8\u201315 and direct master IRQs other than cascade IRQ2, with ordered nested IRQ/frame ownership and slave-before-master EOI; eligible quanta coalesce into one pending handoff until all outstanding EOIs complete. Authored RTC IRQ8/nested keyboard IRQ1 and invalid-order/IRET guards passed locally; extra real empty IRQ1 entries are serviced and accounted for. API 1/2 remain recognized; unsupported PIC modes fail closed."
+      ]
+    },
+    {
+      "id": "trace-events",
+      "order": 2,
+      "title": "Observed execution traces and event searches",
+      "depends_on": [
+        "core",
+        "dos-process"
+      ],
+      "gate": "Compare explicit trace semantics, instruction/context/mode identity, callback-safe boundaries, new-page/new-region/register predicates, IRQ/fault/REP cases, and action causality.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_execution_event_native.py",
+        "tests/test_execution_trace.py",
+        "tests/test_protected_mode_trace.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_qemu_dos_trace_native.py",
+        "tests/test_qemu_dos_trace_contract.py",
+        "tests/test_qemu_trace_semantics_native.py",
+        "tests/test_qemu_step_policy.py",
+        "tests/test_gdb_standard_replies.py",
+        "tests/test_qemu_trace_identity.py"
+      ],
+      "scope_limits": [
+        "QEMU records stopped native intervals with the observed read-only IRQ/timer stepping policy. Faults and partial REP can return normal debug stops; architectural retirement remains unknown.",
+        "Original real-mode COM/MZ captures verify instruction bytes, PSP/MCB ownership and the initial epoch. Canonical source sites account for ordered MZ relocations and exact loader writes; persistent event searches rederive identity from original source and ordered entry/artifact receipts.",
+        "Unsupported source bytes, module departures, allocation/epoch or mode changes stop the source binding. An unbound final observation cannot close a source window or narrow absence. Live overlay rebinding, protected/V86 tasks, input-to-source-trace causality and whole-program timing remain unqualified.",
+        "Raw machine traces remain separately available and do not acquire a DOS process source map. Streaming fetch capture/cursors are not supplied by bounded stopped observations."
+      ]
+    },
+    {
+      "id": "clock-media-input",
+      "order": 3,
+      "title": "Guest clock, coherent media and physical input",
+      "depends_on": [
+        "core",
+        "dos-process"
+      ],
+      "gate": "Guest-time bounded runs, last-completed-frame ownership, stale-frame refusal, keyboard make/break and held leases, mouse-driver consumption/release, frame-edge input and device timing.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_debug_wait.py",
+        "tests/test_dosbox_window.py",
+        "tests/test_dosbox_window_native_contract.py",
+        "tests/test_frame_capture_native.py",
+        "tests/test_frame_coherence.py",
+        "tests/test_frame_timeline_native.py",
+        "tests/test_frames.py",
+        "tests/test_keyboard.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_screenshot_codecs.py",
+        "tests/test_memory_rules.py",
+        "tests/test_qemu_memory_rules.py",
+        "tests/test_qemu_memory_rules_public.py",
+        "tests/test_qemu_memory_rules_native.py",
+        "tests/test_qemu_memory_rule_views_native.py",
+        "tests/test_qemu_memory_views.py",
+        "tests/test_qemu_clock_hooks.py",
+        "tests/test_qemu_dos_modes_checkpoint_native.py",
+        "tests/test_qemu_dos_task_guards_native.py",
+        "tests/test_qemu_clock.py",
+        "tests/test_qemu_input.py",
+        "tests/test_qemu_surface.py",
+        "tests/test_qemu_io_native.py",
+        "tests/test_qemu_io_public.py",
+        "tests/test_qemu_io_deadlines.py",
+        "tests/test_qemu_input_checkpoint_guard.py",
+        "tests/test_qemu_clock_budget.py",
+        "tests/test_qemu_clock_budget_native.py",
+        "tests/test_qemu_audio.py",
+        "tests/test_qemu_audio_native.py",
+        "tests/test_qemu_display.py",
+        "tests/test_qemu_display_native.py",
+        "tests/test_qemu_input_schedule.py",
+        "tests/test_qemu_input_schedule_native.py",
+        "tests/test_execution_clock.py",
+        "tests/test_source_clock_script_deadline.py",
+        "tests/test_qemu_dos_trace_clock.py",
+        "tests/test_qemu_dos_clock_trace_native.py",
+        "tests/test_qemu_retrace.py",
+        "tests/test_qemu_retrace_public.py",
+        "tests/test_qemu_retrace_native.py",
+        "tests/test_qemu_clock_sync.py",
+        "tests/test_qemu_retrace_wait.py",
+        "tests/test_qemu_timing_public.py",
+        "tests/test_qemu_timing_native.py",
+        "tests/test_qemu_input_retrace.py",
+        "tests/test_qemu_input_retrace_public.py",
+        "tests/test_qemu_input_retrace_native.py",
+        "tests/test_qemu_keyboard_press.py",
+        "tests/test_qemu_keyboard_press_public.py",
+        "tests/test_qemu_keyboard_press_native.py",
+        "tests/test_qemu_keyboard_type.py",
+        "tests/test_qemu_keyboard_type_public.py",
+        "tests/test_qemu_keyboard_type_native.py",
+        "tests/test_qemu_mouse_click.py",
+        "tests/test_qemu_mouse_click_public.py",
+        "tests/test_qemu_mouse_click_native.py",
+        "tests/test_qemu_display_probe.py",
+        "tests/test_qemu_display_probe_public.py",
+        "tests/test_qemu_display_probe_native.py",
+        "tests/test_qemu_vga_configuration.py",
+        "tests/test_qemu_vga_configuration_public.py",
+        "tests/test_qemu_vga_configuration_native.py",
+        "tests/test_qemu_mapped_mouse.py",
+        "tests/test_qemu_mapped_mouse_public.py",
+        "tests/test_qemu_mapped_mouse_native.py",
+        "tests/test_qemu_frame_keys.py",
+        "tests/test_qemu_frame_key_checkpoint.py",
+        "tests/test_qemu_frame_keys_public.py",
+        "tests/test_qemu_frame_keys_native.py",
+        "tests/test_qemu_wait.py",
+        "tests/test_qemu_wait_native.py"
+      ],
+      "scope_limits": [
+        "Explicit standard and instruction profiles preserve stock QEMU behavior. The opt-in virtual profile requires the fDisBull API1 extension on QEMU10.0.13 and observes QEMU_CLOCK_VIRTUAL directly, separately from query-replay.icount and host time.",
+        "Virtual-profile initial real-mode COM/MZ source traces advertise source_trace_clock and retain optional fdisbull-source-clock-1 brackets. Before/after native time, counter and epoch must remain identical across ownership/register/instruction observation. This uses the existing native clock extension; host synchronization is a separate opt-in controller.",
+        "virtual-time-range predicates require exact run, host epoch and native epoch plus half-open integer start_ns/end_ns bounds. Live and saved-script requests check every clock leaf before execution and earlier script mutations. Literal identities come from an earlier request; trace-until result interpolation remains unsupported. A time predicate observes debugger boundaries rather than an exact native timer cutoff.",
+        "Stored query rows and search witnesses retain validated source clocks; optional endpoint_clock preserves a count trace's final boundary without adding an N+1 event. Reopened artifacts bind native admission and source lineage, enforce homogeneous stable brackets and monotonic time/counter/sequence order. Candidate source identity remains independent of timestamps. Missing or foreign clocks are unknown offline; malformed clocks are rejected for every query.",
+        "Source-clock joins establish observation order within one run and both epochs, not input causation, natural instruction latency, guest consumption or completed guest frames. Equal nanoseconds do not establish callback order; observed GDB IRQ/timer policy remains in force. An unbound final time match leaves source_window_closed false. Source-trace host bounds include lock admission and persistence; late or failed storage retains known stop evidence and any artifact IDs in error.result without replay.",
+        "clock_advance uses one native timer and one GDB continue under a single host deadline. Token-bound requested/fired/stopped timestamps preserve early debugger/process stops and unknown input consumption; uncertain arm/cleanup closes the machine. No exact arbitrary-nanosecond cutoff, cycle accuracy, generic guest_ms, completed-frame or DOSBox timing parity claim.",
+        "The I/O witnesses use an explicit FreeDOS SWITCHES=/F baseline to omit its boot-key delay for the declared clock profiles. Production preserves caller configurations; guest boot delays may exceed a host startup budget under instruction counting.",
+        "By default, owned keyboard and relative PS/2 mouse edges queue while stopped, dispatch at most once during bounded GDB continue, and preserve its original stop reply. QMP acceptance is not guest consumption; an early stop may leave unsent edges pending. Frame-edge input, pixel clicks and INT33 driver parity remain unsupported; separate optional native extensions supply a single keyboard chord, bounded US-layout text or a physical mouse-button pair.",
+        "Optional native input API1 on the explicit virtual profile adds input_schedule(delta_ns) and input_schedule_observe(), with debug-input-schedule/debug-input-schedule-observe retained JSON and input-schedule/input-schedule-observe script routes. The QEMU10.0.13 input patch applies after the current clock and media patches. virtual_input_schedule requires discovered native commands; timed_input, guest_time_control and completed_guest_frames stay false.",
+        "Scheduled arm/query are passive. The caller explicitly chooses one bounded run or clock_advance; the native virtual timer dispatches one token-owned batch through selected PS/2 callbacks and one final sync. The receipt binds requested start/deadline, actual dispatch/terminal time, lateness, sequence/count and epoch. Device FIFO acceptance, guest consumption, release and frame recognition remain unknown; no legacy guest_ms or exact cycle/frame-press parity.",
+        "The first actual stop cancels an unfired input timer and preserves the original breakpoint/watchpoint or DOS exit/TSR. Pending stops and equal/reached owned clock-budget deadlines win independently of timer insertion order. Pending edges require explicit input_schedule reschedule under a new token or input_cancel_pending disarm/discard before another run or queue mutation; no automatic continuation or replay. Scheduled runs and scripts bound post-stop reconciliation and evidence persistence by their host deadline.",
+        "Native scheduling admits 1..256 events, delay 1..60000000000 ns without signed overflow, relative X/Y values -32767..32767 and one edge per left/middle/right mouse button. Existing input ownership is bounded to 64 leases. Token history permits 4096 successful arms per process. Reset, epoch/profile loss or unsupported runstates invalidate the scheduler; migration stays blocked after its first successful arm. Terminal receipts freeze; uncertain native or evidence results close the VM. The separate opt-in host controller preserves the scheduler's first-stop and unknown-consumption boundaries.",
+        "capture_surface and screenshot retain PNG bytes, unique observation identity and a stopped selected-CPU/clock bracket. They do not establish a last-completed guest frame, freshness, scanline/IRQ phase, audio timing or UI readiness.",
+        "Held leases belong to the owned machine and invalidate on close. Cancellation only discards unsent transitions after proving native disarm; dispatched holds still need explicit release. Cancelling a queued release retains that hold. Unknown delivery or failed input evidence closes the VM without replay.",
+        "The shared memory_rule_run method uses the explicit virtual clock: first tick immediately, subsequent token-bound native nanosecond intervals under one host deadline, fresh guarded writes and durable journals. Explicit RAM-view snapshots bind registered selected task identity, epoch, backing pages, layer IDs and native generation; immutable rule-owned RAM overlays preserve authored RAM and fetch definitions. Hook-aware intervals dispatch actions once and stop without another tick on any nonordinary stop, including coincident timer/hook events. Another selected task or external layer change refuses the stale view before a tick; cold restore retains layers/hooks/IRQ and journal but requires a fresh snapshot/new rule. Base-origin rules still refuse task-private or active layer contexts; queued/held/scheduled input, active clock synchronization or budget, and caller-owned transactions remain refused. Ten authored native cases and the broader 1159-case local regression passed, including retained scheduler/cascade IRQ checkpoint witnesses; host/public/package contracts passed 823 cases, and the final view-guard selection passed 12. These selections overlap. No generic guest_ms, cycle or real-time scheduling claim; formal qualification remains open.",
+        "Scene/frame workflows still require their own qualified guest-time control. No host timer is relabeled as a guest-time scheduler.",
+        "The optional native media extension retains completed synchronous renderer updates under explicit virtual observation cadence, with immutable RGB pixels, token/update identity, publication time, age and stale-update refusal. A completed renderer update can contain partial guest drawing; completed_guest_frame and guest_frame_id remain unknown. No VBlank or full guest-mode-epoch parity.",
+        "Explicit qemu_audio=pc-speaker configures only the PC speaker with a none audiodev. Bounded 32000-Hz mono u8 callback output has sample ranges and delivery timestamps, overflow accounting and stopped WAV exports. Inactive intervals are not synthesized; PCM duration is not elapsed guest time or device queue drain. Other sound devices and audible playback are unqualified.",
+        "Media windows require locally owned tokens and a valid native clock epoch. After stop, retained evidence freezes; reset invalidates and migration after use is blocked. Reads and exports never run or flush the guest. The separate opt-in host controller does not qualify media resampling, queue drain or audible playback alignment.",
+        "After native clock admission, idle warping is suppressed for stopping/stopped CPUs even without an armed budget. An authored one-NOP ordinary GDB continue exposed an approximately 55-ms false jump to the PIT timer before this correction; genuinely halted CPUs remain eligible for virtual timer advances.",
+        "The optional retrace API1 patch follows the exact clock/media/input chain. Explicit qemu_retrace=precise with virtual clock selects standard PCI VGA and qemu-vga-precise-fdisbull-v1. retrace_observe, debug-retrace-observe and script retrace-observe are passive stopped reads; the default standard retrace profile retains ordinary QEMU behavior.",
+        "Retrace receipts bind run, host/native clock epochs, exact device/console/head, raw and cached model timing, stable stopped brackets and a monotone timing_generation. Write-time CR10/VBE coherence and generation hooks expose A-to-B-to-A transitions between observations. Generation is timing provenance, not a complete video-mode, palette, pixel-format or application identity.",
+        "Only initialized legacy VGA with VBE disabled and supported positive nonwrapped timing has phase evidence. Uninitialized/VBE/invalid timing returns an explicit unsupported reason without inventing a phase. The model vertical-retrace interval is not the entire vertical blank interval; synthesized status bits do not establish visible scanout, frame completion, input consumption or hardware-cycle accuracy.",
+        "Retrace queries do not read the guest status port, reset the attribute flip-flop, refresh pixels, advance clocks or wait for an edge. Admission pins the device and blocks migration. Reset or malformed/contradictory native evidence invalidates ownership. A current retrace sample cannot assign phase or generation to an older renderer publication.",
+        "Retrace host deadlines include lock admission, clock brackets and persistence; script capability/literal-timeout preflight precedes earlier writes. A late journal can commit before timeout failure; error.result retains the observation. Separate retrace_wait composes one native budget with stopped observations; default promotion remains unqualified.",
+        "Explicit retrace_wait(edge=enter|exit), debug-retrace-wait and script retrace-wait plan one strictly next transition from the admitted precise model and execute at most one native clock budget. Success requires the same run/epochs/device/model/timing generation, an ordinary owned timer stop and the exact absolute target interval. Unsupported or full-period timing does not execute; timing changes, missed windows and earlier/coincident stops retain their evidence without retry.",
+        "clock_sync_start/observe/step/stop, retained debug-clock-sync-* JSON routes and clock-sync-* script operations expose a separate opt-in fixed 1:1 host/native mapping. Persistent anchors count all monotonic host elapsed time since start and subtract actual native progress including prior overshoot. One step freezes one target, makes at most one bounded guest catch-up or stopped host sleep, and retains actual residual drift.",
+        "host_clock_sync requires the explicit virtual profile and native clock commands. It is inactive by default. Excess lag/lead, nonordinary stops, timeout or uncertain persistence latch a mapping until explicit stop/start; stop is passive between calls, not asynchronous cancellation. Script capability/signature/literal/transaction preflight and a single intersected host deadline cover admission, observations, correction, cleanup and persistence; error.result retains known execution evidence.",
+        "There is no background pacing, implicit rebase, repeated correction loop, icount-rate change, media resampling or completed-frame claim. VGA timing changes do not rebase host anchors; clock epoch/profile loss invalidates live ownership. Reopened event history does not restore a VM or mapping. All 127 default-promotion qualifications remain open.",
+        "The optional fifth input-retrace patch adds input_schedule_retrace(edge=enter|exit), debug-input-schedule-retrace and input-schedule-retrace under retrace_input_schedule. It pins the exact stopped epoch/device/model/generation, computes the strictly next target/window, then freezes the native callback check. Changed timing including ABA or a missed occurrence cancels without dispatch; stop/equal-budget precedence remains. This is modeled retrace input, not full VBlank, guest-frame or consumption parity.",
+        "The optional sixth keyboard-press patch adds virtual_keyboard_press to the existing keyboard_press/GuestKeyboard.press, debug-keyboard-press and keyboard.press script routes. One stopped empty-queue/no-held-lease admission passively arms a 2..8-edge chord: caller-order modifier makes, main make/break, reverse modifier breaks. Every make and modifier break waits 2 ms; main break waits hold_ms from the actual main make. All next deadlines derive from actual preceding callbacks. Strict hold_ms/gap_ms are 1..1000; gap_ms is retained without effect for a single press, matching retained DOSBox.",
+        "Timed press receipts preserve the immutable plan, assigned deadlines and actual delivered prefix. Every edge honors pending stops and reached/equal clock budgets. First-stop cancellation latches the suffix and keeps dispatched holds; input_cancel_pending discards only unsent steps and callers explicitly release retained leases. Another run or ordinary/retrace reschedule cannot replay a bound partial chord. Malformed, uncertain or expired native/evidence outcomes close without replay. Arm has one 1000 ms host bound and honors tighter incoming bounds. Coordinate click helpers and general timed_input, guest_time_control, completed_guest_frames remain unavailable; native callback evidence is not generic guest consumption.",
+        "The optional seventh keyboard-type patch adds virtual_keyboard_type through existing keyboard_type/GuestKeyboard.type, debug-keyboard-type and keyboard.type script routes. One stopped empty-queue/no-held-lease admission passively arms 1..64 printable US-layout ASCII characters plus CR, LF and Tab; CRLF produces two Enter chords. Uppercase and shifted punctuation use separate Shift chords. The first edge waits 2 ms, main breaks wait hold_ms, other makes/Shift breaks wait 2 ms, and each later character adds gap_ms to its first-edge delay. Every deadline derives from the actual preceding callback; no trailing gap timer or implicit execution.",
+        "Text plans retain at most 256 edges and 128 unique future key lifetimes separately from the existing 64-active-lease bound. Only validated delivered makes enter the active ledger; matching breaks consume them. Native typing receipts retain text, immutable steps, per-character public indices, delivered prefixes and per-edge lateness. First-stop cancellation blocks replay/rescheduling; input_cancel_pending discards suffix/reservations and preserves dispatched holds for explicit release. Complete text, native capability, transactions, strict timing and resolved script options validate before arm; one 1000 ms host allowance includes lock admission and evidence persistence. Long valid text may outlast one 60-second clock budget; no hidden subdivision or resume occurs. Guest layout, lock state, arbitrary text consumption and completed frames remain unknown.",
+        "The optional eighth mouse-click patch follows the exact seven earlier patches and adds virtual_mouse_click through QEMU-only mouse_button_click(button='left', *, hold_ms=80), debug-mouse-button-click and mouse.button-click. It requires explicit virtual clock, native clock/input commands, input-send-event and x-fdisbull-arm-mouse-click, without precise retrace. Seven-patch binaries refuse this helper and retain their existing operations. Exact left/middle/right names and strict int holds of 1..1000 validate before admission. One stopped empty-queue/no-held-lease/no-bound-schedule arm prepares two separate one-button batches with one sync per edge: down after 2 ms, up hold_ms after the actual down callback. Caller-selected run, clock advance or one explicit clock_sync_step supplies execution; there is no trailing timer, hidden run/sleep/resume, rebase or replay.",
+        "Timed click receipts retain fdisbull-qemu-scheduled-input-1 with a mutually exclusive click descriptor in fdisbull-mouse-click-1. The exact two-step plan retains the shared lease, delivered prefix, assigned deadlines, actual callbacks and per-edge lateness; top-level lateness is None and dispatch appears only after full completion. Pending stops and equal/reached budgets win before each edge. First-stop cancellation can retain one owned down and blocks further execution or new/converted schedules until input_cancel_pending discards the suffix; the caller explicitly mouse_button_up(lease) and chooses release execution. Terminal evidence freezes. Refused arms preserve old evidence/token, and reopened journals do not restore live ownership. One 1000 ms arm bound covers lock admission, I/O and persistence with tighter incoming bounds; accepted/uncertain late arms, malformed/native evidence failures and persistence failures close with available evidence and no replay.",
+        "The mouse click requests no movement, but prior native accumulators or external button state can affect packets. Disabled/remote device state and FIFO capacity are not normalized; callbacks do not establish packet delivery, arbitrary guest consumption, cursor position or INT33 behavior. Controlled IRQ12 packet witnesses remain distinct from generic guest qualification. No GuestMouse facade or legacy DebugSession stub is added. Coordinate click(x,y), debug-click, click/click-frame and input.mouse.click keep their existing contracts and native refusal. This is only a narrow extension of the physical input.mouse.button route; all 127 promotion qualifications remain open. General timed_input, absolute_mouse, guest_time_control and completed_guest_frames remain false, with DOSBox still the default.",
+        "The optional ninth display-probe patch follows all eight exact prerequisite patches and adds renderer_probe through display_probe(points, *, window=None, update_id=None, timeout_ms=1000), debug-display-probe and script display-probe. It requires the explicit virtual profile and native clock/display/probe commands. Zero through 256 ordered two-coordinate points use strict ints in 0..8191 and retained dimensions; duplicates are preserved and even an empty list needs a publication. Optional expected window and positive uint64 update_id must be supplied together and match exactly. Native sampling always receives the current owned token and exact update ID. Old eight-layer executables retain renderer_capture and existing input but refuse this helper.",
+        "Sparse reads access the existing immutable native RGB copy without refresh, file/image export, artifact creation, execution, input, wait or auto-sync. Results use fdisbull-renderer-probe-1, ordered pixels with x/y/rgb, retained publication metadata and unchanged stopped clock brackets; the full native response and machine-display-probe journal survive as evidence, not live ownership. The host caches at most the immediately previous probe samples for overlap contradictions. No full-raster hash is invented. VRAM, palette or mode changes can affect a current surface while the probe still reads older retained pixels and dimensions.",
+        "Direct values/signatures validate before lock admission; scripts validate capability, every visible literal and transactions before earlier effects, then resolved values before sampling and timeout clamping. One default 1000 ms host allowance (1..600000 ms) intersects tighter bounds through admission, native queries and persistence. Missing publication, stale identity and outside coordinates refuse before native sampling while preserving a valid stopped owner. Malformed native evidence, persistence failures and late results close with available evidence and no retry. The separate legacy video.probe/debug-frame-probe, coordinate clicks and scenes still lack mode/frame/state and guest mouse mapping semantics. Broad timed_input, absolute_mouse, guest_time_control and completed_guest_frames stay false; all 127 promotion qualifications remain open with DOSBox default.",
+        "The optional tenth VGA-configuration patch follows all nine exact prerequisites and adds vga_configuration through vga_configuration_observe(*, timeout_ms=1000), debug-vga-configuration and script vga-configuration. It requires the existing explicit virtual/precise profiles and all native clock/display/retrace/configuration commands. Nine-layer executables retain their existing operations and refuse this helper. The bounded raw vector tracks conservative legacy/VBE registers and derived origin/pitch/bank/size, attribute interpretation/display enable, DAC width and framebuffer byte order; palette contents, VRAM/fonts, ordinary selectors, renderer caches and dimensions are excluded.",
+        "Configuration generation is positive device/process-local uint64, independent of windows, and commits after complete effective legacy/VBE/QEXT/QOM writes. A-to-B-to-A advances twice even without intervening queries; no-op and ignored writes do not advance. Reset always advances, overflow never wraps and unsupported post-load invalidates. A query detects uncommitted raw change and cannot repair missing history. Native publication captures the pinned selected VGA alongside retained RGB without depending on prior public configuration admission. Stopping preserves the frozen stamp; a new empty window has no published stamp. The host keeps one current frontier and the last actual publication frontier across empty windows, validates raw identity at equal generation, and permits distinct generations at equal virtual time.",
+        "Results use fdisbull-vga-configuration-1 with current/published snapshots, retained display metadata, configuration_matches, unchanged stopped clock brackets and full native evidence. Canonical raw SHA256 identifies values only, not generation or pixels. Publication semantics are configuration_observed_at_publication: transient invalid rendering can leave an older surface, so raster_coherence, completed_guest_frame, guest_frame_id and cursor_mapping remain unknown. No current dimensions, BIOS mode, guest frame or INT33 mapping are inferred. No execution, render, guest I/O/memory read, sleep, wait, input, export or auto-sync occurs. Direct parameters validate before lock/I/O; script capability/literal/transaction preflight precedes earlier effects and resolved validation precedes clamping. One 1000 ms default host deadline (1..600000) includes persistence and final return. Malformed, contradictory, control, persistence or late-result failures close with available evidence and no retry. Successful machine-vga-configuration-observe history survives reopening without live ownership; all 127 promotion gates remain open with DOSBox default.",
+        "The optional eleventh display-motion patch follows all ten exact prerequisites and adds mapped_mouse_motion through mouse_move_mapped(dx_pixels, dy_pixels, *, counts_per_pixel, window, update_id, configuration_generation, timeout_ms=1000), debug-mouse-move-mapped and script mouse.move-mapped. It requires explicit virtual/precise profiles and all native input/clock/display/retrace/configuration/motion commands; ten-layer executables retain old routes. A caller-declared axis rational scale converts retained-image pixel displacements to QEMU REL input-event units, not PS/2 wire y counts. Pixel components are strict ints -8191..8191, ratio numerators are nonzero signed ints with magnitude at most 32767, denominators are 1..32767, and each exact derived axis must fit -127..127. No rounding, clamp, splitting, origin, absolute destination or implicit input execution is provided.",
+        "Mapped motion requires an owned explicitly stopped nonempty renderer window, matching window/update/generation, matching current and published configuration, empty pending input and no owned held leases or bound schedule. One passive native batch schedules nonzero x then nonzero y and one sync after 2 ms. Native arm and callback recheck the exact admitted display/configuration binding; configuration increases including A-to-B-to-A cancel first, otherwise publication/window changes cancel. Pending stops and reached/equal budgets win before sampling. The existing explicit run, clock advance or cooperative clock-sync controller owns execution. Cancelled records remain protected until input_cancel_pending; neither ordinary nor retrace scheduling can strip the guard. Frozen motion receipts retain declaration, derived units, source observation and native arm/check evidence. Uncertain or late arms, malformed evidence and persistence failures close with available evidence and no replay; journal reopening does not restore authority.",
+        "The mapping is declared, not a verified driver calibration. Publication/configuration binding is not image freshness: palette, VRAM/fonts and application state are excluded, and retained publications have no implicit age limit. No button event is requested; external buttons and native accumulators remain unknown. Device queue acceptance, guest consumption, actual pixel displacement/position, mapping validity, raster coherence and target reached remain unknown. Controlled authored packet/application/draw witnesses and a wrong-scale counterexample do not qualify arbitrary INT33 or games. Legacy coordinate/frame clicks and frame probes remain open. All 127 promotion qualifications remain open; DOSBox default and broad timed_input/absolute_mouse/guest_time_control/completed_guest_frames flags are unchanged.",
+        "Native observation-driven wait requires the explicit virtual clock extension, one owned CPU and a project outside a caller transaction. guest_ms and slice_ms are milliseconds in QEMU_CLOCK_VIRTUAL; fast_forward=True and CS-based memory descriptors refuse. Machine physical/virtual addresses remain explicit. Stops take precedence over another predicate poll, measured native intervals supply progress, and source/epoch/address-context changes cannot turn later bytes into readiness. A native exit that closes the clock channel retains its arrived outcome and incomplete-clock evidence; it does not establish DOSBox timing parity."
+      ]
+    },
+    {
+      "id": "checkpoints",
+      "order": 4,
+      "title": "Native checkpoints, Anchor Stones and restore epochs",
+      "depends_on": [
+        "dos-process",
+        "clock-media-input"
+      ],
+      "gate": "Whole CPU/device/clock/disk state, explicit mutable-file policy, cold-session restore, exact source/backend/profile identity, pending input policy, epoch invalidation, and close on uncertain restore.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_anchor_stone_cli.py",
+        "tests/test_debugger.py",
+        "tests/test_dos_qemu.py",
+        "tests/test_protected_runtime.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_qemu_checkpoint.py",
+        "tests/test_qemu_checkpoint_tracking.py",
+        "tests/test_qemu_checkpoint_native.py",
+        "tests/test_qemu_dos_checkpoint_native.py",
+        "tests/test_qemu_dos_checkpoint_sessions_native.py",
+        "tests/test_qemu_checkpoint_host_restart_native.py",
+        "tests/test_qemu_instrumented_checkpoint_native.py",
+        "tests/test_qemu_dos_modes_checkpoint_native.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py",
+        "tests/test_qemu_dos_task_views.py",
+        "tests/test_qemu_dos_alias_task_layers_native.py",
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_native.py",
+        "tests/test_qemu_dos_irq_preemption_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_quantum_native.py",
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
+      ],
+      "scope_limits": [
+        "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
+        "Standard raw machines and stopped owned COM/MZ processes can cold restore from a private QCOW2 disk. The process envelope preserves source/helper/serial identity, active RAM/fetch layers, hooks and breakpoints across sessions in the same project. Optional native instrumentation sidecars preserve virtual time, retained media and precise retrace under fresh owner identities. Native task-context observation admits bounded remapped protected/V86 RAM when ownership and selected module PC are verified. An authored cooperating-monitor A-to-B-to-A witness and separate Python-process restore cover distinct physical backings, layers and task-scoped hooks. Host files, arbitrary QEMM/DPMI mappings, state forks and histories remain unqualified.",
+        "Native VMState version 1 retains the bounded private arena, task identity and tombstones; version-3 host controls retain per-task stacks, shared hook traps, hit counts and pending hooks with fresh private layer IDs. Authored same-page cold restore passed in a separate Python process under standard and virtual/precise-retrace profiles. Dormant generation-zero and selected-B checkpoints also passed; full parity remains unqualified.",
+        "Authored native cooperative scheduler cold restore passed in a separate Python process with a dormant protected INT61 frame, distinct CPU/x87 state and task-private RAM/fetch/hooks. Per-task x87 rounding of 1.5 to 1 and 2 and guest watchpoints with identical DR7 controls and different DR0 addresses survived switching and cold restore; an instrumented profile preserves virtual clock, precise retrace, VGA configuration and an audio observer with zero frames and zero drops, providing no PCM or audible playback evidence. General parity remains unqualified.",
+        "Authored IRQ0 checkpoints passed before EOI with PIC in service and after EOI with the interrupted hardware frame dormant, including separate-process restore and quantum-three phase. A combined virtual-clock, precise-retrace, VGA configuration, x87 and audio-observer IRQ checkpoint witness passed across pre- and post-EOI cold restore; both audio windows contained zero frames and zero drops, providing no PCM or audible playback evidence.",
+        "API 3 permits a consistent nested IRQ stack or partially acknowledged cascade (slave EOI completed, master cascade EOI pending) in the native task checkpoint. Authored nested and partial-EOI cold restores passed locally for IRQ8 and IRQ1 policy targets; IRQ1 retains a pending handoff until outer EOI. The guest stops after A resumes, without a DOS-cleanup claim; no general hardware IRQ or vendor qualification follows.",
+        "The restricted standard raw-machine profile admits only the exact live automatic DESQview lifecycle breakpoint during save/load. Saving suspends and restores its remote control while paused; user/hook breakpoints, active layers, pending lifecycle stops and unreleased input still refuse. Cold restore retires the old observer, replaces the owner and creates a fresh capture epoch; prior source bindings, snapshots and physical certificates are historical and require fresh stopped observation. This does not extend protected LE checkpoint binding, allocation lifetime or whole-task RAM authority. Native evidence is recorded separately in the handoff log; a test reference alone is not a qualification."
+      ]
+    },
+    {
+      "id": "layers-hooks",
+      "order": 5,
+      "title": "RAM/fetch layers, live code views, hooks and block services",
+      "depends_on": [
+        "dos-process",
+        "trace-events"
+      ],
+      "gate": "Distinct RAM/fetch visibility, guarded all-or-nothing transitions, active precedence, translated-block invalidation, self-modifying code, callback context, declared host-effect authority and region-join contracts.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_code_layers.py",
+        "tests/test_code_overlap_native.py",
+        "tests/test_common_uil.py",
+        "tests/test_protected_mode_native.py",
+        "tests/test_runtime_code.py",
+        "tests/test_screenshot_hooks.py",
+        "tests/test_udc_layers.py",
+        "tests/test_qemu_layers_native.py",
+        "tests/test_qemu_hooks_native.py",
+        "tests/test_qemu_dos_modes_checkpoint_native.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py",
+        "tests/test_qemu_dos_task_views.py",
+        "tests/test_qemu_dos_alias_task_layers_native.py",
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_native.py",
+        "tests/test_qemu_dos_irq_preemption_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_quantum_native.py",
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
+      ],
+      "scope_limits": [
+        "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch; aliases of one physical page share layer effects. Source definitions require the verified DOS module and observed protected/V86 ownership, including bounded remapped RAM with the native task-context extension.",
+        "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter, including bounded remapped protected/V86 ownership and explicitly bound cooperating-monitor task identity. Architectural CR3/TR alone does not identify a software task. Arbitrary protected-mode source mappings, mixed-device memory, runtime code promotion and screenshot hooks remain open.",
+        "Explicit task-private views support up to 16 cooperating task lifetimes and 16 physical pages per task. CPU RAM and fetch use the selected task view; ordinary debugger and device accesses retain base RAM. Retired lifetimes remain tombstones; private anchor/paging-structure pages and unsupported paging are rejected. Authored native same-page and shared-hook checkpoint witnesses passed; arbitrary schedulers and vendor compatibility remain unqualified.",
+        "The authored native cooperative scheduler witness passed same-site task-scoped hooks over private RAM/fetch views, including restored hit counts. This is bounded shared-allocation evidence, not arbitrary DOS multitasker parity."
+      ]
+    },
+    {
+      "id": "histories",
+      "order": 6,
+      "title": "Checkpoint rewind, CPU/RAM deltas, frame history and trials",
+      "depends_on": [
+        "checkpoints",
+        "layers-hooks",
+        "clock-media-input",
+        "trace-events"
+      ],
+      "gate": "Unrecorded-mutation invalidation, partial-state freeze/recovery, file identity, bounded storage, full-frame/key restore, dependency-aware history and incomplete-trial refusal.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_qemu_dos_history.py",
+        "tests/test_qemu_dos_history_public.py",
+        "tests/test_qemu_dos_history_native.py",
+        "tests/test_qemu_dos_frames.py",
+        "tests/test_qemu_dos_frames_public.py",
+        "tests/test_qemu_dos_frames_native.py",
+        "tests/test_qemu_frame_hook_fence.py",
+        "tests/test_qemu_frame_deadlines.py",
+        "tests/test_cpu_deltas.py",
+        "tests/test_cpu_deltas_native.py",
+        "tests/test_debug_experiments.py",
+        "tests/test_debug_rewind.py",
+        "tests/test_debug_timeline.py",
+        "tests/test_debug_timeline_deltas.py",
+        "tests/test_delta_policies.py",
+        "tests/test_frame_timeline_native.py",
+        "tests/test_rewind_native.py",
+        "tests/test_qemu_frame_keys.py",
+        "tests/test_qemu_frame_key_checkpoint.py",
+        "tests/test_qemu_frame_keys_public.py",
+        "tests/test_qemu_frame_keys_native.py",
+        "tests/test_qemu_dos_checkpoint_payload.py",
+        "tests/test_qemu_frame_storage.py",
+        "tests/test_qemu_frame_deltas.py",
+        "tests/test_qemu_frame_deltas_public.py",
+        "tests/test_qemu_frame_deltas_native.py",
+        "tests/test_qemu_cpu_deltas.py",
+        "tests/test_qemu_cpu_undo_runtime.py",
+        "tests/test_qemu_cpu_undo_guard.py",
+        "tests/test_qemu_cpu_deltas_public.py",
+        "tests/test_qemu_cpu_deltas_native.py",
+        "tests/test_qemu_experiments.py",
+        "tests/test_qemu_trial_observations.py",
+        "tests/test_qemu_experiments_public.py",
+        "tests/test_qemu_experiments_native.py",
+        "tests/test_qemu_experiment_admission.py"
+      ],
+      "scope_limits": [
+        "Native renderer histories retain complete checkpoint/PNG DAG points with default full or opt-in lossless checkpoint delta retention, bounded parent chains, full keyframes/fallback, exact pin reconstruction, retained branches and cold restore. PNGs stay full. The unit is a synchronous renderer publication; completed_guest_frames remains false.",
+        "N21 adds atomic stopped frame-key ownership, input journals, scheduled edges and full held-key/device restore under fresh native identities without reinjection. Typematic repeat is unsupported. Ordinary physical input remains a separate lease model; actual capacity and owner guards bind.",
+        "Selected native CPU/RAM projections support bounded source ranges, exposed GPRs/RIP/arithmetic flags and observed single-step stops under stable task, layer, hook, frame-key and IRQ ownership. Selected undo freezes before mutation; unselected state stays current and a verified full checkpoint or frame-point restore is required before execution. Native retirement, hidden CPU/device rollback and partial continuation are not claimed. Projection artifacts persist, but the live undo cursor does not reattach after restart.",
+        "General completed-frame/input parity and directory/file-aware restore remain unqualified. Frame checkpoint delta mode changes retention only, with encoded payload/canonical metadata budgets distinct from reconstructed bytes and live disk growth. DOSBox stays retained pending formal local parity.",
+        "Bounded native comparative trials restore the same full checkpoint before each arm, apply one explicit global or saved-selected-task layer stack, compare validated captured observations and require final full baseline recovery within the overall deadline. Incomplete observations cannot prove equality. Source RAM uses the native selected-task view; fresh epochs/control IDs are retained as provenance. General replay, full equivalence, host file rollback and parity remain unqualified."
+      ]
+    },
+    {
+      "id": "workflows",
+      "order": 7,
+      "title": "Scenes, scripts, player workflows and analysis consumers",
+      "depends_on": [
+        "clock-media-input",
+        "histories",
+        "layers-hooks"
+      ],
+      "gate": "Coherent observation bundles, named actions, exact input ownership, scripts/budgets, frame/domain/readiness guards, spatial/fair-play policy and actual scene progression.",
+      "status": "pending",
+      "witness_tests": [
+        "tests/test_capabilities.py",
+        "tests/test_ida_dosbox.py",
+        "tests/test_input_macros.py",
+        "tests/test_movement.py",
+        "tests/test_player_live.py",
+        "tests/test_progressive_scenes.py",
+        "tests/test_scene_domain_integration.py",
+        "tests/test_scene_readiness.py",
+        "tests/test_scenes.py",
+        "tests/test_spatial_modes.py",
+        "tests/test_spatial_native.py"
+      ],
+      "scope_limits": [
+        "Host algorithms can be reused after their input/frame/state/control dependencies are qualified. Registering a method or importing a mixin does not supply those dependencies."
+      ]
+    },
+    {
+      "id": "qualification",
+      "order": 8,
+      "title": "Compatibility matrix, comparison and retained fallback",
+      "depends_on": [
+        "core",
+        "dos-process",
+        "trace-events",
+        "clock-media-input",
+        "checkpoints",
+        "layers-hooks",
+        "histories",
+        "workflows"
+      ],
+      "gate": "Real DOS/QEMM/DESQview/game cases and separate Windows regression; compare qualified observables and preserve DOSBox selectable after any default switch.",
+      "status": "in_progress",
+      "witness_tests": [
+        "tests/test_desqview_memory_native.py",
+        "tests/test_qemu_dos_game_parity_native.py",
+        "tests/test_qemu_dosbox_parity_native.py",
+        "tests/test_qemm_runtime.py",
+        "tests/test_win16_native.py",
+        "tests/test_windows_native.py"
+      ],
+      "scope_limits": [
+        "The paired freeware Tic-Tac-Toe witness compares an original COM and one physical key with the same loaded-image result; rendering, later play, real driver/task compatibility and release qualification remain open."
+      ]
+    }
+  ],
+  "rpc_methods": [
+    {
+      "method": "agent.capabilities",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.capabilities / status()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "breakpoints.create",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.breakpoint()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "breakpoints.delete",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.delete_breakpoint()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "breakpoints.list",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.breakpoints (no matching RPC wrapper)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.continue",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.run() / resume()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.pause",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.pause()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.step",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.step()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.timing",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.clock_observe(); stock instruction counter or opt-in API1 native QEMU_CLOCK_VIRTUAL; clock_advance(delta_ns) preserves actual requested/fired/stopped times and early stops; no legacy guest_ms or exact-cutoff parity; explicit precise retrace_observe() and bounded retrace_wait() retain native VGA model/generation; separate fixed1:1 clock_sync_* maps host/native time without completed-frame or hardware-cycle parity",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "execution.wait",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.run(timeout_ms=...) / GDBRemote.execute()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "frame.step",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.down",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_down(); owned queue dispatched once during bounded run, immediately by default or explicitly armed with input_schedule(delta_ns)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.frame_edges",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.frame_inputs; optional N21 token/epoch/generation-owned stopped PS/2 QCode edges and full checkpoint restore; actual quiescent FIFO capacity binds; no typematic repeat or full legacy RPC parity",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.press",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_press(); optional virtual_keyboard_press native chord with callback-relative timing, delivered-prefix receipts and explicit held-lease recovery; no generic guest-consumption claim",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.state",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_state()/input_state()/input_schedule_observe(); owned queue, leases and retained dispatch receipts, no native guest state",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.type",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_type()/GuestKeyboard.type(); optional virtual_keyboard_type passively arms 1..64 US-layout ASCII characters with callback-relative holds/gaps, unique per-character leases, delivered-prefix receipts and explicit held-key recovery; guest layout and text consumption remain unqualified",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.keyboard.up",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_up(); matching lease and explicit immediate or scheduled release dispatch, with guest consumption unknown",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.button",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.mouse_button_down/up(); owned physical PS/2 leases with immediate or scheduled dispatch; optional virtual_mouse_click adds mouse_button_click() as one passive down/up pair with separate syncs, an actual-down-relative hold and explicit retained-lease recovery; no coordinate, INT33 or guest-consumption claim",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.click",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.move",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.mouse_move_relative(); relative controller deltas with immediate or scheduled dispatch; optional mapped_mouse_motion converts caller-declared pixel displacements by exact axis scales and binds callbacks to a stopped publication/VGA generation. No absolute pointer, verified driver mapping, packet acceptance or actual pixel-travel claim",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "input.mouse.state",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.input_state(); owned queue/leases only, no guest cursor state",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "layers.configure",
+      "slice": "layers-hooks",
+      "legacy_profile": "layers",
+      "current_status": "partial",
+      "native_route": "Native QMP x-fdisbull-layer-configure; guarded direct RAM and TCG fetch map",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "memory.read",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.memory(space=physical|virtual)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "memory.write",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.write_memory(space=physical|virtual, expected_hex=...)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "session.start",
+      "slice": "dos-process",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Project.debugger(backend=qemu-dos, dos_boot_image=...) -> QemuDOSProcessSession; original real-mode COM/MZ only",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "session.status",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.status()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "session.stop",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "QemuMachine.close(); not selected DOS process termination",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.get_registers",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.registers()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.load",
+      "slice": "checkpoints",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding, optional instrumented state and bounded protected/V86 ownership",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.save",
+      "slice": "checkpoints",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding, optional instrumented state and bounded protected/V86 ownership",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "state.set_register",
+      "slice": "core",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.write_registers()",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "trace.read",
+      "slice": "trace-events",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Stored machine trace artifact (no streaming cursor equivalent)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "trace.start",
+      "slice": "trace-events",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.trace() or QemuDOSProcessSession.trace() (bounded stopped observations; not streaming fetch capture)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "trace.stop",
+      "slice": "trace-events",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "Machine trace call ends at count, stop, or deadline (no persistent trace control)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "video.probe",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "video.screenshot",
+      "slice": "clock-media-input",
+      "legacy_profile": "stable_and_layers",
+      "current_status": "partial",
+      "native_route": "MachineContext.capture_surface()/screenshot(); stopped CPU/clock bracket and PNG, not a completed guest frame",
+      "qualification": "unqualified"
+    }
+  ],
+  "public_methods": [
+    {
+      "method": "debug-assisted-travel",
+      "operation": "assisted_travel",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-bind-runtime-memory",
+      "operation": "bind_runtime_memory",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-branch",
+      "operation": "branch",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.branch; verified 16-bit DOS source address",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-breakpoint",
+      "operation": "breakpoint",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.breakpoint",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-capture-code",
+      "operation": "capture_code",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.capture_code; native capture without static promotion",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-cave",
+      "operation": "cave",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.cave; guarded real-mode DOS source extent",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-click",
+      "operation": "click",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-click-frame",
+      "operation": "click_frame",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-code",
+      "operation": "code",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.code; verified native RAM and fetch views",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-compare-experiment",
+      "operation": "compare_experiment",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.compare_experiment; bounded native full-checkpoint comparative trials",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-contexts",
+      "operation": "contexts",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.contexts",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-controls",
+      "operation": "controls",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.controls; bounded native full-checkpoint comparative trials",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delete-breakpoint",
+      "operation": "delete_breakpoint",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.delete_breakpoint",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delete-hook",
+      "operation": "delete_hook",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuHookSessionMixin; owned native stops and bounded paused actions",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-record",
+      "operation": "cpu_delta_record",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_record; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-recover",
+      "operation": "cpu_delta_recover",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_recover; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-rewind",
+      "operation": "cpu_delta_rewind",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_rewind; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-start",
+      "operation": "cpu_delta_start",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_start; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-delta-status",
+      "operation": "cpu_delta_status",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.cpu_delta_status; selected native CPU/RAM projection, freeze-only undo and full checkpoint recovery",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-desqview-observe",
+      "operation": "desqview_observe",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.desqview_observe",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-frame-advance",
+      "operation": "advance_frames",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.advance_frames",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-frame-inputs",
+      "operation": "frame_inputs",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.frame_inputs",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-frame-probe",
+      "operation": "frame_probe",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-hook",
+      "operation": "hook",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuHookSessionMixin; owned native stops and bounded paused actions",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-hooks",
+      "operation": "hooks",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuHookSessionMixin; owned native stops and bounded paused actions",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-down",
+      "operation": "keyboard_key_down",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_down(); owned queue/leases with immediate or explicit input_schedule dispatch; no guest-consumption claim",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-press",
+      "operation": "keyboard_press",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_press()/GuestKeyboard.press(); optional virtual_keyboard_press passive chord and explicit bounded execution; partial cancellation retains delivered prefix and held leases",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-state",
+      "operation": "keyboard_state",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_state()/input_state(); owned queue/leases and retained immediate or scheduled receipts; no guest-consumption claim",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-type",
+      "operation": "keyboard_type",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_type()/GuestKeyboard.type(); optional virtual_keyboard_type passively arms 1..64 US-layout ASCII characters with callback-relative holds/gaps, unique per-character leases, delivered-prefix receipts and explicit held-key recovery; guest layout and text consumption remain unqualified",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-keyboard-up",
+      "operation": "keyboard_key_up",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.keyboard_key_up(); explicit matching-lease release through immediate or scheduled dispatch; no guest-consumption claim",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-layer-enable",
+      "operation": "layer_enable",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.layer_enable; scoped to one native layer stack",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-layer-patch",
+      "operation": "layer_patch",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.layer_patch; version-bound source or run/epoch-bound backing",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-layer-stack",
+      "operation": "layers",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuLayerSessionMixin.layers; stopped guarded physical backing stack",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-load-anchor-stone",
+      "operation": "load_anchor_stone",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding, optional instrumented state and bounded protected/V86 ownership",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-load-state",
+      "operation": "load_state",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding, optional instrumented state and bounded protected/V86 ownership",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-macro",
+      "operation": "macro",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory",
+      "operation": "memory",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-apply",
+      "operation": "memory_apply",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_apply",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-rule-run",
+      "operation": "memory_rule_run",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_rule_run",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-rule-tick",
+      "operation": "memory_rule_tick",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_rule_tick",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-memory-snapshot",
+      "operation": "memory_snapshot",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.memory_snapshot",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-move",
+      "operation": "move",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-proof-check",
+      "operation": "proof_check",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-registers",
+      "operation": "registers",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.registers",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-restore-experiment",
+      "operation": "restore_experiment",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.restore_experiment; bounded native full-checkpoint comparative trials",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind",
+      "operation": "rewind",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind-record",
+      "operation": "rewind_record",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind_record",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind-start",
+      "operation": "rewind_start",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind_start",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-rewind-status",
+      "operation": "rewind_status",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.rewind_status",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-run",
+      "operation": "run",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.run",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-runtime-memory",
+      "operation": "runtime_memory",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-save-anchor-stone",
+      "operation": "save_anchor_stone",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding, optional instrumented state and bounded protected/V86 ownership",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-save-experiment",
+      "operation": "save_experiment",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.save_experiment; bounded native full-checkpoint comparative trials",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-save-state",
+      "operation": "save_state",
+      "slice": "checkpoints",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "Standard raw-machine checkpoints and native DOS process envelopes with same-project cross-session control rebinding, optional instrumented state and bounded protected/V86 ownership",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-act",
+      "operation": "scene_act",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-assert",
+      "operation": "scene_assert",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-check",
+      "operation": "scene_check",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-click",
+      "operation": "scene_click",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-navigation",
+      "operation": "scene_navigation",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-scene-wait",
+      "operation": "scene_wait",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-screenshot",
+      "operation": "screenshot",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.screenshot()/capture_surface(); stopped display observation, no completed-frame identity",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-screenshot-hooks",
+      "operation": "screenshot_hooks",
+      "slice": "layers-hooks",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-script",
+      "operation": "script",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.script",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-spatial-action",
+      "operation": "spatial_action",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-spatial-policy",
+      "operation": "spatial_policy",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-status",
+      "operation": "status",
+      "slice": "core",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.status",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-text-act",
+      "operation": "text_act",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-text-observe",
+      "operation": "text_observe",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-advance",
+      "operation": "timeline_advance",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_advance",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-image",
+      "operation": "timeline_image",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_image",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-pin",
+      "operation": "timeline_pin",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_pin",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-rewind",
+      "operation": "timeline_rewind",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_rewind",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-start",
+      "operation": "timeline_start",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_start",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-status",
+      "operation": "timeline_status",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_status",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-timeline-stop",
+      "operation": "timeline_stop",
+      "slice": "histories",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.timeline_stop",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-trace",
+      "operation": "trace",
+      "slice": "trace-events",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.trace (raw) / QemuDOSProcessSession.trace (verified original DOS module)",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-trace-until",
+      "operation": "trace_until",
+      "slice": "trace-events",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.trace_until; initial real-mode COM/MZ module, no queued action input",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-wait",
+      "operation": "wait",
+      "slice": "clock-media-input",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "partial",
+      "native_route": "MachineContext.wait(); explicit QEMU_CLOCK_VIRTUAL guest_ms/slice_ms, bounded memory/register/status predicates, measured integer nanoseconds and stop precedence; no DOS fast_forward or implicit source/segment addresses",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-workflow-act",
+      "operation": "workflow_act",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-workflow-observe",
+      "operation": "workflow_observe",
+      "slice": "workflows",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-write-memory",
+      "operation": "write_memory",
+      "slice": "core",
+      "legacy_status": "explicitly_refused",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.write_memory",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-write-registers",
+      "operation": "write_registers",
+      "slice": "core",
+      "legacy_status": "explicitly_refused",
+      "current_status": "partial",
+      "native_route": "MachineDebugSession.write_registers",
+      "qualification": "unqualified"
+    },
+    {
+      "method": "debug-write-runtime-memory",
+      "operation": "write_runtime_memory",
+      "slice": "dos-process",
+      "legacy_status": "available_with_profile_guards",
+      "current_status": "pending",
+      "native_route": null,
+      "qualification": "unqualified"
+    }
+  ],
+  "extra_surfaces": [
+    {
+      "id": "python-frame-rgba",
+      "slice": "clock-media-input",
+      "surface": "DebugSession.frame_rgba / RGBAFrame buffer",
+      "status": "pending",
+      "tests": [
+        "tests/test_frames.py",
+        "tests/test_screenshot_codecs.py"
+      ]
+    },
+    {
+      "id": "private-target-and-entry",
+      "slice": "dos-process",
+      "surface": "LaunchAlias, source SHA-256/relocation checks, PSP/COM entry, staged asset allowlist, no original-source writes",
+      "status": "partial",
+      "tests": [
+        "tests/test_debugger.py",
+        "tests/test_dos_qemu.py",
+        "tests/test_dos_launch.py",
+        "tests/test_dos_process_image.py",
+        "tests/test_qemu_dos_process.py",
+        "tests/test_qemu_dos_process_native.py"
+      ],
+      "native_route": "QemuDOSProcessSession; separate source/boot/prepared-disk identities and verified actual DOS entry"
+    },
+    {
+      "id": "protected-v86-memory",
+      "slice": "dos-process",
+      "surface": "Observed CR0/CR3/CR4/A20/segment widths; explicit physical RAM; mapped-page identity and task lifetime",
+      "status": "partial",
+      "tests": [
+        "tests/test_dos_memory.py",
+        "tests/test_protected_runtime_native.py",
+        "tests/test_qemm_runtime.py",
+        "tests/test_qemu_dos_tasks.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py",
+        "tests/test_qemu_dos_task_guards_native.py",
+        "tests/test_qemu_dos_task_public.py",
+        "tests/test_qemu_dos_task_views.py",
+        "tests/test_qemu_dos_alias_task_layers_native.py",
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_native.py",
+        "tests/test_qemu_dos_irq_preemption_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_quantum_native.py",
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
+      ],
+      "native_route": "debug-memory-translation; debug-dos-task-bind and debug-dos-task-observe for explicit FDBTASK1 cooperating monitor lifetime; native task-private routes debug-dos-task-switching, debug-dos-task-register, debug-dos-task-layer-patch, debug-dos-task-layers, debug-dos-task-memory and debug-dos-task-retire; QemuDOSProcessSession and native extensions; local authored same-page task-private and cold-restore witnesses passed; experimental native CPU scheduling routes debug-dos-task-scheduler, debug-dos-task-fork, debug-dos-task-context, debug-dos-task-runnable, debug-dos-task-scheduler-observe and debug-dos-task-scheduler-disable include locally passed authored cooperative V86 scheduler/frame and separate-process cold-restore witnesses; broader scheduler qualification remains open; not parity qualified; debug-dos-task-preemption: bounded authored PIT IRQ0/i8042 IRQ1, EOI/frame and checkpoint witnesses passed; combined instrumented IRQ cold restore passed with zero-frame audio observer continuity only; API 3 adds ordered nested/cascaded PIC ownership and partial-EOI checkpoints; authored RTC IRQ8/nested IRQ1 witnesses and EOI guards passed locally for both policy targets"
+    },
+    {
+      "id": "process-and-resident-completion",
+      "slice": "dos-process",
+      "surface": "Selected DOS PSP after termination cleanup, parent/child identity, guest_tsr vs guest_exit vs emulator shutdown",
+      "status": "partial",
+      "tests": [
+        "tests/test_debug_semantics.py",
+        "tests/test_qemu_dos_process_native.py",
+        "tests/test_qemu_dos_process_lifecycle.py"
+      ],
+      "native_route": "debug-dos-process / QemuDOSProcessSession.dos_process_info; verified parent return and observed retained MCB/IVT state"
+    },
+    {
+      "id": "remote-tool-consumers",
+      "slice": "workflows",
+      "surface": "JSON serve/debug, IDA endpoint, runtime doctor, capabilities report, replay examples, packaged skill and offline runtime setup",
+      "status": "pending",
+      "tests": [
+        "tests/test_ida_dosbox.py",
+        "tests/test_capabilities.py"
+      ]
+    },
+    {
+      "id": "native-display-window",
+      "slice": "clock-media-input",
+      "surface": "Explicit dot-mode spectator request and host-input filtering; no silent headless substitution",
+      "status": "pending",
+      "tests": [
+        "tests/test_dosbox_window.py",
+        "tests/test_dosbox_window_native_contract.py"
+      ]
+    },
+    {
+      "id": "static-analysis-and-artifacts",
+      "slice": "core",
+      "surface": "Project/source versions, disassembly, driver readers, offline bindiff, immutable artifact export/restart isolation",
+      "status": "retained_host_code",
+      "tests": [
+        "tests/test_qemu_machine.py",
+        "tests/test_runtime_code.py"
+      ]
+    },
+    {
+      "id": "hardware-and-driver-compatibility",
+      "slice": "qualification",
+      "surface": "Real DOS BIOS/devices, QEMM/EMM386 EMS/XMS/A20/paging, DESQview task scheduling and I/O, actual games; Windows separate",
+      "status": "pending",
+      "tests": [
+        "tests/test_qemm_runtime.py",
+        "tests/test_desqview_memory_native.py",
+        "tests/test_windows_native.py",
+        "tests/test_win16_native.py"
+      ]
+    },
+    {
+      "id": "udl-uil-block-services",
+      "slice": "layers-hooks",
+      "surface": "Planned region implementations, mask/priority/epoch, optional original execution, pending Python services, joins and effect authority; existing lab evidence is not production qualification",
+      "status": "planned_addition_not_legacy_capability",
+      "tests": [
+        "tests/test_udc_layers.py",
+        "tests/test_common_uil.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-status",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace status",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_status; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-files",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace files",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_files; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-read",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace read",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_read; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-seal",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace seal",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_seal; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-export",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace export",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_export; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py",
+        "tests/test_dos_workspace_export_atomic.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-keep",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace keep",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep; bounded checkpointed workspace, bounded local witnesses exist; broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-edit",
+      "slice": "layers-hooks",
+      "surface": "Native-only workspace edit",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_edit; bounded checkpointed edits and source-guarded inactive host refresh for cold launch; live visibility and broad qualification pending",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_dos_workspace_native.py",
+        "tests/test_qemu_workspace_refresh_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-save-output",
+      "slice": "layers-hooks",
+      "surface": "Native-only caller-attested closed/flushed output capture and exclusive export",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_save_output; qualified minimal runtime, stopped physical RAM guards and full checkpoint; guest-create provenance remains unknown",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_workspace_output.py",
+        "tests/test_qemu_workspace_output_native.py",
+        "tests/test_dos_workspace_export_atomic.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-start",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-start",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_start; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_dos_save_operations.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-status",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-status",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_status; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_dos_save_operations.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-capture",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-capture",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_capture; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_dos_save_operations.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-provenance-stop",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: provenance-stop",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_provenance_stop; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_dos_save_operations.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-keep-policy",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: keep-policy",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_dos_save_operations.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ]
+    },
+    {
+      "id": "debug-workspace-keep-policy-enabled",
+      "slice": "layers-hooks",
+      "surface": "Native-only DOS guest-create provenance and opt-in keep policy: keep-policy-enabled",
+      "status": "partial",
+      "native_route": "QemuDOSWorkspaceMixin.workspace_keep_policy_enabled; bounded N22 exclusive-create witness from verified original entry; explicit workspace seal services opt-in keeps; opt-in N23 save-v2 independently replays overwrite, seek/truncate and explicit temp rename replacement from proven preimages; N24 optional safe_stop selects exact post-flush pause and automatic keep only in outer public run; internal script/trial/history execution suppressed",
+      "qualification": "unqualified",
+      "tests": [
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_dos_keep_policy.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_dos_save_operations.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_save_stop.py",
+        "tests/test_qemu_save_stop_run.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ]
+    }
+  ],
+  "required_campaigns": [
+    {
+      "id": "native-dos-program-and-tsr",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "qemm-and-protected-v86",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "desqview-task-switching",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "real-game-comparison",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "windows-shared-core-regression",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "cold-restore-and-epoch",
+      "qualification": "unqualified"
+    },
+    {
+      "id": "dosbox-fallback-rehearsal",
+      "qualification": "unqualified"
+    }
+  ]
+}

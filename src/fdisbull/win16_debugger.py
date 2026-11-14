@@ -125,7 +125,7 @@ class Win16DebugSession(WindowsUIMixin):
     script_operations={'run','step','trace','breakpoint','delete-breakpoint','registers','write-registers','memory',
         'write-memory','status','assert','click','click-frame','screenshot',
         'keyboard.press','keyboard.type','keyboard.state','keyboard.key-down','keyboard.key-up','frame-probe','scene-check','scene-assert',
-        'scene-click','scene-act','scene-wait','wait'}
+        'scene-click','scene-act','scene-wait','wait','save-state','load-state'}
     _artifact=DebugSession._artifact
     script=DebugSession.script
     click_frame=DebugSession.click_frame
@@ -136,27 +136,41 @@ class Win16DebugSession(WindowsUIMixin):
     context=DebugSession.context
 
     def __init__(self, project, executable, game_dir, *, kernel, initramfs,
-                 version=None, files=None, boot_timeout_ms=240000,state=None,window=False,memory_mib=4096):
+                 version=None, files=None, boot_timeout_ms=240000,state=None,window=False,memory_mib=None):
         self.project=project;self.rpc=None;self.closed=False;self.run_id=uuid.uuid4().hex
         self.bits=16
         self.version=project.version(version)
         if project.meta['format']!='NE' or project.meta['arch']!='x86' or project.bits!=16 or self.version['parent'] is not None:
             raise ValueError('Win16 launch requires the original unpatched Windows NE version')
-        if state is not None:raise ValueError('Win16 native checkpoint restoration requires separate selector requalification')
         if type(window) is not bool:raise ValueError('window must be boolean')
-        if memory_mib is None:memory_mib=4096
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
         self.game_dir=Path(game_dir).expanduser().resolve(strict=True)
         self.target=project.meta['filename']
         from .guest_assets import uploads
         staged=uploads(project,self.game_dir,self.target,files)
+        saved=None; native=None
+        if state is not None:
+            from .wine_state import get_state, file_hash
+            _,saved,native=get_state(project,state,self.version['id'])
+            old=saved['metadata']
+            if (old.get('backend')!=self.backend_name or old.get('runtime_profile')!='wine11-ne-selector-1'
+                    or [{'path':x['path'],'sha256':x['sha256']} for x in staged]!=old.get('files')
+                    or not isinstance(saved.get('host',{}).get('win16_context'),dict)):
+                raise ValueError('Win16 checkpoint program or context identity mismatch')
+            for name,path in zip(('qemu','kernel','initramfs'),(executable,kernel,initramfs)):
+                if file_hash(Path(path).expanduser().resolve(strict=True))!=old['runtime_inputs'][name]['sha256']:
+                    raise ValueError('Win16 checkpoint backend identity mismatch: '+name)
+        selected_memory = (saved['metadata'].get('memory_mib',4096) if saved else 4096) if memory_mib is None else memory_mib
+        if saved and selected_memory!=saved['metadata'].get('memory_mib',4096):
+            raise ValueError('Win16 checkpoint machine-memory configuration mismatch')
+        memory_mib=selected_memory
         self.source=next(base64.b64decode(item['data_base64']) for item in staged if item['path']==self.target)
         self.ne=load_ne(self.source).metadata['ne']
         self.bindings={};self.breakpoints={};self.watchpoints={};self._binding_epoch=0
         self._recording=False;self._startup_receipts=[];self._edits={};self.mode_id=0;self._frame=None
         self._segments={s['index']:s for s in self.ne['segments']}
         self.metadata={'backend':self.backend_name,'runtime_profile':'wine11-ne-selector-1',
-            'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
+            'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],'memory_mib':memory_mib,
             'files':[{'path':item['path'],'sha256':item['sha256']} for item in staged],
             'original_entry_verified':False,'address_mapping':'observed source segment + live LDT selector/offset; no DOS paragraph arithmetic',
             'watch_coverage':'qualified single scalar operands; unresolved selectors or widths refuse',
@@ -165,20 +179,35 @@ class Win16DebugSession(WindowsUIMixin):
             'general_register_write_limit':'six checked non-stack GPRs only when the paired native/WOW integer setter is available',
             'register_context_contract':self.register_context_contract}
         try:
-            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,memory_mib=memory_mib)
-            # Shared broker: 300s Wine setup, 90s agent response and transport.
-            launched=self.call('session.start',{'target':self.target,'profile':'ne','files':staged},timeout_ms=420000)
-            if launched.get('bits')!=32 or launched.get('launch_profile')!='win16-ne-carrier':
-                raise DebuggerError('Runtime did not expose the actual Win16 carrier bootstrap')
+            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,
+                                   memory_mib=memory_mib,**({'restore':native} if saved else {}))
+            if saved is None:
+                # Shared broker: 300s Wine setup, 90s agent response and transport.
+                launched=self.call('session.start',{'target':self.target,'profile':'ne','files':staged},timeout_ms=420000)
+                if launched.get('bits')!=32 or launched.get('launch_profile')!='win16-ne-carrier':
+                    raise DebuggerError('Runtime did not expose the actual Win16 carrier bootstrap')
+            else:
+                launched={'pid':saved['metadata']['target_pid'],
+                          'image_base':saved['metadata']['carrier_image_base'], 'restored_from':state}
             self.register_edits_available=self.rpc.capabilities.get('win16_integer_pair') is True
+            checkpoints=(self.rpc.capabilities.get('context_diagnostics') is True and
+                         self.rpc.capabilities.get('control_inventory') is True)
             self.rpc.capabilities.update(backend=self.backend_name,architecture='x86',bits=16,carrier_bits=32,
-                source_bound_ne_selectors=True,save_states=False,code_layers=False,native_hooks=False,
+                source_bound_ne_selectors=True,save_states=checkpoints,code_layers=False,native_hooks=False,
                 register_edit=self.register_edits_available,
                 register_context=self.register_context_contract)
             self.metadata['general_register_writes']=self.register_edits_available
+            self.metadata['native_checkpoints']=checkpoints
             self.metadata.update(runtime_inputs=self.rpc.inputs,guest_runtime=self.rpc.hello,
                 target_pid=launched['pid'],carrier_image_base=launched['image_base'],qemu_pid=self.rpc.process.pid)
-            self._bootstrap_ne(min(boot_timeout_ms,180000))
+            if saved is None:
+                self._bootstrap_ne(min(boot_timeout_ms,180000))
+            else:
+                from .win16_state import _verify_inputs, requalify
+                _verify_inputs(self,saved['metadata'])
+                requalify(self,saved['host']['win16_context'])
+                self.metadata.update(original_entry_verified=True,restored_from=state,
+                                     selector_bindings=list(self.bindings.values()))
             self._windows_ui_initialize(window=window)
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
@@ -707,11 +736,17 @@ class Win16DebugSession(WindowsUIMixin):
         self._event('write-registers',result)
         return result
 
-    def save_state(self,*args,**kwargs):
-        raise ValueError('Win16 native checkpoints require separately qualified source/selector restoration')
+    def save_state(self, name='checkpoint.sav', *, max_bytes=None):
+        if getattr(self,'rpc',None) is None:
+            raise ValueError('Win16 native checkpoints require separately qualified source/selector restoration')
+        from .win16_state import save_state
+        return save_state(self, name, max_bytes=max_bytes)
 
-    def load_state(self,*args,**kwargs):
-        raise ValueError('Win16 native checkpoints require separately qualified source/selector restoration')
+    def load_state(self, artifact):
+        if getattr(self,'rpc',None) is None:
+            raise ValueError('Win16 native checkpoints require separately qualified source/selector restoration')
+        from .win16_state import load_state
+        return load_state(self, artifact)
 
     def close(self):
         if self.closed:return

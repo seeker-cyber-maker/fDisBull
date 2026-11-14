@@ -81,10 +81,20 @@ def _pe_test(project,debug,exports,step):
     return {'frame.png':frame['artifact'],'click.png':click['frame']['artifact'],'trace.json':trace['artifact']},capture
 
 
-def doctor(*,backend,executable,kernel=None,initramfs=None,output=None,boot_timeout_ms=240000):
+def doctor(*,backend,executable,kernel=None,initramfs=None,output=None,boot_timeout_ms=240000,
+           qemu_transport=None,qemu_firmware=None):
     """No user target is accepted. Output contains JSON/PNG only; private DB/state are temporary."""
+    if backend=='qemu-dos':
+        if kernel is not None or initramfs is not None:
+            raise ValueError('Native QEMU doctor boots its authored image without a kernel/initramfs')
+        from .qemu_doctor import doctor_qemu
+        return doctor_qemu(executable=executable,output=output,boot_timeout_ms=boot_timeout_ms,
+                           qemu_transport='unix' if qemu_transport is None else qemu_transport,
+                           qemu_firmware=qemu_firmware)
+    if qemu_transport is not None or qemu_firmware is not None:
+        raise ValueError('Doctor qemu_transport and qemu_firmware require backend=qemu-dos')
     if backend not in ('dosbox','dosbox-qemu','wine-qemu'):
-        raise ValueError('Doctor supports dosbox, dosbox-qemu and wine-qemu; other backends lack this authored self-test')
+        raise ValueError('Doctor supports dosbox, dosbox-qemu, qemu-dos and wine-qemu; other backends lack this authored self-test')
     destination=None
     if output is not None:
         destination=Path(output).expanduser().resolve()

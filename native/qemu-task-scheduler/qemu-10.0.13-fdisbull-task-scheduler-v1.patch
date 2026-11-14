@@ -1,0 +1,2049 @@
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -73,6 +73,7 @@
+ { 'include': 'fdisbull-instrumented-checkpoint.json' }
+ { 'include': 'fdisbull-task-context.json' }
+ { 'include': 'fdisbull-task-private.json' }
++{ 'include': 'fdisbull-task-scheduler.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -70,6 +70,7 @@
+   'fdisbull-instrumented-checkpoint',
+   'fdisbull-task-context',
+     'fdisbull-task-private',
++  'fdisbull-task-scheduler',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/target/i386/fdisbull-task-private.c
++++ b/target/i386/fdisbull-task-private.c
+@@ -11,6 +11,7 @@
+ #include "hw/core/cpu.h"
+ #include "migration/vmstate.h"
+ #include "qapi/qapi-commands-fdisbull-task-private.h"
++#include "qapi/qapi-commands-fdisbull-task-scheduler.h"
+ #include "qemu/uuid.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/bswap.h"
+@@ -21,6 +22,7 @@
+ #include "system/cpus.h"
+ #include "system/fdisbull-task-context.h"
+ #include "system/fdisbull-task-private.h"
++#include "target/i386/fdisbull-task-scheduler.h"
+ #include "system/runstate.h"
+ #include "system/tcg.h"
+ 
+@@ -41,6 +43,67 @@
+     uint32_t slot;
+     bool used;
+ } TaskPageState;
++
++typedef struct TaskCpuSegment {
++    uint32_t selector;
++    uint64_t base;
++    uint32_t limit;
++    uint32_t flags;
++} TaskCpuSegment;
++
++#define TASK_FRAME_DEPTH 32
++typedef struct TaskFrameState {
++    uint64_t sequence;
++    uint32_t vector;
++    uint32_t kind;
++    uint32_t pre_cs;
++    uint64_t pre_eip;
++    uint32_t pre_ss;
++    uint64_t pre_sp;
++    uint64_t frame_sp;
++    uint32_t frame_ss_selector;
++    uint64_t frame_ss_base;
++    uint64_t frame_sp_mask;
++    uint32_t frame_size;
++    uint8_t backing_count;
++    uint64_t backing_page[2];
++    uint32_t width;
++    bool error_code_present;
++    uint32_t error_code;
++} TaskFrameState;
++
++typedef struct TaskCpuContext {
++    uint64_t registers[16];
++    uint64_t debug_registers[6]; /* DR0-DR3, DR6, DR7 */
++    uint64_t eip;
++    uint64_t eflags;
++    uint64_t cc_dst, cc_src, cc_src2;
++    uint32_t cc_op;
++    int32_t df;
++    uint32_t hflags, hflags2;
++    TaskCpuSegment segments[6];
++    TaskCpuSegment ldt, tr, gdt, idt;
++    uint64_t cr[5];
++    bool pdptrs_valid;
++    uint64_t pdptrs[4];
++    int32_t a20_mask;
++    uint64_t efer;
++    uint32_t fpstt;
++    uint16_t fpus, fpuc;
++    uint8_t fptags[8];
++    uint64_t fp_low[8];
++    uint16_t fp_high[8];
++    uint16_t fpop, fpcs, fpds;
++    uint64_t fpip, fpdp;
++    uint32_t mxcsr;
++    uint64_t xstate_qwords[(CPU_NB_REGS == 8 ? 8 : 32) * 8];
++    uint64_t xcr0, xstate_bv;
++    uint32_t sysenter_cs;
++    uint64_t sysenter_esp, sysenter_eip;
++    uint64_t star, lstar, cstar, fmask, kernelgsbase;
++    uint8_t interrupt_injected, soft_interrupt, nmi_injected, nmi_pending;
++    bool valid;
++} TaskCpuContext;
+ 
+ typedef struct TaskState {
+     char uuid[37];
+@@ -53,6 +116,13 @@
+     TaskPageState pages[TASK_PAGES];
+     GHashTable *execute;
+     GHashTable *expected;
++    bool runnable;
++    bool blocked;
++    bool cpu_bound;
++    bool cpu_valid;
++    TaskCpuContext cpu;
++    uint8_t frame_depth;
++    TaskFrameState frames[TASK_FRAME_DEPTH];
+ } TaskState;
+ 
+ typedef struct TaskExecState {
+@@ -84,6 +154,19 @@
+     uint8_t exec_expected[TASK_MAX_EXEC_BYTES];
+     bool overflow;
+     bool enabled;
++    bool scheduler_enabled;
++    bool scheduler_prepared;
++    bool scheduler_switch_pending;
++    uint8_t scheduler_selected;
++    uint64_t scheduler_generation;
++    uint64_t frame_sequence;
++    uint8_t cpu_bound[TASK_MAX];
++    uint8_t runnable[TASK_MAX];
++    uint8_t blocked[TASK_MAX];
++    uint8_t context_valid[TASK_MAX];
++    uint8_t frame_depth[TASK_MAX];
++    TaskCpuContext contexts[TASK_MAX];
++    TaskFrameState frames[TASK_MAX * TASK_FRAME_DEPTH];
+ } TaskMigrationState;
+ 
+ static TaskState tasks[TASK_MAX];
+@@ -103,8 +186,17 @@
+ static gint pending_task = -1;
+ static gint pending_fault;
+ static char *task_fault;
++static bool scheduler_enabled;
++static bool scheduler_prepared;
++static bool scheduler_switch_pending;
++static uint8_t scheduler_selected = UINT8_MAX;
++static uint64_t scheduler_generation = 1;
++static uint64_t frame_sequence;
++static char *scheduler_fault;
+ static QemuMutex task_lock;
+ static gsize task_lock_initialized;
++
++static void task_error(Error **errp, const char *why);
+ 
+ static void lock_init(void)
+ {
+@@ -114,9 +206,160 @@
+     }
+ }
+ 
++static TaskCpuSegment task_segment_from_cache(const SegmentCache *sc)
++{
++    return (TaskCpuSegment) { sc->selector, sc->base, sc->limit, sc->flags };
++}
++
++static void task_segment_to_cache(SegmentCache *sc, const TaskCpuSegment *src)
++{
++    sc->selector = src->selector;
++    sc->base = src->base;
++    sc->limit = src->limit;
++    sc->flags = src->flags;
++}
++
++static const char *task_cpu_mode(const CPUX86State *env)
++{
++    if (env->eflags & VM_MASK) return "v86";
++    if (!(env->cr[0] & CR0_PE_MASK)) return "real";
++    if (env->hflags & HF_LMA_MASK) return "long";
++    return "protected";
++}
++
++static bool task_cpu_mode_supported(const CPUX86State *env, Error **errp)
++{
++    if (!strcmp(task_cpu_mode(env), "long") || (env->cr[4] & CR4_PAE_MASK) ||
++        (env->hflags & (HF_SMM_MASK | HF_GUEST_MASK)) ||
++        (env->cr[4] & (CR4_PKE_MASK | CR4_PKS_MASK)) ||
++        (env->xcr0 & ~UINT64_C(3)) || (env->xstate_bv & ~UINT64_C(3))) {
++        task_error(errp, "native task contexts support only real, V86, and non-PAE 32-bit protected modes");
++        return false;
++    }
++    return true;
++}
++
++static void task_cpu_context_capture(TaskCpuContext *ctx, CPUX86State *env,
++                                     bool use_next_eip, target_ulong next_eip)
++{
++    memset(ctx, 0, sizeof(*ctx));
++    for (unsigned i = 0; i < 16; i++) ctx->registers[i] = env->regs[i];
++    for (unsigned i = 0; i < 4; i++) ctx->debug_registers[i] = env->dr[i];
++    ctx->debug_registers[4] = env->dr[6];
++    ctx->debug_registers[5] = env->dr[7];
++    ctx->eip = use_next_eip ? next_eip : env->eip;
++    ctx->eflags = cpu_compute_eflags(env);
++    /* QEMU migration may canonicalize lazy flags; store only their architectural value. */
++    ctx->cc_dst = 0; ctx->cc_src = ctx->eflags & (CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O);
++    ctx->cc_src2 = 0; ctx->cc_op = CC_OP_EFLAGS;
++    ctx->df = (ctx->eflags & DF_MASK) ? -1 : 1;
++    ctx->hflags = env->hflags; ctx->hflags2 = env->hflags2;
++    for (unsigned i = 0; i < 6; i++) ctx->segments[i] = task_segment_from_cache(&env->segs[i]);
++    ctx->ldt = task_segment_from_cache(&env->ldt);
++    ctx->tr = task_segment_from_cache(&env->tr);
++    ctx->gdt = task_segment_from_cache(&env->gdt);
++    ctx->idt = task_segment_from_cache(&env->idt);
++    for (unsigned i = 0; i < 5; i++) ctx->cr[i] = env->cr[i];
++    ctx->pdptrs_valid = env->pdptrs_valid;
++    memcpy(ctx->pdptrs, env->pdptrs, sizeof(ctx->pdptrs));
++    ctx->a20_mask = env->a20_mask; ctx->efer = env->efer;
++    ctx->fpstt = env->fpstt; ctx->fpus = env->fpus; ctx->fpuc = env->fpuc;
++    memcpy(ctx->fptags, env->fptags, sizeof(ctx->fptags));
++    for (unsigned i = 0; i < 8; i++) {
++        ctx->fp_low[i] = env->fpregs[i].d.low;
++        ctx->fp_high[i] = env->fpregs[i].d.high;
++    }
++    ctx->fpop = env->fpop; ctx->fpcs = env->fpcs; ctx->fpds = env->fpds;
++    ctx->fpip = env->fpip; ctx->fpdp = env->fpdp;
++    ctx->mxcsr = env->mxcsr;
++    memcpy(ctx->xstate_qwords, env->xmm_regs, sizeof(ctx->xstate_qwords));
++    ctx->xcr0 = env->xcr0; ctx->xstate_bv = env->xstate_bv;
++    ctx->sysenter_cs = env->sysenter_cs; ctx->sysenter_esp = env->sysenter_esp;
++    ctx->sysenter_eip = env->sysenter_eip; ctx->star = env->star;
++#ifdef TARGET_X86_64
++    ctx->lstar = env->lstar; ctx->cstar = env->cstar;
++    ctx->fmask = env->fmask; ctx->kernelgsbase = env->kernelgsbase;
++#endif
++    ctx->interrupt_injected = env->interrupt_injected;
++    ctx->soft_interrupt = env->soft_interrupt;
++    ctx->nmi_injected = env->nmi_injected; ctx->nmi_pending = env->nmi_pending;
++    ctx->valid = true;
++}
++
++static bool task_cpu_context_restore(TaskCpuContext *ctx, X86CPU *cpu,
++                                     bool materialize_eflags, Error **errp)
++{
++    CPUX86State *env = &cpu->env;
++    if (!ctx->valid || (ctx->hflags & HF_LMA_MASK) ||
++        (ctx->cr[4] & CR4_PAE_MASK)) {
++        task_error(errp, "saved CPU context is invalid or outside the supported mode set");
++        return false;
++    }
++    for (unsigned i = 0; i < 16; i++) env->regs[i] = ctx->registers[i];
++    env->eip = ctx->eip;
++    env->eflags = materialize_eflags ? ctx->eflags :
++        ctx->eflags & ~(DF_MASK | CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O);
++    env->cc_dst = ctx->cc_dst; env->cc_src = ctx->cc_src;
++    env->cc_src2 = ctx->cc_src2; env->cc_op = ctx->cc_op; env->df = ctx->df;
++    /* DR7's fast path only tracks enable-bit changes. Disable old guest hooks
++     * before replacing their address registers so an equal DR7 still rebinds. */
++    cpu_x86_update_dr7(env, env->dr[7] &
++                       ~(DR7_GLOBAL_BP_MASK | DR7_LOCAL_BP_MASK));
++    for (unsigned i = 0; i < 4; i++) env->dr[i] = ctx->debug_registers[i];
++    env->dr[6] = ctx->debug_registers[4];
++    cpu_x86_update_dr7(env, ctx->debug_registers[5]);
++    cpu_x86_update_cr0(env, ctx->cr[0]);
++    cpu_x86_update_cr4(env, ctx->cr[4]);
++    cpu_x86_update_cr3(env, ctx->cr[3]);
++    env->cr[2] = ctx->cr[2]; env->cr[1] = 0;
++    env->pdptrs_valid = ctx->pdptrs_valid;
++    memcpy(env->pdptrs, ctx->pdptrs, sizeof(ctx->pdptrs));
++    cpu_load_efer(env, ctx->efer);
++    env->a20_mask = ctx->a20_mask;
++    for (unsigned i = 0; i < 6; i++) {
++        cpu_x86_load_seg_cache(env, i, ctx->segments[i].selector,
++                               ctx->segments[i].base, ctx->segments[i].limit,
++                               ctx->segments[i].flags);
++    }
++    task_segment_to_cache(&env->ldt, &ctx->ldt);
++    task_segment_to_cache(&env->tr, &ctx->tr);
++    task_segment_to_cache(&env->gdt, &ctx->gdt);
++    task_segment_to_cache(&env->idt, &ctx->idt);
++    env->hflags = ctx->hflags; env->hflags2 = ctx->hflags2;
++    env->fpstt = ctx->fpstt; env->fpus = ctx->fpus; env->fpuc = ctx->fpuc;
++    memcpy(env->fptags, ctx->fptags, sizeof(ctx->fptags));
++    for (unsigned i = 0; i < 8; i++) {
++        env->fpregs[i].d = make_floatx80(ctx->fp_high[i], ctx->fp_low[i]);
++    }
++    env->fpop = ctx->fpop; env->fpcs = ctx->fpcs; env->fpds = ctx->fpds;
++    env->fpip = ctx->fpip; env->fpdp = ctx->fpdp;
++    env->mxcsr = ctx->mxcsr;
++    memcpy(env->xmm_regs, ctx->xstate_qwords, sizeof(ctx->xstate_qwords));
++    env->xcr0 = ctx->xcr0; env->xstate_bv = ctx->xstate_bv;
++    env->sysenter_cs = ctx->sysenter_cs; env->sysenter_esp = ctx->sysenter_esp;
++    env->sysenter_eip = ctx->sysenter_eip; env->star = ctx->star;
++#ifdef TARGET_X86_64
++    env->lstar = ctx->lstar; env->cstar = ctx->cstar;
++    env->fmask = ctx->fmask; env->kernelgsbase = ctx->kernelgsbase;
++#endif
++    env->interrupt_injected = ctx->interrupt_injected;
++    env->soft_interrupt = ctx->soft_interrupt;
++    env->nmi_injected = ctx->nmi_injected; env->nmi_pending = ctx->nmi_pending;
++    update_fp_status(env); update_mxcsr_status(env);
++    return true;
++}
++
+ static void task_error(Error **errp, const char *why)
+ {
+     error_setg(errp, "FDISBULL_TASK_PRECONDITION: %s", why);
++}
++
++static void task_request_debug(CPUState *cpu)
++{
++    bool acquired = !bql_locked();
++    if (acquired) bql_lock();
++    cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
++    if (acquired) bql_unlock();
+ }
+ 
+ static bool generation_room(Error **errp)
+@@ -303,19 +546,19 @@
+ 
+ /* This release supports nonpaged memory and legacy non-PAE paging. Private
+  * pages may not alias the active page directory or any present page table. */
+-static bool task_paging_guard(CPUState *cpu, TaskState *task, Error **errp)
+-{
+-    CPUX86State *env = &X86_CPU(cpu)->env;
++static bool task_paging_guard_context(const uint64_t cr[5], TaskState *task,
++                                      Error **errp)
++{
+     uint8_t entry[4];
+     uint64_t directory, backing;
+-    if (!(env->cr[0] & CR0_PG_MASK) || !task->page_count) {
++    if (!(cr[0] & CR0_PG_MASK) || !task->page_count) {
+         return true;
+     }
+-    if (env->cr[4] & CR4_PAE_MASK) {
++    if (cr[4] & CR4_PAE_MASK) {
+         task_error(errp, "task-private RAM with PAE page tables is unsupported");
+         return false;
+     }
+-    directory = env->cr[3] & ~(uint64_t)(TASK_PAGE_SIZE - 1);
++    directory = cr[3] & ~(uint64_t)(TASK_PAGE_SIZE - 1);
+     if (!physical_backing_page(directory, &backing)) {
+         task_error(errp, "active page directory is not direct RAM");
+         return false;
+@@ -334,7 +577,7 @@
+         }
+         uint32_t pde = ldl_le_p(entry);
+         if (!(pde & PG_PRESENT_MASK) ||
+-            ((pde & PG_PSE_MASK) && (env->cr[4] & CR4_PSE_MASK))) {
++            ((pde & PG_PSE_MASK) && (cr[4] & CR4_PSE_MASK))) {
+             continue;
+         }
+         uint64_t table = pde & ~(uint64_t)(TASK_PAGE_SIZE - 1);
+@@ -348,6 +591,13 @@
+         }
+     }
+     return true;
++}
++
++static bool task_paging_guard(CPUState *cpu, TaskState *task, Error **errp)
++{
++    TaskCpuContext live;
++    task_cpu_context_capture(&live, &X86_CPU(cpu)->env, false, 0);
++    return task_paging_guard_context(live.cr, task, errp);
+ }
+ 
+ static bool task_key_validate(const char *uuid, uint64_t cookie,
+@@ -401,6 +651,58 @@
+         return false;
+     }
+     *uuid_out = uuid_bytes_hex(host + 8);
++    return true;
++}
++
++static bool write_scheduler_anchor(int selected, Error **errp)
++{
++    uint8_t bytes[TASK_ANCHOR_SIZE] = {0};
++    hwaddr offset;
++    uint64_t backing;
++    MemoryRegion *mr;
++    if (!migration_state.anchor_address ||
++        !direct_ram(migration_state.anchor_address, TASK_ANCHOR_SIZE,
++                    &mr, &offset, &backing, NULL, errp)) return false;
++    for (int ti = 0; ti < TASK_MAX; ti++) {
++        for (unsigned p = 0; p < tasks[ti].page_count; p++) {
++            if (tasks[ti].pages[p].backing_page ==
++                (backing & ~(TASK_PAGE_SIZE - 1))) {
++                task_error(errp, "scheduler anchor must remain in shared base RAM");
++                return false;
++            }
++        }
++    }
++    memcpy(bytes, "FDBTASK1", 8);
++    if (selected >= 0 && selected < TASK_MAX) {
++        const char *uuid = tasks[selected].uuid;
++        for (unsigned i = 0; i < 16; i++) {
++            bytes[8 + i] = (g_ascii_xdigit_value(uuid[2 * i]) << 4) |
++                           g_ascii_xdigit_value(uuid[2 * i + 1]);
++        }
++        if (migration_state.sequence > UINT64_MAX - 2) {
++            task_error(errp, "scheduler anchor sequence exhausted");
++            return false;
++        }
++        migration_state.sequence += 2;
++        stq_le_p(bytes + 24, migration_state.sequence);
++        stq_le_p(bytes + 32, tasks[selected].cookie);
++        stq_le_p(bytes + 40, tasks[selected].incarnation);
++        stl_le_p(bytes + 48, 1);
++    } else {
++        /* State zero records a native idle stop without assigning a guest task. */
++        migration_state.sequence += migration_state.sequence <= UINT64_MAX - 2 ? 2 : 0;
++        stq_le_p(bytes + 24, migration_state.sequence);
++        stl_le_p(bytes + 48, 0);
++    }
++    MemTxResult tx = address_space_write(&address_space_memory,
++                                         migration_state.anchor_address,
++                                         MEMTXATTRS_UNSPECIFIED,
++                                         bytes, sizeof(bytes));
++    if (tx != MEMTX_OK) {
++        task_error(errp, "failed to publish native scheduler anchor");
++        return false;
++    }
++    memory_region_set_dirty(mr, offset, sizeof(bytes));
+     return true;
+ }
+ 
+@@ -508,6 +810,220 @@
+     return result;
+ }
+ 
++static void digest_u64(GChecksum *sum, uint64_t value)
++{
++    uint8_t bytes[8]; stq_le_p(bytes, value); g_checksum_update(sum, bytes, sizeof(bytes));
++}
++
++static void digest_u32(GChecksum *sum, uint32_t value)
++{
++    uint8_t bytes[4]; stl_le_p(bytes, value); g_checksum_update(sum, bytes, sizeof(bytes));
++}
++
++static void digest_segment(GChecksum *sum, const TaskCpuSegment *seg)
++{
++    digest_u32(sum, seg->selector); digest_u64(sum, seg->base);
++    digest_u32(sum, seg->limit); digest_u32(sum, seg->flags);
++}
++
++static char *task_context_digest(const TaskCpuContext *ctx)
++{
++    g_autoptr(GChecksum) sum = g_checksum_new(G_CHECKSUM_SHA256);
++    for (unsigned i = 0; i < 16; i++) digest_u64(sum, ctx->registers[i]);
++    for (unsigned i = 0; i < ARRAY_SIZE(ctx->debug_registers); i++) digest_u64(sum, ctx->debug_registers[i]);
++    digest_u64(sum, ctx->eip); digest_u64(sum, ctx->eflags);
++    digest_u64(sum, ctx->cc_dst); digest_u64(sum, ctx->cc_src);
++    digest_u64(sum, ctx->cc_src2); digest_u32(sum, ctx->cc_op);
++    digest_u32(sum, ctx->df); digest_u32(sum, ctx->hflags);
++    digest_u32(sum, ctx->hflags2);
++    for (unsigned i = 0; i < 6; i++) digest_segment(sum, &ctx->segments[i]);
++    digest_segment(sum, &ctx->ldt); digest_segment(sum, &ctx->tr);
++    digest_segment(sum, &ctx->gdt); digest_segment(sum, &ctx->idt);
++    for (unsigned i = 0; i < 5; i++) digest_u64(sum, ctx->cr[i]);
++    digest_u32(sum, ctx->pdptrs_valid); for (unsigned i = 0; i < 4; i++) digest_u64(sum, ctx->pdptrs[i]);
++    digest_u32(sum, ctx->a20_mask); digest_u64(sum, ctx->efer);
++    digest_u32(sum, ctx->fpstt); digest_u32(sum, ctx->fpus); digest_u32(sum, ctx->fpuc);
++    for (unsigned i = 0; i < 8; i++) { digest_u64(sum, ctx->fp_low[i]); digest_u32(sum, ctx->fp_high[i]); digest_u32(sum, ctx->fptags[i]); }
++    digest_u32(sum, ctx->fpop); digest_u32(sum, ctx->fpcs); digest_u32(sum, ctx->fpds);
++    digest_u64(sum, ctx->fpip); digest_u64(sum, ctx->fpdp); digest_u32(sum, ctx->mxcsr);
++    for (unsigned i = 0; i < ARRAY_SIZE(ctx->xstate_qwords); i++) digest_u64(sum, ctx->xstate_qwords[i]);
++    digest_u64(sum, ctx->xcr0); digest_u64(sum, ctx->xstate_bv);
++    digest_u32(sum, ctx->sysenter_cs); digest_u64(sum, ctx->sysenter_esp); digest_u64(sum, ctx->sysenter_eip);
++    digest_u64(sum, ctx->star); digest_u64(sum, ctx->lstar); digest_u64(sum, ctx->cstar);
++    digest_u64(sum, ctx->fmask); digest_u64(sum, ctx->kernelgsbase);
++    digest_u32(sum, ctx->interrupt_injected); digest_u32(sum, ctx->soft_interrupt);
++    digest_u32(sum, ctx->nmi_injected); digest_u32(sum, ctx->nmi_pending);
++    return g_strdup(g_checksum_get_string(sum));
++}
++
++static char *task_xstate_digest(const TaskCpuContext *ctx)
++{
++    g_autoptr(GChecksum) sum = g_checksum_new(G_CHECKSUM_SHA256);
++    for (unsigned i = 0; i < 8; i++) { digest_u64(sum, ctx->fp_low[i]); digest_u32(sum, ctx->fp_high[i]); }
++    digest_u32(sum, ctx->fpstt); digest_u32(sum, ctx->fpus); digest_u32(sum, ctx->fpuc);
++    for (unsigned i = 0; i < 8; i++) digest_u32(sum, ctx->fptags[i]);
++    digest_u32(sum, ctx->fpop); digest_u32(sum, ctx->fpcs); digest_u32(sum, ctx->fpds);
++    digest_u64(sum, ctx->fpip); digest_u64(sum, ctx->fpdp);
++    for (unsigned i = 0; i < ARRAY_SIZE(ctx->xstate_qwords); i++) digest_u64(sum, ctx->xstate_qwords[i]);
++    digest_u32(sum, ctx->mxcsr); digest_u64(sum, ctx->xcr0); digest_u64(sum, ctx->xstate_bv);
++    return g_strdup(g_checksum_get_string(sum));
++}
++
++static char *task_frame_digest(const TaskState *task)
++{
++    g_autoptr(GChecksum) sum = g_checksum_new(G_CHECKSUM_SHA256);
++    digest_u32(sum, task->frame_depth);
++    for (unsigned i = 0; i < task->frame_depth; i++) {
++        const TaskFrameState *f = &task->frames[i];
++        digest_u64(sum, f->sequence); digest_u32(sum, f->vector); digest_u32(sum, f->kind);
++        digest_u32(sum, f->pre_cs); digest_u64(sum, f->pre_eip);
++        digest_u32(sum, f->pre_ss); digest_u64(sum, f->pre_sp);
++        digest_u64(sum, f->frame_sp); digest_u32(sum, f->width);
++        digest_u32(sum, f->frame_ss_selector); digest_u64(sum, f->frame_ss_base);
++        digest_u64(sum, f->frame_sp_mask); digest_u32(sum, f->frame_size);
++        digest_u32(sum, f->backing_count);
++        for (unsigned b = 0; b < 2; b++) digest_u64(sum, f->backing_page[b]);
++        digest_u32(sum, f->error_code_present); digest_u32(sum, f->error_code);
++    }
++    return g_strdup(g_checksum_get_string(sum));
++}
++
++static const char *task_context_mode(const TaskCpuContext *ctx)
++{
++    if (ctx->eflags & VM_MASK) return "v86";
++    if (!(ctx->cr[0] & CR0_PE_MASK)) return "real";
++    if (ctx->hflags & HF_LMA_MASK) return "long";
++    return "protected";
++}
++
++static FdisbullTaskCpuSegment *qapi_segment(const TaskCpuSegment *seg)
++{
++    FdisbullTaskCpuSegment *out = g_new0(FdisbullTaskCpuSegment, 1);
++    out->selector = seg->selector; out->base = seg->base;
++    out->limit = seg->limit; out->flags = seg->flags;
++    return out;
++}
++
++static FdisbullTaskSchedulerStatusInfo *scheduler_status_new(void)
++{
++    FdisbullTaskSchedulerStatusInfo *out = g_new0(FdisbullTaskSchedulerStatusInfo, 1);
++    out->model = g_strdup("qemu-pc-task-scheduler-v1"); out->api_version = 1;
++    out->epoch = epoch_highwater; out->generation = generation_highwater;
++    out->enabled = scheduler_enabled; out->yield_vector = 0x60; out->block_vector = 0x62;
++    out->pending_switch = scheduler_switch_pending;
++    if (scheduler_fault) out->fault = g_strdup(scheduler_fault);
++    out->runqueue_generation = scheduler_generation;
++    CPUState *owner = NULL; CPU_FOREACH(owner) { break; }
++    if (owner) {
++        uint32_t pending = owner->interrupt_request &
++            (CPU_INTERRUPT_HARD | CPU_INTERRUPT_NMI | CPU_INTERRUPT_SMI |
++             CPU_INTERRUPT_MCE | CPU_INTERRUPT_VIRQ);
++        while (pending) { out->pending_irq_count++; pending &= pending - 1; }
++    }
++    out->selected_uuid = g_strdup("");
++    if (scheduler_selected < TASK_MAX && tasks[scheduler_selected].cpu_bound) {
++        TaskState *selected = &tasks[scheduler_selected];
++        g_free(out->selected_uuid); out->selected_uuid = g_strdup(selected->uuid);
++        out->selected_cookie = selected->cookie; out->selected_incarnation = selected->incarnation;
++    }
++    FdisbullTaskSchedulerSlotList **tail = &out->tasks;
++    for (int i = 0; i < TASK_MAX; i++) {
++        TaskState *task = &tasks[i];
++        if (!task->cpu_bound) continue;
++        TaskCpuContext live_ctx;
++        TaskCpuContext *ctx = &task->cpu;
++        if (scheduler_enabled && scheduler_selected == i) {
++            CPUState *cpu = NULL; CPU_FOREACH(cpu) { break; }
++            if (cpu) { task_cpu_context_capture(&live_ctx, &X86_CPU(cpu)->env, false, 0); ctx = &live_ctx; }
++        }
++        FdisbullTaskSchedulerSlot *slot = g_new0(FdisbullTaskSchedulerSlot, 1);
++        slot->uuid = g_strdup(task->uuid); slot->cookie = task->cookie;
++        slot->incarnation = task->incarnation; slot->slot = i;
++        slot->runnable = task->runnable; slot->blocked = task->blocked;
++        slot->retired = task->retired; slot->context_valid = task->cpu_valid;
++        slot->context_sha256 = task->cpu_valid ? task_context_digest(ctx) : g_strdup("");
++        slot->frame_sha256 = task_frame_digest(task); slot->interrupt_depth = task->frame_depth;
++        if (task->cpu_valid) {
++            slot->eip = ctx->eip; slot->esp = ctx->registers[R_ESP];
++            slot->eflags = ctx->eflags; slot->mode = g_strdup(task_context_mode(ctx));
++            slot->cs_selector = ctx->segments[R_CS].selector;
++            slot->ss_selector = ctx->segments[R_SS].selector;
++        } else { slot->mode = g_strdup("unknown"); }
++        slot->execution_bytes = g_hash_table_size(task->execute);
++        slot->execution_sha256 = task_exec_digest(task);
++        FdisbullTaskPageInfoList **ptail = &slot->pages;
++        for (unsigned p = 0; p < task->page_count; p++) {
++            FdisbullTaskPageInfoList *node = g_new0(FdisbullTaskPageInfoList, 1);
++            node->value = page_info_new(&task->pages[p]); *ptail = node; ptail = &node->next;
++        }
++        FdisbullTaskSchedulerSlotList *node = g_new0(FdisbullTaskSchedulerSlotList, 1);
++        node->value = slot; *tail = node; tail = &node->next;
++    }
++    return out;
++}
++
++static FdisbullTaskInterruptFrame *task_frame_info(const TaskFrameState *frame)
++{
++    FdisbullTaskInterruptFrame *out = g_new0(FdisbullTaskInterruptFrame, 1);
++    out->sequence = frame->sequence; out->vector = frame->vector;
++    out->kind = g_strdup(frame->kind == 1 ? "hardware" : frame->kind == 2 ? "software" : "exception");
++    out->pre_cs = frame->pre_cs; out->pre_eip = frame->pre_eip;
++    out->pre_ss = frame->pre_ss; out->pre_sp = frame->pre_sp;
++    out->frame_sp = frame->frame_sp; out->width = frame->width;
++    out->frame_ss_selector = frame->frame_ss_selector;
++    out->frame_ss_base = frame->frame_ss_base;
++    out->frame_sp_mask = frame->frame_sp_mask;
++    out->frame_size = frame->frame_size;
++    out->backing_count = frame->backing_count;
++    uint64List **btail = &out->backing_pages;
++    for (unsigned b = 0; b < frame->backing_count; b++) {
++        uint64List *n = g_new0(uint64List, 1); n->value = frame->backing_page[b];
++        *btail = n; btail = &n->next;
++    }
++    out->error_code_present = frame->error_code_present;
++    out->error_code = frame->error_code;
++    return out;
++}
++
++static FdisbullTaskCpuContextInfo *task_cpu_context_info(TaskState *task,
++                                                          bool live,
++                                                          const TaskCpuContext *ctx)
++{
++    FdisbullTaskCpuContextInfo *out = g_new0(FdisbullTaskCpuContextInfo, 1);
++    out->uuid = g_strdup(task->uuid); out->cookie = task->cookie;
++    out->incarnation = task->incarnation; out->live = live;
++    uint64List **regtail = &out->registers;
++    for (unsigned i = 0; i < 16; i++) {
++        uint64List *reg = g_new0(uint64List, 1); reg->value = ctx->registers[i];
++        *regtail = reg; regtail = &reg->next;
++    }
++    out->eip = ctx->eip; out->eflags = ctx->eflags;
++    out->mode = g_strdup(task_context_mode(ctx));
++    FdisbullTaskCpuSegmentList **tail = &out->segments;
++    for (unsigned i = 0; i < 6; i++) {
++        FdisbullTaskCpuSegmentList *n = g_new0(FdisbullTaskCpuSegmentList, 1);
++        n->value = qapi_segment(&ctx->segments[i]); *tail = n; tail = &n->next;
++    }
++    const TaskCpuSegment *system[4] = { &ctx->ldt, &ctx->tr, &ctx->gdt, &ctx->idt };
++    tail = &out->system_segments;
++    for (unsigned i = 0; i < 4; i++) {
++        FdisbullTaskCpuSegmentList *n = g_new0(FdisbullTaskCpuSegmentList, 1);
++        n->value = qapi_segment(system[i]); *tail = n; tail = &n->next;
++    }
++    out->cr0 = ctx->cr[0]; out->cr2 = ctx->cr[2];
++    out->cr3 = ctx->cr[3]; out->cr4 = ctx->cr[4];
++    out->efer = ctx->efer; out->a20_mask = ctx->a20_mask;
++    out->xstate_sha256 = task_xstate_digest(ctx);
++    out->context_sha256 = task_context_digest(ctx);
++    out->interrupt_depth = task->frame_depth;
++    FdisbullTaskInterruptFrameList **ftail = &out->frames;
++    for (unsigned i = 0; i < task->frame_depth; i++) {
++        FdisbullTaskInterruptFrameList *n = g_new0(FdisbullTaskInterruptFrameList, 1);
++        n->value = task_frame_info(&task->frames[i]); *ftail = n; ftail = &n->next;
++    }
++    return out;
++}
++
+ static void clear_task(TaskState *task)
+ {
+     g_clear_pointer(&task->execute, g_hash_table_unref);
+@@ -518,7 +1034,8 @@
+ static int migration_pre_save(void *opaque)
+ {
+     TaskMigrationState *state = opaque;
+-    if (g_atomic_int_get(&pending_task) >= 0 || g_atomic_int_get(&pending_fault)) {
++    if (g_atomic_int_get(&pending_task) >= 0 || g_atomic_int_get(&pending_fault) ||
++        scheduler_switch_pending) {
+         return -EBUSY;
+     }
+     memset(state->task_used, 0, sizeof(state->task_used));
+@@ -528,11 +1045,40 @@
+     state->epoch = epoch_highwater;
+     state->generation = generation_highwater;
+     state->enabled = monitor_enabled;
++    state->scheduler_enabled = scheduler_enabled;
++    state->scheduler_prepared = scheduler_prepared;
++    state->scheduler_switch_pending = scheduler_switch_pending;
++    state->scheduler_selected = scheduler_selected;
++    state->scheduler_generation = scheduler_generation;
++    state->frame_sequence = frame_sequence;
++    memset(state->cpu_bound, 0, sizeof(state->cpu_bound));
++    memset(state->runnable, 0, sizeof(state->runnable));
++    memset(state->blocked, 0, sizeof(state->blocked));
++    memset(state->context_valid, 0, sizeof(state->context_valid));
++    memset(state->frame_depth, 0, sizeof(state->frame_depth));
++    memset(state->contexts, 0, sizeof(state->contexts));
++    memset(state->frames, 0, sizeof(state->frames));
+     for (int ti = 0; ti < TASK_MAX; ti++) {
+         TaskState *task = &tasks[ti];
+         state->task_used[ti] = task->used;
+         state->task_retired[ti] = task->retired;
+         state->page_count[ti] = task->page_count;
++        state->cpu_bound[ti] = task->cpu_bound;
++        state->runnable[ti] = task->runnable;
++        state->blocked[ti] = task->blocked;
++        if (task->cpu_bound) {
++            TaskCpuContext snapshot = task->cpu;
++            if (scheduler_enabled && scheduler_selected == ti) {
++                CPUState *cs = first_cpu;
++                if (!cs) return -EINVAL;
++                task_cpu_context_capture(&snapshot, &X86_CPU(cs)->env, true,
++                                         X86_CPU(cs)->env.eip);
++            }
++            state->contexts[ti] = snapshot;
++            state->context_valid[ti] = snapshot.valid;
++            state->frame_depth[ti] = task->frame_depth;
++            memcpy(&state->frames[ti * TASK_FRAME_DEPTH], task->frames, sizeof(task->frames));
++        }
+         if (!task->used) {
+             continue;
+         }
+@@ -584,7 +1130,9 @@
+     }
+     for (int i = 0; i < TASK_MAX; i++) {
+         if (!state->task_used[i]) {
+-            if (state->page_count[i] || state->task_retired[i]) return -EINVAL;
++            if (state->page_count[i] || state->task_retired[i] ||
++                (version_id >= 2 && (state->cpu_bound[i] || state->runnable[i] ||
++                 state->blocked[i] || state->context_valid[i] || state->frame_depth[i]))) return -EINVAL;
+             continue;
+         }
+         if (state->task_retired[i] > 1) return -EINVAL;
+@@ -613,6 +1161,30 @@
+         task->cookie = state->cookie[i];
+         task->incarnation = state->incarnation[i];
+         task->generation = state->task_generation[i];
++        if (version_id >= 2) {
++            if (state->cpu_bound[i] > 1 || state->runnable[i] > 1 ||
++                state->blocked[i] > 1 || state->context_valid[i] > 1 ||
++                state->frame_depth[i] > TASK_FRAME_DEPTH ||
++                (state->runnable[i] && state->blocked[i]) ||
++                (state->task_retired[i] && state->runnable[i]) ||
++                (state->cpu_bound[i] && !state->task_retired[i] &&
++                 (!state->context_valid[i] || !state->contexts[i].valid)) ||
++                (state->task_retired[i] && state->context_valid[i]) ||
++                (!state->cpu_bound[i] && (state->context_valid[i] || state->frame_depth[i]))) {
++                return -EINVAL;
++            }
++            task->cpu_bound = state->cpu_bound[i];
++            task->runnable = state->runnable[i];
++            task->blocked = state->blocked[i];
++            task->cpu_valid = state->context_valid[i];
++            task->cpu = state->contexts[i];
++            if (version_id < 3 && task->cpu_valid) {
++                task->cpu.debug_registers[4] = DR6_FIXED_1;
++                task->cpu.debug_registers[5] = DR7_FIXED_1;
++            }
++            task->frame_depth = state->frame_depth[i];
++            memcpy(task->frames, &state->frames[i * TASK_FRAME_DEPTH], sizeof(task->frames));
++        }
+         task->page_count = state->page_count[i];
+         task->execute = byte_map_new();
+         task->expected = byte_map_new();
+@@ -662,10 +1234,57 @@
+         return -EINVAL;
+     }
+     if (state->selected == UINT8_MAX && state->enabled) return -EINVAL;
++    if (version_id >= 2) {
++        if ((state->scheduler_enabled &&
++             (state->scheduler_selected >= TASK_MAX ||
++              state->scheduler_selected != state->selected ||
++              !restored[state->scheduler_selected].cpu_bound ||
++              (!restored[state->scheduler_selected].retired &&
++               !restored[state->scheduler_selected].cpu_valid) ||
++              restored[state->scheduler_selected].retired)) ||
++            (state->scheduler_selected >= TASK_MAX &&
++             state->scheduler_selected != UINT8_MAX) ||
++            (state->scheduler_switch_pending && !state->scheduler_enabled) ||
++            (state->scheduler_enabled && !state->scheduler_prepared) ||
++            !state->scheduler_generation || state->scheduler_generation == UINT64_MAX ||
++            state->frame_sequence == UINT64_MAX) return -EINVAL;
++        for (int i = 0; i < TASK_MAX; i++) {
++            if (restored[i].cpu_bound && !restored[i].used) return -EINVAL;
++            if (restored[i].frame_depth && !restored[i].cpu_bound) return -EINVAL;
++            for (unsigned f = 0; f < restored[i].frame_depth; f++) {
++                TaskFrameState *frame = &restored[i].frames[f];
++                if (!frame->sequence || frame->sequence > state->frame_sequence ||
++                    !frame->width || (frame->width != 16 && frame->width != 32) ||
++                    frame->frame_size > 64 || frame->backing_count > 2 ||
++                    !frame->frame_size || !frame->backing_count ||
++                    (frame->frame_sp_mask != UINT16_MAX && frame->frame_sp_mask != UINT32_MAX)) return -EINVAL;
++                for (unsigned b = 0; b < frame->backing_count; b++) {
++                    bool owned = false;
++                    for (unsigned p = 0; p < restored[i].page_count; p++) {
++                        owned |= restored[i].pages[p].backing_page == frame->backing_page[b];
++                    }
++                    if (!owned || (frame->backing_page[b] & (TASK_PAGE_SIZE - 1))) return -EINVAL;
++                }
++            }
++        }
++    }
+     for (int i = 0; i < TASK_MAX; i++) clear_task(&tasks[i]);
+     memcpy(tasks, restored, sizeof(tasks));
+     selected_task = state->selected;
+     monitor_enabled = state->enabled;
++    if (version_id >= 2) {
++        scheduler_enabled = state->scheduler_enabled;
++        scheduler_prepared = state->scheduler_prepared;
++        scheduler_switch_pending = state->scheduler_switch_pending;
++        scheduler_selected = state->scheduler_selected;
++        scheduler_generation = MAX(scheduler_generation, state->scheduler_generation);
++        frame_sequence = state->frame_sequence;
++    } else {
++        scheduler_enabled = scheduler_prepared = scheduler_switch_pending = false;
++        scheduler_selected = UINT8_MAX;
++        scheduler_generation = 1;
++        frame_sequence = 0;
++    }
+     migration_state.anchor_address = state->anchor_address;
+     migration_state.sequence = state->sequence;
+     epoch_highwater = MAX(epoch_highwater, state->epoch) + 1;
+@@ -673,6 +1292,14 @@
+     state->epoch = epoch_highwater;
+     state->generation = generation_highwater;
+     g_clear_pointer(&task_fault, g_free);
++    if (version_id >= 2 && selected_task < TASK_MAX &&
++        tasks[selected_task].cpu_bound && tasks[selected_task].cpu_valid) {
++        CPUState *cpu = first_cpu;
++        if (!cpu || !task_cpu_context_restore(&tasks[selected_task].cpu,
++                                              X86_CPU(cpu), true, NULL)) {
++            return -EINVAL;
++        }
++    }
+     g_atomic_int_set(&pending_task, -1);
+     g_atomic_int_set(&pending_fault, 0);
+     CPUState *cpu;
+@@ -683,9 +1310,86 @@
+     return 0;
+ }
+ 
++static const VMStateDescription vmstate_task_cpu_segment = {
++    .name = "fdisbull/task-cpu-segment",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32(selector, TaskCpuSegment),
++        VMSTATE_UINT64(base, TaskCpuSegment),
++        VMSTATE_UINT32(limit, TaskCpuSegment),
++        VMSTATE_UINT32(flags, TaskCpuSegment),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static const VMStateDescription vmstate_task_cpu_context = {
++    .name = "fdisbull/task-cpu-context",
++    .version_id = 2,
++    .minimum_version_id = 1,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT64_ARRAY(registers, TaskCpuContext, 16),
++        VMSTATE_UINT64_ARRAY_V(debug_registers, TaskCpuContext, 6, 2),
++        VMSTATE_UINT64(eip, TaskCpuContext), VMSTATE_UINT64(eflags, TaskCpuContext),
++        VMSTATE_UINT64(cc_dst, TaskCpuContext), VMSTATE_UINT64(cc_src, TaskCpuContext),
++        VMSTATE_UINT64(cc_src2, TaskCpuContext), VMSTATE_UINT32(cc_op, TaskCpuContext),
++        VMSTATE_INT32(df, TaskCpuContext), VMSTATE_UINT32(hflags, TaskCpuContext),
++        VMSTATE_UINT32(hflags2, TaskCpuContext),
++        VMSTATE_STRUCT_ARRAY(segments, TaskCpuContext, 6, 0,
++                             vmstate_task_cpu_segment, TaskCpuSegment),
++        VMSTATE_STRUCT(ldt, TaskCpuContext, 0, vmstate_task_cpu_segment, TaskCpuSegment),
++        VMSTATE_STRUCT(tr, TaskCpuContext, 0, vmstate_task_cpu_segment, TaskCpuSegment),
++        VMSTATE_STRUCT(gdt, TaskCpuContext, 0, vmstate_task_cpu_segment, TaskCpuSegment),
++        VMSTATE_STRUCT(idt, TaskCpuContext, 0, vmstate_task_cpu_segment, TaskCpuSegment),
++        VMSTATE_UINT64_ARRAY(cr, TaskCpuContext, 5),
++        VMSTATE_BOOL(pdptrs_valid, TaskCpuContext),
++        VMSTATE_UINT64_ARRAY(pdptrs, TaskCpuContext, 4),
++        VMSTATE_INT32(a20_mask, TaskCpuContext), VMSTATE_UINT64(efer, TaskCpuContext),
++        VMSTATE_UINT32(fpstt, TaskCpuContext), VMSTATE_UINT16(fpus, TaskCpuContext),
++        VMSTATE_UINT16(fpuc, TaskCpuContext), VMSTATE_UINT8_ARRAY(fptags, TaskCpuContext, 8),
++        VMSTATE_UINT64_ARRAY(fp_low, TaskCpuContext, 8),
++        VMSTATE_UINT16_ARRAY(fp_high, TaskCpuContext, 8),
++        VMSTATE_UINT16(fpop, TaskCpuContext), VMSTATE_UINT16(fpcs, TaskCpuContext),
++        VMSTATE_UINT16(fpds, TaskCpuContext), VMSTATE_UINT64(fpip, TaskCpuContext),
++        VMSTATE_UINT64(fpdp, TaskCpuContext), VMSTATE_UINT32(mxcsr, TaskCpuContext),
++        VMSTATE_UINT64_ARRAY(xstate_qwords, TaskCpuContext,
++                             (CPU_NB_REGS == 8 ? 8 : 32) * 8),
++        VMSTATE_UINT64(xcr0, TaskCpuContext), VMSTATE_UINT64(xstate_bv, TaskCpuContext),
++        VMSTATE_UINT32(sysenter_cs, TaskCpuContext), VMSTATE_UINT64(sysenter_esp, TaskCpuContext),
++        VMSTATE_UINT64(sysenter_eip, TaskCpuContext), VMSTATE_UINT64(star, TaskCpuContext),
++        VMSTATE_UINT64(lstar, TaskCpuContext), VMSTATE_UINT64(cstar, TaskCpuContext),
++        VMSTATE_UINT64(fmask, TaskCpuContext), VMSTATE_UINT64(kernelgsbase, TaskCpuContext),
++        VMSTATE_UINT8(interrupt_injected, TaskCpuContext),
++        VMSTATE_UINT8(soft_interrupt, TaskCpuContext),
++        VMSTATE_UINT8(nmi_injected, TaskCpuContext), VMSTATE_UINT8(nmi_pending, TaskCpuContext),
++        VMSTATE_BOOL(valid, TaskCpuContext),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static const VMStateDescription vmstate_task_frame = {
++    .name = "fdisbull/task-interrupt-frame",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT64(sequence, TaskFrameState), VMSTATE_UINT32(vector, TaskFrameState),
++        VMSTATE_UINT32(kind, TaskFrameState), VMSTATE_UINT32(pre_cs, TaskFrameState),
++        VMSTATE_UINT64(pre_eip, TaskFrameState), VMSTATE_UINT32(pre_ss, TaskFrameState),
++        VMSTATE_UINT64(pre_sp, TaskFrameState), VMSTATE_UINT64(frame_sp, TaskFrameState),
++        VMSTATE_UINT32(frame_ss_selector, TaskFrameState),
++        VMSTATE_UINT64(frame_ss_base, TaskFrameState),
++        VMSTATE_UINT64(frame_sp_mask, TaskFrameState),
++        VMSTATE_UINT32(frame_size, TaskFrameState),
++        VMSTATE_UINT8(backing_count, TaskFrameState),
++        VMSTATE_UINT64_ARRAY(backing_page, TaskFrameState, 2),
++        VMSTATE_UINT32(width, TaskFrameState), VMSTATE_BOOL(error_code_present, TaskFrameState),
++        VMSTATE_UINT32(error_code, TaskFrameState), VMSTATE_END_OF_LIST()
++    }
++};
++
+ static const VMStateDescription vmstate_fdisbull_task_private = {
+     .name = "fdisbull/task-private",
+-    .version_id = 1,
++    .version_id = 3,
+     .minimum_version_id = 1,
+     .pre_save = migration_pre_save,
+     .post_load = migration_post_load,
+@@ -712,6 +1416,22 @@
+         VMSTATE_UINT8_ARRAY(exec_expected, TaskMigrationState, TASK_MAX_EXEC_BYTES),
+         VMSTATE_BOOL(overflow, TaskMigrationState),
+         VMSTATE_BOOL(enabled, TaskMigrationState),
++        VMSTATE_BOOL_V(scheduler_enabled, TaskMigrationState, 2),
++        VMSTATE_BOOL_V(scheduler_prepared, TaskMigrationState, 2),
++        VMSTATE_BOOL_V(scheduler_switch_pending, TaskMigrationState, 2),
++        VMSTATE_UINT8_V(scheduler_selected, TaskMigrationState, 2),
++        VMSTATE_UINT64_V(scheduler_generation, TaskMigrationState, 2),
++        VMSTATE_UINT64_V(frame_sequence, TaskMigrationState, 2),
++        VMSTATE_UINT8_ARRAY_V(cpu_bound, TaskMigrationState, TASK_MAX, 2),
++        VMSTATE_UINT8_ARRAY_V(runnable, TaskMigrationState, TASK_MAX, 2),
++        VMSTATE_UINT8_ARRAY_V(blocked, TaskMigrationState, TASK_MAX, 2),
++        VMSTATE_UINT8_ARRAY_V(context_valid, TaskMigrationState, TASK_MAX, 2),
++        VMSTATE_UINT8_ARRAY_V(frame_depth, TaskMigrationState, TASK_MAX, 2),
++        VMSTATE_STRUCT_ARRAY(contexts, TaskMigrationState, TASK_MAX, 2,
++                             vmstate_task_cpu_context, TaskCpuContext),
++        VMSTATE_STRUCT_ARRAY(frames, TaskMigrationState,
++                             TASK_MAX * TASK_FRAME_DEPTH, 2,
++                             vmstate_task_frame, TaskFrameState),
+         VMSTATE_END_OF_LIST()
+     }
+ };
+@@ -903,9 +1623,7 @@
+         qemu_mutex_unlock(&task_lock);
+         tlb_flush(cpu);
+         tb_flush(cpu);
+-        bql_lock();
+-        cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
+-        bql_unlock();
++        task_request_debug(cpu);
+         return true;
+     }
+     selected_task = pending;
+@@ -938,10 +1656,327 @@
+         error_free(err);
+         tlb_flush(cpu);
+         tb_flush(cpu);
+-        bql_lock();
+-        cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
+-        bql_unlock();
++        task_request_debug(cpu);
+         cpu_exit(cpu);
++    }
++}
++
++static int task_scheduler_next(int after)
++{
++    for (unsigned n = 1; n <= TASK_MAX; n++) {
++        int i = (after + n) % TASK_MAX;
++        if (tasks[i].cpu_bound && tasks[i].cpu_valid && tasks[i].runnable &&
++            !tasks[i].blocked && !tasks[i].retired) return i;
++    }
++    return -1;
++}
++
++static void task_scheduler_debug_stop(CPUState *cpu)
++{
++    task_request_debug(cpu);
++}
++
++static void task_scheduler_fail(const char *reason)
++{
++    g_free(scheduler_fault);
++    scheduler_fault = g_strdup(reason);
++    g_clear_pointer(&task_fault, g_free);
++    task_fault = g_strdup(reason);
++    scheduler_enabled = false;
++    scheduler_switch_pending = false;
++    scheduler_selected = selected_task = UINT8_MAX;
++}
++
++static bool task_scheduler_select(CPUState *cpu, int next, bool step_boundary,
++                                  bool step_dispatch_pending)
++{
++    if (scheduler_generation >= UINT64_MAX - 1 || generation_highwater >= UINT64_MAX - 1) {
++        task_scheduler_fail("native task scheduler generation exhausted");
++        if (!step_dispatch_pending) task_scheduler_debug_stop(cpu);
++        return false;
++    }
++    if (next < 0) {
++        scheduler_switch_pending = false;
++        scheduler_generation++;
++        generation_highwater++;
++        /* Keep the last native CPU and its private view selected while idle. */
++        if (scheduler_selected < TASK_MAX && tasks[scheduler_selected].cpu_valid) {
++            task_cpu_context_restore(&tasks[scheduler_selected].cpu, X86_CPU(cpu), true, NULL);
++            migration_state.selected = scheduler_selected;
++            tlb_flush(cpu); tb_flush(cpu);
++        }
++        if (!step_dispatch_pending) task_scheduler_debug_stop(cpu);
++        return false;
++    }
++    g_autoptr(Error) paging_error = NULL;
++    if (!tasks[next].cpu_valid || tasks[next].retired ||
++        !task_paging_guard_context(tasks[next].cpu.cr, &tasks[next], &paging_error)) {
++        task_scheduler_fail(paging_error ? error_get_pretty(paging_error) :
++                            "next native task has no valid CPU context");
++        if (!step_dispatch_pending) task_scheduler_debug_stop(cpu);
++        return false;
++    }
++    if (!write_scheduler_anchor(next, NULL)) {
++        task_scheduler_fail("failed to publish native scheduler selection");
++        if (!step_dispatch_pending) task_scheduler_debug_stop(cpu);
++        return false;
++    }
++    scheduler_selected = next;
++    scheduler_switch_pending = false;
++    selected_task = next;
++    migration_state.selected = next;
++    scheduler_generation++;
++    generation_highwater++;
++    if (!task_cpu_context_restore(&tasks[next].cpu, X86_CPU(cpu), false, NULL)) {
++        task_scheduler_fail("failed to restore native task CPU context");
++        if (!step_dispatch_pending) task_scheduler_debug_stop(cpu);
++        return false;
++    }
++    fdisbull_task_context_note_transition();
++    tlb_flush(cpu); tb_flush(cpu);
++    g_clear_pointer(&task_fault, g_free);
++    if ((step_boundary || cpu->singlestep_enabled) && !step_dispatch_pending) {
++        task_scheduler_debug_stop(cpu);
++    }
++    return true;
++}
++
++bool fdisbull_task_scheduler_resume(CPUState *cpu)
++{
++    int next;
++    if (!scheduler_enabled) return false;
++    /* Do not queue another native idle stop while a debugger stop is pending. */
++    if (cpu->exception_index == EXCP_DEBUG ||
++        (cpu->interrupt_request & CPU_INTERRUPT_DEBUG)) return false;
++    if (scheduler_selected < TASK_MAX && !scheduler_switch_pending &&
++        tasks[scheduler_selected].runnable && !tasks[scheduler_selected].blocked &&
++        !tasks[scheduler_selected].retired) return false;
++    lock_init(); qemu_mutex_lock(&task_lock);
++    if (scheduler_selected < TASK_MAX && tasks[scheduler_selected].cpu_bound &&
++        !tasks[scheduler_selected].retired) {
++        task_cpu_context_capture(&tasks[scheduler_selected].cpu,
++                                 &X86_CPU(cpu)->env, false, 0);
++        tasks[scheduler_selected].cpu_valid = true;
++    }
++    int after = scheduler_selected < TASK_MAX ? scheduler_selected : TASK_MAX - 1;
++    next = task_scheduler_next(after);
++    scheduler_switch_pending = false;
++    if (next < 0) {
++        qemu_mutex_unlock(&task_lock);
++        task_scheduler_debug_stop(cpu);
++        return true;
++    }
++    bool switched = task_scheduler_select(cpu, next, cpu->singlestep_enabled, false);
++    qemu_mutex_unlock(&task_lock);
++    return switched;
++}
++
++bool fdisbull_task_scheduler_handle_interrupt(X86CPU *cpu, int intno,
++                                               int is_int,
++                                               target_ulong next_eip)
++{
++    CPUState *cs = CPU(cpu);
++    int current, next;
++    if (!scheduler_enabled || !is_int || (intno != 0x60 && intno != 0x62)) return false;
++    lock_init(); qemu_mutex_lock(&task_lock);
++    current = scheduler_selected;
++    if (current >= TASK_MAX || !tasks[current].cpu_bound ||
++        !tasks[current].runnable || tasks[current].blocked || tasks[current].retired) {
++        task_scheduler_fail("native scheduler trap has no runnable current task");
++        qemu_mutex_unlock(&task_lock);
++        task_scheduler_debug_stop(cs);
++        return true;
++    }
++    Error *mode_error = NULL;
++    if (!task_cpu_mode_supported(&cpu->env, &mode_error)) {
++        task_scheduler_fail(error_get_pretty(mode_error));
++        error_free(mode_error);
++        qemu_mutex_unlock(&task_lock);
++        task_scheduler_debug_stop(cs);
++        return true;
++    }
++    task_cpu_context_capture(&tasks[current].cpu, &cpu->env, true, next_eip);
++    tasks[current].cpu_valid = true;
++    if (intno == 0x62) {
++        tasks[current].runnable = false;
++        tasks[current].blocked = true;
++        scheduler_generation++;
++    }
++    next = task_scheduler_next(current);
++    scheduler_switch_pending = false;
++    bool step = cs->singlestep_enabled;
++    bool selected = task_scheduler_select(cs, next, step, step);
++    qemu_mutex_unlock(&task_lock);
++    if (!selected) return true;
++    return true;
++}
++
++bool fdisbull_task_scheduler_preflight_frame(CPUState *cpu,
++                                              target_ulong ss_base,
++                                              target_ulong stack_pointer,
++                                              target_ulong sp_mask,
++                                              unsigned frame_bytes)
++{
++    if (!scheduler_enabled) return true;
++    if (scheduler_selected >= TASK_MAX || frame_bytes > 64 || !frame_bytes) return false;
++    TaskState *task = &tasks[scheduler_selected];
++    if (task->frame_depth >= TASK_FRAME_DEPTH) return false;
++    target_ulong start = (stack_pointer - frame_bytes) & sp_mask;
++    for (unsigned i = 0; i < frame_bytes; i++) {
++        target_ulong linear = ss_base + ((start + i) & sp_mask);
++        MemTxAttrs attrs = MEMTXATTRS_UNSPECIFIED;
++        hwaddr physical = cpu_get_phys_page_attrs_debug(cpu, linear, &attrs);
++        uint64_t backing;
++        if (physical == (hwaddr)-1 ||
++            !direct_ram(physical, 1, NULL, NULL, &backing, NULL, NULL) ||
++            !task_has_backing_page(task, backing)) return false;
++    }
++    return true;
++}
++
++void fdisbull_task_scheduler_refuse_frame(CPUState *cpu, const char *reason)
++{
++    g_clear_pointer(&task_fault, g_free);
++    task_fault = g_strdup(reason);
++    scheduler_enabled = false;
++    scheduler_selected = UINT8_MAX;
++    selected_task = UINT8_MAX;
++    g_free(scheduler_fault);
++    scheduler_fault = g_strdup(reason);
++    migration_state.selected = UINT8_MAX;
++    task_request_debug(cpu);
++    if (!bql_locked()) cpu_loop_exit_noexc(cpu);
++    cpu_exit(cpu);
++}
++
++void fdisbull_task_scheduler_record_frame(CPUState *cpu, int intno,
++                                          int is_int, int is_hw,
++                                          int error_code,
++                                          bool error_code_present,
++                                          uint32_t pre_cs,
++                                          target_ulong pre_eip,
++                                          uint32_t pre_ss,
++                                          target_ulong pre_sp,
++                                          target_ulong frame_sp,
++                                          uint32_t width,
++                                          uint32_t frame_size)
++{
++    if (!scheduler_enabled || scheduler_selected >= TASK_MAX) return;
++    TaskState *task = &tasks[scheduler_selected];
++    if (task->frame_depth >= TASK_FRAME_DEPTH) {
++        g_clear_pointer(&task_fault, g_free);
++        task_scheduler_fail("native interrupt frame nesting limit exceeded");
++        task_scheduler_debug_stop(cpu);
++        return;
++    }
++    TaskFrameState *frame = &task->frames[task->frame_depth++];
++    uint64_t mask = (X86_CPU(cpu)->env.segs[R_SS].flags & DESC_B_MASK) ? UINT32_MAX : UINT16_MAX;
++    uint64_t ss_base = X86_CPU(cpu)->env.segs[R_SS].base;
++    frame_sp &= mask;
++    if (!frame_size || frame_size > 64 || (width != 16 && width != 32)) {
++        task_scheduler_fail("native interrupt frame has unsupported gate width or size");
++        task_scheduler_debug_stop(cpu);
++        return;
++    }
++    *frame = (TaskFrameState) {
++        .sequence = ++frame_sequence, .vector = intno,
++        .kind = is_hw ? 1 : is_int ? 2 : 3,
++        .pre_cs = pre_cs, .pre_eip = pre_eip,
++        .pre_ss = pre_ss, .pre_sp = pre_sp,
++        .frame_sp = frame_sp, .width = width,
++        .frame_ss_selector = X86_CPU(cpu)->env.segs[R_SS].selector,
++        .frame_ss_base = ss_base, .frame_sp_mask = mask, .frame_size = frame_size,
++        .error_code_present = error_code_present,
++        .error_code = error_code,
++    };
++    for (unsigned b = 0; b < frame_size; b++) {
++        MemTxAttrs attrs = MEMTXATTRS_UNSPECIFIED;
++        hwaddr physical = cpu_get_phys_page_attrs_debug(cpu,
++            ss_base + ((frame_sp + b) & mask), &attrs);
++        uint64_t backing;
++        if (physical == (hwaddr)-1 || !direct_ram(physical, 1, NULL, NULL,
++                                                   &backing, NULL, NULL)) {
++            fdisbull_task_scheduler_refuse_frame(cpu,
++                "native interrupt frame mapping changed after stack preflight");
++            return;
++        }
++        backing &= ~(TASK_PAGE_SIZE - 1);
++        if (!frame->backing_count || frame->backing_page[frame->backing_count - 1] != backing) {
++            if (frame->backing_count == ARRAY_SIZE(frame->backing_page)) {
++                fdisbull_task_scheduler_refuse_frame(cpu,
++                    "native interrupt frame crosses too many private pages");
++                return;
++            }
++            frame->backing_page[frame->backing_count++] = backing;
++        }
++    }
++}
++
++bool fdisbull_task_scheduler_iret_precheck(CPUX86State *env,
++                                           uint32_t operand_width)
++{
++    if (!scheduler_enabled || scheduler_selected >= TASK_MAX) return true;
++    TaskState *task = &tasks[scheduler_selected];
++    if (!task->frame_depth) {
++        fdisbull_task_scheduler_refuse_frame(CPU(env_archcpu(env)),
++            "IRET has no native frame owned by the selected task");
++        return false;
++    }
++    TaskFrameState *frame = &task->frames[task->frame_depth - 1];
++    if (frame->width != operand_width) {
++        fdisbull_task_scheduler_refuse_frame(CPU(env_archcpu(env)),
++            "IRET operand width does not match the selected task's native frame");
++        return false;
++    }
++    target_ulong mask = (env->segs[R_SS].flags & DESC_B_MASK) ? 0xffffffff : 0xffff;
++    if (frame->frame_sp != (env->regs[R_ESP] & mask) ||
++        frame->frame_ss_selector != env->segs[R_SS].selector ||
++        frame->frame_ss_base != env->segs[R_SS].base ||
++        frame->frame_sp_mask != mask || frame->frame_size > 64 ||
++        !frame->backing_count || frame->backing_count > 2) {
++        fdisbull_task_scheduler_refuse_frame(CPU(env_archcpu(env)),
++            "IRET stack identity does not match the selected task's native frame");
++        return false;
++    }
++    CPUState *cpu = CPU(env_archcpu(env));
++    unsigned saved_page = 0;
++    uint64_t previous_backing = UINT64_MAX;
++    for (unsigned b = 0; b < frame->frame_size; b++) {
++        MemTxAttrs attrs = MEMTXATTRS_UNSPECIFIED;
++        hwaddr physical = cpu_get_phys_page_attrs_debug(cpu,
++            frame->frame_ss_base + ((frame->frame_sp + b) & frame->frame_sp_mask), &attrs);
++        uint64_t backing;
++        if (physical == (hwaddr)-1 || !direct_ram(physical, 1, NULL, NULL, &backing, NULL, NULL)) {
++            fdisbull_task_scheduler_refuse_frame(cpu, "IRET frame is no longer direct private RAM");
++            return false;
++        }
++        backing &= ~(TASK_PAGE_SIZE - 1);
++        if (backing != previous_backing) {
++            if (saved_page >= frame->backing_count || frame->backing_page[saved_page] != backing) {
++                fdisbull_task_scheduler_refuse_frame(cpu, "IRET frame backing order changed after interrupt delivery");
++                return false;
++            }
++            saved_page++;
++            previous_backing = backing;
++        }
++        if (!task_has_backing_page(task, backing)) {
++            fdisbull_task_scheduler_refuse_frame(cpu, "IRET frame backing changed after interrupt delivery");
++            return false;
++        }
++    }
++    if (saved_page != frame->backing_count) {
++        fdisbull_task_scheduler_refuse_frame(cpu, "IRET frame no longer spans its captured private pages");
++        return false;
++    }
++    return true;
++}
++
++void fdisbull_task_scheduler_iret_complete(CPUX86State *env)
++{
++    if (scheduler_enabled && scheduler_selected < TASK_MAX &&
++        tasks[scheduler_selected].frame_depth) {
++        memset(&tasks[scheduler_selected].frames[--tasks[scheduler_selected].frame_depth],
++               0, sizeof(TaskFrameState));
+     }
+ }
+ 
+@@ -1462,6 +2497,230 @@
+     return result;
+ }
+ 
++static bool scheduler_key(const char *uuid, uint64_t cookie, uint64_t incarnation,
++                          int *index, Error **errp)
++{
++    if (!task_key_validate(uuid, cookie, incarnation, errp)) return false;
++    *index = find_task(uuid, cookie, incarnation);
++    if (*index < 0 || !tasks[*index].cpu_bound || tasks[*index].retired) {
++        task_error(errp, "task lifetime has no live native CPU slot");
++        return false;
++    }
++    return true;
++}
++
++static bool scheduler_stack_owned(TaskState *task, const TaskCpuContext *ctx,
++                                  Error **errp)
++{
++    uint64_t sp_mask = (ctx->segments[R_SS].flags & DESC_B_MASK) ? UINT32_MAX : UINT16_MAX;
++    uint64_t linear = ctx->segments[R_SS].base + (ctx->registers[R_ESP] & sp_mask);
++    uint64_t physical = linear & (uint64_t)(uint32_t)ctx->a20_mask;
++    if (ctx->cr[0] & CR0_PG_MASK) {
++        CPUState *cpu = NULL; CPU_FOREACH(cpu) { break; }
++        MemTxAttrs attrs = MEMTXATTRS_UNSPECIFIED;
++        hwaddr paddr;
++        if (!cpu) {
++            task_error(errp, "task stack cannot be translated for private ownership");
++            return false;
++        }
++        paddr = cpu_get_phys_page_attrs_debug(cpu, linear, &attrs);
++        if (paddr == (hwaddr)-1) {
++            task_error(errp, "task stack cannot be translated for private ownership");
++            return false;
++        }
++        physical = paddr;
++    }
++    if (!task_has_backing_page(task, physical)) {
++        task_error(errp, "task stack pointer is outside its private task pages");
++        return false;
++    }
++    return true;
++}
++
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_scheduler_init(
++    uint64_t anchor_address, bool has_prepare_only, bool prepare_only,
++    Error **errp)
++{
++    bool prepare = has_prepare_only && prepare_only;
++    if (!stopped_single_tcg(errp) ||
++        !direct_ram(anchor_address, TASK_ANCHOR_SIZE, NULL, NULL, NULL, NULL, errp)) return NULL;
++    manager_init_empty(errp);
++    if (errp && *errp) return NULL;
++    if (scheduler_prepared && migration_state.anchor_address != anchor_address) {
++        task_error(errp, "scheduler anchor cannot change after initialization"); return NULL;
++    }
++    if (!io_ready) {
++        memory_region_init_io(&task_io, NULL, &task_io_ops, NULL,
++                              "fdisbull-task-doorbell", 2);
++        memory_region_add_subregion(get_system_io(), TASK_PORT, &task_io);
++        io_ready = true;
++    }
++    migration_state.anchor_address = anchor_address;
++    if (!prepare) {
++        g_autofree char *uuid = NULL;
++        uint64_t sequence, cookie, incarnation;
++        if (!read_anchor(&uuid, &sequence, &cookie, &incarnation, errp) ||
++            (sequence & 1) || !cookie || !incarnation) {
++            if (!errp || !*errp) task_error(errp, "scheduler requires a stable committed monitor anchor");
++            return NULL;
++        }
++    }
++    scheduler_prepared = true;
++    scheduler_enabled = !prepare;
++    scheduler_switch_pending = false;
++    if (!prepare && selected_task < TASK_MAX && tasks[selected_task].cpu_bound) {
++        scheduler_selected = selected_task;
++    }
++    return scheduler_status_new();
++}
++
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_slot_capture(
++    const char *uuid, uint64_t cookie, uint64_t incarnation,
++    FdisbullTaskPageList *pages, Error **errp)
++{
++    FdisbullTaskStatusInfo *registered;
++    CPUState *cpu = NULL; CPU_FOREACH(cpu) { break; }
++    if (!stopped_single_tcg(errp) || !scheduler_prepared || !cpu ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) {
++        if ((!errp || !*errp) && !scheduler_prepared) task_error(errp, "scheduler is not initialized");
++        return NULL;
++    }
++    registered = qmp_x_fdisbull_task_register(uuid, cookie, incarnation, pages, errp);
++    if (!registered) return NULL;
++    qapi_free_FdisbullTaskStatusInfo(registered);
++    lock_init(); qemu_mutex_lock(&task_lock);
++    int ti = find_task(uuid, cookie, incarnation);
++    if (ti < 0 || tasks[ti].retired || tasks[ti].cpu_bound ||
++        (selected_task < TASK_MAX && selected_task != ti)) {
++        qemu_mutex_unlock(&task_lock); task_error(errp, "task cannot be captured into a native CPU slot"); return NULL;
++    }
++    TaskCpuContext ctx;
++    task_cpu_context_capture(&ctx, &X86_CPU(cpu)->env, false, 0);
++    g_autoptr(Error) local_err = NULL;
++    if (!task_cpu_mode_supported(&X86_CPU(cpu)->env, &local_err) || !scheduler_stack_owned(&tasks[ti], &ctx, &local_err)) {
++        qemu_mutex_unlock(&task_lock); error_propagate(errp, local_err); return NULL;
++    }
++    tasks[ti].cpu = ctx; tasks[ti].cpu_valid = true; tasks[ti].cpu_bound = true;
++    tasks[ti].runnable = true; tasks[ti].blocked = false;
++    scheduler_selected = selected_task = ti; scheduler_enabled = true;
++    scheduler_switch_pending = false; scheduler_generation++;
++    generation_highwater++;
++    qemu_mutex_unlock(&task_lock);
++    return scheduler_status_new();
++}
++
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_slot_fork(
++    const char *parent_uuid, uint64_t parent_cookie, uint64_t parent_incarnation,
++    const char *uuid, uint64_t cookie, uint64_t incarnation,
++    FdisbullTaskPageList *pages, uint64_t entry_eip, uint64List *registers,
++    uint64_t eflags, Error **errp)
++{
++    int parent, child;
++    CPUState *cpu = NULL; CPU_FOREACH(cpu) { break; }
++    if (!stopped_single_tcg(errp) || !scheduler_enabled || !cpu ||
++        !scheduler_key(parent_uuid, parent_cookie, parent_incarnation, &parent, errp) ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) return NULL;
++    if (scheduler_selected != parent || tasks[parent].frame_depth ||
++        registers == NULL) {
++        task_error(errp, "fork requires the selected parent with no owned interrupt frames and 16 registers"); return NULL;
++    }
++    unsigned count = 0;
++    for (uint64List *n = registers; n; n = n->next) count++;
++    if (count != 16) { task_error(errp, "fork requires exactly 16 general registers"); return NULL; }
++    child = find_task(uuid, cookie, incarnation);
++    if (child < 0 || tasks[child].retired || tasks[child].cpu_bound ||
++        !tasks[child].page_count) {
++        task_error(errp, "child must be pre-registered with private pages and no CPU slot"); return NULL;
++    }
++    if (!task_paging_guard(cpu, &tasks[child], errp)) return NULL;
++    TaskCpuContext parent_ctx, child_ctx;
++    task_cpu_context_capture(&parent_ctx, &X86_CPU(cpu)->env, false, 0);
++    if (!task_cpu_mode_supported(&X86_CPU(cpu)->env, errp)) return NULL;
++    child_ctx = parent_ctx;
++    child_ctx.eip = entry_eip;
++    unsigned i = 0;
++    for (uint64List *n = registers; n; n = n->next, i++) child_ctx.registers[i] = n->value;
++    if ((eflags & (VM_MASK | IOPL_MASK)) != (parent_ctx.eflags & (VM_MASK | IOPL_MASK))) {
++        task_error(errp, "fork flags cannot change virtual-8086 or I/O privilege mode"); return NULL;
++    }
++    child_ctx.eflags = eflags;
++    child_ctx.cc_op = CC_OP_EFLAGS;
++    child_ctx.cc_src = eflags & (CC_C | CC_P | CC_A | CC_Z | CC_S | CC_O);
++    child_ctx.cc_dst = child_ctx.cc_src2 = 0;
++    child_ctx.df = (eflags & DF_MASK) ? -1 : 1;
++    uint64_t entry_linear = child_ctx.segments[R_CS].base + entry_eip;
++    uint64_t entry_phys = entry_linear;
++    if (child_ctx.cr[0] & CR0_PG_MASK) {
++        MemTxAttrs attrs = MEMTXATTRS_UNSPECIFIED;
++        entry_phys = cpu_get_phys_page_attrs_debug(cpu, entry_linear, &attrs);
++        if (entry_phys == (hwaddr)-1) { task_error(errp, "child entry cannot be translated"); return NULL; }
++    }
++    if (!task_has_backing_page(&tasks[child], entry_phys)) {
++        task_error(errp, "child entry point is outside its private task pages"); return NULL;
++    }
++    if (!scheduler_stack_owned(&tasks[child], &child_ctx, errp)) return NULL;
++    tasks[parent].cpu = parent_ctx; tasks[parent].cpu_valid = true;
++    tasks[child].cpu = child_ctx; tasks[child].cpu_valid = true;
++    tasks[child].cpu_bound = true; tasks[child].runnable = true; tasks[child].blocked = false;
++    scheduler_generation++; generation_highwater++;
++    return scheduler_status_new();
++}
++
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_slot_runnable(
++    const char *uuid, uint64_t cookie, uint64_t incarnation, bool runnable,
++    Error **errp)
++{
++    int ti;
++    if (!stopped_single_tcg(errp) || !scheduler_key(uuid, cookie, incarnation, &ti, errp)) return NULL;
++    if (tasks[ti].retired) { task_error(errp, "retired slot cannot be scheduled"); return NULL; }
++    if (tasks[ti].runnable != runnable) { tasks[ti].runnable = runnable; tasks[ti].blocked = !runnable; scheduler_generation++; }
++    if (scheduler_selected == ti && !runnable) scheduler_switch_pending = true;
++    else if (runnable && scheduler_enabled &&
++             (scheduler_selected >= TASK_MAX || tasks[scheduler_selected].blocked ||
++              !tasks[scheduler_selected].runnable)) scheduler_switch_pending = true;
++    return scheduler_status_new();
++}
++
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_scheduler_observe(Error **errp)
++{
++    if (!stopped_single_tcg(errp) || !scheduler_prepared) {
++        if ((!errp || !*errp) && !scheduler_prepared) task_error(errp, "scheduler is not initialized");
++        return NULL;
++    }
++    return scheduler_status_new();
++}
++
++FdisbullTaskCpuContextInfo *qmp_x_fdisbull_task_context_read(
++    const char *uuid, uint64_t cookie, uint64_t incarnation, Error **errp)
++{
++    int ti;
++    if (!stopped_single_tcg(errp) || !scheduler_key(uuid, cookie, incarnation, &ti, errp)) return NULL;
++    TaskCpuContext live_ctx; TaskCpuContext *ctx = &tasks[ti].cpu; bool live = false;
++    if (scheduler_enabled && scheduler_selected == ti) {
++        CPUState *cpu = NULL; CPU_FOREACH(cpu) { break; }
++        if (!cpu) { task_error(errp, "selected CPU is unavailable"); return NULL; }
++        task_cpu_context_capture(&live_ctx, &X86_CPU(cpu)->env, false, 0); ctx = &live_ctx; live = true;
++    }
++    return task_cpu_context_info(&tasks[ti], live, ctx);
++}
++
++FdisbullTaskSchedulerStatusInfo *qmp_x_fdisbull_task_scheduler_disable(Error **errp)
++{
++    if (!stopped_single_tcg(errp) || !scheduler_enabled) {
++        if ((!errp || !*errp) && !scheduler_enabled) task_error(errp, "scheduler is not enabled");
++        return NULL;
++    }
++    if (scheduler_switch_pending) { task_error(errp, "cannot disable with a pending task switch"); return NULL; }
++    for (int i = 0; i < TASK_MAX; i++) {
++        if (tasks[i].cpu_bound && tasks[i].frame_depth) {
++            task_error(errp, "cannot disable while a task owns interrupt frames"); return NULL;
++        }
++    }
++    scheduler_enabled = false;
++    scheduler_generation++;
++    return scheduler_status_new();
++}
++
+ FdisbullTaskStatusInfo *qmp_x_fdisbull_task_retire(
+     const char *uuid, uint64_t cookie, uint64_t incarnation, Error **errp)
+ {
+@@ -1470,8 +2729,25 @@
+     lock_init(); qemu_mutex_lock(&task_lock);
+     int ti = find_task(uuid, cookie, incarnation);
+     if (ti < 0) { qemu_mutex_unlock(&task_lock); task_error(errp, "unknown task key"); return NULL; }
++    if (scheduler_enabled && scheduler_selected == ti) {
++        qemu_mutex_unlock(&task_lock);
++        task_error(errp, "selected native CPU task cannot be retired while scheduler is enabled");
++        return NULL;
++    }
+     if (!generation_room(errp)) { qemu_mutex_unlock(&task_lock); return NULL; }
+     tasks[ti].retired = true;
++    if (tasks[ti].cpu_bound) {
++        tasks[ti].cpu_valid = false;
++        tasks[ti].runnable = false;
++        tasks[ti].blocked = false;
++        tasks[ti].frame_depth = 0;
++        memset(&tasks[ti].cpu, 0, sizeof(tasks[ti].cpu));
++        memset(tasks[ti].frames, 0, sizeof(tasks[ti].frames));
++        if (scheduler_selected == ti) {
++            scheduler_selected = UINT8_MAX;
++            scheduler_switch_pending = scheduler_enabled;
++        }
++    }
+     if (selected_task == ti) selected_task = UINT8_MAX;
+     generation_highwater++;
+     CPUState *cpu; CPU_FOREACH(cpu) { tlb_flush(cpu); tb_flush(cpu); }
+--- a/target/i386/tcg/seg_helper.c
++++ b/target/i386/tcg/seg_helper.c
+@@ -30,6 +30,7 @@
+ #include "access.h"
+ #ifndef CONFIG_USER_ONLY
+ #include "system/fdisbull-task-context.h"
++#include "target/i386/fdisbull-task-scheduler.h"
+ #endif
+ 
+ #ifdef TARGET_X86_64
+@@ -224,6 +225,7 @@
+         cpu_abort(CPU(cpu), "invalid tss type");
+     }
+     shift = type >> 3;
++
+     index = (dpl * 4 + 2) << shift;
+     if (index + (4 << shift) - 1 > env->tr.limit) {
+         raise_exception_err_ra(env, EXCP0A_TSS, env->tr.selector & 0xfffc, retaddr);
+@@ -646,14 +648,15 @@
+ }
+ 
+ /* protected mode interrupt */
+-static void do_interrupt_protected(CPUX86State *env, int intno, int is_int,
++static bool do_interrupt_protected(CPUX86State *env, int intno, int is_int,
+                                    int error_code, unsigned int next_eip,
+-                                   int is_hw)
++                                   int is_hw, uint32_t *frame_width,
++                                   uint32_t *frame_size)
+ {
+     SegmentCache *dt;
+     target_ulong ptr;
+     int type, dpl, selector, ss_dpl, cpl;
+-    int has_error_code, new_stack, shift;
++    int has_error_code, new_stack, shift, push_size;
+     uint32_t e1, e2, offset, ss = 0, ss_e1 = 0, ss_e2 = 0;
+     uint32_t old_eip, eflags;
+     int vm86 = env->eflags & VM_MASK;
+@@ -704,6 +707,13 @@
+ 
+     if (type == 5) {
+         /* task gate */
++#ifndef CONFIG_USER_ONLY
++        if (!fdisbull_task_scheduler_preflight_frame(env_cpu(env), 0, 0, 0, 0)) {
++            fdisbull_task_scheduler_refuse_frame(env_cpu(env),
++                "native task-switch interrupt gates are unsupported by cooperative CPU slots");
++            return false;
++        }
++#endif
+         /* must do that check here to return the correct error code */
+         if (!(e2 & DESC_P_MASK)) {
+             raise_exception_err(env, EXCP0B_NOSEG, intno * 8 + 2);
+@@ -727,7 +737,7 @@
+             }
+             SET_ESP(sa.sp, sa.sp_mask);
+         }
+-        return;
++        return true;
+     }
+ 
+     /* Otherwise, trap or interrupt gate */
+@@ -800,13 +810,21 @@
+ 
+     shift = type >> 3;
+ 
+-#if 0
+-    /* XXX: check that enough room is available */
++    /* Stack ownership is checked before the first guest stack write. */
+     push_size = 6 + (new_stack << 2) + (has_error_code << 1);
+     if (vm86) {
+         push_size += 8;
+     }
+     push_size <<= shift;
++    *frame_width = shift ? 32 : 16;
++    *frame_size = push_size;
++#ifndef CONFIG_USER_ONLY
++    if (!fdisbull_task_scheduler_preflight_frame(env_cpu(env), sa.ss_base,
++                                                  sa.sp, sa.sp_mask, push_size)) {
++        fdisbull_task_scheduler_refuse_frame(env_cpu(env),
++            "native interrupt frame does not fit in the selected task's private stack");
++        return false;
++    }
+ #endif
+     eflags = cpu_compute_eflags(env);
+     /*
+@@ -878,6 +896,7 @@
+                    get_seg_limit(e1, e2),
+                    e2);
+     env->eip = offset;
++    return true;
+ }
+ 
+ #ifdef TARGET_X86_64
+@@ -1128,7 +1147,7 @@
+ }
+ 
+ /* real mode interrupt */
+-static void do_interrupt_real(CPUX86State *env, int intno, int is_int,
++static bool do_interrupt_real(CPUX86State *env, int intno, int is_int,
+                               int error_code, unsigned int next_eip)
+ {
+     SegmentCache *dt;
+@@ -1160,6 +1179,14 @@
+         old_eip = env->eip;
+     }
+     old_cs = env->segs[R_CS].selector;
++#ifndef CONFIG_USER_ONLY
++    if (!fdisbull_task_scheduler_preflight_frame(env_cpu(env), sa.ss_base,
++                                                  sa.sp, sa.sp_mask, 6)) {
++        fdisbull_task_scheduler_refuse_frame(env_cpu(env),
++            "native real-mode interrupt frame does not fit in the selected task's private stack");
++        return false;
++    }
++#endif
+     /* XXX: use SS segment size? */
+     pushw(&sa, cpu_compute_eflags(env));
+     pushw(&sa, old_cs);
+@@ -1171,6 +1198,7 @@
+     env->segs[R_CS].selector = selector;
+     env->segs[R_CS].base = (selector << 4);
+     env->eflags &= ~(IF_MASK | TF_MASK | AC_MASK | RF_MASK);
++    return true;
+ }
+ 
+ /*
+@@ -1182,6 +1210,20 @@
+                       int error_code, target_ulong next_eip, int is_hw)
+ {
+     CPUX86State *env = &cpu->env;
++#ifndef CONFIG_USER_ONLY
++    target_ulong task_pre_eip = is_int ? next_eip : env->eip;
++    uint32_t task_pre_cs = env->segs[R_CS].selector;
++    uint32_t task_pre_ss = env->segs[R_SS].selector;
++    target_ulong task_pre_sp = env->regs[R_ESP];
++    uint32_t task_frame_width = 16;
++    uint32_t task_frame_size = 6;
++    bool task_frame_error_code = (env->cr[0] & CR0_PE_MASK) &&
++        !is_int && !is_hw && exception_has_error_code(intno);
++    if (fdisbull_task_scheduler_handle_interrupt(cpu, intno, is_int,
++                                                  next_eip)) {
++        return;
++    }
++#endif
+ 
+     if (qemu_loglevel_mask(CPU_LOG_INT)) {
+         if ((env->cr[0] & CR0_PE_MASK)) {
+@@ -1217,6 +1259,7 @@
+             count++;
+         }
+     }
++    bool frame_delivered = true;
+     if (env->cr[0] & CR0_PE_MASK) {
+ #if !defined(CONFIG_USER_ONLY)
+         if (env->hflags & HF_GUEST_MASK) {
+@@ -1229,8 +1272,8 @@
+         } else
+ #endif
+         {
+-            do_interrupt_protected(env, intno, is_int, error_code, next_eip,
+-                                   is_hw);
++            frame_delivered = do_interrupt_protected(env, intno, is_int, error_code, next_eip,
++                                                      is_hw, &task_frame_width, &task_frame_size);
+         }
+     } else {
+ #if !defined(CONFIG_USER_ONLY)
+@@ -1238,8 +1281,10 @@
+             handle_even_inj(env, intno, is_int, error_code, is_hw, 1);
+         }
+ #endif
+-        do_interrupt_real(env, intno, is_int, error_code, next_eip);
+-    }
++        frame_delivered = do_interrupt_real(env, intno, is_int, error_code, next_eip);
++    }
++
++    if (!frame_delivered) return;
+ 
+ #if !defined(CONFIG_USER_ONLY)
+     if (env->hflags & HF_GUEST_MASK) {
+@@ -1252,6 +1297,13 @@
+                  env->vm_vmcb + offsetof(struct vmcb, control.event_inj),
+                  event_inj & ~SVM_EVTINJ_VALID);
+     }
++#endif
++#ifndef CONFIG_USER_ONLY
++    fdisbull_task_scheduler_record_frame(CPU(cpu), intno, is_int, is_hw,
++                                         error_code, task_frame_error_code,
++                                         task_pre_cs, task_pre_eip, task_pre_ss,
++                                         task_pre_sp, env->regs[R_ESP],
++                                         task_frame_width, task_frame_size);
+ #endif
+ }
+ 
+@@ -1958,6 +2010,9 @@
+     uint32_t new_cs, new_eip, new_eflags;
+     int eflags_mask;
+     StackAccess sa;
++#ifndef CONFIG_USER_ONLY
++    if (!fdisbull_task_scheduler_iret_precheck(env, shift ? 32 : 16)) return;
++#endif
+ 
+     sa.env = env;
+     sa.ra = GETPC();
+@@ -1993,6 +2048,9 @@
+     }
+     cpu_load_eflags(env, new_eflags, eflags_mask);
+     env->hflags2 &= ~HF2_NMI_MASK;
++#ifndef CONFIG_USER_ONLY
++    fdisbull_task_scheduler_iret_complete(env);
++#endif
+ }
+ 
+ static inline void validate_seg(CPUX86State *env, X86Seg seg_reg, int cpl)
+@@ -2249,6 +2307,9 @@
+ {
+     int tss_selector, type;
+     uint32_t e1, e2;
++#ifndef CONFIG_USER_ONLY
++    if (!fdisbull_task_scheduler_iret_precheck(env, shift ? 32 : 16)) return;
++#endif
+ 
+     /* specific case for TSS */
+     if (env->eflags & NT_MASK) {
+@@ -2274,6 +2335,9 @@
+         helper_ret_protected(env, shift, 1, 0, GETPC());
+     }
+     env->hflags2 &= ~HF2_NMI_MASK;
++#ifndef CONFIG_USER_ONLY
++    fdisbull_task_scheduler_iret_complete(env);
++#endif
+ }
+ 
+ void helper_lret_protected(CPUX86State *env, int shift, int addend)
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -952,6 +952,7 @@
+ 
+     while (true) {
+ #ifndef CONFIG_USER_ONLY
++        fdisbull_task_scheduler_resume(cpu);
+         /* A guest may single-step the OUTW that publishes a task switch.
+          * Commit that switch before handling the resulting debug exception,
+          * so the stopped state already names the new task. */
+--- a/system/fdisbull-task-private.h
++++ b/system/fdisbull-task-private.h
+@@ -14,5 +14,6 @@
+ bool fdisbull_task_private_commit_switch(CPUState *cpu);
+ void fdisbull_task_private_context_changed(CPUState *cpu);
+ void fdisbull_task_private_note_reset(void);
++bool fdisbull_task_scheduler_resume(CPUState *cpu);
+ 
+ #endif
+--- a/qapi/fdisbull-task-scheduler.json
++++ b/qapi/fdisbull-task-scheduler.json
+@@ -0,0 +1,237 @@
++{ 'include': 'fdisbull-task-private.json' }
++
++##
++# @FdisbullTaskCpuSegment:
++# Canonical x86 segment-cache contents in a task context receipt.
++#
++# @selector: Selector value.
++# @base: Segment base.
++# @limit: Segment limit.
++# @flags: Architectural descriptor flags.
++##
++{ 'struct': 'FdisbullTaskCpuSegment',
++  'data': { 'selector': 'uint32', 'base': 'uint64', 'limit': 'uint32',
++            'flags': 'uint32' } }
++
++##
++# @FdisbullTaskInterruptFrame:
++# Native ownership record for one successfully delivered guest interrupt.
++#
++# @sequence: Monotonic frame sequence.
++# @vector: Interrupt vector.
++# @kind: Native interrupt delivery kind.
++# @pre-cs: CS before delivery.
++# @pre-eip: EIP before delivery.
++# @pre-ss: SS before delivery.
++# @pre-sp: SP before delivery.
++# @frame-sp: SP of the pushed frame.
++# @frame-ss-selector: SS selector owning the pushed frame.
++# @frame-ss-base: SS base owning the pushed frame.
++# @frame-sp-mask: Operand-width mask for SP.
++# @frame-size: Pushed frame byte count.
++# @backing-count: Number of physical private pages touched by the frame.
++# @backing-pages: Backing page identities in frame address order.
++# @width: Operand width in bytes.
++# @error-code-present: Whether delivery pushed an error code.
++# @error-code: Error code value when present.
++##
++{ 'struct': 'FdisbullTaskInterruptFrame',
++  'data': { 'sequence': 'uint64', 'vector': 'uint32', 'kind': 'str',
++            'pre-cs': 'uint32', 'pre-eip': 'uint64', 'pre-ss': 'uint32',
++            'pre-sp': 'uint64', 'frame-sp': 'uint64', 'width': 'uint32',
++            'frame-ss-selector': 'uint32', 'frame-ss-base': 'uint64',
++            'frame-sp-mask': 'uint64', 'frame-size': 'uint32',
++            'backing-count': 'uint32', 'backing-pages': [ 'uint64' ],
++            'error-code-present': 'bool', 'error-code': 'uint32' } }
++
++##
++# @FdisbullTaskSchedulerSlot:
++# One task slot in the native round-robin scheduler receipt.
++#
++# @uuid: Monitor task UUID.
++# @cookie: Monitor task cookie.
++# @incarnation: Task lifetime identifier.
++# @slot: Native scheduler slot.
++# @runnable: Whether the slot is eligible to run.
++# @blocked: Whether the slot is blocked.
++# @retired: Whether the lifetime is tombstoned.
++# @context-valid: Whether a CPU context is available.
++# @context-sha256: Canonical CPU context digest.
++# @eip: Saved instruction pointer.
++# @esp: Saved stack pointer.
++# @eflags: Saved flags.
++# @mode: Supported CPU mode.
++# @cs-selector: CS selector.
++# @ss-selector: SS selector.
++# @interrupt-depth: Native owned interrupt-frame depth.
++# @frame-sha256: Canonical interrupt-frame digest.
++# @pages: Private page receipts.
++# @execution-bytes: Count of fetch overlay bytes.
++# @execution-sha256: Fetch overlay digest.
++##
++{ 'struct': 'FdisbullTaskSchedulerSlot',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'slot': 'uint32', 'runnable': 'bool', 'blocked': 'bool',
++            'retired': 'bool', 'context-valid': 'bool',
++            'context-sha256': 'str', 'eip': 'uint64', 'esp': 'uint64',
++            'eflags': 'uint64', 'mode': 'str', 'cs-selector': 'uint32',
++            'ss-selector': 'uint32', 'interrupt-depth': 'uint32',
++            'frame-sha256': 'str', 'pages': [ 'FdisbullTaskPageInfo' ],
++            'execution-bytes': 'uint64', 'execution-sha256': 'str' } }
++
++##
++# @FdisbullTaskSchedulerStatusInfo:
++# Native runqueue, selection and per-task state receipt.
++#
++# @model: Native model identifier.
++# @api-version: API version.
++# @epoch: Native owner epoch.
++# @generation: Scheduler state generation.
++# @enabled: Whether native scheduling is enabled.
++# @pending-switch: Whether a native boundary must select a task.
++# @selected-uuid: Selected task UUID.
++# @selected-cookie: Selected task cookie.
++# @selected-incarnation: Selected task lifetime.
++# @runqueue-generation: Runqueue mutation generation.
++# @yield-vector: Cooperative yield interrupt vector.
++# @block-vector: Cooperative block/finish interrupt vector.
++# @pending-irq-count: Machine-level pending interrupt count.
++# @tasks: CPU-bound native slots.
++# @fault: Present when a native ownership check revoked scheduling.
++##
++{ 'struct': 'FdisbullTaskSchedulerStatusInfo',
++  'data': { 'model': 'str', 'api-version': 'uint64', 'epoch': 'uint64',
++            'generation': 'uint64', 'enabled': 'bool',
++            'pending-switch': 'bool',
++            '*fault': 'str',
++            'selected-uuid': 'str', 'selected-cookie': 'uint64',
++            'selected-incarnation': 'uint64', 'runqueue-generation': 'uint64',
++            'yield-vector': 'uint32', 'block-vector': 'uint32',
++            'pending-irq-count': 'uint32',
++            'tasks': [ 'FdisbullTaskSchedulerSlot' ] } }
++
++##
++# @FdisbullTaskCpuContextInfo:
++# Full canonical stopped x86 CPU context for one native task slot.
++#
++# @uuid: Monitor task UUID.
++# @cookie: Monitor task cookie.
++# @incarnation: Task lifetime identifier.
++# @live: Whether values were captured from the selected live CPU.
++# @registers: GPR values in the documented native order.
++# @eip: Instruction pointer.
++# @eflags: Flags register.
++# @mode: Supported CPU mode.
++# @segments: ES, CS, SS, DS, FS, GS caches.
++# @system-segments: LDTR, TR, GDTR, IDTR caches.
++# @cr0: CR0.
++# @cr2: CR2.
++# @cr3: CR3.
++# @cr4: CR4.
++# @efer: EFER.
++# @a20-mask: A20 mask.
++# @xstate-sha256: Canonical extended-state digest.
++# @context-sha256: Canonical complete-context digest.
++# @interrupt-depth: Native owned interrupt-frame depth.
++# @frames: Native interrupt-frame receipts.
++##
++{ 'struct': 'FdisbullTaskCpuContextInfo',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'live': 'bool', 'registers': [ 'uint64' ], 'eip': 'uint64',
++            'eflags': 'uint64', 'mode': 'str',
++            'segments': [ 'FdisbullTaskCpuSegment' ],
++            'system-segments': [ 'FdisbullTaskCpuSegment' ],
++            'cr0': 'uint64', 'cr2': 'uint64', 'cr3': 'uint64',
++            'cr4': 'uint64', 'efer': 'uint64', 'a20-mask': 'int64',
++            'xstate-sha256': 'str', 'context-sha256': 'str',
++            'interrupt-depth': 'uint32',
++            'frames': [ 'FdisbullTaskInterruptFrame' ] } }
++
++##
++# @x-fdisbull-task-scheduler-init:
++# Initialize or prepare the native round-robin scheduler and VMState record.
++#
++# @anchor-address: Direct guest RAM address of the FDBTASK1 status record.
++# @prepare-only: Prepare a destination without activating its scheduler before
++#     the saved scheduler VMState is restored.
++##
++{ 'command': 'x-fdisbull-task-scheduler-init',
++  'data': { 'anchor-address': 'uint64', '*prepare-only': 'bool' },
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
++
++##
++# @x-fdisbull-task-slot-capture:
++# Capture the stopped current CPU as the initial runnable task context.
++#
++# @uuid: Monitor task UUID.
++# @cookie: Monitor task cookie.
++# @incarnation: Task lifetime identifier.
++# @pages: Private task pages.
++##
++{ 'command': 'x-fdisbull-task-slot-capture',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'pages': [ 'FdisbullTaskPage' ] },
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
++
++##
++# @x-fdisbull-task-slot-fork:
++# Fork a saved parent context; only EIP, the 16 GPRs and flags are overridden.
++#
++# @parent-uuid: Parent monitor task UUID.
++# @parent-cookie: Parent task cookie.
++# @parent-incarnation: Parent task lifetime.
++# @uuid: Child monitor task UUID.
++# @cookie: Child task cookie.
++# @incarnation: Child task lifetime.
++# @pages: Child private task pages.
++# @entry-eip: Child entry instruction pointer.
++# @registers: RAX,RCX,RDX,RBX,RSP,RBP,RSI,RDI,R8..R15, in that order.
++# @eflags: Child flags value.
++##
++{ 'command': 'x-fdisbull-task-slot-fork',
++  'data': { 'parent-uuid': 'str', 'parent-cookie': 'uint64',
++            'parent-incarnation': 'uint64', 'uuid': 'str', 'cookie': 'uint64',
++            'incarnation': 'uint64', 'pages': [ 'FdisbullTaskPage' ],
++            'entry-eip': 'uint64', 'registers': [ 'uint64' ],
++            'eflags': 'uint64' },
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
++
++##
++# @x-fdisbull-task-slot-runnable:
++# Change one task's runnable state while the machine is stopped.
++#
++# @uuid: Monitor task UUID.
++# @cookie: Monitor task cookie.
++# @incarnation: Task lifetime identifier.
++# @runnable: New runnable state.
++##
++{ 'command': 'x-fdisbull-task-slot-runnable',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'runnable': 'bool' },
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
++
++##
++# @x-fdisbull-task-scheduler-observe:
++# Read native scheduler state without changing it.
++##
++{ 'command': 'x-fdisbull-task-scheduler-observe',
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
++
++##
++# @x-fdisbull-task-context-read:
++# Read a stopped native task's full saved or live CPU context.
++#
++# @uuid: Monitor task UUID.
++# @cookie: Monitor task cookie.
++# @incarnation: Task lifetime identifier.
++##
++{ 'command': 'x-fdisbull-task-context-read',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64' },
++  'returns': 'FdisbullTaskCpuContextInfo' }
++
++##
++# @x-fdisbull-task-scheduler-disable:
++# Disable scheduling at a quiescent native stop.
++##
++{ 'command': 'x-fdisbull-task-scheduler-disable',
++  'returns': 'FdisbullTaskSchedulerStatusInfo' }
+--- a/target/i386/fdisbull-task-scheduler.h
++++ b/target/i386/fdisbull-task-scheduler.h
+@@ -0,0 +1,32 @@
++#ifndef TARGET_I386_FDISBULL_TASK_SCHEDULER_H
++#define TARGET_I386_FDISBULL_TASK_SCHEDULER_H
++
++#include "target/i386/cpu.h"
++
++#ifndef CONFIG_USER_ONLY
++bool fdisbull_task_scheduler_handle_interrupt(X86CPU *cpu, int intno,
++                                               int is_int,
++                                               target_ulong next_eip);
++bool fdisbull_task_scheduler_preflight_frame(CPUState *cpu,
++                                              target_ulong ss_base,
++                                              target_ulong stack_pointer,
++                                              target_ulong sp_mask,
++                                              unsigned frame_bytes);
++void fdisbull_task_scheduler_refuse_frame(CPUState *cpu, const char *reason);
++void fdisbull_task_scheduler_record_frame(CPUState *cpu, int intno,
++                                          int is_int, int is_hw,
++                                          int error_code,
++                                          bool error_code_present,
++                                          uint32_t pre_cs,
++                                          target_ulong pre_eip,
++                                          uint32_t pre_ss,
++                                          target_ulong pre_sp,
++                                          target_ulong frame_sp,
++                                          uint32_t width,
++                                          uint32_t frame_size);
++bool fdisbull_task_scheduler_iret_precheck(CPUX86State *env,
++                                           uint32_t operand_width);
++void fdisbull_task_scheduler_iret_complete(CPUX86State *env);
++#endif
++
++#endif

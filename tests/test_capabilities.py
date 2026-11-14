@@ -16,16 +16,17 @@ def catalog(report):
 
 
 def test_cli_and_projectless_json_agree(capsys):
-    assert main(["capabilities"]) == 0
-    cli = json.loads(capsys.readouterr().out)
-    reply = respond({"method": "capabilities"}, default_project="/does/not/exist.fdb")
-    assert cli["ok"] and reply["ok"]
-    assert cli["result"] == reply["result"]
-    assert cli["result"]["format"] == "fdisbull-capabilities-1"
-    # The expanded catalog stays well under the ordinary 64 KiB reply limit;
-    # environment-dependent path fields (imported_from) add a few dozen bytes.
-    assert len(json.dumps(cli).encode()) < 48 * 1024
-    assert all(item["status"] == "read" for item in cli["result"]["sources"].values())
+    assert main(['capabilities']) == 0
+    wire = capsys.readouterr().out
+    cli = json.loads(wire)
+    reply = respond({'method': 'capabilities'}, default_project='/does/not/exist.fdb')
+    assert cli['ok'] and reply['ok']
+    assert cli['result'] == reply['result']
+    assert cli['result']['format'] == 'fdisbull-capabilities-1'
+    # Measure the actual compact wire reply, including its newline, rather
+    # than reserializing it with extra whitespace. Keep half of 64 KiB free.
+    assert len(wire.encode()) < 32 * 1024
+    assert all(item['status'] == 'read' for item in cli['result']['sources'].values())
 
 
 def test_discovery_needs_no_site_packages_or_native_imports():
@@ -71,6 +72,22 @@ def test_discovery_never_starts_a_tool_or_target(monkeypatch):
     assert all(
         item["runtime_validation"] == "not_run" for item in report["capabilities"]
     )
+
+
+def test_chip8_profile_discovery_preserves_native_and_pipeline_limits():
+    from fdisbull.capabilities import capabilities
+    items = catalog(capabilities())
+    assert items['decode.chip8']['architectures'] == ['chip8-classic-16be']
+    assert items['debug.chip8']['availability'] == 'not_checked'
+    assert items['debug.chip8']['runtime_validation'] == 'not_run'
+    assert items['debug.chip8']['maturity'] == 'experimental'
+    scope = items['debug.chip8']['scope']
+    assert 'CHIP-8 v6: layers/hooks, owned keys, lossless histories' in scope
+    assert 'Full recovery without key reinjection' in scope
+    assert 'frozen V0..VF/I/PC/RAM undo' in scope
+    assert 'paired trials' in scope
+    assert 'checkpoint tool required' in scope
+    assert 'No partial resume, VBlank or parity claim' in scope
 
 
 def test_detected_executable_is_not_runtime_validation(tmp_path, monkeypatch):

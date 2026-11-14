@@ -169,6 +169,10 @@ class MachinePeer:
     def registers(self):
         return self.snapshots[min(self.index, len(self.snapshots) - 1)][0]
 
+    def request(self, command, timeout_ms=10000):
+        assert command == 'qqemu.sstepbits'
+        return b''  # This authored peer does not implement QEMU policy queries.
+
     def call(self, method, params=None):
         if method == 'query-status':
             return dict(running=self.running)
@@ -216,6 +220,7 @@ def test_observed_trace_width_follows_v86_to_protected_transition():
     debug._artifact = lambda name, kind, data, metadata: json.loads(data)
     result = debug.trace(count=2, bits=None)
     assert result['complete'] and peer.steps == 2
+    assert result['single_step_policy']['status'] == 'unsupported'
     assert [event['code_bits'] for event in result['events']] == [16, 32]
     assert [event['cpu_mode'] for event in result['events']] == ['v86', 'protected']
     assert result['bitness_source'] == 'observed per instruction'

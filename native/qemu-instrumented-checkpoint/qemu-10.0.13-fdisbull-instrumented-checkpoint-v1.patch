@@ -1,0 +1,2475 @@
+--- a/audio/audio.c
++++ b/audio/audio.c
+@@ -37,6 +37,7 @@
+ #include "qemu/error-report.h"
+ #include "qemu/log.h"
+ #include "qemu/module.h"
++#include "qemu/main-loop.h"
+ #include "qemu/help_option.h"
+ #include "system/system.h"
+ #include "system/replay.h"
+@@ -838,6 +839,339 @@
+             trace_audio_timer_stop();
+         }
+     }
++}
++
++/* The checkpoint path does not run audio or discard samples. Restrict it to
++ * the known one-voice, equal-rate none backend, where no resampler history is
++ * consumed by rate_template's equal-rate copy path. */
++static bool fdisbull_audio_info_supported(const struct audio_pcm_info *info)
++{
++    return info->freq == 32000 && info->nchannels == 1 && info->bits == 8 &&
++           !info->is_signed && !info->is_float && info->bytes_per_frame == 1;
++}
++
++static bool fdisbull_audio_buffer_valid(const STSampleBuffer *buffer)
++{
++    return buffer->buffer && buffer->size && buffer->size <= 65536 &&
++           buffer->pos < buffer->size;
++}
++
++static bool fdisbull_audio_output_graph_safe(AudioState **state, Error **errp)
++{
++    AudioState *s;
++    HWVoiceOut *hw;
++    SWVoiceOut *sw;
++    CaptureVoiceOut *cap;
++    SWVoiceCap *sc;
++
++    assert(bql_locked());
++    s = audio_state_by_name("fdisbull-pc", errp);
++    if (!s) {
++        return false;
++    }
++    if (!s->drv || strcmp(s->drv->name, "none") || !s->dev ||
++        !audio_get_pdo_out(s->dev)->mixing_engine || s->vm_running ||
++        !QLIST_EMPTY(&s->hw_head_in)) {
++        error_setg(errp, "Audio checkpoint requires a stopped none backend with no input");
++        return false;
++    }
++    hw = QLIST_FIRST(&s->hw_head_out);
++    if (!hw || QLIST_NEXT(hw, entries) || hw->s != s || hw->poll_mode ||
++        hw->pending_disable ||
++        !fdisbull_audio_info_supported(&hw->info) ||
++        !fdisbull_audio_buffer_valid(&hw->mix_buf)) {
++        error_setg(errp, "Audio checkpoint requires one supported PC speaker hardware output");
++        return false;
++    }
++    if ((hw->buf_emul && (!hw->size_emul || hw->size_emul > 65536 ||
++            hw->pos_emul >= hw->size_emul || hw->pending_emul > hw->size_emul)) ||
++        (!hw->buf_emul && (hw->size_emul || hw->pos_emul || hw->pending_emul))) {
++        error_setg(errp, "Audio checkpoint backend ring is not bounded");
++        return false;
++    }
++    sw = QLIST_FIRST(&hw->sw_head);
++    if (!sw || QLIST_NEXT(sw, entries) || !sw->name || strcmp(sw->name, "pcspk") ||
++        sw->hw != hw || !sw->card || sw->card->state != s || !sw->rate ||
++        sw->total_hw_samples_mixed > hw->mix_buf.size ||
++        !!sw->empty != (sw->total_hw_samples_mixed == 0) || sw->resample_buf.pos ||
++        !!sw->active != !!hw->enabled || !fdisbull_audio_info_supported(&sw->info)) {
++        error_setg(errp, "Audio checkpoint requires a supported equal-rate PC speaker voice");
++        return false;
++    }
++    cap = QLIST_FIRST(&s->cap_head);
++    sc = QLIST_FIRST(&hw->cap_head);
++    if (cap) {
++        SWVoiceOut *csw = QLIST_FIRST(&cap->hw.sw_head);
++        struct capture_callback *cb = QLIST_FIRST(&cap->cb_head);
++        if (QLIST_NEXT(cap, entries) || !sc || QLIST_NEXT(sc, entries) ||
++            sc->cap != cap || csw != &sc->sw || QLIST_NEXT(csw, entries) ||
++            !cb || QLIST_NEXT(cb, entries) || csw->hw != &cap->hw || !csw->rate ||
++            csw->total_hw_samples_mixed > cap->hw.mix_buf.size ||
++            !!csw->empty != (csw->total_hw_samples_mixed == 0) || csw->resample_buf.pos ||
++            cap->hw.pending_emul || !fdisbull_audio_info_supported(&csw->info) ||
++            !fdisbull_audio_info_supported(&cap->hw.info) ||
++            !fdisbull_audio_buffer_valid(&cap->hw.mix_buf)) {
++            error_setg(errp, "Audio checkpoint requires one supported equal-rate capture path");
++            return false;
++        }
++    } else if (sc) {
++        error_setg(errp, "Audio checkpoint capture graph is inconsistent");
++        return false;
++    }
++    *state = s;
++    return true;
++}
++
++
++/* Private same-build format. The zeroed header contains no pointers; sample
++ * arrays and scalar volume values use the pinned mixer ABI. */
++typedef struct FdisbullAudioCore {
++    uint64_t magic, version, sample_size, volume_size, has_capture;
++    uint64_t hw_size, hw_pos, hw_timestamp, hw_enabled;
++    uint64_t sw_total, sw_active, sw_empty;
++    uint64_t emul_size, emul_pos, emul_pending;
++    uint64_t cap_size, cap_pos, cap_timestamp, cap_enabled;
++    uint64_t csw_total, csw_active, csw_empty;
++    struct mixeng_volume sw_volume, csw_volume;
++} FdisbullAudioCore;
++
++#define FDISBULL_AUDIO_CORE_MAGIC UINT64_C(0x4644424155443031)
++
++static void fdisbull_audio_copy_volume(struct mixeng_volume *dst,
++                                       const struct mixeng_volume *src)
++{
++    dst->mute = src->mute;
++    dst->l = src->l;
++    dst->r = src->r;
++}
++
++char *fdisbull_audio_output_checkpoint_export(Error **errp)
++{
++    AudioState *s;
++    HWVoiceOut *hw;
++    SWVoiceOut *sw;
++    CaptureVoiceOut *cap;
++    FdisbullAudioCore h = { 0 };
++    g_autofree uint8_t *blob = NULL;
++    size_t len, hw_bytes, cap_bytes = 0;
++
++    assert(bql_locked());
++    s = audio_state_by_name("fdisbull-pc", NULL);
++    if (!s) {
++        return g_strdup("");
++    }
++    if (!fdisbull_audio_output_graph_safe(&s, errp)) {
++        return NULL;
++    }
++    hw = QLIST_FIRST(&s->hw_head_out);
++    sw = QLIST_FIRST(&hw->sw_head);
++    cap = QLIST_FIRST(&s->cap_head);
++    h.magic = FDISBULL_AUDIO_CORE_MAGIC;
++    h.version = 1;
++    h.sample_size = sizeof(st_sample);
++    h.volume_size = sizeof(struct mixeng_volume);
++    h.has_capture = !!cap;
++    h.hw_size = hw->mix_buf.size;
++    h.hw_pos = hw->mix_buf.pos;
++    h.hw_timestamp = hw->ts_helper;
++    h.hw_enabled = !!hw->enabled;
++    h.sw_total = sw->total_hw_samples_mixed;
++    h.sw_active = !!sw->active;
++    h.sw_empty = !!sw->empty;
++    h.emul_size = hw->size_emul;
++    h.emul_pos = hw->pos_emul;
++    h.emul_pending = hw->pending_emul;
++    fdisbull_audio_copy_volume(&h.sw_volume, &sw->vol);
++    hw_bytes = h.hw_size * sizeof(st_sample);
++    if (cap) {
++        SWVoiceOut *csw = QLIST_FIRST(&cap->hw.sw_head);
++        h.cap_size = cap->hw.mix_buf.size;
++        h.cap_pos = cap->hw.mix_buf.pos;
++        h.cap_timestamp = cap->hw.ts_helper;
++        h.cap_enabled = !!cap->hw.enabled;
++        h.csw_total = csw->total_hw_samples_mixed;
++        h.csw_active = !!csw->active;
++        h.csw_empty = !!csw->empty;
++        fdisbull_audio_copy_volume(&h.csw_volume, &csw->vol);
++        cap_bytes = h.cap_size * sizeof(st_sample);
++    }
++    len = sizeof(h) + hw_bytes + cap_bytes + h.emul_size;
++    blob = g_malloc0(len);
++    memcpy(blob, &h, sizeof(h));
++    memcpy(blob + sizeof(h), hw->mix_buf.buffer, hw_bytes);
++    if (cap) {
++        memcpy(blob + sizeof(h) + hw_bytes, cap->hw.mix_buf.buffer, cap_bytes);
++    }
++    if (h.emul_pending) {
++        size_t first = audio_ring_posb(h.emul_pos, h.emul_pending, h.emul_size);
++        size_t count = MIN(h.emul_pending, h.emul_size - first);
++        uint8_t *out = blob + sizeof(h) + hw_bytes + cap_bytes;
++        memcpy(out + first, hw->buf_emul + first, count);
++        if (count < h.emul_pending) {
++            memcpy(out, hw->buf_emul, h.emul_pending - count);
++        }
++    }
++    return g_base64_encode(blob, len);
++}
++
++bool fdisbull_audio_output_checkpoint_import(const char *base64, Error **errp)
++{
++    AudioState *s;
++    HWVoiceOut *hw;
++    SWVoiceOut *sw;
++    CaptureVoiceOut *cap;
++    FdisbullAudioCore h;
++    g_autofree guchar *blob = NULL;
++    g_autofree char *canonical = NULL;
++    gsize len;
++    size_t hw_bytes, cap_bytes;
++
++    assert(bql_locked());
++    if (!base64) {
++        error_setg(errp, "Missing audio core checkpoint");
++        return false;
++    }
++    s = audio_state_by_name("fdisbull-pc", NULL);
++    if (!*base64) {
++        if (!s) {
++            return true;
++        }
++        error_setg(errp, "Audio core checkpoint lacks the destination device");
++        return false;
++    }
++    /* The maximum follows two 65536-frame buffers, plus the fixed header. */
++    if (!s || strlen(base64) > 4 * ((sizeof(h) + 2 * 65536 * sizeof(st_sample) + 65536 + 2) / 3)) {
++        error_setg(errp, "Audio core checkpoint device or size mismatch");
++        return false;
++    }
++    blob = g_base64_decode(base64, &len);
++    canonical = g_base64_encode(blob, len);
++    if (strcmp(base64, canonical) || len < sizeof(h)) {
++        error_setg(errp, "Invalid audio core checkpoint encoding");
++        return false;
++    }
++    memcpy(&h, blob, sizeof(h));
++    if (h.magic != FDISBULL_AUDIO_CORE_MAGIC || h.version != 1 ||
++        h.sample_size != sizeof(st_sample) || h.volume_size != sizeof(struct mixeng_volume) ||
++        h.has_capture > 1 || !h.hw_size || h.hw_size > 65536 ||
++        h.hw_pos >= h.hw_size || h.hw_enabled > 1 || h.sw_active > 1 ||
++        h.sw_empty > 1 || h.sw_total > h.hw_size ||
++        h.sw_empty != (h.sw_total == 0) || h.sw_active != h.hw_enabled ||
++        h.emul_size > 65536 || h.emul_pending > h.emul_size ||
++        (h.emul_size ? h.emul_pos >= h.emul_size : h.emul_pos != 0) ||
++        h.cap_size > 65536 || h.cap_enabled > 1 || h.csw_active > 1 || h.csw_empty > 1 ||
++        (h.has_capture && (!h.cap_size || h.cap_pos >= h.cap_size ||
++          h.csw_total > h.cap_size || h.csw_empty != (h.csw_total == 0))) ||
++        (!h.has_capture && (h.cap_size || h.cap_pos || h.cap_timestamp || h.cap_enabled ||
++                            h.csw_total || h.csw_active || h.csw_empty))) {
++        error_setg(errp, "Invalid or incompatible audio core checkpoint header");
++        return false;
++    }
++    hw_bytes = h.hw_size * sizeof(st_sample);
++    cap_bytes = h.cap_size * sizeof(st_sample);
++    if (len != sizeof(h) + hw_bytes + cap_bytes + h.emul_size ||
++        !fdisbull_audio_output_graph_safe(&s, errp)) {
++        if (len != sizeof(h) + hw_bytes + cap_bytes + h.emul_size) {
++            error_setg(errp, "Invalid audio core checkpoint length");
++        }
++        return false;
++    }
++    hw = QLIST_FIRST(&s->hw_head_out);
++    sw = QLIST_FIRST(&hw->sw_head);
++    cap = QLIST_FIRST(&s->cap_head);
++    if (h.hw_size != hw->mix_buf.size || h.hw_enabled != !!hw->enabled ||
++        h.sw_active != !!sw->active || h.has_capture != !!cap ||
++        (cap && (h.cap_size != cap->hw.mix_buf.size ||
++                 h.cap_enabled != !!cap->hw.enabled ||
++                 h.csw_active != !!QLIST_FIRST(&cap->hw.sw_head)->active))) {
++        error_setg(errp, "Audio core checkpoint graph differs from destination");
++        return false;
++    }
++    /* All input and destination checks precede the first mutation. */
++    memcpy(hw->mix_buf.buffer, blob + sizeof(h), hw_bytes);
++    hw->mix_buf.pos = h.hw_pos;
++    hw->ts_helper = h.hw_timestamp;
++    g_free(hw->buf_emul);
++    hw->buf_emul = h.emul_size ? g_memdup2(blob + sizeof(h) + hw_bytes + cap_bytes,
++                                         h.emul_size) : NULL;
++    hw->size_emul = h.emul_size;
++    hw->pos_emul = h.emul_pos;
++    hw->pending_emul = h.emul_pending;
++    sw->total_hw_samples_mixed = h.sw_total;
++    sw->empty = h.sw_empty;
++    fdisbull_audio_copy_volume(&sw->vol, &h.sw_volume);
++    if (cap) {
++        SWVoiceOut *csw = QLIST_FIRST(&cap->hw.sw_head);
++        memcpy(cap->hw.mix_buf.buffer, blob + sizeof(h) + hw_bytes, cap_bytes);
++        cap->hw.mix_buf.pos = h.cap_pos;
++        cap->hw.ts_helper = h.cap_timestamp;
++        csw->total_hw_samples_mixed = h.csw_total;
++        csw->empty = h.csw_empty;
++        fdisbull_audio_copy_volume(&csw->vol, &h.csw_volume);
++    }
++    return true;
++}
++
++bool fdisbull_audio_output_checkpoint_safe(int64_t *timer_ns, Error **errp)
++{
++    AudioState *s;
++    bool pending;
++    uint64_t expiry;
++    int64_t now;
++
++    if (!timer_ns || !fdisbull_audio_output_graph_safe(&s, errp)) {
++        return false;
++    }
++    pending = timer_pending(s->ts);
++    if (s->period_ticks <= 0 || pending != s->timer_running ||
++        pending != !!audio_is_timer_needed(s)) {
++        error_setg(errp, "Audio checkpoint timer state is not reconstructible");
++        return false;
++    }
++    if (!pending) {
++        *timer_ns = -1;
++        return true;
++    }
++    expiry = timer_expire_time_ns(s->ts);
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (now < 0 || s->period_ticks > INT64_MAX - now ||
++        expiry > (uint64_t)(now + s->period_ticks)) {
++        error_setg(errp, "Audio checkpoint timer deadline would change on resume");
++        return false;
++    }
++    *timer_ns = expiry;
++    return true;
++}
++
++bool fdisbull_audio_output_checkpoint_restore_timer(int64_t timer_ns, Error **errp)
++{
++    AudioState *s;
++    int64_t now;
++
++    if (!fdisbull_audio_output_graph_safe(&s, errp)) {
++        return false;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (s->period_ticks <= 0 || now < 0 ||
++        s->period_ticks > INT64_MAX - now ||
++        (timer_ns >= 0 && timer_ns > now + s->period_ticks)) {
++        error_setg(errp, "Restored audio timer deadline would change on resume");
++        return false;
++    }
++    if (timer_ns < -1 || (timer_ns >= 0) != !!audio_is_timer_needed(s)) {
++        error_setg(errp, "Restored audio timer does not match the voice state");
++        return false;
++    }
++    if (timer_ns < 0) {
++        timer_del(s->ts);
++        s->timer_running = false;
++    } else {
++        timer_mod_ns(s->ts, timer_ns);
++        s->timer_running = true;
++        /* timer_last only diagnoses late callbacks; it does not drive audio. */
++        s->timer_last = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    }
++    return true;
+ }
+ 
+ static void audio_timer (void *opaque)
+--- a/audio/audio.h
++++ b/audio/audio.h
+@@ -119,6 +119,13 @@
+ void AUD_set_active_out (SWVoiceOut *sw, int on);
+ int  AUD_is_active_out (SWVoiceOut *sw);
+ 
++/* Scoped fDisBull checkpoint helpers: stopped none/32 kHz mono path only. */
++char *fdisbull_audio_output_checkpoint_export(Error **errp);
++bool fdisbull_audio_output_checkpoint_import(const char *base64, Error **errp);
++bool fdisbull_audio_output_checkpoint_safe(int64_t *timer_ns, Error **errp);
++bool fdisbull_audio_output_checkpoint_restore_timer(int64_t timer_ns,
++                                                   Error **errp);
++
+ void     AUD_init_time_stamp_out (SWVoiceOut *sw, QEMUAudioTimeStamp *ts);
+ uint64_t AUD_get_elapsed_usec_out (SWVoiceOut *sw, QEMUAudioTimeStamp *ts);
+ 
+--- a/hw/audio/pcspk.c
++++ b/hw/audio/pcspk.c
+@@ -32,6 +32,7 @@
+ #include "hw/timer/i8254.h"
+ #include "migration/vmstate.h"
+ #include "hw/audio/pcspk.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+ #include "qom/object.h"
+ 
+@@ -57,6 +58,8 @@
+     uint8_t data_on;
+     uint8_t dummy_refresh_clock;
+     bool migrate;
++    bool fdisbull_checkpoint_loaded;
++    int64_t fdisbull_checkpoint_audio_timer_ns;
+ };
+ 
+ static const char *s_spk = "pcspk";
+@@ -202,6 +205,129 @@
+ 
+     return s->migrate;
+ }
++
++static bool pcspk_checkpoint_needed(void *opaque)
++{
++    (void)opaque;
++    return fdisbull_instrumented_checkpoint_busy();
++}
++
++bool fdisbull_pcspk_checkpoint_audio_safe(Error **errp)
++{
++    PCSpkState *s = pcspk_state;
++    int64_t deadline;
++
++    if (!s || !s->pit) {
++        error_setg(errp, "PC speaker checkpoint device is unavailable");
++        return false;
++    }
++    if (!s->card.state) {
++        return true;
++    }
++    if (!s->voice) {
++        error_setg(errp, "PC speaker checkpoint audio voice is unavailable");
++        return false;
++    }
++    return fdisbull_audio_output_checkpoint_safe(&deadline, errp);
++}
++
++static int pcspk_checkpoint_pre_save(void *opaque)
++{
++    PCSpkState *s = opaque;
++    g_autoptr(Error) local_err = NULL;
++
++    s->fdisbull_checkpoint_audio_timer_ns = -1;
++    if (s->card.state && (!s->voice ||
++        !fdisbull_audio_output_checkpoint_safe(&s->fdisbull_checkpoint_audio_timer_ns,
++                                               &local_err))) {
++        if (local_err) {
++            error_report_err(g_steal_pointer(&local_err));
++        }
++        return -EINVAL;
++    }
++    return 0;
++}
++
++static int pcspk_checkpoint_post_load(void *opaque, int version_id)
++{
++    PCSpkState *s = opaque;
++    unsigned int expected;
++
++    (void)version_id;
++
++    /* The optional subsection is never admitted to ordinary migration. */
++    if (!fdisbull_instrumented_checkpoint_busy() || s->data_on > 1 ||
++        (s->dummy_refresh_clock & ~0x10) || s->pit_count > 65536 ||
++        (s->pit_count && s->pit_count < PCSPK_MIN_COUNT) ||
++        s->samples > PCSPK_BUF_LEN || s->fdisbull_checkpoint_audio_timer_ns < -1 ||
++        (!s->card.state && s->fdisbull_checkpoint_audio_timer_ns != -1) ||
++        (s->samples ? s->play_pos >= s->samples : s->play_pos != 0)) {
++        return -EINVAL;
++    }
++    if (s->pit_count) {
++        const uint32_t m = PCSPK_SAMPLE_RATE * s->pit_count;
++        expected = (QEMU_ALIGN_DOWN(PCSPK_BUF_LEN * PIT_FREQ, m) /
++                    (PIT_FREQ >> 1) + 1) >> 1;
++        if (!expected || s->samples != expected) {
++            return -EINVAL;
++        }
++    } else if (s->samples && s->samples != PCSPK_BUF_LEN) {
++        return -EINVAL;
++    }
++
++    /* PIT ordering is not established during individual device post_load.
++     * The scoped import owner rearms after the whole snapshot job completes. */
++    s->fdisbull_checkpoint_loaded = true;
++    return 0;
++}
++
++bool fdisbull_pcspk_checkpoint_rearm(Error **errp)
++{
++    PCSpkState *s = pcspk_state;
++    PITChannelInfo channel;
++
++    if (!fdisbull_instrumented_checkpoint_busy() || !s || !s->pit ||
++        !s->fdisbull_checkpoint_loaded) {
++        error_setg(errp, "PC speaker checkpoint state or owned load is absent");
++        return false;
++    }
++    pit_get_channel_info(s->pit, 2, &channel);
++    if (channel.gate != 0 && channel.gate != 1) {
++        error_setg(errp, "Restored PC speaker PIT gate is invalid");
++        return false;
++    }
++    if (s->card.state && !s->voice) {
++        error_setg(errp, "Restored PC speaker audio voice is unavailable");
++        return false;
++    }
++    if (s->voice) {
++        /* Unlike a port write, rearming must not reset the restored phase. */
++        AUD_set_active_out(s->voice, channel.gate && s->data_on);
++    }
++    if (s->card.state && !fdisbull_audio_output_checkpoint_restore_timer(
++            s->fdisbull_checkpoint_audio_timer_ns, errp)) {
++        return false;
++    }
++    s->fdisbull_checkpoint_loaded = false;
++    return true;
++}
++
++static const VMStateDescription vmstate_spk_fdisbull_checkpoint = {
++    .name = "pcspk/fdisbull-checkpoint",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = pcspk_checkpoint_needed,
++    .pre_save = pcspk_checkpoint_pre_save,
++    .post_load = pcspk_checkpoint_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32(pit_count, PCSpkState),
++        VMSTATE_UINT32(samples, PCSpkState),
++        VMSTATE_UINT32(play_pos, PCSpkState),
++        VMSTATE_UINT8_ARRAY(sample_buf, PCSpkState, PCSPK_BUF_LEN),
++        VMSTATE_INT64(fdisbull_checkpoint_audio_timer_ns, PCSpkState),
++        VMSTATE_END_OF_LIST()
++    }
++};
+ 
+ static const VMStateDescription vmstate_spk = {
+     .name = "pcspk",
+@@ -212,7 +338,11 @@
+         VMSTATE_UINT8(data_on, PCSpkState),
+         VMSTATE_UINT8(dummy_refresh_clock, PCSpkState),
+         VMSTATE_END_OF_LIST()
+-    }
++    },
++    .subsections = (const VMStateDescription * const []) {
++        &vmstate_spk_fdisbull_checkpoint,
++        NULL
++    },
+ };
+ 
+ static const Property pcspk_properties[] = {
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -502,3 +502,18 @@
+ }
+ 
+ type_init(vga_register_types)
++
++
++bool pci_std_vga_fdisbull_checkpoint_restore(
++    Object *obj, const FdisbullRetraceInfo *retrace,
++    const FdisbullVgaConfigurationSnapshot *configuration,
++    uint64_t new_epoch, int64_t virtual_ns, Error **errp)
++{
++    if (!obj || strcmp(object_get_typename(obj), "VGA")) {
++        error_setg(errp, "Checkpoint restore requires the exact selected primary VGA");
++        return false;
++    }
++    return vga_fdisbull_checkpoint_restore(&PCI_VGA(obj)->vga, retrace,
++                                           configuration, new_epoch,
++                                           virtual_ns, errp);
++}
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -38,6 +38,7 @@
+ #include "ui/pixel_ops.h"
+ #include "ui/console.h"
+ #include "qemu/timer.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "hw/xen/xen.h"
+ #include "migration/vmstate.h"
+ #include "trace.h"
+@@ -2445,7 +2446,7 @@
+     vbe_update_vgaregs(s);
+     vga_update_memory_access(s);
+     /* Process-local generations are never serialized or restored as history. */
+-    if (s->fdisbull_retrace) {
++    if (s->fdisbull_retrace && !fdisbull_instrumented_checkpoint_busy()) {
+         s->fdisbull_configuration_invalidated = true;
+     }
+     return 0;
+@@ -2705,3 +2706,142 @@
+         portio_list_add(&s->vbe_port_list, address_space_io, 0x1ce);
+     }
+ }
++
++
++static bool vga_u8_list_equal(const uint8List *list, const uint8_t *bytes,
++                              size_t count)
++{
++    size_t i = 0;
++
++    for (; list && i < count; list = list->next, i++) {
++        if (list->value != bytes[i]) {
++            return false;
++        }
++    }
++    return !list && i == count;
++}
++
++static bool vga_u16_list_equal(const uint16List *list, const uint16_t *words,
++                               size_t count)
++{
++    size_t i = 0;
++
++    for (; list && i < count; list = list->next, i++) {
++        if (list->value != words[i]) {
++            return false;
++        }
++    }
++    return !list && i == count;
++}
++
++static bool vga_fdisbull_configuration_snapshot_equal(
++    const VGAConfigurationState *raw,
++    const FdisbullVgaConfigurationSnapshot *snapshot)
++{
++    const FdisbullVgaConfigurationRaw *saved = snapshot->raw;
++
++    return saved &&
++        vga_u8_list_equal(saved->sequencer, raw->sequencer,
++                          ARRAY_SIZE(raw->sequencer)) &&
++        vga_u8_list_equal(saved->sequencer_vbe, raw->sequencer_vbe,
++                          ARRAY_SIZE(raw->sequencer_vbe)) &&
++        vga_u8_list_equal(saved->graphics, raw->graphics,
++                          ARRAY_SIZE(raw->graphics)) &&
++        vga_u8_list_equal(saved->crtc, raw->crtc, ARRAY_SIZE(raw->crtc)) &&
++        vga_u8_list_equal(saved->attribute_controls, raw->attribute_controls,
++                          ARRAY_SIZE(raw->attribute_controls)) &&
++        vga_u16_list_equal(saved->vbe, raw->vbe, ARRAY_SIZE(raw->vbe)) &&
++        saved->misc_output == raw->misc_output &&
++        saved->feature_control == raw->feature_control &&
++        saved->display_enabled == raw->display_enabled &&
++        saved->vbe_start_address == raw->vbe_start_address &&
++        saved->vbe_line_offset == raw->vbe_line_offset &&
++        saved->vbe_bank_mask == raw->vbe_bank_mask &&
++        saved->bank_offset == raw->bank_offset &&
++        saved->dac_8bit == raw->dac_8bit &&
++        saved->big_endian_framebuffer == raw->big_endian_framebuffer &&
++        saved->vram_size == raw->vram_size &&
++        saved->vbe_size == raw->vbe_size &&
++        saved->vbe_size_mask == raw->vbe_size_mask;
++}
++
++bool vga_fdisbull_checkpoint_restore(
++    VGACommonState *s, const FdisbullRetraceInfo *retrace,
++    const FdisbullVgaConfigurationSnapshot *configuration,
++    uint64_t new_epoch, int64_t virtual_ns, Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) actual = NULL;
++    VGAConfigurationState raw;
++    FdisbullRetraceRaw retrace_raw;
++    bool initialized;
++
++    assert(bql_locked());
++    if (!fdisbull_instrumented_checkpoint_busy() || !s->fdisbull_retrace ||
++        !retrace || !retrace->raw || !retrace->timing || !configuration ||
++        !retrace->timing_generation || !configuration->configuration_generation ||
++        !new_epoch || virtual_ns < 0 || configuration->epoch != retrace->epoch ||
++        configuration->virtual_ns != virtual_ns ||
++        configuration->device_type == NULL ||
++        strcmp(configuration->device_type, "VGA")) {
++        error_setg(errp, "Invalid fDisBull VGA checkpoint restore request");
++        return false;
++    }
++    retrace_raw = vga_fdisbull_retrace_raw(s);
++    if (!vga_fdisbull_raw_equal(&retrace_raw, retrace->raw)) {
++        error_setg(errp, "Restored VGA timing registers differ from checkpoint");
++        return false;
++    }
++    vga_fdisbull_configuration_raw(s, &raw);
++    if (!vga_fdisbull_configuration_snapshot_equal(&raw, configuration)) {
++        error_setg(errp, "Restored VGA configuration differs from checkpoint");
++        return false;
++    }
++
++    initialized = !retrace->unsupported_reason ||
++                  strcmp(retrace->unsupported_reason, "uninitialized");
++    s->fdisbull_retrace_generation = retrace->timing_generation;
++    s->fdisbull_retrace_initialized = initialized;
++    s->fdisbull_retrace_overflow = false;
++    if (initialized) {
++        s->update_retrace_info(s);
++    } else {
++        memset(&s->retrace_info.precise, 0, sizeof(s->retrace_info.precise));
++    }
++    s->fdisbull_configuration_initialized = true;
++    s->fdisbull_configuration_invalidated = false;
++    s->fdisbull_configuration_generation = configuration->configuration_generation;
++    s->fdisbull_configuration_committed = raw;
++
++    actual = g_new0(FdisbullRetraceInfo, 1);
++    if (!vga_fdisbull_retrace_query(s, virtual_ns, actual, errp)) {
++        return false;
++    }
++    if (!vga_fdisbull_raw_equal(actual->raw, retrace->raw) ||
++        actual->timing_generation != retrace->timing_generation ||
++        actual->phase_supported != retrace->phase_supported ||
++        actual->timing->ticks_per_char != retrace->timing->ticks_per_char ||
++        actual->timing->total_chars != retrace->timing->total_chars ||
++        actual->timing->htotal != retrace->timing->htotal ||
++        actual->timing->hstart != retrace->timing->hstart ||
++        actual->timing->hend != retrace->timing->hend ||
++        actual->timing->vstart != retrace->timing->vstart ||
++        actual->timing->vend != retrace->timing->vend ||
++        actual->timing->freq != retrace->timing->freq) {
++        error_setg(errp, "Restored VGA retrace cache differs from checkpoint");
++        return false;
++    }
++    if (actual->phase_supported &&
++        (!actual->phase || !retrace->phase ||
++         actual->phase->period_ns != retrace->phase->period_ns ||
++         actual->phase->phase_ns != retrace->phase->phase_ns ||
++         actual->phase->line != retrace->phase->line ||
++         actual->phase->character != retrace->phase->character ||
++         actual->phase->line_character != retrace->phase->line_character ||
++         actual->phase->vertical_retrace != retrace->phase->vertical_retrace ||
++         actual->phase->horizontal_retrace != retrace->phase->horizontal_retrace ||
++         actual->phase->status1_timing_bits != retrace->phase->status1_timing_bits)) {
++        error_setg(errp, "Restored VGA retrace phase differs from checkpoint");
++        return false;
++    }
++    return true;
++}
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -205,8 +205,13 @@
+                           const MemoryRegionPortio **vbe_ports);
+ void vga_common_reset(VGACommonState *s);
+ struct FdisbullRetraceInfo;
++struct FdisbullVgaConfigurationSnapshot;
+ bool vga_fdisbull_retrace_query(VGACommonState *s, int64_t virtual_ns,
+                               struct FdisbullRetraceInfo *info, Error **errp);
++bool vga_fdisbull_checkpoint_restore(
++    VGACommonState *s, const struct FdisbullRetraceInfo *retrace,
++    const struct FdisbullVgaConfigurationSnapshot *configuration,
++    uint64_t new_epoch, int64_t virtual_ns, Error **errp);
+ 
+ struct FdisbullVgaConfigurationSnapshot;
+ void vga_fdisbull_configuration_commit(VGACommonState *s, bool force);
+--- a/include/hw/audio/pcspk.h
++++ b/include/hw/audio/pcspk.h
+@@ -25,6 +25,13 @@
+ #ifndef HW_PCSPK_H
+ #define HW_PCSPK_H
+ 
++#include "qapi/error.h"
++
+ #define TYPE_PC_SPEAKER "isa-pcspk"
+ 
++/* Called only after a scoped instrumented load has restored the PIT. */
++bool fdisbull_pcspk_checkpoint_rearm(Error **errp);
++/* Pure stopped-state admission; does not drain or advance audio. */
++bool fdisbull_pcspk_checkpoint_audio_safe(Error **errp);
++
+ #endif /* HW_PCSPK_H */
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -37,6 +37,10 @@
+ struct FdisbullVgaConfigurationSnapshot *
+ pci_std_vga_fdisbull_configuration_snapshot(Object *obj, uint64_t epoch,
+                                            int64_t virtual_ns, Error **errp);
++bool pci_std_vga_fdisbull_checkpoint_restore(
++    Object *obj, const struct FdisbullRetraceInfo *retrace,
++    const struct FdisbullVgaConfigurationSnapshot *configuration,
++    uint64_t new_epoch, int64_t virtual_ns, Error **errp);
+ 
+ #define TYPE_VGA_MMIO "vga-mmio"
+ 
+--- /dev/null
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -0,0 +1,66 @@
++#ifndef SYSTEM_FDISBULL_INSTRUMENTED_CHECKPOINT_H
++#define SYSTEM_FDISBULL_INSTRUMENTED_CHECKPOINT_H
++
++#include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
++#include "qapi/error.h"
++
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT \
++    "fdisbull-instrumented-qemu-state-1"
++
++bool fdisbull_instrumented_checkpoint_snapshot_save_authorize(
++    const char *token, Error **errp);
++void fdisbull_instrumented_checkpoint_snapshot_save_complete(
++    const char *token, bool success);
++
++bool fdisbull_instrumented_checkpoint_busy(void);
++bool fdisbull_instrumented_checkpoint_allows_blocker(const Error *reason);
++bool fdisbull_instrumented_checkpoint_snapshot_load_begin(Error **errp);
++void fdisbull_instrumented_checkpoint_snapshot_load_complete(bool success);
++
++bool fdisbull_clock_checkpoint_owns_blocker(const Error *reason);
++bool fdisbull_audio_checkpoint_owns_blocker(const Error *reason);
++bool fdisbull_display_checkpoint_owns_blocker(const Error *reason);
++bool fdisbull_retrace_checkpoint_owns_blocker(const Error *reason);
++bool fdisbull_input_checkpoint_owns_blocker(const Error *reason);
++bool fdisbull_input_checkpoint_safe(Error **errp);
++
++bool fdisbull_clock_checkpoint_validate(const FdisbullClockInfo *info,
++                                       int64_t virtual_ns, Error **errp);
++uint64_t fdisbull_clock_checkpoint_restore(const FdisbullClockInfo *info,
++                                           Error **errp);
++
++FdisbullAudioInfo *fdisbull_audio_checkpoint_info(Error **errp);
++char *fdisbull_audio_checkpoint_pcm_base64(void);
++bool fdisbull_audio_checkpoint_validate(
++    const FdisbullInstrumentedAudioState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp);
++bool fdisbull_audio_checkpoint_restore(
++    const FdisbullInstrumentedAudioState *state, uint64_t epoch,
++    const char **new_token, Error **errp);
++
++FdisbullDisplayInfo *fdisbull_display_checkpoint_info(Error **errp);
++char *fdisbull_display_checkpoint_rgb_base64(void);
++char *fdisbull_display_checkpoint_device_path(void);
++int64_t fdisbull_display_checkpoint_deadline(void);
++FdisbullVgaConfigurationSnapshot *fdisbull_display_checkpoint_configuration(void);
++bool fdisbull_display_checkpoint_validate(
++    const FdisbullInstrumentedDisplayState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp);
++bool fdisbull_display_checkpoint_restore(
++    const FdisbullInstrumentedDisplayState *state, uint64_t epoch,
++    const char **new_token, Error **errp);
++
++bool fdisbull_retrace_checkpoint_admitted(void);
++bool fdisbull_retrace_checkpoint_restore_configuration(
++    const FdisbullRetraceInfo *info,
++    const FdisbullVgaConfigurationSnapshot *configuration, Error **errp);
++FdisbullRetraceInfo *fdisbull_retrace_checkpoint_info(Error **errp);
++char *fdisbull_retrace_checkpoint_device_path(void);
++bool fdisbull_retrace_checkpoint_validate(
++    const FdisbullInstrumentedRetraceState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp);
++bool fdisbull_retrace_checkpoint_restore(
++    const FdisbullInstrumentedRetraceState *state, uint64_t epoch,
++    const char **device, Error **errp);
++
++#endif
+--- a/migration/migration.c
++++ b/migration/migration.c
+@@ -2013,7 +2013,8 @@
+                "during postcopy-active or postcopy-recover state");
+ }
+ 
+-bool migration_is_blocked(Error **errp)
++bool migration_is_blocked_except(Error **errp,
++                                 bool (*allow)(const Error *reason))
+ {
+     GSList *blockers = migration_blockers[migrate_mode()];
+ 
+@@ -2021,12 +2022,19 @@
+         return true;
+     }
+ 
+-    if (blockers) {
+-        error_propagate(errp, error_copy(blockers->data));
+-        return true;
++    for (; blockers; blockers = blockers->next) {
++        if (!allow || !allow(blockers->data)) {
++            error_propagate(errp, error_copy(blockers->data));
++            return true;
++        }
+     }
+ 
+     return false;
++}
++
++bool migration_is_blocked(Error **errp)
++{
++    return migration_is_blocked_except(errp, NULL);
+ }
+ 
+ /* Returns true if continue to migrate, or false if error detected */
+--- a/migration/migration.h
++++ b/migration/migration.h
+@@ -531,6 +531,9 @@
+ 
+ int migrate_init(MigrationState *s, Error **errp);
+ bool migration_is_blocked(Error **errp);
++/* Local snapshot owner may exempt only its own retained observer blockers. */
++bool migration_is_blocked_except(Error **errp,
++                                 bool (*allow)(const Error *reason));
+ /* True if outgoing migration has entered postcopy phase */
+ bool migration_in_postcopy(void);
+ bool migration_postcopy_is_alive(MigrationStatus state);
+--- a/migration/savevm.c
++++ b/migration/savevm.c
+@@ -44,6 +44,8 @@
+ #include "postcopy-ram.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-migration.h"
++#include "qapi/qapi-commands-fdisbull-instrumented-checkpoint.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "qapi/clone-visitor.h"
+ #include "qapi/qapi-builtin-visit.h"
+ #include "qemu/error-report.h"
+@@ -3216,8 +3218,9 @@
+     return se->ops->load_state_buffer(se->opaque, buf, len, errp);
+ }
+ 
+-bool save_snapshot(const char *name, bool overwrite, const char *vmstate,
+-                  bool has_devices, strList *devices, Error **errp)
++static bool save_snapshot_internal(const char *name, bool overwrite,
++                                  const char *vmstate, bool has_devices,
++                                  strList *devices, bool instrumented, Error **errp)
+ {
+     BlockDriverState *bs;
+     QEMUSnapshotInfo sn1, *sn = &sn1;
+@@ -3229,7 +3232,8 @@
+ 
+     GLOBAL_STATE_CODE();
+ 
+-    if (migration_is_blocked(errp)) {
++    if (migration_is_blocked_except(errp, instrumented ?
++            fdisbull_instrumented_checkpoint_allows_blocker : NULL)) {
+         return false;
+     }
+ 
+@@ -3326,6 +3330,13 @@
+     return ret == 0;
+ }
+ 
++bool save_snapshot(const char *name, bool overwrite, const char *vmstate,
++                   bool has_devices, strList *devices, Error **errp)
++{
++    return save_snapshot_internal(name, overwrite, vmstate, has_devices,
++                                  devices, false, errp);
++}
++
+ void qmp_xen_save_devices_state(const char *filename, bool has_live, bool live,
+                                 Error **errp)
+ {
+@@ -3547,12 +3558,15 @@
+     Coroutine *co;
+     Error **errp;
+     bool ret;
++    char *instrumented_token;
++    bool instrumented_load;
+ } SnapshotJob;
+ 
+ static void qmp_snapshot_job_free(SnapshotJob *s)
+ {
+     g_free(s->tag);
+     g_free(s->vmstate);
++    g_free(s->instrumented_token);
+     qapi_free_strList(s->devices);
+ }
+ 
+@@ -3565,13 +3579,22 @@
+ 
+     job_progress_set_remaining(&s->common, 1);
+ 
++    if (s->instrumented_load &&
++        !fdisbull_instrumented_checkpoint_snapshot_load_begin(s->errp)) {
++        s->ret = false;
++        goto done;
++    }
+     vm_stop(RUN_STATE_RESTORE_VM);
+ 
+     s->ret = load_snapshot(s->tag, s->vmstate, true, s->devices, s->errp);
+     if (s->ret) {
+         load_snapshot_resume(orig_state);
+     }
+-
++    if (s->instrumented_load) {
++        fdisbull_instrumented_checkpoint_snapshot_load_complete(s->ret);
++    }
++
++done:
+     job_progress_update(&s->common, 1);
+ 
+     qmp_snapshot_job_free(s);
+@@ -3584,8 +3607,20 @@
+     SnapshotJob *s = container_of(job, SnapshotJob, common);
+ 
+     job_progress_set_remaining(&s->common, 1);
+-    s->ret = save_snapshot(s->tag, false, s->vmstate,
+-                           true, s->devices, s->errp);
++    if (s->instrumented_token) {
++        if (fdisbull_instrumented_checkpoint_snapshot_save_authorize(
++                s->instrumented_token, s->errp)) {
++            s->ret = save_snapshot_internal(s->tag, false, s->vmstate,
++                                            true, s->devices, true, s->errp);
++            fdisbull_instrumented_checkpoint_snapshot_save_complete(
++                s->instrumented_token, s->ret);
++        } else {
++            s->ret = false;
++        }
++    } else {
++        s->ret = save_snapshot(s->tag, false, s->vmstate,
++                              true, s->devices, s->errp);
++    }
+     job_progress_update(&s->common, 1);
+ 
+     qmp_snapshot_job_free(s);
+@@ -3702,6 +3737,64 @@
+     job_start(&s->common);
+ }
+ 
++static bool fdisbull_snapshot_nodes(const char *vmstate, strList *devices,
++                                    Error **errp)
++{
++    if (strcmp(vmstate, "disk0") || !devices || devices->next ||
++        strcmp(devices->value, "disk0")) {
++        error_setg(errp, "Instrumented local checkpoint requires only disk0");
++        return false;
++    }
++    return true;
++}
++
++void qmp_x_fdisbull_instrumented_snapshot_save(const char *job_id,
++                                              const char *tag,
++                                              const char *vmstate,
++                                              strList *devices,
++                                              const char *token, Error **errp)
++{
++    SnapshotJob *s;
++
++    if (!fdisbull_snapshot_nodes(vmstate, devices, errp)) {
++        return;
++    }
++    s = job_create(job_id, &snapshot_save_job_driver, NULL,
++                   qemu_get_aio_context(), JOB_MANUAL_DISMISS,
++                   NULL, NULL, errp);
++    if (!s) {
++        return;
++    }
++    s->tag = g_strdup(tag);
++    s->vmstate = g_strdup(vmstate);
++    s->devices = QAPI_CLONE(strList, devices);
++    s->instrumented_token = g_strdup(token);
++    job_start(&s->common);
++}
++
++void qmp_x_fdisbull_instrumented_snapshot_load(const char *job_id,
++                                              const char *tag,
++                                              const char *vmstate,
++                                              strList *devices, Error **errp)
++{
++    SnapshotJob *s;
++
++    if (!fdisbull_snapshot_nodes(vmstate, devices, errp)) {
++        return;
++    }
++    s = job_create(job_id, &snapshot_load_job_driver, NULL,
++                   qemu_get_aio_context(), JOB_MANUAL_DISMISS,
++                   NULL, NULL, errp);
++    if (!s) {
++        return;
++    }
++    s->tag = g_strdup(tag);
++    s->vmstate = g_strdup(vmstate);
++    s->devices = QAPI_CLONE(strList, devices);
++    s->instrumented_load = true;
++    job_start(&s->common);
++}
++
+ void qmp_snapshot_delete(const char *job_id,
+                          const char *tag,
+                          strList *devices,
+--- /dev/null
++++ b/qapi/fdisbull-instrumented-checkpoint.json
+@@ -0,0 +1,214 @@
++# Bounded fDisBull local process checkpoint for native observers.
++{ 'include': 'run-state.json' }
++{ 'include': 'fdisbull-audio.json' }
++{ 'include': 'fdisbull-display.json' }
++{ 'include': 'fdisbull-retrace.json' }
++{ 'include': 'fdisbull-vga-configuration.json' }
++
++##
++# @FdisbullInstrumentedAudioState:
++#
++# Retained fDisBull PC-speaker capture metadata and bounded PCM prefix.
++#
++# @profile: Admitted native observer profile.
++#
++# @active: Whether its native callback or timer remains active.
++#
++# @info: Validated native observation at the stopped capture time.
++#
++# @pcm-base64: Canonical base64 of retained mono unsigned 8-bit PCM.
++#
++# @core-base64: Bounded pending mixer state for the exact admitted output graph.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInstrumentedAudioState',
++  'data': { 'profile': 'str', 'active': 'bool', 'info': 'FdisbullAudioInfo',
++            'pcm-base64': 'str', 'core-base64': 'str' } }
++
++##
++# @FdisbullInstrumentedDisplayState:
++#
++# Retained renderer publication and timer owner for one display session.
++#
++# @profile: Admitted native observer profile.
++#
++# @active: Whether its native callback or timer remains active.
++#
++# @device-path: Canonical primary VGA device path.
++#
++# @console-index: Selected primary console index.
++#
++# @next-deadline-ns: Absolute virtual display timer deadline or minus one.
++#
++# @info: Validated native observation at the stopped capture time.
++#
++# @rgb-base64: Canonical base64 of the retained RGB publication.
++#
++# @published-configuration: Configuration observed when the retained publication was made.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInstrumentedDisplayState',
++  'data': { 'profile': 'str', 'active': 'bool', 'device-path': 'str',
++            'console-index': 'int', 'next-deadline-ns': 'int',
++            'info': 'FdisbullDisplayInfo', 'rgb-base64': 'str',
++            '*published-configuration': 'FdisbullVgaConfigurationSnapshot' } }
++
++##
++# @FdisbullInstrumentedRetraceState:
++#
++# Exact previously admitted primary VGA retrace owner and observation.
++#
++# @profile: Admitted native observer profile.
++#
++# @admitted: Whether the precise retrace model was admitted.
++#
++# @device-path: Canonical primary VGA device path.
++#
++# @info: Validated native observation at the stopped capture time.
++#
++# @configuration: Current VGA configuration and generation.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInstrumentedRetraceState',
++  'data': { 'profile': 'str', 'admitted': 'bool', '*device-path': 'str',
++            '*info': 'FdisbullRetraceInfo',
++            '*configuration': 'FdisbullVgaConfigurationSnapshot' } }
++
++##
++# @FdisbullInstrumentedCheckpointState:
++#
++# Bounded sidecar for process-local fDisBull instrumentation owners.  Guest
++# CPU, RAM and device state is carried by the QEMU internal snapshot.
++#
++# @format: Versioned private instrumentation state format.
++#
++# @virtual-ns: Exact stopped QEMU virtual-clock time in nanoseconds.
++#
++# @source-epoch: Native clock owner epoch at capture.
++#
++# @clock: Resolved stopped clock budget history.
++#
++# @audio: Retained audio observer owner and data.
++#
++# @display: Retained renderer observer owner and data.
++#
++# @retrace: Retained precise retrace owner and provenance.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInstrumentedCheckpointState',
++  'data': { 'format': 'str', 'virtual-ns': 'int', 'source-epoch': 'uint64',
++            'clock': 'FdisbullClockInfo', 'audio': 'FdisbullInstrumentedAudioState',
++            'display': 'FdisbullInstrumentedDisplayState',
++            'retrace': 'FdisbullInstrumentedRetraceState' } }
++
++##
++# @FdisbullInstrumentedCheckpointExport:
++#
++# Versioned native state record and one-use local snapshot authorization.
++#
++# @state: Versioned native instrumentation state serialized as JSON.
++#
++# @sha256: SHA-256 of the exact serialized state bytes.
++#
++# @token: One-use authorization bound to the exact exported state.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInstrumentedCheckpointExport',
++  'data': { 'state': 'str', 'sha256': 'str', 'token': 'str' } }
++
++##
++# @FdisbullInstrumentedCheckpointReceipt:
++#
++# Receipt for one successfully imported native checkpoint owner set.
++#
++# @format: Versioned private instrumentation state format.
++#
++# @virtual-ns: Exact stopped QEMU virtual-clock time in nanoseconds.
++#
++# @new-epoch: Fresh native clock owner epoch after restore.
++#
++# @audio-token: Fresh token for the imported audio window.
++#
++# @display-token: Fresh token for the imported display window.
++#
++# @retrace-device: Canonical device of the imported retrace owner.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInstrumentedCheckpointReceipt',
++  'data': { 'format': 'str', 'virtual-ns': 'int', 'new-epoch': 'uint64',
++            '*audio-token': 'str', '*display-token': 'str',
++            '*retrace-device': 'str' } }
++
++##
++# @x-fdisbull-instrumented-checkpoint-export:
++#
++# Export stopped native observer state and one-use snapshot authorization.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-instrumented-checkpoint-export',
++  'returns': 'FdisbullInstrumentedCheckpointExport' }
++##
++# @x-fdisbull-instrumented-checkpoint-import:
++#
++# Rebind a sidecar after the scoped local machine snapshot has loaded.
++#
++# @state: Versioned native instrumentation state serialized as JSON.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-instrumented-checkpoint-import',
++  'data': { 'state': 'str' }, 'returns': 'FdisbullInstrumentedCheckpointReceipt' }
++##
++# @x-fdisbull-instrumented-checkpoint-status:
++#
++# Return the successfully imported observer ownership receipt.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-instrumented-checkpoint-status',
++  'returns': 'FdisbullInstrumentedCheckpointReceipt' }
++##
++# @x-fdisbull-instrumented-snapshot-save:
++#
++# Save one local disk snapshot using its exact native export token.
++#
++# @job-id: Unique local snapshot job identifier.
++#
++# @tag: Internal snapshot name in the private disk.
++#
++# @vmstate: The admitted VM-state block node, disk0.
++#
++# @devices: The sole admitted snapshot device, disk0.
++#
++# @token: One-use authorization bound to the exact exported state.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-instrumented-snapshot-save',
++  'data': { 'job-id': 'str', 'tag': 'str', 'vmstate': 'str',
++            'devices': ['str'], 'token': 'str' } }
++##
++# @x-fdisbull-instrumented-snapshot-load:
++#
++# Load one local disk snapshot and require native observer import.
++#
++# @job-id: Unique local snapshot job identifier.
++#
++# @tag: Internal snapshot name in the private disk.
++#
++# @vmstate: The admitted VM-state block node, disk0.
++#
++# @devices: The sole admitted snapshot device, disk0.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-instrumented-snapshot-load',
++  'data': { 'job-id': 'str', 'tag': 'str', 'vmstate': 'str',
++            'devices': ['str'] } }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -67,6 +67,7 @@
+     'fdisbull-vga-configuration',
+     'fdisbull-layers',
+   'fdisbull-dos-checkpoint',
++  'fdisbull-instrumented-checkpoint',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -70,6 +70,7 @@
+ { 'include': 'fdisbull-vga-configuration.json' }
+ { 'include': 'fdisbull-layers.json' }
+ { 'include': 'fdisbull-dos-checkpoint.json' }
++{ 'include': 'fdisbull-instrumented-checkpoint.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- a/system/fdisbull-audio.c
++++ b/system/fdisbull-audio.c
+@@ -7,12 +7,14 @@
+  */
+ #include "qemu/osdep.h"
+ #include "audio/audio.h"
++#include "hw/audio/pcspk.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-audio.h"
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/timer.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/reset.h"
+ 
+ #define AUDIO_RATE 32000
+@@ -39,9 +41,10 @@
+     Error *migration_blocker;
+ } audio_window;
+ 
++
+ static void audio_reset(void *opaque)
+ {
+-    if (audio_window.token) {
++    if (!fdisbull_instrumented_checkpoint_busy() && audio_window.token) {
+         audio_window.invalidated = true;
+     }
+ }
+@@ -172,7 +175,10 @@
+         .destroy = audio_destroy,
+     };
+ 
+-    if (!audio_guard(errp)) {
++    if (fdisbull_instrumented_checkpoint_busy() || !audio_guard(errp)) {
++        if (fdisbull_instrumented_checkpoint_busy()) {
++            error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        }
+         return NULL;
+     }
+     if (audio_window.capture || !token[0] || strlen(token) > 128 ||
+@@ -212,6 +218,10 @@
+ 
+ FdisbullAudioInfo *qmp_x_fdisbull_stop_audio(const char *token, Error **errp)
+ {
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
+     if (!audio_guard(errp) || !audio_token(token, errp)) {
+         return NULL;
+     }
+@@ -257,3 +267,172 @@
+     }
+     return audio_info();
+ }
++
++
++FdisbullAudioInfo *fdisbull_audio_checkpoint_info(Error **errp)
++{
++    return qmp_x_fdisbull_query_audio(errp);
++}
++
++char *fdisbull_audio_checkpoint_pcm_base64(void)
++{
++    if (!audio_window.pcm || !audio_window.frames) {
++        return g_strdup("");
++    }
++    return g_base64_encode(audio_window.pcm, audio_window.frames);
++}
++
++static bool audio_checkpoint_decode(const FdisbullInstrumentedAudioState *state,
++                                    g_autofree uint8_t **pcm,
++                                    size_t *pcm_bytes, Error **errp)
++{
++    g_autofree char *canonical = NULL;
++    FdisbullAudioChunkList *chunk;
++    uint64_t frames = 0;
++    unsigned nchunks = 0;
++
++    if (!state || !state->profile ||
++        (strcmp(state->profile, "off") && strcmp(state->profile, "pc-speaker")) ||
++        !state->info || !state->core_base64 || strlen(state->core_base64) > 8 * 1024 * 1024 ||
++        !state->pcm_base64 || strlen(state->pcm_base64) > 4 * MAX_FRAMES / 3 + 8 ||
++        state->info->api_version != 1 || state->info->rate != AUDIO_RATE ||
++        state->info->channels != 1 || strcmp(state->info->format, "u8") ||
++        state->info->max_frames > MAX_FRAMES || state->info->frames > state->info->max_frames ||
++        state->info->dropped_frames ||
++        (state->info->has_start_ns != (state->info->token != NULL))) {
++        error_setg(errp, "Invalid native audio checkpoint profile or metadata");
++        return false;
++    }
++    *pcm = g_base64_decode(state->pcm_base64, pcm_bytes);
++    canonical = g_base64_encode(*pcm, *pcm_bytes);
++    if (!canonical || strcmp(canonical, state->pcm_base64) ||
++        *pcm_bytes != state->info->frames || *pcm_bytes > MAX_FRAMES) {
++        error_setg(errp, "Native audio checkpoint PCM length or encoding differs");
++        return false;
++    }
++    for (chunk = state->info->chunks; chunk; chunk = chunk->next) {
++        FdisbullAudioChunk *item = chunk->value;
++        if (!item || !item->frames || item->first_frame != frames ||
++            item->virtual_ns < state->info->start_ns ||
++            item->virtual_ns > state->info->virtual_ns ||
++            UINT64_MAX - frames < item->frames || ++nchunks > MAX_CHUNKS) {
++            error_setg(errp, "Invalid native audio checkpoint callback timeline");
++            return false;
++        }
++        frames += item->frames;
++    }
++    if (frames != state->info->frames ||
++        (state->active != !strcmp(state->info->state, "capturing")) ||
++        (state->active && strcmp(state->profile, "pc-speaker")) ||
++        (!state->info->token && (state->active || state->info->frames || nchunks)) ||
++        (state->info->token && strcmp(state->profile, "pc-speaker"))) {
++        error_setg(errp, "Native audio checkpoint state and retained frames disagree");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_audio_checkpoint_validate(
++    const FdisbullInstrumentedAudioState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp)
++{
++    g_autofree uint8_t *pcm = NULL;
++    size_t pcm_bytes = 0;
++
++    if (!audio_checkpoint_decode(state, &pcm, &pcm_bytes, errp)) {
++        return false;
++    }
++    if (state->info->epoch != source_epoch || state->info->virtual_ns != virtual_ns ||
++        state->info->state == NULL || !strcmp(state->info->state, "invalidated") ||
++        !strcmp(state->info->state, "overflow")) {
++        error_setg(errp, "Native audio checkpoint epoch or state is invalid");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_audio_checkpoint_restore(
++    const FdisbullInstrumentedAudioState *state, uint64_t epoch,
++    const char **new_token, Error **errp)
++{
++    g_autofree uint8_t *pcm = NULL;
++    size_t pcm_bytes = 0;
++    FdisbullAudioChunkList *chunk;
++    AudioState *audio = NULL;
++    struct audsettings settings = { AUDIO_RATE, 1, AUDIO_FORMAT_U8, 0 };
++    struct audio_capture_ops ops = {
++        .notify = audio_notify, .capture = audio_capture, .destroy = audio_destroy,
++    };
++    bool expected_enabled;
++
++    assert(bql_locked());
++    if (!audio_checkpoint_decode(state, &pcm, &pcm_bytes, errp) ||
++        !fdisbull_audio_checkpoint_validate(state, state->info->epoch,
++                                            state->info->virtual_ns, errp)) {
++        return false;
++    }
++    if (!fdisbull_pcspk_checkpoint_rearm(errp)) {
++        return false;
++    }
++    if (audio_window.capture || audio_window.token) {
++        error_setg(errp, "Destination already owns a native audio window");
++        return false;
++    }
++    if (state->info->token && !audio_window.migration_blocker) {
++        error_setg(&audio_window.migration_blocker,
++                   "fDisBull audio capture windows do not support generic migration");
++        if (migrate_add_blocker(&audio_window.migration_blocker, errp) < 0) {
++            return false;
++        }
++    }
++    if (state->active) {
++        audio = audio_state_by_name("fdisbull-pc", errp);
++        if (!audio) {
++            return false;
++        }
++    }
++    audio_window.initialized = true;
++    qemu_register_reset(audio_reset, NULL);
++    audio_window.invalidated = false;
++    audio_window.epoch = epoch;
++    audio_window.token = state->info->token ? g_uuid_string_random() : NULL;
++    audio_window.start_ns = state->info->has_start_ns ? state->info->start_ns : 0;
++    audio_window.stop_ns = state->info->has_stop_ns ? state->info->stop_ns : 0;
++    audio_window.max_frames = state->info->max_frames;
++    audio_window.frames = state->info->frames;
++    audio_window.dropped = state->info->dropped_frames;
++    audio_window.nchunks = 0;
++    for (chunk = state->info->chunks; chunk; chunk = chunk->next) {
++        audio_window.chunks[audio_window.nchunks++] = *chunk->value;
++    }
++    g_free(audio_window.pcm);
++    audio_window.pcm = g_malloc(MAX(1, audio_window.max_frames));
++    if (pcm_bytes) {
++        memcpy(audio_window.pcm, pcm, pcm_bytes);
++    }
++    audio_window.overflow = !strcmp(state->info->state, "overflow");
++    audio_window.stopped = state->info->has_stop_ns;
++    audio_window.enabled = state->info->enabled;
++    expected_enabled = state->info->enabled;
++    if (state->active) {
++        audio_window.capture = AUD_add_capture(audio, &settings, &ops, NULL);
++        if (!audio_window.capture || audio_window.enabled != expected_enabled) {
++            audio_window.invalidated = true;
++            error_setg(errp, "Restored native PC-speaker capture profile differs");
++            return false;
++        }
++    }
++    if (!fdisbull_audio_output_checkpoint_import(state->core_base64, errp)) {
++        audio_window.invalidated = true;
++        return false;
++    }
++    if (new_token) {
++        *new_token = audio_window.token;
++    }
++    return true;
++}
++
++bool fdisbull_audio_checkpoint_owns_blocker(const Error *reason)
++{
++    return reason && audio_window.migration_blocker == reason;
++}
+--- a/system/fdisbull-clock.c
++++ b/system/fdisbull-clock.c
+@@ -18,6 +18,7 @@
+ #include "qemu/timer.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/replay.h"
+ #include "system/runstate.h"
+ 
+@@ -47,6 +48,12 @@
+     .state = FDISBULL_CLOCK_BUDGET_STATE_IDLE,
+ };
+ 
++
++bool fdisbull_clock_checkpoint_owns_blocker(const Error *reason)
++{
++    return reason && clock_state.migration_blocker == reason;
++}
++
+ static bool fdisbull_clock_safe_state(RunState state)
+ {
+     return state == RUN_STATE_PRELAUNCH || state == RUN_STATE_DEBUG ||
+@@ -83,6 +90,9 @@
+ {
+     CPUState *cpu;
+ 
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        return true;
++    }
+     if (clock_state.pending_stop) {
+         return true;
+     }
+@@ -121,11 +131,16 @@
+ 
+ void fdisbull_clock_on_reset(void)
+ {
+-    fdisbull_clock_invalidate();
++    if (!fdisbull_instrumented_checkpoint_busy()) {
++        fdisbull_clock_invalidate();
++    }
+ }
+ 
+ void fdisbull_clock_on_runstate_change(RunState state)
+ {
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        return;
++    }
+     if (state != RUN_STATE_RUNNING && !fdisbull_clock_safe_state(state) &&
+         !clock_state.invalidated) {
+         fdisbull_clock_invalidate();
+@@ -136,7 +151,7 @@
+                                          RunState state)
+ {
+     assert(bql_locked());
+-    if (running) {
++    if (running || fdisbull_instrumented_checkpoint_busy()) {
+         return;
+     }
+ 
+@@ -241,6 +256,10 @@
+ 
+ static bool fdisbull_clock_require_stopped(Error **errp)
+ {
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return false;
++    }
+     if (clock_state.pending_stop) {
+         error_setg(errp, "fDisBull clock stop is still pending; close the VM");
+         return false;
+@@ -329,3 +348,61 @@
+     }
+     return fdisbull_clock_info();
+ }
++
++
++bool fdisbull_clock_checkpoint_validate(const FdisbullClockInfo *info,
++                                       int64_t virtual_ns, Error **errp)
++{
++    assert(bql_locked());
++    fdisbull_clock_init();
++    if (!info || info->api_version != FDISBULL_CLOCK_API_VERSION ||
++        !info->budget_supported || info->running || info->pending_stop ||
++        info->virtual_ns != virtual_ns || virtual_ns < 0 ||
++        info->epoch == 0 || info->epoch == UINT64_MAX ||
++        (info->status != RUN_STATE_PRELAUNCH &&
++         info->status != RUN_STATE_PAUSED && info->status != RUN_STATE_DEBUG) ||
++        info->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        info->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED ||
++        info->budget_state == FDISBULL_CLOCK_BUDGET_STATE_INVALIDATED ||
++        qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) != virtual_ns ||
++        !fdisbull_clock_single_cpu(true)) {
++        error_setg(errp, "Instrumented checkpoint clock is not the same safe stopped profile");
++        return false;
++    }
++    return true;
++}
++
++uint64_t fdisbull_clock_checkpoint_restore(const FdisbullClockInfo *info,
++                                           Error **errp)
++{
++    assert(bql_locked());
++    if (!fdisbull_clock_checkpoint_validate(info, info ? info->virtual_ns : -1,
++                                            errp)) {
++        return 0;
++    }
++    if (info->epoch == UINT64_MAX) {
++        error_setg(errp, "Instrumented checkpoint clock epoch cannot advance");
++        return 0;
++    }
++    if (info->budget_token && !clock_state.migration_blocker) {
++        error_setg(&clock_state.migration_blocker,
++                   "fDisBull virtual-clock budgets do not support migration");
++        if (migrate_add_blocker(&clock_state.migration_blocker, errp) < 0) {
++            return 0;
++        }
++    }
++    timer_del(&clock_state.timer);
++    clock_state.invalidated = false;
++    clock_state.pending_stop = false;
++    clock_state.epoch = info->epoch + 1;
++    clock_state.state = info->budget_state;
++    g_free(clock_state.token);
++    clock_state.token = g_strdup(info->budget_token);
++    clock_state.start_ns = info->has_budget_start_ns ? info->budget_start_ns : 0;
++    clock_state.deadline_ns = info->has_budget_deadline_ns ? info->budget_deadline_ns : 0;
++    clock_state.has_fired = info->has_budget_fired_ns;
++    clock_state.fired_ns = info->has_budget_fired_ns ? info->budget_fired_ns : 0;
++    clock_state.has_stopped = info->has_budget_stopped_ns;
++    clock_state.stopped_ns = info->has_budget_stopped_ns ? info->budget_stopped_ns : 0;
++    return clock_state.epoch;
++}
+--- a/system/fdisbull-display.c
++++ b/system/fdisbull-display.c
+@@ -21,6 +21,7 @@
+ #include "qemu/main-loop.h"
+ #include "qemu/timer.h"
+ #include "system/fdisbull-display.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/fdisbull-retrace.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+@@ -57,6 +58,7 @@
+     Error *migration_blocker;
+ } display_window;
+ 
++
+ static void display_timer_cb(void *opaque);
+ 
+ static void display_invalidate(const char *reason)
+@@ -76,14 +78,14 @@
+ 
+ static void display_reset(void *opaque)
+ {
+-    if (display_window.token) {
++    if (!fdisbull_instrumented_checkpoint_busy() && display_window.token) {
+         display_invalidate("reset invalidated the observer");
+     }
+ }
+ 
+ static void display_vm_state_change(void *opaque, bool running, RunState state)
+ {
+-    if (display_window.token && !running &&
++    if (!fdisbull_instrumented_checkpoint_busy() && display_window.token && !running &&
+         state != RUN_STATE_PRELAUNCH && state != RUN_STATE_PAUSED &&
+         state != RUN_STATE_DEBUG) {
+         display_invalidate("unsupported VM state invalidated the observer");
+@@ -264,7 +266,8 @@
+     CPUState *cpu;
+ 
+     assert(bql_locked());
+-    if (!display_window.observing || display_window.invalidated) {
++    if (fdisbull_instrumented_checkpoint_busy() ||
++        !display_window.observing || display_window.invalidated) {
+         return;
+     }
+     clock = qmp_x_fdisbull_query_clock(NULL);
+@@ -336,6 +339,10 @@
+     Object *dev;
+     int64_t now;
+ 
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
+     if (!display_guard(errp)) {
+         return NULL;
+     }
+@@ -396,6 +403,10 @@
+ 
+ FdisbullDisplayInfo *qmp_x_fdisbull_stop_display(const char *token, Error **errp)
+ {
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
+     if (!display_guard(errp) || !display_token(token, errp)) {
+         return NULL;
+     }
+@@ -595,3 +606,185 @@
+     /* Empty/new windows are evidence, not permission to refresh or substitute. */
+     return display_configuration_info(retrace, errp);
+ }
++
++FdisbullDisplayInfo *fdisbull_display_checkpoint_info(Error **errp)
++{
++    return qmp_x_fdisbull_query_display(errp);
++}
++
++char *fdisbull_display_checkpoint_rgb_base64(void)
++{
++    if (!display_window.rgb || !display_window.rgb_bytes) {
++        return g_strdup("");
++    }
++    return g_base64_encode(display_window.rgb, display_window.rgb_bytes);
++}
++
++char *fdisbull_display_checkpoint_device_path(void)
++{
++    if (!display_window.device) {
++        return g_strdup("");
++    }
++    return object_get_canonical_path(display_window.device);
++}
++
++int64_t fdisbull_display_checkpoint_deadline(void)
++{
++    return display_window.initialized ? timer_expire_time_ns(&display_window.timer) : -1;
++}
++
++FdisbullVgaConfigurationSnapshot *fdisbull_display_checkpoint_configuration(void)
++{
++    return display_window.published_configuration ?
++        QAPI_CLONE(FdisbullVgaConfigurationSnapshot,
++                   display_window.published_configuration) : NULL;
++}
++
++static bool display_checkpoint_decode(
++    const FdisbullInstrumentedDisplayState *state,
++    g_autofree uint8_t **rgb, size_t *rgb_bytes, Error **errp)
++{
++    g_autofree char *canonical = NULL;
++    FdisbullDisplayInfo *info;
++    bool has_pixels;
++
++    if (!state || !state->profile ||
++        (strcmp(state->profile, "off") && strcmp(state->profile, "renderer")) ||
++        !state->info || !state->rgb_base64 ||
++        strlen(state->rgb_base64) > (DISPLAY_MAX_RGB_BYTES * 4 / 3 + 8) ||
++        state->console_index != 0 || state->next_deadline_ns < -1) {
++        error_setg(errp, "Invalid native display checkpoint profile or metadata");
++        return false;
++    }
++    info = state->info;
++    has_pixels = info->has_width && info->has_height;
++    *rgb = g_base64_decode(state->rgb_base64, rgb_bytes);
++    canonical = g_base64_encode(*rgb, *rgb_bytes);
++    if (!canonical || strcmp(canonical, state->rgb_base64) ||
++        *rgb_bytes > DISPLAY_MAX_RGB_BYTES ||
++        (has_pixels && (info->width <= 0 || info->height <= 0 ||
++                        (uint64_t)info->width * info->height * 3 != *rgb_bytes)) ||
++        (!has_pixels && *rgb_bytes) ||
++        (!!state->published_configuration != has_pixels) ||
++        (state->active != !strcmp(info->state, "observing")) ||
++        (state->active && (strcmp(state->profile, "renderer") ||
++                           !state->device_path[0] || state->next_deadline_ns < 0)) ||
++        (!info->token && (state->active || has_pixels || info->updates))) {
++        error_setg(errp, "Native display checkpoint publication or timer differs");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_display_checkpoint_validate(
++    const FdisbullInstrumentedDisplayState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp)
++{
++    g_autofree uint8_t *rgb = NULL;
++    size_t rgb_bytes = 0;
++
++    if (!display_checkpoint_decode(state, &rgb, &rgb_bytes, errp)) {
++        return false;
++    }
++    if (state->info->api_version != 1 || state->info->epoch != source_epoch ||
++        state->info->virtual_ns != virtual_ns ||
++        !strcmp(state->info->state, "invalidated") ||
++        (state->info->token && !state->info->has_start_ns) ||
++        (state->active && state->info->period_ns < DISPLAY_MIN_PERIOD_NS)) {
++        error_setg(errp, "Native display checkpoint epoch or observer state is invalid");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_display_checkpoint_restore(
++    const FdisbullInstrumentedDisplayState *state, uint64_t epoch,
++    const char **new_token, Error **errp)
++{
++    g_autofree uint8_t *rgb = NULL;
++    size_t rgb_bytes = 0;
++    QemuConsole *console = NULL;
++    Object *device = NULL;
++    g_autofree char *path = NULL;
++
++    assert(bql_locked());
++    if (!display_checkpoint_decode(state, &rgb, &rgb_bytes, errp) ||
++        !fdisbull_display_checkpoint_validate(state, state->info->epoch,
++                                             state->info->virtual_ns, errp)) {
++        return false;
++    }
++    if (display_window.token || display_window.observing || display_window.device) {
++        error_setg(errp, "Destination already owns a native display observer");
++        return false;
++    }
++    if (state->info->token) {
++        if (!display_window.migration_blocker) {
++            error_setg(&display_window.migration_blocker,
++                       "fDisBull retained display does not support migration");
++            if (migrate_add_blocker(&display_window.migration_blocker, errp) < 0) {
++                return false;
++            }
++        }
++        if (!display_console(&console, &device)) {
++            error_setg(errp, "Restored display requires headless synchronous standard VGA");
++            return false;
++        }
++        path = object_get_canonical_path(device);
++        if (!path || strcmp(path, state->device_path)) {
++            error_setg(errp, "Restored display VGA identity differs from its checkpoint");
++            return false;
++        }
++    }
++    if (!display_window.initialized) {
++        display_window.initialized = true;
++        timer_init_ns(&display_window.timer, QEMU_CLOCK_VIRTUAL,
++                      display_timer_cb, NULL);
++        qemu_register_reset(display_reset, NULL);
++        qemu_add_vm_change_state_handler(display_vm_state_change, NULL);
++    }
++    display_window.invalidated = false;
++    display_window.observing = state->active;
++    display_window.stopped = !strcmp(state->info->state, "stopped");
++    display_window.epoch = epoch;
++    display_window.failure = NULL;
++    display_window.start_ns = state->info->has_start_ns ? state->info->start_ns : 0;
++    display_window.stop_ns = state->info->has_stop_ns ? state->info->stop_ns : 0;
++    display_window.period_ns = state->info->period_ns;
++    display_window.updates = state->info->updates;
++    display_window.published_ns = state->info->has_published_ns ?
++        state->info->published_ns : 0;
++    display_window.width = state->info->has_width ? state->info->width : 0;
++    display_window.height = state->info->has_height ? state->info->height : 0;
++    display_window.rgb_bytes = rgb_bytes;
++    g_free(display_window.rgb);
++    display_window.rgb = rgb_bytes ? g_memdup2(rgb, rgb_bytes) : NULL;
++    g_clear_pointer(&display_window.published_configuration,
++                    qapi_free_FdisbullVgaConfigurationSnapshot);
++    display_window.published_configuration = state->published_configuration ?
++        QAPI_CLONE(FdisbullVgaConfigurationSnapshot,
++                   state->published_configuration) : NULL;
++    if (display_window.published_configuration) {
++        display_window.published_configuration->epoch = epoch;
++    }
++    g_free(display_window.token);
++    display_window.token = state->info->token ? g_uuid_string_random() : NULL;
++    if (state->info->token) {
++        object_ref(OBJECT(console));
++        object_ref(device);
++        display_window.console = console;
++        display_window.device = device;
++    }
++    if (display_window.observing && !display_rearm(state->info->virtual_ns)) {
++        error_setg(errp, "Restored display timer phase is invalid");
++        return false;
++    }
++    if (new_token) {
++        *new_token = display_window.token;
++    }
++    return true;
++}
++
++bool fdisbull_display_checkpoint_owns_blocker(const Error *reason)
++{
++    return reason && display_window.migration_blocker == reason;
++}
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -21,6 +21,7 @@
+ #include "system/fdisbull-clock.h"
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-retrace.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+ #include "ui/input.h"
+@@ -69,6 +70,30 @@
+     .state = FDISBULL_INPUT_STATE_IDLE,
+ };
+ 
++
++bool fdisbull_input_checkpoint_safe(Error **errp)
++{
++    assert(bql_locked());
++    if (input_schedule.invalidated ||
++        input_schedule.state == FDISBULL_INPUT_STATE_ARMED ||
++        input_schedule.state == FDISBULL_INPUT_STATE_FAILED ||
++        input_schedule.batch || input_schedule.retrace || input_schedule.press ||
++        input_schedule.typing || input_schedule.click || input_schedule.motion) {
++        error_setg(errp, "Instrumented checkpoint requires no pending native input schedule");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_input_checkpoint_owns_blocker(const Error *reason)
++{
++    return reason && input_schedule.migration_blocker == reason &&
++           input_schedule.state != FDISBULL_INPUT_STATE_ARMED &&
++           !input_schedule.batch && !input_schedule.retrace &&
++           !input_schedule.press && !input_schedule.typing &&
++           !input_schedule.click && !input_schedule.motion;
++}
++
+ static void input_timer_cb(void *opaque);
+ 
+ static bool input_safe_state(RunState state)
+--- /dev/null
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -0,0 +1,385 @@
++/*
++ * Bounded sidecar for fDisBull's process-local clock, audio, display and
++ * retrace owners.  Guest CPU/RAM/device state stays in the QEMU snapshot.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "audio/audio.h"
++#include "hw/audio/pcspk.h"
++#include "hw/core/cpu.h"
++#include "migration/blocker.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-instrumented-checkpoint.h"
++#include "qapi/qapi-commands-fdisbull-audio.h"
++#include "qapi/qapi-commands-fdisbull-display.h"
++#include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "qapi/qapi-commands-fdisbull-vga-configuration.h"
++#include "qapi/clone-visitor.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qapi/qapi-visit-fdisbull-instrumented-checkpoint.h"
++#include "qapi/qobject-input-visitor.h"
++#include "qapi/qobject-output-visitor.h"
++#include "qapi/visitor.h"
++#include "qemu/main-loop.h"
++#include "qobject/qjson.h"
++#include "qobject/qobject.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/runstate.h"
++
++static void checkpoint_qobject_unref(QObject *object)
++{
++    qobject_unref(object);
++}
++G_DEFINE_AUTOPTR_CLEANUP_FUNC(QObject, checkpoint_qobject_unref)
++
++static char *export_token;
++static char *export_json;
++static char *export_sha256;
++static bool save_busy;
++static bool restore_pending;
++static FdisbullInstrumentedCheckpointReceipt *last_receipt;
++
++static char *sha256_text(const char *text)
++{
++    return g_compute_checksum_for_data(G_CHECKSUM_SHA256,
++                                       (const guchar *)text, strlen(text));
++}
++
++static char *state_json(FdisbullInstrumentedCheckpointState *state,
++                        Error **errp)
++{
++    g_autoptr(QObject) object = NULL;
++    g_autoptr(GString) json = NULL;
++    Visitor *visitor = qobject_output_visitor_new(&object);
++
++    if (!visit_type_FdisbullInstrumentedCheckpointState(visitor, NULL,
++                                                       &state, errp)) {
++        visit_free(visitor);
++        return NULL;
++    }
++    visit_complete(visitor, &object);
++    visit_free(visitor);
++    json = qobject_to_json(object);
++    return json ? g_string_free(g_steal_pointer(&json), false) : NULL;
++}
++
++static FdisbullInstrumentedCheckpointState *parse_state(const char *text,
++                                                         Error **errp)
++{
++    g_autoptr(QObject) object = NULL;
++    FdisbullInstrumentedCheckpointState *state = NULL;
++    Visitor *visitor;
++
++    if (!text || strlen(text) > 48 * 1024 * 1024) {
++        error_setg(errp, "Instrumented checkpoint sidecar exceeds 48 MiB");
++        return NULL;
++    }
++    object = qobject_from_json(text, errp);
++    if (!object) {
++        return NULL;
++    }
++    visitor = qobject_input_visitor_new(object);
++    if (!visit_type_FdisbullInstrumentedCheckpointState(visitor, NULL,
++                                                        &state, errp)) {
++        visit_free(visitor);
++        return NULL;
++    }
++    visit_free(visitor);
++    return state;
++}
++
++bool fdisbull_instrumented_checkpoint_busy(void)
++{
++    return save_busy || restore_pending;
++}
++
++bool fdisbull_instrumented_checkpoint_allows_blocker(const Error *reason)
++{
++    return save_busy && reason &&
++        (fdisbull_clock_checkpoint_owns_blocker(reason) ||
++         fdisbull_audio_checkpoint_owns_blocker(reason) ||
++         fdisbull_display_checkpoint_owns_blocker(reason) ||
++         fdisbull_retrace_checkpoint_owns_blocker(reason) ||
++         fdisbull_input_checkpoint_owns_blocker(reason));
++}
++
++static FdisbullInstrumentedCheckpointState *capture_state(Error **errp)
++{
++    g_autoptr(FdisbullInstrumentedCheckpointState) result = NULL;
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(FdisbullAudioInfo) audio = NULL;
++    g_autoptr(FdisbullDisplayInfo) display = NULL;
++    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++    g_autoptr(FdisbullVgaConfigurationInfo) configuration = NULL;
++
++    assert(bql_locked());
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock || !fdisbull_clock_checkpoint_validate(clock, clock->virtual_ns,
++                                                     errp)) {
++        return NULL;
++    }
++    if (!fdisbull_input_checkpoint_safe(errp) ||
++        !fdisbull_pcspk_checkpoint_audio_safe(errp)) {
++        return NULL;
++    }
++    audio = fdisbull_audio_checkpoint_info(errp);
++    if (!audio) {
++        return NULL;
++    }
++    display = fdisbull_display_checkpoint_info(errp);
++    if (!display) {
++        return NULL;
++    }
++    if (fdisbull_retrace_checkpoint_admitted()) {
++        retrace = fdisbull_retrace_checkpoint_info(errp);
++        configuration = qmp_x_fdisbull_query_vga_configuration(errp);
++        if (!retrace || !configuration || !configuration->current) {
++            return NULL;
++        }
++    }
++
++    result = g_new0(FdisbullInstrumentedCheckpointState, 1);
++    result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    result->virtual_ns = clock->virtual_ns;
++    result->source_epoch = clock->epoch;
++    result->clock = g_steal_pointer(&clock);
++
++    result->audio = g_new0(FdisbullInstrumentedAudioState, 1);
++    result->audio->profile = g_strdup(audio->token ? "pc-speaker" : "off");
++    result->audio->active = !strcmp(audio->state, "capturing");
++    result->audio->info = g_steal_pointer(&audio);
++    result->audio->pcm_base64 = fdisbull_audio_checkpoint_pcm_base64();
++    result->audio->core_base64 = fdisbull_audio_output_checkpoint_export(errp);
++    if (!result->audio->core_base64) {
++        return NULL;
++    }
++
++    result->display = g_new0(FdisbullInstrumentedDisplayState, 1);
++    result->display->profile = g_strdup(display->token ? "renderer" : "off");
++    result->display->active = !strcmp(display->state, "observing");
++    result->display->device_path = fdisbull_display_checkpoint_device_path();
++    result->display->console_index = 0;
++    result->display->next_deadline_ns = fdisbull_display_checkpoint_deadline();
++    result->display->info = g_steal_pointer(&display);
++    result->display->rgb_base64 = fdisbull_display_checkpoint_rgb_base64();
++    result->display->published_configuration =
++        fdisbull_display_checkpoint_configuration();
++
++    result->retrace = g_new0(FdisbullInstrumentedRetraceState, 1);
++    result->retrace->admitted = retrace != NULL;
++    result->retrace->profile = g_strdup(retrace ? "precise" : "off");
++    if (retrace) {
++        result->retrace->device_path = fdisbull_retrace_checkpoint_device_path();
++        result->retrace->info = g_steal_pointer(&retrace);
++        result->retrace->configuration =
++            QAPI_CLONE(FdisbullVgaConfigurationSnapshot, configuration->current);
++    }
++    return g_steal_pointer(&result);
++}
++
++FdisbullInstrumentedCheckpointExport *
++qmp_x_fdisbull_instrumented_checkpoint_export(Error **errp)
++{
++    g_autoptr(FdisbullInstrumentedCheckpointState) state = NULL;
++    g_autofree char *json = NULL;
++    g_autofree char *digest = NULL;
++    FdisbullInstrumentedCheckpointExport *result;
++
++    assert(bql_locked());
++    state = capture_state(errp);
++    if (!state) {
++        return NULL;
++    }
++    json = state_json(state, errp);
++    if (!json) {
++        return NULL;
++    }
++    if (strlen(json) > 48 * 1024 * 1024) {
++        error_setg(errp, "Instrumented checkpoint sidecar exceeds 48 MiB");
++        return NULL;
++    }
++    digest = sha256_text(json);
++    g_free(export_token);
++    g_free(export_json);
++    g_free(export_sha256);
++    export_token = g_uuid_string_random();
++    export_json = g_strdup(json);
++    export_sha256 = g_strdup(digest);
++
++    result = g_new0(FdisbullInstrumentedCheckpointExport, 1);
++    result->state = g_steal_pointer(&json);
++    result->sha256 = g_steal_pointer(&digest);
++    result->token = g_strdup(export_token);
++    return result;
++}
++
++bool fdisbull_instrumented_checkpoint_snapshot_save_authorize(
++    const char *token, Error **errp)
++{
++    g_autoptr(FdisbullInstrumentedCheckpointState) state = NULL;
++    g_autofree char *json = NULL;
++    g_autofree char *digest = NULL;
++
++    assert(bql_locked());
++    if (!token || !export_token || strcmp(token, export_token) ||
++        save_busy || restore_pending) {
++        error_setg(errp, "Instrumented snapshot save token is absent, expired or already used");
++        return false;
++    }
++    state = capture_state(errp);
++    if (!state) {
++        return false;
++    }
++    json = state_json(state, errp);
++    if (!json) {
++        return false;
++    }
++    digest = sha256_text(json);
++    if (strcmp(json, export_json) || strcmp(digest, export_sha256)) {
++        error_setg(errp, "Native instrumented state changed after checkpoint export");
++        return false;
++    }
++    save_busy = true;
++    return true;
++}
++
++void fdisbull_instrumented_checkpoint_snapshot_save_complete(
++    const char *token, bool success)
++{
++    assert(bql_locked());
++    (void)success;
++    if (export_token && token && !strcmp(token, export_token)) {
++        save_busy = false;
++        g_clear_pointer(&export_token, g_free);
++        g_clear_pointer(&export_json, g_free);
++        g_clear_pointer(&export_sha256, g_free);
++    }
++}
++
++bool fdisbull_instrumented_checkpoint_snapshot_load_begin(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    Error *local_err = NULL;
++
++    assert(bql_locked());
++    if (save_busy || restore_pending) {
++        error_setg(errp, "An instrumented checkpoint transaction is already active");
++        return false;
++    }
++    clock = qmp_x_fdisbull_query_clock(&local_err);
++    if (!clock || clock->running || clock->pending_stop ||
++        !clock->budget_supported ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED ||
++        !fdisbull_input_checkpoint_safe(&local_err) ||
++        !fdisbull_clock_checkpoint_validate(clock, clock->virtual_ns,
++                                            &local_err)) {
++        if (!local_err) {
++            error_setg(&local_err, "Instrumented snapshot load requires a valid stopped virtual profile");
++        }
++        error_propagate(errp, local_err);
++        return false;
++    }
++    restore_pending = true;
++    return true;
++}
++
++void fdisbull_instrumented_checkpoint_snapshot_load_complete(bool success)
++{
++    assert(bql_locked());
++    if (!success) {
++        restore_pending = false;
++    }
++}
++
++static FdisbullInstrumentedCheckpointReceipt *receipt_copy(
++    const FdisbullInstrumentedCheckpointReceipt *source)
++{
++    return source ? QAPI_CLONE(FdisbullInstrumentedCheckpointReceipt, source) : NULL;
++}
++
++FdisbullInstrumentedCheckpointReceipt *
++qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
++{
++    g_autoptr(FdisbullInstrumentedCheckpointState) state = NULL;
++    g_autoptr(FdisbullClockInfo) current_clock = NULL;
++    const char *audio_token = NULL, *display_token = NULL, *retrace_device = NULL;
++    FdisbullInstrumentedCheckpointReceipt *receipt = NULL;
++    uint64_t epoch;
++
++    assert(bql_locked());
++    if (!restore_pending) {
++        error_setg(errp, "Instrumented checkpoint import requires its scoped snapshot load");
++        return NULL;
++    }
++    state = parse_state(json, errp);
++    if (!state) {
++        return NULL;
++    }
++    if (strcmp(state->format, FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT) ||
++        !state->clock || !state->audio || !state->display || !state->retrace ||
++        state->source_epoch != state->clock->epoch ||
++        state->virtual_ns != state->clock->virtual_ns) {
++        error_setg(errp, "Invalid instrumented checkpoint envelope identity");
++        return NULL;
++    }
++    if (!fdisbull_clock_checkpoint_validate(state->clock, state->virtual_ns, errp) ||
++        !fdisbull_audio_checkpoint_validate(state->audio, state->source_epoch,
++                                            state->virtual_ns, errp) ||
++        !fdisbull_display_checkpoint_validate(state->display, state->source_epoch,
++                                              state->virtual_ns, errp) ||
++        !fdisbull_retrace_checkpoint_validate(state->retrace, state->source_epoch,
++                                              state->virtual_ns, errp)) {
++        return NULL;
++    }
++    current_clock = qmp_x_fdisbull_query_clock(errp);
++    if (!current_clock) {
++        return NULL;
++    }
++    if (current_clock->running || current_clock->pending_stop ||
++        current_clock->virtual_ns != state->virtual_ns ||
++        !current_clock->budget_supported ||
++        qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) != state->virtual_ns) {
++        error_setg(errp, "Restored QEMU clock does not match the instrumented checkpoint");
++        return NULL;
++    }
++
++    epoch = fdisbull_clock_checkpoint_restore(state->clock, errp);
++    if (!epoch) {
++        return NULL;
++    }
++    if (!fdisbull_retrace_checkpoint_restore(state->retrace, epoch,
++                                             &retrace_device, errp) ||
++        !fdisbull_audio_checkpoint_restore(state->audio, epoch,
++                                           &audio_token, errp) ||
++        !fdisbull_display_checkpoint_restore(state->display, epoch,
++                                             &display_token, errp)) {
++        return NULL;
++    }
++    receipt = g_new0(FdisbullInstrumentedCheckpointReceipt, 1);
++    receipt->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    receipt->virtual_ns = state->virtual_ns;
++    receipt->new_epoch = epoch;
++    receipt->audio_token = audio_token ? g_strdup(audio_token) : NULL;
++    receipt->display_token = display_token ? g_strdup(display_token) : NULL;
++    receipt->retrace_device = retrace_device ? g_strdup(retrace_device) : NULL;
++    g_clear_pointer(&last_receipt, qapi_free_FdisbullInstrumentedCheckpointReceipt);
++    last_receipt = receipt_copy(receipt);
++    restore_pending = false;
++    return receipt;
++}
++
++FdisbullInstrumentedCheckpointReceipt *
++qmp_x_fdisbull_instrumented_checkpoint_status(Error **errp)
++{
++    assert(bql_locked());
++    if (restore_pending || !last_receipt) {
++        error_setg(errp, "No successfully imported instrumented checkpoint is owned");
++        return NULL;
++    }
++    return receipt_copy(last_receipt);
++}
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -34,3 +34,8 @@
+     error_setg(errp, "VGA configuration snapshots require standard PCI VGA support");
+     return NULL;
+ }
++
++bool fdisbull_retrace_checkpoint_owns_blocker(const Error *reason)
++{
++    return false;
++}
+--- a/system/fdisbull-retrace.c
++++ b/system/fdisbull-retrace.c
+@@ -16,6 +16,7 @@
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
+ #include "system/fdisbull-retrace.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/reset.h"
+ 
+ static struct {
+@@ -26,6 +27,7 @@
+     Error *migration_blocker;
+ } retrace_owner;
+ 
++
+ typedef struct PrimaryVGASearch {
+     unsigned count;
+     Object *device;
+@@ -46,7 +48,9 @@
+ static void retrace_reset(void *opaque)
+ {
+     assert(bql_locked());
+-    retrace_owner.invalidated = true;
++    if (!fdisbull_instrumented_checkpoint_busy()) {
++        retrace_owner.invalidated = true;
++    }
+ }
+ 
+ static bool retrace_guard(FdisbullClockInfo *clock, Error **errp)
+@@ -179,3 +183,100 @@
+     }
+     return retrace_snapshot(clock, false, errp);
+ }
++
++bool fdisbull_retrace_checkpoint_admitted(void)
++{
++    return retrace_owner.device != NULL && !retrace_owner.invalidated;
++}
++
++FdisbullRetraceInfo *fdisbull_retrace_checkpoint_info(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    assert(bql_locked());
++    if (!retrace_owner.device || retrace_owner.invalidated) {
++        return NULL;
++    }
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock || !retrace_guard(clock, errp)) {
++        return NULL;
++    }
++    return retrace_snapshot(clock, false, errp);
++}
++
++char *fdisbull_retrace_checkpoint_device_path(void)
++{
++    return retrace_owner.device_path ? g_strdup(retrace_owner.device_path) :
++                                      g_strdup("");
++}
++
++bool fdisbull_retrace_checkpoint_validate(
++    const FdisbullInstrumentedRetraceState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp)
++{
++    if (!state || !state->profile ||
++        (strcmp(state->profile, "off") && strcmp(state->profile, "precise")) ||
++        (state->admitted != !strcmp(state->profile, "precise")) ||
++        (state->admitted != (state->info != NULL)) ||
++        (state->admitted != (state->device_path != NULL)) ||
++        (state->admitted != (state->configuration != NULL))) {
++        error_setg(errp, "Invalid native retrace checkpoint profile or ownership");
++        return false;
++    }
++    if (state->admitted &&
++        (state->info->api_version != 1 || state->info->epoch != source_epoch ||
++         state->info->virtual_ns != virtual_ns || !state->device_path[0] ||
++         strcmp(state->info->device, state->device_path))) {
++        error_setg(errp, "Native retrace checkpoint identity or epoch differs");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_retrace_checkpoint_restore(
++    const FdisbullInstrumentedRetraceState *state, uint64_t epoch,
++    const char **device, Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) actual = NULL;
++
++    assert(bql_locked());
++    if (!fdisbull_retrace_checkpoint_validate(state, state->info ?
++            state->info->epoch : 0, state->info ? state->info->virtual_ns :
++            qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL), errp)) {
++        return false;
++    }
++    if (!state->admitted) {
++        if (device) {
++            *device = NULL;
++        }
++        return true;
++    }
++    if (!retrace_owner.device || retrace_owner.invalidated ||
++        !retrace_owner.device_path ||
++        strcmp(retrace_owner.device_path, state->device_path)) {
++        error_setg(errp, "Restored retrace requires the same freshly admitted VGA owner");
++        return false;
++    }
++    if (!pci_std_vga_fdisbull_checkpoint_restore(retrace_owner.device,
++            state->info, state->configuration, epoch,
++            state->info->virtual_ns, errp)) {
++        retrace_owner.invalidated = true;
++        return false;
++    }
++    retrace_owner.epoch = epoch;
++    retrace_owner.invalidated = false;
++    actual = fdisbull_retrace_checkpoint_info(errp);
++    if (!actual) {
++        retrace_owner.invalidated = true;
++        return false;
++    }
++    if (device) {
++        *device = retrace_owner.device_path;
++    }
++    return true;
++}
++
++bool fdisbull_retrace_checkpoint_owns_blocker(const Error *reason)
++{
++    return reason && retrace_owner.migration_blocker == reason;
++}
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -20,6 +20,7 @@
+   'fdisbull-input.c',
+   'fdisbull-layers.c',
+   'fdisbull-dos-checkpoint.c',
++  'fdisbull-instrumented-checkpoint.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',

@@ -1,7 +1,38 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
+recursive-include src/fdisbull/dos_guest *.asm
 recursive-include src/fdisbull/native_runtime *.c *.h *.m
+recursive-include native/qemu-clock *.md *.json *.patch
+recursive-include native/qemu-media *.md *.json *.patch
+recursive-include native/qemu-input *.md *.json *.patch
+recursive-include native/qemu-retrace *.md *.json *.patch
+recursive-include native/qemu-input-retrace *.md *.json *.patch
+recursive-include native/qemu-keyboard-press *.md *.json *.patch
+recursive-include native/qemu-keyboard-type *.md *.json *.patch
+recursive-include native/qemu-mouse-click *.md *.json *.patch
+recursive-include native/qemu-display-probe *.md *.json *.patch
+recursive-include native/qemu-vga-configuration *.md *.json *.patch
+recursive-include native/qemu-display-motion *.md *.json *.patch
+recursive-include native/qemu-dos-checkpoint *.md *.json *.patch
+recursive-include native/qemu-frame-history *.md *.json *.patch
+recursive-include native/qemu-frame-keys *.md *.json *.patch
+recursive-include native/qemu-instrumented-checkpoint *.md *.json *.patch
+recursive-include native/qemu-layers *.md *.json *.patch
+recursive-include native/qemu-task-private *.md *.json *.patch
+recursive-include native/qemu-task-context *.md *.json *.patch
+recursive-include native/qemu-task-scheduler *.md *.json *.patch
+recursive-include native/qemu-task-preemption *.md *.json *.patch
+recursive-include native/qemu-task-cascade *.md *.json *.patch
+recursive-include native/qemu-dos-provenance *.md *.json *.patch
+recursive-include native/qemu-dos-save-operations *.md *.json *.patch
+recursive-include native/qemu-dos-save-stop *.md *.json *.patch
+recursive-include native/qemu-chip8 *.md *.json *.patch
+recursive-include native/qemu-chip8-devices *.md *.json *.patch
+recursive-include native/qemu-chip8-classic *.md *.json *.patch
+recursive-include native/qemu-chip8-layers *.md *.json *.patch
+recursive-include native/qemu-chip8-frames *.md *.json *.patch
+recursive-include native/qemu-chip8-frame-keys *.md *.json *.patch
 recursive-include src/fdisbull/web_runtime *.mjs *.html
 recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
 include src/fdisbull/game_sources/LICENSE.txt
@@ -13,6 +44,7 @@ recursive-include src/fdisbull/skills *.md
 recursive-include skills/dos-target-media-rip *.md *.py
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
+include tests/offline_win16_oracle.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S
 include tests/fixtures/protected_mode_mouse.S
@@ -110,7 +142,11 @@ include docs/evidence/integration-025/dinopark.json
 include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
 recursive-include scripts *.py *.c *.sh *.txt
+include scripts/ci/RECOVERY.md
+include scripts/ci/fdisbull-ci-production.service
+include scripts/ci/qualification-policy.json
 prune examples
+prune fixtures/behavior-curriculum
 prune history
 prune experimental
 prune build

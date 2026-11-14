@@ -211,3 +211,24 @@ The small three-trial, 512-byte RAM fixture does not establish throughput for
 larger windows or real games. Selected-memory scanning and mounted-file hashing
 can grow with the target. Native checkpoint methods also restore more state, so
 the ratios are not claims of equivalent whole-machine functionality.
+
+## CHIP-8 v6 selected undo
+
+The experimental `qemu-chip8` v6 runtime with a checkpoint tool exposes the
+same `cpu_delta_start`, `cpu_delta_status`, `cpu_delta_record`,
+`cpu_delta_rewind` and `cpu_delta_recover` operation names. Its address space
+is flat 4 KiB RAM, with 1–64 nonoverlapping selected ranges and at most 4,096
+selected bytes. Selectable registers are `v0`–`vf`, `i` and `pc`; SP and stack
+selection are not supported. See the [CHIP-8 profile](CHIP8_QEMU.md#v6-selected-cpuram-undo)
+for usage, bounds and the eleven bounded native witnesses passed locally on
+macOS arm64.
+
+This is a freeze-only projection of observed single-step boundaries, with no
+instruction-retirement claim. A guarded native RAM transition preserves the
+active fetch view and layer definitions while advancing their generation; it
+does not create a new layer. It checks all unselected RAM and exposed
+registers after the inverse. Devices, RNG and key state remain current. A
+preservation policy cannot permit partial resume. A verified full anchor or
+checkpoint, including a reconstructed full/delta frame point, is required to
+thaw execution. The combined RAM and register operations are not an atomic
+whole-machine restore.

@@ -397,6 +397,37 @@ def instruction_memory_accesses(raw, address, arch, bits, cs=None, registers=Non
     if not isinstance(raw, bytes):
         raise ValueError('instruction bytes must be bytes')
     _integer(address, 'instruction address')
+    if arch == 'chip8':
+        if bits != 16 or cs is not None:
+            raise ValueError('CHIP-8 memory decoding requires 16-bit words and flat RAM')
+        from .chip8 import decode
+        instruction = decode(raw, address)
+        states = _states(registers)
+        if instruction is None:
+            return []
+        family = instruction['mnemonic']
+        word = int.from_bytes(raw[:2], 'big')
+        width = ((word >> 8) & 15) + 1 if family in ('save', 'load') else 3 if family == 'bcd' else word & 15 if family == 'drw' else 0
+        if not width:
+            return []
+        result = []
+        for state in states:
+            fact = _base_fact(ix.OpAccess.WRITE if family in ('save', 'bcd') else ix.OpAccess.READ, width, 12)
+            fact.update(operand_index=None, implicit=False, base_register='i',
+                        decoder='fdisbull CHIP-8 classic classifier')
+            target = state.get('i')
+            if target is None:
+                fact['unresolved_reasons'].append('unknown address register i')
+                fact.update(possible_start=0, possible_end=4096)
+            elif not 0 <= target < 4096 or target + width > 4096:
+                fact['unresolved_reasons'].append('CHIP-8 transfer exceeds 4 KiB RAM; no wrapped address inferred')
+                fact['assumptions'].append(dict(kind='register_constant', register='i', value=target))
+            else:
+                fact['assumptions'].append(dict(kind='register_constant', register='i', value=target))
+                fact['effective_offset'] = target
+                _interval(fact, target, width)
+            result.append(fact)
+        return result
     if arch not in ('x86', 'arm64', 'thumb') or bits not in ((16, 32, 64) if arch == 'x86' else (32,) if arch == 'thumb' else (64,)):
         raise ValueError('memory decoding supports x86 16/32/64, ARM64 and Thumb32')
     if cs is not None:

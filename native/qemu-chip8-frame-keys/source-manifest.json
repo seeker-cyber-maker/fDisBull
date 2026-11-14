@@ -1,0 +1,232 @@
+{
+  "base": {
+    "applies_to": "QEMU source after sealed CHIP-8 v1 CPU, v2 devices, v3 classic/RNG, v4 RAM/fetch layers and v5 timer-tick frame sampling patches",
+    "patch_parent": "native/qemu-chip8-frames/qemu-10.0.13-fdisbull-chip8-frames-v5.patch",
+    "patch_parent_manifest_sha256": "386fc2363d6a8f751e29849fe55ddce8fe57bb0f3d9544bd4d8eff33a61fd1de",
+    "patch_parent_sha256": "7dfbb94ee30de832b1521d187a1d2607bfb6cb9fca5b1a6fc098d46539bc5c28",
+    "qemu_version": "10.0.13",
+    "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa"
+  },
+  "build": {
+    "accelerator": "TCG",
+    "base_source": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frames-runtime-20261112",
+    "build_command": "TMPDIR=/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/tmp-frame-keys /Users/tiga/miniconda/bin/ninja -C /Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/build-frame-keys -j4 qemu-system-chip8",
+    "build_cwd": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112",
+    "build_dir": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/build-frame-keys",
+    "build_status": "passed",
+    "candidate_binary": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/build-frame-keys/qemu-system-chip8",
+    "candidate_binary_sha256": "4c06e9426b581dc889f35f980b3bced1b92742e2b23cd28f8118924469f08ee5",
+    "candidate_binary_size": 6304584,
+    "ci": false,
+    "configure_command": "TMPDIR=/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/tmp-frame-keys ../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/build-frame-keys/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "configure_cwd": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/build-frame-keys",
+    "configure_status": "passed",
+    "runtime": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112",
+    "source": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112",
+    "storage_admission": {
+      "admission_path": "/Volumes/CACHE/fdisbull-ci-builds",
+      "admitted": true,
+      "build_estimate_bytes": 1000000000,
+      "destination_reserve_bytes": 20000000000,
+      "initial_estimate_bytes": 1800000000
+    },
+    "target": "chip8-softmmu",
+    "tmpdir": "/Volumes/CACHE/fdisbull-ci-builds/chip8-frame-keys-runtime-20261112/tmp-frame-keys"
+  },
+  "feature": "Explicit token-bound CHIP-8 frame-key ownership with checkpoint adoption",
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "implementation_status": "v6 configured/built locally; native and compatibility checks passed; integrated preservation coverage completed with an unresolved retained DOSBox startup failure",
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-chip8-frame-keys-v6.patch",
+    "files": [
+      {
+        "after_sha256": "59c9c1684f770b756f2bc33f96338162857c4c6397c46c431f6bd10efa5f9c16",
+        "before_sha256": "d7659d992196e703cda8b09991c6835f5d776d655aa7648958f9e6a7976aee1f",
+        "path": "qapi/misc.json"
+      },
+      {
+        "after_sha256": "9d31f51f655f4d785fe21fdb6ef9519575bc96b8bbc9add31b64bc6fe4e32275",
+        "before_sha256": "5ba0b8902d487f3d6fb9a1144a6d4d1c3e2b4f9da12827c3da1bc51023850141",
+        "path": "system/qmp-chip8.c"
+      },
+      {
+        "after_sha256": "421987cd7f73652a4cf33b998384fd87d90cb4c281fd69a8fecc9d1a892eab76",
+        "before_sha256": "7819619a56349a2b7c374490dcf00952612213fc01a674f75a349e23dab4d478",
+        "path": "target/chip8/cpu.c"
+      },
+      {
+        "after_sha256": "7a20741ce3679e06dca1ef6419273668fdea53233783285b092402040068f315",
+        "before_sha256": "8ffaa5c71b65d81c089056123dfc0ed4322493c7a454e21ad34ffc49f6cedc96",
+        "path": "target/chip8/cpu.h"
+      },
+      {
+        "after_sha256": "4ba1a6265636afb6f726b8d5bdb02aaa0d6c7b50c7e1b8ab7128c1201c01acf4",
+        "before_sha256": "cbe69aa87c66e01c4c6935a4c26f29873a357a50156bd899747c4e9164455474",
+        "path": "target/chip8/vmstate.c"
+      }
+    ],
+    "modified_file_count": 5,
+    "sha256": "5f9162d7e88ae2bf0aaae6fc9c03504e7321d605e8124a252533cf4749aa15b3"
+  },
+  "target": {
+    "checkpoint": "VMState version 6/minimum 6. Logical active/held set, owner generation and accepted-edge count are serialized. Tokens/epoch are process-local. On restore an active owner is validly represented as needs-adoption with a fresh epoch and empty token; host adoption is required before execution/frame arming. Cross-version VMState restore is not claimed.",
+    "commands": {
+      "adopt": "x-chip8-adopt-frame-keys(token:str,expected-generation:uint64,expected-state-generation:uint64,held-mask:uint16)",
+      "apply": "x-chip8-apply-frame-key-edges(token:str,expected-generation:uint64,expected-state-generation:uint64,edges:[Chip8FrameKeyEdge])",
+      "detach": "x-chip8-detach-frame-keys(token:str,expected-generation:uint64)",
+      "query": "query-chip8-frame-keys"
+    },
+    "cpu_model": "chip8-cpu",
+    "cpu_subset": "fdisbull-chip8-frame-keys-6",
+    "edge": {
+      "batch": "1-16 unique keys; stopped-state atomic compare-and-swap",
+      "key": "one lowercase hexadecimal digit 0-f",
+      "pressed": "boolean"
+    },
+    "environment_model": "fdisbull-chip8-display-keypad-timers-rng-layers-frames-keys-5",
+    "frame_model": "fdisbull-chip8-native-frame-sample-1",
+    "key_model": "fdisbull-chip8-frame-keys-1",
+    "machine": "chip8-test",
+    "profile": "chip8-classic-pilot-default-v1",
+    "qemu_target": "chip8-softmmu",
+    "receipt_fields": [
+      "model",
+      "subset",
+      "environment-model",
+      "epoch",
+      "active",
+      "valid",
+      "needs-adoption",
+      "generation",
+      "accepted-edges",
+      "held-mask",
+      "key-mask",
+      "state-generation",
+      "token",
+      "held",
+      "edge-capacity",
+      "repeat-supported"
+    ],
+    "receipt_semantics": {
+      "adopt": "after restore, binds a new token and increments owner generation only; it does not inject events or change CPU state generation",
+      "claim": "first nonempty owned edge claims the lease only when no manually held keys exist; accepted batch increments owner and CPU state generations once",
+      "detach": "requires active matching owner and an empty held/key mask; increments owner generation only and retains accepted-edge count",
+      "epoch": "positive process-local random value rotated on reset and after restore; it is not serialized",
+      "frame_fence": "frame arm and key-owner mutations are mutually exclusive; arming refuses invalid or unadopted restored owner state",
+      "fx0a": "accepted input clears stop attribution but does not clear architectural wait; the guest consumes a held key only after explicit resume",
+      "manual_input": "legacy manual keypad mutation is rejected while the owner is active, including an active empty owner",
+      "repeat": "not supported"
+    }
+  },
+  "verification": {
+    "ci": false,
+    "default_runtime_changed": false,
+    "host_tests": {
+      "cases": 143,
+      "errors": 0,
+      "failures": 0,
+      "receipt": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-host-final-02.xml",
+        "sha256": "73fc466404c96bdd50fba534234ff87d2c36fe764895a2cb2d406ac2982c72fa"
+      },
+      "skipped": 0,
+      "status": "passed"
+    },
+    "integrated_preservation": {
+      "cases_with_passing_observations": 3277,
+      "clean_full_run": false,
+      "coverage": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-preservation-coverage-01.json",
+        "sha256": "431613866ad1400e07e38a1e9672c9ac16ac76ce1b5c9cc6dd6726cf9668477c"
+      },
+      "diagnostic": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-dosbox-startup-01.json",
+        "sha256": "cb2717bbd9b70023077193dba6a5ab88d4d08f2605b507a41ef015ad8cc686c9"
+      },
+      "eligible_cases": 3277,
+      "files": 196,
+      "original_run": {
+        "errors": 0,
+        "failures": 1,
+        "passed": 2819,
+        "result": {
+          "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-preservation-final-01-result.json",
+          "sha256": "cd3b2aacef52b0077890c609387aaeef5596fed1c4f9463d82c5e96b94aa9d51"
+        },
+        "skipped": 0,
+        "tests": 2820
+      },
+      "predeclared_exclusions": 2,
+      "python_files": 1215,
+      "qualification": "The later passing observation does not resolve the retained-backend startup issue or make the original full run clean.",
+      "source_unchanged": true,
+      "status": "completed_with_retained_startup_failure",
+      "tail": {
+        "errors": 0,
+        "failures": 0,
+        "passed": 462,
+        "result": {
+          "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-preservation-tail-01-result.json",
+          "sha256": "6da7e701b546c253e84396d8139936f5720b0b3a8afc8c9a3161ab4b76a9c919"
+        },
+        "skipped": 0,
+        "tests": 462
+      }
+    },
+    "native_tests": {
+      "cases": 18,
+      "errors": 0,
+      "failures": 0,
+      "log": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-native-final-01.log",
+        "sha256": "9adf02388d89207e362f5aa589d2e530dff9942f494b4dc210f1e2417bf863f6"
+      },
+      "platform": "macOS arm64",
+      "receipt": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-native-final-01.xml",
+        "sha256": "7d07214429a1c2e86cebd25dc859cd56d481c04b1f585d5948ae837d5c2f1f91"
+      },
+      "result": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-native-final-01-result.json",
+        "sha256": "450e7240ab1d0dc08ebebab15c6347a535e1e8b41eb74b63df9ebcbdaa342099"
+      },
+      "skipped": 0,
+      "status": "passed",
+      "tests_run_by_patch_author": false
+    },
+    "patch_replay": {
+      "all_touched_file_hashes_match": true,
+      "patch_apply": "patch -p1 --batch against only the five touched files copied from sealed v5",
+      "receipt_path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-patch-replay-receipt-01.json",
+      "status": "passed"
+    },
+    "qapi_and_build": "QAPI generation occurred during configure/Ninja; build linked qemu-system-chip8.",
+    "retained_compatibility": {
+      "cases": 72,
+      "errors": 0,
+      "failures": 0,
+      "log": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-compat-final-01.log",
+        "sha256": "a9cdef08cb81fcf4e62dd8bb6a11c0901747bb50439b9fa35f9869797681166a"
+      },
+      "note": "One v1-only CLS refusal case is not applicable to the completed profile.",
+      "predeclared_deselections": 1,
+      "receipt": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-compat-final-01.xml",
+        "sha256": "a9ea49d9255008c45e4356a1a9795531a6d214769d5df7b3d1cac9dc6a65423c"
+      },
+      "result": {
+        "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-frame-keys-compat-final-01-result.json",
+        "sha256": "d4928c494f5bf8d560db451770db2102f03e4b1cbac81ed0481c737227724cf9"
+      },
+      "skipped": 0,
+      "status": "passed"
+    },
+    "v5_history_upgrade": {
+      "receipt_path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/chip8-v5-frame-keys-upgraded-host-01/receipt.json",
+      "receipt_sha256": "a6f0dff3da4cbdad6bd33215d5732fbc089e3fdd335e9ab63047cd29afe69a53",
+      "status": "passed",
+      "summary": "Restored a previously created v5 frame-history node with the upgraded host and original v5 binary; full CPU/RAM/environment/pixels matched, old nodes and originals stayed intact, owned key input was refused without effects, then one native tick advanced."
+    }
+  }
+}

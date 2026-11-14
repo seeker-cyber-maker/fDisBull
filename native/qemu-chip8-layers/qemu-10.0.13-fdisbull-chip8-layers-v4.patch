@@ -1,0 +1,839 @@
+--- a/qapi/misc.json
++++ b/qapi/misc.json
+@@ -64,6 +64,8 @@
+ # @rng-seed: Seed selected by reset or the stopped-state seed command.
+ # @rng-state: Current 32-bit LCG state.
+ # @rng-draws: Number of random instructions consumed since the last seed.
++# @layer-model: Fixed target-local CHIP-8 RAM/fetch layer model identifier.
++# @layer-generation: Layer compare-and-swap generation.
+ #
+ # Since: 10.1
+ ##
+@@ -78,7 +80,8 @@
+             'phase-numerator': 'uint8', 'virtual-now-ns': 'uint64',
+             'next-deadline-ns': 'uint64', 'state-generation': 'uint64',
+             'rng-model': 'str', 'rng-seed': 'uint32', 'rng-state': 'uint32',
+-            'rng-draws': 'uint64' } }
++            'rng-draws': 'uint64', 'layer-model': 'str',
++            'layer-generation': 'uint64' } }
+ 
+ ##
+ # @query-chip8-environment:
+@@ -130,6 +133,64 @@
+ { 'command': 'x-chip8-seed-rng', 'data': { 'seed': 'uint32',
+                                            'expected-generation': 'uint64' },
+   'returns': 'Chip8EnvironmentInfo' }
++
++##
++# @Chip8LayerPatch:
++# One guarded byte range in the fixed CHIP-8 RAM.
++#
++# @address: Starting flat CHIP-8 address.
++# @expected-hex: Expected current bytes, lowercase hexadecimal.
++# @data-hex: Replacement bytes, lowercase hexadecimal.
++##
++{ 'struct': 'Chip8LayerPatch',
++  'data': { 'address': 'uint16', 'expected-hex': 'str', 'data-hex': 'str' } }
++
++##
++# @Chip8LayersInfo:
++# Complete stopped-state view of CHIP-8 instruction-fetch layering.
++#
++# @model: Fixed native layer model identifier.
++# @generation: Layer CAS generation.
++# @execute-mask-hex: One byte per RAM address; 01 selects execute overlay.
++# @execute-bytes-hex: Overlay bytes; zero where the mask is zero.
++# @execute-base-hex: Expected underlying RAM bytes; zero where unmasked.
++# @execution-bytes: Number of masked execute bytes.
++# @faulted: Whether a backing mismatch has been latched.
++# @fault-address: Address of the first backing mismatch, or zero.
++# @fault-pc: PC at the first backing mismatch, or zero.
++# @stop-owned: Ephemeral attribution for the currently pending layer stop.
++# @backing-valid: Whether all currently masked execute backing bytes match.
++# @mismatch-address: First current mismatch address, or zero.
++##
++{ 'struct': 'Chip8LayersInfo',
++  'data': { 'model': 'str', 'generation': 'uint64',
++            'execute-mask-hex': 'str', 'execute-bytes-hex': 'str',
++            'execute-base-hex': 'str', 'execution-bytes': 'uint64',
++            'faulted': 'bool', 'fault-address': 'uint16',
++            'fault-pc': 'uint16', 'stop-owned': 'bool',
++            'backing-valid': 'bool', 'mismatch-address': 'uint16' } }
++
++##
++# @query-chip8-layers:
++# Return the complete stopped-state CHIP-8 layer and backing-integrity receipt.
++##
++{ 'command': 'query-chip8-layers', 'returns': 'Chip8LayersInfo' }
++
++##
++# @x-chip8-configure-layers:
++# Atomically guard and apply RAM writes and replace the complete execute overlay.
++# Execute expected bytes are compared with RAM after the guarded RAM writes.
++#
++# @expected-generation: Required layer compare-and-swap generation.
++# @expected-state-generation: Required CPU environment generation.
++# @ram: Guarded writes to actual guest RAM.
++# @execute: Guarded complete desired instruction-fetch overlay.
++##
++{ 'command': 'x-chip8-configure-layers',
++  'data': { 'expected-generation': 'uint64',
++            'expected-state-generation': 'uint64',
++            'ram': [ 'Chip8LayerPatch' ], 'execute': [ 'Chip8LayerPatch' ] },
++  'returns': 'Chip8LayersInfo' }
+ 
+ ##
+ # = Miscellanea
+--- a/system/qmp-chip8.c
++++ b/system/qmp-chip8.c
+@@ -7,6 +7,9 @@
+ #include "qemu/timer.h"
+ #include "system/runstate.h"
+ 
++#define CHIP8_LAYER_MODEL "fdisbull-chip8-native-layers-1"
++#define CHIP8_LAYER_HEX_SIZE 8192
++
+ Chip8FaultInfo *qmp_query_chip8_fault(Error **errp)
+ {
+     CPUState *cs = qemu_get_cpu(0);
+@@ -95,6 +98,7 @@
+     GET_STR(cpu_subset, "chip8-device-subset");
+     GET_STR(env_model, "chip8-env-model");
+     GET_STR(rng_model, "chip8-rng-model");
++    GET_STR(layer_model, "chip8-layer-model");
+     info->width = 64;
+     info->height = 32;
+     GET_STR(pixels_hex, "display-pixels-hex");
+@@ -115,6 +119,7 @@
+     GET_U32(rng_seed, "rng-seed");
+     GET_U32(rng_state, "rng-state");
+     GET_U64(rng_draws, "rng-draws");
++    GET_U64(layer_generation, "layer-generation");
+ #undef GET_STR
+ #undef GET_U64
+ #undef GET_U32
+@@ -131,6 +136,153 @@
+     return chip8_environment(errp);
+ }
+ 
++static Chip8LayersInfo *chip8_layers_info(Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Object *obj;
++    Error *local_err = NULL;
++    Chip8LayersInfo *info;
++
++    if (!cs || runstate_is_running()) {
++        error_setg(errp, "CHIP-8 layer query requires a stopped CPU");
++        return NULL;
++    }
++    obj = OBJECT(cs);
++    info = g_new0(Chip8LayersInfo, 1);
++#define CHIP8_LAYER_GET_STR(field, prop) do { \
++    info->field = object_property_get_str(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define CHIP8_LAYER_GET_U64(field, prop) do { \
++    info->field = object_property_get_uint(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define CHIP8_LAYER_GET_U16(field, prop) do { \
++    info->field = object_property_get_uint(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define CHIP8_LAYER_GET_BOOL(field, prop) do { \
++    info->field = object_property_get_bool(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++    CHIP8_LAYER_GET_STR(model, "chip8-layer-model");
++    CHIP8_LAYER_GET_U64(generation, "layer-generation");
++    CHIP8_LAYER_GET_STR(execute_mask_hex, "execute-mask-hex");
++    CHIP8_LAYER_GET_STR(execute_bytes_hex, "execute-bytes-hex");
++    CHIP8_LAYER_GET_STR(execute_base_hex, "execute-base-hex");
++    CHIP8_LAYER_GET_U64(execution_bytes, "layer-execution-bytes");
++    CHIP8_LAYER_GET_BOOL(faulted, "layer-faulted");
++    CHIP8_LAYER_GET_U16(fault_address, "layer-fault-address");
++    CHIP8_LAYER_GET_U16(fault_pc, "layer-fault-pc");
++    CHIP8_LAYER_GET_BOOL(stop_owned, "layer-stop-owned");
++    CHIP8_LAYER_GET_BOOL(backing_valid, "layer-backing-valid");
++    CHIP8_LAYER_GET_U16(mismatch_address, "layer-mismatch-address");
++#undef CHIP8_LAYER_GET_STR
++#undef CHIP8_LAYER_GET_U64
++#undef CHIP8_LAYER_GET_U16
++#undef CHIP8_LAYER_GET_BOOL
++    if (!info->model || strcmp(info->model, CHIP8_LAYER_MODEL) ||
++        !info->execute_mask_hex ||
++        strlen(info->execute_mask_hex) != CHIP8_LAYER_HEX_SIZE ||
++        !info->execute_bytes_hex ||
++        strlen(info->execute_bytes_hex) != CHIP8_LAYER_HEX_SIZE ||
++        !info->execute_base_hex ||
++        strlen(info->execute_base_hex) != CHIP8_LAYER_HEX_SIZE) {
++        error_setg(errp, "CHIP-8 layer properties are inconsistent");
++        qapi_free_Chip8LayersInfo(info);
++        return NULL;
++    }
++    return info;
++fail:
++    error_propagate(errp, local_err);
++    qapi_free_Chip8LayersInfo(info);
++    return NULL;
++}
++
++Chip8LayersInfo *qmp_query_chip8_layers(Error **errp)
++{
++    return chip8_layers_info(errp);
++}
++
++static bool chip8_layer_append_patches(GString *command,
++                                       Chip8LayerPatchList *items,
++                                       size_t *range_count, Error **errp)
++{
++    Chip8LayerPatchList *item;
++
++    for (item = items; item; item = item->next) {
++        const char *expected = item->value->expected_hex;
++        const char *data = item->value->data_hex;
++        size_t expected_len, data_len, i;
++
++        if (++*range_count > 256 || !expected || !data) {
++            error_setg(errp,
++                       "CHIP8_LAYER_PRECONDITION: malformed or excessive ranges");
++            return false;
++        }
++        expected_len = strlen(expected);
++        data_len = strlen(data);
++        if (!expected_len || (expected_len & 1) ||
++            expected_len != data_len || expected_len > 8192) {
++            error_setg(errp,
++                       "CHIP8_LAYER_PRECONDITION: invalid guarded hex lengths");
++            return false;
++        }
++        for (i = 0; i < expected_len; i++) {
++            if (!g_ascii_isdigit(expected[i]) &&
++                !(expected[i] >= 'a' && expected[i] <= 'f')) {
++                error_setg(errp,
++                           "CHIP8_LAYER_PRECONDITION: guarded hex must be lowercase hexadecimal");
++                return false;
++            }
++            if (!g_ascii_isdigit(data[i]) &&
++                !(data[i] >= 'a' && data[i] <= 'f')) {
++                error_setg(errp,
++                           "CHIP8_LAYER_PRECONDITION: guarded hex must be lowercase hexadecimal");
++                return false;
++            }
++        }
++        g_string_append_printf(command, "%u,%s,%s;", item->value->address,
++                               expected, data);
++    }
++    return true;
++}
++
++Chip8LayersInfo *qmp_x_chip8_configure_layers(
++    uint64_t expected_generation, uint64_t expected_state_generation,
++    Chip8LayerPatchList *ram, Chip8LayerPatchList *execute, Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    GString *command;
++    Error *local_err = NULL;
++    size_t range_count = 0;
++
++    if (!cs || runstate_is_running()) {
++        error_setg(errp, "CHIP-8 layer configuration requires a stopped CPU");
++        return NULL;
++    }
++    command = g_string_new(NULL);
++    g_string_append_printf(command, "%" PRIu64 ",%" PRIu64 "|",
++                           expected_generation, expected_state_generation);
++    if (!chip8_layer_append_patches(command, ram, &range_count, errp)) {
++        g_string_free(command, true);
++        return NULL;
++    }
++    g_string_append_c(command, '|');
++    if (!chip8_layer_append_patches(command, execute, &range_count, errp)) {
++        g_string_free(command, true);
++        return NULL;
++    }
++    object_property_set_str(OBJECT(cs), "configure-layers-command",
++                            command->str, &local_err);
++    g_string_free(command, true);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_layers_info(errp);
++}
++
+ Chip8EnvironmentInfo *qmp_x_chip8_set_keys(uint16_t key_mask,
+                                             uint64_t expected_generation,
+                                             Error **errp)
+--- a/target/chip8/cpu.c
++++ b/target/chip8/cpu.c
+@@ -1,13 +1,16 @@
+ #include "qemu/osdep.h"
+ #include "qapi/error.h"
++#include "qapi/visitor.h"
+ #include "qemu/typedefs.h"
+ #include "qemu/timer.h"
+ #include "qapi/error.h"
+ #include "crypto/hash.h"
+ #include "qemu/host-utils.h"
+ #include "system/runstate.h"
++#include "system/tcg.h"
+ #include "exec/address-spaces.h"
+ #include "exec/exec-all.h"
++#include "exec/tb-flush.h"
+ #include "exec/translation-block.h"
+ #include "exec/cputlb.h"
+ #include "exec/page-protection.h"
+@@ -134,7 +137,7 @@
+ 
+ static char *chip8_get_subset(Object *obj, Error **errp)
+ {
+-    return g_strdup("fdisbull-chip8-classic-complete-3");
++    return g_strdup(CHIP8_LAYERS_SUBSET);
+ }
+ 
+ static bool chip8_get_faulted(Object *obj, Error **errp)
+@@ -144,12 +147,17 @@
+ 
+ static char *chip8_get_devices_subset(Object *obj, Error **errp)
+ {
+-    return g_strdup("fdisbull-chip8-classic-complete-3");
++    return g_strdup(CHIP8_LAYERS_SUBSET);
+ }
+ 
+ static char *chip8_get_env_model(Object *obj, Error **errp)
+ {
+-    return g_strdup("fdisbull-chip8-display-keypad-timers-rng-2");
++    return g_strdup(CHIP8_LAYERS_ENV_MODEL);
++}
++
++static char *chip8_get_layer_model(Object *obj, Error **errp)
++{
++    return g_strdup(CHIP8_LAYER_MODEL);
+ }
+ 
+ static char *chip8_get_rng_model(Object *obj, Error **errp)
+@@ -201,6 +209,314 @@
+ static bool chip8_get_sound_active(Object *obj, Error **errp)
+ {
+     return CHIP8_CPU(obj)->env.sound_timer != 0;
++}
++
++static char *chip8_layer_array_hex(const uint8_t *data, size_t size)
++{
++    static const char digits[] = "0123456789abcdef";
++    char *hex = g_malloc(size * 2 + 1);
++    size_t i;
++
++    for (i = 0; i < size; i++) {
++        hex[i * 2] = digits[data[i] >> 4];
++        hex[i * 2 + 1] = digits[data[i] & 0x0f];
++    }
++    hex[size * 2] = '\0';
++    return hex;
++}
++
++static char *chip8_get_execute_mask_hex(Object *obj, Error **errp)
++{
++    return chip8_layer_array_hex(CHIP8_CPU(obj)->env.execute_mask,
++                                 CHIP8_RAM_SIZE);
++}
++
++static char *chip8_get_execute_bytes_hex(Object *obj, Error **errp)
++{
++    return chip8_layer_array_hex(CHIP8_CPU(obj)->env.execute_bytes,
++                                 CHIP8_RAM_SIZE);
++}
++
++static char *chip8_get_execute_base_hex(Object *obj, Error **errp)
++{
++    return chip8_layer_array_hex(CHIP8_CPU(obj)->env.execute_base,
++                                 CHIP8_RAM_SIZE);
++}
++
++static bool chip8_layer_backing(Object *obj, uint16_t *mismatch,
++                                Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    unsigned i;
++
++    for (i = 0; i < CHIP8_RAM_SIZE; i++) {
++        uint8_t actual;
++        if (!env->execute_mask[i]) {
++            continue;
++        }
++        if (address_space_read(&address_space_memory, i,
++                              MEMTXATTRS_UNSPECIFIED, &actual, 1) != MEMTX_OK) {
++            error_setg(errp, "CHIP-8 layer backing could not be read");
++            return false;
++        }
++        if (actual != env->execute_base[i]) {
++            if (mismatch) {
++                *mismatch = i;
++            }
++            return false;
++        }
++    }
++    if (mismatch) {
++        *mismatch = 0;
++    }
++    return true;
++}
++
++static bool chip8_get_layer_backing_valid(Object *obj, Error **errp)
++{
++    return chip8_layer_backing(obj, NULL, errp);
++}
++
++static void chip8_get_layer_mismatch_address(Object *obj, Visitor *v,
++                                             const char *name, void *opaque,
++                                             Error **errp)
++{
++    uint16_t mismatch = 0;
++
++    chip8_layer_backing(obj, &mismatch, errp);
++    if (errp && *errp) {
++        return;
++    }
++    visit_type_uint16(v, name, &mismatch, errp);
++}
++
++static void chip8_get_execution_bytes(Object *obj, Visitor *v,
++                                      const char *name, void *opaque,
++                                      Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    uint64_t count = 0;
++    unsigned i;
++
++    for (i = 0; i < CHIP8_RAM_SIZE; i++) {
++        count += env->execute_mask[i] != 0;
++    }
++    visit_type_uint64(v, name, &count, errp);
++}
++
++static bool chip8_get_layer_faulted(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.layer_faulted;
++}
++
++static bool chip8_get_layer_stop_owned(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.layer_stop_owned;
++}
++
++static void chip8_layer_precondition(Error **errp, const char *reason)
++{
++    error_setg(errp, "CHIP8_LAYER_PRECONDITION: %s", reason);
++}
++
++static int chip8_layer_hex_nibble(char value)
++{
++    if (value >= '0' && value <= '9') {
++        return value - '0';
++    }
++    if (value >= 'a' && value <= 'f') {
++        return value - 'a' + 10;
++    }
++    return -1;
++}
++
++static bool chip8_layer_parse_u64(char *text, uint64_t *value)
++{
++    char *end;
++    unsigned long long parsed;
++
++    if (!text || !*text || *text == '-') {
++        return false;
++    }
++    errno = 0;
++    parsed = g_ascii_strtoull(text, &end, 10);
++    if (errno || *end) {
++        return false;
++    }
++    *value = parsed;
++    return true;
++}
++
++static bool chip8_layer_parse_patches(
++    const char *spec, uint8_t present[CHIP8_RAM_SIZE],
++    uint8_t expected[CHIP8_RAM_SIZE], uint8_t data[CHIP8_RAM_SIZE],
++    size_t *total_bytes, size_t *range_count, Error **errp)
++{
++    gchar **entries = g_strsplit(spec, ";", -1);
++    unsigned entry_index;
++    bool valid = true;
++
++    for (entry_index = 0; entries[entry_index] && valid; entry_index++) {
++        gchar **fields;
++        uint64_t address64;
++        size_t expected_chars, data_chars, length, i;
++
++        if (!entries[entry_index][0]) {
++            continue;
++        }
++        fields = g_strsplit(entries[entry_index], ",", 4);
++        if (g_strv_length(fields) != 3 || ++*range_count > 256 ||
++            !chip8_layer_parse_u64(fields[0], &address64) ||
++            address64 >= CHIP8_RAM_SIZE || !fields[1] || !fields[2]) {
++            valid = false;
++            g_strfreev(fields);
++            break;
++        }
++        expected_chars = strlen(fields[1]);
++        data_chars = strlen(fields[2]);
++        if (!expected_chars || (expected_chars & 1) ||
++            expected_chars != data_chars ||
++            expected_chars > CHIP8_RAM_SIZE * 2) {
++            valid = false;
++            g_strfreev(fields);
++            break;
++        }
++        length = expected_chars / 2;
++        if (length > CHIP8_RAM_SIZE - address64 ||
++            length > CHIP8_RAM_SIZE - *total_bytes) {
++            valid = false;
++            g_strfreev(fields);
++            break;
++        }
++        for (i = 0; i < length; i++) {
++            int e0 = chip8_layer_hex_nibble(fields[1][i * 2]);
++            int e1 = chip8_layer_hex_nibble(fields[1][i * 2 + 1]);
++            int d0 = chip8_layer_hex_nibble(fields[2][i * 2]);
++            int d1 = chip8_layer_hex_nibble(fields[2][i * 2 + 1]);
++            unsigned address = address64 + i;
++
++            if (e0 < 0 || e1 < 0 || d0 < 0 || d1 < 0 || present[address]) {
++                valid = false;
++                break;
++            }
++            present[address] = 1;
++            expected[address] = (e0 << 4) | e1;
++            data[address] = (d0 << 4) | d1;
++        }
++        if (valid) {
++            *total_bytes += length;
++        }
++        g_strfreev(fields);
++    }
++    g_strfreev(entries);
++    if (!valid) {
++        chip8_layer_precondition(errp,
++                                 "malformed, overlapping, or oversized ranges");
++    }
++    return valid;
++}
++
++static void chip8_configure_layers_command(Object *obj, const char *value,
++                                           Error **errp)
++{
++    CPUState *cs = CPU(obj);
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    CPUArchState *env = &cpu->env;
++    gchar **parts = NULL;
++    char *comma;
++    uint64_t expected_generation, expected_state_generation;
++    uint8_t ram_present[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t ram_expected[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t ram_data[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t exec_present[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t exec_expected[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t exec_data[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t ram_before[CHIP8_RAM_SIZE];
++    uint8_t ram_after[CHIP8_RAM_SIZE];
++    uint8_t new_mask[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t new_bytes[CHIP8_RAM_SIZE] = { 0 };
++    uint8_t new_base[CHIP8_RAM_SIZE] = { 0 };
++    size_t ram_total = 0, exec_total = 0, range_count = 0, i;
++    MemTxResult tx_result;
++
++    if (!tcg_enabled() || runstate_is_running() ||
++        qemu_get_cpu(0) != cs || qemu_get_cpu(1)) {
++        chip8_layer_precondition(errp,
++                                 "layer operations require one stopped TCG CPU");
++        return;
++    }
++    parts = g_strsplit(value, "|", 3);
++    if (g_strv_length(parts) != 3 || !(comma = strchr(parts[0], ','))) {
++        chip8_layer_precondition(errp, "malformed generation or patch list");
++        goto out;
++    }
++    *comma++ = '\0';
++    if (!chip8_layer_parse_u64(parts[0], &expected_generation) ||
++        !chip8_layer_parse_u64(comma, &expected_state_generation) ||
++        !chip8_layer_parse_patches(parts[1], ram_present, ram_expected,
++                                   ram_data, &ram_total, &range_count, errp) ||
++        !chip8_layer_parse_patches(parts[2], exec_present, exec_expected,
++                                   exec_data, &exec_total, &range_count, errp)) {
++        if (!errp || !*errp) {
++            chip8_layer_precondition(errp, "malformed generation or patch list");
++        }
++        goto out;
++    }
++    if (expected_generation != env->layer_generation ||
++        expected_state_generation != env->state_generation ||
++        env->layer_generation == UINT64_MAX ||
++        env->state_generation == UINT64_MAX) {
++        chip8_layer_precondition(errp,
++                                 "layer or CPU generation changed/exhausted");
++        goto out;
++    }
++    tx_result = address_space_read(&address_space_memory, 0,
++                                   MEMTXATTRS_UNSPECIFIED, ram_before,
++                                   CHIP8_RAM_SIZE);
++    if (tx_result != MEMTX_OK) {
++        chip8_layer_precondition(errp, "flat RAM is not readable");
++        goto out;
++    }
++    memcpy(ram_after, ram_before, sizeof(ram_after));
++    for (i = 0; i < CHIP8_RAM_SIZE; i++) {
++        if (ram_present[i]) {
++            if (ram_before[i] != ram_expected[i]) {
++                chip8_layer_precondition(errp, "RAM expected bytes differ");
++                goto out;
++            }
++            ram_after[i] = ram_data[i];
++        }
++        if (exec_present[i] && ram_after[i] != exec_expected[i]) {
++            chip8_layer_precondition(errp,
++                                     "execute expected bytes differ from post-RAM view");
++            goto out;
++        }
++        if (exec_present[i]) {
++            new_mask[i] = 1;
++            new_bytes[i] = exec_data[i];
++            new_base[i] = ram_after[i];
++        }
++    }
++    tx_result = address_space_write(&address_space_memory, 0,
++                                    MEMTXATTRS_UNSPECIFIED, ram_after,
++                                    CHIP8_RAM_SIZE);
++    if (tx_result != MEMTX_OK) {
++        error_setg(errp,
++                   "CHIP8_LAYER_UNCERTAIN: flat RAM write failed after dispatch");
++        goto out;
++    }
++    memcpy(env->execute_mask, new_mask, sizeof(new_mask));
++    memcpy(env->execute_bytes, new_bytes, sizeof(new_bytes));
++    memcpy(env->execute_base, new_base, sizeof(new_base));
++    env->layer_generation++;
++    env->layer_faulted = false;
++    env->layer_fault_address = 0;
++    env->layer_fault_pc = 0;
++    env->layer_stop_owned = false;
++    chip8_state_generation_advance(env);
++    tb_flush(cs);
++out:
++    g_strfreev(parts);
+ }
+ 
+ void chip8_apply_ticks(CPUArchState *env, uint32_t count, bool manual)
+@@ -353,6 +669,7 @@
+ static void chip8_cpu_exec_enter(CPUState *cs)
+ {
+     CHIP8_CPU(cs)->env.key_wait_stop_owned = false;
++    CHIP8_CPU(cs)->env.layer_stop_owned = false;
+ }
+ 
+ static const gchar *chip8_gdb_arch_name(CPUState *cs)
+@@ -375,6 +692,8 @@
+     object_property_add_str(obj, "chip8-device-subset",
+                             chip8_get_devices_subset, NULL);
+     object_property_add_str(obj, "chip8-env-model", chip8_get_env_model, NULL);
++    object_property_add_str(obj, "chip8-layer-model", chip8_get_layer_model,
++                            NULL);
+     object_property_add_str(obj, "chip8-rng-model", chip8_get_rng_model, NULL);
+     object_property_add_str(obj, "display-pixels-hex", chip8_get_pixels_hex,
+                             NULL);
+@@ -386,15 +705,21 @@
+                             chip8_debug_ticks_command);
+     object_property_add_str(obj, "seed-rng-command", NULL,
+                             chip8_seed_rng_command);
++    object_property_add_str(obj, "configure-layers-command", NULL,
++                            chip8_configure_layers_command);
+ #define ADD_U64(name, field) object_property_add_uint64_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
+ #define ADD_U32(name, field) object_property_add_uint32_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
+ #define ADD_U8(name, field) object_property_add_uint8_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
++#define ADD_U16(name, field) object_property_add_uint16_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
+     ADD_U64("frame-generation", frame_generation);
+     ADD_U64("state-generation", state_generation);
+     ADD_U64("virtual-ticks", virtual_ticks);
+     ADD_U64("manual-ticks", manual_ticks);
+     ADD_U64("next-deadline-ns", next_deadline_ns);
+     ADD_U64("rng-draws", rng_draws);
++    ADD_U64("layer-generation", layer_generation);
++    ADD_U16("layer-fault-address", layer_fault_address);
++    ADD_U16("layer-fault-pc", layer_fault_pc);
+     ADD_U32("rng-seed", rng_seed);
+     ADD_U32("rng-state", rng_state);
+     ADD_U8("phase-numerator", phase_numerator);
+@@ -406,9 +731,26 @@
+     object_property_add_bool(obj, "key-wait-stop-owned",
+                              chip8_get_key_wait_stop_owned, NULL);
+     object_property_add_bool(obj, "sound-active", chip8_get_sound_active, NULL);
++    object_property_add_str(obj, "execute-mask-hex",
++                            chip8_get_execute_mask_hex, NULL);
++    object_property_add_str(obj, "execute-bytes-hex",
++                            chip8_get_execute_bytes_hex, NULL);
++    object_property_add_str(obj, "execute-base-hex",
++                            chip8_get_execute_base_hex, NULL);
++    object_property_add_bool(obj, "layer-faulted",
++                             chip8_get_layer_faulted, NULL);
++    object_property_add_bool(obj, "layer-stop-owned",
++                             chip8_get_layer_stop_owned, NULL);
++    object_property_add_bool(obj, "layer-backing-valid",
++                             chip8_get_layer_backing_valid, NULL);
++    object_property_add(obj, "layer-mismatch-address", "uint16",
++                        chip8_get_layer_mismatch_address, NULL, NULL, NULL);
++    object_property_add(obj, "layer-execution-bytes", "uint64",
++                        chip8_get_execution_bytes, NULL, NULL, NULL);
+ #undef ADD_U64
+ #undef ADD_U32
+ #undef ADD_U8
++#undef ADD_U16
+     cpu->tick_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, chip8_tick_timer_cb,
+                                    cpu);
+ }
+--- a/target/chip8/cpu.h
++++ b/target/chip8/cpu.h
+@@ -13,6 +13,9 @@
+ #define CHIP8_DISPLAY_HEIGHT 32
+ #define CHIP8_DISPLAY_PIXELS (CHIP8_DISPLAY_WIDTH * CHIP8_DISPLAY_HEIGHT)
+ #define CHIP8_FONT_BASE 0x50
++#define CHIP8_LAYER_MODEL "fdisbull-chip8-native-layers-1"
++#define CHIP8_LAYERS_SUBSET "fdisbull-chip8-layers-hooks-4"
++#define CHIP8_LAYERS_ENV_MODEL "fdisbull-chip8-display-keypad-timers-rng-layers-3"
+ 
+ typedef enum Chip8Fault {
+     CHIP8_FAULT_NONE = 0,
+@@ -49,6 +52,14 @@
+     uint32_t rng_seed;
+     uint32_t rng_state;
+     uint64_t rng_draws;
++    uint8_t execute_mask[CHIP8_RAM_SIZE];
++    uint8_t execute_bytes[CHIP8_RAM_SIZE];
++    uint8_t execute_base[CHIP8_RAM_SIZE];
++    uint64_t layer_generation;
++    bool layer_faulted;
++    uint16_t layer_fault_address;
++    uint16_t layer_fault_pc;
++    bool layer_stop_owned;
+ } CPUArchState;
+ 
+ static inline void chip8_counter_add_saturating(uint64_t *value,
+@@ -86,6 +97,7 @@
+                               int *max_insns, vaddr pc, void *host_pc);
+ void chip8_tcg_init(void);
+ void chip8_apply_ticks(CPUArchState *env, uint32_t count, bool manual);
++void chip8_layer_check_or_stop(CPUArchState *env);
+ 
+ #define MMU_USER_IDX 0
+ 
+--- a/target/chip8/helper.c
++++ b/target/chip8/helper.c
+@@ -29,6 +29,30 @@
+         chip8_raise(env, env->fault_pc, env->fault_opcode, env->fault_code);
+     }
+     chip8_raise(env, pc, opcode, code);
++}
++
++void chip8_layer_check_or_stop(CPUArchState *env)
++{
++    CPUState *cs = env_cpu(env);
++    uint32_t address;
++
++    if (!env->layer_faulted) {
++        for (address = 0; address < CHIP8_RAM_SIZE; address++) {
++            if (env->execute_mask[address] &&
++                cpu_ldub_data(env, address) != env->execute_base[address]) {
++                env->layer_faulted = true;
++                env->layer_fault_address = address;
++                env->layer_fault_pc = env->pc;
++                chip8_state_generation_advance(env);
++                break;
++            }
++        }
++    }
++    if (env->layer_faulted) {
++        env->layer_stop_owned = true;
++        cs->exception_index = EXCP_DEBUG;
++        cpu_loop_exit(cs);
++    }
+ }
+ 
+ void helper_chip8_step(CPUArchState *env, uint32_t pc, uint32_t opcode)
+@@ -41,6 +65,7 @@
+     uint32_t sum, a, b, count, k, sx, sy, row, col, bit;
+     uint8_t temp[16];
+ 
++    chip8_layer_check_or_stop(env);
+     if (env->faulted) {
+         chip8_raise(env, env->fault_pc, env->fault_opcode, env->fault_code);
+     }
+--- a/target/chip8/translate.c
++++ b/target/chip8/translate.c
+@@ -47,6 +47,13 @@
+                                tcg_constant_i32(CHIP8_FAULT_FETCH_OOB));
+     } else {
+         opcode = translator_lduw_swap(ctx->env, db, pc, true);
++        if (ctx->env->execute_mask[pc]) {
++            opcode = (opcode & 0x00ff) |
++                     ((uint32_t)ctx->env->execute_bytes[pc] << 8);
++        }
++        if (ctx->env->execute_mask[pc + 1]) {
++            opcode = (opcode & 0xff00) | ctx->env->execute_bytes[pc + 1];
++        }
+         gen_helper_chip8_step(tcg_env, tcg_constant_i32(pc),
+                               tcg_constant_i32(opcode));
+     }
+--- a/target/chip8/vmstate.c
++++ b/target/chip8/vmstate.c
+@@ -36,15 +36,31 @@
+         env->next_deadline_ns > INT64_MAX) {
+         return -EINVAL;
+     }
++    if ((!env->layer_faulted &&
++         (env->layer_fault_address || env->layer_fault_pc)) ||
++        (env->layer_faulted &&
++         (env->layer_fault_address >= CHIP8_RAM_SIZE ||
++          env->layer_fault_pc > 0xffff ||
++          !env->execute_mask[env->layer_fault_address]))) {
++        return -EINVAL;
++    }
++    for (i = 0; i < CHIP8_RAM_SIZE; i++) {
++        if (env->execute_mask[i] > 1 ||
++            (!env->execute_mask[i] &&
++             (env->execute_bytes[i] || env->execute_base[i]))) {
++            return -EINVAL;
++        }
++    }
+     /* The stop attribution is ephemeral, not a restored execution event. */
+     env->key_wait_stop_owned = false;
++    env->layer_stop_owned = false;
+     return 0;
+ }
+ 
+ const VMStateDescription vmstate_chip8_cpu = {
+     .name = "chip8-cpu",
+-    .version_id = 3,
+-    .minimum_version_id = 3,
++    .version_id = 4,
++    .minimum_version_id = 4,
+     .post_load = chip8_cpu_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UINT32_ARRAY(env.v, Chip8CPU, 16),
+@@ -71,6 +87,13 @@
+         VMSTATE_UINT32(env.rng_seed, Chip8CPU),
+         VMSTATE_UINT32(env.rng_state, Chip8CPU),
+         VMSTATE_UINT64(env.rng_draws, Chip8CPU),
++        VMSTATE_UINT8_ARRAY(env.execute_mask, Chip8CPU, CHIP8_RAM_SIZE),
++        VMSTATE_UINT8_ARRAY(env.execute_bytes, Chip8CPU, CHIP8_RAM_SIZE),
++        VMSTATE_UINT8_ARRAY(env.execute_base, Chip8CPU, CHIP8_RAM_SIZE),
++        VMSTATE_UINT64(env.layer_generation, Chip8CPU),
++        VMSTATE_BOOL(env.layer_faulted, Chip8CPU),
++        VMSTATE_UINT16(env.layer_fault_address, Chip8CPU),
++        VMSTATE_UINT16(env.layer_fault_pc, Chip8CPU),
+         VMSTATE_END_OF_LIST()
+     }
+ };

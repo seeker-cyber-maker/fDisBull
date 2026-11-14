@@ -1,0 +1,95 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "source-bound FreeDOS DOS save-operation witness",
+  "base": {
+    "qemu_version": "10.0.13",
+    "runtime": "native-runtime/guest-provenance-runtime",
+    "prerequisite_package": "native/qemu-dos-provenance",
+    "prerequisite_patch": "native/qemu-dos-provenance/qemu-10.0.13-fdisbull-dos-provenance-v1.patch",
+    "prerequisite_patch_sha256": "99f615226a728a0d80ac6456ddd8f7f6e32f0a6c020de3a73f2cbbc2aac2e6aa"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-dos-save-operations-v2.patch",
+    "sha256": "8d7ac0a56445afe2ad47e9aaaa8977579ce8d1c559616a0f85bf3c5864f23339",
+    "modified_file_count": 2,
+    "files": [
+      {
+        "path": "qapi/fdisbull-dos-provenance.json",
+        "before_sha256": "1a6cb1aec99181a205266fefe73a3ef4db197b7b84f9d572a795fb74e1904973",
+        "after_sha256": "e2710ddc9375c3f058b138aab7cd98a07b1341b5f4a14400e7fa8514da9135eb"
+      },
+      {
+        "path": "target/i386/fdisbull-dos-provenance.c",
+        "before_sha256": "6698d432bad0585845a1159ff1af2a87e546a89a463beefe12f4c7e196c7240e",
+        "after_sha256": "d45254bdbcf2a85a25f4130f996438171f2dad98843f1973c486320dbde576e3"
+      }
+    ],
+    "dry_run": {
+      "command": "patch --dry-run -p1 -d <sealed-N22-qemu-10.0.13> < native/qemu-dos-save-operations/qemu-10.0.13-fdisbull-dos-save-operations-v2.patch",
+      "result": "passed against sealed N22 guest-provenance-runtime source"
+    },
+    "applied_verification": {
+      "files": 2,
+      "seeded_base_files": 2,
+      "new_files": 0,
+      "base_hashes_unchanged": true,
+      "applied_matches_candidate": true,
+      "receipt": "R/save-operations-patch-replay-receipt.json",
+      "result": "passed: patch applied to a private copy containing only its two touched N22 files; both outputs matched candidate hashes"
+    }
+  },
+  "api": {
+    "commands": [
+      "x-fdisbull-arm-dos-save-operations",
+      "x-fdisbull-query-dos-save-witness",
+      "x-fdisbull-disarm-dos-save-witness"
+    ],
+    "legacy_api_version": 1,
+    "save_operations_api_version": 2,
+    "legacy_model": "qemu-pc-dos-save-witness-v1",
+    "save_operations_model": "qemu-pc-dos-save-witness-v2",
+    "save_operations": "save-v2",
+    "checkpoint_state": "native VMState schema version 2, minimum version 2; operation ledger and pending DOS call are serialized; older native streams are rejected; same-binary restore only",
+    "scope": "one stopped x86 TCG CPU, real-mode arm, one pinned process lifetime, one absolute root-D final path and optional distinct temporary path; v1 QMP behavior remains available"
+  },
+  "build": {
+    "source": "native-runtime/guest-write-provenance-runtime/qemu-10.0.13",
+    "build_dir": "native-runtime/guest-write-provenance-runtime/build-n23",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "../qemu-10.0.13/configure --target-list=x86_64-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../qemu-10.0.13/pc-bios --prefix=<guest-write-provenance-runtime>/build-n23/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "environment": {
+      "TMPDIR": "<guest-write-provenance-runtime>/tmp-n23"
+    },
+    "build_command": "/Users/tiga/miniconda/bin/ninja -C build-n23 -j4 qemu-system-x86_64",
+    "candidate_binary_sha256": "cf7d52018709d4d467d0cf426aa4616361a34c46c4fb590337f47f1ad0badaca",
+    "build_log": "guest-write-provenance-runtime/build-n23-04.log",
+    "build_result": "Build 04 compiled and linked successfully; no final-log warnings reported."
+  },
+  "qualification": {
+    "status": "bounded root-owned local native validation passed; hosted CI and cross-binary restore remain unqualified",
+    "tests_run_by_patch_author": false,
+    "ci": false,
+    "cross_binary_restore_qualified": false,
+    "native_cases": 13,
+    "native_passed": 13,
+    "native_failures": 0,
+    "native_skipped": 0,
+    "native_receipt": "R/save-ops-native-02.log",
+    "native_duration_seconds": 28.58,
+    "legacy_v1_cases": 13,
+    "legacy_v1_passed": 13,
+    "legacy_v1_failures": 0,
+    "legacy_v1_skipped": 0,
+    "legacy_v1_receipt": "R/save-ops-v1-native-01.log",
+    "native_scope": "Bounded DOS save-operation replay with create/truncate, write/zero-truncate, seek/reopen, rename and temporary-shadow replacement; pending seek/rename checkpoint restoration and observed PIT interrupt activity; stored v2 predecessor rearm across FDB reopen and explicit keep; retained v1 QMP/proof behavior."
+  },
+  "limits": [
+    "One source-bound real-mode FreeDOS process and one root-D final 8.3 path plus optional root-D temporary 8.3 path.",
+    "At most 32 sorted disjoint caller code ranges below 0xA0000, 256 events, 64 KiB captured write stream and 64 KiB logical file size.",
+    "AH=3D write/readwrite opens, AH=3C/AH=5B creates, AH=40 writes and zero-count truncation, AH=42 bounded seeks, AH=68 commit, AH=3E close, AH=41 tracked delete, AH=56 tracked rename, and AH=0D flush are the qualified save operations.",
+    "Unsupported DOS mutations, source/process changes, path escapes, holes, failed/short calls, changed INT 21h vector, and unowned raw storage/DMA/PCI operations invalidate evidence.",
+    "A ready native ledger is only evidence for host replay; it does not establish general DOS filesystem coverage or host filesystem visibility.",
+    "No DOSBox parity, guest TSR, non-x86, hosted CI, generic migration, or cross-binary restore claim."
+  ]
+}

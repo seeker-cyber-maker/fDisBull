@@ -1,0 +1,119 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 plus sealed native/qemu-task-preemption v1 patch (N18)",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_file": "../qemu-task-preemption/qemu-10.0.13-fdisbull-task-preemption-v1.patch",
+  "base_patch_sha256": "0dd3cb4625c2fcbe2f7ba65b8df899a6b06519681cabc92406503bfeff901bd0",
+  "base_binary": {
+    "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-preemption-runtime/build/qemu-system-x86_64",
+    "sha256": "0e6a5433fbd118be138a50e6979a7f828b37083d50e6e248e7c4e1cc1db1aebc"
+  },
+  "patch_file": "qemu-10.0.13-fdisbull-task-cascade-v2.patch",
+  "patch_sha256": "df50e8d92c9a260c7c7721518ff4d50f3734b8f81012d2a8e1ef68b3d3ff28d7",
+  "patch_dry_run": {
+    "command": "patch --dry-run -p1 -d <sealed N18 source> <qemu-10.0.13-fdisbull-task-cascade-v2.patch>",
+    "result": "Both files applied cleanly to the sealed N18 source; no source files were written during the dry run."
+  },
+  "scope": "Extends opt-in x86 TCG real-8259 task preemption from direct master IRQs to real slave/cascade IRQs and nested real PIC interrupt frames. It retains the existing machine-global PIC/PIT and task-private RAM/fetch views.",
+  "modified_files": [
+    {
+      "path": "qapi/fdisbull-task-scheduler.json",
+      "before_sha256": "f23ab77e27590062c266bee6c1fd22f6be60a830997837a1cfbd6de6089420aa",
+      "after_sha256": "216e0a8b341aaa45a6ffe4c8014eb9bb27739014f4e6b274d7e874368aae6f08"
+    },
+    {
+      "path": "target/i386/fdisbull-task-private.c",
+      "before_sha256": "69c70c6c056ae19e79a09029c65bdf6270feb49811e9c72133f766b94751a47c",
+      "after_sha256": "deec0311a573360f89c822260f65ad903e3712c866726f6241179937634f04b0"
+    }
+  ],
+  "qmp_api": {
+    "scheduler_model": "qemu-pc-task-scheduler-v1",
+    "scheduler_api_version": 3,
+    "preemption_model": "qemu-pc-pic-preemption-v2",
+    "configure_command": "x-fdisbull-task-preemption-configure",
+    "arguments": [
+      "enabled:bool",
+      "irq:uint8 (0..15 except cascade line 2)",
+      "quantum?:uint32 (default 1, range 1..65535)"
+    ],
+    "outstanding_frame_receipt": "Ordered outstanding-frames entries bind task identity, PIC ack sequence, native frame sequence, global IRQ/vector, master/slave lines, and required/seen EOI masks. Bit 0 is master EOI; bit 1 is slave EOI. The legacy inflight fields project the newest outstanding frame; ack-count minus eoi-count equals outstanding-count.",
+    "eoi_counters": "ack-count counts every successfully framed real PIC IRQ while enabled. eoi-count increments once per frame after all required controller EOIs. Quantum progress advances only when the configured IRQ frame completes; preemption-count counts completed switches. A target handoff can remain pending while an older or nested frame is outstanding.",
+    "coalescing": "The pending handoff is one boolean request, not a queue of switches. If more configured-IRQ quantum thresholds complete before the outstanding stack drains, they coalesce into the next eligible handoff; later completions continue advancing quantum-progress, and at most one switch occurs at the empty-stack boundary."
+  },
+  "interrupt_contract": {
+    "supported_pic": "Normal dual-8259 mode with configured global IRQ 0..15 except cascade line 2; one TCG vCPU.",
+    "slave_irq_binding": "A slave IRQ has one native hardware frame and records both master cascade line 2 and the source slave line. Its matching slave EOI must occur before the master IRQ2 EOI.",
+    "nested_ownership": "All accepted real PIC IRQs are tracked while enabled, including non-policy nested IRQs. EOIs bind LIFO to the newest outstanding frame. A task switch is deferred until no outstanding controller EOI remains; fully EOI-complete frames remain task-owned until IRET.",
+    "checkpoint": "fdisbull/task-private VMState advances to version 5. The nested frame VMState layout remains unchanged; API3 PIC bindings are stored in parallel arrays. Consistent nested and partially EOI-complete cascade states can be saved when PIC ISR bits exactly match the native frame stack. A stable pending target handoff is saveable only while another frame remains outstanding; a pending handoff with an empty stack is refused.",
+    "legacy_streams": "The N18 version-4 direct-master binding is reconstructed as a one-controller frame. Versions 1..3 load with PIC preemption disabled and no inherited PIC-frame ownership metadata. Host exact-binary fencing means cross-binary checkpoint interchange is not qualified."
+  },
+  "bounds": {
+    "fails_closed": [
+      "IRQ2 itself",
+      "spurious or unacknowledged PIC deliveries",
+      "APIC or other non-8259 delivery",
+      "auto-EOI, PIC polling, PIC reinitialization, or unsupported PIC modes",
+      "mismatched, ambiguous, duplicate-line, or out-of-order EOI ownership",
+      "IRET before all EOIs required by its hardware frame"
+    ],
+    "limits": "The bounded native task scheduler, task count, private page cap, supported CPU modes, allocation identity, and device/DMA limitations remain those of the preceding qemu-task-scheduler patch. This does not implement a proprietary task manager or general DOS task scheduler. This delta adds no timer source; general IRQ timing remains unqualified beyond the prior bounded authored real IRQ0 witness, and this cascade change does not broaden that qualification."
+  },
+  "build": {
+    "source": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-cascade-runtime/qemu-10.0.13",
+    "build_dir": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-cascade-runtime/build",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_args": [
+      "--target-list=x86_64-softmmu",
+      "--without-default-features",
+      "--enable-system",
+      "--enable-tcg",
+      "--enable-pixman",
+      "--disable-user",
+      "--disable-tools",
+      "--disable-docs",
+      "--disable-guest-agent",
+      "--disable-containers",
+      "--disable-download",
+      "--disable-install-blobs",
+      "--disable-debug-info",
+      "--disable-qom-cast-debug",
+      "--audio-drv-list=",
+      "--firmwarepath=../qemu-10.0.13/pc-bios",
+      "--prefix=/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-cascade-runtime/build/install",
+      "--ninja=/Users/tiga/miniconda/bin/ninja",
+      "--python=/Users/tiga/miniconda/bin/python3"
+    ],
+    "configure_command_record": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-cascade-configure-command.json",
+    "configure_command_sha256": "26d4b3ce3a96c072e4308978d98cbebd4da968bd8696f39c3eb3f1033a1f2538",
+    "command": "TMPDIR=<native-cascade-runtime/tmp> /Users/tiga/miniconda/bin/ninja -C build -j2 qemu-system-x86_64",
+    "initial_build_receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-cascade-build-01.log",
+    "initial_build_receipt_sha256": "bbf80f6f64c5e2fe2ccf93e359692a1c6435700377ea01fcb9438333a4821676",
+    "initial_build_result": "Full configure and initial 1587-step build/link succeeded.",
+    "incremental_build_receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-cascade-build-02.log",
+    "incremental_build_receipt_sha256": "7c8139068c21238007e0dd97a3603f31623e9f7af6fa853a5ef219069bdd1355",
+    "incremental_build_result": "After the policy handoff boundary fix, the task-private C object compiled and QEMU relinked in the final four-step incremental build; the frozen binary hash below matches the qualification run.",
+    "result": "Configure, initial build, incremental handoff-fix build, and link succeeded. No build or guest execution was performed by the patch author."
+  },
+  "binary": {
+    "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-cascade-runtime/build/qemu-system-x86_64",
+    "sha256": "74daa2ab4e6cdb03a7d4a7f6725656fc81a0022cf171242813cfe188943e8b0f"
+  },
+  "native_qualification": {
+    "owner": "Root-owned; no guest execution by patch author.",
+    "receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-cascade-04.xml",
+    "result": "19 passed, 0 failed, 0 skipped in 71.708 seconds.",
+    "scope": [
+      "real RTC IRQ8 cascade delivery with matching slave and master EOIs",
+      "nested i8042 IRQ1 over IRQ8, per-task frame ownership and cold Python-process checkpoint continuation",
+      "policy IRQ8 handoff after the cascade completes",
+      "policy IRQ1 handoff deferred until the outer IRQ8 cascade completes",
+      "nested IRET without required master EOI refused before frame pop",
+      "master cascade EOI before slave EOI faults without task switch",
+      "previous N18 standard/virtual IRQ0, direct IRQ1, quantum, scheduler-frame, interrupt-shadow, and instrumented-checkpoint cases"
+    ],
+    "not_qualified": "Cross-binary VMState interchange remains unqualified because the host exact-binary fence rejects a different native executable hash. No CI was run."
+  }
+}

@@ -12,6 +12,32 @@ result could change the next action or the requested conclusion. These defaults
 govern exploratory work; the detailed references are addenda for the questions
 that need them, not a checklist to complete on every target.
 
+## When the next step is unclear
+
+If you cannot turn the request into a concrete probe, read [next steps and
+worked recipes](references/next-steps.md) before browsing the whole method
+catalog. If an FDB is supplied, start with `fdisbull status PROJECT` to learn
+its mapped entry and source identity; `inspect` takes an input file, not a project
+status query. Reuse an existing valid import instead of guessing a new mapping.
+Pick the nearest missing fact, two plausible explanations and one
+available observation that separates them. Decide what each result would unlock,
+then run it. Re-plan after a meaningful result or failure; do not fill a planning
+form before a cheap known lookup. For deeper prioritization use
+`references/analysis-approach.md`.
+
+## When one case contradicts the working explanation
+
+A mostly successful interpretation is still a candidate when a relevant case
+contradicts it. Preserve the failing case and the last working version. Compare
+one successful and one failing case, identify the first unexplained difference,
+and choose a probe that separates two explanations. Do not count ignoring
+residual data, dropping a failing case or weakening an assertion as a repair.
+A successful call and a correctly shaped output do not establish correct values.
+Before closing, check an independently derived value or boundary on a previously
+failing case and rerun the earlier control. If unresolved, return a bounded
+partial result with the contradiction attached. Use [contradiction recovery](references/contradiction-recovery.md)
+for a worked decision sequence; do not restart the whole investigation.
+
 ## Start at the question
 
 State the expected result before choosing tools: the deliverable, target and
@@ -228,6 +254,8 @@ budget stop or unsupported operation as such, with the next useful action.
 
 | Need now | Reference |
 | --- | --- |
+| Need an executable starting point, output interpretation or recovery after failure | `references/next-steps.md` (linked above) |
+| Interpret structures, distinguish file/memory addresses or find static accesses | [types and addresses](references/analysis-types.md) |
 | Choose questions, dependencies and branches | [analysis approach](references/analysis-approach.md) |
 | Capture controls, discover serializers, call original routines and advance file work | [runtime navigation](references/runtime-navigation.md) |
 | Find concrete static, native, media, scene and player commands | [workflows](references/workflows.md) |
@@ -244,6 +272,9 @@ budget stop or unsupported operation as such, with the next useful action.
 | Inspect DESQview modules/APIs, cooperate with its kernel, or narrow changing RAM values and apply bounded edits | [DESQview and memory search](references/desqview-and-memory-search.md) |
 | Compare action traces for code/register candidates or stop at a bounded instruction predicate | [execution event search](references/execution-event-search.md) |
 | Identify architecture/container/media headers through the persistent format catalog or frame native SMK2 movies | [file formats](references/file-formats.md) |
+| Prepare a FreeDOS runtime, capture a private D: directory, inspect/edit file generations or restore file-aware checkpoints | [references/dos-file-layers.md](references/dos-file-layers.md) |
+| Test native QEMU DOS, inspect migration coverage, or select the retained DOSBox fallback | [references/dos-qemu-migration.md](references/dos-qemu-migration.md) |
+| Import a CHIP-8 ROM, inspect its native CPU/RAM or restore an exact-runtime checkpoint | [references/chip8-qemu.md](references/chip8-qemu.md) |
 
 
 For a human-readable review of established findings, use the companion

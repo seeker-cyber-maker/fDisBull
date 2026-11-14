@@ -1,0 +1,596 @@
+--- a/include/system/fdisbull-display.h
++++ b/include/system/fdisbull-display.h
+@@ -4,6 +4,7 @@
+ #define SYSTEM_FDISBULL_DISPLAY_H
+ 
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
++#include "qapi/error.h"
+ 
+ /*
+  * Requires BQL, prior precise VGA admission and an initialized display owner.
+@@ -21,4 +22,9 @@
+ FdisbullVgaConfigurationInfo *
+ fdisbull_vga_configuration_snapshot_owned(Error **errp);
+ 
++/* True while a display-publication fence is armed, completed, or pending. */
++bool fdisbull_display_frame_fence_blocks_control(void);
++void fdisbull_display_frame_handle_stop_request(void);
++bool fdisbull_display_frame_checkpoint_safe(Error **errp);
++
+ #endif
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -45,10 +45,10 @@
+ FdisbullVgaConfigurationSnapshot *fdisbull_display_checkpoint_configuration(void);
+ bool fdisbull_display_checkpoint_validate(
+     const FdisbullInstrumentedDisplayState *state, uint64_t source_epoch,
+-    int64_t virtual_ns, Error **errp);
++    int64_t virtual_ns, bool require_published_configuration, Error **errp);
+ bool fdisbull_display_checkpoint_restore(
+     const FdisbullInstrumentedDisplayState *state, uint64_t epoch,
+-    const char **new_token, Error **errp);
++    bool require_published_configuration, const char **new_token, Error **errp);
+ 
+ bool fdisbull_retrace_checkpoint_admitted(void);
+ bool fdisbull_retrace_checkpoint_restore_configuration(
+--- a/qapi/fdisbull-display.json
++++ b/qapi/fdisbull-display.json
+@@ -81,6 +81,82 @@
+   'returns': 'FdisbullDisplayInfo' }
+ 
+ ##
++# @FdisbullDisplayFrameFenceInfo:
++#
++# Receipt for a one-shot stop request tied to one completed synchronous display
++# publication.  This is renderer completion, not a guest-frame or retrace ID.
++#
++# @api-version: Fence protocol version, one.
++# @epoch: Native virtual-clock owner epoch.
++# @state: armed, completed or cancelled.
++# @token: Fence owner token.
++# @display-token: Display observer token captured at arm time.
++# @baseline-update-id: Last published update when armed.
++# @updates: Current retained display update count.
++# @stop-pending: The fence stop request has not yet reached a safe stopped state.
++# @stop-consumed: The frame fence itself issued the VM stop after publication.
++#     A preexisting debugger or other stop clears stop-pending without setting
++#     this field.
++# @completed-update-id: Exact update ID published by this fence, when complete.
++# @published-ns: Actual virtual time of that completed publication.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullDisplayFrameFenceInfo',
++  'data': { 'api-version': 'int', 'epoch': 'uint64', 'state': 'str',
++            'token': 'str', 'display-token': 'str',
++            'baseline-update-id': 'uint64', 'updates': 'uint64',
++            'stop-pending': 'bool', 'stop-consumed': 'bool',
++            '*completed-update-id': 'uint64', '*published-ns': 'int' } }
++
++##
++# @x-fdisbull-arm-display-frame:
++#
++# @token: New one-shot fence token (1..128 bytes).
++# @display-token: Current retained display observer token.
++#
++# Arm a stop after the next successful synchronous renderer publication.
++# Requires a stopped supported virtual-clock owner and active display observer.
++# The fence neither renders nor advances guest execution.  On publication, it
++# requests a stop at the next safe CPU boundary.  It does not identify guest
++# drawing, a VGA retrace, or an application frame.
++#
++# Returns: Armed receipt with the current update ID as baseline.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-display-frame',
++  'data': { 'token': 'str', 'display-token': 'str' },
++  'returns': 'FdisbullDisplayFrameFenceInfo' }
++
++##
++# @x-fdisbull-query-display-frame:
++#
++# @token: Current fence token.
++#
++# Read the retained one-shot completion/stop receipt without advancing time.
++#
++# Returns: Current fence receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-display-frame', 'data': { 'token': 'str' },
++  'returns': 'FdisbullDisplayFrameFenceInfo' }
++
++##
++# @x-fdisbull-cancel-display-frame:
++#
++# @token: Current fence token.
++#
++# Cancel an incomplete arm.  A completed publication and its stop receipt are
++# retained unchanged.  Cancelling permits the existing display checkpoint
++# state to be saved; no new persistent fence state is introduced.
++#
++# Returns: Actual retained fence receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-cancel-display-frame', 'data': { 'token': 'str' },
++  'returns': 'FdisbullDisplayFrameFenceInfo' }
++
++##
+ # @x-fdisbull-export-display:
+ #
+ # @token: Current owner token.
+--- a/system/fdisbull-clock.c
++++ b/system/fdisbull-clock.c
+@@ -18,6 +18,7 @@
+ #include "qemu/timer.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-display.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/replay.h"
+ #include "system/runstate.h"
+@@ -291,6 +292,10 @@
+                    "align=off,sleep=off, one vCPU and no replay/migration");
+         return NULL;
+     }
++    if (fdisbull_display_frame_fence_blocks_control()) {
++        error_setg(errp, "Cancel the display-frame fence before arming a clock budget");
++        return NULL;
++    }
+     if (clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
+         clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
+         error_setg(errp, "fDisBull clock budget already active");
+--- a/system/fdisbull-display.c
++++ b/system/fdisbull-display.c
+@@ -9,6 +9,7 @@
+  */
+ #include "qemu/osdep.h"
+ #include "hw/core/cpu.h"
++#include "exec/cpu-interrupt.h"
+ #include "hw/display/vga.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+@@ -23,6 +24,7 @@
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/fdisbull-retrace.h"
++#include "system/cpus.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+ #include "ui/console.h"
+@@ -58,6 +60,22 @@
+     Error *migration_blocker;
+ } display_window;
+ 
++/* Process-local one-shot renderer-publication fence; never VMState state. */
++static struct {
++    bool initialized;
++    bool armed;
++    bool completed;
++    bool cancelled;
++    bool stop_pending;
++    bool stop_consumed;
++    uint64_t epoch;
++    char *token;
++    char *display_token;
++    uint64_t baseline_update_id;
++    uint64_t completed_update_id;
++    int64_t published_ns;
++} display_frame_fence;
++
+ 
+ static void display_timer_cb(void *opaque);
+ 
+@@ -70,6 +88,10 @@
+     display_window.invalidated = true;
+     display_window.observing = false;
+     display_window.failure = reason;
++    if (display_frame_fence.armed) {
++        display_frame_fence.armed = false;
++        display_frame_fence.cancelled = true;
++    }
+     g_clear_pointer(&display_window.rgb, g_free);
+     g_clear_pointer(&display_window.published_configuration,
+                     qapi_free_FdisbullVgaConfigurationSnapshot);
+@@ -81,10 +103,22 @@
+     if (!fdisbull_instrumented_checkpoint_busy() && display_window.token) {
+         display_invalidate("reset invalidated the observer");
+     }
++    if (!fdisbull_instrumented_checkpoint_busy() &&
++        (display_frame_fence.armed || display_frame_fence.stop_pending)) {
++        display_frame_fence.armed = false;
++        display_frame_fence.cancelled = true;
++        display_frame_fence.stop_pending = false;
++        display_frame_fence.stop_consumed = false;
++    }
+ }
+ 
+ static void display_vm_state_change(void *opaque, bool running, RunState state)
+ {
++    if (!fdisbull_instrumented_checkpoint_busy() && !running &&
++        display_frame_fence.stop_pending) {
++        /* The stop is real; attribution is made only by our handler below. */
++        display_frame_fence.stop_pending = false;
++    }
+     if (!fdisbull_instrumented_checkpoint_busy() && display_window.token && !running &&
+         state != RUN_STATE_PRELAUNCH && state != RUN_STATE_PAUSED &&
+         state != RUN_STATE_DEBUG) {
+@@ -145,6 +179,68 @@
+         return false;
+     }
+     return true;
++}
++
++static FdisbullDisplayFrameFenceInfo *display_frame_fence_info(void)
++{
++    FdisbullDisplayFrameFenceInfo *info = g_new0(FdisbullDisplayFrameFenceInfo, 1);
++    uint64_t updates = display_frame_fence.baseline_update_id;
++
++    if (display_frame_fence.completed) {
++        updates = display_frame_fence.completed_update_id;
++    } else if (display_window.token && display_frame_fence.display_token &&
++               !strcmp(display_window.token, display_frame_fence.display_token)) {
++        updates = display_window.updates;
++    }
++
++    info->api_version = 1;
++    info->epoch = display_frame_fence.epoch;
++    info->state = g_strdup(display_frame_fence.completed ? "completed" :
++                           display_frame_fence.armed ? "armed" : "cancelled");
++    info->token = g_strdup(display_frame_fence.token);
++    info->display_token = g_strdup(display_frame_fence.display_token);
++    info->baseline_update_id = display_frame_fence.baseline_update_id;
++    info->updates = updates;
++    info->stop_pending = display_frame_fence.stop_pending;
++    info->stop_consumed = display_frame_fence.stop_consumed;
++    info->has_completed_update_id = display_frame_fence.completed;
++    info->completed_update_id = display_frame_fence.completed_update_id;
++    info->has_published_ns = display_frame_fence.completed;
++    info->published_ns = display_frame_fence.published_ns;
++    return info;
++}
++
++bool fdisbull_display_frame_fence_blocks_control(void)
++{
++    return display_frame_fence.token && !display_frame_fence.cancelled;
++}
++
++bool fdisbull_display_frame_checkpoint_safe(Error **errp)
++{
++    assert(bql_locked());
++    if (fdisbull_display_frame_fence_blocks_control() ||
++        display_frame_fence.stop_pending) {
++        error_setg(errp, "Cancel the native display-frame fence before checkpointing");
++        return false;
++    }
++    return true;
++}
++
++void fdisbull_display_frame_handle_stop_request(void)
++{
++    assert(bql_locked());
++    if (!display_frame_fence.stop_pending) {
++        return;
++    }
++    if (runstate_is_running()) {
++        /* Match the ordinary interrupt-class stop used by the clock budget. */
++        vm_stop(RUN_STATE_PAUSED);
++        display_frame_fence.stop_consumed = true;
++    }
++    /* A prior debugger or external stop wins and is not attributed to us. */
++    if (!runstate_is_running()) {
++        display_frame_fence.stop_pending = false;
++    }
+ }
+ 
+ static FdisbullDisplayInfo *display_info(void)
+@@ -282,7 +378,8 @@
+         return;
+     }
+     CPU_FOREACH(cpu) {
+-        if (cpu->stop || cpu->stopped) {
++        if (cpu->stop || cpu->stopped ||
++            (cpu->interrupt_request & CPU_INTERRUPT_DEBUG)) {
+             display_rearm(clock->virtual_ns);
+             return;
+         }
+@@ -323,12 +420,135 @@
+     display_window.published_configuration = g_steal_pointer(&configuration);
+     display_window.updates++;
+     display_window.published_ns = published_ns;
++    if (display_frame_fence.armed) {
++        if (display_frame_fence.epoch != display_window.epoch ||
++            !display_window.token ||
++            strcmp(display_frame_fence.display_token, display_window.token) ||
++            display_frame_fence.baseline_update_id == UINT64_MAX ||
++            display_window.updates != display_frame_fence.baseline_update_id + 1) {
++            display_invalidate("display-frame fence publication identity changed");
++            return;
++        }
++        display_frame_fence.armed = false;
++        display_frame_fence.completed = true;
++        display_frame_fence.completed_update_id = display_window.updates;
++        display_frame_fence.published_ns = published_ns;
++        display_frame_fence.stop_pending = true;
++        /* Same deferred safe-boundary request used by the virtual-clock timer. */
++        cpu_stop_current();
++        qemu_notify_event();
++    }
+     display_rearm(display_window.published_ns);
+ }
+ 
+ FdisbullDisplayInfo *qmp_x_fdisbull_query_display(Error **errp)
+ {
+     return display_guard(errp) ? display_info() : NULL;
++}
++
++FdisbullDisplayFrameFenceInfo *qmp_x_fdisbull_arm_display_frame(
++    const char *token, const char *display_token, Error **errp)
++{
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
++    if (!display_guard(errp)) {
++        return NULL;
++    }
++    if (!display_window.observing || !display_window.token ||
++        strcmp(display_token, display_window.token)) {
++        error_setg(errp, "Display-frame fence requires the current active display observer");
++        return NULL;
++    }
++    if (fdisbull_display_frame_fence_blocks_control() ||
++        display_frame_fence.stop_pending) {
++        error_setg(errp, "A display-frame fence is already active or unconsumed");
++        return NULL;
++    }
++    if (!token[0] || strlen(token) > 128 ||
++        (display_frame_fence.token && !strcmp(token, display_frame_fence.token))) {
++        error_setg(errp, "Display-frame fence requires a new token of 1..128 bytes");
++        return NULL;
++    }
++    g_free(display_frame_fence.token);
++    g_free(display_frame_fence.display_token);
++    display_frame_fence.initialized = true;
++    display_frame_fence.armed = true;
++    display_frame_fence.completed = false;
++    display_frame_fence.cancelled = false;
++    display_frame_fence.stop_pending = false;
++    display_frame_fence.stop_consumed = false;
++    display_frame_fence.epoch = display_window.epoch;
++    display_frame_fence.token = g_strdup(token);
++    display_frame_fence.display_token = g_strdup(display_token);
++    display_frame_fence.baseline_update_id = display_window.updates;
++    display_frame_fence.completed_update_id = 0;
++    display_frame_fence.published_ns = 0;
++    return display_frame_fence_info();
++}
++
++FdisbullDisplayFrameFenceInfo *qmp_x_fdisbull_query_display_frame(
++    const char *token, Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
++    if (!display_frame_fence.token || strcmp(token, display_frame_fence.token)) {
++        error_setg(errp, "Display-frame fence token does not own the current receipt");
++        return NULL;
++    }
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock) {
++        return NULL;
++    }
++    if (clock->running || clock->pending_stop ||
++        clock->epoch != display_frame_fence.epoch) {
++        error_setg(errp, "Display-frame receipt requires its stopped clock epoch");
++        return NULL;
++    }
++    if (display_frame_fence.armed) {
++        if (!display_guard(errp) ||
++            !display_window.token ||
++            strcmp(display_frame_fence.display_token, display_window.token)) {
++            if (errp && !*errp) {
++                error_setg(errp, "Display-frame fence owner window changed");
++            }
++            return NULL;
++        }
++    }
++    return display_frame_fence_info();
++}
++
++FdisbullDisplayFrameFenceInfo *qmp_x_fdisbull_cancel_display_frame(
++    const char *token, Error **errp)
++{
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
++    if (!display_frame_fence.token || strcmp(token, display_frame_fence.token)) {
++        error_setg(errp, "Display-frame fence token does not own the current receipt");
++        return NULL;
++    }
++    if (!display_window.invalidated &&
++        (display_frame_fence.armed || !display_frame_fence.cancelled) &&
++        !display_guard(errp)) {
++        return NULL;
++    }
++    if (display_frame_fence.armed &&
++        (display_frame_fence.epoch != display_window.epoch ||
++         !display_window.token ||
++         strcmp(display_frame_fence.display_token, display_window.token))) {
++        error_setg(errp, "Display-frame fence owner epoch/window changed");
++        return NULL;
++    }
++    display_frame_fence.armed = false;
++    display_frame_fence.cancelled = true;
++    return display_frame_fence_info();
+ }
+ 
+ FdisbullDisplayInfo *qmp_x_fdisbull_start_display(const char *token,
+@@ -347,7 +567,8 @@
+         return NULL;
+     }
+     now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+-    if (display_window.observing || !token[0] || strlen(token) > 128 ||
++    if (fdisbull_display_frame_fence_blocks_control() ||
++        display_window.observing || !token[0] || strlen(token) > 128 ||
+         (display_window.token && !strcmp(display_window.token, token)) ||
+         period_ns < DISPLAY_MIN_PERIOD_NS || period_ns > DISPLAY_MAX_PERIOD_NS ||
+         now < 0 || now > INT64_MAX - period_ns) {
+@@ -410,6 +631,10 @@
+     if (!display_guard(errp) || !display_token(token, errp)) {
+         return NULL;
+     }
++    if (fdisbull_display_frame_fence_blocks_control()) {
++        error_setg(errp, "Cancel the display-frame fence before stopping display observation");
++        return NULL;
++    }
+     if (display_window.observing) {
+         timer_del(&display_window.timer);
+         display_window.observing = false;
+@@ -642,7 +867,8 @@
+ 
+ static bool display_checkpoint_decode(
+     const FdisbullInstrumentedDisplayState *state,
+-    g_autofree uint8_t **rgb, size_t *rgb_bytes, Error **errp)
++    g_autofree uint8_t **rgb, size_t *rgb_bytes,
++    bool require_published_configuration, Error **errp)
+ {
+     g_autofree char *canonical = NULL;
+     FdisbullDisplayInfo *info;
+@@ -665,7 +891,9 @@
+         (has_pixels && (info->width <= 0 || info->height <= 0 ||
+                         (uint64_t)info->width * info->height * 3 != *rgb_bytes)) ||
+         (!has_pixels && *rgb_bytes) ||
+-        (!!state->published_configuration != has_pixels) ||
++        (state->published_configuration && !has_pixels) ||
++        (require_published_configuration && has_pixels &&
++         !state->published_configuration) ||
+         (state->active != !strcmp(info->state, "observing")) ||
+         (state->active && (strcmp(state->profile, "renderer") ||
+                            !state->device_path[0] || state->next_deadline_ns < 0)) ||
+@@ -678,12 +906,13 @@
+ 
+ bool fdisbull_display_checkpoint_validate(
+     const FdisbullInstrumentedDisplayState *state, uint64_t source_epoch,
+-    int64_t virtual_ns, Error **errp)
++    int64_t virtual_ns, bool require_published_configuration, Error **errp)
+ {
+     g_autofree uint8_t *rgb = NULL;
+     size_t rgb_bytes = 0;
+ 
+-    if (!display_checkpoint_decode(state, &rgb, &rgb_bytes, errp)) {
++    if (!display_checkpoint_decode(state, &rgb, &rgb_bytes,
++                                   require_published_configuration, errp)) {
+         return false;
+     }
+     if (state->info->api_version != 1 || state->info->epoch != source_epoch ||
+@@ -699,7 +928,7 @@
+ 
+ bool fdisbull_display_checkpoint_restore(
+     const FdisbullInstrumentedDisplayState *state, uint64_t epoch,
+-    const char **new_token, Error **errp)
++    bool require_published_configuration, const char **new_token, Error **errp)
+ {
+     g_autofree uint8_t *rgb = NULL;
+     size_t rgb_bytes = 0;
+@@ -708,9 +937,11 @@
+     g_autofree char *path = NULL;
+ 
+     assert(bql_locked());
+-    if (!display_checkpoint_decode(state, &rgb, &rgb_bytes, errp) ||
++    if (!display_checkpoint_decode(state, &rgb, &rgb_bytes,
++                                   require_published_configuration, errp) ||
+         !fdisbull_display_checkpoint_validate(state, state->info->epoch,
+-                                             state->info->virtual_ns, errp)) {
++                                             state->info->virtual_ns,
++                                             require_published_configuration, errp)) {
+         return false;
+     }
+     if (display_window.token || display_window.observing || display_window.device) {
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -24,6 +24,7 @@
+ #include "qobject/qjson.h"
+ #include "qobject/qobject.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/fdisbull-display.h"
+ #include "system/runstate.h"
+ 
+ static void checkpoint_qobject_unref(QObject *object)
+@@ -115,6 +116,9 @@
+     assert(bql_locked());
+     if (fdisbull_instrumented_checkpoint_busy()) {
+         error_setg(errp, "Instrumented checkpoint transaction is in progress");
++        return NULL;
++    }
++    if (!fdisbull_display_frame_checkpoint_safe(errp)) {
+         return NULL;
+     }
+     clock = qmp_x_fdisbull_query_clock(errp);
+@@ -178,6 +182,11 @@
+         result->retrace->configuration =
+             QAPI_CLONE(FdisbullVgaConfigurationSnapshot, configuration->current);
+     }
++    if (result->retrace->admitted && result->display->info->has_width &&
++        !result->display->published_configuration) {
++        error_setg(errp, "Precise retrace checkpoint lacks the display publication configuration");
++        return NULL;
++    }
+     return g_steal_pointer(&result);
+ }
+ 
+@@ -268,6 +277,10 @@
+     assert(bql_locked());
+     if (save_busy || restore_pending) {
+         error_setg(errp, "An instrumented checkpoint transaction is already active");
++        return false;
++    }
++    if (!fdisbull_display_frame_checkpoint_safe(&local_err)) {
++        error_propagate(errp, local_err);
+         return false;
+     }
+     clock = qmp_x_fdisbull_query_clock(&local_err);
+@@ -330,10 +343,11 @@
+     if (!fdisbull_clock_checkpoint_validate(state->clock, state->virtual_ns, errp) ||
+         !fdisbull_audio_checkpoint_validate(state->audio, state->source_epoch,
+                                             state->virtual_ns, errp) ||
++        !fdisbull_retrace_checkpoint_validate(state->retrace, state->source_epoch,
++                                              state->virtual_ns, errp) ||
+         !fdisbull_display_checkpoint_validate(state->display, state->source_epoch,
+-                                              state->virtual_ns, errp) ||
+-        !fdisbull_retrace_checkpoint_validate(state->retrace, state->source_epoch,
+-                                              state->virtual_ns, errp)) {
++                                              state->virtual_ns,
++                                              state->retrace->admitted, errp)) {
+         return NULL;
+     }
+     current_clock = qmp_x_fdisbull_query_clock(errp);
+@@ -357,6 +371,7 @@
+         !fdisbull_audio_checkpoint_restore(state->audio, epoch,
+                                            &audio_token, errp) ||
+         !fdisbull_display_checkpoint_restore(state->display, epoch,
++                                             state->retrace->admitted,
+                                              &display_token, errp)) {
+         return NULL;
+     }
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -53,6 +53,7 @@
+ #include "qom/object_interfaces.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-display.h"
+ #include "system/qtest.h"
+ #include "system/replay.h"
+ #include "system/reset.h"
+@@ -780,6 +781,7 @@
+         vm_stop(RUN_STATE_DEBUG);
+     }
+     fdisbull_clock_handle_stop_request();
++    fdisbull_display_frame_handle_stop_request();
+     if (qemu_suspend_requested()) {
+         qemu_system_suspend();
+     }

@@ -19,6 +19,7 @@ EXCLUDED_DIRECTORIES = {
     "__pycache__",
     "freeware-games",
     "freeware-games.zip",
+    "behavior-curriculum",
 }
 EXCLUDED_SUFFIXES = {
     ".fdb",
@@ -76,6 +77,7 @@ REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {
 }
 REQUIRED_TEST_HELPERS = {
     ".gitlab-ci.yml",
+    "tests/offline_win16_oracle.c",
     ".github/workflows/ovh-bootstrap.yml",
     ".github/workflows/ci.yml",
     ".github/workflows/native-debugger.yml",

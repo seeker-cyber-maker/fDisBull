@@ -1,0 +1,48 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "upstream_tag_url": "https://qemu.googlesource.com/qemu/+/refs/tags/v10.0.13/",
+  "patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "files": [
+    {
+      "path": "accel/tcg/icount-common.c",
+      "base_sha256": "1debfc9eabfa137e87932e9ae98b08a10e8554e0f164c5ba910d4920df0984ed",
+      "patched_sha256": "0ef7ea079a54e6d1d83f36518eef780a778b8f0071ef1d301371868d82b85bcb"
+    },
+    {
+      "path": "include/system/fdisbull-clock.h",
+      "base_sha256": null,
+      "patched_sha256": "7cf52e4f49129bcda561f46788eae86529b370e271f0714e96fa8e781533f3ad"
+    },
+    {
+      "path": "qapi/run-state.json",
+      "base_sha256": "8a4b98f256771d08f4a448779f9a5bb359b36c128297a2f2074e46eceaf36076",
+      "patched_sha256": "6aa6b74d14574a82839fe8ed5949c3e2cf669021b502e4b4ed803559d04e965e"
+    },
+    {
+      "path": "system/fdisbull-clock.c",
+      "base_sha256": null,
+      "patched_sha256": "59e71fd207410998ffbcbb579760b2d1a3d6edb1790ccfe96287504dbf2d36c1"
+    },
+    {
+      "path": "system/meson.build",
+      "base_sha256": "2c210634b93b229c1265d153ae5e592aa4b36834909051aeea5570c53d13e589",
+      "patched_sha256": "3918fef0eab891f5172a021d6581eaacde163c2290abff87ace30b4f00f68c7a"
+    },
+    {
+      "path": "system/runstate.c",
+      "base_sha256": "2195707a6ff9b0ff4209030bf6154d52d4b5743bd7187cf4da09b879d81988fb",
+      "patched_sha256": "4f2087cba96bf1dfdb48a20c2ba7094d9230bf169880f72ee22eb7bd8301fa8f"
+    }
+  ],
+  "patch_roundtrip": "Passed against official archive baseline members; includes debugger-stop idle-warp suppression after native clock admission, with or without an armed budget",
+  "schema_validation": "QAPISchema(qapi/qapi-schema.json) passed",
+  "native_build_and_runtime": "reported separately by private build and native witness receipts",
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  }
+}

@@ -1,6 +1,7 @@
 """Verify two-way mirror reconciliation and GitLab CI pipeline-suppression rules."""
 import importlib.util
 from pathlib import Path
+import re
 import subprocess
 
 import pytest
@@ -107,7 +108,7 @@ def test_reconcile_with_remote_fast_forwards_behind_local_branch_and_skips_synce
     assert updated_sha == sha2
 
 
-def test_sync_mirrors_refuses_retired_github_remote(tmp_path):
+def test_legacy_sync_helper_keeps_github_on_guarded_service(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
@@ -120,7 +121,7 @@ def test_sync_mirrors_refuses_retired_github_remote(tmp_path):
         ["git", "-C", str(repo), "remote", "add", "origin", "https://github.com/seeker-cyber-maker/fDisBull.git"],
         check=True,
     )
-    with pytest.raises(mirror.MirrorSyncError, match="Refusing to push to retired GitHub remote"):
+    with pytest.raises(mirror.MirrorSyncError, match="Legacy helper excludes GitHub remote"):
         mirror.sync_mirrors(repo, remotes=("origin",), dry_run=True)
 
 
@@ -137,5 +138,28 @@ def test_gitlab_ci_yaml_blocks_routine_compute_and_requires_local_runner():
     assert '    - fdisbull-local-linux' in ci_text
     assert "interruptible: true" not in ci_text
     assert "retry: 0" in ci_text
-    assert 'resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"' in ci_text
+    # Check each executable job, including jobs inheriting the debugger template.
+    # A shared group serializes different branches and pipelines on the OVH host.
+    sections = dict(re.findall(r"(?ms)^([\w.-]+):\s*\n(.*?)(?=^[\w.-]+:|\Z)", ci_text))
+    jobs = {name: body for name, body in sections.items()
+            if not name.startswith('.') and re.search(r"(?m)^  (?:script|extends):", body)}
+    assert set(jobs) >= {"test-and-package", "native-qualification", "native-debugger-stable",
+                         "native-debugger-layers", "native-unified", "qualify-candidate",
+                         "ci-recovery-rehearsal"}
+    for name, body in jobs.items():
+        parent = re.search(r"(?m)^  extends: (\.[\w.-]+)\s*$", body)
+        inherited = sections.get(parent.group(1), "") if parent else ""
+        lock = re.search(r"(?m)^  resource_group: (.+?)\s*$", body)
+        if not lock:
+            lock = re.search(r"(?m)^  resource_group: (.+?)\s*$", inherited)
+        assert lock and lock.group(1).strip('"\'') == "fdisbull-ovh-ci", name
     assert "when: manual" in ci_text
+    rehearsal = sections['ci-recovery-rehearsal']
+    assert ('$FDISBULL_CI_RECOVERY_REHEARSAL == "1" && $CI_PIPELINE_SOURCE == "api"'
+            in rehearsal)
+    assert 'when: never' in rehearsal
+    # The explicit API rehearsal must not admit ordinary package or native jobs.
+    for name in ('test-and-package', 'native-qualification', '.native_qualification_rules'):
+        assert '$FDISBULL_CI_RECOVERY_REHEARSAL == "1"' in sections[name]
+    assert 'when: manual' in sections['native-qualification']
+    assert 'allow_failure: false' in sections['native-qualification']

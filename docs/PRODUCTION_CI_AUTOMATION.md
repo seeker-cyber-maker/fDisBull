@@ -1,0 +1,180 @@
+# Production CI recovery
+
+This is the control-plane contract, not a release qualification. Installed
+source, provider results, closed exports, native health receipts and the
+operational acceptance record determine which deployment is live. Fixture
+tests alone do not establish activation, notification delivery or recovery of
+a naturally occurring failure.
+
+## Direct VPS source-to-release job
+
+The installed, root-only queue command is:
+
+```sh
+python3 /usr/local/libexec/fdisbull-ci-production/production_pipeline.py --enqueue FULL_SOURCE_SHA
+```
+
+It uses the operator-installed 0.35.0 input template, records one immutable
+request and lets the existing n8n timer start the job. It starts no worker and
+performs no release itself. The source integrator calls it only after the
+primary repository's contribution disposition and full source SHA are frozen.
+Repeated calls for that same request do not launch another attempt.
+
+A frozen release request can select the existing n8n service's direct VPS path.
+The request records the full commit on the primary GitHub repository, version,
+new tag, retained native input identities and private source/output locations.
+The service holds the same single executor lease. It does not dispatch a hosted
+workflow or ask a chat to poll its progress.
+
+The existing serial Docker runner executes ordinary packaging, both declared
+DOS native legs, prepared Wine/QEMU acceptance, complete kit assembly and a
+separate source-free consumer with networking disabled. Full kit preparation
+requires authored PE32 and Win16 inputs; PE64-only output requires an explicit
+legacy choice. The consumer also imports a tiny authored executable through the
+packaged CLI, analyzes it and reopens its persisted project. These checks are
+part of the delivered consumer seam, rather than another qualification harness.
+
+The owner records actual progress, a finite deadline and host health during the
+job. Workers carry the run and source labels used for exact owned-process
+cleanup. Results, failed attempts and stopped container disks are preserved.
+Fixed disk-reserve floors and reserve-based permission gates have been removed;
+valid mounted destinations and actual filesystem errors remain authoritative.
+
+A completed consumer and matching ordinary package inventory produce one
+release input manifest. The existing Mac GUI worker keeps its existing named
+GitHub credential in place. It creates a draft of the authorized new release,
+uploads the four packages, complete offline ZIP and checksum file, checks asset
+identities, then publishes. Every mutation has a durable intent. An uncertain
+response stops with its partial effects retained; read-only reconciliation never
+repeats a mutation. A successful CLI exit alone is not publication proof.
+
+This code path must pass a real uninterrupted source-to-release run before
+being called operationally qualified. Historical operator-assisted closure does
+not qualify it. Publication and the active local installation retain separate
+identities and gates. There is no automatic system-wide application installation
+in this path.
+
+## Execution and ownership
+
+The existing n8n operations timer reads the fixed native `status` command. Its
+reply contains only `schema_version` and `pending_work`; the read performs no
+provider request, model call or queue mutation. A pending result lets the
+existing authenticated bridge start `fdisbull-ci-production.service`. There is
+no second schedule or model polling loop.
+
+One native service holds the existing OVH executor flock for its complete
+incident. Durable intake and action records precede any non-idempotent action.
+The original repository's manual GitHub workflow runs the actual ordinary
+`test-and-package.sh`, using separate pinned control and candidate checkouts.
+GitLab retains its deliberate web/API admission and blocking manual native
+gate. Provider credentials stay on the already authenticated Mac; fixed
+Tailscale SSH commands carry bounded structured requests, not credentials.
+
+The service owns finite job, patch, request, output and incident budgets. Its
+managed stop drains current work rather than killing a lease owner while
+daemon-owned containers may survive. Unknown cleanup retains the lease in an
+explicit attention hold. A durable blocker prevents subsequent controlled
+provider operations. Only exact owned container identities may be stopped;
+there is no pruning or deletion of unrelated workers or preserved results.
+
+## Supported decisions
+
+| Provider/job | Recognized failure | Allowed action |
+| --- | --- | --- |
+| GitHub ordinary | Closed, source-bound missing qualification-policy diagnostic | Restore that exact derived CI input from its retained hash-bound canonical bytes; retry the same source once |
+| GitHub ordinary | One supported failed pytest node with a reproduced baseline | One bounded source worker, dedicated candidate branch, dual-provider ref readback, then a new exact-source workflow |
+| GitLab ordinary | The same supported source-failure class | One bounded source worker and a new exact-source ordinary pipeline; its native gate remains manual |
+| GitLab native | Canonical failed job and preserved export | Retain evidence and report attention; an existing retry adapter is not permission to invent a repair or bypass the manual gate |
+| Any other, incomplete or ambiguous case | Unknown or unsupported | Preserve it as unknown/attention; do not infer success, retry indefinitely or weaken checks |
+
+This matrix describes the implemented policy. Each route still needs its own
+operational evidence before being called qualified. An induced infrastructure
+failure must remain labeled induced. A successful job rerun qualifies that job
+and candidate; it does not qualify a complete release or every backend.
+
+## Source-worker boundary
+
+The source selector accepts one non-parameterized failed test from an ordinary
+JUnit report whose bytes are bound to a closed canonical job export. It maps
+the test and up to three direct first-party source imports against the exact
+Git commit. Protected test and verifier hashes, a clean isolated worktree and
+an actually failing baseline are mandatory.
+
+The existing Mac Python environment is explicitly pinned. Its reproducer is a
+Mac-local observation, not Linux parity. The worker may change only the chosen
+source files, within a 64 KiB diff, 300-second wall-time and bounded output.
+The installed CLI has no hard token-budget flag; recorded token usage is an
+audit value, not an enforced cap. Tests, CI configuration and protected
+verifiers cannot be edited to make the result green.
+
+Only a new, single-parent candidate commit with a passing reproducer may be
+pushed to its dedicated `codex/ci-repair-*` ref. Both named provider identities
+and both exact remote refs are verified. GitLab publication uses `ci.skip`;
+qualification is a separate deliberate dispatch. Unknown publication is
+readback-only: it does not repeat a push. Source repair never merges main,
+moves tags, publishes a package or changes an installed application.
+
+## Evidence and terminal results
+
+Failure evidence is retained before classification: canonical provider
+metadata, original bounded private log, source postcheck and a closed byte-hash
+inventory. Source selection transfers bounded verified JUnit evidence;
+provider logs never become model instructions or notification content.
+
+GitHub binds actual numeric run, attempt, job and runner identities to the
+control SHA and independently verified candidate checkout. The listener also
+checks for other active runs before starting; its local lease cannot exclude
+an unauthorized external actor racing at the provider. GitLab's ref-only API
+likewise requires immediate ref readback and rejects a resulting SHA mismatch;
+it is not an atomic compare-and-dispatch operation.
+
+Recovery requires the correct candidate's canonical terminal success, clean
+closed export, required real package/test artifacts and a durable healthy host
+decision. A successful API response or artifact upload alone is insufficient.
+Incident phases enter the existing notification journal. Journal acceptance,
+delivery acceptance and a human seeing a phone notification are separate facts.
+
+## Controller stops and completed initial jobs
+
+Bootstrap, initial qualification and cleanup stops use the existing native
+notification journal. Their immutable stop snapshot has a stable identity, so a
+later service invocation reuses the original cause instead of creating another
+bootstrap incident. Planned component-maintenance markers suppress that route.
+The bounded append acknowledges journal acceptance only; delivery still needs
+its own readback. If the journal is unavailable, retain an unresolved receipt.
+
+Private qualification controllers must use `initial_listener_required(request)`
+before reserving the full listener-start window. A completed result or existing
+listener intent can require read-only reconciliation without another four-hour
+listener budget. This decision does not authorize releasing ownership.
+
+On a qualification exception, `stop_qualification(request, error,
+deadline_epoch=...)` separately classifies ownership. A safe release requires an
+exact accepted initial dispatch, one terminal attempt-1 result, its candidate
+source binding, matching listener start/exit and cleanup records, and fresh
+process/container checks. The caller releases its lease only by leaving the
+owning context. Missing records, conflicting identities or later unresolved
+actions retain attention and ownership. This API cannot certify an entire
+repair incident or close a later retry from initial-attempt evidence.
+
+A later release proof is stored separately from the original stop snapshot.
+Neither path rewrites an earlier controller outcome, synthesizes a recovered
+job, nor repeats an uncertain provider mutation. The previous private wrappers
+with an unconditional attention sleep are retired evidence and must not be
+reused. Their replacements require this explicit stop classification.
+
+## Installation and publication gates
+
+The native CLI checks the exact installed module set and entrypoint hash before
+importing mutable control code. Provider action state is on the verified CODEX
+volume with a separate small history anchor; missing mount, marker or history
+fails closed instead of creating an empty replacement. Source selection and
+publication require their own explicit private activation manifest.
+
+An original no-network kit acceptance remains immutable. New source requires a
+distinct private candidate and new consumer evidence. Every future large
+download also needs its own scoped serving policy, HEAD-before-range checks,
+exact first/middle/tail bytes, a complete download hash and an actually
+interrupted `Range`/`If-Range` resumed hash. The successful existing archive's
+CDN check is not a blanket qualification for future URLs. Release, tag and
+system-wide application installation remain separate human-authorized steps.
