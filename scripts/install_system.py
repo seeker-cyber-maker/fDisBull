@@ -102,6 +102,58 @@ def _tool_entries(z):
     return root
 
 
+def _source_built_dependency(dep,wheel):
+    proof=read_json(reference(dep['source_build']))
+    fields={'schema','name','version','platform','architecture','wheel','sdist','pypi_identity','build_commands','validation_commands','toolchain'}
+    if (set(proof)!=fields or proof['schema']!='fdisbull-source-built-wheel-1'
+            or proof['platform']!='darwin' or proof['architecture']!='arm64'
+            or not isinstance(proof['name'],str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*',proof['name'])
+            or not isinstance(proof['version'],str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+!]*',proof['version'])
+            or proof['wheel']!={'name':wheel.name,'size':dep['wheel']['size'],'sha256':dep['wheel']['sha256']}):
+        raise ValueError('source-built wheel identity invalid')
+    parts=wheel.name[:-4].split('-') if wheel.name.endswith('.whl') else []
+    if (len(parts) not in (5,6) or not all(re.fullmatch(r'macosx_[0-9]+_[0-9]+_arm64',x) for x in parts[-1].split('.'))):
+        raise ValueError('source-built wheel platform invalid')
+    normalize=lambda value:re.sub(r'[-_.]+','-',value).lower()
+    with zipfile.ZipFile(wheel) as archive:
+        names=archive.namelist()
+        metadata=[n for n in names if n.endswith('.dist-info/METADATA') and n.count('/')==1]
+        wheelmeta=[n for n in names if n.endswith('.dist-info/WHEEL') and n.count('/')==1]
+        if len(metadata)!=1 or len(wheelmeta)!=1 or metadata[0].rsplit('/',1)[0]!=wheelmeta[0].rsplit('/',1)[0]:raise ValueError('source-built wheel metadata missing')
+        if archive.getinfo(metadata[0]).file_size>2*1024*1024 or archive.getinfo(wheelmeta[0]).file_size>2*1024*1024:raise ValueError('source-built wheel metadata too large')
+        meta=BytesParser(policy=default).parsebytes(archive.read(metadata[0])); tags=BytesParser(policy=default).parsebytes(archive.read(wheelmeta[0])).get_all('Tag',[])
+        expected_tags={f'{py}-{abi}-{plat}' for py in parts[-3].split('.') for abi in parts[-2].split('.') for plat in parts[-1].split('.')}
+        if (normalize(str(meta.get('Name','')))!=normalize(proof['name']) or str(meta.get('Version',''))!=proof['version']
+                or normalize(parts[0])!=normalize(proof['name']) or parts[1]!=proof['version'] or not tags or set(tags)!=expected_tags):
+            raise ValueError('source-built wheel metadata differs')
+    sdist=reference(proof['sdist']);identity=read_json(reference(proof['pypi_identity']))
+    rows=identity.get('files',[])
+    if not isinstance(rows,list):raise ValueError('official source identity invalid')
+    matches=[row for row in rows if isinstance(row,dict) and row.get('filename')==sdist.name]
+    api='https://pypi.org/pypi/'+proof['name']+'/'+proof['version']+'/json'
+    if (identity.get('schema')!='fdisbull-source-sdist-pypi-identity-1' or identity.get('name')!=proof['name']
+            or identity.get('version')!=proof['version'] or len(matches)!=1):raise ValueError('official source identity invalid')
+    row=matches[0]
+    if (row.get('metadata_match') is not True or row.get('yanked') is not False or row.get('packagetype')!='sdist'
+            or not str(row.get('pypi_file_url','')).startswith('https://files.pythonhosted.org/') or row.get('pypi_release_api')!=api
+            or row.get('pypi_sha256')!=proof['sdist']['sha256'] or row.get('pypi_size')!=proof['sdist']['size']):
+        raise ValueError('official source identity invalid')
+    for key in ('build_commands','validation_commands'):
+        commands=proof[key]
+        if not isinstance(commands,list) or not commands:raise ValueError('source build commands missing')
+        for command in commands:
+            if (not isinstance(command,dict) or set(command)!={'argv','returncode','stdout','stderr'}
+                    or not isinstance(command['argv'],list) or not command['argv']
+                    or any(not isinstance(x,str) or not x for x in command['argv'])
+                    or type(command['returncode']) is not int or command['returncode']!=0):raise ValueError('source build command invalid')
+            reference(command['stdout']);reference(command['stderr'])
+    if not isinstance(proof['toolchain'],dict) or not proof['toolchain']:raise ValueError('source build toolchain missing')
+    for name,ref in proof['toolchain'].items():
+        if not isinstance(name,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,79}',name):raise ValueError('source build toolchain name invalid')
+        reference(ref)
+    return proof
+
+
 def validate_input(path):
     doc=read_json(path)
     fields={'schema','source_commit','version','artifacts','dependencies','backends','resources','proofs','native_log_root'}
@@ -140,8 +192,11 @@ def validate_input(path):
     if not isinstance(deps,list) or not deps:raise ValueError('pinned dependency wheels required')
     dep_paths=[]
     for dep in deps:
-        if not isinstance(dep,dict) or set(dep)!={'wheel','pypi_identity'}:raise ValueError('dependency provenance required')
-        wheel=reference(dep['wheel']); proof=read_json(reference(dep['pypi_identity']))
+        if not isinstance(dep,dict) or set(dep) not in ({'wheel','pypi_identity'},{'wheel','source_build'}):raise ValueError('dependency provenance required')
+        wheel=reference(dep['wheel'])
+        if 'source_build' in dep:
+            _source_built_dependency(dep,wheel);dep_paths.append(wheel);continue
+        proof=read_json(reference(dep['pypi_identity']))
         rows=proof.get('files',[])
         matches=[row for row in rows if isinstance(row,dict) and row.get('filename')==wheel.name]
         if (wheel.suffix!='.whl' or proof.get('schema')!='fdisbull-retained-third-party-wheel-pypi-identity-v1'
@@ -390,7 +445,22 @@ def stage(input_path,base):
             artifact_refs[role]={'path':dst.relative_to(prefix).as_posix(),'sha256':ref['sha256']}
         for index,dep in enumerate(doc['dependencies']):
             dst=share/'wheels'/Path(dep['wheel']['path']).name;_copy(dep['wheel'],dst);wheel_paths.append(dst)
-            _copy(dep['pypi_identity'],share/'dependency-proofs'/('%03d.json'%index))
+            if 'pypi_identity' in dep:
+                _copy(dep['pypi_identity'],share/'dependency-proofs'/('%03d.json'%index))
+            else:
+                directory=share/'dependency-proofs'/('%03d-source-build'%index)
+                proof=_source_built_dependency(dep,reference(dep['wheel']))
+                _copy(dep['source_build'],directory/'source-build.json')
+                links={}
+                def retain(label,ref):
+                    dst=directory/label;_copy(ref,dst)
+                    links[label]={'path':dst.relative_to(prefix).as_posix(),'sha256':ref['sha256'],'size':ref['size']}
+                retain('sdist',proof['sdist']);retain('pypi-identity.json',proof['pypi_identity'])
+                for name,ref in sorted(proof['toolchain'].items()):retain('toolchain/'+name,ref)
+                for group in ('build_commands','validation_commands'):
+                    for number,command in enumerate(proof[group]):
+                        for key in ('stdout','stderr'):retain(f'{group}/{number:03d}-{key}',command[key])
+                _write(directory/'retained-evidence.json',{'schema':'fdisbull-source-build-retained-evidence-1','files':links})
         verifier,checker=_extract_tool(share/'artifacts'/Path(doc['artifacts']['tool']['path']).name,share/'tool-source')
         shutil.copyfile(verifier,share/'verify-system.py');shutil.copyfile(checker,share/'check-local-install.py')
         backends={}

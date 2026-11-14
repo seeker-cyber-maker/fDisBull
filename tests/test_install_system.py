@@ -61,6 +61,72 @@ def fixture(tmp_path):
     return manifest,data,native
 
 
+def source_build_fixture(tmp_path):
+    path,data,_=fixture(tmp_path);inp=path.parent
+    wheelpath=inp/'iced_x86-1.21.0-cp313-cp313-macosx_11_0_arm64.whl'
+    with zipfile.ZipFile(wheelpath,'w') as z:
+        z.writestr('iced_x86-1.21.0.dist-info/METADATA','Name: iced-x86\nVersion: 1.21.0\n')
+        z.writestr('iced_x86-1.21.0.dist-info/WHEEL','Wheel-Version: 1.0\nTag: cp313-cp313-macosx_11_0_arm64\n')
+    wheel=ref(wheelpath);sdist=put(inp/'iced-x86-1.21.0.tar.gz',b'simulated sdist')
+    identity=doc(inp/'sdist-pypi.json',{'schema':'fdisbull-source-sdist-pypi-identity-1','name':'iced-x86','version':'1.21.0','files':[{'filename':Path(sdist['path']).name,'metadata_match':True,'yanked':False,'packagetype':'sdist','pypi_file_url':'https://files.pythonhosted.org/example','pypi_release_api':'https://pypi.org/pypi/iced-x86/1.21.0/json','pypi_sha256':sdist['sha256'],'pypi_size':sdist['size']}]})
+    stdout=put(inp/'build-stdout',b'build output');stderr=put(inp/'build-stderr',b'')
+    command={'argv':['python','build.py'],'returncode':0,'stdout':stdout,'stderr':stderr}
+    proof={'schema':'fdisbull-source-built-wheel-1','name':'iced-x86','version':'1.21.0','platform':'darwin','architecture':'arm64','wheel':{'name':wheelpath.name,'size':wheel['size'],'sha256':wheel['sha256']},'sdist':sdist,'pypi_identity':identity,'build_commands':[command.copy()],'validation_commands':[command.copy()],'toolchain':{'compiler':put(inp/'compiler-identity',b'compiler identity')}}
+    proofpath=inp/'source-build.json';data['dependencies']=[{'wheel':wheel,'source_build':doc(proofpath,proof)}];doc(path,data)
+    return path,data,proof,proofpath
+
+
+def test_source_built_wheel_accepts_bound_evidence(tmp_path):
+    path,data,_,_=source_build_fixture(tmp_path)
+    assert installer.validate_input(path)['dependencies']==data['dependencies']
+
+
+@pytest.mark.parametrize('mutation,match',[
+    (lambda p:p['wheel'].update(sha256='0'*64),'wheel identity'),
+    (lambda p:p.update(architecture='x86_64'),'wheel identity'),
+    (lambda p:p['build_commands'][0].update(returncode=1),'command invalid'),
+    (lambda p:p['validation_commands'][0]['stdout'].update(path='/missing/log'),'regular non-state'),
+    (lambda p:p['pypi_identity'].update(path='/missing/identity'),'regular non-state'),
+])
+def test_source_built_wheel_rejects_unbound_or_failed_evidence(tmp_path,mutation,match):
+    path,data,proof,proofpath=source_build_fixture(tmp_path);mutation(proof)
+    data['dependencies'][0]['source_build']=doc(proofpath,proof);doc(path,data)
+    with pytest.raises(ValueError,match=match):installer.validate_input(path)
+
+
+def test_source_built_wheel_requires_arm64_tag(tmp_path):
+    path,data,proof,proofpath=source_build_fixture(tmp_path)
+    wheel=Path(data['dependencies'][0]['wheel']['path']);renamed=wheel.with_name(wheel.name.replace('arm64','x86_64'));wheel.rename(renamed)
+    data['dependencies'][0]['wheel']=ref(renamed);proof['wheel']['name']=renamed.name
+    data['dependencies'][0]['source_build']=doc(proofpath,proof);doc(path,data)
+    with pytest.raises(ValueError,match='platform invalid'):installer.validate_input(path)
+
+
+def test_source_build_refuses_wrong_official_sdist_hash(tmp_path):
+    path,data,proof,proofpath=source_build_fixture(tmp_path)
+    identitypath=Path(proof['pypi_identity']['path']);identity=json.loads(identitypath.read_text())
+    identity['files'][0]['pypi_sha256']='0'*64
+    proof['pypi_identity']=doc(identitypath,identity)
+    data['dependencies'][0]['source_build']=doc(proofpath,proof);doc(path,data)
+    with pytest.raises(ValueError,match='official source identity'):installer.validate_input(path)
+
+
+def test_source_build_evidence_staged_with_payload(tmp_path,monkeypatch):
+    path,_,_,_=source_build_fixture(tmp_path)
+    def fake_run(argv,*args,**kwargs):
+        if 'venv' in argv:
+            target=Path(argv[-1]);(target/'bin').mkdir(parents=True);(target/'bin/python').write_bytes(b'simulated python')
+    monkeypatch.setattr(installer,'_run',fake_run)
+    monkeypatch.setattr(installer,'_verify',lambda *a,**kw:{'status':'simulated'})
+    prefix=Path(installer.stage(path,tmp_path/'base')['prefix'])
+    evidence=prefix/'share/dependency-proofs/000-source-build'
+    assert (evidence/'sdist').read_bytes()==b'simulated sdist'
+    assert (evidence/'build_commands/000-stdout').read_bytes()==b'build output'
+    payload=json.loads((prefix/'PAYLOAD.json').read_text())['files']
+    for name in ('source-build.json','sdist','pypi-identity.json','toolchain/compiler','build_commands/000-stdout','validation_commands/000-stderr','retained-evidence.json'):
+        assert 'share/dependency-proofs/000-source-build/'+name in payload
+
+
 def test_input_accepts_only_bound_complete_evidence(tmp_path):
     path,data,native=fixture(tmp_path)
     assert installer.validate_input(path)['source_commit']==data['source_commit']
