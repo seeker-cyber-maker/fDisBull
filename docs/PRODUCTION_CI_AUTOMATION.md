@@ -86,6 +86,35 @@ decision. A successful API response or artifact upload alone is insufficient.
 Incident phases enter the existing notification journal. Journal acceptance,
 delivery acceptance and a human seeing a phone notification are separate facts.
 
+## Controller stops and completed initial jobs
+
+Bootstrap, initial qualification and cleanup stops use the existing native
+notification journal. Their immutable stop snapshot has a stable identity, so a
+later service invocation reuses the original cause instead of creating another
+bootstrap incident. Planned component-maintenance markers suppress that route.
+The bounded append acknowledges journal acceptance only; delivery still needs
+its own readback. If the journal is unavailable, retain an unresolved receipt.
+
+Private qualification controllers must use `initial_listener_required(request)`
+before reserving the full listener-start window. A completed result or existing
+listener intent can require read-only reconciliation without another four-hour
+listener budget. This decision does not authorize releasing ownership.
+
+On a qualification exception, `stop_qualification(request, error,
+deadline_epoch=...)` separately classifies ownership. A safe release requires an
+exact accepted initial dispatch, one terminal attempt-1 result, its candidate
+source binding, matching listener start/exit and cleanup records, and fresh
+process/container checks. The caller releases its lease only by leaving the
+owning context. Missing records, conflicting identities or later unresolved
+actions retain attention and ownership. This API cannot certify an entire
+repair incident or close a later retry from initial-attempt evidence.
+
+A later release proof is stored separately from the original stop snapshot.
+Neither path rewrites an earlier controller outcome, synthesizes a recovered
+job, nor repeats an uncertain provider mutation. The previous private wrappers
+with an unconditional attention sleep are retired evidence and must not be
+reused. Their replacements require this explicit stop classification.
+
 ## Installation and publication gates
 
 The native CLI checks the exact installed module set and entrypoint hash before

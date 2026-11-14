@@ -31,6 +31,7 @@ health_module=_module('offline-qualification.py')
 control_module=_module('production_control.py')
 source_module=_module('production_source_transport.py')
 gui_client_module=_module('production_gui_client.py')
+entrypoint_module=_module('production-ci.py')
 
 REPO='seeker-cyber-maker/fDisBull'
 BRIDGE='/Volumes/CODEX/Codex_Projects/fDisBull-targets-private/production-ci-bridge/production_transport.py'
@@ -181,6 +182,7 @@ class Runtime:
         self._health_capture=health_capture or health_module.capture_health
         self._incident_runner=incident_runner or subprocess.run
         self._trace_capture=trace_capture;self._cleanup_unknown=False;self._cleanup_key=None;self._last_incident=None
+        self._qualification_ownership_hold=False
         self._sleep=sleeper;self._cleanup_runner=cleanup_runner or transport_module._source.run_command
         self._admission_deadline=self.clock()+self.config['max_incident_seconds']
         self._admission_scopes={p:self._admission_deadline for p in ('github','gitlab')}
@@ -323,11 +325,29 @@ class Runtime:
                     else:control_module.write_json(path,value,exclusive=True)
                     recorded=True
                 except (OSError,ValueError,RuntimeError):pass
-            if not notified and self._last_incident is not None:
-                incident,state=self._last_incident
-                try:self._emit(incident,'attention',state,attention_reason='ci_executor_unavailable');notified=True
-                except Exception:pass
-            if recorded and not CLEANUP_BLOCKER.exists() and not CLEANUP_BLOCKER.is_symlink() and safe:
+            if not notified:
+                try:
+                    if self._last_incident is not None:
+                        incident,state=self._last_incident
+                        self._emit(incident,'attention',state,attention_reason='ci_executor_unavailable')
+                    elif (self.root/'blocked.json').exists() and control_module.read_json(self.root/'blocked.json').get('schema')=='fdisbull-controller-stop-block-1':
+                        # A qualification stop already owns the immutable cause.
+                        # Replaying it must not create a second cleanup alert.
+                        def append(*args,**kwargs):
+                            self._guard(check_cleanup=False)
+                            return self._incident_runner(*args,**kwargs)
+                        self._guard(check_cleanup=False)
+                        entrypoint_module.record_failure('CleanupUnknown',runner=append)
+                    else:
+                        self._stop_notice('cleanup',str(self._cleanup_key or 'unknown'),'CleanupUnknown',
+                            deadline_epoch=getattr(self,'_admission_deadline',None),
+                            proof={'scope':'owned-worker-cleanup','action_key_sha256':key})
+                except (OSError,ValueError,RuntimeError):pass
+                # Native append retries are bounded inside the shared helper.
+                # An unresolved receipt persists; this hold is not a sender loop.
+                notified=True
+            if (recorded and not CLEANUP_BLOCKER.exists() and not CLEANUP_BLOCKER.is_symlink() and safe
+                    and not getattr(self,'_qualification_ownership_hold',False)):
                 self._cleanup_unknown=False;return
             self._sleep(60)
             if not CLEANUP_BLOCKER.exists() and not CLEANUP_BLOCKER.is_symlink():safe=self._verify_cleanup()
@@ -600,31 +620,15 @@ class Runtime:
                'context':{'provider':target['provider'],'project':manifest['project'],'run_id':target['run_id'],
                           'job_id':target['job_id'],'commit_sha':target['source_sha'],
                           'job_name':target['job_name'],'receipt_path':str(snapshot)}}
-        payload=encode(event)
-        for attempt in range(2):
+        def guarded_append(*args,**kwargs):
             self._guard(check_cleanup=False)
             if (self._attention_bytes(snapshot)!=snapshot_data or self._attention_bytes(binding)!=pin_data
                     or self._attention_bytes(directory/'manifest.json')!=manifest_data
                     or encode(json.loads(self._attention_bytes(directory/'state.json')))!=encode(state)):
                 raise ValueError('controller attention changed before journal append')
-            try:
-                result=self._incident_runner(['sudo','-n','-u','operations-alerts','/usr/bin/python3',
-                    '/usr/local/libexec/ci_incident.py','append'],input=payload,capture_output=True,timeout=30,check=False)
-            except (OSError,subprocess.SubprocessError):
-                if attempt==0:continue
-                raise RuntimeError('controller attention journal unavailable') from None
-            try:reply=json.loads(result.stdout)
-            except (AttributeError,TypeError,ValueError):
-                if attempt==0:continue
-                raise RuntimeError('controller attention journal unavailable') from None
-            if (type(result.returncode) is not int or result.returncode!=0 or type(reply) is not dict
-                    or set(reply)!={'stage','phase','incident_id','event_id','execution_performed','already_present','delivery_status'}
-                    or any(reply.get(k)!=receipt[k] for k in ('stage','phase','incident_id','event_id'))
-                    or reply.get('execution_performed') is not False or type(reply.get('already_present')) is not bool
-                    or reply.get('delivery_status')!='not_observed_here'):
-                raise RuntimeError('controller attention journal reply rejected')
-            return receipt
-        raise RuntimeError('controller attention journal unavailable')
+            return self._incident_runner(*args,**kwargs)
+        entrypoint_module._append_controller_event(self.root,event,guarded_append)
+        return receipt
 
     def _emit(self,incident,phase,state,*,attention_reason='ci_repair_failed'):
         if phase not in ('down','attention','complete'):return {'stage':'local-journal-only','phase':phase}
@@ -843,6 +847,184 @@ class Runtime:
         observed=self.backend(manifest,directory).observe(target)
         if observed.get('status')!='failed':raise ValueError('canonical failure unavailable')
         return target,required
+
+    def _stop_notice(self,stage,key,error_type,*,deadline_epoch,proof,context=None):
+        self._guard(check_cleanup=False)
+        def guarded_append(*args,**kwargs):
+            self._guard(check_cleanup=False)
+            return self._incident_runner(*args,**kwargs)
+        try:
+            return entrypoint_module.append_controller_stop(self.root,key,stage,error_type,
+                deadline_epoch=deadline_epoch,test=self.config.get('incident_test') is True,
+                context=context,proof=proof,runner=guarded_append)
+        except RuntimeError:
+            incident=hashlib.sha256(('controller-stop:'+stage+':'+key).encode()).hexdigest()
+            return {'stage':'notification-unresolved','phase':'attention','execution_performed':False,
+                    'delivery_status':'not_observed_here',
+                    'receipt_path':str(self.root/'incidents'/incident/'controller-attention-state.json')}
+
+    @staticmethod
+    def _initial_request(request):
+        if (type(request) is not dict or set(request)!={'key','source_sha'}
+                or not isinstance(request['key'],str) or not re.fullmatch(r'[A-Za-z0-9_.:/-]{1,500}',request['key'])
+                or not isinstance(request['source_sha'],str) or not re.fullmatch(r'[a-f0-9]{40}',request['source_sha'])):
+            raise ValueError('invalid initial stop request')
+        return request['key'],request['source_sha']
+
+    def initial_listener_required(self,request):
+        """Read-only margin decision; it does not certify cleanup or acceptance."""
+        self._guard(check_cleanup=False);key,sha=self._initial_request(request);host=self._github_host()
+        # An existing listener intent forbids respawn in GitHubHost.run_listener.
+        if host._path(key,'listener-intent').exists() or host._path(key,'listener-intent').is_symlink():return False
+        for status in ('success','failed'):
+            path=host._path(key,'initial-result-'+status)
+            if path.exists() or path.is_symlink():
+                item=json.loads(self._attention_bytes(path));target=production.target(item.get('target'))
+                if item.get('status')!=status or target['source_sha']!=sha:raise ValueError('initial result differs')
+                return False
+        return True
+
+    def _initial_stop_proof(self,request):
+        """Local terminal-host receipts plus fresh exact ownership checks only.
+
+        No reconcile/accept/provider method is called: those methods may POST.
+        A completed job without the listener/cleanup chain remains unknown.
+        """
+        key,sha=self._initial_request(request);host=self._github_host();gh=self.config['github'];records={}
+        def read(path):
+            path=Path(path);data=self._attention_bytes(path);value=json.loads(data)
+            if type(value) is not dict:raise ValueError('initial stop object required')
+            records[str(path)]=data;return value
+        if (self.root!=RECOVERY/'production' or host.state!=self.root/'github-host'
+                or host.export_root!=EXPORT/'github' or gh.get('repository')!=REPO
+                or str(gh.get('workflow_id'))!='417757453' or str(gh.get('runner_id'))!='21'
+                or gh.get('actor')!='seeker-cyber-maker' or gh.get('profile')!='ordinary'
+                or gh.get('sole_executor_authority') is not True
+                or gh.get('ref')!='codex/production-ci-recovery-20261113'
+                or not isinstance(gh.get('control_sha'),str) or not re.fullmatch(r'[a-f0-9]{40}',gh['control_sha'])
+                or CLEANUP_BLOCKER.exists() or CLEANUP_BLOCKER.is_symlink()
+                or self._cleanup_key not in (None,key)):
+            raise ValueError('initial stop ownership unavailable')
+        nonce=hashlib.sha256(key.encode()).hexdigest()
+        body={'ref':gh['ref'],'inputs':{'nonce':nonce,'candidate_sha':sha}}
+        digest=transport_module.request_digest('github','POST',host_module.BASE+'/workflows/417757453/dispatches',body)
+        intent=read(host._path(key,'dispatch-intent'))
+        if (set(intent)!={'action_key','candidate_sha','nonce','request_sha256','created_epoch'}
+                or any(intent.get(k)!=v for k,v in {'action_key':key,'candidate_sha':sha,'nonce':nonce,'request_sha256':digest}.items())
+                or type(intent['created_epoch']) not in (int,float) or not math.isfinite(intent['created_epoch'])
+                or not 0<=intent['created_epoch']<=self.clock()):raise ValueError('initial dispatch intent differs')
+        acceptance=host._path(key,'acceptance')
+        if read(acceptance)!={'action_key':key,'request_sha256':digest,'http_status':204}:
+            raise ValueError('initial acceptance differs')
+        paths=[host._path(key,'initial-result-'+status) for status in ('success','failed')]
+        selected=[path for path in paths if path.exists() or path.is_symlink()]
+        if len(selected)!=1:raise ValueError('initial terminal result ambiguous')
+        result=read(selected[0]);target=production.target(result.get('target'))
+        if (set(result)!={'target','status','acceptance_receipt'} or result['target']!=target
+                or result['status'] not in ('success','failed') or selected[0]!=host._path(key,'initial-result-'+result['status'])
+                or result['acceptance_receipt']!=str(acceptance) or target['provider']!='github'
+                or target['repository']!=REPO or target['source_sha']!=sha or target['control_sha']!=gh['control_sha']
+                or target['ref']!=gh['ref'] or target['runner_id']!='21' or target['job_name']!='qualification'
+                or target['run_attempt']!='1'):raise ValueError('initial terminal target differs')
+        active=self.root/'active.json'
+        if active.exists() or active.is_symlink():
+            item=read(active)
+            if (item.get('status') not in ('attention','complete') or not isinstance(item.get('event_key'),str)
+                    or not re.fullmatch(r'[a-f0-9]{64}',item['event_key'])):raise ValueError('controller ownership unresolved')
+            state=read(self.root/'incidents'/item['event_key']/'state.json')
+            if (state.get('status')!=item['status'] or state.get('target')!=target
+                    or type(state.get('actions')) is not list
+                    or any(type(a) is not dict or type(a.get('result')) is not dict
+                           or a['result'].get('status')!='completed' for a in state['actions'])):
+                raise ValueError('later controller ownership unresolved')
+        source_path=host.state/('source-'+hashlib.sha256(host_module._bytes(target)).hexdigest()+'.json')
+        source=read(source_path)
+        start_path=host.export_root/target['run_id']/target['run_attempt']/'qualification'/target['job_id']/'candidate-start.json'
+        start=read(start_path)
+        if (source!={'target':target,'start_sha256':hashlib.sha256(records[str(start_path)]).hexdigest(),'start_path':str(start_path)}
+                or start.get('schema')!='fdisbull-github-candidate-start-1' or start.get('candidate_head')!=sha
+                or start.get('control_head')!=gh['control_sha'] or start.get('nonce')!=nonce
+                or any(str(start.get(k))!=v for k,v in target.items() if k!='provider')):
+            raise ValueError('initial source binding differs')
+        listener=read(host._path(key,'listener-intent'));started=read(host._path(key,'listener-started'))
+        if (listener!={'action_key':key,'nonce':nonce,'run_id':target['run_id'],'run_attempt':'1','source_sha':sha,
+                       'control_sha':gh['control_sha'],'ref':gh['ref']}
+                or set(started)!={'action_key','pid','run_id','run_attempt'} or started['action_key']!=key
+                or started['run_id']!=target['run_id'] or started['run_attempt']!='1'
+                or type(started['pid']) is not int or started['pid']<=1):raise ValueError('initial listener identity differs')
+        exited=read(host._path(key,'listener-exit'))
+        cleanup_path=host.control_root/'github-bootstrap-20261113'/nonce/'cleanup.json';cleanup=read(cleanup_path)
+        if (set(exited)!={'action_key','pid','exit_code','cleanup_verified','cleanup_receipt'}
+                or exited['action_key']!=key or exited['pid']!=started['pid'] or type(exited['exit_code']) is not int
+                or exited['exit_code'] not in (0,1) or exited['cleanup_verified'] is not True
+                or exited['cleanup_receipt']!=str(cleanup_path)):raise ValueError('initial listener exit unverified')
+        labels={'fdisbull.ci.provider':'github','fdisbull.ci.run_id':target['run_id'],
+                'fdisbull.ci.run_attempt':'1','fdisbull.ci.control_sha':gh['control_sha']}
+        if (cleanup.get('status')!='clean' or cleanup.get('labels')!=labels or type(cleanup.get('containers')) is not list
+                or len(cleanup['containers'])>128
+                or any(type(row) is not dict or row.get('final_running') is not False for row in cleanup['containers'])):
+            raise ValueError('initial cleanup receipt unverified')
+        read(host.control_root/'github-bootstrap-20261113'/nonce/'started.json')
+        previous=self._cleanup_key;self._cleanup_key=key
+        try:
+            if not self._verify_cleanup():raise ValueError('initial fresh ownership check unverified')
+        finally:self._cleanup_key=previous
+        self._guard(check_cleanup=False)
+        if CLEANUP_BLOCKER.exists() or CLEANUP_BLOCKER.is_symlink():raise ValueError('cleanup became blocked')
+        if any(self._attention_bytes(Path(path))!=data for path,data in records.items()):raise ValueError('initial stop evidence changed')
+        return {'schema':'fdisbull-initial-safe-stop-proof-1','scope':'selected-initial-attempt-only',
+                'request':dict(request),'target':target,'job_status':result['status'],'observed_epoch':self.clock(),
+                'fresh_process_container_check':True,
+                'files':{path:{'size':len(data),'sha256':hashlib.sha256(data).hexdigest()} for path,data in records.items()}}
+
+    def stop_qualification(self,request,error,*,deadline_epoch):
+        """Record a finite attention stop; release_safe applies on caller exit only."""
+        self._guard(check_cleanup=False);key,sha=self._initial_request(request)
+        if type(deadline_epoch) not in (int,float) or not math.isfinite(deadline_epoch) or deadline_epoch<0:
+            raise ValueError('invalid qualification stop deadline')
+        category=type(error).__name__ if isinstance(error,BaseException) else error
+        if not isinstance(category,str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,100}',category):
+            raise ValueError('invalid qualification stop category')
+        proof=None
+        try:proof=self._initial_stop_proof(request)
+        except (OSError,ValueError,RuntimeError,TypeError,KeyError,AttributeError):pass
+        # Latch an unknown owner before snapshot or journal I/O: a malformed ACK or local
+        # write failure cannot make the caller's cleanup guard release it.
+        if proof is None:
+            self._cleanup_unknown=True
+            # Generic listener cleanup cannot settle a stricter qualification
+            # ownership rejection (for example, a later unresolved retry).
+            self._qualification_ownership_hold=True
+            if self._cleanup_key is None:self._cleanup_key=key
+        stop_id=hashlib.sha256(('controller-stop:qualification:'+key).encode()).hexdigest()
+        snapshot=self.root/'incidents'/stop_id/'controller-attention-state.json'
+        context=None
+        if proof is not None:
+            target=proof['target']
+            context={'provider':'github','project':REPO,'run_id':target['run_id'],'job_id':target['job_id'],
+                     'commit_sha':target['source_sha'],'job_name':target['job_name']}
+        arguments={'deadline_epoch':deadline_epoch,'proof':{'scope':'initial-qualification-stop','request':dict(request)},'context':context}
+        if snapshot.exists() or snapshot.is_symlink():
+            original=json.loads(self._attention_bytes(snapshot))
+            if original.get('proof')!=arguments['proof']:raise ValueError('qualification stop request differs')
+            category=original['error_type'];arguments['deadline_epoch']=original['deadline_epoch']
+            arguments['context']=None if original.get('context_identity')=='controller-code-fingerprint' else {
+                k:v for k,v in original['context'].items() if k!='receipt_path'}
+        notice=self._stop_notice('qualification',key,category,**arguments)
+        release_path=None
+        if proof is not None:
+            proof['stop_snapshot_sha256']=hashlib.sha256(self._attention_bytes(snapshot)).hexdigest()
+            data=entrypoint_module._stop_encode(proof)+b'\n'
+            release_path=snapshot.parent/('release-proof-'+hashlib.sha256(data).hexdigest()+'.json')
+            if release_path.exists() or release_path.is_symlink():
+                if self._attention_bytes(release_path)!=data:raise ValueError('qualification release proof conflicts')
+            else:self._attention_write(release_path,data)
+            self._qualification_ownership_hold=False
+            self._cleanup_unknown=False
+        return {'status':'attention','stage':'qualification','release_safe':proof is not None,
+                'hold_required':proof is None,'lease_release':'on-caller-context-exit' if proof else 'ownership-held',
+                'receipt_path':str(snapshot),'release_proof_path':str(release_path) if release_path else None,
+                'notification':notice}
 
     def initial_dispatch(self,request):
         self._guard()

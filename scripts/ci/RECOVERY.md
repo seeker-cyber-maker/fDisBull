@@ -69,6 +69,23 @@ install a receiver or notification service. Record each deployed component's
 commit and hash separately from the workflow-control SHA when recovering an
 older run; do not relabel that run as using a newer workflow.
 
+Some pytest 9 reports count passing subreports in the suite total while reusing
+their parent testcase nodes. An ordinary report with that count mismatch needs
+its closed-inventory `tests.log`: one complete terminal summary must reconcile
+every parent, directly skipped case, skipped node and passing subtest exactly.
+Missing or ambiguous captures fail verification. Native reports and the 26
+required contracts retain their strict checks.
+
+A verifier correction does not rewrite a controller's earlier terminal
+attention state. Revalidate the original closed export and canonical provider
+capture, then retain a separate immutable operator-assisted closure certificate
+under the incident's `reconciliation/` directory. Bind the original state,
+manifest and actions, successful job evidence, corrected verifier commit and
+component hashes, and record `automatic_controller_complete: false`. The
+existing incident journal can record `recovered/ci_requalified` for the actual
+verified job; journal acceptance, delivery and automatic controller recovery
+remain separate claims.
+
 Configuration contains source/state paths, a retained credential-free CI
 transport helper, the selected branch and full initial SHA, runner/project
 identities, the existing SSH argv, a pinned boot ID, expected marker bytes/hash,

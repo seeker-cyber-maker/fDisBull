@@ -62,6 +62,8 @@ def controller_attention(tmp_path,monkeypatch):
     key='d'*64;incident=incidents/key;incident.mkdir(mode=0o700)
     export=tmp_path/'results';export.mkdir();lock=tmp_path/'executor.lock';lock.touch()
     monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
     target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
             'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
     manifest={'incident_id':key,'project':r.REPO,'initial_target':target,'required_artifacts':sorted(r.evidence_module.ORDINARY),
@@ -380,6 +382,8 @@ def test_full_recovery_composes_real_evidence_policy_and_controller(tmp_path,mon
     recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700);root.chmod(0o700)
     export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
     monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
     policy_dir=tmp_path/'policy';policy_dir.mkdir(mode=0o700);canonical=policy_dir/'qualification-policy.canonical.json'
     policy_bytes=b'{"authorized":true}\n';canonical.write_bytes(policy_bytes);canonical.chmod(0o400)
     inputs=policy_dir/'job-inputs';inputs.mkdir(mode=0o700);active=inputs/'qualification-policy.json'
@@ -739,7 +743,7 @@ def test_cleanup_hold_requires_marker_removal_and_fresh_proof(tmp_path,monkeypat
     marker=tmp_path/'blocked';marker.write_text('operator attention')
     monkeypatch.setattr(r,'CLEANUP_BLOCKER',marker)
     runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=True;runtime._last_incident=None
-    runtime._cleanup_key='key';runtime.root=tmp_path
+    runtime._cleanup_key='key';runtime.root=tmp_path;runtime._stop_notice=lambda *args,**kwargs:{'stage':'journaled'}
     checks=[];runtime._verify_cleanup=lambda:checks.append('checked') or True
     def operator_action(seconds):
         assert seconds==60 and marker.exists()
@@ -791,6 +795,7 @@ def test_cleanup_unknown_without_ownership_proof_never_returns(tmp_path,monkeypa
     marker=tmp_path/'blocked';marker.write_text('attention');monkeypatch.setattr(r,'CLEANUP_BLOCKER',marker)
     runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=True;runtime._last_incident=None
     runtime._cleanup_key='key';runtime.root=tmp_path;runtime._verify_cleanup=lambda:False
+    runtime._stop_notice=lambda *args,**kwargs:{'stage':'journaled'}
     calls=[]
     def timeout(seconds):calls.append(seconds);raise TimeoutError('test stop only')
     runtime._sleep=timeout
@@ -833,6 +838,8 @@ def test_source_repair_requalifies_new_sha_with_real_controller_and_evidence(tmp
     recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700)
     export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
     monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
     target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
             'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
     make_export(export,target,'failed','c'*64)
@@ -992,6 +999,8 @@ def test_gui_transport_enabled_only_by_fixed_explicit_config(tmp_path,monkeypatc
     recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700)
     export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
     monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
     cfg={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),
          'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
                    'control_sha':'a'*40,'ref':'codex/production-ci-recovery-20261113','profile':'ordinary',
@@ -1036,3 +1045,202 @@ def test_initial_incident_reuses_verified_capture_without_provider_recapture(tmp
     meta=next(evidence_dir.glob('*.provider.json'));meta.write_text('{}')
     with pytest.raises(ValueError,match='initial capture hash mismatch'):
         runtime._evidence(target,incident)(observation,fixtures.REQ)
+
+
+@pytest.fixture
+def initial_stop(controller_attention,tmp_path,monkeypatch):
+    f=controller_attention;runtime=f.runtime;request={'key':'initial-stop-fixture','source_sha':'a'*40}
+    key=request['key'];nonce=hashlib.sha256(key.encode()).hexdigest();target=dict(f.state['target'])
+    host=object.__new__(r.host_module.GitHubHost)
+    host.state=r._private(runtime.root/'github-host');host.control_root=r._private(tmp_path/'control')
+    host.export_root=r.EXPORT/'github';runtime._host=host
+    runtime.clock=lambda:2000.0
+    def put(path,value):
+        path.parent.mkdir(parents=True,mode=0o700,exist_ok=True)
+        r.host_module._write(path,value)
+        return path
+    body={'ref':target['ref'],'inputs':{'nonce':nonce,'candidate_sha':request['source_sha']}}
+    digest=r.transport_module.request_digest('github','POST',r.host_module.BASE+'/workflows/417757453/dispatches',body)
+    put(host._path(key,'dispatch-intent'),{'action_key':key,'candidate_sha':request['source_sha'],'nonce':nonce,
+        'request_sha256':digest,'created_epoch':1000.0})
+    acceptance=put(host._path(key,'acceptance'),{'action_key':key,'request_sha256':digest,'http_status':204})
+    put(host._path(key,'initial-result-success'),{'target':target,'status':'success','acceptance_receipt':str(acceptance)})
+    start=put(host.export_root/target['run_id']/'1'/'qualification'/target['job_id']/'candidate-start.json',
+        {'schema':'fdisbull-github-candidate-start-1',**{k:v for k,v in target.items() if k!='provider'},
+         'candidate_head':target['source_sha'],'control_head':target['control_sha'],'nonce':nonce})
+    put(host.state/('source-'+hashlib.sha256(r.host_module._bytes(target)).hexdigest()+'.json'),
+        {'target':target,'start_path':str(start),'start_sha256':hashlib.sha256(start.read_bytes()).hexdigest()})
+    put(host._path(key,'listener-intent'),{'action_key':key,'nonce':nonce,'run_id':target['run_id'],'run_attempt':'1',
+        'source_sha':target['source_sha'],'control_sha':target['control_sha'],'ref':target['ref']})
+    put(host._path(key,'listener-started'),{'action_key':key,'pid':123456,'run_id':target['run_id'],'run_attempt':'1'})
+    folder=host.control_root/'github-bootstrap-20261113'/nonce
+    put(folder/'started.json',{'pid':123457,'runner_id':21,'stage':'listener-started'})
+    labels={'fdisbull.ci.provider':'github','fdisbull.ci.run_id':target['run_id'],'fdisbull.ci.run_attempt':'1',
+        'fdisbull.ci.control_sha':target['control_sha']}
+    put(folder/'cleanup.json',{'status':'clean','labels':labels,'containers':[]})
+    put(host._path(key,'listener-exit'),{'action_key':key,'pid':123456,'exit_code':0,'cleanup_verified':True,
+        'cleanup_receipt':str(folder/'cleanup.json')})
+    process_checks=[];docker_calls=[]
+    def gone(pid,signal):process_checks.append(pid);raise ProcessLookupError()
+    monkeypatch.setattr(r.os,'kill',gone);monkeypatch.setattr(r.os,'killpg',gone)
+    def docker(argv,**kwargs):
+        docker_calls.append(argv)
+        assert argv[:3]==['docker','ps','-aq']
+        return {'returncode':0,'timed_out':False,'overflow':False,'stdout':b''}
+    runtime._cleanup_runner=docker
+    stop_id=hashlib.sha256(('controller-stop:qualification:'+key).encode()).hexdigest()
+    f.journal.incident=runtime.root/'incidents'/stop_id
+    return SimpleNamespace(**vars(f),request=request,host=host,target=target,put=put,
+                           process_checks=process_checks,docker_calls=docker_calls)
+
+
+def test_completed_initial_stop_has_finite_attention_and_fresh_release_proof(initial_stop):
+    f=initial_stop;result=f.runtime.stop_qualification(f.request,ValueError('private message'),deadline_epoch=2500)
+    assert result['status']=='attention' and result['release_safe'] and not result['hold_required']
+    assert result['lease_release']=='on-caller-context-exit' and result['notification']['stage']=='journaled'
+    proof=json.loads(Path(result['release_proof_path']).read_text())
+    assert proof['scope']=='selected-initial-attempt-only' and proof['target']==f.target and proof['job_status']=='success'
+    assert proof['fresh_process_container_check'] and len(f.process_checks)==3 and len(f.docker_calls)==2
+    assert f.runtime.cleanup_blocked() is False and not f.calls
+    event=json.loads(f.journal.payloads[0]);assert event['context']['run_id']==f.target['run_id']
+    assert event['context']['commit_sha']==f.target['source_sha'] and event['phase']=='attention'
+    assert 'private message' not in Path(result['receipt_path']).read_text()
+
+
+def test_initial_stop_failed_job_can_release_clean_owner_without_job_recovery_claim(initial_stop):
+    f=initial_stop;old=f.host._path(f.request['key'],'initial-result-success');value=json.loads(old.read_text())
+    value['status']='failed';old.rename(f.host._path(f.request['key'],'initial-result-failed'))
+    f.host._path(f.request['key'],'initial-result-failed').write_text(json.dumps(value))
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['release_safe'] and json.loads(Path(result['release_proof_path']).read_text())['job_status']=='failed'
+    assert [json.loads(p)['phase'] for p in f.journal.payloads]==['attention']
+
+
+@pytest.mark.parametrize('damage',['missing-listener','missing-acceptance','wrong-source','exit-unknown','live-process',
+                                   'cleanup-blocker','different-action','later-attempt','pending-controller-action'])
+def test_completed_job_alone_never_releases_unresolved_ownership(initial_stop,monkeypatch,damage):
+    f=initial_stop;key=f.request['key']
+    if damage=='missing-listener':f.host._path(key,'listener-exit').unlink()
+    elif damage=='missing-acceptance':f.host._path(key,'acceptance').unlink()
+    elif damage=='wrong-source':
+        path=f.host._path(key,'listener-intent');value=json.loads(path.read_text());value['source_sha']='f'*40;path.write_text(json.dumps(value))
+    elif damage=='exit-unknown':
+        path=f.host._path(key,'listener-exit');value=json.loads(path.read_text());value['exit_code']=86;path.write_text(json.dumps(value))
+    elif damage=='live-process':monkeypatch.setattr(r.os,'kill',lambda *args:None)
+    elif damage=='cleanup-blocker':r.CLEANUP_BLOCKER.write_text('unknown')
+    elif damage=='different-action':f.runtime._cleanup_key='other-unresolved-action'
+    elif damage=='later-attempt':
+        path=f.host._path(key,'initial-result-success');value=json.loads(path.read_text());value['target']['run_attempt']='2';path.write_text(json.dumps(value))
+    elif damage=='pending-controller-action':
+        f.put(f.runtime.root/'active.json',{'event_key':f.key,'status':'attention'})
+        state={**f.state,'target':f.target,'actions':[{'action':'retry_job','key':'retry','result':None}]}
+        r.control_module.write_json(f.incident/'state.json',state)
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['hold_required'] and not result['release_safe'] and result['release_proof_path'] is None
+    assert result['lease_release']=='ownership-held' and f.runtime.cleanup_blocked() and not f.calls
+    assert [json.loads(p)['phase'] for p in f.journal.payloads]==['attention']
+
+
+def test_runtime_stop_then_bootstrap_failure_reuses_original_native_event(initial_stop):
+    f=initial_stop;f.host._path(f.request['key'],'listener-exit').unlink()
+    first=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    snapshot=Path(first['receipt_path']);original=snapshot.read_bytes()
+    replay=r.entrypoint_module.record_failure('ValueError',runner=f.journal)
+    assert replay==first['notification'] and snapshot.read_bytes()==original
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    record=json.loads(snapshot.read_text());assert record['stage']=='qualification' and record['error_type']=='RuntimeError'
+    assert not list(f.runtime.root.glob('service-error-*.json')) and not f.calls
+
+
+def test_initial_stop_reentry_keeps_original_snapshot_when_release_proof_later_available(initial_stop):
+    f=initial_stop;path=f.host._path(f.request['key'],'listener-exit');original_exit=path.read_bytes();path.unlink()
+    first=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    snapshot=Path(first['receipt_path']);original=snapshot.read_bytes()
+    path.write_bytes(original_exit);path.chmod(0o600)
+    second=f.runtime.stop_qualification(f.request,ValueError(),deadline_epoch=3000)
+    assert first['hold_required'] and second['release_safe'] and snapshot.read_bytes()==original
+    assert not f.runtime._qualification_ownership_hold and not f.runtime.cleanup_blocked()
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert json.loads(snapshot.read_text())['context_identity']=='controller-code-fingerprint'
+    assert Path(second['release_proof_path']).stat().st_mode&0o777==0o400
+
+
+def test_clean_completed_initial_stop_does_not_hold_idle_lease_for_native_ack_failure(initial_stop):
+    f=initial_stop;calls=[]
+    def unavailable(*args,**kwargs):calls.append(kwargs['input']);return SimpleNamespace(returncode=1,stdout=b'')
+    f.runtime._incident_runner=unavailable
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['release_safe'] and not result['hold_required'] and result['notification']['stage']=='notification-unresolved'
+    assert len(calls)==2 and calls[0]==calls[1]
+    assert Path(result['receipt_path']).with_name('controller-stop-notification-unresolved.json').is_file()
+
+
+def test_existing_initial_listener_and_terminal_result_need_no_new_listener_margin(initial_stop):
+    f=initial_stop
+    assert f.runtime.initial_listener_required(f.request) is False
+    f.host._path(f.request['key'],'listener-intent').unlink()
+    assert f.runtime.initial_listener_required(f.request) is False
+    f.host._path(f.request['key'],'initial-result-success').unlink()
+    assert f.runtime.initial_listener_required(f.request) is True and not f.calls
+
+
+def test_cleanup_hold_without_incident_journals_once_and_retains_unknown_owner(controller_attention):
+    f=controller_attention;f.runtime._cleanup_key='unknown-owned-action';f.runtime._verify_cleanup=lambda:False
+    stop_id=hashlib.sha256(b'controller-stop:cleanup:unknown-owned-action').hexdigest()
+    f.journal.incident=f.runtime.root/'incidents'/stop_id;sleeps=[]
+    def interrupt(seconds):sleeps.append(seconds);raise TimeoutError('bounded test interrupt')
+    f.runtime._sleep=interrupt
+    with pytest.raises(TimeoutError):f.runtime.hold_cleanup()
+    assert sleeps==[60] and f.runtime.cleanup_blocked() and len(f.journal.payloads)==1
+    snapshot=json.loads((f.journal.incident/'controller-attention-state.json').read_text())
+    assert snapshot['stage']=='cleanup' and snapshot['deadline_epoch'] is not None
+    assert json.loads(f.journal.payloads[0])['context']['run_id']=='controller'
+    assert not f.calls
+
+
+def test_qualification_ownership_hold_replays_same_stop_instead_of_cleanup_alert(initial_stop):
+    f=initial_stop;f.host._path(f.request['key'],'listener-exit').unlink()
+    first=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    f.runtime._verify_cleanup=lambda:False
+    def interrupt(seconds):raise TimeoutError('bounded hold test')
+    f.runtime._sleep=interrupt
+    with pytest.raises(TimeoutError):f.runtime.hold_cleanup()
+    assert len(f.journal.payloads)==2 and len(set(f.journal.payloads))==1
+    assert f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert not list((f.runtime.root/'incidents').glob('*/controller-stop-notification-unresolved.json'))
+    assert f.runtime.cleanup_blocked() and Path(first['receipt_path']).is_file()
+
+
+@pytest.mark.parametrize('failure_point',['snapshot-read','snapshot-write'])
+def test_unknown_initial_owner_is_latched_even_if_stop_snapshot_io_fails(initial_stop,monkeypatch,failure_point):
+    f=initial_stop;f.host._path(f.request['key'],'listener-exit').unlink()
+    if failure_point=='snapshot-read':
+        stop_id=hashlib.sha256(('controller-stop:qualification:'+f.request['key']).encode()).hexdigest()
+        snapshot=f.runtime.root/'incidents'/stop_id/'controller-attention-state.json'
+        snapshot.parent.mkdir(mode=0o700)
+        snapshot.write_text('{}')
+    else:
+        def reject(*args,**kwargs):raise ValueError('local immutable snapshot rejected')
+        monkeypatch.setattr(f.runtime,'_stop_notice',reject)
+    with pytest.raises(ValueError):f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert f.runtime.cleanup_blocked() and f.runtime._qualification_ownership_hold
+    assert f.runtime._cleanup_key==f.request['key'] and not f.journal.payloads
+
+
+def test_qualification_later_action_hold_survives_clean_initial_cleanup(initial_stop):
+    f=initial_stop
+    f.put(f.runtime.root/'active.json',{'event_key':f.key,'status':'attention'})
+    state={**f.state,'target':f.target,'actions':[{'action':'retry_job','key':'later-retry','result':None}]}
+    r.control_module.write_json(f.incident/'state.json',state)
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['hold_required'] and not result['release_safe']
+    assert not r.CLEANUP_BLOCKER.exists()
+    sleeps=[]
+    def interrupt(seconds):sleeps.append(seconds);raise TimeoutError('ownership hold remains pending')
+    f.runtime._sleep=interrupt
+    with pytest.raises(TimeoutError,match='ownership hold remains pending'):f.runtime.hold_cleanup()
+    # The generic check proves only the old initial listener is gone. It must
+    # not discharge the rejected later-action ownership decision.
+    assert len(f.process_checks)==3 and len(f.docker_calls)==2
+    assert sleeps==[60] and f.runtime.cleanup_blocked()
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1

@@ -223,3 +223,36 @@ Missing runs, incomplete pages, mismatched SHAs, stale data and provider errors 
 Authentication/access failures, rate limits, CI quota exhaustion and confirmed account restrictions stop refreshes through a persisted `provider_stop`. Do not repeatedly retry, change accounts/repositories, weaken checks or push empty commits to evade the condition. Resolve normal provider access first.
 
 Do not start watchers, scheduled checks or monitoring services without a separate user request. Source fixes, CI qualification, review readiness, merging and releasing remain separate gates.
+
+## Finite agent waits and controller handoffs
+
+Reviewers must not remain active solely to wait for another CI chat. Read the
+owner's existing receipt first. At most one bounded chat wait of up to 60 seconds
+is appropriate for an imminent result; do not renew it merely because the owner
+is active or its cursor changed. If the required result is unavailable, publish
+the completed review, name the missing evidence and its owner, and end the turn
+or continue independent authorized work. Resume review when concrete new evidence
+is available. This rule does not stop an authorized finite worker or replace the
+existing n8n service with a chat-based polling loop.
+
+The CI owner maintains one durable current-state handoff in the existing control
+records. Include the incident, run and attempt, exact application and workflow
+commits, owner, current stage, last substantive progress time, stage deadline,
+next action, blocker and paths to retained results. Repeated status reads and
+additional passing test counts are not substantive progress by themselves.
+
+Controller stages need finite deadlines and explicit success, failure or
+attention outcomes. A timeout must retain the original action intent and evidence;
+it must not authorize replay of an uncertain mutation. A completed job must not
+leave an idle holder retaining the executor indefinitely. Before releasing or
+transferring ownership, reconcile live workers and unresolved actions under the
+existing executor protocol. Report controller attention through the existing
+deduplicated notification route, including failures before job-evidence capture.
+
+When a verifier rejects a completed export, preserve it and correct the verifier
+against that real evidence without weakening failure detection. Reuse the export
+where source identity and completeness remain valid; do not rebuild merely to
+repair receipt interpretation. Record operator-assisted reconciliation separately
+from automatic recovery. A fix, a successful rehearsal and a recovered production
+incident are distinct outcomes. These are required behaviors, not a declaration
+that the current deployment has passed them.
