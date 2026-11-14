@@ -5,6 +5,25 @@ This is the operational entry point for releases. The current intended release i
 2026-11-14; this document is a required process, not a completion certificate.
 [Release status](RELEASE_STATUS.md) records dated outcomes and historical releases.
 
+## Current authorization
+
+On 2026-11-14 the user explicitly approved installing and activating 0.35.0 once
+it passes the full release checks, keeping the previous version for rollback.
+That approval supersedes earlier "don't install" instructions for this release.
+No repeated installation-permission question is required. Preserve the exact
+previous selector and prefix, validate the fresh prefix before switching, then
+verify the active installation and the retained rollback target. Full Linux CI
+does not by itself qualify native macOS backends.
+
+The user is handling DotBox independently. It is not a dependency or additional
+implementation task for the fDisBull release owners.
+
+Before relying on a restriction, distinguish current user instructions from
+historical receipts, old candidate-specific holds and retired-provider setup
+notes. Update active guidance when superseded; preserve historical evidence.
+Do not remove current source-identity, privacy, rollback or genuine failure checks
+under the guise of clearing stale instructions.
+
 ## Authority and ownership
 
 Original GitHub `seeker-cyber-maker/fDisBull` is the source, review and publication

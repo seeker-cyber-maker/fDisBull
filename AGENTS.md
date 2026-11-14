@@ -6,6 +6,17 @@ bounded source-to-UIL experiments. The analysis project stores discoveries and
 evidence between turns. An emulator process is owned by its live server/context;
 saved run history does not reconnect it after exit.
 
+## Current resource and release policy (2026-11-14)
+
+Fixed disk reserves and mandatory storage admission have been removed. Prefer
+mounted external project/cache destinations for bulk outputs, validate actual
+mount identity and report real I/O failures. Preserve unique data and require
+exact approval for irreversible deletion; ordinary allocation needs no approval.
+Heavy local model/GPU/VM jobs retain shared-memory guard policy; routine commands
+and ordinary tests run directly. n8n owns the current VPS CI/release sequence.
+0.35.0 installation and activation are authorized after full release checks,
+with the previous prefix retained for rollback. DotBox is a separate user project.
+
 ## Start with the user's task
 
 - Reuse the established executable, project and live session. For first use or
@@ -86,6 +97,11 @@ of tool-only wheels, source distributions and tool source ZIPs.
 Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
+For 0.35.0, the user explicitly approved installation and activation after all
+release checks pass, preserving the previous prefix for rollback. Older
+"do not install" directions do not block that approved, gated completion.
+n8n owns this release/installation continuation; do not activate a provisional
+candidate or bypass exact-source qualification.
 
 After each release candidate is packaged, install and activate a fresh shared
 prefix locally, then run

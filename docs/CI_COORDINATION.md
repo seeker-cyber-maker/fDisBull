@@ -8,14 +8,20 @@ The guarded mirror service preserves original GitHub, local-hub and GitLab refs.
 
 This establishes infrastructure and artifact handoff, not application/native qualification. The real qualification checker rejected missing ordinary/native receipts and emitted `release_ready=false`. Existing exact-candidate GitLab/local receipts retain their own scope. QEMU qualification, the full offline consumer kit and release publication remain separate gates.
 
-## Local-first workflow and provider routing
+## Qualification and provider routing
 
-Routine pushes, all merge requests and tags do not admit GitLab pipelines.
-Run ordinary and native qualification locally against the exact candidate SHA
-using the finite local Linux runner, `scripts/ci/local-linux.py`. Inspect its
-help and runtime preflight before starting; a missing prerequisite is incomplete,
-not a passed gate. Use separate local execution identities and receipts. Local
-results do not establish a GitLab pipeline or hosted CI success.
+n8n owns the current 0.35.0 direct VPS source-to-release path described in
+[production CI automation](PRODUCTION_CI_AUTOMATION.md). The source integrator
+hands off one frozen primary-GitHub SHA; n8n alone queues and observes its finite
+ordinary/native, package, disconnected-consumer and delivery stages.
+
+Routine pushes, merge requests and tags do not admit GitLab pipelines. The
+finite Mac local Linux runner, `scripts/ci/local-linux.py`, remains available for
+explicit CI-owner diagnostics and fallback qualification. It is not a mandatory
+prelude to the VPS path. Inspect its help and prerequisites before an authorized
+local run, keep distinct identities/receipts, and do not launch a parallel worker
+for the same candidate. Missing prerequisites remain incomplete; local results
+do not establish hosted CI success.
 
 The retained GitLab workflow admits only explicit web/API pipelines. Every job
 requires the `fdisbull-local-linux` runner tag, including the ordinary job; it

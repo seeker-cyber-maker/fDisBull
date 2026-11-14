@@ -168,9 +168,10 @@ polling disabled. Group-wide activation is outside this workflow.
 Source: [OpenAI GitLab integration](https://learn.chatgpt.com/docs/third-party/gitlab).
 Upload contract: [GitLab Markdown uploads API](https://docs.gitlab.com/api/project_markdown_uploads/).
 
-Known host state at implementation: GitLab connector and repository-scoped Git
+Historical host state at implementation (not a current authentication hold): GitLab connector and repository-scoped Git
 fetch/push work; ordinary `glab` reports incomplete OAuth configuration, and
 reusing the current Git credential in memory returns API HTTP 401. No tokens
-were created or saved. CLI publishing therefore stays blocked until existing
-API authentication is repaired through the normal approved flow. Connector MR
+were created or saved. CLI publishing was blocked for that observation. Recheck
+the current authenticated route before treating this historical result as a
+present blocker; do not recreate credentials merely to clear old text. Connector MR
 creation and an authenticated browser upload remain independent supported paths.
