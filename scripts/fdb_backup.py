@@ -8,7 +8,8 @@ import json
 import os
 from pathlib import Path
 import secrets
-import sqlite3
+import subprocess
+import sys
 import stat
 import time
 
@@ -95,20 +96,70 @@ def _require_directory(path, descriptor):
         os.close(current)
 
 
-def _require_database(connection, descriptor):
-    """Bind SQLite's resolved main filename to the admitted regular inode."""
-    filename = next(row[2] for row in connection.execute('PRAGMA database_list') if row[1] == 'main')
-    path = Path(filename)
-    parent = _directory(path.parent)
-    try:
-        current = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent)
+def _sqlite_backup(source, staging, sourcefd, snapshotfd, referencesfd, end, source_parentfd):
+    """Use a fresh, site-disabled child with no SQLite descriptor cache/threads."""
+    _deadline(end)
+    helper = Path(__file__).resolve().with_name('fdb_backup_sqlite.py')
+    command = [sys.executable, '-I', '-S', '-B', str(helper),
+               '--source', str(source), '--snapshot', str(staging/'snapshot.sqlite'),
+               '--source-fd', str(sourcefd), '--source-parent-fd', str(source_parentfd),
+               '--snapshot-fd', str(snapshotfd),
+               '--references-fd', str(referencesfd), '--deadline', str(end),
+               '--max-database', str(MAX_DATABASE)]
+    for operation in ('backup', 'scan'):
         try:
-            if not _same_inode(os.fstat(current), os.fstat(descriptor)):
-                raise ValueError('SQLite database identity changed')
-        finally:
-            os.close(current)
+            result = subprocess.run(command + ['--operation', operation], pass_fds=(sourcefd, snapshotfd, referencesfd, source_parentfd),
+                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                timeout=max(.001, end-time.monotonic()), check=False)
+        except subprocess.TimeoutExpired as error:
+            raise TimeoutError('FDB SQLite worker deadline expired') from error
+        if len(result.stdout) > 8192 or len(result.stderr) > 8192:
+            raise ValueError('Invalid SQLite worker response')
+        try:
+            reply = json.loads(result.stdout)
+        except (ValueError, UnicodeDecodeError) as error:
+            raise ValueError('SQLite worker failed without a completion receipt') from error
+        if result.returncode or reply.get('status') != 'completed':
+            if reply.get('error_type') == 'TimeoutError':
+                raise TimeoutError('FDB SQLite worker deadline expired')
+            raise ValueError('SQLite worker refused: ' + str(reply.get('error', 'unknown failure')))
+        expected = {'source': list(_inode(os.fstat(sourcefd))),
+                    'snapshot': list(_inode(os.fstat(snapshotfd)))}
+        if operation == 'scan':
+            expected.pop('source')
+        if (reply.get('format') != 'fdisbull-private-sqlite-backup-1'
+                or reply.get('bound_inodes') != expected):
+            raise ValueError('SQLite worker database identity receipt differs')
+
+def _inode(value):
+    return value.st_dev, value.st_ino
+
+
+def _require_name(parentfd, name, descriptor):
+    current = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parentfd)
+    try:
+        if (not stat.S_ISREG(os.fstat(current).st_mode)
+                or not _same_inode(os.fstat(current), os.fstat(descriptor))):
+            raise ValueError('Published backup file identity changed')
     finally:
-        os.close(parent)
+        os.close(current)
+
+
+def _publish(source_parent, source_name, destination_parent, destination_name,
+             descriptor, size, digest, end, maximum):
+    """Never replace a destination; bind the published inode and its bytes."""
+    os.link(source_name, destination_name, src_dir_fd=source_parent,
+            dst_dir_fd=destination_parent, follow_symlinks=False)
+    published = os.open(destination_name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=destination_parent)
+    try:
+        if (not stat.S_ISREG(os.fstat(published).st_mode)
+                or not _same_inode(os.fstat(published), os.fstat(descriptor))):
+            raise ValueError('Published backup file identity changed')
+        actual_size, actual_digest = _hash_descriptor(published, end, maximum)
+        if (actual_size, actual_digest) != (size, digest):
+            raise ValueError('Published backup file bytes changed')
+    finally:
+        os.close(published)
 
 
 def _hash_descriptor(descriptor, end, maximum):
@@ -134,6 +185,7 @@ def capture_fdb(path, objects_roots, output_newdir, timeout_seconds, *, expected
     pinned output directory is exclusive. Failed staging is retained rather
     than deleting names that may have been replaced by another operation.
     Callers with an earlier admission may bind source and parent inode identity.
+    Successful private stages are retained; hard-linked payloads are not copied.
     """
     if (isinstance(timeout_seconds,bool) or not isinstance(timeout_seconds,(int,float))
             or not 0<timeout_seconds<=86400): raise ValueError('Invalid backup timeout')
@@ -189,153 +241,127 @@ def capture_fdb(path, objects_roots, output_newdir, timeout_seconds, *, expected
         snapshotfd=os.open('snapshot.sqlite',os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=stagingfd)
         descriptors.append(snapshotfd)
         _require_directory(source.parent,descriptors[0])
-        source_db=sqlite3.connect(source.as_uri()+'?mode=ro',uri=True,timeout=min(timeout_seconds,1))
-        dest_db=None
-        try:
-            _require_database(source_db,sourcefd)
-            _require_directory(staging,stagingfd)
-            dest_db=sqlite3.connect(str(staging/'snapshot.sqlite'),timeout=min(timeout_seconds,1))
-            _require_database(dest_db,snapshotfd)
-            if dest_db.execute('PRAGMA page_count').fetchone() != (0,):
-                raise ValueError('Private snapshot must start empty')
-            dest_db.set_progress_handler(lambda: int(time.monotonic()>=end),10000)
-            page_size=source_db.execute('PRAGMA page_size').fetchone()[0]
-            def progress(status,remaining,total):
-                _deadline(end)
-                if total*page_size>MAX_DATABASE: raise ValueError('FDB snapshot exceeds size bound')
-            source_db.backup(dest_db,pages=256,progress=progress,sleep=0.01)
-            _deadline(end)
-            if dest_db.execute('PRAGMA integrity_check').fetchall()!=[('ok',)]:
-                raise ValueError('FDB snapshot integrity check failed')
-            refs={};pending=[];scanned_text=set();total_objects=0
-            def collect(ref):
-                digest=ref['sha256'];old=refs.get(digest)
-                if old is not None and old['size']!=ref['size']:
-                    raise ValueError('Conflicting size for external object hash')
-                if old is None:
-                    refs[digest]={'size':ref['size'],'encodings':set()}
-                if ref['encoding'] not in refs[digest]['encodings']:
-                    refs[digest]['encodings'].add(ref['encoding']);pending.append((digest,ref['encoding']))
-            tables=dest_db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").fetchall()
-            for (name,) in tables:
-                _deadline(end)
-                if not isinstance(name,str) or '\0' in name: raise ValueError('Invalid SQLite table name')
-                quoted='"'+name.replace('"','""')+'"'
-                for row in dest_db.execute('SELECT * FROM '+quoted):
-                    for value in row: _references(value,collect,end)
-            rootfds=None
-            while pending:
-                _deadline(end);digest,encoding=pending.pop();record=refs[digest]
-                try:
-                    existing=os.stat(digest,dir_fd=objectsfd,follow_symlinks=False)
-                    if not stat.S_ISREG(existing.st_mode):
-                        raise ValueError('Snapshot object is not a regular file')
-                except FileNotFoundError:
-                    existing=None
-                if existing is None:
-                    if rootfds is None:
-                        rootfds=[]
-                        for root in roots:
-                            for parent in (root,*root.parents):
-                                if (parent/'.git').exists() or (parent/'.git').is_symlink():
-                                    raise ValueError('Private object stores must be outside Git')
-                            try: rootfd=_directory(root)
-                            except FileNotFoundError: continue
-                            descriptors.append(rootfd);rootfds.append(rootfd)
-                    opened=None
-                    for rootfd in rootfds:
-                        try: opened=os.open(digest,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=rootfd)
-                        except FileNotFoundError: continue
-                        break
-                    if opened is None: raise ValueError('External object missing: '+digest)
-                    try:
-                        if not stat.S_ISREG(os.fstat(opened).st_mode): raise ValueError('External object is not a regular file')
-                        out=os.open(digest,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=objectsfd)
-                        try:
-                            actual=0;hasher=hashlib.sha256()
-                            while True:
-                                _deadline(end);chunk=os.read(opened,1024*1024)
-                                if not chunk: break
-                                actual+=len(chunk)
-                                if actual>record['size'] or total_objects+actual>MAX_OBJECTS_TOTAL:
-                                    raise ValueError('External object exceeds declared or aggregate bound')
-                                hasher.update(chunk);view=memoryview(chunk)
-                                while view:
-                                    count=os.write(out,view)
-                                    if count<=0: raise OSError('Object write made no progress')
-                                    view=view[count:]
-                            if actual!=record['size'] or hasher.hexdigest()!=digest:
-                                raise ValueError('External object size or SHA-256 differs: '+digest)
-                            os.fsync(out);total_objects+=actual
-                        finally: os.close(out)
-                    finally: os.close(opened)
-                if encoding=='text' and digest not in scanned_text:
-                    scanned_text.add(digest)
-                    objectfd=os.open(digest,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=objectsfd)
-                    try:
-                        size,actual_digest=_hash_descriptor(objectfd,end,MAX_OBJECT)
-                        if size!=record['size'] or actual_digest!=digest:
-                            raise ValueError('Snapshot text object differs from its identity')
-                        os.lseek(objectfd,0,os.SEEK_SET)
-                        chunks=[]
-                        while True:
-                            _deadline(end); chunk=os.read(objectfd,1024*1024)
-                            if not chunk: break
-                            chunks.append(chunk)
-                        text=b''.join(chunks).decode('utf-8')
-                    except UnicodeDecodeError as error: raise ValueError('External text object is not UTF-8') from error
-                    finally: os.close(objectfd)
-                    _references(text,collect,end)
-            _require_database(source_db,sourcefd)
-            _require_database(dest_db,snapshotfd)
-            dest_db.close();dest_db=None
-            size,digest=_hash_descriptor(snapshotfd,end,MAX_DATABASE)
-            for key,record in refs.items():
-                objectfd=os.open(key,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=objectsfd)
-                try:
-                    object_size,object_digest=_hash_descriptor(objectfd,end,MAX_OBJECT)
-                    if object_size!=record['size'] or object_digest!=key:
-                        raise ValueError('Snapshot object differs from its identity')
-                finally:
-                    os.close(objectfd)
-            _require_directory(source.parent,descriptors[0])
-            _require_directory(output.parent,parentfd)
-            _require_directory(output,outfd)
-            os.link('snapshot.sqlite','project.fdb',src_dir_fd=stagingfd,dst_dir_fd=outfd,follow_symlinks=False)
-            if not _same_inode(os.stat('project.fdb',dir_fd=outfd,follow_symlinks=False),os.fstat(snapshotfd)):
-                raise ValueError('Published snapshot identity changed')
-            os.fsync(snapshotfd)
-            os.fsync(objectsfd)
-            manifest={'format':FORMAT,'source':source_identity(source),'database':{'path':'project.fdb','size':size,'sha256':digest},
-                      'objects':[{'path':'objects/'+key,'size':refs[key]['size'],'sha256':key,
-                                  'encodings':sorted(refs[key]['encodings'])} for key in sorted(refs)],
-                      'objects_total_bytes':total_objects,
-                      'scope':'SQLite snapshot and referenced target objects only; other external files, runtimes and backend dependencies are not inventoried.'}
-            encoded=json.dumps(manifest,sort_keys=True,separators=(',',':')).encode('utf-8')
-            _deadline(end)
-            fd=os.open('.manifest.partial',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=outfd)
+        referencesfd=os.open('references.jsonl',os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=stagingfd)
+        descriptors.append(referencesfd)
+        _sqlite_backup(source,staging,sourcefd,snapshotfd,referencesfd,end,descriptors[0])
+        refs={};pending=[];scanned_text=set();total_objects=0
+        def collect(ref):
+            digest=ref['sha256'];old=refs.get(digest)
+            if old is not None and old['size']!=ref['size']:
+                raise ValueError('Conflicting size for external object hash')
+            if old is None:
+                refs[digest]={'size':ref['size'],'encodings':set()}
+            if ref['encoding'] not in refs[digest]['encodings']:
+                refs[digest]['encodings'].add(ref['encoding']);pending.append((digest,ref['encoding']))
+        os.lseek(referencesfd,0,os.SEEK_SET)
+        with os.fdopen(os.dup(referencesfd),'rb') as records:
+            while True:
+                _deadline(end);line=records.readline(512)
+                if not line:break
+                if not line.endswith(b'\n'):raise ValueError('Invalid SQLite reference record')
+                collect(_identity(json.loads(line)))
+        rootfds=None
+        while pending:
+            _deadline(end);digest,encoding=pending.pop();record=refs[digest]
             try:
-                with os.fdopen(fd,'wb') as stream:
-                    stream.write(encoded);stream.flush();os.fsync(stream.fileno())
-                _deadline(end)
-                _require_directory(output,outfd)
-                # Exclusive publication must not replace an unrelated file.
-                os.link('.manifest.partial','manifest.json',src_dir_fd=outfd,dst_dir_fd=outfd,follow_symlinks=False)
-                os.fsync(outfd)
-            except BaseException:
-                # Retain incomplete owned output; never delete a replaced name.
-                raise
-            _require_directory(output,outfd)
-            # The successful published DB is this same inode. Only our private
-            # staging name is retired; no recursive/pathname cleanup is used.
-            if _same_inode(os.stat('snapshot.sqlite',dir_fd=stagingfd,follow_symlinks=False),os.fstat(snapshotfd)):
-                os.unlink('snapshot.sqlite',dir_fd=stagingfd)
-            try: os.rmdir(staging_name,dir_fd=parentfd)
-            except OSError: pass
-            return manifest
-        finally:
-            source_db.close()
-            if dest_db is not None: dest_db.close()
+                existing=os.stat(digest,dir_fd=objectsfd,follow_symlinks=False)
+                if not stat.S_ISREG(existing.st_mode):
+                    raise ValueError('Snapshot object is not a regular file')
+            except FileNotFoundError:
+                existing=None
+            if existing is None:
+                if rootfds is None:
+                    rootfds=[]
+                    for root in roots:
+                        for parent in (root,*root.parents):
+                            if (parent/'.git').exists() or (parent/'.git').is_symlink():
+                                raise ValueError('Private object stores must be outside Git')
+                        try: rootfd=_directory(root)
+                        except FileNotFoundError: continue
+                        descriptors.append(rootfd);rootfds.append(rootfd)
+                opened=None
+                for rootfd in rootfds:
+                    try: opened=os.open(digest,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=rootfd)
+                    except FileNotFoundError: continue
+                    break
+                if opened is None: raise ValueError('External object missing: '+digest)
+                try:
+                    if not stat.S_ISREG(os.fstat(opened).st_mode): raise ValueError('External object is not a regular file')
+                    out=os.open(digest,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=objectsfd)
+                    try:
+                        actual=0;hasher=hashlib.sha256()
+                        while True:
+                            _deadline(end);chunk=os.read(opened,1024*1024)
+                            if not chunk: break
+                            actual+=len(chunk)
+                            if actual>record['size'] or total_objects+actual>MAX_OBJECTS_TOTAL:
+                                raise ValueError('External object exceeds declared or aggregate bound')
+                            hasher.update(chunk);view=memoryview(chunk)
+                            while view:
+                                count=os.write(out,view)
+                                if count<=0: raise OSError('Object write made no progress')
+                                view=view[count:]
+                        if actual!=record['size'] or hasher.hexdigest()!=digest:
+                            raise ValueError('External object size or SHA-256 differs: '+digest)
+                        os.fsync(out);total_objects+=actual
+                    finally: os.close(out)
+                finally: os.close(opened)
+            if encoding=='text' and digest not in scanned_text:
+                scanned_text.add(digest)
+                objectfd=os.open(digest,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=objectsfd)
+                try:
+                    size,actual_digest=_hash_descriptor(objectfd,end,MAX_OBJECT)
+                    if size!=record['size'] or actual_digest!=digest:
+                        raise ValueError('Snapshot text object differs from its identity')
+                    os.lseek(objectfd,0,os.SEEK_SET)
+                    chunks=[]
+                    while True:
+                        _deadline(end); chunk=os.read(objectfd,1024*1024)
+                        if not chunk: break
+                        chunks.append(chunk)
+                    text=b''.join(chunks).decode('utf-8')
+                except UnicodeDecodeError as error: raise ValueError('External text object is not UTF-8') from error
+                finally: os.close(objectfd)
+                _references(text,collect,end)
+        size,digest=_hash_descriptor(snapshotfd,end,MAX_DATABASE)
+        for key,record in refs.items():
+            objectfd=os.open(key,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=objectsfd)
+            try:
+                object_size,object_digest=_hash_descriptor(objectfd,end,MAX_OBJECT)
+                if object_size!=record['size'] or object_digest!=key:
+                    raise ValueError('Snapshot object differs from its identity')
+            finally:
+                os.close(objectfd)
+        _require_directory(source.parent,descriptors[0])
+        _require_directory(output.parent,parentfd)
+        _require_directory(output,outfd)
+        _require_name(descriptors[0],source.name,sourcefd)
+        _publish(stagingfd,'snapshot.sqlite',outfd,'project.fdb',snapshotfd,size,digest,end,MAX_DATABASE)
+        os.fsync(snapshotfd)
+        os.fsync(objectsfd)
+        manifest={'format':FORMAT,'source':source_identity(source),'database':{'path':'project.fdb','size':size,'sha256':digest},
+                  'objects':[{'path':'objects/'+key,'size':refs[key]['size'],'sha256':key,
+                              'encodings':sorted(refs[key]['encodings'])} for key in sorted(refs)],
+                  'objects_total_bytes':total_objects,
+                  'scope':'SQLite snapshot and referenced target objects only; other external files, runtimes and backend dependencies are not inventoried.'}
+        encoded=json.dumps(manifest,sort_keys=True,separators=(',',':')).encode('utf-8')
+        _deadline(end)
+        fd=os.open('.manifest.partial',os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=outfd)
+        descriptors.append(fd)
+        view=memoryview(encoded)
+        while view:
+            _deadline(end);count=os.write(fd,view)
+            if count<=0:raise OSError('Manifest write made no progress')
+            view=view[count:]
+        os.fsync(fd)
+        _require_directory(output,outfd)
+        _publish(outfd,'.manifest.partial',outfd,'manifest.json',fd,len(encoded),
+                 hashlib.sha256(encoded).hexdigest(),end,len(encoded))
+        os.fsync(outfd)
+        _require_directory(output,outfd)
+        # Retain private staging and partial names. Successful DB/manifest links
+        # share their inodes; there is no conditional pathname deletion race.
+        return manifest
     finally:
         for fd in reversed(descriptors): os.close(fd)
 
