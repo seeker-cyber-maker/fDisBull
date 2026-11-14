@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -94,7 +95,7 @@ def test_payload_reference_cannot_escape_or_follow_symlinks(tmp_path):
 def test_existing_checker_invocation_and_explicit_stage_flags_are_supported(tmp_path, monkeypatch, capsys):
     prefix = tmp_path / 'release'
     observed = []
-    monkeypatch.setattr(v, 'verify_prefix', lambda p, m: observed.append((p, m)) or {'status': 'passed', 'active_default': False})
+    monkeypatch.setattr(v, 'verify_prefix', lambda p, m, **kw: observed.append((p, m)) or {'status': 'passed', 'active_default': False})
     assert v.main(['verify', '--prefix', str(prefix)]) == 0
     assert observed == [(prefix, prefix / 'share/install-manifest.json')]
     assert '"active_default": false' in capsys.readouterr().out
@@ -106,3 +107,99 @@ def test_tool_archive_selection_contains_installer_and_independent_verifier():
     spec.loader.exec_module(builder)
     files = {path.relative_to(ROOT).as_posix() for path in builder.release_files(ROOT)}
     assert {'scripts/install_system.py', 'scripts/verify_system_install.py', 'scripts/check_local_install.py'} <= files
+
+
+def activation_fixture(tmp_path):
+    base=tmp_path/'system';prefix=base/'releases/candidate';(prefix/'share').mkdir(parents=True)
+    (base/'current').symlink_to('releases/candidate');attempt='1'*32
+    directory=prefix/'share/activations'/attempt;directory.mkdir(parents=True)
+    intent={'schema':'fdisbull-install-activation-2','attempt':attempt,'source_commit':'a'*40,
+            'version':'0.35.0','previous_selector':'releases/old','new_selector':'releases/candidate',
+            'staged_receipt_sha256':'c'*64}
+    path=directory/'intent.json';path.write_text(json.dumps(intent))
+    intent_sha=hashlib.sha256(path.read_bytes()).hexdigest()
+    receipt={'status':'activating','activation_attempt':attempt,
+             'activation_intent':{'path':f'share/activations/{attempt}/intent.json','sha256':intent_sha}}
+    return base,prefix,directory,intent,receipt
+
+
+def complete_activation(prefix,directory,intent,receipt):
+    completion={'schema':'fdisbull-install-activation-complete-2','attempt':intent['attempt'],
+        'source_commit':intent['source_commit'],'version':intent['version'],
+        'previous_selector':intent['previous_selector'],'new_selector':intent['new_selector'],
+        'intent_sha256':receipt['activation_intent']['sha256'],
+        'command_resolution':{'prefix':str(prefix),'version':intent['version'],'caller_path':'/caller/fdisbull',
+                              'wrapper':'/usr/local/bin/fdisbull','wrapper_sha256':'a'*64,
+                              'native_commands':{'dosbox':'/dosbox','qemu':'/qemu',
+                                                 'targets':['dosbox-layers','dosbox-x','qemu-system-x86_64']}},
+        'precheck_result':{'status':'prechecked','selected_default':True,'active_default':False,
+                           'version':intent['version'],'source_commit':intent['source_commit']}}
+    path=directory/'complete.json';path.write_text(json.dumps(completion))
+    receipt.update(status='active_verified',activation_complete={
+        'path':f"share/activations/{intent['attempt']}/complete.json",
+        'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
+    return completion,path
+
+
+def test_selected_activating_candidate_is_prechecked_but_never_public_passed(tmp_path):
+    base,prefix,directory,intent,receipt=activation_fixture(tmp_path)
+    with pytest.raises(ValueError,match='incomplete'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40)
+    assert v.activation_state(prefix,base,receipt,'0.35.0','a'*40,precheck=True)=={
+        'status':'prechecked','selected_default':True,'active_default':False}
+    receipt['activation_intent']['sha256']='f'*64
+    with pytest.raises(ValueError,match='hash mismatch'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40,precheck=True)
+
+
+def test_selected_active_requires_exact_completion_and_rejects_mutation(tmp_path):
+    base,prefix,directory,intent,receipt=activation_fixture(tmp_path)
+    receipt['status']='active_verified'
+    with pytest.raises(ValueError,match='completion reference'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40)
+    completion,path=complete_activation(prefix,directory,intent,receipt)
+    assert v.activation_state(prefix,base,receipt,'0.35.0','a'*40)=={
+        'status':'passed','selected_default':True,'active_default':True}
+    path.write_text(json.dumps({**completion,'version':'0.36.0'}))
+    with pytest.raises(ValueError,match='hash mismatch'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40)
+
+
+def test_inactive_activating_refused_and_staged_candidate_not_active(tmp_path):
+    base,prefix,directory,intent,receipt=activation_fixture(tmp_path)
+    (base/'current').unlink()
+    with pytest.raises(ValueError,match='incomplete'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40)
+    with pytest.raises(ValueError,match='selected activating'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40,precheck=True)
+    assert v.activation_state(prefix,base,{'status':'staged_verified'},'0.35.0','a'*40)=={
+        'status':'passed','selected_default':False,'active_default':False}
+
+
+@pytest.mark.parametrize('mutation',[
+    lambda i:i.update(attempt='2'*32),
+    lambda i:i.update(source_commit='f'*40),
+    lambda i:i.update(new_selector='releases/other'),
+    lambda i:i.pop('staged_receipt_sha256'),
+])
+def test_precheck_refuses_unbound_intent_even_when_rehashed(tmp_path,mutation):
+    base,prefix,directory,intent,receipt=activation_fixture(tmp_path)
+    mutation(intent);path=directory/'intent.json';path.write_text(json.dumps(intent))
+    receipt['activation_intent']['sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+    with pytest.raises(ValueError,match='intent binding'):
+        v.activation_state(prefix,base,receipt,'0.35.0','a'*40,precheck=True)
+
+
+@pytest.mark.parametrize('mutation',[
+    lambda c:c.update(attempt='2'*32),
+    lambda c:c.update(intent_sha256='f'*64),
+    lambda c:c['precheck_result'].update(active_default=True),
+    lambda c:c['precheck_result'].update(status='passed'),
+    lambda c:c['command_resolution'].update(native_commands={}),
+    lambda c:c['command_resolution'].update(prefix='/wrong'),
+])
+def test_completion_refuses_unbound_attempt_precheck_or_route(tmp_path,mutation):
+    base,prefix,directory,intent,receipt=activation_fixture(tmp_path)
+    completion,path=complete_activation(prefix,directory,intent,receipt);mutation(completion)
+    path.write_text(json.dumps(completion));receipt['activation_complete']['sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+    with pytest.raises(ValueError):v.activation_state(prefix,base,receipt,'0.35.0','a'*40)

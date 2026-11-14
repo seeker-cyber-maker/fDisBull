@@ -6,6 +6,7 @@ import hashlib
 import importlib
 import importlib.metadata
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import sys
@@ -155,7 +156,73 @@ def _installed_wheel(prefix, artifact, distribution):
     return compared
 
 
-def verify_prefix(prefix, manifest_path):
+def activation_state(prefix, base, receipt, version, source_commit, *, precheck=False):
+    """Distinguish selected-but-activating from durably verified activation."""
+    prefix,base=Path(prefix),Path(base)
+    current=base/'current'
+    selected=current.is_symlink() and current.resolve()==prefix
+    status=receipt.get('status')
+    require(status in ('candidate','staged_verified','activating','rolling_back','active_verified'), 'installation status invalid')
+    if precheck:
+        require(status=='activating' and selected, 'precheck requires selected activating candidate')
+    elif status in ('activating','rolling_back'):
+        raise ValueError('activation is incomplete; reconciliation required')
+    elif selected:
+        require(status=='active_verified', 'selected candidate is not active_verified')
+    else:
+        return {'status':'passed','selected_default':False,'active_default':False}
+    attempt=receipt.get('activation_attempt')
+    require(isinstance(attempt,str) and re.fullmatch(r'[a-f0-9]{32}',attempt), 'activation attempt invalid')
+    intent_ref=receipt.get('activation_intent')
+    intent_path='share/activations/'+attempt+'/intent.json'
+    require(isinstance(intent_ref,dict) and set(intent_ref)=={'path','sha256'}
+            and intent_ref.get('path')==intent_path, 'activation intent reference invalid')
+    intent=read(checked_ref(prefix,intent_ref))
+    expected_selector='releases/'+prefix.name
+    require({'schema','attempt','source_commit','version','previous_selector','new_selector','staged_receipt_sha256'} <= set(intent)
+            and intent.get('schema')=='fdisbull-install-activation-2'
+            and intent.get('attempt')==attempt and intent.get('source_commit')==source_commit
+            and intent.get('version')==version and intent.get('new_selector')==expected_selector
+            and HEX.fullmatch(str(intent.get('staged_receipt_sha256')))
+            and ('legacy_intent_sha256' not in intent or HEX.fullmatch(str(intent['legacy_intent_sha256'])))
+            and (intent.get('previous_selector') is None or isinstance(intent['previous_selector'],str))
+            and os.readlink(current)==expected_selector, 'activation intent binding mismatch')
+    if precheck:
+        return {'status':'prechecked','selected_default':True,'active_default':False}
+    complete_ref=receipt.get('activation_complete')
+    complete_path='share/activations/'+attempt+'/complete.json'
+    require(isinstance(complete_ref,dict) and set(complete_ref)=={'path','sha256'}
+            and complete_ref.get('path')==complete_path, 'activation completion reference invalid')
+    complete=read(checked_ref(prefix,complete_ref))
+    require(set(complete)=={'schema','attempt','source_commit','version','previous_selector','new_selector',
+                            'intent_sha256','command_resolution','precheck_result'}
+            and complete.get('schema')=='fdisbull-install-activation-complete-2'
+            and complete.get('attempt')==attempt and complete.get('source_commit')==source_commit
+            and complete.get('version')==version and complete.get('previous_selector')==intent['previous_selector']
+            and complete.get('new_selector')==expected_selector and complete.get('intent_sha256')==intent_ref['sha256'],
+            'activation completion binding mismatch')
+    pre=complete.get('precheck_result')
+    require(isinstance(pre,dict) and pre.get('status')=='prechecked' and pre.get('selected_default') is True
+            and pre.get('active_default') is False and pre.get('version')==version
+            and pre.get('source_commit')==source_commit, 'activation precheck evidence invalid')
+    route=complete.get('command_resolution')
+    require(isinstance(route,dict) and route.get('prefix')==str(prefix) and route.get('version')==version
+            and isinstance(route.get('caller_path'),str) and bool(route['caller_path'])
+            and isinstance(route.get('wrapper'),str) and bool(route['wrapper'])
+            and HEX.fullmatch(str(route.get('wrapper_sha256')))
+            and isinstance(route.get('native_commands'),dict) and bool(route['native_commands']),
+            'activation command resolution invalid')
+    native=route['native_commands']
+    required={'dosbox-x','dosbox-layers','qemu-system-x86_64'}
+    require(isinstance(native.get('dosbox'),str) and bool(native['dosbox'])
+            and isinstance(native.get('qemu'),str) and bool(native['qemu'])
+            and isinstance(native.get('targets'),list) and all(isinstance(x,str) for x in native['targets'])
+            and len(native['targets'])==len(set(native['targets'])) and set(native['targets'])==required,
+            'activation native command resolution invalid')
+    return {'status':'passed','selected_default':True,'active_default':True}
+
+
+def verify_prefix(prefix, manifest_path, *, activation_precheck=False):
     prefix = Path(prefix).absolute()
     require(prefix.is_dir() and not any(x.is_symlink() for x in (prefix, *prefix.parents)), 'unsafe prefix')
     manifest_path = Path(manifest_path)
@@ -176,6 +243,9 @@ def verify_prefix(prefix, manifest_path):
     require(runtime.get('version') == receipt.get('version') == version
             and runtime.get('source_commit') == receipt.get('source_commit') == source_commit,
             'runtime/installation identities disagree')
+    base = Path(manifest.get('base', ''))
+    require(base.is_absolute() and prefix.parent == base / 'releases', 'installation base mismatch')
+    activation=activation_state(prefix,base,receipt,version,source_commit,precheck=activation_precheck)
     proofs = manifest.get('proofs')
     require(isinstance(proofs, dict) and set(proofs) == {'ci', 'native', 'release', 'delivery'}, 'proof references missing')
     documents = {name: read(checked_ref(prefix, ref)) for name, ref in proofs.items()}
@@ -213,12 +283,8 @@ def verify_prefix(prefix, manifest_path):
         loaded = importlib.import_module(module)
         require(Path(loaded.__file__).resolve().is_relative_to(prefix / 'venv'), 'import outside candidate')
         compared[role] = _installed_wheel(prefix, artifacts[role], package)
-    base = Path(manifest.get('base', ''))
-    require(base.is_absolute() and prefix.parent == base / 'releases', 'installation base mismatch')
-    current = base / 'current'
-    active = current.is_symlink() and current.resolve() == prefix
-    return {'status': 'passed', 'version': version, 'source_commit': source_commit,
-            'active_default': active, 'files_verified': len(files), 'payload_entries': len(files),
+    return {**activation, 'version': version, 'source_commit': source_commit,
+            'files_verified': len(files), 'payload_entries': len(files),
             'wheel_members_verified': compared, 'wheel_resources': compared}
 
 
@@ -227,9 +293,11 @@ def main(argv=None):
     parser.add_argument('operation', nargs='?', choices=['verify'], default='verify')
     parser.add_argument('--prefix', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--manifest', type=Path)
+    parser.add_argument('--activation-precheck', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     try:
-        result = verify_prefix(args.prefix, args.manifest or args.prefix / 'share/install-manifest.json')
+        result = verify_prefix(args.prefix, args.manifest or args.prefix / 'share/install-manifest.json',
+                               activation_precheck=args.activation_precheck)
     except Exception as error:
         print(json.dumps({'status': 'failed', 'error_type': type(error).__name__, 'error': str(error)}))
         return 1

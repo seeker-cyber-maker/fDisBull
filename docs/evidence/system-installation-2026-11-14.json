@@ -1,4 +1,19 @@
 {
+  "activation_recovery_followup": {
+    "corrections": [
+      "explicit activating/rolling_back phases; finalmarker afterprechecks and durableboundproof",
+      "immutableper-attempt records; explicitcompensating reconciliation; idempotentverifiedreadback and newexplicitretry",
+      "exactownedprocessgroup cleanupregardlessleaderliveness"
+    ],
+    "findings": [
+      "active_verified marker preceded durable completion",
+      "fixed-name intent prevented retry",
+      "dead leader could leave output-holding child alive"
+    ],
+    "integrated_verification": "86 installer/verifier/checker/pipeline/release checks passed in1.46s",
+    "scope": "Authored disposable prefixes/processes and simulated protocol receipts, no realhoststage/nativeVM/CI/release.",
+    "verification": "60 focused installer/verifier/checker checks passed, including real abrupt childprocess exits at fiveactivation boundaries and rollback boundary; deadleader/livechild timeout tested"
+  },
   "actual_cli_probe": {
     "fixture_sha256": "419ddca7a484fee079460325c7a9ffcb85eaf4c689409978d96a57f4612501af",
     "installed_version": "0.34.1",

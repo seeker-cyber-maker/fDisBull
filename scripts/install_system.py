@@ -293,9 +293,11 @@ def _run(argv,work,*,timeout=300,json_output=False,capture=False):
                 if len(buffers[key.fileobj])>1024*1024:raise ValueError('verification output too large')
         if process.wait(timeout=max(.01,deadline-time.monotonic()))!=0:raise ValueError('command failed: '+str(argv[0]))
     except BaseException:
-        if process.poll() is None:
-            try:os.killpg(process.pid,signal.SIGKILL)
-            except ProcessLookupError:pass
+        # A finished leader can leave children holding either output pipe.
+        # This process created the session; drain its exact group regardless
+        # of leader liveness rather than leaving those children behind.
+        try:os.killpg(process.pid,signal.SIGKILL)
+        except ProcessLookupError:pass
         process.wait();raise
     finally:
         sel.close();process.stdout.close();process.stderr.close()
@@ -330,11 +332,16 @@ def _cli_probe(prefix,base):
     return {'status':'passed','workspace':str(work),'fixture_sha256':digest(target),'persisted_instructions':counts['instructions']}
 
 
-def _verify(prefix,base,*,active_required=False):
+def _verify(prefix,base,*,active_required=False,activation_precheck=False):
     work=_workspace(base)
     manifest=prefix/'share/install-manifest.json';verifier=prefix/'share/verify-system.py'
-    result=_run([prefix/'venv/bin/python','-B','-I',verifier,'--prefix',prefix,'--manifest',manifest],work,timeout=300,json_output=True)
-    if result.get('status')!='passed' or (active_required and result.get('active_default') is not True):raise ValueError('system verifier rejected candidate')
+    argv=[prefix/'venv/bin/python','-B','-I',verifier,'--prefix',prefix,'--manifest',manifest]
+    if activation_precheck:argv.append('--activation-precheck')
+    result=_run(argv,work,timeout=300,json_output=True)
+    expected='prechecked' if activation_precheck else 'passed'
+    if (result.get('status')!=expected or (active_required and result.get('active_default') is not True)
+            or activation_precheck and (result.get('selected_default') is not True or result.get('active_default') is not False)):
+        raise ValueError('system verifier rejected candidate')
     return {'verifier':result,'cli':_cli_probe(prefix,base)}
 
 
@@ -433,7 +440,7 @@ def _candidate(prefix,base):
     receipt=read_json(p/'INSTALLATION.json');manifest=read_json(p/'share/install-manifest.json')
     if (manifest.get('schema')!='fdisbull-system-install-manifest-1' or manifest.get('base')!=str(base)
             or manifest.get('version')!=receipt.get('version') or manifest.get('source_commit')!=receipt.get('source_commit')
-            or receipt.get('status') not in ('staged_verified','active_verified')):raise ValueError('candidate installation receipt invalid')
+            or receipt.get('status') not in ('staged_verified','activating','rolling_back','active_verified')):raise ValueError('candidate installation receipt invalid')
     return p,receipt,manifest
 
 
@@ -504,61 +511,171 @@ def _verify_resolution(base,prefix,version):
             'prefix':str(prefix),'native_commands':backends}
 
 
+def _postcheck(prefix,base,manifest,*,activation_precheck=False):
+    work=_workspace(base)
+    argv=[prefix/'venv/bin/python','-B','-I',prefix/'share/check-local-install.py',
+          '--base',base,'--version',manifest['version'],'--commit',manifest['source_commit'],'--json']
+    if activation_precheck:argv.append('--activation-precheck')
+    result=_run(argv,work,timeout=300,json_output=True)
+    expected='prechecked' if activation_precheck else 'passed'
+    if (result.get('status')!=expected or result.get('source_commit')!=manifest['source_commit']
+            or result.get('version')!=manifest['version']
+            or activation_precheck and (result.get('selected_default') is not True or result.get('active_default') is not False)):
+        raise ValueError('postcheck local install failed')
+    return result
+
+
+def _previous_available(base,previous):
+    if previous is None:return
+    if not isinstance(previous,str) or not previous or '\x00' in previous:raise ValueError('previous selector invalid')
+    target=(base/previous).resolve(strict=True)
+    if target.parent!=base/'releases' or not target.is_dir():raise ValueError('previous selector unavailable')
+
+
+def _attempt(prefix,receipt,manifest,base):
+    attempt=receipt.get('activation_attempt');ref=receipt.get('activation_intent')
+    if not isinstance(attempt,str) or not re.fullmatch('[0-9a-f]{32}',attempt):raise ValueError('activation attempt identity missing')
+    expected='share/activations/'+attempt+'/intent.json'
+    if (not isinstance(ref,dict) or set(ref)!={'path','sha256'} or ref['path']!=expected
+            or not HASH.fullmatch(str(ref['sha256']))):raise ValueError('activation intent reference invalid')
+    path=safe_regular(prefix/expected)
+    if digest(path)!=ref['sha256']:raise ValueError('activation intent changed')
+    intent=read_json(path)
+    if (intent.get('schema')!='fdisbull-install-activation-2' or intent.get('attempt')!=attempt
+            or intent.get('source_commit')!=manifest['source_commit'] or intent.get('version')!=manifest['version']
+            or intent.get('new_selector')!='releases/'+prefix.name):raise ValueError('activation intent binding invalid')
+    _previous_available(base,intent.get('previous_selector'))
+    backup=safe_regular(path.parent/'staged.json')
+    if digest(backup)!=intent.get('staged_receipt_sha256'):raise ValueError('staged receipt backup changed')
+    staged=read_json(backup)
+    if (staged.get('status')!='staged_verified' or staged.get('version')!=manifest['version']
+            or staged.get('source_commit')!=manifest['source_commit']):raise ValueError('staged receipt backup identity invalid')
+    return path.parent,intent,staged
+
+
+def _close_attempt(path,value):
+    # Reconciliation may finish an already-observed compensation, never replace
+    # the original closure or replay a selector switch that already happened.
+    if path.exists() or path.is_symlink():
+        existing=read_json(path)
+        keys=('schema','attempt','source_commit','version','restored_selector')
+        if any(existing.get(k)!=value.get(k) for k in keys):raise ValueError('activation closure conflicts')
+        return existing
+    _write(path,value)
+    return value
+
+
+def _restore_attempt(prefix,base,receipt,manifest,*,reason):
+    folder,intent,staged=_attempt(prefix,receipt,manifest,base)
+    previous=intent['previous_selector'];selected=intent['new_selector'];current=_selector(base)
+    if current not in (previous,selected):
+        raise RuntimeError('selector changed outside activation; reconciliation required')
+    # Clear any final marker durably before a compensating selector mutation.
+    if receipt['status']!='rolling_back':
+        receipt={**receipt,'status':'rolling_back'}
+        _write(prefix/'INSTALLATION.json',receipt,replace=True)
+    if _selector(base)==selected:_switch(base,previous)
+    if _selector(base)!=previous:raise RuntimeError('activation selector rollback failed')
+    closure={'schema':'fdisbull-install-rollback-2','attempt':intent['attempt'],
+             'source_commit':manifest['source_commit'],'version':manifest['version'],
+             'restored_selector':previous,'reason':reason}
+    _close_attempt(folder/'rollback-complete.json',closure)
+    _write(prefix/'INSTALLATION.json',staged,replace=True)
+    return {'status':'rolled_back','restored_selector':previous,'attempt':intent['attempt']}
+
+
+def _confirm_active(prefix,base,receipt,manifest):
+    _,intent,_=_attempt(prefix,receipt,manifest,base)
+    if _selector(base)!='releases/'+prefix.name:raise ValueError('active candidate is not selected; reconcile explicitly')
+    _verify(prefix,base,active_required=True)
+    _verify_resolution(base,prefix,manifest['version'])
+    _postcheck(prefix,base,manifest)
+    return {'status':'active_verified','prefix':str(prefix),'previous_selector':intent['previous_selector'],
+            'already_active':True,'attempt':receipt['activation_attempt']}
+
+
 def activate(prefix,base):
     base=_base(base)
     with _lock(base):
         prefix,receipt,manifest=_candidate(prefix,base)
-        if receipt['status']!='staged_verified':raise ValueError('candidate is not staged and verified')
+        if receipt['status']=='active_verified':return _confirm_active(prefix,base,receipt,manifest)
+        if receipt['status']!='staged_verified':raise ValueError('interrupted activation; run reconcile before a new attempt')
         _verify(prefix,base)
         previous=_selector(base);selected='releases/'+prefix.name
-        if previous==selected:raise ValueError('candidate already selected')
-        intent=prefix/'share/activation-intent.json'
-        _write(intent,{'schema':'fdisbull-install-activation-1','source_commit':manifest['source_commit'],
-                       'version':manifest['version'],'previous_selector':previous,'new_selector':selected})
+        if previous==selected:raise ValueError('candidate already selected without a complete activation')
+        _previous_available(base,previous)
+        # Older fixed-name attempts remain untouched. New attempts are unique.
+        legacy=prefix/'share/activation-intent.json'
+        legacy_sha=None
+        if legacy.exists() or legacy.is_symlink():
+            old=read_json(legacy)
+            if (old.get('schema')!='fdisbull-install-activation-1' or old.get('source_commit')!=manifest['source_commit']
+                    or old.get('version')!=manifest['version'] or old.get('previous_selector')!=previous
+                    or old.get('new_selector')!=selected):raise ValueError('legacy activation effects require reconciliation')
+            legacy_sha=digest(legacy)
+        attempt=uuid.uuid4().hex;folder=prefix/'share/activations'/attempt
+        folder.mkdir(parents=True,exist_ok=False)
+        _write(folder/'staged.json',receipt)
+        intent={'schema':'fdisbull-install-activation-2','attempt':attempt,'source_commit':manifest['source_commit'],
+                'version':manifest['version'],'previous_selector':previous,'new_selector':selected,
+                'staged_receipt_sha256':digest(folder/'staged.json')}
+        if legacy_sha is not None:intent['legacy_intent_sha256']=legacy_sha
+        _write(folder/'intent.json',intent)
+        pending={**receipt,'status':'activating','activation_attempt':attempt,'previous_selector':previous,
+                 'activation_intent':{'path':(folder/'intent.json').relative_to(prefix).as_posix(),
+                                      'sha256':digest(folder/'intent.json')}}
         try:
-            _write(prefix/'INSTALLATION.json',{**receipt,'status':'active_verified','previous_selector':previous},replace=True)
+            _write(prefix/'INSTALLATION.json',pending,replace=True)
             if _selector(base)!=previous:raise ValueError('selector changed before activation')
             _switch(base,selected)
-            _verify(prefix,base,active_required=True)
+            _verify(prefix,base,activation_precheck=True)
             route=_verify_resolution(base,prefix,manifest['version'])
-            work=_workspace(base)
-            check=_run([prefix/'venv/bin/python','-B','-I',prefix/'share/check-local-install.py',
-                        '--base',base,'--version',manifest['version'],'--commit',manifest['source_commit'],'--json'],work,timeout=300,json_output=True)
-            if check.get('status')!='passed' or _selector(base)!=selected:raise ValueError('postcheck local install failed')
-            _write(prefix/'share/activation-complete.json',{'schema':'fdisbull-install-activation-complete-1',
-                   'status':'passed','source_commit':manifest['source_commit'],'selector':selected,
-                   'previous_selector':previous,'postcheck':check,'command_resolution':route})
-            return {'status':'active_verified','prefix':str(prefix),'previous_selector':previous}
+            precheck=_postcheck(prefix,base,manifest,activation_precheck=True)
+            if _selector(base)!=selected:raise ValueError('selector changed during activation checks')
+            complete={'schema':'fdisbull-install-activation-complete-2','attempt':attempt,
+                      'source_commit':manifest['source_commit'],'version':manifest['version'],
+                      'new_selector':selected,'previous_selector':previous,
+                      'intent_sha256':pending['activation_intent']['sha256'],
+                      'command_resolution':route,'precheck_result':precheck}
+            _write(folder/'complete.json',complete)
+            # All substantive live checks and their durable proof precede this
+            # final marker. Public verification refuses the activating phase.
+            final={**pending,'status':'active_verified','activation_complete':{
+                'path':(folder/'complete.json').relative_to(prefix).as_posix(),'sha256':digest(folder/'complete.json')}}
+            _write(prefix/'INSTALLATION.json',final,replace=True)
+            _verify(prefix,base,active_required=True)
+            _postcheck(prefix,base,manifest)
+            return {'status':'active_verified','prefix':str(prefix),'previous_selector':previous,'attempt':attempt}
         except BaseException:
-            current=_selector(base)
-            if current==selected:
-                _switch(base,previous)
-                if _selector(base)!=previous:raise RuntimeError('activation selector rollback failed')
-            elif current!=previous:
-                raise RuntimeError('activation failed and selector changed; manual reconciliation required')
-            _write(prefix/'INSTALLATION.json',receipt,replace=True)
+            # Re-read durable state: a write/switch can take effect before its
+            # caller sees an error. Compensation observes which effect exists.
+            actual=read_json(prefix/'INSTALLATION.json')
+            if actual.get('activation_attempt')==attempt:
+                _restore_attempt(prefix,base,actual,manifest,reason='activation-failed')
+            elif actual!=receipt:raise RuntimeError('activation receipt changed; reconciliation required')
             raise
+
+
+def reconcile(prefix,base):
+    """Explicitly restore an interrupted owned attempt; never run it forward."""
+    base=_base(base)
+    with _lock(base):
+        prefix,receipt,manifest=_candidate(prefix,base)
+        if receipt['status']=='active_verified':return _confirm_active(prefix,base,receipt,manifest)
+        if receipt['status']=='staged_verified':
+            if _selector(base)=='releases/'+prefix.name:raise ValueError('staged candidate unexpectedly selected')
+            return {'status':'staged_verified','prefix':str(prefix),'reconciliation_performed':False}
+        return _restore_attempt(prefix,base,receipt,manifest,reason='explicit-reconciliation')
 
 
 def rollback(prefix,base):
     base=_base(base)
     with _lock(base):
         prefix,receipt,manifest=_candidate(prefix,base)
-        if receipt['status']!='active_verified':raise ValueError('candidate is not active')
-        intent=read_json(prefix/'share/activation-intent.json')
-        if (intent.get('schema')!='fdisbull-install-activation-1' or intent.get('source_commit')!=manifest['source_commit']
-                or intent.get('new_selector')!='releases/'+prefix.name or _selector(base)!=intent['new_selector']):
-            raise ValueError('selector or activation binding changed')
-        previous=intent.get('previous_selector')
-        if previous is not None:
-            target=(base/previous).resolve(strict=True)
-            if target.parent!=base/'releases' or not target.is_dir():raise ValueError('previous selector unavailable')
-        _switch(base,previous)
-        if _selector(base)!=previous:raise RuntimeError('rollback selector readback failed')
-        _write(prefix/'INSTALLATION.json',{**receipt,'status':'staged_verified'},replace=True)
-        _write(prefix/'share/rollback-complete.json',{'schema':'fdisbull-install-rollback-1','status':'passed',
-               'source_commit':manifest['source_commit'],'restored_selector':previous})
-        return {'status':'rolled_back','restored_selector':previous}
+        if receipt['status']=='staged_verified':
+            if _selector(base)=='releases/'+prefix.name:raise ValueError('staged candidate unexpectedly selected')
+            return {'status':'already_inactive','current_selector':_selector(base),'already_inactive':True}
+        return _restore_attempt(prefix,base,receipt,manifest,reason='explicit-rollback')
 
 
 def main(argv=None):
@@ -566,7 +683,7 @@ def main(argv=None):
     parser.add_argument('--base',type=Path,default=DEFAULT_BASE)
     sub=parser.add_subparsers(dest='command',required=True)
     s=sub.add_parser('stage');s.add_argument('--manifest',type=Path,required=True)
-    for name in ('verify','activate','rollback'):
+    for name in ('verify','activate','rollback','reconcile'):
         p=sub.add_parser(name);p.add_argument('--prefix',type=Path,required=True)
     args=parser.parse_args(argv)
     try:

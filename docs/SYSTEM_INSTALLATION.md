@@ -18,6 +18,7 @@ state as an installation resource.
 python scripts/install_system.py --base /Users/Shared/fDisBull stage --manifest /absolute/private/install-inputs.json
 python scripts/install_system.py --base /Users/Shared/fDisBull verify --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
 python scripts/install_system.py --base /Users/Shared/fDisBull activate --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
+python scripts/install_system.py --base /Users/Shared/fDisBull reconcile --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
 python scripts/install_system.py --base /Users/Shared/fDisBull rollback --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
 ```
 
@@ -38,13 +39,23 @@ successful build commands. Linux CI and an old binary's hash do not establish
 these host-specific facts. The installer consumes real receipts; it does not
 manufacture native qualification.
 
-Activation re-verifies the staged prefix, records the exact previous selector,
-switches it atomically and checks the selected executable and installed package
-identity. It invokes the existing `check_local_install.py` with the required
-version and full source commit. A failed activation restores the prior selector
-and installation record; the prior prefix and running private sessions remain
-in place. Rollback restores the recorded selector and retains both prefixes.
-Unknown external changes require reconciliation rather than an overwrite.
+Activation re-verifies the staged prefix and writes an immutable attempt
+directory containing the exact previous selector and original staged receipt.
+It records `activating`, switches the selector atomically, and checks the selected
+executable and installed package identity. It invokes `check_local_install.py`
+with the required version and full source commit. The internal precheck reports
+`prechecked`, never active success. Only after
+the live checks and their hash-bound completion proof are durable does the
+installer write `active_verified`, then verify the public result. A failed
+activation restores the prior selector and installation record; the prior
+prefix and running private sessions remain in place. Rollback restores the recorded selector and retains both prefixes.
+An abrupt process loss leaves `activating` or `rolling_back`, and public checks
+reject that incomplete state. Explicit `reconcile` observes the current selector
+and compensates only an owned effect; it does not replay the activation forward.
+It refuses an unrelated selector change. A subsequent explicit activation uses a
+new attempt directory, preserving every previous intent, completion and rollback
+record. Repeating a completed activation verifies its existing result; repeating
+rollback on an inactive candidate reports `already_inactive` without mutation.
 
 The copied `share/verify-system.py` is version-neutral. It checks the file
 inventory, CI artifact identities, native and delivery evidence, installed wheel
@@ -61,3 +72,7 @@ readback before completion can be claimed.
 The [0.31.1 installation snapshot](SYSTEM_INSTALLATION-0.31.1-HISTORY.md) is
 preserved byte-for-byte for historical reference. Its active-selector statements
 and qualification results describe that older installation, not today's prefix.
+
+The finite subprocess runner terminates its exact owned process group on timeout
+or output failure even if the original launcher has exited while a descendant
+holds an output pipe. This cleanup does not inspect or stop unrelated apps.
