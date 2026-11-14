@@ -457,6 +457,8 @@ def _main(z, bound, report_callback, api_proofs, deadline):
     dll_length=len(bytes.fromhex(bound['dll']['globals']['hex']))
     after_report=_cells(report_callback['proof']['post_memory'])
     expected_owned={a:after_report[a] for a in range(dll_start,dll_start+dll_length)} | code
+    expected_owned.update({int(r['address'],16)+k:entry_cells[int(r['address'],16)+k]
+        for r in recovery['protected_ranges'] if r['role'].startswith('iat-') for k in range(r['length'])})
     _require_owned_poststate(z,modeled['memory'],expected_owned,prove)
     text=lambda v:z.simplify(v).sexpr()
     data=bound['exe']['globals'];start=int(data['address'],16)
@@ -468,9 +470,10 @@ def _main(z, bound, report_callback, api_proofs, deadline):
         final_data[a]=byte.as_long()
     return {'registers_at_exit_api_entry':{n:text(modeled['registers'][n]) for n in names},
         'flags_at_exit_api_entry':text(modeled['flags']),
+        'memory_at_exit_api_entry':{hex(a):text(modeled['memory'][a]) for a in addresses},
         'exe_memory':_rows(final_data),
         'dll_report_post_memory':report_post,'exit_code':exit_code,
-        'teardown_precondition':'Complete DLL globals and both code images universally preserved by authored main and verified calls',
+        'teardown_precondition':'Complete DLL globals, both code images and initialized IAT universally preserved by authored main and verified calls',
         'termination_bound_authored_instructions':len(records),
         'prefix_memory_snapshots_checked':checks['snapshots'],
         'instruction_fetch_checks':modeled['fetch_checks'],
