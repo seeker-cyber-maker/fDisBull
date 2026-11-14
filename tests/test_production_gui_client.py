@@ -246,3 +246,131 @@ def test_gui_get_retry_budget_is_charged_conservatively(tmp_path):
     raw=Raw();gate=runtime._GatedTransport(raw,lambda:None,lambda:1000,'github')
     assert gate.request('GET','/fixed/read')=={'ok':True}
     assert gate.remaining==98 and raw.calls==1
+
+
+def test_expired_retained_result_uses_independent_read_deadline(tmp_path):
+    now=[1000];elapsed=[0.0];calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append((doc,kw['timeout']))
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        if now[0]>=2000:
+            assert kw['timeout']>1.014
+            elapsed[0]+=1.014
+        return envelope({'status':'complete','request_id':doc['request_id'],'result':{'ok':True}})
+    c=setup(tmp_path,runner,clock=lambda:now[0]);c.monotonic=lambda:elapsed[0]
+    assert c.call('provider',{'x':1},key='k',timeout=60)=={'ok':True}
+    now[0]=2000
+    assert c.call('provider',{'x':1},key='k',timeout=60)=={'ok':True}
+    assert [d['operation'] for d,_ in calls]==['submit','result','result']
+    assert calls[1][0]['request_id']==calls[2][0]['request_id']
+
+
+def test_result_transport_retry_same_nonce_and_total_deadline(tmp_path):
+    elapsed=[0.0];calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append((doc,kw['timeout']))
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        if len(calls)==2:
+            elapsed[0]+=20
+            raise TimeoutError()
+        return envelope({'status':'complete','request_id':doc['request_id'],'result':{'accepted':True}})
+    c=setup(tmp_path,runner);c.monotonic=lambda:elapsed[0]
+    doc={'operation':'request','method':'POST','provider':'github','path':'/fixed','payload':{}}
+    assert c.call('provider',doc,key='action',timeout=60)=={'accepted':True}
+    assert [x[0]['operation'] for x in calls]==['submit','result','result']
+    assert calls[1][0]==calls[2][0]=={'operation':'result','request_id':calls[0][0]['nonce']}
+    assert calls[1][1]==45 and calls[2][1]==25
+
+
+def test_result_transport_retry_exhaustion_is_unknown_without_resubmit(tmp_path):
+    calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        raise TimeoutError()
+    c=setup(tmp_path,runner)
+    with pytest.raises(RuntimeError,match='GUI result outcome unknown'):c.call('provider',{'method':'POST'},key='k',timeout=60)
+    assert [d['operation'] for d in calls]==['submit','result','result']
+    assert calls[1]==calls[2]
+
+
+def test_result_validation_failure_does_not_retry(tmp_path):
+    calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        return envelope({'status':'complete','request_id':'different','result':{'ok':True}})
+    c=setup(tmp_path,runner)
+    with pytest.raises(RuntimeError,match='identity mismatch'):c.call('provider',{'x':1},key='k',timeout=60)
+    assert [d['operation'] for d in calls]==['submit','result']
+
+
+def test_expiry_before_submit_does_not_start_action(tmp_path):
+    times=iter([1000,1001,1001]);calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        return envelope({'status':'pending','request_id':doc['request_id']})
+    c=setup(tmp_path,runner,clock=lambda:next(times))
+    with pytest.raises(RuntimeError,match='action outcome unknown'):c.call('provider',{'method':'POST'},key='k',timeout=1)
+    assert [d['operation'] for d in calls]==['result']
+
+
+def test_result_lookup_deadline_exhausted_never_starts_second_read(tmp_path):
+    elapsed=[0.0];calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        elapsed[0]+=45
+        raise TimeoutError()
+    c=setup(tmp_path,runner);c.monotonic=lambda:elapsed[0]
+    with pytest.raises(RuntimeError,match='GUI result outcome unknown'):c.call('provider',{'method':'POST'},key='k',timeout=60)
+    assert [d['operation'] for d in calls]==['submit','result']
+
+
+def test_malformed_result_json_is_not_retried(tmp_path):
+    calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        return {'returncode':0,'stdout':b'not-json','timed_out':False,'overflow':False}
+    c=setup(tmp_path,runner)
+    with pytest.raises(RuntimeError,match='unknown'):c.call('provider',{'method':'POST'},key='k',timeout=60)
+    assert [d['operation'] for d in calls]==['submit','result']
+
+
+def test_structured_helper_rejection_does_not_retry(tmp_path):
+    calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        return {'returncode':1,'stdout':b'{"error":"gui_transport_unavailable"}',
+                'timed_out':False,'overflow':False}
+    c=setup(tmp_path,runner)
+    with pytest.raises(RuntimeError,match='unknown'):c.call('provider',{'method':'POST'},key='k',timeout=60)
+    assert [d['operation'] for d in calls]==['submit','result']
+
+
+def test_expired_retained_pending_one_lookup_no_submit(tmp_path):
+    now=[1000];calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        if now[0]>=2000:return envelope({'status':'pending','request_id':doc['request_id']})
+        return envelope({'status':'complete','request_id':doc['request_id'],'result':{'ok':True}})
+    c=setup(tmp_path,runner,clock=lambda:now[0])
+    assert c.call('provider',{'method':'POST'},key='k',timeout=60)=={'ok':True}
+    now[0]=2000;before=len(calls)
+    with pytest.raises(RuntimeError,match='action outcome unknown'):c.call('provider',{'method':'POST'},key='k',timeout=60)
+    assert [d['operation'] for d in calls[before:]]==['result']
+    assert calls[-1]['request_id']==calls[0]['nonce']
+
+
+def test_overflow_response_is_not_retried(tmp_path):
+    calls=[]
+    def runner(argv,**kw):
+        doc=json.loads(kw['input_bytes']);calls.append(doc)
+        if doc['operation']=='submit':return envelope({'status':'pending','request_id':doc['nonce']})
+        return {'returncode':1,'stdout':b'{}','timed_out':False,'overflow':True}
+    c=setup(tmp_path,runner)
+    with pytest.raises(RuntimeError,match='unknown'):c.call('provider',{'method':'POST'},key='k',timeout=60)
+    assert [d['operation'] for d in calls]==['submit','result']
