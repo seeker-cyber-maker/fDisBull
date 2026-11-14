@@ -1,6 +1,6 @@
-# Local-first CI: pushes, merge requests and tags do not create pipelines.
-# Only deliberate web/API pipelines are admitted, and every job requires the
-# dedicated local-runner tag. Heavy qualification has a blocking manual start.
+# Deliberate CI only: pushes, merge requests and tags do not create pipelines.
+# n8n owns the shared OVH executor. Web/API jobs require its dedicated runner
+# tag; heavy qualification retains a blocking manual start.
 spec:
   inputs:
     recovery:
