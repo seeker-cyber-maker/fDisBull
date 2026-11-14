@@ -1,155 +1,169 @@
 # DOS/4GW LE static analysis
 
-**Development candidate — unreleased.** Use a source checkout or wheel that
-contains this module. This guide does not announce a published release or a
-qualified native DOS/4GW execution backend.
+The mixed-mode extension is a local development candidate. Use a checkout or
+wheel containing these changes; this guide does not announce a shared system
+installation or a published release.
 
-The LE loader lets fDisBull analyze the protected-mode image in a supported
-DOS/4GW-style executable. It maps the LE objects and their internal fixups,
-then uses the existing **x86-32 `NativeProcessor`** for instruction decoding
-and the existing project analyzer for traversal and persistent evidence.
-There is no new instruction set, game-script interpreter or plugin registry.
-
-For measured target results, format evidence and follow-up acceptance criteria,
-see the [DOS format findings](DOS_FORMAT_FINDINGS_2026-10-29.md).
+The LE loader maps supported protected-mode executable objects, retains the
+complete original file and uses the native x86 decoder in each object's declared
+16-bit or 32-bit mode. The ordinary project analyzer owns traversal, persisted
+facts, candidate functions, xrefs, CFGs and byte versions. Runtime execution and
+runtime selector binding are separate evidence paths.
 
 ## Select the image
 
-A file may contain both a 16-bit DOS MZ bootstrap and a 32-bit LE program.
-These are separate image views with different entry points and address models.
-
 | Selection | Behavior |
 | --- | --- |
-| Default / `--image auto` | A recognized LE input selects the supported LE loader. An unsupported LE profile fails explicitly; it is not silently analyzed as the preceding DOS bootstrap. |
-| `--image le` | Requires an LE image, either bare or referenced by an independent MZ secondary-header field. It applies the same complete loading checks as automatic selection. |
-| `--image mz` | Selects the declared 16-bit DOS load image of an MZ container, subject to the existing MZ validation. It does not load the LE program. |
+| Default / `--image auto` | Selects a validated direct LE, independent MZ/LE or declared MZ/BW/inner-MZ/LE application. Unsupported recognized profiles fail explicitly. |
+| `--image le` | Selects the same LE application with complete mapping and supported-fixup checks. |
+| `--image mz` | Selects the original outer DOS bootstrap as a separate real-mode image. |
 
-Keep the two views in separate projects. For inputs with LE fixups, use the
-container loader: `--arch` selects raw bytes and bypasses this mapping.
-`--bits`, `--base`, a nondefault `--load-segment` and `--slice-arch` do not
-describe this executable LE profile and are rejected by LE import. `--module`
-does not enable DLL or missing-entry support for this profile.
+For bound carriers the outer MZ's declared end must identify a complete BW
+header. Its absolute `next_header_pos` must point forward to a validated inner
+MZ whose independent `e_lfanew` identifies LE. This is bounded chain traversal,
+not signature scanning or carving. The inner header must actually contain the
+secondary-header field. Original-file positions, application-file positions,
+object offsets and preferred address keys stay distinct in metadata.
 
-## Run a bounded first pass
-
-Replace the example paths with the chosen input and new private project paths.
-Original game files and byte-retaining project databases belong outside the
-source checkout and tool packages.
-
-```sh
-fdisbull identify /path/to/program.exe
-fdisbull --output-artifact-dir "$HOME/fdisbull-private/output-artifacts" inspect /path/to/program.exe --image le
-fdisbull import /path/to/program.exe /path/to/program-le.fdb --image le
-fdisbull analyze /path/to/program-le.fdb --max-instructions 5000
-fdisbull analysis-status /path/to/program-le.fdb
-fdisbull functions /path/to/program-le.fdb --limit 20
-fdisbull disasm /path/to/program-le.fdb --lines 20
-```
-
-Omitting `--image le` on import selects the same supported LE image
-automatically. To inspect only a valid preceding DOS bootstrap instead:
+Keep MZ and LE selections in separate projects. `--arch` bypasses container
+loading and must not be used to force a mixed module through one raw decoder.
+LE import rejects incompatible `--bits`, `--base`, `--load-segment`,
+`--slice-arch` and library/module overrides.
 
 ```sh
-fdisbull inspect /path/to/program.exe --image mz
-fdisbull import /path/to/program.exe /path/to/program-dos-stub.fdb --image mz
+fdisbull identify /private/original.exe
+fdisbull import /private/original.exe /private/protected.fdb --image le
+fdisbull analyze /private/protected.fdb --max-instructions 5000
+fdisbull analysis-status /private/protected.fdb
+fdisbull disasm /private/protected.fdb --address 0x60000 --lines 16
+fdisbull cfg /private/protected.fdb 0x60000
 ```
 
-One bounded analysis call may leave pending work and unresolved indirect
-transfers. Function entries are candidates. Neither a drained queue nor a
-large instruction count establishes full-game coverage or runtime behavior.
-These commands do not execute the input program.
+The example address is a caller-selected preferred object address, not a
+universal entry. Inspect the actual sections and loader metadata first. Original
+programs, project databases and decoder objects belong in private paths outside
+source Git and distribution inputs.
 
-## Understand addresses and fixups
+## Object modes and traversal
 
-The loader maps each object's declared preferred base and virtual size. The
-declared entry is the selected start object's base plus its EIP offset.
-An explicit `--entry` must name a file-backed byte in an executable mapped
-object. The result is a flat x86-32 address; it is not a real-mode `CS:IP`
-pair or an observed protected-mode selector.
+Each mapped object retains its preferred base, size, flags, file-backed extents
+and declared decoder width. The project persists `decode_regions` in each byte
+version. The project's default width describes its selected entry; the analysis
+namespace remains stable while each instruction exposes its actual
+`decoder_bits` and `decoder_context`. Disassembly, memory queries, CFG nodes,
+function-boundary discovery and native backing blocks use the address's object
+mode. Reopening a project and making a mapped-memory child version preserve
+these declarations.
 
-For supported internal offset32 fixups, the loader writes the target object's
-preferred base plus its target offset into a separate mapped image. Target
-offset fields may be 16 or 32 bits; object ordinals may be 8 or 16 bits.
-Signed source offsets handle words spanning page boundaries, and identical
-duplicate records on adjoining pages retain separate evidence while applying
-one unique write. Conflicting overlapping writes are rejected.
+New mode-bearing LE projects use semantic project schema 10. Older fDisBull
+readers reject that format instead of silently treating the bridge as 32-bit.
+The new reader also accepts ordinary legacy schema-9 projects. Unguarded
+schema-9 mode prototypes require explicit reimport; changing a format number
+alone is not a general migration procedure.
 
-The exact source container remains retained. Source-file offsets, mapped
-addresses and mapped-snapshot hashes describe different representations.
-Each fixup records its original mapped value, relocated value, metadata-record
-offset and source-file fragments. The original mapped value may include
-declared zero fill. A word spanning noncontiguous physical pages or BSS does
-not claim a single contiguous source-file offset.
+A 16-bit object's near instruction pointer is object-relative. Only qualified
+same-object targets are rebased into preferred address keys. Decoding and
+fallthrough stop at object boundaries and at actual file-backed boundaries;
+interior zero-fill pages and trailing BSS are not invented instruction bytes.
+A near branch does not establish a switch of runtime code-selector mode.
+Selectors and far transfers remain unresolved unless separately qualified.
 
-Standalone `inspect` shows a bounded preview of at most 10,000 fixup records,
-with the total count and an explicit warning when that preview is capped.
-That preview can still exceed the core inline reply budget. The global
-`--output-artifact-dir` option in the example above permits a large reply to
-be retained as an artifact and returns a compact receipt. Choose a private
-directory outside Git; inspect the referenced artifact only when its detail
-is needed. The option precedes the subcommand.
+A file-backed executable 16-bit object boundary receives a labeled candidate
+seed. That allows inspection of a bridge or interrupt-style object without
+asserting a call edge from the main entry or claiming a proven function root.
+One bounded pass may leave pending work. An empty implemented queue is not
+whole-program recovery or proof that every byte is reachable.
 
-Imported projects retain every supported fixup and expose the complete list
-through the existing paginated query:
+## Fixups and immutable source
+
+For supported internal `offset32` fixups, the static analysis image receives the
+target object's preferred base plus target offset. Original bytes, original
+values, record positions, source fragments, target object/offset and resulting
+static values are retained. Target offsets may use 16 or 32 bits, and object
+ordinals may use 8 or 16 bits. Signed page-crossing source positions and identical
+cross-page duplicate records are preserved; conflicting writes refuse.
+
+Internal `offset16` records are parsed and retained **symbolically and
+unapplied**. Their field bytes are unchanged, `applied` is false,
+`relocated_value` is null and the record retains its target object, target offset,
+preferred target address and explicit unresolved reason. Original-runtime
+observations and another documented loader differ in this field's treatment;
+the generic loader does not choose a runtime alias convention from the record
+alone. A preferred base aligned to 64 KiB must not conceal that uncertainty.
+
+An instruction intersecting such a field reports
+`operand_status='symbolic_unapplied_fixup'` and retains its relocation evidence.
+Control-flow closure and operand interpretation are separate: a closed CFG can
+still have `interpretation_complete=false`. Segment-derived LE16 memory
+expressions remain symbolic; they never inherit real-mode `selector * 16`
+arithmetic. Native backing blocks keep their true width, but an unapplied
+relocation makes the capture incomplete for executable reconstruction.
+Fixed-width derived semantics and ABI `auto-analyze` explicitly refuse mixed
+projects and any LE image with symbolic operand fixups; they do not publish 32-bit effects for 16-bit instructions.
+
+All applied fixups identify the separate `static_analysis_image` and set
+`runtime_applied=false`. The full original container remains `source_bytes`.
+Static preferred addresses are neither observed native placements nor runtime
+selectors. Native object placements can differ by object, so a single uniform
+runtime relocation delta must not be assumed.
+
+Standalone inspection limits its relocation preview to 10,000 records and
+reports the total. Imported projects retain every supported record. Use bounded
+pagination for complete inspection:
 
 ```sh
-fdisbull relocations /path/to/program-le.fdb --limit 50 --offset 0
-fdisbull relocations /path/to/program-le.fdb --limit 50 --offset 50
+fdisbull relocations /private/protected.fdb --limit 50 --offset 0
+fdisbull relocations /private/protected.fdb --limit 50 --offset 50
 ```
 
-Continue increasing the offset by the page size as needed. The per-request
-limit remains bounded; a standalone preview cap does not truncate the project's
-retained relocation evidence. Prefer these paginated project queries for
-routine detail. Sections expose virtual size, permissions and
-source fragments; contiguous file coordinates remain unknown when backing is
-fragmented.
+Large replies can use the global `--output-artifact-dir` option with a private
+external directory. Fragmented mappings do not claim a single contiguous source
+file offset.
 
-## Supported profile and explicit refusals
+## Supported profile and refusals
 
-The current loader supports little-endian, level-zero LE executables with an
-i386/486 CPU declaration, 4096-byte pages and 32-bit objects. It handles
-enumerated physical pages, explicit zero-fill pages, BSS and the internal
-offset32 fixups described above.
+The profile supports little-endian, level-zero i386/486 LE executable modules,
+4096-byte pages, 16-bit objects up to 64 KiB, 32-bit objects, enumerated pages,
+zero-fill pages and BSS. Source and mapped bytes are bounded to 64 MiB, with
+4,096 objects, 16,384 logical pages and 100,000 fixup records. Mappings, structural
+extents and overlaps are checked before admission.
 
-It refuses LX, imported modules, selector and far-pointer fixups,
-self-relative fixups, fixup lists/chains/addends, 16-bit or unsupported object
-semantics, iterated/invalid/compressed pages, DLLs/drivers and other page sizes.
-An unsupported encoding is a limit of this module, not proof that the input is
-an invalid executable.
+LX, external imports, selector/far-pointer fixups, self-relative fixups,
+fixup lists/chains/addends, iterated/invalid/compressed pages, privileged or
+resource object semantics, DLLs/drivers and other page sizes still refuse.
+An unsupported profile is not proof that the original executable is invalid.
+The separate `le-driver-inspect` / `le-driver-disasm` interfaces retain their
+broader symbolic object-inventory contract, including driver/library variants.
 
-Source and total mapped bytes are limited to 64 MiB; additional limits are
-4,096 objects, 16,384 logical pages and 100,000 fixup records. Bounds and
-overlaps are checked before an image is accepted.
+## Versioned memory and native verification
 
-This module does not recover RTLink or other dynamic overlays from classic
-MZ files. An appended MZ tail may contain overlay data, debug information or
-other content; its presence alone does not establish a loadable overlay.
+`patch` creates a child mapped-memory version without modifying the original
+container or parent. Mode declarations and source metadata are preserved with
+the existing inherited-metadata warning. Original fixup evidence describes the
+initial loading transformation, not an inverse executable writer.
+`refresh-metadata` and runnable LE file rewriting remain unsupported.
 
-## Versioned memory experiments
+Native qualification must bind the original executable, actual descriptor
+bases/default widths, observed memory and each relocation target object. It
+must distinguish mapped code from code actually reached. Mapping a 16-bit
+interrupt-style object does not establish that the handler ran. The private
+Doom pilot reached original title screens and checked sampled offset32 sites
+against independently observed object bases; its offset16 convention remains
+explicitly unresolved. No licensed target bytes are distributed by the tool.
 
-The existing `patch` command can create a child version of the mapped LE
-memory image. The parent stays intact, and the child retains the original
-source container and inherited file metadata with an explicit warning.
-
-This is **memory-only patching**. No inverse fixup processing or runnable LE
-executable rewrite is implemented. Retained relocation metadata describes the
-original loading transformation; it does not prove that patched memory can be
-written back to the file at the same offset. `refresh-metadata` is currently
-unsupported for LE. Reopening a project preserves its stored evidence; it does
-not refresh a native player or launch a DOS process.
-
-Runtime selectors, actual DOS/4GW placement, interrupts, device state and
-gameplay execution need separate investigation and qualification. See the
-[processor seam](PROCESSOR_MODULES.md) and [DOS debugger guide](DOSBOX_DEBUGGER.md)
-for their distinct responsibilities.
+See [DOS debugger boundaries](DOSBOX_DEBUGGER.md) for the original-runtime
+backend and [the processor seam](PROCESSOR_MODULES.md) for native decoder facts.
+A normal LE static project does not by itself provide a live runtime binding.
 
 ## Encoding references
 
-The format definitions and page layout were checked against Open Watcom
-commit `5474be3542af05eee71be05fafc31bbe11f1415b`:
+The format definitions follow Open Watcom commit
+`5474be3542af05eee71be05fafc31bbe11f1415b`:
 
-- [LE/LX header, object, page-map and fixup definitions](https://github.com/open-watcom/open-watcom-v2/blob/5474be3542af05eee71be05fafc31bbe11f1415b/bld/watcom/h/exeflat.h).
-- [LE page-map and enumerated-data writer](https://github.com/open-watcom/open-watcom-v2/blob/5474be3542af05eee71be05fafc31bbe11f1415b/bld/wl/c/loadflat.c).
+- [LE/LX header, object, page and fixup definitions](https://github.com/open-watcom/open-watcom-v2/blob/5474be3542af05eee71be05fafc31bbe11f1415b/bld/watcom/h/exeflat.h).
+- [DOS/16M BW header and absolute next-header field](https://github.com/open-watcom/open-watcom-v2/blob/5474be3542af05eee71be05fafc31bbe11f1415b/bld/watcom/h/exe16m.h).
+- [LE page/data writer](https://github.com/open-watcom/open-watcom-v2/blob/5474be3542af05eee71be05fafc31bbe11f1415b/bld/wl/c/loadflat.c).
 
-These sources explain the encoding. The implemented subset and its explicit
-refusals are defined by this module and the authored loader/workflow tests.
+These references explain encodings. Authored tests and explicitly scoped native
+receipts qualify the implemented subset; a specification alone does not prove
+a particular original loader's runtime convention.

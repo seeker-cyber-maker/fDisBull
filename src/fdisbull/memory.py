@@ -473,7 +473,13 @@ class MemoryMixin:
                 match = re.fullmatch(r'x86:16:little:cs=([0-9a-fA-F]{4})', row['context'])
                 source_cs = int(match[1], 16) if match else None
                 state = json.loads(row['state_registers']) if row['state_registers'] else {}
-                facts = [json.loads(row['detail'])] if persisted else instruction_memory_accesses(bytes.fromhex(row['bytes']), source, self.arch, self.bits, cs=source_cs, registers=state)
+                facts = [json.loads(row['detail'])] if persisted else instruction_memory_accesses(bytes.fromhex(row['bytes']), source, self.arch, self.decode_bits(source,version_id), cs=source_cs, registers=state)
+                if not persisted and self.meta['format'] == 'LE':
+                    mode = self.decode_mode(source, version_id)
+                    if mode is not None:
+                        from .decode_modes import memory_accesses
+                        raw = bytes.fromhex(row['bytes'])
+                        facts = memory_accesses(raw, source, mode, self._le_processor(version_id).fixups_for(source,len(raw)))
                 if not persisted and self.meta['format'] == 'NE':
                     from .ne_processor import memory_accesses
                     facts = memory_accesses(bytes.fromhex(row['bytes']), source)

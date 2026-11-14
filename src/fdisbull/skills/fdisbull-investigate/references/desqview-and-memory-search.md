@@ -139,6 +139,18 @@ at qualified single-CPU machine stops. No persistent unattended writer starts.
 
 ## Keep evidence scoped
 
+The persisted runtime mapping registry can keep separate task incarnations,
+bounded source-object relationships, aliases and map/restore events. Start with
+`runtime-objects` and `runtime-task-start`; direct `runtime-map` evidence is
+caller-recorded, not live authenticated. `runtime-map-snapshot` can check a
+local retained snapshot extent without treating its caller task label as a
+kernel allocation identity. Register the task with the observed capture epoch,
+then take the qualifying new snapshot; old captures cannot qualify a fresh
+incarnation. Query historical relations with `runtime-mappings`,
+`runtime-resolve` and `runtime-mapping-events`. Reused application numbers do not
+reuse an incarnation. A checkpoint restore creates fresh registry lifetimes and
+does not restore guest state. See source documentation `docs/runtime-mappings.md`.
+
 Separate configured image, parsed report, verified helper-ready stop, original
 kernel instruction witness and complete native environment qualification.
 The helper observes its own task. A menu application number is reusable, and a

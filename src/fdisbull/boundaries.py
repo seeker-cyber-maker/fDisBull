@@ -207,6 +207,7 @@ class BoundaryMixin:
                 from .ne_processor import NEProcessor
                 from .processor import Location
                 ne_processor = NEProcessor(self.meta['loader_metadata']['ne'])
+            le_processor = self._le_processor(v)
 
             def current_bytes(a, size=15):
                 region = next((r for r in regions if r.start <= a < r.start + len(r.data)), None)
@@ -233,8 +234,12 @@ class BoundaryMixin:
                         if ins is not None:
                             from .ne import following
                             ins['next_address'] = following(a, ins['size'])
+                    elif le_processor is not None:
+                        from .processor import Location
+                        decoded = le_processor.decode(source, Location('le.preferred', a))
+                        ins = decoded.facts if decoded else None
                     else:
-                        ins = decode(source, a, self.arch, self.bits)
+                        ins = decode(source, a, self.arch, self.decode_bits(a,v))
                 if ins is not None and not raw and ins['size'] != row['size']:
                     ins = None
                 cache[identity] = ins
@@ -248,7 +253,7 @@ class BoundaryMixin:
                         break
                     result.append(item)
                     following = item.get('next_address', a + item['size'])
-                    if following < a or item['flow'] in ('return', 'jump', 'indirect_jump', 'stop'):
+                    if following is None or following < a or item['flow'] in ('return', 'jump', 'indirect_jump', 'stop'):
                         break
                     a = following
                 return result

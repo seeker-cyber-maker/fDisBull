@@ -172,11 +172,13 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         loaded = load_ne(data, entry=entry, module=module)
         loaded.metadata.update(filename=path.name, source_sha256=hashlib.sha256(data).hexdigest())
         return loaded
-    if image == 'le' or (image is None and (data.startswith(b'LE') or secondary and secondary['format'] == 'LE')):
+    from .le import le_carrier_origin
+    le_origin = le_carrier_origin(data) if image in (None, 'le') else None
+    if image == 'le' or (image is None and le_origin is not None):
         if slice_arch is not None:
             raise ValueError('slice_arch selects Mach-O CPUs and cannot select an LE image')
         if bits is not None or base or load_segment != 0x1000:
-            raise ValueError('LE uses its preferred flat object addresses; bits/base/load_segment overrides are not supported')
+            raise ValueError('LE uses preferred object keys and per-object widths; bits/base/load_segment overrides are not supported')
         from .le import load_le
         return load_le(data, entry=entry)
     if image=='pe':

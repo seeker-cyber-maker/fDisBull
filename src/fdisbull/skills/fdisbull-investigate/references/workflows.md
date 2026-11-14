@@ -50,7 +50,7 @@ Inspect before importing so format, slice and image profile are explicit:
   alone is not format evidence), `--image ne` (or auto-detection) for 16-bit
   Win16 NE logical `ne:seg:offset` segments, and `--image ail` for Miles AIL 2
   `.ADV` audio drivers (`dos-services` names DIGPAK/MIDPAK `INT 66h` calls;
-  `omf-catalog` builds OMF library signature catalogs). Bounded 32-bit DOS/4GW
+  `omf-catalog` builds OMF library signature catalogs). Bounded mixed 16/32-bit DOS/4GW
   LE objects and internal fixups load into the existing x86 analyzer.
 - **Desktop & embedded:** import PE32/PE64 (plus optional `managed` .NET CIL),
   Linux ELF, Mach-O ARM64 (`--slice-arch arm64`, with `code-backings` and

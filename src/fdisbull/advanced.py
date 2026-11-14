@@ -26,6 +26,21 @@ def _automatic_summary(contract):
 
 
 class AdvancedMixin:
+    def _require_flat_advanced_model(self, version, operation):
+        # Native traversal preserves object-local widths. The derived register,
+        # frame and ABI model still assumes one width for a whole project.
+        # Refuse before publishing any inferred effects under that assumption.
+        document = self._document(version)
+        regions = document.get('decode_regions', [])
+        if any(region['bits'] != self.bits for region in regions):
+            raise ValueError(operation + ' requires a uniform-width semantics/ABI model; '
+                             'use native analyze, disasm, CFG and code backings for mixed-mode LE')
+        if document.get('le', {}).get('symbolic_fixup_count', 0) or any(
+                record.get('applied') is False
+                for record in self.meta.get('loader_metadata', {}).get('le', {}).get('fixups', [])):
+            raise ValueError(operation + ' requires resolved LE operand relocations; '
+                             'symbolic source fields must not become concrete derived effects')
+
     def _signature_name(self,v,context,address):
         query='SELECT r.document FROM advanced_results r JOIN advanced_jobs j USING(version,context,address) WHERE r.version=? AND r.address=? AND j.state=\'done\''
         params=[v,_key(address)]
@@ -91,6 +106,8 @@ class AdvancedMixin:
             contract['abi']=abi
         with self.transaction(True):
             v,context,a=self._advanced_identity(address,cs,version)
+            if abi is not None and self.decode_bits(a, v) != self.bits:
+                raise ValueError('ABI summary width differs from this mixed-mode object')
             if self._mapping(v,a) is None:raise ValueError('summary address must be mapped')
             old=self.db.execute('SELECT document FROM function_summaries WHERE version=? AND context=? AND address=?',(v,context,_key(a))).fetchone()
             document=_dump(contract)
@@ -147,6 +164,10 @@ class AdvancedMixin:
             rows=sorted(snapshot['nodes'],key=lambda node:int(node['address'],16))
             if not snapshot['graph_closed'] or not rows or int(rows[0]['address'],16)!=a or any(row['context']!=context for row in rows):
                 raise ValueError('Signature capture requires a closed complete function in one context')
+            widths = {self.decode_bits(int(row['address'],16), v) for row in rows}
+            if len(widths) != 1:
+                raise ValueError('Signature capture requires one instruction width')
+            bits = widths.pop()
             raw=b''.join(bytes.fromhex(row['bytes']) for row in rows)
             if len(raw)>65536:raise ValueError('Signature capture exceeds 65536 bytes')
             expected=a
@@ -161,7 +182,7 @@ class AdvancedMixin:
                     mask[offset:offset+2]=b'\0\0'
                     relocations.append(dict(offset=offset,size=2,kind='MZ_segment_word'))
             signature=validate_signature(dict(id='captured.'+hashlib.sha256(_dump([name,raw.hex(),mask.hex(),context]).encode()).hexdigest()[:24],
-                name=name,arch=self.arch,bits=self.bits,bytes=raw.hex(),mask=mask.hex(),relocations=relocations,
+                name=name,arch=self.arch,bits=bits,bytes=raw.hex(),mask=mask.hex(),relocations=relocations,
                 source='User-confirmed routine captured by '+author,identity_only=True,
                 provenance=dict(author=author,version=v,version_sha256=self.version(v)['sha256'],
                                 context=context,address=hex(a),input_sha256=hashlib.sha256(raw).hexdigest())))
@@ -215,6 +236,7 @@ class AdvancedMixin:
         return None
 
     def _advanced_one(self,v,job,options):
+        self._require_flat_advanced_model(v, 'Derived analysis')
         context,address=job['context'],int(job['address'],16)
         snapshot=self.cfg(address,v,cs=_selector(context),max_instructions=options['max_instructions'])
         semantics={n['id']:instruction_semantics(bytes.fromhex(n['bytes']),int(n['address'],16),self.arch,self.bits,cs=_selector(n['context'])) for n in snapshot['nodes']}
@@ -401,6 +423,7 @@ class AdvancedMixin:
         for name,value,maximum in [('max_instructions',max_instructions,100000),('max_functions',max_functions,10000),('max_steps',max_steps,1000000),('max_entries',max_entries,65536),('max_rounds',max_rounds,100)]:integer(value,name,1,maximum)
         with self.transaction(True):
             v=self.version(version)['id']
+            self._require_flat_advanced_model(v, 'auto-analyze')
             enable_key=f'advanced_enabled_{v}'
             legacy_retracted=0
             if not self.db.execute('SELECT 1 FROM metadata WHERE key=?',(enable_key,)).fetchone():
