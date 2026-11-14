@@ -231,6 +231,9 @@ class QemuLayerSessionMixin:
         args = {'generation': self._layer_generation,
                 'ram': _chunks(current, writes), 'execute': _chunks(post_ram, execute)}
         previous = list(self._layer_active)
+        from .qemu_machine import _before_machine_execution, _tracking
+        _before_machine_execution(self,'machine-layer-write')
+        self._automatic_internal_pending=None
         try:
             result = self.vm.qmp.call('x-fdisbull-layer-configure', args)
         except DebuggerError as error:
@@ -260,6 +263,7 @@ class QemuLayerSessionMixin:
         self._layer_ram_applied = ram
         self._layer_exec_base = {a: post_ram[a] for a in execute}
         self._layer_exec = execute
+        _tracking(self,'after_stop','machine-layer-transition')
         return evidence
 
     @_locked

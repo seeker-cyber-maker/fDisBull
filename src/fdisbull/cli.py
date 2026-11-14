@@ -250,6 +250,7 @@ METHODS = {
     "desqview-module-inspect": "Inspect raw DVdx or caller-described older DESQview modules; path,[expected_type,expected_version]",
     "debug-desqview-observe": "Read a stopped DESQview report, optionally verifying authored helper/nonce/ready PC; run,address,[space,probe_base,expected_nonce,context]",
     "debug-qemm-observe": "Read a QPI report from stopped machine memory; run,address,[length,context]",
+    "debug-tracking": "Automatic stopped-state source bindings and lifetime diagnostics; run,[context]",
     "debug-status": "Live debugger status and address mapping; run",
     "debug-dos-process": "Read observed native DOS PSP, source mapping, driver registration and exit/residency evidence; run",
     "debug-dos-task-bind": "Bind the current native DOS COM/MZ task to its cooperating monitor anchor; run,anchor_address,expected_monitor",
@@ -485,6 +486,61 @@ METHODS["source-info"] = (
     "Recorded target size/SHA-256, loader provenance and current availability; [version]; "
     "or source-catalog counts and scope with catalog"
 )
+
+
+METHODS.update({
+    'runtime-objects': 'List source-bound LE objects or mapped regions for runtime relationships; [version]',
+    'runtime-task-start': 'Record a fresh task incarnation; run,external_id,evidence,[version,capture_epoch]',
+    'runtime-task-end': 'End one task incarnation without deleting history; task,evidence',
+    'runtime-map': 'Record a caller-supplied bounded object relationship; task,object_id,object_offset,length,linear_start,evidence,[physical_start,selector,mapping_context,replace]',
+    'runtime-map-snapshot': "Bind only a local snapshot's compared object extent; task,snapshot,object_id,object_offset,length,[snapshot_offset,replace]",
+    'runtime-unmap': 'Close explicitly selected active binding lifetimes; task,bindings,evidence',
+    'runtime-map-checkpoint': "Record the selected task's current binding set; task,evidence",
+    'runtime-map-restore': 'Restore a same-task checkpoint as fresh binding lifetimes; task,checkpoint,evidence',
+    'runtime-mappings': "Inspect a task's current or historical recorded relationships; task,[at,offset,limit]",
+    'runtime-tasks': 'Page persisted task incarnations; [run,offset,limit]',
+    'runtime-resolve': 'Return every matching bounded relationship without guessing ownership; task,address,[space,at,selector]',
+    'runtime-mapping-events': 'Page append-only task mapping history; task,[after,limit]',
+})
+
+RUNTIME_MAPPING_WRITES = frozenset((
+    "runtime-task-start", "runtime-task-end", "runtime-map", "runtime-map-snapshot",
+    "runtime-unmap", "runtime-map-checkpoint", "runtime-map-restore",
+))
+RUNTIME_MAPPING_METHODS = RUNTIME_MAPPING_WRITES | frozenset((
+    "runtime-objects", "runtime-tasks", "runtime-mappings", "runtime-resolve", "runtime-mapping-events",
+))
+
+
+def _runtime_mapping_parameters(method, params):
+    """CLI definitions are bounded data, never a recipe to execute."""
+    if "definition_file" not in params:
+        return params
+    if method not in RUNTIME_MAPPING_WRITES or set(params) != {"definition_file"}:
+        raise ValueError("runtime mapping definition_file cannot be combined with other parameters")
+    path = Path(params["definition_file"])
+    maximum = 4 * 1024 * 1024
+    if not path.is_file() or path.stat().st_size > maximum:
+        raise ValueError("expected one runtime mapping JSON definition file at most 4 MiB")
+    with path.open("rb") as stream:
+        raw = stream.read(maximum + 1)
+    if len(raw) > maximum:
+        raise ValueError("runtime mapping definition exceeds 4 MiB")
+    def unique(pairs):
+        result = {}
+        for name, value in pairs:
+            if name in result:
+                raise ValueError("duplicate runtime mapping definition key: " + name)
+            result[name] = value
+        return result
+    def finite(value):
+        raise ValueError("nonfinite runtime mapping definition value: " + value)
+    definition = json.loads(raw.decode("utf-8"), object_pairs_hook=unique, parse_constant=finite)
+    if not isinstance(definition, dict):
+        raise ValueError("runtime mapping definition must be a JSON object")
+    if "project" in definition or "definition_file" in definition:
+        raise ValueError("runtime mapping definition cannot override project or definition_file")
+    return definition
 
 
 def source_catalog_request(method, params):
@@ -978,6 +1034,10 @@ def invoke(method, params, debugger=None):
     project = p.pop("project", None)
     if not project:
         raise ValueError("project path is required")
+    if method in RUNTIME_MAPPING_METHODS:
+        p = _runtime_mapping_parameters(method, p)
+        with Project(project) as db:
+            return getattr(db, method.replace("-", "_"))(**p)
     if method == "storage-info":
         from .target_storage import storage_report
 
@@ -2092,6 +2152,32 @@ def parser():
     c.add_argument('path')
     c.add_argument('--expected-type')
     c.add_argument('--expected-version', type=lambda value: int(value,0))
+    for name in sorted(RUNTIME_MAPPING_METHODS):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument('project')
+        if name in RUNTIME_MAPPING_WRITES:
+            c.add_argument('--definition-file', required=True,
+                           help='UTF-8 JSON object containing operation parameters; at most4MiB')
+        elif name == 'runtime-objects':
+            c.add_argument('--version', type=int)
+        elif name == 'runtime-tasks':
+            c.add_argument('--run')
+            c.add_argument('--offset', type=int, default=0)
+            c.add_argument('--limit', type=int, default=100)
+        else:
+            c.add_argument('task')
+            if name == 'runtime-mapping-events':
+                c.add_argument('--after', type=int, default=0)
+                c.add_argument('--limit', type=int, default=100)
+            else:
+                c.add_argument('--at', type=int)
+            if name == 'runtime-mappings':
+                c.add_argument('--offset', type=int, default=0)
+                c.add_argument('--limit', type=int, default=256)
+            if name == 'runtime-resolve':
+                c.add_argument('address', type=lambda value: int(value,0))
+                c.add_argument('--space', choices=['linear','physical','preferred','selector'], default='linear')
+                c.add_argument('--selector', type=lambda value: int(value,0))
     for name in ('memory-snapshot-info','memory-search-start','memory-search-refine','memory-search-results','memory-edit-plan','memory-rule-create','memory-rule-info'):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument('project')

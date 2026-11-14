@@ -66,6 +66,26 @@ def stamp():
     return now()
 
 
+def _tracking_callback(session, operation, reason, *args):
+    """Observe a stopped session without recursively observing tracker reads."""
+    tracker = getattr(session, '_automatic_runtime_tracker', None)
+    if tracker is None or getattr(session, '_automatic_tracking_callback_active', False):
+        return None
+    session._automatic_tracking_callback_active = True
+    try:
+        return getattr(tracker, operation)(reason, *args)
+    finally:
+        session._automatic_tracking_callback_active = False
+
+
+def _attach_runtime_tracking(session):
+    if getattr(session, '_automatic_runtime_tracker', None) is not None:
+        return
+    from .runtime_tracking import AutomaticRuntimeTracker
+    session._automatic_runtime_tracker = AutomaticRuntimeTracker(session)
+    _tracking_callback(session, 'after_stop', 'session-start')
+
+
 DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
 DEBUG_DDL += SCENE_DDL
@@ -1348,7 +1368,7 @@ class DebugWorkspace:
                    'debug-dos-task-scheduler-observe':'dos_task_scheduler_observe',
                    'debug-dos-task-scheduler-disable':'dos_task_scheduler_disable',
                    'debug-dos-task-preemption':'dos_task_preemption',
-                   'debug-status':'status','debug-dos-process':'dos_process_info','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-status':'status','debug-tracking':'tracking_status','debug-dos-process':'dos_process_info','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-engine-state':'engine_state','debug-write-engine-state':'write_engine_state',
                    'debug-read-variable':'read_variable','debug-write-variable':'write_variable',
                    'debug-hotspot-events':'hotspot_events',
