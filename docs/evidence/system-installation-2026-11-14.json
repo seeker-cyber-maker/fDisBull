@@ -1,0 +1,57 @@
+{
+  "activation_recovery_followup": {
+    "corrections": [
+      "explicit activating/rolling_back phases; finalmarker afterprechecks and durableboundproof",
+      "immutableper-attempt records; explicitcompensating reconciliation; idempotentverifiedreadback and newexplicitretry",
+      "exactownedprocessgroup cleanupregardlessleaderliveness"
+    ],
+    "findings": [
+      "active_verified marker preceded durable completion",
+      "fixed-name intent prevented retry",
+      "dead leader could leave output-holding child alive"
+    ],
+    "integrated_verification": "87 installer/verifier/checker/pipeline/release checks passed; Linuxdeadleader fixture usesprocfs and readinesshandshake, notprocps/startupdelay",
+    "scope": "Authored disposable prefixes/processes and simulated protocol receipts, no realhoststage/nativeVM/CI/release.",
+    "verification": "61 focused installer/verifier/checker checks passed as part of integrated87, including real abrupt childprocess exits at fiveactivation boundaries and rollback boundary; deadleader/livechild timeout and selector setup failure tested"
+  },
+  "actual_cli_probe": {
+    "fixture_sha256": "419ddca7a484fee079460325c7a9ffcb85eaf4c689409978d96a57f4612501af",
+    "installed_version": "0.34.1",
+    "operations": [
+      "import",
+      "analyze",
+      "status/reopen"
+    ],
+    "persisted_instructions": 8,
+    "selector_changed": false,
+    "source_commit": "3aaac41b1f73220568fc07b9d53f5ccd4307a242"
+  },
+  "focused_integrated_checks": "66 passed in1.33s",
+  "followup_checks": "30 installer/verifier tests passed after shared native command route binding",
+  "game_files_states_databases_included": false,
+  "historical_installation_snapshot": {
+    "current_guidance": false,
+    "path": "docs/SYSTEM_INSTALLATION-0.31.1-HISTORY.md",
+    "preserved_from": "be68826e:docs/SYSTEM_INSTALLATION.md",
+    "sha256": "2f78bc175ac7c1a6c58bdc5f51b675fd9fbe13d8e9eb4674fa20fb1a86e4855e"
+  },
+  "implemented": [
+    "fresh evidence-bound prefix",
+    "version-neutral payload and installed-wheel verifier",
+    "atomic activation and prior-selector rollback",
+    "command-resolution and existing checker postcheck",
+    "authoredMZ CLI intake/analyze/reopen outsideprefix"
+  ],
+  "qualification_remaining": [
+    "finalfrozen0.35source",
+    "exactcommitLinuxordinary+native",
+    "newno-networkkitconsumer",
+    "publication+CDNfull/resumereadback",
+    "source-boundfreshMacbackendbuilds and sixnativeprofiles",
+    "real0.35freshprefix/activation/postcheck"
+  ],
+  "schema": "fdisbull-system-installation-implementation-evidence-1",
+  "system_installation_performed": false,
+  "tests_scope": "Disposable and synthetic protocol regression checks; no real0.35installation/nativequalification.",
+  "version": "0.35.0"
+}

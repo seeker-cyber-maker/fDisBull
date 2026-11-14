@@ -16,51 +16,81 @@ acceptance remain open. Follow the [release process](RELEASE_PROCESS.md) and
 [current release status](RELEASE_STATUS.md). No installation is performed by
 updating these records.
 
-## Historical: fDisBull 0.31.1 local shared Mac installation
+## Installation protocol
 
-The active selector `/Users/Shared/fDisBull/current` points to
-`/Users/Shared/fDisBull/releases/0.31.1-27b388d`, source
-`27b388d38cc14f04842a81b8ec1a113460900f53`. This is the 0.31.1 patch release
-installed from CI-verified artifacts; `INSTALLATION.json` records
-`active_verified`.
+`scripts/install_system.py` stages a fresh application prefix and switches the
+existing shared selector only after validating its inputs and the candidate.
+The current 0.35.0 installation is authorized after the complete release checks
+pass. Older no-install instructions are historical; authorization does not turn
+missing native evidence into a passed check.
 
-The local prefix contains the shipped Swift capture helper
-`fdisbull/data/FdisbullMacCapture.swift` in both the core wheel and the tool
-source ZIP. The installed package passed **97 tests** with no failures, errors or
-skips (63 required-native debugger/layer/keyboard plus 34 macOS capture tests).
-DOSBox, DOS-in-QEMU and Wine/QEMU doctors passed native-state restoration. The
-installed player restored `hall`/`key` across two fresh processes and kept
-private checkpoint permissions. `scripts/check_local_install.py --version
-0.31.1 --commit 27b388d38cc14f04842a81b8ec1a113460900f53` passed.
+The input manifest uses schema `fdisbull-system-install-input-1`. It records the
+full source commit and version, the four CI release artifacts, independently
+identified dependency wheels, Mac backends, runtime resources, and CI, published
+release, public download and Mac native receipts. Each input reference contains
+an absolute `path`, `size` and `sha256`. The script validates the closed manifest
+fields before creating a prefix. It never takes a project database or emulator
+state as an installation resource.
 
-The previous 0.31.0 prefix remains intact. Backup:
-`/Users/Shared/fDisBull/backups/0.31.0-a12441b-to-0.31.1-27b388d`; the guarded
-`current/share/rollback-to-0.31.0.py` reports the plan by default and requires
-`--apply`. Existing projects and user checkpoints were not migrated.
-
-Commands are `fdisbull`, `fdisbull-player`, `fdisbull-python`,
-`fdisbull-dosbox`, `fdisbull-qemu` and `fdisbull-runtime`. `RUNTIME.json`
-records backend paths. Verify the complete payload with:
-
-```bash
-fdisbull-python -B -I /Users/Shared/fDisBull/current/share/verify-system.py verify
+```sh
+python scripts/install_system.py --base /Users/Shared/fDisBull stage --manifest /absolute/private/install-inputs.json
+python scripts/install_system.py --base /Users/Shared/fDisBull verify --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
+python scripts/install_system.py --base /Users/Shared/fDisBull activate --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
+python scripts/install_system.py --base /Users/Shared/fDisBull reconcile --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
+python scripts/install_system.py --base /Users/Shared/fDisBull rollback --prefix /Users/Shared/fDisBull/releases/VERSION-SOURCEPREFIX
 ```
 
-After each release, confirm the local installation from the release source tree:
+Staging installs the identified wheels in a fresh virtual environment using only
+the supplied dependency wheels. It copies the identified source tools, backends
+and runtime resources, inventories their bytes, and runs the installed CLI
+through an authored executable import, bounded analysis and project reopen.
+That probe's temporary database and evidence live outside the release prefix.
+A staged prefix is a candidate; staging does not replace `current`.
 
-```bash
-python scripts/check_local_install.py --version 0.31.1 \
-  --commit 27b388d38cc14f04842a81b8ec1a113460900f53
-```
+Mac native evidence uses schema `fdisbull-macos-native-qualification-1` and binds
+the same version/source, backend bytes and every runtime resource. Successful
+command records include nonzero native case counts, profiles, argument vectors,
+return codes and byte-bound stdout/stderr logs. Required profiles cover stable
+and layered DOSBox, the QEMU machine, Wine PE64/PE32 and Win16. Backend build
+receipts bind the upstream source, applied patch where relevant, binary and
+successful build commands. Linux CI and an old binary's hash do not establish
+these host-specific facts. The installer consumes real receipts; it does not
+manufacture native qualification.
 
-The check requires `INSTALLATION.json` to be `active_verified`, the selector to
-resolve under `releases/`, the installed version and source commit to match the
-release, and the complete payload verifier to report `active_default: true`.
+Activation re-verifies the staged prefix and writes an immutable attempt
+directory containing the exact previous selector and original staged receipt.
+It records `activating`, switches the selector atomically, and checks the selected
+executable and installed package identity. It invokes `check_local_install.py`
+with the required version and full source commit. The internal precheck reports
+`prechecked`, never active success. Only after
+the live checks and their hash-bound completion proof are durable does the
+installer write `active_verified`, then verify the public result. A failed
+activation restores the prior selector and installation record; the prior
+prefix and running private sessions remain in place. Rollback restores the recorded selector and retains both prefixes.
+An abrupt process loss leaves `activating` or `rolling_back`, and public checks
+reject that incomplete state. Explicit `reconcile` observes the current selector
+and compensates only an owned effect; it does not replay the activation forward.
+It refuses an unrelated selector change. A subsequent explicit activation uses a
+new attempt directory, preserving every previous intent, completion and rollback
+record. Repeating a completed activation verifies its existing result; repeating
+rollback on an inactive candidate reports `already_inactive` without mutation.
 
-Discover both skills with `fdisbull agent-skill --list`; retrieve only the
-needed reference. Keep games, story inputs, saved native states and project
-databases outside the managed prefix. These checks qualify this host and
-prefix, not arbitrary macOS hosts or complete game parity.
+The copied `share/verify-system.py` is version-neutral. It checks the file
+inventory, CI artifact identities, native and delivery evidence, installed wheel
+members and import locations. Its `active_default` field is true only when this
+prefix is selected. The existing checker calls it with `verify`; the installer
+can also supply explicit prefix and manifest arguments for a disposable test.
 
-Historical 0.25.0 publication details remain in
-[PUBLICATION-0.25.md](PUBLICATION-0.25.md) and [RELEASE_STATUS.md](RELEASE_STATUS.md).
+The regression tests exercise disposable prefixes and simulated protocol
+records. They qualify installer behavior, not a real 0.35.0 installation. A new
+release still requires actual Linux qualification, disconnected-kit acceptance,
+publication/download readback, fresh Mac native results and live activation
+readback before completion can be claimed.
+
+The [0.31.1 installation snapshot](SYSTEM_INSTALLATION-0.31.1-HISTORY.md) is
+preserved byte-for-byte for historical reference. Its active-selector statements
+and qualification results describe that older installation, not today's prefix.
+
+The finite subprocess runner terminates its exact owned process group on timeout
+or output failure even if the original launcher has exited while a descendant
+holds an output pipe. This cleanup does not inspect or stop unrelated apps.
