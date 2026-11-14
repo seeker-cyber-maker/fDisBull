@@ -15,6 +15,9 @@ from .output_limits import (
 
 AGENT_SKILL_GUIDES = {
     "SKILL.md": "Start here: investigation technique, cost/reward/confidence and evidence boundaries",
+    "references/contradiction-recovery.md": "Resolve a counterexample without weakening the claim: preserve failures, discriminate explanations and independently verify a repair",
+    "references/next-steps.md": "Turn a question into a probe: executable static/data recipes, result branches and failure recovery",
+    "references/analysis-types.md": "Use structural types and static accesses with explicit file/runtime address and RAM/ROM boundaries",
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
     "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
     "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
