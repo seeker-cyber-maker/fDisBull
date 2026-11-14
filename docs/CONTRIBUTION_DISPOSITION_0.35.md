@@ -16,7 +16,7 @@ because its branch was mirrored or its files parse.
 | Native QEMU migration, file layers, source/task bindings, CHIP-8 and virtual-time waits | `de2d6bb71bcd5d8e07462a38f9d6f4f921446cdc` | Integrated full lineage; combined CLI retains preflight, ScummVM options and new QEMU options. Platform/native acceptance remains separate. |
 | Bounded PE behavior comparison and Wine loader/process-attach proofs | `25dca2cc9f2a18c5dbe371faf91465db42bde356` | Integrated full lineage with explicit conditional claims; kept QEMU options while adding PE64 process-create loader mode. Private packet qualification remains open. |
 | Release front door | `RELEASE_PROCESS.md` SHA-256 `783c9f0a24d33d3ee67a18e2df2563ecbbfd4caadcf867147dd92eeb3f1de10f` | Integrated exact supplied bytes; linked from current README/status. |
-| Frozen finite CI/release continuation | `0fcbda2c287fa64a14d82d320b8f6d3971071c73` | Integrated from the owner-frozen local object; canonical owner-branch readback is pending. Combined broker retains both loader diagnostics and control inventory. No run or deployment follows from this merge. |
+| Frozen finite CI/release continuation | `0fcbda2c287fa64a14d82d320b8f6d3971071c73` | Integrated from the owner-frozen object; canonical branch `adef0021` read back on primary GitHub, GitLab and local hub. Combined broker retains both loader diagnostics and control inventory. No run or deployment follows from this merge. |
 | Intended version and current installation documentation | This integration line | Core/player/runtime metadata now 0.35.0. Historical installation notes remain historical; current shared 0.34.1 local candidate is not attributed to the old tag. |
 
 ## Equivalent or superseded work, with provenance retained
@@ -51,9 +51,9 @@ because its branch was mirrored or its files parse.
 n8n froze `codex/ci-end-to-end-stabilization-20261114` at
 `0fcbda2c287fa64a14d82d320b8f6d3971071c73`, followed by the bounded correction
 `adef0021cf5dc39c66601e9afadedf188dfb8a9f`. That immutable local source is now
-integrated; its live worktree/index were not swept. The owner reported a provider
-principal-parser failure before mutation and is resolving canonical branch
-publication. Candidate freeze still requires its canonical branch readback.
+integrated; its live worktree/index were not swept. The owner corrected the plain-output parser failure. Exact canonical branch
+`adef0021` readback is verified on primary GitHub, GitLab and the local hub.
+The remaining contribution/delivery issues below still prevent a final freeze.
 
 The public-metadata transport prototype
 `75114464333fb96771e0e2fc6f1be6497e015d69` is separately preserved on primary as
@@ -89,7 +89,7 @@ The private operational receipt `primary-integration-coverage.json` lists every
 head and exact OID for the next bounded comparison pass.
 
 Before freeze, finish those dispositions, reconcile or explicitly resolve the
-remaining schema/loader work, verify n8n's canonical continuation ref and close the remaining delivery gaps, then qualify
+remaining schema/loader work, close the remaining delivery gaps, then qualify
 one exact primary-GitHub SHA. Ordinary/native CI, complete offline packaging,
 network-disabled DOS/PE32/Win16 consumption, public delivery and fresh shared
 installation verification remain independent open gates.

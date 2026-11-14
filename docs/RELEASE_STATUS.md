@@ -5,7 +5,7 @@
 The intended next version is **0.35.0**. Follow the [release process](RELEASE_PROCESS.md)
 for ownership and the required source-through-install sequence. Original GitHub
 `seeker-cyber-maker/fDisBull` is the authority; GitLab and the local hub are recovery
-copies. Source integration, canonical CI-continuation readback, exact-candidate
+copies. Source integration, exact-candidate
 ordinary/native qualification and disconnected package acceptance remain separate
 open gates. No 0.35.0 tag, publication or installation is established by this entry.
 
