@@ -111,6 +111,9 @@ include docs/evidence/integration-025/dinopark.json
 include docs/evidence/integration-025/tests.json
 include docs/evidence/integration-025/packages.json
 recursive-include scripts *.py *.c *.sh *.txt
+include scripts/ci/RECOVERY.md
+include scripts/ci/fdisbull-ci-production.service
+include scripts/ci/qualification-policy.json
 prune examples
 prune history
 prune experimental
