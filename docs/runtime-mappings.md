@@ -60,8 +60,12 @@ remains unknown. No custom guest helper is needed for this observer.
 For supported stopped legacy-paged observations, the provider also qualifies
 the physical placement of each automatic source snapshot. After capture it
 revalidates the exact task/process identity, CPU stop, run, source/version and
-capture epoch. Two fresh linear and physical readback passes must equal every
-captured byte, including relocated bytes; uncached page-table readbacks must
+capture epoch. Fresh raw-machine sessions use the run ID as their effective
+epoch until a genuine restore assigns an explicit epoch; the qualifier uses
+the same rule as snapshots and the tracker, without creating a private epoch.
+An explicitly invalid epoch or a later epoch change is still refused. Every
+captured byte, including relocated bytes, must match two fresh linear and
+physical readback passes; uncached page-table readbacks must
 retain the sealed mapping. The bounded certificate covers only that snapshot,
 with page-split extents and hashes. It does not qualify the physical placement
 of every manager record, a whole task's RAM, allocation ownership or lifetime.

@@ -6243,3 +6243,87 @@ DOSBox-X remains default and retained, with the selector, installation manifest
 and seven DOSBox payload hashes unchanged. No CI, native rebuild, release, MR
 merge or shared activation. Overall parity and DOSBox-X removal are unqualified.
 See the [sanitized host receipt](evidence/desqview-automatic-physical-2026-11-14/verification.json).
+
+## 2026-11-14: bounded native automatic physical qualification accepted
+
+Runtime `fdbda4c94e2dab8fc5a772a33732f3fc019d2259` completes the native
+DESQview physical-proof slice on one new private wheel. The human waived the
+memory guard for finite owned native jobs, then explicitly approved a separate
+corrected candidate after the original wheel failed. DOSBox-X remains default
+and retained. No CI, native rebuild, release, MR merge or shared activation.
+
+The frozen `72423fad` run failed closed at its first original DESQview source
+stop. Its valid task/snapshot epoch was the run ID; the new qualifier expected
+`None` because the initial raw machine had no `_runtime_epoch` attribute. It
+published zero bindings/certificates/witnesses and retired safely. Closed
+SQL/CAS evidence and an authored red regression isolated that single-field
+mismatch. The old wheel, install and failed run remain unchanged.
+
+The corrected candidate changes exactly two missing-attribute fallbacks to the
+existing snapshot/tracker `session.run_id` rule, plus a regression for initial
+and explicit epochs. It does not initialize a private epoch or relax later
+owner/run/epoch drift checks. The other 708 runtime members are unchanged.
+
+Fresh corrected-candidate preservation evidence:
+
+- **3,317 host passes / 12 input-dependent native skips**, 114 files, all
+  **1,280 Python source/test hashes** unchanged. The run completed before the
+  commit; its before/after hashes were verified equal to the clean committed
+  source. **299 installed-wheel cases** and **313 independent focused cases**
+  passed; these selections overlap.
+- All **709 runtime files** match source, wheel and private flat install;
+  all **20 critical imports** match. Wheel SHA-256:
+  `b9f64a8234cb28928cf20facd4df19869604d4a0a0db6da7b05be0aaf73dac36`.
+- **Ten native pytest cases passed, zero skips**: eight DOS/CHIP-8 preservation
+  and fault cases plus standard/virtual authored LE profiles. Trials, histories,
+  shared replay, selected state, layers, hooks, checkpoints and IRQ compositions
+  retain their named checks. Both authored traces pass cold validators/searches
+  and exact exports; 50 virtual-clock brackets remain stable.
+- Untouched Doom adds eight distinct source sites and a ninth zero-step current
+  predicate, 24 canonical bytes, nine direct original-source matches, 72 pointer
+  checks and four byte-identical hot/cold/CAS exports. Its ordinary-run endpoint
+  is protected mode with changed GDT identity: generation advances 1 to 2 and
+  authority is withdrawn/refused. Mask7 suppresses IRQs/timers; retirement,
+  intervening execution and timer-transparent tracing remain unqualified.
+  No observed Doom instruction overlaps a fixup; the authored native LE cases
+  provide executed-relocation coverage separately.
+
+The fresh original-DESQview run qualifies the initial raw-session path without
+checkpoint priming. Six stopped automatic/independent pairs validate **18
+current binding claims, 18 snapshots and 18 certificates**, with **364 immutable
+source bytes per endpoint**. Independent raw PDE/PTE, physical, linear and
+original-source checks agree on 36 binding readback passes. A retained task
+moves from physical `0x1f262d0` to `0x16a2d0` with unchanged task/process episode,
+generations, source and virtual extents. Genuine `0xB0FA` reuse has different
+task UUIDs/process episodes, generations 1 to 3 and ordered native END/CREATE;
+the two lifetimes are not joined.
+
+Cold evidence retains **42 detailed source errors**, **15** linked same-episode
+recoveries and **16** coverage witnesses. Six ended tasks/30 closed bindings
+pass **180 each** endpoint, range and closed-interval checks; zero bindings are
+current after closure. Both independent cold readers and the automatic join
+pass against the same unchanged database. The independent physical reader's
+automatic gate stays `null` by design; the separately verified automatic join
+establishes the combined bounded gate.
+
+A private cold-reader fixture had incorrectly wrapped one CPU document. Its
+separately named v2 changes one comparison to equality of complete raw CPU
+documents, matching the unchanged producer. The old reader/freeze remain
+preserved; no fields are dropped and all other joins stay intact. The current
+164-case private selection passes, including one retained-native metadata-shape
+check. Independent review also passes 30 authored v2 cases with that live-file
+case excluded. The 31 base control files and nine v2 files stay hash-frozen.
+
+The full 734-byte window differs at **nine mutable offsets**, all outside the
+364 immutable source bytes. Whole-window/task RAM restoration is unqualified.
+These are stopped-extent proofs, not continuous residency, execution or
+allocation-lifetime evidence. Overall QEMU-DOS/DOSBox-X parity and removal remain
+unqualified; the broader compatibility and conversion gates remain separate.
+
+All guests are closed/reaped and owned groups absent. Original image, Doom EXE/
+WAD, native binaries, interpreter, modules and controls remain unchanged. The
+shared selector, installation manifest and seven DOSBox payload hashes match
+the baseline. Private evidence and the one canonical package map are under
+`QEMU-DOSBox-Parity-20261110/physical-qualification-epoch-fix`; original-DESQview
+raw data stays on CACHE in `desqview-live-adapter-fdbda4c9-20261114`.
+See the [sanitized native receipt](evidence/desqview-automatic-physical-native-2026-11-14/verification.json).
