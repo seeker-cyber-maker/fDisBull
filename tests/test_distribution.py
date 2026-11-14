@@ -11,8 +11,13 @@ import pytest
 
 REQUIRED_SOURCE_FILES = (
     ".gitlab-ci.yml",
+    ".github/workflows/ovh-bootstrap.yml",
     ".github/workflows/ci.yml",
     ".github/workflows/native-debugger.yml",
+    ".github/retained-workflows/ci.yml.disabled",
+    ".github/retained-workflows/native-debugger.yml.disabled",
+    "scripts/ci/github-bootstrap.py",
+    "scripts/ci/github-once.py",
     "scripts/console_synthesis_oracle.c",
     "tests/metrics_checks.mjs",
     "tests/memory_cut_shell_checks.mjs",
@@ -40,6 +45,7 @@ REQUIRED_SOURCE_FILES = (
     "tests/fixtures_macho.py",
     "tests/fixtures_z_scenes.py",
     "tests/wine_gui_fixture.c",
+    "tests/offline_win16_oracle.c",
     "tests/dosbox_zip_empty_write.cpp",
     "src/fdisbull/wine_guest/agent.c",
     "src/fdisbull/wine_guest/init.sh",
@@ -1492,3 +1498,23 @@ def test_distribution_check_requires_source_concepts_reference(tmp_path, kind):
             output.writestr(member, '')
     with pytest.raises(ValueError, match=re.escape(resource)):
         check(archive)
+
+
+def test_authored_windows_source_contracts_include_both_fixtures(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    win16 = "tests/offline_win16_oracle.c"
+    pe32 = "src/fdisbull/wine_guest/selftest32.c"
+    build = runpy.run_path(str(root / "scripts/build_release.py"))
+    selected = {path.relative_to(root).as_posix() for path in build["release_files"](root)}
+    assert {win16, pe32} <= selected
+    manifest = (root / "MANIFEST.in").read_text().splitlines()
+    assert "include " + win16 in manifest
+    assert "recursive-include src/fdisbull *.py *.c *.sh" in manifest
+    checker = runpy.run_path(str(root / "scripts/check_dist.py"))
+    assert win16 in checker["REQUIRED_TEST_HELPERS"]
+    assert "wine_guest/selftest32.c" in checker["REQUIRED_PE_RESOURCES"]
+    for missing in (win16, pe32):
+        archive = tmp_path / ("missing-" + Path(missing).name + ".zip")
+        source_archive(archive, tuple(item for item in REQUIRED_SOURCE_FILES if item != missing))
+        with pytest.raises(ValueError, match=re.escape(missing)):
+            checker["check_archive"](archive)

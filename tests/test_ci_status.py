@@ -44,6 +44,11 @@ def forbidden(*args):
     pytest.fail('A provider request was not permitted')
 
 
+def reserve(tmp_path, *, now=1000, owner='coordinator', **options):
+    return gate.reserve_refresh(repo=REPO, host='github.com', owner=owner,
+                                state_dir=tmp_path, clock=lambda: now, **options)
+
+
 @pytest.fixture
 def fake_gh(tmp_path, monkeypatch):
     """A real child process receives exactly the CLI request the helper makes."""
@@ -117,12 +122,43 @@ def test_gitlab_host_uses_glab_api_and_normalizes_pipelines(tmp_path, fake_gh, m
                        f'projects/brewster-jennings-group%2Ffdisbull/pipelines?sha={SHA}&per_page=100']
 
 
-def test_retired_github_repository_blocks_before_spawning_gh(tmp_path, fake_gh):
+def test_restored_github_repository_allows_one_bounded_authorized_refresh(tmp_path, fake_gh):
+    calls = []
+
+    def fetch(host, repo, sha):
+        calls.append((host, repo, sha))
+        return response(sha)
+
     row = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=SHA, host='github.com',
-                            state_dir=tmp_path, refresh=True, owner='coordinator', clock=lambda: 1000)
-    assert row['status'] == 'error' and row['error'] == 'provider_retired_repository'
-    assert row['provider_stop'] == {'reason': 'provider_retired_repository', 'observed_at': 1000}
+                            state_dir=tmp_path, refresh=True, owner='coordinator',
+                            clock=lambda: 1000, fetch=fetch)
+
+    assert row['status'] == 'fresh' and row['refresh_performed']
+    assert row['repo'] == 'seeker-cyber-maker/fdisbull' and row['owner'] == 'coordinator'
+    assert row['next_refresh_at'] == 1300 and row['qualification'] == 'observation_only'
+    assert calls == [('github.com', 'seeker-cyber-maker/fdisbull', SHA)]
     assert not fake_gh.exists()
+
+
+def test_restored_github_repository_still_persists_provider_restriction_stop(tmp_path):
+    calls = []
+
+    def restricted(*args):
+        calls.append(args)
+        raise gate.FetchError('provider_restriction', provider_stop=True)
+
+    row = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=SHA, host='github.com',
+                            state_dir=tmp_path, refresh=True, owner='coordinator',
+                            clock=lambda: 1000, fetch=restricted)
+    assert row['status'] == 'error' and row['error'] == 'provider_restriction'
+    assert row['provider_stop'] == {'reason': 'provider_restriction', 'observed_at': 1000}
+    assert calls == [('github.com', 'seeker-cyber-maker/fdisbull', SHA)]
+
+    stopped = gate.check_status(repo='seeker-cyber-maker/fDisBull', sha=OTHER, host='github.com',
+                                state_dir=tmp_path, refresh=True, owner='coordinator',
+                                clock=lambda: 1400, fetch=forbidden)
+    assert stopped['refresh_reason'] == 'provider_stopped'
+    assert not stopped['refresh_performed']
 
 
 def test_different_sha_cannot_bypass_repository_gate_or_read_other_sha_cache(tmp_path):
@@ -143,6 +179,70 @@ def test_repository_owner_cannot_be_silently_replaced_after_cooldown(tmp_path):
     assert not denied['refresh_performed']
     resumed = check(tmp_path, now=1400, fetch=lambda *_: response())
     assert resumed['refresh_performed'] and resumed['next_refresh_at'] == 1700
+
+
+def test_reserved_window_blocks_status_refresh_and_other_sha(tmp_path):
+    reservation = reserve(tmp_path)
+    assert reservation == {'allowed': True, 'reason': 'reserved',
+                           'next_refresh_at': 1300, 'owner': 'coordinator'}
+    same = check(tmp_path, fetch=forbidden)
+    other = check(tmp_path, sha=OTHER, fetch=forbidden)
+    assert same['refresh_reason'] == other['refresh_reason'] == 'cooldown'
+    assert same['next_refresh_at'] == other['next_refresh_at'] == 1300
+
+
+def test_status_refresh_reservation_blocks_batch_reservation(tmp_path):
+    check(tmp_path, fetch=lambda *_: response())
+    reservation = reserve(tmp_path, now=1100)
+    assert reservation == {'allowed': False, 'reason': 'cooldown',
+                           'next_refresh_at': 1300, 'owner': 'coordinator'}
+
+
+def test_reservation_rejects_different_owner(tmp_path):
+    reserve(tmp_path)
+    denied = reserve(tmp_path, now=1400, owner='other-agent')
+    assert denied == {'allowed': False, 'reason': 'owner_conflict',
+                      'next_refresh_at': 1300, 'owner': 'coordinator'}
+
+
+def test_provider_stop_is_persisted_for_owner_and_first_stop_is_preserved(tmp_path):
+    reserve(tmp_path)
+    recorded = gate.record_provider_stop(repo=REPO, host='github.com', owner='coordinator',
+                                         reason='provider_http_429', state_dir=tmp_path,
+                                         clock=lambda: 1050)
+    assert recorded == {'recorded': True, 'reason': 'provider_stopped', 'owner': 'coordinator',
+                        'provider_stop': {'reason': 'provider_http_429', 'observed_at': 1050}}
+    preserved = gate.record_provider_stop(repo=REPO, host='github.com', owner='coordinator',
+                                          reason='provider_restriction', state_dir=tmp_path,
+                                          clock=lambda: 1060)
+    assert not preserved['recorded'] and preserved['provider_stop'] == recorded['provider_stop']
+    assert reserve(tmp_path, now=5000)['reason'] == 'provider_stopped'
+
+
+def test_reservation_busy_and_invalid_clock_fail_closed(tmp_path):
+    directory = gate._directory(tmp_path, 'github.com', REPO)
+    with gate._locked(directory) as acquired:
+        assert acquired
+        denied = reserve(tmp_path)
+    assert denied == {'allowed': False, 'reason': 'busy',
+                      'next_refresh_at': None, 'owner': None}
+    for invalid in (-1, float('nan'), float('inf'), True, '1000'):
+        with pytest.raises(gate.StatusError, match='clock'):
+            gate.reserve_refresh(repo=REPO, host='github.com', owner='coordinator',
+                                 state_dir=tmp_path, clock=lambda value=invalid: value)
+
+
+def test_provider_stop_requires_reserved_owner_and_never_replaces_other_owner(tmp_path):
+    denied = gate.record_provider_stop(repo=REPO, host='github.com', owner='other-agent',
+                                       reason='provider_restriction', state_dir=tmp_path,
+                                       clock=lambda: 1000)
+    assert denied['reason'] == 'owner_conflict' and not denied['recorded']
+    reserve(tmp_path)
+    denied = gate.record_provider_stop(repo=REPO, host='github.com', owner='other-agent',
+                                       reason='provider_restriction', state_dir=tmp_path,
+                                       clock=lambda: 1000)
+    assert denied['reason'] == 'owner_conflict' and not denied['recorded']
+    assert denied['provider_stop'] is None
 
 
 @pytest.mark.parametrize('status', [401, 403, 429])

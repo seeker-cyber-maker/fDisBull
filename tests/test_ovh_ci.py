@@ -87,6 +87,62 @@ def test_actual_git_export_verifies(exports):
     assert json.loads((root / '50/104/job.json').read_text())['project_directory'] == str(work.resolve())
 
 
+@pytest.fixture
+def failed_export(exports):
+    work, root, env = exports
+    capture = work / 'artifacts/ordinary/failure.txt'
+    capture.parent.mkdir(parents=True, exist_ok=True)
+    capture.write_text('controlled failure evidence\n')
+    job_env = {**env, 'CI_JOB_ID': '105', 'CI_JOB_NAME': 'demo', 'CI_JOB_STATUS': 'failed'}
+    exporter.export(work, root, job_env)
+    return work, root, job_env
+
+
+def test_failed_export_verified_without_claiming_job_success(failed_export):
+    _, root, env = failed_export
+    result = exporter.verify_job_export(root, '50', '105', env['CI_COMMIT_SHA'], 'demo',
+                                        expected_job_status='failed')
+    assert result['status'] == 'export-verified'
+    assert result['job_status'] == 'failed'
+
+
+@pytest.mark.parametrize('damage', ['tampered', 'missing', 'extra', 'wrong_status', 'wrong_name', 'wrong_sha', 'dirty'])
+def test_failed_export_rejects_damaged_or_mismatched_evidence(failed_export, damage):
+    _, root, env = failed_export
+    target = root / '50/105'
+    capture = target / 'exported/artifacts/ordinary/failure.txt'
+    status, name, sha = 'failed', 'demo', env['CI_COMMIT_SHA']
+    if damage == 'tampered':
+        capture.write_text('changed')
+    elif damage == 'missing':
+        capture.unlink()
+    elif damage == 'extra':
+        (capture.parent / 'extra').write_text('unlisted')
+    elif damage == 'wrong_status':
+        status = 'success'
+    elif damage == 'wrong_name':
+        name = 'other'
+    elif damage == 'wrong_sha':
+        sha = 'a' * 40
+    else:
+        post = target / 'source-postcheck.json'
+        record = json.loads(post.read_text())
+        record['tracked_worktree_dirty'] = True
+        post.write_text(json.dumps(record))
+    with pytest.raises((ValueError, OSError)):
+        exporter.verify_job_export(root, '50', '105', sha, name, expected_job_status=status)
+
+
+def test_full_qualification_rejects_failed_export(exports):
+    work, root, env = exports
+    path = root / '50/101/job.json'
+    meta = json.loads(path.read_text())
+    meta['job_status'] = 'failed'
+    path.write_text(json.dumps(meta))
+    with pytest.raises(ValueError):
+        exporter.verify(work, root, env)
+
+
 @pytest.mark.parametrize('exports', ['outside', 'missing'], indirect=True)
 def test_nested_runtime_references_reject_outside_or_missing(exports):
     work, root, env = exports
@@ -128,7 +184,7 @@ def test_ci_resource_serial_retention_and_legacy_contract():
     assert 'fdisbull-ovh-ca' in config
     assert 'FDISBULL_EXPECTED_BYTES: "35000000000"' in config
     assert 'expire_in: 7 days' not in config and 'expire_in: 30 days' not in config
-    assert config.count('expire_in: never') == 4
+    assert config.count('expire_in: never') == 5
     assert '--legacy-dos-only' in config
     assert 'ovh-export.py verify' in config
     # Ordinary CI compiles the actual PNG/zstd encoders in the source patches.

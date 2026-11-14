@@ -27,9 +27,12 @@ def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
     assert re.search(r'^  tags:\n    - fdisbull-local-linux$', ci_section('default'), re.M)
     gate = ci_section('native-qualification')
     assert 'when: manual' in gate and 'allow_failure: false' in gate
+    rehearsal_guard = '- if: \'$FDISBULL_CI_RECOVERY_REHEARSAL == "1"\'\n      when: never'
     for name in ('native-qualification', '.native_qualification_rules'):
         conditions = [line.strip() for line in ci_section(name).splitlines() if line.strip().startswith('- if:')]
-        assert conditions == ['- if: \'$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"\'']
+        assert conditions == [rehearsal_guard.splitlines()[0].strip(),
+                              '- if: \'$CI_PIPELINE_SOURCE == "api" || $CI_PIPELINE_SOURCE == "web"\'']
+        assert rehearsal_guard in ci_section(name)
         assert 'when: never' in ci_section(name)
     assert 'extends: .native_qualification_rules' in ci_section('.native_debugger_template')
     for name in ('native-debugger-stable', 'native-debugger-layers'):
@@ -43,6 +46,26 @@ def test_ci_wiring_cannot_drop_manual_full_qualification_during_a_merge():
     assert 'bash scripts/ci/test-and-package.sh' in ci_section('test-and-package')
     for name in ('native-qualification', '.native_qualification_rules', '.native_debugger_template', 'native-unified', 'qualify-candidate'):
         assert 'allow_failure: true' not in ci_section(name)
+
+
+def test_api_rehearsal_omits_package_and_native_qualification_jobs():
+    rehearsal = ci_section('ci-recovery-rehearsal')
+    assert ('- if: \'$FDISBULL_CI_RECOVERY_REHEARSAL == "1" && '
+            '$CI_PIPELINE_SOURCE == "api"\'\n      when: on_success') in rehearsal
+    assert '\n    - when: never\n' in rehearsal
+    ordinary = ci_section('test-and-package')
+    assert ('$FDISBULL_CI_RECOVERY_REHEARSAL == "1"' in ordinary
+            and ordinary.index('$FDISBULL_CI_RECOVERY_REHEARSAL == "1"')
+            < ordinary.index('when: never') < ordinary.index('when: on_success'))
+    for name in ('native-qualification', '.native_qualification_rules'):
+        section = ci_section(name)
+        assert section.index('$FDISBULL_CI_RECOVERY_REHEARSAL == "1"') < section.index('when: never')
+    assert 'when: manual' in ci_section('native-qualification')
+    assert 'allow_failure: false' in ci_section('native-qualification')
+    assert 'extends: .native_qualification_rules' in ci_section('native-unified')
+    assert 'extends: .native_qualification_rules' in ci_section('qualify-candidate')
+    assert 'extends: .native_debugger_template' in ci_section('native-debugger-stable')
+    assert 'extends: .native_debugger_template' in ci_section('native-debugger-layers')
 
 
 def test_ordinary_job_requires_inventory_and_isolated_install_receipts():
@@ -133,3 +156,19 @@ def test_native_local_receipt_does_not_fabricate_gitlab_ids(tmp_path, monkeypatc
     assert receipt['local_run_id'] == 'b4f5594b-2d10-4f1a-bd00-e25412e0f851'
     assert receipt['local_job_id'] == '00000000-0000-4000-8000-000000000002'
     assert 'pipeline_id' not in receipt and 'job_id' not in receipt
+
+
+def test_pipeline_inputs_are_bounded_and_default_to_ordinary_mode():
+    text = (ROOT / '.gitlab-ci.yml').read_text()
+    header, _ = text.split('\n---\n', 1)
+    assert header.count('    recovery') == 4
+    assert "options: ['0', '1']\n      default: '0'" in header
+    assert "regex: '^[A-Za-z0-9_-]{1,100}$'\n      default: 'none'" in header
+    assert header.count("regex: '^[0-9a-f]{64}$'") == 2
+    assert header.count("default: '" + '0' * 64 + "'") == 2
+    variables = ci_section('variables')
+    for name, input_name in [('FDISBULL_CI_RECOVERY_REHEARSAL', 'recovery'),
+                             ('FDISBULL_RECOVERY_INCIDENT', 'recovery_incident'),
+                             ('FDISBULL_RECOVERY_INPUT_SHA256', 'recovery_input_sha256')]:
+        assert name + ": '$[[ inputs." + input_name + " ]]'" in variables
+    assert 'action:$[[ inputs.recovery_action_id ]]' in ci_section('workflow')

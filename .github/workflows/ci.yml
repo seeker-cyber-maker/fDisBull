@@ -1,72 +1,13 @@
-name: Tests and tool packages
+name: Legacy CI identity - keep disabled
 
+# Provider compatibility stub. Keep this legacy workflow ID disabled.
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-  pull_request:
   workflow_dispatch:
-
-# PR updates replace obsolete PR runs. Main, tags and manual qualifications
-# each retain their own run, including pending runs for an exact release SHA.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 permissions:
   contents: read
-
 jobs:
-  test-and-package:
-    runs-on: ubuntu-latest
+  retired:
+    if: ${{ false }}
+    runs-on: [self-hosted, Linux, X64, fdisbull-ovh-ca-gh1]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: pyproject.toml
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Install tool and build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang
-          python -m pip install ".[test,source]" build
-      - name: Run tests
-        run: python -m pytest -q
-      - name: Build wheel and source distribution
-        run: python -m build
-      - name: Build standalone player wheel
-        run: python -m build --wheel ./player --outdir dist
-      - name: Gate both bundled skills from the built wheel
-        run: |
-          python -m venv --system-site-packages "$RUNNER_TEMP/fdisbull-skill-gate"
-          "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" -m pip install --no-index --no-deps --force-reinstall dist/fdisbull-*.whl
-          python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --output "$RUNNER_TEMP/fdisbull-skill-gate-receipt.json"
-          python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --skill write-gamefaqs-guide --output "$RUNNER_TEMP/fdisbull-guide-skill-gate-receipt.json"
-      - name: Smoke test standalone player in an isolated environment
-        run: |
-          python -m venv "$RUNNER_TEMP/fdisbull-player-smoke"
-          "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -m pip install --no-index --no-deps dist/fdisbull_player-*.whl
-          "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -c "import importlib.util; import fdisbull_player; assert importlib.util.find_spec('fdisbull') is None"
-          "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -m fdisbull_player --help
-      - name: Check wheel and source distribution contents
-        run: python scripts/check_dist.py
-      - name: Build tool-only source ZIP
-        run: python scripts/build_release.py
-      - name: Check all release artifacts
-        run: python scripts/check_dist.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: fdisbull-agent-skill-acceptance
-          path: |
-            ${{ runner.temp }}/fdisbull-skill-gate-receipt.json
-            ${{ runner.temp }}/fdisbull-guide-skill-gate-receipt.json
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
-          name: fdisbull-tool-packages
-          path: dist/*
-          if-no-files-found: error
+      - run: exit 1

@@ -1,8 +1,12 @@
 # CI triggers and status coordination
 
-fDisBull maintains **equal repository state** across local Git (`/Volumes/CODEX/Codex_Projects/fDisBull` and `local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git`) and GitLab (`gitlab` at `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project ID `88349936`) during the 30-day GitLab evaluation trial. **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is permanently retired and obsolete** (`remote.origin.pushurl` is locked to `RETIRED_GITHUB_DO_NOT_PUSH`, and `scripts/ci_status.py` blocks live refreshes against `seeker-cyber-maker/fDisBull`).
+The user selected original GitHub [`seeker-cyber-maker/fDisBull`](https://github.com/seeker-cyber-maker/fDisBull), repository ID `1431097789`, as the preferred source/review platform. The connected `TiGa-RCE` account now has Write access. `TiGa-RCE/fdisbull` is a distinct partial import, not the restoration target.
 
-Agents are required to update **both** local Git and GitLab when landing or syncing branches and tags, while strictly preventing duplicate or unthrottled CI pipeline runs that could trigger provider abuse filters.
+The guarded mirror service preserves original GitHub, local-hub and GitLab refs. GitHub and GitLab use separate durable histories and one outer lock. GitLab pushes retain `ci.skip`; GitHub/local pushes do not receive that option. Historical tag identities remain immutable. See [the restoration contract](GITHUB_RESTORATION.md).
+
+**CI owner: n8n. The manual GitHub → OVH bootstrap passed on 2026-11-13.** [Run 43512305780](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/43512305780), attempt 1, completed successfully on runner `fdisbull-ovh-ca-gh1`; its artifact was independently verified and [handed back to PR #84](https://github.com/seeker-cyber-maker/fDisBull/pull/84#issuecomment-6865708771). Actions is enabled, `ovh-bootstrap.yml` is manual-only, and legacy workflow IDs `394106283` and `394474280` remain disabled. Its finite worker shares the OVH executor lock with GitLab and relinquishes the lock after owned-process cleanup. Pushes, PRs and tags do not automatically dispatch this workflow. Only n8n dispatches/observes jobs; other workers consume dated receipts.
+
+This establishes infrastructure and artifact handoff, not application/native qualification. The real qualification checker rejected missing ordinary/native receipts and emitted `release_ready=false`. Existing exact-candidate GitLab/local receipts retain their own scope. QEMU qualification, the full offline consumer kit and release publication remain separate gates.
 
 ## Local-first workflow and provider routing
 
@@ -149,15 +153,10 @@ hashes. A zero process exit alone is not a completed leg; source checks and
 artifact collection must also finish. A missing required capture never becomes
 successful equality or qualification.
 
-## Dual synchronization between local Git and GitLab
+## Legacy local/GitLab helper
 
-Sync only authorized refs with `scripts/sync_mirrors.py`; inspect its current
-help and dry run before pushing. Its suppression options and workflow rules are
-separate controls. The YAML prevents automatic pipelines for ordinary push and
-MR events; GitLab push option `ci.skip` alone does not suppress an independent
-MR pipeline. Existing refs with different source-branch configuration may have
-different behavior. Never push an empty commit or resync every ref to request a
-check. Tags and release actions require separate authorization.
+Use the installed guarded three-way service for normal propagation. Push an ordinary source branch to `origin` or `local-hub`; the service preserves the other endpoints. The legacy `scripts/sync_mirrors.py` helper is only for reviewed local/GitLab operations. Do not use the old `dual` command or pass `ci.skip` to GitHub/local-hub. Manual GitLab pushes require `-o ci.skip`.
+
 
 ## Candidate and package acceptance
 

@@ -24,6 +24,7 @@ SOURCE_SUPPORT = (
     "tests/",
     "scripts/",
     ".github/workflows/",
+    ".github/retained-workflows/",
     ".gitlab-ci.yml",
     "skills/dos-target-media-rip/",
     "docs/evidence/gog-galaxy-chimprec-2026-11-02/receipt.json",
