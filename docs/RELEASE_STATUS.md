@@ -10,7 +10,8 @@ ordinary/native qualification and disconnected package acceptance remain separat
 open gates. No 0.35.0 tag, publication or installation is established by this entry.
 
 The integration branch is `codex/release-0.35.0-integration-20261114`. The [contribution disposition](CONTRIBUTION_DISPOSITION_0.35.md) records included,
-equivalent and preserved/open work; it must close before candidate freeze. n8n's existing control
+equivalent and preserved/open work. The [historical audit](SOURCE_CONSOLIDATION_AUDIT_0.35.md)
+is complete; required unique adaptations must close before candidate freeze. n8n's existing control
 state owns the current release record; its canonical record link is not yet supplied.
 Historical records below retain their original dates and provider scope.
 
