@@ -15,6 +15,7 @@ ENVIRONMENT = {
     'dispatch': 'observed_single_thread_tls_dllmain_process_lifetime',
     'memory_frame': 'preserve_owned_images_globals_and_iat_between_callbacks',
     'initial_iat_binding': 'observed_named_exports_before_pe_entry',
+    'wine_api_frame': 'fixed_verified_code_and_readonly_thunk_words',
     'termination': 'observed_exitprocess_no_return_low32_rcx',
     'segment_binding': 'explicit_win64_gs_teb_convention',
 }
@@ -49,6 +50,42 @@ def _rows(cells):
         else:
             rows.append({'address': hex(address), 'hex': f'{byte:02x}'})
     return rows
+
+
+def _admit_call_binding(bound, call, implementation=None):
+    """Join the selected summary to the source import and immutable boundary."""
+    docs, recovery = bound['documents'], bound['report']['recovery']
+    name = call['name']
+    imports = bound['exe']['imports']
+    if name not in imports:
+        raise ValueError('An external summary has no source import identity')
+    bindings = {r['name']: r for r in docs[_id(recovery['bindings'])]['imports']}
+    if (name not in bindings or call['iat_address'] != imports[name]['iat_address']
+            or call['iat_address'] != bindings[name]['iat_address']
+            or call['target'] != bindings[name]['target']):
+        raise ValueError('Call name, IAT slot and target differ from the source-bound entry import')
+    entry = docs[_id(recovery['entry'])]
+    slot = int(call['iat_address'],16); cells = _cells(entry['memory'])
+    if any(slot+k not in cells for k in range(8)) or int.from_bytes(bytes(cells[slot+k] for k in range(8)),'little') != int(call['target'],16):
+        raise ValueError('Entry snapshot IAT bytes do not establish the selected call binding')
+    if implementation is not None:
+        imported=implementation['import']
+        if (imported['name']!=name or imported['runtime_iat_address']!=call['iat_address']
+                or imported['target']!=call['target'] or imported['callsite']!=call['callsite']
+                or imported['return_address']!=call['return_address']):
+            raise ValueError('API summary name/frame/IAT differs from its verified implementation')
+    else:
+        if call['entry'] is None or docs[_id(call['entry'])]['registers']['rip'] != call['target']:
+            raise ValueError('A source import summary enters a different actual callee')
+
+
+def _require_owned_poststate(z, memory, expected, prove):
+    if not set(expected)<=memory.keys():
+        raise ValueError('Teardown preconditions escape modeled owned memory')
+    try:
+        prove(z.And(*[memory[a]==b for a,b in expected.items()]))
+    except ValueError as error:
+        raise ValueError('Authored code does not establish the universal DLL/code state required for teardown') from error
 
 
 def recover_loader_module(project, dll_project, evidence, *, environment_contract, timeout_ms=10000):
@@ -133,6 +170,10 @@ def _recover(bound, result, deadline):
     if roles[:3] != ['tls-attach', 'dll-attach', 'report'] or sorted(roles[3:]) != ['dll-detach', 'tls-detach']:
         raise ValueError('The source module requires one attach pair, report and detach pair')
     result['dll_contracts'] = proofs
+    entry_cells=_cells(get(recovery['entry'])['memory'])
+    initialized_code=_cells([proofs[1]['post_code']])
+    if any(entry_cells.get(a)!=b for a,b in initialized_code.items()):
+        raise ValueError('Proved DLL initialization does not establish the entry code epoch')
     # Generic callback proofs above derive their next invariant, never taking
     # the next native sample as an axiom. Opaque gaps must separately satisfy
     # the explicitly assumed owned-memory frame in the observed execution.
@@ -175,14 +216,37 @@ def _recover(bound, result, deadline):
             'import_binding': 'observed entry initialization' if len(frame_checks)<3 else 'preserved'})
     result['environment_edges'] = frame_checks
     api_proofs = {}
+    api_fixed={}
     for reference in report['apis']:
         document = get(reference)
         proof = validate_wine_api_contract(document)
         if proof['status'] != 'proved_for_observed_implementation':
             raise ValueError('An actual Wine API contract did not reverify')
         api_proofs[_id(reference)] = proof
+        info=document['implementation']['thread_info'];teb=int(info['teb'],16)
+        frame=int(document['contexts']['entry']['general']['rsp'],16)
+        private=_cells(document['implementation']['memory']['entry'])
+        exempt=set(range(teb+0x30,teb+0x38)) | set(range(teb+0x68,teb+0x6c)) | set(range(frame,frame+8))
+        private={a:b for a,b in private.items() if a not in exempt}
+        for row in document['implementation']['code_reads']:
+            for k,b in enumerate(bytes.fromhex(row['hex'])):
+                a=int(row['address'],16)+k
+                if a in private and private[a]!=b:raise ValueError('Verified API code and thunk words alias inconsistently')
+                private[a]=b
+        if set(private)&protected or set(private)&set(entry_cells):
+            raise ValueError('Verified Wine implementation aliases authored code, globals, IAT or environment frame')
+        for a,b in private.items():
+            if a in api_fixed and api_fixed[a]!=b:
+                raise ValueError('Wine code or readonly thunk preconditions change between verified calls')
+            api_fixed[a]=b
     if len(api_proofs) != 8:
         raise ValueError('Whole module recovery needs all eight actual last-error calls')
+    calls=recovery['calls']
+    if ([c['name'] for c in calls] != ['dll_report', *['SetLastError','GetLastError']*4, 'ExitProcess']
+            or [_id(c['implementation']) for c in calls if c['name'] in ('SetLastError','GetLastError')]
+                != [_id(r) for r in report['apis']]
+            or _id(calls[0]['callback']) != callbacks[2]['artifact']):
+        raise ValueError('Every source call requires its own ordered proved implementation or callback')
     main = _main(z, bound, callbacks[2], api_proofs, deadline)
     # Main must begin with the state derived by the two initialization proofs.
     initial_dll = _cells(proofs[1]['post_memory'])
@@ -200,6 +264,9 @@ def _recover(bound, result, deadline):
         'exit_code': main['exit_code'], 'initialization': 'derived from original DLL globals and proved attach transfers',
         'teardown_order': roles[3:], 'termination': 'bounded authored paths; terminal environment contract and actual exit receipt',
         'native_api_proofs': {k: v['sha256'] for k, v in api_proofs.items()},
+        'wine_api_frame': {'status':'explicit_fixed_image_precondition',
+            'bytes':len(api_fixed),'sha256':_digest(_rows(api_fixed)),
+            'noninterference':'Disjoint from all declared authored/main memory and code effects; opaque loader initialization remains conditional'},
         'callback_instruction_bound': sum(p['transfer']['termination_bound_instructions'] for p in proofs)},
         remaining_assumptions=deepcopy(ENVIRONMENT))
     contraction = {'format': 'fdisbull-loader-module-contraction-1',
@@ -255,6 +322,8 @@ def _main(z, bound, report_callback, api_proofs, deadline):
                 'event': step['event'], 'after': step['after'],
                 'before_memory': step['memory_before'], 'after_memory': step['memory_after']})
     for call in recovery['calls']:
+        implementation=get(call['implementation']) if call['implementation'] is not None else None
+        _admit_call_binding(bound,call,implementation)
         trace_ref=call['trace'] if call['trace'] is not None else get(call['implementation'])['trace']
         trace=get(trace_ref)
         if trace.get('complete') is not True or len(trace['events'])!=1:
@@ -381,6 +450,14 @@ def _main(z, bound, report_callback, api_proofs, deadline):
     for obligation in modeled['proof_obligations']+modeled['safety']:
         prove(z.Implies(obligation['prefix'],obligation['valid']))
     prove(modeled['domain'])
+    # A native sample can hide a symbolic store that happens to preserve a
+    # value. Teardown may consume the report postcondition only after proving
+    # its complete owned state for every admitted application entry state.
+    dll_start=int(bound['dll']['globals']['address'],16)
+    dll_length=len(bytes.fromhex(bound['dll']['globals']['hex']))
+    after_report=_cells(report_callback['proof']['post_memory'])
+    expected_owned={a:after_report[a] for a in range(dll_start,dll_start+dll_length)} | code
+    _require_owned_poststate(z,modeled['memory'],expected_owned,prove)
     text=lambda v:z.simplify(v).sexpr()
     data=bound['exe']['globals'];start=int(data['address'],16)
     final_data={}
@@ -393,6 +470,7 @@ def _main(z, bound, report_callback, api_proofs, deadline):
         'flags_at_exit_api_entry':text(modeled['flags']),
         'exe_memory':_rows(final_data),
         'dll_report_post_memory':report_post,'exit_code':exit_code,
+        'teardown_precondition':'Complete DLL globals and both code images universally preserved by authored main and verified calls',
         'termination_bound_authored_instructions':len(records),
         'prefix_memory_snapshots_checked':checks['snapshots'],
         'instruction_fetch_checks':modeled['fetch_checks'],

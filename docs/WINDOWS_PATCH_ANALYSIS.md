@@ -87,6 +87,12 @@ entry, IAT resolution is an observed named-export initialization relation.
 Paired native snapshots check that environment contract for the captured runs;
 they do not prove Wine's general noninterference. Dispatch, the GS/TEB
 convention and ExitProcess's terminal environment relation remain explicit.
+Verified Wine instruction/thunk bytes are a fixed-image precondition, checked
+for consistency across calls and disjointness from modeled authored effects.
+Before teardown, the application must universally establish the complete DLL
+global state and both code images required by the callback contracts. Equal
+native samples cannot substitute for that implication. Each summary is bound
+to its exact source import name, IAT slot, target and caller frame.
 Final DLL RAM is the state after the last observed callback, not a fabricated
 postmortem read. Other libraries, hidden OS/CPU state, concurrency, faults,
 devices, timing and Microsoft Windows remain outside this conditional proof.
