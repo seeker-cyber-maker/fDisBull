@@ -1,5 +1,6 @@
 """Independent MZ header/relocation checks for the DOS code-layout adapter."""
 import struct
+from hashlib import sha256
 
 import pytest
 
@@ -65,3 +66,22 @@ def test_mz_refuses_com_return_without_a_process_return_adapter(tmp_path, ending
         assert retained['target'] == 'dos-com16-i386'
         with pytest.raises(ValueError, match='return.*adapter'):
             project.udc_dos_compile(spec['id'], assumptions=ASSUMPTIONS, container='mz')
+
+
+def test_mz_pointer_table_receipt_hashes_rebased_emitted_file_slice(tmp_path):
+    project, source, native, _, terminal = setup_project(tmp_path)
+    original = source.read_bytes()
+    with project:
+        spec = definition(project, native, terminal)
+        com = project.udc_dos_compile(spec['id'], assumptions=ASSUMPTIONS)
+        mz = project.udc_dos_compile(spec['id'], assumptions=ASSUMPTIONS, container='mz')
+    for result in (com, mz):
+        raw = bytes.fromhex(result['bytes'])
+        receipt = result['data'][0]
+        emitted = raw[receipt['file_offset']:receipt['file_offset'] + receipt['size']]
+        assert emitted != original[0x10:0x12]  # The pointer moved with its target port.
+        assert receipt['sha256'] == sha256(emitted).hexdigest()
+        assert result['source_sha256'] == sha256(original).hexdigest()
+    assert source.read_bytes() == original
+    assert mz['data'][0]['file_offset'] == com['data'][0]['file_offset'] + 0x120
+    assert mz['data'][0]['sha256'] == com['data'][0]['sha256']

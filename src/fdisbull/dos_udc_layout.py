@@ -375,7 +375,7 @@ def compile_dos_com(capsule, plan, data, *, references=None, replacements=None,
         start = occurrence['output_ip'] - 0x100
         occurrence['bytes'] = raw[start:start + occurrence['size']].hex()
     result = {'format':'fdisbull-dos-com-compilation-1','target':'dos-com16-i386','bytes':raw.hex(),'sha256':sha256(raw).hexdigest(),'entry_ip':0x100,'entry_port':entry,'ports':ports,
-              'data':[{'id':d['id'],'ip':d['ip'],'file_offset':d['ip']-0x100,'size':len(d['raw']),'sha256':sha256(d['raw']).hexdigest()} for d in data_by_id.values()],
+              'data':[{'id':d['id'],'ip':d['ip'],'file_offset':d['ip']-0x100,'size':len(d['raw']),'sha256':sha256(raw[d['ip']-0x100:d['ip']-0x100+len(d['raw'])]).hexdigest()} for d in data_by_id.values()],
               'occurrences':occurrences,'fixups':fixups,'fixed_memory_accesses':fixed_reads,'register_memory_obligation':dynamic_seen,
               'qualification':'structural_only','native_execution':False,'assumptions':deepcopy(assumptions),
               'abi':{'cpu':'i386+','cs_ds_es_ss':'equal','stack_reserved':[0xf000,0x10000],'file_offset_to_ip':0x100},
