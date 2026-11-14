@@ -57,6 +57,40 @@ is global. An unrelated process END does not retire another qualified process.
 Unknown or malformed containment fails closed, and creation before attachment
 remains unknown. No custom guest helper is needed for this observer.
 
+For supported stopped legacy-paged observations, the provider also qualifies
+the physical placement of each automatic source snapshot. After capture it
+revalidates the exact task/process identity, CPU stop, run, source/version and
+capture epoch. Two fresh linear and physical readback passes must equal every
+captured byte, including relocated bytes; uncached page-table readbacks must
+retain the sealed mapping. The bounded certificate covers only that snapshot,
+with page-split extents and hashes. It does not qualify the physical placement
+of every manager record, a whole task's RAM, allocation ownership or lifetime.
+The first slice supports A20-enabled, non-PAE legacy32 paging with 4KiB pages
+and configured conventional/extended RAM, at most 1MiB and256 pages per proof.
+One ten-second observer deadline starts at entry and intersects any exported
+caller/transport deadline. The raw machine run's local execution timeout is a
+separate budget when it has no exported parent deadline. The proof never
+renews a budget between passes, and restores prior transport bounds afterward.
+
+The tracker records each certificate as a local runtime-tracking artifact.
+`runtime_map_snapshot` accepts its optional `physical_readback` attachment only
+when the local artifact, snapshot, task's native identity, sealed page coverage
+and byte hashes agree. Source comparison and its loader fixup exclusions remain
+separate; physical equality never excludes fixup bytes. Each resulting binding
+has `physical_qualification.qualified: true` for its exact stopped extent.
+Physical addresses remain outside task/process identity keys. A registry
+checkpoint restore retains the old proof as historical evidence and requires a
+fresh readback before a new physical qualification.
+Disjoint fragments can share one certificate; overlapping republication or
+reuse after any of its binding intervals closes is refused.
+
+A typed physical readback failure withdraws all partial bindings and reports
+`physical-unavailable`. The native episode can survive only after independent
+stopped CPU and lifecycle-coverage revalidation; a later successful observation
+can publish fresh proofs under that episode. Unexpected I/O, identity/CPU drift
+and lost coverage retain the existing retirement/fencing behavior. Providers
+without this operation and older snapshots gain no direct physical-read claim.
+
 Source availability and native lifetime continuity are separate qualifications.
 A typed `SourceMatchError` during source discovery withdraws current source
 bindings and exposes no partial source result. It can preserve existing native
@@ -128,12 +162,12 @@ gates, recorded in the [maintained handoff](DOS_QEMU_HANDOFF.md).
 
 
 The Engine snapshot path retains its existing PTE-derived translation evidence;
-it does not adopt the private W7 per-page `physical_readback` extension. A
+ordinary snapshots do not independently read physical target bytes. A
 registry physical coordinate is therefore not, by itself, a proof that original
 source bytes were independently read at that physical address. Native acceptance
 can add a separate bounded stopped physical-read auditor receipt using ordinary
-public reads and stable CPU/translation checks. Such a receipt qualifies only
-those observed extents and does not upgrade the automatic provider's scope.
+public reads and stable CPU/translation checks. This remains independent of the
+automatic DESQview source-snapshot qualification described above.
 The stricter `dos_source_admit` operation owns its explicit physical/linear
 readback proof independently.
 

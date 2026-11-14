@@ -405,9 +405,17 @@ class AutomaticRuntimeTracker:
                 self.project.db.execute('UPDATE runtime_mapping_tasks SET document=? WHERE id=?',
                                         (_json(row).decode(), task))
         bindings = []
+        physically_qualified = []
         for span in match['source_spans']:
             snapshot = self.session.memory_snapshot(span['address'], length=span['length'],
                 task_id=key, name='automatic-' + span['name'] + '.bin')
+            physical_readback = None
+            qualifier = getattr(self.provider, 'qualify_physical', None)
+            if callable(qualifier):
+                certificate = qualifier(snapshot['artifact'], native['native'])
+                physical_readback = dict(certificate=certificate,
+                    evidence=self._record('physical-qualification', certificate))
+                physically_qualified.append(snapshot['artifact'])
             fragments = span.get('fragments') or [dict(snapshot_offset=0,
                 object_offset=span['object_offset'], length=span['length'])]
             for fragment in fragments:
@@ -419,14 +427,18 @@ class AutomaticRuntimeTracker:
                     count = min(end - offset, 4096 - ((span['address'] + offset) & 4095))
                     mapped = self.project.runtime_map_snapshot(task, snapshot['artifact'], span['object_id'],
                         fragment['object_offset'] + offset - fragment['snapshot_offset'], count,
-                        snapshot_offset=offset)
+                        snapshot_offset=offset,
+                        **({'physical_readback': physical_readback} if physical_readback is not None else {}))
                     bindings.append(mapped['binding'])
                     # Track incrementally so an enrichment failure can close
                     # every already-published relation before returning.
                     self.active_bindings[task] = list(bindings)
                     offset += count
         return dict(task=task, identity=native, source=match['source_identity'],
-                    binding_count=len(bindings), bindings=bindings)
+                    binding_count=len(bindings), bindings=bindings,
+                    physical_qualification=dict(qualified=bool(physically_qualified),
+                        snapshots=physically_qualified,
+                        scope='current stopped source snapshots only; no allocation or lifetime proof'))
 
     def after_stop(self, reason):
         if self.closed or self.busy or self.fenced:
@@ -478,7 +490,25 @@ class AutomaticRuntimeTracker:
                     executables_modified=False)
                 return
             phase = 'source-publication'
-            published = [self._publish(match) for match in matches]
+            from .runtime_desqview_physical import DesqviewPhysicalError
+            try:
+                published = [self._publish(match) for match in matches]
+            except DesqviewPhysicalError as error:
+                # Physical target-byte proof is independent of the resident
+                # lifecycle observer. Never retain partial maps or borrow a
+                # prior successful physical observation after a readback miss.
+                phase = 'physical-context-revalidation'
+                self._invalidate('incomplete physical qualification')
+                _require(self.session.registers() == source_context,
+                         'Stopped CPU context changed during physical qualification')
+                _require(self._validate_native_coverage(),
+                         'Physical qualification failed without native lifecycle coverage')
+                phase = 'physical-qualification'
+                self._observation_error(phase, reason, error, 'preserved-native-provider')
+                self.last.update(state='physical-unavailable', reason=reason, current_bindings=0,
+                    sources=[], error_type=type(error).__name__, error=str(error),
+                    lifetime_qualification='native-lifecycle-since-attach', executables_modified=False)
+                return
             self.last.update(state='qualified-stopped-bindings' if published else 'no-source-match',
                 reason=reason, current_bindings=sum(row['binding_count'] for row in published),
                 sources=published, lifetime_qualification=('native-lifecycle-since-attach' if self.provider else

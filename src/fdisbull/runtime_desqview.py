@@ -279,6 +279,10 @@ class DesqviewProvider:
             _same_stop(before, _paused(self.session))
             return result
 
+    def qualify_physical(self, snapshot_artifact, native_identity):
+        from .runtime_desqview_physical import qualify
+        return qualify(self, snapshot_artifact, native_identity)
+
     def validate_coverage(self):
         """Validate the resident hook during a DOS or supervisor-mode stop.
 

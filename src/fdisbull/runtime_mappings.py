@@ -61,6 +61,90 @@ def _json(value, limit=65536):
     return raw.decode()
 
 
+def _physical_readback(project, receipt, identity, snapshot, snapshot_sha, context, pages,
+                       data, offset, length, physical_start):
+    """Bind recorded provider evidence to one already source-verified extent.
+
+    Like other recorded evidence, this is not authentication of a live caller.
+    Only the provider's owned stopped readback creates the live qualification.
+    The registry independently rejects foreign, incomplete or changed captures.
+    """
+    from .runtime_desqview_physical import FORMAT, SCOPE
+
+    def require(condition):
+        if not condition:
+            raise ValueError('physical readback certificate differs from source/capture identity')
+
+    def sha(value):
+        raw = value if isinstance(value, bytes) else _json(value).encode()
+        return hashlib.sha256(raw).hexdigest()
+
+    require(isinstance(receipt, dict) and set(receipt) == {'certificate', 'evidence'})
+    certificate = receipt['certificate']
+    require(isinstance(certificate, dict))
+    evidence = _evidence(receipt['evidence'])
+    prefix = 'local-runtime-tracking:'
+    require(evidence['kind'] == 'recorded' and evidence['reference'].startswith(prefix))
+    from .memory_search_runtime import _artifact
+    artifact = evidence['reference'][len(prefix):]
+    record, recorded, metadata = _artifact(project, artifact, 'runtime-tracking')
+    require(record['run'] == identity['run'] and record['sha256'] == evidence['sha256'] and
+            metadata.get('kind') == 'physical-qualification' and metadata.get('automatic') is True and
+            json.loads(recorded) == dict(format='fdisbull-automatic-runtime-tracking-1',
+                                        kind='physical-qualification', document=certificate))
+    order = {r['id']: r['rowid'] for r in project.db.execute(
+        'SELECT rowid,id FROM debug_artifacts WHERE id IN (?,?)', (artifact, snapshot))}
+    require(artifact in order and snapshot in order and order[artifact] > order[snapshot])
+    native = identity.get('automatic_tracking', {}).get('identity', {}).get('native')
+    require(isinstance(native, dict) and physical_start is not None and
+            0 < len(data) <= 1024 * 1024 and len(pages) <= 256)
+    require(certificate.get('format') == FORMAT and certificate.get('qualified') is True and
+            type(certificate.get('passes')) is int and certificate['passes'] == 2 and
+            certificate.get('verification_scope') == SCOPE and
+            certificate.get('snapshot') == snapshot and
+            certificate.get('snapshot_sha256') == snapshot_sha == sha(data) and
+            certificate.get('mapping_id') == context['mapping_id'] and
+            certificate.get('context_sha256') == sha(context) and
+            certificate.get('native_identity_sha256') == sha(native))
+    # Reconstruct coverage from the sealed capture, never from submitted ranges.
+    expected = []
+    cursor = context['region']['start']
+    end = cursor + len(data)
+    while cursor < end:
+        page = next((p for p in pages if int(p['linear'], 16) == cursor & ~4095), None)
+        require(page is not None)
+        physical = int(page['physical'], 16) if isinstance(page['physical'], str) else page['physical']
+        count = min(end - cursor, 4096 - (cursor & 4095))
+        low = cursor - context['region']['start']
+        expected.append(dict(linear_start=cursor, physical_start=physical + (cursor & 4095),
+                             length=count, sha256=sha(data[low:low + count])))
+        cursor += count
+    ranges = certificate.get('ranges')
+    require(isinstance(ranges, list) and all(isinstance(r, dict) and
+            all(type(r.get(k)) is int for k in ('linear_start', 'physical_start', 'length'))
+            for r in ranges) and ranges == expected)
+    certificate_sha = sha(certificate)
+    # One certificate may publish disjoint source fragments from its capture.
+    # Once withdrawn, or already used for this extent, it cannot qualify a new
+    # interval. A checkpoint or execution gap needs a fresh provider readback.
+    replay = project.db.execute('''SELECT 1 FROM runtime_mapping_bindings
+        WHERE task=? AND json_extract(document,'$.physical_qualification.certificate_sha256')=?
+        AND (closed IS NOT NULL OR
+             (json_extract(document,'$.linear_start') < ? AND
+              json_extract(document,'$.linear_start') + json_extract(document,'$.length') > ?)) LIMIT 1''',
+        (identity['id'], certificate_sha, context['region']['start'] + offset + length,
+         context['region']['start'] + offset)).fetchone()
+    require(replay is None)
+    return dict(format=FORMAT, qualified=True, snapshot=snapshot,
+                snapshot_sha256=snapshot_sha, mapping_id=context['mapping_id'],
+                context_sha256=certificate['context_sha256'],
+                native_identity_sha256=certificate['native_identity_sha256'],
+                certificate_sha256=certificate_sha, evidence=evidence, passes=2,
+                linear_start=context['region']['start'] + offset,
+                physical_start=physical_start, length=length,
+                sha256=sha(data[offset:offset + length]), verification_scope=SCOPE)
+
+
 def _evidence(value):
     if not isinstance(value, dict) or not {'kind', 'reference', 'sha256'} <= set(value) or set(value) - {'kind', 'reference', 'sha256', 'note'}:
         raise ValueError('evidence requires kind, reference and sha256, with optional note')
@@ -383,6 +467,10 @@ class RuntimeMappingsMixin:
             self.db.execute('UPDATE runtime_mapping_bindings SET closed=? WHERE task=? AND closed IS NULL', (event, task))
             restored = []
             for original in originals:
+                if original.get('physical_qualification', {}).get('qualified') is True:
+                    original['historical_physical_qualification'] = original['physical_qualification']
+                    original['physical_qualification'] = dict(qualified=False,
+                        reason='registry checkpoint restore requires a fresh stopped physical readback')
                 original.update(restored_from=original['id'], evidence=evidence,
                                 qualification='caller_recorded_restore; previous snapshot identity is historical, not fresh proof')
                 restored.append(self._mapping_insert(task, original, event))
@@ -432,7 +520,7 @@ class RuntimeMappingsMixin:
                     ordering='journal append order; not a reconstructed unobserved execution timeline')
 
     def runtime_map_snapshot(self, task, snapshot, object_id, object_offset, length,
-                             snapshot_offset=0, replace=None):
+                             snapshot_offset=0, replace=None, physical_readback=None):
         """Qualify a local retained capture extent; never accepts foreign IDs/masks."""
         from .memory_search_runtime import _snapshot
         _int(snapshot_offset, 'snapshot offset', 0, MAX_SPAN)
@@ -528,6 +616,10 @@ class RuntimeMappingsMixin:
                 cursor = min(address + length, page_start + 4096)
             if cursor == address + length and physical and all(p - l == physical[0][1] - physical[0][0] for l, p in physical):
                 spec['physical_start'] = physical[0][1]
+            if physical_readback is not None:
+                spec['physical_qualification'] = _physical_readback(
+                    self, physical_readback, identity, snapshot, row['sha256'], context, pages,
+                    data, snapshot_offset, length, spec['physical_start'])
             spec.update(qualification='snapshot_bytes_and_capture_context_verified; task ownership remains caller-declared',
                         snapshot=snapshot, compared_bytes=compared, excluded_fixup_bytes=len(excluded),
                         verification_scope='only this captured extent at this capture; no continuous mapping, execution or allocation ownership proof')
