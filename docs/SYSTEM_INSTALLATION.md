@@ -75,6 +75,32 @@ new attempt directory, preserving every previous intent, completion and rollback
 record. Repeating a completed activation verifies its existing result; repeating
 rollback on an inactive candidate reports `already_inactive` without mutation.
 
+An installer dependency may instead be built locally from an official PyPI
+source distribution when no suitable official Darwin arm64 wheel exists. Its
+manifest entry is `{"wheel": REF, "source_build": REF}`. Every `REF` is an
+absolute file path, size and SHA-256 using the input reference format above.
+The `fdisbull-source-built-wheel-1` document has exactly these fields:
+`schema`, `name`, `version`, `platform` (`darwin`), `architecture` (`arm64`),
+`wheel` (`name`, `size`, `sha256`), `sdist` (REF), `pypi_identity` (REF),
+`build_commands`, `validation_commands`, and `toolchain` (a nonempty mapping
+of names to REFs). Each command records exactly `argv`, `returncode`, `stdout`
+and `stderr`; it must succeed and both logs must be hash-bound REFs. Wheel
+metadata, filename and macOS arm64 tags must agree with the receipt.
+
+The independent `fdisbull-source-sdist-pypi-identity-1` document supplies
+`name`, `version` and a `files` array. Its unique source-file entry contains
+`filename`, `metadata_match`, `yanked`, `packagetype`, `pypi_file_url`,
+`pypi_release_api`, `pypi_sha256` and `pypi_size`. It must describe a
+non-yanked official source distribution with the exact retained bytes. This
+does not describe the locally built wheel as an official PyPI wheel. Staging
+retains the original build and identity records, source archive, command logs,
+toolchain evidence and a path index under `share/dependency-proofs`; the payload
+inventory covers those files. Native application qualification remains separate.
+These are operator-generated execution records. The installer checks their
+identities and completeness; it does not prove that arbitrary recorded commands
+ran. Produce them from the actual isolated build and independent wheel checks.
+Simulated fixture records qualify the protocol only, never a dependency build.
+
 The copied `share/verify-system.py` is version-neutral. It checks the file
 inventory, CI artifact identities, native and delivery evidence, installed wheel
 members and import locations. Its `active_default` field is true only when this
