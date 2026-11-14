@@ -197,3 +197,31 @@ def test_rejects_mount_at_parent_instead_of_owned_run_attempt(fixture):
                   host_root=host,control=control,mounted=mounted,policy_path=tmp/'policy.json',
                   control_root=tmp/'ci-control',policy_sha=hashlib.sha256((tmp/'policy.json').read_bytes()).hexdigest())
     assert inspected==[host/'42/1'] and not list((host/'42/1').iterdir())
+
+
+def test_shared_package_smoke_receives_candidate_and_external_build_parent(fixture, tmp_path):
+    tmp, candidate, control, host, sha, env, job, request = fixture
+    stub = tmp_path / 'stub-python'
+    stub.write_text('#!/bin/sh\nexit 79\n'); stub.chmod(0o755)
+    env.update(CI_PROJECT_DIR='/incorrect/project', CI_BUILDS_DIR='/incorrect/builds',
+               CI_PIPELINE_ID='pretend', CI_JOB_ID='pretend', CI_RUNNER_ID='pretend',
+               FDISBULL_CI_PYTHON=str(stub))
+    def runner(work, child_env, log):
+        assert child_env['CI_PROJECT_DIR'] == str(candidate.resolve())
+        assert child_env['CI_BUILDS_DIR'] == str(candidate.resolve().parent)
+        assert candidate.resolve() not in Path(child_env['CI_BUILDS_DIR']).parents
+        assert not {'CI_PIPELINE_ID','CI_JOB_ID','CI_RUNNER_ID'} & child_env.keys()
+        assert 'GITHUB_TOKEN' not in child_env and 'OTHER_SECRET' not in child_env
+        run = subprocess.run(['bash', str(ROOT/'scripts/ci/package-smoke.sh')], cwd=work,
+                             env=child_env, capture_output=True, text=True)
+        # The real shell reaches our deliberate stub only after resolving the
+        # required variables and creating its scratch directory outside source.
+        assert run.returncode == 79, run.stderr
+        assert list(candidate.parent.glob('fdisbull-package-smoke.*'))
+        log.write_bytes(b'fixture stops at stub python')
+        return 1, {'total_bytes': 28, 'retained_bytes': 28, 'truncated': False}
+    meta=q.execute(candidate, sha, 'nonce', tmp/'output', env=env, request=request, runner=runner,
+                   system_preparer=fake_system_prepare, host_root=host, control=control, mounted=lambda _: True,
+                   policy_path=tmp/'policy.json', control_root=tmp/'ci-control',
+                   policy_sha=hashlib.sha256((tmp/'policy.json').read_bytes()).hexdigest())
+    assert meta['job_status']=='failed' and meta['qualification_stage']=='ordinary-tests'
