@@ -154,18 +154,21 @@ def _normalize_entries(entries):
     return nodes, children
 
 
-def _layout_fat16(size_bytes):
+def _layout_fat16(size_bytes, *, prefer_large_clusters=False):
     if type(size_bytes) is not int or size_bytes % SECTOR or not MIN_WORKSPACE_BYTES <= size_bytes <= MAX_WORKSPACE_BYTES:
         raise ValueError('Workspace volume must be sector-aligned and 4..48 MiB')
     total = size_bytes // SECTOR
-    for sectors_per_cluster in (1, 2, 4, 8, 16, 32, 64):
+    cluster_choices = (8, 1, 2, 4, 16, 32, 64) if prefer_large_clusters else (1, 2, 4, 8, 16, 32, 64)
+    for sectors_per_cluster in cluster_choices:
         root_entries = 512
         root_sectors = root_entries * 32 // SECTOR
         fat_sectors = 1
         for _ in range(32):
             clusters = (total - 1 - 2 * fat_sectors - root_sectors) // sectors_per_cluster
             wanted = math.ceil((clusters + 2) * 2 / SECTOR)
-            if wanted == fat_sectors:
+            # Data-region rounding can alternate between two FAT lengths.
+            # Preferred layouts retain the sufficient upper bound, never shrink.
+            if wanted == fat_sectors or (prefer_large_clusters and wanted < fat_sectors):
                 break
             fat_sectors = wanted
         clusters = (total - 1 - 2 * fat_sectors - root_sectors) // sectors_per_cluster
@@ -181,6 +184,17 @@ def build_volume(entries, size_bytes=DEFAULT_WORKSPACE_BYTES) -> bytes:
     """Build one deterministic FAT16 volume from a DOS-short-path inventory."""
     layout = _layout_fat16(size_bytes)
     nodes, children = _normalize_entries(entries)
+    if size_bytes >= DEFAULT_WORKSPACE_BYTES:
+        # Shorter FAT chains bound traversal work for large assets. Retain the
+        # old layout when rounding files and directory tables would not fit.
+        preferred = _layout_fat16(size_bytes, prefer_large_clusters=True)
+        preferred_bytes = preferred['spc'] * SECTOR
+        required = sum(math.ceil(len(node['data']) / preferred_bytes)
+                       for node in nodes.values() if node['type'] == 'file')
+        required += sum(max(1, math.ceil((len(rows) + 2) * 32 / preferred_bytes))
+                        for path, rows in children.items() if path)
+        if required <= preferred['clusters']:
+            layout = preferred
     cluster_size = layout['spc'] * SECTOR
     next_cluster = 2
     fat = [0xfff8, 0xffff]

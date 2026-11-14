@@ -49,6 +49,99 @@ def test_fat16_roundtrip_files_directories_empty_and_metadata():
     }
 
 
+@pytest.mark.parametrize('size_bytes', [32 * 1024 * 1024, 48 * 1024 * 1024])
+def test_large_volumes_use_shorter_chains_without_changing_file_bytes(size_bytes):
+    # Authored bytes at the observed large-asset scale, not an original WAD.
+    payload = (bytes(range(256)) * 48470)[:12408292]
+    entries = {'ASSET.BIN': {'type': 'file', 'data': payload},
+               'EMPTY.DAT': {'type': 'file', 'data': b''}}
+    image = fat.build_volume(entries, size_bytes=size_bytes)
+    assert image[13] == 8
+    fs = fat._Fat16(image)
+    first = struct.unpack_from('<H', image, fs.root_offset + 26)[0]
+    assert len(fs.chain(first)) == 3030
+    parsed = fat.parse_volume(image)
+    assert parsed['ASSET.BIN']['data'] == payload
+    assert parsed['EMPTY.DAT']['data'] == b''
+    assert image == fat.build_volume(dict(reversed(list(entries.items()))), size_bytes=size_bytes)
+
+
+def test_preferred_layout_keeps_enough_fat_sectors_at_rounding_boundary():
+    # The needed FAT length alternates between 32 and 33 sectors if each
+    # iteration shrinks to the new minimum. The smaller table is too short.
+    image = fat.build_volume({'A.DAT': {'type': 'file', 'data': b'authored'}},
+                             size_bytes=33600000)
+    assert fat.parse_volume(image)['A.DAT']['data'] == b'authored'
+    assert image[13] == 8 and struct.unpack_from('<H', image, 22)[0] == 33
+    legacy = fat._layout_fat16(33600000)
+    assert (legacy['spc'], legacy['fat_sectors'], legacy['clusters']) == (1, 255, 65082)
+
+
+def test_every_preferred_geometry_has_capacity_for_all_cluster_entries():
+    invalid = []
+    for sectors in range(32 * 1024 * 1024 // 512, 48 * 1024 * 1024 // 512 + 1):
+        layout = fat._layout_fat16(sectors * 512, prefer_large_clusters=True)
+        if layout['fat_sectors'] * 512 < (layout['clusters'] + 2) * 2:
+            invalid.append(sectors)
+    assert invalid == []
+
+
+@pytest.mark.parametrize('size_bytes', [4 * 1024 * 1024, 16 * 1024 * 1024,
+                                      32 * 1024 * 1024 - 512])
+def test_small_volumes_keep_existing_512_byte_clusters(size_bytes):
+    image = fat.build_volume(_entries(), size_bytes=size_bytes)
+    assert image[13] == 1
+    assert fat.parse_volume(image)['SAVE.DAT']['data'] == b'save-state'
+
+
+@pytest.mark.parametrize('file_count', [8160, 8191])
+def test_large_volume_falls_back_when_file_and_directory_rounding_exceed_capacity(file_count):
+    # 8160 file clusters alone fit 8179 preferred clusters, but the directory
+    # needs another 64. The second case also reaches the 8192-entry limit.
+    entries = {f'BULK\\F{index:07d}': {'type': 'file', 'data': b'x'}
+               for index in range(file_count)}
+    image = fat.build_volume(entries)
+    assert image[13] == 1
+    parsed = fat.parse_volume(image)
+    assert len(parsed) == file_count + 1
+    assert all(item['data'] == b'x' for item in parsed.values() if item['type'] == 'file')
+
+
+def test_empty_files_do_not_force_a_capacity_fallback():
+    entries = {f'BULK\\F{index:07d}': {'type': 'file', 'data': b''}
+               for index in range(8191)}
+    image = fat.build_volume(entries)
+    assert image[13] == 8
+    parsed = fat.parse_volume(image)
+    assert len(parsed) == 8192
+    assert all(item['data'] == b'' for item in parsed.values())
+
+
+def test_preferred_volume_exact_capacity_and_overflow():
+    # 65536 sectors minus one reserved, two 32-sector FATs and 32 root sectors
+    # leave 8179 complete 4096-byte clusters; the trailing seven sectors do
+    # not create another cluster.
+    capacity = 8179 * 4096
+    image = fat.build_volume({'FULL.BIN': {'type': 'file', 'data': b'x' * capacity}})
+    assert image[13] == 8
+    assert len(fat.parse_volume(image)['FULL.BIN']['data']) == capacity
+    with pytest.raises(ValueError, match='exceed the FAT16 volume'):
+        fat.build_volume({'FULL.BIN': {'type': 'file', 'data': b'x' * (capacity + 1)}})
+
+
+@pytest.mark.parametrize('size_bytes', [True, 4 * 1024 * 1024 - 512,
+                                      48 * 1024 * 1024 + 512, 32 * 1024 * 1024 + 1])
+def test_cluster_policy_preserves_volume_size_bounds(size_bytes):
+    with pytest.raises(ValueError, match='sector-aligned and 4..48 MiB'):
+        fat.build_volume({}, size_bytes=size_bytes)
+
+
+def test_cluster_policy_preserves_entry_limit():
+    entries = {f'F{index:07d}': {'type': 'file', 'data': b''} for index in range(8193)}
+    with pytest.raises(ValueError, match='entry count'):
+        fat.build_volume(entries)
+
+
 @pytest.mark.parametrize('entries', [
     {'A.TXT': {'type': 'file', 'data': b'a'}, 'a.txt': {'type': 'file', 'data': b'b'}},
     {'LONGNAME9.TXT': {'type': 'file', 'data': b'x'}},
