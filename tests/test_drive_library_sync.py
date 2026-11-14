@@ -475,7 +475,7 @@ def test_identical_files_share_one_content_addressed_remote_object(tmp_path):
     assert first==second==f'library/objects/{digest}'
 
 
-def test_legacy_cached_receipt_stays_readonly_while_changed_file_moves_to_objects(tmp_path):
+def test_unbound_legacy_receipt_is_recaptured_without_changing_old_remote_bytes(tmp_path):
     root=tmp_path/'library';(root/'targets').mkdir(parents=True)
     original=b'legacy stored bytes'
     relative='targets/legacy.com'
@@ -496,10 +496,11 @@ def test_legacy_cached_receipt_stays_readonly_while_changed_file_moves_to_object
     assert unchanged['status']=='complete'
     legacy_manifest=_latest_library_manifest(transport,unchanged['run'])
     legacy_path=legacy_manifest['entries'][relative]['content']['remote_path']
-    assert legacy_path==f'library/files/{relative}'
+    assert legacy_path==f'library/objects/{_sha_payload(original)}'
+    assert legacy_manifest['entries'][relative]['content']['source_selection']
     assert transport.remote['library/files'][relative]==original
     object_calls=[call for call in transport.calls if call[0]=='library/objects']
-    assert object_calls[-1][2]=={}
+    assert object_calls[-1][2]=={_sha_payload(original):original}
 
     changed=b'new content-addressed bytes'
     (root/relative).write_bytes(changed)
@@ -697,3 +698,164 @@ def test_tampered_cached_library_capture_is_refused_before_upload(tmp_path):
     assert not transport.remote.get('library/objects')
     assert not any(path.startswith('library/manifests/') for path in transport.remote)
     assert any('Cached library capture differs' in error['message'] for error in retry['errors'])
+
+
+def test_admitted_source_cannot_be_replaced_by_intermediate_symlink_during_capture(tmp_path, monkeypatch):
+    root = tmp_path/'library';(root/'targets/game').mkdir(parents=True)
+    source = root/'targets/game/PROGRAM.COM';source.write_bytes(b'AAAA')
+    outside = tmp_path/'outside';(outside/'game').mkdir(parents=True)
+    (outside/'game/PROGRAM.COM').write_bytes(b'BBBB')
+    parked = root/'parked-targets'
+    fdb_root = tmp_path/'fdb';_make_fdb_root(fdb_root)
+    config = _config(tmp_path, root, fdb_root);transport = FakeTransport()
+    before = sync.scan_library(config['library'])
+    real_lstat, real_open, real_copy = Path.lstat, os.open, sync.stable_copy
+    active = [False];swapped = [False]
+    def swap():
+        if not swapped[0]:
+            (root/'targets').rename(parked)
+            (root/'targets').symlink_to(outside, target_is_directory=True)
+            swapped[0] = True
+    def lstat(path, *args, **kwargs):
+        if active[0] and path == source:swap()
+        return real_lstat(path, *args, **kwargs)
+    def opened(path, flags, *args, **kwargs):
+        if active[0] and Path(path).name == source.name and kwargs.get('dir_fd') is not None:
+            swap()
+        return real_open(path, flags, *args, **kwargs)
+    def raced_copy(*args, **kwargs):
+        active[0] = True
+        try:return real_copy(*args, **kwargs)
+        finally:
+            active[0] = False
+            if swapped[0]:
+                (root/'targets').unlink()
+                parked.rename(root/'targets')
+    monkeypatch.setattr(Path, 'lstat', lstat)
+    monkeypatch.setattr(sync.os, 'open', opened)
+    monkeypatch.setattr(sync, 'stable_copy', raced_copy)
+    result = sync.run_once(config, transport)
+    assert swapped[0] is True
+    assert sync.scan_library(config['library']) == before
+    assert result['status'] == 'partial'
+    assert not any(b'BBBB' in call[2].values() for call in transport.calls)
+    assert not any(call[0].startswith('library/manifests/') for call in transport.calls)
+    assert source.read_bytes() == b'AAAA' and (outside/'game/PROGRAM.COM').read_bytes() == b'BBBB'
+
+
+def test_stable_copy_refuses_symlink_destination_ancestry(tmp_path):
+    source = tmp_path/'source';source.write_bytes(b'AAAA')
+    outside = tmp_path/'outside';outside.mkdir()
+    stage = tmp_path/'stage';stage.symlink_to(outside, target_is_directory=True)
+    with pytest.raises((ValueError, OSError)):
+        sync.stable_copy(source, stage/'copy')
+    assert not (outside/'copy').exists() and source.read_bytes() == b'AAAA'
+
+
+def test_capture_refuses_regular_file_substitution_after_admission(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    source=root/'targets/program.com';source.write_bytes(b'AAAA')
+    entry=sync.scan_library(_library(root))['targets/program.com']
+    parked=source.with_name('original.com');source.rename(parked)
+    source.write_bytes(b'BBBB')
+    with sync._directory_handle(root) as fd:
+        with pytest.raises(ValueError, match='exact admitted scan entry'):
+            sync.stable_copy(source,tmp_path/'captured',admitted=entry,
+                             source_root_fd=fd,relative='targets/program.com')
+    assert not (tmp_path/'captured').exists()
+    assert source.read_bytes()==b'BBBB' and parked.read_bytes()==b'AAAA'
+
+
+def test_root_aba_cannot_change_the_pinned_capture_selection(tmp_path, monkeypatch):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    source=root/'targets/program.com';source.write_bytes(b'AAAA')
+    outside=tmp_path/'outside';(outside/'targets').mkdir(parents=True)
+    (outside/'targets/program.com').write_bytes(b'BBBB')
+    parked=tmp_path/'parked-library'
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    config=_config(tmp_path,root,repository);transport=FakeTransport()
+    original_copy=sync.stable_copy
+    swapped=[]
+    def copy(*args, **kwargs):
+        root.rename(parked);root.symlink_to(outside,target_is_directory=True)
+        swapped.append(True)
+        try:return original_copy(*args,**kwargs)
+        finally:
+            root.unlink();parked.rename(root)
+    monkeypatch.setattr(sync,'stable_copy',copy)
+    result=sync.run_once(config,transport)
+    assert swapped and result['status']=='complete'
+    assert transport.remote['library/objects']=={_sha_payload(b'AAAA'):b'AAAA'}
+    assert source.read_bytes()==b'AAAA'
+    assert (outside/'targets/program.com').read_bytes()==b'BBBB'
+
+
+def test_destination_parent_swap_does_not_write_through_replacement(tmp_path, monkeypatch):
+    source=tmp_path/'source';source.write_bytes(b'AAAA')
+    stage=tmp_path/'stage';stage.mkdir()
+    parked=tmp_path/'parked';outside=tmp_path/'outside';outside.mkdir()
+    original_open=os.open;swapped=[]
+    def opened(path, flags, *args, **kwargs):
+        if path=='capture' and flags & os.O_CREAT and not swapped:
+            stage.rename(parked);stage.symlink_to(outside,target_is_directory=True)
+            swapped.append(True)
+        return original_open(path,flags,*args,**kwargs)
+    monkeypatch.setattr(sync.os,'open',opened)
+    with pytest.raises(ValueError,match='symlink'):
+        sync.stable_copy(source,stage/'capture')
+    assert swapped and not (outside/'capture').exists()
+    assert (parked/'capture').read_bytes()==b'AAAA' and source.read_bytes()==b'AAAA'
+
+
+def test_unbound_capture_and_completion_cannot_certify_wrong_legacy_bytes(tmp_path):
+    root=tmp_path/'library';(root/'targets').mkdir(parents=True)
+    relative='targets/program.com';source=root/relative;source.write_bytes(b'AAAA')
+    repository=tmp_path/'fdb';_make_fdb_root(repository)
+    config=_config(tmp_path,root,repository);transport=FakeTransport()
+    assert sync.run_once(config,transport)['status']=='complete'
+    wrong=tmp_path/'legacy-capture';wrong.write_bytes(b'BBBB')
+    unbound={'size':4,'sha256':_sha_payload(b'BBBB'),'md5':hashlib.md5(b'BBBB').hexdigest()}
+    with sqlite3.connect(Path(config['state_dir'])/'state.sqlite') as db:
+        db.execute('UPDATE files SET receipt=? WHERE path=?',(json.dumps(unbound),relative))
+        db.execute('UPDATE captures SET receipt=?,payload=? WHERE path=?',
+                   (json.dumps(unbound),str(wrong),relative))
+    transport.remote.setdefault('library/files',{})[relative]=b'BBBB'
+    transport.calls.clear()
+    result=sync.run_once(config,transport)
+    assert result['status']=='complete'
+    proof=_latest_library_manifest(transport,result['run'])['entries'][relative]['content']
+    assert proof['source_selection']['relative']==relative
+    assert proof['sha256']==_sha_payload(b'AAAA')
+    assert not any(b'BBBB' in call[2].values() for call in transport.calls)
+    assert transport.remote['library/files'][relative]==b'BBBB'
+    assert wrong.read_bytes()==b'BBBB' and source.read_bytes()==b'AAAA'
+
+
+def test_verified_link_rejects_substituted_source_inode(tmp_path, monkeypatch):
+    source=tmp_path/'capture';source.write_bytes(b'AAAA')
+    parked=tmp_path/'parked';destination=tmp_path/'objects/object'
+    receipt={'size':4,'sha256':_sha_payload(b'AAAA'),'md5':hashlib.md5(b'AAAA').hexdigest()}
+    original_link=os.link
+    def link(*args, **kwargs):
+        source.rename(parked);source.write_bytes(b'BBBB')
+        return original_link(*args,**kwargs)
+    monkeypatch.setattr(sync.os,'link',link)
+    with pytest.raises(ValueError,match='pathname changed'):
+        sync._verified_link(source,destination,receipt)
+    assert parked.read_bytes()==b'AAAA' and source.read_bytes()==b'BBBB'
+    # Failed artifacts remain inspectable, but cannot receive a completion receipt.
+    assert destination.read_bytes()==b'BBBB'
+
+
+@pytest.mark.parametrize('atomic', [False,True])
+def test_metadata_writes_refuse_symlink_ancestry_without_touching_sentinel(tmp_path, atomic):
+    outside=tmp_path/'outside';outside.mkdir()
+    sentinel=outside/'status.json';sentinel.write_bytes(b'untouched')
+    state=tmp_path/'state';state.symlink_to(outside,target_is_directory=True)
+    with pytest.raises(ValueError,match='symlink'):
+        if atomic:
+            sync._atomic_json(state/'status.json',{'status':'new'})
+        else:
+            sync._write_new(state/'new.json',b'new')
+    assert sentinel.read_bytes()==b'untouched'
+    assert list(outside.iterdir())==[sentinel]

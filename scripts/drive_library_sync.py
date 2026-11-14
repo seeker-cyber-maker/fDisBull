@@ -31,19 +31,26 @@ def _json(value):
 
 
 def _write_new(path, data):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with path.open('xb') as stream:
+    path = Path(path).absolute()
+    with _directory_handle(path.parent, create=True) as parent:
+        _write_at(parent, path.name, data)
+
+
+def _write_at(parent, name, data):
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                 0o600, dir_fd=parent)
+    with os.fdopen(fd, 'wb') as stream:
         stream.write(data)
         stream.flush()
         os.fsync(stream.fileno())
 
 
 def _atomic_json(path, value):
-    path = Path(path)
-    temp = path.with_name(path.name + '.' + uuid.uuid4().hex)
-    _write_new(temp, _json(value).encode())
-    os.replace(temp, path)
+    path = Path(path).absolute()
+    with _directory_handle(path.parent, create=True) as parent:
+        temp = path.name + '.' + uuid.uuid4().hex
+        _write_at(parent, temp, _json(value).encode())
+        os.replace(temp, path.name, src_dir_fd=parent, dst_dir_fd=parent)
 
 
 def _root(path):
@@ -61,81 +68,223 @@ def _identity(path):
     return {'device': s.st_dev, 'inode': s.st_ino}
 
 
-def _member(root, relative):
+def _stat_key(value):
+    return value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns
+
+
+def _entry_key(entry):
+    if entry.get('kind') != 'file':
+        raise ValueError('Capture admission requires a regular file')
+    return tuple(entry[name] for name in ('device', 'inode', 'size', 'mtime_ns', 'ctime_ns'))
+
+
+def _fd_identity(fd):
+    value = os.fstat(fd)
+    return {'device': value.st_dev, 'inode': value.st_ino}
+
+
+def _parts(relative):
     path = Path(relative)
-    if not path.parts or path.is_absolute() or any(p in ('', '.', '..') for p in path.parts):
+    if not path.parts or path.is_absolute() or '..' in path.parts:
         raise ValueError('Source selection must be a relative path')
-    target = root / path
-    for parent in target.parents:
-        if parent == root:
-            break
-        if parent.is_symlink():
-            raise ValueError('Source selection traverses a symlink')
-    return target
+    return path.parts
 
 
-def scan_library(library):
-    """Inventory only explicit selections; retain links as metadata, not bytes."""
-    root = _root(library['root'])
-    expected = library.get('identity')
-    if expected and _identity(root) != expected:
+def _open_directory(name, *, parent=None, create=False):
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    try:
+        return os.open(name, flags, dir_fd=parent)
+    except FileNotFoundError:
+        if not create:
+            raise ValueError('Selected directory is unavailable') from None
+        try:
+            os.mkdir(name, mode=0o700, dir_fd=parent)
+        except FileExistsError:
+            pass
+        try:
+            return os.open(name, flags, dir_fd=parent)
+        except OSError:
+            raise ValueError('Directory ancestry changed or traverses a symlink') from None
+    except OSError:
+        raise ValueError('Directory ancestry changed or traverses a symlink') from None
+
+
+@contextmanager
+def _directory_handle(path, *, create=False, expected=None):
+    """Pin each component; never reopen an admitted path through a symlink."""
+    path = Path(path).expanduser().absolute()
+    if '..' in path.parts:
+        raise ValueError('Directory ancestry cannot contain parent traversal')
+    fd = _open_directory(path.anchor)
+    try:
+        for name in path.parts[1:]:
+            child = _open_directory(name, parent=fd, create=create)
+            os.close(fd)
+            fd = child
+        if expected is not None and _fd_identity(fd) != expected:
+            raise ValueError('Admitted root identity changed')
+        yield fd
+    finally:
+        os.close(fd)
+
+
+@contextmanager
+def _relative_parent(root_fd, relative):
+    parts = _parts(relative)
+    fd = os.dup(root_fd)
+    try:
+        for name in parts[:-1]:
+            child = _open_directory(name, parent=fd)
+            os.close(fd)
+            fd = child
+        yield fd, parts[-1]
+    finally:
+        os.close(fd)
+
+
+@contextmanager
+def _regular_reader(root_fd, relative, *, admitted=None):
+    with _relative_parent(root_fd, relative) as (parent, name):
+        # A replaced FIFO must not block before its type can be checked.
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        with os.fdopen(fd, 'rb') as reader:
+            before = os.fstat(reader.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                raise ValueError('Stable capture requires a regular file')
+            if admitted is not None and _stat_key(before) != _entry_key(admitted):
+                raise ValueError('Source differs from the exact admitted scan entry')
+            yield reader, before
+            if _stat_key(os.fstat(reader.fileno())) != _stat_key(before):
+                raise ValueError('Source changed during capture; staged bytes are not published')
+
+
+def scan_library(library, *, root_fd=None):
+    """Inventory explicit selections through pinned, no-follow directories."""
+    root = Path(library['root']).expanduser().absolute()
+    if root_fd is None:
+        with _directory_handle(root, expected=library.get('identity')) as fd:
+            return scan_library(library, root_fd=fd)
+    if library.get('identity') and _fd_identity(root_fd) != library['identity']:
         raise ValueError('Library root identity changed; no transfer attempted')
     result = {}
-    def visit(path):
-        s = path.lstat()
-        relative = path.relative_to(root).as_posix()
+    def visit(parent, name, relative, *, require_directory=False):
+        value = os.stat(name, dir_fd=parent, follow_symlinks=False)
         if any(c in relative for c in ('\n', '\r', '\x00')):
             raise ValueError('Source name cannot be represented safely in a transfer list')
-        common = dict(path=str(path), size=s.st_size, mtime_ns=s.st_mtime_ns,
-                      ctime_ns=s.st_ctime_ns, inode=s.st_ino, device=s.st_dev)
-        if stat.S_ISLNK(s.st_mode):
-            result[relative] = dict(common, kind='symlink', target=os.readlink(path))
-        elif stat.S_ISDIR(s.st_mode):
-            for child in sorted(path.iterdir()):
-                visit(child)
-        elif stat.S_ISREG(s.st_mode):
+        common = dict(path=str(root / relative), size=value.st_size,
+                      mtime_ns=value.st_mtime_ns, ctime_ns=value.st_ctime_ns,
+                      inode=value.st_ino, device=value.st_dev)
+        if require_directory and not stat.S_ISDIR(value.st_mode):
+            raise ValueError('Admitted library directory is missing or aliased: ' + relative)
+        if stat.S_ISLNK(value.st_mode):
+            result[relative] = dict(common, kind='symlink', target=os.readlink(name, dir_fd=parent))
+        elif stat.S_ISDIR(value.st_mode):
+            child = _open_directory(name, parent=parent)
+            try:
+                if _fd_identity(child) != {'device': value.st_dev, 'inode': value.st_ino}:
+                    raise ValueError('Selected directory changed during inventory')
+                for entry in sorted(os.listdir(child)):
+                    visit(child, entry, relative + '/' + entry)
+            finally:
+                os.close(child)
+        elif stat.S_ISREG(value.st_mode):
             result[relative] = dict(common, kind='file')
         else:
             raise ValueError('Special library entry is unsupported: ' + relative)
     for relative in library.get('include_dirs', []):
-        selected = _member(root, relative)
-        if not selected.is_dir() or selected.is_symlink():
-            raise ValueError('Admitted library directory is missing or aliased: ' + relative)
-        visit(selected)
+        with _relative_parent(root_fd, relative) as (parent, name):
+            visit(parent, name, Path(relative).as_posix(), require_directory=True)
     for relative in library.get('include_files', []):
-        selected = _member(root, relative)
-        if not selected.exists() and not selected.is_symlink():
-            raise ValueError('Admitted library metadata is missing: ' + relative)
-        visit(selected)
+        with _relative_parent(root_fd, relative) as (parent, name):
+            visit(parent, name, Path(relative).as_posix())
     return result
 
 
-def stable_copy(source, destination):
-    """Capture bytes with a no-follow descriptor and compare-before/after guard."""
-    source, destination = Path(source), Path(destination)
-    for parent in source.parents:
-        if parent.is_symlink():
-            raise ValueError('Cannot capture through symlink ancestry')
-    before = source.lstat()
-    if not stat.S_ISREG(before.st_mode):
-        raise ValueError('Stable capture requires a regular file')
-    destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+def _selection_binding(root_fd, relative, entry):
+    return {'root_identity': _fd_identity(root_fd), 'relative': Path(relative).as_posix(),
+            'scan_signature': _signature(entry)}
+
+
+def stable_copy(source, destination, *, admitted=None, source_root_fd=None, relative=None):
+    """Copy the exact scanned file, retaining pinned source and output handles."""
+    source, destination = Path(source).absolute(), Path(destination).absolute()
+    if source_root_fd is None:
+        with _directory_handle(source.parent) as fd:
+            return stable_copy(source, destination, admitted=admitted,
+                               source_root_fd=fd, relative=source.name)
+    if relative is None:
+        raise ValueError('A pinned root requires a relative selection')
+    with _regular_reader(source_root_fd, relative, admitted=admitted) as (reader, before):
+        sha, md5 = hashlib.sha256(), hashlib.md5()
+        with _directory_handle(destination.parent, create=True) as parent:
+            fd = os.open(destination.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                         0o600, dir_fd=parent)
+            with os.fdopen(fd, 'wb') as writer:
+                for block in iter(lambda: reader.read(1024 * 1024), b''):
+                    writer.write(block); sha.update(block); md5.update(block)
+                writer.flush(); os.fsync(writer.fileno())
+                written = os.fstat(writer.fileno())
+        if written.st_size != before.st_size:
+            raise ValueError('Captured length differs')
+        # Check the same admitted selection again without pathname reopening.
+        expected = admitted or dict(kind='file', device=before.st_dev, inode=before.st_ino,
+            size=before.st_size, mtime_ns=before.st_mtime_ns, ctime_ns=before.st_ctime_ns)
+        with _regular_reader(source_root_fd, relative, admitted=expected):
+            pass
+        # A moved/replaced output path cannot certify a different staged object.
+        staged = dict(kind='file', device=written.st_dev, inode=written.st_ino,
+            size=written.st_size, mtime_ns=written.st_mtime_ns, ctime_ns=written.st_ctime_ns)
+        with _directory_handle(destination.parent) as parent:
+            with _regular_reader(parent, destination.name, admitted=staged) as (check, _):
+                check_sha = hashlib.sha256()
+                for block in iter(lambda: check.read(1024 * 1024), b''):
+                    check_sha.update(block)
+                if check_sha.hexdigest() != sha.hexdigest():
+                    raise ValueError('Captured bytes differ from the admitted source')
+    receipt = dict(sha256=sha.hexdigest(), md5=md5.hexdigest(), size=before.st_size)
+    if admitted is not None:
+        receipt['source_selection'] = _selection_binding(source_root_fd, relative, admitted)
+    return receipt
+
+
+def _checked_payload(reader, receipt):
     sha, md5 = hashlib.sha256(), hashlib.md5()
-    with os.fdopen(os.open(source, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as reader:
-        observed = os.fstat(reader.fileno())
-        def key(s):
-            return s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns
-        if key(observed) != key(before):
-            raise ValueError('Source changed before capture')
-        with destination.open('xb') as writer:
-            for block in iter(lambda: reader.read(1024 * 1024), b''):
-                writer.write(block); sha.update(block); md5.update(block)
-            writer.flush(); os.fsync(writer.fileno())
-        if key(os.fstat(reader.fileno())) != key(before) or key(source.lstat()) != key(before):
-            raise ValueError('Source changed during capture; staged bytes are not published')
-    if destination.stat().st_size != before.st_size:
-        raise ValueError('Captured length differs')
-    return dict(sha256=sha.hexdigest(), md5=md5.hexdigest(), size=before.st_size)
+    for block in iter(lambda: reader.read(1024 * 1024), b''):
+        sha.update(block); md5.update(block)
+    size = os.fstat(reader.fileno()).st_size
+    if (size, sha.hexdigest(), md5.hexdigest()) != (receipt['size'], receipt['sha256'], receipt['md5']):
+        raise ValueError('Cached library capture differs; no payload was published')
+
+
+def _verified_link(source, destination, receipt, *, existing=False):
+    """Link only a checked inode; never certify a substituted pathname."""
+    source, destination = Path(source).absolute(), Path(destination).absolute()
+    with _directory_handle(source.parent) as source_parent:
+        fd = os.open(source.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                     dir_fd=source_parent)
+        with os.fdopen(fd, 'rb') as reader:
+            before = os.fstat(reader.fileno())
+            if not stat.S_ISREG(before.st_mode):
+                raise ValueError('Cached library capture is not a regular file')
+            _checked_payload(reader, receipt)
+            with _directory_handle(destination.parent, create=True) as parent:
+                linked = True
+                try:
+                    os.link(source.name, destination.name, src_dir_fd=source_parent,
+                            dst_dir_fd=parent, follow_symlinks=False)
+                except FileExistsError:
+                    if not existing:
+                        raise
+                    linked = False
+                with _regular_reader(parent, destination.name) as (check, value):
+                    if linked and (value.st_dev, value.st_ino) != (before.st_dev, before.st_ino):
+                        raise ValueError('Staged capture pathname changed during linking')
+                    _checked_payload(check, receipt)
+            # Creating our own hard link changes ctime, but not content identity.
+            after = os.fstat(reader.fileno())
+            if (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) != (
+                    before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns):
+                raise ValueError('Cached library capture changed during linking')
 
 
 class RcloneTransport:
@@ -294,42 +443,46 @@ def plan(config):
 
 
 def _sync_library_phase(config, db, directory, run, result, transport):
-    entries = scan_library(config['library'])
+    bound = db.execute('SELECT value FROM metadata WHERE name=?', ('binding',)).fetchone()
+    expected = config['library'].get('identity')
+    if bound:
+        expected = json.loads(bound[0])['library_observed_identity']
+    with _directory_handle(config['library']['root'], expected=expected) as root_fd:
+        return _sync_library_from_root(config, db, directory, run, result, transport, root_fd)
+
+
+def _sync_library_from_root(config, db, directory, run, result, transport, root_fd):
+    entries = scan_library(config['library'], root_fd=root_fd)
     library = directory / 'library'
     objects = directory / 'library-objects'
     pending = []
     for relative, entry in entries.items():
         signature = _signature(entry)
-        previous = db.execute('SELECT signature FROM files WHERE path=?', (relative,)).fetchone()
+        previous = db.execute('SELECT signature,receipt FROM files WHERE path=?', (relative,)).fetchone()
+        source_binding = _selection_binding(root_fd, relative, entry) if entry['kind'] == 'file' else None
         if previous and previous[0] == signature:
-            continue
+            proof = json.loads(previous[1])
+            if entry['kind'] == 'symlink' or proof.get('source_selection') == source_binding:
+                continue
         if entry['kind'] == 'symlink':
             receipt = dict(kind='symlink', target=entry['target'], bytes_uploaded=False)
         else:
             captured = library / relative
             cached = db.execute('SELECT signature,receipt,payload FROM captures WHERE path=?', (relative,)).fetchone()
-            if cached and cached[0] == signature:
+            if (cached and cached[0] == signature
+                    and json.loads(cached[1]).get('source_selection') == source_binding):
                 receipt = json.loads(cached[1])
                 payload = Path(cached[2])
                 # A failed cloud attempt does not require another full local
                 # allocation. Reuse only exact, independently hashed bytes.
-                sha, md5 = hashlib.sha256(), hashlib.md5()
-                with os.fdopen(os.open(payload, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as stream:
-                    for block in iter(lambda: stream.read(1024 * 1024), b''):
-                        sha.update(block); md5.update(block)
-                    size = os.fstat(stream.fileno()).st_size
-                if (size, sha.hexdigest(), md5.hexdigest()) != (receipt['size'], receipt['sha256'], receipt['md5']):
-                    raise ValueError('Cached library capture differs; no payload was published')
-                captured.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-                os.link(payload, captured)
+                _verified_link(payload, captured, receipt)
             else:
-                receipt = stable_copy(entry['path'], captured)
+                receipt = stable_copy(entry['path'], captured, admitted=entry,
+                                      source_root_fd=root_fd, relative=relative)
                 db.execute('INSERT OR REPLACE INTO captures VALUES (?,?,?,?)',
                            (relative, signature, _json(receipt), str(captured)))
-            objects.mkdir(exist_ok=True)
             object_path = objects / receipt['sha256']
-            if not object_path.exists():
-                os.link(captured, object_path)
+            _verified_link(captured, object_path, receipt, existing=True)
             receipt['remote_path'] = 'library/objects/' + receipt['sha256']
         pending.append((relative, signature, receipt))
     # Captured is distinct from synced. These reusable local bytes are not a
@@ -365,7 +518,9 @@ def _sync_library_phase(config, db, directory, run, result, transport):
     for prefix, expected in groups.items():
         if transport.verify_files(prefix, expected).get('verified') is not True:
             raise ValueError('Current library remote verification failed')
-    if scan_library(config['library'])!=entries:
+    with _directory_handle(config['library']['root'], expected=_fd_identity(root_fd)):
+        pass
+    if scan_library(config['library'], root_fd=root_fd)!=entries:
         raise ValueError('Library changed during transfer; namespace was not published')
     summary = {path:dict(**{k:v for k,v in entry.items() if k!='path'},content=content[path])
                for path,entry in entries.items()}
@@ -374,8 +529,8 @@ def _sync_library_phase(config, db, directory, run, result, transport):
     if pending or not prior_namespace or prior_namespace[0]!=namespace_hash:
         metadata = directory / 'library-manifest'
         _write_new(metadata/'manifest.json', _json(dict(format=FORMAT, run=run, entries=summary,
-                  source_root=str(_root(config['library']['root'])),
-                  source_identity=_identity(_root(config['library']['root'])),
+                  source_root=str(Path(config['library']['root']).expanduser().absolute()),
+                  source_identity=_fd_identity(root_fd),
                   external_links='recorded only', payload_layout='sha256-objects-v1', complete_transfer_set=True)).encode())
         complete = transport.put_tree(metadata, 'library/manifests/'+run, run)
         if complete.get('verified') is not True:
