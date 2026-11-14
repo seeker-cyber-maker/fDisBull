@@ -339,3 +339,9 @@ def test_cache_worktree_parent_requires_exact_mounted_uuid(tmp_path,monkeypatch)
     assert s._cache_volume_ok(root/'missing',root=root,runner=runner(s.CACHE_UUID)) is False
     monkeypatch.setattr(s.os.path,'ismount',lambda path:False)
     assert s._cache_volume_ok(worktrees,root=root,runner=runner(s.CACHE_UUID)) is False
+
+
+def test_source_environment_keeps_api_output_machine_readable():
+    env = s._clean_env({'FORCE_COLOR':'1', 'CLICOLOR_FORCE':'1', 'GH_FORCE_TTY':'1', 'PATH':'/bin'})
+    assert not {'FORCE_COLOR', 'CLICOLOR_FORCE', 'GH_FORCE_TTY'} & set(env)
+    assert env['NO_COLOR'] == '1' and env['CLICOLOR'] == '0'

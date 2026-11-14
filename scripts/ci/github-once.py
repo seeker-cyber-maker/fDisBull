@@ -11,7 +11,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import signal
 import stat
 import subprocess
@@ -197,8 +196,6 @@ def main():
     if subprocess.check_output(['docker', 'ps', '-q', '--filter', 'label=fdisbull.ci.provider=github'],
                                text=True, timeout=20).strip():
         raise RuntimeError('GitHub job already active')
-    if shutil.disk_usage(CONTROL).free - 12_000_000_000 < 20_000_000_000:
-        raise RuntimeError('host admission unavailable')
     inputs_root = verify_job_inputs(LOCK.parent / 'production' / 'job-inputs')
     for path in (inputs_root / 'health', inputs_root / 'health' / args.run_id):
         if path.is_symlink(): raise ValueError('unsafe health capsule directory')

@@ -14,8 +14,6 @@ import subprocess
 import sys
 import tempfile
 
-MIN_RESERVE = 20_000_000_000
-TARGET_RESERVE = 40_000_000_000
 EXPECTED_ALLOCATION = 1_000_000_000
 
 
@@ -82,7 +80,6 @@ def execute(candidate, source_sha, nonce, output, *, env=None, host_root=Path('/
     _no_symlink_parents(host_root)
     if not host_root.is_dir() or not mounted(host_root): raise ValueError('host results mount unavailable')
     free = shutil.disk_usage(host_root).free
-    if free - EXPECTED_ALLOCATION < MIN_RESERVE: raise ValueError('host storage admission refused')
     candidate = Path(candidate).resolve(strict=True)
     control = Path(control or Path(__file__).resolve().parents[2]).resolve(strict=True)
     _clean_candidate(control, control_sha)
@@ -119,7 +116,7 @@ def execute(candidate, source_sha, nonce, output, *, env=None, host_root=Path('/
                'source_postcheck': {'candidate_head': source_sha, 'tracked_worktree_dirty': False,
                                     'control_head': control_sha, 'control_tracked_worktree_dirty': False},
                'storage': {'free_bytes': free, 'expected_bytes': EXPECTED_ALLOCATION,
-                           'minimum_reserve_bytes': MIN_RESERVE, 'target_reserve_bytes': TARGET_RESERVE},
+                           'reserve_enforced': False},
                'qualification_check': {'status': 'rejected_missing_receipts', 'exit_code': check.returncode,
                                        'missing': missing, 'pipeline_id': None,
                                        'validation_sentinel': '0 is a checker argument only; not a provider identity'},

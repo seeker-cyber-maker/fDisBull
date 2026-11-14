@@ -317,3 +317,11 @@ def test_probe_main_has_bounded_input_and_only_safe_output(monkeypatch,capsys):
     monkeypatch.setattr(p.sys,'stdin',SimpleNamespace(buffer=io.BytesIO(b'x'*8193)))
     assert p._probe_main()==0
     assert json.loads(capsys.readouterr().out)=={'schema':p.TOKEN_PROBE_SCHEMA,'status':'error'}
+
+
+def test_publisher_environment_keeps_api_output_machine_readable(monkeypatch):
+    for key in ('FORCE_COLOR', 'CLICOLOR_FORCE', 'GH_FORCE_TTY'):
+        monkeypatch.setenv(key, '1')
+    env = p._env()
+    assert not {'FORCE_COLOR', 'CLICOLOR_FORCE', 'GH_FORCE_TTY'} & set(env)
+    assert env['NO_COLOR'] == '1' and env['CLICOLOR'] == '0'
