@@ -9,8 +9,8 @@ copies. Source integration, n8n's finished CI continuation, exact-candidate
 ordinary/native qualification and disconnected package acceptance remain separate
 open gates. No 0.35.0 tag, publication or installation is established by this entry.
 
-The integration branch is `codex/release-0.35.0-integration-20261114`. Its contribution
-disposition will be frozen before n8n qualifies the candidate. n8n's existing control
+The integration branch is `codex/release-0.35.0-integration-20261114`. The [contribution disposition](CONTRIBUTION_DISPOSITION_0.35.md) records included,
+equivalent and preserved/open work; it must close before candidate freeze. n8n's existing control
 state owns the current release record; its canonical record link is not yet supplied.
 Historical records below retain their original dates and provider scope.
 

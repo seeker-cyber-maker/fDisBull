@@ -23,7 +23,7 @@ def test_identity_final_release_fields():
     report = identity()
     assert report["format"] == "fdisbull-runtime-identity-1"
     assert report["runtime_version"] == __version__
-    assert report["primary_version"] == "0.34.1"
+    assert report["primary_version"] == "0.35.0"
     assert report["candidate_number"] is None
     assert report["candidate_label"] is None
     assert report["runtime_version"] == report["distribution_version"]
@@ -42,7 +42,7 @@ def test_release_and_candidate_mapping_matches_pep440():
         assert report["candidate_label"] == "0.34.1-rc9"
         assert report["distribution_version"] == "0.34.1rc9"
         # PEP 440 normalized equivalent stays in distribution metadata. The
-        # runtime constant still says 0.34.1, so the report records the
+        # runtime constant identifies this release, so the report records the
         # candidate/metadata-vs-runtime mismatch as a diagnostic.
         assert report["metadata_normalization"] == "distribution_metadata_mismatch"
         # Numeric RC ordering: rc9 < rc10 must follow from the parsed integer.
@@ -121,7 +121,7 @@ def test_preflight_reports_ready_and_missing_per_capability(manifest, capsys):
     assert by_name["fdisbull-investigate"]["status"] == "ready"
     assert by_name["fdisbull"]["status"] == "ready"
     assert by_name["not-installed-anywhere"]["status"] == "missing"
-    assert body["runtime_identity"]["primary_version"] == "0.34.1"
+    assert body["runtime_identity"]["primary_version"] == "0.35.0"
     # Independent checks continue after ordinary failures.
     assert body["summary"]["total"] == len(body["checks"])
 
@@ -199,7 +199,7 @@ def test_version_json_prints_full_identity(capsys):
     assert exit_info.value.code == 0
     report = json.loads(capsys.readouterr().out)
     assert report["format"] == "fdisbull-runtime-identity-1"
-    assert report["primary_version"] == "0.34.1"
+    assert report["primary_version"] == "0.35.0"
     assert report["runtime_version"] == __version__
 
 
@@ -221,7 +221,7 @@ def test_capabilities_expose_candidate_fields():
 
     report = capabilities()
     package = report["package"]
-    assert package["primary_version"] == "0.34.1"
+    assert package["primary_version"] == "0.35.0"
     # Omitted until a candidate-tagged runtime sets it.
     assert package.get("candidate_number") is None
     assert package["runtime_version"] == __version__
