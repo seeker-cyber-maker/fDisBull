@@ -112,3 +112,25 @@ def test_ordinary_load_never_falls_back_to_machine_loader(raw_project,tmp_path,m
     # Native test-peer close has no DOS lifecycle; restore its base class.
     session.__class__=MachineDebugSession
     session.close()
+
+
+def test_machine_artifact_uses_checkpoint_budget_without_widening_other_kinds(raw_project,tmp_path):
+    session,peer=stopped_session(raw_project,tmp_path)
+    payload=b'authored large machine state'.ljust(16*1024**2+1,b'\0')
+    try:
+        saved=raw_project._debug_artifact(session.run_id,'large.qcow2','machine-state',payload,{})
+        row=raw_project.db.execute('SELECT data,sha256 FROM debug_artifacts WHERE id=?',
+                                  (saved['artifact'],)).fetchone()
+        assert bytes(row['data'])==payload and row['sha256']==saved['sha256']
+        assert saved['size']==len(payload) and peer.calls==[]
+        for kind in ('image','unknown-kind'):
+            with pytest.raises(ValueError,match='per-kind size budget'):
+                raw_project._debug_artifact(session.run_id,'oversized.dat',kind,payload,{})
+        # The separate machine kind inherits the existing full-state ceiling;
+        # ordinary artifact kinds retain their 16 MiB limit.
+        oversized=bytes(128*1024**2+1)
+        for kind in ('state','machine-state'):
+            with pytest.raises(ValueError,match='per-kind size budget'):
+                raw_project._debug_artifact(session.run_id,'oversized.qcow2',kind,oversized,{})
+    finally:
+        session.close()

@@ -395,7 +395,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
 
     def _debug_artifact(self, run, name, kind, data, metadata):
         name = _file_name(name)
-        if len(data) > (128 if kind=='state' else 16)*1024*1024:
+        if len(data) > (128 if kind in ('state','machine-state') else 16)*1024*1024:
             raise ValueError('Runtime artifact exceeds per-kind size budget')
         row=self.db.execute('SELECT version FROM debug_runs WHERE id=?',(run,)).fetchone()
         if row is None:
