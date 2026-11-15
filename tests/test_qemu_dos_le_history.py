@@ -19,7 +19,7 @@ def _encoded(value):
 def le_history(active_le, monkeypatch):
     from fdisbull import qemu_dos_le_history as module
     get_provider = module.get_provider
-    checkpoint = SimpleNamespace(MAX_DESCRIPTOR=0)
+    checkpoint = SimpleNamespace(MAX_DESCRIPTOR=0, _producer=lambda: {'authored-checkpoint.py': 'a' * 64})
     monkeypatch.setattr(module, '_checkpoints', lambda: checkpoint)
 
     o, s = active_le, active_le.session
@@ -349,3 +349,74 @@ def test_changed_source_producer_invalidates_cursor_without_replacing_handle(le_
     assert not status['valid'] and status['cursor'] is None
     assert s._le_source is handle and handle['producer'] == producer
     assert s._qemu_history_live == mz_live and not o.intervals
+
+
+def _assert_no_capture_effects(o, calls, artifacts):
+    assert o.session.calls == calls
+    assert o.project.db.execute('SELECT count(*) FROM debug_artifacts').fetchone()[0] == artifacts
+    assert not o.intervals
+
+
+def test_inert_attach_then_independent_bind_cannot_capture_until_explicit_restore(le_history):
+    o, s, h = le_history, le_history.session, le_history.provider
+    root = h.rewind_start(max_steps=4, max_bytes=200000)
+    s.dos_source_unbind()
+    s._qemu_le_history_provider = None
+    s.__dict__.pop('_qemu_le_history_live', None)
+    attached_provider = o.get_provider(s)
+    attached = attached_provider.rewind_start(history=root['history'])
+    assert not attached['valid'] and attached['cursor'] is None
+    s.dos_source_bind()
+    calls = deepcopy(s.calls)
+    artifacts = o.project.db.execute('SELECT count(*) FROM debug_artifacts').fetchone()[0]
+    with pytest.raises(ValueError):
+        attached_provider.rewind_record()
+    _assert_no_capture_effects(o, calls, artifacts)
+    restored = attached_provider.rewind(history=root['history'], node=root['cursor'])
+    assert restored['valid'] and restored['cursor'] == root['cursor']
+    assert attached_provider.rewind_record()['retained_nodes'] == 2
+
+
+def test_known_owner_mutation_and_fresh_bind_can_record_explicit_capture(le_history):
+    o, s, h = le_history, le_history.session, le_history.provider
+    root = h.rewind_start(max_steps=4, max_bytes=200000)
+    vm, process, epoch = s.vm, s.vm.process, s._runtime_epoch
+    previous_binding = s._le_source['recipe']['binding_id']
+    s.vm.history_operation_guard('write_memory', (), {})
+    o.peer.cpu['ip'] += 2
+    s.dos_source_bind()
+    assert s.vm is vm and s.vm.process is process and s._runtime_epoch == epoch
+    assert s._le_source['recipe']['binding_id'] != previous_binding
+    assert not h.rewind_status()['valid']
+    captured = h.rewind_record()
+    assert captured['retained_nodes'] == 2
+    assert captured['nodes'][-1]['parent'] == root['cursor']
+    assert captured['nodes'][-1]['edge']['kind'] == 'capture' and not o.intervals
+
+
+def test_plain_source_load_cannot_capture_old_history_until_explicit_history_restore(le_history):
+    o, s, h = le_history, le_history.session, le_history.provider
+    root = h.rewind_start(max_steps=4, max_bytes=200000)
+    old_vm, old_epoch = s.vm, s._runtime_epoch
+    source = root['nodes'][0]['checkpoint']['artifact']
+    o.checkpoint.load_le_source_state(s, source)
+    assert s.vm is not old_vm and s._runtime_epoch != old_epoch
+    assert s.dos_source_binding()['live']
+    calls = deepcopy(s.calls)
+    artifacts = o.project.db.execute('SELECT count(*) FROM debug_artifacts').fetchone()[0]
+    with pytest.raises(ValueError):
+        h.rewind_record()
+    _assert_no_capture_effects(o, calls, artifacts)
+    h.rewind(history=root['history'], node=root['cursor'])
+    assert h.rewind_record()['retained_nodes'] == 2
+
+
+def test_changed_checkpoint_producer_refuses_old_history_before_admission(le_history, monkeypatch):
+    o, s, h = le_history, le_history.session, le_history.provider
+    h.rewind_start(max_steps=4, max_bytes=200000)
+    monkeypatch.setattr(o.checkpoint, '_producer', lambda: {'authored-checkpoint.py': 'b' * 64})
+    calls = deepcopy(s.calls)
+    artifacts = o.project.db.execute('SELECT count(*) FROM debug_artifacts').fetchone()[0]
+    with pytest.raises(ValueError):
+        h.rewind_record()
+    _assert_no_capture_effects(o, calls, artifacts)

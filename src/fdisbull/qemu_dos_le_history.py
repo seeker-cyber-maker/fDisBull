@@ -103,7 +103,13 @@ class LESourceHistoryProvider(QemuDOSHistoryMixin):
     def _history_identity(self):
         identity = super()._history_identity()
         identity.update(_source_identity(self._owner))
+        identity['checkpoint_producer'] = deepcopy(_checkpoints()._producer())
         return identity
+
+    def _history_publish(self, manifest, *, reason):
+        if manifest.get('identity') != self._history_identity():
+            raise ValueError('LE history source or checkpoint producer identity changed before publication')
+        return super()._history_publish(manifest, reason=reason)
 
     def _history_admission(self):
         from .qemu_owned_checkpoint import _preflight
@@ -152,7 +158,11 @@ class LESourceHistoryProvider(QemuDOSHistoryMixin):
         super()._validate_manifest(manifest)
         identity = manifest['identity']
         if (identity.get('source_view') != 'embedded-le'
-                or not _hex_digest(identity.get('application_source_sha256'))):
+                or not _hex_digest(identity.get('application_source_sha256'))
+                or not isinstance(identity.get('checkpoint_producer'), dict)
+                or not identity['checkpoint_producer']
+                or any(not isinstance(name, str) or not name or not _hex_digest(digest)
+                       for name, digest in identity['checkpoint_producer'].items())):
             raise ValueError('LE history source identity is invalid')
         for node in manifest['nodes']:
             cp = node['checkpoint']
@@ -229,6 +239,29 @@ class LESourceHistoryProvider(QemuDOSHistoryMixin):
     @_capture_only
     def rewind_record(self, count=1, timeout_ms=60000, *, advance='capture'):
         self._history_supported()
+        live = self._qemu_history_live
+        if not isinstance(live, dict) or not live.get('history'):
+            raise ValueError('Start or explicitly restore an LE history node before capture')
+        manifest, _ = self._history_latest(live['history'])
+        if (live.get('history') != manifest.get('_artifact_id')
+                or live.get('history_id') != manifest['id'] or manifest.get('pending') is not None):
+            raise ValueError('LE history has a stale revision or unresolved operation; no capture was admitted')
+        prior = live.get('fingerprint')
+        current = self._history_live_fingerprint()
+        def lineage(fingerprint):
+            if not isinstance(fingerprint, dict) or not isinstance(fingerprint.get('le_source'), dict):
+                return None
+            source = fingerprint['le_source']
+            values = (fingerprint.get('epoch'), fingerprint.get('process_nonce_sha256'),
+                      source.get('owner'), source.get('process'))
+            if (not isinstance(values[0], str) or not values[0] or not _hex_digest(values[1])
+                    or any(type(value) is not int or value <= 0 for value in values[2:])):
+                return None
+            return values
+        # Capture may follow an unobserved interval and a newly bound handle,
+        # but it cannot adopt a cold/foreign machine into an existing lineage.
+        if lineage(prior) is None or lineage(prior) != lineage(current):
+            raise ValueError('Explicitly restore an LE history node before capture on this machine owner')
         _checkpoints().admit_le_source_capture(self._owner, timeout_ms=self._history_remaining_ms())
         return QemuDOSHistoryMixin.rewind_record.__wrapped__(self, count=count, timeout_ms=timeout_ms,
                                                            advance=advance)
