@@ -294,6 +294,9 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if row is not None and row['kind']=='machine-state':
             from .qemu_owned_checkpoint import inspect_owned_machine_state
             return inspect_owned_machine_state(self, artifact)
+        if row is not None and row['kind']=='le-source-state':
+            from .qemu_dos_le_checkpoint import inspect_le_source_state
+            return inspect_le_source_state(self, artifact)
         if row is None or row['kind']!='state':
             raise ValueError('Unknown native state artifact')
         data = bytes(row['data'])
@@ -342,7 +345,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
-        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1', 'fdisbull-qemu-owned-machine-qcow2-v1'):
+        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1', 'fdisbull-qemu-owned-machine-qcow2-v1', 'fdisbull-qemu-dos-le-checkpoint-1'):
             raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
@@ -1388,6 +1391,10 @@ class DebugWorkspace:
         methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
         methods.update({'debug-save-machine-state':'save_machine_state',
                         'debug-load-machine-state':'load_machine_state'})
+        methods.update({'debug-save-le-source-state':'save_le_source_state',
+                        'debug-load-le-source-state':'load_le_source_state',
+                        'debug-le-rewind-start':'le_rewind_start','debug-le-rewind-status':'le_rewind_status',
+                        'debug-le-rewind-record':'le_rewind_record','debug-le-rewind':'le_rewind'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
@@ -1458,6 +1465,12 @@ class DebugWorkspace:
             if (getattr(selected,'metadata',{}).get('backend') != 'qemu-dos'
                     or not getattr(selected,'capabilities',{}).get('owned_machine_checkpoints')):
                 raise ValueError('Owned-machine checkpoints require an enabled native QEMU DOS session')
+        if method in ('debug-save-le-source-state','debug-load-le-source-state',
+                      'debug-le-rewind-start','debug-le-rewind-status','debug-le-rewind-record','debug-le-rewind'):
+            capability = 'le_source_histories' if method.startswith('debug-le-rewind') else 'le_source_checkpoints'
+            if (getattr(selected,'metadata',{}).get('backend') != 'qemu-dos'
+                    or not getattr(selected,'capabilities',{}).get(capability)):
+                raise ValueError('LE source checkpoints/history require an enabled native QEMU DOS session')
         operation=getattr(selected,methods[method],None)
         if operation is None:
             if getattr(session,'metadata',{}).get('backend')=='qemu-dos':

@@ -636,6 +636,19 @@ def save_owned_machine_state(session, name='owned-machine.qcow2', max_bytes=None
 
 @full_load
 def load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protected_source=False):
+    return _load_owned_machine_state(session, artifact, timeout_ms,
+                                    rebind_protected_source=rebind_protected_source)
+
+
+def _load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protected_source=False,
+                              *, _le_checkpoint=None):
+    """Trusted full-loader body; its caller must own a full_load scope."""
+    if not getattr(session, '_qemu_cpu_delta_full_load_depth', 0):
+        raise ValueError('Owned machine loader requires a trusted full-load scope')
+    if _le_checkpoint is not None and (not rebind_protected_source
+            or not isinstance(_le_checkpoint, dict)
+            or _le_checkpoint.get('machine', {}).get('artifact') != artifact):
+        raise ValueError('LE source checkpoint and native machine reference differ')
     if type(rebind_protected_source) is not bool:
         raise ValueError('rebind_protected_source must be a literal Boolean')
     from .qemu_checkpoint import snapshot_job, validate_qcow_header
@@ -740,6 +753,9 @@ def load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protect
             bind_history = getattr(session, '_history_bind', None)
             if bind_history is not None:
                 bind_history()
+            le_history = getattr(session, '_qemu_le_history_provider', None)
+            if le_history is not None:
+                le_history._history_bind()
             if bundle['parent_return_observer']:
                 session._return_breakpoint = MachineContext.breakpoint(session,
                     session._ready['helper_segment'] * 16 + session._ready['exit_wait_ip'])['breakpoint_id']
@@ -767,7 +783,14 @@ def load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protect
             if protected_binding is not None:
                 result.update(protected_source_binding=protected_binding,
                     source_revalidation_scope='fresh stopped LE admission; not restored MZ authority or allocation lifetime')
-            session._event('load-machine-state', result)
+            if _le_checkpoint is not None:
+                from .qemu_dos_le_checkpoint import complete_le_restore
+                result.update(complete_le_restore(session, _le_checkpoint, protected_binding))
+            with session.project.transaction(True):
+                session._event('load-machine-state', result)
+                if _le_checkpoint is not None:
+                    session._event('load-le-source-state', result)
+                _remaining(deadline)
             _remaining(deadline)
             attest_machine_restore(session, result)
             return result

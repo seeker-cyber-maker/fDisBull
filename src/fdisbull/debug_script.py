@@ -53,6 +53,9 @@ OPERATIONS = {
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
     'save-machine-state':'save_machine_state', 'load-machine-state':'load_machine_state',
+    'save-le-source-state':'save_le_source_state', 'load-le-source-state':'load_le_source_state',
+    'le-rewind-start':'le_rewind_start', 'le-rewind-status':'le_rewind_status',
+    'le-rewind-record':'le_rewind_record', 'le-rewind':'le_rewind',
     'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
     'rewind-start':'rewind_start', 'rewind-status':'rewind_status',
     'rewind-record':'rewind_record', 'rewind':'rewind',
@@ -190,6 +193,34 @@ def validate_script(script, *, session=None):
                             raise ValueError('Owned-machine artifact must be a nonempty identifier or result reference')
                         if 'rebind_protected_source' in params and type(params['rebind_protected_source']) is not bool:
                             raise ValueError('rebind_protected_source must be a literal Boolean')
+                    if op in ('save-le-source-state','load-le-source-state','le-rewind-start',
+                              'le-rewind-status','le-rewind-record','le-rewind'):
+                        if (backend or actual) != 'qemu-dos':
+                            raise ValueError('LE source scripts require the qemu-dos backend')
+                        if session is not None:
+                            capability = 'le_source_histories' if op.startswith('le-rewind') else 'le_source_checkpoints'
+                            if not getattr(session,'capabilities',{}).get(capability):
+                                raise ValueError('LE source checkpoints/history are not enabled')
+                            if session.project.db.in_transaction:
+                                raise ValueError('LE source scripts require no caller transaction')
+                        if 'name' in params:
+                            from .external_files import _file_name
+                            _file_name(params['name'])
+                            if params['name'].startswith('$'):
+                                raise ValueError('LE source checkpoint names must be literal')
+                        from .qemu_dos_le_checkpoint import MAX_DESCRIPTOR
+                        for key, limits in (('timeout_ms',(1,600000)), ('max_steps',(1,128)),
+                                            ('max_bytes',(MAX_DESCRIPTOR+1,1024**3 if op=='le-rewind-start' else 128*1024**2))):
+                            if key in params:
+                                bounded(params[key],key,*limits)
+                        for key in ('artifact','history','node'):
+                            if key in params and (not isinstance(params[key],str) or not params[key]):
+                                raise ValueError('LE source references must be nonempty identifiers or result references')
+                        if op=='le-rewind-record':
+                            if params.get('advance','capture') != 'capture' or type(params.get('count',1)) is not int or params.get('count',1) != 1:
+                                raise ValueError('LE source history records one explicit capture; stepping is unsupported')
+                        if op=='le-rewind' and 'count' in params:
+                            bounded(params['count'],'count',1,128)
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary
@@ -603,7 +634,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             for key in ('start','stop'):
                 call=step[key]
                 session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
-    restore_operations = {'load-state','load-machine-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
+    restore_operations = {'load-state','load-machine-state','load-le-source-state','le-rewind',
+                          'load-anchor-stone','rewind','delta-recover','timeline-rewind'}
     def frame_owned_keys():
         from .keyboard_input import KEYS
         result = session.keyboard_state() if native_frames else session.call('input.keyboard.state')
@@ -691,7 +723,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op']=='load-machine-state':
+            if step['op'] in ('load-machine-state','save-le-source-state','load-le-source-state',
+                              'le-rewind-start','le-rewind-record','le-rewind'):
                 if 'timeout_ms' in params:
                     bounded(params['timeout_ms'],'timeout_ms',1,600000)
                 params['timeout_ms']=min(params.get('timeout_ms',60000),remaining)

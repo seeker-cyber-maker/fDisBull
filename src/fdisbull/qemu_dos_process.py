@@ -390,6 +390,9 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 self.capabilities['frame_timeline_input'] = 'owned stopped frame-key edges and checkpoint restore; ordinary leases and schedules excluded'
             self.capabilities['save_states'] = checkpoint_tool is not None
             self.capabilities['owned_machine_checkpoints'] = bool(self.capabilities['rewind'])
+            self.capabilities['le_source_checkpoints'] = bool(self.capabilities['rewind'])
+            self.capabilities['le_source_histories'] = bool(self.capabilities['rewind'])
+            self.capabilities['le_source_checkpoint_scope'] = 'qualified stopped LE relation; no DOS task/allocation lifetime'
             self.capabilities['owned_machine_checkpoint_scope'] = (
                 'owned VM and private disk; original DOS source binding is retired on restore')
             self.capabilities['dos_protected_source_admission'] = True
@@ -736,6 +739,39 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         return load_owned_machine_state(self, artifact, timeout_ms=timeout_ms,
                                         rebind_protected_source=rebind_protected_source)
 
+    @machine_operation
+    def save_le_source_state(self, name='dos-le-source.json', *, max_bytes=None, timeout_ms=60000):
+        """Persist a qualified LE descriptor joined to a complete machine state."""
+        from .qemu_dos_le_checkpoint import save_le_source_state
+        return save_le_source_state(self, name, max_bytes=max_bytes, timeout_ms=timeout_ms)
+
+    def load_le_source_state(self, artifact, *, timeout_ms=60000):
+        from .qemu_dos_le_checkpoint import load_le_source_state
+        return load_le_source_state(self, artifact, timeout_ms=timeout_ms)
+
+    def le_rewind_start(self, max_steps=16, max_bytes=536870912, *, history=None, timeout_ms=60000):
+        return self._le_history_call('rewind_start', timeout_ms, max_steps=max_steps,
+                                     max_bytes=max_bytes, history=history, timeout_ms=timeout_ms)
+
+    def le_rewind_status(self, *, history=None):
+        return self._le_history_call('rewind_status', 60000, history=history)
+
+    def le_rewind_record(self, count=1, timeout_ms=60000, *, advance='capture'):
+        return self._le_history_call('rewind_record', timeout_ms, count=count,
+                                     timeout_ms=timeout_ms, advance=advance)
+
+    def le_rewind(self, count=1, *, history=None, node=None, timeout_ms=60000):
+        return self._le_history_call('rewind', timeout_ms, count=count, history=history,
+                                     node=node, timeout_ms=timeout_ms)
+
+    def _le_history_call(self, operation, budget_ms, **parameters):
+        # Provider/guard installation is part of the same stable owner lock
+        # and deadline as the operation, including replacement on restore.
+        from .qemu_dos_le_history import get_provider
+        from .qemu_owned_checkpoint import _operation
+        with _operation(self, budget_ms):
+            return getattr(get_provider(self), operation)(**parameters)
+
     def _save_entry_state_v1(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
         from .external_files import _file_name
         from .qemu_checkpoint import snapshot_job, validate_qcow_header
@@ -768,6 +804,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
     def load_state(self, artifact, *, timeout_ms=60000):
         from .qemu_dos_checkpoint import PROCESS_FORMATS, load_process_state
         row = self.project.db.execute('SELECT metadata FROM debug_artifacts WHERE id=?', (artifact,)).fetchone()
+        if row is not None and json.loads(row['metadata']).get('format') == 'fdisbull-qemu-dos-le-checkpoint-1':
+            raise ValueError('LE source checkpoints require load_le_source_state; no MZ source authority is restored')
         if row is not None and json.loads(row['metadata']).get('format') == 'fdisbull-qemu-owned-machine-qcow2-v1':
             raise ValueError('Owned-machine artifacts require load_machine_state; no DOS source binding is restored')
         if row is not None and json.loads(row['metadata']).get('format') in PROCESS_FORMATS:
@@ -954,6 +992,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
     @property
     def script_operations(self):
         return super().script_operations | {'save-machine-state', 'load-machine-state',
+            'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
+            'le-rewind-record', 'le-rewind',
             'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',
             'delta-start','delta-status','delta-record','delta-rewind','delta-recover',
             'frame-advance', 'frame-inputs', 'timeline-start', 'timeline-status', 'timeline-advance',
