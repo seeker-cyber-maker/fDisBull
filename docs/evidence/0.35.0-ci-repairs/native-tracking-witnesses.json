@@ -1,4 +1,24 @@
 {
+  "actual_linux_stable_failure": {
+    "cleanup": {
+      "checked": 2,
+      "running_after": 0,
+      "stopped": 0
+    },
+    "failed": 3,
+    "failure_ids": [
+      "tests.test_debugger::test_real_breakpoint_translation_trace_restart_and_patch_isolation",
+      "tests.test_debugger::test_native_state_fork_edits_and_reinjects_without_changing_parent",
+      "tests.test_cpu_deltas_native::test_real_delta_projection_freezes_until_native_recovery"
+    ],
+    "job_id": "b7d7988d-2706-490f-a1ad-9936a2f971f1",
+    "native_qualification": false,
+    "passed": 2438,
+    "reusable_built_backend_sha256": "de492b658844fc342275a17d820cb71017c6a062a3115ee560e5749b1a838f53",
+    "reuse_preflight_sha256": "99592fff9bb0e5317adcb3e5e1ad0576ceff9683d0713ca6068644f5db033b97",
+    "run_id": "58dbc3d6-1540-4bea-83f0-272431ef0628",
+    "source_sha": "21b7841fb5a0ce82d9d0feafdd96f276ba8d6f1c"
+  },
   "actual_mac_check": {
     "core_wheel_sha256": "cdc1d23b510cb6a2fd88f7a7fea41cba93e8dc47a3b99fb02711c079302328d3",
     "dosbox_backend_sha256": "5aa7ddd05e6ebffa5a20da39daf728b31fd2fcb8cc0e8ff917e65795b13ede45",
@@ -15,6 +35,20 @@
     "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "stdout_sha256": "07fe025b269af732476072b2de2420feb5594837858e6365bc3421c261828828"
   },
+  "actual_mac_cpu_delta_check": {
+    "elapsed_seconds": 5.748,
+    "errors": 0,
+    "failed": 0,
+    "junit_sha256": "e521d9cdf76a4ccc99f9763660edbdcfe44058c1ce88afe70b4f28389a4e9a90",
+    "passed": 6,
+    "post_run_summary_sha256": "9eb354b3569e69da8acfc0e86751ea398a8f5b125a1d70740f94b7be0c98ab7d",
+    "scope": "Affected CPU-delta file; prototype against unchanged installed CI core and real DOSBox backend.",
+    "skipped": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "5c5f4ea077bec3cd09c4549f0c37eb8bf43d68e757f47d17ab73ed26035ba896",
+    "test_file": "tests/test_cpu_deltas_native.py",
+    "test_file_sha256": "d01bef3baceb74a5671f9ab71c3002b53f02efff7aec19b757071f817c79b49a"
+  },
   "actual_prior_failures": [
     {
       "cause": "Exact artifact-kind set omitted newly automatic memory-snapshot/runtime-tracking records. Breakpoint, trace, screenshot and restart operations reached the final witness assertion.",
@@ -24,6 +58,10 @@
     {
       "cause": "Total artifact count expected two states but now also includes automatic tracking records. Preserve no-additional-state semantics by checking state artifact IDs.",
       "test": "test_native_state_fork_edits_and_reinjects_without_changing_parent"
+    },
+    {
+      "cause": "Automatic startup tracking invalidates the empty-artifact assertion. The rejected script must preserve the exact baseline artifact ID/kind/SHA set and CPU/memory, with diagnostics still validated.",
+      "test": "test_real_delta_projection_freezes_until_native_recovery"
     }
   ],
   "limits": [
@@ -40,6 +78,7 @@
     "Require original trace/screenshot and known automatic snapshot/tracking kinds, bound to the exited run.",
     "Validate paused-CPU snapshot metadata; export tracking JSON and validate schema, event identity and SHA-256.",
     "Retain trace addresses, PNG/hash/export, project restart and patched-child isolation checks.",
-    "Require the expected parent/fork state IDs and unchanged state-ID set after the rejected edit."
+    "Require the expected parent/fork state IDs and unchanged state-ID set after the rejected edit.",
+    "Require exact artifact ID/kind/SHA equality before/after the rejected script, validate automatic diagnostics, and retain all CPU-delta freeze/rewind/recovery checks."
   ]
 }
