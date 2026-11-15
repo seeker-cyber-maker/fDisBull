@@ -1,0 +1,74 @@
+{
+  "api": {
+    "eligible": "Original unlayered, single-vCPU, unpaged protected32 LE carrier with A20; fresh CPU/GDT/readback proof",
+    "load_machine_state_option": "rebind_protected_source=True",
+    "mz_live_ranges_retired": true,
+    "old_handles_retired": true,
+    "one_lock_and_deadline": true,
+    "protected_source_rebound": true,
+    "source_binding_restored": false
+  },
+  "constraints": {
+    "dosbox_x_default_and_retained": true,
+    "no_ci": true,
+    "no_commercial_bytes_in_repository": true,
+    "no_merge": true,
+    "no_native_rebuild": true,
+    "no_release": true,
+    "no_shared_activation": true
+  },
+  "date": "2026-11-15",
+  "doom": {
+    "all_guests_reaped": true,
+    "arguments": "-nosound -nomouse",
+    "canonical_source_boundaries_per_trace": 4,
+    "cold_query_and_export": true,
+    "cold_receipt_sha256": "d67880906e5e25f884aefc05ab5a9ca124f4c47e866a994a94f6ff34a9756e72",
+    "cpu_restored_exactly": true,
+    "fresh_binding_ids_and_capture_epochs": true,
+    "hot_receipt_sha256": "1ea38faec3bce09aaefdf5f2df227c89b20ee4e0aa8f6f22f7ddfa0b9a350163",
+    "hot_restore": true,
+    "input": "Verified copy of previously closed E1M1 machine checkpoint; no fresh game launch or new gameplay claim",
+    "new_checkpoint": {
+      "artifact": "5309715436f2492f83dca602b67b9388",
+      "sha256": "39ca479fc8eb9423a1e3a15c3044c257b1344fd581b4be27447408287072525e",
+      "size": 44410703
+    },
+    "original_checkpoint_sha256": "7975550c822161f2a7c8e6fd75df073dc149552b28b5316214424b52d1dfd079",
+    "original_executables_and_canonical_prior_evidence_unchanged": true,
+    "separate_python_cold_restore": true
+  },
+  "failed_candidates_retained": [
+    {
+      "cause": "Common trace guard incorrectly required live MZ mapping for fresh LE handle",
+      "commit": "8da9ca3b3ef7d86a89cbb19962e30d18359a2f77",
+      "failed_native": 2,
+      "passed_native": 29
+    },
+    {
+      "cause": "Virtual LE historical reader compared restored admission to launch clock admission",
+      "commit": "ee443b152e86c62032a2519bebab2a675a463231",
+      "failed_native": 1,
+      "passed_native": 30
+    }
+  ],
+  "open": [
+    "Persisted LE source checkpoint/history route explicitly requested in the newer Doom chat; next owned slice",
+    "Task/allocation lifetime and aliased-page source ownership remain unproved",
+    "Broader audio/mouse/device/media/timing and portable delivery",
+    "Full DOSBox-X parity/default/removal qualification"
+  ],
+  "runtime_commit": "b4d74d7b2d67c3a31fc4b3ab406e4e263e5c6bc2",
+  "runtime_files": 711,
+  "schema": "fdisbull-qemu-le-rebind-verification-1",
+  "scope": "Fresh stopped LE admission after owned machine restore; not persisted source checkpoint/history continuity",
+  "source_wheel_install_equal": true,
+  "tests": {
+    "host_receipt_sha256": "ce86b5daa0737f0e68491ad4ba70aaeea20d94a87d7234f8aeaa44cfbfc7ee9d",
+    "installed_host": 543,
+    "native": 31,
+    "native_receipt_sha256": "ebce78920ce50a75065c7607916600b743bcf07ef27292d62055f753009cb4e6",
+    "skipped": 0
+  },
+  "wheel_sha256": "276074a81fb5b6101103d920d7f5f293249fd723a3b33942aa0f8bce144b517e"
+}

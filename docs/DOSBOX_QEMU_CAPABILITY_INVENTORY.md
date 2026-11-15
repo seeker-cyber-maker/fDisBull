@@ -41,6 +41,9 @@ The separate native-only [owned-machine recovery contract](DOS_OWNED_MACHINE_CHE
 now has [bounded original-Doom hot/cross-host/exit evidence](evidence/qemu-owned-machine-recovery-2026-11-14/README.md).
 It deliberately retires source authority and does not advance the stronger
 source-bound checkpoint/history rows or the default/removal gates.
+The opt-in `rebind_protected_source=True` load option performs a fresh stopped
+LE admission after machine recovery. It never restores the old handle or MZ
+allocation authority; source-bound histories/trials/undo remain distinct.
 
 The trace slice adds source-bound stopped observations and `trace-until` to
 the original COM/MZ process adapter, plus persistent event-search integration.

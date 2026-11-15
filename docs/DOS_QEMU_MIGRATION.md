@@ -45,9 +45,11 @@ An explicit [owned-machine checkpoint](DOS_OWNED_MACHINE_CHECKPOINTS.md) now
 recovers a DOS-launched machine after its original executable allocation/source
 authority changes. It uses a separate artifact kind and retires source bindings
 on restore. [Bounded original-Doom qualification](evidence/qemu-owned-machine-recovery-2026-11-14/README.md)
-includes hot recovery, a separate Python host and normal guest exit. This does
-not supply protected source-bound history/checkpoint continuity or close the
-overall replacement gate.
+includes hot recovery, a separate Python host and normal guest exit. An explicit
+`rebind_protected_source=True` load option can freshly admit an eligible stopped
+LE source view under the same lock/deadline. It issues a new handle and retains
+`source_binding_restored=False`; saved recipes and source-bound histories remain
+separate. This does not close the overall replacement gate.
 
 Restricted standard raw checkpoints can preserve an attached automatic
 DESQview observer. Save temporarily suspends only its verified lifecycle

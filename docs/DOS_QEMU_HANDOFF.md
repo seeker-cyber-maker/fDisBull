@@ -1,9 +1,10 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
-Latest local gate: [owned-machine recovery for ordinary protected DOS](evidence/qemu-owned-machine-recovery-2026-11-14/README.md).
-Original Doom passes bounded hot recovery, a separate-Python-host restore and
-normal DOS exit from that checkpoint. Source-bound protected continuity and
-overall DOSBox-X parity remain open; DOSBox-X stays default and retained.
+Latest local gate: [fresh LE admission after owned recovery](evidence/qemu-le-rebind-2026-11-15/README.md).
+Original Doom passes bounded hot/separate-Python-host cold recovery with fresh
+LE bindings and canonical source traces. Persisted source-bound checkpoints and
+history are the next explicitly requested seam; this gate does not supply them.
+Overall DOSBox-X parity remains open; DOSBox-X stays default and retained.
 
 ## Migration plan
 
