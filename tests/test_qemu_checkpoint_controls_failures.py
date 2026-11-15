@@ -6,6 +6,8 @@ import pytest
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.qemu_checkpoint_controls import restore_controls
 from fdisbull import qemu_instrumented_checkpoint as instrumented
+from fdisbull import qemu_layers
+from test_qemu_hooks import Harness
 
 
 def closing_session(vm, *, close_fails=True):
@@ -108,3 +110,81 @@ def test_instrumented_explicit_native_policy_refusal_preserves_live_owner():
     assert caught.value.__cause__ is primary
     assert session.close_calls==0 and not hasattr(session.vm,'_fdisbull_control_quarantine')
     assert calls==[instrumented.PREFIX+'checkpoint-export']
+
+
+@pytest.mark.parametrize('through_controls',[False,True])
+def test_hook_publication_failure_survives_nested_cleanup(through_controls):
+    primary=OSError('authored hook publication failure')
+    primary.result={'hook_native_observation':'retained'}
+    original_result=primary.result
+    session=Harness()
+    session.metadata={'source_sha256':'a'*64}
+    session.version={'id':1,'sha256':'b'*64}
+    session.breakpoints={};session._layer_active=[];session._layer_generation=0
+    session._layer_exec={};session._layer_epoch=lambda:2;session._stopped=lambda:None
+    session.close_calls=0
+    def event(name,data):
+        session.events.append((name,data))
+        raise primary
+    def close():
+        session.close_calls+=1
+        raise RuntimeError('authored nested cleanup failure')
+    session._event=event;session.close=close
+    actions=[{'op':'layers','layers':[]}]
+    with pytest.raises(OSError) as caught:
+        if through_controls:
+            controls=dict(format='fdisbull-qemu-controls-1',run='original-run',epoch=1,
+                source_sha256='a'*64,version=1,version_sha256='b'*64,
+                active=[],definitions={},observed=[],pending_hook=None,breakpoints=[],
+                maps={key:[] for key in ('ram_base','ram_applied','exec_base','exec')},
+                hooks=[dict(hook='original-hook',epoch=1,hits=0,max_hits=1,
+                    address=0x1000,runtime_address=0x1000,actions=actions,once=True,
+                    cs=None,access='x',length=1,space='linear')])
+            restore_controls(session,controls,1)
+        else:
+            session.hook(0x1000,actions=actions,space='linear')
+    assert caught.value is primary and caught.value.result is original_result
+    assert primary.machine_cleanup_error=='RuntimeError'
+    assert session.vm._fdisbull_control_quarantine
+    assert session.close_calls==(2 if through_controls else 1)
+    assert session.points=={'bp-1':0x1000}
+    assert [name for name,_ in session.events]==['hook-create']
+
+
+@pytest.mark.parametrize('through_controls',[False,True])
+@pytest.mark.parametrize('receipt',[
+    {'generation':1,'execution-bytes':0},
+    {'generation':0,'execution-bytes':1},
+])
+def test_invalid_layer_receipt_retains_intended_error_before_cleanup(
+        monkeypatch,through_controls,receipt):
+    message='QEMU layer state differs from the owned layer stack'
+    primary=DebuggerError(message);primary.result={'native_receipt':receipt}
+    original_result=primary.result;constructed=[];calls=[]
+    def error(message):
+        constructed.append(message)
+        return primary
+    monkeypatch.setattr(qemu_layers,'DebuggerError',error)
+    session,controls=control_session(primary)
+    def call(command,*args,**kwargs):
+        calls.append(command)
+        return receipt
+    session.vm.qmp=SimpleNamespace(call=call)
+    session._layer_native_observe=lambda **extent:qemu_layers.QemuLayerSessionMixin._layer_native_observe(session,**extent)
+    definition=dict(version=1,name='authored execute layer',kind='execute',
+        patches=[dict(address=0x1000,expected_hex='90',data_hex='cc')])
+    session.capabilities={'code_layers':True}
+    session.project.debug_layer_info=lambda _:definition
+    session._layer_spans=lambda address,length,space,cs=None:(address,address,[(address,length)],{})
+    session._layer_ram_extent=lambda address,length:None
+    session._stopped=lambda:SimpleNamespace(memory=lambda address,length,**_:b'\x90'*length)
+    controls.update(active=['execute-layer'],definitions={'execute-layer':definition},
+        breakpoints=[],observed=[[0x1000,0x90]],
+        maps=dict(ram_base=[],ram_applied=[],exec_base=[[0x1000,0x90]],exec=[[0x1000,0xcc]]))
+    with pytest.raises(DebuggerError,match=message) as caught:
+        if through_controls:restore_controls(session,controls,1)
+        else:session._layer_native_observe()
+    assert caught.value is primary and caught.value.result is original_result
+    assert constructed==[message] and primary.machine_cleanup_error=='RuntimeError'
+    assert session.close_calls==1 and session.vm._fdisbull_control_quarantine
+    assert calls==['x-fdisbull-layer-observe']

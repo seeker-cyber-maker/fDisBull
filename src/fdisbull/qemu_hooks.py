@@ -158,8 +158,12 @@ class QemuHookSessionMixin:
         self._hook_reindex([*self._qemu_hooks.values(), control])
         try:
             self._event('hook-create', deepcopy(control))
-        except BaseException:
-            self.close()
+        except BaseException as error:
+            self.vm._fdisbull_control_quarantine = 'uncertain hook creation publication'
+            try:
+                self.close()
+            except BaseException as cleanup_error:
+                error.machine_cleanup_error = type(cleanup_error).__name__
             raise
         return deepcopy(control)
 

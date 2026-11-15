@@ -31,6 +31,11 @@ completion channel, supported native controls and workspace/instrumentation
 sidecars. Restore verifies a fresh machine before replacing the old owner. The
 saved guest disk is restored; host files are untouched.
 
+Admission requires one observed vCPU, real/protected/V86 mode, supported
+non-PAE address translation, and code/stack witness pages in conventional or
+extended RAM. ROM and unsupported address contexts refuse. These are bounded
+machine checks, separate from executable allocation or source-lifetime proof.
+
 Explicit native physical/linear RAM and fetch layers and linear hooks with
 guarded register or native-layer actions can cross this boundary. Source-based
 controls, task-private layers, task bindings/scheduler owners and active save

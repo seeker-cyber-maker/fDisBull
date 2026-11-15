@@ -131,8 +131,13 @@ class QemuLayerSessionMixin:
                 or result['generation'] != self._layer_generation
                 or result['execution-bytes'] != expected_count
                 or valid_fault and not self._layer_exec):
-            self.close()
-            raise DebuggerError('QEMU layer state differs from the owned layer stack')
+            error = DebuggerError('QEMU layer state differs from the owned layer stack')
+            self.vm._fdisbull_control_quarantine = 'uncertain native layer observation'
+            try:
+                self.close()
+            except BaseException as cleanup_error:
+                error.machine_cleanup_error = type(cleanup_error).__name__
+            raise error
         return result
 
     def _layer_before_execution(self):
