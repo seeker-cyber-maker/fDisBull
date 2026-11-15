@@ -363,6 +363,81 @@ def _operation_receipt(project, run, operation, artifact, expected):
     return matches[0]
 
 
+def _le_owned_restore(project, row, metadata, original_process, *, epoch=None):
+    """Explain only the owned restore's recorded lifecycle fields.
+
+    This is historical manifest/receipt validation, not native checkpoint
+    admission. The LE capture independently retains its complete source proof.
+    In particular, cold queries do not reopen a potentially 128 MiB VM image.
+    """
+    marker = metadata.get('owned_machine_restore')
+    if marker is None:
+        return metadata, None
+    from .qemu_owned_checkpoint import FORMAT, KIND, MAX_STATE
+    if (type(marker) is not dict or set(marker) !=
+            {'artifact', 'sha256', 'origin_run', 'source_binding_restored', 'runtime_origin'}
+            or marker['source_binding_restored'] is not False
+            or type(marker['runtime_origin']) is not dict or not 1 <= len(marker['runtime_origin']) <= 32):
+        raise ValueError('LE owned restore lifecycle marker is malformed')
+    _identifier(marker['artifact']); _digest(marker['sha256']); _identifier(marker['origin_run'])
+    for item in marker['runtime_origin'].values():
+        if type(item) is not dict:
+            raise ValueError('LE owned restore runtime origin is malformed')
+        _digest(item.get('sha256'))
+    state = project.db.execute('''SELECT a.id,a.run,a.kind,a.sha256,a.metadata,
+        fdb_length(a.data) AS size,r.version FROM debug_artifacts a
+        JOIN debug_runs r ON r.id=a.run WHERE a.id=?''', (marker['artifact'],)).fetchone()
+    if (state is None or state['kind'] != KIND or state['version'] != row['version']
+            or state['run'] != marker['origin_run'] or state['sha256'] != marker['sha256']
+            or type(state['size']) is not int or not 0 < state['size'] <= MAX_STATE):
+        raise ValueError('LE owned restore differs from its retained machine-state artifact')
+    manifest = _document(state['metadata'])
+    expected = dict(format=FORMAT, origin_run=state['run'], source_binding_restored=False,
+        host_files_restored=False, source_sha256=metadata['source_sha256'],
+        version_sha256=row['version_sha256'])
+    if any(type(manifest.get(k)) is not type(v) or manifest.get(k) != v for k, v in expected.items()):
+        raise ValueError('LE owned restore manifest identity differs')
+    created = _capture_sequence(project, state)
+    rows = project.db.execute('''SELECT sequence,fdb_length(evidence) AS size FROM debug_events
+        WHERE run=? AND operation='load-machine-state' ORDER BY sequence LIMIT ?''',
+        (row['run'], MAX_CAPTURE_RECEIPTS + 1)).fetchall()
+    if (len(rows) > MAX_CAPTURE_RECEIPTS
+            or any(type(r['size']) is not int or not 0 < r['size'] <= MAX_BYTES for r in rows)
+            or sum(r['size'] for r in rows) > MAX_BYTES):
+        raise ValueError('LE owned restore receipts exceed their bounded evidence budget')
+    matches = []
+    for item in rows:
+        receipt = _document(project.db.execute('SELECT evidence FROM debug_events WHERE sequence=?',
+                                               (item['sequence'],)).fetchone()[0])
+        if receipt.get('artifact') != marker['artifact']:
+            continue
+        if epoch is not None and receipt.get('capture_epoch') != epoch:
+            continue
+        if (receipt.get('sha256') != marker['sha256'] or receipt.get('origin_run') != marker['origin_run']
+                or receipt.get('machine_state_restored') is not True
+                or receipt.get('source_binding_restored') is not False
+                or receipt.get('host_files_restored') is not False
+                or type(receipt.get('checkpoint_epoch')) is not int or receipt['checkpoint_epoch'] < 1
+                or type(receipt.get('capture_epoch')) is not str or not 1 <= len(receipt['capture_epoch']) <= 128
+                or type(receipt.get('process')) is not dict
+                or receipt['process'].get('capture_epoch') != receipt['capture_epoch']
+                or receipt['process'].get('state') != 'active' or receipt['process'].get('machine_closed')
+                or item['sequence'] <= created):
+            raise ValueError('LE owned restore success receipt differs')
+        matches.append((item['sequence'], receipt))
+    if not matches or epoch is not None and len(matches) != 1:
+        raise ValueError('LE owned restore requires its epoch-specific successful load receipt')
+    sequence, receipt = matches[-1]
+    normalized = deepcopy(metadata)
+    del normalized['owned_machine_restore']
+    for process in (normalized['process'], receipt['process']):
+        mapping = process.get('source_mapping')
+        if type(mapping) is not dict or mapping.get('current_bytes') != 'not source-qualified':
+            raise ValueError('LE owned restore current-byte lifecycle differs')
+        mapping['current_bytes'] = original_process['source_mapping'].get('current_bytes')
+    return normalized, (sequence, receipt['process'])
+
+
 def _le_launch_binding(project, row, document, metadata):
     """Reconstruct the immutable launch while permitting a fresh restore epoch."""
     from .qemu_trace_identity import load_trace_binding
@@ -370,8 +445,6 @@ def _le_launch_binding(project, row, document, metadata):
              'protected_source_binding_material', 'checkpoint_restore'}
     captured_metadata = {key: value for key, value in document['mapping'].items() if key not in extra}
     current_metadata = {key: value for key, value in metadata.items() if key not in extra}
-    captured = load_trace_binding(project, row['version'], captured_metadata)
-    current = load_trace_binding(project, row['version'], current_metadata)
     process = captured_metadata['process']
     if process.get('state') != 'active' or process.get('machine_closed'):
         raise ValueError('LE trace must capture an active owned DOS process')
@@ -389,9 +462,25 @@ def _le_launch_binding(project, row, document, metadata):
             or original_process.get('source_mapping', {}).get('status') != 'initial-load-verified'
             or original_process['source_mapping'].get('live') is not True):
         raise ValueError('LE trace original process entry is not verified')
+    captured_metadata, captured_restore = _le_owned_restore(project, row, captured_metadata,
+        original_process, epoch=process['capture_epoch'])
+    current_metadata, current_restore = _le_owned_restore(project, row, current_metadata, original_process)
+    captured = load_trace_binding(project, row['version'], captured_metadata)
+    current = load_trace_binding(project, row['version'], current_metadata)
     original = load_trace_binding(project, row['version'], dict(current_metadata, process=original_process))
     if not (_json(original['identity']) == _json(current['identity']) == _json(captured['identity'])):
         raise ValueError('LE trace differs from its immutable DOS launch identity')
+    trace_sequence = _capture_sequence(project, row)
+    if captured_restore is not None and not entry['sequence'] < captured_restore[0] < trace_sequence:
+        raise ValueError('LE owned restore does not precede its source capture')
+    if current_restore is not None and (captured_restore is None or current_restore[0] != captured_restore[0]):
+        if current_restore[0] <= trace_sequence:
+            raise ValueError('LE current owned restore does not follow the historical capture')
+    for restored in (captured_restore, current_restore):
+        if restored is not None:
+            proof = load_trace_binding(project, row['version'], dict(current_metadata, process=restored[1]))
+            if _json(proof['identity']) != _json(original['identity']):
+                raise ValueError('LE owned restore changed immutable process launch facts')
     return entry['sequence']
 
 

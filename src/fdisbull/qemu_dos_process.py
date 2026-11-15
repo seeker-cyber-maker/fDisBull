@@ -730,10 +730,11 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         from .qemu_owned_checkpoint import save_owned_machine_state
         return save_owned_machine_state(self, name, max_bytes=max_bytes)
 
-    def load_machine_state(self, artifact, *, timeout_ms=60000):
+    def load_machine_state(self, artifact, *, timeout_ms=60000, rebind_protected_source=False):
         """Recover a distinct machine artifact and retire source authority."""
         from .qemu_owned_checkpoint import load_owned_machine_state
-        return load_owned_machine_state(self, artifact, timeout_ms=timeout_ms)
+        return load_owned_machine_state(self, artifact, timeout_ms=timeout_ms,
+                                        rebind_protected_source=rebind_protected_source)
 
     def _save_entry_state_v1(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
         from .external_files import _file_name

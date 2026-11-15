@@ -464,3 +464,225 @@ def test_admission_transport_loss_quarantines_without_masking_primary(runtime, m
         else: owned.load_owned_machine_state(session, saved['artifact'])
     assert session.closed and session.vm._fdisbull_control_quarantine
     assert not runtime.spawned and session.thawed == 0
+
+
+def _old_rebind_handle(session):
+    """A host lifecycle handle only; no authored COM is asserted to be LE."""
+    recipe = dict(binding_id='a'*32, run=session.run_id, capture_epoch=session._runtime_epoch,
+        source_sha256=session.metadata['source_sha256'], version=session.version['id'],
+        version_sha256=session.metadata['version_sha256'], source_view='embedded-le')
+    state = dict(recipe=recipe, state='qualified-stopped', generation=1, observations=1,
+                 owner=session.vm, process=session.vm.process, reason=None)
+    session._le_source = state
+    return state
+
+
+def _static_rebind_boundary(runtime, monkeypatch):
+    """Substitute only static LE admission for this fake-native COM fixture.
+
+    Real carrier parsing, descriptor admission and dos_source_bind behavior
+    retain their independent tests. These records test loader composition.
+    """
+    from fdisbull import le, qemu_dos_source_admission as admission
+    calls = []
+    image = object()
+    source = runtime.session._checkpoint_source.read_bytes()
+    def context(registers):
+        assert registers == runtime.saved_cpu
+        calls.append(('context', runtime.session.vm))
+        return dict(mode='protected', bits=32)
+    def retained(session, expected):
+        assert expected == session.metadata['source_sha256']
+        calls.append(('source', session.vm))
+        return source, dict(source_sha256=expected)
+    def carrier(data):
+        assert data == source
+        calls.append(('carrier', runtime.session.vm))
+        return image
+    monkeypatch.setattr(admission, '_context', context)
+    monkeypatch.setattr(admission, '_source', retained)
+    monkeypatch.setattr(le, 'load_runtime_le_carrier', carrier)
+    return calls
+
+
+@pytest.mark.parametrize('explicit_false', [False, True], ids=['default', 'explicit-false'])
+def test_owned_restore_does_not_bind_protected_source_implicitly(runtime, monkeypatch, explicit_false):
+    from fdisbull import le, qemu_dos_source_admission as admission
+    session = runtime.session; saved = owned.save_owned_machine_state(session)
+    old = _old_rebind_handle(session)
+    def forbidden(*args, **kwargs):
+        pytest.fail('Default machine recovery must not parse or bind protected source')
+    monkeypatch.setattr(admission, '_context', forbidden)
+    monkeypatch.setattr(admission, '_source', forbidden)
+    monkeypatch.setattr(le, 'load_runtime_le_carrier', forbidden)
+    monkeypatch.setattr(session, 'dos_source_bind', forbidden)
+    options = dict(rebind_protected_source=False) if explicit_false else {}
+    result = session.load_machine_state(saved['artifact'], **options)
+    assert result['protected_source_rebound'] is False
+    assert 'protected_source_binding' not in result
+    assert result['source_binding_restored'] is False
+    assert old['state'] == 'retired' and session._le_source is old
+    assert session._process['source_mapping']['live'] is False
+
+
+@pytest.mark.parametrize('value', [None, 0, 1, 'true', [], {}])
+def test_owned_rebind_flag_refuses_before_retirement_or_native_effects(runtime, monkeypatch, value):
+    session = runtime.session; saved = owned.save_owned_machine_state(session)
+    old = _old_rebind_handle(session)
+    calls = list(session.vm.calls); snapshots = list(runtime.snapshots)
+    events = runtime.project.db.execute('SELECT count(*) FROM debug_events').fetchone()[0]
+    monkeypatch.setattr(session, 'dos_source_bind', lambda **kw: pytest.fail('Unexpected bind'))
+    with pytest.raises(ValueError, match='literal Boolean'):
+        session.load_machine_state(saved['artifact'], rebind_protected_source=value)
+    assert old['state'] == 'qualified-stopped' and old['generation'] == 1
+    assert session.vm.calls == calls and runtime.snapshots == snapshots and not runtime.spawned
+    assert runtime.project.db.execute('SELECT count(*) FROM debug_events').fetchone()[0] == events
+    assert not session.closed and session.thawed == 0
+
+
+@pytest.mark.parametrize('stage', ['context', 'source', 'carrier'])
+def test_owned_rebind_static_refusal_precedes_fresh_owner(runtime, monkeypatch, stage):
+    from fdisbull import le, qemu_dos_source_admission as admission
+    session = runtime.session; saved = owned.save_owned_machine_state(session)
+    calls = _static_rebind_boundary(runtime, monkeypatch)
+    error = ValueError('authored protected '+stage+' refusal')
+    def refuse(*args, **kwargs):
+        raise error
+    module, name = (le, 'load_runtime_le_carrier') if stage == 'carrier' else (
+        admission, '_context' if stage == 'context' else '_source')
+    monkeypatch.setattr(module, name, refuse)
+    monkeypatch.setattr(session, 'dos_source_bind', lambda **kw: pytest.fail('Unexpected bind'))
+    with pytest.raises(ValueError) as caught:
+        session.load_machine_state(saved['artifact'], rebind_protected_source=True)
+    assert caught.value is error
+    assert [name for name, _ in calls] == {'context':[], 'source':['context'],
+                                         'carrier':['context','source']}[stage]
+    assert not runtime.spawned and not session.closed and session.thawed == 0
+    assert [operation for operation, _ in runtime.snapshots] == ['save']
+
+
+def test_owned_rebind_refuses_active_saved_layers_before_context_or_spawn(runtime, monkeypatch):
+    session = runtime.session
+    session.capabilities['code_layers'] = True
+    layer = session.layer_patch('saved-native-layer', 0x110020, expected_hex='00', data_hex='00',
+                               kind='ram', space='physical', activate=False)['layer']
+    saved = owned.save_owned_machine_state(session)
+    definition = runtime.project.debug_layer_info(layer)
+    def activate(bundle):
+        controls = bundle['controls']
+        controls['active'] = [layer]; controls['definitions'] = {layer:definition}
+        controls['maps']['ram_base'] = [[0x110020, 0]]
+        controls['maps']['ram_applied'] = [[0x110020, 0]]
+        controls['observed'] = [[0x110020, 0]]
+    rewrite(runtime, saved, activate)
+    # The archive is structurally valid. The opt-in policy must reject its
+    # active view, rather than discovering that incompatibility after restore.
+    owned._read_artifact(runtime.project, saved['artifact'], session.version['id'])
+    calls = _static_rebind_boundary(runtime, monkeypatch)
+    with pytest.raises(ValueError, match='unlayered saved machine'):
+        session.load_machine_state(saved['artifact'], rebind_protected_source=True)
+    assert not calls and not runtime.spawned and not session.closed and session.thawed == 0
+
+
+def test_owned_rebind_runs_on_fresh_persisted_owner_inside_shared_budget_and_lock(runtime, monkeypatch):
+    from fdisbull import qemu_cpu_undo_guard as guard
+    session = runtime.session; saved = owned.save_owned_machine_state(session)
+    old_vm = session.vm; old_epoch = session._runtime_epoch
+    old_handle = _old_rebind_handle(session)
+    static = _static_rebind_boundary(runtime, monkeypatch)
+    order = []
+    event = session._event
+    def record(operation, value):
+        if operation in ('dos-source-bind', 'load-machine-state'):
+            order.append(operation)
+        return event(operation, value)
+    monkeypatch.setattr(session, '_event', record)
+    inherited = time.monotonic()+1
+    session._rpc_deadline = inherited
+    binding = {}
+    def bind(*, expected_source_sha256, timeout_ms):
+        assert session.vm is runtime.spawned[0] and old_vm.closed
+        assert session.vm.lock is old_vm.lock and old_vm.lock._is_owned()
+        assert session._runtime_epoch != old_epoch and old_handle['state'] == 'retired'
+        assert session._owned_machine_restored is True and session.thawed == 0
+        assert session._process['source_mapping']['live'] is False
+        assert expected_source_sha256 == session.metadata['source_sha256']
+        assert 1 <= timeout_ms <= 1000
+        assert session._deadline <= inherited
+        assert session.vm.operation_deadline == session.vm.qmp.operation_deadline == session._deadline
+        persisted = json.loads(runtime.project.db.execute('SELECT metadata FROM debug_runs WHERE id=?',
+                                                         (session.run_id,)).fetchone()[0])
+        assert persisted['process']['capture_epoch'] == session._runtime_epoch
+        assert persisted['process']['source_mapping']['live'] is False
+        assert persisted['owned_machine_restore']['artifact'] == saved['artifact']
+        acquired = []
+        def contender():
+            locked = old_vm.lock.acquire(timeout=.02); acquired.append(locked)
+            if locked: old_vm.lock.release()
+        thread = threading.Thread(target=contender); thread.start(); thread.join(timeout=1)
+        assert not thread.is_alive() and acquired == [False]
+        binding.update(source_view='embedded-le', binding_id='b'*32, run=session.run_id,
+            capture_epoch=session._runtime_epoch, source_sha256=expected_source_sha256,
+            state='qualified-stopped', live=True, checkpoint_binding_restored=False)
+        session._event('dos-source-bind', dict(authored_boundary_only=True, **binding))
+        return deepcopy(binding)
+    monkeypatch.setattr(session, 'dos_source_bind', bind)
+    attest = guard.attest_machine_restore
+    def checked_attest(owner, result):
+        assert owner.vm.lock._is_owned() and owner.thawed == 0
+        order.append('attest'); return attest(owner, result)
+    monkeypatch.setattr(guard, 'attest_machine_restore', checked_attest)
+    complete = session._cpu_delta_full_restore_complete
+    def thaw():
+        assert session.vm.lock._is_owned()
+        order.append('thaw'); complete()
+    monkeypatch.setattr(session, '_cpu_delta_full_restore_complete', thaw)
+    result = session.load_machine_state(saved['artifact'], timeout_ms=600000,
+                                        rebind_protected_source=True)
+    assert [name for name, _ in static] == ['context','source','carrier']
+    assert all(owner is old_vm for _, owner in static)
+    assert order == ['dos-source-bind','load-machine-state','attest','thaw']
+    assert result['protected_source_rebound'] is True and result['protected_source_binding'] == binding
+    assert result['source_binding_restored'] is False
+    assert result['process']['source_mapping']['live'] is False and session.thawed == 1
+    assert session._rpc_deadline == inherited
+
+
+@pytest.mark.parametrize('stage', ['bind', 'late', 'publication'])
+def test_owned_rebind_failure_closes_replacement_without_thaw(runtime, monkeypatch, stage):
+    from fdisbull import qemu_cpu_undo_guard as guard
+    session = runtime.session; saved = owned.save_owned_machine_state(session)
+    old = session.vm; _static_rebind_boundary(runtime, monkeypatch)
+    session._qemu_cpu_delta_history = dict(valid=False, frozen=True)
+    calls = []; late = [False]
+    error = (ValueError('authored fresh source refusal') if stage == 'bind' else
+             TimeoutError('authored post-bind deadline') if stage == 'late' else
+             OSError('authored rebound publication failure'))
+    remaining = owned._remaining
+    def budget(deadline):
+        if late[0]: raise error
+        return remaining(deadline)
+    monkeypatch.setattr(owned, '_remaining', budget)
+    def bind(**kwargs):
+        calls.append((session.vm, session._runtime_epoch))
+        assert old.closed and session.vm is runtime.spawned[0]
+        if stage == 'bind': raise error
+        late[0] = stage == 'late'
+        return dict(binding_id='b'*32, capture_epoch=session._runtime_epoch, live=True)
+    monkeypatch.setattr(session, 'dos_source_bind', bind)
+    event = session._event
+    def publish(operation, value):
+        if stage == 'publication' and operation == 'load-machine-state': raise error
+        return event(operation, value)
+    monkeypatch.setattr(session, '_event', publish)
+    monkeypatch.setattr(guard, 'attest_machine_restore',
+                        lambda *args: pytest.fail('Failed rebind must not attest completion'))
+    with pytest.raises(type(error)) as caught:
+        session.load_machine_state(saved['artifact'], rebind_protected_source=True)
+    assert caught.value is error and len(calls) == 1
+    assert old.closed and session.closed and runtime.spawned[0].closed
+    assert session.vm._fdisbull_control_quarantine and session.thawed == 0
+    assert session._qemu_cpu_delta_history['frozen'] is True
+    assert session._process['source_mapping']['live'] is False
+    assert session._owned_machine_restored is True
+    assert [operation for operation, _ in runtime.snapshots] == ['save','load']

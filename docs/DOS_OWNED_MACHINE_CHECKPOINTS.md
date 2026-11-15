@@ -54,12 +54,45 @@ anchors retain their stronger source checks; they do not accept machine-state
 artifacts. A verified full machine recovery can clear a selected-undo freeze
 without reviving its invalid history or claiming source restoration.
 
+For an eligible protected32 LE carrier, explicitly request a **fresh stopped
+source admission** inside the restore operation:
+
+```python
+restored = debug.load_machine_state(
+    saved['artifact'], timeout_ms=60000, rebind_protected_source=True)
+assert restored['source_binding_restored'] is False
+assert restored['protected_source_rebound'] is True
+binding = restored['protected_source_binding']
+assert binding['live'] and binding['source_view'] == 'embedded-le'
+```
+
+The flag must be a literal Boolean in Python/JSON and saved scripts; omission
+keeps machine-only recovery. The saved machine must be unlayered, unpaged
+protected32 with A20 and a single observed CPU, and the retained original must
+be an eligible x86 LE carrier. Static incompatibilities refuse before spawning
+a replacement. After machine restoration, the existing LE matcher and stopped
+instruction proof run again against the restored CPU, RAM and GDT. A new
+binding ID and current capture epoch are issued before the restore completion
+receipt. Both phases share the controller lock and one absolute deadline.
+Revalidation or publication failure closes the uncertain owner and does not
+complete selected-undo recovery.
+
+This option does not serialize a source handle or revive the saved recipe,
+original MZ live ranges, allocation lifetime, task-private source views or old
+source-bound histories/trials/undo. Active native layers remain supported by
+machine-only recovery; they are ineligible for this optional LE admission.
+Native hooks and instrumentation retain their machine checkpoint contracts.
+Even an otherwise valid machine can fail fresh source admission, for example
+when initialized data witnesses changed. Earlier and newly bound LE traces can
+be queried after reopening the project using their own captured source proof
+and validated machine-restore provenance.
+
 `debug-state-info` can inspect these artifacts offline after reopening the
 project. `load_state`, Anchor Stone loading and state forks do not accept them
 as source-bound checkpoints. Keep checkpoint bytes, private guest files and
 byte-retaining databases outside Git and release packages.
 
-This contract is a bounded recovery capability. Protected LE source-bound
-checkpoint continuity, broader DOS game compatibility and overall DOSBox-X
+This contract is a bounded recovery capability. Persisted protected LE source
+recipes/history continuity, broader DOS game compatibility and overall DOSBox-X
 parity remain separate qualification gates. No CI is required or dispatched by
 these operations.

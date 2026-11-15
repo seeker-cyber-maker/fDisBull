@@ -43,6 +43,29 @@ def operation(project, run, name, document):
             (run, 'authored', name, json.dumps(document))).lastrowid
 
 
+def owned_restore(project, run, launch, epoch):
+    """Author the durable manifest/receipt boundary, not a native VM payload."""
+    current = deepcopy(launch)
+    state = project._debug_artifact(run, 'owned-machine.qcow2', 'machine-state',
+        b'authored opaque machine checkpoint', dict(
+            format='fdisbull-qemu-owned-machine-qcow2-v1',
+            source_sha256=project.meta['source_sha256'],
+            version_sha256=project.version(1)['sha256'], origin_run=run,
+            sidecar_sha256='c'*64, source_binding_restored=False,
+            checkpoint_scope='owned native machine and private disk; no DOS/LE source ownership',
+            host_files_restored=False))
+    current['process']['capture_epoch'] = epoch
+    current['process']['source_mapping'].update(live=False, live_ranges=[],
+        status='unqualified-after-owned-machine-restore', current_bytes='not source-qualified')
+    current['owned_machine_restore'] = dict(artifact=state['artifact'], sha256=state['sha256'],
+        origin_run=run, source_binding_restored=False, runtime_origin=deepcopy(launch['runtime_inputs']))
+    result = dict(artifact=state['artifact'], sha256=state['sha256'], origin_run=run,
+        machine_state_restored=True, source_binding_restored=False, host_files_restored=False,
+        capture_epoch=epoch, checkpoint_epoch=int(epoch.rsplit(':', 1)[1]),
+        process=deepcopy(current['process']))
+    return current, result
+
+
 @pytest.fixture
 def le_trace(owned, request):
     s, p = owned.session, owned.project
@@ -55,6 +78,12 @@ def le_trace(owned, request):
     with p.transaction(True):
         p.db.execute('UPDATE debug_runs SET metadata=? WHERE id=?', (json.dumps(launch), s.run_id))
         receipt(p, s.run_id, launch['process'])
+    restored = None
+    if options.get('owned_restore'):
+        launch, restored = owned_restore(p, s.run_id, launch, s._runtime_epoch)
+        s.metadata, s._process = deepcopy(launch), deepcopy(launch['process'])
+        with p.transaction(True):
+            p.db.execute('UPDATE debug_runs SET metadata=? WHERE id=?', (json.dumps(launch), s.run_id))
     admission = s.dos_source_admit()
     initial = stored(p, admission['artifact'])
     image, cpu, gdt, memory, _, source_read = source_fixture()
@@ -68,6 +97,8 @@ def le_trace(owned, request):
     operation(p, s.run_id, 'dos-source-bind', dict(artifact=binding['artifact'],
         sha256=binding['sha256'], binding_id=recipe['binding_id'],
         capture_epoch=recipe['capture_epoch'], admission=binding_document['admission']))
+    if restored is not None:
+        operation(p, s.run_id, 'load-machine-state', restored)
     mapping = deepcopy(launch)
     mapping['process'] = deepcopy(s._process)
     mapping.update(protected_source_binding=recipe,
@@ -235,6 +266,91 @@ def test_fresh_restore_epoch_binding_and_prior_trace_remain_historical(le_trace)
                              (json.dumps(current), o.session.run_id))
     assert o.project.event_trace_query(o.trace['artifact'],
         predicate=dict(kind='mnemonic', equals='push')) == before
+
+
+@pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True)], indirect=True)
+def test_fresh_owned_restore_binding_keeps_cold_source_identity(le_trace, tmp_path):
+    o = le_trace
+    query = o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
+    assert query['matched_count'] == 2
+    search = o.project.event_search_start(o.trace['artifact'])
+    retained = o.project.event_search_results(search['artifact'])
+    o.project.debug_export(o.trace['artifact'], tmp_path/'before.json')
+    database = o.project.path
+    o.project.__exit__(None, None, None)
+    with Project(database) as cold:
+        assert cold.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push')) == query
+        assert cold.event_search_results(search['artifact']) == retained
+        cold.debug_export(o.trace['artifact'], tmp_path/'after.json')
+        assert (tmp_path/'before.json').read_bytes() == (tmp_path/'after.json').read_bytes()
+
+
+def test_prior_le_trace_survives_actual_owned_restore_metadata(le_trace):
+    o = le_trace
+    query = o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
+    current = json.loads(o.project.db.execute('SELECT metadata FROM debug_runs WHERE id=?',
+                                            (o.session.run_id,)).fetchone()[0])
+    # Reusing one archive in two successful loads is valid. Select by epoch,
+    # rather than requiring a unique operation for an artifact forever.
+    current, restored = owned_restore(o.project, o.session.run_id, current, 'source-run:process:2')
+    operation(o.project, o.session.run_id, 'load-machine-state', restored)
+    restored['capture_epoch'] = 'source-run:process:3'
+    restored['checkpoint_epoch'] += 1
+    restored['process']['capture_epoch'] = restored['capture_epoch']
+    operation(o.project, o.session.run_id, 'load-machine-state', restored)
+    current['process'].update(capture_epoch='source-run:process:4', state='exited', machine_closed=True)
+    current['process']['source_mapping'].update(status='invalidated-on-machine-close')
+    with o.project.transaction(True):
+        o.project.db.execute('UPDATE debug_runs SET metadata=? WHERE id=?',
+                            (json.dumps(current), o.session.run_id))
+    assert o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push')) == query
+
+
+@pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True)], indirect=True)
+@pytest.mark.parametrize('fault', ['missing-load', 'load-source-authority', 'load-epoch', 'late-load',
+    'load-allocation', 'marker-extra', 'marker-hash', 'marker-origin', 'manifest-source',
+    'state-kind', 'state-creation', 'current-bytes', 'allocation', 'process-disk'])
+def test_owned_restore_exemption_requires_exact_lifecycle_and_immutable_launch(le_trace, fault):
+    o = le_trace
+    document = deepcopy(o.document)
+    marker = document['mapping']['owned_machine_restore']
+    load = o.project.db.execute("SELECT sequence,evidence FROM debug_events WHERE operation='load-machine-state'").fetchone()
+    result = json.loads(load['evidence'])
+    with o.project.transaction(True):
+        if fault == 'missing-load':
+            o.project.db.execute('DELETE FROM debug_events WHERE sequence=?', (load['sequence'],))
+        elif fault in ('load-source-authority', 'load-epoch', 'load-allocation', 'late-load'):
+            if fault == 'load-source-authority': result['source_binding_restored'] = True
+            elif fault == 'load-epoch': result['capture_epoch'] = 'source-run:process:99'
+            elif fault == 'load-allocation': result['process']['allocation']['owner_psp'] += 1
+            else:
+                o.project.db.execute('UPDATE debug_events SET sequence=sequence+1000 WHERE sequence=?', (load['sequence'],))
+            o.project.db.execute('UPDATE debug_events SET evidence=? WHERE sequence=?',
+                (json.dumps(result), load['sequence'] + (1000 if fault == 'late-load' else 0)))
+        elif fault == 'manifest-source':
+            row = o.project.db.execute('SELECT metadata FROM debug_artifacts WHERE id=?', (marker['artifact'],)).fetchone()
+            manifest = json.loads(row[0]); manifest['source_sha256'] = 'f'*64
+            o.project.db.execute('UPDATE debug_artifacts SET metadata=? WHERE id=?',
+                                (json.dumps(manifest), marker['artifact']))
+        elif fault == 'state-kind':
+            o.project.db.execute("UPDATE debug_artifacts SET kind='state' WHERE id=?", (marker['artifact'],))
+        elif fault == 'state-creation':
+            rows = o.project.db.execute("SELECT sequence,evidence FROM debug_events WHERE operation='artifact'").fetchall()
+            for row in rows:
+                value = json.loads(row['evidence'])
+                if value['artifact'] == marker['artifact']:
+                    value['sha256'] = 'f'*64
+                    o.project.db.execute('UPDATE debug_events SET evidence=? WHERE sequence=?',
+                                        (json.dumps(value), row['sequence']))
+        elif fault == 'marker-extra': marker['invented_authority'] = True
+        elif fault == 'marker-hash': marker['sha256'] = 'f'*64
+        elif fault == 'marker-origin': marker['origin_run'] = 'foreign-run'
+        elif fault == 'current-bytes': document['mapping']['process']['source_mapping']['current_bytes'] = 'anything'
+        elif fault == 'allocation': document['mapping']['process']['allocation']['owner_psp'] += 1
+        else: document['mapping']['process_disk']['prepared_boot_image']['sha256'] = 'f'*64
+    replace_artifact(o.project, o.trace['artifact'], document)
+    with pytest.raises(ValueError):
+        o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
 
 
 def test_terminal_mode_boundary_is_queryable_without_source_site(le_trace):

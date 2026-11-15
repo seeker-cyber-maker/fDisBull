@@ -188,6 +188,8 @@ def validate_script(script, *, session=None):
                                 bounded(params[key],key,*bounds)
                         if 'artifact' in params and (not isinstance(params['artifact'],str) or not params['artifact']):
                             raise ValueError('Owned-machine artifact must be a nonempty identifier or result reference')
+                        if 'rebind_protected_source' in params and type(params['rebind_protected_source']) is not bool:
+                            raise ValueError('rebind_protected_source must be a literal Boolean')
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary

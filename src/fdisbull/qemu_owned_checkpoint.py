@@ -635,7 +635,9 @@ def save_owned_machine_state(session, name='owned-machine.qcow2', max_bytes=None
 
 
 @full_load
-def load_owned_machine_state(session, artifact, timeout_ms=60000):
+def load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protected_source=False):
+    if type(rebind_protected_source) is not bool:
+        raise ValueError('rebind_protected_source must be a literal Boolean')
     from .qemu_checkpoint import snapshot_job, validate_qcow_header
     from .qemu_checkpoint_controls import restore_controls
     from .qemu_dos_checkpoint import _compatibility, _decode_origin, _serial_idle, _source
@@ -663,6 +665,16 @@ def load_owned_machine_state(session, artifact, timeout_ms=60000):
         if 'workspace' in bundle:
             from .qemu_workspace import verify_workspace_checkpoint
             verify_workspace_checkpoint(session, machine, bundle['workspace'])
+        if rebind_protected_source:
+            # This is a new stopped-source admission, not an archived handle
+            # or a restoration of the launch-time DOS allocation authority.
+            from .qemu_dos_source_admission import _context, _source as le_source
+            from .le import load_runtime_le_carrier
+            if bundle['controls']['active']:
+                raise ValueError('Protected source rebind requires an unlayered saved machine view')
+            _context(bundle['registers'])
+            raw, _ = le_source(session, session.metadata['source_sha256'])
+            load_runtime_le_carrier(raw)
         _remaining(deadline)
         new = None
         try:
@@ -739,13 +751,22 @@ def load_owned_machine_state(session, artifact, timeout_ms=60000):
             session.metadata['owned_machine_restore'] = dict(artifact=artifact, sha256=row['sha256'],
                 origin_run=row['run'], source_binding_restored=False, runtime_origin=bundle['runtime_origin'])
             session._persist_process()
+            protected_binding = None
+            if rebind_protected_source:
+                protected_binding = session.dos_source_bind(
+                    expected_source_sha256=session.metadata['source_sha256'],
+                    timeout_ms=_remaining(deadline))
             result = dict(artifact=artifact, sha256=row['sha256'], machine_state_restored=True,
                 source_binding_restored=False, host_files_restored=False, origin_run=row['run'],
+                protected_source_rebound=rebind_protected_source,
                 capture_epoch=session._runtime_epoch, checkpoint_epoch=session._checkpoint_epoch,
                 registers=actual, controls=controls, process=deepcopy(session._process),
                 instrumentation=instrumentation, native_architectural_context=native_task,
                 workspace_restored='workspace' in bundle,
                 framebuffer='native state restored; recapture for a new stored image')
+            if protected_binding is not None:
+                result.update(protected_source_binding=protected_binding,
+                    source_revalidation_scope='fresh stopped LE admission; not restored MZ authority or allocation lifetime')
             session._event('load-machine-state', result)
             _remaining(deadline)
             attest_machine_restore(session, result)

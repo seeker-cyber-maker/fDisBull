@@ -24,9 +24,10 @@ class RoutedMachineSession(MachineDebugSession):
         self.calls.append(('save',name,max_bytes))
         return dict(artifact='machine-artifact')
 
-    def load_machine_state(self,artifact,*,timeout_ms=60000):
-        self.calls.append(('load',artifact,timeout_ms))
-        return dict(machine_state_restored=True,source_binding_restored=False)
+    def load_machine_state(self,artifact,*,timeout_ms=60000,rebind_protected_source=False):
+        self.calls.append(('load',artifact,timeout_ms,rebind_protected_source))
+        return dict(machine_state_restored=True,source_binding_restored=False,
+                    protected_source_rebound=rebind_protected_source)
 
 
 def routed(project,tmp_path):
@@ -56,6 +57,9 @@ def test_explicit_machine_routes_are_discoverable_and_literal_admitted():
     dict(op='load-machine-state',artifact='id',timeout_ms='$controls.timeout'),
     dict(op='load-machine-state',artifact=42),
     dict(op='load-machine-state',artifact=''),
+    dict(op='load-machine-state',artifact='id',rebind_protected_source=1),
+    dict(op='load-machine-state',artifact='id',rebind_protected_source='true'),
+    dict(op='load-machine-state',artifact='id',rebind_protected_source='$saved.flag'),
 ])
 def test_malformed_new_operation_refuses_before_earlier_effect(raw_project,tmp_path,step):
     session,peer=routed(raw_project,tmp_path)
@@ -80,14 +84,17 @@ def test_json_and_script_use_distinct_methods_and_inherit_budget(raw_project,tmp
     try:
         reply=respond(dict(method='debug-save-machine-state',params={**common,'name':'owned.qcow2','max_bytes':400}),debugger=workspace)
         assert reply['ok'],reply
-        loaded=respond(dict(method='debug-load-machine-state',params={**common,'artifact':'id','timeout_ms':300}),debugger=workspace)
+        loaded=respond(dict(method='debug-load-machine-state',params={**common,'artifact':'id','timeout_ms':300,
+            'rebind_protected_source':True}),debugger=workspace)
         assert loaded['ok'] and loaded['result']['source_binding_restored'] is False
+        assert loaded['result']['protected_source_rebound'] is True
         report=execute_script(session,route(dict(op='save-machine-state',**{'as':'saved'}),
-            dict(op='load-machine-state',artifact='$saved.artifact',timeout_ms=600000)),timeout_ms=200)
+            dict(op='load-machine-state',artifact='$saved.artifact',timeout_ms=600000,
+                 rebind_protected_source=True)),timeout_ms=200)
         assert report['ok'],report
-        assert session.calls[:2]==[('save','owned.qcow2',400),('load','id',300)]
+        assert session.calls[:2]==[('save','owned.qcow2',400),('load','id',300,True)]
         assert session.calls[-1][0:2]==('load','machine-artifact')
-        assert 1<=session.calls[-1][2]<=200 and peer.calls==[]
+        assert 1<=session.calls[-1][2]<=200 and session.calls[-1][3] is True and peer.calls==[]
         session.capabilities['owned_machine_checkpoints']=False
         denied=respond(dict(method='debug-load-machine-state',params={**common,'artifact':'id'}),debugger=workspace)
         assert not denied['ok']
