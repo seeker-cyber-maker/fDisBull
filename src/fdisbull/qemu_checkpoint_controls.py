@@ -496,7 +496,11 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
             raise ValueError('Checkpoint pending hook task is not registered')
         return dict(layers=layer_ids, breakpoints=point_ids, hooks=hook_ids,
                     pending_hook=session._qemu_hook_pending, epoch=session._layer_epoch())
-    except BaseException:
+    except BaseException as error:
         if mutated:
-            session.close()
+            session.vm._fdisbull_control_quarantine = 'uncertain checkpoint control restore'
+            try:
+                session.close()
+            except BaseException as cleanup_error:
+                error.machine_cleanup_error = type(cleanup_error).__name__
         raise

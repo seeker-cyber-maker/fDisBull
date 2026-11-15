@@ -72,6 +72,14 @@ def validate(vm, record):
     return _decode(record)
 
 
+def _close_capture_failure(session, error):
+    session.vm._fdisbull_control_quarantine = 'uncertain instrumented checkpoint capture'
+    try:
+        session.close()
+    except BaseException as cleanup_error:
+        error.machine_cleanup_error = type(cleanup_error).__name__
+
+
 def capture(session):
     if not enabled(session.vm):
         return None, None
@@ -83,10 +91,10 @@ def capture(session):
         # issuance. A complete explicit refusal leaves that stopped owner live.
         if str(error).startswith('QMP ' + PREFIX + 'checkpoint-export: '):
             raise ValueError('Native instrumented checkpoint refused: ' + str(error)) from error
-        session.close()
+        _close_capture_failure(session, error)
         raise
-    except BaseException:
-        session.close()
+    except BaseException as error:
+        _close_capture_failure(session, error)
         raise
     try:
         if (not isinstance(value, dict) or not isinstance(value.get('token'), str)
@@ -99,8 +107,8 @@ def capture(session):
                 or state['source-epoch'] != before['virtual_clock']['native']['epoch']):
             raise DebuggerError('Native instrumentation changed during checkpoint capture')
         return record, value['token']
-    except BaseException:
-        session.close()
+    except BaseException as error:
+        _close_capture_failure(session, error)
         raise
 
 
