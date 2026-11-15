@@ -14,10 +14,11 @@ from .output_limits import (
 )
 
 AGENT_SKILL_GUIDES = {
-    "SKILL.md": "Start here: investigation technique, cost/reward/confidence and evidence boundaries",
+    "SKILL.md": "Start here: build the harness during play, keep the next action usable and investigate as needed",
+    "references/cloud-harness.md": "Dot/cloud play: bounded opening buffer, near-term priorities, parallel workers and safe promotion",
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
     "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
-    "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
+    "references/runtime-navigation.md": "Controller recipes, scene entry, input/navigation, native helpers and observation projections",
     "references/sweding.md": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
     "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
     "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
@@ -50,7 +51,7 @@ AGENT_SKILLS = {
         "guides": AGENT_SKILL_GUIDES_FDISBULL,
     },
     DEFAULT_AGENT_SKILL: {
-        "purpose": "Investigate programs, qualify evidence and recover game behavior",
+        "purpose": "Build a progressive play harness, investigate programs and recover game behavior",
         "guides": AGENT_SKILL_GUIDES,
     },
     "write-gamefaqs-guide": {

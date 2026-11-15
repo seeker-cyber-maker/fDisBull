@@ -70,6 +70,7 @@ REQUIRED_SOURCE_FILES = (
     "src/fdisbull/data/dos-runtime-signatures.json",
     "src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt",
     "src/fdisbull/skills/fdisbull-investigate/SKILL.md",
+    "src/fdisbull/skills/fdisbull-investigate/references/cloud-harness.md",
     "src/fdisbull/skills/fdisbull-investigate/references/scenes.md",
     "src/fdisbull/skills/fdisbull-investigate/references/methodology.md",
     "src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md",

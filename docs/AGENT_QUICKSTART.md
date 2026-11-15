@@ -36,6 +36,12 @@ actions as they become available. Use the cheapest compatible capability on late
 visits. Group compatible tests by scene, share observations, and use distinctive
 in-range values to test several HUD candidates together; split only ambiguous
 results. A Z/UIL harness can keep using the original engine and needs no UDC port.
+For Dot/cooperative cloud play, retrieve
+`agent-skill --reference references/cloud-harness.md`. Use a bounded opening
+buffer, then prioritize the current scene and next likely transition while play
+continues through working input actions. Workers return separate candidates from
+shared evidence or isolated guests; one live owner promotes revisions between
+requests. Distant-level recovery is not a startup gate.
 Use the retained controller's `capture-action` to save a learned control immediately;
 `execute:true` couples its first attempt to before/after frames. Named replay has
 no extra observation cost. `frame` with `grid:20` helps identify small toolbar

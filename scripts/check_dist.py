@@ -872,6 +872,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
 }
 REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/fdisbull-investigate/SKILL.md",
+    "skills/fdisbull-investigate/references/cloud-harness.md",
     "skills/fdisbull-investigate/references/scenes.md",
     "skills/fdisbull-investigate/references/methodology.md",
     "skills/fdisbull-investigate/references/runtime-navigation.md",

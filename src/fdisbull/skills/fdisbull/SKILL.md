@@ -1,6 +1,6 @@
 ---
 name: fdisbull
-description: Select and load the correct fDisBull skill for the task at hand. Use when multiple fDisBull skills exist and the user has not named one; routes to investigation, guide writing, or format/container handling.
+description: Choose the fDisBull skill for program investigation, progressive cooperative-play harness building including Dot/cloud workers, or writing a guide from recovered game knowledge.
 ---
 
 # fDisBull — skill router
@@ -11,18 +11,18 @@ Start here when you have a vague fDisBull request. Do not load every skill. Sele
 
 | If you need to… | Load this skill |
 |---|---|
-| Investigate a program or game, understand files/state, decode what got found, build a Z/Z-harness | `fdisbull-investigate` |
+| Build a Z harness during cooperative play, work as Dot or a parallel cloud worker, investigate files/state or recover behavior | `fdisbull-investigate` |
 | Write a readable GameFAQs-style guide, route, walkthrough, or technical FAQ | `write-gamefaqs-guide` |
 
 ## Load only what you need
 
-Read the router's multi-skill guidance, then read the chosen child's `SKILL.md` with `fdisbull agent-skill --reference <path>` and load only the specific `references/` file needed for the current decision.
+Read the chosen child's entrypoint with `fdisbull agent-skill --skill NAME --reference SKILL.md`, substituting the selected name. Load only the specific reference needed for the current decision. For cooperative play or a cloud harness worker, the investigation entrypoint routes to `references/cloud-harness.md`; prepare the current scene and next likely transition, then grow the harness while play continues.
 
 ## Do not combine the two child skills
 
 These two skills do different jobs:
 
-- **Investigation** (decode, verify claims, recover facts, build harness) → `fdisbull-investigate`
+- **Investigation and progressive play harness** (recover facts, capture controls, extend the next playable scene) → `fdisbull-investigate`
 - **Writing** (organize established knowledge into human-readable prose) → `write-gamefaqs-guide`
 
 Do not serve a writing request with the investigation skill, or serve an investigation request with the writing skill. If the user wants both, provide them sequentially: investigate first, then write using the investigation output.
