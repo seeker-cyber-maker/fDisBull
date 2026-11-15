@@ -90,6 +90,71 @@ def test_health_unknown_for_stale_or_incomplete_snapshot(tmp_path):
     assert backend.health()['state'] == 'unknown'
 
 
+def health_snapshot(backend, now, *, disk=None):
+    check = {'state': 'healthy', 'checked_epoch': now, 'fresh': True}
+    return {
+        'observed_epoch': now,
+        'read_only': True,
+        'model_required': False,
+        'boot_id': backend.config['expected_boot_id'],
+        'doctor_observation': check,
+        'n8n_readiness': check,
+        'health_checks': {k: check for k in module.CHECKS},
+        'websites': {k: check for k in module.WEBSITES},
+        'disk': disk if disk is not None else {
+            'state': 'known', 'free_bytes': 21_000_000_000, 'checked_epoch': now,
+        },
+    }
+
+
+@pytest.mark.parametrize('free_bytes', [0, 1, 20_099_999_999])
+def test_health_does_not_fail_on_known_low_disk_telemetry(tmp_path, free_bytes):
+    backend, _, transport = make(tmp_path)
+    now = int(time.time())
+    snapshot = health_snapshot(
+        backend, now, disk={'state': 'known', 'free_bytes': free_bytes, 'checked_epoch': now},
+    )
+    transport.responses = [{'snapshot': snapshot, 'receipt_path': '/ci/low-disk'}]
+    assert backend.health()['state'] == 'healthy'
+
+
+@pytest.mark.parametrize('disk', [
+    {'state': 'unknown', 'free_bytes': 0},
+    {'state': 'known', 'checked_epoch': 1},
+    {'state': 'known', 'free_bytes': 0},
+    {'state': 'known', 'free_bytes': '0', 'checked_epoch': 1_800_000_000},
+    {'state': 'known', 'free_bytes': True, 'checked_epoch': 1_800_000_000},
+    {'state': 'known', 'free_bytes': -1, 'checked_epoch': 1_800_000_000},
+    {'state': 'known', 'free_bytes': 0, 'checked_epoch': 1},
+])
+def test_health_preserves_unknown_for_invalid_disk_telemetry(tmp_path, disk):
+    backend, _, transport = make(tmp_path)
+    now = int(time.time())
+    snapshot = health_snapshot(backend, now, disk=disk)
+    transport.responses = [{'snapshot': snapshot, 'receipt_path': '/ci/invalid-disk'}]
+    assert backend.health()['state'] == 'unknown'
+
+
+def test_health_preserves_explicit_unhealthy_service_state_with_low_disk(tmp_path):
+    backend, _, transport = make(tmp_path)
+    now = int(time.time())
+    snapshot = health_snapshot(
+        backend, now, disk={'state': 'known', 'free_bytes': 0, 'checked_epoch': now},
+    )
+    snapshot['health_checks'][module.CHECKS[0]] = {'state': 'unhealthy', 'checked_epoch': now, 'fresh': True}
+    transport.responses = [{'snapshot': snapshot, 'receipt_path': '/ci/unhealthy-service'}]
+    assert backend.health()['state'] == 'unhealthy'
+
+
+def test_health_preserves_unknown_for_missing_disk_observation(tmp_path):
+    backend, _, transport = make(tmp_path)
+    now = int(time.time())
+    snapshot = health_snapshot(backend, now)
+    del snapshot['disk']
+    transport.responses = [{'snapshot': snapshot, 'receipt_path': '/ci/missing-disk'}]
+    assert backend.health()['state'] == 'unknown'
+
+
 def test_ambiguous_retry_reconciles_without_posting_again(tmp_path):
     backend, provider, transport = make(tmp_path)
     backend.prepared = True; backend._lease_held = True

@@ -10,7 +10,7 @@ from pathlib import Path
 import subprocess
 
 HELPER = Path('/usr/local/libexec/health_decision.py')
-HELPER_SHA256 = '34a5b8a626fc796df252e77946e50bd9a96dec678084649a80791618416d03d8'
+HELPER_SHA256 = '43ee153c0d5d4b2cbd1f4ce17001623002a8bdd95584b792f3f28148709efb5c'
 TIMEOUT_SECONDS = 55
 MAX_RECORD_BYTES = 65536
 

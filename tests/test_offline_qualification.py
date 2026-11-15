@@ -32,7 +32,7 @@ def record(healthy=True, durable=True):
             'free_bytes': None, 'snapshot_observed_epoch': 1, 'snapshot_age_seconds': 0,
             'read_only': True, 'model_required': False, 'components': {n: dict(item) for n in names},
             'disk': {'state': 'known', 'free_bytes': 30000000000,
-                     'minimum_free_bytes': 20100000000, 'failures': []},
+                     'minimum_free_bytes': None, 'failures': []},
             'failures': [], 'receipt': receipt}
 
 

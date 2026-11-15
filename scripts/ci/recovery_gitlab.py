@@ -355,11 +355,14 @@ class GitLabRecoveryBackend:
             if (s['doctor_observation'].get('fresh') is not True
                     or any(s['health_checks'][k].get('fresh') is not True for k in CHECKS)):
                 return {'state': 'unknown', 'receipt_path': out['receipt_path']}
-            if s['disk']['state'] != 'known' or not isinstance(s['disk']['free_bytes'], int):
+            disk = s['disk']
+            free_bytes = disk.get('free_bytes')
+            if (disk.get('state') != 'known' or type(free_bytes) is not int
+                    or free_bytes < 0):
                 return {'state': 'unknown', 'receipt_path': out['receipt_path']}
-            if not isinstance(s['disk'].get('checked_epoch'), (int, float)) or not 0 <= now - s['disk']['checked_epoch'] <= 120:
+            if not isinstance(disk.get('checked_epoch'), (int, float)) or not 0 <= now - disk['checked_epoch'] <= 120:
                 return {'state': 'unknown', 'receipt_path': out['receipt_path']}
-            if 'unhealthy' in states or s['disk']['free_bytes'] < 20_100_000_000:
+            if 'unhealthy' in states:
                 return {'state': 'unhealthy', 'receipt_path': out['receipt_path']}
             if 'unknown' in states:
                 return {'state': 'unknown', 'receipt_path': out['receipt_path']}
