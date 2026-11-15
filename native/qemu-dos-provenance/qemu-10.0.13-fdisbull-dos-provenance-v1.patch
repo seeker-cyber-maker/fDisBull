@@ -1,0 +1,1286 @@
+--- /dev/null
++++ b/qapi/fdisbull-dos-provenance.json
+@@ -0,0 +1,131 @@
++# Bounded native provenance for one source-owned DOS create/write/close path.
++##
++# @FdisbullDosSaveWitnessRange:
++# @start: Guest linear start of an admitted caller code range.
++# @size: Nonzero byte extent of the caller code range.
++##
++{ 'struct': 'FdisbullDosSaveWitnessRange',
++  'data': { 'start': 'uint32', 'size': 'uint32' } }
++
++##
++# @FdisbullDosSaveWitnessEvent:
++# @sequence: Monotone ledger event index.
++# @function: DOS INT 21h function number observed at caller entry.
++# @handle: DOS handle relevant to the event, or 65535 when not applicable.
++# @carry: Carry flag observed after the matching INT 21h return.
++# @ax: AX observed after the matching INT 21h return.
++# @requested: Requested byte count for a write, otherwise zero.
++# @accepted: Accepted byte count for a successful write, otherwise zero.
++# @caller-pc: Caller linear address of the INT 21h instruction.
++# @return-pc: Linear address immediately after the INT instruction.
++##
++{ 'struct': 'FdisbullDosSaveWitnessEvent',
++  'data': { 'sequence': 'uint32', 'function': 'uint8', 'handle': 'uint16',
++            'carry': 'bool', 'ax': 'uint16', 'requested': 'uint16',
++            'accepted': 'uint16', 'caller-pc': 'uint32',
++            'return-pc': 'uint32' } }
++
++##
++# @FdisbullDosSaveWitnessInterruptFrame:
++# @cs: Code selector captured before the hardware interrupt frame was pushed.
++# @ss: Stack selector captured before the hardware interrupt frame was pushed.
++# @sp: Stack pointer captured before the hardware interrupt frame was pushed.
++# @return-pc: Linear PC to which the hardware IRET must return.
++##
++{ 'struct': 'FdisbullDosSaveWitnessInterruptFrame',
++  'data': { 'cs': 'uint16', 'ss': 'uint16', 'sp': 'uint16',
++            'return-pc': 'uint32' } }
++
++##
++# @FdisbullDosSaveWitnessInfo:
++# @api-version: Private native protocol version.
++# @model: Exact observer model.
++# @epoch: Native owner epoch, changed after VM restore.
++# @generation: Monotone observer state generation.
++# @active: Observer is armed and recording.
++# @valid: No unsupported or ambiguous operation has invalidated evidence.
++# @phase: Current ledger phase: idle, armed, created, writing, committed,
++#   closed, ready or invalid.
++# @token: Host owner token, omitted before arming.
++# @child-psp: Admitted caller PSP.
++# @int21-vector: Pinned little-endian IVT value from bytes 84h..87h.
++# @dos-path: One absolute DOS 8.3 path, such as D:\\SAVE.DAT.
++# @source-ranges: Admitted caller code ranges.
++# @create-seen: Successful exclusive AH=5Bh create was observed.
++# @created-handle: Handle returned by the create, or 65535 before creation.
++# @write-count: Successful nonzero sequential writes to the created handle.
++# @bytes-written: Accepted sequential payload bytes captured exactly.
++# @commit-seen: Successful AH=68h commit observed.
++# @flush-seen: Successful AH=0Dh disk flush observed after close.
++# @close-seen: Successful AH=3Eh close of the created handle observed.
++# @event-count: Number of matching INT 21h calls recorded.
++# @events: Bounded ordered call ledger.
++# @payload-hex: Concatenated accepted write bytes, lower-case hex.
++# @pending: An INT 21h call has entered and has not yet returned.
++# @pending-function: Function number for the in-flight call.
++# @pending-handle: DOS handle associated with the call, or 65535.
++# @pending-requested: Requested bytes for an in-flight write.
++# @pending-caller-pc: Caller linear address at INT 21h entry.
++# @pending-return-pc: Exact linear return address of the call.
++# @pending-ss: Stack selector at entry.
++# @pending-cs: Code selector at entry.
++# @pending-sp: Stack pointer at entry.
++# @pending-payload-hex: Captured write buffer for an in-flight write.
++# @hardware-interrupt-depth: Bounded unreturned hardware interrupt depth.
++# @hardware-returns: Ordered hardware interrupt return frames, outermost first.
++# @fault: Diagnostic when invalid.
++##
++{ 'struct': 'FdisbullDosSaveWitnessInfo',
++  'data': { 'api-version': 'int', 'model': 'str', 'epoch': 'uint64',
++            'generation': 'uint64', 'active': 'bool', 'valid': 'bool',
++            'phase': 'str', '*token': 'str', 'child-psp': 'uint16',
++            'int21-vector': 'uint32',
++            'dos-path': 'str', 'source-ranges': ['FdisbullDosSaveWitnessRange'],
++            'create-seen': 'bool', 'created-handle': 'uint16',
++            'write-count': 'uint32', 'bytes-written': 'uint32',
++            'commit-seen': 'bool', 'flush-seen': 'bool', 'close-seen': 'bool',
++            'event-count': 'uint32', 'events': ['FdisbullDosSaveWitnessEvent'],
++            'payload-hex': 'str', 'pending': 'bool',
++            'pending-function': 'uint8', 'pending-handle': 'uint16',
++            'pending-requested': 'uint16', 'pending-caller-pc': 'uint32',
++            'pending-return-pc': 'uint32', 'pending-ss': 'uint16',
++            'pending-cs': 'uint16', 'pending-sp': 'uint16',
++            'pending-payload-hex': 'str', 'hardware-interrupt-depth': 'uint8',
++            'hardware-returns': ['FdisbullDosSaveWitnessInterruptFrame'],
++            '*fault': 'str' } }
++
++##
++# @x-fdisbull-arm-dos-save-witness:
++# @token: Opaque host owner token, at least 16 and at most 64 characters.
++# @child-psp: PSP identity observed for the admitted caller.
++# @source-ranges: Sorted, disjoint physical code ranges owned by the caller.
++# @dos-path: Absolute root destination on drive D, in DOS 8.3 form.
++# @int21-vector: Expected IVT value captured from the trusted kernel.
++#
++# Arm a stopped, single-CPU, real-mode DOS call observer for one caller and
++# one absolute 8.3 destination. The observer does not execute guest code.
++##
++{ 'command': 'x-fdisbull-arm-dos-save-witness',
++  'data': { 'token': 'str', 'child-psp': 'uint16',
++            'source-ranges': ['FdisbullDosSaveWitnessRange'],
++            'dos-path': 'str', 'int21-vector': 'uint32' },
++  'returns': 'FdisbullDosSaveWitnessInfo' }
++
++##
++# @x-fdisbull-query-dos-save-witness:
++# Query the current native DOS save witness without changing it.
++##
++{ 'command': 'x-fdisbull-query-dos-save-witness',
++  'returns': 'FdisbullDosSaveWitnessInfo' }
++
++##
++# @x-fdisbull-disarm-dos-save-witness:
++# @token: Current host owner token.
++# @expected-generation: Generation observed by the caller before disarming.
++#
++# Disarm an observer after its receipt has been durably consumed. The ledger
++# remains queryable and is not erased.
++##
++{ 'command': 'x-fdisbull-disarm-dos-save-witness',
++  'data': { 'token': 'str', 'expected-generation': 'uint64' },
++  'returns': 'FdisbullDosSaveWitnessInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -71,6 +71,7 @@
+   'fdisbull-task-context',
+     'fdisbull-task-private',
+   'fdisbull-task-scheduler',
++    'fdisbull-dos-provenance',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -74,6 +74,7 @@
+ { 'include': 'fdisbull-task-context.json' }
+ { 'include': 'fdisbull-task-private.json' }
+ { 'include': 'fdisbull-task-scheduler.json' }
++{ 'include': 'fdisbull-dos-provenance.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- /dev/null
++++ b/target/i386/fdisbull-dos-provenance.c
+@@ -0,0 +1,1044 @@
++/* Native INT 21h provenance for one bounded FreeDOS save operation.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "migration/vmstate.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-dos-provenance.h"
++#include "exec/cpu-common.h"
++#include "qemu/main-loop.h"
++#include "qemu/accel.h"
++#include "qemu/uuid.h"
++#include "system/runstate.h"
++#include "target/i386/fdisbull-dos-provenance.h"
++
++#define DOS_WITNESS_API 1
++#define DOS_WITNESS_MAX_EVENTS 256
++#define DOS_WITNESS_MAX_BYTES 65536
++#define DOS_WITNESS_MAX_RANGES 32
++#define DOS_WITNESS_MAX_HW_DEPTH 16
++#define DOS_WITNESS_HANDLE_NONE UINT16_MAX
++
++typedef struct DosWitnessRange {
++    uint32_t start;
++    uint32_t size;
++} DosWitnessRange;
++
++typedef struct DosWitnessEvent {
++    uint32_t sequence;
++    uint8_t function;
++    uint16_t handle;
++    bool carry;
++    uint16_t ax;
++    uint16_t requested;
++    uint16_t accepted;
++    uint32_t caller_pc;
++    uint32_t return_pc;
++} DosWitnessEvent;
++
++typedef struct DosWitnessInterruptFrame {
++    uint16_t cs;
++    uint16_t ss;
++    uint16_t sp;
++    uint32_t return_pc;
++} DosWitnessInterruptFrame;
++
++typedef struct DosWitnessState {
++    uint64_t epoch;
++    uint64_t generation;
++    bool active;
++    bool valid;
++    uint8_t phase;
++    uint16_t child_psp;
++    uint32_t int21_vector;
++    uint16_t created_handle;
++    uint32_t write_count;
++    uint32_t bytes_written;
++    bool create_seen;
++    bool commit_seen;
++    bool flush_seen;
++    bool close_seen;
++    uint32_t event_count;
++    uint32_t range_count;
++    DosWitnessRange ranges[DOS_WITNESS_MAX_RANGES];
++    uint8_t token[65];
++    uint8_t dos_path[16];
++    uint8_t fault[160];
++    uint8_t payload[DOS_WITNESS_MAX_BYTES];
++    DosWitnessEvent events[DOS_WITNESS_MAX_EVENTS];
++
++    /* An in-flight INT 21h call is part of the checkpointed proof. */
++    bool pending;
++    uint8_t pending_function;
++    uint16_t pending_handle;
++    uint16_t pending_requested;
++    uint32_t pending_caller_pc;
++    uint32_t pending_return_pc;
++    uint16_t pending_ss;
++    uint16_t pending_cs;
++    uint16_t pending_sp;
++    uint16_t pending_payload_size;
++    uint8_t pending_payload[DOS_WITNESS_MAX_BYTES];
++    uint8_t hardware_depth;
++    DosWitnessInterruptFrame hardware_frames[DOS_WITNESS_MAX_HW_DEPTH];
++} DosWitnessState;
++
++static DosWitnessState witness = {
++    .epoch = 1,
++    .generation = 1,
++    .valid = true,
++    .created_handle = DOS_WITNESS_HANDLE_NONE,
++    .pending_handle = DOS_WITNESS_HANDLE_NONE,
++};
++static uint64_t epoch_highwater = 1;
++static uint64_t generation_highwater = 1;
++static bool vmstate_registered;
++static bool token_valid(const char *token);
++
++static bool counter_advance(uint64_t *counter)
++{
++    if (*counter == UINT64_MAX) {
++        return false;
++    }
++    (*counter)++;
++    return true;
++}
++
++static void witness_fault(const char *reason)
++{
++    if (!witness.valid) {
++        return;
++    }
++    witness.valid = false;
++    witness.phase = 7;
++    g_strlcpy((char *)witness.fault, reason, sizeof(witness.fault));
++    if (!counter_advance(&generation_highwater)) {
++        return;
++    }
++    witness.generation = generation_highwater;
++}
++
++static bool witness_register_vmstate(Error **errp)
++{
++    extern const VMStateDescription vmstate_fdisbull_dos_save_witness;
++    (void)errp;
++    if (!vmstate_registered) {
++        vmstate_register(NULL, 0, &vmstate_fdisbull_dos_save_witness,
++                         &witness);
++        vmstate_registered = true;
++    }
++    return true;
++}
++
++static int dos_witness_pre_save(void *opaque)
++{
++    DosWitnessState *state = opaque;
++    state->epoch = epoch_highwater;
++    state->generation = generation_highwater;
++    return 0;
++}
++
++static int dos_witness_post_load(void *opaque, int version_id)
++{
++    DosWitnessState *state = opaque;
++    uint64_t accepted_sum = 0;
++    uint32_t i;
++
++    if (version_id != 1 || !state->epoch || !state->generation ||
++        state->epoch == UINT64_MAX || state->generation == UINT64_MAX ||
++        !epoch_highwater || !generation_highwater ||
++        epoch_highwater == UINT64_MAX || generation_highwater == UINT64_MAX ||
++        state->range_count > DOS_WITNESS_MAX_RANGES ||
++        state->event_count > DOS_WITNESS_MAX_EVENTS ||
++        state->bytes_written > DOS_WITNESS_MAX_BYTES ||
++        state->hardware_depth > DOS_WITNESS_MAX_HW_DEPTH ||
++        state->phase > 7 ||
++        !memchr(state->token, '\0', sizeof(state->token)) ||
++        !memchr(state->dos_path, '\0', sizeof(state->dos_path)) ||
++        !memchr(state->fault, '\0', sizeof(state->fault)) ||
++        (state->pending && (!state->active || !state->valid)) ||
++        (state->active && (!state->token[0] ||
++                           !token_valid((const char *)state->token) ||
++                           !state->dos_path[0] || !state->child_psp ||
++                           !state->range_count || !state->int21_vector ||
++                           state->phase == 0)) ||
++        (state->valid && state->phase == 7) ||
++        (!state->valid && state->phase != 7) ||
++        (state->phase == 6 && (!state->create_seen || !state->close_seen ||
++                               !state->flush_seen || !state->valid)) ||
++        (state->create_seen && state->created_handle == DOS_WITNESS_HANDLE_NONE)) {
++        return -EINVAL;
++    }
++    for (i = 0; i < state->range_count; i++) {
++        uint64_t end = (uint64_t)state->ranges[i].start + state->ranges[i].size;
++        if (!state->ranges[i].size || end > 0x100000 ||
++            (i && state->ranges[i].start <
++             (uint64_t)state->ranges[i - 1].start + state->ranges[i - 1].size)) {
++            return -EINVAL;
++        }
++    }
++    for (i = 0; i < state->event_count; i++) {
++        const DosWitnessEvent *event = &state->events[i];
++        if (event->sequence != i + 1 || event->accepted > event->requested ||
++            (event->function == 0x40 && event->accepted &&
++             event->accepted != event->requested)) {
++            return -EINVAL;
++        }
++        accepted_sum += event->accepted;
++    }
++    if (accepted_sum != state->bytes_written ||
++        (state->pending && state->pending_function == 0x40 &&
++         state->pending_payload_size != state->pending_requested)) {
++        return -EINVAL;
++    }
++    epoch_highwater = MAX(epoch_highwater, state->epoch) + 1;
++    generation_highwater = MAX(generation_highwater, state->generation) + 1;
++    state->epoch = epoch_highwater;
++    state->generation = generation_highwater;
++    return 0;
++}
++
++static const VMStateDescription vmstate_dos_witness_range = {
++    .name = "fdisbull/dos-save-witness/range",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32(start, DosWitnessRange),
++        VMSTATE_UINT32(size, DosWitnessRange),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static const VMStateDescription vmstate_dos_witness_event = {
++    .name = "fdisbull/dos-save-witness/event",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32(sequence, DosWitnessEvent),
++        VMSTATE_UINT8(function, DosWitnessEvent),
++        VMSTATE_UINT16(handle, DosWitnessEvent),
++        VMSTATE_BOOL(carry, DosWitnessEvent),
++        VMSTATE_UINT16(ax, DosWitnessEvent),
++        VMSTATE_UINT16(requested, DosWitnessEvent),
++        VMSTATE_UINT16(accepted, DosWitnessEvent),
++        VMSTATE_UINT32(caller_pc, DosWitnessEvent),
++        VMSTATE_UINT32(return_pc, DosWitnessEvent),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static const VMStateDescription vmstate_dos_witness_interrupt_frame = {
++    .name = "fdisbull/dos-save-witness/interrupt-frame",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT16(cs, DosWitnessInterruptFrame),
++        VMSTATE_UINT16(ss, DosWitnessInterruptFrame),
++        VMSTATE_UINT16(sp, DosWitnessInterruptFrame),
++        VMSTATE_UINT32(return_pc, DosWitnessInterruptFrame),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++const VMStateDescription vmstate_fdisbull_dos_save_witness = {
++    .name = "fdisbull/dos-save-witness",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .pre_save = dos_witness_pre_save,
++    .post_load = dos_witness_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT64(epoch, DosWitnessState),
++        VMSTATE_UINT64(generation, DosWitnessState),
++        VMSTATE_BOOL(active, DosWitnessState),
++        VMSTATE_BOOL(valid, DosWitnessState),
++        VMSTATE_UINT8(phase, DosWitnessState),
++        VMSTATE_UINT16(child_psp, DosWitnessState),
++        VMSTATE_UINT32(int21_vector, DosWitnessState),
++        VMSTATE_UINT16(created_handle, DosWitnessState),
++        VMSTATE_UINT32(write_count, DosWitnessState),
++        VMSTATE_UINT32(bytes_written, DosWitnessState),
++        VMSTATE_BOOL(create_seen, DosWitnessState),
++        VMSTATE_BOOL(commit_seen, DosWitnessState),
++        VMSTATE_BOOL(flush_seen, DosWitnessState),
++        VMSTATE_BOOL(close_seen, DosWitnessState),
++        VMSTATE_UINT32(event_count, DosWitnessState),
++        VMSTATE_UINT32(range_count, DosWitnessState),
++        VMSTATE_STRUCT_ARRAY(ranges, DosWitnessState, DOS_WITNESS_MAX_RANGES,
++                             0, vmstate_dos_witness_range, DosWitnessRange),
++        VMSTATE_BUFFER(token, DosWitnessState),
++        VMSTATE_BUFFER(dos_path, DosWitnessState),
++        VMSTATE_BUFFER(fault, DosWitnessState),
++        VMSTATE_UINT8_ARRAY(payload, DosWitnessState, sizeof(witness.payload)),
++        VMSTATE_STRUCT_ARRAY(events, DosWitnessState, DOS_WITNESS_MAX_EVENTS,
++                             0, vmstate_dos_witness_event, DosWitnessEvent),
++        VMSTATE_BOOL(pending, DosWitnessState),
++        VMSTATE_UINT8(pending_function, DosWitnessState),
++        VMSTATE_UINT16(pending_handle, DosWitnessState),
++        VMSTATE_UINT16(pending_requested, DosWitnessState),
++        VMSTATE_UINT32(pending_caller_pc, DosWitnessState),
++        VMSTATE_UINT32(pending_return_pc, DosWitnessState),
++        VMSTATE_UINT16(pending_ss, DosWitnessState),
++        VMSTATE_UINT16(pending_cs, DosWitnessState),
++        VMSTATE_UINT16(pending_sp, DosWitnessState),
++        VMSTATE_UINT16(pending_payload_size, DosWitnessState),
++        VMSTATE_UINT8_ARRAY(pending_payload, DosWitnessState, sizeof(witness.pending_payload)),
++        VMSTATE_UINT8(hardware_depth, DosWitnessState),
++        VMSTATE_STRUCT_ARRAY(hardware_frames, DosWitnessState,
++                             DOS_WITNESS_MAX_HW_DEPTH, 0,
++                             vmstate_dos_witness_interrupt_frame,
++                             DosWitnessInterruptFrame),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static bool stopped_cpu(CPUState **out, CPUX86State **env_out,
++                        bool require_real_mode, Error **errp)
++{
++    CPUState *cpu, *found = NULL;
++    CPUX86State *env;
++    int count = 0;
++
++    if (runstate_is_running() || (runstate_get() != RUN_STATE_PAUSED &&
++        runstate_get() != RUN_STATE_DEBUG &&
++        runstate_get() != RUN_STATE_PRELAUNCH)) {
++        error_setg(errp, "DOS save witness requires a stopped VM");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        found = cpu;
++        count++;
++    }
++    if (count != 1 || !found || !object_dynamic_cast(OBJECT(found), TYPE_X86_CPU) ||
++        strcmp(current_accel_name(), "tcg")) {
++        error_setg(errp, "DOS save witness requires one stopped x86 TCG CPU");
++        return false;
++    }
++    env = &X86_CPU(found)->env;
++    if (require_real_mode && ((env->cr[0] & CR0_PE_MASK) ||
++        (env->hflags & HF_LMA_MASK) ||
++        (env->cr[4] & CR4_PAE_MASK) || (env->hflags & HF_GUEST_MASK))) {
++        error_setg(errp, "DOS save witness supports real mode only");
++        return false;
++    }
++    *out = found;
++    *env_out = env;
++    return true;
++}
++
++static bool source_pc(uint32_t pc)
++{
++    uint32_t i;
++    for (i = 0; i < witness.range_count; i++) {
++        uint64_t end = (uint64_t)witness.ranges[i].start + witness.ranges[i].size;
++        if (pc >= witness.ranges[i].start && pc < end) {
++            return true;
++        }
++    }
++    return false;
++}
++
++static bool memory_read(CPUState *cpu, uint32_t address, uint8_t *data,
++                        size_t size)
++{
++    if ((uint64_t)address + size > 0xA0000 ||
++        cpu_memory_rw_debug(cpu, address, data, size, 0)) {
++        return false;
++    }
++    return true;
++}
++
++static bool read_dos_path(CPUState *cpu, CPUX86State *env, char *path,
++                          size_t capacity)
++{
++    uint32_t offset = env->regs[R_EDX] & 0xffff;
++    uint32_t address = env->segs[R_DS].base + offset;
++    size_t i;
++
++    for (i = 0; i + 1 < capacity; i++) {
++        uint8_t c;
++        if ((uint64_t)offset + i >= 0x10000) {
++            return false;
++        }
++        if (!memory_read(cpu, address + i, &c, 1)) {
++            return false;
++        }
++        if (!c) {
++            path[i] = '\0';
++            return i != 0;
++        }
++        if (c < 0x20 || c > 0x7e) {
++            return false;
++        }
++        path[i] = g_ascii_toupper(c);
++    }
++    return false;
++}
++
++static bool read_int21_vector(CPUState *cpu, uint32_t *vector)
++{
++    uint8_t bytes[4];
++    if (!memory_read(cpu, 0x84, bytes, sizeof(bytes))) {
++        return false;
++    }
++    *vector = (uint32_t)bytes[0] |
++              ((uint32_t)bytes[1] << 8) |
++              ((uint32_t)bytes[2] << 16) |
++              ((uint32_t)bytes[3] << 24);
++    return *vector != 0;
++}
++
++static bool path_matches(const char *candidate)
++{
++    return g_ascii_strcasecmp(candidate, (const char *)witness.dos_path) == 0;
++}
++
++static bool dos_mutator(uint8_t ah)
++{
++    switch (ah) {
++    case 0x0f: case 0x10: case 0x13: case 0x14: case 0x15: case 0x16:
++    case 0x17: case 0x21: case 0x22: case 0x23: case 0x27: case 0x28:
++    case 0x3c: case 0x3d: case 0x3e: case 0x40: case 0x41: case 0x42:
++    case 0x43: case 0x45: case 0x46: case 0x47: case 0x56: case 0x5b:
++    case 0x5c: case 0x6c: case 0x68:
++        return true;
++    default:
++        return false;
++    }
++}
++
++static bool dos_call_observed(uint8_t ah)
++{
++    switch (ah) {
++    case 0x01: case 0x02: case 0x06: case 0x07: case 0x08:
++    case 0x09: case 0x0a: case 0x0b: case 0x0c: case 0x0d:
++    case 0x19: case 0x2f: case 0x30: case 0x34: case 0x35: case 0x36:
++    case 0x3e: case 0x40: case 0x4e: case 0x4f:
++    case 0x51: case 0x52: case 0x59: case 0x62: case 0x68: case 0x5b:
++        return true;
++    default:
++        return false;
++    }
++}
++
++static void record_entry(CPUState *cpu, CPUX86State *env, uint8_t ah,
++                         uint32_t caller_pc, uint32_t return_pc)
++{
++    uint16_t handle = DOS_WITNESS_HANDLE_NONE;
++    uint16_t requested = 0;
++    uint8_t tmp[DOS_WITNESS_MAX_BYTES];
++    uint16_t count = 0;
++    uint32_t address;
++    char path[260];
++
++    if (witness.event_count >= DOS_WITNESS_MAX_EVENTS || witness.pending) {
++        witness_fault("INT 21h event bound or nested call exceeded");
++        return;
++    }
++    if (ah == 0x5b) {
++        if (!read_dos_path(cpu, env, path, sizeof(path)) || !path_matches(path) ||
++            witness.create_seen) {
++            witness_fault("Exclusive create path was not the admitted target");
++            return;
++        }
++    } else if (ah == 0x40) {
++        handle = env->regs[R_EBX] & 0xffff;
++        requested = env->regs[R_ECX] & 0xffff;
++        if (!witness.create_seen || handle != witness.created_handle ||
++            witness.close_seen || requested == 0 ||
++            (uint64_t)witness.bytes_written + requested > DOS_WITNESS_MAX_BYTES) {
++            witness_fault("Unsupported or nonsequential DOS write");
++            return;
++        }
++        address = env->segs[R_DS].base + (env->regs[R_EDX] & 0xffff);
++        if ((uint64_t)(env->regs[R_EDX] & 0xffff) + requested > 0x10000 ||
++            !memory_read(cpu, address, tmp, requested)) {
++            witness_fault("DOS write buffer was not readable RAM");
++            return;
++        }
++        count = requested;
++        memcpy(witness.pending_payload, tmp, count);
++        witness.commit_seen = false;
++    } else if (ah == 0x68) {
++        handle = env->regs[R_EBX] & 0xffff;
++        if (!witness.create_seen || handle != witness.created_handle ||
++            witness.close_seen) {
++            witness_fault("Commit did not target the created handle");
++            return;
++        }
++    } else if (ah == 0x3e) {
++        handle = env->regs[R_EBX] & 0xffff;
++        if (!witness.create_seen || handle != witness.created_handle ||
++            witness.close_seen) {
++            witness_fault("Close did not target the created handle");
++            return;
++        }
++    } else if (ah == 0x0d) {
++        if (!witness.close_seen) {
++            witness_fault("Disk flush preceded close");
++            return;
++        }
++    } else if (dos_mutator(ah) || !dos_call_observed(ah)) {
++        witness_fault("Unsupported DOS file operation during save witness");
++        return;
++    }
++
++    if (ah == 0x40 && count) {
++        witness.pending_payload_size = count;
++    } else {
++        witness.pending_payload_size = 0;
++    }
++    witness.pending = true;
++    witness.pending_function = ah;
++    witness.pending_handle = handle;
++    witness.pending_requested = requested;
++    witness.pending_caller_pc = caller_pc;
++    witness.pending_return_pc = return_pc;
++    witness.pending_ss = env->segs[R_SS].selector;
++    witness.pending_cs = env->segs[R_CS].selector;
++    witness.pending_sp = env->regs[R_ESP] & 0xffff;
++}
++
++void fdisbull_dos_save_witness_interrupt(CPUX86State *env, int intno,
++                                         int is_int,
++                                         int is_hw,
++                                         target_ulong next_eip)
++{
++    uint32_t caller_pc;
++    uint32_t return_pc;
++    uint32_t actual_vector;
++    CPUState *cpu = env_cpu(env);
++
++    if (!witness.active || !witness.valid) {
++        return;
++    }
++    if ((env->cr[0] & CR0_PE_MASK) || (env->cr[4] & CR4_PAE_MASK) ||
++        (env->hflags & (HF_LMA_MASK | HF_GUEST_MASK))) {
++        witness_fault("CPU left real mode while DOS save witness was armed");
++        return;
++    }
++    if (is_hw) {
++        DosWitnessInterruptFrame *frame;
++        if (witness.hardware_depth >= DOS_WITNESS_MAX_HW_DEPTH) {
++            witness_fault("Hardware interrupt nesting exceeded witness bound");
++            return;
++        }
++        frame = &witness.hardware_frames[witness.hardware_depth++];
++        frame->cs = env->segs[R_CS].selector;
++        frame->ss = env->segs[R_SS].selector;
++        frame->sp = env->regs[R_ESP] & 0xffff;
++        frame->return_pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
++        if (!counter_advance(&generation_highwater)) {
++            witness_fault("DOS save witness generation overflow");
++        } else {
++            witness.generation = generation_highwater;
++        }
++        return;
++    }
++    if (!is_int) {
++        return;
++    }
++    if (intno == 0x13 || intno == 0x25 || intno == 0x26) {
++        if (witness.pending &&
++            (witness.pending_function == 0x5b ||
++             witness.pending_function == 0x40 ||
++             witness.pending_function == 0x68 ||
++             witness.pending_function == 0x3e ||
++             witness.pending_function == 0x0d)) {
++            return;
++        }
++        witness_fault("Raw BIOS or absolute disk access outside DOS save call");
++        return;
++    }
++    if (intno != 0x21) {
++        return;
++    }
++    caller_pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
++    return_pc = (env->segs[R_CS].base + next_eip) & 0xfffff;
++    if (!source_pc(caller_pc) || witness.hardware_depth ||
++        !read_int21_vector(cpu, &actual_vector) ||
++        actual_vector != witness.int21_vector) {
++        witness_fault("DOS call was outside the admitted caller state");
++        return;
++    }
++    if (((env->regs[R_EAX] >> 8) & 0xff) == 0x4b ||
++        ((env->regs[R_EAX] >> 8) & 0xff) == 0x50) {
++        witness_fault("EXEC or PSP switch invalidated save proof");
++        return;
++    }
++    record_entry(cpu, env, (env->regs[R_EAX] >> 8) & 0xff,
++                 caller_pc, return_pc);
++}
++
++void fdisbull_dos_save_witness_iret(CPUX86State *env)
++{
++    DosWitnessEvent *event;
++    uint16_t ax;
++    bool carry;
++    uint32_t pc;
++
++    if (!witness.active || !witness.valid || !witness.pending) {
++        /* Hardware-only frames are still part of the receipt when no DOS
++         * call is in flight. */
++        if (witness.active && witness.valid && witness.hardware_depth) {
++            DosWitnessInterruptFrame *frame =
++                &witness.hardware_frames[witness.hardware_depth - 1];
++            pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
++            if (pc == frame->return_pc &&
++                env->segs[R_CS].selector == frame->cs &&
++                env->segs[R_SS].selector == frame->ss &&
++                (env->regs[R_ESP] & 0xffff) == frame->sp) {
++                memset(frame, 0, sizeof(*frame));
++                witness.hardware_depth--;
++                if (!counter_advance(&generation_highwater)) {
++                    witness_fault("DOS save witness generation overflow");
++                } else {
++                    witness.generation = generation_highwater;
++                }
++            }
++        }
++        return;
++    }
++    pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
++    if (witness.hardware_depth) {
++        DosWitnessInterruptFrame *frame =
++            &witness.hardware_frames[witness.hardware_depth - 1];
++        if (pc == frame->return_pc &&
++            env->segs[R_CS].selector == frame->cs &&
++            env->segs[R_SS].selector == frame->ss &&
++            (env->regs[R_ESP] & 0xffff) == frame->sp) {
++            memset(frame, 0, sizeof(*frame));
++            witness.hardware_depth--;
++            if (!counter_advance(&generation_highwater)) {
++                witness_fault("DOS save witness generation overflow");
++            } else {
++                witness.generation = generation_highwater;
++            }
++            return;
++        }
++    }
++    if (pc != witness.pending_return_pc ||
++        env->segs[R_CS].selector != witness.pending_cs ||
++        env->segs[R_SS].selector != witness.pending_ss ||
++        (env->regs[R_ESP] & 0xffff) != witness.pending_sp) {
++        return;
++    }
++    ax = env->regs[R_EAX] & 0xffff;
++    carry = cpu_compute_eflags(env) & CC_C;
++    if (witness.event_count >= DOS_WITNESS_MAX_EVENTS) {
++        witness_fault("DOS event ledger overflow");
++        return;
++    }
++    event = &witness.events[witness.event_count];
++    memset(event, 0, sizeof(*event));
++    event->sequence = witness.event_count + 1;
++    event->function = witness.pending_function;
++    event->handle = witness.pending_handle;
++    event->carry = carry;
++    event->ax = ax;
++    event->requested = witness.pending_requested;
++    event->caller_pc = witness.pending_caller_pc;
++    event->return_pc = witness.pending_return_pc;
++
++    switch (witness.pending_function) {
++    case 0x51:
++    case 0x62:
++        if ((env->regs[R_EBX] & 0xffff) != witness.child_psp) {
++            witness_fault("Current DOS PSP did not match the admitted caller");
++        }
++        event->handle = env->regs[R_EBX] & 0xffff;
++        break;
++    case 0x5b:
++        if (!carry) {
++            witness.create_seen = true;
++            witness.created_handle = ax;
++            event->handle = ax;
++            witness.phase = 2;
++        } else {
++            witness_fault("Exclusive DOS create failed");
++        }
++        break;
++    case 0x40:
++        if (!carry && ax == witness.pending_requested &&
++            ax > 0 && ax <= witness.pending_payload_size &&
++            witness.bytes_written + ax <= DOS_WITNESS_MAX_BYTES) {
++            memcpy(witness.payload + witness.bytes_written,
++                   witness.pending_payload, ax);
++            witness.bytes_written += ax;
++            witness.write_count++;
++            event->accepted = ax;
++            witness.phase = 3;
++        } else {
++            witness_fault("DOS write failed or was not fully sequential");
++        }
++        break;
++    case 0x68:
++        if (!carry) {
++            witness.commit_seen = true;
++            witness.phase = 4;
++        } else {
++            witness_fault("DOS commit failed");
++        }
++        break;
++    case 0x3e:
++        if (!carry) {
++            witness.close_seen = true;
++            witness.phase = 5;
++        } else {
++            witness_fault("DOS close failed");
++        }
++        break;
++    case 0x0d:
++        witness.flush_seen = true;
++        if (witness.create_seen && witness.close_seen) {
++            witness.phase = 6;
++        }
++        break;
++    default:
++        break;
++    }
++    witness.event_count++;
++    witness.pending = false;
++    witness.pending_function = 0;
++    witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.pending_requested = 0;
++    witness.pending_caller_pc = 0;
++    witness.pending_return_pc = 0;
++    witness.pending_ss = 0;
++    witness.pending_cs = 0;
++    witness.pending_sp = 0;
++    witness.pending_payload_size = 0;
++    memset(witness.pending_payload, 0, sizeof(witness.pending_payload));
++    if (!counter_advance(&generation_highwater)) {
++        witness_fault("DOS save witness generation overflow");
++        return;
++    }
++    witness.generation = generation_highwater;
++}
++
++void fdisbull_dos_save_witness_raw_io(CPUX86State *env, uint32_t raw_port,
++                                      unsigned width)
++{
++    uint32_t pc;
++    uint16_t port = raw_port & 0xffff;
++    bool storage_port = false;
++    unsigned i;
++    static const struct { uint16_t first, last; } ranges[] = {
++        {0x1f0, 0x1f7}, {0x170, 0x177}, {0x3f0, 0x3f7}, {0x376, 0x376},
++        {0xcf8, 0xcff}, {0x00, 0x0f}, {0x80, 0x8f}, {0xc0, 0xdf},
++    };
++
++    for (i = 0; i < ARRAY_SIZE(ranges); i++) {
++        uint32_t end = (uint32_t)port + MAX(width, 1) - 1;
++        if (port <= ranges[i].last && end >= ranges[i].first) {
++            storage_port = true;
++            break;
++        }
++    }
++
++    if (!witness.active || !witness.valid || !storage_port) {
++        return;
++    }
++    pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
++    if (source_pc(pc) || witness.hardware_depth || !witness.pending ||
++        (witness.pending_function != 0x5b &&
++         witness.pending_function != 0x40 &&
++         witness.pending_function != 0x68 &&
++         witness.pending_function != 0x3e &&
++         witness.pending_function != 0x0d)) {
++        witness_fault("Unowned storage or DMA port write invalidated save proof");
++    }
++}
++
++static bool normalize_dos_path(const char *path, char out[16], Error **errp)
++{
++    char drive, name[9] = {0}, ext[4] = {0};
++    const char *p;
++    size_t ni = 0, ei = 0;
++    bool had_dot = false;
++
++    if (strlen(path) < 4 || g_ascii_toupper(path[0]) != 'D' ||
++        path[1] != ':' || (path[2] != '\\' && path[2] != '/') ||
++        strchr(path + 3, '\\') || strchr(path + 3, '/') ||
++        strchr(path + 3, ':')) {
++        error_setg(errp, "DOS save witness requires one absolute D: root 8.3 path");
++        return false;
++    }
++    drive = 'D';
++    p = path + 3;
++    for (; *p; p++) {
++        if (*p == '.') {
++            if (had_dot || ni == 0) {
++                error_setg(errp, "Invalid DOS 8.3 destination path");
++                return false;
++            }
++            had_dot = true;
++            ei = 1;
++            continue;
++        }
++        if (!g_ascii_isalnum(*p) && *p != '_' && *p != '$' && *p != '~' &&
++            *p != '-') {
++            error_setg(errp, "DOS destination is not an 8.3 path");
++            return false;
++        }
++        if (!ei) {
++            if (ni >= 8) {
++                error_setg(errp, "DOS destination basename exceeds 8.3 limits");
++                return false;
++            }
++            name[ni++] = g_ascii_toupper(*p);
++        } else {
++            if (ei > 3) {
++                error_setg(errp, "DOS destination extension exceeds 8.3 limits");
++                return false;
++            }
++            ext[ei - 1] = g_ascii_toupper(*p);
++            ei++;
++        }
++    }
++    if (ni == 0 || (had_dot && ei == 1)) {
++        error_setg(errp, "DOS destination basename or extension is empty");
++        return false;
++    }
++    if (ei > 1) {
++        g_snprintf(out, 16, "%c:\\%s.%s", drive, name, ext);
++    } else {
++        g_snprintf(out, 16, "%c:\\%s", drive, name);
++    }
++    return true;
++}
++
++static bool parse_ranges(const FdisbullDosSaveWitnessRangeList *list,
++                         DosWitnessRange *ranges, uint32_t *count,
++                         Error **errp)
++{
++    const FdisbullDosSaveWitnessRangeList *it;
++    uint32_t n = 0;
++    uint64_t total = 0;
++
++    for (it = list; it; it = it->next) {
++        uint64_t end = (uint64_t)it->value->start + it->value->size;
++        if (++n > DOS_WITNESS_MAX_RANGES || !it->value->size || end > 0x100000) {
++            error_setg(errp, "Invalid DOS caller source range");
++            return false;
++        }
++        total += it->value->size;
++        if (total > 0x10000) {
++            error_setg(errp, "DOS caller source ranges exceed 64 KiB");
++            return false;
++        }
++        if (n > 1 && it->value->start <
++            (uint64_t)ranges[n - 2].start + ranges[n - 2].size) {
++            error_setg(errp, "DOS caller source ranges overlap or are unordered");
++            return false;
++        }
++        ranges[n - 1] = (DosWitnessRange){it->value->start, it->value->size};
++    }
++    if (!n) {
++        error_setg(errp, "At least one DOS caller source range is required");
++        return false;
++    }
++    *count = n;
++    return true;
++}
++
++static bool token_valid(const char *token)
++{
++    const unsigned char *p = (const unsigned char *)token;
++    size_t len;
++
++    if (!token || (len = strlen(token)) < 16 || len > 64) {
++        return false;
++    }
++    for (; *p; p++) {
++        if (!g_ascii_isalnum(*p) && *p != '-' && *p != '_' && *p != '.') {
++            return false;
++        }
++    }
++    return true;
++}
++
++static FdisbullDosSaveWitnessInfo *witness_info(Error **errp)
++{
++    FdisbullDosSaveWitnessInfo *info = g_new0(FdisbullDosSaveWitnessInfo, 1);
++    FdisbullDosSaveWitnessRangeList **rtail = &info->source_ranges;
++    FdisbullDosSaveWitnessEventList **etail = &info->events;
++    FdisbullDosSaveWitnessInterruptFrameList **ftail = &info->hardware_returns;
++    GString *hex = g_string_sized_new(witness.bytes_written * 2);
++    uint32_t i;
++    (void)errp;
++
++    info->api_version = DOS_WITNESS_API;
++    info->model = g_strdup("qemu-pc-dos-save-witness-v1");
++    info->epoch = witness.epoch;
++    info->generation = witness.generation;
++    info->active = witness.active;
++    info->valid = witness.valid;
++    static const char *const phases[] = {
++        "idle", "armed", "created", "writing", "committed", "closed", "ready", "invalid"
++    };
++    info->phase = g_strdup(witness.phase < ARRAY_SIZE(phases) ? phases[witness.phase] : "invalid");
++    if (witness.token[0]) {
++        info->token = g_strdup((const char *)witness.token);
++    }
++    info->child_psp = witness.child_psp;
++    info->int21_vector = witness.int21_vector;
++    info->dos_path = g_strdup((const char *)witness.dos_path);
++    info->create_seen = witness.create_seen;
++    info->created_handle = witness.created_handle;
++    info->write_count = witness.write_count;
++    info->bytes_written = witness.bytes_written;
++    info->commit_seen = witness.commit_seen;
++    info->flush_seen = witness.flush_seen;
++    info->close_seen = witness.close_seen;
++    info->event_count = witness.event_count;
++    info->pending = witness.pending;
++    info->pending_function = witness.pending_function;
++    info->pending_handle = witness.pending_handle;
++    info->pending_requested = witness.pending_requested;
++    info->pending_caller_pc = witness.pending_caller_pc;
++    info->pending_return_pc = witness.pending_return_pc;
++    info->pending_ss = witness.pending_ss;
++    info->pending_cs = witness.pending_cs;
++    info->pending_sp = witness.pending_sp;
++    info->hardware_interrupt_depth = witness.hardware_depth;
++    if (witness.fault[0]) {
++        info->fault = g_strdup((const char *)witness.fault);
++    }
++    for (i = 0; i < witness.range_count; i++) {
++        FdisbullDosSaveWitnessRangeList *node = g_new0(FdisbullDosSaveWitnessRangeList, 1);
++        node->value = g_new0(FdisbullDosSaveWitnessRange, 1);
++        node->value->start = witness.ranges[i].start;
++        node->value->size = witness.ranges[i].size;
++        *rtail = node;
++        rtail = &node->next;
++    }
++    for (i = 0; i < witness.event_count; i++) {
++        DosWitnessEvent *src = &witness.events[i];
++        FdisbullDosSaveWitnessEventList *node = g_new0(FdisbullDosSaveWitnessEventList, 1);
++        FdisbullDosSaveWitnessEvent *dst = g_new0(FdisbullDosSaveWitnessEvent, 1);
++        dst->sequence = src->sequence;
++        dst->function = src->function;
++        dst->handle = src->handle;
++        dst->carry = src->carry;
++        dst->ax = src->ax;
++        dst->requested = src->requested;
++        dst->accepted = src->accepted;
++        dst->caller_pc = src->caller_pc;
++        dst->return_pc = src->return_pc;
++        node->value = dst;
++        *etail = node;
++        etail = &node->next;
++    }
++    for (i = 0; i < witness.hardware_depth; i++) {
++        DosWitnessInterruptFrame *src = &witness.hardware_frames[i];
++        FdisbullDosSaveWitnessInterruptFrameList *node =
++            g_new0(FdisbullDosSaveWitnessInterruptFrameList, 1);
++        FdisbullDosSaveWitnessInterruptFrame *dst =
++            g_new0(FdisbullDosSaveWitnessInterruptFrame, 1);
++        dst->cs = src->cs;
++        dst->ss = src->ss;
++        dst->sp = src->sp;
++        dst->return_pc = src->return_pc;
++        node->value = dst;
++        *ftail = node;
++        ftail = &node->next;
++    }
++    for (i = 0; i < witness.bytes_written; i++) {
++        g_string_append_printf(hex, "%02x", witness.payload[i]);
++    }
++    info->payload_hex = g_string_free(hex, FALSE);
++    hex = g_string_sized_new(witness.pending_payload_size * 2);
++    for (i = 0; i < witness.pending_payload_size; i++) {
++        g_string_append_printf(hex, "%02x", witness.pending_payload[i]);
++    }
++    info->pending_payload_hex = g_string_free(hex, FALSE);
++    return info;
++}
++
++FdisbullDosSaveWitnessInfo *qmp_x_fdisbull_query_dos_save_witness(Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++    if (!stopped_cpu(&cpu, &env, false, errp) || !witness_register_vmstate(errp)) {
++        return NULL;
++    }
++    return witness_info(errp);
++}
++
++FdisbullDosSaveWitnessInfo *qmp_x_fdisbull_arm_dos_save_witness(
++    const char *token, uint16_t child_psp,
++    FdisbullDosSaveWitnessRangeList *source_ranges, const char *dos_path,
++    uint32_t int21_vector,
++    Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++    DosWitnessRange ranges[DOS_WITNESS_MAX_RANGES] = {0};
++    uint32_t count = 0;
++    char normalized[16] = {0};
++
++    if (!stopped_cpu(&cpu, &env, true, errp) || !witness_register_vmstate(errp)) {
++        return NULL;
++    }
++    if (witness.active || (witness.token[0] && witness.phase != 6)) {
++        error_setg(errp, "A DOS save witness is already active or unresolved");
++        return NULL;
++    }
++    if (!token_valid(token) || !child_psp || !int21_vector ||
++        !parse_ranges(source_ranges, ranges, &count, errp) ||
++        !normalize_dos_path(dos_path, normalized, errp)) {
++        if (errp && !*errp) error_setg(errp, "Invalid DOS save witness identity");
++        return NULL;
++    }
++    {
++        uint32_t actual_vector;
++        if (!read_int21_vector(cpu, &actual_vector) ||
++            actual_vector != int21_vector) {
++            error_setg(errp, "INT 21h vector differs from trusted kernel baseline");
++            return NULL;
++        }
++    }
++    memset(&witness, 0, sizeof(witness));
++    witness.epoch = epoch_highwater;
++    witness.child_psp = child_psp;
++    witness.int21_vector = int21_vector;
++    witness.created_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.range_count = count;
++    memcpy(witness.ranges, ranges, count * sizeof(ranges[0]));
++    g_strlcpy((char *)witness.token, token, sizeof(witness.token));
++    g_strlcpy((char *)witness.dos_path, normalized, sizeof(witness.dos_path));
++    witness.active = true;
++    witness.valid = true;
++    witness.phase = 1;
++    if (!counter_advance(&generation_highwater)) {
++        witness_fault("DOS save witness generation overflow");
++        error_setg(errp, "DOS save witness generation overflow");
++        return NULL;
++    }
++    witness.generation = generation_highwater;
++    return witness_info(errp);
++}
++
++FdisbullDosSaveWitnessInfo *qmp_x_fdisbull_disarm_dos_save_witness(
++    const char *token, uint64_t expected_generation, Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++    if (!stopped_cpu(&cpu, &env, false, errp) || !witness_register_vmstate(errp)) {
++        return NULL;
++    }
++    if (!witness.token[0] || strcmp(token, (const char *)witness.token) ||
++        expected_generation != witness.generation || witness.pending) {
++        error_setg(errp, "DOS save witness disarm CAS failed or call is pending");
++        return NULL;
++    }
++    witness.active = false;
++    if (counter_advance(&generation_highwater)) {
++        witness.generation = generation_highwater;
++    } else {
++        witness_fault("DOS save witness generation overflow");
++    }
++    return witness_info(errp);
++}
+--- /dev/null
++++ b/target/i386/fdisbull-dos-provenance.h
+@@ -0,0 +1,16 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef TARGET_I386_FDISBULL_DOS_PROVENANCE_H
++#define TARGET_I386_FDISBULL_DOS_PROVENANCE_H
++
++#include "qapi/error.h"
++#include "target/i386/cpu.h"
++
++void fdisbull_dos_save_witness_interrupt(CPUX86State *env, int intno,
++                                         int is_int,
++                                         int is_hw,
++                                         target_ulong next_eip);
++void fdisbull_dos_save_witness_iret(CPUX86State *env);
++void fdisbull_dos_save_witness_raw_io(CPUX86State *env, uint32_t port,
++                                      unsigned width);
++
++#endif
+--- a/target/i386/meson.build
++++ b/target/i386/meson.build
+@@ -15,6 +15,7 @@
+ i386_system_ss = ss.source_set()
+ i386_system_ss.add(files(
+   'fdisbull-task-private.c',
++  'fdisbull-dos-provenance.c',
+   'task-context.c',
+   'arch_dump.c',
+   'arch_memory_mapping.c',
+--- a/target/i386/tcg/seg_helper.c
++++ b/target/i386/tcg/seg_helper.c
+@@ -30,6 +30,7 @@
+ #include "access.h"
+ #ifndef CONFIG_USER_ONLY
+ #include "system/fdisbull-task-context.h"
++#include "target/i386/fdisbull-dos-provenance.h"
+ #include "target/i386/fdisbull-task-scheduler.h"
+ #endif
+ 
+@@ -1223,6 +1224,7 @@
+                                                   next_eip)) {
+         return;
+     }
++    fdisbull_dos_save_witness_interrupt(env, intno, is_int, is_hw, next_eip);
+ #endif
+ 
+     if (qemu_loglevel_mask(CPU_LOG_INT)) {
+@@ -2050,6 +2052,7 @@
+     env->hflags2 &= ~HF2_NMI_MASK;
+ #ifndef CONFIG_USER_ONLY
+     fdisbull_task_scheduler_iret_complete(env);
++    fdisbull_dos_save_witness_iret(env);
+ #endif
+ }
+ 
+--- a/target/i386/tcg/system/misc_helper.c
++++ b/target/i386/tcg/system/misc_helper.c
+@@ -26,9 +26,11 @@
+ #include "exec/cputlb.h"
+ #include "tcg/helper-tcg.h"
+ #include "hw/i386/apic.h"
++#include "target/i386/fdisbull-dos-provenance.h"
+ 
+ void helper_outb(CPUX86State *env, uint32_t port, uint32_t data)
+ {
++    fdisbull_dos_save_witness_raw_io(env, port, 1);
+     address_space_stb(&address_space_io, port, data,
+                       cpu_get_mem_attrs(env), NULL);
+ }
+@@ -41,6 +43,7 @@
+ 
+ void helper_outw(CPUX86State *env, uint32_t port, uint32_t data)
+ {
++    fdisbull_dos_save_witness_raw_io(env, port, 2);
+     address_space_stw(&address_space_io, port, data,
+                       cpu_get_mem_attrs(env), NULL);
+ }
+@@ -53,6 +56,7 @@
+ 
+ void helper_outl(CPUX86State *env, uint32_t port, uint32_t data)
+ {
++    fdisbull_dos_save_witness_raw_io(env, port, 4);
+     address_space_stl(&address_space_io, port, data,
+                       cpu_get_mem_attrs(env), NULL);
+ }

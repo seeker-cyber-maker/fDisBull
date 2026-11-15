@@ -105,6 +105,14 @@ def _condition(item, cells: dict) -> str:
             + _value(item["right"], cells)
             + ")"
         )
+    if op == "ge":
+        return (
+            "("
+            + _value(item["left"], cells)
+            + " >= "
+            + _value(item["right"], cells)
+            + ")"
+        )
     if op == "bit_test":
         return (
             "((((unsigned long long)"
@@ -122,12 +130,13 @@ def _condition(item, cells: dict) -> str:
     )
 
 
+
 def _wrapper(body, cells, modules, bindings, counter, indent="  "):
     """Render plan statements. ``counter`` is a one-item mutable step index."""
     lines = []
     for item in body:
         op = item["op"]
-        if op in ("set", "add", "subtract"):
+        if op in ("set", "add", "subtract", "multiply", "divide"):
             cell = item["var"]
             typ = cells[cell]["type"]
             name = _cname(cell)
@@ -141,23 +150,20 @@ def _wrapper(body, cells, modules, bindings, counter, indent="  "):
                 )
                 lines.append(indent + f"  {name} = t; }}")
             else:
-                sign = "+" if op == "add" else "-"
                 cast = {
                     "u8": "unsigned char",
                     "u16": "unsigned short",
                     "i16": "short",
                     "bool": "unsigned char",
                 }[typ]
-                lines.append(
-                    indent
-                    + "{ long long t = "
-                    + name
-                    + " "
-                    + sign
-                    + " ("
-                    + operand
-                    + ");"
-                )
+                if op == "multiply":
+                    inner = name + " * (" + operand + ")"
+                elif op == "divide":
+                    lines.append(indent + "if ((" + operand + ") == 0) { g_status = 1; return 0; }")
+                    inner = name + " / (" + operand + ")"
+                else:
+                    inner = name + " " + ("+" if op == "add" else "-") + " (" + operand + ")"
+                lines.append(indent + "{ long long t = " + inner + ";")
                 lines.append(indent + f"  {name} = (long long)({cast})t; }}")
         elif op == "if":
             lines.append(indent + "if (" + _condition(item["condition"], cells) + ") {")
@@ -248,6 +254,7 @@ def _wrapper(body, cells, modules, bindings, counter, indent="  "):
         else:
             raise ValueError("unsupported macos plan statement: " + str(op))
     return lines
+
 
 
 def _render(plan: dict, modules: dict) -> dict:

@@ -1,5 +1,5 @@
-name: OVH manual bootstrap
-run-name: "OVH bootstrap ${{ inputs.nonce }}"
+name: OVH manual qualification
+run-name: "OVH qualification ${{ inputs.nonce }}"
 
 on:
   workflow_dispatch:
@@ -15,18 +15,19 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: fdisbull-ovh-ci
   cancel-in-progress: false
 
 jobs:
-  bootstrap:
+  qualification:
     runs-on: [self-hosted, Linux, X64, fdisbull-ovh-ca-gh1]
-    timeout-minutes: 10
+    timeout-minutes: 240
     container:
       image: python:3.13.5-bookworm@sha256:6c6b3c2deae72b980c4323738be824884c9a2e17588c93db82612f8a3072be88
-      options: --cpus=2 --memory=2g --pids-limit=512 --volume /var/lib/fdisbull-ci/results/github:/ci-host-results --label fdisbull.ci.provider=github
+      options: --cpus=2 --memory=9g --memory-swap=9g --pids-limit=512 --volume /var/lib/fdisbull-ci/results/github/${{ github.run_id }}/${{ github.run_attempt }}:/ci-host-results/${{ github.run_id }}/${{ github.run_attempt }} --volume /var/lib/fdisbull-ci/control/production/job-inputs:/ci-control/production:ro --label fdisbull.ci.provider=github --label fdisbull.ci.run_id=${{ github.run_id }} --label fdisbull.ci.run_attempt=${{ github.run_attempt }} --label fdisbull.ci.control_sha=${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,19 +39,21 @@ jobs:
           ref: ${{ inputs.candidate_sha }}
           path: candidate
           persist-credentials: false
-      - name: Verify bounded bootstrap
+      - name: Run ordinary qualification
         env:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           BOOTSTRAP_NONCE: ${{ inputs.nonce }}
-          BOOTSTRAP_OUTPUT: artifacts/github-bootstrap-${{ github.run_id }}-${{ github.run_attempt }}
+          BOOTSTRAP_OUTPUT: artifacts/github-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: >-
-          python control/scripts/ci/github-bootstrap.py
-          --candidate candidate --source-sha "$CANDIDATE_SHA"
+          python control/scripts/ci/production-qualification.py
+          --control control --candidate candidate --source-sha "$CANDIDATE_SHA"
+          --policy-sha 36b34e8b17309855408e4d0556bf047be3135ceb455359c806a45967c2a3ffeb
           --nonce "$BOOTSTRAP_NONCE" --output "$BOOTSTRAP_OUTPUT"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: github-bootstrap-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/github-bootstrap-${{ github.run_id }}-${{ github.run_attempt }}/
+          name: github-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/github-qualification-${{ github.run_id }}-${{ github.run_attempt }}/
           if-no-files-found: error
           include-hidden-files: false

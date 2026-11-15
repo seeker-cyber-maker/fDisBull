@@ -91,15 +91,26 @@ def load(handle, checkpoint='live', *, prepare_guest_ms=100, timeout_ms=10000):
     with handle.lock:
         try:
             _init(project)
-            if isinstance(checkpoint,str) and re.fullmatch(r'[0-9a-f]{32}', checkpoint):
-                selected=checkpoint
-            else:
-                _slot(checkpoint)
-                row=project.db.execute('SELECT checkpoint FROM player_checkpoint_slots WHERE slot=?',(checkpoint,)).fetchone()
-                if row is None:
+            slot_row=None
+            explicit_id=isinstance(checkpoint,str) and re.fullmatch(r'id:[0-9a-f]{32}',checkpoint)
+            if explicit_id:
+                selected=checkpoint[3:]
+            elif isinstance(checkpoint,str):
+                try:
+                    _slot(checkpoint)
+                except ValueError:
+                    pass
+                else:
+                    slot_row=project.db.execute('SELECT checkpoint FROM player_checkpoint_slots WHERE slot=?',(checkpoint,)).fetchone()
+            if not explicit_id:
+                if slot_row is not None:
+                    selected=slot_row['checkpoint']
+                elif isinstance(checkpoint,str) and re.fullmatch(r'[0-9a-f]{32}', checkpoint):
+                    selected=checkpoint
+                else:
+                    _slot(checkpoint)
                     if getattr(handle.session,'_player_checkpoint_failed',False): raise ValueError('Prior restore incomplete')
                     return {'status':'missing','complete':True}
-                selected=row['checkpoint']
             row=project.db.execute('SELECT document,sha256 FROM player_checkpoints WHERE id=?',(selected,)).fetchone()
             if row is None: raise ValueError('Checkpoint record missing')
             raw=row['document'].encode()

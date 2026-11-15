@@ -1,0 +1,43 @@
+{
+  "baseline_junit_sha256": "6fc9fd16f728c25ba05b7a499281a7bf96e549aad0535bfa4a81179026f78ceb",
+  "baseline_non_green": 26,
+  "changed_sources": [],
+  "counts": {
+    "errors": 23,
+    "failures": 3,
+    "skipped": 142,
+    "tests": 4188
+  },
+  "junit_sha256": "d6e40475e8d47343a0910fef7a931313d8afa11b78718bb97a803bc824b9666e",
+  "limits": [
+    "Broad macOS suite remains non-green. The 26 non-green cases and result types match the prior baseline; this does not claim hosted Linux/native CI."
+  ],
+  "log_sha256": "d2bd20d85569083e8cc8e147c5dba8bfeed2ca7f4642ff44ce1daafb4623454c",
+  "missing": [],
+  "non_green": 26,
+  "passed": 4020,
+  "post_broad_change": {
+    "coverage_only_checker_change": "Additional complete native/UIL samples at recovered collision, B1 and NPC response transitions; four checker tests and all four formal routes rerun after the broad suite",
+    "distribution_followup": {
+      "log_sha256": "d70eb2610cf08b570f09defce8a107066be1c7dca11ebc7d27a84433670cf81f",
+      "result": "passed",
+      "scope": "Updated source selectors and guards require sanitized SNES evidence and source modules; original inputs excluded.",
+      "source_hashes": {
+        "MANIFEST.in": "59371027bcae760053107ede75529307efc672a75820b368329e279b2cf6ee42",
+        "scripts/build_release.py": "70ef940fc4f22bf891d97edfd95bf990a582effef35f4c1d77ee17163f618786",
+        "scripts/check_dist.py": "efb46bd7f2d40b011a5a7d4ef1b4cff25162bd184a5bc54c5579c60745ff9784",
+        "tests/test_distribution.py": "7e38e5a200eec18a490d01de9c30e67d0d12f3022057ae939300ad31d810810f"
+      },
+      "tests": 976
+    },
+    "file": "scripts/check_console_udc.py",
+    "focused_host_tests": 68,
+    "focused_log_sha256": "0176575ac7807bc1fa3862729b727723fbf695a3377a6935e0d57eccd4d54228",
+    "help_readback_sha256": "9cbc2832b833a1d1ce93f443a3abac2c48e63cb88497b1ab8af0c23e9934cc38",
+    "kind": "CLI help text only: --inputs expects a JSON file path",
+    "runtime_behavior_changed": false
+  },
+  "same_non_green_cases_and_types": true,
+  "source_unchanged": true,
+  "unexpected": []
+}

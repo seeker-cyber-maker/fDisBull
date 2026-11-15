@@ -12,6 +12,7 @@ import iced_x86 as ix
 
 
 FORMAT = 'fdisbull-code-backings-1'
+_MAX_STORED_INCOMING = 100000
 
 
 def digest(document):
@@ -69,6 +70,52 @@ def _arm_file_offset(address, raw, slice_identity, source_bytes, mappings):
     if not start <= offset or offset + len(raw) > end or source_bytes[offset:offset + len(raw)] != raw:
         raise ValueError('ARM64 instruction differs from selected Mach-O file bytes')
     return offset
+
+
+def _stored_incoming(project, version, blocks, incoming, problems):
+    """Inventory reverse control references for every captured instruction.
+
+    Batch exact address/context lookups. A capped inventory stays incomplete;
+    a known caller of an interior node is as relevant as a caller of a root.
+    """
+    contexts = {}
+    for block in blocks.values():
+        contexts.setdefault(block['context'], {})[f'{int(block["address"], 16):016x}'] = block['id']
+    examined = 0
+    dos = project.meta['format'] in ('MZ', 'COM', 'SYS')
+    kinds = "kind IN ('branch','resolved_branch','fallthrough','call','resolved_call')"
+    for context, targets in sorted(contexts.items()):
+        addresses = sorted(targets)
+        for start in range(0, len(addresses), 400):
+            batch = addresses[start:start+400]
+            placeholders = ','.join('?' for _ in batch)
+            remaining = _MAX_STORED_INCOMING-examined
+            if dos:
+                query = ("SELECT source,source_context,target,target_context,kind,evidence FROM dos_edges "
+                         "WHERE version=? AND (target_context=? OR target_context='' OR target_context IS NULL) "
+                         f"AND target IN ({placeholders}) AND {kinds} ORDER BY target,source,kind LIMIT ?")
+            else:
+                query = ("SELECT source,context AS source_context,target,context AS target_context,kind,evidence FROM xrefs "
+                         f"WHERE version=? AND context=? AND target IN ({placeholders}) AND {kinds} "
+                         "ORDER BY target,source,kind LIMIT ?")
+            rows = project.db.execute(query, (version, context, *batch, remaining+1)).fetchall()
+            overflow = len(rows) > remaining
+            for row in rows[:remaining]:
+                target_id = targets[row['target']]
+                source_id = f'{row["source_context"]}@{hex(int(row["source"], 16))}'
+                edge = {'source': source_id, 'target': target_id, 'kind': row['kind'],
+                        'evidence': row['evidence'], 'provenance': 'stored'}
+                if not row['target_context']:
+                    edge['context_resolution'] = 'unresolved_physical_target'
+                    problems.append({'kind': 'incoming_context_unresolved',
+                                     'source': source_id, 'target': target_id})
+                incoming.setdefault(target_id, {}).setdefault((source_id, row['kind']), edge)
+            examined += min(len(rows), remaining)
+            if overflow:
+                problems.append({'kind': 'incoming_budget', 'limit': _MAX_STORED_INCOMING})
+                return {'limit': _MAX_STORED_INCOMING, 'examined': examined, 'complete': False}
+    return {'limit': _MAX_STORED_INCOMING, 'examined': examined, 'complete': True}
+
 
 
 def materialize_code_backing(backing):
@@ -141,6 +188,8 @@ def validate_source(project, document, *, version=None):
             region = project._mapping(selected['id'], address)
             if region is None or region.data[address-region.start:address-region.start+len(raw)] != raw:
                 raise ValueError('backing bytes differ from their source occurrence')
+            if block.get('bits') != project.decode_bits(address, selected['id']):
+                raise ValueError('backing decoder width differs from its source occurrence')
             if arm_source is not None:
                 file_offset = _arm_file_offset(address, raw, slice_identity, source_bytes, mappings)
                 if (block['provenance'].get('file_offset') != file_offset
@@ -153,12 +202,17 @@ def validate_source(project, document, *, version=None):
         budget = document.get('budget', {}).get('limit')
         fresh = project.code_backings(requests, version=selected['id'], max_instructions=budget)
 
+        def references(block):
+            values = [(r.get('operand_index'), r.get('role'), r.get('target'), r.get('width'))
+                      for r in block.get('references', [])]
+            return sorted(values, key=lambda row: json.dumps(row, separators=(',', ':')))
+
         def facts(capsule):
             return {'entries': capsule['entries'], 'complete': capsule['complete'],
                     'visits': capsule['budget']['visits'],
-                    'blocks': sorted((b['id'], b['context'], b['address'], b['bytes'], b['flow'],
+                    'blocks': sorted((b['id'], b['context'], b['address'], b['bytes'], b['flow'], b['bits'],
                                       sorted((e['kind'], e['target']) for e in b['exits']),
-                                      sorted((e['source'], e['kind'], e['target']) for e in b['incoming']))
+                                      sorted((e['source'], e['kind'], e['target']) for e in b['incoming']), references(b))
                                      for b in capsule['blocks'])}
         if facts(fresh) != facts(document):
             raise ValueError('capture graph differs from selected project facts')
@@ -205,6 +259,7 @@ class CodeBackingsMixin:
             if self.digest(self.regions(v)) != selected['sha256']:
                 raise ValueError('source image version digest mismatch')
             arm_source = _arm_macho_source(self, v) if arm_macho else None
+            object_modes = self.decode_regions(v)
             blocks, roots, incoming, problems, root_evidence = {}, [], {}, [], []
             used = 0
             for index, item in enumerate(requests):
@@ -217,26 +272,6 @@ class CodeBackingsMixin:
                 roots.append(graph['entry'])
                 root_evidence.append({'entry': graph['entry'], 'source': 'caller_selected_exact_entry',
                                       'graph_closed': graph['graph_closed'], 'runtime_observed': False})
-                # Preserve stored incoming evidence even when its source is
-                # outside this selected reachable slice. Selection is not a
-                # substitute for evidence that another path targets an operand.
-                if graph['context'] is not None:
-                    target_key = f'{int(graph["address"], 16):016x}'
-                    if self.meta['format'] in ('MZ', 'COM', 'SYS'):
-                        incoming_rows = self.db.execute(
-                            "SELECT source,source_context,kind,evidence FROM dos_edges WHERE version=? AND target_context=? AND target=? AND kind IN ('branch','resolved_branch','fallthrough','call','resolved_call') LIMIT 1025",
-                            (v, graph['context'], target_key)).fetchall()
-                    else:
-                        incoming_rows = self.db.execute(
-                            "SELECT source,context AS source_context,kind,evidence FROM xrefs WHERE version=? AND context=? AND target=? AND kind IN ('branch','resolved_branch','fallthrough','call','resolved_call') LIMIT 1025",
-                            (v, graph['context'], target_key)).fetchall()
-                    if len(incoming_rows) > 1024:
-                        problems.append({'kind': 'incoming_budget', 'entry_index': index})
-                    for row in incoming_rows[:1024]:
-                        source_id = f'{row["source_context"]}@{hex(int(row["source"], 16))}'
-                        incoming.setdefault(graph['entry'], {})[(source_id, row['kind'])] = {
-                            'source': source_id, 'target': graph['entry'], 'kind': row['kind'],
-                            'evidence': row['evidence'], 'provenance': 'stored'}
                 for field in ('gaps', 'unresolved', 'frontier', 'calls'):
                     for detail in graph[field]:
                         problems.append({'kind': field, 'entry_index': index, 'detail': deepcopy(detail)})
@@ -251,6 +286,13 @@ class CodeBackingsMixin:
                     exits = [{'kind': edge['kind'], 'target': edge['target'],
                               'evidence': edge['evidence'], 'provenance': edge['provenance']}
                              for edge in by_source.get(node['id'], [])]
+                    unresolved_fixups = [record for record in node.get('le_fixups', [])
+                                         if record.get('applied') is False]
+                    if unresolved_fixups:
+                        problems.append({'kind': 'unresolved_relocation', 'entry_index': index,
+                                         'instruction': node['id'],
+                                         'detail': 'LE source fields have symbolic, unapplied relocations',
+                                         'relocations': deepcopy(unresolved_fixups)})
                     if node['id'] in blocks:
                         # A second bounded root may see less of the same graph.
                         known = {(e['kind'], e['target']) for e in blocks[node['id']]['exits']}
@@ -261,8 +303,9 @@ class CodeBackingsMixin:
                     region = self._mapping(v, a)
                     if region is None or region.data[a-region.start:a-region.start+len(raw)] != raw:
                         raise ValueError('stored instruction bytes differ from source version')
+                    bits = self.decode_bits(a, v)
                     if x86:
-                        decoder = ix.Decoder(self.bits, raw)
+                        decoder = ix.Decoder(bits, raw)
                         instruction = decoder.decode()
                         if instruction.is_invalid or instruction.len != len(raw) or len(raw) != node['size']:
                             raise ValueError('stored instruction is not a complete native encoding')
@@ -286,18 +329,24 @@ class CodeBackingsMixin:
                                   'source_sha256': self.meta['source_sha256'],
                                   'version_sha256': selected['sha256'], 'context': node['context'],
                                   'byte_roles': roles}
+                    if object_modes:
+                        provenance['decoder_context'] = f'{self.arch}:{bits}:little'
+                        provenance['le_fixups'] = deepcopy(node.get('le_fixups', []))
                     if arm_macho:
                         provenance.update(file_offset=file_offset,
                                           slice_relative_offset=file_offset - slice_identity['offset'])
                     blocks[node['id']] = {
-                        'id': node['id'], 'isa': self.arch, 'bits': self.bits,
+                        'id': node['id'], 'isa': self.arch, 'bits': bits,
                         'address': node['address'], 'context': node['context'],
                         'bytes': raw.hex(), 'sha256': hashlib.sha256(raw).hexdigest(),
                         'flow': node['flow'], 'instruction': {k: node[k] for k in ('size', 'mnemonic', 'operands')},
                         'exits': exits, 'references': deepcopy(node['references']),
                         'provenance': provenance,
-                        'effects': {'status': 'native_backing_residual',
-                                    'scope': 'Complete original native instruction, with its architectural effects retained; no UIL meaning inferred.'}}
+                        'effects': {'status': 'unresolved_native_relocation' if unresolved_fixups else 'native_backing_residual',
+                                    'scope': ('Source encoding has a symbolic LE relocation; execution-ready effects remain unknown.'
+                                              if unresolved_fixups else
+                                              'Complete original native instruction, with its architectural effects retained; no UIL meaning inferred.')}}
+            inventory = _stored_incoming(self, v, blocks, incoming, problems)
             for block in blocks.values():
                 block['incoming'] = list(incoming.get(block['id'], {}).values())
                 block['exits'].sort(key=lambda edge: (edge['kind'], edge['target']))
@@ -317,7 +366,7 @@ class CodeBackingsMixin:
                 'coverage': {'physical_bytes': physical, 'encoding_bytes': occurrences,
                              'shared_occurrence_bytes': occurrences-physical,
                              'physical_ranges': [{'start': hex(start), 'end': hex(end)} for start, end in spans]},
-                'budget': {'limit': budget, 'visits': used},
+                'budget': {'limit': budget, 'visits': used}, 'incoming_inventory': inventory,
                 'qualification': 'native_backings_only',
                 'scope': 'Entry-qualified stored encodings and explicit edges; no recovered intent, reachability or equivalence claim.'}
             if arm_macho:

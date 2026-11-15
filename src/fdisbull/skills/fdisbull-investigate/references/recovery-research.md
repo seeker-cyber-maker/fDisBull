@@ -11,6 +11,7 @@ prior work. A coordinator may research references separately from blind workers.
 ## Contents
 
 - [Qualify prior work](#qualify-prior-work)
+- [Research newly encountered game concepts](#research-newly-encountered-game-concepts)
 - [Reuse reconstructed source](#reuse-reconstructed-source)
 - [Turn leads into scenes](#turn-leads-into-qualified-scenes)
 - [Retain reusable meanings](#retain-reusable-meanings)
@@ -55,6 +56,58 @@ files before relying on them.
 This checklist builds on the guide-derived scene investigation proposed in
 [PR #20](https://github.com/seeker-cyber-maker/fDisBull/pull/20); the broader
 Gob/source-adapter and acceptance contracts there remain proposals.
+
+## Research newly encountered game concepts
+
+Repeat a bounded documentation pass when a newly encountered mechanic or
+unexplained behavior leaves a material implementation choice unresolved. Name
+the player-facing concept and observed behavior, then research established
+terminology, alternative meanings and implementation families before costly
+recovery or implementation. Start with retained target documentation; consult
+primary algorithm references and related games when they can distinguish the
+alternatives. A familiar label is a search lead, not this target's specification.
+
+Record only what changes the next decision: the observation and open question,
+reference and pinned revision, candidate mechanisms, predicted differences,
+and the cheapest target probe with a budget and stop condition. Existing
+project notes or source/concept catalogs suffice. Keep borrowed concepts,
+upstream source claims and target-qualified behavior distinct; similarity does
+not establish common code, rules, ordering, timing or presentation. Respect
+declared independent-recovery information bounds.
+
+For example, a hint can involve proving a forced move, finding its supporting
+facts, choosing among moves and presenting an explanation. Research those
+decisions separately. Likewise, a unique puzzle is not automatically solvable
+by a specified deduction repertoire, and a small support set is not necessarily
+an understandable explanation. Label a native improvement separately from
+recovered original behavior.
+
+Stop when research yields a useful discriminating probe or reusable reference,
+or further searching no longer changes the live alternatives. Resume after a
+counterexample or new mechanic warrants it. Retain unresolved choices; do not
+make exhaustive genre research a gate for a bounded recovery slice.
+
+### Worked lead: hint support in Bombe
+
+[CharlieBrej/Bombe](https://github.com/CharlieBrej/Bombe/tree/40bbb2962ff847d6d371a909bda4a9da3cc3ea4d)
+at commit `40bbb2962ff847d6d371a909bda4a9da3cc3ea4d` provides a related-game
+implementation lead. Its
+[hint reduction](https://github.com/CharlieBrej/Bombe/blob/40bbb2962ff847d6d371a909bda4a9da3cc3ea4d/GameState.cpp#L1954-L2046)
+tries removing regions while retaining a provable target. This suggests asking
+which clues and background rules support a deduction, separately from how a
+game selects or phrases the hint. Greedy removal does not establish the
+globally smallest or easiest explanation.
+
+Inspect implementation assumptions before reuse. Bombe's
+[determinability helper](https://github.com/CharlieBrej/Bombe/blob/40bbb2962ff847d6d371a909bda4a9da3cc3ea4d/Grid.cpp#L3291-L3473)
+consults stored bomb values and does not distinguish an unknown solver result
+from unsatisfiable at its final check. This static observation is not a
+reproduced faulty hint. An answer-free verifier must derive its conclusion
+from declared visible premises and retain an explicit unresolved outcome.
+Replay any proposed explanation under its stated clues, givens, row rules and
+player assumptions. Use matched original states to test hint-order hypotheses;
+Bombe's source does not establish another game's original algorithm. This
+example was source-reviewed, not locally built or executed.
 
 ## Reuse reconstructed source
 
@@ -383,3 +436,228 @@ report accepted scope, errors, time/tokens and worker costs when measured before
 claiming efficiency. Keep unavailable metrics unavailable. Distinguish an
 improved report structure from a reproduced proof or demonstrated gameplay
 recovery; retain counterexamples and incomplete runs in the result.
+
+## Initial documentation pass after target triage
+
+For ordinary investigation and recovery, use this order:
+
+```text
+Initial target analysis
+    -> initial documentation pass
+    -> hypothesis ledger / preliminary Z blueprint where useful
+    -> focused code and runtime checks
+    -> revised knowledge and the next useful probe
+```
+
+First establish the readily available target facts: executable/container format,
+ISA and mode, platform, visible version/region/language markers, resources,
+recognizable runtime or interpreter signatures, suspected modifications and
+input identity. Keep known facts separate from tentative identifications. Do not
+wait for complete disassembly, an exact build number or recovered function
+semantics before searching. An unknown version narrows what can be concluded,
+not whether useful prior work can be consulted.
+
+Next perform a bounded initial documentation pass. Retrieve relevant guides,
+solutions, walkthroughs, manuals, playthroughs, third-party reversing work,
+format/engine documentation, reconstructed source and build/verification notes.
+Use the initial fingerprints to choose searches, including localized titles and
+terminology. Documentation is a normal first-phase deliverable, not an optional
+rescue after decompilation stalls. Later findings can refine the identification
+and trigger a targeted follow-up search; do not repeat a settled broad survey.
+
+Prefer exact-edition materials when available, then widen to related versions,
+platforms, localizations, ports or engine families. Exact matching is a preference,
+not an admission prerequisite for a hypothesis. A version or document-language
+mismatch does not make an idea useless. It may still identify a likely object,
+rule, subsystem, file format, puzzle structure or discriminating test. Related
+work supplies candidate meaning; it does not transfer qualified addresses,
+object IDs, binary layouts, timing or input sequences automatically.
+
+Record the document's language separately from the game edition/region it
+actually describes; an English guide need not describe the US game. Keep
+original names and useful translated aliases without treating lexical matches
+as object identity. Translate just enough to understand the claim and preserve
+ambiguous terms. A translated/reposted guide retains its upstream lineage, not
+an additional independent vote. Unknown source edition or translation quality
+stays unknown, but useful hypotheses may still be recorded.
+
+Record applicability per claim, not as a single trusted/untrusted guide flag:
+source and section, stated or inferred source edition, relation to this target,
+proposed transferable idea, known differences, evidence and next discriminator.
+A mismatch can challenge the affected claim and its dependents without deleting
+unrelated leads. Conversely, an exact-match cover/title does not certify every
+claim. Leave mutually exclusive version-specific alternatives in the blueprint
+until the target distinguishes them.
+
+The output is a compact documentation packet: target fingerprint and unknowns,
+source/applicability ledger, prioritized hypotheses and an initial scene/action
+blueprint where appropriate. Start with the requested scope and next frontier,
+not an exhaustive internet bibliography. Stop gathering when the next useful
+probe is defined or the agreed research budget is reached. Record inaccessible
+sources or unproductive searches and proceed with the best supported route;
+absence of documentation must not block all analysis. Count retrieval,
+translation, collation and correction costs in assisted-method benchmarks.
+
+Testing a supplied hypothesis is often cheaper than inventing one from scratch;
+use that as a probe-selection heuristic, not a guaranteed speedup or permission
+to confirm only the favored explanation. State what would contradict it and
+choose the smallest useful source or runtime check. Initial documentation
+predicts where to look; qualification determines what the target actually does.
+Preserve unsupported or contradicted predictions rather than rewriting history.
+
+Exceptions are explicit: a user-requested blind/independent recovery arm, a
+no-external-research instruction, spoiler/access constraints, or a small question
+already settled by available evidence. Keep target-specific answers outside
+blind workers; a coordinator may prepare packets separately. Record the reason
+when the documentation pass is omitted. This guidance authorizes neither
+running downloaded code nor obtaining unprovided game assets.
+
+
+
+## Collate guides into provisional Z blueprints
+
+For ordinary scene-compatible recovery, actively collate existing game guides,
+solutions, walkthroughs, manuals, playthroughs and analyses before starting cold.
+Use them as a third-party behavioral reconstruction: an incomplete description
+of externally observed actions and outcomes, often assembled through black-box
+play rather than code inspection. This is useful prior knowledge, not recovered
+source code. An analysis may contain code-backed facts; classify each claim by
+its actual evidence rather than promoting everything because the title says
+"analysis". Keep this material out of an explicitly independent benchmark arm.
+
+Synthesize an original, bounded blueprint for the current scene and useful next
+frontier. Extract proposed entities, actions, prerequisite alternatives, outcomes,
+scene transitions and unresolved questions. A blueprint can narrow the search,
+provide a coverage checklist, and later serve as a comparison point for recovered
+behavior. Do not wait for complete UDL recovery before drafting it, or routinely
+skip Z merely because a low-level executable route exists. Z remains optional
+where a scene/action view would distort the target's behavior.
+
+### Weight agreement by lineage, not vote count
+
+Collate claims, not just documents. For a material claim retain its source and
+edition, author/date or revision when available, section or video timestamp,
+reported prerequisites, first-hand evidence if present, and known/suspected
+upstream source family. Keep asserted facts separate from our inferences.
+A compact private ledger is enough; do not require exhaustive source genealogy
+before investigating the next useful action.
+
+Fourteen comparable, apparently independent reports can reasonably make a claim
+the first search hypothesis ahead of one unsupported outlier. That is search
+priority, not truth or verification. Fourteen derivatives of one guide count as
+one source family for corroboration, not fourteen independent witnesses. Shared
+wording, identical unusual mistakes, citations, translations and reposts are
+lineage clues, not proof of copying. Unknown dependence stays unknown; do not
+invent confidence percentages or assume independence from different websites.
+Record raw report counts separately from established source families.
+
+Retain the dissenting claim and the cheapest discriminator. A specific,
+reproducible observation or source-bound finding can outweigh the majority.
+Differences may reflect editions, hidden prerequisites, alternate routes or an
+upstream mistake; do not silently average incompatible claims into one scene.
+An agent's synthesized guide and tests derived from it keep the same lineage:
+neither is new independent corroboration. Repeated agreement does not promote
+hypotheses to accepted UDL/UIL semantics. The goal is a better starting prior,
+not a vote-certified game model.
+
+### Case study seed: an English FF7 guide and regional clock instructions
+
+TiGa reports remembering an English Final Fantasy VII PS1 guide that apparently
+used the original Japanese release without clearly identifying that basis, with
+clock-puzzle instructions that differed from the simplified US version. Treat
+this as a user-reported case-study seed, not independently verified publication
+history: the guide title, publisher, printing/page and compared game releases
+have not been established here. Do not guess a particular guide or silently
+upgrade the recollection into a confirmed version matrix.
+
+A separate [first-hand screenshot playthrough](https://lparchive.org/Final-Fantasy-VII/Update%2051/)
+shows the Temple of the Ancients clock interaction in an English-language game.
+It is a candidate observation source for that scene, not evidence of the guide's
+Japanese provenance or a complete JP/US comparison. Neither game was executed
+for this skill update, and no guide-page comparison was completed.
+
+The useful investigation design does not depend on accepting the history first:
+
+| Candidate claim | How to retain and check it |
+| --- | --- |
+| The described area contains a clock-based traversal interaction | Keep as a scene/search lead; bind the scene and exits against the selected target. |
+| A particular sequence controls the clock hands | Mark edition-sensitive; preserve competing procedures and inspect the target's menu/script/input transitions. |
+| Neighboring locations, objects or route relationships described elsewhere | Retain as separate hypotheses with their own evidence; a clock mismatch neither disproves nor validates them. |
+| The English guide was based on the Japanese release | Keep attributed and unconfirmed until the exact publication and comparison evidence are identified. |
+
+Draft shared scene structure with version-qualified alternatives for the clock
+procedure. A common description can survive while one branch is replaced or
+left unresolved. A mismatch localizes investigation; it is not a reason to throw
+away the rest of the guide or declare the rest correct. Avoid forcing either
+version to fit a single flattened walkthrough. Search by meaning and scene
+relationships when names differ after localization.
+
+A future completed case study should identify the publication and game builds,
+compare the relevant passage with each version's code or recorded interaction,
+and preserve both the initially inferred applicability and the corrected result.
+It would measure how much useful scene structure was retained and how much
+version-specific correction was required, rather than score the entire guide
+as simply right or wrong.
+
+### Draft Z early without pretending it is tested
+
+Keep a preliminary Z scene as an explicitly untested prediction artifact with
+stable claim IDs and links back to the source ledger. Record which details are
+reported, inferred, unknown or disputed. Draft scene descriptions and commands
+are useful before code bindings exist; guessed descriptions are not recovered
+original narration. Unknown guards, coordinates, item IDs and effects remain
+unknown, not invented executable facts. Use plain structured notes if the
+installed Z format cannot preserve uncertainty; do not invent a supported schema.
+
+Illustrative PQ1-style hypothesis, not a factual claim about any actual room or
+edition: a guide reports "there is a key in this room".
+
+```text
+claim key-in-room: guide-reported, untested; source and edition recorded
+scene: reported room label; native room/resource binding unknown
+object candidate: key; code identity, visibility and availability unknown
+action candidate: find or take key; exact verb/dispatch and prerequisites unknown
+predicted result: acquisition; inventory/flag effects not yet established
+next probe: locate the room/object representation and the acquisition handler
+```
+
+That report justifies looking for the key, not inserting one into the model as
+confirmed. Search candidate room scripts, object/inventory records, text and
+aliases, state predicates, acquisition dispatch and related writes. A literal
+"key" string may be absent or refer to another object; numeric IDs, shared
+handlers or hidden conditions may carry the meaning. Failure of one string
+search does not establish absence. Keep the possible no-key or different-room
+case as a discriminator, and qualify any live click geometry separately.
+
+A draft may run in an explicitly selected conjecture simulator or be authored
+as a guide-based adaptation. That does not make it original-backed execution.
+Do not drive a live guest or mutate authoritative game state on the strength of
+a draft binding. Do not silently replace an unsupported recovered action with
+a conjectured successful one. Future/hidden objects stay in the investigator's
+blueprint unless the chosen assistance/spoiler profile permits their disclosure.
+
+### Compare predictions with recovered behavior and observations
+
+Keep the pre-analysis draft revision instead of overwriting predictions after
+seeing the answer. Reconcile three columns per claim: guide-derived Z prediction,
+source-qualified UDL/UIL behavior, and original-runtime observation when needed.
+They answer different questions. For example, a key's object record may support
+its existence while pickup availability, ordinary reachability and persistence
+remain unresolved. A missing observation is unknown, not a contradiction.
+
+Compare scene contents, accepted/refused/repeated actions, guard alternatives,
+ordered state changes, exits and timing where relevant. Distinguish a guide's
+convenient route order from a necessary dependency. Mark each claim supported
+at a stated boundary, refined, contradicted or still unresolved; retain the
+original prediction and decisive evidence. Add branches discovered in code even
+when every walkthrough omits them. A mismatch directs investigation and does
+not authorize editing the original or forcing the implementation to fit a guide.
+
+The Z blueprint is a comparison point, not the sole oracle. Executing a draft
+against its own expected answers shows internal consistency only. Guide-derived
+cases may guide original-code/runtime checks, but count that evidence according
+to how it was actually obtained; do not call the shared prediction independent.
+Completing the guide checklist establishes coverage of its claims, not the whole
+game. Record prediction accuracy, unresolved claims and correction/preparation
+cost alongside time to accepted behavior. Compare assisted and cold workflows
+separately rather than claiming that prior knowledge was free.

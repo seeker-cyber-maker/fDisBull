@@ -89,6 +89,11 @@ CS:IP entries; supply a selector when a physical address has multiple contexts.
 The capture budget is shared across roots and counts repeated CFG visits.
 All requested entries remain recorded when that budget expires. Missing facts,
 unresolved transfers and frontier entries produce `complete: false`.
+Stored incoming control references are also inventoried for every captured
+instruction, including interior joins. The reverse lookup is batched and has
+an explicit 100,000-record budget; exhaustion or an unresolved target context
+keeps the capture incomplete. Selection of roots never erases a known caller
+of an interior instruction.
 
 The layout additionally accepts `order` (all backing IDs exactly once), `base`,
 `assumptions` and `entry_references`. The CLI accepts the latter structured
@@ -142,8 +147,11 @@ version. Editing one independent backing is not a source patch: materialization
 rejects a mismatched revision, and this API does not qualify arbitrary edits.
 
 `validate_source` checks version/byte identity and re-queries the requested
-project graph to detect a relabeled partial capture or altered ports. Its
-`source_valid` receipt is not semantic equivalence or authenticated authorship.
+project graph to detect a relabeled partial capture or altered ports. The
+semantic comparison includes stored operand reference facts as well as
+incoming and outgoing control edges. Learning a pointer can invalidate an old
+capture even when code bytes are unchanged; a label-only change does not.
+The `source_valid` receipt is not semantic equivalence or authenticated authorship.
 Public JSON digests detect inconsistent content; callers can recompute them.
 The standalone `compile_code_backings` accepts caller-authored capsules and
 independently validates encodings and edges; it cannot authenticate their

@@ -1,0 +1,134 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 plus sealed native/qemu-task-scheduler v1 patch",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_file": "../qemu-task-scheduler/qemu-10.0.13-fdisbull-task-scheduler-v1.patch",
+  "base_patch_sha256": "e939efa9379027199b990143b2d04a122ca21787367dd20f00d0a071750db52f",
+  "patch_file": "qemu-10.0.13-fdisbull-task-preemption-v1.patch",
+  "patch_sha256": "0dd3cb4625c2fcbe2f7ba65b8df899a6b06519681cabc92406503bfeff901bd0",
+  "scope": "Opt-in x86 TCG task preemption from real direct master-8259 acknowledgements and matching guest EOIs, preserving task-owned hardware frames and global PIC/PIT state.",
+  "modified_files": [
+    {
+      "path": "hw/i386/x86-cpu.c",
+      "before_sha256": "79fccea18ff6b5427cfe40383b519f0c996a31da857f945c21f7f04e24cc056f",
+      "after_sha256": "45603721ba6c814767a1a75e20327f6a42fa44aca660776c10327bc983e38ade"
+    },
+    {
+      "path": "hw/intc/i8259.c",
+      "before_sha256": "8ea7ab1cce169d826d82b41149f838fa4f50444ba98bc86874176a0bf1c0522e",
+      "after_sha256": "ba9ee68b0f873dce193a4fda2ffddfe523567a915a410cf169e03b7cf3b7751d"
+    },
+    {
+      "path": "include/hw/intc/i8259.h",
+      "before_sha256": "165ac69fff66c4d6701c0e4a487531a5ec2466ff2116411bc015d916450cefa6",
+      "after_sha256": "a7c0212d598f7508e896b64c0e3bbfd02248392a268b0be56d0fba6a0347332d"
+    },
+    {
+      "path": "qapi/fdisbull-task-scheduler.json",
+      "before_sha256": "558b193c93c0cc8edeae8208c425e898be56096b1e5ee80065a61c24b0026d4d",
+      "after_sha256": "f23ab77e27590062c266bee6c1fd22f6be60a830997837a1cfbd6de6089420aa"
+    },
+    {
+      "path": "target/i386/cpu.h",
+      "before_sha256": "ecaa4c9d845cb6167e1e435d9523aefcebf10a75d70851164431e6c2d87bac8e",
+      "after_sha256": "54c96602f39ed257e658dc2b845db8243abd2163745838473ee4aabc2e00bff6"
+    },
+    {
+      "path": "target/i386/fdisbull-task-private.c",
+      "before_sha256": "2906f9371bbfb48a8be84cd7d14ce3543b42acce9ff946f69b95b756d9ca99da",
+      "after_sha256": "69c70c6c056ae19e79a09029c65bdf6270feb49811e9c72133f766b94751a47c"
+    },
+    {
+      "path": "target/i386/fdisbull-task-scheduler.h",
+      "before_sha256": "c6fdf2b789063150b5246f7ee7add1138488986b1c70f627153802436d8262b1",
+      "after_sha256": "0d7add775680284fbc7cc7bb26e5a3c7abb733e6ac7e09257a21a38ff9af6d6d"
+    },
+    {
+      "path": "target/i386/tcg/system/seg_helper.c",
+      "before_sha256": "93ea76a075fd7825652dd0ad20b2d6c7fe093d16e5800d6e4a659ac9a90f1ca1",
+      "after_sha256": "072d1ea8d4f464b7eb958560171cb297f94031d842a8fc1e3e9f857854de9cc4"
+    }
+  ],
+  "qmp_command": {
+    "name": "x-fdisbull-task-preemption-configure",
+    "arguments": [
+      "enabled:bool",
+      "irq:uint8 (0..7 except 2)",
+      "quantum?:uint32 (default 1, range 1..65535)"
+    ],
+    "returns": "qemu-pc-task-scheduler-v1 API 2 status with qemu-pc-pic-preemption-v1 record",
+    "semantics": "Binds a real accepted PIC IRQ to the selected native hardware frame. After its actual guest EOI clears the matching master ISR bit, switches at the native execution-loop boundary before the next guest translation block when the configured EOI quantum is reached."
+  },
+  "preemption_bounds": {
+    "supported_pic": "Normal dual-8259 mode; direct master IRQs 0,1,3,4,5,6,7.",
+    "fails_closed": [
+      "IRQ2/cascade and all slave IRQs",
+      "spurious acknowledgement",
+      "APIC or other non-8259 delivery",
+      "auto-EOI",
+      "PIC polling",
+      "PIC reinitialization or unsupported PIC modes"
+    ],
+    "policy": "No fabricated interrupt or EOI. QEMU normal IF, PIC mask, STI shadow, and MOV SS shadow behavior governs acceptance. PIC/PIT pending lines remain machine-global.",
+    "checkpoint": "fdisbull/task-private VMState v4 stores PIC scheduler counters and parallel per-frame PIC bindings without changing the nested v3 frame layout. An in-flight pre-EOI state is saveable only when task key, native frame sequence, ack sequence, and master ISR bit agree. A pending post-EOI handoff is not saveable. v1-v3 streams restore with preemption disabled and legacy frame PIC metadata cleared."
+  },
+  "build": {
+    "source": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-preemption-runtime/qemu-10.0.13",
+    "build_dir": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-preemption-runtime/build",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_args": [
+      "--target-list=x86_64-softmmu",
+      "--without-default-features",
+      "--enable-system",
+      "--enable-tcg",
+      "--enable-pixman",
+      "--disable-user",
+      "--disable-tools",
+      "--disable-docs",
+      "--disable-guest-agent",
+      "--disable-containers",
+      "--disable-download",
+      "--disable-install-blobs",
+      "--disable-debug-info",
+      "--disable-qom-cast-debug",
+      "--audio-drv-list=",
+      "--firmwarepath=../qemu-10.0.13/pc-bios",
+      "--prefix=/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-preemption-runtime/build/install",
+      "--ninja=/Users/tiga/miniconda/bin/ninja",
+      "--python=/Users/tiga/miniconda/bin/python3"
+    ],
+    "command": "TMPDIR=<native-preemption-runtime/tmp> /Users/tiga/miniconda/bin/ninja -C build -j2",
+    "result": "Full configured compile and link succeeded; no tests run by patch author."
+  },
+  "binary": {
+    "path": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-preemption-runtime/build/qemu-system-x86_64",
+    "sha256": "0e6a5433fbd118be138a50e6979a7f828b37083d50e6e248e7c4e1cc1db1aebc"
+  },
+  "native_qualification": {
+    "owner": "Root-owned; no guest execution by patch author.",
+    "aggregate_receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-preemption-03.xml",
+    "aggregate_result": "14 passed, 0 failed, 0 skipped in 57.459 seconds.",
+    "checks": [
+      "IRQ0 standard profile cold pre-EOI and post-EOI restore, task-frame/PIC ownership, real IRET and DOS return 42",
+      "IRQ0 virtual/x87 profile cross-process restore",
+      "IRQ deferral until IF eligible",
+      "IRQ deferral while PIC-masked",
+      "chained-shadow guard fixture",
+      "real i8042 keyboard IRQ1 A-to-B-to-A preemption",
+      "quantum-three EOI phase preserved through cold restore",
+      "V86 native interrupt-frame cold restore",
+      "per-task x87 state restore",
+      "instrumented checkpoint profile on scheduler witness",
+      "per-task guest debug-watchpoint address isolation",
+      "IRET width mismatch rejected before frame pop",
+      "V86 GP error-code frame recorded before handler",
+      "unowned ring-0 interrupt stack rejected before guest write"
+    ],
+    "instrumented_irq_receipt": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-preemption-04.xml",
+    "instrumented_irq_result": "1 passed, 0 failed, 0 skipped in 7.277 seconds; pre/post-EOI cross-process checks in the instrumented profile.",
+    "not_qualified": "A dedicated isolated MOV SS pending-IRQ probe remains unqualified because the available stopped-input path cannot establish a pending PIC interrupt before the following instruction. The chained-shadow fixture passed; no broader MOV SS-specific claim is made.",
+    "ci": "No CI was run for this patch."
+  }
+}

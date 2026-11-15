@@ -1,0 +1,152 @@
+--- a/qapi/fdisbull-display.json
++++ b/qapi/fdisbull-display.json
+@@ -97,3 +97,76 @@
+ { 'command': 'x-fdisbull-export-display',
+   'data': { 'token': 'str', 'filename': 'str' },
+   'returns': 'FdisbullDisplayInfo' }
++
++
++##
++# @FdisbullDisplayPoint:
++#
++# One pixel coordinate in a retained renderer publication.
++#
++# @x: Zero-based horizontal coordinate, less than retained width.
++# @y: Zero-based vertical coordinate, less than retained height.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullDisplayPoint',
++  'data': { 'x': 'int', 'y': 'int' } }
++
++##
++# @FdisbullDisplaySample:
++#
++# One packed RGB24 pixel from the retained publication, without rendering.
++#
++# @x: Requested zero-based horizontal coordinate.
++# @y: Requested zero-based vertical coordinate.
++# @r: Red channel, 0..255.
++# @g: Green channel, 0..255.
++# @b: Blue channel, 0..255.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullDisplaySample',
++  'data': { 'x': 'int', 'y': 'int',
++            'r': 'uint8', 'g': 'uint8', 'b': 'uint8' } }
++
++##
++# @FdisbullDisplayProbe:
++#
++# A bounded sparse observation of one retained renderer publication.
++#
++# @display: Exact retained publication and current stopped observation time.
++# @samples: One sample per requested point, in request order with duplicates.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullDisplayProbe',
++  'data': { 'display': 'FdisbullDisplayInfo',
++            'samples': [ 'FdisbullDisplaySample' ] } }
++
++##
++# @x-fdisbull-probe-display:
++#
++# @token: Current owner token.
++# @update-id: Exact positive ID of the latest retained publication.
++# @points: Zero through 256 ordered pixel coordinates.  Each must lie within
++#     the retained dimensions; duplicate coordinates remain separate samples.
++#
++# Read only the owned packed RGB publication under the stopped clock guard.
++# The entire point list validates before any sample is read or result allocated.
++# An empty list still requires a retained publication and exact identity.
++# Rejected arguments preserve the observer and its publication.
++#
++# This command does not refresh the display, create a file, advance time, run
++# guest instructions, or modify timers.  Coordinates describe the retained
++# renderer image, not a guest cursor, mode identity or completed guest frame.
++# A later guest mode or palette change cannot relabel the retained publication.
++#
++# Returns: Publication receipt and requested RGB samples.  No full-raster hash
++#     or guest drawing completion is established by this sparse observation.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-probe-display',
++  'data': { 'token': 'str', 'update-id': 'uint64',
++            'points': [ 'FdisbullDisplayPoint' ] },
++  'returns': 'FdisbullDisplayProbe' }
+--- a/system/fdisbull-display.c
++++ b/system/fdisbull-display.c
+@@ -23,6 +23,7 @@
+ #define DISPLAY_MAX_PERIOD_NS INT64_C(1000000000)
+ #define DISPLAY_MAX_DIMENSION 8192
+ #define DISPLAY_MAX_RGB_BYTES (16 * 1024 * 1024)
++#define DISPLAY_MAX_PROBE_POINTS 256
+ 
+ static struct {
+     bool initialized;
+@@ -413,3 +414,62 @@
+     }
+     return display_info();
+ }
++
++
++FdisbullDisplayProbe *qmp_x_fdisbull_probe_display(
++    const char *token, uint64_t update_id, FdisbullDisplayPointList *points,
++    Error **errp)
++{
++    FdisbullDisplayPointList *entry;
++    FdisbullDisplayProbe *probe;
++    FdisbullDisplaySampleList **tail;
++    unsigned count = 0;
++
++    if (!display_guard(errp) || !display_token(token, errp)) {
++        return NULL;
++    }
++    if (!display_window.rgb) {
++        error_setg(errp, "Display observer has no retained renderer publication");
++        return NULL;
++    }
++    if (!update_id || update_id != display_window.updates) {
++        error_setg(errp, "Display probe update ID does not match the retained "
++                   "publication");
++        return NULL;
++    }
++
++    /* Reject the entire request before allocating a result or reading pixels. */
++    for (entry = points; entry; entry = entry->next) {
++        const FdisbullDisplayPoint *point = entry->value;
++
++        if (++count > DISPLAY_MAX_PROBE_POINTS) {
++            error_setg(errp, "Display probe accepts at most 256 points");
++            return NULL;
++        }
++        if (point->x < 0 || point->y < 0 ||
++            point->x >= display_window.width ||
++            point->y >= display_window.height) {
++            error_setg(errp, "Display probe point is outside the retained "
++                       "publication");
++            return NULL;
++        }
++    }
++
++    probe = g_new0(FdisbullDisplayProbe, 1);
++    probe->display = display_info();
++    tail = &probe->samples;
++    for (entry = points; entry; entry = entry->next) {
++        const FdisbullDisplayPoint *point = entry->value;
++        size_t offset = ((size_t)point->y * display_window.width +
++                         (size_t)point->x) * 3;
++        FdisbullDisplaySample *sample = g_new0(FdisbullDisplaySample, 1);
++
++        sample->x = point->x;
++        sample->y = point->y;
++        sample->r = display_window.rgb[offset];
++        sample->g = display_window.rgb[offset + 1];
++        sample->b = display_window.rgb[offset + 2];
++        QAPI_LIST_APPEND(tail, sample);
++    }
++    return probe;
++}

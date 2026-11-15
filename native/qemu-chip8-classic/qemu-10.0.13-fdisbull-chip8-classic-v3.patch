@@ -1,0 +1,357 @@
+--- a/qapi/misc.json
++++ b/qapi/misc.json
+@@ -60,6 +60,10 @@
+ # @virtual-now-ns: Current QEMU virtual-clock time.
+ # @next-deadline-ns: Next virtual-clock timer deadline.
+ # @state-generation: Mutation generation used by stopped-state CAS commands.
++# @rng-model: Fixed deterministic random-number generator model identifier.
++# @rng-seed: Seed selected by reset or the stopped-state seed command.
++# @rng-state: Current 32-bit LCG state.
++# @rng-draws: Number of random instructions consumed since the last seed.
+ #
+ # Since: 10.1
+ ##
+@@ -72,7 +76,9 @@
+             'sound-timer': 'uint8', 'sound-active': 'bool',
+             'virtual-ticks': 'uint64', 'manual-ticks': 'uint64',
+             'phase-numerator': 'uint8', 'virtual-now-ns': 'uint64',
+-            'next-deadline-ns': 'uint64', 'state-generation': 'uint64' } }
++            'next-deadline-ns': 'uint64', 'state-generation': 'uint64',
++            'rng-model': 'str', 'rng-seed': 'uint32', 'rng-state': 'uint32',
++            'rng-draws': 'uint64' } }
+ 
+ ##
+ # @query-chip8-environment:
+@@ -109,6 +115,20 @@
+ ##
+ { 'command': 'x-chip8-debug-ticks', 'data': { 'count': 'uint32',
+                                              'expected-generation': 'uint64' },
++  'returns': 'Chip8EnvironmentInfo' }
++
++##
++# @x-chip8-seed-rng:
++# @seed: New 32-bit RNG seed and initial state.
++# @expected-generation: Required compare-and-swap state generation.
++#
++# Seed the deterministic CHIP-8 RNG while stopped and return the full resulting
++# environment receipt. Other CPU, display, key, timer, and clock state is kept.
++#
++# Since: 10.1
++##
++{ 'command': 'x-chip8-seed-rng', 'data': { 'seed': 'uint32',
++                                           'expected-generation': 'uint64' },
+   'returns': 'Chip8EnvironmentInfo' }
+ 
+ ##
+--- a/system/qmp-chip8.c
++++ b/system/qmp-chip8.c
+@@ -94,6 +94,7 @@
+     GET_STR(profile, "chip8-profile");
+     GET_STR(cpu_subset, "chip8-device-subset");
+     GET_STR(env_model, "chip8-env-model");
++    GET_STR(rng_model, "chip8-rng-model");
+     info->width = 64;
+     info->height = 32;
+     GET_STR(pixels_hex, "display-pixels-hex");
+@@ -111,6 +112,9 @@
+     info->virtual_now_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+     GET_U64(next_deadline_ns, "next-deadline-ns");
+     GET_U64(state_generation, "state-generation");
++    GET_U32(rng_seed, "rng-seed");
++    GET_U32(rng_state, "rng-state");
++    GET_U64(rng_draws, "rng-draws");
+ #undef GET_STR
+ #undef GET_U64
+ #undef GET_U32
+@@ -169,3 +173,24 @@
+     }
+     return chip8_environment(errp);
+ }
++
++Chip8EnvironmentInfo *qmp_x_chip8_seed_rng(uint32_t seed,
++                                           uint64_t expected_generation,
++                                           Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Error *local_err = NULL;
++    char *cmd;
++    if (!cs) {
++        error_setg(errp, "CHIP-8 CPU is unavailable");
++        return NULL;
++    }
++    cmd = g_strdup_printf("%u:%" PRIu64, seed, expected_generation);
++    object_property_set_str(OBJECT(cs), "seed-rng-command", cmd, &local_err);
++    g_free(cmd);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_environment(errp);
++}
+--- a/target/chip8/cpu.c
++++ b/target/chip8/cpu.c
+@@ -27,7 +27,7 @@
+ static void chip8_set_pc(CPUState *cs, vaddr value)
+ {
+     CHIP8_CPU(cs)->env.pc = value & 0xffff;
+-    CHIP8_CPU(cs)->env.state_generation++;
++    chip8_state_generation_advance(&CHIP8_CPU(cs)->env);
+ }
+ 
+ static void chip8_sync_from_tb(CPUState *cs, const TranslationBlock *tb)
+@@ -134,7 +134,7 @@
+ 
+ static char *chip8_get_subset(Object *obj, Error **errp)
+ {
+-    return g_strdup("fdisbull-chip8-classic-devices-2");
++    return g_strdup("fdisbull-chip8-classic-complete-3");
+ }
+ 
+ static bool chip8_get_faulted(Object *obj, Error **errp)
+@@ -144,14 +144,19 @@
+ 
+ static char *chip8_get_devices_subset(Object *obj, Error **errp)
+ {
+-    return g_strdup("fdisbull-chip8-classic-devices-2");
++    return g_strdup("fdisbull-chip8-classic-complete-3");
+ }
+ 
+ static char *chip8_get_env_model(Object *obj, Error **errp)
+ {
+-    return g_strdup("fdisbull-chip8-display-keypad-timers-1");
++    return g_strdup("fdisbull-chip8-display-keypad-timers-rng-2");
+ }
+ 
++static char *chip8_get_rng_model(Object *obj, Error **errp)
++{
++    return g_strdup("fdisbull-lcg32-high8-v1");
++}
++
+ static char *chip8_get_pixels_hex(Object *obj, Error **errp)
+ {
+     CPUArchState *env = &CHIP8_CPU(obj)->env;
+@@ -210,11 +215,11 @@
+         }
+     }
+     if (manual) {
+-        env->manual_ticks += count;
+-    } else {
+-        env->virtual_ticks += count;
++        chip8_counter_add_saturating(&env->manual_ticks, count);
++    } else {
++        chip8_counter_add_saturating(&env->virtual_ticks, count);
+     }
+-    env->state_generation++;
++    chip8_state_generation_advance(env);
+ }
+ 
+ static void chip8_set_keys_command(Object *obj, const char *value,
+@@ -244,7 +249,7 @@
+     }
+     cpu->env.key_mask = mask;
+     cpu->env.key_wait_stop_owned = false;
+-    cpu->env.state_generation++;
++    chip8_state_generation_advance(&cpu->env);
+ }
+ 
+ static void chip8_debug_ticks_command(Object *obj, const char *value,
+@@ -277,6 +282,38 @@
+     cpu->env.key_wait_stop_owned = false;
+ }
+ 
++static void chip8_seed_rng_command(Object *obj, const char *value,
++                                   Error **errp)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    char *end;
++    unsigned long seed, generation;
++    if (runstate_is_running()) {
++        error_setg(errp, "CHIP-8 RNG seeding requires a stopped VM");
++        return;
++    }
++    errno = 0;
++    seed = strtoul(value, &end, 10);
++    if (errno || end == value || *end != ':') {
++        error_setg(errp, "Malformed CHIP-8 RNG seed command");
++        return;
++    }
++    value = end + 1;
++    errno = 0;
++    generation = strtoul(value, &end, 10);
++    if (errno || end == value || *end || seed > UINT32_MAX ||
++        generation != cpu->env.state_generation ||
++        cpu->env.state_generation == UINT64_MAX) {
++        error_setg(errp, "CHIP-8 RNG seed generation or seed mismatch");
++        return;
++    }
++    cpu->env.rng_seed = seed;
++    cpu->env.rng_state = seed;
++    cpu->env.rng_draws = 0;
++    cpu->env.key_wait_stop_owned = false;
++    chip8_state_generation_advance(&cpu->env);
++}
++
+ static void chip8_tick_apply_cpu(CPUState *cs, run_on_cpu_data data)
+ {
+     Chip8CPU *cpu = CHIP8_CPU(cs);
+@@ -338,6 +375,7 @@
+     object_property_add_str(obj, "chip8-device-subset",
+                             chip8_get_devices_subset, NULL);
+     object_property_add_str(obj, "chip8-env-model", chip8_get_env_model, NULL);
++    object_property_add_str(obj, "chip8-rng-model", chip8_get_rng_model, NULL);
+     object_property_add_str(obj, "display-pixels-hex", chip8_get_pixels_hex,
+                             NULL);
+     object_property_add_str(obj, "display-pixels-sha256",
+@@ -346,6 +384,8 @@
+                             chip8_set_keys_command);
+     object_property_add_str(obj, "debug-ticks-command", NULL,
+                             chip8_debug_ticks_command);
++    object_property_add_str(obj, "seed-rng-command", NULL,
++                            chip8_seed_rng_command);
+ #define ADD_U64(name, field) object_property_add_uint64_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
+ #define ADD_U32(name, field) object_property_add_uint32_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
+ #define ADD_U8(name, field) object_property_add_uint8_ptr(obj, name, &cpu->env.field, OBJ_PROP_FLAG_READ)
+@@ -354,6 +394,9 @@
+     ADD_U64("virtual-ticks", virtual_ticks);
+     ADD_U64("manual-ticks", manual_ticks);
+     ADD_U64("next-deadline-ns", next_deadline_ns);
++    ADD_U64("rng-draws", rng_draws);
++    ADD_U32("rng-seed", rng_seed);
++    ADD_U32("rng-state", rng_state);
+     ADD_U8("phase-numerator", phase_numerator);
+     ADD_U8("delay-timer", delay_timer);
+     ADD_U8("sound-timer", sound_timer);
+--- a/target/chip8/cpu.h
++++ b/target/chip8/cpu.h
+@@ -46,8 +46,26 @@
+     uint8_t phase_numerator;
+     uint64_t next_deadline_ns;
+     bool key_wait_stop_owned;
++    uint32_t rng_seed;
++    uint32_t rng_state;
++    uint64_t rng_draws;
+ } CPUArchState;
+ 
++static inline void chip8_counter_add_saturating(uint64_t *value,
++                                                uint64_t amount)
++{
++    if (UINT64_MAX - *value < amount) {
++        *value = UINT64_MAX;
++    } else {
++        *value += amount;
++    }
++}
++
++static inline void chip8_state_generation_advance(CPUArchState *env)
++{
++    chip8_counter_add_saturating(&env->state_generation, 1);
++}
++
+ struct ArchCPU {
+     CPUState parent_obj;
+     CPUArchState env;
+--- a/target/chip8/helper.c
++++ b/target/chip8/helper.c
+@@ -11,7 +11,7 @@
+     CPUState *cs = env_cpu(env);
+ 
+     if (!env->faulted) {
+-        env->state_generation++;
++        chip8_state_generation_advance(env);
+     }
+     env->pc = pc;
+     env->faulted = true;
+@@ -48,7 +48,7 @@
+     case 0x0:
+         if (opcode == 0x00e0) {
+             memset(env->display, 0, sizeof(env->display));
+-            env->frame_generation++;
++            chip8_counter_add_saturating(&env->frame_generation, 1);
+         } else if (opcode == 0x00ee) {
+             if (env->sp == 0) {
+                 chip8_raise(env, pc, opcode, CHIP8_FAULT_STACK_UNDERFLOW);
+@@ -74,6 +74,16 @@
+         env->sp++;
+         next = nnn;
+         break;
++    case 0xb:
++        /* Bnnn uses V0 and preserves the full sum; do not mask to 12 bits. */
++        next = nnn + (env->v[0] & 0xff);
++        break;
++    case 0xc:
++        env->rng_state = env->rng_state * UINT32_C(1664525) +
++                         UINT32_C(1013904223);
++        chip8_counter_add_saturating(&env->rng_draws, 1);
++        env->v[x] = (env->rng_state >> 24) & kk;
++        break;
+     case 0x3:
+         if ((env->v[x] & 0xff) == kk) {
+             next += 2;
+@@ -178,7 +188,7 @@
+         }
+         env->v[0xf] = a;
+         if (count) {
+-            env->frame_generation++;
++            chip8_counter_add_saturating(&env->frame_generation, 1);
+         }
+         break;
+     case 0xe:
+@@ -204,7 +214,7 @@
+         } else if (kk == 0x0a) {
+             if (!env->key_mask) {
+                 if (!env->key_wait) {
+-                    env->state_generation++;
++                    chip8_state_generation_advance(env);
+                 }
+                 env->key_wait = true;
+                 env->key_wait_stop_owned = true;
+@@ -223,8 +233,19 @@
+             env->delay_timer = env->v[x] & 0xff;
+         } else if (kk == 0x18) {
+             env->sound_timer = env->v[x] & 0xff;
++        } else if (kk == 0x1e) {
++            a = env->v[x] & 0xff;
++            env->i = (env->i + a) & 0xffff;
+         } else if (kk == 0x29) {
+             env->i = CHIP8_FONT_BASE + 5 * (env->v[x] & 0xf);
++        } else if (kk == 0x33) {
++            a = env->v[x] & 0xff;
++            if (env->i > CHIP8_RAM_SIZE || 3 > CHIP8_RAM_SIZE - env->i) {
++                chip8_raise(env, pc, opcode, CHIP8_FAULT_DATA_OOB);
++            }
++            cpu_stb_data(env, env->i, a / 100);
++            cpu_stb_data(env, env->i + 1, (a / 10) % 10);
++            cpu_stb_data(env, env->i + 2, a % 10);
+         } else if (kk != 0x55 && kk != 0x65) {
+             chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
+         } else {
+@@ -254,5 +275,5 @@
+         chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
+     }
+     env->pc = next;
+-    env->state_generation++;
++    chip8_state_generation_advance(env);
+ }
+--- a/target/chip8/vmstate.c
++++ b/target/chip8/vmstate.c
+@@ -43,8 +43,8 @@
+ 
+ const VMStateDescription vmstate_chip8_cpu = {
+     .name = "chip8-cpu",
+-    .version_id = 2,
+-    .minimum_version_id = 2,
++    .version_id = 3,
++    .minimum_version_id = 3,
+     .post_load = chip8_cpu_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UINT32_ARRAY(env.v, Chip8CPU, 16),
+@@ -68,6 +68,9 @@
+         VMSTATE_UINT8(env.phase_numerator, Chip8CPU),
+         VMSTATE_UINT64(env.next_deadline_ns, Chip8CPU),
+         VMSTATE_TIMER_PTR(tick_timer, Chip8CPU),
++        VMSTATE_UINT32(env.rng_seed, Chip8CPU),
++        VMSTATE_UINT32(env.rng_state, Chip8CPU),
++        VMSTATE_UINT64(env.rng_draws, Chip8CPU),
+         VMSTATE_END_OF_LIST()
+     }
+ };

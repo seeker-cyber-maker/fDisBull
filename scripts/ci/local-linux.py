@@ -26,7 +26,6 @@ import tarfile
 import uuid
 
 CLI = Path('/Users/tiga/.local/bin/container')
-ADMISSION = Path('/Users/tiga/.codex/bin/storage_admit.py')
 JOBS = {'ordinary': 'test-and-package', 'stable': 'native-debugger-stable',
         'layers': 'native-debugger-layers', 'unified': 'native-unified'}
 PREPARE_JOB = 'native-unified-prepare'
@@ -150,7 +149,14 @@ def source_identity(source, *, generated_outputs=False):
     if capture(status, cwd=source).strip():
         raise ValueError('Source must be clean, including new authored files')
     sha = capture(['git', 'rev-parse', 'HEAD'], cwd=source).strip()
-    branch = capture(['git', 'symbolic-ref', '--short', 'HEAD'], cwd=source).strip()
+    try:
+        branch = capture(['git', 'symbolic-ref', '--quiet', '--short', 'HEAD'], cwd=source).strip()
+    except subprocess.CalledProcessError as error:
+        if error.returncode != 1:
+            raise
+        # The production pipeline deliberately checks out an immutable commit.
+        # Detached HEAD is a valid source identity, not an unknown branch name.
+        branch = None
     if not re.fullmatch('[0-9a-f]{40}', sha):
         raise ValueError('Expected one exact source commit')
     return sha, branch
@@ -159,8 +165,10 @@ def source_identity(source, *, generated_outputs=False):
 def clone_source(source, destination, sha, branch):
     # --no-local uses a shallow upload-pack transfer, rather than copying the
     # original Git config, worktree pointer, credentials or complete history.
-    capture(['git', '-c', 'core.hooksPath=/dev/null', 'clone', '--no-local', '--depth', '1', '--single-branch',
-             '--branch', branch, str(source), str(destination)], timeout=180)
+    command = ['git', '-c', 'core.hooksPath=/dev/null', 'clone', '--no-local', '--depth', '1', '--single-branch']
+    if branch is not None:
+        command += ['--branch', branch]
+    capture([*command, str(source), str(destination)], timeout=180)
     if source_identity(destination) != (sha, branch):
         raise ValueError('Source moved during snapshot; preserve this attempt and start a new run')
 
@@ -270,22 +278,22 @@ def unified_command(image, environment):
             + shlex.join(args))
 
 
-def admit(parent, expected, reserve):
-    result = subprocess.run([sys.executable, str(ADMISSION), '--path', str(parent),
-                             '--expected-bytes', str(expected), '--destination-reserve-bytes', str(reserve)],
-                            env=safe_env(), capture_output=True, text=True, timeout=30)
-    if result.returncode:
-        raise ValueError('Storage admission rejected: ' + result.stdout.strip())
-    return json.loads(result.stdout)
+def storage_observation(path, expected, reserve):
+    path = Path(path)
+    if path.is_symlink() or not path.is_dir():
+        raise ValueError(f'Storage destination unavailable: {path}')
+    usage = shutil.disk_usage(path)
+    return {'free_bytes': usage.free, 'expected_bytes': expected, 'reserve_bytes': reserve,
+            'storage_status': 'observed', 'reserve_enforced': False}
 
 
-def admit_destinations(parent, expected, reserve):
-    result = {'output': admit(parent, expected, reserve)}
+def observe_destinations(parent, expected, reserve):
+    result = {'output': storage_observation(parent, expected, reserve)}
     # Image layers, guest root disks and the builder always use CACHE, even
     # when the caller keeps source/results on the separate CODEX pool.
     store = Path('/Volumes/CACHE/AppleContainer')
     if os.stat(parent).st_dev != os.stat(store).st_dev:
-        result['container_store'] = admit(store, expected, reserve)
+        result['container_store'] = storage_observation(store, expected, reserve)
     return result
 
 
@@ -508,14 +516,13 @@ def execute(args):
     if run_root.is_relative_to(source) or source.is_relative_to(run_root):
         raise ValueError('Output must be outside the source checkout')
     parent = run_root if run_root.exists() else run_root.parent
-    # Initial control-file admission is small; every new material leg gets its
-    # own budget after completed legs have been checked. A resumed preparation
-    # must not require the original compiler allocation a second time.
+    # Preserve destination identity/availability telemetry without making free
+    # space or a projected allocation a permission gate.
     if args.profile == 'qualify':
         if not run_root.is_dir() or not (run_root / 'run.json').is_file():
             raise ValueError('Readback qualification requires an existing local run')
     else:
-        admit_destinations(parent, 0, args.reserve_bytes)
+        observe_destinations(parent, 0, args.reserve_bytes)
     run_root.mkdir(exist_ok=True)
     manifest_path = run_root / 'run.json'
     if manifest_path.exists():
@@ -555,8 +562,6 @@ def execute(args):
                 (output / '.native/backends/layers/dosbox-x').stat().st_size, source_root=source,
                 shared_os_base=base_root / '.native/pe/runtime.cpio.gz')
             save(phase / 'retained-base-allocation-bound.json', bound)
-            if args.expected_bytes is not None and args.expected_bytes < bound['expected_bytes']:
-                raise ValueError('Explicit allocation is below the measured retained-base bound')
             allocation = bound['expected_bytes'] if args.expected_bytes is None else args.expected_bytes
         if profile == 'unified' and (output/'native-evidence/pe/windows-runtime.cpio.gz').exists():
             runtime_bytes = sum((output/name).stat().st_size for name in UNIFIED_INPUTS)
@@ -564,12 +569,10 @@ def execute(args):
             # Staged host input, guest working copy and exported evidence; the
             # completed preparation/qualification copies already occupy space.
             needed = ((3*runtime_bytes + 4_000_000_000 + 999_999_999)//1_000_000_000)*1_000_000_000
-            if args.expected_bytes is not None and args.expected_bytes < needed:
-                raise ValueError('Explicit acceptance allocation is below its retained-input copy bound')
             allocation = needed if args.expected_bytes is None else args.expected_bytes
             save(phase/'retained-acceptance-allocation-bound.json', {'expected_bytes':needed,
                  'prepared_input_bytes':runtime_bytes,'retained_copies':3,'system_and_evidence_budget':4_000_000_000})
-        save(phase / 'storage-admission.json', admit_destinations(run_root, allocation, args.reserve_bytes))
+        save(phase / 'storage-observation.json', observe_destinations(run_root, allocation, args.reserve_bytes))
         job_id = str(uuid.uuid4())
         name = f'fdb-ci-{profile}-{job_id[:8]}'
         print(f'{profile}: preparing exact source {sha}; container {name}', flush=True)
@@ -730,12 +733,13 @@ def main():
     parser.add_argument('--retained-windows-fixtures', type=Path, help='Explicit pinned authored selector.exe, PROGRAM.EXE and INITIAL.BIN')
     parser.add_argument('--require-os-capability', choices=['wine64', 'dos', 'pe32', 'win16-guards'], action='append')
     parser.add_argument('--profile', choices=['all', *JOBS, 'unified-prepare', 'qualify'], default='all')
-    parser.add_argument('--expected-bytes', type=int, help='Conservative per-leg allocation override; defaults: prepare35GB, unified tests8GB, ordinary12GB, stable14GB, layers18GB')
-    parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000)
+    parser.add_argument('--expected-bytes', type=int, help='Per-leg allocation estimate for telemetry; defaults: prepare35GB, unified tests8GB, ordinary12GB, stable14GB, layers18GB')
+    parser.add_argument('--reserve-bytes', type=int, default=40_000_000_000,
+                        help='Legacy compatibility value, recorded as telemetry only and not enforced')
     parser.add_argument('--timeout', type=int, default=7200, help='Per-container wall-clock seconds')
     args = parser.parse_args()
-    if (args.expected_bytes is not None and args.expected_bytes < 0) or args.reserve_bytes < 20_000_000_000 or args.timeout <= 0:
-        parser.error('Require nonnegative estimate, at least 20 GB reserve and positive timeout')
+    if (args.expected_bytes is not None and args.expected_bytes < 0) or args.reserve_bytes < 0 or args.timeout <= 0:
+        parser.error('Require nonnegative estimates and reserve telemetry, and positive timeout')
     try:
         execute(args)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:

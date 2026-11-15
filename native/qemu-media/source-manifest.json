@@ -1,0 +1,63 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "files": [
+    {
+      "path": "include/ui/console.h",
+      "base_sha256": "683e8c4e52ed1bad1886987ba1ac521e6977c35c6822fbc141cccb8f902f5240",
+      "patched_sha256": "f9a21aae3bdfcc117f93beef7451137b28b88385af2522093279bcd795eab54a"
+    },
+    {
+      "path": "qapi/fdisbull-audio.json",
+      "base_sha256": null,
+      "patched_sha256": "207687b0247e0df3c97e0cf0b1622ed1b7b2f1fda8d09698471af10a972534ea"
+    },
+    {
+      "path": "qapi/fdisbull-display.json",
+      "base_sha256": null,
+      "patched_sha256": "b07f94f3eb0f8b109ac27b67429218b93d430463a22141186221d93b4dd17fad"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "84c867304e94f2bc55e3dcb238cf7d7ceab835886145ddaa3b04c9889b39275e",
+      "patched_sha256": "cc0189a0ad79ad13eb845c7f0914d6ccd5eb44d143449adcbb98a07961e919c5"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "5a1866bc72ca3f98fe84f5521a986360d5eb6c950c6abbfd21731460cbc5ec37",
+      "patched_sha256": "e92f94f87cdfe9a24ba6558f4dc83f05a3dd42b7ec4b33f14ba6fd5e06d28dc2"
+    },
+    {
+      "path": "system/fdisbull-audio.c",
+      "base_sha256": null,
+      "patched_sha256": "93fdb924abf5c83951031d7831fde2cd8d5b5084399da809bfb520d9489d79b5"
+    },
+    {
+      "path": "system/fdisbull-display.c",
+      "base_sha256": null,
+      "patched_sha256": "50d1e0298c070b6dd5a49def4613cf5c16bd0685944c23dda38a31fc28fa3510"
+    },
+    {
+      "path": "system/meson.build",
+      "base_sha256": "3918fef0eab891f5172a021d6581eaacde163c2290abff87ace30b4f00f68c7a",
+      "patched_sha256": "08c5ddef696e62d2eb57f4b07cd6b5a31da476237a883519282022fec02acf05"
+    },
+    {
+      "path": "ui/console.c",
+      "base_sha256": "0c2e4572327c72768ea8b21db849de4ee85dcbd736f5cd7e008f29ec55aee156",
+      "patched_sha256": "da1db82ec9de9e966006ead45a62844b9d89006514e63f9df0980708eb53e222"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed after the exact current clock patch; every resulting file matches the private built source",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

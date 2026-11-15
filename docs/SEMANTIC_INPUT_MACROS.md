@@ -40,3 +40,13 @@ Reaching a predicate is not yet success: stop input must be consumed, the queue 
 A blocked route never becomes successful because of a later state edit. Teleport recovery, full AGI control-map extraction, watched-write progress windows and automatic path planning are outside this implementation. Scene geometry is a versioned authored model whose evidence status must distinguish observation, inference and source derivation.
 
 See [scene navigation](SCENE_NAVIGATION.md), [bounded proofs](BOUNDED_PROOFS.md) and [0.20 verification](RECONCILIATION-0.20.md) for the tested scope.
+
+## Historical proposal and current input boundary
+
+The venue-neutral world-IR proposal in contribution `ae39d078` separates presentation
+from canonical state/events and player intents. This remains a design boundary;
+this documentation does not create a universal semantic macro engine. Current
+QEMU physical input has controller-owned key leases and separate scheduling contracts.
+Historical statements that no backend exposes key-down/key-up describe the earlier
+0.19 interface, not current QEMU capability discovery. A named semantic route must
+retain its selected macro expansion and qualify any blocked/arrival result separately.

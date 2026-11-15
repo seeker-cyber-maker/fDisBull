@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from test_offline_windows_oracles import sample_ne
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('boat_linux', ROOT / 'scripts/ci/boat-linux.py')
@@ -27,7 +28,7 @@ def test_docker_index_and_platform_are_distinct_and_amd64_selected():
 
 def test_consumer_has_only_input_and_results_no_host_or_source_runtime(tmp_path):
     image = {'image_reference': 'example@sha256:'+'a'*64}
-    cmd = boat.docker_command('chat-consumer', 'job', image, tmp_path/'work', tmp_path/'guest', tmp_path/'input', {}, consumer_kit=tmp_path/'kit')
+    cmd = boat.docker_command('chat-consumer', 'job', image, tmp_path/'work', tmp_path/'guest', tmp_path/'input', {'FDISBULL_LOCAL_RUN_ID':'fixture-run','CI_COMMIT_SHA':'a'*40}, consumer_kit=tmp_path/'kit')
     assert cmd[:2] == ['docker', 'run']
     assert '--network' in cmd and cmd[cmd.index('--network')+1] == 'none'
     assert 'SYS_ADMIN' not in cmd and '--cap-add' not in cmd
@@ -56,13 +57,64 @@ def test_worker_identity_must_bind_current_host_boot(tmp_path, monkeypatch):
         boat.read_worker(path)
 
 
-def test_admission_preserves_minimum_and_checks_distinct_stores(tmp_path, monkeypatch):
+def test_local_host_receipt_binds_boot_hostname_and_platform(tmp_path, monkeypatch):
+    boot = 'a0ae3230-94b0-46fd-9b4b-8c40ed8f0e2f'
+    receipt = {'schema': 'fdisbull-local-docker-host-v1', 'execution_origin': 'local-linux',
+               'architecture': 'x86_64', 'host_boot_id': boot, 'host_name': 'actual-host',
+               'observed_at': '2026-11-14T00:00:00Z'}
+    path = tmp_path / 'host.json'; path.write_text(json.dumps(receipt))
+    monkeypatch.setattr(boat.platform, 'system', lambda: 'Linux')
+    monkeypatch.setattr(boat.platform, 'machine', lambda: 'x86_64')
+    monkeypatch.setattr(boat.platform, 'node', lambda: 'actual-host')
+    original = Path.read_text
+    monkeypatch.setattr(Path, 'read_text', lambda self, *a, **kw: boot if str(self) == '/proc/sys/kernel/random/boot_id' else original(self, *a, **kw))
+    assert boat.read_local_host(path) == receipt
+    receipt['host_name'] = 'other-host'; path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='host identity'):
+        boat.read_local_host(path)
+    receipt['host_name'] = 'actual-host'; receipt['host_boot_id'] = 'b0ae3230-94b0-46fd-9b4b-8c40ed8f0e2f'
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='boot identity differs'):
+        boat.read_local_host(path)
+
+
+def test_authored_fixture_is_source_profiled_hash_checked_and_staged(tmp_path):
+    fixture = tmp_path / 'fixture.exe'; fixture.write_bytes(sample_ne())
+    expected = boat.authored_fixture(ROOT, fixture)
+    env = {'FDISBULL_LOCAL_RUN_ID':'fixture-run','CI_COMMIT_SHA':'a'*40}
+    work = tmp_path / 'work'; work.mkdir()
+    boat.stage_authored_fixture(ROOT, fixture, expected, work, env)
+    assert env['FDISBULL_NE_AUTHORED_FIXTURE'] == '/work/.native/authored-win16/ORACLE.EXE'
+    assert (work / '.native/authored-win16/ORACLE.EXE').read_bytes() == fixture.read_bytes()
+    command = boat.docker_command('chat-prepare', 'job', {'image_reference': 'example'}, work,
+                                  tmp_path / 'guest', tmp_path / 'input', env)
+    assert 'FDISBULL_NE_AUTHORED_FIXTURE=/work/.native/authored-win16/ORACLE.EXE' in command
+    fixture.write_bytes(sample_ne() + b'changed')
+    with pytest.raises(ValueError, match='changed during staging'):
+        boat.stage_authored_fixture(ROOT, fixture, expected, tmp_path / 'other', {})
+
+
+def test_full_profile_rejects_missing_authored_fixture_before_work(tmp_path, monkeypatch):
+    monkeypatch.setattr(boat, 'source_identity', lambda source: ('a' * 40, 'branch'))
+    monkeypatch.setattr(boat, 'read_local_host', lambda path: {})
+    args = SimpleNamespace(source=tmp_path, local_host=True, worker_receipt=tmp_path/'host.json',
+                           authored_win16_fixture=None, windows_acceptance='pe64-pe32-win16', profile='all')
+    with pytest.raises(ValueError, match='Authored Win16 fixture required'):
+        boat.execute(args)
+
+
+def test_storage_observation_allows_low_free_space_and_checks_destination(tmp_path, monkeypatch):
     root = tmp_path/'docker'
     root.mkdir()
     monkeypatch.setattr(boat, 'capture', lambda *a, **kw: str(root))
-    monkeypatch.setattr(boat.shutil, 'disk_usage', lambda p: SimpleNamespace(free=25_000_000_000))
-    with pytest.raises(ValueError, match='Storage admission rejected'):
-        boat.admit_destinations(tmp_path, 8_000_000_000, 20_000_000_000)
+    monkeypatch.setattr(boat.shutil, 'disk_usage', lambda p: SimpleNamespace(free=1))
+    result = boat.observe_destinations(tmp_path, 8_000_000_000, 0)
+    assert result['output']['free_bytes'] == 1
+    assert result['output']['reserve_enforced'] is False
+    link = tmp_path/'link'
+    link.symlink_to(root, target_is_directory=True)
+    with pytest.raises(ValueError, match='destination unavailable'):
+        boat.observe_destinations(link, 0, 0)
 
 
 def test_guest_environment_has_both_boat_provenance_fields():
@@ -72,6 +124,9 @@ def test_guest_environment_has_both_boat_provenance_fields():
     assert env['FDISBULL_EXECUTION_ORIGIN'] == 'boat-linux'
     assert env['FDISBULL_BOAT_SANDBOX_ID'] == 'bx_5asjcc78'
     assert json.loads(env['FDISBULL_BOAT_WORKER_RECEIPT']) == ref
+    local = boat.job_environment('ordinary', 'a'*40, 'run', 'job', origin='local-linux')
+    assert local['FDISBULL_EXECUTION_ORIGIN'] == 'local-linux'
+    assert not any(key.startswith('FDISBULL_BOAT_') for key in local)
 
 
 def test_actual_docker_hub_familiar_image_inspect_and_platform_pin(tmp_path, monkeypatch):
@@ -162,7 +217,7 @@ def test_retained_preparation_mounts_are_read_only_without_docker_or_host_networ
     image = {'image_reference': 'example@sha256:' + 'a' * 64}
     mounts = [(tmp_path / 'base', '/runtime-base'), (tmp_path / 'os', '/runtime-os-base')]
     cmd = boat.docker_command('unified-prepare', 'job', image, tmp_path / 'work',
-                              tmp_path / 'guest', tmp_path / 'input', {}, mounts)
+                              tmp_path / 'guest', tmp_path / 'input', {'FDISBULL_LOCAL_RUN_ID':'fixture-run','CI_COMMIT_SHA':'a'*40}, mounts)
     assert all(any(f'source={source},target={target},readonly' in value for value in cmd)
                for source, target in mounts)
     assert not any('docker.sock' in value for value in cmd)

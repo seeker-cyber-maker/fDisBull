@@ -1,0 +1,97 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "qemu-10.0.13.tar.xz",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "patch_file": "qemu-10.0.13-fdisbull-layers-v1.patch",
+  "patch_sha256": "974a701ce218187be712d82a62a0339d0b09f0501d210485249ab4c21fe23c87",
+  "scope": "Experimental stopped single-vCPU system-mode TCG physical RAM writes and instruction-fetch overlays",
+  "modified_files": [
+    {
+      "path": "accel/tcg/cputlb.c",
+      "before_sha256": "c87607ea14f8c17fa7eaa6e3d1c19526a0b6dd3effaf91335448686e43d9e3c5",
+      "after_sha256": "74d49bbe6858135c1944eaffa1f3497c028bfac91f3e0ccb64940d34ceb39453"
+    },
+    {
+      "path": "accel/tcg/translator.c",
+      "before_sha256": "98a9aefa2a39d5315f90e48ca99cd49983d369e3bec7d785aaa430848991b854",
+      "after_sha256": "c1497068ed2db9105666c81020b8d38f885284c80adb674a2807422bef3dc053"
+    },
+    {
+      "path": "include/system/fdisbull-layers.h",
+      "before_sha256": null,
+      "after_sha256": "2ecb6317e89580fcedeaac4a967f7ac0af1cc450b85609ae8df2c9c3b9660df3"
+    },
+    {
+      "path": "qapi/fdisbull-layers.json",
+      "before_sha256": null,
+      "after_sha256": "8fca76717ee015d2c4423e914e607592ab3cc79fb7a37f7f247d44bb720a25b8"
+    },
+    {
+      "path": "qapi/meson.build",
+      "before_sha256": "9246e18e7e733568bd9842c444724cb27c0403dabb314f3961390f7838f7b382",
+      "after_sha256": "9146b7aa7ac194c70062f53533a6f4588a87d5f6cd191f6b0e89d4ed09ee48ab"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "before_sha256": "1e33bf78994a39015c764b328965fa946af7ed9e816932bddab3d22bf0d6afd4",
+      "after_sha256": "e2e9e4bd6506537c9424eb7963680f9ec79bbe47dcddf2b604891a7cbb9f0989"
+    },
+    {
+      "path": "system/fdisbull-layers.c",
+      "before_sha256": null,
+      "after_sha256": "84bc387ed9c544441379b4b14f47d801e20f1c67bf7e304b022e69459935956f"
+    },
+    {
+      "path": "system/meson.build",
+      "before_sha256": "fe3656d5d4bd5bc5033c1fa97e1ae036fa61e9ab3087ce9ef9adec73f37516dd",
+      "after_sha256": "109aceb62a36fd67202e9384682c0f95c500f569d2ddc18a53a9c3bd48592289"
+    }
+  ],
+  "prerequisites": [
+    {
+      "name": "qemu-clock",
+      "patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b"
+    },
+    {
+      "name": "qemu-media",
+      "patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6"
+    },
+    {
+      "name": "qemu-input",
+      "patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb"
+    },
+    {
+      "name": "qemu-retrace",
+      "patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c"
+    },
+    {
+      "name": "qemu-input-retrace",
+      "patch_sha256": "5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80"
+    },
+    {
+      "name": "qemu-keyboard-press",
+      "patch_sha256": "0098d4301d8703d7d740b58ae0f048d0a73ec6e9c9ce10cec04457bebb1c4ed0"
+    },
+    {
+      "name": "qemu-keyboard-type",
+      "patch_sha256": "d680d253af93b60d3101ef74c1243e19e887b1cabdf0df194fdec0aafed23cc5"
+    },
+    {
+      "name": "qemu-mouse-click",
+      "patch_sha256": "23f38d65391587b0be11af021fc3858872475d25a03719844b486719eee154d9"
+    },
+    {
+      "name": "qemu-display-probe",
+      "patch_sha256": "d4dc9a87a9c00e807da66339bc8cf055779de754a937ce727b0baa143300f5aa"
+    },
+    {
+      "name": "qemu-vga-configuration",
+      "patch_sha256": "960a2cee1ffc95705760d1af314f7081d94db4b7f70c96bbd7b73845451a5ad7"
+    },
+    {
+      "name": "qemu-display-motion",
+      "patch_sha256": "27ca5b889e6be2758b812b7e19936281b4640dddf0b398519c209dd202937ec8"
+    }
+  ]
+}

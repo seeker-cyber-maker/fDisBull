@@ -48,6 +48,44 @@ def qualify_capture(session, observed):
 
 
 class RuntimeCodeMixin:
+    def debug_recover_loader_module(self, dll_project, evidence, *, environment_contract,
+                                    loader_source=None, timeout_ms=30000):
+        """Compose immutable module evidence, optionally proving captured loader dispatch.
+
+        ``loader_source`` selects the private original Wine ntdll.dll. It does
+        not become an attachment or an executable input to a debugger.
+        """
+        from pathlib import Path
+        from .project import Project
+        from .pe_loader_module_recovery import recover_loader_module
+        loader_bytes = None if loader_source is None else Path(loader_source).read_bytes()
+        if isinstance(dll_project, Project):
+            return recover_loader_module(self, dll_project, evidence,
+                environment_contract=environment_contract, loader_source=loader_bytes, timeout_ms=timeout_ms)
+        with Project(dll_project) as subject:
+            return recover_loader_module(self, subject, evidence,
+                environment_contract=environment_contract, loader_source=loader_bytes, timeout_ms=timeout_ms)
+
+    def debug_compare_runtime_modules(self, baseline_version, layer_version, baseline_paths, layer_paths, *,
+                                      contract, timeout_ms=10000):
+        from .runtime_module_analysis import compare_runtime_modules
+        return compare_runtime_modules(self, baseline_version, layer_version, baseline_paths, layer_paths,
+                                       contract=contract, timeout_ms=timeout_ms)
+
+    def debug_compare_runtime_functions(self, baseline_version, layer_version, baseline_paths, layer_paths, *,
+                                        contract, timeout_ms=5000, execution_mode='stable_leaf'):
+        from .runtime_patch_analysis import compare_runtime_functions
+        return compare_runtime_functions(self, baseline_version, layer_version, baseline_paths, layer_paths,
+                                         contract=contract, timeout_ms=timeout_ms, execution_mode=execution_mode)
+
+    def debug_compare_runtime_code(self, baseline_version, layer_version, baseline_trace, layer_trace, *,
+                                   contract, correspondence=None, baseline_memory=None, layer_memory=None,
+                                   timeout_ms=1000):
+        from .runtime_patch_analysis import compare_runtime_code
+        return compare_runtime_code(self, baseline_version, layer_version, baseline_trace, layer_trace,
+            contract=contract, correspondence=correspondence, baseline_memory=baseline_memory,
+            layer_memory=layer_memory, timeout_ms=timeout_ms)
+
     def _runtime_record(self, version):
         row = self.db.execute('SELECT * FROM runtime_versions WHERE version=?', (version,)).fetchone()
         if row is None:

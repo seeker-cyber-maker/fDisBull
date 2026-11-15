@@ -30,6 +30,8 @@ def test_missing_or_unrecognized_ldd_fails(monkeypatch):
 
 
 def test_static_ldd_and_actual_failure_are_distinct(monkeypatch):
+    monkeypatch.setattr(module, 'run', lambda args: '\tstatically linked\n')
+    assert module.ldd_dependencies(Path('/a'), Path('/ldd')) == {}
     def static(args):
         raise subprocess.CalledProcessError(1, args, stderr='not a dynamic executable')
     monkeypatch.setattr(module, 'run', static)
@@ -38,6 +40,21 @@ def test_static_ldd_and_actual_failure_are_distinct(monkeypatch):
         raise subprocess.CalledProcessError(1, args, stderr='permission denied')
     monkeypatch.setattr(module, 'run', fail)
     with pytest.raises(ValueError, match='permission denied'):
+        module.ldd_dependencies(Path('/a'), Path('/ldd'))
+
+
+@pytest.mark.parametrize('output', [
+    'statically linked\nlibbad.so => not found\n',
+    'statically linked\nunexpected output\n',
+])
+def test_static_mixed_with_other_ldd_output_fails(monkeypatch, output):
+    monkeypatch.setattr(module, 'run', lambda args: output)
+    with pytest.raises(ValueError):
+        module.ldd_dependencies(Path('/a'), Path('/ldd'))
+    def failed(args):
+        raise subprocess.CalledProcessError(1, args, stderr=output)
+    monkeypatch.setattr(module, 'run', failed)
+    with pytest.raises(ValueError, match='ldd failed'):
         module.ldd_dependencies(Path('/a'), Path('/ldd'))
 
 
@@ -101,3 +118,27 @@ def test_wheel_data_refuses_installed_symlink_escape(tmp_path):
     (prefix / 'bin/z3').symlink_to(outside)
     with pytest.raises(ValueError, match='missing or changed'):
         module.installed_wheel_member(prefix, 'z3_solver-5.3.2.0.data/data/bin/z3', b'payload', 'z3_solver-5.3.2.0.dist-info')
+
+
+def test_stager_preserves_explicit_firmware_role_for_exact_installer_artwork(tmp_path, monkeypatch):
+    prefix = tmp_path / 'python'; (prefix / 'bin').mkdir(parents=True)
+    (prefix / 'bin/python3.13').write_bytes(b'authored Python')
+    (prefix / 'lib/python3.13').mkdir(parents=True)
+    wheels = tmp_path / 'wheels'; wheels.mkdir()
+    stage = tmp_path / 'stage'; stage.mkdir()
+    tool = tmp_path / 'ldd'; tool.write_text('authored tool')
+    qemu = tmp_path / 'qemu'; qemu.write_bytes(b'authored QEMU')
+    bitmap = tmp_path / 'qemu-nsis.bmp'; bitmap.write_bytes(b'authored upstream artwork')
+    monkeypatch.setattr(module.kit, 'RUNTIME_WHEELS', set())
+    # Full builder byte pins are tested in test_chat_offline_kit. Here the
+    # independent boundary is whether staging passes the declared role through.
+    monkeypatch.setattr(module.kit, 'load_inventory', lambda path: None)
+    config = {'python_prefix': str(prefix), 'wheelhouse': str(wheels), 'ldd': str(tool),
+        'identities': {}, 'wheel_versions': {}, 'inputs': [
+            {'source': str(qemu), 'destination': 'native/qemu/bin/qemu-system-x86_64', 'role': 'qemu'},
+            {'source': str(bitmap), 'destination': module.kit.QEMU_INSTALLER_BITMAP, 'role': 'firmware'}]}
+    output = module.prepare(config, stage)
+    import json
+    entry = next(item for item in json.loads(output.read_text())['files'] if item['destination'] == module.kit.QEMU_INSTALLER_BITMAP)
+    assert entry['role'] == 'firmware'
+    assert Path(entry['source']).read_bytes() == bitmap.read_bytes()

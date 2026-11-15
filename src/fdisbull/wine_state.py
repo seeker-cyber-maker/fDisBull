@@ -161,6 +161,8 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
             raise ValueError('PE native state max_bytes must be 1..2 GiB including manifest and sidecar')
         _file_name(name);self._layer_setup()
         if self._pending_exec:raise ValueError('Finish the pending execution-layer instruction before native capture')
+        from .qemu_input import require_released_machine_input
+        require_released_machine_input(getattr(self.rpc,'vm',None))
         if self.rpc.capabilities.get('keyboard'):
             inputs=self.call('keyboard-state')
             if inputs.get('pending') or inputs.get('held') or getattr(self,'_keyboard_leases',{}):

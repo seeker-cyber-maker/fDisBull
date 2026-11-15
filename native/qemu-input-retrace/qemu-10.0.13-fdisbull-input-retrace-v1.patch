@@ -1,0 +1,613 @@
+diff --git a/include/system/fdisbull-retrace.h b/include/system/fdisbull-retrace.h
+new file mode 100644
+--- /dev/null
++++ b/include/system/fdisbull-retrace.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* Internal snapshots of the already admitted fDisBull precise VGA owner. */
++#ifndef SYSTEM_FDISBULL_RETRACE_H
++#define SYSTEM_FDISBULL_RETRACE_H
++
++#include "qapi/qapi-types-fdisbull-retrace.h"
++
++/*
++ * Requires BQL and a previously admitted/pinned owner.  This is not the public
++ * stopped-only query: native input may sample while running or with an armed
++ * clock budget.  It validates the current clock profile/epoch and device/model
++ * identity, performs no guest I/O or timing update, and never admits a new owner.
++ * The caller owns the returned immutable snapshot.
++ */
++FdisbullRetraceInfo *fdisbull_retrace_snapshot_owned(Error **errp);
++
++#endif
+diff --git a/qapi/fdisbull-input.json b/qapi/fdisbull-input.json
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -1,5 +1,6 @@
+ # Experimental fDisBull one-shot physical input scheduling, API 1.
+ { 'include': 'ui.json' }
++{ 'include': 'fdisbull-retrace.json' }
+
+ ##
+ # @FdisbullInputState:
+@@ -16,6 +17,39 @@
+   'data': [ 'idle', 'armed', 'dispatched', 'cancelled', 'failed' ] }
+
+ ##
++# @FdisbullInputRetraceEdge:
++#
++# @enter: Strictly next modeled vertical-retrace entry.
++# @exit: Strictly next modeled vertical-retrace exit.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullInputRetraceEdge', 'data': [ 'enter', 'exit' ] }
++
++##
++# @FdisbullInputRetrace:
++#
++# @edge: Selected modeled vertical-retrace transition.
++# @target-ns: Strictly future transition computed at arm.
++# @window-end-ns: Exclusive end of that absolute occurrence's dispatch window.
++# @armed: Immutable coherent snapshot accepted at arm.
++# @checked: Immutable running timer-callback snapshot.  Absent before the
++#     callback or when stop/budget precedence cancels before model sampling.
++#
++# These snapshots are historical.  Queries never refresh them or relabel them
++# with the current stopped clock.  A timing-generation change cancels without
++# dispatch as retrace-timing-changed; a callback at or beyond window-end-ns
++# cancels as retrace-missed-window.  Neither cancellation stops the guest or
++# retargets the batch, so its terminal timestamp may precede the eventual stop.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInputRetrace',
++  'data': { 'edge': 'FdisbullInputRetraceEdge', 'target-ns': 'int',
++            'window-end-ns': 'int', 'armed': 'FdisbullRetraceInfo',
++            '*checked': 'FdisbullRetraceInfo' } }
++
++##
+ # @FdisbullInputInfo:
+ #
+ # @api-version: Scheduling protocol version, one.
+@@ -29,6 +63,7 @@
+ # @terminal-ns: Actual terminal transition time; absent while idle or armed.
+ # @dispatch-ns: Actual handler/sync completion time; only present if dispatched.
+ # @reason: Terminal reason of at most 256 bytes; absent while idle or armed.
++# @retrace: Immutable modeled-retrace binding, present only for a retrace arm.
+ #
+ # Terminal fields are retained unchanged until a new token is accepted.
+ # Dispatch does not establish PS/2 queue acceptance, guest consumption, or
+@@ -42,7 +77,8 @@
+             'state': 'FdisbullInputState', 'virtual-ns': 'int',
+             'event-count': 'uint64', '*token': 'str', '*start-ns': 'int',
+             '*deadline-ns': 'int', '*terminal-ns': 'int',
+-            '*dispatch-ns': 'int', '*reason': 'str' } }
++            '*dispatch-ns': 'int', '*reason': 'str',
++            '*retrace': 'FdisbullInputRetrace' } }
+
+ ##
+ # @x-fdisbull-query-input:
+@@ -85,6 +121,48 @@
+   'returns': 'FdisbullInputInfo' }
+
+ ##
++# @x-fdisbull-arm-input-retrace:
++#
++# @token: Unused owner token of 1..128 bytes, shared with ordinary input arms.
++# @events: Existing owned PS/2 batch, with the same bounds and preflight as
++#     x-fdisbull-arm-input.
++# @edge: Strictly next modeled vertical-retrace entry or exit.
++# @expected-epoch: Expected admitted native virtual-clock epoch.
++# @expected-device: Expected canonical path of the pinned primary VGA.
++# @expected-model: Expected model identity, qemu-vga-precise-fdisbull-v1.
++# @expected-generation: Expected monotone VGA timing generation.
++# @expected-virtual-ns: Expected stopped virtual timestamp at acceptance.
++#
++# Requires a prior successful x-fdisbull-query-retrace admission and the same
++# stopped input guards as x-fdisbull-arm-input.  An armed clock budget is
++# allowed.  All expected fields must match a fresh coherent owned snapshot.
++# Unsupported phase, an interval with no transition, an invalid delay or signed
++# target/window overflow refuses before accepting a batch or consuming a token.
++#
++# Native code computes the strictly next absolute target and exclusive window.
++# The timer honors existing pending-stop and reached clock-budget precedence,
++# then revalidates the pinned model, generation and original window before any
++# input callback.  Generation changes, including A-to-B-to-A and changes to
++# unsupported timing, cancel without dispatch.  An unchanged generation with
++# changed timing/eligibility, an invalid owner/cache, or an early timer is a
++# fatal failure.  There is no implicit continue, stop, retry or retarget.
++#
++# A dispatched receipt retains the actual model check and handler/sync time;
++# it does not establish guest consumption, full VBlank or completed drawing.
++# An ordinary later arm clears the retained retrace descriptor.  Both arm
++# variants share the one scheduler, migration restriction and token history.
++#
++# Returns: Armed receipt with a retrace binding.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-input-retrace',
++  'data': { 'token': 'str', 'events': ['InputEvent'],
++            'edge': 'FdisbullInputRetraceEdge', 'expected-epoch': 'uint64',
++            'expected-device': 'str', 'expected-model': 'str',
++            'expected-generation': 'uint64', 'expected-virtual-ns': 'int' },
++  'returns': 'FdisbullInputInfo' }
++
++##
+ # @x-fdisbull-cancel-input:
+ #
+ # @token: Current owner token.
+diff --git a/qapi/fdisbull-retrace.json b/qapi/fdisbull-retrace.json
+--- a/qapi/fdisbull-retrace.json
++++ b/qapi/fdisbull-retrace.json
+@@ -80,7 +80,9 @@
+ # @api-version: Private observation protocol version, one.
+ # @model: qemu-vga-precise-fdisbull-v1.
+ # @epoch: Native virtual-clock epoch.
+-# @virtual-ns: Actual stopped QEMU_CLOCK_VIRTUAL timestamp.
++# @virtual-ns: Actual QEMU_CLOCK_VIRTUAL snapshot timestamp.  The public query
++#     observes a stopped VM; a retained input check observes its running timer
++#     callback and remains historical when queried after a later stop.
+ # @device: Exact canonical QOM path of the pinned primary VGA device.
+ # @device-type: Exact type name, VGA.
+ # @console: Console index, zero.
+@@ -94,6 +96,10 @@
+ # @unsupported-reason: Present only without phase support: uninitialized,
+ #     vbe-enabled or invalid-timing, in that precedence order.
+ # @phase: Present only when phase-supported is true.
++#
++# The snapshot does not itself establish a stopped VM.  The public query
++# retains its stopped/no-active-budget guard; an internal already-owned input
++# check can use the same pure model snapshot while the vCPU is running.
+ #
+ # Since: 10.0
+ ##
+diff --git a/system/fdisbull-input.c b/system/fdisbull-input.c
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -9,13 +9,16 @@
+ #include "qemu/osdep.h"
+ #include "hw/core/cpu.h"
+ #include "migration/blocker.h"
++#include "qapi/clone-visitor.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-input.h"
+ #include "qapi/qapi-commands-run-state.h"
++#include "qapi/qapi-visit-fdisbull-input.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/timer.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-retrace.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+ #include "ui/input.h"
+@@ -34,6 +37,7 @@
+     Error *migration_blocker;
+     GHashTable *used_tokens;
+     FdisbullInputBatch *batch;
++    FdisbullInputRetrace *retrace;
+     char *token;
+     char *reason;
+     uint64_t event_count;
+@@ -183,7 +187,101 @@
+     info->has_dispatch_ns = input_schedule.has_dispatch;
+     info->dispatch_ns = input_schedule.dispatch_ns;
+     info->reason = g_strdup(input_schedule.reason);
++    if (input_schedule.retrace) {
++        info->retrace = QAPI_CLONE(FdisbullInputRetrace, input_schedule.retrace);
++    }
+     return info;
++}
++
++static bool input_retrace_identity_equal(const FdisbullRetraceInfo *a,
++                                         const FdisbullRetraceInfo *b)
++{
++    return a->api_version == b->api_version && a->epoch == b->epoch &&
++           !g_strcmp0(a->model, b->model) &&
++           !g_strcmp0(a->device, b->device) &&
++           !g_strcmp0(a->device_type, b->device_type) &&
++           a->console == b->console && a->head == b->head;
++}
++
++static bool input_retrace_model_equal(const FdisbullRetraceInfo *a,
++                                      const FdisbullRetraceInfo *b)
++{
++    const FdisbullRetraceRaw *ar = a->raw, *br = b->raw;
++    const FdisbullRetraceTiming *at = a->timing, *bt = b->timing;
++
++    return a->phase_supported == b->phase_supported &&
++           !g_strcmp0(a->unsupported_reason, b->unsupported_reason) &&
++           ar->msr == br->msr && ar->sr1 == br->sr1 &&
++           ar->cr00 == br->cr00 && ar->cr04 == br->cr04 &&
++           ar->cr05 == br->cr05 && ar->cr06 == br->cr06 &&
++           ar->cr07 == br->cr07 && ar->cr10 == br->cr10 &&
++           ar->cr11 == br->cr11 && ar->vbe_enable == br->vbe_enable &&
++           at->ticks_per_char == bt->ticks_per_char &&
++           at->total_chars == bt->total_chars && at->htotal == bt->htotal &&
++           at->hstart == bt->hstart && at->hend == bt->hend &&
++           at->vstart == bt->vstart && at->vend == bt->vend &&
++           at->freq == bt->freq;
++}
++
++static bool input_retrace_check(int64_t now)
++{
++    FdisbullInputRetrace *retrace = input_schedule.retrace;
++    FdisbullRetraceInfo *armed, *checked;
++    Error *err = NULL;
++
++    if (!retrace) {
++        return true;
++    }
++    if (retrace->checked) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "retrace input already has a callback snapshot");
++        return false;
++    }
++    armed = retrace->armed;
++    checked = fdisbull_retrace_snapshot_owned(&err);
++    if (!checked) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     err ? error_get_pretty(err) : "retrace snapshot failed");
++        error_free(err);
++        return false;
++    }
++    /* Preserve the actual check even when it refuses this one-shot attempt. */
++    retrace->checked = checked;
++    if (checked->virtual_ns != now ||
++        !input_retrace_identity_equal(armed, checked) ||
++        checked->timing_generation < armed->timing_generation) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "retrace input clock, identity or generation regressed");
++        return false;
++    }
++    if (checked->timing_generation != armed->timing_generation) {
++        input_finish(FDISBULL_INPUT_STATE_CANCELLED,
++                     "retrace-timing-changed");
++        return false;
++    }
++    if (!checked->phase_supported || !checked->phase ||
++        !input_retrace_model_equal(armed, checked)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "retrace input model changed without a generation");
++        return false;
++    }
++    if (now < retrace->target_ns) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "retrace input callback preceded its target");
++        return false;
++    }
++    if (now >= retrace->window_end_ns) {
++        input_finish(FDISBULL_INPUT_STATE_CANCELLED,
++                     "retrace-missed-window");
++        return false;
++    }
++    if (checked->phase->vertical_retrace !=
++        (retrace->edge == FDISBULL_INPUT_RETRACE_EDGE_ENTER)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "retrace input phase contradicts its original window");
++        return false;
++    }
++    return true;
+ }
+
+ static void input_timer_cb(void *opaque)
+@@ -222,6 +320,9 @@
+                      "virtual input timer fired before its deadline");
+         return;
+     }
++    if (!input_retrace_check(clock->virtual_ns)) {
++        return;
++    }
+     if (!qemu_input_fdisbull_dispatch(input_schedule.batch, &err)) {
+         input_finish(FDISBULL_INPUT_STATE_FAILED,
+                      err ? error_get_pretty(err) : "input dispatch failed");
+@@ -236,43 +337,41 @@
+     return input_guard(errp) ? input_info() : NULL;
+ }
+
+-FdisbullInputInfo *qmp_x_fdisbull_arm_input(const char *token,
+-                                          int64_t delta_ns,
+-                                          InputEventList *events, Error **errp)
+-{
+-    FdisbullInputBatch *batch;
+-    int64_t now;
+-
++static bool input_arm_guard(const char *token, Error **errp)
++{
+     if (!input_guard(errp)) {
+-        return NULL;
++        return false;
+     }
+     if (input_schedule.state == FDISBULL_INPUT_STATE_ARMED) {
+         error_setg(errp, "A scheduled input batch is already armed");
+-        return NULL;
++        return false;
+     }
+     if (input_schedule.state == FDISBULL_INPUT_STATE_FAILED) {
+         error_setg(errp, "Scheduled input failed; close the VM");
+-        return NULL;
++        return false;
+     }
+     if (!token[0] || strlen(token) > INPUT_MAX_TOKEN_BYTES ||
+         g_hash_table_contains(input_schedule.used_tokens, token)) {
+         error_setg(errp, "Scheduled input requires an unused token of "
+                    "1..128 bytes");
+-        return NULL;
++        return false;
+     }
+     if (g_hash_table_size(input_schedule.used_tokens) >=
+         INPUT_MAX_USED_TOKENS) {
+         error_setg(errp, "Scheduled input exhausted its 4096-token history; "
+                    "close the VM");
+-        return NULL;
+-    }
+-    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+-    if (delta_ns < 1 || delta_ns > INPUT_MAX_DELTA_NS || now < 0 ||
+-        now > INT64_MAX - delta_ns) {
+-        error_setg(errp, "Scheduled input delta must be 1..60000000000 ns "
+-                   "without signed clock overflow");
+-        return NULL;
+-    }
++        return false;
++    }
++    return true;
++}
++
++static FdisbullInputInfo *input_arm(const char *token, int64_t now,
++                                   int64_t deadline_ns, InputEventList *events,
++                                   const FdisbullInputRetrace *retrace,
++                                   Error **errp)
++{
++    FdisbullInputBatch *batch;
++
+     batch = qemu_input_fdisbull_prepare(events, errp);
+     if (!batch) {
+         return NULL;
+@@ -291,9 +390,12 @@
+     g_clear_pointer(&input_schedule.reason, g_free);
+     input_schedule.token = g_strdup(token);
+     input_schedule.batch = batch;
++    qapi_free_FdisbullInputRetrace(input_schedule.retrace);
++    input_schedule.retrace = retrace ? QAPI_CLONE(FdisbullInputRetrace, retrace)
++                                     : NULL;
+     input_schedule.event_count = qemu_input_fdisbull_count(batch);
+     input_schedule.start_ns = now;
+-    input_schedule.deadline_ns = now + delta_ns;
++    input_schedule.deadline_ns = deadline_ns;
+     input_schedule.has_terminal = false;
+     input_schedule.has_dispatch = false;
+     input_schedule.terminal_ns = 0;
+@@ -303,6 +405,120 @@
+     return input_info();
+ }
+
++FdisbullInputInfo *qmp_x_fdisbull_arm_input(const char *token,
++                                          int64_t delta_ns,
++                                          InputEventList *events, Error **errp)
++{
++    int64_t now;
++
++    if (!input_arm_guard(token, errp)) {
++        return NULL;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (delta_ns < 1 || delta_ns > INPUT_MAX_DELTA_NS || now < 0 ||
++        now > INT64_MAX - delta_ns) {
++        error_setg(errp, "Scheduled input delta must be 1..60000000000 ns "
++                   "without signed clock overflow");
++        return NULL;
++    }
++    return input_arm(token, now, now + delta_ns, events, NULL, errp);
++}
++
++static bool input_retrace_window(const FdisbullRetraceInfo *armed,
++                                 FdisbullInputRetraceEdge edge,
++                                 int64_t *target_ns, int64_t *window_end_ns,
++                                 Error **errp)
++{
++    const FdisbullRetraceTiming *timing = armed->timing;
++    int64_t period, line_ns, entry, exit_ns, width, phase, position, delta, target;
++
++    if (!armed->phase_supported || !armed->phase) {
++        error_setg(errp, "Retrace input requires supported timing: %s",
++                   armed->unsupported_reason ? armed->unsupported_reason
++                                             : "no phase");
++        return false;
++    }
++    /*
++     * The coherent model query already checked positive divisors, the period
++     * product and nonwrapped intervals inside that period.  These products
++     * are bounded by that checked period and cannot overflow signed time.
++     */
++    period = armed->phase->period_ns;
++    line_ns = timing->ticks_per_char * timing->htotal;
++    entry = line_ns * timing->vstart;
++    exit_ns = line_ns * (timing->vend + 1);
++    width = exit_ns - entry;
++    if (entry == 0 && exit_ns == period) {
++        error_setg(errp, "Retrace input timing has no vertical transition");
++        return false;
++    }
++    phase = edge == FDISBULL_INPUT_RETRACE_EDGE_ENTER ? entry : exit_ns % period;
++    if (edge == FDISBULL_INPUT_RETRACE_EDGE_EXIT) {
++        width = period - width;
++    }
++    position = armed->virtual_ns % period;
++    /* C's signed remainder is not Python's modulo.  Keep both terms positive
++     * and select one complete period when already exactly at the edge. */
++    delta = phase > position ? phase - position : period - (position - phase);
++    if (delta < 1 || delta > INPUT_MAX_DELTA_NS ||
++        armed->virtual_ns > INT64_MAX - delta) {
++        error_setg(errp, "Retrace input target exceeds its delay or signed "
++                   "clock bound");
++        return false;
++    }
++    target = armed->virtual_ns + delta;
++    if (width <= 0 || target > INT64_MAX - width) {
++        error_setg(errp, "Retrace input window exceeds signed clock bounds");
++        return false;
++    }
++    *target_ns = target;
++    *window_end_ns = target + width;
++    return true;
++}
++
++FdisbullInputInfo *qmp_x_fdisbull_arm_input_retrace(
++    const char *token, InputEventList *events, FdisbullInputRetraceEdge edge,
++    uint64_t expected_epoch, const char *expected_device,
++    const char *expected_model, uint64_t expected_generation,
++    int64_t expected_virtual_ns, Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) armed = NULL;
++    g_autoptr(FdisbullInputRetrace) retrace = NULL;
++    int64_t target_ns, window_end_ns;
++
++    if (!input_arm_guard(token, errp)) {
++        return NULL;
++    }
++    if (edge != FDISBULL_INPUT_RETRACE_EDGE_ENTER &&
++        edge != FDISBULL_INPUT_RETRACE_EDGE_EXIT) {
++        error_setg(errp, "Retrace input edge must be enter or exit");
++        return NULL;
++    }
++    armed = fdisbull_retrace_snapshot_owned(errp);
++    if (!armed) {
++        return NULL;
++    }
++    if (armed->epoch != input_schedule.epoch || armed->epoch != expected_epoch ||
++        strcmp(armed->device, expected_device) ||
++        strcmp(armed->model, expected_model) ||
++        armed->timing_generation != expected_generation ||
++        armed->virtual_ns != expected_virtual_ns) {
++        error_setg(errp, "Retrace input expectations differ from the owned "
++                   "model snapshot");
++        return NULL;
++    }
++    if (!input_retrace_window(armed, edge, &target_ns, &window_end_ns, errp)) {
++        return NULL;
++    }
++    retrace = g_new0(FdisbullInputRetrace, 1);
++    retrace->edge = edge;
++    retrace->target_ns = target_ns;
++    retrace->window_end_ns = window_end_ns;
++    retrace->armed = g_steal_pointer(&armed);
++    return input_arm(token, retrace->armed->virtual_ns, target_ns, events,
++                     retrace, errp);
++}
++
+ FdisbullInputInfo *qmp_x_fdisbull_cancel_input(const char *token, Error **errp)
+ {
+     if (!input_guard(errp)) {
+diff --git a/system/fdisbull-retrace.c b/system/fdisbull-retrace.c
+--- a/system/fdisbull-retrace.c
++++ b/system/fdisbull-retrace.c
+@@ -15,6 +15,7 @@
+ #include "qapi/qapi-commands-fdisbull-retrace.h"
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
++#include "system/fdisbull-retrace.h"
+ #include "system/reset.h"
+
+ static struct {
+@@ -77,16 +78,16 @@
+     return true;
+ }
+
+-FdisbullRetraceInfo *qmp_x_fdisbull_query_retrace(Error **errp)
++static FdisbullRetraceInfo *retrace_snapshot(FdisbullClockInfo *clock,
++                                           bool admit, Error **errp)
+ {
+-    g_autoptr(FdisbullClockInfo) clock = NULL;
+     g_autoptr(FdisbullRetraceInfo) info = NULL;
+     g_autofree char *path = NULL;
+     PrimaryVGASearch search = { 0 };
+
+     assert(bql_locked());
+-    clock = qmp_x_fdisbull_query_clock(errp);
+-    if (!clock || !retrace_guard(clock, errp)) {
++    if (!admit && !retrace_owner.device) {
++        error_setg(errp, "Retrace snapshot requires a previously admitted owner");
+         return NULL;
+     }
+     object_child_foreach_recursive(object_get_root(),
+@@ -115,6 +116,7 @@
+         return NULL;
+     }
+     if (!retrace_owner.migration_blocker) {
++        assert(admit);
+         error_setg(&retrace_owner.migration_blocker,
+                    "fDisBull precise retrace ownership does not support migration");
+         if (migrate_add_blocker(&retrace_owner.migration_blocker, errp) < 0) {
+@@ -122,6 +124,7 @@
+         }
+     }
+     if (!retrace_owner.device) {
++        assert(admit);
+         object_ref(search.device);
+         retrace_owner.device = search.device;
+         retrace_owner.device_path = g_strdup(path);
+@@ -136,3 +139,43 @@
+     info->device_type = g_strdup("VGA");
+     return g_steal_pointer(&info);
+ }
++
++FdisbullRetraceInfo *qmp_x_fdisbull_query_retrace(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    assert(bql_locked());
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock || !retrace_guard(clock, errp)) {
++        return NULL;
++    }
++    return retrace_snapshot(clock, true, errp);
++}
++
++FdisbullRetraceInfo *fdisbull_retrace_snapshot_owned(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    assert(bql_locked());
++    if (!retrace_owner.device || retrace_owner.invalidated) {
++        error_setg(errp, "Retrace snapshot requires a valid admitted owner");
++        return NULL;
++    }
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock) {
++        return NULL;
++    }
++    if (clock->api_version != 1 || !clock->budget_supported ||
++        clock->epoch != retrace_owner.epoch || clock->virtual_ns < 0 ||
++        clock->pending_stop ||
++        (clock->status != RUN_STATE_RUNNING &&
++         clock->status != RUN_STATE_PRELAUNCH &&
++         clock->status != RUN_STATE_PAUSED && clock->status != RUN_STATE_DEBUG) ||
++        clock->running != (clock->status == RUN_STATE_RUNNING)) {
++        retrace_owner.invalidated = true;
++        error_setg(errp, "Retrace snapshot clock profile or epoch invalidated; "
++                   "close the VM");
++        return NULL;
++    }
++    return retrace_snapshot(clock, false, errp);
++}
+diff --git a/system/fdisbull-retrace-stub.c b/system/fdisbull-retrace-stub.c
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -5,9 +5,16 @@
+ #include "qemu/osdep.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "system/fdisbull-retrace.h"
+
+ FdisbullRetraceInfo *qmp_x_fdisbull_query_retrace(Error **errp)
+ {
+     error_setg(errp, "Retrace observation requires standard PCI VGA support");
+     return NULL;
+ }
++
++FdisbullRetraceInfo *fdisbull_retrace_snapshot_owned(Error **errp)
++{
++    error_setg(errp, "Retrace snapshots require standard PCI VGA support");
++    return NULL;
++}

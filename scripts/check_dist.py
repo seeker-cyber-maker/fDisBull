@@ -19,6 +19,7 @@ EXCLUDED_DIRECTORIES = {
     "__pycache__",
     "freeware-games",
     "freeware-games.zip",
+    "behavior-curriculum",
 }
 EXCLUDED_SUFFIXES = {
     ".fdb",
@@ -76,6 +77,7 @@ REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {
 }
 REQUIRED_TEST_HELPERS = {
     ".gitlab-ci.yml",
+    "tests/offline_win16_oracle.c",
     ".github/workflows/ovh-bootstrap.yml",
     ".github/workflows/ci.yml",
     ".github/workflows/native-debugger.yml",
@@ -107,7 +109,7 @@ REQUIRED_SOURCE_DELIVERY = {
 REQUIRED_TEST_HELPERS.add("tests/test_analysis_approach_skill.py")
 REQUIRED_TEST_HELPERS |= {
     "tests/rom_asm_sh2_vectors.json",
-    "tests/test_media_modules.py",
+    "tests/test_media_modules.py", "tests/test_shi.py",
 }
 REQUIRED_SOURCE_EVIDENCE = {
     "docs/evidence/output-024/" + name
@@ -860,7 +862,7 @@ REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsm.java")
 REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsmServer.java")
 REQUIRED_KNOWLEDGE_RESOURCES = {
     "data/dinopark-e55-terminal.json",
-    "media.py",
+    "media.py", "shi.py",
     "capabilities.py",
     "capture_audit.py",
     "skills/fdisbull-investigate/references/media-modules.md",
@@ -924,6 +926,17 @@ REQUIRED_SOURCE_EVIDENCE |= {
     "docs/evidence/common-uil-desktop-2026-11-01/verification.json",
     "docs/verification/kq1-tas-2026-10-31.json",
 }
+REQUIRED_KINT_RESOURCES = {
+    "kint6_format.py", "kint6_processor.py", "sherlock7_media.py",
+    "skills/fdisbull-investigate/references/kint6-sherlock7.md",
+}
+REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_KINT_RESOURCES
+REQUIRED_TEST_HELPERS |= {
+    "tests/test_kint6_format.py", "tests/test_kint6_processor.py", "tests/test_sherlock7_media.py",
+    "tests/test_sherlock7_modules.py",
+    "tests/kint6_vectors.json", "tests/test_kint6_vectors.py",
+}
+REQUIRED_SOURCE_EVIDENCE.add("docs/SHERLOCK7_MEDIA.md")
 REQUIRED_KNOWLEDGE_RESOURCES |= {
     "media.py",
     "capabilities.py",
@@ -974,6 +987,76 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "web_runtime/memory-canvas.mjs",
     "web_runtime/memory-index.html",
 }
+
+
+# Recovered bounded compiler/adapter modules are required in delivered tools.
+REQUIRED_RECOVERED_UDC_RESOURCES = {
+    'data/FdisbullGhidraAsmC.txt',
+    'dcc_asm_c.py',
+    'dos_mz_udc.py',
+    'dos_udc.py',
+    'dos_udc_layout.py',
+    'dos_udc_project.py',
+    'game_sources/shadowrun_snes_action_collision.c',
+    'game_sources/shadowrun_snes_camera.c',
+    'game_sources/shadowrun_snes_choice.c',
+    'game_sources/shadowrun_snes_conversation.c',
+    'game_sources/shadowrun_snes_conversation_bridge.c',
+    'game_sources/shadowrun_snes_dialogue.c',
+    'game_sources/shadowrun_snes_dialogue_select.c',
+    'game_sources/shadowrun_snes_flags.c',
+    'game_sources/shadowrun_snes_hardware.c',
+    'game_sources/shadowrun_snes_interaction.c',
+    'game_sources/shadowrun_snes_live.c',
+    'game_sources/shadowrun_snes_menu.c',
+    'game_sources/shadowrun_snes_npc.c',
+    'game_sources/shadowrun_snes_opening.c',
+    'game_sources/shadowrun_snes_opening_anim.c',
+    'game_sources/shadowrun_snes_opening_collision.c',
+    'game_sources/shadowrun_snes_opening_window.c',
+    'game_sources/shadowrun_snes_rng.c',
+    'game_sources/shadowrun_snes_scene_collision.c',
+    'game_sources/shadowrun_snes_scene_init.c',
+    'game_sources/shadowrun_snes_script.c',
+    'game_sources/shadowrun_snes_target.c',
+    'game_sources/shadowrun_snes_task_init.c',
+    'game_sources/shadowrun_snes_text.c',
+    'game_sources/shadowrun_snes_transition.c',
+    'game_sources/shadowrun_snes_vertical.c',
+    'ghidra_asm_c.py',
+    'influence_pilot.py',
+    'llvm_scalar_pilot.py',
+    'reko_asm_c.py',
+    'shadowrun_snes_action_collision.py',
+    'shadowrun_snes_camera.py',
+    'shadowrun_snes_choice.py',
+    'shadowrun_snes_conversation.py',
+    'shadowrun_snes_dialogue.py',
+    'shadowrun_snes_dialogue_select.py',
+    'shadowrun_snes_hardware.py',
+    'shadowrun_snes_interaction.py',
+    'shadowrun_snes_live.py',
+    'shadowrun_snes_menu.py',
+    'shadowrun_snes_npc.py',
+    'shadowrun_snes_opening.py',
+    'shadowrun_snes_opening_anim.py',
+    'shadowrun_snes_opening_collision.py',
+    'shadowrun_snes_opening_window.py',
+    'shadowrun_snes_rng.py',
+    'shadowrun_snes_scene_init.py',
+    'shadowrun_snes_script.py',
+    'shadowrun_snes_scripted.py',
+    'shadowrun_snes_target.py',
+    'shadowrun_snes_task_init.py',
+    'shadowrun_snes_text.py',
+    'shadowrun_snes_transition.py',
+    'shadowrun_snes_vertical.py',
+    'skills/fdisbull-investigate/references/block-orchestration.md',
+    'uil_record.py',
+    'zmachine_udc.py',
+}
+
+REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_RECOVERED_UDC_RESOURCES
 
 
 def archive_names(path: Path) -> list[str]:

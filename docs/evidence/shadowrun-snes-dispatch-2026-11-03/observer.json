@@ -1,0 +1,18 @@
+{
+  "source_commit": "fae2fea08f74180759ef540ee94259213f503480",
+  "core_sha256": "6d679f9123cbffe635815dfc137af88c2effc54bd9355f3cd112fb3cd4e51283",
+  "baseline_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+  "reference_receipt_sha256": "77989ff658f1d22bc53b01ccc6df6853d7c78c6fac184aa03585d2753ce7830b",
+  "checkpoint_receipt_sha256": "3c6b6f7290c8a20c5755b6b25fe81a29afc8f0a0aa60a69cfbad7cea8fe86593",
+  "final_equal": {
+    "system_ram_sha256": true,
+    "state_sha256": true,
+    "frame_rgb_sha256": true,
+    "frame_png_sha256": true,
+    "save_ram_sha256": true
+  },
+  "checkpoint_pc": "80962E",
+  "checkpoints": 63,
+  "drops": 0,
+  "private_receipt_sha256": "584d76691504b28ccaaa1d9825a57cc3b2b5977c632d54fee55606a3ce5db95d"
+}

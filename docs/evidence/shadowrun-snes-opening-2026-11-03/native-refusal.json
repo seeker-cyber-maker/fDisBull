@@ -1,0 +1,23 @@
+{
+  "complete_state_elements_compared": 576220,
+  "format": "opening-native-refusal-1",
+  "limits": [
+    "B interaction and reserved input are deliberate unsupported tests after the canonical route; not source-equivalence claims for these actions."
+  ],
+  "native_receipt_sha256": "5500d4bd8b64ad29d6d62e77cd33b11f2360d511a616125f2e2629b08dc964c2",
+  "program_sha256": "a62b2df38f9bd9ae803dd9c7fd532c797b3dff754f43b911c90448d9d15d8487",
+  "result": "passed",
+  "return_codes": [
+    1,
+    1,
+    1,
+    1
+  ],
+  "route_updates": 1615,
+  "unsupported_pads": [
+    32,
+    32,
+    128,
+    128
+  ]
+}

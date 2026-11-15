@@ -1,0 +1,169 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "stopped, frame-owned PS/2 key edges with checkpoint continuity",
+  "base": {
+    "qemu_version": "10.0.13",
+    "runtime": "native-runtime/frame-history-runtime",
+    "prerequisite_patch": "native/qemu-frame-history/qemu-10.0.13-fdisbull-renderer-publication-frame-fence-v1.patch",
+    "prerequisite_patch_sha256": "beb6a9d20ff7be9e2456486d2fcde4dbb090d2d52fa66c78a5201d5d5023de93"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-frame-keys-v1.patch",
+    "sha256": "2aa98bd99982ad0ada521fd24c6dddf679c43cf1e1c428ca03de34655523c35f",
+    "modified_file_count": 14,
+    "files": [
+      {
+        "path": "hw/input/pckbd.c",
+        "before_sha256": "e48dc36f8ddd165877ac647408dd4f10ab782dc9061e25f78c20a975abb5eaa4",
+        "after_sha256": "edbce71d4af0712304cef197bfbd72969431ab1522b47217e1bf09683e71d249"
+      },
+      {
+        "path": "hw/input/ps2.c",
+        "before_sha256": "fe898d87af4c87c138767b272c8ebcb0932927fcc889b4a82ac50e5086cda715",
+        "after_sha256": "0b217d7d29dd1994d7fa18e26ae95f5aa04eef630d7122bc66511c7d860364f7"
+      },
+      {
+        "path": "include/hw/input/i8042.h",
+        "before_sha256": "73f3cb5cb7fa4288acbeec1f20ca2097d5f98eff646803b974e087f78fba3665",
+        "after_sha256": "40a6370b7d95a2b809b9add2d58a61813d9102ee39d35eaa1cacee87f02890ee"
+      },
+      {
+        "path": "include/hw/input/ps2.h",
+        "before_sha256": "0ba539a66e3c7e852ce4a448d16dfed9c9c4111b85c0919063629edcc935fdef",
+        "after_sha256": "d65788abe6a7d6dded74b1f350c2f25e2763c8d17ba04fcfdefdfe4457f84c45"
+      },
+      {
+        "path": "include/system/fdisbull-frame-keys.h",
+        "before_sha256": null,
+        "after_sha256": "aaf85bb426680a7c458c68d574c72eec330204c28694be788fa01c66fad2b274"
+      },
+      {
+        "path": "include/system/fdisbull-instrumented-checkpoint.h",
+        "before_sha256": "caf278e06f42bc716f8da4ea68a57756ed19eef62f79b7110d08d015d0bb73ba",
+        "after_sha256": "e3a7ef6645af126784e9a39b8662f3df3c7ab2bef8fd0cb89ec05e05cfab30c9"
+      },
+      {
+        "path": "include/ui/input.h",
+        "before_sha256": "4516ebd6a77a33ed178bdbc400a1a1ef1d7ceb78dd4d7078689d6c691d1add9d",
+        "after_sha256": "17d2bd415c5cf2f45978e18e38186e7bce168e0ab3827297b116e17cd892efe4"
+      },
+      {
+        "path": "qapi/fdisbull-input.json",
+        "before_sha256": "42cd8fc6fe66f0d493b9e4e9e81611718c0f4150b1e93eb4f3fddf7a0a5236f2",
+        "after_sha256": "0f4bfe101aa95494c2558e47a4a604df67dd5cb14b927f7ef7c90566c11a9366"
+      },
+      {
+        "path": "qapi/fdisbull-instrumented-checkpoint.json",
+        "before_sha256": "8c0db0a7757704f1c602005c1cd2946d92ae3f2dbe954b9c73c9b5c192ccac36",
+        "after_sha256": "b18c6f336d73171ff2bb825fb176c1a829bef231604ad4e03c693766f9a491a5"
+      },
+      {
+        "path": "system/fdisbull-frame-keys.c",
+        "before_sha256": null,
+        "after_sha256": "b287912863c512a56953dac996d43a493b3e5d72242293c177406e1e769d0d83"
+      },
+      {
+        "path": "system/fdisbull-input.c",
+        "before_sha256": "c7f5cdd237fe87f494c28196134a7526ef542b387e0f6b11342afb317b7f9fe9",
+        "after_sha256": "6aa22e3bf639674f1bf6535b84290e59e5d32e8e4d3b0e2dbb46b80d6e1737a3"
+      },
+      {
+        "path": "system/fdisbull-instrumented-checkpoint.c",
+        "before_sha256": "428eaa3a46334a036d0f4f6387eaada7b75ebcd48b7bc4df0606ece0398f1b33",
+        "after_sha256": "c4f05baee49ae418ff85ef929c57a702c247cc27567c9f807d1440647dda49ec"
+      },
+      {
+        "path": "system/meson.build",
+        "before_sha256": "0efb42996fea6882cb776888ba818964012034943098643f3200eee00bad3dc7",
+        "after_sha256": "0f433a9b87a308620d25a3a7877fe8593af730eeda9a682700047a1983ad3cbc"
+      },
+      {
+        "path": "ui/input.c",
+        "before_sha256": "77fa3efcc9917030b6313a540d58a274100589d15d8ace2a3ead4ffe911e56cc",
+        "after_sha256": "0034f96ff1dfced92407de4e76cdc70fddcc898f2ac99e583d5b829f619faf77"
+      }
+    ],
+    "dry_run": {
+      "command": "patch --dry-run -p1 -d /Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/frame-history-runtime/qemu-10.0.13 < native/qemu-frame-keys/qemu-10.0.13-fdisbull-frame-keys-v1.patch",
+      "result": "passed"
+    },
+    "applied_verification": {
+      "files": 14,
+      "base_hashes_unchanged": true,
+      "applied_matches_candidate": true,
+      "receipt": "frame-keys-patch-verification.json"
+    }
+  },
+  "api": {
+    "commands": [
+      "x-fdisbull-query-frame-keys",
+      "x-fdisbull-apply-frame-key-edges",
+      "x-fdisbull-detach-frame-keys"
+    ],
+    "protocol_version": 1,
+    "state_format": 2,
+    "apply": "atomic stopped QCode edge batch; first claim uses the queried idle generation (zero in a fresh process, possibly nonzero after detach); owner publishes only after preflight and callback dispatch; subsequent apply uses token and expected-generation CAS",
+    "detach": "only an empty valid owner can detach; generation advances, accepted-edges is retained, and ordinary input may resume",
+    "receipt": "FdisbullFrameKeysInfo includes owner validity/generation/token, sorted held and foreign-held keys, accepted edge count, selected PS/2 identity, FIFO/controller state and canonical SHA-256 over PS/2 FIFO plus controller behavior state",
+    "checkpoint": "instrumented state v2 persists held keys and exact PS/2/i8042 proof; restore validates VMState state before fresh owner token/epoch binding and does not dispatch keys again"
+  },
+  "scope_limits": [
+    "Stopped single-virtual-CPU supported QEMU profile only; accepted states are PAUSED, DEBUG, and PRELAUNCH.",
+    "Preserves explicit held key makes/breaks only. Native typematic repeat is unsupported and repeat-supported is false.",
+    "Only a uniquely selected realized PS/2 keyboard on ISA i8042 is supported. Other input plans must be inactive; foreign keyboard events invalidate an active owner.",
+    "Batch grammar is limited to 32 edges and 64 held keys; actual capacity is two edges when the PS/2 FIFO and i8042 output are quiescent, zero otherwise. Preflight failure dispatches no edge.",
+    "The native owner blocks generic migration; use instrumented checkpoint export/load. Old v1 state remains importable only under its legacy constraints; new exports use format v2.",
+    "This does not qualify host physical keyboard leases, arbitrary QEMU input backends, DOSBox parity, or other architectures."
+  ],
+  "build": {
+    "source": "native-runtime/frame-keys-runtime/qemu-10.0.13",
+    "build_dir": "native-runtime/frame-keys-runtime/build-n21",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "../qemu-10.0.13/configure --target-list=x86_64-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../qemu-10.0.13/pc-bios --prefix=<build-n21>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_command": "TMPDIR=<frame-keys-runtime/tmp-n21> /Users/tiga/miniconda/bin/ninja -C build-n21 -j4 qemu-system-x86_64",
+    "build_result": "Incremental build and link succeeded after stopped direct-handler dispatch, first-owner transient dispatch authorization, and PRELAUNCH admission fix.",
+    "binary_path": "native-runtime/frame-keys-runtime/build-n21/qemu-system-x86_64",
+    "binary_sha256": "54773e161f54f5c356bb1626b6c82f5cb1362e77329ce8c7001aea892ebfe19a"
+  },
+  "qualification": {
+    "status": "bounded root-owned local native witnesses passed; hosted CI and cross-binary restore remain unqualified",
+    "tests_run_by_patch_author": false,
+    "ci": false,
+    "root_validation": {
+      "selection": "root-owned native frame-key suite",
+      "cases": 14,
+      "passed": 14,
+      "failures": 0,
+      "skipped": 0,
+      "receipt": "R/frame-keys-native-corrected.xml",
+      "duration_seconds": 24.88,
+      "scope": "Authored BIOS and raw IRQ1 consumption, stopped PS/2 key dispatch, held-key checkpoint/cold restore/release, schedule branching and zero rewind, CAS/capacity refusal, Python/JSON/script routes and failure cleanup, task-private IRQ checkpoint, legacy detach/reacquisition, and actual foreign-input invalidation",
+      "cross_binary_restore_qualified": false,
+      "integrated_preservation": {
+        "files": 102,
+        "tests": 1917,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "receipt": "frame-keys-preservation-final.xml",
+        "source_witness_hashes_unchanged": true
+      },
+      "retained_dosbox": {
+        "tests": 317,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "receipt": "frame-keys-dosbox-final.xml"
+      },
+      "legacy_scheduled_input": {
+        "tests": 58,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "receipt": "frame-keys-schedule-preservation.xml"
+      },
+      "errors": 0
+    }
+  }
+}

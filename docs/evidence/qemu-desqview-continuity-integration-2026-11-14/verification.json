@@ -1,0 +1,196 @@
+{
+  "candidate_files_byte_exact": true,
+  "canonical_package_manifest_sha256": "cdc74f5bd5b8c9deaa1f9f22d7453dac8a262e53e8f43d9aa000fc8ff4df4ecc",
+  "claim_limits": {
+    "DOSBox_removal_permitted": false,
+    "LE_source_addressed_layers_hooks_checkpoint_authority": false,
+    "automatic_provider_physical_qualification": null,
+    "broader_DOS_or_Windows_compatibility": false,
+    "instruction_retirement": false,
+    "irq_timer_transparent_tracing": false,
+    "paged_ldt_bridge_LE_execution": false,
+    "scope": "one combined local install; bounded prepared-state Doom and DESQview source/task evidence plus named preservation checks",
+    "whole_task_ram_restoration": false
+  },
+  "cleanup_correction": {
+    "future_dispatch_refused": true,
+    "preservation_cases_stayed_green": 3,
+    "primary_error_and_arrived_result_preserved": true,
+    "quarantine_before_cleanup": true,
+    "reproduced_red_failure_cases": 5,
+    "scope": [
+      "execution-publication",
+      "DOS-helper-return",
+      "scheduler-return-refusal",
+      "native-W-X-exit"
+    ],
+    "secondary_retirement_disposal_diagnostics": true
+  },
+  "date": "2026-11-14",
+  "desqview": {
+    "all_35_errors_exported_via_public_Project_API_to_private_files": true,
+    "all_inputs_controls_modules_unchanged": true,
+    "bindings": 30,
+    "bounded_cold_audit_passed": true,
+    "canonical_database_unchanged": true,
+    "closed_interval_checks": 180,
+    "critical_imports_checked": 19,
+    "current_bindings": 0,
+    "durable_source_errors": 35,
+    "ended_tasks": 6,
+    "endpoint_checks": 180,
+    "fresh_combined_run": "f93aff3a280e4af99845869546107ebd",
+    "full_runtime_window_bytes": 734,
+    "full_window_differences": 15,
+    "gates": {
+      "automatic_provider_physical_qualification": null,
+      "cold_source_error_history_after_recovery": true,
+      "independent_stopped_physical_readback": true,
+      "native_handle_reuse": true,
+      "same_task_physical_relocation": true
+    },
+    "guest_closed_reaped_pid_absent": true,
+    "immutable_code_bytes_per_witness": 364,
+    "native_reuse": {
+      "native_end_create_order_verified": true,
+      "process_generations": [
+        1,
+        3
+      ],
+      "same_numeric_handle_new_registry_uuid_and_process_incarnation": true,
+      "task_generations": [
+        1,
+        3
+      ]
+    },
+    "original_image_sha256": "ab93f28f921ade6e00cb2e80ed2b4981d0f94ad0275131f9a7ac5de0cd8de2cb",
+    "owner_postflight_708_and_19_imports_verified": true,
+    "range_checks": 180,
+    "recent_error_summary_limit": 16,
+    "same_task_relocation": {
+      "different_independently_observed_physical_vectors": true,
+      "same_source_and_virtual_coverage": true,
+      "same_task_uuid_process_episode_and_generation": true
+    },
+    "same_task_source_error_recoveries": 9,
+    "stopped_physical_witnesses": 6,
+    "stopped_provider_coverage_witnesses": 12
+  },
+  "format": "fdisbull-desqview-le-combined-acceptance-1",
+  "host": {
+    "counts_overlap": true,
+    "default_native_routes_remain_distinct": true,
+    "explicit_coupling_cases": 8,
+    "focused_source_passed": 264,
+    "independent_focused_passed": 264,
+    "installed_focused_passed": 264,
+    "native_input_skips": 12,
+    "passed": 3238,
+    "selected_files": 110
+  },
+  "integrated_candidate": "63da4cb7392157cf0d8e82e562655e09c541ec3a",
+  "integration_parent": "110430501f39c7ca15d7c44bf150159a985a2289",
+  "interpreter": {
+    "installation_layout": "one private flat target; interpreter prefix independently pinned",
+    "sha256": "0f5374bca527c5a5e958ee94e03e55816a368533286e6315b8bf013da622fc61",
+    "version": "3.13.13"
+  },
+  "native_qemu_sha256": "d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d",
+  "policy": {
+    "ci_started": false,
+    "default_backend": "dosbox",
+    "merge": false,
+    "native_rebuild": false,
+    "original_inputs_modified": false,
+    "release": false,
+    "shared_activation": false
+  },
+  "private_receipt_sha256": {
+    "cleanup-integrated-host-02.xml": "13968bca8d78135b199cd1f5e9a34082c8ec6dad6d1c2ed8be2520f4a5948ff1",
+    "desqview-public-error-reopen.json": "fd086eeaeb715a71e87827adbfd4d568e90b49805897279163ee4d2ec4f2b70d",
+    "doom-native-01/cold-receipt.json": "f3c6e1882570eac643f590f87737b54e22cea06fb42ba06cc31e3247305d70c7",
+    "doom-native-01/controller-receipt.json": "5c20b67e034e41417ab083d7027281917dd5454418fd4086904ce845ff0980b2",
+    "doom-native-01/hot-receipt.json": "c5b1d039637d94d5ba0083c17bf9468bb752fceff3f47df2d6cb4dbcdb93e447",
+    "doom-native-output-audit-01.json": "1ebb33249a0877e14f764d909a385acea59ebc98533a96c9dce9bdc018076284",
+    "host-preservation-62d01df8-20261114T045238Z-446d7b-result.json": "eabc1a1b7b76c27f31496ae2ac3c9688addce18f1f89c0b28d40feb20a2f654d",
+    "installed-coupling-host-01.xml": "6e420f36df2cbfeba3ee57d2a0e0754eaef43e613d6aff5f6c079aa1348000eb",
+    "native-authored-output-audit-01.json": "5b8d934d5fdd776c9ace743f6c5a14d07606e692a0c6762741aa58278dd9c89d",
+    "native-authored-standard-01-result.json": "20384d6ca40e31e9cab46feddb1e26203d7e39279da3fab518fe4ccf99d1b73d",
+    "native-authored-virtual-01-result.json": "23cb234623a24202eabddb02ae58d6240732e9880f3cb241ad1d6540048c3e31",
+    "native-preservation-01-result.json": "a03a10cb9b4312e7248456191afc6ecfd6411ceffe3d8dbf028d45ca797b616d",
+    "package-62d01df8.json": "cdc74f5bd5b8c9deaa1f9f22d7453dac8a262e53e8f43d9aa000fc8ff4df4ecc",
+    "reports/continuity-native-final.json": "8462fed57aba53727c3c4f96b3f6115542ce7a7ea9975fda8b960145bf59c382",
+    "runs/desqview-combined-62d01df8-687b7ef8/CLOSED.json": "358a67d5b370ff38f5ec15cec457e5b32b595ef57fa36530cb11ecaad35b854f",
+    "shared-build-post-desqview.json": "6210e389c3f9a0cf1c6dfc4a5022b3509b5aeb021469b31642166d01e5a54aad",
+    "tracker-le-cleanup-independent-final-01.xml": "685ba58695ddf1450c5f1b6ef8ff514133cce08e39e6a785793f1d074629e482"
+  },
+  "python_source_test_files_unchanged": 1275,
+  "root_native": {
+    "authored_standard_passed": 1,
+    "authored_virtual_passed": 1,
+    "guard_diagnostics": {
+      "doom-native-01": {
+        "events": [],
+        "job_exit_code": 0,
+        "state": "completed",
+        "termination_reason": null
+      },
+      "native-authored-standard-01": {
+        "events": [],
+        "job_exit_code": 0,
+        "state": "completed",
+        "termination_reason": null
+      },
+      "native-authored-virtual-01": {
+        "events": [
+          {
+            "type": "group_identity_uncertain"
+          }
+        ],
+        "job_exit_code": 0,
+        "state": "completed",
+        "termination_reason": null
+      },
+      "native-preservation-01": {
+        "events": [
+          {
+            "type": "group_identity_uncertain"
+          }
+        ],
+        "job_exit_code": 0,
+        "state": "completed",
+        "termination_reason": null
+      }
+    },
+    "original_doom": {
+      "all_inputs_unchanged": true,
+      "canonical_checked_boundaries": 9,
+      "cold_query_matches": [
+        8,
+        1
+      ],
+      "current_predicate_additional_steps": 0,
+      "distinct_count_sites": 8,
+      "four_exports_equal": true,
+      "fresh_controller_hot_and_cold_passed": true,
+      "guest_closed_reaped": true,
+      "observed_executed_fixup_overlaps": 0,
+      "ordinary_endpoint": "real16/unpaged/A20; protected32 refresh refused, authority withdrawn",
+      "ordinary_run_generation": [
+        1,
+        2
+      ],
+      "pointer_witness_checks": 72,
+      "source_bounding_interval_bytes": 149,
+      "source_sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "startup_observations": 14,
+      "step_mask": 7,
+      "unknowns": 0
+    },
+    "preservation_and_publication_failure_passed": 8,
+    "pytest_skips": 0
+  },
+  "runtime_source_commit": "62d01df80274656f0dac6352068f54363338e9f8",
+  "source_wheel_installed_equal_files": 708,
+  "wheel_sha256": "9d57314e541b6b14b0a0066a0a6911995a748c3b9f627a2a3b6f721daa192111"
+}

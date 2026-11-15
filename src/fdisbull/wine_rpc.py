@@ -141,5 +141,10 @@ class WineQemuRPC:
 
     def capture(self,path):
         with self.lock:
+            from .qemu_input import require_released_machine_input
+            # A preflight refusal leaves the owner usable so the caller can
+            # explicitly release/cancel its physical input. It is not a failed
+            # or partially dispatched native migration.
+            require_released_machine_input(self.vm)
             try:return self.qmp.save(path)
             except BaseException:self.close();raise

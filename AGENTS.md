@@ -1,55 +1,36 @@
 # fDisBull for agents
 
-**Designed by a human, refined by agents, and operated by agents.**
+fDisBull gives an agent persistent program analysis, headless native debugging,
+named scene actions, explicit spatial policies, a separate text player, and
+bounded source-to-UIL experiments. The analysis project stores discoveries and
+evidence between turns. An emulator process is owned by its live server/context;
+saved run history does not reconnect it after exit.
 
-fDisBull owns the mechanical middle of reverse engineering, live headless
-debugging, state discovery, and semantic reconstruction (`UDL` → `UIL` → `UDC`)
-across 400+ deterministic CLI/JSON methods (`fdisbull methods`), leaving you
-only a small number of bounded judgment points along a
-[7-stage automated pipeline](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md).
-To keep your token usage low and your context window clean:
+## Current resource and release policy (2026-11-14)
 
-- **Direct output is capped at 64 KiB inline (`fdisbull-output-ref-1`):** larger
-  replies are stored automatically as immutable private files (`out-<sha256>`)
-  and queried surgically via `output-select` (JSON Pointer), `output-read`
-  (byte range) or `output-info`—never dump full artifacts into context.
-- **Long reports and discoveries live in searchable SQLite and vectorized DBs:**
-  instructions, CFGs, xrefs, structural types, watch hits, Anchor Stones,
-  dependency queues (`work-queue`, `operation-goal`) and Z scenes persist in the
-  project database (`.fdb`), while source snapshots and logical concepts are
-  indexed in the SQLite FTS5 + vector embedding catalog (`source-*`,
-  `fdisbull-source-catalog-1`).
-- **Live emulators are owned by their server/context:** saved run history does
-  not reconnect a guest after exit, and headless launches suppress GUI pop-ups
-  by default.
+Fixed disk reserves and mandatory storage admission have been removed. Prefer
+mounted external project/cache destinations for bulk outputs, validate actual
+mount identity and report real I/O failures. Preserve unique data and require
+exact approval for irreversible deletion; ordinary allocation needs no approval.
+Heavy local model/GPU/VM jobs retain shared-memory guard policy; routine commands
+and ordinary tests run directly. n8n owns the current VPS CI/release sequence.
+0.35.0 installation and activation are authorized after full release checks,
+with the previous prefix retained for rollback. DotBox is a separate user project.
 
 ## Start with the user's task
 
-- Reuse the established executable, project and live session. Verify runtime
-  identity or required capabilities once on entry with `fdisbull --version-json`,
-  `fdisbull preflight --expectations <manifest>` or `fdisbull capabilities`;
-  do not repeat discovery or diagnostics before known working operations.
-- Three self-contained skills ship inside the installed wheel and work without
-  opening a project (`fdisbull agent-skill --list` and `--index`):
-  - `fdisbull agent-skill --skill fdisbull --reference SKILL.md` (`fdisbull`):
-    top-level router skill for choosing between investigation (`fdisbull-investigate`)
-    and guide writing (`write-gamefaqs-guide`).
-  - `fdisbull agent-skill --reference SKILL.md` (`fdisbull-investigate`):
-    evidence-driven reverse engineering, deliverable framing (`references/task-framing.md`),
-    probe selection, memory/event searches, scene/UIL recovery and verification
-    gates (consult [the quickstart](docs/AGENT_QUICKSTART.md) and then only the
-    needed reference).
-  - `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`
-    (`write-gamefaqs-guide`): turning recovered mechanics, routes, bugs, unused
-    code and format specs into an attributed, human-readable guide. Keep
-    attributed external findings distinct from recovered and observed game behavior.
+- Reuse the established executable, project and live session. For first use or
+  an unfamiliar operation, consult [the quickstart](docs/AGENT_QUICKSTART.md)
+  and `fdisbull agent-skill --reference SKILL.md`, then only the needed reference.
+  The bundled skill is available from an installed wheel without a project.
+- For a human-readable review of established game knowledge, read
+  `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`.
+  Use `agent-skill --list` to discover both bundled skills. Keep attributed
+  external findings distinct from recovered and observed game behavior.
 - Use `fdisbull --help` or `fdisbull methods` when an interface is unknown.
-  Prefer built-in deterministic readers and search surfaces (`media-modules`,
-  `media-inspect`, `media-extract` including native Inno 5.6.2 and MADS;
-  `dos-sys-inspect`, `desqview-module-inspect`; `debug-search-*` scalar memory
-  narrowing; `debug-event-search-*` and `debug-trace-until` execution-event
-  isolation; `frame_rgba()` in-memory frame buffers) over ad-hoc scripts.
-- Static analysis needs no running emulator. Debugging original DOS/Windows code
+  Check capabilities after a relevant environment change or capability failure;
+  do not repeat discovery or diagnostics before known working operations.
+- Static analysis needs no running emulator. Debugging original DOS/PE64 code
   needs the matching separately prepared backend and the user's own inputs.
   The standalone player consumes an authored projection or compatible endpoint;
   it does not automatically recover an entire game's scripts.
@@ -58,18 +39,13 @@ To keep your token usage low and your context window clean:
   record it when reporting how a result was obtained. Live player mode can save
   between model turns; verify the checkpoint receipt before claiming persistence.
 
-For repeated game work, grow a rapid self-building `Z` harness from the startup
-menus and global controls onward. Expose each learned control as a named `Z`
-action immediately, compose useful routes, automate navigation, add compatible
-placement and scene presets, then replace repeated UI work with programmatic
-actions as those become available. For rapid QA and patch/edition comparisons,
-target isolated code blocks rather than re-running the whole process: rewind
-live debugged state via Anchor Stones (`debug-rewind-*`, `debug-delta-*`,
-`debug-timeline-*`), compare baseline vs. patched code layers in live
-experiments, and export pre/post-patch behavioral diffs through `UDL` → `UIL`
-into any supported language (Python, JS, C, ASM, or Z3 proofs). Use the
-cheapest acquired capability for the next test. A Z/UIL harness does not
-require a UDC build; source/model/output qualification applies when the
+For repeated game work, grow a reusable Z harness from the startup menus and
+global controls onward. Expose each learned control as a named action immediately,
+compose useful routes, automate navigation, add compatible placement and scene
+presets, then
+replace repeated UI work with programmatic actions as those become available.
+Use the cheapest acquired capability for the next test. A Z/UIL harness does
+not require a UDC build; source/model/output qualification applies when the
 requested deliverable includes a replacement or target implementation.
 
 Keep one bounded question per worker and batch compatible tests in one scene
@@ -84,16 +60,17 @@ result. Publish useful partial findings and newly unlocked questions promptly.
 A blocker belongs to its dependent work; retain it and continue other ready work.
 One controller owns each live guest; other workers consume immutable evidence.
 
+## Storage policy override — 2026-11-14
+
+The user removed fixed free-space reserves and mandatory storage admission for
+this project, including mirrors, VPS CI, packaging and release. Do not stop work
+or request confirmation solely because a 40 GB/20 GB threshold would be crossed.
+Routine allocation is authorized. Use suitable mounted destinations and actual
+job requirements; preserve unique work and report genuine I/O failures. Do not
+replace reserve stops with new permission gates. This does not authorize automatic
+deletion or loss of existing work. The global agent guidance records the same rule.
+
 ## Working in this repository
-
-CI is local-first: branch, merge-request and tag events must not automatically
-start provider pipelines. Use the finite local Linux qualification route and
-keep its receipts explicitly local. GitLab web/API pipelines require an explicit
-user action and a dedicated `fdisbull-local-linux` runner; do not register a
-runner, create credentials, or use hosted instance runners as a fallback. Heavy
-native work requires a deliberate start. Apply the storage admission rules
-before each material growth phase. Local results do not establish hosted CI.
-
 
 The [README](README.md) introduces the product to people. Technical contracts,
 API examples and scope limits belong in the linked docs and bundled skill.
@@ -120,6 +97,11 @@ of tool-only wheels, source distributions and tool source ZIPs.
 Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
+For 0.35.0, the user explicitly approved installation and activation after all
+release checks pass, preserving the previous prefix for rollback. Older
+"do not install" directions do not block that approved, gated completion.
+n8n owns this release/installation continuation; do not activate a provisional
+candidate or bypass exact-source qualification.
 
 After each release candidate is packaged, install and activate a fresh shared
 prefix locally, then run
@@ -130,7 +112,7 @@ payload, version, commit and selector all verify.
 ## Repository authority, mirrors and CI coordination
 
 - **The original GitHub repository `seeker-cyber-maker/fDisBull` (ID `1431097789`) is the preferred source/review platform.** The user confirmed this exact repository has their reported Trust & Safety exemption. The connected `TiGa-RCE` account has Write access. This is not an exemption for other repositories/accounts. `TiGa-RCE/fdisbull` is a separate partial import; leave it separate.
-- **Preserve local-hub and GitLab work.** The guarded service serializes original GitHub ↔ local-hub ↔ GitLab using separate peer histories, volume/storage admission and fast-forward-only updates. Original GitHub is `origin`; local-hub is `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git`; GitLab remains `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`. Push ordinary source branches to `origin` or `local-hub`; the service propagates them. Manual GitLab pushes require `-o ci.skip`; never send that provider option to GitHub or local-hub. Do not use the old `dual` push remote.
+- **Preserve local-hub and GitLab work.** The guarded service serializes original GitHub ↔ local-hub ↔ GitLab using separate peer histories, mounted-volume identity checks and fast-forward-only updates. Original GitHub is `origin`; local-hub is `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git`; GitLab remains `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`. Push ordinary source branches to `origin` or `local-hub`; the service propagates them. Manual GitLab pushes require `-o ci.skip`; never send that provider option to GitHub or local-hub. Do not use the old `dual` push remote.
 - Do not overwrite differing tags or delete/recreate refs to obtain parity. Historical `v0.27.0` has two preserved annotated tag identities pointing to the same commit. The exact configured exception and archive aliases are described in `docs/GITHUB_RESTORATION.md`; changes outside that mapping must hold for review. Working checkouts are not advanced by the service.
 - **n8n owns CI.** The manual GitHub → OVH bootstrap passed on 2026-11-13 (run `43512305780`, attempt 1). Actions is enabled for the manual-only `ovh-bootstrap.yml`; legacy workflow IDs remain disabled. n8n alone dispatches and observes finite workers under the shared OVH executor lock. Ordinary pushes, PRs and tags do not automatically start this workflow. The bootstrap qualifies infrastructure and artifact handoff only; ordinary/native candidate qualification and offline package acceptance remain separate. Other workers must not change Actions settings, register runners, dispatch pipelines or duplicate status polling.
 - Read [CI triggers and status coordination](docs/CI_COORDINATION.md). Preserve GitLab's deliberate triggers and `ci.skip` mirroring. Heavy native compilation remains an explicit CI-owner action. Use `scripts/ci_status.py` in cache-only mode by default; only the named owner refreshes within the shared cooldown. No automatic retry loops, empty commits or parallel job-status loops.

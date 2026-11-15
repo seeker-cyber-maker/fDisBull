@@ -1,5 +1,8 @@
 """Additive observation contracts. Native evidence is never replaced."""
 
+PE_TRACE_SEMANTICS = ('instructions completed by the selected stopped thread; '
+                      'pre-instruction registers; peer threads held per step')
+
 
 def contract(backend):
     if backend=='scummvm-kyra':
@@ -34,12 +37,13 @@ def contract(backend):
                 'guest_exit_reporting':'ScummVM engine lifecycle; original DOS process exit unavailable'}
     dos=backend in ('dosbox','dosbox-qemu')
     pe=backend in ('wine-qemu','ida-wine-qemu')
+    machine=backend in ('qemu-machine','qemu-dos')
     return {'format':'fdisbull-debug-semantics-1','backend':backend,
             **({'native_hooks_available':True} if dos else {}),
             'execution_breakpoint_stage':'before-instruction',
             'watchpoint_stage':'after-access; instruction completion unknown' if dos else 'before-access' if backend=='wine-qemu' else 'unsupported' if backend=='ida-wine-qemu' else 'unknown; inspect native reply',
             'trace_registers_stage':'before-instruction',
-            'trace_completion':'fetch-observed; completion unknown' if dos else 'confirmed completed steps',
+            'trace_completion':'fetch-observed; completion unknown' if dos else 'native step stops; instruction completion unknown' if machine else 'confirmed completed steps',
             'timing':'guest ticks supported' if dos else 'host bounded; stepping has no elapsed-time fidelity',
             'address_context':'explicit CPU address space; DOS paragraph projection requires observed real mode' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space',
             'guest_exit_reporting':('Requires lifecycle.dos_guest_exit; selected DOS PSP after process cleanup; '
@@ -88,6 +92,7 @@ def trace_decode_bits(event):
 
 def normalize_trace(backend,events,*,version,delta=0,budget_reached=False):
     dos=backend in ('dosbox','dosbox-qemu')
+    machine=backend in ('qemu-machine','qemu-dos')
     for index,event in enumerate(events):
         context='flat' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'
         address=event.get('address')
@@ -104,6 +109,8 @@ def normalize_trace(backend,events,*,version,delta=0,budget_reached=False):
         event['identity']={'source_version':version,'context':context,'runtime_address':address,
                            'project_address':event.get('project_address')}
         event['observation']={'registers_stage':'before-instruction',
-                              'instruction_completed':False if dos and budget_reached and index==len(events)-1 else None if dos else True,
-                              'evidence':'pending fetch at trace budget' if dos and budget_reached and index==len(events)-1 else 'native fetch' if dos else 'confirmed native step'}
+                              # A QEMU T05 can follow exception dispatch or one
+                              # REP iteration. It does not certify retirement.
+                              'instruction_completed':False if dos and budget_reached and index==len(events)-1 else None if dos or machine else True,
+                              'evidence':'pending fetch at trace budget' if dos and budget_reached and index==len(events)-1 else 'native fetch' if dos else 'native step stop; instruction completion unknown' if machine else 'confirmed native step'}
     return events

@@ -4,11 +4,13 @@ import importlib.util
 import json
 import lzma
 import io
+import shutil
 import tarfile
 from pathlib import Path
 import zipfile
 
 import pytest
+from test_offline_windows_oracles import sample_ne
 
 SPEC = importlib.util.spec_from_file_location('chat_ci_inputs', Path(__file__).parents[1] / 'scripts/ci/prepare-chat-inputs.py')
 module = importlib.util.module_from_spec(SPEC)
@@ -81,3 +83,31 @@ def test_full_windows_base_requires_verified_pe32_and_exact_bytes(tmp_path):
         module.full_windows_base(manifest, tmp_path)
     with pytest.raises(ValueError, match='full Windows runtime'):
         module.full_windows_base({}, tmp_path)
+
+
+def test_extended_windows_inputs_require_and_bind_authored_fixtures(tmp_path):
+    root = tmp_path / 'source'; root.mkdir()
+    tests = root / 'tests'; tests.mkdir()
+    existing = Path(__file__).parent
+    for name in ('offline_windows_oracles.py', 'offline_win16_oracle.c'):
+        shutil.copyfile(existing / name, tests / name)
+    pe32 = root / 'native-evidence/pe/selftest32.exe'
+    pe32.parent.mkdir(parents=True)
+    pe32.write_bytes(b'prepared PE32 identity')
+    manifest = {'retained_base': {'pe32_fixture': {
+        'path': 'native-evidence/pe/selftest32.exe', **module.identity(pe32)}}}
+    with pytest.raises(ValueError, match='FDISBULL_NE_AUTHORED_FIXTURE'):
+        module.extended_windows_inputs(manifest, root, tmp_path, {})
+    fixture = tmp_path / 'ORACLE.EXE'; fixture.write_bytes(sample_ne())
+    acceptance, inputs = module.extended_windows_inputs(
+        manifest, root, tmp_path, {'FDISBULL_NE_AUTHORED_FIXTURE': str(fixture)})
+    assert acceptance == 'pe64-pe32-win16'
+    assert [row['role'] for row in inputs] == ['pe32_fixture', 'win16_fixture', 'win16_profile']
+    profile = json.loads(Path(inputs[2]['source']).read_text())
+    assert profile['executable_sha256'] == hashlib.sha256(fixture.read_bytes()).hexdigest()
+    assert profile['source_sha256'] == hashlib.sha256((tests / 'offline_win16_oracle.c').read_bytes()).hexdigest()
+    assert profile['counter'] == 'ne:2:0x25'
+    pe32.write_bytes(b'changed')
+    with pytest.raises(ValueError, match='missing or changed'):
+        module.extended_windows_inputs(manifest, root, tmp_path, {'FDISBULL_NE_AUTHORED_FIXTURE': str(fixture)})
+    assert module.extended_windows_inputs({}, root, tmp_path, {'FDISBULL_CHAT_WINDOWS_ACCEPTANCE': 'pe64'}) == (None, [])

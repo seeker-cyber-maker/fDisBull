@@ -253,7 +253,7 @@ def test_pinned_machine_copy_is_private_immutable_and_cleaned(tmp_path, monkeypa
     image = tmp_path / 'private.img'
     original = b'authored boot provenance'
     image.write_bytes(original)
-    monkeypatch.setattr(qemu_machine, 'QemuControl', lambda *args: SimpleNamespace(close=lambda: None))
+    monkeypatch.setattr(qemu_machine, 'QemuControl', lambda *args: SimpleNamespace(close=lambda: None, call=lambda method, **options: []))
     machine = qemu_machine.QemuMachine(executable, boot_image=image, cpu_model='486', cpus=1,
                                        memory_mib=32, boot_image_sha256=hashlib.sha256(original).hexdigest(),
                                        boot_device=boot_device)

@@ -1,0 +1,790 @@
+--- a/include/ui/input.h
++++ b/include/ui/input.h
+@@ -17,6 +17,7 @@
+ 
+ typedef struct QemuInputHandler QemuInputHandler;
+ typedef struct QemuInputHandlerState QemuInputHandlerState;
++typedef struct FdisbullInputBatch FdisbullInputBatch;
+ 
+ typedef void (*QemuInputHandlerEvent)(DeviceState *dev, QemuConsole *src,
+                                       InputEvent *evt);
+@@ -41,6 +42,21 @@
+ void qemu_input_event_send_impl(QemuConsole *src, InputEvent *evt);
+ void qemu_input_event_sync(void);
+ void qemu_input_event_sync_impl(void);
++
++/*
++ * One-shot native PS/2 batches.  Prepare, dispatch and free require the BQL.
++ * Prepare owns a deep copy of 1..256 events and refs to the selected devices.
++ * Dispatch revalidates the batch, requires a running VM without replay, and
++ * sends qcode keys, relative X/Y motion and ordinary mouse buttons followed
++ * by one sync.  Success means handler callbacks and sync completed, not that
++ * device FIFOs accepted every byte or that the guest consumed the input.
++ * Free never emits releases or changes device queues or held state.
++ */
++FdisbullInputBatch *qemu_input_fdisbull_prepare(InputEventList *events,
++                                             Error **errp);
++bool qemu_input_fdisbull_dispatch(FdisbullInputBatch *batch, Error **errp);
++void qemu_input_fdisbull_free(FdisbullInputBatch *batch);
++unsigned qemu_input_fdisbull_count(const FdisbullInputBatch *batch);
+ 
+ void qemu_input_event_send_key(QemuConsole *src, KeyValue *key, bool down);
+ void qemu_input_event_send_key_number(QemuConsole *src, int num, bool down);
+--- /dev/null
++++ b/qapi/fdisbull-input.json
+@@ -0,0 +1,100 @@
++# Experimental fDisBull one-shot physical input scheduling, API 1.
++{ 'include': 'ui.json' }
++
++##
++# @FdisbullInputState:
++#
++# @idle: No schedule has been armed.
++# @armed: One owned batch is waiting for its virtual deadline.
++# @dispatched: All selected PS/2 handler callbacks and final sync completed.
++# @cancelled: The batch was disarmed without dispatch.
++# @failed: Pre-dispatch revalidation failed; close the VM.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullInputState',
++  'data': [ 'idle', 'armed', 'dispatched', 'cancelled', 'failed' ] }
++
++##
++# @FdisbullInputInfo:
++#
++# @api-version: Scheduling protocol version, one.
++# @epoch: Native clock epoch bound to this scheduler.
++# @state: State of the most recent owned schedule.
++# @virtual-ns: Stopped observation time.
++# @event-count: Number of events in this batch; zero before the first arm.
++# @token: Owning token, absent before the first successful arm.
++# @start-ns: Virtual time at arm, absent before the first successful arm.
++# @deadline-ns: Requested virtual deadline, absent before the first arm.
++# @terminal-ns: Actual terminal transition time; absent while idle or armed.
++# @dispatch-ns: Actual handler/sync completion time; only present if dispatched.
++# @reason: Terminal reason of at most 256 bytes; absent while idle or armed.
++#
++# Terminal fields are retained unchanged until a new token is accepted.
++# Dispatch does not establish PS/2 queue acceptance, guest consumption, or
++# physical release of an earlier held input.  A full or disabled device can
++# ignore an event even though its handler callback completed.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInputInfo',
++  'data': { 'api-version': 'int', 'epoch': 'uint64',
++            'state': 'FdisbullInputState', 'virtual-ns': 'int',
++            'event-count': 'uint64', '*token': 'str', '*start-ns': 'int',
++            '*deadline-ns': 'int', '*terminal-ns': 'int',
++            '*dispatch-ns': 'int', '*reason': 'str' } }
++
++##
++# @x-fdisbull-query-input:
++#
++# Observe the latest schedule without dispatching input or running the VM.
++# Requires the valid stopped native virtual-clock API 1 profile.
++#
++# Returns: Schedule receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-input', 'returns': 'FdisbullInputInfo' }
++
++##
++# @x-fdisbull-arm-input:
++#
++# @token: Unused owner token of 1..128 bytes.
++# @delta-ns: Virtual delay, 1..60000000000 nanoseconds, without signed overflow.
++# @events: Owned batch of 1..256 qcode key, relative X/Y, or ordinary button
++#     events.  Relative values are bounded to -32767..32767.  Only left, middle
++#     and right buttons are admitted, with at most one edge per button.
++#
++# Validate and copy one batch while stopped.  Arm does not run the VM or emit
++# input.  At the deadline, revalidate the same PS/2 device/handler identities,
++# empty legacy keyboard queue, absence of earlier unsynchronized input, and
++# cumulative mouse arithmetic before dispatching any event and one final sync.
++# A pending stop or reached clock-budget deadline takes precedence.  The first
++# actual VM stop cancels an unfired batch, so later execution cannot replay it.
++# Cancellation never synthesizes releases or changes existing held input.
++#
++# Reset, an unsupported VM state or native epoch/profile loss invalidates the
++# scheduler and makes subsequent commands fail.  Migration stays blocked after
++# the first successful arm.  Tokens cannot be reused; a bounded process-lifetime
++# history permits 4096 successful arms, after which a new VM is required.
++#
++# Returns: Armed receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-input',
++  'data': { 'token': 'str', 'delta-ns': 'int', 'events': ['InputEvent'] },
++  'returns': 'FdisbullInputInfo' }
++
++##
++# @x-fdisbull-cancel-input:
++#
++# @token: Current owner token.
++#
++# Disarm the current unfired schedule while stopped.  Cancellation is idempotent
++# and preserves an already terminal receipt.  It cannot undo dispatched events,
++# release held input, clear device queues, or run the VM.
++#
++# Returns: Retained schedule receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-cancel-input', 'data': { 'token': 'str' },
++  'returns': 'FdisbullInputInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -62,6 +62,7 @@
+     'audio',
+     'fdisbull-audio',
+     'fdisbull-display',
++    'fdisbull-input',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -65,6 +65,7 @@
+ { 'include': 'audio.json' }
+ { 'include': 'fdisbull-audio.json' }
+ { 'include': 'fdisbull-display.json' }
++{ 'include': 'fdisbull-input.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- /dev/null
++++ b/system/fdisbull-input.c
+@@ -0,0 +1,317 @@
++/*
++ * Explicit one-shot fDisBull physical input scheduling, protocol version 1.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * All live accesses are serialized by BQL.  The virtual timer dispatches an
++ * owned batch through the selected PS/2 input handlers.  It never resumes or
++ * stops the VM, releases held input, or claims that the guest consumed input.
++ */
++#include "qemu/osdep.h"
++#include "hw/core/cpu.h"
++#include "migration/blocker.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-input.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qemu/main-loop.h"
++#include "qemu/timer.h"
++#include "system/cpus.h"
++#include "system/fdisbull-clock.h"
++#include "system/reset.h"
++#include "system/runstate.h"
++#include "ui/input.h"
++
++#define INPUT_MAX_DELTA_NS INT64_C(60000000000)
++#define INPUT_MAX_TOKEN_BYTES 128
++#define INPUT_MAX_USED_TOKENS 4096
++#define INPUT_MAX_REASON_BYTES 256
++
++static struct {
++    bool initialized;
++    bool invalidated;
++    uint64_t epoch;
++    FdisbullInputState state;
++    QEMUTimer timer;
++    Error *migration_blocker;
++    GHashTable *used_tokens;
++    FdisbullInputBatch *batch;
++    char *token;
++    char *reason;
++    uint64_t event_count;
++    int64_t start_ns;
++    int64_t deadline_ns;
++    bool has_terminal;
++    int64_t terminal_ns;
++    bool has_dispatch;
++    int64_t dispatch_ns;
++} input_schedule = {
++    .state = FDISBULL_INPUT_STATE_IDLE,
++};
++
++static void input_timer_cb(void *opaque);
++
++static bool input_safe_state(RunState state)
++{
++    return state == RUN_STATE_PRELAUNCH || state == RUN_STATE_PAUSED ||
++           state == RUN_STATE_DEBUG;
++}
++
++static void input_finish(FdisbullInputState state, const char *reason)
++{
++    assert(bql_locked());
++    if (input_schedule.state != FDISBULL_INPUT_STATE_ARMED) {
++        return;
++    }
++    timer_del(&input_schedule.timer);
++    input_schedule.state = state;
++    input_schedule.has_terminal = true;
++    input_schedule.terminal_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    input_schedule.has_dispatch = state == FDISBULL_INPUT_STATE_DISPATCHED;
++    if (input_schedule.has_dispatch) {
++        input_schedule.dispatch_ns = input_schedule.terminal_ns;
++    }
++    g_free(input_schedule.reason);
++    input_schedule.reason = g_strndup(reason, INPUT_MAX_REASON_BYTES);
++    qemu_input_fdisbull_free(input_schedule.batch);
++    input_schedule.batch = NULL;
++}
++
++static void input_invalidate(const char *reason)
++{
++    assert(bql_locked());
++    if (input_schedule.invalidated) {
++        return;
++    }
++    input_finish(FDISBULL_INPUT_STATE_FAILED, reason);
++    if (input_schedule.initialized) {
++        timer_del(&input_schedule.timer);
++    }
++    input_schedule.invalidated = true;
++}
++
++static void input_reset(void *opaque)
++{
++    input_invalidate("machine reset invalidated scheduled input");
++}
++
++static void input_vm_state_change(void *opaque, bool running, RunState state)
++{
++    assert(bql_locked());
++    if (running) {
++        return;
++    }
++    if (!input_safe_state(state)) {
++        input_invalidate("unsupported VM state invalidated scheduled input");
++        return;
++    }
++    /* An actual stop consumes the schedule, even before its deadline. */
++    input_finish(FDISBULL_INPUT_STATE_CANCELLED, "machine-stop");
++}
++
++static bool input_guard(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    CPUState *cpu;
++    unsigned cpus = 0;
++
++    assert(bql_locked());
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock) {
++        return false;
++    }
++    if (input_schedule.invalidated) {
++        error_setg(errp, "Scheduled input invalidated; close the VM");
++        return false;
++    }
++    if (clock->api_version != 1 || !clock->budget_supported ||
++        (input_schedule.initialized && input_schedule.epoch != clock->epoch)) {
++        if (input_schedule.initialized) {
++            input_invalidate("native clock profile or epoch changed");
++        }
++        error_setg(errp, "Scheduled input requires a valid native clock API 1 "
++                   "epoch; close an invalidated VM");
++        return false;
++    }
++    if (clock->running || clock->pending_stop ||
++        !input_safe_state(clock->status) ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
++        error_setg(errp, "Scheduled input commands require a safe stopped "
++                   "native clock with no pending stop");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        cpus++;
++        if (!cpu->stopped) {
++            error_setg(errp, "Scheduled input requires one stopped vCPU");
++            return false;
++        }
++    }
++    if (cpus != 1) {
++        error_setg(errp, "Scheduled input requires one stopped vCPU");
++        return false;
++    }
++    if (!input_schedule.initialized) {
++        input_schedule.initialized = true;
++        input_schedule.epoch = clock->epoch;
++        input_schedule.used_tokens = g_hash_table_new_full(g_str_hash,
++                                                          g_str_equal,
++                                                          g_free, NULL);
++        /* Ordinary virtual timers participate in no-sleep icount HLT warp. */
++        timer_init_ns(&input_schedule.timer, QEMU_CLOCK_VIRTUAL,
++                      input_timer_cb, NULL);
++        qemu_register_reset(input_reset, NULL);
++        qemu_add_vm_change_state_handler(input_vm_state_change, NULL);
++    }
++    return true;
++}
++
++static FdisbullInputInfo *input_info(void)
++{
++    FdisbullInputInfo *info = g_new0(FdisbullInputInfo, 1);
++
++    info->api_version = 1;
++    info->epoch = input_schedule.epoch;
++    info->state = input_schedule.state;
++    info->virtual_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    info->event_count = input_schedule.event_count;
++    info->token = g_strdup(input_schedule.token);
++    info->has_start_ns = input_schedule.token != NULL;
++    info->start_ns = input_schedule.start_ns;
++    info->has_deadline_ns = input_schedule.token != NULL;
++    info->deadline_ns = input_schedule.deadline_ns;
++    info->has_terminal_ns = input_schedule.has_terminal;
++    info->terminal_ns = input_schedule.terminal_ns;
++    info->has_dispatch_ns = input_schedule.has_dispatch;
++    info->dispatch_ns = input_schedule.dispatch_ns;
++    info->reason = g_strdup(input_schedule.reason);
++    return info;
++}
++
++static void input_timer_cb(void *opaque)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    Error *err = NULL;
++
++    assert(bql_locked());
++    assert(qemu_in_vcpu_thread());
++    if (input_schedule.state != FDISBULL_INPUT_STATE_ARMED ||
++        input_schedule.invalidated) {
++        return;
++    }
++    clock = qmp_x_fdisbull_query_clock(NULL);
++    if (!clock || clock->api_version != 1 || !clock->budget_supported ||
++        input_schedule.epoch != clock->epoch) {
++        input_invalidate("native clock profile or epoch changed");
++        return;
++    }
++    /* A debugger/native stop wins before the main loop changes runstate. */
++    if (!clock->running || clock->pending_stop ||
++        fdisbull_clock_stop_pending()) {
++        input_finish(FDISBULL_INPUT_STATE_CANCELLED, "stop-pending");
++        return;
++    }
++    /* Equal timer deadlines otherwise depend on insertion order. */
++    if (clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED ||
++        (clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED &&
++         clock->has_budget_deadline_ns &&
++         clock->budget_deadline_ns <= clock->virtual_ns)) {
++        input_finish(FDISBULL_INPUT_STATE_CANCELLED, "budget-deadline");
++        return;
++    }
++    if (clock->virtual_ns < input_schedule.deadline_ns) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "virtual input timer fired before its deadline");
++        return;
++    }
++    if (!qemu_input_fdisbull_dispatch(input_schedule.batch, &err)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     err ? error_get_pretty(err) : "input dispatch failed");
++        error_free(err);
++        return;
++    }
++    input_finish(FDISBULL_INPUT_STATE_DISPATCHED, "dispatch-complete");
++}
++
++FdisbullInputInfo *qmp_x_fdisbull_query_input(Error **errp)
++{
++    return input_guard(errp) ? input_info() : NULL;
++}
++
++FdisbullInputInfo *qmp_x_fdisbull_arm_input(const char *token,
++                                          int64_t delta_ns,
++                                          InputEventList *events, Error **errp)
++{
++    FdisbullInputBatch *batch;
++    int64_t now;
++
++    if (!input_guard(errp)) {
++        return NULL;
++    }
++    if (input_schedule.state == FDISBULL_INPUT_STATE_ARMED) {
++        error_setg(errp, "A scheduled input batch is already armed");
++        return NULL;
++    }
++    if (input_schedule.state == FDISBULL_INPUT_STATE_FAILED) {
++        error_setg(errp, "Scheduled input failed; close the VM");
++        return NULL;
++    }
++    if (!token[0] || strlen(token) > INPUT_MAX_TOKEN_BYTES ||
++        g_hash_table_contains(input_schedule.used_tokens, token)) {
++        error_setg(errp, "Scheduled input requires an unused token of "
++                   "1..128 bytes");
++        return NULL;
++    }
++    if (g_hash_table_size(input_schedule.used_tokens) >=
++        INPUT_MAX_USED_TOKENS) {
++        error_setg(errp, "Scheduled input exhausted its 4096-token history; "
++                   "close the VM");
++        return NULL;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (delta_ns < 1 || delta_ns > INPUT_MAX_DELTA_NS || now < 0 ||
++        now > INT64_MAX - delta_ns) {
++        error_setg(errp, "Scheduled input delta must be 1..60000000000 ns "
++                   "without signed clock overflow");
++        return NULL;
++    }
++    batch = qemu_input_fdisbull_prepare(events, errp);
++    if (!batch) {
++        return NULL;
++    }
++    if (!input_schedule.migration_blocker) {
++        error_setg(&input_schedule.migration_blocker,
++                   "fDisBull scheduled input does not support migration");
++        if (migrate_add_blocker(&input_schedule.migration_blocker, errp) < 0) {
++            qemu_input_fdisbull_free(batch);
++            return NULL;
++        }
++    }
++
++    g_hash_table_add(input_schedule.used_tokens, g_strdup(token));
++    g_free(input_schedule.token);
++    g_clear_pointer(&input_schedule.reason, g_free);
++    input_schedule.token = g_strdup(token);
++    input_schedule.batch = batch;
++    input_schedule.event_count = qemu_input_fdisbull_count(batch);
++    input_schedule.start_ns = now;
++    input_schedule.deadline_ns = now + delta_ns;
++    input_schedule.has_terminal = false;
++    input_schedule.has_dispatch = false;
++    input_schedule.terminal_ns = 0;
++    input_schedule.dispatch_ns = 0;
++    input_schedule.state = FDISBULL_INPUT_STATE_ARMED;
++    timer_mod_ns(&input_schedule.timer, input_schedule.deadline_ns);
++    return input_info();
++}
++
++FdisbullInputInfo *qmp_x_fdisbull_cancel_input(const char *token, Error **errp)
++{
++    if (!input_guard(errp)) {
++        return NULL;
++    }
++    if (!input_schedule.token || strcmp(input_schedule.token, token)) {
++        error_setg(errp, "Input token does not own the current schedule");
++        return NULL;
++    }
++    input_finish(FDISBULL_INPUT_STATE_CANCELLED, "caller");
++    return input_info();
++}
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -17,6 +17,7 @@
+   'fdisbull-clock.c',
+   'fdisbull-audio.c',
+   'fdisbull-display.c',
++  'fdisbull-input.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',
+--- a/ui/input.c
++++ b/ui/input.c
+@@ -1,7 +1,11 @@
+ #include "qemu/osdep.h"
++#include "qemu/main-loop.h"
++#include "hw/input/ps2.h"
+ #include "system/system.h"
++#include "qapi/clone-visitor.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-ui.h"
++#include "qapi/qapi-visit-ui.h"
+ #include "trace.h"
+ #include "ui/input.h"
+ #include "ui/console.h"
+@@ -16,6 +20,24 @@
+     QemuConsole       *con;
+     QTAILQ_ENTRY(QemuInputHandlerState) node;
+ };
++
++typedef struct FdisbullInputTarget {
++    DeviceState *dev;
++    int handler_id;
++    QemuInputHandlerEvent event;
++    QemuInputHandlerSync sync;
++} FdisbullInputTarget;
++
++struct FdisbullInputBatch {
++    InputEventList *events;
++    unsigned count;
++    FdisbullInputTarget keyboard;
++    FdisbullInputTarget mouse;
++    bool dispatched;
++};
++
++#define FDISBULL_INPUT_MAX_EVENTS 256
++#define FDISBULL_INPUT_REL_LIMIT 32767
+ 
+ typedef struct QemuInputEventQueue QemuInputEventQueue;
+ typedef QTAILQ_HEAD(QemuInputEventQueueHead, QemuInputEventQueue)
+@@ -120,6 +142,265 @@
+         }
+     }
+     return NULL;
++}
++
++static QemuInputHandlerState *
++fdisbull_input_target(FdisbullInputTarget *target, InputEventKind kind,
++                     bool capture, Error **errp)
++{
++    bool keyboard = kind == INPUT_EVENT_KIND_KEY;
++    const char *type = keyboard ? TYPE_PS2_KBD_DEVICE : TYPE_PS2_MOUSE_DEVICE;
++    uint32_t mask = keyboard ? INPUT_EVENT_MASK_KEY :
++        INPUT_EVENT_MASK_BTN | INPUT_EVENT_MASK_REL;
++    QemuInputHandlerState *s = qemu_input_find_handler(1U << kind, NULL);
++
++    if (!s || !s->dev || !s->dev->realized ||
++        strcmp(object_get_typename(OBJECT(s->dev)), type) ||
++        s->handler->mask != mask || !s->handler->event ||
++        (keyboard ? s->handler->sync != NULL : s->handler->sync == NULL)) {
++        error_setg(errp, "fDisBull input requires the selected %s handler",
++                   type);
++        return NULL;
++    }
++
++    if (capture && !target->dev) {
++        target->dev = s->dev;
++        object_ref(OBJECT(target->dev));
++        target->handler_id = s->id;
++        target->event = s->handler->event;
++        target->sync = s->handler->sync;
++    }
++
++    /* Reselect live handler state; never retain its unregisterable pointer. */
++    if (target->dev != s->dev || target->handler_id != s->id ||
++        target->event != s->handler->event ||
++        target->sync != s->handler->sync) {
++        error_setg(errp, "fDisBull input selected %s handler changed", type);
++        return NULL;
++    }
++    return s;
++}
++
++static bool fdisbull_input_key_mapped(PS2KbdState *kbd, InputKeyEvent *key,
++                                      Error **errp)
++{
++    const guint16 *map;
++    guint length;
++    int qcode = key->key->u.qcode.data;
++
++    if (qcode < 0 || qcode >= Q_KEY_CODE__MAX) {
++        error_setg(errp, "fDisBull input requires a valid qcode");
++        return false;
++    }
++    if (qcode == Q_KEY_CODE_SYSRQ) {
++        qcode = Q_KEY_CODE_PRINT;
++    }
++    switch (kbd->scancode_set) {
++    case 1:
++        map = qemu_input_map_qcode_to_atset1;
++        length = qemu_input_map_qcode_to_atset1_len;
++        break;
++    case 2:
++        map = qemu_input_map_qcode_to_atset2;
++        length = qemu_input_map_qcode_to_atset2_len;
++        break;
++    case 3:
++        map = qemu_input_map_qcode_to_atset3;
++        length = qemu_input_map_qcode_to_atset3_len;
++        break;
++    default:
++        error_setg(errp, "fDisBull input PS/2 scancode set is unsupported");
++        return false;
++    }
++    if ((guint)qcode >= length || !map[qcode]) {
++        error_setg(errp, "fDisBull input qcode has no PS/2 scancode mapping");
++        return false;
++    }
++    return true;
++}
++
++static bool fdisbull_input_preflight(FdisbullInputBatch *batch,
++                                    InputEventList *events, bool capture,
++                                    Error **errp)
++{
++    QemuInputHandlerState *s;
++    InputEventList *e;
++    unsigned count = 0;
++    unsigned buttons = 0;
++    bool have_mouse = false;
++    int64_t mouse_dx = 0;
++    int64_t mouse_dy = 0;
++
++    assert(bql_locked());
++    if (replay_mode != REPLAY_MODE_NONE) {
++        error_setg(errp, "fDisBull input does not support replay");
++        return false;
++    }
++    if (!events) {
++        error_setg(errp, "fDisBull input batch must not be empty");
++        return false;
++    }
++    if (!QTAILQ_EMPTY(&kbd_queue) || queue_count ||
++        (kbd_timer && timer_pending(kbd_timer))) {
++        error_setg(errp, "fDisBull input requires an empty keyboard queue");
++        return false;
++    }
++    QTAILQ_FOREACH(s, &handlers, node) {
++        if (s->events) {
++            error_setg(errp, "fDisBull input requires synchronized handlers");
++            return false;
++        }
++    }
++
++    for (e = events; e; e = e->next) {
++        InputEvent *evt = e->value;
++        InputMoveEvent *move;
++        InputBtnEvent *button;
++        PS2MouseState *mouse;
++
++        if (++count > FDISBULL_INPUT_MAX_EVENTS) {
++            error_setg(errp, "fDisBull input batch exceeds %d events",
++                       FDISBULL_INPUT_MAX_EVENTS);
++            return false;
++        }
++        if (!evt) {
++            error_setg(errp, "fDisBull input event must not be null");
++            return false;
++        }
++        switch (evt->type) {
++        case INPUT_EVENT_KIND_KEY:
++            if (!evt->u.key.data || !evt->u.key.data->key ||
++                evt->u.key.data->key->type != KEY_VALUE_KIND_QCODE) {
++                error_setg(errp, "fDisBull input keys must use qcodes");
++                return false;
++            }
++            s = fdisbull_input_target(&batch->keyboard, evt->type,
++                                      capture, errp);
++            if (!s || !fdisbull_input_key_mapped(PS2_KBD_DEVICE(s->dev),
++                                               evt->u.key.data, errp)) {
++                return false;
++            }
++            break;
++        case INPUT_EVENT_KIND_REL:
++        case INPUT_EVENT_KIND_BTN:
++            s = fdisbull_input_target(&batch->mouse, evt->type, capture, errp);
++            if (!s) {
++                return false;
++            }
++            if (!have_mouse) {
++                mouse = PS2_MOUSE_DEVICE(s->dev);
++                mouse_dx = mouse->mouse_dx;
++                mouse_dy = mouse->mouse_dy;
++                have_mouse = true;
++            }
++            if (evt->type == INPUT_EVENT_KIND_BTN) {
++                button = evt->u.btn.data;
++                if (!button ||
++                    (button->button != INPUT_BUTTON_LEFT &&
++                     button->button != INPUT_BUTTON_MIDDLE &&
++                     button->button != INPUT_BUTTON_RIGHT)) {
++                    error_setg(errp, "fDisBull input requires ordinary "
++                               "PS/2 mouse buttons");
++                    return false;
++                }
++                if (buttons & (1U << button->button)) {
++                    error_setg(errp, "fDisBull input allows one edge per "
++                               "mouse button in a batch");
++                    return false;
++                }
++                buttons |= 1U << button->button;
++                break;
++            }
++            move = evt->u.rel.data;
++            if (!move ||
++                (move->axis != INPUT_AXIS_X && move->axis != INPUT_AXIS_Y) ||
++                move->value < -FDISBULL_INPUT_REL_LIMIT ||
++                move->value > FDISBULL_INPUT_REL_LIMIT) {
++                error_setg(errp, "fDisBull input requires relative X/Y "
++                           "values in -32767..32767");
++                return false;
++            }
++            if (move->axis == INPUT_AXIS_X) {
++                mouse_dx += move->value;
++            } else {
++                mouse_dy -= move->value;
++            }
++            if (mouse_dx < INT_MIN || mouse_dx > INT_MAX ||
++                mouse_dy < INT_MIN || mouse_dy > INT_MAX) {
++                error_setg(errp, "fDisBull input mouse accumulator overflow");
++                return false;
++            }
++            break;
++        default:
++            error_setg(errp, "fDisBull input supports only qcode keys, "
++                       "relative X/Y motion and ordinary mouse buttons");
++            return false;
++        }
++    }
++    if (capture) {
++        batch->count = count;
++    }
++    return true;
++}
++
++FdisbullInputBatch *qemu_input_fdisbull_prepare(InputEventList *events,
++                                             Error **errp)
++{
++    FdisbullInputBatch *batch = g_new0(FdisbullInputBatch, 1);
++
++    if (!fdisbull_input_preflight(batch, events, true, errp)) {
++        qemu_input_fdisbull_free(batch);
++        return NULL;
++    }
++    batch->events = QAPI_CLONE(InputEventList, events);
++    return batch;
++}
++
++bool qemu_input_fdisbull_dispatch(FdisbullInputBatch *batch, Error **errp)
++{
++    InputEventList *e;
++
++    assert(bql_locked());
++    if (!batch || batch->dispatched) {
++        error_setg(errp, "fDisBull input batch is absent or already dispatched");
++        return false;
++    }
++    if (!runstate_is_running()) {
++        error_setg(errp, "fDisBull input dispatch requires a running VM");
++        return false;
++    }
++    if (!fdisbull_input_preflight(batch, batch->events, false, errp)) {
++        return false;
++    }
++
++    /* All failure checks precede the first callback; no delayed key helper. */
++    batch->dispatched = true;
++    for (e = batch->events; e; e = e->next) {
++        qemu_input_event_send(NULL, e->value);
++    }
++    qemu_input_event_sync();
++    return true;
++}
++
++void qemu_input_fdisbull_free(FdisbullInputBatch *batch)
++{
++    assert(bql_locked());
++    if (!batch) {
++        return;
++    }
++    qapi_free_InputEventList(batch->events);
++    if (batch->keyboard.dev) {
++        object_unref(OBJECT(batch->keyboard.dev));
++    }
++    if (batch->mouse.dev) {
++        object_unref(OBJECT(batch->mouse.dev));
++    }
++    g_free(batch);
++}
++
++unsigned qemu_input_fdisbull_count(const FdisbullInputBatch *batch)
++{
++    return batch ? batch->count : 0;
+ }
+ 
+ void qmp_input_send_event(const char *device,

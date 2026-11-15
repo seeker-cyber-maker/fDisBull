@@ -316,6 +316,9 @@ class ExecutionTraceSessionMixin:
         until, regions, action = validate_trace_until(
             until, regions=regions, max_steps=max_steps, timeout_ms=timeout_ms,
             name=name, action=action, label=label)
+        from .execution_clock import clock_predicates
+        if clock_predicates(until):
+            raise ValueError('Live virtual-time-range requires the native qemu-dos virtual clock profile')
         backend = getattr(self, "backend_name", None) or self.metadata.get("backend", "dosbox")
         if self.closed or backend not in ("dosbox", "dosbox-qemu"):
             raise ValueError("Live trace-until requires an owned DOSBox session")

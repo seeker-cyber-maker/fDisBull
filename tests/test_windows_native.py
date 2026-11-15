@@ -80,6 +80,18 @@ def qualify_windows_program(output,*,qemu,kernel,runtime,fixture,expected_bits=3
                 assert (before['metadata']['width'],before['metadata']['height'])==(320,200)
                 assert session.frame_probe([[40,56]])['samples'][0]['rgb']==[224,160,32]
                 mark('checkpoint-before-input-and-original-orange-frame',state=state(),breakpoint=bp)
+                # Positive native state round trip, distinct from the pending/
+                # held-key refusal checks below. The write is diagnostic and
+                # is undone by restoring the captured machine state.
+                snapshot=session.save_state('pe32-positive.sav')
+                session.write_memory(counter,'29000000',expected_hex='07000000')
+                assert read(counter)==41
+                restored=session.load_state(snapshot['artifact'])
+                assert restored['state']=='stopped' and state()=={'counter':7,'keys':0,'clicks':0,'last_key':0}
+                assert session.registers()['project_address']==hex(checkpoint)
+                receipt['full_VM_snapshot_positive_test']=True
+                receipt['assistance'].append('Guarded counter edit 7->41 was undone by native state restore.')
+                mark('positive-native-save-guarded-mutation-and-restore',snapshot=snapshot,restored=restored)
 
                 with pytest.raises(ValueError,match='expected bytes'):
                     session.write_memory(counter,'29000000',expected_hex='08000000')
@@ -216,6 +228,23 @@ def qualify_windows_program(output,*,qemu,kernel,runtime,fixture,expected_bits=3
             assert session.rpc.process.poll() is not None
             mark('owned-vm-and-spectator-closed-and-reaped')
         with Project(database) as reopened:
+            # Reopening the saved checkpoint starts a new VM and rebinds the
+            # original PE32 address map and owned breakpoint in a new session.
+            with reopened.debugger(qemu,game,backend='wine-qemu',kernel=kernel,initramfs=runtime,
+                                   version=1,window=True,memory_mib=8192,boot_timeout_ms=600000,
+                                   state=snapshot['artifact']) as fresh:
+                assert fresh.metadata['bits']==expected_bits
+                assert fresh.registers()['project_address']==hex(checkpoint)
+                assert fresh.memory(counter,length=4)['hex']=='07000000'
+                fresh_before=fresh.screenshot('fresh-restored.png',hooks=False)
+                assert fresh.frame_probe([[40,56]])['samples'][0]['rgb']==[224,160,32]
+                fresh.click(80,80,mode_id=fresh_before['metadata']['mode_id'])
+                assert fresh.run(timeout_ms=30000)['outcome']=='breakpoint'
+                assert fresh.memory(counter,length=4)['hex']=='08000000'
+                assert fresh.memory(exports['clicks'],length=4)['hex']=='01000000'
+                assert fresh.frame_probe([[40,56]])['samples'][0]['rgb']==[32,192,96]
+                mark('fresh-session-saved-state-rebound-and-click-replayed', state_artifact=snapshot['artifact'])
+            assert fresh.rpc.process.poll() is not None
             reopened.debug_export(final['artifact'],output/'final.png')
             reopened.debug_export(trace['artifact'],output/'checkpoint-trace.json')
             actual=Image.open(output/'final.png');assert actual.size==(320,200) and actual.getpixel((40,56))==(32,192,96)

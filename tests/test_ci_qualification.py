@@ -505,7 +505,7 @@ def chat_qualified(local_qualified):
               'python':'3.13.5','network_interfaces':['lo'],'python_origin':'kit','python_mappings':'kit',
               'loader_closure':'kit-lib','elf_objects_checked':2,'skipped':0,'native_failures':0,
               'profiles':['dos','wine','player','z3'],'checks':{name:True for name in gate.CHAT_CHECKS},
-              'runtime_sha256':{'dos':'a'*64,'wine':'b'*64},'dos_screenshot_sha256':'c'*64,'pe_screenshot_sha256':'d'*64}
+              'runtime_sha256':{'dos':'a'*64,'wine':'b'*64,'windows':'e'*64},'dos_screenshot_sha256':'c'*64,'pe_screenshot_sha256':'d'*64}
     write(root,'native-evidence/chat/acceptance.json',verifier)
     verifier_ref=gate.identity(root,'native-evidence/chat/acceptance.json')
     producer='00000000-0000-4000-8000-000000000010';consumer='00000000-0000-4000-8000-000000000011'
@@ -517,7 +517,7 @@ def chat_qualified(local_qualified):
     junit=root/'native-evidence/chat/tests.xml';junit.write_text('<testsuite tests="1" failures="0" errors="0" skipped="0"/>')
     junit_ref=gate.identity(root,'native-evidence/chat/tests.xml')
     write(root,'artifacts/receipts/chat-consumer.json',dict(common,schema='fdisbull-chat-consumer-job-v1',local_job_id=consumer,producer_job_id=producer,verifier=verifier_ref,source_access='absent',source_check='artifact-and-host-clone',host_source_postcheck=postcheck_ref,junit=junit_ref))
-    for name, jobid, jobname in [('prepare',producer,'chat-native-prepare'),('consumer',consumer,'chat-native-consumer')]:
+    for name, jobid, jobname in [('prepare',producer,'native-chat-prepare'),('consumer',consumer,'native-chat-consumer')]:
         process={'execution_origin':'local-linux','source_commit':SHA,'local_run_id':LOCAL_RUN,'local_job_id':jobid,
                  'job_name':jobname,'termination':'exited','exit_code':0,'container_state_after_stop':'stopped',
                  'image_digest':'sha256:'+'b'*64,'runtime':{'system':'linux','machine':'x86_64','python':'3.13.5'},'archive':archive_ref}
@@ -534,6 +534,36 @@ def test_chat_consumer_required_for_final_qualification(local_qualified):
 def test_chat_consumer_qualifies_when_all_receipts_match(chat_qualified):
     result=gate.validate(chat_qualified,SHA,local_run_id=LOCAL_RUN)
     assert result['status']=='qualified' and result['chat_consumer']['archive']['size'] > 0
+
+
+@pytest.mark.parametrize('kind', ['prepare', 'consumer'])
+def test_chat_rejects_invented_reordered_process_job_names(chat_qualified, kind):
+    path = chat_qualified / f'artifacts/receipts/local-process-chat-{kind}.json'
+    data = json.loads(path.read_text())
+    data['job_name'] = f'chat-native-{kind}'
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='process evidence failed'):
+        gate.validate(chat_qualified, SHA, local_run_id=LOCAL_RUN)
+
+
+@pytest.mark.parametrize('runtime_hashes', [
+    {'dos': 'a'*64, 'wine': 'b'*64},
+    {'dos': 'a'*64, 'wine': 'b'*64, 'windows': 'not-a-sha256'},
+    {'dos': 'a'*64, 'wine': 'b'*64, 'windows': 'e'*64, 'unexpected': 'f'*64},
+])
+def test_chat_requires_exact_full_windows_runtime_identity(chat_qualified, runtime_hashes):
+    path = chat_qualified / 'native-evidence/chat/acceptance.json'
+    data = json.loads(path.read_text())
+    data['runtime_sha256'] = runtime_hashes
+    path.write_text(json.dumps(data))
+    ref = gate.identity(chat_qualified, 'native-evidence/chat/acceptance.json')
+    for name in ('chat-consumer', 'local-process-chat-consumer'):
+        path = chat_qualified / f'artifacts/receipts/{name}.json'
+        data = json.loads(path.read_text())
+        data['verifier'] = ref
+        path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='prepared runtime identity missing'):
+        gate.validate(chat_qualified, SHA, local_run_id=LOCAL_RUN)
 
 
 @pytest.mark.parametrize('field,value', [('network_interfaces',['lo','eth0']),('loader_closure','host'),

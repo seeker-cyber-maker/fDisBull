@@ -10,9 +10,12 @@ capability contract; successful parsing establishes structure, not behavior.
 - [Reuse the shipped modules](#reuse-the-shipped-modules)
 - [MZ envelope version 1](#mz-envelope-version-1)
 - [AGI v2 resource version 1](#agi-v2-resource-version-1)
+- [Sherlock SHI version 1](#sherlock-shi-version-1)
 - [Existing readers and decoders](#existing-readers-and-decoders)
+- [Castles II BOB image adapter](#castles-ii-bob-image-adapter)
 - [Westwood Kyra-family media and EMC2](#westwood-kyra-family-media-and-emc2)
 - [MADS conversations and containers](#mads-conversations-and-containers)
+- [KINT 6 and Sherlock 7](#kint-6-and-sherlock-7)
 - [Extend and qualify a module](#extend-and-qualify-a-module)
 
 ## Classify the next obstacle
@@ -51,6 +54,8 @@ fdisbull media-inspect /private/program --adapter mz-envelope
 fdisbull media-extract /private/program /private/new-tail --adapter mz-envelope --member tail --max-payload-bytes 1048576
 fdisbull media-inspect /private/PICDIR --adapter agi-v2 --volume-root /private/game --number 0
 fdisbull media-extract /private/PICDIR /private/new-resource --adapter agi-v2 --volume-root /private/game --number 0 --member resource
+fdisbull media-inspect /private/images.shi --adapter sherlock-shi
+fdisbull media-extract /private/images.shi /private/new-images --adapter sherlock-shi --member all
 ```
 
 Python equivalents are `fdisbull.media.media_modules()`,
@@ -62,18 +67,21 @@ fallback guesses. The catalog routes GOG and picture work to existing APIs
 rather than wrapping or rebuilding those readers.
 
 `fdisbull-media-members-1` inventories adapter/version, input roles/sizes/SHA-256,
-and member names/input roles/absolute offsets/sizes/SHA-256. It contains no raw
-payload, preview, hex or base64. Extraction adds the selected member's mapping
-to fixed output `payload.bin` and `media-manifest.json`. The manifest remains
-structural-only; it does not supply addresses, source mappings or semantic claims.
+and member names/input roles/offsets/sizes/SHA-256. Decoded PNG members use
+`offset: null` and an explicit pixel rectangle. It does not inline complete
+member payloads or previews. PNG profiles expose fixed control-color values;
+KINT exposes selected header fields, including raw reserved extension bytes.
+MZ/AGI extraction adds the selected member's mapping to fixed output
+`payload.bin` and `media-manifest.json`. Their manifest remains structural-only;
+it does not supply runtime addresses, source mappings or semantic claims.
 For AGI, both directory and volume identities and the resource number are retained.
 
 Sources stay unchanged. `media-extract` requires an existing private parent owned by
 the caller (0700), creates an exclusive 0700 destination and 0600 files, refuses
 Git/worktree ancestry and symlink output paths, and accepts only listed member
 names. Never publish payloads or private originals, including modified game
-assets. Reports contain hashes and sizes only, but still review provenance before
-publication. No new FDB writes are made: parser output does not bypass the
+assets. Reports contain structural/pixel metadata rather than complete payloads;
+review that metadata and provenance before publication. No new FDB writes are made: parser output does not bypass the
 external-target storage boundary or grant permission to bind/import bytes.
 
 The original MZ and AGI adapters cap each source volume/container at 64 MiB. `max_output_bytes`
@@ -81,7 +89,7 @@ limits the selected payload to 1..64 MiB before creating output (default 64 MiB)
 The CLI uses `--max-payload-bytes` for this limit. The global
 `--max-output-bytes` before the command controls the JSON reply budget instead;
 it never changes the extracted payload limit.
-These adapters perform no decompression and have fixed/small member counts.
+The MZ and AGI adapters perform no decompression and have fixed/small member counts.
 Filesystem operations assume the caller controls the private parent; this is
 not a sandbox against a hostile concurrent process running as the same user.
 
@@ -141,6 +149,90 @@ has the declared length (0..65535); empty resources are structurally permitted.
 No header bytes enter the emitted payload. AGI v3 combined directories,
 compressed headers, LZW and alternate codecs are unsupported; the caller must
 select the v2 variant from evidence rather than treat acceptance as detection.
+
+## KINT 6 and Sherlock 7
+
+Use `kint6-ke` for original header/body ranges and virtual memory declarations,
+and `fdisbull.kint6` through `module-analyze` for guest instruction facts.
+Use `sherlock7-images`, `kint6-user-buttons` and `kint6-user-overlays` for
+documented PNG atlas layouts. They preserve RGBA pixels, report color keys
+separately and support one named crop or `--member all`. PNG payload names,
+aggregate limits and pixel provenance extend the byte-container contract above.
+Read [KINT 6 and Sherlock 7](kint6-sherlock7.md) for the complete specification,
+commands, research provenance and explicit runtime/version gaps.
+## Sherlock SHI version 1
+
+Adapter `sherlock-shi` implements only the observed Sherlock 1.50 profile,
+`sherlock-1.50-46x32x32`. Its independently authored codec follows the recovered
+structure of four privately supplied image sets. The record roles, palette and
+indexed overlay operation were separately qualified against this game's
+rendering; they are not fields embedded in SHI. Repository tests contain only
+authored planar vectors. Original images and captures are not distributed.
+
+The file has exactly 46 records of 520 bytes (23,920 bytes total), with no
+file-level header, directory, compression, trailer or variable-length records.
+Image IDs are the stable zero-based record numbers 0..45. Every record starts
+with four little-endian 16-bit words `[4, 1, 32, 32]`; all eight header bytes
+must match. The first two words are fixed profile markers whose broader field
+semantics remain unqualified. The admitted dimensions are always 32 by 32.
+Reject every other header or size, including a valid prefix with trailing bytes.
+
+For image `i`, the record offset is `520*i`, and its 512-byte pixel payload starts
+at `520*i + 8`. Each of 32 rows holds four consecutive planes of four bytes
+each. Within a plane, the first pixel is the high bit; plane 0 is the low color
+bit. For `x,y` in 0..31, relative to the start of this record's payload:
+
+```text
+index(x,y) = sum(((payload[16*y + 4*p + x//8] >> (7 - x%8)) & 1) << p
+                 for p in 0..3)
+```
+
+`fdisbull.shi.decode_shi(payload)` accepts bytes, bytearray or memoryview with
+the exact file size, validates every record, and returns a tuple of 46 immutable
+1024-byte images: row-major pixels, one index 0..15 per byte. It never returns a
+partially decoded prefix. `encode_shi(images)` accepts a list/tuple of exactly
+46 such bytes-like images, rejects every wrong size or index above 15, and
+returns the exact planar encoding with fixed headers. It does not quantize RGB
+artwork, change inputs or write files. Encoding a complete decoded supported
+file reproduces its original bytes.
+
+| Image IDs | Qualified role |
+| --- | --- |
+| 0..35 | Game items: category row `id//6`, item `id%6`; this is not a solution column |
+| 36 | Empty tile |
+| 37 / 38 | NOT mask / ink |
+| 39 / 40 | BETWEEN-left mask / ink |
+| 41 / 42 | BETWEEN-middle mask / ink |
+| 43 / 44 | BETWEEN-right mask / ink |
+| 45 | Three-dot LEFT_OF separator |
+
+Marker composition is `(destination & mask) | ink` on four-bit palette indices.
+Do not replace it with PNG alpha compositing. The profile's 16 RGB triples are
+available in `fdisbull.shi.PALETTE` and the manifest's `palette.colors`; the
+manifest explicitly records `embedded: false` and their game-profile source.
+Color values are not inferred from the image data or from a generic EGA palette.
+The qualified 16x16 candidate reduction samples source coordinate `(2*x, 2*y)`
+without interpolation. Extraction preserves the original 32x32 indices and does
+not perform this reduction or combine mask/ink pairs.
+
+`media-inspect` returns all 46 source members named `image-00` through `image-45`.
+Each member retains its record offset/size/SHA-256, absolute payload offset/size,
+stable `image_id`, dimensions, decoded pixel SHA-256 and role. Decoded pixels are
+not included in JSON. The ordinary top-level input identity is the whole SHI
+file. The declared palette, mask/ink pair IDs and half-size sampling are profile
+metadata; `qualification` remains `structural-only` for the supplied file.
+
+`media-extract --member image-37` exports just `image-37.png`; `--member all`
+exports all 46 records. The latter selector is advertised by `extract_all_member`.
+Every PNG uses four-bit indexed color, preserves index order and contains no
+transparency. The manifest's `extracted.images` maps each PNG path/size/SHA-256
+back to a `source_member` and `image_id`; the retained `members` list supplies
+source offsets and decoded hashes. PNG encoding hashes may depend on Pillow/zlib
+versions; decoded index hashes provide the stable pixel identity. The complete
+PNG set is prepared and its summed byte budget checked before output creation.
+All existing private-path, exclusive-directory and 0600-file rules still apply.
+SHI rejects AGI-only `volume_root` and `number` parameters. Parsing does not
+detect another SHI edition, prove a file's provenance, or qualify game behavior.
 
 ## Existing readers and decoders
 
@@ -234,6 +326,30 @@ Keep CNV/CND/HAG payloads, decoded text, instruction bytes and private state out
 Git. Publish authored scripts and aggregate/hashing receipts only. Read the full
 repository guide `docs/MADS_PROCESSOR.md` for API contracts, limits and provenance.
 The next semantic gate is a native interpreter trace, not another parse count.
+
+## Castles II BOB image adapter
+
+Use the existing inspect/extract API for the explicitly selected original Castles II CD variant:
+
+    fdisbull media-inspect /private/game/ANIM.BOB --adapter castles2-bob
+    fdisbull media-extract /private/game/ANIM.BOB /private/new-bob-output --adapter castles2-bob --member preview-png
+
+The generic extractor writes PNG bytes to "payload.bin"; rename that private
+file to ".png" for viewing. "palette-rgb" and "indices" preserve original
+byte spans at file offsets 4 and 772.
+
+This is a narrow adapter using the existing MADS IndexedImage and PNG encoder,
+not a new graphics framework. Layout is width:u16le, height:u16le,
+256 RGB888 triplets, and width*height row-major u8 indices; source length is
+exactly 772+width*height, with 1..4096 dimensions and <=4 MiB pixels.
+BOB has no magic: never select by ".BOB" suffix alone.
+
+A magenta-looking background at palette index 255 in some portraits does
+not prove transparency. The parser does not infer a color key, alpha,
+in-game blit/compositing, palette cycling or animation timing; C2INTRNN
+files are independent source frames. Keep game bytes and derived PNGs private.
+The 97-file source-specific acceptance and feature-investment record is in
+docs/CASTLES2_BOB_DECISION.md.
 
 ## Extend and qualify a module
 

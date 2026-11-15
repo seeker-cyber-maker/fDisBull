@@ -37,6 +37,16 @@ reported. They do not extend the native project database. The original Zork
 converter and executable IR remain unchanged; this adapter supplies source
 instruction facts and does not itself recover the separate game-intent UIL.
 
+`fdisbull.kint6_processor.KINT6Processor` supplies the KINT 6 guest seam for
+`.KE` files. It shares its bounded header parser with the `kint6-ke` media
+adapter and reports exact instruction spans, structured operands and static
+successors in a SHA-256-qualified guest byte space. It does not allocate the
+declared runtime segments, execute host calls or supply a semantic lifter.
+Use the registered `fdisbull.kint6` module for CLI/JSON traversal. Its adapter
+contract is version `1`; documented 6.3.0 encodings do not certify every newer
+runtime effect. The packaged `references/kint6-sherlock7.md` guide records
+format facts, research provenance and limits.
+
 The separate [Zork scene recovery layer](ZORK_SCENES.md) adds qualified data
 provenance: action tables, object callbacks and exit records resolve many of
 those stack-carried targets to named rules and source entries. It uses the

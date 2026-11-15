@@ -45,12 +45,20 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
     machine=DebugSession.machine
 
     def __init__(self, project, executable, game_dir, *, kernel, initramfs,
-                 version=None, files=None, boot_timeout_ms=240000,state=None,window=False,memory_mib=None):
+                 version=None, files=None, boot_timeout_ms=240000,state=None,window=False,memory_mib=None,
+                 loader_mode='entry'):
         self.project=project;self.rpc=None;self.closed=False;self.run_id=uuid.uuid4().hex
         self.version=project.version(version)
         if project.meta['format']!='PE' or project.bits not in (32,64) or project.meta['arch']!='x86' or self.version['parent'] is not None:
             raise ValueError('Wine launch requires the original unpatched x86 PE32/PE32+ version; select version=1 explicitly')
         self.bits=project.bits
+        if loader_mode not in ('entry','process-create'):
+            raise ValueError('loader_mode must be entry or process-create')
+        if loader_mode=='process-create' and (self.bits!=64 or self.backend_name!='wine-qemu'):
+            raise ValueError('process-create loader mode requires the native PE64 Wine backend')
+        if loader_mode=='process-create' and state is not None:
+            raise ValueError('Saved-state restoration in process-create loader mode is not qualified')
+        self.loader_mode=loader_mode
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
         directory=Path(game_dir).expanduser().resolve(strict=True)
         self.game_dir=directory
@@ -68,6 +76,8 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             saved=None;native=None
             if state is not None:
                 _,saved,native=get_state(project,state,self.version['id'])
+                if saved['metadata'].get('loader_mode','entry')!='entry':
+                    raise ValueError('Saved-state restoration from process-create loader mode is not qualified')
                 for name,path in zip(('qemu','kernel','initramfs'),(executable,kernel,initramfs)):
                     if file_hash(Path(path).expanduser().resolve(strict=True))!=saved['metadata']['runtime_inputs'][name]['sha256']:
                         raise ValueError('Native state backend identity mismatch: '+name)
@@ -81,7 +91,8 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             if saved is None:
                 launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,
                     # Covers 300s Wine setup, 90s agent response and transport.
-                    'files':uploads,'bits':self.bits,**getattr(self,'engine_start',{})},timeout_ms=420000)
+                    'files':uploads,'bits':self.bits,**getattr(self,'engine_start',{}),
+                    **({'stop_before_loader':True} if loader_mode=='process-create' else {})},timeout_ms=420000)
             else:
                 launched={'image_base':saved['metadata']['runtime_image_base'],'pid':saved['metadata']['target_pid'],
                           'session':self.rpc.call('status'),'restored_from':state}
@@ -93,7 +104,9 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             self.rpc.capabilities.update(architecture=actual_arch,bits=self.bits)
             self.runtime_base=int(launched['image_base'],16);self.delta=self.runtime_base-self.static_base
             self._relocate_expected()
-            self.metadata={'backend':self.backend_name,'runtime_profile':('pe32-win32-debug-1' if self.bits==32 else 'pe64-win32-debug-2'),'bits':self.bits,'memory_mib':selected_memory,
+            self.metadata={'backend':self.backend_name,'runtime_profile':('pe64-win32-debug-before-loader-1' if loader_mode=='process-create' else
+                'pe32-win32-debug-1' if self.bits==32 else 'pe64-win32-debug-2'),'bits':self.bits,'memory_mib':selected_memory,
+                'loader_mode':loader_mode,
                 'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                 'static_image_base':hex(self.static_base),'runtime_image_base':hex(self.runtime_base),
                 'address_mapping':'observed main-module base + project RVA','capabilities':self.rpc.capabilities,
@@ -106,7 +119,20 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
                 ('wine_version','guest_kernel','agent_binary_sha256','resources')}
             if saved is not None:self._load_state_host(saved['host'])
             regs=self.registers()
-            if saved is None and regs['project_address']!=hex(project.meta['entry']):raise DebuggerError('Observed PE entry differs from project entry')
+            if loader_mode=='process-create':
+                initial=launched.get('session',{})
+                loader=initial.get('loader',{})
+                if (launched.get('launch_profile')!='pe-before-loader' or initial.get('state')!='stopped'
+                        or initial.get('stop_reason',{}).get('kind')!='process-create'
+                        or initial.get('stop_reason',{}).get('address')!=regs[ip_name(regs)]
+                        or initial.get('stop_reason',{}).get('thread')!=regs.get('thread')
+                        or loader.get('profile')!='pe-before-loader' or loader.get('phase')!='before-entry'
+                        or loader.get('entry_reached') is not False or loader.get('stop_on_load') is not True):
+                    raise DebuggerError('Native process-create stop before loader execution was not observed')
+                self.metadata.update(initial_loader=dict(loader),initial_stop=dict(initial['stop_reason']),
+                    initial_registers=regs,entry_observed_at_launch=False)
+            elif saved is None and regs['project_address']!=hex(project.meta['entry']):
+                raise DebuggerError('Observed PE entry differs from project entry')
             if saved is not None:
                 for field in (ip_name(regs),flags_name(regs),'general','thread'):
                     if regs[field]!=saved['metadata']['registers'][field]:raise DebuggerError('Native restored registers differ: '+field)
@@ -177,6 +203,38 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
         return {'run':self.run_id,'version':self.version['id'],'live':not self.closed,
                 **self.call('status'),'mapping':self.metadata,'semantics':contract(self.backend_name)}
 
+    @pe_delta_locked
+    def loader_control(self, *, stop_on_load):
+        """Choose whether a genuine LOAD_DLL debug event remains paused."""
+        if type(stop_on_load) is not bool:
+            raise ValueError('stop_on_load must be boolean')
+        if getattr(self,'loader_mode','entry')!='process-create':
+            raise ValueError('Loader controls require process-create loader mode')
+        result=self.call('loader-control',{'stop_on_load':stop_on_load})
+        self._event('loader-control',result)
+        return result
+
+    @pe_delta_locked
+    def loader_events(self, *, after=0, limit=256):
+        """Read bounded native loader history without continuing the target."""
+        bounded(after,'after',0,2**64-1);bounded(limit,'limit',1,256)
+        return self.call('loader-events',{'after':after,'limit':limit})
+
+    @pe_delta_locked
+    def thread_info(self):
+        """Observe the selected thread's TEB from its native debug event."""
+        return self.call('thread-info')
+
+    def _save_native_state(self,name='checkpoint.sav',*,max_bytes=None):
+        if getattr(self,'loader_mode','entry')=='process-create':
+            raise ValueError('Saved states in process-create loader mode are not qualified')
+        return super()._save_native_state(name,max_bytes=max_bytes)
+
+    def _load_native_state(self,artifact):
+        if getattr(self,'loader_mode','entry')=='process-create':
+            raise ValueError('Saved states in process-create loader mode are not qualified')
+        return super()._load_native_state(artifact)
+
     def registers(self):
         result=self._native_registers()
         bits=getattr(self,'bits',64)
@@ -188,6 +246,27 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             result['project_address']=self.project_address(result[ip]);result['execution_location']='relocated-layer-instruction'
         result['cpu_mode']='protected32' if bits==32 else 'long64'
         return result
+
+    @pe_delta_locked
+    def stack_memory(self, *, offset=0, length=16):
+        """Observe a bounded window around the selected stopped thread's SP."""
+        bounded(offset,'offset',-4096,4096);bounded(length,'length',1,256)
+        if offset + length > 4096:
+            raise ValueError('Stack window must stay within 4096 bytes of the current SP')
+        if self.call('status').get('state')!='stopped':
+            raise ValueError('Stack memory requires a stopped selected thread')
+        registers=self.registers();bits=getattr(self,'bits',64)
+        pointer=int(registers['general']['rsp' if bits==64 else 'esp'],16)
+        address=pointer+offset
+        if address<0 or address+length>1<<bits:
+            raise ValueError('Stack window exceeds the selected process address width')
+        result=self.call('read',dict(address=address,length=length))
+        data=base64.b64decode(result['data_base64'],validate=True)
+        if len(data)!=length:raise DebuggerError('Incomplete selected-thread stack read')
+        return {'run':self.run_id,'version':self.version['id'],'runtime_address':hex(address),
+                'stack_pointer':hex(pointer),'thread':registers['thread'],'offset':offset,
+                'length':length,'hex':data.hex(),'view':'selected-thread-stack',
+                'scope':'Observed process-stack bytes; no static project address or automatic memory assumption'}
 
     def memory(self,address,*,cs=None,length=16):
         if cs is not None:raise ValueError('PE64 addresses are flat virtual addresses')
@@ -286,6 +365,19 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
         self._event('step',evidence)
         return evidence
 
+    @pe_delta_locked
+    def capture_module_entry(self, *, data_ranges, name='module-entry.json'):
+        from .runtime_module_analysis import observe_module_entry
+        return observe_module_entry(self, data_ranges=data_ranges, name=name)
+
+    @pe_delta_locked
+    def import_call(self, *, name='import-call.json', memory_ranges=None, code_ranges=None,
+                    timeout_ms=60000, trace_implementation=False):
+        from .wine_import_calls import observe_import_call
+        return observe_import_call(self, name=name, memory_ranges=memory_ranges,
+                                   code_ranges=code_ranges, timeout_ms=timeout_ms,
+                                   trace_implementation=trace_implementation)
+
     def trace(self,name='trace.json',*,count=512,timeout_ms=10000,fast_forward=False):
         from .decoder import decode
         _file_name(name);bounded(count,'count',1,10000);bounded(timeout_ms,'timeout_ms',1,600000)
@@ -295,9 +387,9 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             event['project_address']=self.project_address(event['address'])
             decoded=decode(bytes.fromhex(event['bytes']),int(event['address'],16),'x86',getattr(self,'bits',64))
             if decoded:event['instruction']=decoded
+        from .debug_semantics import PE_TRACE_SEMANTICS, normalize_trace, contract
         result.update(run=self.run_id,version=self.version['id'],mapping=self.metadata,requested_count=count,
-                      semantics='instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step')
-        from .debug_semantics import normalize_trace,contract
+                      semantics=PE_TRACE_SEMANTICS)
         normalize_trace(self.backend_name,result['events'],version=self.version['id'],delta=self.delta)
         result['observation_contract']=contract(self.backend_name)
         if len(result['events'])>count:raise DebuggerError('PE trace exceeds requested count')

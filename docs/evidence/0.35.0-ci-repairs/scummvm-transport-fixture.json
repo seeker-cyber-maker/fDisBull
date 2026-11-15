@@ -1,0 +1,97 @@
+{
+  "actual_ci_failure": {
+    "execution_origin": "local-linux",
+    "failing_operation": "2MiB echo response timeout after refusal/no-pause checks passed",
+    "intake_sha256": "a0181af381afa087f05e90809a9350aa9b37da8f45b4f653a807df1905d6f7ed",
+    "job_id": "510460ce-57cd-4ec5-a939-d74c573ad66f",
+    "node": "tests/test_scummvm_transport.py::test_backend_refusal_keeps_a_valid_channel_and_large_send_drains",
+    "payload_bytes": 2097152,
+    "preserved_as_failed": true,
+    "request_timeout_ms": 5000,
+    "run_id": "cbc02cca-c972-4fcb-b154-0614274aaea6",
+    "source_commit": "85d6e122474e86263e79acba4e69eeea26550345",
+    "testcase_seconds": 5.177
+  },
+  "change": {
+    "actual_kernel_partial_send_asserted_before_read_release": true,
+    "backend_read_gate": true,
+    "full_echo_asserted_after_read_release": true,
+    "payload_bytes": 2097152,
+    "peer_read_buffer_bytes": 65536,
+    "production_transport_unchanged": true,
+    "replies_still_use_socket_sendall": true,
+    "rpc_deadline_ms": 5000,
+    "send_buffer_requested_bytes": 4096,
+    "test_file_sha256": "c9ee5ea8ab07893da88ebca0ae8417cc1406396ea9062845a924c2e665cbbf1a"
+  },
+  "claim_limits": [
+    "The failed85 full CI result remains failed; focused checks do not replace fresh full ordinary/native/offline qualification on the integrated successor.",
+    "The native KQ1 case requires private input and was not executed in these unit diagnostics.",
+    "The timing mechanism is measured locally; its precise contribution to historical Linux scheduling is not inferred."
+  ],
+  "linux_diagnostic": {
+    "cleanup": "stopped",
+    "container_exit_code": 0,
+    "cpus": 2,
+    "focused_junit_sha256": [
+      "3aa1e65b64c8ce1718684f3c4da28de463ac4d9de675360042ccefad299984a6",
+      "7b6a7321df88ecf0f226dc0a0b4ab9de1bd33f4e5bbfa6eb834adbdffc276712",
+      "a7795c6f68d5e2add63f73252157272c23a92f506bf94cce9c606f207593de05",
+      "44ac17d23ed1e34a8859fd7d95c2eef485a7f55193ab0dce59c53409a82c4649",
+      "5a4b05b522c5300d7c081e789bfe135ffe0934618413322287c50f26f1dc4c64",
+      "744615dc2cd375ba1a15d96482342fc2c12c1ed892fbb18ea668523f4098638f",
+      "cab7bab2a34726599728ec79c0e23d797a3fbd73cdd82ebd413afcf5ecdbeda2",
+      "07838aa4b238b780a7b61353c092ffb52143dd59f3d37b6c4fbb33866021afeb",
+      "e17210dacba821077225d1759f899a35302b68ccbe893fb440218651f2e09f6c",
+      "b0ac34d636269c15dbf2932b8ba60ee2db717e436a811c965eb728acc0159a8e"
+    ],
+    "focused_repetitions_passed": 10,
+    "focused_repetitions_skipped": 0,
+    "full_file_junit_sha256": "5dba0aec2f277a313d086ef9e9ba0bb0bb1fd28d2906448b0848f26e20ef8175",
+    "image_digest": "sha256:3c3ba8ad4c85eb63b7568f806434f14e33370056985da7fdf2673621cb1d7e93",
+    "interpretation_receipt_sha256": "95bd83d80db810730a6a7e0378dfcba77b57c0d7d77c605bae27e6eaf0e45969",
+    "memory_bytes": 1073741824,
+    "native_kq1_skipped": 1,
+    "network": "none",
+    "original_strict_postcheck_reason": "Native KQ1 skip was rejected by a no-skips postcheck; raw test process exited0 and separate scoped interpretation records unit evidence.",
+    "original_strict_postcheck_record_preserved": true,
+    "request_timeout_ms": 5000,
+    "scope": "unit transport only; not exact-successor CI or native ScummVM qualification",
+    "unit_cases_passed": 6
+  },
+  "mac_focused": {
+    "failed": 0,
+    "junit_sha256": "2d963af942baa0af436d3ae48a2e5aaff11cdb0dcda68b48f1a7c171202bc3f6",
+    "passed": 6,
+    "platform": "macOS arm64",
+    "python": "3.13.13",
+    "skipped_native_kq1": 1
+  },
+  "mechanism_experiment": {
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "receipt_sha256": "d59e307bd281a05214983386b294016090a524cad4859d2aceeaae43e13cfd78",
+    "result_sha256": "7395b22d53ad976f9691971b7190890c6b932e4faac5660861a7af317b6e680b",
+    "results": [
+      {
+        "buffering": 0,
+        "bytes": 2097153,
+        "bytes_identical": true,
+        "elapsed_seconds": 2.0512957079336047,
+        "label": "unbuffered",
+        "recv_into_calls": 2097153
+      },
+      {
+        "buffering": 65536,
+        "bytes": 2097153,
+        "bytes_identical": true,
+        "elapsed_seconds": 0.002750959014520049,
+        "label": "buffered",
+        "recv_into_calls": 257
+      }
+    ],
+    "scope": "Local mechanism experiment; not historical Linux timing reproduction or native qualification"
+  },
+  "private_game_files_states_databases_included": false,
+  "schema": "fdisbull-scummvm-transport-fixture-repair-1",
+  "source_base": "85d6e122474e86263e79acba4e69eeea26550345"
+}

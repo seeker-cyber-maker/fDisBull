@@ -28,6 +28,11 @@ RUNTIME_WHEELS = {'fdisbull', 'fdisbull-player', 'iced-x86', 'capstone', 'lief',
 ELF_ROLES = {'python', 'loader', 'dosbox', 'qemu'}
 SINGLE_ROLES = REQUIRED_ROLES - {'firmware', 'license'}
 FORBIDDEN = {'.fdb', '.sav', '.state', '.png', '.jpg', '.jpeg', '.gif', '.bmp'}
+# QEMU's pinned upstream installer artwork is firmware-distribution material,
+# not a captured target image. This exception is exact-path, role and byte bound.
+QEMU_INSTALLER_BITMAP = 'native/qemu/share/qemu/qemu-nsis.bmp'
+QEMU_INSTALLER_BITMAP_SIZE = 154542
+QEMU_INSTALLER_BITMAP_SHA256 = '93f79a2b6e0f97bc7b7c75ded89a3c4c7657af37c087cf067470771e0affda9c'
 
 
 def sha256(path):
@@ -42,13 +47,14 @@ def is_elf64_x86_64(header):
     return len(header) >= 20 and header[:6] == b'\x7fELF\x02\x01' and struct.unpack_from('<H', header, 18)[0] == 62
 
 
-def destination(value):
+def destination(value, role=None):
     if not isinstance(value, str) or not value or '\\' in value:
         raise ValueError('invalid destination')
     p = PurePosixPath(value)
     if p.is_absolute() or any(part in ('.', '..') for part in value.split('/')) or not re.fullmatch(r'[A-Za-z0-9_+.,@/=-]+', value):
         raise ValueError(f'unsafe destination: {value}')
-    if any(part.startswith('.') for part in p.parts) or p.suffix.lower() in FORBIDDEN:
+    installer_bitmap = role == 'firmware' and value == QEMU_INSTALLER_BITMAP
+    if any(part.startswith('.') for part in p.parts) or (p.suffix.lower() in FORBIDDEN and not installer_bitmap):
         raise ValueError(f'private or hidden payload prohibited: {value}')
     if p.parts[0] in {'bin', 'MANIFEST.json', 'README.txt'}:
         raise ValueError(f'reserved destination: {value}')
@@ -95,7 +101,7 @@ def load_inventory(path):
     if not isinstance(entries, list) or not entries:
         raise ValueError('empty inventory')
     for item in entries:
-        target = str(destination(item['destination']))
+        target = str(destination(item['destination'], role=item.get('role', 'payload')))
         if target in paths:
             raise ValueError(f'duplicate destination: {target}')
         paths.add(target)
@@ -107,6 +113,9 @@ def load_inventory(path):
         if item.get('size') != src.stat().st_size or isinstance(item.get('size'), bool):
             raise ValueError(f'size mismatch: {src}')
         role = item.get('role', 'payload')
+        if target == QEMU_INSTALLER_BITMAP and (item['size'] != QEMU_INSTALLER_BITMAP_SIZE
+                or item['sha256'] != QEMU_INSTALLER_BITMAP_SHA256):
+            raise ValueError('QEMU installer bitmap identity mismatch')
         roles.setdefault(role, []).append(target)
         if role in ELF_ROLES:
             with src.open('rb') as f:
@@ -116,6 +125,15 @@ def load_inventory(path):
     profile = inventory.get('profile', 'prebuilt')
     if profile not in ('prebuilt', 'shared'):
         raise ValueError('unknown profile')
+    acceptance = inventory.get('windows_acceptance')
+    extra_roles = {'pe32_fixture', 'win16_fixture', 'win16_profile'}
+    if acceptance is None:
+        if extra_roles & roles.keys():
+            raise ValueError('extended Windows roles require explicit acceptance profile')
+    elif acceptance != 'pe64-pe32-win16' or profile != 'shared':
+        raise ValueError('unknown or incompatible Windows acceptance profile')
+    elif any(len(roles.get(role, [])) != 1 for role in extra_roles):
+        raise ValueError('extended Windows acceptance requires exactly one of each fixture and profile')
     required = REQUIRED_ROLES if profile == 'prebuilt' else (REQUIRED_ROLES - {'wine_initramfs', 'dos_initramfs'}) | {'runtime_base', 'runtime_recipe', 'runtime_preparer', 'windows_runtime_base', 'windows_runtime_recipe'}
     if profile == 'shared' and ({'wine_initramfs', 'dos_initramfs'} & roles.keys()):
         raise ValueError('shared profile must not contain prebuilt initramfs')
@@ -240,7 +258,11 @@ def wrapper(loader, target, python=False, module=None, qemu=False):
         command += ' -L "$ROOT/native/qemu/share/qemu"'
     return ('#!/bin/sh\nset -eu\nROOT=$(CDPATH= cd -- "${0%/*}/.." && pwd)\n'
             'unset PYTHONPATH PYTHONHOME LD_LIBRARY_PATH LD_PRELOAD\nexport PYTHONNOUSERSITE=1\n' +
-            ('export PYTHONHOME="$ROOT/python"\n' if python else '') +
+            # Keep libc in its built-in C locale while Python retains UTF-8
+            # text/path semantics. CPython's locale coercion would otherwise
+            # map the host's C.UTF-8 locale outside the immutable kit.
+            ('export PYTHONHOME="$ROOT/python"\n'
+             'export LC_ALL=C LANG=C PYTHONCOERCECLOCALE=0 PYTHONUTF8=1\n' if python else '') +
             'exec ' + command + ' "$@"\n')
 
 
@@ -257,7 +279,7 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
         profile = inventory.get('profile', 'prebuilt')
         delivered = [x for x in inventory['files'] if profile != 'shared' or not x['destination'].startswith('wheels/')]
         for item in delivered:
-            dst = root / str(destination(item['destination']))
+            dst = root / str(destination(item['destination'], role=item.get('role', 'payload')))
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(item['source'], dst)
             if sha256(dst) != item['sha256']:
@@ -284,6 +306,8 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
                 "  ./bin/fdisbull --help\n"
                 "  ./bin/fdisbull agent-skill --reference SKILL.md\n"
                 "  ./bin/player --help\n")
+        if any(item['destination'] == 'docs/START_HERE.md' for item in delivered):
+            text += "  Read docs/START_HERE.md for extraction, runtime preparation and scope.\n"
         if profile == 'shared':
             text += ("  ./bin/prepare-runtimes --cache /absolute/writable/cache\n"
                      "This prepares compact DOS and Wine PE64 images. The full Windows\n"
@@ -305,6 +329,8 @@ def build(inventory_path, output, compression='zip', max_bytes=2_000_000_000):
                   'wheel_artifacts': [{'name': Path(x['destination']).name, 'sha256': x['sha256'], 'size': x['size']} for x in inventory['files'] if x['destination'].startswith('wheels/')],
                   'files': [{k: v for k, v in x.items() if k != 'source'} for x in delivered] + generated,
                   'qualification': 'not-qualified-by-builder'}
+        if inventory.get('windows_acceptance') is not None:
+            public['windows_acceptance'] = inventory['windows_acceptance']
         (root / 'MANIFEST.json').write_text(json.dumps(public, indent=2, sort_keys=True) + '\n')
         if compression == 'zip':
             with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED, allowZip64=True) as archive:

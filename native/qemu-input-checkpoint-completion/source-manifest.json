@@ -1,0 +1,70 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Instrumented checkpoint admission for quiescent completed native input receipts",
+  "implementation_status": "One-object local native candidate frozen; bounded ATTT cold-restore/win/exit and affected native checkpoint guards passed",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-dos-save-stop",
+    "prerequisite_manifest_sha256": "8638c4d082f5ee2bb5a90a34357668b3af05f4f20bd8b226fad01de5aa8afd19",
+    "prerequisite_patch": "native/qemu-dos-save-stop/qemu-10.0.13-fdisbull-dos-save-stop-v1.patch",
+    "prerequisite_patch_sha256": "468f3bf0f1adb8f7d9f1dc11b822e983e180d892cbe1573a09a2f91dc583d195",
+    "prerequisite_binary_sha256": "8af033a259892808dd5b15b524f64145aa17a6dcf3a774dc6e8d2985c31e4d27",
+    "runtime": "R/native-runtime/save-safe-stop-runtime"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-input-checkpoint-completion-v1.patch",
+    "sha256": "967644facebf2ae48186bc27dfab6f2b02550ae56b343e06a87950b7ec270eb8",
+    "modified_file_count": 1,
+    "files": [
+      {
+        "path": "system/fdisbull-input.c",
+        "before_sha256": "6aa22e3bf639674f1bf6535b84290e59e5d32e8e4d3b0e2dbb46b80d6e1737a3",
+        "after_sha256": "4ea7a02a043c93293fc6655e1746dd1491eacf1b9ee98f31e75a6d47d1e158ed"
+      }
+    ]
+  },
+  "build": {
+    "platform": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "source_file": "/Volumes/CACHE/fdisbull-ci-builds/qemu-consolidation-20261113/input-checkpoint-completion-01/source/system/fdisbull-input.c",
+    "build_dir": "/Volumes/CACHE/fdisbull-ci-builds/qemu-consolidation-20261113/input-checkpoint-completion-01/build-n24",
+    "candidate_binary": "/Volumes/CACHE/fdisbull-ci-builds/qemu-consolidation-20261113/input-checkpoint-completion-01/frozen/qemu-system-x86_64-input-checkpoint-completion-01",
+    "candidate_binary_sha256": "d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d",
+    "candidate_binary_size": 24908408,
+    "strategy": "Copied existing N24 build objects/generated inputs and compiled only candidate system/fdisbull-input.c, then replayed exact retained link and macOS wrapper commands; no configure or generators.",
+    "receipt_path": "/Volumes/CACHE/fdisbull-ci-builds/qemu-consolidation-20261113/input-checkpoint-completion-01/build-receipt.json",
+    "receipt_sha256": "7cb762709e16347ab0a5e1b32436720bc5fdef188e2d2b7b1077dd3c94046a70",
+    "commands_file": "/Volumes/CACHE/fdisbull-ci-builds/qemu-consolidation-20261113/input-checkpoint-completion-01/build-receipt.json",
+    "compile_link_wrap_elapsed_seconds": 1.0145315418485552,
+    "copy_elapsed_seconds": 1.1413000409957021,
+    "accepted_parent_unchanged": true,
+    "ci": false
+  },
+  "contract": {
+    "input_api_version": 1,
+    "qmp_protocol_changed": false,
+    "vmstate_layout_changed": false,
+    "checkpoint_policy": "Same predicate governs instrumented capture/load preflight and bypass of only the exact input-owned migration blocker. Ordinary migration remains blocked.",
+    "completed_metadata": "Retained retrace/press/type/click/motion descriptors require DISPATCHED plus terminal/dispatch markers. Press/type/click dispatched_count must equal event_count.",
+    "quiescence": "No invalidation, ARMED or FAILED state; no batch, keyboard_next, click_next, keyboard/click batches, or pending initialized timer.",
+    "cancelled": "Retained CANCELLED incomplete descriptors remain refused. Descriptor-free legacy idle/quiescent cases remain admitted.",
+    "effects": "No dispatch, replay, synthesized release, descriptor deletion or guest-consumption inference is added.",
+    "compatibility": "New binary has a distinct identity. No cross-binary saved-state compatibility is claimed; retain accepted N24 and its original checkpoint artifacts."
+  },
+  "verification": {
+    "native_behavior_status": "5 focused native cases passed: actual ATTT input/save/RAM-layer edit/cold restore/repeated win/PNG/reset/guest exit; armed-input refusal; retained audio/display blockers; COM/MZ virtual mid-program restore",
+    "native_behavior_receipt": "R/qemu-consolidation-workflow-receipt-01.json",
+    "native_behavior_xml": "R/qemu-game-workflow-02.xml",
+    "limits": "Completed timed keyboard input demonstrated; typing/click/motion not newly qualified; no DOSBox winning-pixel comparison, broad campaign or cross-binary checkpoint proof",
+    "accepted_source_object_and_binary_hashes_unchanged": true,
+    "no_default_change": true,
+    "no_shared_installation": true,
+    "no_release_tag_merge": true,
+    "patch_replay": {
+      "status": "dry-run and apply passed; result matches built candidate source",
+      "receipt_path": "/Volumes/CACHE/fdisbull-ci-builds/qemu-consolidation-20261113/input-checkpoint-completion-01/patch-replay-receipt.json",
+      "receipt_sha256": "2ea4c8f769482ee159daa9bff8e7e5a6e519666cd181631bf74e58e7a13490a0"
+    }
+  }
+}

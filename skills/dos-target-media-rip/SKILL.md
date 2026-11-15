@@ -62,6 +62,10 @@ task-scoped overrides; tool read/output budgets are not storage authorization.
   [Smacker framing](references/smacker.md) and use `media-inspect --adapter smacker`
   followed by `smk-frame`. Unsupported profiles refuse. Preserve original audio,
   logical frames and duration; qualify original-game consumption separately.
+- **Old Interplay MVE or Castles II SLB:** read
+  [MVE framing and SLB playback](references/mve-slb.md). Preserve codec family,
+  original chunk-size bounds, audio and explicit ending-reference recovery;
+  SLB timing uses a recovered consumer profile, not guessed kHz.
 - **Coktel IMD in ITK/LTK:** read
   [format-aware framing](references/imd-itk-ltk.md). Recover and rebuild every
   linked archive/index/cache. The established Italian CD profile does not qualify

@@ -1,0 +1,1246 @@
+import base64
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import sqlite3
+import sys
+import time
+from types import SimpleNamespace
+
+import pytest
+
+SCRIPTS=Path(__file__).resolve().parents[1]/'scripts/ci'
+sys.path.insert(0,str(SCRIPTS))
+spec=importlib.util.spec_from_file_location('production_runtime',SCRIPTS/'production_runtime.py')
+r=importlib.util.module_from_spec(spec);spec.loader.exec_module(r)
+spec2=importlib.util.spec_from_file_location('evidence_fixtures',Path(__file__).with_name('test_production_evidence.py'))
+fixtures=importlib.util.module_from_spec(spec2);spec2.loader.exec_module(fixtures)
+
+
+def hashes():
+    result={}
+    for name in r.MODULES:
+        path=SCRIPTS/name
+        if name=='ci_status.py' and not path.exists():path=SCRIPTS.parent/name
+        result[name]=hashlib.sha256(path.read_bytes()).hexdigest()
+    return result
+
+
+class AttentionJournal:
+    """Isolated native-protocol fixture; it never calls a sender or live journal."""
+    def __init__(self,path,incident):
+        self.db=sqlite3.connect(path);self.db.execute('CREATE TABLE events (id TEXT PRIMARY KEY, payload BLOB)')
+        self.incident=incident;self.payloads=[];self.lose_first_ack=False
+
+    def __call__(self,argv,**kwargs):
+        assert argv[-2:]==['/usr/local/libexec/ci_incident.py','append']
+        payload=kwargs['input'];self.payloads.append(payload);event=json.loads(payload)
+        assert set(event)=={'dedupe_key','phase','reason','test','context'}
+        assert event['dedupe_key']=='controller-attention:'+self.incident.name
+        assert event['phase']=='attention' and event['reason']=='ci_executor_unavailable'
+        assert set(event['context'])=={'provider','project','run_id','job_id','commit_sha','job_name','receipt_path'}
+        assert event['context']['receipt_path']==str(self.incident/'controller-attention-state.json')
+        native_id='ci_'+hashlib.sha256(event['dedupe_key'].encode()).hexdigest()[:40]
+        event_id='conn_'+native_id+'_attention'
+        old=self.db.execute('SELECT payload FROM events WHERE id=?',(event_id,)).fetchone()
+        if old:assert old[0]==payload
+        else:self.db.execute('INSERT INTO events VALUES (?,?)',(event_id,payload));self.db.commit()
+        if self.lose_first_ack and len(self.payloads)==1:
+            return SimpleNamespace(returncode=1,stdout=b'')
+        return SimpleNamespace(returncode=0,stdout=json.dumps({'stage':'journaled','event_id':event_id,
+            'incident_id':native_id,'phase':'attention','already_present':old is not None,
+            'delivery_status':'not_observed_here','execution_performed':False}).encode())
+
+
+@pytest.fixture
+def controller_attention(tmp_path,monkeypatch):
+    recovery=tmp_path/'recovery';recovery.mkdir(mode=0o700)
+    root=recovery/'production';root.mkdir(mode=0o700)
+    incidents=root/'incidents';incidents.mkdir(mode=0o700)
+    key='d'*64;incident=incidents/key;incident.mkdir(mode=0o700)
+    export=tmp_path/'results';export.mkdir();lock=tmp_path/'executor.lock';lock.touch()
+    monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
+    target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
+            'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
+    manifest={'incident_id':key,'project':r.REPO,'initial_target':target,'required_artifacts':sorted(r.evidence_module.ORDINARY),
+              'deadline_epoch':time.time()+600,'max_infrastructure_repairs':1,'max_source_repairs':1}
+    state={'manifest':manifest,'target':dict(target),'status':'attention','phase':'attention',
+           'reason':'observation-unknown-or-mismatch','observations':[],'evidence':[],'actions':[],
+           'classifications':[],'health':[],'counts':{'infrastructure':0,'source':0},'notifications':[]}
+    calls=[]
+    def forbidden(*args,**kwargs):
+        calls.append('external/work');pytest.fail('notification must not call provider, health, model, job or repair')
+    sentinel=SimpleNamespace(reserve=forbidden,request=forbidden,for_action=forbidden,prepare=forbidden,repair=forbidden)
+    config={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),
+            'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
+                      'control_sha':target['control_sha'],'ref':target['ref'],'profile':'ordinary','sole_executor_authority':True,
+                      'export_root':str(export)},'module_sha256':hashes(),'incident_test':True,'max_incident_seconds':600}
+    journal=AttentionJournal(tmp_path/'journal.sqlite',incident)
+    runtime=r.Runtime(config,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,
+        lease_check=lambda:True,transport_factory=lambda provider:sentinel,source_transport=sentinel,
+        host_factory=forbidden,health_capture=forbidden,incident_runner=journal)
+    def save(value):r.control_module.write_json(incident/'state.json',value)
+    r.control_module.write_json(incident/'manifest.json',manifest,exclusive=True);save(state)
+    yield SimpleNamespace(runtime=runtime,key=key,incident=incident,state=state,manifest=manifest,save=save,
+                          journal=journal,calls=calls,forbidden=forbidden)
+    journal.db.close()
+
+
+def test_first_observation_unknown_journals_only_controller_attention(controller_attention):
+    f=controller_attention;state=json.loads(json.dumps(f.state));state['status']='pending';state['phase']='observe';state.pop('reason')
+    f.save(state);observed=[]
+    def unknown(target):observed.append(target);raise RuntimeError('canonical observation unavailable')
+    backend=SimpleNamespace(observe=unknown,emit=lambda phase,current:f.runtime._emit(f.key,phase,current),
+                            health=f.forbidden,perform=f.forbidden,classify=f.forbidden,retain=f.forbidden)
+    controller=r.control_module.RecoveryController(f.incident/'state.json',f.manifest,backend)
+    f.runtime._cleanup_unknown=True  # Notification-only guards do not operate an uncertain worker.
+    final=controller.step()
+    assert len(observed)==1 and final['reason']=='observation-unknown-or-mismatch'
+    assert [n['phase'] for n in final['notifications']]==['attention']
+    assert final['notifications'][0]['journal_receipt']['stage']=='journaled'
+    assert controller.step()==final and len(observed)==1
+    assert f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert [json.loads(p)['phase'] for p in f.journal.payloads]==['attention']
+    event=json.loads(f.journal.payloads[0]);assert event['test'] is True
+    assert event['context']['commit_sha']==f.state['target']['source_sha'] and not f.calls
+    snapshot=json.loads((f.incident/'controller-attention-state.json').read_text())
+    assert snapshot['notifications']==[] and snapshot['observations']==snapshot['evidence']==snapshot['actions']==[]
+
+
+def test_controller_attention_reentry_latches_original_bytes_and_event(controller_attention):
+    f=controller_attention;receipt=f.runtime._emit(f.key,'attention',f.state)
+    snapshot=f.incident/'controller-attention-state.json';original=snapshot.read_bytes();identity=snapshot.stat()
+    assert original==(f.incident/'state.json').read_bytes()
+    current=json.loads(json.dumps(f.state));current['notifications']=[{'phase':'attention','journal_receipt':receipt}]
+    f.save(current)
+    assert f.runtime._emit(f.key,'attention',current)==receipt
+    current['notifications'].append({'phase':'attention','error':'RuntimeError'});f.save(current)
+    assert f.runtime._emit(f.key,'attention',current)==receipt
+    assert snapshot.read_bytes()==original and snapshot.stat().st_ino==identity.st_ino
+    assert snapshot.stat().st_mtime_ns==identity.st_mtime_ns
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert not f.calls
+
+
+def test_controller_attention_keeps_configured_test_flag_immutable(controller_attention):
+    f=controller_attention;f.runtime.config['incident_test']=False
+    f.runtime._emit(f.key,'attention',f.state)
+    assert json.loads(f.journal.payloads[0])['test'] is False
+    f.journal.payloads.clear();f.runtime.config['incident_test']=True
+    with pytest.raises(ValueError,match='snapshot binding changed'):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+def test_verified_paired_attention_keeps_existing_lifecycle_contract(controller_attention):
+    f=controller_attention;receipt=f.incident/'paired-evidence.json';receipt.write_text('{}');receipt.chmod(0o600)
+    target=f.state['target'];state={'observations':[{**target,'status':'failed'}],
+        'evidence':[{'status':'export-verified','job_status':'failed','target':target,'receipt_path':str(receipt)}]}
+    events=[]
+    f.runtime._incident_runner=lambda *args,**kwargs:events.append(json.loads(kwargs['input'])) or SimpleNamespace(returncode=0)
+    assert f.runtime._emit(f.key,'attention',state)=={'stage':'journaled','phase':'attention'}
+    assert events[0]['dedupe_key']==f.key and events[0]['reason']=='ci_repair_failed'
+    assert events[0]['context']['receipt_path']==str(receipt)
+    assert not (f.incident/'controller-attention-state.json').exists()
+
+
+@pytest.mark.parametrize('field,value',[
+    ('reason','health-unknown'),('status','complete'),('phase','observe'),
+    ('observations',{}),('evidence',{}),('actions',[{}]),('classifications',[{}]),('health',[{}]),
+    ('counts',{'infrastructure':False,'source':0}),('counts',{'infrastructure':1,'source':0}),
+    ('counts',{'infrastructure':0,'source':0,'other':0}),('notifications',[{'phase':'attention','error':'RuntimeError'}]),
+])
+def test_controller_attention_refuses_noninitial_or_worked_state(controller_attention,field,value):
+    f=controller_attention;f.state[field]=value;f.save(f.state)
+    with pytest.raises((ValueError,TypeError)):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads and not (f.incident/'controller-attention-state.json').exists() and not f.calls
+
+
+@pytest.mark.parametrize('change',['manifest-id','manifest-project','disk-manifest','target','extra-target','profile'])
+def test_controller_attention_requires_actual_manifest_and_full_target(controller_attention,change):
+    f=controller_attention
+    if change=='manifest-id':f.state['manifest']['incident_id']='e'*64
+    elif change=='manifest-project':f.state['manifest']['project']='other/project'
+    elif change=='disk-manifest':
+        altered={**f.manifest,'project':'other/project'};r.control_module.write_json(f.incident/'manifest.json',altered)
+    elif change=='target':f.state['target']['source_sha']='f'*40
+    elif change=='extra-target':f.state['target']['unexpected']='field'
+    else:f.runtime.config['github']['profile']='native'
+    if change in ('manifest-id','manifest-project'):r.control_module.write_json(f.incident/'manifest.json',f.state['manifest'])
+    f.save(f.state)
+    with pytest.raises(ValueError):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads and not f.calls
+
+
+@pytest.mark.parametrize('filename',['manifest.json','state.json','controller-attention-state.json','controller-attention-binding.json'])
+@pytest.mark.parametrize('kind',['mode','symlink','special'])
+def test_controller_attention_refuses_unsafe_private_files(controller_attention,filename,kind):
+    f=controller_attention
+    if filename.startswith('controller-attention'):f.runtime._emit(f.key,'attention',f.state)
+    f.journal.payloads.clear();path=f.incident/filename
+    if kind=='mode':path.chmod(0o644)
+    else:
+        saved=path.with_name(filename+'.original');path.rename(saved)
+        if kind=='symlink':path.symlink_to(saved)
+        else:os.mkfifo(path,0o600)
+    with pytest.raises(ValueError):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+def test_controller_attention_requires_owner_lease_source_and_exact_disk_state(controller_attention,monkeypatch):
+    f=controller_attention
+    with monkeypatch.context() as patch:
+        patch.setattr(r.os,'geteuid',lambda:f.incident.stat().st_uid+1)
+        with pytest.raises(ValueError,match='private'):f.runtime._emit(f.key,'attention',f.state)
+    f.runtime._lease_check=lambda:False
+    with pytest.raises(RuntimeError,match='lease'):f.runtime._emit(f.key,'attention',f.state)
+    f.runtime._lease_check=lambda:True
+    f.runtime.hashes['production_runtime.py']='0'*64
+    with pytest.raises(RuntimeError,match='source identity'):f.runtime._emit(f.key,'attention',f.state)
+    f.runtime.hashes=hashes();f.state['reason']='changed-only-in-memory'
+    with pytest.raises(ValueError,match='differs from disk'):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+@pytest.mark.parametrize('value',[False,0.0])
+def test_controller_attention_disk_equality_preserves_strict_zero_count_type(controller_attention,value):
+    f=controller_attention;disk=json.loads(json.dumps(f.state));disk['counts']['infrastructure']=value;f.save(disk)
+    with pytest.raises(ValueError,match='differs from disk'):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads and not (f.incident/'controller-attention-state.json').exists()
+
+
+def test_controller_attention_rejects_private_file_with_another_owner(controller_attention,monkeypatch):
+    f=controller_attention;actual_fstat=r.os.fstat
+    def another_owner(fd):
+        info=actual_fstat(fd)
+        return SimpleNamespace(st_mode=info.st_mode,st_uid=info.st_uid+1,st_nlink=info.st_nlink,
+                               st_size=info.st_size,st_dev=info.st_dev,st_ino=info.st_ino)
+    monkeypatch.setattr(r.os,'fstat',another_owner)
+    with pytest.raises(ValueError,match='private controller attention file'):
+        f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+@pytest.mark.parametrize('kind',['mode','symlink','incident-id'])
+def test_controller_attention_rejects_unsafe_incident_directory(controller_attention,kind):
+    f=controller_attention;key=f.key
+    if kind=='mode':f.incident.chmod(0o755)
+    elif kind=='symlink':
+        other=f.incident.with_name('original');f.incident.rename(other);f.incident.symlink_to(other,target_is_directory=True)
+    else:key='D'*64
+    with pytest.raises(ValueError):f.runtime._emit(key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+@pytest.mark.parametrize('change',['snapshot-bytes','binding-bytes','manifest-bytes','work','bookkeeping'])
+def test_controller_attention_refuses_snapshot_tampering_or_reentry_work(controller_attention,change):
+    f=controller_attention;receipt=f.runtime._emit(f.key,'attention',f.state);f.journal.payloads.clear()
+    if change in ('snapshot-bytes','binding-bytes','manifest-bytes'):
+        filename={'snapshot-bytes':'controller-attention-state.json','binding-bytes':'controller-attention-binding.json','manifest-bytes':'manifest.json'}[change]
+        path=f.incident/filename;path.chmod(0o600);path.write_bytes(path.read_bytes()+b' ')
+    elif change=='work':f.state['actions']=[{}];f.save(f.state)
+    else:f.state['notifications']=[{'phase':'down','journal_receipt':receipt}];f.save(f.state)
+    with pytest.raises(ValueError):f.runtime._emit(f.key,'attention',f.state)
+    assert not f.journal.payloads
+
+
+def test_controller_attention_lost_append_ack_retries_identical_payload_once(controller_attention):
+    f=controller_attention;f.journal.lose_first_ack=True
+    assert f.runtime._emit(f.key,'attention',f.state)['stage']=='journaled'
+    assert len(f.journal.payloads)==2 and f.journal.payloads[0]==f.journal.payloads[1]
+    assert f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1 and not f.calls
+
+
+def test_controller_attention_rechecks_snapshot_before_uncertain_append_retry(controller_attention):
+    f=controller_attention;calls=[]
+    def runner(*args,**kwargs):
+        calls.append(kwargs['input']);path=f.incident/'controller-attention-state.json'
+        path.chmod(0o600);path.write_bytes(path.read_bytes()+b' ')
+        return SimpleNamespace(returncode=1,stdout=b'')
+    f.runtime._incident_runner=runner
+    with pytest.raises(ValueError,match='changed before journal append'):
+        f.runtime._emit(f.key,'attention',f.state)
+    assert len(calls)==1
+
+
+@pytest.mark.parametrize('failure',['runner','unstructured','structured','wrong-id','wrong-event','wrong-phase','wrong-stage','execution','execution-int'])
+def test_controller_attention_never_reports_journaled_without_native_reply(controller_attention,failure):
+    f=controller_attention;calls=[]
+    def runner(*args,**kwargs):
+        calls.append(kwargs['input'])
+        if failure=='runner':raise OSError('append unavailable')
+        if failure=='unstructured':return SimpleNamespace(returncode=1,stdout=b'unknown')
+        if failure=='structured':return SimpleNamespace(returncode=1,stdout=b'{"stage":"rejected"}')
+        key='controller-attention:'+f.key;native='ci_'+hashlib.sha256(key.encode()).hexdigest()[:40]
+        reply={'stage':'journaled','incident_id':native,'event_id':'conn_'+native+'_attention',
+               'phase':'attention','already_present':False,'delivery_status':'not_observed_here','execution_performed':False}
+        if failure=='wrong-id':reply['incident_id']='ci_'+'0'*40
+        elif failure=='wrong-event':reply['event_id']='conn_'+native+'_down'
+        elif failure=='wrong-phase':reply['phase']='down'
+        elif failure=='wrong-stage':reply['stage']='delivered'
+        else:reply['execution_performed']=0 if failure=='execution-int' else True
+        return SimpleNamespace(returncode=0,stdout=json.dumps(reply).encode())
+    f.runtime._incident_runner=runner
+    with pytest.raises(RuntimeError):f.runtime._emit(f.key,'attention',f.state)
+    assert len(calls)==(2 if failure in ('runner','unstructured') else 1)
+    assert len(set(calls))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==0
+    assert not f.calls
+
+
+def test_runtime_transfers_production_sized_closed_junit_to_source_validator(tmp_path, monkeypatch):
+    recovery = tmp_path / 'recovery'; recovery.mkdir()
+    export = tmp_path / 'results'; export.mkdir()
+    monkeypatch.setattr(r, 'RECOVERY', recovery); monkeypatch.setattr(r, 'EXPORT', export)
+    target = {'provider': 'github', 'repository': r.REPO, 'run_id': '11', 'run_attempt': '1',
+              'job_id': '22', 'source_sha': 'a' * 40, 'job_name': 'qualification', 'runner_id': '21',
+              'ref': 'codex/production-ci-recovery-20261113', 'control_sha': 'b' * 40}
+    rows = ['<testcase classname="tests.test_bulk_export_compatibility_long_module_name_with_production_metadata" '
+            f'name="test_case_{i:05d}" time="0.000000" />' for i in range(14179)]
+    rows.append('<testcase classname="tests.test_example" name="test_value"><failure>assertion failed</failure></testcase>')
+    junit = ('<testsuite tests="14180" failures="1" errors="0">' + ''.join(rows) + '</testsuite>').encode()
+    assert len(junit) > 1700000
+    folder = export / 'github/11/1/qualification/22'; (folder / 'exported/artifacts/ordinary').mkdir(parents=True)
+    (folder / 'exported/artifacts/ordinary/tests.xml').write_bytes(junit)
+    job = {'schema': 'fdisbull-production-job-export-1', **{k: v for k, v in target.items() if k != 'provider'},
+           'job_status': 'failed', 'export_success': True}
+    fixtures.write(folder / 'job.json', job)
+    fixtures.write(folder / 'inventory.json', [{'path': r.source_module.JUNIT, 'size': len(junit),
+                                               'sha256': hashlib.sha256(junit).hexdigest()}])
+    receipt = recovery / 'evidence.json'
+    fixtures.write(receipt, {'schema': 'fdisbull-production-evidence-1', 'target': target, 'job_status': 'failed',
+                            'export_job_sha256': hashlib.sha256((folder / 'job.json').read_bytes()).hexdigest(),
+                            'inventory_sha256': hashlib.sha256((folder / 'inventory.json').read_bytes()).hexdigest()})
+    receipt.chmod(0o600)
+    evidence = {'status': 'export-verified', 'job_status': 'failed', 'target': target, 'receipt_path': str(receipt),
+                'host_export_verified': True, 'closed_inventory_verified': True,
+                'source_postcheck_verified': True, 'provider_trace_verified': True}
+    bundle, binding = object.__new__(r.Runtime)._source_bundle(target, evidence)
+    # Files stay in the isolated fixture; the wire identity represents the
+    # fixed VPS installation path expected by the independent Mac receiver.
+    bundle = {**bundle, 'evidence_receipt_path': '/var/lib/fdisbull-ci/control/recovery/production/fixture/evidence.json'}
+    actual_target, actual_junit, event = r.source_module.validate_bundle(bundle)
+    assert actual_target == target and actual_junit == junit and len(event) == 64
+    assert len(binding) == 64
+    assert r.source_module.select_node(actual_junit, ['tests/test_example.py']) == 'tests/test_example.py::test_value'
+
+
+def make_export(root,target,status,policy_sha):
+    folder=root/'github'/target['run_id']/target['run_attempt']/'qualification'/target['job_id'];exported=folder/'exported';exported.mkdir(parents=True)
+    if status=='success':fixtures.ordinary(exported,target)
+    else:fixtures.write(exported/'artifacts/recovery/diagnostic.json',{'kind':'infrastructure','reason':'missing_ci_owned_input',
+         'input_key':'qualification-policy','expected_sha256':policy_sha,'target':target})
+    identity={k:v for k,v in target.items() if k!='provider'}
+    fixtures.write(folder/'candidate-start.json',{'schema':'fdisbull-github-candidate-start-1',**identity,
+          'candidate_head':target['source_sha'],'control_head':target['control_sha'],'nonce':'verified'})
+    fixtures.write(folder/'caller-health.json',{'target':identity})
+    fixtures.write(folder/'source-postcheck.json',{'source_commit':target['source_sha'],'expected_source_commit':target['source_sha'],
+          'tracked_worktree_dirty':False,'export_success':True})
+    fixtures.write(folder/'qualification.log',b'private qualifier log')
+    fixtures.write(folder/'system-preparation.log',b'system prepared' if status=='success' else b'')
+    fixtures.write(folder/'system-preparation.json',{'status':'passed' if status=='success' else 'skipped',
+          'steps':[{'name':'update','passed':True}] if status=='success' else [],'capture_limit_bytes':4*1024*1024})
+    inventory=[fixtures.ident(p,exported) for p in sorted(exported.rglob('*')) if p.is_file()]
+    fixtures.write(folder/'inventory.json',inventory)
+    meta={'schema':'fdisbull-production-job-export-1',**identity,'job_status':status,'qualification_exit_code':int(status!='success'),
+          'export_success':True,'files':len(inventory),'project_directory':'/candidate','finished_at':'2026-11-14T00:00:00+00:00',
+          'log':{'total_bytes':21,'retained_bytes':21,'truncated':False},
+          'qualification_stage':'ordinary-tests' if status=='success' else 'policy-preflight'}
+    for name in ('candidate-start.json','caller-health.json','source-postcheck.json','inventory.json','qualification.log',
+                 'system-preparation.json','system-preparation.log'):
+        x=fixtures.ident(folder/name,folder);meta[name]={'size':x['size'],'sha256':x['sha256']}
+    fixtures.write(folder/'job.json',meta)
+
+
+class FakeProvider:
+    def __init__(self,target,active,clock=time.time):self.target=target;self.active=active;self.clock=clock;self.attempt=1;self.posts=0;self.proofs={};self.reservations=0
+    def reserve(self):self.reservations+=1;return {'allowed':True,'reason':'reserved','next_refresh_at':self.clock()+300}
+    def receipt(self,key):return {'receipt':self.proofs.get(key)}
+    def for_action(self,key):
+        def send(method,path,payload):
+            assert self.active.is_file() and self.posts==0
+            self.posts+=1;self.attempt=2
+            return {'http_status':201,'data':None,'request_id':None}
+        return send
+    def request(self,method,path,payload=None):
+        n=2 if '/attempts/2' in path or path.endswith('/jobs/23') else 1
+        if path.endswith('/runs/11'):n=self.attempt
+        run={'id':11,'run_attempt':n,'head_sha':self.target['control_sha'],'head_branch':self.target['ref'],
+             'repository':{'full_name':r.REPO}}
+        job={'id':22 if n==1 else 23,'run_id':11,'name':'qualification','head_sha':self.target['control_sha'],
+             'runner_id':21,'status':'completed','conclusion':'failure' if n==1 else 'success'}
+        if '/jobs?' in path:data={'total_count':1,'jobs':[job]}
+        elif path.endswith('/jobs/22') or path.endswith('/jobs/23'):data=job
+        elif '/runs/11' in path:data=run
+        else:raise AssertionError(path)
+        return {'http_status':200,'data':data,'request_id':None}
+
+
+def test_full_recovery_composes_real_evidence_policy_and_controller(tmp_path,monkeypatch,capsys):
+    recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700);root.chmod(0o700)
+    export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
+    monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
+    policy_dir=tmp_path/'policy';policy_dir.mkdir(mode=0o700);canonical=policy_dir/'qualification-policy.canonical.json'
+    policy_bytes=b'{"authorized":true}\n';canonical.write_bytes(policy_bytes);canonical.chmod(0o400)
+    inputs=policy_dir/'job-inputs';inputs.mkdir(mode=0o700);active=inputs/'qualification-policy.json'
+    monkeypatch.setattr(r.policy_module,'CANONICAL_POLICY',canonical);monkeypatch.setattr(r.policy_module,'ACTIVE_POLICY',active)
+    monkeypatch.setattr(r.policy_module,'ACTIVE_ROOT',inputs)
+    monkeypatch.setattr(r.policy_module,'EXPECTED_SHA256',hashlib.sha256(policy_bytes).hexdigest())
+    target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
+            'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
+    make_export(export,target,'failed',r.policy_module.EXPECTED_SHA256)
+    second={**target,'run_attempt':'2','job_id':'23'};make_export(export,second,'success',r.policy_module.EXPECTED_SHA256)
+    now=[time.time()];clock=lambda:now[0]
+    provider=FakeProvider(target,active,clock);events=[];secret_trace=b'private trace do not display'
+    def trace(t,tr):return {'encoding':'base64','data':base64.b64encode(secret_trace).decode(),
+                            'size':len(secret_trace),'sha256':hashlib.sha256(secret_trace).hexdigest()}
+    class Host:
+        def __init__(self,config,state,tr,*args,**kwargs):self.tr=tr;self.state=Path(state)
+        def source_binding(self,t,run,job):
+            start=json.loads((export/'github'/t['run_id']/t['run_attempt']/'qualification'/t['job_id']/'candidate-start.json').read_text())
+            assert start['candidate_head']==t['source_sha'] and str(job['id'])==t['job_id']
+            return {'verified':True,'target':t,'receipt_path':'candidate-start'}
+        def capture_provider(self,o):
+            t={k:o[k] for k in r.production.SCHEMAS['github']};base='/repos/'+r.REPO+'/actions'
+            run=self.tr.request('GET',base+'/runs/'+t['run_id']+'/attempts/'+t['run_attempt'])['data']
+            job=self.tr.request('GET',base+'/jobs/'+t['job_id'])['data']
+            return {'verified':True,'target':t,'job_status':o['status'],'metadata':{'run':run,'job':job},'trace':trace(t,self.tr)}
+        def after_acceptance(self,*args):assert active.read_bytes()==policy_bytes
+        def resolve_dispatch(self,*args):return None
+    cfg={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),
+         'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
+                   'control_sha':target['control_sha'],'ref':target['ref'],'profile':'ordinary',
+                   'sole_executor_authority':True,'export_root':str(export)},'module_sha256':hashes(),'incident_test':True,'max_incident_seconds':600}
+    def health(path):path.write_text('{}');return {'continue':True}
+    def journal(argv,**kw):events.append(json.loads(kw['input']));return SimpleNamespace(returncode=0)
+    runtime=r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,
+        transport_factory=lambda p:provider,host_factory=Host,health_capture=health,incident_runner=journal,clock=clock)
+    cfg.update(schema='fdisbull-production-ci-config-1',enabled=True,installation_id='fixture',activated_epoch=1,max_incident_seconds=600)
+    r.control_module.write_json(root/'installation.json',{'schema':'fdisbull-production-state-1','installation_id':'fixture'},exclusive=True)
+    with r.control_module.FailureInbox(root/'failure-inbox.sqlite'):pass
+    service=r.control_module.ProductionService(cfg,lambda config,state,lease:runtime,clock=clock,sleeper=lambda seconds:now.__setitem__(0,now[0]+seconds))
+    final=service.run()
+    assert final['status']=='complete' and final['target']==second and provider.posts==1
+    assert active.read_bytes()==policy_bytes
+    assert [e['phase'] for e in events]==['down','recovered'] and all(e['test'] for e in events)
+    assert secret_trace.decode() not in json.dumps(events) and secret_trace.decode() not in capsys.readouterr().out
+    assert len(list((root/'incidents').glob('*/evidence/*.trace')))==2
+
+
+def test_reservation_reused_then_renewed_after_long_listener():
+    now=[1000.0]
+    class Raw:
+        def __init__(self):self.reservations=0;self.gets=0
+        def reserve(self):self.reservations+=1;return {'allowed':True,'reason':'reserved','next_refresh_at':now[0]+300}
+        def request(self,*args):self.gets+=1;return {'http_status':200,'data':{}}
+    raw=Raw();gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github')
+    assert gate.prepare()['allowed'] and gate.prepare()['reason']=='active_batch'
+    assert gate.request('GET','/x')['http_status']==200 and raw.reservations==1
+    now[0]=1301
+    assert gate.request('GET','/x')['http_status']==200 and raw.reservations==2
+
+
+def test_delayed_gui_read_renews_expiring_batch_before_one_http_call():
+    now=[1280.0];sleeps=[];guards=[]
+    class Raw:
+        request_budget=2
+        request_window_seconds=180
+        def __init__(self):self.expiry=1300.0;self.reservations=[];self.http_calls=0
+        def reserve(self):
+            self.reservations.append(now[0]);self.expiry=now[0]+300
+            return {'allowed':True,'reason':'reserved','next_refresh_at':self.expiry}
+        def request(self,*args):
+            now[0]+=20  # The GUI handoff occurs after the local admission check.
+            if now[0]>=self.expiry:raise RuntimeError('remote batch expired before HTTP')
+            self.http_calls+=1;return {'http_status':200,'data':{}}
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    raw=Raw();gate=r._GatedTransport(raw,lambda:guards.append(now[0]),lambda:now[0],'github')
+    gate.expires=1300.0;gate.remaining=88
+    gate.sleeper=sleep;gate.health=lambda:{'state':'healthy'}
+    assert gate.request('GET','/fixed/read')['http_status']==200
+    assert raw.reservations==[1300.0] and sleeps==[20.0] and raw.http_calls==1
+    assert gate.remaining==98 and guards
+
+
+def test_actual_gui_two_get_http_starts_fit_fresh_window_not_reply_deadline():
+    now=[1280.0];batch=[1300.0];starts=[];reservations=[];sleeps=[];health=[]
+    class Client:
+        def call(self,kind,doc,**kwargs):
+            assert kind=='provider' and kwargs['timeout']==60
+            if doc['operation']=='reserve':
+                reservations.append(now[0]);batch[0]=now[0]+300
+                return {'allowed':True,'next_refresh_at':batch[0],'reason':'reserved'}
+            assert doc['method']=='GET'
+            now[0]+=60;starts.append(now[0]);assert now[0]<batch[0]
+            now[0]+=45  # Retained result lookup may finish after the start window.
+            if len(starts)==1:raise r.gui_client_module.CompletedGuiFailure('runner_nonzero',1)
+            return {'http_status':200,'data':{}}
+    raw=r.gui_client_module.GuiProviderTransport('github',Client())
+    assert raw.request_window_seconds==180 and raw.action_window_seconds==75 and raw.request_budget==2
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github',sleeper=sleep,
+                           health=lambda:health.append(now[0]) or {'state':'healthy'},deadline=2000)
+    gate.expires=1300;gate.remaining=88
+    assert gate.request('GET','/fixed/read')['http_status']==200
+    assert reservations==[1300] and sleeps==[20] and health==[1280]
+    assert starts==[1360,1465] and starts[-1]-reservations[0]==165
+    assert now[0]-reservations[0]==210 and gate.remaining==98
+
+
+def test_gui_post_is_sent_once_even_if_reply_finishes_after_batch_expiry():
+    now=[1220.0];starts=[]
+    class Client:
+        def call(self,kind,doc,**kwargs):
+            assert doc['method']=='POST' and kwargs['key']=='provider-action:owned'
+            now[0]+=60;starts.append(now[0]);assert now[0]<1300
+            now[0]+=45
+            return {'http_status':201,'data':None}
+    raw=r.gui_client_module.GuiProviderTransport('github',Client())
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github');gate.expires=1300;gate.remaining=88
+    assert gate.for_action('owned')('POST','/fixed/action',{})['http_status']==201
+    assert starts==[1280] and now[0]==1325 and gate.remaining==87
+
+
+def test_gui_post_completed_failure_is_not_replayed():
+    calls=[]
+    class Client:
+        def call(self,*args,**kwargs):calls.append((args,kwargs));raise r.gui_client_module.CompletedGuiFailure('runner_nonzero',1)
+    raw=r.gui_client_module.GuiProviderTransport('github',Client())
+    gate=r._GatedTransport(raw,lambda:None,lambda:1000,'github');gate.expires=1300;gate.remaining=100
+    with pytest.raises(r.gui_client_module.CompletedGuiFailure):gate.for_action('owned')('POST','/fixed/action',{})
+    assert len(calls)==1 and gate.remaining==99
+
+
+def test_gitlab_action_window_covers_actual_principal_get_then_post(tmp_path):
+    import contextlib
+    now=[1220.0];batch=[1300.0];starts=[];reserves=[];sleeps=[]
+    bridge=object.__new__(r.transport_module.ProviderBridge)
+    bridge.principal=(43957127,'TiGa-RCE');bridge._ensure=lambda:None
+    bridge._bridge_lock=contextlib.nullcontext
+    bridge._file=lambda key:tmp_path/(hashlib.sha256(key.encode()).hexdigest()+'.json')
+    bridge._save_mirrored=lambda path,value:path.write_text(json.dumps(value))
+    def send(provider,method,path,payload,raw):
+        if now[0]>=batch[0]:raise RuntimeError('remote batch expired before GitLab '+method)
+        starts.append((method,path,now[0]))
+        if method=='GET':
+            assert path=='user';now[0]+=30
+            return {'http_status':200,'data':{'id':43957127,'username':'TiGa-RCE'},'request_id':None}
+        return {'http_status':201,'data':{'id':23},'request_id':None}
+    bridge._send=send
+    class Client:
+        def call(self,kind,doc,**kwargs):
+            assert kind=='provider'
+            if doc['operation']=='reserve':
+                reserves.append(now[0]);batch[0]=now[0]+300
+                return {'allowed':True,'next_refresh_at':batch[0]}
+            now[0]+=60  # GUI handoff before actual ProviderBridge.request().
+            return bridge.request(doc['provider'],doc['method'],doc['path'],doc['payload'],doc['action_key'])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    raw=r.gui_client_module.GuiProviderTransport('gitlab',Client())
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'gitlab',sleeper=sleep,health=lambda:{'state':'healthy'})
+    gate.expires=1300;gate.remaining=88
+    assert gate.for_action('owned')('POST','/projects/88349936/jobs/22/retry',{})['data']=={'id':23}
+    assert raw.action_window_seconds==110 and raw.request_window_seconds==180
+    assert reserves==[1300] and sleeps==[60,20]
+    assert starts==[('GET','user',1360),('POST','/projects/88349936/jobs/22/retry',1390)]
+    assert gate.remaining==98
+
+
+@pytest.mark.parametrize('unhealthy',[False,True])
+def test_window_wait_checks_health_and_renews_only_at_normal_expiry(unhealthy):
+    now=[1200.0];sleeps=[];health=[];reserves=[];http=[];guards=[]
+    class Raw:
+        request_budget=2;request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);return {'allowed':True,'next_refresh_at':now[0]+300}
+        def request(self,*args):http.append(now[0]);return {'http_status':200}
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    def check_health():health.append(now[0]);return {'state':'unhealthy' if unhealthy else 'healthy'}
+    gate=r._GatedTransport(Raw(),lambda:guards.append(now[0]),lambda:now[0],'github',sleeper=sleep,health=check_health)
+    gate.expires=1300;gate.remaining=88
+    assert gate.prepare(2,180)=={'allowed':False,'reason':'cooldown','next_refresh_at':1300}
+    if unhealthy:
+        with pytest.raises(RuntimeError,match='health'):gate.request('GET','/fixed/read')
+        assert not sleeps and not reserves and not http
+    else:
+        assert gate.request('GET','/fixed/read')['http_status']==200
+        assert sleeps==[60,40] and health==[1200,1260] and reserves==[1300] and http==[1300]
+    assert guards
+
+
+def test_exhausted_gui_count_waits_for_expiry_then_denied_reservation_sends_no_http():
+    now=[1280.0];reserves=[];http=[];sleeps=[]
+    class Raw:
+        request_budget=2;request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);return {'allowed':False,'reason':'quota'}
+        def request(self,*args):http.append(args);raise AssertionError('denied provider call')
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,health=lambda:{'state':'healthy'})
+    gate.expires=1300;gate.remaining=1
+    with pytest.raises(RuntimeError,match='reservation unavailable'):gate.request('GET','/fixed/read')
+    assert reserves==[1300] and sleeps==[20] and not http and gate.remaining==1
+
+
+def test_new_reservation_must_still_fit_declared_execution_window():
+    now=[1000.0];reserves=[]
+    class Raw:
+        def reserve(self):reserves.append(now[0]);now[0]+=10;return {'allowed':True,'next_refresh_at':1100}
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github')
+    assert gate.prepare(2,180)=={'allowed':False,'reason':'cooldown','next_refresh_at':1100}
+    assert gate.expires==1100 and gate.remaining==100 and reserves==[1000]
+
+
+@pytest.mark.parametrize('window',[True,'180',-1,301,float('inf'),float('nan')])
+def test_invalid_execution_window_never_reserves_or_calls_provider(window):
+    def forbidden(*args):pytest.fail('invalid window must not reserve or call provider')
+    raw=SimpleNamespace(request_window_seconds=window,reserve=forbidden,request=forbidden)
+    gate=r._GatedTransport(raw,lambda:None,lambda:1000,'github')
+    with pytest.raises(ValueError,match='execution window'):gate.request('GET','/fixed/read')
+
+
+def test_window_wait_refuses_expiry_beyond_incident_deadline_minus_window():
+    now=[1000.0];calls=[]
+    raw=SimpleNamespace(request_window_seconds=180,reserve=lambda:calls.append('reserve'),request=lambda *args:calls.append('http'))
+    gate=r._GatedTransport(raw,lambda:None,lambda:now[0],'github',sleeper=lambda seconds:calls.append('sleep'),
+                           health=lambda:{'state':'healthy'},deadline=1250)
+    gate.expires=1100;gate.remaining=88  # Latest viable admission is 1070.
+    with pytest.raises(TimeoutError,match='cannot fit'):gate.request('GET','/fixed/read')
+    assert not calls and now[0]==1000
+
+
+def test_delayed_renewal_cannot_start_http_after_actual_incident_deadline_margin():
+    now=[1200.0];sleeps=[];reserves=[];http=[]
+    class Raw:
+        request_window_seconds=180
+        def reserve(self):
+            reserves.append(now[0]);now[0]+=30
+            return {'allowed':True,'next_refresh_at':now[0]+300}
+        def request(self,*args):http.append(now[0])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,
+                           health=lambda:{'state':'healthy'},deadline=1500)
+    gate.expires=1300;gate.remaining=88
+    with pytest.raises(TimeoutError,match='admission deadline'):gate.request('GET','/fixed/read')
+    assert sleeps==[60,40] and reserves==[1300] and now[0]==1330 and not http
+
+
+def test_window_admission_has_one_360_second_bound_without_early_reservation_reset():
+    now=[1000.0];sleeps=[];reserves=[];http=[]
+    class Raw:
+        request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);return {'allowed':True,'next_refresh_at':now[0]+100}
+        def request(self,*args):http.append(now[0])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,health=lambda:{'state':'healthy'})
+    with pytest.raises(TimeoutError,match='cannot fit'):gate.request('GET','/fixed/read')
+    assert reserves==[1000,1100,1200,1300] and now[0]==1300
+    assert all(0<seconds<=60 for seconds in sleeps) and not http
+
+
+def test_runtime_lifetime_admission_deadline_only_narrows(controller_attention):
+    f=controller_attention;now=[1000.0];raw=SimpleNamespace(request_window_seconds=180)
+    runtime=r.Runtime(f.runtime.config,f.runtime.root,f.runtime.lease,uid=lambda:0,lease_check=lambda:True,
+                      clock=lambda:now[0],transport_factory=lambda provider:raw,source_transport=object())
+    assert runtime._admission_deadline==1600
+    gate=runtime.transports['github'];gate.expires=1700;gate.remaining=100
+    manifest={**f.manifest,'deadline_epoch':1300}
+    assert runtime.prepare(manifest)['allowed']
+    assert runtime._admission_deadline==1300
+    assert runtime.prepare({**manifest,'deadline_epoch':1500})['allowed']
+    assert runtime._admission_deadline==1300
+    now[0]=1121
+    assert runtime.prepare({'initial_target':{'provider':'github'}})['reason']=='deadline'
+    with pytest.raises(TimeoutError):gate.request('GET','/must-not-start')
+
+
+def test_provider_preflight_360_can_transition_to_later_eight_hour_source_intent(controller_attention):
+    f=controller_attention;now=[1000.0];reserves=[];reads=[]
+    def reserve():
+        reserves.append(now[0]);return {'allowed':True,'next_refresh_at':now[0]+300}
+    def request(*args):
+        reads.append((now[0],args));return {'http_status':200,'data':{}}
+    raw=SimpleNamespace(request_window_seconds=180,reserve=reserve,request=request)
+    config={**f.runtime.config,'max_incident_seconds':28800}
+    runtime=r.Runtime(config,f.runtime.root,f.runtime.lease,uid=lambda:0,lease_check=lambda:True,
+                      clock=lambda:now[0],transport_factory=lambda provider:raw,source_transport=object())
+    gate=runtime.transports['github'];gate.expires=1300;gate.remaining=100
+    assert runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':now[0]+360})['allowed']
+    assert runtime._admission_scopes['github']==1360 and runtime._admission_deadline==29800
+    now[0]+=1
+    source_intent={'created_epoch':now[0],'deadline_seconds':28800}
+    initial_deadline=source_intent['created_epoch']+source_intent['deadline_seconds']
+    assert runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':initial_deadline})['allowed']
+    assert runtime._admission_scopes['github']==29800 and runtime._admission_deadline==29800
+    now[0]=1720  # A completed 12-minute job may still be observed normally.
+    assert runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':initial_deadline})['allowed']
+    assert gate.request('GET','/completed-job')['http_status']==200
+    assert reserves==[1720] and reads==[(1720,('GET','/completed-job',None))]
+    # Once a true incident is supplied, neither later admission nor manifest
+    # calls may extend its actual deadline.
+    runtime.prepare({**f.manifest,'deadline_epoch':2000})
+    runtime.prepare({'initial_target':{'provider':'github'},'deadline_epoch':initial_deadline})
+    assert runtime._admission_scopes['github']==runtime._admission_deadline==2000
+
+
+def test_in_progress_window_wait_cannot_extend_its_original_scope():
+    now=[1000.0];scope=[1300.0];sleeps=[];reserves=[];http=[]
+    class Raw:
+        request_window_seconds=180
+        def reserve(self):reserves.append(now[0]);now[0]+=30;return {'allowed':True,'next_refresh_at':now[0]+300}
+        def request(self,*args):http.append(now[0])
+    def sleep(seconds):sleeps.append(seconds);now[0]+=seconds;scope[0]=2000
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:now[0],'github',sleeper=sleep,
+                           health=lambda:{'state':'healthy'},deadline=lambda:scope[0])
+    gate.expires=1100;gate.remaining=88
+    with pytest.raises(TimeoutError,match='admission deadline'):gate.request('GET','/must-not-start')
+    assert sleeps==[60,40] and reserves==[1100] and now[0]==1130 and not http
+
+
+def test_remote_reservation_validated_after_delayed_gui_round_trip():
+    now=[1000.0]
+    class Delayed:
+        def reserve(self):
+            now[0]+=8
+            return {'allowed':True,'next_refresh_at':now[0]+300,'reason':'reserved'}
+    gate=r._GatedTransport(Delayed(),lambda:None,lambda:now[0],'github')
+    assert gate.prepare()['allowed'] is True
+    assert gate.expires==1308 and gate.remaining==100
+
+
+@pytest.mark.parametrize('expiry',[1007,1608])
+def test_delayed_reservation_still_rejects_expired_or_excessive_window(expiry):
+    now=[1000.0]
+    class Delayed:
+        def reserve(self):
+            now[0]+=8
+            return {'allowed':True,'next_refresh_at':expiry,'reason':'reserved'}
+    gate=r._GatedTransport(Delayed(),lambda:None,lambda:now[0],'github')
+    with pytest.raises(ValueError,match='invalid reservation'):gate.prepare()
+    assert gate.expires==0 and gate.remaining==0
+
+
+def test_unknown_cleanup_latches_before_controller_can_reconcile():
+    runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=False
+    class Host:
+        def after_acceptance(self,*args):raise r.host_module.CleanupUnknown('cleanup unknown')
+    with pytest.raises(r.host_module.CleanupUnknown):runtime._after_acceptance(Host(),'retry_job','key',{}, {})
+    assert runtime.cleanup_blocked() is True
+
+
+def test_gate_denies_exhausted_batch_without_post():
+    class Raw:
+        def reserve(self):return {'allowed':True,'reason':'reserved','next_refresh_at':1300}
+        def for_action(self,key):raise AssertionError('must not send')
+    gate=r._GatedTransport(Raw(),lambda:None,lambda:1000,'gitlab')
+    gate.prepare();gate.remaining=1
+    with pytest.raises(RuntimeError):gate.for_action('action')('POST','/x',{})
+
+
+def test_cleanup_hold_requires_marker_removal_and_fresh_proof(tmp_path,monkeypatch):
+    marker=tmp_path/'blocked';marker.write_text('operator attention')
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',marker)
+    runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=True;runtime._last_incident=None
+    runtime._cleanup_key='key';runtime.root=tmp_path;runtime._stop_notice=lambda *args,**kwargs:{'stage':'journaled'}
+    checks=[];runtime._verify_cleanup=lambda:checks.append('checked') or True
+    def operator_action(seconds):
+        assert seconds==60 and marker.exists()
+        marker.unlink()
+    runtime._sleep=operator_action
+    runtime.hold_cleanup()
+    assert checks==['checked','checked'] and runtime.cleanup_blocked() is False
+
+
+def test_cleanup_verifier_checks_exact_owned_labels_and_listener_exit(tmp_path,monkeypatch):
+    runtime=object.__new__(r.Runtime);runtime._cleanup_key='key'
+    runtime.config={'github':{'control_sha':'b'*40}}
+    class Host:
+        control_root=tmp_path
+        def _path(self,key,name):return tmp_path/(name+'.json')
+    runtime._github_host=lambda:Host()
+    nonce=hashlib.sha256(b'key').hexdigest()
+    intent={'action_key':'key','run_id':'11','run_attempt':'2','source_sha':'a'*40,'control_sha':'b'*40,'nonce':nonce}
+    (tmp_path/'listener-intent.json').write_text(json.dumps(intent))
+    (tmp_path/'listener-started.json').write_text(json.dumps({'action_key':'key','run_id':'11','run_attempt':'2','pid':123456}))
+    started=tmp_path/'github-bootstrap-20261113'/nonce/'started.json';started.parent.mkdir(parents=True)
+    started.write_text(json.dumps({'pid':123457,'runner_id':21,'stage':'listener-started'}))
+    def gone(pid,signal):raise ProcessLookupError()
+    monkeypatch.setattr(r.os,'kill',gone);monkeypatch.setattr(r.os,'killpg',gone)
+    cid='c'*64;labels={'fdisbull.ci.provider':'github','fdisbull.ci.run_id':'11','fdisbull.ci.run_attempt':'2',
+        'fdisbull.ci.control_sha':'b'*40}
+    calls=[]
+    def runner(argv,**kw):
+        calls.append(argv)
+        payload=cid.encode()+b'\n' if argv[1]=='ps' else json.dumps([{'Id':cid,'Config':{'Labels':labels},'State':{'Running':False}}]).encode()
+        return {'returncode':0,'stdout':payload,'stderr':b'','timed_out':False,'overflow':False}
+    runtime._cleanup_runner=runner
+    assert runtime._verify_cleanup() is True and [x[1] for x in calls]==['ps','inspect','ps']
+
+
+def test_native_retry_gate_rejects_wrong_canonical_job(tmp_path):
+    target={'provider':'gitlab','project_id':'88349936','pipeline_id':'10','job_id':'20','source_sha':'a'*40,
+            'job_name':'native-debugger-stable','runner_id':'58990209','ref':'main'}
+    class Transport:
+        def request(self,method,path):
+            if '/pipelines/' in path:return {'http_status':200,'data':[{'id':70,'name':'native-qualification','status':'success'}]}
+            return {'http_status':200,'data':{'id':71,'name':'native-qualification','status':'success','ref':'main',
+                'commit':{'id':'a'*40},'pipeline':{'id':10,'project_id':88349936}}}
+    runtime=object.__new__(r.Runtime);runtime.transports={'gitlab':Transport()};runtime.root=tmp_path
+    with pytest.raises(ValueError,match='gate identity'):runtime._gitlab_gate(target,{**target,'status':'failed'})
+
+
+def test_cleanup_unknown_without_ownership_proof_never_returns(tmp_path,monkeypatch):
+    marker=tmp_path/'blocked';marker.write_text('attention');monkeypatch.setattr(r,'CLEANUP_BLOCKER',marker)
+    runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=True;runtime._last_incident=None
+    runtime._cleanup_key='key';runtime.root=tmp_path;runtime._verify_cleanup=lambda:False
+    runtime._stop_notice=lambda *args,**kwargs:{'stage':'journaled'}
+    calls=[]
+    def timeout(seconds):calls.append(seconds);raise TimeoutError('test stop only')
+    runtime._sleep=timeout
+    with pytest.raises(TimeoutError):runtime.hold_cleanup()
+    assert calls==[60] and runtime.cleanup_blocked() and (tmp_path/'cleanup-attention').is_dir()
+
+
+def test_initial_dispatch_accepted_pending_without_second_post(tmp_path):
+    runtime=object.__new__(r.Runtime);runtime._guard=lambda **kw:None;runtime.health=lambda:{'state':'healthy'}
+    runtime.config={'github':{'ref':'codex/production-ci-recovery-20261113'}};runtime._cleanup_unknown=False
+    calls=[]
+    class Host:
+        def _path(self,key,kind):return tmp_path/(kind+'.json')
+        def initial_dispatch(self,key,sha):calls.append('post');self._path(key,'dispatch-intent').write_text('{}');return None
+        def reconcile_initial(self,key,sha):calls.append('reconcile');return {'status':'running'}
+        def _accept(self,key,path,body,status):return '/private/accepted.json'
+    runtime._github_host=lambda:Host();request={'key':'initial','source_sha':'a'*40}
+    assert runtime.initial_dispatch(request)=={'status':'pending','verified':True,'receipt_path':'/private/accepted.json'}
+    assert runtime.initial_dispatch(request)['status']=='pending' and calls==['post','reconcile']
+
+
+def test_finish_batch_prevents_reuse_before_cooldown():
+    class Raw:
+        def reserve(self):return {'allowed':True,'reason':'reserved','next_refresh_at':1300}
+    runtime=object.__new__(r.Runtime);gate=r._GatedTransport(Raw(),lambda:None,lambda:1000,'github')
+    runtime.transports={'github':gate};manifest={'initial_target':{'provider':'github'}}
+    assert gate.prepare()['allowed'] is True
+    runtime.finish_batch(manifest)
+    assert gate.prepare()['reason']=='cooldown' and gate.remaining==0
+
+
+def test_cleanup_marker_refuses_provider_and_source_admission(tmp_path,monkeypatch):
+    marker=tmp_path/'blocker';marker.write_text('blocked');monkeypatch.setattr(r,'CLEANUP_BLOCKER',marker)
+    runtime=object.__new__(r.Runtime);runtime._cleanup_unknown=False
+    with pytest.raises(r.host_module.CleanupUnknown):runtime._guard()
+    assert runtime._cleanup_unknown is True
+
+
+def test_source_repair_requalifies_new_sha_with_real_controller_and_evidence(tmp_path,monkeypatch):
+    recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700)
+    export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
+    monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
+    target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
+            'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
+    make_export(export,target,'failed','c'*64)
+    folder=export/'github/11/1/qualification/22';exported=folder/'exported'
+    (exported/'artifacts/recovery/diagnostic.json').unlink()
+    junit=b'<testsuite tests="1" failures="1" errors="0"><testcase classname="tests.test_demo" name="test_bug"><failure/></testcase></testsuite>'
+    fixtures.write(exported/'artifacts/ordinary/tests.xml',junit)
+    inv=[fixtures.ident(p,exported) for p in sorted(exported.rglob('*')) if p.is_file()];fixtures.write(folder/'inventory.json',inv)
+    meta=json.loads((folder/'job.json').read_text());meta['files']=len(inv);meta['qualification_stage']='ordinary-tests'
+    fixtures.write(folder/'system-preparation.json',{'status':'passed','steps':[{'name':'update','passed':True}], 'capture_limit_bytes':4*1024*1024})
+    prep=fixtures.ident(folder/'system-preparation.json',folder);meta['system-preparation.json']={'size':prep['size'],'sha256':prep['sha256']}
+    identity=fixtures.ident(folder/'inventory.json',folder)
+    meta['inventory.json']={'size':identity['size'],'sha256':identity['sha256']};fixtures.write(folder/'job.json',meta)
+    second={**target,'run_id':'12','run_attempt':'1','job_id':'24','source_sha':'d'*40}
+    make_export(export,second,'success','c'*64)
+    now=[time.time()];clock=lambda:now[0]
+    class Source:
+        def __init__(self):self.prepares=0;self.repairs=0;self.readbacks=0;self.result=None
+        def prepare(self,t,bundle):
+            self.prepares+=1
+            assert base64.b64decode(bundle['junit_base64'])==junit and 'trace' not in json.dumps(bundle)
+            h=lambda b:hashlib.sha256(b).hexdigest()
+            event=h(json.dumps({'target':t,'receipt_sha256':bundle['evidence_receipt_sha256'],'junit_sha256':h(junit)},sort_keys=True,separators=(',',':')).encode())
+            self.event=event
+            return {'schema':'fdisbull-source-reproducer-1','status':'verified_reproducer','selection_profile':'single-failure-direct-imports-1',
+                'event_key':event,'target':t,'baseline':'failed','linux_parity':False,'requires_linux_requalification':True,'receipt_path':'/mac/prepared'}
+        def reconcile_prepare(self,*args):raise AssertionError('no repeated preparation')
+        def repair(self,key,payload):
+            self.repairs+=1;assert payload['source_prepare']=={'event_key':self.event}
+            ref='codex/ci-repair-'+self.event;sha=second['source_sha'];entry={'verified':True,'source_sha':sha,'candidate_ref':ref}
+            self.result={'status':'completed','base_sha':target['source_sha'],'source_sha':sha,'candidate_ref':ref,'receipt_path':'/mac/final',
+                'publication':{**entry,'receipt_path':'/mac/readback','github':dict(entry),'gitlab':dict(entry)}}
+            return self.result
+        def reconcile(self,key,payload):self.readbacks+=1;return self.result
+    source=Source()
+    class Provider:
+        def __init__(self):self.posts=0
+        def reserve(self):return {'allowed':True,'reason':'reserved','next_refresh_at':clock()+300}
+        def for_action(self,key):
+            def send(method,path,payload):
+                self.posts+=1;assert payload['inputs']['candidate_sha']==second['source_sha']
+                return {'http_status':204,'data':None,'request_id':None}
+            return send
+        def receipt(self,key):return {'receipt':None}
+        def request(self,method,path,payload=None):
+            is_new='/runs/12' in path or '/jobs/24' in path
+            run={'id':12 if is_new else 11,'run_attempt':1,'head_sha':target['control_sha'],'head_branch':target['ref'],'repository':{'full_name':r.REPO}}
+            job={'id':24 if is_new else 22,'run_id':12 if is_new else 11,'name':'qualification','head_sha':target['control_sha'],
+                 'runner_id':21,'status':'completed','conclusion':'success' if is_new else 'failure'}
+            data={'total_count':1,'jobs':[job]} if '/jobs?' in path else job if '/jobs/' in path else run
+            return {'http_status':200,'data':data,'request_id':None}
+    provider=Provider();secret=b'private original log'
+    def trace(t,tr):return {'encoding':'base64','data':base64.b64encode(secret).decode(),'size':len(secret),'sha256':hashlib.sha256(secret).hexdigest()}
+    class Host:
+        def __init__(self,config,state,tr,*args,**kwargs):self.tr=tr
+        def source_binding(self,t,run,job):return {'verified':True,'target':t,'receipt_path':'candidate-start'}
+        def after_acceptance(self,*args):pass
+        def resolve_dispatch(self,key,proof,payload):
+            return {'verified':True,'target':second,'nonce':hashlib.sha256(key.encode()).hexdigest(),'receipt_path':'nonce-proof'}
+        def capture_provider(self,o):
+            t={k:o[k] for k in r.production.SCHEMAS['github']};base='/repos/'+r.REPO+'/actions'
+            run=self.tr.request('GET',base+'/runs/'+t['run_id']+'/attempts/'+t['run_attempt'])['data']
+            job=self.tr.request('GET',base+'/jobs/'+t['job_id'])['data']
+            return {'verified':True,'target':t,'job_status':o['status'],'metadata':{'run':run,'job':job},'trace':trace(t,self.tr)}
+    cfg={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),'max_incident_seconds':3600,
+         'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker','control_sha':target['control_sha'],
+                   'ref':target['ref'],'profile':'ordinary','sole_executor_authority':True,'export_root':str(export)},'module_sha256':hashes()}
+    def health(path):path.write_text('{}');return {'continue':True}
+    events=[]
+    runtime=r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,clock=clock,
+        transport_factory=lambda p:provider,host_factory=Host,health_capture=health,source_transport=source,
+        incident_runner=lambda argv,**kw:events.append(json.loads(kw['input'])) or SimpleNamespace(returncode=0))
+    key='e'*64;incident=root/'incidents'/key;incident.mkdir(parents=True,mode=0o700)
+    manifest={'incident_id':key,'project':r.REPO,'initial_target':target,'required_artifacts':sorted(r.evidence_module.ORDINARY),
+              'deadline_epoch':clock()+3600,'max_infrastructure_repairs':1,'max_source_repairs':1}
+    controller=r.control_module.RecoveryController(incident/'state.json',manifest,runtime.backend(manifest,incident))
+    state=controller.step()
+    assert state['phase']=='dispatch_pipeline' and source.prepares==1 and source.repairs==1
+    assert controller.step()['target']==second
+    state=controller.step()
+    assert state['status']=='complete' and provider.posts==1 and source.readbacks>=1
+    assert state['target']['source_sha']==second['source_sha'] and [e['phase'] for e in events]==['down','recovered']
+
+
+def test_uncertain_source_prepare_only_reconciles_without_recreation(tmp_path):
+    runtime=object.__new__(r.Runtime);runtime._guard=lambda **kw:None;runtime.health=lambda:{'state':'healthy'};runtime.clock=lambda:1000
+    target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
+            'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
+    event='c'*64;bundle={'junit_base64':base64.b64encode(b'junit').decode(),'evidence_receipt_sha256':'d'*64}
+    runtime._source_bundle=lambda t,e:(bundle,event)
+    calls=[]
+    class Source:
+        def prepare(self,t,b):calls.append('prepare');raise TimeoutError()
+        def reconcile_prepare(self,t,b):calls.append('reconcile');return None
+    runtime.source=Source();obs={**target,'status':'failed'}
+    assert runtime._classify(obs,{},tmp_path,3000)['kind']=='blocked'
+    assert runtime._classify(obs,{},tmp_path,3000)['kind']=='blocked'
+    assert calls==['prepare','reconcile'] and (tmp_path/('source-prepare-'+event+'.json')).is_file()
+
+
+def test_source_classification_requires_time_and_healthy_host(tmp_path):
+    runtime=object.__new__(r.Runtime);runtime._guard=lambda **kw:None;runtime.clock=lambda:1000
+    runtime.health=lambda:{'state':'unknown'}
+    target={'provider':'github','repository':r.REPO,'run_id':'11','run_attempt':'1','job_id':'22','runner_id':'21',
+            'job_name':'qualification','source_sha':'a'*40,'control_sha':'b'*40,'ref':'codex/production-ci-recovery-20261113'}
+    bundle={'junit_base64':base64.b64encode(b'junit').decode(),'evidence_receipt_sha256':'d'*64}
+    runtime._source_bundle=lambda t,e:(bundle,'c'*64)
+    runtime.source=SimpleNamespace(prepare=lambda *args:pytest.fail('must not prepare'))
+    assert runtime._classify({**target,'status':'failed'},{},tmp_path,3000)['kind']=='blocked'
+    runtime.health=lambda:pytest.fail('deadline check must run first')
+    assert runtime._classify({**target,'status':'failed'},{},tmp_path,1500)['kind']=='blocked'
+
+
+def test_restart_recovers_cleanup_key_only_from_unique_exact_run(tmp_path,monkeypatch):
+    marker=tmp_path/'blocker';monkeypatch.setattr(r,'CLEANUP_BLOCKER',marker)
+    runtime=object.__new__(r.Runtime);runtime._cleanup_key=None
+    class Host:
+        state=tmp_path
+        def _path(self,key,kind):return tmp_path/(hashlib.sha256(key.encode()).hexdigest()+'.'+kind+'.json')
+    host=Host();runtime._github_host=lambda:host
+    labels={'fdisbull.ci.provider':'github','fdisbull.ci.run_id':'11','fdisbull.ci.run_attempt':'2','fdisbull.ci.control_sha':'b'*40}
+    marker.write_text(json.dumps({'status':'unknown','labels':labels}))
+    host._path('action','listener-intent').write_text(json.dumps({'action_key':'action','run_id':'11','run_attempt':'2','control_sha':'b'*40}))
+    runtime._recover_cleanup_key()
+    assert runtime._cleanup_key=='action'
+    runtime._cleanup_key=None
+    host._path('other','listener-intent').write_text(json.dumps({'action_key':'other','run_id':'11','run_attempt':'2','control_sha':'b'*40}))
+    runtime._recover_cleanup_key()
+    assert runtime._cleanup_key is None
+
+
+def test_source_dispatch_needs_both_provider_readbacks():
+    target={'source_sha':'a'*40};event='c'*64;sha='b'*40;ref='codex/ci-repair-'+event
+    one={'verified':True,'source_sha':sha,'candidate_ref':ref}
+    result={'status':'completed','base_sha':'a'*40,'source_sha':sha,'candidate_ref':ref,'receipt_path':'/mac/final',
+            'publication':{**one,'receipt_path':'/mac/readback','github':dict(one)}}
+    assert r.Runtime._valid_publication(result,target,event) is False
+    result['publication']['gitlab']=dict(one)
+    assert r.Runtime._valid_publication(result,target,event) is True
+    result['publication']['gitlab']['source_sha']='d'*40
+    assert r.Runtime._valid_publication(result,target,event) is False
+
+
+def test_initial_pending_without_acceptance_is_never_success(tmp_path):
+    runtime=object.__new__(r.Runtime);runtime._guard=lambda **kw:None;runtime.health=lambda:{'state':'healthy'}
+    runtime.config={'github':{'ref':'codex/production-ci-recovery-20261113'}};runtime._cleanup_unknown=False
+    class Host:
+        def _path(self,key,kind):return tmp_path/'intent'
+        def initial_dispatch(self,key,sha):return None
+        def _accept(self,*args):return None
+    runtime._github_host=lambda:Host()
+    with pytest.raises(RuntimeError,match='acceptance unknown'):
+        runtime.initial_dispatch({'key':'initial','source_sha':'a'*40})
+
+
+def test_gui_transport_enabled_only_by_fixed_explicit_config(tmp_path,monkeypatch):
+    recovery=tmp_path/'recovery';root=recovery/'production';root.mkdir(parents=True,mode=0o700)
+    export=tmp_path/'results';export.mkdir();lock=tmp_path/'ci.lock';lock.touch()
+    monkeypatch.setattr(r,'RECOVERY',recovery);monkeypatch.setattr(r,'EXPORT',export);monkeypatch.setattr(r,'LOCK',lock)
+    monkeypatch.setattr(r.entrypoint_module,'STATE',root)
+    monkeypatch.setattr(r,'CLEANUP_BLOCKER',tmp_path/'cleanup-blocked.json')
+    cfg={'bridge_path':r.BRIDGE,'state_dir':str(root),'export_root':str(export),'executor_lock':str(lock),
+         'github':{'repository':r.REPO,'workflow_id':417757453,'runner_id':21,'actor':'seeker-cyber-maker',
+                   'control_sha':'a'*40,'ref':'codex/production-ci-recovery-20261113','profile':'ordinary',
+                   'sole_executor_authority':True,'export_root':str(export)},'module_sha256':hashes(),
+         'gui_transport':{'enabled':True,'state_dir':str(root/'gui-client')},'max_incident_seconds':600}
+    clients=[]
+    def factory(path):clients.append(path);return object()
+    runtime=r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,gui_client_factory=factory)
+    assert clients==[str(root/'gui-client')]
+    assert isinstance(runtime.transports['github'].raw,r.gui_client_module.GuiProviderTransport)
+    assert isinstance(runtime.transports['gitlab'].raw,r.gui_client_module.GuiProviderTransport)
+    assert isinstance(runtime.source,r.gui_client_module.GuiSourceTransport)
+    cfg['gui_transport']['state_dir']='/tmp/not-approved'
+    with pytest.raises(ValueError,match='GUI transport'):r.Runtime(cfg,root,{'fd':1,'owner_pid':1,'device':1,'inode':1},uid=lambda:0,lease_check=lambda:True,gui_client_factory=factory)
+
+
+def test_initial_incident_reuses_verified_capture_without_provider_recapture(tmp_path,monkeypatch):
+    root=tmp_path/'production';root.mkdir(mode=0o700)
+    export=tmp_path/'results';export.mkdir();monkeypatch.setattr(r,'EXPORT',export)
+    target=dict(fixtures.GH);target['ref']='codex/production-ci-recovery-20261113'
+    make_export(export,target,'failed','c'*64)
+    observation={**target,'status':'failed'};request={'key':'initial-fixture','source_sha':target['source_sha']}
+    initial=hashlib.sha256(('initial:'+request['key']).encode()).hexdigest()
+    evidence_dir=root/'initial'/initial/'evidence';evidence_dir.mkdir(parents=True,mode=0o700)
+    evidence=r.evidence_module.ProductionEvidence(export/'github',evidence_dir,'ordinary',fixtures.capture)(observation,fixtures.REQ)
+    receipt=Path(evidence['receipt_path']);value={'schema':'fdisbull-initial-qualification-1','request':request,
+        'verified':True,'status':'failed','target':target,'receipt_path':str(receipt),
+        'receipt_sha256':hashlib.sha256(receipt.read_bytes()).hexdigest()}
+    fixtures.write(root/'initial-result.json',value)
+    runtime=object.__new__(r.Runtime);runtime.root=root;runtime.config={'initial_request':request}
+    class Host:
+        def capture_provider(self,obs):raise AssertionError('unexpected provider recapture')
+    runtime._github_host=lambda:Host()
+    incident=root/'incidents'/'evidence';incident.mkdir(parents=True,mode=0o700)
+    result=runtime._evidence(target,incident)(observation,fixtures.REQ)
+    assert result['status']=='export-verified' and result['diagnostic']['target']==target
+    assert Path(result['receipt_path']).parent==incident
+    trace=next(evidence_dir.glob('*.trace'));trace.write_bytes(b'tampered private trace')
+    with pytest.raises(ValueError,match='initial capture hash mismatch'):
+        runtime._evidence(target,incident)(observation,fixtures.REQ)
+    trace.write_bytes(b'original trace')
+    meta=next(evidence_dir.glob('*.provider.json'));meta.write_text('{}')
+    with pytest.raises(ValueError,match='initial capture hash mismatch'):
+        runtime._evidence(target,incident)(observation,fixtures.REQ)
+
+
+@pytest.fixture
+def initial_stop(controller_attention,tmp_path,monkeypatch):
+    f=controller_attention;runtime=f.runtime;request={'key':'initial-stop-fixture','source_sha':'a'*40}
+    key=request['key'];nonce=hashlib.sha256(key.encode()).hexdigest();target=dict(f.state['target'])
+    host=object.__new__(r.host_module.GitHubHost)
+    host.state=r._private(runtime.root/'github-host');host.control_root=r._private(tmp_path/'control')
+    host.export_root=r.EXPORT/'github';runtime._host=host
+    runtime.clock=lambda:2000.0
+    def put(path,value):
+        path.parent.mkdir(parents=True,mode=0o700,exist_ok=True)
+        r.host_module._write(path,value)
+        return path
+    body={'ref':target['ref'],'inputs':{'nonce':nonce,'candidate_sha':request['source_sha']}}
+    digest=r.transport_module.request_digest('github','POST',r.host_module.BASE+'/workflows/417757453/dispatches',body)
+    put(host._path(key,'dispatch-intent'),{'action_key':key,'candidate_sha':request['source_sha'],'nonce':nonce,
+        'request_sha256':digest,'created_epoch':1000.0})
+    acceptance=put(host._path(key,'acceptance'),{'action_key':key,'request_sha256':digest,'http_status':204})
+    put(host._path(key,'initial-result-success'),{'target':target,'status':'success','acceptance_receipt':str(acceptance)})
+    start=put(host.export_root/target['run_id']/'1'/'qualification'/target['job_id']/'candidate-start.json',
+        {'schema':'fdisbull-github-candidate-start-1',**{k:v for k,v in target.items() if k!='provider'},
+         'candidate_head':target['source_sha'],'control_head':target['control_sha'],'nonce':nonce})
+    put(host.state/('source-'+hashlib.sha256(r.host_module._bytes(target)).hexdigest()+'.json'),
+        {'target':target,'start_path':str(start),'start_sha256':hashlib.sha256(start.read_bytes()).hexdigest()})
+    put(host._path(key,'listener-intent'),{'action_key':key,'nonce':nonce,'run_id':target['run_id'],'run_attempt':'1',
+        'source_sha':target['source_sha'],'control_sha':target['control_sha'],'ref':target['ref']})
+    put(host._path(key,'listener-started'),{'action_key':key,'pid':123456,'run_id':target['run_id'],'run_attempt':'1'})
+    folder=host.control_root/'github-bootstrap-20261113'/nonce
+    put(folder/'started.json',{'pid':123457,'runner_id':21,'stage':'listener-started'})
+    labels={'fdisbull.ci.provider':'github','fdisbull.ci.run_id':target['run_id'],'fdisbull.ci.run_attempt':'1',
+        'fdisbull.ci.control_sha':target['control_sha']}
+    put(folder/'cleanup.json',{'status':'clean','labels':labels,'containers':[]})
+    put(host._path(key,'listener-exit'),{'action_key':key,'pid':123456,'exit_code':0,'cleanup_verified':True,
+        'cleanup_receipt':str(folder/'cleanup.json')})
+    process_checks=[];docker_calls=[]
+    def gone(pid,signal):process_checks.append(pid);raise ProcessLookupError()
+    monkeypatch.setattr(r.os,'kill',gone);monkeypatch.setattr(r.os,'killpg',gone)
+    def docker(argv,**kwargs):
+        docker_calls.append(argv)
+        assert argv[:3]==['docker','ps','-aq']
+        return {'returncode':0,'timed_out':False,'overflow':False,'stdout':b''}
+    runtime._cleanup_runner=docker
+    stop_id=hashlib.sha256(('controller-stop:qualification:'+key).encode()).hexdigest()
+    f.journal.incident=runtime.root/'incidents'/stop_id
+    return SimpleNamespace(**vars(f),request=request,host=host,target=target,put=put,
+                           process_checks=process_checks,docker_calls=docker_calls)
+
+
+def test_completed_initial_stop_has_finite_attention_and_fresh_release_proof(initial_stop):
+    f=initial_stop;result=f.runtime.stop_qualification(f.request,ValueError('private message'),deadline_epoch=2500)
+    assert result['status']=='attention' and result['release_safe'] and not result['hold_required']
+    assert result['lease_release']=='on-caller-context-exit' and result['notification']['stage']=='journaled'
+    proof=json.loads(Path(result['release_proof_path']).read_text())
+    assert proof['scope']=='selected-initial-attempt-only' and proof['target']==f.target and proof['job_status']=='success'
+    assert proof['fresh_process_container_check'] and len(f.process_checks)==3 and len(f.docker_calls)==2
+    assert f.runtime.cleanup_blocked() is False and not f.calls
+    event=json.loads(f.journal.payloads[0]);assert event['context']['run_id']==f.target['run_id']
+    assert event['context']['commit_sha']==f.target['source_sha'] and event['phase']=='attention'
+    assert 'private message' not in Path(result['receipt_path']).read_text()
+
+
+def test_initial_stop_failed_job_can_release_clean_owner_without_job_recovery_claim(initial_stop):
+    f=initial_stop;old=f.host._path(f.request['key'],'initial-result-success');value=json.loads(old.read_text())
+    value['status']='failed';old.rename(f.host._path(f.request['key'],'initial-result-failed'))
+    f.host._path(f.request['key'],'initial-result-failed').write_text(json.dumps(value))
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['release_safe'] and json.loads(Path(result['release_proof_path']).read_text())['job_status']=='failed'
+    assert [json.loads(p)['phase'] for p in f.journal.payloads]==['attention']
+
+
+@pytest.mark.parametrize('damage',['missing-listener','missing-acceptance','wrong-source','exit-unknown','live-process',
+                                   'cleanup-blocker','different-action','later-attempt','pending-controller-action'])
+def test_completed_job_alone_never_releases_unresolved_ownership(initial_stop,monkeypatch,damage):
+    f=initial_stop;key=f.request['key']
+    if damage=='missing-listener':f.host._path(key,'listener-exit').unlink()
+    elif damage=='missing-acceptance':f.host._path(key,'acceptance').unlink()
+    elif damage=='wrong-source':
+        path=f.host._path(key,'listener-intent');value=json.loads(path.read_text());value['source_sha']='f'*40;path.write_text(json.dumps(value))
+    elif damage=='exit-unknown':
+        path=f.host._path(key,'listener-exit');value=json.loads(path.read_text());value['exit_code']=86;path.write_text(json.dumps(value))
+    elif damage=='live-process':monkeypatch.setattr(r.os,'kill',lambda *args:None)
+    elif damage=='cleanup-blocker':r.CLEANUP_BLOCKER.write_text('unknown')
+    elif damage=='different-action':f.runtime._cleanup_key='other-unresolved-action'
+    elif damage=='later-attempt':
+        path=f.host._path(key,'initial-result-success');value=json.loads(path.read_text());value['target']['run_attempt']='2';path.write_text(json.dumps(value))
+    elif damage=='pending-controller-action':
+        f.put(f.runtime.root/'active.json',{'event_key':f.key,'status':'attention'})
+        state={**f.state,'target':f.target,'actions':[{'action':'retry_job','key':'retry','result':None}]}
+        r.control_module.write_json(f.incident/'state.json',state)
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['hold_required'] and not result['release_safe'] and result['release_proof_path'] is None
+    assert result['lease_release']=='ownership-held' and f.runtime.cleanup_blocked() and not f.calls
+    assert [json.loads(p)['phase'] for p in f.journal.payloads]==['attention']
+
+
+def test_runtime_stop_then_bootstrap_failure_reuses_original_native_event(initial_stop):
+    f=initial_stop;f.host._path(f.request['key'],'listener-exit').unlink()
+    first=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    snapshot=Path(first['receipt_path']);original=snapshot.read_bytes()
+    replay=r.entrypoint_module.record_failure('ValueError',runner=f.journal)
+    assert replay==first['notification'] and snapshot.read_bytes()==original
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    record=json.loads(snapshot.read_text());assert record['stage']=='qualification' and record['error_type']=='RuntimeError'
+    assert not list(f.runtime.root.glob('service-error-*.json')) and not f.calls
+
+
+def test_initial_stop_reentry_keeps_original_snapshot_when_release_proof_later_available(initial_stop):
+    f=initial_stop;path=f.host._path(f.request['key'],'listener-exit');original_exit=path.read_bytes();path.unlink()
+    first=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    snapshot=Path(first['receipt_path']);original=snapshot.read_bytes()
+    path.write_bytes(original_exit);path.chmod(0o600)
+    second=f.runtime.stop_qualification(f.request,ValueError(),deadline_epoch=3000)
+    assert first['hold_required'] and second['release_safe'] and snapshot.read_bytes()==original
+    assert not f.runtime._qualification_ownership_hold and not f.runtime.cleanup_blocked()
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert json.loads(snapshot.read_text())['context_identity']=='controller-code-fingerprint'
+    assert Path(second['release_proof_path']).stat().st_mode&0o777==0o400
+
+
+def test_clean_completed_initial_stop_does_not_hold_idle_lease_for_native_ack_failure(initial_stop):
+    f=initial_stop;calls=[]
+    def unavailable(*args,**kwargs):calls.append(kwargs['input']);return SimpleNamespace(returncode=1,stdout=b'')
+    f.runtime._incident_runner=unavailable
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['release_safe'] and not result['hold_required'] and result['notification']['stage']=='notification-unresolved'
+    assert len(calls)==2 and calls[0]==calls[1]
+    assert Path(result['receipt_path']).with_name('controller-stop-notification-unresolved.json').is_file()
+
+
+def test_existing_initial_listener_and_terminal_result_need_no_new_listener_margin(initial_stop):
+    f=initial_stop
+    assert f.runtime.initial_listener_required(f.request) is False
+    f.host._path(f.request['key'],'listener-intent').unlink()
+    assert f.runtime.initial_listener_required(f.request) is False
+    f.host._path(f.request['key'],'initial-result-success').unlink()
+    assert f.runtime.initial_listener_required(f.request) is True and not f.calls
+
+
+def test_cleanup_hold_without_incident_journals_once_and_retains_unknown_owner(controller_attention):
+    f=controller_attention;f.runtime._cleanup_key='unknown-owned-action';f.runtime._verify_cleanup=lambda:False
+    stop_id=hashlib.sha256(b'controller-stop:cleanup:unknown-owned-action').hexdigest()
+    f.journal.incident=f.runtime.root/'incidents'/stop_id;sleeps=[]
+    def interrupt(seconds):sleeps.append(seconds);raise TimeoutError('bounded test interrupt')
+    f.runtime._sleep=interrupt
+    with pytest.raises(TimeoutError):f.runtime.hold_cleanup()
+    assert sleeps==[60] and f.runtime.cleanup_blocked() and len(f.journal.payloads)==1
+    snapshot=json.loads((f.journal.incident/'controller-attention-state.json').read_text())
+    assert snapshot['stage']=='cleanup' and snapshot['deadline_epoch'] is not None
+    assert json.loads(f.journal.payloads[0])['context']['run_id']=='controller'
+    assert not f.calls
+
+
+def test_qualification_ownership_hold_replays_same_stop_instead_of_cleanup_alert(initial_stop):
+    f=initial_stop;f.host._path(f.request['key'],'listener-exit').unlink()
+    first=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    f.runtime._verify_cleanup=lambda:False
+    def interrupt(seconds):raise TimeoutError('bounded hold test')
+    f.runtime._sleep=interrupt
+    with pytest.raises(TimeoutError):f.runtime.hold_cleanup()
+    assert len(f.journal.payloads)==2 and len(set(f.journal.payloads))==1
+    assert f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1
+    assert not list((f.runtime.root/'incidents').glob('*/controller-stop-notification-unresolved.json'))
+    assert f.runtime.cleanup_blocked() and Path(first['receipt_path']).is_file()
+
+
+@pytest.mark.parametrize('failure_point',['snapshot-read','snapshot-write'])
+def test_unknown_initial_owner_is_latched_even_if_stop_snapshot_io_fails(initial_stop,monkeypatch,failure_point):
+    f=initial_stop;f.host._path(f.request['key'],'listener-exit').unlink()
+    if failure_point=='snapshot-read':
+        stop_id=hashlib.sha256(('controller-stop:qualification:'+f.request['key']).encode()).hexdigest()
+        snapshot=f.runtime.root/'incidents'/stop_id/'controller-attention-state.json'
+        snapshot.parent.mkdir(mode=0o700)
+        snapshot.write_text('{}')
+    else:
+        def reject(*args,**kwargs):raise ValueError('local immutable snapshot rejected')
+        monkeypatch.setattr(f.runtime,'_stop_notice',reject)
+    with pytest.raises(ValueError):f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert f.runtime.cleanup_blocked() and f.runtime._qualification_ownership_hold
+    assert f.runtime._cleanup_key==f.request['key'] and not f.journal.payloads
+
+
+def test_qualification_later_action_hold_survives_clean_initial_cleanup(initial_stop):
+    f=initial_stop
+    f.put(f.runtime.root/'active.json',{'event_key':f.key,'status':'attention'})
+    state={**f.state,'target':f.target,'actions':[{'action':'retry_job','key':'later-retry','result':None}]}
+    r.control_module.write_json(f.incident/'state.json',state)
+    result=f.runtime.stop_qualification(f.request,RuntimeError(),deadline_epoch=2500)
+    assert result['hold_required'] and not result['release_safe']
+    assert not r.CLEANUP_BLOCKER.exists()
+    sleeps=[]
+    def interrupt(seconds):sleeps.append(seconds);raise TimeoutError('ownership hold remains pending')
+    f.runtime._sleep=interrupt
+    with pytest.raises(TimeoutError,match='ownership hold remains pending'):f.runtime.hold_cleanup()
+    # The generic check proves only the old initial listener is gone. It must
+    # not discharge the rejected later-action ownership decision.
+    assert len(f.process_checks)==3 and len(f.docker_calls)==2
+    assert sleeps==[60] and f.runtime.cleanup_blocked()
+    assert len(set(f.journal.payloads))==1 and f.journal.db.execute('SELECT COUNT(*) FROM events').fetchone()[0]==1

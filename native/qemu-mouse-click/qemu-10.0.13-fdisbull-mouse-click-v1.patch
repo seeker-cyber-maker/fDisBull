@@ -1,0 +1,434 @@
+diff --git a/qapi/fdisbull-input.json b/qapi/fdisbull-input.json
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -6,10 +6,10 @@
+ # @FdisbullInputState:
+ #
+ # @idle: No schedule has been armed.
+-# @armed: One owned batch or finite keyboard sequence awaits its next deadline.
++# @armed: One owned batch or finite physical sequence awaits its next deadline.
+ # @dispatched: All selected PS/2 handler callbacks and final sync completed.
+-# @cancelled: The undispatched batch or keyboard suffix was disarmed.  A sequence
+-#     can retain an already dispatched prefix.
++# @cancelled: The undispatched batch or physical suffix was disarmed.  A
++#     sequence can retain an already dispatched prefix.
+ # @failed: Revalidation or scheduling failed; close the VM.  A sequence can
+ #     retain an already dispatched prefix.
+ #
+@@ -126,6 +126,49 @@
+             'dispatched-count': 'uint64' } }
+
+ ##
++# @FdisbullInputClickStep:
++#
++# @button: Ordinary physical mouse button for this edge.
++# @down: True for press, false for release.
++# @delay-ns: Delay from arm for the first edge or from the actual preceding
++#     callback and sync completion for the release.
++# @deadline-ns: Absolute deadline, present only for the delivered prefix and
++#     the immediate next edge.  The release deadline is not predicted at arm.
++# @dispatch-ns: Actual handler and sync completion time, present only for the
++#     delivered prefix.
++#
++# The button, direction and delay never change.  Each deadline and dispatch
++# time is added once.  All fields freeze when the click becomes terminal.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInputClickStep',
++  'data': { 'button': 'InputButton', 'down': 'bool', 'delay-ns': 'int',
++            '*deadline-ns': 'int', '*dispatch-ns': 'int' } }
++
++##
++# @FdisbullInputClick:
++#
++# @button: Selected left, middle or right mouse button.
++# @hold-ms: Delay from actual down callback completion to release, 1..1000.
++# @steps: Immutable two-edge plan: down after 2000000 ns from arm, then up
++#     after hold-ms from the actual down callback and sync completion.
++# @dispatched-count: Number of completed handler/sync steps in the prefix.
++#
++# Each edge uses its own separately prepared batch and sync.  Cancellation
++# retains prefix evidence without replay or a cleanup release.  No movement
++# is requested, but prior mouse accumulators and external button state can
++# affect packets.  Callback completion does not establish device FIFO
++# acceptance, guest consumption, cursor position or application response.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInputClick',
++  'data': { 'button': 'InputButton', 'hold-ms': 'int',
++            'steps': ['FdisbullInputClickStep'],
++            'dispatched-count': 'uint64' } }
++
++##
+ # @FdisbullInputInfo:
+ #
+ # @api-version: Scheduling protocol version, one.
+@@ -140,14 +183,18 @@
+ # @dispatch-ns: Actual handler/sync completion time; only present if dispatched.
+ # @reason: Terminal reason of at most 256 bytes; absent while idle or armed.
+ # @retrace: Immutable modeled-retrace binding, present only for a retrace arm.
++#     Mutually exclusive with press, typing and click.
+ # @press: Finite timed keyboard plan and actual prefix, present only for a
+-#     keyboard-press arm.  Mutually exclusive with retrace and typing.
++#     keyboard-press arm.  Mutually exclusive with retrace, typing and click.
+ # @typing: Finite timed text plan and actual prefix, present only for a
+-#     keyboard-type arm.  Mutually exclusive with press and retrace.
++#     keyboard-type arm.  Mutually exclusive with press, retrace and click.
++# @click: Timed mouse-button plan and actual prefix, present only for a
++#     mouse-click arm.  Mutually exclusive with press, typing and retrace.
+ #
+ # Terminal fields are retained unchanged until a new token is accepted.
+ # Top-level dispatch-ns is present only when every planned event completed;
+-# a cancelled sequence exposes its delivered prefix through press or typing.
++# a cancelled sequence exposes its delivered prefix through press, typing or
++# click.
+ # Dispatch does not establish PS/2 queue acceptance, guest consumption, or
+ # physical release of an earlier held input.  A full or disabled device can
+ # ignore an event even though its handler callback completed.
+@@ -161,7 +208,7 @@
+             '*deadline-ns': 'int', '*terminal-ns': 'int',
+             '*dispatch-ns': 'int', '*reason': 'str',
+             '*retrace': 'FdisbullInputRetrace', '*press': 'FdisbullInputPress',
+-            '*typing': 'FdisbullInputType' } }
++            '*typing': 'FdisbullInputType', '*click': 'FdisbullInputClick' } }
+
+ ##
+ # @x-fdisbull-query-input:
+@@ -269,9 +316,9 @@
+ # is no implicit continue, stop, suffix replay or synthetic cleanup release.
+ #
+ # This command shares the existing scheduler, migration restriction and token
+-# history.  It clears old retrace/type descriptors; another accepted arm clears
+-# this press descriptor.  Physical held-key ownership remains the caller's
+-# responsibility, including explicit resolution of a cancelled partial press.
++# history.  It clears old retrace/type/click descriptors; another accepted arm
++# clears this press descriptor.  Physical held-key ownership remains the
++# caller's responsibility, including resolution of a cancelled partial press.
+ #
+ # Returns: Armed receipt with only its first step deadline established.
+ # Since: 10.0
+@@ -304,7 +351,8 @@
+ # into several runs.  Partial sequences require explicit caller recovery.
+ #
+ # Shares query/cancel, migration restriction and token history with other
+-# input modes.  Clears old press/retrace descriptors only on successful arm.
++# input modes.  Clears old press/retrace/click descriptors only on successful
++# arm.
+ # Does not infer guest layout, neutralize held keys or Caps Lock, synthesize
+ # cleanup releases, replay callbacks or establish guest consumption.
+ #
+@@ -313,6 +361,38 @@
+ ##
+ { 'command': 'x-fdisbull-arm-keyboard-type',
+   'data': { 'token': 'str', 'text': 'str', 'hold-ms': 'int', 'gap-ms': 'int' },
++  'returns': 'FdisbullInputInfo' }
++
++##
++# @x-fdisbull-arm-mouse-click:
++#
++# @token: Unused owner token of 1..128 bytes, shared with other input arms.
++# @button: Ordinary left, middle or right mouse button; no wheel/side/extra.
++# @hold-ms: Hold from the actual down callback, 1..1000 milliseconds.
++#
++# Passively arm one down/up pair on the valid stopped native clock profile.
++# Validate the button, hold and full signed nominal horizon, then prepare and
++# pin two separate one-event PS/2 batches before accepting the token.  The
++# down is due 2 ms after arm.  Its callback and sync establish the release
++# deadline hold-ms later; a late down never shortens the requested hold.
++#
++# Every edge preserves the existing epoch/profile, pending-stop, reached/equal
++# clock-budget and pinned-handler checks.  The first actual VM stop cancels
++# the undispatched suffix.  Completion does not itself stop the VM.  There
++# is no implicit run, movement, trailing timer, replay or cleanup release.
++#
++# Shares query/cancel, migration restriction and token history with other
++# input modes.  Successful arm clears press/typing/retrace descriptors;
++# another accepted arm clears click.  Refused arms preserve the old receipt
++# and do not consume the requested token.  External button state and pending
++# mouse accumulators are not neutralized.  Disabled, remote or full devices
++# can complete callbacks without emitting a packet or delivering guest input.
++#
++# Returns: Armed receipt with only the down deadline established.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-mouse-click',
++  'data': { 'token': 'str', 'button': 'InputButton', 'hold-ms': 'int' },
+   'returns': 'FdisbullInputInfo' }
+
+ ##
+diff --git a/system/fdisbull-input.c b/system/fdisbull-input.c
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -3,7 +3,7 @@
+  * SPDX-License-Identifier: GPL-2.0-or-later
+  *
+  * All live accesses are serialized by BQL.  The virtual timer dispatches an
+- * owned batch or finite keyboard sequence through selected PS/2 handlers.  It
++ * owned batch or finite physical sequence through selected PS/2 handlers.  It
+  * never resumes or stops the VM, synthesizes cleanup releases, or claims that
+  * the guest consumed input.
+  */
+@@ -32,6 +32,8 @@
+ #define INPUT_MAX_TYPE_CHARS 64
+ #define INPUT_MAX_TYPE_STEPS (4 * INPUT_MAX_TYPE_CHARS)
+ #define INPUT_PRESS_EDGE_DELAY_NS INT64_C(2000000)
++#define INPUT_MAX_CLICK_STEPS 2
++#define INPUT_CLICK_EDGE_DELAY_NS INT64_C(2000000)
+
+ static struct {
+     bool initialized;
+@@ -45,8 +47,11 @@
+     FdisbullInputRetrace *retrace;
+     FdisbullInputPress *press;
+     FdisbullInputType *typing;
++    FdisbullInputClick *click;
+     FdisbullInputPressStepList *keyboard_next;
+     FdisbullInputBatch *keyboard_batches[INPUT_MAX_TYPE_STEPS];
++    FdisbullInputClickStepList *click_next;
++    FdisbullInputBatch *click_batches[INPUT_MAX_CLICK_STEPS];
+     char *token;
+     char *reason;
+     uint64_t event_count;
+@@ -79,6 +84,17 @@
+     input_schedule.keyboard_next = NULL;
+ }
+
++static void input_click_free_batches(void)
++{
++    unsigned i;
++
++    for (i = 0; i < INPUT_MAX_CLICK_STEPS; i++) {
++        qemu_input_fdisbull_free(input_schedule.click_batches[i]);
++        input_schedule.click_batches[i] = NULL;
++    }
++    input_schedule.click_next = NULL;
++}
++
+ static void input_finish(FdisbullInputState state, const char *reason)
+ {
+     assert(bql_locked());
+@@ -98,6 +114,7 @@
+     qemu_input_fdisbull_free(input_schedule.batch);
+     input_schedule.batch = NULL;
+     input_keyboard_free_batches();
++    input_click_free_batches();
+ }
+
+ static void input_invalidate(const char *reason)
+@@ -217,6 +234,9 @@
+     if (input_schedule.typing) {
+         info->typing = QAPI_CLONE(FdisbullInputType, input_schedule.typing);
+     }
++    if (input_schedule.click) {
++        info->click = QAPI_CLONE(FdisbullInputClick, input_schedule.click);
++    }
+     return info;
+ }
+
+@@ -377,6 +397,65 @@
+     timer_mod_ns(&input_schedule.timer, step->deadline_ns);
+ }
+
++static void input_click_dispatch(int64_t now)
++{
++    FdisbullInputClickStepList *node = input_schedule.click_next;
++    FdisbullInputClickStep *step;
++    uint64_t index = input_schedule.click->dispatched_count;
++    int64_t actual;
++    Error *err = NULL;
++
++    if (!node || index >= input_schedule.event_count ||
++        index >= INPUT_MAX_CLICK_STEPS ||
++        !input_schedule.click_batches[index]) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "mouse click lost its next owned step");
++        return;
++    }
++    step = node->value;
++    if (!step->has_deadline_ns || step->has_dispatch_ns ||
++        now < step->deadline_ns) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "mouse click timer preceded its current deadline");
++        return;
++    }
++    /* Check overflow before the synchronous callback, preserving its prefix. */
++    if (node->next && now > INT64_MAX - node->next->value->delay_ns) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "mouse click next deadline would overflow");
++        return;
++    }
++    if (!qemu_input_fdisbull_dispatch(input_schedule.click_batches[index],
++                                     &err)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     err ? error_get_pretty(err) :
++                           "mouse click dispatch failed");
++        error_free(err);
++        return;
++    }
++
++    actual = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    step->has_dispatch_ns = true;
++    step->dispatch_ns = actual;
++    input_schedule.click->dispatched_count++;
++    qemu_input_fdisbull_free(input_schedule.click_batches[index]);
++    input_schedule.click_batches[index] = NULL;
++    if (actual != now) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "virtual time changed inside synchronous mouse callback");
++        return;
++    }
++    if (!node->next) {
++        input_finish(FDISBULL_INPUT_STATE_DISPATCHED, "dispatch-complete");
++        return;
++    }
++    input_schedule.click_next = node->next;
++    step = node->next->value;
++    step->has_deadline_ns = true;
++    step->deadline_ns = actual + step->delay_ns;
++    timer_mod_ns(&input_schedule.timer, step->deadline_ns);
++}
++
+ static void input_timer_cb(void *opaque)
+ {
+     g_autoptr(FdisbullClockInfo) clock = NULL;
+@@ -415,6 +494,10 @@
+     }
+     if (input_schedule.press || input_schedule.typing) {
+         input_keyboard_dispatch(clock->virtual_ns);
++        return;
++    }
++    if (input_schedule.click) {
++        input_click_dispatch(clock->virtual_ns);
+         return;
+     }
+     if (!input_retrace_check(clock->virtual_ns)) {
+@@ -515,6 +598,8 @@
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
+     g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
++    input_click_free_batches();
++    g_clear_pointer(&input_schedule.click, qapi_free_FdisbullInputClick);
+     input_arm_commit(token, now, deadline_ns, qemu_input_fdisbull_count(batch));
+     return input_info();
+ }
+@@ -727,6 +812,8 @@
+     g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
++    input_click_free_batches();
++    g_clear_pointer(&input_schedule.click, qapi_free_FdisbullInputClick);
+     qapi_free_FdisbullInputPress(input_schedule.press);
+     input_schedule.press = g_steal_pointer(&press);
+     input_schedule.keyboard_next = input_schedule.press->steps;
+@@ -893,6 +980,8 @@
+     g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
++    input_click_free_batches();
++    g_clear_pointer(&input_schedule.click, qapi_free_FdisbullInputClick);
+     qapi_free_FdisbullInputType(input_schedule.typing);
+     input_schedule.typing = g_steal_pointer(&typing);
+     input_schedule.keyboard_next = input_schedule.typing->steps;
+@@ -911,6 +1000,100 @@
+     return NULL;
+ }
+
++static FdisbullInputBatch *input_click_prepare_step(InputButton button,
++                                                    bool down, Error **errp)
++{
++    InputBtnEvent button_event = { .button = button, .down = down };
++    InputEvent event = { .type = INPUT_EVENT_KIND_BTN,
++                         .u.btn = { .data = &button_event } };
++    InputEventList events = { .value = &event };
++
++    /* Each edge owns a separate batch so its mouse sync cannot be collapsed. */
++    return qemu_input_fdisbull_prepare(&events, errp);
++}
++
++FdisbullInputInfo *qmp_x_fdisbull_arm_mouse_click(
++    const char *token, InputButton button, int64_t hold_ms, Error **errp)
++{
++    g_autoptr(FdisbullInputClick) click = NULL;
++    FdisbullInputBatch *batches[INPUT_MAX_CLICK_STEPS] = { 0 };
++    FdisbullInputClickStepList **tail;
++    unsigned i;
++    int64_t now, horizon;
++
++    if (!input_arm_guard(token, errp)) {
++        return NULL;
++    }
++    if (button != INPUT_BUTTON_LEFT && button != INPUT_BUTTON_MIDDLE &&
++        button != INPUT_BUTTON_RIGHT) {
++        error_setg(errp, "Mouse click button must be left, middle or right");
++        return NULL;
++    }
++    if (hold_ms < 1 || hold_ms > 1000) {
++        error_setg(errp, "Mouse click hold-ms must be 1..1000");
++        return NULL;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    horizon = INPUT_CLICK_EDGE_DELAY_NS + hold_ms * SCALE_MS;
++    if (now < 0 || now > INT64_MAX - horizon) {
++        error_setg(errp, "Mouse click nominal horizon exceeds signed time");
++        return NULL;
++    }
++
++    click = g_new0(FdisbullInputClick, 1);
++    click->button = button;
++    click->hold_ms = hold_ms;
++    tail = &click->steps;
++    for (i = 0; i < INPUT_MAX_CLICK_STEPS; i++) {
++        FdisbullInputClickStepList *node =
++            g_new0(FdisbullInputClickStepList, 1);
++        FdisbullInputClickStep *step = g_new0(FdisbullInputClickStep, 1);
++
++        *tail = node;
++        node->value = step;
++        tail = &node->next;
++        step->button = button;
++        step->down = i == 0;
++        step->delay_ns = i == 0 ? INPUT_CLICK_EDGE_DELAY_NS :
++                                 hold_ms * SCALE_MS;
++        if (i == 0) {
++            step->has_deadline_ns = true;
++            step->deadline_ns = now + step->delay_ns;
++        }
++        batches[i] = input_click_prepare_step(button, step->down, errp);
++        if (!batches[i]) {
++            goto fail;
++        }
++    }
++    if (!input_block_migration(errp)) {
++        goto fail;
++    }
++
++    input_schedule.batch = NULL;
++    g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
++    input_keyboard_free_batches();
++    g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
++    g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
++    input_click_free_batches();
++    qapi_free_FdisbullInputClick(input_schedule.click);
++    input_schedule.click = g_steal_pointer(&click);
++    input_schedule.click_next = input_schedule.click->steps;
++    for (i = 0; i < INPUT_MAX_CLICK_STEPS; i++) {
++        input_schedule.click_batches[i] = batches[i];
++        batches[i] = NULL;
++    }
++    input_arm_commit(token, now,
++                     input_schedule.click_next->value->deadline_ns,
++                     INPUT_MAX_CLICK_STEPS);
++    return input_info();
++
++fail:
++    for (i = 0; i < INPUT_MAX_CLICK_STEPS; i++) {
++        qemu_input_fdisbull_free(batches[i]);
++    }
++    return NULL;
++}
++
+ FdisbullInputInfo *qmp_x_fdisbull_cancel_input(const char *token, Error **errp)
+ {
+     if (!input_guard(errp)) {

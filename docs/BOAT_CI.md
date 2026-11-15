@@ -59,12 +59,12 @@ source-export proofs; a new shallow checkout cannot stand in for that build.
 The kit QEMU wrapper passes its firmware path explicitly because the private
 ELF loader changes executable-relative directory discovery.
 
-The driver admits each material phase against actual output/Docker filesystems,
-without adding figures from the same device. Estimates are conservative;
-`--expected-bytes` is an explicit estimate, not a way to evade admission. Retain
-logs and selected exports before any separately approved cleanup. A failed run
-cannot be reused for a changed commit. GitLab and local-hub must both receive
-the source refs with automatic provider CI suppressed.
+The driver records free-space and allocation-estimate telemetry for the output
+and Docker filesystems, without adding figures from the same device. Storage
+reserves are not enforced by this driver. `--expected-bytes` records an estimate
+only. Retain logs and selected exports before any separately approved cleanup.
+A failed run cannot be reused for a changed commit. GitLab and local-hub must
+both receive the source refs with automatic provider CI suppressed.
 
 ## Offline kit and persistence
 
@@ -97,10 +97,10 @@ components keep their original identities; every candidate acceptance is fresh.
 
 The full Wine runtime is required for the chat kit. A kit can be up to 2 GB,
 with a 4 GiB extracted archive limit and a separately hash-bound 6 GiB expanded
-guest base limit. Each chat phase admits a conservative 32 GB allocation by
-default, including intermediate images and evidence. Actual growth and input
-sizes must still be inspected before choosing an explicit override. A failed
-admission preserves the attempt and never lowers the reserve automatically.
+guest base limit. Each chat phase records a default 32 GB allocation estimate,
+including intermediate images and evidence. These estimates do not gate work;
+archive and extraction correctness limits remain enforced. Failed attempts are
+preserved.
 
 For attachment limits, `scripts/chat_offline_parts.py split` creates an ordered
 set (250 MB per part by default) and a checksum manifest. Deliver the helper and

@@ -1,0 +1,1897 @@
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -34,6 +34,9 @@
+ #include "exec/log.h"
+ #include "qemu/main-loop.h"
+ #include "exec/cpu-all.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-task-private.h"
++#endif
+ #include "system/cpu-timers.h"
+ #include "exec/replay-core.h"
+ #include "system/tcg.h"
+@@ -947,16 +950,34 @@
+ {
+     int ret;
+ 
+-    /* if an exception is pending, we execute it here */
+-    while (!cpu_handle_exception(cpu, &ret)) {
++    while (true) {
++#ifndef CONFIG_USER_ONLY
++        /* A guest may single-step the OUTW that publishes a task switch.
++         * Commit that switch before handling the resulting debug exception,
++         * so the stopped state already names the new task. */
++        fdisbull_task_private_commit_switch(cpu);
++#endif
++        /* if an exception is pending, we execute it here */
++        if (cpu_handle_exception(cpu, &ret)) {
++            break;
++        }
+         TranslationBlock *last_tb = NULL;
+         int tb_exit = 0;
+ 
+-        while (!cpu_handle_interrupt(cpu, &last_tb)) {
++        while (true) {
+             TranslationBlock *tb;
+             vaddr pc;
+             uint64_t cs_base;
+             uint32_t flags, cflags;
++
++#ifndef CONFIG_USER_ONLY
++            if (fdisbull_task_private_commit_switch(cpu)) {
++                last_tb = NULL;
++            }
++#endif
++            if (cpu_handle_interrupt(cpu, &last_tb)) {
++                break;
++            }
+ 
+             cpu_get_tb_cpu_state(cpu_env(cpu), &pc, &cs_base, &flags);
+ 
+@@ -998,6 +1019,15 @@
+             }
+ 
+ #ifndef CONFIG_USER_ONLY
++            /* Translation can discover a stale private fetch overlay.  Stop
++             * before entering the just-generated TB in that case. */
++            if (fdisbull_task_private_commit_switch(cpu)) {
++                last_tb = NULL;
++                continue;
++            }
++#endif
++
++#ifndef CONFIG_USER_ONLY
+             /*
+              * We don't take care of direct jumps when address mapping
+              * changes in system emulation.  So it's not safe to make a
+--- a/accel/tcg/cputlb.c
++++ b/accel/tcg/cputlb.c
+@@ -27,6 +27,7 @@
+ #include "exec/cputlb.h"
+ #ifndef CONFIG_USER_ONLY
+ #include "system/fdisbull-layers.h"
++#include "system/fdisbull-task-private.h"
+ #endif
+ #include "exec/tb-flush.h"
+ #include "exec/memory-internal.h"
+@@ -1075,6 +1076,14 @@
+     if (is_ram) {
+         iotlb = memory_region_get_ram_addr(section->mr) + xlat;
+         assert(!(iotlb & ~TARGET_PAGE_MASK));
++        ram_addr_t task_addr;
++        if (fdisbull_task_private_resolve(iotlb, &task_addr)) {
++            void *task_ptr = fdisbull_task_private_ptr(task_addr);
++            assert(task_ptr != NULL);
++            iotlb = task_addr;
++            /* The common path below subtracts addr_page once. */
++            addend = (uintptr_t)task_ptr;
++        }
+         /*
+          * Computing is_clean is expensive; avoid all that unless
+          * the page is actually writable.
+@@ -1342,6 +1351,11 @@
+ #ifndef CONFIG_USER_ONLY
+         if (fdisbull_layers_note_guest_write(ram_addr, size)) {
+             /* Stop at the first boundary after a layer backing is modified. */
++            bql_lock();
++            cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
++            bql_unlock();
++        }
++        if (fdisbull_task_private_note_guest_write(ram_addr, size)) {
+             bql_lock();
+             cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
+             bql_unlock();
+--- /dev/null
++++ b/qapi/fdisbull-task-private.json
+@@ -0,0 +1,220 @@
++##
++# @FdisbullTaskLayerView:
++# Explicit view used by a stopped read-only task-memory request.
++#
++# @ram: Task-private data bytes.
++# @execute: Effective task-private instruction-fetch bytes.
++# @base: Shared underlying guest RAM bytes.
++##
++{ 'enum': 'FdisbullTaskLayerView', 'data': [ 'ram', 'execute', 'base' ] }
++
++##
++# @FdisbullTaskPage:
++# One guest physical page requested for private storage.
++#
++# @address: Page-aligned guest physical address.
++##
++{ 'struct': 'FdisbullTaskPage',
++  'data': { 'address': 'uint64' } }
++
++##
++# @FdisbullTaskPatch:
++# Guarded bytes in a registered task-private page.
++#
++# @address: Guest physical start address.
++# @before: Expected bytes as lowercase hex.
++# @after: Replacement bytes as lowercase hex.
++##
++{ 'struct': 'FdisbullTaskPatch',
++  'data': { 'address': 'uint64', 'before': 'str', 'after': 'str' } }
++
++##
++# @FdisbullTaskPageInfo:
++# Identity and digest of a private page.
++#
++# @address: Guest physical page address.
++# @backing: Internal resolved RAM backing page address.
++# @sha256: Digest of the full task-private page.
++##
++{ 'struct': 'FdisbullTaskPageInfo',
++  'data': { 'address': 'uint64', 'backing': 'uint64', 'sha256': 'str' } }
++
++##
++# @FdisbullTaskInfo:
++# One registered task lifetime and its pages/layers.
++#
++# @uuid: Cooperating monitor UUID as 32 lowercase hex digits.
++# @cookie: Monitor task cookie.
++# @incarnation: Non-reusable lifetime counter.
++# @generation: Per-task layer generation.
++# @retired: Whether this lifetime has been tombstoned.
++# @pages: Private page identities and contents digests.
++# @execution-bytes: Count of task fetch overlay bytes.
++# @execution-sha256: Digest of effective task fetch overlay state.
++##
++{ 'struct': 'FdisbullTaskInfo',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'generation': 'uint64', 'retired': 'bool',
++            'pages': [ 'FdisbullTaskPageInfo' ],
++            'execution-bytes': 'uint64', 'execution-sha256': 'str' } }
++
++##
++# @FdisbullTaskStatusInfo:
++# Full task-private owner and registry receipt.
++#
++# @model: Native implementation model identifier.
++# @api-version: API schema version.
++# @epoch: Native owner epoch, changed on reset or migration load.
++# @generation: Native task-view manager generation.
++# @uuid: Requested monitor UUID.
++# @cookie: Requested task cookie.
++# @incarnation: Requested task incarnation.
++# @task-generation: Requested task's layer generation.
++# @selected: Whether the requested task owns the active CPU view.
++# @selected-uuid: Active task UUID, or empty when no task is selected.
++# @selected-cookie: Active task cookie, or zero when none is selected.
++# @selected-incarnation: Active task incarnation, or zero when none selected.
++# @sequence: Last committed even scheduler sequence.
++# @pending: Whether a task switch is queued for the next TB boundary.
++# @fault: Optional fail-closed task-view fault.
++# @tasks: Complete registered task and page inventory.
++##
++{ 'struct': 'FdisbullTaskStatusInfo',
++  'data': { 'model': 'str', 'api-version': 'uint64', 'epoch': 'uint64',
++            'generation': 'uint64', 'uuid': 'str', 'cookie': 'uint64',
++            'incarnation': 'uint64', 'task-generation': 'uint64',
++            'selected': 'bool', 'selected-uuid': 'str',
++            'selected-cookie': 'uint64', 'selected-incarnation': 'uint64',
++            'sequence': 'uint64', 'pending': 'bool', '*fault': 'str',
++            'tasks': [ 'FdisbullTaskInfo' ] } }
++
++##
++# @FdisbullTaskMonitorInfo:
++# Doorbell and arena initialization receipt.
++#
++# @model: Native implementation model identifier.
++# @anchor-address: Physical RAM address of FDBTASK1 record.
++# @anchor-size: FDBTASK1 record size in bytes.
++# @doorbell-port: Guest I/O port used to commit a task switch.
++# @doorbell-value: Required 16-bit doorbell token.
++# @epoch: Native task-context epoch.
++# @generation: Native manager generation.
++# @max-tasks: Maximum registered task lifetimes.
++# @max-pages-per-task: Maximum private pages per task.
++# @enabled: Whether guest doorbell commits are enabled.
++##
++{ 'struct': 'FdisbullTaskMonitorInfo',
++  'data': { 'model': 'str', 'anchor-address': 'uint64',
++            'anchor-size': 'uint64', 'doorbell-port': 'uint64',
++            'doorbell-value': 'uint64', 'epoch': 'uint64',
++            'generation': 'uint64', 'max-tasks': 'uint64',
++            'max-pages-per-task': 'uint64', 'enabled': 'bool' } }
++
++##
++# @FdisbullTaskConfigureInfo:
++# Atomic per-task layer transition receipt.
++#
++# @generation: New per-task layer generation.
++# @ram-bytes: Number of task-private data bytes written.
++# @execution-bytes: Number of active task fetch overlay bytes.
++# @fault: Optional task-view fault.
++##
++{ 'struct': 'FdisbullTaskConfigureInfo',
++  'data': { 'generation': 'uint64', 'ram-bytes': 'uint64',
++            'execution-bytes': 'uint64', '*fault': 'str' } }
++
++##
++# @FdisbullTaskReadInfo:
++# Explicit stopped task-memory view receipt.
++#
++# @generation: Task layer generation.
++# @data-hex: Requested byte span as lowercase hex.
++# @active: Whether the task currently owns the CPU view.
++##
++{ 'struct': 'FdisbullTaskReadInfo',
++  'data': { 'generation': 'uint64', 'data-hex': 'str', 'active': 'bool' } }
++
++##
++# @x-fdisbull-task-monitor-init:
++# Initialize the cooperative task monitor, its private RAM arena and the
++# VMState record. The guest commits an already-published even FDBTASK1 anchor
++# using OUTW 0xF1DB,0x4446.
++#
++# @anchor-address: Physical RAM address of the 56-byte FDBTASK1 anchor.
++# @prepare-only: Initialize for a snapshot destination without enabling
++#     guest commits before the saved VMState is restored.
++##
++{ 'command': 'x-fdisbull-task-monitor-init',
++  'data': { 'anchor-address': 'uint64', '*prepare-only': 'bool' },
++  'returns': 'FdisbullTaskMonitorInfo' }
++
++##
++# @x-fdisbull-task-register:
++# Register or extend one never-reused incarnation.
++#
++# @uuid: Cooperating monitor UUID as 32 lowercase hex digits.
++# @cookie: Task cookie.
++# @incarnation: Non-reusable task lifetime counter.
++# @pages: Physical RAM pages to clone into this private view.
++##
++{ 'command': 'x-fdisbull-task-register',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'pages': [ 'FdisbullTaskPage' ] },
++  'returns': 'FdisbullTaskStatusInfo' }
++
++##
++# @x-fdisbull-task-layer-configure:
++# Atomically configure guarded task layers.
++#
++# @uuid: Cooperating monitor UUID.
++# @cookie: Task cookie.
++# @incarnation: Task lifetime counter.
++# @generation: Expected current per-task layer generation.
++# @ram: Guarded private data writes.
++# @execute: Complete desired task-private fetch overlay.
++##
++{ 'command': 'x-fdisbull-task-layer-configure',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'generation': 'uint64', 'ram': [ 'FdisbullTaskPatch' ],
++            'execute': [ 'FdisbullTaskPatch' ] },
++  'returns': 'FdisbullTaskConfigureInfo' }
++
++##
++# @x-fdisbull-task-layer-read:
++# Read an explicit task/base/fetch memory view.
++#
++# @uuid: Cooperating monitor UUID.
++# @cookie: Task cookie.
++# @incarnation: Task lifetime counter.
++# @address: Guest physical address.
++# @length: Number of bytes, from 1 to 4096.
++# @view: Optional explicit memory view, defaulting to ram.
++##
++{ 'command': 'x-fdisbull-task-layer-read',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64',
++            'address': 'uint64', 'length': 'uint16', '*view': 'FdisbullTaskLayerView' },
++  'returns': 'FdisbullTaskReadInfo' }
++
++##
++# @x-fdisbull-task-layer-observe:
++# Read registry, selection and page digests.
++#
++# @uuid: Cooperating monitor UUID.
++# @cookie: Task cookie.
++# @incarnation: Task lifetime counter.
++##
++{ 'command': 'x-fdisbull-task-layer-observe',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64' },
++  'returns': 'FdisbullTaskStatusInfo' }
++
++##
++# @x-fdisbull-task-retire:
++# Retire one incarnation and revoke active mapping.
++#
++# @uuid: Cooperating monitor UUID.
++# @cookie: Task cookie.
++# @incarnation: Task lifetime counter.
++##
++{ 'command': 'x-fdisbull-task-retire',
++  'data': { 'uuid': 'str', 'cookie': 'uint64', 'incarnation': 'uint64' },
++  'returns': 'FdisbullTaskStatusInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -69,6 +69,7 @@
+   'fdisbull-dos-checkpoint',
+   'fdisbull-instrumented-checkpoint',
+   'fdisbull-task-context',
++    'fdisbull-task-private',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -72,6 +72,7 @@
+ { 'include': 'fdisbull-dos-checkpoint.json' }
+ { 'include': 'fdisbull-instrumented-checkpoint.json' }
+ { 'include': 'fdisbull-task-context.json' }
++{ 'include': 'fdisbull-task-private.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- a/system/fdisbull-layers.c
++++ b/system/fdisbull-layers.c
+@@ -16,6 +16,7 @@
+ #include "system/runstate.h"
+ #include "system/tcg.h"
+ #include "system/fdisbull-layers.h"
++#include "system/fdisbull-task-private.h"
+ 
+ #define LAYER_MAX_BYTES 65536
+ #define LAYER_MAX_PATCHES 4096
+@@ -490,6 +491,7 @@
+         }
+     }
+     qemu_mutex_unlock(&layers.lock);
++    fdisbull_task_private_copy_code(dest, host, length);
+ }
+ 
+ bool fdisbull_layers_note_guest_write(ram_addr_t address, size_t length)
+--- /dev/null
++++ b/system/fdisbull-task-private.h
+@@ -0,0 +1,18 @@
++/* Cooperative task-private RAM views for system TCG. */
++#ifndef SYSTEM_FDISBULL_TASK_PRIVATE_H
++#define SYSTEM_FDISBULL_TASK_PRIVATE_H
++
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "hw/core/cpu.h"
++#include "exec/cpu-common.h"
++
++bool fdisbull_task_private_resolve(uint64_t base, ram_addr_t *private_addr);
++void *fdisbull_task_private_ptr(uint64_t address);
++void fdisbull_task_private_copy_code(void *dest, const void *host, size_t length);
++bool fdisbull_task_private_note_guest_write(uint64_t address, size_t length);
++bool fdisbull_task_private_commit_switch(CPUState *cpu);
++void fdisbull_task_private_context_changed(CPUState *cpu);
++void fdisbull_task_private_note_reset(void);
++
++#endif
+--- a/target/i386/cpu.c
++++ b/target/i386/cpu.c
+@@ -33,6 +33,7 @@
+ #include "qemu/error-report.h"
+ #ifndef CONFIG_USER_ONLY
+ #include "system/fdisbull-task-context.h"
++#include "system/fdisbull-task-private.h"
+ #endif
+ #include "qapi/qapi-visit-machine.h"
+ #include "standard-headers/asm-x86/kvm_para.h"
+@@ -7649,6 +7650,7 @@
+ #endif
+ #ifndef CONFIG_USER_ONLY
+     fdisbull_task_context_note_reset();
++    fdisbull_task_private_note_reset();
+ #endif
+ }
+ 
+--- /dev/null
++++ b/target/i386/fdisbull-task-private.c
+@@ -0,0 +1,1481 @@
++/*
++ * Cooperative per-task private RAM and instruction-fetch views.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "exec/address-spaces.h"
++#include "exec/cpu-common.h"
++#include "exec/cputlb.h"
++#include "exec/memory.h"
++#include "exec/tb-flush.h"
++#include "hw/core/cpu.h"
++#include "migration/vmstate.h"
++#include "qapi/qapi-commands-fdisbull-task-private.h"
++#include "qemu/uuid.h"
++#include "qemu/main-loop.h"
++#include "qemu/bswap.h"
++#include "qemu/cutils.h"
++#include "qemu/thread.h"
++#include "exec/cpu-interrupt.h"
++#include "target/i386/cpu.h"
++#include "system/cpus.h"
++#include "system/fdisbull-task-context.h"
++#include "system/fdisbull-task-private.h"
++#include "system/runstate.h"
++#include "system/tcg.h"
++
++#define TASK_MAX 16
++#define TASK_PAGES 16
++#define TASK_PAGE_SIZE 4096
++#define TASK_ARENA_SIZE (TASK_MAX * TASK_PAGES * TASK_PAGE_SIZE)
++#define TASK_MAX_EXEC_BYTES 65536
++#define TASK_MAX_PATCH_BYTES 65536
++#define TASK_MAX_READ 4096
++#define TASK_ANCHOR_SIZE 56
++#define TASK_PORT 0xf1db
++#define TASK_PORT_VALUE 0x4446
++
++typedef struct TaskPageState {
++    uint64_t guest_address;
++    uint64_t backing_page;
++    uint32_t slot;
++    bool used;
++} TaskPageState;
++
++typedef struct TaskState {
++    char uuid[37];
++    uint64_t cookie;
++    uint64_t incarnation;
++    uint64_t generation;
++    bool used;
++    bool retired;
++    uint8_t page_count;
++    TaskPageState pages[TASK_PAGES];
++    GHashTable *execute;
++    GHashTable *expected;
++} TaskState;
++
++typedef struct TaskExecState {
++    uint32_t private_offset;
++    uint8_t value;
++    uint8_t expected;
++} TaskExecState;
++
++typedef struct TaskMigrationState {
++    uint64_t anchor_address;
++    uint64_t sequence;
++    uint64_t epoch;
++    uint64_t generation;
++    uint8_t selected;
++    uint8_t task_used[TASK_MAX];
++    uint8_t task_retired[TASK_MAX];
++    uint8_t page_count[TASK_MAX];
++    uint8_t uuid[TASK_MAX * 37];
++    uint64_t cookie[TASK_MAX];
++    uint64_t incarnation[TASK_MAX];
++    uint64_t task_generation[TASK_MAX];
++    uint64_t page_guest[TASK_MAX * TASK_PAGES];
++    uint64_t page_backing[TASK_MAX * TASK_PAGES];
++    uint32_t page_slot[TASK_MAX * TASK_PAGES];
++    uint32_t exec_count;
++    uint32_t exec_offset[TASK_MAX_EXEC_BYTES];
++    uint8_t exec_task[TASK_MAX_EXEC_BYTES];
++    uint8_t exec_value[TASK_MAX_EXEC_BYTES];
++    uint8_t exec_expected[TASK_MAX_EXEC_BYTES];
++    bool overflow;
++    bool enabled;
++} TaskMigrationState;
++
++static TaskState tasks[TASK_MAX];
++static TaskMigrationState migration_state = { .selected = UINT8_MAX };
++static MemoryRegion task_arena;
++static MemoryRegion task_io;
++static uint8_t *arena_host;
++static uint64_t arena_ram_addr;
++static bool arena_ready;
++static bool io_ready;
++static bool vmstate_ready;
++static bool task_manager_ready;
++static bool monitor_enabled;
++static uint64_t epoch_highwater = 1;
++static uint64_t generation_highwater = 1;
++static uint8_t selected_task = UINT8_MAX;
++static gint pending_task = -1;
++static gint pending_fault;
++static char *task_fault;
++static QemuMutex task_lock;
++static gsize task_lock_initialized;
++
++static void lock_init(void)
++{
++    if (g_once_init_enter(&task_lock_initialized)) {
++        qemu_mutex_init(&task_lock);
++        g_once_init_leave(&task_lock_initialized, 1);
++    }
++}
++
++static void task_error(Error **errp, const char *why)
++{
++    error_setg(errp, "FDISBULL_TASK_PRECONDITION: %s", why);
++}
++
++static bool generation_room(Error **errp)
++{
++    if (generation_highwater >= UINT64_MAX - 2) {
++        task_error(errp, "task generation counter exhausted");
++        return false;
++    }
++    return true;
++}
++
++static GHashTable *byte_map_new(void)
++{
++    return g_hash_table_new_full(g_int64_hash, g_int64_equal, g_free, NULL);
++}
++
++static bool byte_map_put(GHashTable *map, uint64_t address, uint8_t value)
++{
++    uint64_t *key = g_new(uint64_t, 1);
++    *key = address;
++    g_hash_table_replace(map, key, GUINT_TO_POINTER((unsigned)value + 1));
++    return true;
++}
++
++static bool byte_map_get(GHashTable *map, uint64_t address, uint8_t *value)
++{
++    gpointer found = map ? g_hash_table_lookup(map, &address) : NULL;
++    if (!found) {
++        return false;
++    }
++    *value = GPOINTER_TO_UINT(found) - 1;
++    return true;
++}
++
++static uint8_t *slot_ptr(uint32_t slot)
++{
++    return arena_host + (size_t)slot * TASK_PAGE_SIZE;
++}
++
++static uint64_t slot_ram_addr(uint32_t slot)
++{
++    return arena_ram_addr + (uint64_t)slot * TASK_PAGE_SIZE;
++}
++
++static bool direct_ram(uint64_t physical, hwaddr size, MemoryRegion **mr_out,
++                       hwaddr *offset_out, uint64_t *backing_out,
++                       uint8_t **host_out, Error **errp)
++{
++    MemoryRegion *mr;
++    hwaddr offset, length = size;
++
++    if (physical > UINT32_MAX || size == 0 ||
++        physical > UINT64_MAX - size) {
++        task_error(errp, "address is outside bounded 32-bit physical RAM");
++        return false;
++    }
++    mr = address_space_translate(&address_space_memory, physical, &offset,
++                                 &length, true, MEMTXATTRS_UNSPECIFIED);
++    if (!mr || !memory_region_is_ram(mr) || memory_region_is_rom(mr) ||
++        memory_region_is_romd(mr) || mr->readonly || length < size ||
++        memory_region_has_ram_discard_manager(mr)) {
++        task_error(errp, "address does not resolve to direct writable RAM");
++        return false;
++    }
++    if (mr_out) {
++        *mr_out = mr;
++    }
++    if (offset_out) {
++        *offset_out = offset;
++    }
++    if (backing_out) {
++        *backing_out = memory_region_get_ram_addr(mr) + offset;
++    }
++    if (host_out) {
++        *host_out = memory_region_get_ram_ptr(mr) + offset;
++    }
++    return true;
++}
++
++static bool stopped_single_tcg(Error **errp)
++{
++    CPUState *cpu;
++    unsigned count = 0;
++    if (!tcg_enabled() || (runstate_get() != RUN_STATE_PAUSED &&
++                           runstate_get() != RUN_STATE_DEBUG &&
++                           runstate_get() != RUN_STATE_PRELAUNCH)) {
++        task_error(errp, "requires stopped system-mode TCG");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        if (++count > 1 || !cpu->stopped) {
++            task_error(errp, "requires one stopped vCPU");
++            return false;
++        }
++    }
++    if (count != 1) {
++        task_error(errp, "requires one stopped vCPU");
++        return false;
++    }
++    return true;
++}
++
++static void register_vmstate(void);
++static void manager_init_empty(Error **errp)
++{
++    g_autoptr(Error) local_err = NULL;
++    if (task_manager_ready) {
++        return;
++    }
++    if (!arena_ready) {
++        if (!memory_region_init_ram(&task_arena, NULL,
++                                    "fdisbull-task-private-ram",
++                                    TASK_ARENA_SIZE, &local_err)) {
++            error_propagate(errp, local_err);
++            return;
++        }
++        arena_host = memory_region_get_ram_ptr(&task_arena);
++        arena_ram_addr = memory_region_get_ram_addr(&task_arena);
++        memset(arena_host, 0, TASK_ARENA_SIZE);
++        arena_ready = true;
++    }
++    lock_init();
++    if (!vmstate_ready) {
++        register_vmstate();
++        vmstate_ready = true;
++    }
++    task_manager_ready = true;
++}
++
++static int find_task(const char *uuid, uint64_t cookie, uint64_t incarnation)
++{
++    for (int i = 0; i < TASK_MAX; i++) {
++        if (tasks[i].used && tasks[i].cookie == cookie &&
++            tasks[i].incarnation == incarnation &&
++            !strcmp(tasks[i].uuid, uuid)) {
++            return i;
++        }
++    }
++    return -1;
++}
++
++static gint uint64_compare(gconstpointer a, gconstpointer b)
++{
++    uint64_t x = *(const uint64_t *)a;
++    uint64_t y = *(const uint64_t *)b;
++    return x < y ? -1 : x > y;
++}
++
++static int find_free_task(void)
++{
++    for (int i = 0; i < TASK_MAX; i++) {
++        if (!tasks[i].used) {
++            return i;
++        }
++    }
++    return -1;
++}
++
++static TaskPageState *find_page_by_backing(TaskState *task,
++                                            uint64_t backing_page)
++{
++    for (unsigned i = 0; i < task->page_count; i++) {
++        if (task->pages[i].backing_page == backing_page) {
++            return &task->pages[i];
++        }
++    }
++    return NULL;
++}
++
++static bool task_has_backing_page(TaskState *task, uint64_t backing)
++{
++    return find_page_by_backing(task, backing & ~(TASK_PAGE_SIZE - 1)) != NULL;
++}
++
++static bool physical_backing_page(uint64_t physical, uint64_t *backing)
++{
++    if (!direct_ram(physical & ~(TASK_PAGE_SIZE - 1), TASK_PAGE_SIZE,
++                    NULL, NULL, backing, NULL, NULL)) {
++        return false;
++    }
++    *backing &= ~(TASK_PAGE_SIZE - 1);
++    return true;
++}
++
++/* This release supports nonpaged memory and legacy non-PAE paging. Private
++ * pages may not alias the active page directory or any present page table. */
++static bool task_paging_guard(CPUState *cpu, TaskState *task, Error **errp)
++{
++    CPUX86State *env = &X86_CPU(cpu)->env;
++    uint8_t entry[4];
++    uint64_t directory, backing;
++    if (!(env->cr[0] & CR0_PG_MASK) || !task->page_count) {
++        return true;
++    }
++    if (env->cr[4] & CR4_PAE_MASK) {
++        task_error(errp, "task-private RAM with PAE page tables is unsupported");
++        return false;
++    }
++    directory = env->cr[3] & ~(uint64_t)(TASK_PAGE_SIZE - 1);
++    if (!physical_backing_page(directory, &backing)) {
++        task_error(errp, "active page directory is not direct RAM");
++        return false;
++    }
++    if (task_has_backing_page(task, backing)) {
++        task_error(errp, "private task page aliases the active page directory");
++        return false;
++    }
++    for (unsigned i = 0; i < 1024; i++) {
++        uint64_t pde_address = directory + i * sizeof(uint32_t);
++        if (address_space_read(&address_space_memory, pde_address,
++                               MEMTXATTRS_UNSPECIFIED, entry,
++                               sizeof(entry)) != MEMTX_OK) {
++            task_error(errp, "active page directory cannot be read as RAM");
++            return false;
++        }
++        uint32_t pde = ldl_le_p(entry);
++        if (!(pde & PG_PRESENT_MASK) ||
++            ((pde & PG_PSE_MASK) && (env->cr[4] & CR4_PSE_MASK))) {
++            continue;
++        }
++        uint64_t table = pde & ~(uint64_t)(TASK_PAGE_SIZE - 1);
++        if (!physical_backing_page(table, &backing)) {
++            task_error(errp, "active page table is not direct RAM");
++            return false;
++        }
++        if (task_has_backing_page(task, backing)) {
++            task_error(errp, "private task page aliases an active page table");
++            return false;
++        }
++    }
++    return true;
++}
++
++static bool task_key_validate(const char *uuid, uint64_t cookie,
++                              uint64_t incarnation, Error **errp)
++{
++    if (!uuid || strnlen(uuid, 33) != 32 || !cookie || !incarnation) {
++        task_error(errp, "task key needs 32 lowercase UUID hex digits and nonzero cookie/incarnation");
++        return false;
++    }
++    for (unsigned i = 0; i < 32; i++) {
++        if (!g_ascii_isxdigit(uuid[i]) || g_ascii_isupper(uuid[i])) {
++            task_error(errp, "task monitor UUID must be lowercase hex");
++            return false;
++        }
++    }
++    return true;
++}
++
++static char *uuid_bytes_hex(const uint8_t *bytes)
++{
++    static const char digits[] = "0123456789abcdef";
++    char *text = g_malloc(33);
++    for (unsigned i = 0; i < 16; i++) {
++        text[i * 2] = digits[bytes[i] >> 4];
++        text[i * 2 + 1] = digits[bytes[i] & 15];
++    }
++    text[32] = '\0';
++    return text;
++}
++
++static bool read_anchor(char **uuid_out, uint64_t *sequence,
++                        uint64_t *cookie, uint64_t *incarnation,
++                        Error **errp)
++{
++    uint8_t *host;
++    if (!migration_state.anchor_address ||
++        !direct_ram(migration_state.anchor_address, TASK_ANCHOR_SIZE,
++                    NULL, NULL, NULL, &host, errp)) {
++        return false;
++    }
++    if (memcmp(host, "FDBTASK1", 8) || ldl_le_p(host + 48) != 1 ||
++        ldl_le_p(host + 52) != 0) {
++        task_error(errp, "anchor format, active state, or reserved field is invalid");
++        return false;
++    }
++    *sequence = ldq_le_p(host + 24);
++    *cookie = ldq_le_p(host + 32);
++    *incarnation = ldq_le_p(host + 40);
++    if ((*sequence & 1) || !*cookie || !*incarnation) {
++        task_error(errp, "anchor is not an even, active task lifetime");
++        return false;
++    }
++    *uuid_out = uuid_bytes_hex(host + 8);
++    return true;
++}
++
++static FdisbullTaskPageInfo *page_info_new(TaskPageState *page)
++{
++    FdisbullTaskPageInfo *info = g_new0(FdisbullTaskPageInfo, 1);
++    info->address = page->guest_address;
++    info->backing = page->backing_page;
++    info->sha256 = g_compute_checksum_for_data(G_CHECKSUM_SHA256,
++                                               slot_ptr(page->slot),
++                                               TASK_PAGE_SIZE);
++    return info;
++}
++
++static char *task_exec_digest(TaskState *task)
++{
++    GArray *items = g_array_new(FALSE, FALSE, sizeof(uint64_t));
++    GChecksum *sum = g_checksum_new(G_CHECKSUM_SHA256);
++    GHashTableIter iter;
++    gpointer key, value;
++    g_hash_table_iter_init(&iter, task->execute);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t address = *(uint64_t *)key;
++        g_array_append_val(items, address);
++    }
++    g_array_sort(items, uint64_compare);
++    for (guint i = 0; i < items->len; i++) {
++        uint64_t address = g_array_index(items, uint64_t, i);
++        uint8_t value_byte = 0, expected_byte = 0;
++        byte_map_get(task->execute, address, &value_byte);
++        byte_map_get(task->expected, address, &expected_byte);
++        g_checksum_update(sum, (const guchar *)&address, sizeof(address));
++        g_checksum_update(sum, &value_byte, 1);
++        g_checksum_update(sum, &expected_byte, 1);
++    }
++    char *digest = g_strdup(g_checksum_get_string(sum));
++    g_checksum_free(sum);
++    g_array_unref(items);
++    return digest;
++}
++
++static FdisbullTaskStatusInfo *status_new(const char *uuid, uint64_t cookie,
++                                           uint64_t incarnation,
++                                           Error **errp)
++{
++    FdisbullTaskStatusInfo *result = g_new0(FdisbullTaskStatusInfo, 1);
++    uint64_t epoch, ignored_generation;
++    if (!fdisbull_task_context_get_counters(&epoch, &ignored_generation, errp)) {
++        g_free(result);
++        return NULL;
++    }
++    result->model = g_strdup("qemu-pc-task-private-v1");
++    result->api_version = 1;
++    result->epoch = epoch;
++    result->generation = generation_highwater;
++    result->uuid = g_strdup(uuid);
++    result->cookie = cookie;
++    result->incarnation = incarnation;
++    result->selected = false;
++    result->selected_uuid = g_strdup("");
++    result->selected_cookie = 0;
++    result->selected_incarnation = 0;
++    result->sequence = migration_state.sequence;
++    result->pending = g_atomic_int_get(&pending_task) >= 0;
++    if (task_fault) {
++        result->fault = g_strdup(task_fault);
++    }
++    int requested = find_task(uuid, cookie, incarnation);
++    if (requested >= 0) {
++        result->task_generation = tasks[requested].generation;
++        result->selected = selected_task == requested;
++    }
++    if (selected_task < TASK_MAX && tasks[selected_task].used) {
++        g_free(result->selected_uuid);
++        result->selected_uuid = g_strdup(tasks[selected_task].uuid);
++        result->selected_cookie = tasks[selected_task].cookie;
++        result->selected_incarnation = tasks[selected_task].incarnation;
++    }
++    FdisbullTaskInfoList **tail = &result->tasks;
++    for (int ti = 0; ti < TASK_MAX; ti++) {
++        TaskState *task = &tasks[ti];
++        if (!task->used) {
++            continue;
++        }
++        FdisbullTaskInfo *info = g_new0(FdisbullTaskInfo, 1);
++        info->uuid = g_strdup(task->uuid);
++        info->cookie = task->cookie;
++        info->incarnation = task->incarnation;
++        info->generation = task->generation;
++        info->retired = task->retired;
++        info->execution_bytes = g_hash_table_size(task->execute);
++        info->execution_sha256 = task_exec_digest(task);
++        FdisbullTaskPageInfoList **ptail = &info->pages;
++        for (unsigned pi = 0; pi < task->page_count; pi++) {
++            FdisbullTaskPageInfoList *node = g_new0(FdisbullTaskPageInfoList, 1);
++            node->value = page_info_new(&task->pages[pi]);
++            *ptail = node;
++            ptail = &node->next;
++        }
++        FdisbullTaskInfoList *node = g_new0(FdisbullTaskInfoList, 1);
++        node->value = info;
++        *tail = node;
++        tail = &node->next;
++    }
++    return result;
++}
++
++static void clear_task(TaskState *task)
++{
++    g_clear_pointer(&task->execute, g_hash_table_unref);
++    g_clear_pointer(&task->expected, g_hash_table_unref);
++    memset(task, 0, sizeof(*task));
++}
++
++static int migration_pre_save(void *opaque)
++{
++    TaskMigrationState *state = opaque;
++    if (g_atomic_int_get(&pending_task) >= 0 || g_atomic_int_get(&pending_fault)) {
++        return -EBUSY;
++    }
++    memset(state->task_used, 0, sizeof(state->task_used));
++    memset(state->task_retired, 0, sizeof(state->task_retired));
++    state->exec_count = 0;
++    state->selected = selected_task;
++    state->epoch = epoch_highwater;
++    state->generation = generation_highwater;
++    state->enabled = monitor_enabled;
++    for (int ti = 0; ti < TASK_MAX; ti++) {
++        TaskState *task = &tasks[ti];
++        state->task_used[ti] = task->used;
++        state->task_retired[ti] = task->retired;
++        state->page_count[ti] = task->page_count;
++        if (!task->used) {
++            continue;
++        }
++        pstrcpy((char *)&state->uuid[ti * 37], 37, task->uuid);
++        state->cookie[ti] = task->cookie;
++        state->incarnation[ti] = task->incarnation;
++        state->task_generation[ti] = task->generation;
++        for (unsigned pi = 0; pi < task->page_count; pi++) {
++            unsigned pidx = ti * TASK_PAGES + pi;
++            state->page_guest[pidx] = task->pages[pi].guest_address;
++            state->page_backing[pidx] = task->pages[pi].backing_page;
++            state->page_slot[pidx] = task->pages[pi].slot;
++        }
++        GHashTableIter iter;
++        gpointer key, value;
++        g_hash_table_iter_init(&iter, task->execute);
++        while (g_hash_table_iter_next(&iter, &key, &value)) {
++            if (state->exec_count >= TASK_MAX_EXEC_BYTES) {
++                return -ENOSPC;
++            }
++            uint32_t n = state->exec_count++;
++            uint64_t address = *(uint64_t *)key;
++            uint8_t expected;
++            state->exec_task[n] = ti;
++            state->exec_offset[n] = address - arena_ram_addr;
++            state->exec_value[n] = GPOINTER_TO_UINT(value) - 1;
++            if (!byte_map_get(task->expected, address, &expected)) {
++                return -EINVAL;
++            }
++            state->exec_expected[n] = expected;
++        }
++    }
++    return 0;
++}
++
++static int migration_post_load(void *opaque, int version_id)
++{
++    TaskMigrationState *state = opaque;
++    if (state->overflow || !state->epoch || !state->generation ||
++        state->epoch == UINT64_MAX || state->generation == UINT64_MAX ||
++        (state->selected >= TASK_MAX && state->selected != UINT8_MAX) ||
++        state->exec_count > TASK_MAX_EXEC_BYTES) {
++        return -EINVAL;
++    }
++    TaskState restored[TASK_MAX] = {0};
++    bool slots[TASK_MAX * TASK_PAGES] = {0};
++    if (epoch_highwater == UINT64_MAX || generation_highwater == UINT64_MAX) {
++        return -EINVAL;
++    }
++    for (int i = 0; i < TASK_MAX; i++) {
++        if (!state->task_used[i]) {
++            if (state->page_count[i] || state->task_retired[i]) return -EINVAL;
++            continue;
++        }
++        if (state->task_retired[i] > 1) return -EINVAL;
++        if (state->page_count[i] > TASK_PAGES ||
++            !state->cookie[i] || !state->incarnation[i] ||
++            strnlen((char *)&state->uuid[i * 37], 37) != 32) {
++            return -EINVAL;
++        }
++        const char *uuid = (char *)&state->uuid[i * 37];
++        for (unsigned c = 0; c < 32; c++) {
++            if (!g_ascii_isdigit(uuid[c]) && (uuid[c] < 'a' || uuid[c] > 'f')) return -EINVAL;
++        }
++        for (int j = 0; j < i; j++) {
++            if (restored[j].used && !strcmp(restored[j].uuid, uuid) &&
++                restored[j].cookie == state->cookie[i] &&
++                restored[j].incarnation == state->incarnation[i]) return -EINVAL;
++            if (restored[j].used && !strcmp(restored[j].uuid, uuid) &&
++                restored[j].cookie == state->cookie[i] &&
++                !restored[j].retired && !state->task_retired[i]) return -EINVAL;
++        }
++        TaskState *task = &restored[i];
++        task->used = true;
++        task->retired = state->task_retired[i];
++        pstrcpy(task->uuid, sizeof(task->uuid),
++                (char *)&state->uuid[i * 37]);
++        task->cookie = state->cookie[i];
++        task->incarnation = state->incarnation[i];
++        task->generation = state->task_generation[i];
++        task->page_count = state->page_count[i];
++        task->execute = byte_map_new();
++        task->expected = byte_map_new();
++        for (unsigned p = 0; p < task->page_count; p++) {
++            unsigned pidx = i * TASK_PAGES + p;
++            uint32_t slot = state->page_slot[pidx];
++            if (slot >= TASK_MAX * TASK_PAGES ||
++                slots[slot] ||
++                (state->page_guest[pidx] & (TASK_PAGE_SIZE - 1)) ||
++                (state->page_backing[pidx] & (TASK_PAGE_SIZE - 1))) {
++                return -EINVAL;
++            }
++            slots[slot] = true;
++            for (unsigned q = 0; q < p; q++) {
++                if (task->pages[q].guest_address == state->page_guest[pidx] ||
++                    task->pages[q].backing_page == state->page_backing[pidx]) return -EINVAL;
++            }
++            uint64_t actual_backing;
++            if (!physical_backing_page(state->page_guest[pidx], &actual_backing) ||
++                actual_backing != state->page_backing[pidx]) return -EINVAL;
++            task->pages[p] = (TaskPageState) {
++                .guest_address = state->page_guest[pidx],
++                .backing_page = state->page_backing[pidx],
++                .slot = slot,
++                .used = true,
++            };
++        }
++    }
++    for (uint32_t n = 0; n < state->exec_count; n++) {
++        unsigned ti = state->exec_task[n];
++        uint32_t offset = state->exec_offset[n];
++        if (ti >= TASK_MAX || !restored[ti].used ||
++            offset >= TASK_ARENA_SIZE || (offset >> 12) >= TASK_MAX * TASK_PAGES) {
++            return -EINVAL;
++        }
++        uint64_t address = arena_ram_addr + offset;
++        bool owned = false;
++        for (unsigned p = 0; p < restored[ti].page_count; p++) {
++            owned |= restored[ti].pages[p].slot == (offset >> 12);
++        }
++        if (!owned || byte_map_get(restored[ti].execute, address, &(uint8_t){0})) return -EINVAL;
++        byte_map_put(restored[ti].execute, address, state->exec_value[n]);
++        byte_map_put(restored[ti].expected, address, state->exec_expected[n]);
++    }
++    if (state->selected < TASK_MAX &&
++        (!restored[state->selected].used || restored[state->selected].retired)) {
++        return -EINVAL;
++    }
++    if (state->selected == UINT8_MAX && state->enabled) return -EINVAL;
++    for (int i = 0; i < TASK_MAX; i++) clear_task(&tasks[i]);
++    memcpy(tasks, restored, sizeof(tasks));
++    selected_task = state->selected;
++    monitor_enabled = state->enabled;
++    migration_state.anchor_address = state->anchor_address;
++    migration_state.sequence = state->sequence;
++    epoch_highwater = MAX(epoch_highwater, state->epoch) + 1;
++    generation_highwater = MAX(generation_highwater, state->generation) + 1;
++    state->epoch = epoch_highwater;
++    state->generation = generation_highwater;
++    g_clear_pointer(&task_fault, g_free);
++    g_atomic_int_set(&pending_task, -1);
++    g_atomic_int_set(&pending_fault, 0);
++    CPUState *cpu;
++    CPU_FOREACH(cpu) {
++        tlb_flush(cpu);
++        tb_flush(cpu);
++    }
++    return 0;
++}
++
++static const VMStateDescription vmstate_fdisbull_task_private = {
++    .name = "fdisbull/task-private",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .pre_save = migration_pre_save,
++    .post_load = migration_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT64(anchor_address, TaskMigrationState),
++        VMSTATE_UINT64(sequence, TaskMigrationState),
++        VMSTATE_UINT64(epoch, TaskMigrationState),
++        VMSTATE_UINT64(generation, TaskMigrationState),
++        VMSTATE_UINT8(selected, TaskMigrationState),
++        VMSTATE_UINT8_ARRAY(task_used, TaskMigrationState, TASK_MAX),
++        VMSTATE_UINT8_ARRAY(task_retired, TaskMigrationState, TASK_MAX),
++        VMSTATE_UINT8_ARRAY(page_count, TaskMigrationState, TASK_MAX),
++        VMSTATE_UINT8_ARRAY(uuid, TaskMigrationState, TASK_MAX * 37),
++        VMSTATE_UINT64_ARRAY(cookie, TaskMigrationState, TASK_MAX),
++        VMSTATE_UINT64_ARRAY(incarnation, TaskMigrationState, TASK_MAX),
++        VMSTATE_UINT64_ARRAY(task_generation, TaskMigrationState, TASK_MAX),
++        VMSTATE_UINT64_ARRAY(page_guest, TaskMigrationState, TASK_MAX * TASK_PAGES),
++        VMSTATE_UINT64_ARRAY(page_backing, TaskMigrationState, TASK_MAX * TASK_PAGES),
++        VMSTATE_UINT32_ARRAY(page_slot, TaskMigrationState, TASK_MAX * TASK_PAGES),
++        VMSTATE_UINT32(exec_count, TaskMigrationState),
++        VMSTATE_UINT32_ARRAY(exec_offset, TaskMigrationState, TASK_MAX_EXEC_BYTES),
++        VMSTATE_UINT8_ARRAY(exec_task, TaskMigrationState, TASK_MAX_EXEC_BYTES),
++        VMSTATE_UINT8_ARRAY(exec_value, TaskMigrationState, TASK_MAX_EXEC_BYTES),
++        VMSTATE_UINT8_ARRAY(exec_expected, TaskMigrationState, TASK_MAX_EXEC_BYTES),
++        VMSTATE_BOOL(overflow, TaskMigrationState),
++        VMSTATE_BOOL(enabled, TaskMigrationState),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static void register_vmstate(void)
++{
++    vmstate_register(NULL, 0, &vmstate_fdisbull_task_private, &migration_state);
++}
++
++bool fdisbull_task_private_resolve(uint64_t base, ram_addr_t *private_addr)
++{
++    bool found = false;
++    if (!task_manager_ready) {
++        return false;
++    }
++    uint64_t page = base & ~(TASK_PAGE_SIZE - 1);
++    uint64_t within = base & (TASK_PAGE_SIZE - 1);
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    if (selected_task < TASK_MAX && tasks[selected_task].used &&
++        !tasks[selected_task].retired) {
++        TaskPageState *entry = find_page_by_backing(&tasks[selected_task], page);
++        if (entry) {
++            *private_addr = slot_ram_addr(entry->slot) + within;
++            found = true;
++        }
++    }
++    qemu_mutex_unlock(&task_lock);
++    return found;
++}
++
++void *fdisbull_task_private_ptr(uint64_t address)
++{
++    if (!arena_ready || address < arena_ram_addr ||
++        address >= arena_ram_addr + TASK_ARENA_SIZE) {
++        return NULL;
++    }
++    return arena_host + (address - arena_ram_addr);
++}
++
++void fdisbull_task_private_copy_code(void *dest, const void *host, size_t length)
++{
++    uint8_t *output = dest;
++    const uint8_t *input = host;
++    if (!task_manager_ready) {
++        return;
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    if (selected_task >= TASK_MAX || !tasks[selected_task].used) {
++        qemu_mutex_unlock(&task_lock);
++        return;
++    }
++    TaskState *task = &tasks[selected_task];
++    for (size_t i = 0; i < length; i++) {
++        uint64_t addr = qemu_ram_addr_from_host((void *)(input + i));
++        uint8_t value, expected;
++        if (addr != RAM_ADDR_INVALID && byte_map_get(task->execute, addr, &value)) {
++            if (!byte_map_get(task->expected, addr, &expected) || input[i] != expected) {
++                g_clear_pointer(&task_fault, g_free);
++                task_fault = g_strdup("task-private execute backing changed before fetch");
++                g_hash_table_remove_all(task->execute);
++                g_hash_table_remove_all(task->expected);
++                g_atomic_int_set(&pending_fault, 1);
++                if (current_cpu) cpu_exit(current_cpu);
++                output[i] = input[i];
++            } else {
++                output[i] = value;
++            }
++        }
++    }
++    qemu_mutex_unlock(&task_lock);
++}
++
++bool fdisbull_task_private_note_guest_write(uint64_t address, size_t length)
++{
++    bool invalidated = false;
++    if (!task_manager_ready) {
++        return false;
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    if (selected_task >= TASK_MAX || !tasks[selected_task].used) {
++        qemu_mutex_unlock(&task_lock);
++        return false;
++    }
++    TaskState *task = &tasks[selected_task];
++    for (size_t i = 0; i < length; i++) {
++        uint8_t ignored;
++        if (byte_map_get(task->execute, address + i, &ignored)) {
++            g_clear_pointer(&task_fault, g_free);
++            task_fault = g_strdup("guest self-modified task-private execution backing");
++            g_hash_table_remove_all(task->execute);
++            g_hash_table_remove_all(task->expected);
++            g_atomic_int_set(&pending_fault, 1);
++            invalidated = true;
++            break;
++        }
++    }
++    qemu_mutex_unlock(&task_lock);
++    if (invalidated && current_cpu) cpu_exit(current_cpu);
++    return invalidated;
++}
++
++void fdisbull_task_private_note_reset(void)
++{
++    selected_task = UINT8_MAX;
++    g_atomic_int_set(&pending_task, -1);
++    g_atomic_int_set(&pending_fault, 0);
++    g_clear_pointer(&task_fault, g_free);
++    if (generation_highwater != UINT64_MAX) {
++        generation_highwater++;
++    }
++}
++
++/* The OUTW callback only validates and queues. The execution loop commits it
++ * after the I/O-ending TB, before the following guest TB is looked up. */
++static void task_doorbell_write(void *opaque, hwaddr addr, uint64_t value,
++                                unsigned size)
++{
++    g_autofree char *uuid = NULL;
++    uint64_t sequence, cookie, incarnation;
++    int index;
++    if (size != 2 || addr != 0 || value != TASK_PORT_VALUE ||
++        !task_manager_ready || !monitor_enabled ||
++        !read_anchor(&uuid, &sequence, &cookie, &incarnation, NULL)) {
++        g_atomic_int_set(&pending_fault, 1);
++        if (current_cpu) cpu_exit(current_cpu);
++        return;
++    }
++    if ((sequence & 1) || sequence <= migration_state.sequence ||
++        !cookie || !incarnation) {
++        g_atomic_int_set(&pending_fault, 1);
++        if (current_cpu) cpu_exit(current_cpu);
++        return;
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    index = find_task(uuid, cookie, incarnation);
++    qemu_mutex_unlock(&task_lock);
++    if (index < 0 || tasks[index].retired) {
++        g_atomic_int_set(&pending_fault, 1);
++        if (current_cpu) cpu_exit(current_cpu);
++        return;
++    }
++    migration_state.sequence = sequence;
++    g_atomic_int_set(&pending_task, index);
++    /* Force a return to cpu_exec_loop before direct TB chaining can run the
++     * next instruction under the old TLB-selected task view. */
++    if (current_cpu) cpu_exit(current_cpu);
++}
++
++static const MemoryRegionOps task_io_ops = {
++    .write = task_doorbell_write,
++    .endianness = DEVICE_LITTLE_ENDIAN,
++    .valid = { .min_access_size = 1, .max_access_size = 4,
++               .unaligned = false },
++    .impl = { .min_access_size = 1, .max_access_size = 4,
++              .unaligned = false },
++};
++
++bool fdisbull_task_private_commit_switch(CPUState *cpu)
++{
++    gint pending = g_atomic_int_get(&pending_task);
++    if (pending < 0 && !g_atomic_int_get(&pending_fault)) {
++        return false;
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    Error *paging_error = NULL;
++    if (generation_highwater >= UINT64_MAX - 1 ||
++        g_atomic_int_get(&pending_fault) || pending < 0 || pending >= TASK_MAX ||
++        !tasks[pending].used || tasks[pending].retired ||
++        !task_paging_guard(cpu, pending >= 0 && pending < TASK_MAX ?
++                           &tasks[pending] : &tasks[0], &paging_error)) {
++        selected_task = UINT8_MAX;
++        if (paging_error) {
++            g_clear_pointer(&task_fault, g_free);
++            task_fault = g_strdup(error_get_pretty(paging_error));
++        } else if (generation_highwater >= UINT64_MAX - 1) {
++            g_clear_pointer(&task_fault, g_free);
++            task_fault = g_strdup("task generation counter exhausted; task view revoked");
++        } else if (!task_fault) {
++            task_fault = g_strdup("invalid or unregistered task anchor; previous view revoked");
++        }
++        error_free(paging_error);
++        g_atomic_int_set(&pending_fault, 0);
++        g_atomic_int_set(&pending_task, -1);
++        qemu_mutex_unlock(&task_lock);
++        tlb_flush(cpu);
++        tb_flush(cpu);
++        bql_lock();
++        cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
++        bql_unlock();
++        return true;
++    }
++    selected_task = pending;
++    generation_highwater++;
++    g_clear_pointer(&task_fault, g_free);
++    g_atomic_int_set(&pending_task, -1);
++    qemu_mutex_unlock(&task_lock);
++    fdisbull_task_context_note_transition();
++    tlb_flush(cpu);
++    tb_flush(cpu);
++    return true;
++}
++
++void fdisbull_task_private_context_changed(CPUState *cpu)
++{
++    Error *err = NULL;
++    if (!task_manager_ready || selected_task >= TASK_MAX) {
++        return;
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    bool valid = task_paging_guard(cpu, &tasks[selected_task], &err);
++    if (!valid) {
++        selected_task = UINT8_MAX;
++        g_clear_pointer(&task_fault, g_free);
++        task_fault = g_strdup(error_get_pretty(err));
++    }
++    qemu_mutex_unlock(&task_lock);
++    if (!valid) {
++        error_free(err);
++        tlb_flush(cpu);
++        tb_flush(cpu);
++        bql_lock();
++        cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
++        bql_unlock();
++        cpu_exit(cpu);
++    }
++}
++
++static bool add_task_page(TaskState *task, uint64_t guest, Error **errp)
++{
++    uint64_t backing;
++    uint8_t *base;
++    guest &= ~(TASK_PAGE_SIZE - 1);
++    if (!direct_ram(guest, TASK_PAGE_SIZE, NULL, NULL, &backing, &base, errp)) {
++        return false;
++    }
++    backing &= ~(TASK_PAGE_SIZE - 1);
++    TaskPageState *already = find_page_by_backing(task, backing);
++    if (already) {
++        return true;
++    }
++    if (task->page_count >= TASK_PAGES) {
++        task_error(errp, "task page cap exceeded");
++        return false;
++    }
++    bool used[TASK_MAX * TASK_PAGES] = {0};
++    for (int ti = 0; ti < TASK_MAX; ti++) {
++        if (!tasks[ti].used) {
++            continue;
++        }
++        for (unsigned pi = 0; pi < tasks[ti].page_count; pi++) {
++            used[tasks[ti].pages[pi].slot] = true;
++        }
++    }
++    unsigned slot;
++    for (slot = 0; slot < TASK_MAX * TASK_PAGES && used[slot]; slot++) {
++    }
++    if (slot == TASK_MAX * TASK_PAGES) {
++        task_error(errp, "private RAM arena is full");
++        return false;
++    }
++    memcpy(slot_ptr(slot), base, TASK_PAGE_SIZE);
++    memory_region_set_dirty(&task_arena, (uint64_t)slot * TASK_PAGE_SIZE,
++                            TASK_PAGE_SIZE);
++    task->pages[task->page_count++] = (TaskPageState) {
++        .guest_address = guest,
++        .backing_page = backing,
++        .slot = slot,
++        .used = true,
++    };
++    return true;
++}
++
++static TaskState *get_or_create_task(const char *uuid, uint64_t cookie,
++                                     uint64_t incarnation, Error **errp)
++{
++    int index = find_task(uuid, cookie, incarnation);
++    if (index >= 0) {
++        if (tasks[index].retired) {
++            task_error(errp, "retired task incarnation cannot be reused");
++            return NULL;
++        }
++        return &tasks[index];
++    }
++    for (int i = 0; i < TASK_MAX; i++) {
++        if (tasks[i].used && !strcmp(tasks[i].uuid, uuid) &&
++            tasks[i].cookie == cookie && !tasks[i].retired) {
++            task_error(errp, "task cookie already belongs to another incarnation");
++            return NULL;
++        }
++    }
++    index = find_free_task();
++    if (index < 0) {
++        task_error(errp, "task registry is full");
++        return NULL;
++    }
++    TaskState *task = &tasks[index];
++    memset(task, 0, sizeof(*task));
++    pstrcpy(task->uuid, sizeof(task->uuid), uuid);
++    task->cookie = cookie;
++    task->incarnation = incarnation;
++    task->used = true;
++    task->execute = byte_map_new();
++    task->expected = byte_map_new();
++    return task;
++}
++
++FdisbullTaskMonitorInfo *qmp_x_fdisbull_task_monitor_init(
++    uint64_t anchor_address, bool has_prepare_only, bool prepare_only,
++    Error **errp)
++{
++    g_autofree char *ignored = NULL;
++    uint64_t epoch, generation;
++    if (!stopped_single_tcg(errp) ||
++        !direct_ram(anchor_address, TASK_ANCHOR_SIZE, NULL, NULL, NULL, NULL, errp)) {
++        return NULL;
++    }
++    manager_init_empty(errp);
++    if (errp && *errp) {
++        return NULL;
++    }
++    if (io_ready && migration_state.anchor_address != anchor_address) {
++        task_error(errp, "monitor anchor cannot be changed after initialization");
++        return NULL;
++    }
++    if (!io_ready) {
++        memory_region_init_io(&task_io, NULL, &task_io_ops, NULL,
++                              "fdisbull-task-doorbell", 2);
++        memory_region_add_subregion(get_system_io(), TASK_PORT, &task_io);
++        io_ready = true;
++    }
++    migration_state.anchor_address = anchor_address;
++    if (!fdisbull_task_context_get_counters(&epoch, &generation, errp)) {
++        return NULL;
++    }
++    FdisbullTaskMonitorInfo *result = g_new0(FdisbullTaskMonitorInfo, 1);
++    result->model = g_strdup("qemu-pc-task-private-v1");
++    result->anchor_address = anchor_address;
++    result->anchor_size = TASK_ANCHOR_SIZE;
++    result->doorbell_port = TASK_PORT;
++    result->doorbell_value = TASK_PORT_VALUE;
++    result->epoch = epoch;
++    result->generation = generation_highwater;
++    result->max_tasks = TASK_MAX;
++    result->max_pages_per_task = TASK_PAGES;
++    result->enabled = !(has_prepare_only && prepare_only);
++    monitor_enabled = result->enabled;
++    migration_state.enabled = monitor_enabled;
++    return result;
++}
++
++FdisbullTaskStatusInfo *qmp_x_fdisbull_task_register(
++    const char *uuid, uint64_t cookie, uint64_t incarnation,
++    FdisbullTaskPageList *pages, Error **errp)
++{
++    TaskState *task;
++    struct { uint64_t guest; uint64_t backing; uint8_t *host; } candidate[TASK_PAGES];
++    unsigned candidate_count = 0;
++    bool selected_view_changed = false;
++    g_autofree char *anchor_uuid = NULL;
++    uint64_t anchor_sequence, anchor_cookie, anchor_incarnation;
++    bool anchor_matches;
++    if (!stopped_single_tcg(errp) ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) {
++        return NULL;
++    }
++    manager_init_empty(errp);
++    if (errp && *errp) {
++        return NULL;
++    }
++    for (FdisbullTaskPageList *item = pages; item; item = item->next) {
++        uint64_t backing;
++        uint8_t *base;
++        if (candidate_count == TASK_PAGES ||
++            (item->value->address & (TASK_PAGE_SIZE - 1)) ||
++            !direct_ram(item->value->address, TASK_PAGE_SIZE, NULL, NULL,
++                        &backing, &base, errp)) {
++            if (!errp || !*errp) task_error(errp, "invalid or excessive task page list");
++            return NULL;
++        }
++        backing &= ~(TASK_PAGE_SIZE - 1);
++        bool duplicate = false;
++        for (unsigned i = 0; i < candidate_count; i++) {
++            duplicate |= candidate[i].backing == backing;
++        }
++        if (!duplicate) {
++            candidate[candidate_count++] = (typeof(candidate[0])) {
++                .guest = item->value->address, .backing = backing, .host = base
++            };
++        }
++    }
++    if (!read_anchor(&anchor_uuid, &anchor_sequence, &anchor_cookie,
++                     &anchor_incarnation, errp)) {
++        return NULL;
++    }
++    if (strcmp(uuid, anchor_uuid) || (anchor_sequence & 1)) {
++        task_error(errp, "task registration UUID differs from stable monitor anchor");
++        return NULL;
++    }
++    anchor_matches = anchor_cookie == cookie && anchor_incarnation == incarnation;
++    if (anchor_matches &&
++        ((selected_task == UINT8_MAX && migration_state.sequence != 0) ||
++         (selected_task < TASK_MAX &&
++          (selected_task >= TASK_MAX || strcmp(tasks[selected_task].uuid, uuid) ||
++           tasks[selected_task].cookie != cookie ||
++           tasks[selected_task].incarnation != incarnation)))) {
++        task_error(errp, "task selection can change only at a committed doorbell");
++        return NULL;
++    }
++    if (selected_task < TASK_MAX) {
++        TaskState *selected = &tasks[selected_task];
++        if (anchor_cookie == selected->cookie &&
++            anchor_incarnation == selected->incarnation &&
++            anchor_sequence != migration_state.sequence) {
++            task_error(errp, "registration anchor sequence differs from committed task selection");
++            return NULL;
++        }
++    } else if (migration_state.sequence != 0 &&
++               anchor_cookie == cookie && anchor_incarnation == incarnation &&
++               anchor_sequence != migration_state.sequence) {
++        task_error(errp, "cannot select a new task outside a committed doorbell");
++        return NULL;
++    }
++    CPUState *owner = NULL;
++    CPU_FOREACH(owner) { break; }
++    if (candidate_count && owner) {
++        TaskState probe = { .page_count = candidate_count };
++        for (unsigned i = 0; i < candidate_count; i++) {
++            probe.pages[i].backing_page = candidate[i].backing;
++        }
++        Error *paging_error = NULL;
++        if (!task_paging_guard(owner, &probe, &paging_error)) {
++            if (paging_error) error_propagate(errp, paging_error);
++            return NULL;
++        }
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    if (!generation_room(errp)) {
++        qemu_mutex_unlock(&task_lock);
++        return NULL;
++    }
++    int existing_index = find_task(uuid, cookie, incarnation);
++    TaskState *existing = existing_index >= 0 ? &tasks[existing_index] : NULL;
++    unsigned new_pages = 0;
++    for (unsigned i = 0; i < candidate_count; i++) {
++        if (!existing || !find_page_by_backing(existing, candidate[i].backing)) new_pages++;
++    }
++    unsigned free_slots = 0;
++    bool slot_used[TASK_MAX * TASK_PAGES] = {0};
++    for (int ti = 0; ti < TASK_MAX; ti++) for (unsigned pi = 0; tasks[ti].used && pi < tasks[ti].page_count; pi++) slot_used[tasks[ti].pages[pi].slot] = true;
++    for (unsigned i = 0; i < TASK_MAX * TASK_PAGES; i++) free_slots += !slot_used[i];
++    if (new_pages > free_slots || (existing && existing->page_count + new_pages > TASK_PAGES) ||
++        (!existing && find_free_task() < 0)) {
++        qemu_mutex_unlock(&task_lock);
++        task_error(errp, "task or private page capacity exceeded");
++        return NULL;
++    }
++    task = get_or_create_task(uuid, cookie, incarnation, errp);
++    if (!task) {
++        qemu_mutex_unlock(&task_lock);
++        return NULL;
++    }
++    unsigned old_page_count = task->page_count;
++    for (unsigned i = 0; i < candidate_count; i++) {
++        if (!find_page_by_backing(task, candidate[i].backing)) {
++            if (!add_task_page(task, candidate[i].guest, errp)) {
++                qemu_mutex_unlock(&task_lock);
++                return NULL;
++            }
++        }
++    }
++    int task_index = find_task(uuid, cookie, incarnation);
++    if (anchor_matches) {
++        bool initial_selection = selected_task == UINT8_MAX && migration_state.sequence == 0;
++        if (selected_task != task_index && !initial_selection) {
++            qemu_mutex_unlock(&task_lock);
++            task_error(errp, "task selection can change only at a committed doorbell");
++            return NULL;
++        }
++        if (initial_selection) {
++            selected_task = task_index;
++            generation_highwater++;
++            fdisbull_task_context_note_transition();
++            selected_view_changed = true;
++        }
++        migration_state.sequence = anchor_sequence;
++    }
++    generation_highwater++;
++    selected_view_changed |= selected_task == task_index && task->page_count != old_page_count;
++    FdisbullTaskStatusInfo *result = status_new(uuid, cookie, incarnation, errp);
++    qemu_mutex_unlock(&task_lock);
++    if (selected_view_changed) {
++        CPUState *cpu;
++        CPU_FOREACH(cpu) { tlb_flush(cpu); tb_flush(cpu); }
++    }
++    return result;
++}
++
++static bool parse_patch_hex(const char *hex, GByteArray **out, Error **errp)
++{
++    size_t length = hex ? strlen(hex) : 0;
++    if (!length || (length & 1) || length / 2 > TASK_MAX_PATCH_BYTES) {
++        task_error(errp, "patch bytes must be bounded nonempty lowercase hex");
++        return false;
++    }
++    GByteArray *bytes = g_byte_array_sized_new(length / 2);
++    for (size_t i = 0; i < length; i += 2) {
++        int hi = g_ascii_xdigit_value(hex[i]);
++        int lo = g_ascii_xdigit_value(hex[i + 1]);
++        if (hi < 0 || lo < 0 || g_ascii_isupper(hex[i]) || g_ascii_isupper(hex[i + 1])) {
++            g_byte_array_unref(bytes);
++            task_error(errp, "patch bytes must be lowercase hex");
++            return false;
++        }
++        uint8_t byte = (hi << 4) | lo;
++        g_byte_array_append(bytes, &byte, 1);
++    }
++    *out = bytes;
++    return true;
++}
++
++static bool task_patch_address(TaskState *task, uint64_t guest,
++                               uint64_t *private_address, Error **errp)
++{
++    uint64_t base;
++    if (!direct_ram(guest, 1, NULL, NULL, &base, NULL, errp)) {
++        return false;
++    }
++    TaskPageState *page = find_page_by_backing(task, base & ~(TASK_PAGE_SIZE - 1));
++    if (!page) {
++        task_error(errp, "patch address is outside registered task-private pages");
++        return false;
++    }
++    *private_address = slot_ram_addr(page->slot) + (base & (TASK_PAGE_SIZE - 1));
++    return true;
++}
++
++FdisbullTaskConfigureInfo *qmp_x_fdisbull_task_layer_configure(
++    const char *uuid, uint64_t cookie, uint64_t incarnation,
++    uint64_t generation, FdisbullTaskPatchList *ram,
++    FdisbullTaskPatchList *execute, Error **errp)
++{
++    g_autoptr(GHashTable) ram_before = byte_map_new();
++    g_autoptr(GHashTable) ram_after = byte_map_new();
++    g_autoptr(GHashTable) exec_before = byte_map_new();
++    g_autoptr(GHashTable) exec_after = byte_map_new();
++    g_autoptr(GHashTable) replacement = byte_map_new();
++    size_t ram_bytes = 0, exec_bytes = 0;
++    if (!stopped_single_tcg(errp) ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) {
++        return NULL;
++    }
++    if (!task_manager_ready) {
++        task_error(errp, "task monitor is not initialized");
++        return NULL;
++    }
++    lock_init();
++    qemu_mutex_lock(&task_lock);
++    int ti = find_task(uuid, cookie, incarnation);
++    if (ti < 0 || tasks[ti].retired || tasks[ti].generation != generation) {
++        qemu_mutex_unlock(&task_lock);
++        task_error(errp, "task key is unknown, retired, or generation changed");
++        return NULL;
++    }
++    TaskState *task = &tasks[ti];
++    if (task->generation >= UINT64_MAX - 1 || generation_highwater >= UINT64_MAX - 1) {
++        qemu_mutex_unlock(&task_lock);
++        task_error(errp, "task generation counter exhausted");
++        return NULL;
++    }
++    for (int pass = 0; pass < 2; pass++) {
++        FdisbullTaskPatchList *item = pass ? execute : ram;
++        GHashTable *before = pass ? exec_before : ram_before;
++        GHashTable *after = pass ? exec_after : ram_after;
++        size_t *total = pass ? &exec_bytes : &ram_bytes;
++        unsigned count = 0;
++        for (; item; item = item->next) {
++            GByteArray *old_bytes = NULL, *new_bytes = NULL;
++            if (++count > 4096 ||
++                !parse_patch_hex(item->value->before, &old_bytes, errp) ||
++                !parse_patch_hex(item->value->after, &new_bytes, errp)) {
++                if (old_bytes) g_byte_array_unref(old_bytes);
++                if (new_bytes) g_byte_array_unref(new_bytes);
++                if (!errp || !*errp) task_error(errp, "patch count limit exceeded");
++                qemu_mutex_unlock(&task_lock);
++                return NULL;
++            }
++            if (old_bytes->len != new_bytes->len ||
++                item->value->address > UINT64_MAX - old_bytes->len) {
++                g_byte_array_unref(old_bytes); g_byte_array_unref(new_bytes);
++                qemu_mutex_unlock(&task_lock);
++                task_error(errp, "patch extent differs or overflows");
++                return NULL;
++            }
++            *total += old_bytes->len;
++            if (*total > TASK_MAX_PATCH_BYTES) {
++                g_byte_array_unref(old_bytes); g_byte_array_unref(new_bytes);
++                qemu_mutex_unlock(&task_lock);
++                task_error(errp, "patch byte limit exceeded");
++                return NULL;
++            }
++            for (unsigned i = 0; i < old_bytes->len; i++) {
++                uint64_t private_address;
++                if (!task_patch_address(task, item->value->address + i,
++                                        &private_address, errp)) {
++                    g_byte_array_unref(old_bytes); g_byte_array_unref(new_bytes);
++                    qemu_mutex_unlock(&task_lock);
++                    return NULL;
++                }
++                uint64_t *key1 = g_new(uint64_t, 1), *key2 = g_new(uint64_t, 1);
++                *key1 = private_address; *key2 = private_address;
++                if (g_hash_table_contains(before, key1)) {
++                    g_free(key1); g_free(key2);
++                    g_byte_array_unref(old_bytes); g_byte_array_unref(new_bytes);
++                    qemu_mutex_unlock(&task_lock);
++                    task_error(errp, "overlapping task patch ranges");
++                    return NULL;
++                }
++                g_hash_table_insert(before, key1,
++                                    GUINT_TO_POINTER((unsigned)old_bytes->data[i] + 1));
++                g_hash_table_insert(after, key2,
++                                    GUINT_TO_POINTER((unsigned)new_bytes->data[i] + 1));
++            }
++            g_byte_array_unref(old_bytes); g_byte_array_unref(new_bytes);
++        }
++    }
++    GHashTableIter iter; gpointer key, value;
++    g_hash_table_iter_init(&iter, ram_before);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t address = *(uint64_t *)key;
++        uint8_t expected = GPOINTER_TO_UINT(value) - 1, actual;
++        uint8_t *host = arena_host + (address - arena_ram_addr);
++        actual = *host;
++        if (actual != expected) {
++            qemu_mutex_unlock(&task_lock);
++            task_error(errp, "task RAM guard byte differs");
++            return NULL;
++        }
++    }
++    g_hash_table_iter_init(&iter, exec_before);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t address = *(uint64_t *)key;
++        uint8_t expected = GPOINTER_TO_UINT(value) - 1, actual;
++        if (!byte_map_get(ram_after, address, &actual)) {
++            actual = *(arena_host + (address - arena_ram_addr));
++        }
++        if (actual != expected) {
++            qemu_mutex_unlock(&task_lock);
++            task_error(errp, "task execute guard byte differs");
++            return NULL;
++        }
++    }
++    /* Build the full replacement before mutating task state. */
++    g_hash_table_iter_init(&iter, exec_after);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t *copy = g_new(uint64_t, 1); *copy = *(uint64_t *)key;
++        g_hash_table_insert(replacement, copy, value);
++    }
++    g_hash_table_iter_init(&iter, ram_after);
++    while (g_hash_table_iter_next(&iter, &key, &value)) {
++        uint64_t address = *(uint64_t *)key;
++        *(arena_host + (address - arena_ram_addr)) = GPOINTER_TO_UINT(value) - 1;
++        memory_region_set_dirty(&task_arena, address - arena_ram_addr, 1);
++    }
++    g_hash_table_unref(task->execute);
++    task->execute = g_steal_pointer(&replacement);
++    g_hash_table_unref(task->expected);
++    task->expected = g_steal_pointer(&exec_before);
++    task->generation++;
++    generation_highwater++;
++    CPUState *cpu;
++    CPU_FOREACH(cpu) { tlb_flush(cpu); tb_flush(cpu); }
++    FdisbullTaskConfigureInfo *result = g_new0(FdisbullTaskConfigureInfo, 1);
++    result->generation = task->generation;
++    result->ram_bytes = ram_bytes;
++    result->execution_bytes = exec_bytes;
++    if (task_fault) result->fault = g_strdup(task_fault);
++    qemu_mutex_unlock(&task_lock);
++    return result;
++}
++
++FdisbullTaskReadInfo *qmp_x_fdisbull_task_layer_read(
++    const char *uuid, uint64_t cookie, uint64_t incarnation,
++    uint64_t address, uint16_t length, bool has_view,
++    FdisbullTaskLayerView view, Error **errp)
++{
++    if (!stopped_single_tcg(errp) ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) return NULL;
++    if (!length || length > TASK_MAX_READ) {
++        task_error(errp, "read length must be 1..4096"); return NULL;
++    }
++    if (!has_view) view = FDISBULL_TASK_LAYER_VIEW_RAM;
++    lock_init(); qemu_mutex_lock(&task_lock);
++    int ti = find_task(uuid, cookie, incarnation);
++    if (ti < 0) { qemu_mutex_unlock(&task_lock); task_error(errp, "unknown task key"); return NULL; }
++    TaskState *task = &tasks[ti];
++    g_autofree char *hex = g_malloc(length * 2 + 1);
++    static const char digits[] = "0123456789abcdef";
++    for (unsigned i = 0; i < length; i++) {
++        uint8_t *base;
++        uint64_t backing, private_address;
++        if (address > UINT64_MAX - i ||
++            !direct_ram(address + i, 1, NULL, NULL, &backing, &base, errp)) {
++            qemu_mutex_unlock(&task_lock); return NULL;
++        }
++        uint8_t value = *base;
++        TaskPageState *page = find_page_by_backing(task, backing & ~(TASK_PAGE_SIZE - 1));
++        if (view != FDISBULL_TASK_LAYER_VIEW_BASE && page) {
++            private_address = slot_ram_addr(page->slot) + (backing & (TASK_PAGE_SIZE - 1));
++            value = *(arena_host + (private_address - arena_ram_addr));
++            if (view == FDISBULL_TASK_LAYER_VIEW_EXECUTE) {
++                uint8_t overlay;
++                if (byte_map_get(task->execute, private_address, &overlay)) value = overlay;
++            }
++        }
++        hex[i * 2] = digits[value >> 4]; hex[i * 2 + 1] = digits[value & 15];
++    }
++    hex[length * 2] = '\0';
++    FdisbullTaskReadInfo *result = g_new0(FdisbullTaskReadInfo, 1);
++    result->generation = task->generation;
++    result->data_hex = g_steal_pointer(&hex);
++    result->active = selected_task == ti;
++    qemu_mutex_unlock(&task_lock);
++    return result;
++}
++
++FdisbullTaskStatusInfo *qmp_x_fdisbull_task_layer_observe(
++    const char *uuid, uint64_t cookie, uint64_t incarnation, Error **errp)
++{
++    if (!stopped_single_tcg(errp) ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) return NULL;
++    manager_init_empty(errp);
++    if (errp && *errp) return NULL;
++    lock_init(); qemu_mutex_lock(&task_lock);
++    if (find_task(uuid, cookie, incarnation) < 0) {
++        qemu_mutex_unlock(&task_lock);
++        task_error(errp, "task key is not registered");
++        return NULL;
++    }
++    FdisbullTaskStatusInfo *result = status_new(uuid, cookie, incarnation, errp);
++    qemu_mutex_unlock(&task_lock);
++    return result;
++}
++
++FdisbullTaskStatusInfo *qmp_x_fdisbull_task_retire(
++    const char *uuid, uint64_t cookie, uint64_t incarnation, Error **errp)
++{
++    if (!stopped_single_tcg(errp) ||
++        !task_key_validate(uuid, cookie, incarnation, errp)) return NULL;
++    lock_init(); qemu_mutex_lock(&task_lock);
++    int ti = find_task(uuid, cookie, incarnation);
++    if (ti < 0) { qemu_mutex_unlock(&task_lock); task_error(errp, "unknown task key"); return NULL; }
++    if (!generation_room(errp)) { qemu_mutex_unlock(&task_lock); return NULL; }
++    tasks[ti].retired = true;
++    if (selected_task == ti) selected_task = UINT8_MAX;
++    generation_highwater++;
++    CPUState *cpu; CPU_FOREACH(cpu) { tlb_flush(cpu); tb_flush(cpu); }
++    FdisbullTaskStatusInfo *result = status_new(uuid, cookie, incarnation, errp);
++    qemu_mutex_unlock(&task_lock);
++    return result;
++}
+--- a/target/i386/meson.build
++++ b/target/i386/meson.build
+@@ -14,6 +14,7 @@
+ 
+ i386_system_ss = ss.source_set()
+ i386_system_ss.add(files(
++  'fdisbull-task-private.c',
+   'task-context.c',
+   'arch_dump.c',
+   'arch_memory_mapping.c',

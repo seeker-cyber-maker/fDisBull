@@ -1,0 +1,145 @@
+{
+  "controls": {
+    "controller": {
+      "file": "checkpoint_controller.py",
+      "sha256": "6dfa103c998ef9b254a15d53c8f21a1471f1cc02a232df74fad334f910820cb0"
+    },
+    "inputs": {
+      "file": "INPUT-PINS.json",
+      "sha256": "6a2df1e594b83d7501eadfd699a2e3df005f5e6a11608b31fe0fb26521087867"
+    },
+    "preflight": {
+      "file": "CONTROLLER-PREFLIGHT.json",
+      "sha256": "53d4b92b922e08fcfb5895b504f0175b37ed28d0c8dbf0aa1c2fa92c9ea9614e"
+    }
+  },
+  "date": "2026-11-14",
+  "format": "fdisbull-desqview-public-raw-checkpoint-native-1",
+  "host_verification": {
+    "broad_before_narrow_coverage_failure_correction": {
+      "machine_module_sha256": "48b93e324663ded827a4cdb7a4ad7b8730773c0020de323da76890b098be87a0",
+      "native_input_skips": 12,
+      "passes": 3347
+    },
+    "byte_association": {
+      "file": "host-commit-byte-association.json",
+      "sha256": "603046a63a42d411f57cf597cb25600a64d7d1904d5bfdec4e1ca3bedc1950d0"
+    },
+    "corrected_installed_affected": {
+      "passes": 328,
+      "skips": 0
+    },
+    "corrected_source_affected": {
+      "passes": 328,
+      "skips": 0
+    },
+    "counts_overlap_do_not_sum": true,
+    "independent_dedicated": {
+      "passes": 33,
+      "skips": 0
+    }
+  },
+  "limits": [
+    "Restricted standard raw-machine profile only; user/hook breakpoints, active layers, pending lifecycle stops and unreleased input refuse.",
+    "This original-guest trial observed zero selected RAM changes before restore; changed-RAM recovery is separately demonstrated by authored raw/native preservation tests.",
+    "Restored task creation/generation is source-observed; no continuing native lifetime is inferred across restore.",
+    "Two stopped endpoint proofs do not establish continuous residency, allocation lifetime, whole-task RAM authority, protected LE checkpoint binding or broad DOSBox parity."
+  ],
+  "native_preservation": {
+    "coverage": [
+      "DOS and CHIP-8 histories/trials/selected undo/layers/hooks/IRQ and failure containment compositions",
+      "public raw checkpoint project/machine restart through qemu-machine and qemu-dos",
+      "paired authored common DOSBox-X/QEMU controls"
+    ],
+    "independent_receipt": {
+      "file": "independent-native-preservation.json",
+      "sha256": "06167f8cc21c60c3932318703088ed16a19b51da10824607768e3eecd77fa7e1"
+    },
+    "passes": 11,
+    "receipt": {
+      "file": "native-preservation-01-result.json",
+      "sha256": "435bebe69f12a6b4da4ff1507f6ae1a3d6e1af68a0e499c50bbdc5857e0268c1"
+    },
+    "skips": 0
+  },
+  "original_desqview": {
+    "certificates": 6,
+    "changed_ram_restore_demonstrated_in_original_guest": false,
+    "checkpoint_sha256": "cbe045dbd83a64cc13f6504cb261bcecc5ae3c18131041ca3782ca2c3ac40ae0",
+    "closed_database_sha256": "601eec48cc20bad0ca8ec750ec290819d095ea33e53b924f3779215ce14ac241",
+    "cold_reader": "separate process; immutable read-only SQL/CAS; no Project reopen or guest execution",
+    "current_bindings": 0,
+    "distinct_cpu_endpoint_steps": 1,
+    "epochs": {
+      "after": {
+        "creation_observed": false,
+        "epoch": "e69796dfaaab429599b3d372c837315b",
+        "generation": 0,
+        "process_episode": "process-episode:fd70ed1ee5b44831b66ea4fb9893f5b4",
+        "task": "task:b8c5b42dd8784cff8077eabb000e4007"
+      },
+      "before": {
+        "creation_observed": true,
+        "epoch": "b80a88a0f92a48729b752f11f6be2d39",
+        "generation": 1,
+        "process_episode": "process-episode:1bef84b059c64c8e96bfe8a87f86d4fc",
+        "task": "task:f205be1d42204382813fbec32c3e7d31"
+      }
+    },
+    "final_closed_bindings": 9,
+    "final_closed_tasks": 2,
+    "fresh_binding_snapshot_certificate_ids": true,
+    "immutable_source_bytes_per_endpoint": 364,
+    "independent_binding_readback_passes": 12,
+    "independent_receipt": {
+      "file": "independent-native-checkpoint.json",
+      "sha256": "8003edcd204857cff489b0675168ff9ec02f6f332696454d5b105f5c7933c409"
+    },
+    "old_owner_reaped": true,
+    "public_stale_artifact_refusals": [
+      {
+        "case": "old-snapshot-new-task",
+        "error_type": "ValueError",
+        "message": "snapshot predates this task incarnation; capture fresh bytes after task-start",
+        "refused": true
+      },
+      {
+        "case": "old-certificate-fresh-snapshot",
+        "error_type": "ValueError",
+        "message": "physical readback certificate differs from source/capture identity",
+        "refused": true
+      }
+    ],
+    "qualified_binding_claims": 6,
+    "receipt": {
+      "file": "COLD.json",
+      "sha256": "e1f39833edb983c69d002eada22f12f63365735ca4741c9f85dbba2228dee34d"
+    },
+    "refusals_preserve_registry_journal": true,
+    "restore_exact_saved_cpu_and_selected_window": true,
+    "restored_creation_is_source_observed_not_native_create": true,
+    "save_preserves_cpu_ram_tracker_and_binding_documents": true,
+    "selected_runtime_window_bytes": 734,
+    "selected_window_changed_bytes_before_restore": 0,
+    "snapshots": 6,
+    "stopped_endpoint_pairs": 2
+  },
+  "policy": {
+    "allocated_output_bytes": 1901174784,
+    "authorized_output_max_bytes": 2500000000,
+    "ci_run": false,
+    "dosbox_default_retained": true,
+    "native_rebuild": false,
+    "release_or_merge": false,
+    "runtime_inputs_states_databases_private": true,
+    "shared_activation": false
+  },
+  "runtime_commit": "daab62e573727eb2df64609cc9e0fac204ea16cf",
+  "runtime_payload_files": 709,
+  "source_files": {
+    "src/fdisbull/qemu_machine.py": "c9895fa55d28adaa5861b45fa8c44015df039d4961c43a916545158e51fbd3d7",
+    "tests/test_qemu_checkpoint_tracking.py": "b49e84f2b7a453baa028305d9b1d59a4783851d1cb508f64a08634df1b76315e"
+  },
+  "source_wheel_private_install_equal": true,
+  "wheel_sha256": "9761040d0db0bcb712feec9e6f56c8b5ab2b07e53d6526245d5cf4218caf9560"
+}

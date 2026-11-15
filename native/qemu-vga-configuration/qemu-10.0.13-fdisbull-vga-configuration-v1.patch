@@ -1,0 +1,672 @@
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -30,6 +30,8 @@
+ #include "hw/qdev-properties.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-types-fdisbull-retrace.h"
++#include "qapi/qapi-types-fdisbull-vga-configuration.h"
++#include "qemu/main-loop.h"
+ #include "migration/vmstate.h"
+ #include "vga_int.h"
+ #include "ui/pixel_ops.h"
+@@ -81,6 +83,52 @@
+     info->console = 0;
+     info->head = 0;
+     return vga_fdisbull_retrace_query(s, virtual_ns, info, errp);
++}
++
++bool pci_std_vga_fdisbull_configuration_selected(Object *obj)
++{
++    return obj && !strcmp(object_get_typename(obj), "VGA") &&
++           PCI_VGA(obj)->vga.fdisbull_retrace;
++}
++
++FdisbullVgaConfigurationSnapshot *
++pci_std_vga_fdisbull_configuration_snapshot(Object *obj, uint64_t epoch,
++                                           int64_t virtual_ns, Error **errp)
++{
++    g_autoptr(FdisbullVgaConfigurationSnapshot) info = NULL;
++    VGACommonState *s;
++
++    assert(bql_locked());
++    if (!pci_std_vga_fdisbull_configuration_selected(obj) || !epoch ||
++        virtual_ns < 0 || !qdev_is_realized(DEVICE(obj))) {
++        error_setg(errp, "VGA configuration requires selected realized exact "
++                   "primary VGA and a valid native clock identity");
++        return NULL;
++    }
++    s = &PCI_VGA(obj)->vga;
++    if (!s->con || qemu_console_lookup_by_index(0) != s->con ||
++        qemu_console_get_head(s->con) != 0 ||
++        object_property_get_link(OBJECT(s->con), "device", NULL) != obj) {
++        error_setg(errp, "VGA configuration requires owned console zero head zero");
++        return NULL;
++    }
++    info = g_new0(FdisbullVgaConfigurationSnapshot, 1);
++    if (!vga_fdisbull_configuration_query(s, info, errp)) {
++        return NULL;
++    }
++    info->device = object_get_canonical_path(obj);
++    if (!info->device) {
++        error_setg(errp, "VGA configuration device has no canonical identity");
++        return NULL;
++    }
++    info->api_version = 1;
++    info->model = g_strdup("qemu-vga-configuration-fdisbull-v1");
++    info->epoch = epoch;
++    info->virtual_ns = virtual_ns;
++    info->device_type = g_strdup("VGA");
++    info->console = 0;
++    info->head = 0;
++    return g_steal_pointer(&info);
+ }
+ 
+ static const VMStateDescription vmstate_vga_pci = {
+@@ -203,6 +251,7 @@
+         }
+         break;
+     }
++    vga_fdisbull_configuration_commit(s, false);
+ }
+ 
+ static bool vga_get_big_endian_fb(Object *obj, Error **errp)
+@@ -217,6 +266,7 @@
+     PCIVGAState *d = PCI_VGA(PCI_DEVICE(obj));
+ 
+     d->vga.big_endian_fb = value;
++    vga_fdisbull_configuration_commit(&d->vga, false);
+ }
+ 
+ static const MemoryRegionOps pci_vga_qext_ops = {
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -27,6 +27,7 @@
+ #include "system/reset.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-types-fdisbull-retrace.h"
++#include "qapi/qapi-types-fdisbull-vga-configuration.h"
+ #include "qemu/main-loop.h"
+ #include "exec/tswap.h"
+ #include "hw/display/vga.h"
+@@ -485,6 +486,147 @@
+     return true;
+ }
+ 
++/*
++ * Capture actual stored/native fields, without calling the renderer, reading
++ * guest ports or refreshing any cache.  Both sequencer banks are included:
++ * sr() alone would omit inactive configuration and derived VBE changes.
++ */
++static void vga_fdisbull_configuration_raw(VGACommonState *s,
++                                          VGAConfigurationState *raw)
++{
++    QEMU_BUILD_BUG_ON(VBE_DISPI_INDEX_NB != 10);
++    memset(raw, 0, sizeof(*raw));
++    memcpy(raw->sequencer, s->sr, sizeof(raw->sequencer));
++    memcpy(raw->sequencer_vbe, s->sr_vbe, sizeof(raw->sequencer_vbe));
++    memcpy(raw->graphics, s->gr, sizeof(raw->graphics));
++    memcpy(raw->crtc, s->cr, sizeof(raw->crtc));
++    memcpy(raw->attribute_controls, &s->ar[VGA_ATC_MODE],
++           sizeof(raw->attribute_controls));
++    memcpy(raw->vbe, s->vbe_regs, sizeof(raw->vbe));
++    raw->misc_output = s->msr;
++    raw->feature_control = s->fcr;
++    raw->display_enabled = (s->ar_index & 0x20) != 0;
++    raw->vbe_start_address = s->vbe_start_addr;
++    raw->vbe_line_offset = s->vbe_line_offset;
++    raw->vbe_bank_mask = s->vbe_bank_mask;
++    raw->bank_offset = s->bank_offset;
++    raw->dac_8bit = s->dac_8bit != 0;
++    raw->big_endian_framebuffer = s->big_endian_fb;
++    raw->vram_size = s->vram_size;
++    raw->vbe_size = s->vbe_size;
++    raw->vbe_size_mask = s->vbe_size_mask;
++}
++
++static void vga_fdisbull_configuration_init(VGACommonState *s)
++{
++    if (!s->fdisbull_retrace) {
++        return;
++    }
++    assert(!s->fdisbull_configuration_initialized);
++    s->fdisbull_configuration_generation = 1;
++    s->fdisbull_configuration_initialized = true;
++    vga_fdisbull_configuration_raw(s, &s->fdisbull_configuration_committed);
++}
++
++void vga_fdisbull_configuration_commit(VGACommonState *s, bool force)
++{
++    VGAConfigurationState raw;
++
++    /* QOM setters may run before realization; setup establishes identity. */
++    if (!s->fdisbull_retrace || !s->fdisbull_configuration_initialized) {
++        return;
++    }
++    assert(bql_locked());
++    if (s->fdisbull_configuration_invalidated && !force) {
++        return;
++    }
++    vga_fdisbull_configuration_raw(s, &raw);
++    if (!force && !memcmp(&raw, &s->fdisbull_configuration_committed,
++                          sizeof(raw))) {
++        return;
++    }
++    if (s->fdisbull_configuration_generation == UINT64_MAX) {
++        s->fdisbull_configuration_invalidated = true;
++        return;
++    }
++    s->fdisbull_configuration_generation++;
++    memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
++}
++
++static uint8List *vga_fdisbull_configuration_bytes(const uint8_t *data,
++                                                 size_t length)
++{
++    uint8List *head = NULL;
++    uint8List **tail = &head;
++    size_t i;
++
++    for (i = 0; i < length; i++) {
++        QAPI_LIST_APPEND(tail, data[i]);
++    }
++    return head;
++}
++
++bool vga_fdisbull_configuration_query(
++    VGACommonState *s, FdisbullVgaConfigurationSnapshot *info, Error **errp)
++{
++    VGAConfigurationState observed;
++    const VGAConfigurationState *raw = &s->fdisbull_configuration_committed;
++    FdisbullVgaConfigurationRaw *result;
++    uint16List **tail;
++    unsigned i;
++
++    assert(bql_locked());
++    if (!s->fdisbull_retrace || s->retrace != vga_precise_retrace ||
++        s->update_retrace_info != vga_precise_update_retrace_info ||
++        !s->fdisbull_configuration_initialized) {
++        error_setg(errp, "VGA configuration requires initialized exact primary "
++                   "VGA with x-fdisbull-retrace=on and retrace=precise");
++        return false;
++    }
++    if (s->fdisbull_configuration_invalidated ||
++        !s->fdisbull_configuration_generation) {
++        error_setg(errp, "VGA configuration identity invalidated by overflow "
++                   "or unsupported restore; close the VM");
++        return false;
++    }
++    vga_fdisbull_configuration_raw(s, &observed);
++    if (memcmp(&observed, raw, sizeof(observed))) {
++        s->fdisbull_configuration_invalidated = true;
++        error_setg(errp, "VGA configuration changed without a committed "
++                   "generation; querying cannot repair identity");
++        return false;
++    }
++
++    info->configuration_generation = s->fdisbull_configuration_generation;
++    result = info->raw = g_new0(FdisbullVgaConfigurationRaw, 1);
++    result->sequencer = vga_fdisbull_configuration_bytes(
++        raw->sequencer, sizeof(raw->sequencer));
++    result->sequencer_vbe = vga_fdisbull_configuration_bytes(
++        raw->sequencer_vbe, sizeof(raw->sequencer_vbe));
++    result->graphics = vga_fdisbull_configuration_bytes(
++        raw->graphics, sizeof(raw->graphics));
++    result->crtc = vga_fdisbull_configuration_bytes(raw->crtc, sizeof(raw->crtc));
++    result->attribute_controls = vga_fdisbull_configuration_bytes(
++        raw->attribute_controls, sizeof(raw->attribute_controls));
++    tail = &result->vbe;
++    for (i = 0; i < ARRAY_SIZE(raw->vbe); i++) {
++        QAPI_LIST_APPEND(tail, raw->vbe[i]);
++    }
++    result->misc_output = raw->misc_output;
++    result->feature_control = raw->feature_control;
++    result->display_enabled = raw->display_enabled;
++    result->vbe_start_address = raw->vbe_start_address;
++    result->vbe_line_offset = raw->vbe_line_offset;
++    result->vbe_bank_mask = raw->vbe_bank_mask;
++    result->bank_offset = raw->bank_offset;
++    result->dac_8bit = raw->dac_8bit;
++    result->big_endian_framebuffer = raw->big_endian_framebuffer;
++    result->vram_size = raw->vram_size;
++    result->vbe_size = raw->vbe_size;
++    result->vbe_size_mask = raw->vbe_size_mask;
++    return true;
++}
++
+ int vga_ioport_invalid(VGACommonState *s, uint32_t addr)
+ {
+     if (s->msr & VGA_MIS_COLOR) {
+@@ -723,6 +865,8 @@
+     if (s->fdisbull_retrace) {
+         vga_fdisbull_retrace_after(s, &retrace_before);
+     }
++    /* Includes protected CR7 bit 4 and all VBE-derived write effects. */
++    vga_fdisbull_configuration_commit(s, false);
+ }
+ 
+ /*
+@@ -969,6 +1113,8 @@
+     if (s->fdisbull_retrace) {
+         vga_fdisbull_retrace_after(s, &retrace_before);
+     }
++    /* Commit the final fixed-up vector, not intermediate VBE assignments. */
++    vga_fdisbull_configuration_commit(s, false);
+ }
+ 
+ /* called for accesses between 0xa0000 and 0xc0000 */
+@@ -2076,6 +2222,8 @@
+         break;
+     }
+     vga_update_memory_access(s);
++    /* Reset-to-identical-registers is still a new configuration lifetime. */
++    vga_fdisbull_configuration_commit(s, true);
+ }
+ 
+ static void vga_reset(void *opaque)
+@@ -2296,6 +2444,10 @@
+     s->graphic_mode = -1;
+     vbe_update_vgaregs(s);
+     vga_update_memory_access(s);
++    /* Process-local generations are never serialized or restored as history. */
++    if (s->fdisbull_retrace) {
++        s->fdisbull_configuration_invalidated = true;
++    }
+     return 0;
+ }
+ 
+@@ -2470,6 +2622,7 @@
+     s->big_endian_fb = s->default_endian_fb;
+ 
+     vga_dirty_log_start(s);
++    vga_fdisbull_configuration_init(s);
+ 
+     return true;
+ }
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -64,6 +64,32 @@
+     uint8_t  hpel;
+     bool     hpel_split;
+ } VGADisplayParams;
++
++/*
++ * Explicit configuration model 1.  The capture helper zeroes the whole
++ * structure before filling every field, making padding deterministic for
++ * comparisons.  This excludes image content and transient read/index state.
++ */
++typedef struct VGAConfigurationState {
++    uint8_t sequencer[8];
++    uint8_t sequencer_vbe[8];
++    uint8_t graphics[16];
++    uint8_t crtc[256];
++    uint8_t attribute_controls[5];
++    uint16_t vbe[10];
++    uint8_t misc_output;
++    uint8_t feature_control;
++    bool display_enabled;
++    uint32_t vbe_start_address;
++    uint32_t vbe_line_offset;
++    uint32_t vbe_bank_mask;
++    int32_t bank_offset;
++    bool dac_8bit;
++    bool big_endian_framebuffer;
++    uint32_t vram_size;
++    uint32_t vbe_size;
++    uint32_t vbe_size_mask;
++} VGAConfigurationState;
+ 
+ typedef struct VGACommonState {
+     MemoryRegion *legacy_address_space;
+@@ -155,6 +181,11 @@
+     bool fdisbull_retrace_initialized;
+     bool fdisbull_retrace_overflow;
+     uint64_t fdisbull_retrace_generation;
++    /* Configuration identity is opt-in, process-local and never migrated. */
++    bool fdisbull_configuration_initialized;
++    bool fdisbull_configuration_invalidated;
++    uint64_t fdisbull_configuration_generation;
++    VGAConfigurationState fdisbull_configuration_committed;
+     uint8_t is_vbe_vmstate;
+ } VGACommonState;
+ 
+@@ -177,6 +208,12 @@
+ bool vga_fdisbull_retrace_query(VGACommonState *s, int64_t virtual_ns,
+                               struct FdisbullRetraceInfo *info, Error **errp);
+ 
++struct FdisbullVgaConfigurationSnapshot;
++void vga_fdisbull_configuration_commit(VGACommonState *s, bool force);
++bool vga_fdisbull_configuration_query(
++    VGACommonState *s, struct FdisbullVgaConfigurationSnapshot *info,
++    Error **errp);
++
+ void vga_dirty_log_start(VGACommonState *s);
+ void vga_dirty_log_stop(VGACommonState *s);
+ 
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -27,6 +27,17 @@
+                                       struct FdisbullRetraceInfo *info,
+                                       Error **errp);
+ 
++struct FdisbullVgaConfigurationSnapshot;
++/*
++ * BQL-only snapshot of an already selected exact primary VGA.  The caller
++ * owns clock/stop admission; renderer callbacks can snapshot their pinned
++ * device before any public retrace/configuration query has occurred.
++ */
++bool pci_std_vga_fdisbull_configuration_selected(Object *obj);
++struct FdisbullVgaConfigurationSnapshot *
++pci_std_vga_fdisbull_configuration_snapshot(Object *obj, uint64_t epoch,
++                                           int64_t virtual_ns, Error **errp);
++
+ #define TYPE_VGA_MMIO "vga-mmio"
+ 
+ #endif
+--- /dev/null
++++ b/qapi/fdisbull-vga-configuration.json
+@@ -0,0 +1,120 @@
++# Experimental bounded standard VGA configuration observations, API/model 1.
++{ 'include': 'fdisbull-display.json' }
++
++##
++# @FdisbullVgaConfigurationRaw:
++#
++# Conservative stored configuration vector for exact primary standard VGA.
++# DAC and attribute palette entries, VRAM/fonts, ordinary index selectors,
++# flip-flops, status/latch values, renderer caches and cursor blink are excluded.
++# These bytes do not constitute a BIOS mode number or guest cursor mapping.
++#
++# @sequencer: Eight stored legacy sequencer bytes, indices 0..7.
++# @sequencer-vbe: Eight stored VBE sequencer bytes, indices 0..7.
++# @graphics: Sixteen stored graphics-controller bytes, indices 0..15.
++# @crtc: All 256 stored CRTC bytes, conservatively including cursor and unused
++#     controls even when a changed byte does not alter the current geometry.
++# @attribute-controls: Five stored attribute controls, indices 0x10..0x14.
++#     Attribute palette entries 0x00..0x0f are deliberately excluded.
++# @vbe: Ten stored Bochs VBE words, indices 0..9.  Read-only video-memory-size
++#     index 0x0a is outside this array.
++# @misc-output: Stored miscellaneous output byte.
++# @feature-control: Stored feature-control byte.
++# @display-enabled: Attribute index bit 5, which controls display blanking.
++# @vbe-start-address: Derived VBE start address in native four-byte units.
++# @vbe-line-offset: Derived VBE line offset in bytes.
++# @vbe-bank-mask: Native VBE bank mask.
++# @bank-offset: Native banked legacy-aperture byte offset.
++# @dac-8bit: Whether the 256-color DAC uses full eight-bit values.
++# @big-endian-framebuffer: Native framebuffer byte interpretation.
++# @vram-size: Allocated native VRAM bytes.
++# @vbe-size: Native VBE addressing size in bytes.
++# @vbe-size-mask: Native VBE address-wrap mask.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVgaConfigurationRaw',
++  'data': { 'sequencer': [ 'uint8' ], 'sequencer-vbe': [ 'uint8' ],
++            'graphics': [ 'uint8' ], 'crtc': [ 'uint8' ],
++            'attribute-controls': [ 'uint8' ], 'vbe': [ 'uint16' ],
++            'misc-output': 'uint8', 'feature-control': 'uint8',
++            'display-enabled': 'bool', 'vbe-start-address': 'uint32',
++            'vbe-line-offset': 'uint32', 'vbe-bank-mask': 'uint32',
++            'bank-offset': 'int32', 'dac-8bit': 'bool',
++            'big-endian-framebuffer': 'bool', 'vram-size': 'uint32',
++            'vbe-size': 'uint32', 'vbe-size-mask': 'uint32' } }
++
++##
++# @FdisbullVgaConfigurationSnapshot:
++#
++# A bounded configuration observation, independent of renderer window IDs.
++# It describes configuration observed at its timestamp; it does not prove
++# that retained RGB pixels were freshly rendered using that configuration.
++#
++# @api-version: Private configuration protocol version, one.
++# @model: qemu-vga-configuration-fdisbull-v1.
++# @epoch: Native virtual-clock epoch.
++# @virtual-ns: QEMU_CLOCK_VIRTUAL observation timestamp.
++# @device: Exact canonical QOM path of the primary VGA device.
++# @device-type: Exact native type name, VGA.
++# @console: Console index, zero.
++# @head: Display head, zero.
++# @configuration-generation: Positive process/device-local identity for the
++#     committed tracked vector.  Each effective mutator change advances it;
++#     reset always advances it.  A-to-B-to-A changes cannot reuse identity.
++# @raw: Exact committed bounded configuration vector.
++#
++# Palette and VRAM content can change without changing this generation.
++# A generation is not a guest frame, BIOS mode ID or coordinate-mapping proof.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVgaConfigurationSnapshot',
++  'data': { 'api-version': 'int', 'model': 'str', 'epoch': 'uint64',
++            'virtual-ns': 'int', 'device': 'str', 'device-type': 'str',
++            'console': 'int', 'head': 'int',
++            'configuration-generation': 'uint64',
++            'raw': 'FdisbullVgaConfigurationRaw' } }
++
++##
++# @FdisbullVgaConfigurationInfo:
++#
++# One atomic stopped observation of current configuration and display history.
++#
++# @display: Existing renderer observer receipt, without changes to its schema.
++# @current: Configuration observed at this stopped query.
++# @published: Configuration observed alongside the retained RGB publication.
++#     Present exactly when a publication exists on the selected precise path.
++#     This is a frozen observation, never reconstructed from current state.
++#
++# A renderer callback can preserve older surface pixels in transient modes.
++# Even matching current and published configuration does not prove raster
++# coherence, complete guest drawing, VBlank or a guest mouse mapping.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVgaConfigurationInfo',
++  'data': { 'display': 'FdisbullDisplayInfo',
++            'current': 'FdisbullVgaConfigurationSnapshot',
++            '*published': 'FdisbullVgaConfigurationSnapshot' } }
++
++##
++# @x-fdisbull-query-vga-configuration:
++#
++# Observe current configuration and the optional retained publication stamp
++# under BQL.  Requires the stopped native virtual-clock and precise retrace
++# profile, including admission of exactly one primary VGA device.  Reuses
++# the existing stopped retrace ownership/migration guard and display guard.
++#
++# This command performs no guest I/O, rendering, timer action, execution,
++# sleeping, image/file export or implicit synchronization.  Missing retained
++# stamps, unexplained raw changes, overflow or restored identity are errors;
++# querying never repairs state or assigns current configuration to old pixels.
++# Existing display query/export/probe responses remain unchanged.
++#
++# Returns: Current and retained configuration observations.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-vga-configuration',
++  'returns': 'FdisbullVgaConfigurationInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -64,6 +64,7 @@
+     'fdisbull-display',
+     'fdisbull-input',
+     'fdisbull-retrace',
++    'fdisbull-vga-configuration',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -67,6 +67,7 @@
+ { 'include': 'fdisbull-display.json' }
+ { 'include': 'fdisbull-input.json' }
+ { 'include': 'fdisbull-retrace.json' }
++{ 'include': 'fdisbull-vga-configuration.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- a/system/fdisbull-display.c
++++ b/system/fdisbull-display.c
+@@ -9,9 +9,14 @@
+  */
+ #include "qemu/osdep.h"
+ #include "hw/core/cpu.h"
++#include "hw/display/vga.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
++#include "qapi/clone-visitor.h"
+ #include "qapi/qapi-commands-fdisbull-display.h"
++#include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "qapi/qapi-commands-fdisbull-vga-configuration.h"
++#include "qapi/qapi-visit-fdisbull-vga-configuration.h"
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/timer.h"
+@@ -42,6 +47,8 @@
+     int height;
+     size_t rgb_bytes;
+     uint8_t *rgb;
++    /* Configuration observed at publication, not proof of raster production. */
++    FdisbullVgaConfigurationSnapshot *published_configuration;
+     QemuConsole *console;
+     Object *device;
+     QEMUTimer timer;
+@@ -60,6 +67,8 @@
+     display_window.observing = false;
+     display_window.failure = reason;
+     g_clear_pointer(&display_window.rgb, g_free);
++    g_clear_pointer(&display_window.published_configuration,
++                    qapi_free_FdisbullVgaConfigurationSnapshot);
+     display_window.rgb_bytes = 0;
+ }
+ 
+@@ -246,6 +255,8 @@
+ static void display_timer_cb(void *opaque)
+ {
+     g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(FdisbullVgaConfigurationSnapshot) configuration = NULL;
++    int64_t published_ns;
+     QemuConsole *con;
+     Object *dev;
+     CPUState *cpu;
+@@ -287,8 +298,26 @@
+         display_invalidate("renderer pixels unavailable or outside capture bounds");
+         return;
+     }
++    published_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (pci_std_vga_fdisbull_configuration_selected(dev)) {
++        /*
++         * Snapshot the already pinned display device directly.  display_start
++         * need not have admitted the separate public retrace owner.  This is
++         * the configuration observed beside the copy: a renderer can retain
++         * older pixels during transient invalid text or blank configurations.
++         */
++        configuration = pci_std_vga_fdisbull_configuration_snapshot(
++            dev, display_window.epoch, published_ns, NULL);
++        if (!configuration) {
++            display_invalidate("publication configuration identity unavailable");
++            return;
++        }
++    }
++    g_clear_pointer(&display_window.published_configuration,
++                    qapi_free_FdisbullVgaConfigurationSnapshot);
++    display_window.published_configuration = g_steal_pointer(&configuration);
+     display_window.updates++;
+-    display_window.published_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    display_window.published_ns = published_ns;
+     display_rearm(display_window.published_ns);
+ }
+ 
+@@ -346,6 +375,8 @@
+     display_window.console = con;
+     display_window.device = dev;
+     g_clear_pointer(&display_window.rgb, g_free);
++    g_clear_pointer(&display_window.published_configuration,
++                    qapi_free_FdisbullVgaConfigurationSnapshot);
+     g_free(display_window.token);
+     display_window.token = g_strdup(token);
+     display_window.rgb_bytes = 0;
+@@ -473,3 +504,54 @@
+     }
+     return probe;
+ }
++
++
++FdisbullVgaConfigurationInfo *qmp_x_fdisbull_query_vga_configuration(Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++    g_autoptr(FdisbullVgaConfigurationSnapshot) current = NULL;
++    FdisbullVgaConfigurationSnapshot *published;
++    FdisbullVgaConfigurationInfo *info;
++    Object *device;
++
++    assert(bql_locked());
++    /* Existing admission pins exactly one selected primary VGA and its epoch. */
++    retrace = qmp_x_fdisbull_query_retrace(errp);
++    if (!retrace || !display_guard(errp)) {
++        return NULL;
++    }
++    device = object_resolve_path(retrace->device, NULL);
++    if (!device || (display_window.device && display_window.device != device)) {
++        display_invalidate("configuration device differs from display owner");
++        error_setg(errp, "VGA configuration and display device identity differ");
++        return NULL;
++    }
++    current = pci_std_vga_fdisbull_configuration_snapshot(
++        device, retrace->epoch, retrace->virtual_ns, errp);
++    if (!current) {
++        return NULL;
++    }
++    if (current->epoch != display_window.epoch ||
++        current->virtual_ns != qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)) {
++        display_invalidate("configuration clock differs from stopped display");
++        error_setg(errp, "VGA configuration clock changed across stopped query");
++        return NULL;
++    }
++    published = display_window.published_configuration;
++    if (!!display_window.rgb != !!published ||
++        (published && (published->epoch != current->epoch ||
++          published->virtual_ns != display_window.published_ns ||
++          published->virtual_ns > current->virtual_ns ||
++          published->configuration_generation > current->configuration_generation ||
++          strcmp(published->device, current->device)))) {
++        display_invalidate("retained configuration stamp is missing or incoherent");
++        error_setg(errp, "Retained VGA configuration identity is unavailable; "
++                   "current state cannot replace a publication stamp");
++        return NULL;
++    }
++    info = g_new0(FdisbullVgaConfigurationInfo, 1);
++    info->display = display_info();
++    info->current = g_steal_pointer(&current);
++    info->published = QAPI_CLONE(FdisbullVgaConfigurationSnapshot, published);
++    return info;
++}
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -4,6 +4,9 @@
+  */
+ #include "qemu/osdep.h"
+ #include "qapi/error.h"
++#include "qom/object.h"
++#include "hw/display/vga.h"
++#include "qapi/qapi-types-fdisbull-vga-configuration.h"
+ #include "qapi/qapi-commands-fdisbull-retrace.h"
+ #include "system/fdisbull-retrace.h"
+ 
+@@ -18,3 +21,16 @@
+     error_setg(errp, "Retrace snapshots require standard PCI VGA support");
+     return NULL;
+ }
++
++bool pci_std_vga_fdisbull_configuration_selected(Object *obj)
++{
++    return false;
++}
++
++FdisbullVgaConfigurationSnapshot *
++pci_std_vga_fdisbull_configuration_snapshot(Object *obj, uint64_t epoch,
++                                           int64_t virtual_ns, Error **errp)
++{
++    error_setg(errp, "VGA configuration snapshots require standard PCI VGA support");
++    return NULL;
++}

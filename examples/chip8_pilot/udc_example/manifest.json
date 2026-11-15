@@ -1,0 +1,216 @@
+{
+  "backend": "Python 3.13 chip8lab Machine guarded partial evaluation",
+  "candidate_sites": [
+    {
+      "family": "LD_I",
+      "intent": "memory.address_assign",
+      "observed_count": 1,
+      "pc": "0200",
+      "uil_status": "unqualified_candidate",
+      "word": "A238"
+    },
+    {
+      "family": "LOAD",
+      "intent": "memory.register_load",
+      "observed_count": 1,
+      "pc": "0202",
+      "uil_status": "unqualified_candidate",
+      "word": "F765"
+    },
+    {
+      "family": "CLS",
+      "intent": "display.clear",
+      "observed_count": 1,
+      "pc": "0204",
+      "uil_status": "unqualified_candidate",
+      "word": "00E0"
+    },
+    {
+      "family": "LD_VX_DT",
+      "intent": "clock.delay_read",
+      "observed_count": 65,
+      "pc": "0206",
+      "uil_status": "unqualified_candidate",
+      "word": "FF07"
+    },
+    {
+      "family": "SE_VX_KK",
+      "intent": "control.skip_equal",
+      "observed_count": 65,
+      "pc": "0208",
+      "uil_status": "unqualified_candidate",
+      "word": "3F00"
+    },
+    {
+      "family": "LD_DT_VX",
+      "intent": "clock.delay_write",
+      "observed_count": 65,
+      "pc": "020C",
+      "uil_status": "unqualified_candidate",
+      "word": "F315"
+    },
+    {
+      "family": "SKNP",
+      "intent": "input.key_skip",
+      "observed_count": 65,
+      "pc": "020E",
+      "uil_status": "unqualified_candidate",
+      "word": "E4A1"
+    },
+    {
+      "family": "SKNP",
+      "intent": "input.key_skip",
+      "observed_count": 65,
+      "pc": "0212",
+      "uil_status": "unqualified_candidate",
+      "word": "E5A1"
+    },
+    {
+      "family": "SKNP",
+      "intent": "input.key_skip",
+      "observed_count": 65,
+      "pc": "0216",
+      "uil_status": "unqualified_candidate",
+      "word": "E6A1"
+    },
+    {
+      "family": "SKNP",
+      "intent": "input.key_skip",
+      "observed_count": 65,
+      "pc": "021A",
+      "uil_status": "unqualified_candidate",
+      "word": "E7A1"
+    },
+    {
+      "family": "SNE_VX_KK",
+      "intent": "control.skip_not_equal",
+      "observed_count": 65,
+      "pc": "021E",
+      "uil_status": "unqualified_candidate",
+      "word": "4200"
+    },
+    {
+      "family": "ADD_VX_KK",
+      "intent": "arith.add_wrap8",
+      "observed_count": 65,
+      "pc": "0220",
+      "uil_status": "unqualified_candidate",
+      "word": "7001"
+    },
+    {
+      "family": "SNE_VX_KK",
+      "intent": "control.skip_not_equal",
+      "observed_count": 65,
+      "pc": "0222",
+      "uil_status": "unqualified_candidate",
+      "word": "4201"
+    },
+    {
+      "family": "SNE_VX_KK",
+      "intent": "control.skip_not_equal",
+      "observed_count": 65,
+      "pc": "0226",
+      "uil_status": "unqualified_candidate",
+      "word": "4202"
+    },
+    {
+      "family": "SNE_VX_KK",
+      "intent": "control.skip_not_equal",
+      "observed_count": 65,
+      "pc": "022A",
+      "uil_status": "unqualified_candidate",
+      "word": "4203"
+    },
+    {
+      "family": "DRW",
+      "intent": "display.xor_sprite",
+      "observed_count": 65,
+      "pc": "022E",
+      "uil_status": "unqualified_candidate",
+      "word": "D011"
+    },
+    {
+      "family": "SNE_VX_KK",
+      "intent": "control.skip_not_equal",
+      "observed_count": 65,
+      "pc": "0230",
+      "uil_status": "unqualified_candidate",
+      "word": "4F00"
+    },
+    {
+      "family": "JP",
+      "intent": "control.jump",
+      "observed_count": 64,
+      "pc": "0232",
+      "uil_status": "unqualified_candidate",
+      "word": "1206"
+    }
+  ],
+  "comment": "No original-game or real-hardware parity; no source-to-common-UIL proof.",
+  "distribution": "local-only until separate content review",
+  "execution_authorized_by_registry": false,
+  "fallback_family_count": {
+    "LOAD": 1
+  },
+  "fallback_sites": [
+    {
+      "family": "LOAD",
+      "observed_count": 1,
+      "pc": "0202",
+      "reason": "manual_swede_or_VM_fallback_required",
+      "word": "F765"
+    }
+  ],
+  "format": "fdisbull-chip8-python-udc-study-1",
+  "generated_source_sha256": "6efc25616a1ffa0d3d3bd43cddc13f1b4e9e862b0b155eaddca3f9fce272cb3e",
+  "intermediate": "fdisbull-chip8-udl-uil-candidate-1 (NOT canonical UIL)",
+  "manual_rules": [
+    "ADD_I_VX",
+    "ADD_VX_KK",
+    "ADD_VX_VY",
+    "CALL",
+    "CLS",
+    "DRW",
+    "FONT",
+    "JP",
+    "LD_DT_VX",
+    "LD_I",
+    "LD_ST_VX",
+    "LD_VX_DT",
+    "LD_VX_KK",
+    "LD_VX_VY",
+    "RET",
+    "RND",
+    "SE_VX_KK",
+    "SE_VX_VY",
+    "SKNP",
+    "SKP",
+    "SNE_VX_KK",
+    "SNE_VX_VY"
+  ],
+  "module_name": "udc_snek",
+  "observed_site_count": 18,
+  "output": "generated Python using manually sweded pure/state opcode templates",
+  "qualified_against": "bounded reference chip8lab.vm only",
+  "rule_catalog_sha256": "fe83477b35beaad890b1541dc85457dc69724321d448b36ffddea98f22b3db55",
+  "source_bytes": 65,
+  "source_provenance": {
+    "provenance": "chip8lab.registry.observations.sqlite",
+    "source_report_sha256": "e5c4fbc77bd2b6b8e7f4692a5015f72406ead570e965497aa36cdbf3d27ee605",
+    "source_sha256": "09f67a5ef6f3cd9a65edc1e73786bf31a524e279bc1607e1953c6eb80c33b6ee"
+  },
+  "source_sha256": "09f67a5ef6f3cd9a65edc1e73786bf31a524e279bc1607e1953c6eb80c33b6ee",
+  "specialized_site_count": 17,
+  "sweded_families_observed": {
+    "ADD_VX_KK": 1,
+    "CLS": 1,
+    "DRW": 1,
+    "JP": 1,
+    "LD_DT_VX": 1,
+    "LD_I": 1,
+    "LD_VX_DT": 1,
+    "SE_VX_KK": 1,
+    "SKNP": 4,
+    "SNE_VX_KK": 5
+  }
+}

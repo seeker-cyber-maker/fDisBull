@@ -112,6 +112,16 @@ compression or a general virtual I/O layer. The documented QPI I/O callback
 interface itself has version/mode/width limits, so it would not be a universal
 tracing mechanism.
 
+For a stopped native QEMU machine, `debug-memory-translation` optionally takes
+`length` to return `data_hex` and `backing_layer`. It checks a single observed
+4 KiB non-PAE mapping, reads the native virtual address and selected extended
+RAM backing, and requires matching bytes and an unchanged stopped CPU and
+walk. The layer ID follows the physical page within one run and VM epoch. A
+guest can select A, then B, then A at the same linear address while both
+physical pages keep their contents. A new run or cold restore changes the
+identity scope. This read does not change a PTE, switch the guest's mapping,
+establish task or allocation lifetime, or replace the separate code patch layers.
+
 ## Verification and limits
 
 The focused tests cover authored flat/MZ drivers, malformed chains, persistent

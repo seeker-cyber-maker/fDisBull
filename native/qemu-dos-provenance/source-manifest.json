@@ -1,0 +1,113 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "source-bound FreeDOS DOS-save provenance witness",
+  "base": {
+    "qemu_version": "10.0.13",
+    "runtime": "native-runtime/frame-keys-runtime",
+    "prerequisite_patch": "native/qemu-frame-keys/qemu-10.0.13-fdisbull-frame-keys-v1.patch",
+    "prerequisite_patch_sha256": "2aa98bd99982ad0ada521fd24c6dddf679c43cf1e1c428ca03de34655523c35f"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-dos-provenance-v1.patch",
+    "sha256": "99f615226a728a0d80ac6456ddd8f7f6e32f0a6c020de3a73f2cbbc2aac2e6aa",
+    "modified_file_count": 8,
+    "files": [
+      {
+        "path": "qapi/fdisbull-dos-provenance.json",
+        "before_sha256": null,
+        "after_sha256": "1a6cb1aec99181a205266fefe73a3ef4db197b7b84f9d572a795fb74e1904973"
+      },
+      {
+        "path": "qapi/meson.build",
+        "before_sha256": "34b546d0db8184e2ac2534be8076e0dffb4096020ea3d5489a91add4366068ef",
+        "after_sha256": "013868bdcacb599d5c0da432e402ba2c71367ddd23b5a35822aa549d41819009"
+      },
+      {
+        "path": "qapi/qapi-schema.json",
+        "before_sha256": "de9a60d68a8526a123ddd39ff44b8095d92da4a7e5854c16726ad98e352f4eb4",
+        "after_sha256": "c159df31d554fcd8f053565dadb256c9a6afe7274f1f530354a646fcaa9ca23e"
+      },
+      {
+        "path": "target/i386/fdisbull-dos-provenance.c",
+        "before_sha256": null,
+        "after_sha256": "6698d432bad0585845a1159ff1af2a87e546a89a463beefe12f4c7e196c7240e"
+      },
+      {
+        "path": "target/i386/fdisbull-dos-provenance.h",
+        "before_sha256": null,
+        "after_sha256": "6a49522ffa0232b9e9b19a2282da75c008ba7ba30ed1859c6392b243c720091a"
+      },
+      {
+        "path": "target/i386/meson.build",
+        "before_sha256": "958591de86065a3601982a35230c3181972e830775804d0558bb52ecc7b077c7",
+        "after_sha256": "0a19c8391113023018af2603c559a2416cac3d26d225aca42bfd73224a30d4c2"
+      },
+      {
+        "path": "target/i386/tcg/seg_helper.c",
+        "before_sha256": "9d7d83d663c447787fa9b4680ae0da70b112a88e5d3e00b091ad3c3e8861eadf",
+        "after_sha256": "0be315dc057e02519716a35e66fafc8383da973bcc42b54726cb878f5fa57b3f"
+      },
+      {
+        "path": "target/i386/tcg/system/misc_helper.c",
+        "before_sha256": "36ce9b5e0d6bed3a7f329d5354aa6baec4ec9aee04165c3938ef8cb8d84fb911",
+        "after_sha256": "12378714b6f10180e91f19372344be561908b2bae06395af7feb1d00189429e1"
+      }
+    ],
+    "dry_run": {
+      "command": "patch --dry-run -p1 -d <sealed-N21-qemu-10.0.13> < native/qemu-dos-provenance/qemu-10.0.13-fdisbull-dos-provenance-v1.patch",
+      "result": "passed against the sealed N21 frame-keys runtime source"
+    },
+    "applied_verification": {
+      "files": 8,
+      "seeded_base_files": 5,
+      "new_files": 3,
+      "base_hashes_unchanged": true,
+      "applied_matches_candidate": true,
+      "receipt": "R/provenance-patch-replay-receipt.json",
+      "result": "passed: packaged patch applied to an isolated copy of only the touched N21 files; all eight outputs matched the manifest and N22 source hashes"
+    }
+  },
+  "api": {
+    "commands": [
+      "x-fdisbull-arm-dos-save-witness",
+      "x-fdisbull-query-dos-save-witness",
+      "x-fdisbull-disarm-dos-save-witness"
+    ],
+    "protocol_version": 1,
+    "model": "qemu-pc-dos-save-witness-v1",
+    "checkpoint_state": "instrumented native VMState stores witness ownership, payload, INT 21h pending call, and hardware-return frames; post-load validates and advances native epoch/generation; explicit host rebind required",
+    "scope": "one stopped x86 TCG CPU, real-mode arm, one pinned source process lifetime, one absolute D: 8.3 destination; query/disarm work in any stopped CPU mode"
+  },
+  "build": {
+    "source": "native-runtime/guest-provenance-runtime/qemu-10.0.13",
+    "build_dir": "native-runtime/guest-provenance-runtime/build-n22",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "../qemu-10.0.13/configure --target-list=x86_64-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../qemu-10.0.13/pc-bios --prefix=<build-n22>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_command": "TMPDIR=<guest-provenance-runtime/tmp-n22> /Users/tiga/miniconda/bin/ninja -C build-n22 -j4 qemu-system-x86_64",
+    "candidate_binary_sha256": "0665e6d87e5c7fd23f1c62f4fabab534618fabe40c656ecbcd61d4e0d7703ce1",
+    "build_log": "guest-provenance-runtime/build-n22-09.log",
+    "build_result": "Build 09 compiled and linked successfully, including the final interrupt-mode guard."
+  },
+  "qualification": {
+    "status": "bounded root-owned local native validation passed; hosted CI and cross-binary restore remain unqualified",
+    "tests_run_by_patch_author": false,
+    "ci": false,
+    "cross_binary_restore_qualified": false,
+    "psp_claim": "The observer is armed only after the host verifies the original process-entry checkpoint and child PSP setup. It invalidates evidence on process-changing DOS calls and checks observed AH=51h/AH=62h results against the pinned PSP. It does not independently read the FreeDOS kernel current-PSP global when the guest makes no such query.",
+    "native_cases": 13,
+    "native_passed": 13,
+    "native_failures": 0,
+    "native_skipped": 0,
+    "native_receipt": "R/provenance-native-09.log",
+    "native_duration_seconds": 17.98,
+    "native_scope": "Bounded real-mode save witness, checkpointed in-flight INT 21h restoration, PIT IRQ/BDA advancement, raw-QMP failed exclusive-create carry/error guard, and unsupported-operation taint cases."
+  },
+  "scope_limits": [
+    "No guest TSR, DOSBox parity, or non-x86 claim.",
+    "Only the pinned FreeDOS source/runtime and supported real-mode process-entry workflow are in scope.",
+    "One target absolute D: 8.3 path; bounded payload/event ledger; unsupported DOS mutators and raw storage/DMA/PCI paths invalidate the witness.",
+    "A ready witness is still active until explicit disarm; tainted state cannot be rearmed in place.",
+    "Generic QEMU migration and cross-binary state restore are not qualified."
+  ]
+}

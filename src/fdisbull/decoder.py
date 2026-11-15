@@ -24,6 +24,11 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
         raise ValueError("instruction address must fit in an unsigned 64-bit integer")
     if not data:
         return None
+    if arch == 'chip8':
+        if bits != 16:
+            raise ValueError('CHIP-8 decoding requires 16-bit instruction words')
+        from .chip8 import decode as decode_chip8
+        return decode_chip8(data, address)
     if arch == 'thumb':
         if bits != 32:
             raise ValueError('Thumb decoding requires 32 bits')

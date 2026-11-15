@@ -1,0 +1,79 @@
+{
+  "format": "morgue-native-final-contract-1",
+  "limits": [
+    "Far-warning branch deliberately refuses; this is atomicity evidence, not original behavioral parity for that warning.",
+    "Reserved input rollback is repeated after each accepted route.",
+    "Last-pickup display follows actual inventory writer, which differs from placed actor record for Slap Patch."
+  ],
+  "native_sha256": "367de36149bcad9d38ac550b42e145715d080dd01a220c176f441a500e585aee",
+  "program_sha256": "b3f991904e66fd2c9148338a68508581f4f85804c3afd4bd4bb4200c948d7d2f",
+  "refusals": [
+    {
+      "logical_pad": 128,
+      "return": 1,
+      "route": "patch",
+      "state_elements_unchanged": 146716
+    },
+    {
+      "logical_pad": 128,
+      "return": 1,
+      "route": "patch",
+      "state_elements_unchanged": 146716
+    },
+    {
+      "logical_pad": 128,
+      "return": 1,
+      "route": "scalpel",
+      "state_elements_unchanged": 146716
+    },
+    {
+      "logical_pad": 128,
+      "return": 1,
+      "route": "scalpel",
+      "state_elements_unchanged": 146716
+    },
+    {
+      "logical_pad": 128,
+      "return": 1,
+      "route": "door",
+      "state_elements_unchanged": 146716
+    },
+    {
+      "logical_pad": 128,
+      "return": 1,
+      "route": "door",
+      "state_elements_unchanged": 146716
+    },
+    {
+      "logical_pad": 32,
+      "return": 1,
+      "route": "source-observed out-of-range target",
+      "state_elements_unchanged": 293432,
+      "unsupported_effect": "original warning window/input continuation"
+    }
+  ],
+  "result": "passed",
+  "routes": {
+    "door": {
+      "action_count": 2,
+      "counter_value": 1,
+      "name_sha256": "cb4c6d3b7f58e322b0c1ae0f1cc38279a3ce784424ada945a17bd51519f19679",
+      "owner": 2226,
+      "record": 11936
+    },
+    "patch": {
+      "action_count": 1,
+      "counter_value": 1,
+      "name_sha256": "cb4c6d3b7f58e322b0c1ae0f1cc38279a3ce784424ada945a17bd51519f19679",
+      "owner": 2226,
+      "record": 11936
+    },
+    "scalpel": {
+      "action_count": 1,
+      "counter_value": 0,
+      "name_sha256": "e007eea83ce3ada0be4d3f9e6e36d7759204fbec8e3920908476940fc2bc1c8c",
+      "owner": 2226,
+      "record": 11901
+    }
+  }
+}

@@ -14,9 +14,9 @@ handle pins its selected revision. Open a live backend with
 `session.text_projection(name_or_revision, resource_root)`; it implements
 `observe()` and `act(request)` as described in [TEXT_PLAYER.md](TEXT_PLAYER.md).
 `serve_stream(backend, reader, writer)` serves one request and response per
-JSON line on caller-owned streams. This is a local transport, not a secure
-network service; use an authenticated, protected transport if crossing a trust
-boundary. The independently distributed player does not import fDisBull.
+JSON line on caller-owned streams. Callers exposing it over a transport must
+authenticate clients. The text host below does so with a private per-run
+password file. The independently distributed player does not import fDisBull.
 
 The source definition has this shape (IDs, names and text below are synthetic):
 
@@ -61,7 +61,9 @@ The live backend supports `save(slot="live")` and `load(checkpoint="live")`;
 the line protocol uses `{"op":"save","slot":"live"}` and
 `{"op":"load","checkpoint":"live"}`. Save returns an opaque checkpoint ID
 and advances the named slot while preserving older IDs. Load accepts either a
-slot or a returned ID. A missing slot returns `missing`; an incompatible,
+slot or a returned ID. An existing slot takes precedence if its name also looks
+like an ID; prefix `id:` to select the opaque ID explicitly in that case.
+A missing slot returns `missing`; an incompatible,
 corrupt, interrupted or otherwise failed restore returns `incomplete` and
 blocks projection handles on that session until a successful restore. It never silently starts a fresh
 game after a failed restore. Public replies do not include private paths,
@@ -134,12 +136,16 @@ includes the requested and measured guest duration and the stop outcome when
 preparation succeeds. The workflow still performs its normal fresh checks;
 preparation does not guarantee that the resulting frame matches a scene.
 
-Port 0 selects an available port. The callback receives only `host` and `port`
-on the owner thread; connect the separate player with `--connect 127.0.0.1:PORT`.
-The host accepts one client and closes the session and project on disconnect.
+Port 0 selects an available port. The callback receives `host`, `port`, and
+`password_file` on the owner thread. Connect the separate player with
+`--connect 127.0.0.1:PORT --connect-password-file PASSWORD_FILE`. The host
+creates the file in a private temporary directory and removes it on close.
+The player sends the password before any observation or action. Invalid
+connections close without consuming the one authenticated client slot.
+The host accepts one authenticated client and closes the session and project on disconnect.
 The default 60-second timeout applies separately to waiting for a client and to
 each idle socket read; it can be set from 1 to 600,000 milliseconds. A client
 that continues issuing requests can keep the connection open. It is not an
 automation or a persistent service. Loopback restricts remote network access,
-but other local processes may connect: the protocol does not authenticate or
-encrypt clients. Only use this host in a trusted local environment.
+but other local processes may connect and delay admission. Protect the password
+file and the endpoint callback output; TCP traffic is not encrypted.

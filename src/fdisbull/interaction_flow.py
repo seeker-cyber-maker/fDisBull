@@ -95,6 +95,7 @@ def execute_flow(document, state=None, capabilities=(), max_steps=1024, max_call
             op = c['op']
             if op == 'eq': return val(c['left']) == val(c['right'])
             if op == 'lt': return val(c['left']) < val(c['right'])
+            if op == 'ge': return val(c['left']) >= val(c['right'])
             if op == 'bit_test': return bool(val(c['value']) & (1 << c['bit']))
             if op == 'not': return not cond(c['condition'])
             return all(cond(x) for x in c['conditions'])

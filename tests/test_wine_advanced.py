@@ -67,6 +67,11 @@ def test_real_pe_saved_experiment_restores_watches_and_compares_layers(tmp_path)
             assert result['baseline']['memory'][0]['hex']=='08000000'
             assert result['layer']['memory'][0]['hex']=='0a000000'
             assert result['comparison']['observed_difference'] is True
+            assert result['comparison']['observed_effect_difference'] is True
+            assert result['comparison']['memory'][0]['changed']['changed_bytes']==1
+            assert result['comparison']['traces'][0]['topology']['alignment']=='evidenced'
+            assert result['comparison']['traces'][0]['semantics']=='completed_steps'
+            assert result['baseline_restored'] is True
             assert debug.memory(exports['counter'],length=4)['hex']=='07000000'
             assert len(debug.controls()['breakpoints'])==2 and debug.controls()['hooks']==[]
             assert debug.layers()['active']==[]

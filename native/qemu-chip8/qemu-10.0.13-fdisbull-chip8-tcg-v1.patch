@@ -1,0 +1,1015 @@
+--- /dev/null
++++ b/configs/devices/chip8-softmmu/default.mak
+@@ -0,0 +1 @@
++# Minimal CHIP-8 target: the machine has no optional peripherals.
+--- /dev/null
++++ b/configs/targets/chip8-softmmu.mak
+@@ -0,0 +1,3 @@
++TARGET_ARCH=chip8
++TARGET_XML_FILES=gdb-xml/chip8-core.xml
++TARGET_LONG_BITS=32
+--- /dev/null
++++ b/gdb-xml/chip8-core.xml
+@@ -0,0 +1,39 @@
++<?xml version="1.0"?>
++<!DOCTYPE feature SYSTEM "gdb-target.dtd">
++<feature name="org.gnu.gdb.chip8.cpu">
++  <reg name="v0" bitsize="8" type="int" regnum="0"/>
++  <reg name="v1" bitsize="8" type="int"/>
++  <reg name="v2" bitsize="8" type="int"/>
++  <reg name="v3" bitsize="8" type="int"/>
++  <reg name="v4" bitsize="8" type="int"/>
++  <reg name="v5" bitsize="8" type="int"/>
++  <reg name="v6" bitsize="8" type="int"/>
++  <reg name="v7" bitsize="8" type="int"/>
++  <reg name="v8" bitsize="8" type="int"/>
++  <reg name="v9" bitsize="8" type="int"/>
++  <reg name="va" bitsize="8" type="int"/>
++  <reg name="vb" bitsize="8" type="int"/>
++  <reg name="vc" bitsize="8" type="int"/>
++  <reg name="vd" bitsize="8" type="int"/>
++  <reg name="ve" bitsize="8" type="int"/>
++  <reg name="vf" bitsize="8" type="int"/>
++  <reg name="i" bitsize="16" type="int"/>
++  <reg name="pc" bitsize="16" type="code_ptr"/>
++  <reg name="sp" bitsize="8" type="int"/>
++  <reg name="stack0" bitsize="16" type="int"/>
++  <reg name="stack1" bitsize="16" type="int"/>
++  <reg name="stack2" bitsize="16" type="int"/>
++  <reg name="stack3" bitsize="16" type="int"/>
++  <reg name="stack4" bitsize="16" type="int"/>
++  <reg name="stack5" bitsize="16" type="int"/>
++  <reg name="stack6" bitsize="16" type="int"/>
++  <reg name="stack7" bitsize="16" type="int"/>
++  <reg name="stack8" bitsize="16" type="int"/>
++  <reg name="stack9" bitsize="16" type="int"/>
++  <reg name="stack10" bitsize="16" type="int"/>
++  <reg name="stack11" bitsize="16" type="int"/>
++  <reg name="stack12" bitsize="16" type="int"/>
++  <reg name="stack13" bitsize="16" type="int"/>
++  <reg name="stack14" bitsize="16" type="int"/>
++  <reg name="stack15" bitsize="16" type="int"/>
++</feature>
+--- a/hw/Kconfig
++++ b/hw/Kconfig
+@@ -51,6 +51,7 @@
+ source cpu/Kconfig
+ source alpha/Kconfig
+ source avr/Kconfig
++source chip8/Kconfig
+ source hppa/Kconfig
+ source i386/Kconfig
+ source loongarch/Kconfig
+--- /dev/null
++++ b/hw/chip8/Kconfig
+@@ -0,0 +1,4 @@
++config CHIP8_TEST_MACHINE
++    bool
++    default y
++    depends on CHIP8
+--- /dev/null
++++ b/hw/chip8/chip8-test.c
+@@ -0,0 +1,77 @@
++#include "qemu/osdep.h"
++#include "qemu/error-report.h"
++#include "qapi/error.h"
++#include "hw/boards.h"
++#include "hw/loader.h"
++#include "hw/qdev-core.h"
++#include "system/reset.h"
++#include "exec/address-spaces.h"
++#include "target/chip8/cpu-qom.h"
++#include "target/chip8/cpu.h"
++
++#define TYPE_CHIP8_TEST_MACHINE MACHINE_TYPE_NAME("chip8-test")
++OBJECT_DECLARE_SIMPLE_TYPE(Chip8TestMachineState, CHIP8_TEST_MACHINE)
++
++struct Chip8TestMachineState {
++    MachineState parent_obj;
++};
++
++static ram_addr_t chip8_fixup_ram_size(ram_addr_t size)
++{
++    /* CHIP-8 memory is a fixed 4 KiB address space. */
++    return CHIP8_RAM_SIZE;
++}
++
++static void chip8_test_init(MachineState *machine)
++{
++    MachineClass *mc = MACHINE_GET_CLASS(machine);
++    CPUState *cs;
++    ssize_t size;
++
++    if (machine->ram_size != CHIP8_RAM_SIZE) {
++        error_report("CHIP-8 test machine requires exactly 4096 bytes of RAM");
++        exit(1);
++    }
++    memory_region_add_subregion(get_system_memory(), 0, machine->ram);
++    cs = cpu_create(mc->default_cpu_type);
++    if (!machine->kernel_filename) {
++        error_report("CHIP-8 test machine requires a raw ROM via -kernel");
++        exit(1);
++    }
++    size = load_image_targphys(machine->kernel_filename, CHIP8_ROM_BASE,
++                               CHIP8_RAM_SIZE - CHIP8_ROM_BASE);
++    if (size < 2) {
++        error_report("CHIP-8 ROM must contain at least one 16-bit instruction");
++        exit(1);
++    }
++    CHIP8_CPU(cs)->env.pc = CHIP8_ROM_BASE;
++}
++
++static void chip8_test_class_init(ObjectClass *oc, void *data)
++{
++    MachineClass *mc = MACHINE_CLASS(oc);
++
++    mc->desc = "Bounded classic CHIP-8 CPU smoke machine";
++    mc->init = chip8_test_init;
++    mc->default_cpu_type = TYPE_CHIP8_CPU;
++    mc->default_ram_size = CHIP8_RAM_SIZE;
++    mc->default_ram_id = "chip8.ram";
++    mc->fixup_ram_size = chip8_fixup_ram_size;
++    mc->no_cdrom = true;
++    mc->no_floppy = true;
++    mc->no_parallel = true;
++}
++
++static const TypeInfo chip8_test_type = {
++    .name = TYPE_CHIP8_TEST_MACHINE,
++    .parent = TYPE_MACHINE,
++    .instance_size = sizeof(Chip8TestMachineState),
++    .class_init = chip8_test_class_init,
++};
++
++static void chip8_test_register_types(void)
++{
++    type_register_static(&chip8_test_type);
++}
++
++type_init(chip8_test_register_types)
+--- /dev/null
++++ b/hw/chip8/meson.build
+@@ -0,0 +1,3 @@
++chip8_hw_ss = ss.source_set()
++chip8_hw_ss.add(when: 'CONFIG_CHIP8_TEST_MACHINE', if_true: files('chip8-test.c'))
++hw_arch += {'chip8': chip8_hw_ss}
+--- a/hw/meson.build
++++ b/hw/meson.build
+@@ -4,6 +4,7 @@
+ subdir('audio')
+ subdir('block')
+ subdir('char')
++subdir('chip8')
+ subdir('core')
+ subdir('cpu')
+ subdir('cxl')
+--- a/include/system/arch_init.h
++++ b/include/system/arch_init.h
+@@ -23,6 +23,7 @@
+     QEMU_ARCH_AVR = (1 << 21),
+     QEMU_ARCH_HEXAGON = (1 << 22),
+     QEMU_ARCH_LOONGARCH = (1 << 23),
++    QEMU_ARCH_CHIP8 = (1 << 24),
+ };
+ 
+ bool qemu_arch_available(unsigned qemu_arch_mask);
+--- a/qapi/misc-target.json
++++ b/qapi/misc-target.json
+@@ -1,6 +1,7 @@
+ # -*- Mode: Python -*-
+ # vim: filetype=python
+ #
++
+ 
+ ##
+ # @rtc-reset-reinjection:
+--- a/qapi/misc.json
++++ b/qapi/misc.json
+@@ -1,6 +1,39 @@
+ # -*- Mode: Python -*-
+ # vim: filetype=python
+ #
++
++##
++# @Chip8FaultInfo:
++#
++# Fault and target identity for the bounded CHIP-8 QEMU CPU.
++#
++# @profile: Fixed interpreter profile identifier.
++# @cpu-subset: Fixed implemented CPU subset identifier.
++# @faulted: Whether execution stopped on an architected subset fault.
++# @fault-code: 0 for none, 1 unsupported instruction, 2 fetch outside RAM,
++#     3 data extent outside RAM, 4 stack underflow, 5 stack overflow,
++#     6 odd instruction PC.
++# @fault-pc: PC associated with the fault, including out-of-range terminal PCs.
++# @fault-opcode: Fetched opcode, or zero if no complete opcode was fetched.
++#
++# Since: 10.1
++##
++{ 'struct': 'Chip8FaultInfo',
++  'data': { 'profile': 'str', 'cpu-subset': 'str', 'faulted': 'bool',
++            'fault-code': 'uint32', 'fault-pc': 'uint32',
++            'fault-opcode': 'uint32' } }
++
++##
++# @query-chip8-fault:
++#
++# Return the CHIP-8 CPU identity and sticky execution-fault receipt.
++#
++# The command is available in every system build. It returns an error when
++# CPU 0 does not expose the CHIP-8 CPU properties.
++#
++# Since: 10.1
++##
++{ 'command': 'query-chip8-fault', 'returns': 'Chip8FaultInfo' }
+ 
+ ##
+ # = Miscellanea
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -17,6 +17,7 @@
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',
++  'qmp-chip8.c',
+   'qtest.c',
+   'rtc.c',
+   'runstate-action.c',
+--- /dev/null
++++ b/system/qmp-chip8.c
+@@ -0,0 +1,58 @@
++/* Generic QMP bridge to read-only CHIP-8 CPU QOM properties. */
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-misc.h"
++#include "hw/core/cpu.h"
++#include "qom/object.h"
++
++Chip8FaultInfo *qmp_query_chip8_fault(Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Object *obj;
++    Error *local_err = NULL;
++    Chip8FaultInfo *info;
++
++    if (!cs) {
++        error_setg(errp, "CHIP-8 CPU is unavailable");
++        return NULL;
++    }
++    obj = OBJECT(cs);
++    info = g_new0(Chip8FaultInfo, 1);
++    info->profile = object_property_get_str(obj, "chip8-profile", &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        qapi_free_Chip8FaultInfo(info);
++        return NULL;
++    }
++    info->cpu_subset = object_property_get_str(obj, "cpu-subset", &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        qapi_free_Chip8FaultInfo(info);
++        return NULL;
++    }
++    info->faulted = object_property_get_bool(obj, "faulted", &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        qapi_free_Chip8FaultInfo(info);
++        return NULL;
++    }
++    info->fault_code = object_property_get_uint(obj, "fault-code", &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        qapi_free_Chip8FaultInfo(info);
++        return NULL;
++    }
++    info->fault_pc = object_property_get_uint(obj, "fault-pc", &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        qapi_free_Chip8FaultInfo(info);
++        return NULL;
++    }
++    info->fault_opcode = object_property_get_uint(obj, "fault-opcode", &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        qapi_free_Chip8FaultInfo(info);
++        return NULL;
++    }
++    return info;
++}
+--- a/target/Kconfig
++++ b/target/Kconfig
+@@ -1,6 +1,7 @@
+ source alpha/Kconfig
+ source arm/Kconfig
+ source avr/Kconfig
++source chip8/Kconfig
+ source hppa/Kconfig
+ source i386/Kconfig
+ source loongarch/Kconfig
+--- /dev/null
++++ b/target/chip8/Kconfig
+@@ -0,0 +1,2 @@
++config CHIP8
++    bool
+--- /dev/null
++++ b/target/chip8/cpu-param.h
+@@ -0,0 +1,10 @@
++#ifndef CHIP8_CPU_PARAM_H
++#define CHIP8_CPU_PARAM_H
++
++#define TARGET_LONG_BITS 32
++#define TARGET_PAGE_BITS 12
++#define TARGET_PHYS_ADDR_SPACE_BITS 32
++#define TARGET_VIRT_ADDR_SPACE_BITS 32
++#define TCG_GUEST_DEFAULT_MO 0
++
++#endif
+--- /dev/null
++++ b/target/chip8/cpu-qom.h
+@@ -0,0 +1,9 @@
++#ifndef TARGET_CHIP8_CPU_QOM_H
++#define TARGET_CHIP8_CPU_QOM_H
++
++#include "hw/core/cpu.h"
++
++#define TYPE_CHIP8_CPU "chip8-cpu"
++OBJECT_DECLARE_CPU_TYPE(Chip8CPU, Chip8CPUClass, CHIP8_CPU)
++
++#endif
+--- /dev/null
++++ b/target/chip8/cpu.c
+@@ -0,0 +1,189 @@
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "qemu/typedefs.h"
++#include "exec/exec-all.h"
++#include "exec/translation-block.h"
++#include "exec/cputlb.h"
++#include "exec/page-protection.h"
++#include "exec/target_page.h"
++#include "hw/core/sysemu-cpu-ops.h"
++#include "accel/tcg/cpu-ops.h"
++#include "migration/vmstate.h"
++#include "hw/qdev-properties.h"
++#include "cpu.h"
++#include "exec/helper-proto.h"
++
++static vaddr chip8_get_pc(CPUState *cs)
++{
++    return CHIP8_CPU(cs)->env.pc;
++}
++
++static void chip8_set_pc(CPUState *cs, vaddr value)
++{
++    CHIP8_CPU(cs)->env.pc = value & 0xffff;
++}
++
++static void chip8_sync_from_tb(CPUState *cs, const TranslationBlock *tb)
++{
++    CHIP8_CPU(cs)->env.pc = tb->pc & 0xffff;
++}
++
++static void chip8_restore_state(CPUState *cs, const TranslationBlock *tb,
++                                const uint64_t *data)
++{
++    CHIP8_CPU(cs)->env.pc = data[0] & 0xffff;
++}
++
++static int chip8_mmu_index(CPUState *cs, bool ifetch)
++{
++    return MMU_USER_IDX;
++}
++
++static bool chip8_cpu_has_work(CPUState *cs)
++{
++    return false;
++}
++
++static bool chip8_cpu_exec_interrupt(CPUState *cs, int interrupt_request)
++{
++    return false;
++}
++
++static hwaddr chip8_get_phys_page_debug(CPUState *cs, vaddr addr)
++{
++    return addr < CHIP8_RAM_SIZE ? addr : (hwaddr)-1;
++}
++
++static bool chip8_tlb_fill(CPUState *cs, vaddr addr, int size,
++                           MMUAccessType access_type, int mmu_idx,
++                           bool probe, uintptr_t retaddr)
++{
++    if (addr >= CHIP8_RAM_SIZE || size < 1 ||
++        (vaddr)size > CHIP8_RAM_SIZE - addr) {
++        if (!probe) {
++            uint32_t fault = access_type == MMU_INST_FETCH ?
++                             CHIP8_FAULT_FETCH_OOB : CHIP8_FAULT_DATA_OOB;
++            helper_chip8_fault(cpu_env(cs), cpu_env(cs)->pc, 0, fault);
++        }
++        return false;
++    }
++    tlb_set_page(cs, 0, 0, PAGE_READ | PAGE_WRITE | PAGE_EXEC,
++                 mmu_idx, TARGET_PAGE_SIZE);
++    return true;
++}
++
++static void chip8_cpu_reset_hold(Object *obj, ResetType type)
++{
++    CPUState *cs = CPU(obj);
++    Chip8CPU *cpu = CHIP8_CPU(cs);
++    Chip8CPUClass *mcc = CHIP8_CPU_GET_CLASS(obj);
++
++    if (mcc->parent_phases.hold) {
++        mcc->parent_phases.hold(obj, type);
++    }
++    memset(&cpu->env, 0, sizeof(cpu->env));
++    cpu->env.pc = CHIP8_ROM_BASE;
++}
++
++static void chip8_cpu_realize(DeviceState *dev, Error **errp)
++{
++    CPUState *cs = CPU(dev);
++    Chip8CPUClass *mcc = CHIP8_CPU_GET_CLASS(dev);
++    Error *local_err = NULL;
++
++    cpu_exec_realizefn(cs, &local_err);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return;
++    }
++    qemu_init_vcpu(cs);
++    cpu_reset(cs);
++    mcc->parent_realize(dev, errp);
++}
++
++static char *chip8_get_profile(Object *obj, Error **errp)
++{
++    return g_strdup("chip8-classic-pilot-default-v1");
++}
++
++static char *chip8_get_subset(Object *obj, Error **errp)
++{
++    return g_strdup("fdisbull-chip8-cpu-smoke-1");
++}
++
++static bool chip8_get_faulted(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.faulted;
++}
++
++static const gchar *chip8_gdb_arch_name(CPUState *cs)
++{
++    return "chip8";
++}
++
++static void chip8_cpu_instance_init(Object *obj)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    object_property_add_str(obj, "chip8-profile", chip8_get_profile, NULL);
++    object_property_add_str(obj, "cpu-subset", chip8_get_subset, NULL);
++    object_property_add_bool(obj, "faulted", chip8_get_faulted, NULL);
++    object_property_add_uint32_ptr(obj, "fault-code", &cpu->env.fault_code,
++                                   OBJ_PROP_FLAG_READ);
++    object_property_add_uint32_ptr(obj, "fault-pc", &cpu->env.fault_pc,
++                                   OBJ_PROP_FLAG_READ);
++    object_property_add_uint32_ptr(obj, "fault-opcode", &cpu->env.fault_opcode,
++                                   OBJ_PROP_FLAG_READ);
++}
++
++static const struct SysemuCPUOps chip8_sysemu_ops = {
++    .has_work = chip8_cpu_has_work,
++    .get_phys_page_debug = chip8_get_phys_page_debug,
++};
++
++static const TCGCPUOps chip8_tcg_ops = {
++    .initialize = chip8_tcg_init,
++    .translate_code = chip8_cpu_translate_code,
++    .synchronize_from_tb = chip8_sync_from_tb,
++    .restore_state_to_opc = chip8_restore_state,
++    .cpu_exec_halt = chip8_cpu_has_work,
++    .cpu_exec_interrupt = chip8_cpu_exec_interrupt,
++    .tlb_fill = chip8_tlb_fill,
++};
++
++static void chip8_cpu_class_init(ObjectClass *oc, void *data)
++{
++    DeviceClass *dc = DEVICE_CLASS(oc);
++    CPUClass *cc = CPU_CLASS(oc);
++    Chip8CPUClass *mcc = CHIP8_CPU_CLASS(oc);
++    ResettableClass *rc = RESETTABLE_CLASS(oc);
++
++    device_class_set_parent_realize(dc, chip8_cpu_realize, &mcc->parent_realize);
++    resettable_class_set_parent_phases(rc, NULL, chip8_cpu_reset_hold, NULL,
++                                       &mcc->parent_phases);
++    cc->mmu_index = chip8_mmu_index;
++    cc->set_pc = chip8_set_pc;
++    cc->get_pc = chip8_get_pc;
++    cc->gdb_read_register = chip8_cpu_gdb_read_register;
++    cc->gdb_write_register = chip8_cpu_gdb_write_register;
++    cc->gdb_core_xml_file = "chip8-core.xml";
++    cc->gdb_arch_name = chip8_gdb_arch_name;
++    cc->tcg_ops = &chip8_tcg_ops;
++    cc->sysemu_ops = &chip8_sysemu_ops;
++    dc->vmsd = &vmstate_chip8_cpu;
++}
++
++static const TypeInfo chip8_cpu_type_info = {
++    .name = TYPE_CHIP8_CPU,
++    .parent = TYPE_CPU,
++    .instance_size = sizeof(Chip8CPU),
++    .instance_init = chip8_cpu_instance_init,
++    .class_size = sizeof(Chip8CPUClass),
++    .class_init = chip8_cpu_class_init,
++};
++
++static void chip8_cpu_register_types(void)
++{
++    type_register_static(&chip8_cpu_type_info);
++}
++
++type_init(chip8_cpu_register_types)
+--- /dev/null
++++ b/target/chip8/cpu.h
+@@ -0,0 +1,70 @@
++#ifndef TARGET_CHIP8_CPU_H
++#define TARGET_CHIP8_CPU_H
++
++#include "cpu-qom.h"
++#include "exec/cpu-defs.h"
++
++#define CPU_RESOLVING_TYPE TYPE_CHIP8_CPU
++#define CHIP8_RAM_SIZE 4096
++#define CHIP8_ROM_BASE 0x200
++#define CHIP8_STACK_SIZE 16
++
++typedef enum Chip8Fault {
++    CHIP8_FAULT_NONE = 0,
++    CHIP8_FAULT_UNSUPPORTED = 1,
++    CHIP8_FAULT_FETCH_OOB = 2,
++    CHIP8_FAULT_DATA_OOB = 3,
++    CHIP8_FAULT_STACK_UNDERFLOW = 4,
++    CHIP8_FAULT_STACK_OVERFLOW = 5,
++    CHIP8_FAULT_ODD_PC = 6,
++} Chip8Fault;
++
++typedef struct CPUArchState {
++    uint32_t v[16];
++    uint32_t i;
++    uint32_t pc;
++    uint32_t sp;
++    uint32_t stack[CHIP8_STACK_SIZE];
++    bool faulted;
++    uint32_t fault_code;
++    uint32_t fault_pc;
++    uint32_t fault_opcode;
++} CPUArchState;
++
++struct ArchCPU {
++    CPUState parent_obj;
++    CPUArchState env;
++};
++
++struct Chip8CPUClass {
++    CPUClass parent_class;
++    DeviceRealize parent_realize;
++    ResettablePhases parent_phases;
++};
++
++extern const struct VMStateDescription vmstate_chip8_cpu;
++
++int chip8_cpu_gdb_read_register(CPUState *cpu, GByteArray *buf, int reg);
++int chip8_cpu_gdb_write_register(CPUState *cpu, uint8_t *buf, int reg);
++void chip8_cpu_translate_code(CPUState *cpu, TranslationBlock *tb,
++                              int *max_insns, vaddr pc, void *host_pc);
++void chip8_tcg_init(void);
++
++#define MMU_USER_IDX 0
++
++static inline int chip8_cpu_mmu_index(CPUState *cs, bool ifetch)
++{
++    return MMU_USER_IDX;
++}
++
++static inline void cpu_get_tb_cpu_state(CPUArchState *env, vaddr *pc,
++                                        uint64_t *cs_base, uint32_t *pflags)
++{
++    *pc = env->pc;
++    *cs_base = 0;
++    *pflags = 0;
++}
++
++#include "exec/cpu-all.h"
++
++#endif
+--- /dev/null
++++ b/target/chip8/gdbstub.c
+@@ -0,0 +1,63 @@
++#include "qemu/osdep.h"
++#include "gdbstub/helpers.h"
++#include "cpu.h"
++
++int chip8_cpu_gdb_read_register(CPUState *cs, GByteArray *buf, int reg)
++{
++    CPUArchState *env = cpu_env(cs);
++    if (reg < 16) {
++        return gdb_get_reg8(buf, env->v[reg]);
++    }
++    if (reg == 16) {
++        return gdb_get_reg16(buf, env->i & 0xffff);
++    }
++    if (reg == 17) {
++        return gdb_get_reg16(buf, env->pc & 0xffff);
++    }
++    if (reg == 18) {
++        return gdb_get_reg8(buf, env->sp & 0xff);
++    }
++    if (reg >= 19 && reg < 19 + CHIP8_STACK_SIZE) {
++        unsigned index = reg - 19;
++        return gdb_get_reg16(buf, index < env->sp ? env->stack[index] : 0);
++    }
++    return 0;
++}
++
++int chip8_cpu_gdb_write_register(CPUState *cs, uint8_t *buf, int reg)
++{
++    CPUArchState *env = cpu_env(cs);
++    if (reg < 16) {
++        env->v[reg] = buf[0];
++        return 1;
++    }
++    if (reg == 16) {
++        env->i = lduw_le_p(buf);
++        return 2;
++    }
++    if (reg == 17) {
++        env->pc = lduw_le_p(buf);
++        return 2;
++    }
++    if (reg == 18) {
++        if (buf[0] > CHIP8_STACK_SIZE) {
++            return 0;
++        }
++        if (buf[0] < env->sp) {
++            memset(&env->stack[buf[0]], 0,
++                   (env->sp - buf[0]) * sizeof(env->stack[0]));
++        }
++        env->sp = buf[0];
++        return 1;
++    }
++    if (reg >= 19 && reg < 19 + CHIP8_STACK_SIZE) {
++        unsigned index = reg - 19;
++        uint16_t value = lduw_le_p(buf);
++        if (index >= env->sp && value) {
++            return 0;
++        }
++        env->stack[index] = value;
++        return 2;
++    }
++    return 0;
++}
+--- /dev/null
++++ b/target/chip8/helper.c
+@@ -0,0 +1,178 @@
++#include "qemu/osdep.h"
++#include "exec/exec-all.h"
++#include "exec/cpu_ldst.h"
++#include "exec/helper-proto.h"
++#include "cpu.h"
++
++static G_NORETURN void chip8_raise(CPUArchState *env, uint32_t pc,
++                                   uint32_t opcode, uint32_t code)
++{
++    CPUState *cs = env_cpu(env);
++
++    env->pc = pc;
++    env->faulted = true;
++    env->fault_code = code;
++    env->fault_pc = pc;
++    env->fault_opcode = opcode;
++    cs->exception_index = EXCP_DEBUG;
++    cpu_loop_exit(cs);
++}
++
++void helper_chip8_fault(CPUArchState *env, uint32_t pc, uint32_t opcode,
++                        uint32_t code)
++{
++    if (env->faulted) {
++        chip8_raise(env, env->fault_pc, env->fault_opcode, env->fault_code);
++    }
++    chip8_raise(env, pc, opcode, code);
++}
++
++void helper_chip8_step(CPUArchState *env, uint32_t pc, uint32_t opcode)
++{
++    uint32_t x = (opcode >> 8) & 0xf;
++    uint32_t y = (opcode >> 4) & 0xf;
++    uint32_t kk = opcode & 0xff;
++    uint32_t nnn = opcode & 0xfff;
++    uint32_t next = pc + 2;
++    uint32_t sum, a, b, count, k;
++    uint8_t temp[16];
++
++    if (env->faulted) {
++        chip8_raise(env, env->fault_pc, env->fault_opcode, env->fault_code);
++    }
++    switch (opcode >> 12) {
++    case 0x0:
++        if (opcode == 0x00ee) {
++            if (env->sp == 0) {
++                chip8_raise(env, pc, opcode, CHIP8_FAULT_STACK_UNDERFLOW);
++            }
++            if (env->sp > CHIP8_STACK_SIZE) {
++                chip8_raise(env, pc, opcode, CHIP8_FAULT_STACK_UNDERFLOW);
++            }
++            env->sp--;
++            next = env->stack[env->sp];
++            env->stack[env->sp] = 0;
++        } else {
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
++        }
++        break;
++    case 0x1:
++        next = nnn;
++        break;
++    case 0x2:
++        if (env->sp >= CHIP8_STACK_SIZE) {
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_STACK_OVERFLOW);
++        }
++        env->stack[env->sp] = pc + 2;
++        env->sp++;
++        next = nnn;
++        break;
++    case 0x3:
++        if ((env->v[x] & 0xff) == kk) {
++            next += 2;
++        }
++        break;
++    case 0x4:
++        if ((env->v[x] & 0xff) != kk) {
++            next += 2;
++        }
++        break;
++    case 0x5:
++        if ((opcode & 0xf) != 0) {
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
++        }
++        if ((env->v[x] & 0xff) == (env->v[y] & 0xff)) {
++            next += 2;
++        }
++        break;
++    case 0x6:
++        env->v[x] = kk;
++        break;
++    case 0x7:
++        env->v[x] = (env->v[x] + kk) & 0xff;
++        break;
++    case 0x8:
++        a = env->v[x] & 0xff;
++        b = env->v[y] & 0xff;
++        switch (opcode & 0xf) {
++        case 0x0:
++            env->v[x] = b;
++            break;
++        case 0x1:
++            env->v[x] = a | b;
++            env->v[0xf] = 0;
++            break;
++        case 0x2:
++            env->v[x] = a & b;
++            env->v[0xf] = 0;
++            break;
++        case 0x3:
++            env->v[x] = a ^ b;
++            env->v[0xf] = 0;
++            break;
++        case 0x4:
++            sum = a + b;
++            env->v[x] = sum & 0xff;
++            env->v[0xf] = sum > 0xff;
++            break;
++        case 0x5:
++            env->v[x] = (a - b) & 0xff;
++            env->v[0xf] = a >= b;
++            break;
++        case 0x6:
++            env->v[x] = b >> 1;
++            env->v[0xf] = b & 1;
++            break;
++        case 0x7:
++            env->v[x] = (b - a) & 0xff;
++            env->v[0xf] = b >= a;
++            break;
++        case 0xe:
++            env->v[x] = (b << 1) & 0xff;
++            env->v[0xf] = (b >> 7) & 1;
++            break;
++        default:
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
++        }
++        break;
++    case 0x9:
++        if ((opcode & 0xf) != 0) {
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
++        }
++        if ((env->v[x] & 0xff) != (env->v[y] & 0xff)) {
++            next += 2;
++        }
++        break;
++    case 0xa:
++        env->i = nnn;
++        break;
++    case 0xf:
++        if (kk != 0x55 && kk != 0x65) {
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
++        }
++        count = x + 1;
++        if (env->i > CHIP8_RAM_SIZE || count > CHIP8_RAM_SIZE - env->i) {
++            chip8_raise(env, pc, opcode, CHIP8_FAULT_DATA_OOB);
++        }
++        if (kk == 0x55) {
++            for (k = 0; k < count; k++) {
++                temp[k] = env->v[k] & 0xff;
++            }
++            for (k = 0; k < count; k++) {
++                cpu_stb_data(env, env->i + k, temp[k]);
++            }
++        } else {
++            for (k = 0; k < count; k++) {
++                temp[k] = cpu_ldub_data(env, env->i + k);
++            }
++            for (k = 0; k < count; k++) {
++                env->v[k] = temp[k];
++            }
++        }
++        env->i += count;
++        break;
++    default:
++        chip8_raise(env, pc, opcode, CHIP8_FAULT_UNSUPPORTED);
++    }
++    env->pc = next;
++}
+--- /dev/null
++++ b/target/chip8/helper.h
+@@ -0,0 +1,2 @@
++DEF_HELPER_3(chip8_step, void, env, i32, i32)
++DEF_HELPER_4(chip8_fault, noreturn, env, i32, i32, i32)
+--- /dev/null
++++ b/target/chip8/meson.build
+@@ -0,0 +1,10 @@
++chip8_ss = ss.source_set()
++chip8_ss.add(files(
++  'cpu.c',
++  'gdbstub.c',
++  'helper.c',
++  'translate.c',
++  'vmstate.c',
++))
++target_arch += {'chip8': chip8_ss}
++target_system_arch += {'chip8': ss.source_set()}
+--- /dev/null
++++ b/target/chip8/translate.c
+@@ -0,0 +1,81 @@
++#include "qemu/osdep.h"
++#include "tcg/tcg.h"
++#include "cpu.h"
++#include "exec/translator.h"
++#include "exec/helper-gen.h"
++#include "exec/helper-proto.h"
++#include "tcg/tcg-op.h"
++
++#define HELPER_H "helper.h"
++#include "exec/helper-info.c.inc"
++#undef HELPER_H
++
++typedef struct DisasContext {
++    DisasContextBase base;
++    CPUArchState *env;
++} DisasContext;
++
++static void chip8_tb_start(DisasContextBase *db, CPUState *cs)
++{
++    /* This target has no per-TB architectural state to initialize. */
++}
++
++static void chip8_init_disas_context(DisasContextBase *db, CPUState *cs)
++{
++    DisasContext *ctx = container_of(db, DisasContext, base);
++    ctx->env = cpu_env(cs);
++}
++
++static void chip8_insn_start(DisasContextBase *db, CPUState *cs)
++{
++    tcg_gen_insn_start(db->pc_next);
++}
++
++static void chip8_translate_insn(DisasContextBase *db, CPUState *cs)
++{
++    DisasContext *ctx = container_of(db, DisasContext, base);
++    uint32_t pc = db->pc_next;
++    uint16_t opcode;
++
++    if (pc & 1) {
++        gen_helper_chip8_fault(tcg_env, tcg_constant_i32(pc),
++                               tcg_constant_i32(0),
++                               tcg_constant_i32(CHIP8_FAULT_ODD_PC));
++    } else if (pc + 1 >= CHIP8_RAM_SIZE) {
++        gen_helper_chip8_fault(tcg_env, tcg_constant_i32(pc),
++                               tcg_constant_i32(0),
++                               tcg_constant_i32(CHIP8_FAULT_FETCH_OOB));
++    } else {
++        opcode = translator_lduw_swap(ctx->env, db, pc, true);
++        gen_helper_chip8_step(tcg_env, tcg_constant_i32(pc),
++                              tcg_constant_i32(opcode));
++    }
++    db->pc_next = pc + 2;
++    db->is_jmp = DISAS_TOO_MANY;
++}
++
++static void chip8_tb_stop(DisasContextBase *db, CPUState *cs)
++{
++    /* Every translated instruction returns to the outer CPU loop. */
++    tcg_gen_exit_tb(NULL, 0);
++}
++
++static const TranslatorOps chip8_translator_ops = {
++    .init_disas_context = chip8_init_disas_context,
++    .tb_start = chip8_tb_start,
++    .insn_start = chip8_insn_start,
++    .translate_insn = chip8_translate_insn,
++    .tb_stop = chip8_tb_stop,
++};
++
++void chip8_tcg_init(void)
++{
++}
++
++void chip8_cpu_translate_code(CPUState *cs, TranslationBlock *tb,
++                              int *max_insns, vaddr pc, void *host_pc)
++{
++    DisasContext dc = { 0 };
++    translator_loop(cs, tb, max_insns, pc, host_pc,
++                    &chip8_translator_ops, &dc.base);
++}
+--- /dev/null
++++ b/target/chip8/vmstate.c
+@@ -0,0 +1,50 @@
++#include "qemu/osdep.h"
++#include "migration/vmstate.h"
++#include "cpu.h"
++
++static int chip8_cpu_post_load(void *opaque, int version_id)
++{
++    Chip8CPU *cpu = opaque;
++    CPUArchState *env = &cpu->env;
++    unsigned i;
++
++    if (env->i > 0xffff || env->pc > 0xffff || env->sp > CHIP8_STACK_SIZE ||
++        env->fault_code > CHIP8_FAULT_ODD_PC ||
++        (!env->faulted && (env->fault_code || env->fault_pc ||
++                           env->fault_opcode)) ||
++        (env->faulted && (env->fault_code == CHIP8_FAULT_NONE ||
++                          env->fault_pc > 0xffff ||
++                          env->fault_opcode > 0xffff))) {
++        return -EINVAL;
++    }
++    for (i = 0; i < ARRAY_SIZE(env->v); i++) {
++        if (env->v[i] > 0xff) {
++            return -EINVAL;
++        }
++    }
++    for (i = 0; i < ARRAY_SIZE(env->stack); i++) {
++        if (env->stack[i] > 0xffff || (i >= env->sp && env->stack[i])) {
++            return -EINVAL;
++        }
++    }
++    return 0;
++}
++
++const VMStateDescription vmstate_chip8_cpu = {
++    .name = "chip8-cpu",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .post_load = chip8_cpu_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32_ARRAY(env.v, Chip8CPU, 16),
++        VMSTATE_UINT32(env.i, Chip8CPU),
++        VMSTATE_UINT32(env.pc, Chip8CPU),
++        VMSTATE_UINT32(env.sp, Chip8CPU),
++        VMSTATE_UINT32_ARRAY(env.stack, Chip8CPU, CHIP8_STACK_SIZE),
++        VMSTATE_BOOL(env.faulted, Chip8CPU),
++        VMSTATE_UINT32(env.fault_code, Chip8CPU),
++        VMSTATE_UINT32(env.fault_pc, Chip8CPU),
++        VMSTATE_UINT32(env.fault_opcode, Chip8CPU),
++        VMSTATE_END_OF_LIST()
++    }
++};
+--- a/target/meson.build
++++ b/target/meson.build
+@@ -1,6 +1,7 @@
+ subdir('alpha')
+ subdir('arm')
+ subdir('avr')
++subdir('chip8')
+ subdir('hexagon')
+ subdir('hppa')
+ subdir('i386')

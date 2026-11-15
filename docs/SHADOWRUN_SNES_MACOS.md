@@ -1,5 +1,11 @@
 # Shadowrun SNES: bounded native movement transfer
 
+This is the first frozen movement experiment. The later actor-flag, live
+collision and NPC work is documented in [the live-research handoff](SHADOWRUN_SNES_LIVE_HANDOFF.md).
+The subsequent [direction and script-dispatch study](SHADOWRUN_SNES_SCRIPT_DISPATCH.md)
+adds a separate prepared `scripted-intro` profile and a title-menu controller
+component, with their own clocks, comparison results and remaining intro work.
+
 This experiment transfers the **investigation process** from the Genesis work
 to the separate SNES game. It recovers a bounded player-movement and collision
 slice from the original SNES ROM, represents it as procedural UIL, and compiles

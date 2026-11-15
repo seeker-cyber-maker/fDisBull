@@ -115,16 +115,22 @@ python -m fdisbull.ida_dosbox /private/dos-project.fdb \
 ```
 
 The first stdout line is JSON with the loopback host, selected port, interface
-31 and debugger ID 10. One connection owns one real-mode DOS CPU. The endpoint
+31, debugger ID 10 and `password_file`. The file and its temporary parent are
+private to the launching OS user and are removed when the endpoint closes.
+Pass its contents as the IDA protocol password; connections with an absent or
+incorrect password close before the project is opened. One authenticated
+connection owns one real-mode DOS CPU. The endpoint
 starts only its selected original project, validates the executable hash and
 reaps the emulator on disconnect or deadline. The default idle limit is 120s;
 `--idle-timeout` sets 1..3600s. It never binds an external interface.
 
 ```python
 import socket
+from pathlib import Path
 from fdisbull.ida_dosbox import DOSRemoteDebugger
 
-debug = DOSRemoteDebugger(socket.create_connection(("127.0.0.1", port)))
+debug = DOSRemoteDebugger(socket.create_connection(("127.0.0.1", port)),
+                          password=Path(password_file).read_text().strip())
 try:
     started = debug.start("GAME.EXE", bits=16)
     base = started["module"]["base"]

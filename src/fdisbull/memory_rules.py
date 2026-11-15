@@ -8,6 +8,7 @@ Durable pending records prevent a lost acknowledgment from becoming a retry.
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import wraps
 import json
 import time
 import uuid
@@ -90,6 +91,7 @@ def _progress(project, identifier, rule, run):
     attempts = _integer(progress.get('attempts'), 'retained attempts', 0, min(ticks, rule['max_applications']))
     _integer(progress.get('applications'), 'retained applications', 0, attempts)
     _integer(progress.get('sequence'), 'progress sequence', 0, MAX_TICKS * 8 + 16)
+    _current_context(rule, progress)
     return row['id'], progress
 
 
@@ -132,7 +134,46 @@ def _response(identifier, progress_id, progress, *, fresh=False):
 
 
 def _task(context):
+    view = context.get('qemu_memory_view', {})
+    if view.get('scope') == 'task-private':
+        return view['task_identity']['task_id']
     return None if context['task_evidence'].startswith('physical address') else context['task_id']
+
+
+def _current_context(configuration, progress=None):
+    """Only verified rule-owned layer updates can advance the captured view."""
+    original = configuration['origin_context']
+    context = (progress or {}).get('view_context', original)
+    if context is original:
+        return original
+    view, initial = context.get('qemu_memory_view'), original.get('qemu_memory_view')
+    mutable = {'task_generation', 'layer_generation', 'active_layers', 'active_layers_sha256'}
+    if (not isinstance(view, dict) or not isinstance(initial, dict)
+            or {k:v for k,v in context.items() if k != 'qemu_memory_view'}
+            != {k:v for k,v in original.items() if k != 'qemu_memory_view'}
+            or {k:v for k,v in view.items() if k not in mutable}
+            != {k:v for k,v in initial.items() if k not in mutable}
+            or not isinstance((progress or {}).get('view_overlay'), str)):
+        raise ValueError('Invalid retained memory rule view identity')
+    return context
+
+
+def _capture_context(session, context, address=None, length=None):
+    region = context['region']
+    args = (session, region['start'] if address is None else address,
+            region['length'] if length is None else length, context['address_space'], _task(context))
+    view = context.get('qemu_memory_view', {}).get('view', 'base')
+    return _capture(*args, view=view) if view != 'base' else _capture(*args)
+
+
+def _check_rule_context(session, context):
+    if hasattr(session, 'vm'):
+        from .qemu_memory_rules import admit_rule_context
+        admit_rule_context(session, context)
+    capture = _capture_context(session, context)
+    if _json(capture[1]) != _json(context):
+        raise ValueError('Original memory rule task, mapping or epoch changed')
+    return capture
 
 
 def _selected_mapping(original_capture, scalar_capture, address, width):
@@ -230,6 +271,25 @@ class MemoryRuleProjectMixin:
                     progress_artifact=progress_id, progress=progress)
 
 
+def _rule_run_operation(function):
+    """Acquire the native machine under the same outer deadline as its RPCs."""
+    @wraps(function)
+    def invoke(self, *args, **kwargs):
+        if hasattr(self, 'vm'):
+            from .qemu_machine import machine_trace_operation
+            @wraps(function)
+            def native_bound(session, *inner_args, **inner_kwargs):
+                previous = getattr(session, '_rpc_deadline', None)
+                session._rpc_deadline = min(previous, session._deadline) if previous is not None else session._deadline
+                try:
+                    return function(session, *inner_args, **inner_kwargs)
+                finally:
+                    session._rpc_deadline = previous
+            return machine_trace_operation(native_bound, label='Periodic memory rule')(self, *args, **kwargs)
+        return _locked(rpc_budget(function))(self, *args, **kwargs)
+    return invoke
+
+
 class MemoryRuleSessionMixin:
     """Explicit ticks; every possible write has a new one-shot expected-byte plan."""
 
@@ -247,26 +307,38 @@ class MemoryRuleSessionMixin:
         if progress['status'] == 'pending':
             return _failure(self, rule, progress_id, progress,
                 ValueError('Previous rule operation lacks a completion receipt; replay refused'), uncertain=True, fresh=False)
+        original = _current_context(configuration, progress)
+        # Explicit native views are qualified before a tick journal entry. A
+        # selected B task must not consume or disable an A-bound rule.
+        qualified = _check_rule_context(self, original) if 'qemu_memory_view' in original else None
+        if hasattr(self, 'vm') and qualified is None:
+            from .qemu_memory_rules import admit_rule_context
+            admit_rule_context(self, original)
         pending = _next(progress, status='pending', phase='tick-started', reason=None,
                         ticks=progress['ticks'] + 1, last=dict(applied=False, origin_search_artifact=configuration['origin_search_artifact']))
         progress_id, pending = _save(self.project, rule, self.run_id, progress_id, pending, session=self)
         plan_id, dispatched = None, False
         try:
-            original = configuration['origin_context']
             region = original['region']
             # Qualify the original complete region's mapping. Do not store a
             # multi-MiB duplicate per tick: only the selected scalar is retained
             # if an edit is actually required.
-            _, identity, original_capture = _capture(self, region['start'], region['length'],
-                                                     original['address_space'], _task(original))
+            _, identity, original_capture = qualified or _capture_context(self, original)
             if _json(identity) != _json(original):
                 raise ValueError('Original memory rule task, mapping or epoch changed')
             address, width = region['start'] + configuration['offset'], configuration['spec']['width']
-            raw, context, capture = _capture(self, address, width, original['address_space'], _task(original))
+            raw, context, capture = _capture_context(self, original, address, width)
             _selected_mapping(original_capture, capture, address, width)
-            if ({key: value for key, value in context.items() if key not in ('region', 'mapping_id')}
-                    != {key: value for key, value in original.items() if key not in ('region', 'mapping_id')}):
+            excluded = ('region', 'mapping_id', 'qemu_memory_view')
+            if ({key: value for key, value in context.items() if key not in excluded}
+                    != {key: value for key, value in original.items() if key not in excluded}):
                 raise ValueError('Selected scalar left its original task or epoch')
+            if 'qemu_memory_view' in original:
+                before, scalar_view = original['qemu_memory_view'], context.get('qemu_memory_view', {})
+                if ({k:v for k,v in before.items() if k != 'backings'}
+                        != {k:v for k,v in scalar_view.items() if k != 'backings'}
+                        or any(page not in before['backings'] for page in scalar_view.get('backings', []))):
+                    raise ValueError('Selected scalar left its original native memory view')
             snapshot = snapshot_metadata(raw, context=context, capture_id=uuid.uuid4().hex, captured_at=_stamp())
             spec = configuration['spec']
             options = dict(width=spec['width'], signed=spec['signed'], byteorder=spec['byteorder'],
@@ -293,11 +365,28 @@ class MemoryRuleSessionMixin:
             last.update(snapshot_artifact=scalar['artifact'], search_artifact=searched['artifact'], plan_artifact=plan_id)
             pending = _next(pending, attempts=pending['attempts'] + 1, phase='write-pending', last=last)
             progress_id, pending = _save(self.project, rule, self.run_id, progress_id, pending, session=self)
-            receipt = self.memory_apply(plan_id)
+            previous_owner = getattr(self, '_memory_rule_write_owner', None)
+            self._memory_rule_write_owner = dict(rule=rule, previous_overlay=pending.get('view_overlay'))
+            try:
+                receipt = self.memory_apply(plan_id)
+            finally:
+                self._memory_rule_write_owner = previous_owner
             dispatched = True
             if receipt.get('applied') is not True or receipt.get('verified') is not True:
                 raise ValueError('Fresh conditional memory write did not return verified success')
             pending['applications'] += 1
+            if 'qemu_memory_view' in original:
+                if not isinstance(receipt.get('qemu_memory_view_after'), dict) or not receipt.get('qemu_rule_overlay'):
+                    raise ValueError('Native view edit lacks a verified overlay receipt')
+                _, after_context, _ = _capture_context(self, original)
+                after_view, scalar_after = after_context['qemu_memory_view'], receipt['qemu_memory_view_after']
+                if ({k:v for k,v in after_view.items() if k != 'backings'}
+                        != {k:v for k,v in scalar_after.items() if k != 'backings'}
+                        or any(page not in after_view['backings'] for page in scalar_after.get('backings', []))):
+                    raise ValueError('Native view changed after its verified overlay write')
+                pending['view_context'] = after_context
+                pending['view_overlay'] = receipt['qemu_rule_overlay']
+                _current_context(configuration, pending)
             last.update(applied=True, dispatch_outcome=receipt['dispatch_outcome'], write_receipt=receipt)
             return _finish(self, rule, configuration, progress_id, pending,
                            phase='write-complete', reason='applied', last=last)
@@ -305,36 +394,54 @@ class MemoryRuleSessionMixin:
             uncertain = dispatched or (plan_id is not None and plan_id in getattr(self, '_applied_memory_plans', set()))
             return _failure(self, rule, progress_id, pending, error, uncertain=uncertain)
 
-    @_locked
-    @rpc_budget
+    @_rule_run_operation
     def memory_rule_run(self, rule, *, ticks, interval_ms=100, timeout_ms=10000):
-        """Run a finite DOSBox-only sequence, first tick immediately.
+        """Run a finite guest-time sequence, first tick immediately.
 
-        Subsequent ticks follow requested guest-time slices, not a real-time
-        interrupt or a guaranteed wall-clock frequency. A breakpoint, hook,
-        watchpoint, target exit or host timeout ends this invocation without an
-        extra edit. Full-machine callers must advance their guest explicitly.
+        Subsequent ticks follow DOSBox guest-time slices or the explicitly
+        selected QEMU virtual clock, not a guaranteed wall-clock frequency.
+        A nonordinary native stop or host timeout ends this invocation without
+        an extra edit.
         """
         _integer(ticks, 'ticks', 1, MAX_TICKS)
         _integer(interval_ms, 'interval_ms', 1, 60000)
         _integer(timeout_ms, 'timeout_ms', 1, 60000)
         backend = getattr(self, 'backend_name', None) or self.metadata.get('backend')
         # The ordinary DOSBox DebugSession predates an explicit backend_name.
-        # Named foreign backends and machine contexts must still refuse.
-        if backend not in (None, 'dosbox', 'dosbox-qemu') or hasattr(self, 'vm'):
+        # Native QEMU contexts use a separately admitted virtual-clock contract.
+        qemu = hasattr(self, 'vm')
+        if not qemu and backend not in (None, 'dosbox', 'dosbox-qemu'):
             raise ValueError('Periodic guest-time memory rules require the DOSBox backend')
+        if qemu:
+            from .qemu_memory_rules import admit_native_rule_run
+            admit_native_rule_run(self)
         row, configuration = _rule(self.project, rule)
         if row['run'] != self.run_id:
             raise ValueError('Memory rule belongs to a different live run')
+        if qemu:
+            from .qemu_memory_rules import preflight
+            _, initial_progress = _progress(self.project, rule, configuration, self.run_id)
+            preflight(self, configuration, initial_progress)
         # rpc_budget intersects this allowance with any outer operation. All
         # nested snapshot/read/edit RPCs share it; time is never renewed per tick.
         deadline = self._rpc_deadline
         completed, recent, outcome = 0, [], 'host_timeout'
         last = None
+        clock_stop = None
+        context_stop = None
         while completed < ticks:
             if time.monotonic() >= deadline:
                 break
-            last = self.memory_rule_tick(rule)
+            try:
+                last = self.memory_rule_tick(rule)
+            except ValueError as error:
+                if not completed:
+                    raise
+                # A completed interval may have selected another task or a
+                # hook may have changed the stack. No tick was journaled.
+                outcome = 'context_changed'
+                context_stop = str(error)
+                break
             if last['tick_executed']:
                 completed += 1
                 recent.append(dict(progress_artifact=last['progress_artifact'], applied=last['applied']))
@@ -352,21 +459,40 @@ class MemoryRuleSessionMixin:
             waiting = _next(progress, status='pending', phase='execution-pending', reason=None)
             progress_id, waiting = _save(self.project, rule, self.run_id, progress_id, waiting, session=self)
             try:
-                elapsed = self.run(guest_ms=interval_ms, timeout_ms=max(1, remaining),
-                                   fast_forward=False, stop_on_hook=True)
-                if type(elapsed) is not dict or type(elapsed.get('outcome')) is not str:
-                    raise ValueError('Guest slice returned no qualified outcome')
-                outcome = elapsed['outcome']
-                if outcome == 'guest_time':
-                    if (elapsed.get('session', {}).get('state') != 'stopped'
-                            or type(elapsed.get('guest_elapsed_ms')) not in (int, float)
-                            or not elapsed['guest_elapsed_ms'] >= interval_ms):
-                        raise ValueError('Guest slice did not establish its time budget and paused endpoint')
-                status = 'disabled' if outcome in ('guest_exit', 'guest_tsr') else 'active'
+                if qemu:
+                    from .qemu_clock import clock_timer_stop_is_ordinary
+                    advance = getattr(self, '_clock_advance_with_hooks', self.clock_advance)
+                    elapsed = advance(interval_ms * 1_000_000, timeout_ms=max(1, remaining))
+                    ordinary = clock_timer_stop_is_ordinary(elapsed)
+                    native_outcome = elapsed.get('outcome') if isinstance(elapsed, dict) else None
+                    if not isinstance(native_outcome, str):
+                        raise ValueError('Virtual clock slice returned no qualified outcome')
+                    outcome = 'guest_time' if ordinary else 'clock_interrupted'
+                    if not ordinary:
+                        clock_stop = deepcopy(elapsed)
+                    terminal = native_outcome in ('guest_exit', 'guest_tsr') or (
+                        isinstance(elapsed.get('process'), dict) and
+                        elapsed['process'].get('state') in ('guest_exit', 'guest_tsr', 'exited'))
+                    guest_slice = dict(outcome=native_outcome, requested_virtual_ns=interval_ms * 1_000_000,
+                                       clock_stop=deepcopy(elapsed))
+                else:
+                    elapsed = self.run(guest_ms=interval_ms, timeout_ms=max(1, remaining),
+                                       fast_forward=False, stop_on_hook=True)
+                    if type(elapsed) is not dict or type(elapsed.get('outcome')) is not str:
+                        raise ValueError('Guest slice returned no qualified outcome')
+                    outcome = elapsed['outcome']
+                    if outcome == 'guest_time':
+                        if (elapsed.get('session', {}).get('state') != 'stopped'
+                                or type(elapsed.get('guest_elapsed_ms')) not in (int, float)
+                                or not elapsed['guest_elapsed_ms'] >= interval_ms):
+                            raise ValueError('Guest slice did not establish its time budget and paused endpoint')
+                    terminal = outcome in ('guest_exit', 'guest_tsr')
+                    guest_slice = dict(outcome=outcome, guest_elapsed_ms=elapsed.get('guest_elapsed_ms'),
+                                       requested_guest_ms=interval_ms)
+                status = 'disabled' if terminal else 'active'
                 resumed = _next(waiting, status=status, phase='execution-complete' if outcome == 'guest_time' else 'interrupted',
                                 reason=None if outcome == 'guest_time' else outcome,
-                                last=dict(waiting['last'], guest_slice=dict(outcome=outcome,
-                                    guest_elapsed_ms=elapsed.get('guest_elapsed_ms'), requested_guest_ms=interval_ms)))
+                                last=dict(waiting['last'], guest_slice=guest_slice))
                 progress_id, resumed = _save(self.project, rule, self.run_id, progress_id, resumed, session=self)
                 if outcome != 'guest_time':
                     break
@@ -375,8 +501,15 @@ class MemoryRuleSessionMixin:
                 outcome = 'uncertain'
                 break
         progress_id, progress = _progress(self.project, rule, configuration, self.run_id)
-        return dict(rule_artifact=rule, progress_artifact=progress_id, outcome=outcome,
+        result = dict(rule_artifact=rule, progress_artifact=progress_id, outcome=outcome,
                     complete=completed == ticks and outcome in ('tick_budget_complete', 'rule_exhausted'),
                     requested_ticks=ticks, completed_ticks=completed, interval_ms=interval_ms,
                     timeout_ms=timeout_ms, recent_ticks=recent, progress=progress,
                     assistance='bounded host snapshot/edit sequence; not an installed timer or original Game Wizard code')
+        if qemu:
+            result['clock_domain'] = 'qemu-virtual-ns'
+        if clock_stop is not None:
+            result['clock_stop'] = clock_stop
+        if context_stop is not None:
+            result['context_stop'] = context_stop
+        return result

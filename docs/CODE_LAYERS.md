@@ -2,6 +2,37 @@
 
 This page describes the **DOSBox layers backend**. Version 0.13.0 also supports PE64 RAM/execution layers through Wine/QEMU; see [PE64 usage and limits](WINE_DEBUGGER.md#pe64-watches-layers-and-native-states-0130). PE execution layers relocate instructions into a private guest allocation and single-step them. The DOS zero-additional-guest-RAM guarantee, virtual caves, segmented addresses and breakpoint action hooks below do not apply to PE64.
 
+## Native QEMU backing layers
+
+The optional [native layer extension](../native/qemu-layers/README.md) enables
+the QEMU layer stack for an owned, stopped TCG machine with one vCPU. Portable
+COM/MZ definitions use their project addresses and the verified unpaged DOS
+module mapping. A runtime definition created with `space='linear'` resolves
+its physical backing when it is created. The layer remains on that backing
+within the same run and epoch. If the guest remaps the window from A to B and
+back to A, the layer is visible again at A. A `space='physical'` definition
+names the backing directly.
+
+RAM transitions validate all expected bytes before writing. Fetch overlays
+change the bytes translated by TCG while ordinary RAM reads use the underlying
+bytes. `debug.code(..., view='execute')` checks the native fetch view against
+the active stack. Captures use the `qemu-code-snapshot` artifact kind. Static
+promotion still requires a qualified source provenance path. The
+[native DOS checkpoint extension](DOS_QEMU_MIGRATION.md#save-a-dos-process-and-restore-in-another-session)
+preserves active layers and hooks across a new session in the same project.
+A layered COM/MZ program that exits or
+becomes resident closes its owned machine because DOS can release or reuse
+the underlying allocation.
+
+Use `debug.hook` with a source address or a linear machine address. The
+QEMU debugger dispatches only an identified owned breakpoint or watchpoint.
+The actions can replace the layer stack, apply checked registers or redirect
+within a verified real-mode DOS source mapping. A repeat execution hook
+steps past its breakpoint within the same host deadline. The existing
+`stop_on_hook` option returns the action receipt at the stop.
+
+The remainder of this page covers the established DOSBox interface.
+
 Code layers are immutable, version-bound experiment definitions with an ordered active stack in each live debugger session. They preserve original static bytes. Runtime captures and the event timeline record when a view changed, which definitions were active, and which bytes the CPU could fetch. This supports self-modifying code investigations and reversible theories without promoting runtime observations into static instruction facts.
 
 Two layer kinds have different visibility:
@@ -99,6 +130,10 @@ This restores original patched bytes during the check and re-enables the experim
 For repeated checks, arm both hooks with `once=False` and an explicit `max_hits`; the default is one dispatch. Inspect `hook_hits`, `hooks()` and the event timeline for exhausted controls. Disabling a RAM layer still honors changed-byte conflict guards. These mechanisms do not guarantee arbitrary self-checking software is undetectably patched or that modified timing/state will be accepted.
 
 ## Self-modification, snapshots, and temporal evidence
+
+Fresh authored DOS and Wine/QEMU acceptance, including relocated self-writes,
+same-value stores, explicit rebasing and whole-VM restore, is recorded in
+[self-modifying-code verification](VERIFICATION-SMC-LAYERS-2026-11-13.md).
 
 Execution layers retain guards on underlying RAM. Before decoding, the normal core checks overlay guards in the next 15-byte instruction window. A changed guard stops with `outcome="layer_conflict"` before executing that window. Because this covers the maximum architectural instruction length, a nearby guarded byte can cause a conservative stop slightly before the modified instruction. Device/DMA and protected-mode execution are outside this profile.
 

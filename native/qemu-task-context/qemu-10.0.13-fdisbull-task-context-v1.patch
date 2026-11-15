@@ -1,0 +1,530 @@
+--- /dev/null
++++ b/include/system/fdisbull-task-context.h
+@@ -0,0 +1,10 @@
++#ifndef SYSTEM_FDISBULL_TASK_CONTEXT_H
++#define SYSTEM_FDISBULL_TASK_CONTEXT_H
++
++/* Called by x86 architectural state transitions on the single-CPU path. */
++void fdisbull_task_context_note_transition(void);
++void fdisbull_task_context_note_reset(void);
++bool fdisbull_task_context_get_counters(uint64_t *epoch, uint64_t *generation,
++                                       Error **errp);
++
++#endif
+--- /dev/null
++++ b/qapi/fdisbull-task-context.json
+@@ -0,0 +1,69 @@
++# Read-only x86 architectural task context plus a caller-selected RAM anchor.
++##
++# @FdisbullTaskContextInfo:
++#
++# Stopped x86 architectural context.  This is not a guest software-task ID.
++#
++# @api-version: Private wire protocol version.
++# @model: Exact architectural observation model.
++# @epoch: Native owner epoch, changed after loading a saved context.
++# @context-generation: Monotone transition counter for CR3, task-register,
++#   local-descriptor-table and hardware TSS task-switch transitions.
++# @cpu-index: The sole observed CPU's index.
++# @mode: Current architectural execution mode.
++# @cpl: Current privilege level.
++# @eip: Current instruction pointer.
++# @esp: Current stack pointer.
++# @cs-selector: Current code segment selector.
++# @ss-selector: Current stack segment selector.
++# @cr0: Current control register 0.
++# @cr3: Current control register 3.
++# @cr4: Current control register 4.
++# @efer: Current extended feature enable register.
++# @gdt-base: Current GDT base.
++# @gdt-limit: Current GDT limit.
++# @idt-base: Current IDT base.
++# @idt-limit: Current IDT limit.
++# @tr-selector: Current task-register selector.
++# @tr-base: Hidden task-register base.
++# @tr-limit: Hidden task-register limit.
++# @tr-flags: Hidden task-register flags.
++# @ldtr-selector: Current local-descriptor-table selector.
++# @ldtr-base: Hidden local-descriptor-table base.
++# @ldtr-limit: Hidden local-descriptor-table limit.
++# @ldtr-flags: Hidden local-descriptor-table flags.
++# @anchor-address: Optional guest physical address supplied by the caller.
++# @anchor-hex: Exactly 56 bytes read from the supplied direct RAM address.
++#
++# The optional anchor bytes are returned unchanged.  The monitor format and
++# any software-task meaning are interpreted by the host, not QEMU.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullTaskContextInfo',
++  'data': { 'api-version': 'int', 'model': 'str', 'epoch': 'uint64',
++            'context-generation': 'uint64', 'cpu-index': 'int', 'mode': 'str',
++            'cpl': 'int', 'eip': 'uint64', 'esp': 'uint64',
++            'cs-selector': 'uint32', 'ss-selector': 'uint32',
++            'cr0': 'uint64', 'cr3': 'uint64', 'cr4': 'uint64', 'efer': 'uint64',
++            'gdt-base': 'uint64', 'gdt-limit': 'uint32',
++            'idt-base': 'uint64', 'idt-limit': 'uint32',
++            'tr-selector': 'uint32', 'tr-base': 'uint64',
++            'tr-limit': 'uint32', 'tr-flags': 'uint32',
++            'ldtr-selector': 'uint32', 'ldtr-base': 'uint64',
++            'ldtr-limit': 'uint32', 'ldtr-flags': 'uint32',
++            '*anchor-address': 'uint64', '*anchor-hex': 'str' } }
++
++##
++# @x-fdisbull-query-task-context:
++#
++# Read the stopped single-vCPU x86 architectural task context.  If an anchor
++# address is supplied, read 56 bytes only from direct guest RAM.
++#
++# @anchor-address: Optional guest physical address of the caller-owned anchor.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-task-context',
++  'data': { '*anchor-address': 'uint64' },
++  'returns': 'FdisbullTaskContextInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -68,6 +68,7 @@
+     'fdisbull-layers',
+   'fdisbull-dos-checkpoint',
+   'fdisbull-instrumented-checkpoint',
++  'fdisbull-task-context',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -71,6 +71,7 @@
+ { 'include': 'fdisbull-layers.json' }
+ { 'include': 'fdisbull-dos-checkpoint.json' }
+ { 'include': 'fdisbull-instrumented-checkpoint.json' }
++{ 'include': 'fdisbull-task-context.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- /dev/null
++++ b/system/fdisbull-task-context.c
+@@ -0,0 +1,147 @@
++/*
++ * Stopped x86 architectural task-context observations and transition fence.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "migration/vmstate.h"
++#include "qapi/error.h"
++#include "qemu/main-loop.h"
++#include "qemu/thread.h"
++#include "system/fdisbull-task-context.h"
++
++typedef struct FdisbullTaskContextMigration {
++    uint64_t epoch;
++    uint64_t generation;
++    bool overflow;
++} FdisbullTaskContextMigration;
++
++static FdisbullTaskContextMigration migration_state = {
++    .epoch = 1,
++    .generation = 1,
++};
++static uint64_t epoch_highwater = 1;
++static uint64_t generation_highwater = 1;
++static bool vmstate_registered;
++static QemuMutex task_context_lock;
++static gsize task_context_lock_initialized;
++
++static void task_context_lock_init(void)
++{
++    if (g_once_init_enter(&task_context_lock_initialized)) {
++        qemu_mutex_init(&task_context_lock);
++        g_once_init_leave(&task_context_lock_initialized, 1);
++    }
++}
++
++static bool task_counter_advance(uint64_t *value)
++{
++    if (*value == UINT64_MAX) {
++        migration_state.overflow = true;
++        return false;
++    }
++    (*value)++;
++    return true;
++}
++
++void fdisbull_task_context_note_transition(void)
++{
++    task_context_lock_init();
++    qemu_mutex_lock(&task_context_lock);
++    if (!migration_state.overflow) {
++        if (!task_counter_advance(&generation_highwater)) {
++            qemu_mutex_unlock(&task_context_lock);
++            return;
++        }
++        migration_state.generation = generation_highwater;
++    }
++    qemu_mutex_unlock(&task_context_lock);
++}
++
++void fdisbull_task_context_note_reset(void)
++{
++    task_context_lock_init();
++    qemu_mutex_lock(&task_context_lock);
++    if (!migration_state.overflow &&
++        task_counter_advance(&epoch_highwater) &&
++        task_counter_advance(&generation_highwater)) {
++        migration_state.epoch = epoch_highwater;
++        migration_state.generation = generation_highwater;
++    }
++    qemu_mutex_unlock(&task_context_lock);
++}
++
++static int task_context_pre_save(void *opaque)
++{
++    FdisbullTaskContextMigration *state = opaque;
++
++    task_context_lock_init();
++    qemu_mutex_lock(&task_context_lock);
++    state->epoch = epoch_highwater;
++    state->generation = generation_highwater;
++    qemu_mutex_unlock(&task_context_lock);
++    return 0;
++}
++
++static int task_context_post_load(void *opaque, int version_id)
++{
++    FdisbullTaskContextMigration *state = opaque;
++    uint64_t next_epoch, next_generation;
++
++    task_context_lock_init();
++    qemu_mutex_lock(&task_context_lock);
++    if (state->overflow || !state->epoch || !state->generation ||
++        state->epoch == UINT64_MAX || state->generation == UINT64_MAX ||
++        !epoch_highwater || !generation_highwater ||
++        epoch_highwater == UINT64_MAX || generation_highwater == UINT64_MAX) {
++        state->overflow = true;
++        qemu_mutex_unlock(&task_context_lock);
++        return -EINVAL;
++    }
++
++    next_epoch = MAX(epoch_highwater, state->epoch) + 1;
++    next_generation = MAX(generation_highwater, state->generation) + 1;
++    epoch_highwater = next_epoch;
++    generation_highwater = next_generation;
++    state->epoch = next_epoch;
++    state->generation = next_generation;
++    state->overflow = false;
++    qemu_mutex_unlock(&task_context_lock);
++    return 0;
++}
++
++static const VMStateDescription vmstate_fdisbull_task_context = {
++    .name = "fdisbull/task-context",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .pre_save = task_context_pre_save,
++    .post_load = task_context_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT64(epoch, FdisbullTaskContextMigration),
++        VMSTATE_UINT64(generation, FdisbullTaskContextMigration),
++        VMSTATE_BOOL(overflow, FdisbullTaskContextMigration),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++bool fdisbull_task_context_get_counters(uint64_t *epoch, uint64_t *generation,
++                                       Error **errp)
++{
++    assert(bql_locked());
++    task_context_lock_init();
++    if (!vmstate_registered) {
++        vmstate_register(NULL, 0, &vmstate_fdisbull_task_context,
++                         &migration_state);
++        vmstate_registered = true;
++    }
++    qemu_mutex_lock(&task_context_lock);
++    if (migration_state.overflow || !epoch_highwater ||
++        !generation_highwater) {
++        qemu_mutex_unlock(&task_context_lock);
++        error_setg(errp, "Native x86 task-context generation is invalidated");
++        return false;
++    }
++    *epoch = epoch_highwater;
++    *generation = generation_highwater;
++    qemu_mutex_unlock(&task_context_lock);
++    return true;
++}
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -21,6 +21,7 @@
+   'fdisbull-layers.c',
+   'fdisbull-dos-checkpoint.c',
+   'fdisbull-instrumented-checkpoint.c',
++  'fdisbull-task-context.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',
+--- a/target/i386/cpu.c
++++ b/target/i386/cpu.c
+@@ -31,6 +31,9 @@
+ #include "sev.h"
+ #include "qapi/error.h"
+ #include "qemu/error-report.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-task-context.h"
++#endif
+ #include "qapi/qapi-visit-machine.h"
+ #include "standard-headers/asm-x86/kvm_para.h"
+ #include "hw/qdev-properties.h"
+@@ -7644,6 +7647,9 @@
+     env->amd_tsc_scale_msr =  MSR_AMD64_TSC_RATIO_DEFAULT;
+ 
+ #endif
++#ifndef CONFIG_USER_ONLY
++    fdisbull_task_context_note_reset();
++#endif
+ }
+ 
+ void x86_cpu_after_reset(X86CPU *cpu)
+--- a/target/i386/helper.c
++++ b/target/i386/helper.c
+@@ -29,6 +29,9 @@
+ #include "kvm/kvm_i386.h"
+ #endif
+ #include "qemu/log.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-task-context.h"
++#endif
+ #ifdef CONFIG_TCG
+ #include "tcg/insn-start-words.h"
+ #endif
+@@ -172,6 +175,11 @@
+    the PDPT */
+ void cpu_x86_update_cr3(CPUX86State *env, target_ulong new_cr3)
+ {
++#ifndef CONFIG_USER_ONLY
++    if (env->cr[3] != new_cr3) {
++        fdisbull_task_context_note_transition();
++    }
++#endif
+     env->cr[3] = new_cr3;
+     if (env->cr[0] & CR0_PG_MASK) {
+         qemu_log_mask(CPU_LOG_MMU,
+--- a/target/i386/meson.build
++++ b/target/i386/meson.build
+@@ -14,6 +14,7 @@
+ 
+ i386_system_ss = ss.source_set()
+ i386_system_ss.add(files(
++  'task-context.c',
+   'arch_dump.c',
+   'arch_memory_mapping.c',
+   'machine.c',
+--- /dev/null
++++ b/target/i386/task-context.c
+@@ -0,0 +1,145 @@
++/*
++ * Stopped x86 architectural task-context QMP observation.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#include "qemu/osdep.h"
++#include "exec/address-spaces.h"
++#include "exec/memory.h"
++#include "hw/core/cpu.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-task-context.h"
++#include "qemu/main-loop.h"
++#include "system/cpus.h"
++#include "system/runstate.h"
++#include "system/tcg.h"
++#include "system/fdisbull-task-context.h"
++#include "target/i386/cpu.h"
++
++#define TASK_CONTEXT_ANCHOR_SIZE 56
++#define TASK_CONTEXT_MODEL "qemu-i386-architectural-task-context-v1"
++
++static void task_context_mode(const CPUX86State *env, const char **mode)
++{
++    if (env->eflags & VM_MASK) {
++        *mode = "v86";
++    } else if (!(env->hflags & HF_PE_MASK)) {
++        *mode = "real";
++    } else if (env->hflags & HF_CS64_MASK) {
++        *mode = "long";
++    } else if (env->hflags & HF_LMA_MASK) {
++        *mode = "compat";
++    } else {
++        *mode = "protected";
++    }
++}
++
++static bool task_context_read_anchor(uint64_t address, char **hex_out,
++                                     Error **errp)
++{
++    static const char digits[] = "0123456789abcdef";
++    g_autofree uint8_t *bytes = g_malloc(TASK_CONTEXT_ANCHOR_SIZE);
++    hwaddr offset;
++    hwaddr length = TASK_CONTEXT_ANCHOR_SIZE;
++    MemoryRegion *mr;
++    char *hex;
++
++    if (address > (uint64_t)HWADDR_MAX - TASK_CONTEXT_ANCHOR_SIZE) {
++        error_setg(errp, "Task-context anchor address overflows guest physical memory");
++        return false;
++    }
++    mr = address_space_translate(&address_space_memory, address, &offset,
++                                 &length, false, MEMTXATTRS_UNSPECIFIED);
++    if (!mr || !memory_region_is_ram(mr) || memory_region_is_ram_device(mr) ||
++        memory_region_is_rom(mr) || memory_region_is_romd(mr) ||
++        memory_region_has_ram_discard_manager(mr) ||
++        length < TASK_CONTEXT_ANCHOR_SIZE) {
++        error_setg(errp, "Task-context anchor must be exactly 56 bytes in direct guest RAM");
++        return false;
++    }
++
++    memcpy(bytes, memory_region_get_ram_ptr(mr) + offset,
++           TASK_CONTEXT_ANCHOR_SIZE);
++    hex = g_malloc(TASK_CONTEXT_ANCHOR_SIZE * 2 + 1);
++    for (size_t i = 0; i < TASK_CONTEXT_ANCHOR_SIZE; i++) {
++        hex[i * 2] = digits[bytes[i] >> 4];
++        hex[i * 2 + 1] = digits[bytes[i] & 0x0f];
++    }
++    hex[TASK_CONTEXT_ANCHOR_SIZE * 2] = '\0';
++    *hex_out = hex;
++    return true;
++}
++
++FdisbullTaskContextInfo *qmp_x_fdisbull_query_task_context(
++    bool has_anchor_address, uint64_t anchor_address, Error **errp)
++{
++    CPUState *cs = NULL;
++    CPUState *cpu;
++    X86CPU *x86;
++    CPUX86State *env;
++    FdisbullTaskContextInfo *info;
++    const char *mode;
++
++    assert(bql_locked());
++    if (!tcg_enabled() || runstate_is_running()) {
++        error_setg(errp, "Task-context query requires a stopped system-mode TCG machine");
++        return NULL;
++    }
++    CPU_FOREACH(cpu) {
++        if (cs) {
++            error_setg(errp, "Task-context query requires exactly one vCPU");
++            return NULL;
++        }
++        cs = cpu;
++    }
++    if (!cs || !cs->stopped ||
++        !object_dynamic_cast(OBJECT(cs), TYPE_X86_CPU)) {
++        error_setg(errp, "Task-context query requires one stopped x86 vCPU");
++        return NULL;
++    }
++
++    info = g_new0(FdisbullTaskContextInfo, 1);
++    if (!fdisbull_task_context_get_counters(&info->epoch,
++                                            &info->context_generation,
++                                            errp)) {
++        g_free(info);
++        return NULL;
++    }
++    x86 = X86_CPU(cs);
++    env = &x86->env;
++    task_context_mode(env, &mode);
++    info->api_version = 1;
++    info->model = g_strdup(TASK_CONTEXT_MODEL);
++    info->cpu_index = cs->cpu_index;
++    info->mode = g_strdup(mode);
++    info->cpl = env->hflags & HF_CPL_MASK;
++    info->eip = env->eip;
++    info->esp = env->regs[R_ESP];
++    info->cs_selector = env->segs[R_CS].selector;
++    info->ss_selector = env->segs[R_SS].selector;
++    info->cr0 = env->cr[0];
++    info->cr3 = env->cr[3];
++    info->cr4 = env->cr[4];
++    info->efer = env->efer;
++    info->gdt_base = env->gdt.base;
++    info->gdt_limit = env->gdt.limit;
++    info->idt_base = env->idt.base;
++    info->idt_limit = env->idt.limit;
++    info->tr_selector = env->tr.selector;
++    info->tr_base = env->tr.base;
++    info->tr_limit = env->tr.limit;
++    info->tr_flags = env->tr.flags;
++    info->ldtr_selector = env->ldt.selector;
++    info->ldtr_base = env->ldt.base;
++    info->ldtr_limit = env->ldt.limit;
++    info->ldtr_flags = env->ldt.flags;
++    if (has_anchor_address) {
++        if (!task_context_read_anchor(anchor_address, &info->anchor_hex,
++                                      errp)) {
++            qapi_free_FdisbullTaskContextInfo(info);
++            return NULL;
++        }
++        info->has_anchor_address = true;
++        info->anchor_address = anchor_address;
++    }
++    return info;
++}
+--- a/target/i386/tcg/seg_helper.c
++++ b/target/i386/tcg/seg_helper.c
+@@ -28,6 +28,9 @@
+ #include "helper-tcg.h"
+ #include "seg_helper.h"
+ #include "access.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-task-context.h"
++#endif
+ 
+ #ifdef TARGET_X86_64
+ #define SET_ESP(val, sp_mask)                                   \
+@@ -582,6 +585,9 @@
+         cpu_x86_update_dr7(env, env->dr[7] & ~DR7_LOCAL_BP_MASK);
+     }
+ #endif
++#ifndef CONFIG_USER_ONLY
++    fdisbull_task_context_note_transition();
++#endif
+     return type >> 3;
+ }
+ 
+@@ -1256,6 +1262,7 @@
+ 
+ void helper_lldt(CPUX86State *env, int selector)
+ {
++    SegmentCache old_ldt = env->ldt;
+     SegmentCache *dt;
+     uint32_t e1, e2;
+     int index, entry_limit;
+@@ -1306,10 +1313,17 @@
+         }
+     }
+     env->ldt.selector = selector;
++#ifndef CONFIG_USER_ONLY
++    if (old_ldt.selector != env->ldt.selector || old_ldt.base != env->ldt.base ||
++        old_ldt.limit != env->ldt.limit || old_ldt.flags != env->ldt.flags) {
++        fdisbull_task_context_note_transition();
++    }
++#endif
+ }
+ 
+ void helper_ltr(CPUX86State *env, int selector)
+ {
++    SegmentCache old_tr = env->tr;
+     SegmentCache *dt;
+     uint32_t e1, e2;
+     int index, type, entry_limit;
+@@ -1369,6 +1383,12 @@
+         cpu_stl_kernel_ra(env, ptr + 4, e2, GETPC());
+     }
+     env->tr.selector = selector;
++#ifndef CONFIG_USER_ONLY
++    if (old_tr.selector != env->tr.selector || old_tr.base != env->tr.base ||
++        old_tr.limit != env->tr.limit || old_tr.flags != env->tr.flags) {
++        fdisbull_task_context_note_transition();
++    }
++#endif
+ }
+ 
+ /* only works if protected mode and not VM86. seg_reg must be != R_CS */

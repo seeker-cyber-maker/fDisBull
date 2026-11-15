@@ -1,0 +1,346 @@
+--- /dev/null
++++ b/include/agent/audio_capture.h
+@@ -0,0 +1,157 @@
++#ifndef DOSBOX_AGENT_AUDIO_CAPTURE_H
++#define DOSBOX_AGENT_AUDIO_CAPTURE_H
++
++#include <cstddef>
++#include <cstdint>
++#include <new>
++#include <string>
++#include <vector>
++
++namespace dosbox_agent {
++
++static const std::size_t kAudioCaptureMaxBytes = 4u * 1024u * 1024u;
++
++struct AudioCaptureSnapshot {
++    std::uint32_t capture_id = 0;
++    bool active = false;
++    bool complete = false;
++    bool truncated = false;
++    std::string stop_reason;
++    std::uint32_t max_bytes = 0;
++    std::uint32_t byte_count = 0;
++    std::uint32_t sample_rate = 0;
++    std::uint64_t captured_frames = 0;
++    std::uint64_t first_mixer_frame = 0;
++    std::uint64_t next_mixer_frame = 0;
++    std::uint64_t start_guest_ticks = 0;
++    std::uint64_t end_guest_ticks = 0;
++    std::uint64_t last_data_guest_ticks = 0;
++    std::vector<std::uint8_t> pcm;
++};
++
++// All methods are called on the emulation thread. This observer never owns
++// guest memory, schedules guest work, changes CaptureState or opens a file.
++class AudioCaptureBuffer {
++public:
++    bool Start(const std::string& owner, const std::uint32_t max_bytes,
++               const std::uint32_t rate, const std::uint64_t ticks,
++               const std::uint64_t mixer_frame, std::string* error)
++    {
++        if (state.active) return Fail(error, "CAPTURE_ACTIVE");
++        if (owner.empty() || max_bytes < 4 || max_bytes > kAudioCaptureMaxBytes ||
++            max_bytes % 4 != 0 || rate == 0 || next_id == 0)
++            return Fail(error, "INVALID_CAPTURE_PARAMETERS");
++        std::vector<std::uint8_t> fresh;
++        try { fresh.reserve(max_bytes); }
++        catch (const std::bad_alloc&) { return Fail(error, "CAPTURE_ALLOCATION_FAILED"); }
++        state = AudioCaptureSnapshot();
++        state.pcm.swap(fresh);
++        session_owner = owner;
++        state.capture_id = next_id++;
++        state.active = true;
++        state.max_bytes = max_bytes;
++        state.sample_rate = rate;
++        state.first_mixer_frame = state.next_mixer_frame = mixer_frame;
++        state.start_guest_ticks = state.end_guest_ticks = state.last_data_guest_ticks = ticks;
++        return true;
++    }
++
++    bool Active() const { return state.active; }
++    std::uint32_t CurrentId() const { return state.capture_id; }
++
++    void Append(const std::uint32_t rate, const std::size_t frames,
++                const std::int16_t* stereo, const std::uint64_t ticks,
++                const std::uint64_t first_mixer_frame)
++    {
++        if (!state.active || frames == 0) return;
++        if (rate != state.sample_rate) { Close(ticks, "format_changed", true); return; }
++        if (!stereo || first_mixer_frame != state.next_mixer_frame ||
++            ticks < state.last_data_guest_ticks) {
++            Close(ticks, "timeline_discontinuity", true); return;
++        }
++        const std::size_t room = (state.max_bytes - state.pcm.size()) / 4;
++        const std::size_t count = frames < room ? frames : room;
++        for (std::size_t i = 0; i < count * 2; ++i) {
++            const std::uint16_t value = static_cast<std::uint16_t>(stereo[i]);
++            state.pcm.push_back(static_cast<std::uint8_t>(value));
++            state.pcm.push_back(static_cast<std::uint8_t>(value >> 8));
++        }
++        state.byte_count = static_cast<std::uint32_t>(state.pcm.size());
++        state.captured_frames += count;
++        state.next_mixer_frame += count;
++        state.last_data_guest_ticks = state.end_guest_ticks = ticks;
++        if (count != frames || state.pcm.size() == state.max_bytes)
++            Close(ticks, "byte_limit", true);
++    }
++
++    bool Get(const std::string& owner, const std::uint32_t id,
++             const bool stop, const std::uint64_t ticks,
++             AudioCaptureSnapshot* result, std::string* error)
++    {
++        if (!result || owner != session_owner || id == 0 || id != state.capture_id)
++            return Fail(error, "CAPTURE_ID_MISMATCH");
++        if (stop) Close(ticks, "requested", false);
++        // A status snapshot is metadata-only; do not copy the PCM vector.
++        result->capture_id = state.capture_id;
++        result->active = state.active;
++        result->complete = state.complete;
++        result->truncated = state.truncated;
++        result->stop_reason = state.stop_reason;
++        result->max_bytes = state.max_bytes;
++        result->byte_count = state.byte_count;
++        result->sample_rate = state.sample_rate;
++        result->captured_frames = state.captured_frames;
++        result->first_mixer_frame = state.first_mixer_frame;
++        result->next_mixer_frame = state.next_mixer_frame;
++        result->start_guest_ticks = state.start_guest_ticks;
++        result->end_guest_ticks = state.end_guest_ticks;
++        result->last_data_guest_ticks = state.last_data_guest_ticks;
++        if (stop) result->pcm = state.pcm;
++        else result->pcm.clear();
++        return true;
++    }
++
++    void EndOwner(const std::string& owner, const std::uint64_t ticks,
++                  const std::string& reason)
++    {
++        if (owner == session_owner) Close(ticks, reason, true);
++    }
++
++    void Reset()
++    {
++        session_owner.clear();
++        state = AudioCaptureSnapshot();
++        // Keep monotonic capture IDs across selected targets in this process.
++    }
++
++private:
++    static bool Fail(std::string* error, const char* reason)
++    {
++        if (error) *error = reason;
++        return false;
++    }
++    void Close(const std::uint64_t ticks, const std::string& reason, const bool truncated)
++    {
++        if (!state.active) return;
++        state.active = false;
++        state.complete = true;
++        state.truncated = truncated;
++        state.stop_reason = reason;
++        state.end_guest_ticks = ticks;
++    }
++    std::string session_owner;
++    AudioCaptureSnapshot state;
++    std::uint32_t next_id = 1;
++};
++
++bool AGENT_AudioCaptureStart(const std::string&, std::uint32_t,
++                             AudioCaptureSnapshot*, std::string*);
++bool AGENT_AudioCaptureGet(const std::string&, std::uint32_t, bool,
++                           AudioCaptureSnapshot*, std::string*);
++bool AGENT_AudioCaptureActive();
++void AGENT_AddWave(std::uint32_t, std::size_t, const std::int16_t*, std::uint64_t);
++void AGENT_AudioCaptureReset();
++void AGENT_AudioCaptureEndOwner(const std::string&, const std::string&);
++
++} // namespace dosbox_agent
++#endif
+--- a/src/hardware/mixer.cpp
++++ b/src/hardware/mixer.cpp
+@@ -62,2 +62,6 @@
+ #include "midi.h"
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++#include "agent/audio_capture.h"
++#include "agent/agent_bridge.h"
++#endif
+ 
+@@ -674,2 +678,34 @@
+ 
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++namespace dosbox_agent {
++static AudioCaptureBuffer agent_audio_capture;
++bool AGENT_AudioCaptureStart(const std::string& owner, const std::uint32_t max_bytes,
++                             AudioCaptureSnapshot* snapshot, std::string* error)
++{
++    if (!AGENT_EmulationQueue().IsBoundToCurrentThread()) { if(error) *error="COMMAND_REJECTED"; return false; }
++    if (!agent_audio_capture.Start(owner, max_bytes, mixer.freq, PIC_Ticks,
++                                   mixer_sample_counter, error)) return false;
++    return agent_audio_capture.Get(owner, agent_audio_capture.CurrentId(), false, PIC_Ticks, snapshot, error);
++}
++bool AGENT_AudioCaptureGet(const std::string& owner, const std::uint32_t id, const bool stop,
++                           AudioCaptureSnapshot* snapshot, std::string* error)
++{
++    if (!AGENT_EmulationQueue().IsBoundToCurrentThread()) { if(error) *error="COMMAND_REJECTED"; return false; }
++    return agent_audio_capture.Get(owner, id, stop, PIC_Ticks, snapshot, error);
++}
++bool AGENT_AudioCaptureActive() { return agent_audio_capture.Active(); }
++void AGENT_AddWave(const std::uint32_t rate, const std::size_t frames,
++                   const std::int16_t* samples, const std::uint64_t first_frame)
++{
++    agent_audio_capture.Append(rate, frames, samples, PIC_Ticks, first_frame);
++}
++void AGENT_AudioCaptureReset() { agent_audio_capture.Reset(); }
++void AGENT_AudioCaptureEndOwner(const std::string& owner, const std::string& reason)
++{
++    agent_audio_capture.EndOwner(owner, PIC_Ticks, reason);
++}
++} // namespace dosbox_agent
++#endif
++
++
+ /* once a millisecond, render 1ms of audio, up to whole samples */
+@@ -719,3 +755,7 @@
+ 
+-    if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
++    bool agent_capture = false;
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++    agent_capture = dosbox_agent::AGENT_AudioCaptureActive();
++#endif
++    if ((CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) || agent_capture) {
+         int32_t volscale1 = (int32_t)(mixer.recordvol[0] * (1 << MIXER_VOLSHIFT));
+@@ -732,3 +772,7 @@
+         assert(readpos <= MIXER_BUFSIZE);
+-        CAPTURE_AddWave( mixer.freq, added, (int16_t*)convert );
++        if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO))
++            CAPTURE_AddWave( mixer.freq, added, (int16_t*)convert );
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++        if (agent_capture) dosbox_agent::AGENT_AddWave(mixer.freq, added, (int16_t*)convert, mixer_sample_counter);
++#endif
+     }
+--- a/src/agent/server/agent_server.cpp
++++ b/src/agent/server/agent_server.cpp
+@@ -9,2 +9,3 @@
+ #include "agent/input_adapter.h"
++#include "agent/audio_capture.h"
+ #include "dosbox.h"
+@@ -463,2 +464,3 @@
+            method == "state.get_registers" ||
++           method == "audio.capture.start" || method == "audio.capture.status" || method == "audio.capture.stop" ||
+            method == "video.screenshot" || method == "video.probe" ||
+@@ -525,2 +527,3 @@
+     struct AdapterOperation {
++        AudioCaptureSnapshot audio;
+         std::string state_hash;
+@@ -1343,2 +1346,10 @@
+     Add(&result, "video", video);
++    JsonValue audio = Object();
++    Add(&audio, "capture", JsonValue::Bool(true));
++    Add(&audio, "encoding", String("s16le"));
++    Add(&audio, "channels", Number(2)); Add(&audio, "bits", Number(16));
++    Add(&audio, "max_capture_bytes", Number(kAudioCaptureMaxBytes));
++    Add(&audio, "source", String("mixer_recording_conversion"));
++    Add(&audio, "clock", String("PIC_Ticks_milliseconds_and_mixer_frame_counter"));
++    Add(&result, "audio", audio);
+     Add(&result, "save_states", JsonValue::Bool(true));
+@@ -1809,2 +1820,82 @@
+         response = AGENT_MakeJsonRpcResult(parsed.id, result);
++    } else if (parsed.method.compare(0, 14, "audio.capture.") == 0) {
++        const bool start = parsed.method == "audio.capture.start";
++        const bool stop = parsed.method == "audio.capture.stop";
++        std::uint32_t value = 0;
++        const char* field = start ? "max_bytes" : "capture_id";
++        const JsonValue* supplied = parsed.params.Find(field);
++        bool valid = supplied && GetUnsignedInteger(*supplied, &value);
++        for (const auto& item : parsed.params.object)
++            if (item.first != "session_id" && item.first != field) valid = false;
++        valid = valid && (start ? value >= 4 && value <= kAudioCaptureMaxBytes && value % 4 == 0 : value != 0);
++        if (!valid) {
++            response = InvalidParams(parsed.id, "Audio capture requires max_bytes (4..4194304, divisible by4) or a positive capture_id");
++        } else if (start && session->state != Impl::SessionState::Stopped) {
++            response = SessionError(parsed.id, kErrorTargetRunning, "Capture start requires a stopped target", "TARGET_NOT_STOPPED", session);
++        } else if (session->state != Impl::SessionState::Stopped && session->state != Impl::SessionState::Running && session->state != Impl::SessionState::Exited) {
++            response = SessionError(parsed.id, kErrorCapabilityUnavailable, "Target is not active", "TARGET_NOT_ACTIVE", session);
++        } else if (start && (static_cast<std::uint64_t>(value) + 2) / 3 * 4 + 4096 > impl->config.max_message_bytes) {
++            response = Error(parsed.id, kErrorRequestTooLarge, "Capture payload would exceed max_message_bytes", "RESPONSE_TOO_LARGE");
++        } else {
++            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
++            const std::string session_id = session->id;
++            if (SubmitEmulationCommandLocked(impl, [operation, session_id, value, start, stop](const std::uint64_t) {
++                    std::string error;
++                    AudioCaptureSnapshot snapshot;
++                    const bool success = start ? AGENT_AudioCaptureStart(session_id, value, &snapshot, &error)
++                                               : AGENT_AudioCaptureGet(session_id, value, stop, &snapshot, &error);
++                    std::lock_guard<std::mutex> guard(operation->mutex);
++                    operation->success = success; operation->error = error;
++                    operation->audio = std::move(snapshot); operation->done = true;
++                    operation->completed.notify_all();
++                }) == 0) {
++                response = Error(parsed.id, kErrorCapabilityUnavailable, "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
++            } else {
++                Impl::DeferredRequest pending;
++                pending.request = parsed; pending.fingerprint = parsed.fingerprint;
++                const JsonValue response_id = parsed.id;
++                pending.wait = [operation](const std::uint32_t timeout_ms) {
++                    std::unique_lock<std::mutex> guard(operation->mutex);
++                    return operation->completed.wait_for(guard, std::chrono::milliseconds(timeout_ms), [operation]() { return operation->done; });
++                };
++                pending.finish = [impl, session_id, response_id, operation, stop]() {
++                    if (!impl->session || impl->session->id != session_id)
++                        return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
++                    if (!operation->success)
++                        return Error(response_id, kErrorCapabilityUnavailable, "Audio capture request rejected", operation->error);
++                    const AudioCaptureSnapshot& audio = operation->audio;
++                    JsonValue result = SessionResult(*impl->session);
++                    Add(&result, "capture_id", Number(audio.capture_id));
++                    Add(&result, "active", JsonValue::Bool(audio.active));
++                    Add(&result, "complete", JsonValue::Bool(audio.complete));
++                    Add(&result, "truncated", JsonValue::Bool(audio.truncated));
++                    Add(&result, "stop_reason", String(audio.stop_reason));
++                    Add(&result, "max_bytes", Number(audio.max_bytes)); Add(&result, "byte_count", Number(audio.byte_count));
++                    Add(&result, "encoding", String("s16le")); Add(&result, "sample_rate", Number(audio.sample_rate));
++                    Add(&result, "channels", Number(2)); Add(&result, "bits", Number(16));
++                    Add(&result, "captured_frames", Number(audio.captured_frames));
++                    Add(&result, "first_mixer_frame", Number(audio.first_mixer_frame)); Add(&result, "next_mixer_frame", Number(audio.next_mixer_frame));
++                    Add(&result, "start_guest_ticks", Number(audio.start_guest_ticks)); Add(&result, "end_guest_ticks", Number(audio.end_guest_ticks));
++                    Add(&result, "last_data_guest_ticks", Number(audio.last_data_guest_ticks));
++                    Add(&result, "source", String("mixer_recording_conversion"));
++                    if (stop) {
++                        if ((audio.pcm.size() + 2) / 3 * 4 + 4096 > impl->config.max_message_bytes)
++                            return Error(response_id, kErrorRequestTooLarge, "Capture exceeds max_message_bytes", "RESPONSE_TOO_LARGE");
++                        Add(&result, "data_base64", String(EncodeBase64(audio.pcm)));
++                        Add(&result, "sha256", String(Sha256Hex(audio.pcm)));
++                    }
++                    return AGENT_MakeJsonRpcResult(response_id, result);
++                };
++                if (parsed.has_id && parsed.id.type != JsonType::Null) session->deferred_requests[parsed.id_key] = pending;
++                lock.unlock(); const bool completed = pending.wait(impl->config.request_timeout_ms); lock.lock();
++                if (!RebindSessionAfterWait(impl, session_id, &session, &response, parsed.id)) return response;
++                if (!completed) {
++                    cache_response = false;
++                    response = Error(parsed.id, kErrorOperationTimeout, "Audio capture operation is still pending", "OPERATION_TIMEOUT");
++                } else if (parsed.has_id && parsed.id.type != JsonType::Null) {
++                    auto deferred = session->deferred_requests.find(parsed.id_key);
++                    response = deferred->second.finish(); session->deferred_requests.erase(deferred);
++                } else response = pending.finish();
++            }
++        }
+     } else if (parsed.method == "execution.continue") {
+@@ -2200,2 +2291,3 @@
+                     }
++                    if (load) AGENT_AudioCaptureEndOwner(session_id, "state_load");
+                     if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
+@@ -2540,2 +2632,3 @@
+                     std::string adapter_error;
++                    AGENT_AudioCaptureEndOwner(session_id, "session_stop");
+                     const bool success = adapter.TerminateTarget(&adapter_error);
+@@ -3523,2 +3616,3 @@
+     AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput();
++    AGENT_AudioCaptureReset();
+     if (!adapter.IsReadyForTargetStart()) {
+@@ -3703,2 +3797,3 @@
+     Add(&event, "stage", String("after-process-cleanup"));
++    AGENT_AudioCaptureEndOwner(active.id, "guest_exit");
+     active.guest_exit = event;

@@ -9,7 +9,8 @@ implementation, original-game emulator, or evidence of game equivalence.
 
 ```
 python -m fdisbull_player --package slice.json
-python -m fdisbull_player --connect localhost:12345
+python -m fdisbull_player --connect localhost:12345 \
+  --connect-password-file /private/path/from-text-host
 ```
 
 Enter commands one per line; `quit` exits. `look`, `inventory`, `help`, and

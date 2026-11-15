@@ -167,6 +167,16 @@ class _Lower:
             self.value(condition['left']); self.c.emit('50')
             self.value(condition['right']); self.c.emit('4889c1594839c8')
             self.c.emit('0f94c00fb6c0')
+        elif op == 'ge':
+            _fields(condition, ('op', 'left', 'right'))
+            for side in ('left', 'right'):
+                item = condition[side]
+                if isinstance(item, dict):
+                    _check(self.cells.get(item.get('var'), {}).get('type') in ('u8', 'u16', 'i16'),
+                           'native ge compares integer cells only')
+            self.value(condition['left']); self.c.emit('50')
+            self.value(condition['right']); self.c.emit('4889c1594839c1')
+            self.c.emit('0f9dc00fb6c0')
         elif op == 'bit_test':
             _fields(condition, ('op', 'value', 'bit'))
             _check(type(condition['bit']) is int and 0 <= condition['bit'] < 64, 'unsupported native bit index')
@@ -188,20 +198,26 @@ class _Lower:
         else:
             raise ValueError('unsupported native condition')
 
+
     def body(self, body, path, depth=0):
         _check(isinstance(body, list) and len(body) <= 256 and depth <= 12, 'native body budget exceeded')
         for index, item in enumerate(body):
             _check(isinstance(item, dict), 'invalid native statement')
             start, op = self.c.base + len(self.c.data), item.get('op')
             common = ('id', 'evidence')
-            if op in ('set', 'add', 'subtract'):
+            if op in ('set', 'add', 'subtract', 'multiply', 'divide'):
                 _fields(item, ('op', 'var', 'value'), common)
                 name = item['var']; _check(name in self.cells, 'unknown native state cell')
                 self.value(item['value'])
                 if op != 'set':
                     _check(self.cells[name]['type'] != 'bool', 'arithmetic on native bool is unsupported')
                     self.c.emit('4889c1'); self.value({'var': name})
-                    self.c.emit('4801c8' if op == 'add' else '4829c8')
+                    if op == 'add': self.c.emit('4801c8')
+                    elif op == 'subtract': self.c.emit('4829c8')
+                    elif op == 'multiply': self.c.emit('480fafc1')
+                    else:
+                        self.c.emit('4885c9'); self.c.relative('0f84', self.fail)
+                        self.c.emit('489948f7f9')
                 self.store(name, checked=op == 'set')
             elif op == 'if':
                 _fields(item, ('op', 'condition', 'then', 'else'), common)
@@ -256,6 +272,7 @@ class _Lower:
                 raise ValueError('unsupported native statement: ' + str(op))
             self.c.maps.append({'origin': item.get('id', path + '.' + str(index)),
                                 'rva': start, 'end_exclusive': self.c.base + len(self.c.data)})
+
 
 
 NOTIFICATION_BACKENDS = ('message-box-a', 'debug-string-a')
@@ -567,7 +584,7 @@ def build_windows_shell(plan, modules, destination, *, c_compiler=None):
                 'target': {'format': 'PE32+', 'arch': 'x86-64', 'image_base': hex(BASE),
                            'load_profile': 'fixed preferred base; no exception-unwind profile',
                            'original_binary_wrapped': False},
-                'output': {'path': 'program.exe', 'sha256': _sha(image), 'size': len(image)},
+                'output': {'path': 'program.exe', 'absolute_path': str(destination / 'program.exe'), 'sha256': _sha(image), 'size': len(image)},
                 'abi': {'arena': 'RCX', 'result_u16': 'EAX', 'module_result': 'RAX: declared scalar type, i16 sign-extended', 'status': 'EDX',
                         'statuses': {'0': 'success', '1': 'qualification-or-range-failure', '2': 'loop-budget-exhausted',
                                      '3': 'notification-failed-after-state-commit'},

@@ -1,8 +1,25 @@
-"""One bounded, loopback-only connection to a live text projection."""
+"""One authenticated, loopback-only connection to a live text projection."""
+import json
 import socket
+import time
 
+from .local_auth import LocalCredential
 from .project import Project
 from .text_projection import serve_stream
+
+
+def _auth_line(connection, deadline):
+    """Read one bounded line without letting a slow peer reset the deadline."""
+    line=bytearray()
+    while len(line)<=1024:
+        remaining=deadline-time.monotonic()
+        if remaining<=0:return None
+        connection.settimeout(remaining)
+        part=connection.recv(1)
+        if not part:return None
+        line.extend(part)
+        if part==b'\n':return bytes(line)
+    return None
 
 
 def _config(config):
@@ -70,24 +87,41 @@ def host(config, *, on_listen=None):
             backend = session.text_projection(config['projection'], config['game_dir'])
             backend.checkpoint_prepare_guest_ms = config.get('checkpoint_prepare_guest_ms', 100)
             backend.checkpoint_timeout_ms = min(timeout, 30000)
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
-                listener.bind(('127.0.0.1', port))
-                listener.listen(1)
-                listener.settimeout(timeout / 1000)
-                address = {'host':'127.0.0.1', 'port':listener.getsockname()[1],
-                           'policy': {'assisted_travel': session._allow_assisted_travel,
-                                      'spatial_mode':session._spatial_mode, 'fair_play':session._fair_play}}
-                if preparation is not None: address['preparation'] = preparation
-                if on_listen: on_listen(address)
-                try:
-                    connection, _ = listener.accept()
-                except TimeoutError:
-                    return {'status':'accept_timeout', 'endpoint':address}
-                with connection:
-                    connection.settimeout(timeout / 1000)
-                    with connection.makefile('r', encoding='utf-8') as reader, connection.makefile('w', encoding='utf-8') as writer:
+            with LocalCredential('fdisbull-text-host-') as credential:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+                    listener.bind(('127.0.0.1', port))
+                    listener.listen(1)
+                    address = {'host':'127.0.0.1', 'port':listener.getsockname()[1],
+                               'password_file':str(credential.path),
+                               'policy': {'assisted_travel': session._allow_assisted_travel,
+                                          'spatial_mode':session._spatial_mode, 'fair_play':session._fair_play}}
+                    if preparation is not None: address['preparation'] = preparation
+                    if on_listen: on_listen(address)
+                    accept_deadline=time.monotonic()+timeout/1000
+                    while True:
+                        remaining=accept_deadline-time.monotonic()
+                        if remaining<=0:
+                            return {'status':'accept_timeout', 'endpoint':address}
+                        listener.settimeout(remaining)
                         try:
-                            serve_stream(backend, reader, writer)
-                        except (TimeoutError, ConnectionError, UnicodeError):
-                            return {'status':'disconnected', 'endpoint':address}
-                return {'status':'disconnected', 'endpoint':address}
+                            connection, _ = listener.accept()
+                        except TimeoutError:
+                            return {'status':'accept_timeout', 'endpoint':address}
+                        with connection:
+                            try:
+                                line=_auth_line(connection,min(accept_deadline,time.monotonic()+5))
+                                if line is None or len(line)>1024:
+                                    continue
+                                request=json.loads(line)
+                                if not isinstance(request,dict) or set(request)!={'op','token'} or request['op']!='auth' or not credential.check(request['token']):
+                                    continue
+                                connection.settimeout(timeout/1000)
+                                with connection.makefile('r', encoding='utf-8') as reader, connection.makefile('w', encoding='utf-8') as writer:
+                                    writer.write('{"status":"authenticated"}\n');writer.flush()
+                                    try:
+                                        serve_stream(backend, reader, writer)
+                                    except (TimeoutError, ConnectionError, UnicodeError):
+                                        pass
+                                    return {'status':'disconnected', 'endpoint':address}
+                            except (ValueError, OSError, UnicodeError, TimeoutError):
+                                continue

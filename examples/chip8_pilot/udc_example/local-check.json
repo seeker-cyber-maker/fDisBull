@@ -1,0 +1,22 @@
+{
+  "completed_attempts": 978,
+  "evidence_scope": "same authored reference VM differential; fixed host inputs and finite budget",
+  "exception": null,
+  "fallback_steps": 2,
+  "family_executions": {
+    "ADD_VX_KK": 65,
+    "CLS": 1,
+    "DRW": 65,
+    "JP": 64,
+    "LD_DT_VX": 65,
+    "LD_I": 1,
+    "LD_VX_DT": 65,
+    "LOAD": 1,
+    "SE_VX_KK": 65,
+    "SKNP": 260,
+    "SNE_VX_KK": 325
+  },
+  "specialized_steps": 976,
+  "state_sha256": "9b9b3a319431737e3c71d861355ef60646ee401ba1661033eae769e5f509fecf",
+  "status": "key_wait"
+}

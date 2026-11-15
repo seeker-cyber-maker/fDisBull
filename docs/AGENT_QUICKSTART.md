@@ -110,8 +110,47 @@ The following commands are a menu for first use or a specific missing capability
 not a sequence to repeat before each investigation. Retrieve only the reference
 needed for the next operation.
 
-For repository CI and dual-mirror updates (Local Git + GitLab), first read
-[CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
+For the DOSBox-X migration, read [native QEMU DOS](DOS_QEMU_MIGRATION.md) and
+run `fdisbull dos-migration`. `qemu-dos` supports raw disks and original COM/MZ
+projects with a separate `--dos-boot-image`; `debug-dos-process` reports the
+observed PSP, source map and exit/TSR lifecycle. Read the maintained
+[handoff log](DOS_QEMU_HANDOFF.md) before continuing a migration slice.
+`dosbox-qemu` still runs DOSBox inside Linux/QEMU. DOSBox remains the default
+and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
+fixture; actual DOS, driver and game qualification are separate gates.
+The [timing guide](DOS_QEMU_TIMING.md) covers explicit host clock auto-sync,
+modeled retrace waits, generation-checked input at the next retrace edge,
+native single-chord `keyboard.press` under `virtual_keyboard_press`,
+bounded US-layout `keyboard.type` under `virtual_keyboard_type`, and physical
+`mouse_button_click(button='left', *, hold_ms=80)` under `virtual_mouse_click`.
+Inspect each capability before using it. Input arms remain passive and need
+explicit bounded execution; an interrupted press retains its delivered prefix
+and any held leases for explicit recovery. Text entry uses the same recovery
+policy, with separate lifetimes for repeated keys and gaps between characters.
+The eighth native patch adds the mouse pair: down after 2 ms, then a separately
+synchronized release `hold_ms` after the actual down callback. Use JSON
+`debug-mouse-button-click` or script `mouse.button-click`; an explicit
+`clock_sync_step()` can supply one bounded execution attempt. No movement is
+requested, but prior mouse accumulators and external button state can affect
+packets. Coordinate `click(x, y)` and `click-frame` remain unsupported on native
+QEMU; all 127 default-promotion qualifications stay open.
+
+For sparse image observations, inspect `renderer_probe` and use
+`display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON
+`debug-display-probe` or script `display-probe`. The ninth native extension reads
+up to 256 ordered RGB samples from an existing retained renderer publication.
+The optional window/update pair rejects stale identity without refreshing or
+running the guest. It does not supply the mode/frame/state identities required
+by legacy `frame_probe`, coordinate clicks or scene readiness. See the
+[publication probe contract](DOS_QEMU_MIGRATION.md#probe-sparse-pixels-from-one-retained-publication).
+
+For a DOS program that enters protected/v86 mode, read
+[protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).
+Keep guarded live RAM edits separate from edited-checkpoint interventions;
+queue acceptance alone does not prove game input consumption.
+
+For repository CI and original GitHub/local-hub/GitLab propagation, first read
+[CI coordination](CI_COORDINATION.md). Original GitHub (`origin`) is primary;
 keep local Git and GitLab (`brewster-jennings-group/fdisbull`) synchronized,
 and use `scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull`
 in cache-only mode by default.
@@ -234,7 +273,11 @@ directory outside Git. Both return source/member hashes without inline target
 bytes and never execute inputs. Existing `gog-list/gog-unpack` and AGI picture
 APIs remain available through the catalog. Read the packaged specification with
 `fdisbull agent-skill --reference references/media-modules.md` before recovering
-missing tooling or extending an adapter. This does not unpack compressed DOS
+missing tooling or extending an adapter. For KINT `.KE` header/body ranges and
+Sherlock 7 PNG tile/button/overlay sheets, read
+`fdisbull agent-skill --reference references/kint6-sherlock7.md`.
+The PNG profiles support named crops or `--member all`, retain pixel rectangles
+and raw RGBA hashes, and share the private-output policy. This does not unpack compressed DOS
 executables or establish the purpose of their trailing bytes.
 
 For a closed native AVI recording, `fdisbull capture-audit CAPTURE.avi --output
@@ -247,6 +290,48 @@ completeness or timing. Video timestamps do not supply guest ticks or input alig
 budgets and failed-run diagnostics.
 
 ## Choose a route
+
+### Identify an unfamiliar file or prepare a movie variant
+
+Start with `fdisbull file-identify /private/input` and `fdisbull format-modules`.
+The common format-module catalog records signature/header facts and links to
+implemented readers. `--catalog /private/formats.sqlite` persists those facts
+for later sessions. Unknown formats, header recognition, supported image views
+and decoder limitations are separate results; a filename extension is not proof.
+The older `identify` command retains its binary-header response contract.
+
+For one game or a collection, use `intake-inventory /private/game-a
+/private/game-b --catalog /private/formats.sqlite`, with a private
+`--output-artifact-dir` for larger reports. The same per-file kernel returns a
+bounded filesystem inventory and grouped recovery queue. Containers and embedded
+media remain unexpanded. Catalog persistence requires complete alias-safe
+enumeration; incomplete walks report in-memory-only catalog use. See
+[media coverage and recovery](INTAKE_MEDIA_COVERAGE.md) for observed families,
+DinoPark's proprietary formats and FLI/FLC/VID/IDX distinctions.
+
+For a bounded native SMK2 framing variant, use `fdisbull media-inspect INPUT
+--adapter smacker`, then `fdisbull smk-frame INPUT /private/new-output`.
+This retains opening/ending images and complete embedded audio, with native hold
+frames between. Full independent decoding is required; original-game playback
+and seeking remain separate checks. Fetch
+`agent-skill --reference references/file-formats.md` for limits and examples.
+
+For old Interplay MVE framing and Castles II SLB audio, read
+[the media contract](CASTLES2_MEDIA.md). `mve-frame` preserves the original
+codec family, audio and logical timing, with independently checked retained
+images and a bounded ending-reference recovery. `media-inspect --adapter
+castles2-slb|castles2-slb-playback` separates directory structure from the explicit
+original driver profile; selected WAV exports require `--slot` and
+`--playback-profile`. Original-game acceptance is a separate gate.
+
+For DinoPark resources, `media-inspect --adapter dinopark-act|dinopark-pic|dinopark-abt`
+uses the shipped bounded decoders. `media-decode` exports selected private PNG/WAV
+results with explicit palette/timing adapters. See
+[DinoPark media modules](DINOPARK_MEDIA_DECODERS.md) for native comparison scope
+and the byte-decoder contract. [Animation and playback](DINOPARK_ANIMATION_PLAYBACK.md)
+adds sequence inspection, explicit-tick simulation, the original DigPak/SBPRO
+timing profile and separately built bounded mixer capture. Keep requested PCM
+timing, device timing and actual gameplay graphics/sound observations distinct.
 
 ### Intake a collection or a single addition
 
@@ -633,7 +718,7 @@ mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
 For direct guest inputs, `fdisbull decoder-modules` lists the explicitly
-registered AGI and Z-machine front ends. `module-analyze` reads their source
+registered AGI, Z-machine and KINT 6 front ends. `module-analyze` reads their source
 instructions without a native project; `module-lift` provides the first narrow
 AGI state projection into shared UDL/UIL. See [decoder modules](DECODER_MODULES.md)
 for commands, source identities, required state witnesses and unsupported cases.
@@ -830,3 +915,13 @@ it does not imply rollback or permission to retry. Output references are
 distinct from project debugger artifact IDs. The default store is the user data
 `fdisbull/output-artifacts` directory; `FDISBULL_OUTPUT_ARTIFACT_DIR` selects a
 private location outside Git. Artifacts are not automatically deleted.
+
+## Optional recovered tooling in the 0.35 source candidate
+
+The [recovered tooling integration](RECOVERED_TOOLS_035_INTEGRATION.md) records
+bounded Windows route fuzzing, explicit DOS launch/RTLink tools, source-only Drive
+backup/sync helpers, shutdown receipts and their historical origins. Discover the
+installed candidate before relying on these additions. Source inclusion does not
+install a Drive watcher or qualify a native backend. The route-fuzz and crash probes
+launch owned native processes only when explicitly invoked; the source-only tests
+do not launch a guest. Historical research reports and proposals retain their dates.

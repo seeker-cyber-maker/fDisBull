@@ -96,6 +96,23 @@ def _identify_header(data: bytes) -> dict:
             h["warnings"].extend(dos_issues)
             return h
 
+        # Bound DOS/4GW carriers have an independently declared inner MZ.
+        # Follow that bounded chain before inspecting the outer e_lfanew,
+        # which may legitimately be occupied by old DOS relocations.
+        from .le import le_carrier_origin
+        try:
+            carrier = le_carrier_origin(data)
+        except ValueError as error:
+            h['warnings'].append('Bound LE carrier unavailable: ' + str(error))
+            return classic_mz()
+        if carrier is not None and carrier['application_offset']:
+            offset = carrier['header_offset']
+            h.update(format='LE', family='DOS', bits=32, header_offset=offset,
+                     application_file_offset=carrier['application_offset'],
+                     carrier=carrier, source='declared MZ/BW/MZ/LE carrier chain')
+            h['valid'] = need(offset + 196, 'truncated bound LE header')
+            return h
+
         # e_lfanew did not exist in the original MZ layout. Old relocation
         # records can overlap that field; arbitrary nonzero bytes must not
         # invalidate an otherwise sound DOS file. Recognize a secondary format
@@ -244,6 +261,12 @@ def identify_header(data: bytes) -> dict:
     if data.startswith((b'MZ', b'LE')) or header['format'] == 'DOS SYS':
         from .image_views import image_views
         header['image_views']=image_views(data)
+        if header['format'] == 'LE':
+            native = next((view for view in header['image_views']
+                           if view['image'] == 'le' and view['available']), None)
+            if native is not None:
+                header.update(bits=native['bits'], mixed_bits=native.get('mixed_bits', False),
+                              decode_regions=native.get('decode_regions', []))
         if any(view['image'] == 'sys' and view['available'] for view in header['image_views']):
             header['preferred_image'] = 'sys'
     if header['format']=='Mach-O fat' and header['valid']:
@@ -421,7 +444,9 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
                           load_model=metadata['load_model'],
                           object_count=len(metadata['objects']),
                           page_count=len(metadata['pages']),
-                          relocation_count=metadata['fixup_count'])
+                          relocation_count=metadata['fixup_count'],
+                          mixed_bits=metadata.get('mixed_bits', False),
+                          decode_regions=metadata.get('decode_regions', []))
             # Keep large fixup details in the bounded, paginatable relocation
             # list rather than copying them into every header/info response.
             result['le'] = {key: value for key, value in metadata.items()

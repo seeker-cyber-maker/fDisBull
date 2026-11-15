@@ -1,0 +1,1243 @@
+{
+ "format": "fdisbull-civ-game-uil-provenance-1",
+ "scene": "examples/civ/civ_game_scene.json",
+ "scene_sha256": "69c640573f0aae4f2cf4330d743622f68be5ef0975fc50f6b200e08426831a9b",
+ "edition": {
+  "label": "pinned Civ 474.05 / Civ64 475.05 DOS root",
+  "packed_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+  "unpacked_sha256": "aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57",
+  "edition_status": "conflict",
+  "note": "civd calls the packed hash 474.05; Civ64 documentation calls the same bytes 475.05. The scene does not merge the labels."
+ },
+ "authorities": {
+  "civd": {
+   "repository": "sjmelia/civd",
+   "commit": "d9214fcd36aa6003d28aae60c3974b665f752280",
+   "sources": [
+    {
+     "path": "src/GAME.C",
+     "sha256": "d0ff8a960a49e7fbb90bb221f70efa891e65ffc88a6b5f0aa471bd78f07d1246"
+    },
+    {
+     "path": "src/SAVE.C",
+     "sha256": "e061c53d2092f1b09e3902ff81d675caa45d1d2e5bb1307169dd136884075b79"
+    },
+    {
+     "path": "src/WORLDGEN.C",
+     "sha256": "937f512ede20589bb14f120d38fdc5204a39cc2ebbdfea1a83fb093b7ef27b38"
+    },
+    {
+     "path": "src/NEWGAME.C",
+     "sha256": "9b1f2d095ebaa4b192f38b1d353fa107ad336f219fd38c477bfc9c2eaff4697d"
+    },
+    {
+     "path": "src/NAMES.C",
+     "sha256": "f9ffa0acdca92f0777f8acc96d0009f37589ea9bcb482174a90d561c9a01b38e"
+    },
+    {
+     "path": "src/MAP.C",
+     "sha256": "180be2caf8ff5ed830f3ca5aed1cb2faae6803c5d4c35ba50b43597081e9e25a"
+    },
+    {
+     "path": "src/TURN.C",
+     "sha256": "82a75ea97c79945a53910d12e3d9ee9fbedf1875c7bb8b61c4b67b8fbf14f211"
+    },
+    {
+     "path": "src/CONTROL.C",
+     "sha256": "40f717b6adce7c310dc7b9da7a151afbc2e70e451b83a33e6f5779af2c3029e7"
+    },
+    {
+     "path": "src/UNITS.C",
+     "sha256": "ad2cc36f5db94b07a0ed2235588aa058af39d1e354988bd9c115555770d97005"
+    },
+    {
+     "path": "src/CITYMGT.C",
+     "sha256": "78e435ff78709dde8bbab028a81c9899ea8f4602f591c974f4be06e1280457cc"
+    },
+    {
+     "path": "src/ECONOMY.C",
+     "sha256": "0303da40260eab3e19ae8a4c1cc1fd6d2df4c60b94981ebe063c768579ef03ef"
+    },
+    {
+     "path": "src/CITYVIEW.C",
+     "sha256": "9ff2508046e7c57d39299dbe85be87467d24b82787646dd4b68cb34d9d150ad4"
+    },
+    {
+     "path": "src/ADVISORS.C",
+     "sha256": "084a39a92206d17eac187d312cb892e1ec4a6d7bc25cfd05975ac5fba00bae41"
+    },
+    {
+     "path": "src/REPORTS.C",
+     "sha256": "889f913dc1b7ef083eb71c1043ed17a13545d67477d17074eea780b818cda043"
+    },
+    {
+     "path": "src/PEDIA.C",
+     "sha256": "1cf4a2380be01b2cf4073e8c893c6ddcc329cceef9ce05d659ffede406883a9d"
+    },
+    {
+     "path": "src/AUDIENCE.C",
+     "sha256": "90a99917cd190bf1198e18b67d8ec01bcb172368da2374d13510adda0a9d5f3f"
+    },
+    {
+     "path": "src/DIPLOMAC.C",
+     "sha256": "74b5beb1766b825b1b3f2e9769ec8fb282e715c58b55c068a9a7504e38655563"
+    },
+    {
+     "path": "src/SPACESHP.C",
+     "sha256": "94056ff549a38741183e458bcf571fc2c1a97c7f09f5cfaf85fa928cc6376189"
+    },
+    {
+     "path": "src/FAME.C",
+     "sha256": "059fc18654bffeaeff1999c0044be42ca7e77bf3f467d2ecd1a2314e86a9b2c7"
+    },
+    {
+     "path": "src/REPLAY.C",
+     "sha256": "023e1afb83eac7a7a649916a7684b71c4b0033cb594fa03e5155a26966fdd3ac"
+    },
+    {
+     "path": "src/NEWS.C",
+     "sha256": "100fbe456a73dec3f04833bf3685239fca2a78a293297702e791bb0f9436e388"
+    },
+    {
+     "path": "src/PALACE.C",
+     "sha256": "c5d848f8d17c42ea1990e7ed85f22b8fa73b06db9380907d8afd42a7f9049466"
+    },
+    {
+     "path": "src/CITY.C",
+     "sha256": "44dc6c0f163827f0ac8d315511b6c9b2922b7834af977958ad42fa79a26ea39d"
+    },
+    {
+     "path": "src/DIALOG.C",
+     "sha256": "cdd61a8c106629da65342c7ad7f42638458ef259e99011f952f9be4eacb17e8c"
+    },
+    {
+     "path": "src/MENUS.C",
+     "sha256": "dde7c82a7cd50c185ae2d1d4e0728884dcf35d4cc95db30834602ef69dfdc640"
+    },
+    {
+     "path": "src/MESSAGE.C",
+     "sha256": "5642f8b6593e4662856a10969dca3b0f18ac870bb0ae80c1c499f0c786e2a947"
+    }
+   ]
+  },
+  "civ64": {
+   "repository": "Buyukcaglar/Civ64",
+   "commit": "4e46572d727544722d90c24dc2ce51a9c6d22f15",
+   "documents": [
+    "docs/dos/SCENES.md",
+    "docs/dos/SCENES-PLAY.md"
+   ],
+   "label": "DOS listing"
+  },
+  "atlas": {
+   "path": "examples/civ/civ_exe_atlas.json",
+   "sha256": "120d1b4f4839f62f579553d7040bb5eb3dcb651cddd57ce7eb407fb5c97e74c3",
+   "functions": 430,
+   "overlays": 23
+  }
+ },
+ "screens": [
+  {
+   "id": "title",
+   "screen": 0,
+   "civ64": [
+    "SCENES.md 4.4-6"
+   ],
+   "civd": [
+    "GAME.C"
+   ],
+   "objects": 5,
+   "anchors": [
+    {
+     "address": "R:01A8:0486",
+     "role": "title menu",
+     "linear": 7942,
+     "overlay": null,
+     "function": "_game_menu",
+     "source": "GAME.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "load",
+   "screen": 1,
+   "civ64": [
+    "SCENES.md 7.2"
+   ],
+   "civd": [
+    "SAVE.C"
+   ],
+   "objects": 11,
+   "anchors": [
+    {
+     "address": "O11:0000",
+     "role": "load screen",
+     "linear": 145216,
+     "overlay": 11,
+     "function": "_load_game",
+     "source": "SAVE.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "customize",
+   "screen": 2,
+   "civ64": [
+    "SCENES.md 7.4"
+   ],
+   "civd": [
+    "GAME.C"
+   ],
+   "objects": 14,
+   "anchors": [
+    {
+     "address": "R:01A8:0591",
+     "role": "customize world",
+     "linear": 8209,
+     "overlay": null,
+     "function": "_game_menu",
+     "source": "GAME.C",
+     "position": "inside"
+    }
+   ]
+  },
+  {
+   "id": "birth",
+   "screen": 3,
+   "civ64": [
+    "SCENES.md 8"
+   ],
+   "civd": [
+    "WORLDGEN.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O7:0012",
+     "role": "Birth",
+     "linear": 145234,
+     "overlay": 7,
+     "function": "_make_world",
+     "source": "WORLDGEN.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "difficulty",
+   "screen": 4,
+   "civ64": [
+    "SCENES.md 9.1"
+   ],
+   "civd": [
+    "NEWGAME.C"
+   ],
+   "objects": 5,
+   "anchors": [
+    {
+     "address": "O5:0031",
+     "role": "difficulty question",
+     "linear": 145265,
+     "overlay": 5,
+     "function": "_new_game",
+     "source": "NEWGAME.C",
+     "position": "inside"
+    }
+   ]
+  },
+  {
+   "id": "competition",
+   "screen": 5,
+   "civ64": [
+    "SCENES.md 9.2"
+   ],
+   "civd": [
+    "NEWGAME.C"
+   ],
+   "objects": 5,
+   "anchors": [
+    {
+     "address": "O5:012E",
+     "role": "competition question",
+     "linear": 145518,
+     "overlay": 5,
+     "function": "_new_game",
+     "source": "NEWGAME.C",
+     "position": "inside"
+    }
+   ]
+  },
+  {
+   "id": "tribe",
+   "screen": 6,
+   "civ64": [
+    "SCENES.md 9.3"
+   ],
+   "civd": [
+    "NEWGAME.C"
+   ],
+   "objects": 3,
+   "anchors": [
+    {
+     "address": "O5:0309",
+     "role": "tribe question",
+     "linear": 145993,
+     "overlay": 5,
+     "function": "_new_game",
+     "source": "NEWGAME.C",
+     "position": "inside"
+    }
+   ]
+  },
+  {
+   "id": "leader-name",
+   "screen": 7,
+   "civ64": [
+    "SCENES.md 9.4-9.5",
+    "SCENES.md 10.4"
+   ],
+   "civd": [
+    "NAMES.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O23:00D6",
+     "role": "leader name",
+     "linear": 145430,
+     "overlay": 23,
+     "function": "_rename_leader",
+     "source": "NAMES.C",
+     "position": "entry"
+    },
+    {
+     "address": "O23:0414",
+     "role": "text entry",
+     "linear": 146260,
+     "overlay": 23,
+     "function": "_edit_line",
+     "source": "NAMES.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "intro",
+   "screen": 8,
+   "civ64": [
+    "SCENES.md 9.6"
+   ],
+   "civd": [
+    "NEWGAME.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O5:0657",
+     "role": "introduction text",
+     "linear": 146839,
+     "overlay": 5,
+     "function": "_new_game",
+     "source": "NEWGAME.C",
+     "position": "inside"
+    }
+   ]
+  },
+  {
+   "id": "world",
+   "screen": 9,
+   "civ64": [
+    "SCENES-PLAY.md 1-6"
+   ],
+   "civd": [
+    "MAP.C",
+    "TURN.C",
+    "CONTROL.C",
+    "UNITS.C"
+   ],
+   "objects": 14,
+   "anchors": [
+    {
+     "address": "R:1AEA:0008",
+     "role": "full map redraw",
+     "linear": 110248,
+     "overlay": null,
+     "function": "_reveal",
+     "source": "MAP.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:1AEA:03BA",
+     "role": "one map square",
+     "linear": 111194,
+     "overlay": null,
+     "function": "_seen_map",
+     "source": "MAP.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0238:0FEA",
+     "role": "menu bar",
+     "linear": 13162,
+     "overlay": null,
+     "function": "_draw_banner",
+     "source": "TURN.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0238:107E",
+     "role": "status panel",
+     "linear": 13310,
+     "overlay": null,
+     "function": "_status_draw",
+     "source": "TURN.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0403:4060",
+     "role": "unit panel",
+     "linear": 32912,
+     "overlay": null,
+     "function": "_uinit",
+     "source": "CONTROL.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0403:0676",
+     "role": "play-screen input",
+     "linear": 18086,
+     "overlay": null,
+     "function": "_ai_turn",
+     "source": "CONTROL.C",
+     "position": "inside"
+    },
+    {
+     "address": "R:0866:0AD6",
+     "role": "active-unit blink",
+     "linear": 37174,
+     "overlay": null,
+     "function": "_blink_unit",
+     "source": "UNITS.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0866:1D55",
+     "role": "move animation",
+     "linear": 41909,
+     "overlay": null,
+     "function": "_anim_unit",
+     "source": "UNITS.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0866:1F69",
+     "role": "unit stack popup",
+     "linear": 42441,
+     "overlay": null,
+     "function": "_pick_unit",
+     "source": "UNITS.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "city",
+   "screen": 10,
+   "civ64": [
+    "SCENES-PLAY.md 7.1"
+   ],
+   "civd": [
+    "CITYMGT.C"
+   ],
+   "objects": 16,
+   "anchors": [
+    {
+     "address": "R:0D12:0045",
+     "role": "city screen",
+     "linear": 53605,
+     "overlay": null,
+     "function": "_city_process",
+     "source": "CITYMGT.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0D12:7045",
+     "role": "building icons",
+     "linear": 82277,
+     "overlay": null,
+     "function": "_draw_icon",
+     "source": "CITYMGT.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0D12:710D",
+     "role": "panel background",
+     "linear": 82477,
+     "overlay": null,
+     "function": "_tile_panel",
+     "source": "CITYMGT.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0ADE:03EA",
+     "role": "root city caller",
+     "linear": 45514,
+     "overlay": null,
+     "function": "_kill",
+     "source": "ECONOMY.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0ADE:0093",
+     "role": "root city caller",
+     "linear": 44659,
+     "overlay": null,
+     "function": "_civ_economy",
+     "source": "ECONOMY.C",
+     "position": "inside"
+    },
+    {
+     "address": "R:1459:0597",
+     "role": "root city caller",
+     "linear": 84775,
+     "overlay": null,
+     "function": "_capunit",
+     "source": "CAPTURE.C",
+     "position": "inside"
+    }
+   ]
+  },
+  {
+   "id": "production",
+   "screen": 10,
+   "civ64": [
+    "SCENES-PLAY.md 7.12"
+   ],
+   "civd": [
+    "ECONOMY.C"
+   ],
+   "objects": 3,
+   "anchors": [
+    {
+     "address": "R:0ADE:0421",
+     "role": "production menu",
+     "linear": 45569,
+     "overlay": null,
+     "function": "_find_slot",
+     "source": "ECONOMY.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "units",
+   "screen": 10,
+   "civ64": [
+    "SCENES-PLAY.md 7.1"
+   ],
+   "civd": [
+    "CITYMGT.C",
+    "CONTROL.C",
+    "UNITS.C"
+   ],
+   "objects": 5,
+   "anchors": [
+    {
+     "address": "R:0403:4060",
+     "role": "unit panel",
+     "linear": 32912,
+     "overlay": null,
+     "function": "_uinit",
+     "source": "CONTROL.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:0866:1F69",
+     "role": "unit stack popup",
+     "linear": 42441,
+     "overlay": null,
+     "function": "_pick_unit",
+     "source": "UNITS.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "city-view",
+   "screen": 11,
+   "civ64": [
+    "SCENES-PLAY.md 7.2-7.3"
+   ],
+   "civd": [
+    "CITYVIEW.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O19:0000",
+     "role": "city view",
+     "linear": 145216,
+     "overlay": 19,
+     "function": "_city_scene",
+     "source": "CITYVIEW.C",
+     "position": "entry"
+    },
+    {
+     "address": "O19:167B",
+     "role": "invaders",
+     "linear": 150971,
+     "overlay": 19,
+     "function": "_invasion_scene",
+     "source": "CITYVIEW.C",
+     "position": "entry"
+    },
+    {
+     "address": "O19:18C1",
+     "role": "civil disorder",
+     "linear": 151553,
+     "overlay": 19,
+     "function": "_riot_anim",
+     "source": "CITYVIEW.C",
+     "position": "entry"
+    },
+    {
+     "address": "O19:1AE1",
+     "role": "celebration",
+     "linear": 152097,
+     "overlay": 19,
+     "function": "_love_anim",
+     "source": "CITYVIEW.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "reports",
+   "screen": 12,
+   "civ64": [
+    "SCENES-PLAY.md 7.14"
+   ],
+   "civd": [
+    "ADVISORS.C",
+    "REPORTS.C",
+    "TURN.C"
+   ],
+   "objects": 13,
+   "anchors": [
+    {
+     "address": "O14:0000",
+     "role": "report frame",
+     "linear": 145216,
+     "overlay": 14,
+     "function": "_advisor_open",
+     "source": "ADVISORS.C",
+     "position": "entry"
+    },
+    {
+     "address": "O14:186F",
+     "role": "city status",
+     "linear": 151471,
+     "overlay": 14,
+     "function": "_city_rpt",
+     "source": "ADVISORS.C",
+     "position": "entry"
+    },
+    {
+     "address": "O14:03AD",
+     "role": "military status",
+     "linear": 146157,
+     "overlay": 14,
+     "function": "_mil_rpt",
+     "source": "ADVISORS.C",
+     "position": "entry"
+    },
+    {
+     "address": "O14:014B",
+     "role": "science",
+     "linear": 145547,
+     "overlay": 14,
+     "function": "_sci_rpt",
+     "source": "ADVISORS.C",
+     "position": "entry"
+    },
+    {
+     "address": "O14:07F1",
+     "role": "trade",
+     "linear": 147249,
+     "overlay": 14,
+     "function": "_trade_rpt",
+     "source": "ADVISORS.C",
+     "position": "entry"
+    },
+    {
+     "address": "O12:0000",
+     "role": "world map",
+     "linear": 145216,
+     "overlay": 12,
+     "function": "_world_map",
+     "source": "REPORTS.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "pedia",
+   "screen": 13,
+   "civ64": [
+    "SCENES-PLAY.md 7.13"
+   ],
+   "civd": [
+    "PEDIA.C"
+   ],
+   "objects": 5,
+   "anchors": [
+    {
+     "address": "O8:0000",
+     "role": "pedia index",
+     "linear": 145216,
+     "overlay": 8,
+     "function": "_civilopedia",
+     "source": "PEDIA.C",
+     "position": "entry"
+    },
+    {
+     "address": "O8:062A",
+     "role": "pedia entry",
+     "linear": 146794,
+     "overlay": 8,
+     "function": "_pedia_show",
+     "source": "PEDIA.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "diplomacy",
+   "screen": 14,
+   "civ64": [
+    "SCENES-PLAY.md 7.9-7.10"
+   ],
+   "civd": [
+    "AUDIENCE.C",
+    "DIPLOMAC.C"
+   ],
+   "objects": 3,
+   "anchors": [
+    {
+     "address": "O6:1D2B",
+     "role": "leader screen",
+     "linear": 152683,
+     "overlay": 6,
+     "function": "_load_leader",
+     "source": "AUDIENCE.C",
+     "position": "entry"
+    },
+    {
+     "address": "R:1517:04A1",
+     "role": "government change",
+     "linear": 87569,
+     "overlay": null,
+     "function": "_set_government",
+     "source": "DIPLOMAC.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "spaceship",
+   "screen": 15,
+   "civ64": [
+    "SCENES-PLAY.md 7.16"
+   ],
+   "civd": [
+    "SPACESHP.C"
+   ],
+   "objects": 3,
+   "anchors": [
+    {
+     "address": "O18:0000",
+     "role": "spaceship open",
+     "linear": 145216,
+     "overlay": 18,
+     "function": "_spaceship_open",
+     "source": "SPACESHP.C",
+     "position": "entry"
+    },
+    {
+     "address": "O18:0F83",
+     "role": "spaceship build",
+     "linear": 149187,
+     "overlay": 18,
+     "function": "_spaceship_build",
+     "source": "SPACESHP.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "hall",
+   "screen": 16,
+   "civ64": [
+    "SCENES.md 7.5",
+    "SCENES-PLAY.md 7.17"
+   ],
+   "civd": [
+    "FAME.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O3:002B",
+     "role": "Hall of Fame load",
+     "linear": 145259,
+     "overlay": 3,
+     "function": "_fame_load",
+     "source": "FAME.C",
+     "position": "entry"
+    },
+    {
+     "address": "O3:00D7",
+     "role": "Hall of Fame show",
+     "linear": 145431,
+     "overlay": 3,
+     "function": "_show_fame",
+     "source": "FAME.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "game-over",
+   "screen": 17,
+   "civ64": [
+    "SCENES-PLAY.md 7.17"
+   ],
+   "civd": [
+    "TURN.C",
+    "REPLAY.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "R:0238:0092",
+     "role": "end checks",
+     "linear": 9234,
+     "overlay": null,
+     "function": "_game_turn",
+     "source": "TURN.C",
+     "position": "entry"
+    },
+    {
+     "address": "O9:0DDE",
+     "role": "conqueror ending",
+     "linear": 148766,
+     "overlay": 9,
+     "function": "_conquest_replay",
+     "source": "REPLAY.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "newspaper",
+   "screen": 18,
+   "civ64": [
+    "SCENES-PLAY.md 7.7"
+   ],
+   "civd": [
+    "NEWS.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O21:0000",
+     "role": "newspaper",
+     "linear": 145216,
+     "overlay": 21,
+     "function": "_news_box",
+     "source": "NEWS.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "palace",
+   "screen": 19,
+   "civ64": [
+    "SCENES-PLAY.md 7.8"
+   ],
+   "civd": [
+    "PALACE.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O17:0000",
+     "role": "palace view",
+     "linear": 145216,
+     "overlay": 17,
+     "function": "_palace_view",
+     "source": "PALACE.C",
+     "position": "entry"
+    }
+   ]
+  },
+  {
+   "id": "audience",
+   "screen": 20,
+   "civ64": [
+    "SCENES-PLAY.md 7.9"
+   ],
+   "civd": [
+    "AUDIENCE.C"
+   ],
+   "objects": 2,
+   "anchors": [
+    {
+     "address": "O6:1D2B",
+     "role": "leader screen",
+     "linear": 152683,
+     "overlay": 6,
+     "function": "_load_leader",
+     "source": "AUDIENCE.C",
+     "position": "entry"
+    }
+   ]
+  }
+ ],
+ "state": [
+  {
+   "name": "$screen",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "UIL scene selector; no direct DOS symbol."
+  },
+  {
+   "name": "$turn",
+   "type": "u16",
+   "initial": 1,
+   "evidence": "Turn loop R:0238:0092; Civ64 SCENES-PLAY 7.17."
+  },
+  {
+   "name": "$year",
+   "type": "i16",
+   "initial": -4000,
+   "evidence": "DGROUP:B220 absolute year; Civ64 SCENES-PLAY 5.2."
+  },
+  {
+   "name": "$difficulty",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:6B86 `_cur_tier`; civd GLOBALS.C:15 and NEWGAME.C:54-62 assign the five menu rows; Civ64 SCENES-PLAY 5.2 reads [6B86] as difficulty."
+  },
+  {
+   "name": "$competition",
+   "type": "u8",
+   "initial": 4,
+   "evidence": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 map menu rows 7..3 to 6..2, clamped 2..6."
+  },
+  {
+   "name": "$players",
+   "type": "u8",
+   "initial": 63,
+   "evidence": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive `255 >> (6 - civ_total)`; five competition rows write both fields."
+  },
+  {
+   "name": "$rule_options",
+   "type": "u8",
+   "initial": 15,
+   "evidence": "DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186 and NEWGAME.C:82 set 15 at the start of a new game."
+  },
+  {
+   "name": "$tribe",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:113-117 maps the menu row to a tribe."
+  },
+  {
+   "name": "$human_civ",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 masks second-group rows to slots 1..7; Civ64 SCENES-PLAY 7.19 reads the human civilization."
+  },
+  {
+   "name": "$tribe_row",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Zero-based tribe menu row; civd NEWGAME.C:103-117 builds two groups of civ_total+1 rows."
+  },
+  {
+   "name": "$tribe_split",
+   "type": "u8",
+   "initial": 5,
+   "evidence": "civ_total+1, the first second-group menu row; civd NEWGAME.C:114-117."
+  },
+  {
+   "name": "$tribe_rows",
+   "type": "u8",
+   "initial": 10,
+   "evidence": "2*(civ_total+1), both tribe menu groups; civd NEWGAME.C:103-110."
+  },
+  {
+   "name": "$tax_rate",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:DF0E[civ]; Civ64 SCENES-PLAY 7.20."
+  },
+  {
+   "name": "$science_rate",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:B210[civ]; Civ64 SCENES-PLAY 7.20."
+  },
+  {
+   "name": "$luxury_rate",
+   "type": "u8",
+   "initial": 10,
+   "evidence": "Derived as 10 - tax - science; Civ64 SCENES-PLAY 7.20."
+  },
+  {
+   "name": "$selected_city",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "UIL selector into the 128 city records at DGROUP:70EC; no direct DOS symbol."
+  },
+  {
+   "name": "$selected_unit",
+   "type": "u16",
+   "initial": 0,
+   "evidence": "UIL selector into DGROUP:81D4 + civ*600h + unit*0Ch; Civ64 SCENES-PLAY 2.2."
+  },
+  {
+   "name": "$production",
+   "type": "i16",
+   "initial": 1,
+   "evidence": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md. The live founded city holds 1 (Militia)."
+  },
+  {
+   "name": "$shield_box",
+   "type": "i16",
+   "initial": 0,
+   "evidence": "DGROUP:70EC + city*1Ch + 0Eh; civd CITYMGT.C:1433 and reference/struct_city.md."
+  },
+  {
+   "name": "$money",
+   "type": "i32",
+   "initial": 0,
+   "evidence": "money[selected_owner]; civd CITYMGT.C:1428-1434. NEWGAME.C:151-161 initializes every civ to 0 and sets the human to 50 only for Chieftain (cur_tier 0)."
+  },
+  {
+   "name": "$unit_cost",
+   "type": "u16",
+   "initial": 1,
+   "evidence": "utypes[production].cost at DGROUP:112A + production*22h + 18h; Settlers 4 and Militia 1 in 47401/.03/.05; the live founded city starts on Militia (1)."
+  },
+  {
+   "name": "$improvement_cost",
+   "type": "u16",
+   "initial": 8,
+   "evidence": "improvements[-production].cost at DGROUP:0B9A + index*1Eh + 18h; MarketPlace (5) costs 8 in 47401/.03/.05."
+  },
+  {
+   "name": "$improvement_index",
+   "type": "u8",
+   "initial": 5,
+   "evidence": "-production for an improvement purchase; civd CITYMGT.C:1409-1412. Scene uses 5 (MarketPlace)."
+  },
+  {
+   "name": "$buy_price",
+   "type": "u32",
+   "initial": 0,
+   "evidence": "Rush price scratch_i; civd CITYMGT.C:1406-1415."
+  },
+  {
+   "name": "$buy_temp",
+   "type": "u32",
+   "initial": 0,
+   "evidence": "Rush-price intermediate from scratch_i; civd CITYMGT.C:1407-1412."
+  },
+  {
+   "name": "$chooser_open",
+   "type": "bool",
+   "initial": false,
+   "evidence": "UIL context flag for key c / R:0ADE:0421; Civ64 SCENES-PLAY 7.12."
+  },
+  {
+   "name": "$unit_list_open",
+   "type": "bool",
+   "initial": false,
+   "evidence": "UIL context flag for key a / 0A99:7785; Civ64 SCENES-PLAY 7.1."
+  },
+  {
+   "name": "$unit_count",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Runtime-founded Chieftain city has no unit in it (city-09 frame); source fills local unit_count_i from the city garrison up to 18 at CITYMGT.C:1158-1165. Tests seed 3 for the clamp."
+  },
+  {
+   "name": "$unit_cursor",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Local choice_f; source clamps it to 0..unit_count_i-1 at CITYMGT.C:1515."
+  },
+  {
+   "name": "$unit_last",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Derived unit_count_i-1, the source clamp upper bound at CITYMGT.C:1515; 0 when the city has no unit."
+  },
+  {
+   "name": "$city_cursor",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "The source stores the unit cursor at [0x70DC]; Civ64 SCENES-PLAY 7.1."
+  },
+  {
+   "name": "$auto_build",
+   "type": "bool",
+   "initial": false,
+   "evidence": "DGROUP:70EC + city*1Ch + 06h bit 10h; civd CITYMGT.C:1380-1381 toggles it with key A."
+  },
+  {
+   "name": "$report",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "UIL report selector; F1..F10 table at R:0403 3B7D..3BFF; Civ64 SCENES-PLAY 7.14."
+  },
+  {
+   "name": "$view_x",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:D4CC viewport x; Civ64 SCENES-PLAY 3."
+  },
+  {
+   "name": "$view_y",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "DGROUP:D75E viewport y; Civ64 SCENES-PLAY 3."
+  },
+  {
+   "name": "$earth_world",
+   "type": "bool",
+   "initial": false,
+   "evidence": "DGROUP:D76A EARTH branch; civd GAME.C:case 2 sets it before Birth; Civ64 SCENES.md 7.3."
+  },
+  {
+   "name": "$custom_land",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EF6 custom land mass 0..2; civd GAME.C:702 writes the menu result, default 1; WORLDGEN.C:75 uses it."
+  },
+  {
+   "name": "$custom_temperature",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EF8 custom temperature 0..2; civd GAME.C:716 writes the menu result, default 1; WORLDGEN.C:110 uses it."
+  },
+  {
+   "name": "$custom_climate",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EFA custom climate 0..2; civd GAME.C:730 writes the menu result, default 1; WORLDGEN.C:147 uses it."
+  },
+  {
+   "name": "$custom_age",
+   "type": "u8",
+   "initial": 1,
+   "evidence": "DGROUP:7EFC custom age 0..2; civd GAME.C:742 writes the menu result, default 1; WORLDGEN.C:200 uses it."
+  },
+  {
+   "name": "$load_slot",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "UIL selector for the ten CIVIL0..9.SVE slots; Civ64 SCENES.md 7.2. No save parser is modelled."
+  },
+  {
+   "name": "$view_mode",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "City tab selection: 0 INFO, 1 HAPPY, 2 MAP; civd CITYMGT.C key loop i/h/m and Civ64 SCENES-PLAY 7.1."
+  },
+  {
+   "name": "$pedia_category",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Civilopedia category selector 0 advances, 1 units, 2 terrain; Civ64 SCENES-PLAY 7.13 tables at R:271E."
+  },
+  {
+   "name": "$pedia_entry",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Zero-based Civilopedia entry index; Civ64 SCENES-PLAY 7.13."
+  },
+  {
+   "name": "$pedia_entries",
+   "type": "u8",
+   "initial": 72,
+   "evidence": "Exclusive category entry bound: 72 advances, 28 units, 12 terrain from the Civ64 R:271E byte tables; Civ64 SCENES-PLAY 7.13."
+  },
+  {
+   "name": "$government",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Government selector; civd DIPLOMAC.C `_set_government` and Civ64 SCENES-PLAY 7.10."
+  },
+  {
+   "name": "$government_count",
+   "type": "u8",
+   "initial": 6,
+   "evidence": "Authored government list bound (six Civ1 governments); Civ64 SCENES-PLAY 7.10."
+  },
+  {
+   "name": "$spaceship_parts",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Authored count of placed spaceship parts; source O18:0F83 build path, Civ64 SCENES-PLAY 7.16. The part array is not modeled."
+  },
+  {
+   "name": "$hall_entry",
+   "type": "u8",
+   "initial": 0,
+   "evidence": "Zero-based Hall of Fame entry cursor over six FAME.DTA entries; Civ64 SCENES.md 7.5."
+  },
+  {
+   "name": "$game_over",
+   "type": "bool",
+   "initial": false,
+   "evidence": "UIL end-state flag; Civ64 SCENES-PLAY 7.17."
+  }
+ ],
+ "entities": [
+  {
+   "name": "map",
+   "evidence": "80x50 world; terrain/unit/improvement page map; Civ64 SCENES-PLAY 1.1/2."
+  },
+  {
+   "name": "city",
+   "evidence": "128 records of 1Ch at DGROUP:70EC; civd reference/struct_city.md; Civ64 SCENES-PLAY 2.3."
+  },
+  {
+   "name": "unit",
+   "evidence": "DGROUP:81D4 + civ*600h + unit*0Ch; civd reference/struct_unit.md; Civ64 SCENES-PLAY 2.2."
+  },
+  {
+   "name": "civilization",
+   "evidence": "Human civilization DGROUP:D7F0; Civ64 SCENES-PLAY 7.19."
+  }
+ ],
+ "rule_links": [
+  "docs/CIV_CITY_UIL_UDC.md#bounded-udc-module",
+  "docs/CIV_CITY_UIL_UDC.md#buy-price-guard-and-commit-module",
+  "docs/CIV_PATHFINDING_TRACE.md",
+  "docs/CIV_CITY_STATIC_TRACE.md"
+ ],
+ "limits": [
+  "Partial scene graph and state projection, not a full game simulation.",
+  "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
+  "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; tribe-menu row navigation maps both groups to civnow and civ_tribe_of; city auto-build toggles status bit 10h; unit-list next/previous clamp is exercised over a seeded 3-unit fixture because the runtime-founded city has no unit, and select stores the cursor; city buy computes the source unit rush price with Settlers 4 / Militia 1 from the original table and commits shields; the MarketPlace branch doubles the clamped raw and again past index 21. No setup or city action has a live-screen observation.",
+  "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
+  "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence."
+ ]
+}

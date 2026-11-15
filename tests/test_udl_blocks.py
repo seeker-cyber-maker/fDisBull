@@ -65,6 +65,8 @@ def test_asm_c_view_roundtrip_and_changed_defaults_rejected():
     from fdisbull.udl_blocks import asm_to_c
     a = lift_asm_block(bytes.fromhex('05c80048'), {'ax':'$x'}, inputs=['ax'], outputs=['ax'])
     view = asm_to_c(a)
+    assert view['format'] == 'fdisbull-asm-c-view-1'
+    assert set(view) == {'format', 'source_sha256', 'text', 'assumptions'}
     assert view['text'] == 'ax += 200;\nax -= 1;'
     assert view['source_sha256'] == a['sha256']
     assert 'same bounded ASM decoder' in view['assumptions'][0]

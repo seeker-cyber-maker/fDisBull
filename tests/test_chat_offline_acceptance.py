@@ -81,6 +81,150 @@ def test_loader_list_parses_real_glibc_form_and_rejects_host_or_missing(tmp_path
         verifier.parse_loader_list('libfoo.so => not found', root)
 
 
+def interpreter_alias_kit(tmp_path):
+    root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
+    loader=root/'lib/ld-linux-x86-64.so.2';loader.write_bytes(b'\x7fELFloader')
+    return root,loader
+
+
+def test_loader_list_normalizes_exact_private_interpreter_alias(tmp_path):
+    root,loader=interpreter_alias_kit(tmp_path)
+    line=f'/lib64/ld-linux-x86-64.so.2 => {loader} (0x00007fff0010)\n'
+    assert verifier.parse_loader_list(line,root)=={'ld-linux-x86-64.so.2':loader}
+
+
+@pytest.mark.parametrize('target', ['/lib64/ld-linux-x86-64.so.2','/usr/lib/ld-linux-x86-64.so.2'])
+def test_loader_list_rejects_interpreter_alias_resolving_to_host(tmp_path,target):
+    root,_=interpreter_alias_kit(tmp_path)
+    with pytest.raises(ValueError,match='exact kit loader'):
+        verifier.parse_loader_list(f'/lib64/ld-linux-x86-64.so.2 => {target} (0x1234)',root)
+
+
+def test_loader_list_rejects_interpreter_alias_to_another_private_file(tmp_path):
+    root,_=interpreter_alias_kit(tmp_path)
+    other=root/'lib/other.so';other.write_bytes(b'\x7fELFother')
+    with pytest.raises(ValueError,match='exact kit loader'):
+        verifier.parse_loader_list(f'/lib64/ld-linux-x86-64.so.2 => {other} (0x1234)',root)
+
+
+@pytest.mark.parametrize('alias', ['/lib/ld-linux-x86-64.so.2','/tmp/ld-linux-x86-64.so.2'])
+def test_loader_list_rejects_other_absolute_dependency_names(tmp_path,alias):
+    root,loader=interpreter_alias_kit(tmp_path)
+    with pytest.raises(ValueError,match='Invalid or duplicate'):
+        verifier.parse_loader_list(f'{alias} => {loader} (0x1234)',root)
+
+
+@pytest.mark.parametrize('first', ['/lib64/ld-linux-x86-64.so.2','ld-linux-x86-64.so.2'])
+def test_loader_list_rejects_duplicate_normalized_interpreter(tmp_path,first):
+    root,loader=interpreter_alias_kit(tmp_path)
+    output=f'{first} => {loader} (0x1234)\n/lib64/ld-linux-x86-64.so.2 => {loader} (0x5678)\n'
+    with pytest.raises(ValueError,match='Invalid or duplicate'):
+        verifier.parse_loader_list(output,root)
+
+
+def static_loader_roles(tmp_path, *, with_dependency=False):
+    root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
+    loader=root/'lib/ld-linux.so';loader.write_bytes(b'\x7fELFloader')
+    objects=[{'path':'lib/ld-linux.so','needed':{}}]
+    roles={'loader':[loader]}
+    if with_dependency:
+        library=root/'lib/libexample.so';library.write_bytes(b'\x7fELFlibrary')
+        objects[0]['needed']={'libexample.so':'lib/libexample.so'}
+        objects.append({'path':'lib/libexample.so','needed':{}})
+        roles['payload']=[library]
+    receipt=root/'closure.json';receipt.write_text(json.dumps({
+        'schema':'fdisbull-elf-closure-v1','complete':True,'objects':objects}))
+    roles['closure_receipt']=[receipt]
+    return root,roles
+
+
+@pytest.mark.parametrize('output', ['statically linked\n','\tstatically linked\n'])
+def test_loader_closure_accepts_successful_exact_static_leaf(tmp_path, monkeypatch, output):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout=output,stderr=''))
+    assert verifier.check_loader_closure(root,roles)==1
+
+
+def test_loader_closure_rejects_static_result_with_declared_dependencies(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path,with_dependency=True)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout='statically linked\n',stderr=''))
+    with pytest.raises(ValueError,match='contradicts declared dependencies'):
+        verifier.check_loader_closure(root,roles)
+
+
+@pytest.mark.parametrize('output', ['statically linked\nextra output\n','extra output\nstatically linked\n'])
+def test_loader_closure_rejects_mixed_static_output(tmp_path, monkeypatch, output):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout=output,stderr=''))
+    with pytest.raises(ValueError,match='Unrecognized or unresolved'):
+        verifier.check_loader_closure(root,roles)
+
+
+def test_loader_closure_does_not_accept_failed_static_probe(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    root,roles=static_loader_roles(tmp_path)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=1,stdout='statically linked\n',stderr='inspection failed'))
+    with pytest.raises(ValueError,match='Loader could not inspect'):
+        verifier.check_loader_closure(root,roles)
+
+
+def cpython_object_roles(tmp_path, *, name='python/lib/python3.13/config-3.13-x86_64-linux-gnu/python.o',
+                         needed=False, entry_role=None, mutation=None):
+    import struct
+    root=tmp_path/'kit';(root/'lib').mkdir(parents=True)
+    loader=root/'lib/ld-linux.so';loader.write_bytes(b'\x7fELFloader')
+    build_object=root/name;build_object.parent.mkdir(parents=True,exist_ok=True)
+    header=bytearray(64);header[:7]=b'\x7fELF\x02\x01\x01'
+    struct.pack_into('<HHIQQQIHHHHHH',header,16,1,62,1,0,0,7448,0,64,0,0,64,48,47)
+    if mutation=='class':header[4]=1
+    if mutation=='big-endian':
+        header[5]=2
+        struct.pack_into('>HHIQQQIHHHHHH',header,16,1,62,1,0,0,7448,0,64,0,0,64,48,47)
+    for field,offset,format,value in (('machine',18,'<H',183),('entry',24,'<Q',1),
+            ('program-offset',32,'<Q',64),('header-size',52,'<H',32),('program-count',56,'<H',1)):
+        if mutation==field:struct.pack_into(format,header,offset,value)
+    build_object.write_bytes(header+b'authored relocatable fixture')
+    objects=[{'path':'lib/ld-linux.so','needed':{}},
+             {'path':name,'needed':{'ld-linux.so':'lib/ld-linux.so'} if needed else {}}]
+    receipt=root/'closure.json';receipt.write_text(json.dumps({
+        'schema':'fdisbull-elf-closure-v1','complete':True,'objects':objects}))
+    roles={'loader':[loader],'payload':[build_object],'closure_receipt':[receipt]}
+    if entry_role=='loader':roles['loader']=[build_object];roles['payload']=[loader]
+    elif entry_role:roles[entry_role]=[build_object]
+    return root,roles
+
+
+def test_loader_closure_retains_exact_cpython_link_object_without_loading_it(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    root,roles=cpython_object_roles(tmp_path);inspected=[]
+    def run(args,**kwargs):
+        inspected.append(args[-1])
+        return SimpleNamespace(returncode=0,stdout='statically linked\n',stderr='')
+    monkeypatch.setattr(verifier.subprocess,'run',run)
+    assert verifier.check_loader_closure(root,roles)==2
+    assert inspected==[str(root/'lib/ld-linux.so')]
+
+
+@pytest.mark.parametrize('options', [
+    {'name':'python/lib/python3.13/other.o'}, {'needed':True},
+    *({'entry_role':role} for role in ('python','loader','dosbox','qemu')),
+    *({'mutation':field} for field in ('class','big-endian','machine','entry','program-offset','header-size','program-count'))])
+def test_loader_closure_rejects_other_or_malformed_relocatable_payloads(tmp_path, monkeypatch, options):
+    from types import SimpleNamespace
+    root,roles=cpython_object_roles(tmp_path,**options)
+    monkeypatch.setattr(verifier.subprocess,'run',lambda *a,**kw:
+        SimpleNamespace(returncode=0,stdout='statically linked\n',stderr=''))
+    with pytest.raises(ValueError,match='Invalid or unexpected relocatable'):
+        verifier.check_loader_closure(root,roles)
+
+
 def test_closure_checks_actual_loader_output_and_declared_map(tmp_path, monkeypatch):
     root = tmp_path / 'kit'; (root / 'lib').mkdir(parents=True)
     loader = root / 'ld'; loader.write_bytes(b'\x7fELFloader')
@@ -109,23 +253,23 @@ class OracleDebug:
         self.project = SimpleNamespace(db=db)
         self.captures = 0
 
-    def call(self, method, *, timeout_ms):
-        assert method == 'frame.probe' and timeout_ms > 0
-        return {'available':True, 'width':320, 'height':200}
+    def call(self, *args, **kwargs):
+        pytest.fail('Frame readiness must use the supported public screenshot API')
 
     def screenshot(self, name, *, grid=False, grid_step=32, hooks=False):
         from PIL import Image
         from fdisbull.wine_debugger import PEDebugSession
         inspect.signature(PEDebugSession.screenshot).bind(self, name, grid=grid, grid_step=grid_step, hooks=hooks)
-        assert name == 'pe.png' and self._rpc_deadline is not None
+        assert name == 'pe.png' and self._rpc_deadline is not None and hooks is False
         painted = next(self.images)
-        image = Image.new('RGB', (3, 3), 'black')
-        if painted: image.putpixel((1, 1), (255, 160, 32))
+        image = Image.new('RGB', (3, 3), painted if isinstance(painted,str) else 'black')
+        if painted is True: image.putpixel((1, 1), (255, 160, 32))
         data = io.BytesIO(); image.save(data, format='PNG'); payload = data.getvalue()
         self.captures += 1
         self.project.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?)',
                                 (self.captures, payload, hashlib.sha256(payload).hexdigest()))
-        return {'artifact':self.captures, 'metadata':{'mode_id':'oracle'}}
+        return {'artifact':self.captures, 'sha256':hashlib.sha256(payload).hexdigest(),
+                'metadata':{'mode_id':'oracle','width':3,'height':3}}
 
     def run(self, **kwargs):
         pytest.fail('A readiness poll must not resume the stopped oracle')
@@ -143,11 +287,12 @@ def test_oracle_wait_polls_blank_then_returns_exact_painted_artifact(monkeypatch
     assert debug.captures == 2
 
 
-def test_oracle_wait_fails_bounded_for_blank_frame(monkeypatch):
+@pytest.mark.parametrize('solid', [False,'orange'])
+def test_oracle_wait_fails_bounded_for_solid_frame(monkeypatch,solid):
     now = [0.0]
     monkeypatch.setattr(verifier.time, 'monotonic', lambda: now[0])
     monkeypatch.setattr(verifier.time, 'sleep', lambda seconds: now.__setitem__(0, now[0] + seconds))
-    debug = OracleDebug([False] * 10)
+    debug = OracleDebug([solid] * 10)
     with pytest.raises(ValueError, match='deadline'):
         verifier.wait_for_pe_frame(debug, 250)
     assert 1 <= debug.captures <= 4
@@ -155,13 +300,49 @@ def test_oracle_wait_fails_bounded_for_blank_frame(monkeypatch):
         verifier.wait_for_pe_frame(debug, 0)
 
 
-@pytest.mark.parametrize('operation', ['call', 'screenshot'])
-def test_oracle_wait_propagates_debugger_errors(operation):
+def test_oracle_wait_propagates_screenshot_errors_and_restores_caller_deadline():
     debug = OracleDebug([True])
+    previous=verifier.time.monotonic()+5;debug._rpc_deadline=previous
     def failed(*args, **kwargs):
+        assert debug._rpc_deadline==previous
         raise RuntimeError('debugger stopped unexpectedly')
-    setattr(debug, operation, failed)
+    debug.screenshot=failed
     with pytest.raises(RuntimeError, match='stopped unexpectedly'):
+        verifier.wait_for_pe_frame(debug)
+    assert debug._rpc_deadline==previous
+
+
+@pytest.mark.parametrize('width,height', [(1921,3),(3,1081),(True,3),(0,3)])
+def test_oracle_wait_rejects_invalid_returned_dimensions(width,height):
+    debug=OracleDebug([True]);screenshot=debug.screenshot
+    def invalid(*args,**kwargs):
+        frame=screenshot(*args,**kwargs);frame['metadata'].update(width=width,height=height)
+        return frame
+    debug.screenshot=invalid
+    with pytest.raises(ValueError,match='Invalid PE frame dimensions'):
+        verifier.wait_for_pe_frame(debug)
+
+
+def test_oracle_wait_rejects_png_dimensions_differing_from_metadata():
+    debug=OracleDebug([True]);screenshot=debug.screenshot
+    def invalid(*args,**kwargs):
+        frame=screenshot(*args,**kwargs);frame['metadata']['width']=4
+        return frame
+    debug.screenshot=invalid
+    with pytest.raises(ValueError,match='Invalid PE screenshot dimensions'):
+        verifier.wait_for_pe_frame(debug)
+
+
+@pytest.mark.parametrize('corruption', ['stored','returned'])
+def test_oracle_wait_rejects_corrupt_stored_or_returned_artifact_hash(corruption):
+    debug=OracleDebug([True]);screenshot=debug.screenshot
+    def invalid(*args,**kwargs):
+        frame=screenshot(*args,**kwargs)
+        if corruption=='stored':debug.project.db.execute('UPDATE debug_artifacts SET sha256=?',('0'*64,))
+        else:frame['sha256']='0'*64
+        return frame
+    debug.screenshot=invalid
+    with pytest.raises(ValueError,match='Missing or corrupt PE screenshot artifact'):
         verifier.wait_for_pe_frame(debug)
 
 
@@ -267,13 +448,157 @@ def test_loader_closure_accepts_declared_private_vendor_elf(tmp_path, monkeypatc
     assert verifier.check_loader_closure(root,roles)==3
 
 
-def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path):
+@pytest.mark.parametrize('full_windows,memory_mib', [(False,4096),(True,8192)])
+def test_windows_consumer_reserves_memory_and_boot_budget(tmp_path, full_windows, memory_mib):
     class Project:
         def debugger(self, *args, **kwargs):
             self.args, self.kwargs = args, kwargs
             return 'session'
     project = Project()
-    assert verifier.windows_debugger(project, tmp_path, tmp_path / 'work', tmp_path / 'kernel', tmp_path / 'wine') == 'session'
+    assert verifier.windows_debugger(project, tmp_path, tmp_path / 'work', tmp_path / 'kernel', tmp_path / 'wine', full_windows=full_windows) == 'session'
     assert project.args == (tmp_path / 'bin/qemu', tmp_path / 'work')
     assert project.kwargs == {'kernel': tmp_path / 'kernel', 'initramfs': tmp_path / 'wine',
-                              'memory_mib': 4096, 'boot_timeout_ms': 600000}
+                              'memory_mib': memory_mib, 'boot_timeout_ms': 600000}
+
+
+def test_private_workspace_allows_real_project_creation_under_umask_022(tmp_path,monkeypatch):
+    import os
+    import stat
+    from fdisbull.project import Project
+    for name in ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'):
+        monkeypatch.setenv(name,'inherited-value')
+    workspace=tmp_path.resolve()/'consumer';workspace.mkdir()
+    before=os.umask(0o022)
+    try:
+        paths=verifier.prepare_private_workspace(workspace)
+        target=workspace/'AUTHORED.COM';target.write_bytes(b'\xcd\x20')
+        with Project.create(workspace/'target.fdb',target,image='com') as project:
+            assert project.meta['format']=='COM'
+            assert project.regions(1)[0].data==b'\xcd\x20'
+    finally:
+        os.umask(before)
+    assert set(paths)=={'HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'}
+    for name,path in paths.items():
+        assert os.environ[name]==str(path)
+        assert stat.S_IMODE(path.stat().st_mode)==0o700
+
+
+def test_private_workspace_refuses_existing_directory_without_chmod_or_reuse(tmp_path,monkeypatch):
+    import os
+    import stat
+    for name in ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'):
+        monkeypatch.setenv(name,'inherited-value')
+    workspace=tmp_path/'consumer';workspace.mkdir()
+    existing=workspace/'fdisbull_target_store';existing.mkdir(mode=0o755)
+    # Set an intentional caller-owned mode, independently of the test runner's umask.
+    existing.chmod(0o755);(existing/'keep').write_text('caller data')
+    with pytest.raises(FileExistsError,match='already exists'):
+        verifier.prepare_private_workspace(workspace)
+    assert stat.S_IMODE(existing.stat().st_mode)==0o755
+    assert (existing/'keep').read_text()=='caller data'
+    assert list(workspace.iterdir())==[existing]
+    assert all(os.environ[name]=='inherited-value' for name in
+               ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'))
+
+
+def test_dos_fixture_isolated_from_runtime_cache_preserves_real_manifest_guard(tmp_path,monkeypatch):
+    from fdisbull.project import Project
+    from fdisbull.debugger import DebugSession
+    for name in ('HOME','TMPDIR','FDISBULL_TARGET_STORE','FDISBULL_OUTPUT_ARTIFACT_DIR'):
+        monkeypatch.setenv(name,'inherited-value')
+    workspace=tmp_path.resolve()/'consumer';workspace.mkdir()
+    verifier.prepare_private_workspace(workspace)
+    cache=workspace/'runtime-cache';cache.mkdir()
+    # Sparse data reproduces the cache-size boundary without allocating bulk bytes.
+    with (cache/'base.cpio.gz').open('xb') as stream:stream.truncate(256*1024*1024+1)
+    directory,target=verifier.prepare_dos_fixture(workspace)
+    with Project.create(directory/'dos.fdb',target) as project:
+        assert project.meta['format']=='MZ'
+        debug=DebugSession.__new__(DebugSession);debug.project=project
+        debug.game_dir=workspace
+        with pytest.raises(ValueError,match='Game directory exceeds state manifest budget'):
+            debug._disk_manifest()
+        debug.game_dir=directory
+        assert debug._disk_manifest()==[{'path':'KEY.EXE','sha256':hashlib.sha256(target.read_bytes()).hexdigest()}]
+    assert directory==workspace/'dos'
+
+
+def windows_profile_fakes(tmp_path, monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    class Project:
+        def __init__(self, path, target):
+            self.path, self.target = path, target
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def analyze(self, **kwargs):
+            assert kwargs == {'start':0x401000,'max_instructions':64}
+    fixture=tmp_path/'oracle.exe';fixture.write_bytes(b'authored fixture')
+    binary=SimpleNamespace(optional_header=SimpleNamespace(imagebase=0x400000),
+        get_export=lambda:SimpleNamespace(entries=[SimpleNamespace(name='checkpoint',address=0x1000),
+                                                   SimpleNamespace(name='counter',address=0x2000)]))
+    monkeypatch.setitem(sys.modules,'fdisbull.project',SimpleNamespace(Project=SimpleNamespace(create=Project)))
+    monkeypatch.setitem(sys.modules,'lief',SimpleNamespace(PE=SimpleNamespace(parse=lambda path:binary)))
+    return fixture
+
+
+def test_windows_profiles_require_distinct_compact_and_full_native_workflows(tmp_path, monkeypatch):
+    fixture=windows_profile_fakes(tmp_path,monkeypatch)
+    work=tmp_path/'work';work.mkdir();seen=[]
+    def oracle(project, root, workspace, kernel, initramfs, checkpoint, counter, *, full_windows):
+        assert project.target.read_bytes()==fixture.read_bytes()
+        assert project.target.parent==workspace and project.path.parent==workspace
+        assert (checkpoint,counter)==(0x401000,0x402000)
+        seen.append((workspace.name,initramfs,full_windows))
+        return {'sha256':str(full_windows)}
+    monkeypatch.setattr(verifier,'verify_pe_oracle',oracle)
+    result=verifier.verify_windows_profiles(tmp_path,work,tmp_path/'kernel',tmp_path/'compact',tmp_path/'full',fixture)
+    assert seen==[('wine',tmp_path/'compact',False),('windows',tmp_path/'full',True)]
+    assert result=={'wine':{'sha256':'False'},'windows':{'sha256':'True'}}
+
+
+def test_full_windows_native_failure_cannot_be_reported_as_compact_success(tmp_path, monkeypatch):
+    fixture=windows_profile_fakes(tmp_path,monkeypatch)
+    work=tmp_path/'work';work.mkdir();seen=[]
+    def oracle(*args, full_windows):
+        seen.append(full_windows)
+        if full_windows: raise RuntimeError('full Windows guest failed')
+        return {'sha256':'compact'}
+    monkeypatch.setattr(verifier,'verify_pe_oracle',oracle)
+    with pytest.raises(RuntimeError,match='full Windows guest failed'):
+        verifier.verify_windows_profiles(tmp_path,work,tmp_path/'kernel',tmp_path/'compact',tmp_path/'full',fixture)
+    assert seen==[False,True]
+
+
+@pytest.mark.parametrize('restore_works', [True,False])
+def test_pe_oracle_requires_actual_counter_restore(tmp_path, monkeypatch, restore_works):
+    class Debug:
+        value=7
+        def __enter__(self): return self
+        def __exit__(self,*args): pass
+        def breakpoint(self,address):
+            assert address==0x401000
+            return {'bytes_verified':True}
+        def run(self,**kwargs): return {'outcome':'breakpoint'}
+        def memory(self,address,*,length):
+            assert address==0x402000 and length==4
+            return {'hex':self.value.to_bytes(4,'little').hex()}
+        def trace(self,name,*,count,timeout_ms):
+            assert count==4
+            return {'metadata':{'complete':True}}
+        def save_state(self,name): return {'artifact':'saved'}
+        def click(self,x,y,*,mode_id):
+            assert (x,y,mode_id)==(80,80,'mode')
+            self.value=8
+        def load_state(self,artifact):
+            assert artifact=='saved'
+            if restore_works:self.value=7
+    frame={'metadata':{'mode_id':'mode'},'sha256':'frame'}
+    monkeypatch.setattr(verifier,'windows_debugger',lambda *a,**kw:Debug())
+    monkeypatch.setattr(verifier,'wait_for_pe_frame',lambda debug:frame)
+    def run():
+        return verifier.verify_pe_oracle(None,tmp_path,tmp_path,tmp_path/'kernel',tmp_path/'full',
+                                         0x401000,0x402000,full_windows=True)
+    if restore_works: assert run()==frame
+    else:
+        with pytest.raises(ValueError,match='PE native restore failed'):run()

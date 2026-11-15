@@ -14,6 +14,26 @@ def test_native_snes_output_stays_outside_git(tmp_path):
     assert not (root/'app').exists()
 
 
+def test_unknown_profile_is_rejected_before_input_or_output(tmp_path):
+    with pytest.raises(ValueError,match='profile'):
+        build(rom_path='missing',ram='missing',save_ram='missing',output=tmp_path/'app',profile='unknown')
+    assert not (tmp_path/'app').exists()
+
+
+@pytest.mark.parametrize('options,reason',[
+    ({'hardware_mode':'recorded'},'comparison driver'),
+    ({'hardware_mode':'seeded'},'opening profile'),
+    ({'hardware_seed':0},'Hardware seed'),
+    ({'hardware_seed':True},'Hardware seed'),
+    ({'hardware_seed':0x100000000},'Hardware seed'),
+])
+def test_hardware_build_contract_rejects_invalid_options_before_io(tmp_path,options,reason):
+    output=tmp_path/'app'
+    with pytest.raises(ValueError,match=reason):
+        build(rom_path='missing',ram='missing',save_ram='missing',output=output,**options)
+    assert not output.exists()
+
+
 def test_native_snes_refuses_missing_input_without_creating_output(tmp_path):
     output=tmp_path/'app'
     with pytest.raises(ValueError,match='regular file'):
@@ -21,11 +41,12 @@ def test_native_snes_refuses_missing_input_without_creating_output(tmp_path):
     assert not output.exists()
 
 
-def test_snes_build_cli_and_standalone_protocol(tmp_path,capsys):
-    params={'rom_path':str(tmp_path/'missing'),'ram':'missing','save_ram':'missing','output':str(tmp_path/'app')}
+@pytest.mark.parametrize('profile',['static-morgue','live-morgue','npc-intro','scripted-intro','opening'])
+def test_snes_build_cli_and_standalone_protocol(tmp_path,capsys,profile):
+    params={'rom_path':str(tmp_path/'missing'),'ram':'missing','save_ram':'missing','output':str(tmp_path/'app'),'profile':profile}
     result=respond({'method':'shadowrun-snes-build','params':params},default_project='unrelated.fdb')
     assert not result['ok'] and 'regular file' in result['error']['message']
     code=main(['shadowrun-snes-build','--rom',params['rom_path'],'--ram','missing',
-               '--save-ram','missing','--output',params['output']])
+               '--save-ram','missing','--output',params['output'],'--profile',profile])
     output=json.loads(capsys.readouterr().out)
     assert code==1 and not output['ok'] and 'regular file' in output['error']['message']

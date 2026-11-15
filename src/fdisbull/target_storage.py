@@ -114,7 +114,8 @@ class TargetStore:
 # or opaque backend evidence. Externalize the entire value when detected, rather
 # than deleting one nested byte field and silently invalidating its certificate.
 RAW_KEYS = {'bytes', 'bytes_hex', 'data_hex', 'expected_hex', 'witness_hex', 'data_base64',
-            'hex', 'source_bytes', 'initial', 'memory_bytes', 'raw_bytes'}
+            'hex', 'source_bytes', 'initial', 'memory_bytes', 'raw_bytes', 'pixels-hex',
+            'execute-mask-hex', 'execute-bytes-hex', 'execute-base-hex'}
 
 
 def contains_raw(value):

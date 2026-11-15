@@ -1,0 +1,89 @@
+{
+  "failed_run_id": "c6226e42-ff5d-4c5b-aa28-620dfce3512e",
+  "failed_source_commit": "84be6f04242287df61d8a3a7686a5bec68b30fa3",
+  "failure_ids": [
+    "tests.test_dos_migration::test_every_public_dos_route_is_classified_once",
+    "tests.test_install_mirror_sync::test_installer_preview_apply_hook_and_disable",
+    "tests.test_install_mirror_sync::test_installer_refuses_dangling_owned_path_symlinks[hook]",
+    "tests.test_install_mirror_sync::test_installer_refuses_dangling_owned_path_symlinks[plist]",
+    "tests.test_install_mirror_sync::test_installer_refuses_global_unmanaged_hookspath",
+    "tests.test_install_mirror_sync::test_disable_recovers_interrupted_install_receive_state[True]",
+    "tests.test_install_mirror_sync::test_disable_recovers_interrupted_install_receive_state[False]",
+    "tests.test_install_mirror_sync::test_disable_retains_identical_files_that_predated_install",
+    "tests.test_install_mirror_sync::test_installer_refuses_busy_worker_lock_without_changing_installed_files[apply]",
+    "tests.test_install_mirror_sync::test_installer_refuses_busy_worker_lock_without_changing_installed_files[disable]",
+    "tests.test_install_mirror_sync::test_installer_rejects_invalid_storage_options[--storage-checker-source-relative.py]",
+    "tests.test_install_mirror_sync::test_installer_rejects_inactive_github[https://github.com/fixture/inactive.git]",
+    "tests.test_install_mirror_sync::test_installer_rejects_inactive_github[ssh://ssh.github.com/fixture/inactive.git]",
+    "tests.test_install_mirror_sync::test_installer_storage_overrides_and_legacy_manifest_migration",
+    "tests.test_install_mirror_sync::test_managed_upgrade_preserves_enabled_github_peer",
+    "tests.test_llvm_scalar_pilot::test_real_native_code_matches_reference"
+  ],
+  "full_ordinary_result": {
+    "failed": 16,
+    "native_started": false,
+    "passed": 18860,
+    "skipped": 1420,
+    "subtests_passed": 2379
+  },
+  "linux_focused": {
+    "compiler": "Debian clang version 14.0.6\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin\n",
+    "evidence_archive_sha256": "235a14152678e09450ae998e423efc86a283d2ab3916e2b1200347e5de66bdcd",
+    "failed": 0,
+    "fixed_test_nodes": [
+      "tests/test_dos_migration.py",
+      "tests/test_install_mirror_sync.py",
+      "tests/test_llvm_scalar_pilot.py",
+      "tests/test_dosbox_runtime_tracking_hooks.py",
+      "tests/test_late_tracking_stop.py"
+    ],
+    "kind": "Diagnostic from preserved failed worker snapshot; not full successor CI",
+    "network": "none",
+    "original_compile_returncode": 1,
+    "original_compile_stderr": "/diag-input/original-sample.ll:1:30: warning: ptr type is only supported in -opaque-pointers mode\ndefine void @fdisbull_scalar(ptr %state) {\n                             ^\n/diag-input/original-sample.ll:1:30: error: expected type\ndefine void @fdisbull_scalar(ptr %state) {\n                             ^\n1 error generated.\n",
+    "original_ir_sha256": "1a3521bc76e30245acc16ac7dfe5934bbc77a164e45903b27ba919d754db9d68",
+    "owned_running_after": 0,
+    "passed": 77,
+    "python": "3.12.16",
+    "skipped": 0,
+    "source_inputs": {
+      "src/fdisbull/data/dos-migration.json": {
+        "sha256": "2c9246ff797ee560affad199c02d4b0a0e4a4777e067bb9e8eed1793d374d9cb",
+        "size": 112418
+      },
+      "src/fdisbull/llvm_scalar_pilot.py": {
+        "sha256": "1652a0abd1a57afaad8644828f3edaaa62f1ba913f4f4a3f7781f205a8b3766f",
+        "size": 5702
+      },
+      "tests/test_install_mirror_sync.py": {
+        "sha256": "c9074aba890dd53cd43e961350c4a7a111e0737538bc4b1d362ca67b50e84736",
+        "size": 11385
+      },
+      "tests/test_llvm_scalar_pilot.py": {
+        "sha256": "622d372ae3f389236d208380993c416911a9f6910736df32f80f001e0a1f6067",
+        "size": 2650
+      }
+    },
+    "warning": "Pytest cache could not be written to the intentionally read-only source mount; tests completed successfully."
+  },
+  "mac_focused": {
+    "additional_compiler_check": {
+      "PATH": "/usr/bin:/bin",
+      "compiler": "Apple Clang 21.0.0",
+      "passed": 1,
+      "test": "tests/test_llvm_scalar_pilot.py::test_real_native_code_matches_reference"
+    },
+    "compiler": "Homebrew Clang 23.1.4",
+    "failed": 0,
+    "passed": 77,
+    "python": "3.13.13",
+    "skipped": 0
+  },
+  "qualification_limit": "Focused regression evidence only. Full ordinary/native Linux CI, self-contained kit acceptance, release and system activation remain separate gates. No private game files, states or databases included.",
+  "repairs": {
+    "dos_inventory": "Add existing debug-tracking route to core migration inventory; native qualification remains explicitly unqualified.",
+    "llvm": "Emit typed i8* pointers for Clang 14 and modern Clang; preserve compiler stderr in future failing assertions.",
+    "mirror_installer": "Tests use sys.executable and PATH-discovered Git; generated plist must retain the chosen Python. Production defaults were already portable."
+  },
+  "schema": "fdisbull-bounded-ci-repair-evidence-1"
+}

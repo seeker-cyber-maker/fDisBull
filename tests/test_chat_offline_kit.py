@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import subprocess
 from pathlib import Path
 import tarfile
@@ -176,3 +177,107 @@ def test_qemu_wrapper_passes_private_firmware_and_preserves_arguments(tmp_path):
         str(root / 'native/qemu/bin/qemu-system-x86_64').encode(), b'-L',
         str(root / 'native/qemu/share/qemu').encode(), b'-machine', b'pc with spaces', b'-S']
     assert ' -L ' not in kit.wrapper('lib/loader', 'native/dosbox')
+
+
+@pytest.mark.parametrize('path,role', [
+    ('native/qemu/share/qemu/other.bmp', 'firmware'),
+    ('targets/qemu-nsis.bmp', 'firmware'),
+    ('native/qemu/share/qemu/qemu-nsis.bmp', 'payload'),
+    ('native/qemu/share/qemu/qemu-nsis.bmp', None),
+    ('native/qemu/share/qemu/screenshot.png', 'firmware'),
+])
+def test_installer_bitmap_exception_keeps_private_images_forbidden(path, role):
+    with pytest.raises(ValueError, match='prohibited'):
+        kit.destination(path, role=role)
+
+
+def test_exact_installer_bitmap_is_byte_bound_in_inventory_and_archive(tmp_path, monkeypatch):
+    inv, data = inventory(tmp_path)
+    # This bundle's firmware shares QEMU's real directory layout.
+    qemu = next(x for x in data['files'] if x['role'] == 'qemu')
+    qemu['destination'] = 'native/qemu/bin/qemu-system-x86_64'
+    closure_entry = next(x for x in data['files'] if x['role'] == 'closure_receipt')
+    closure_path = Path(closure_entry['source']); closure = json.loads(closure_path.read_text())
+    next(obj for obj in closure['objects'] if obj['path'] == 'native/qemu')['path'] = qemu['destination']
+    closure_path.write_text(json.dumps(closure))
+    closure_entry.update(size=closure_path.stat().st_size, sha256=kit.sha256(closure_path))
+    bitmap = next(x for x in data['files'] if x['role'] == 'firmware')
+    payload = b'authored upstream bitmap stand-in'
+    Path(bitmap['source']).write_bytes(payload)
+    bitmap.update(destination=kit.QEMU_INSTALLER_BITMAP, size=len(payload), sha256=kit.sha256(Path(bitmap['source'])))
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SIZE', len(payload))
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SHA256', bitmap['sha256'])
+    inv.write_text(json.dumps(data))
+    kit.load_inventory(inv)
+    output = tmp_path / 'bitmap.zip'; kit.build(inv, output)
+    with zipfile.ZipFile(output) as archive:
+        assert archive.read('fdisbull-chat-offline/' + kit.QEMU_INSTALLER_BITMAP) == payload
+    # Rehashing a replacement cannot bypass the independently pinned identity.
+    Path(bitmap['source']).write_bytes(b'X' * len(payload))
+    bitmap['sha256'] = kit.sha256(Path(bitmap['source']))
+    inv.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='bitmap identity mismatch'):
+        kit.load_inventory(inv)
+
+
+def test_installer_bitmap_size_is_pinned_independently(tmp_path, monkeypatch):
+    inv, data = inventory(tmp_path)
+    bitmap = next(x for x in data['files'] if x['role'] == 'firmware')
+    bitmap['destination'] = kit.QEMU_INSTALLER_BITMAP
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SHA256', bitmap['sha256'])
+    monkeypatch.setattr(kit, 'QEMU_INSTALLER_BITMAP_SIZE', bitmap['size'] + 1)
+    inv.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='bitmap identity mismatch'):
+        kit.load_inventory(inv)
+
+
+@pytest.mark.parametrize('module', [None, 'fdisbull', 'fdisbull_player'])
+def test_python_wrapper_sets_builtin_locale_and_utf8_before_loader(tmp_path, module):
+    root = tmp_path / 'kit with spaces'
+    (root / 'bin').mkdir(parents=True); (root / 'lib').mkdir()
+    loader = root / 'lib/loader'
+    loader.write_text('#!/bin/sh\nprintf "%s\\0" "$LC_ALL" "$LANG" "$PYTHONCOERCECLOCALE" "$PYTHONUTF8" "$PYTHONHOME" "$@"\n')
+    loader.chmod(0o755)
+    script = root / 'bin/python'
+    script.write_text(kit.wrapper('lib/loader', 'python/bin/python3.13', python=True, module=module))
+    script.chmod(0o755)
+    # Inherited Unicode locale/coercion must not map host locale data; UTF-8
+    # is explicitly restored by Python's own mode rather than libc locale data.
+    env = dict(os.environ, LC_ALL='C.UTF-8', LANG='C.UTF-8', PYTHONCOERCECLOCALE='1', PYTHONUTF8='0')
+    result = subprocess.run([str(script), '-c', 'pass'], env=env, check=True, capture_output=True)
+    values = result.stdout.split(b'\0')[:-1]
+    assert values[:5] == [b'C', b'C', b'0', b'1', str(root / 'python').encode()]
+    expected = [b'--inhibit-cache', b'--library-path', str(root / 'lib').encode(),
+                str(root / 'python/bin/python3.13').encode(), b'-s', b'-P']
+    if module is not None: expected += [b'-m', module.encode()]
+    assert values[5:] == expected + [b'-c', b'pass']
+    assert 'PYTHONCOERCECLOCALE' not in kit.wrapper('lib/loader', 'native/qemu', qemu=True)
+
+
+def test_extended_windows_roles_require_explicit_shared_profile(tmp_path):
+    path, data = inventory(tmp_path)
+    item = dict(data['files'][0], destination='artifacts/pe32', role='pe32_fixture')
+    data['files'].append(item)
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='explicit acceptance'):
+        kit.load_inventory(path)
+    data['windows_acceptance'] = 'pe64-pe32-win16'
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='incompatible'):
+        kit.load_inventory(path)
+    data['profile'] = 'shared'
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='exactly one'):
+        kit.load_inventory(path)
+
+
+def test_shared_extended_inventory_accepts_three_explicit_roles(tmp_path):
+    path, data = inventory(tmp_path)
+    data['profile'] = 'shared'
+    data['windows_acceptance'] = 'pe64-pe32-win16'
+    data['files'] = [item for item in data['files'] if item['role'] not in ('wine_initramfs', 'dos_initramfs')]
+    for role, dest in [('runtime_base', 'runtime/base.cpio.xz'), ('runtime_recipe', 'runtime/recipe.json'), ('runtime_preparer', 'tools/preparer.py'), ('windows_runtime_base', 'runtime/windows-base.cpio.xz'), ('windows_runtime_recipe', 'runtime/windows-recipe.json'), ('pe32_fixture', 'artifacts/pe32.exe'), ('win16_fixture', 'artifacts/win16.exe'), ('win16_profile', 'artifacts/win16.json')]:
+        source = tmp_path / role; source.write_bytes(b'fixture')
+        data['files'].append(dict(source=str(source), destination=dest, role=role, sha256=kit.sha256(source), size=source.stat().st_size))
+    path.write_text(json.dumps(data))
+    assert kit.load_inventory(path)[0]['windows_acceptance'] == 'pe64-pe32-win16'

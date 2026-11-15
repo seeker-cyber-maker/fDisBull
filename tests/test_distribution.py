@@ -36,15 +36,16 @@ REQUIRED_SOURCE_FILES = (
     "player/fdisbull_player/game_intents.py",
     "player/fdisbull_player/intent_runtime.py",
     "player/fdisbull_player/batch.py",
-    "src/fdisbull/media.py",
+    "src/fdisbull/media.py", "src/fdisbull/shi.py",
     "src/fdisbull/skills/fdisbull-investigate/references/media-modules.md",
-    "tests/test_media_modules.py",
+    "tests/test_media_modules.py", "tests/test_shi.py",
     "src/fdisbull/__init__.py",
     "pyproject.toml",
     "tests/fixtures_formats.py",
     "tests/fixtures_macho.py",
     "tests/fixtures_z_scenes.py",
     "tests/wine_gui_fixture.c",
+    "tests/offline_win16_oracle.c",
     "tests/dosbox_zip_empty_write.cpp",
     "src/fdisbull/wine_guest/agent.c",
     "src/fdisbull/wine_guest/init.sh",
@@ -64,6 +65,12 @@ REQUIRED_SOURCE_FILES = (
     "src/fdisbull/dos_qemu.py",
     "src/fdisbull/dos_runtime.py",
     "src/fdisbull/qemu_machine.py",
+    "native/qemu-display-probe/README.md",
+    "native/qemu-display-probe/source-manifest.json",
+    "native/qemu-display-probe/qemu-10.0.13-fdisbull-display-probe-v1.patch",
+    "native/qemu-vga-configuration/README.md",
+    "native/qemu-vga-configuration/source-manifest.json",
+    "native/qemu-vga-configuration/qemu-10.0.13-fdisbull-vga-configuration-v1.patch",
     "src/fdisbull/gdb_rpc.py",
     "src/fdisbull/guest_assets.py",
     "src/fdisbull/wine_deltas.py",
@@ -955,11 +962,39 @@ DESKTOP_EVIDENCE_FILE = "docs/evidence/common-uil-desktop-2026-11-01/verificatio
 
 WINDOWS_RUNTIME_MODULES=('wine_guest/selftest32.c','wine_arch.py','windows_ui.py','win16_debugger.py')
 
+KINT_SOURCE_FILES = (
+    'src/fdisbull/kint6_format.py', 'src/fdisbull/kint6_processor.py',
+    'src/fdisbull/sherlock7_media.py',
+    'src/fdisbull/skills/fdisbull-investigate/references/kint6-sherlock7.md',
+    'tests/test_kint6_format.py', 'tests/test_kint6_processor.py', 'tests/test_sherlock7_media.py',
+    'tests/test_sherlock7_modules.py', 'docs/SHERLOCK7_MEDIA.md',
+    'tests/kint6_vectors.json', 'tests/test_kint6_vectors.py',
+)
+REQUIRED_SOURCE_FILES += KINT_SOURCE_FILES
+
+@pytest.mark.parametrize('required', KINT_SOURCE_FILES)
+def test_distribution_requires_kint_modules_and_specification(tmp_path, required):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path / 'fdisbull-missing-kint.zip'
+    source_archive(archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required))
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
+
+
 WINDOWS_RUNTIME_FILES=tuple('src/fdisbull/'+name for name in WINDOWS_RUNTIME_MODULES)+tuple('tests/'+name for name in (
     'test_wine_pe32.py','test_wine_pe32_state.py','test_wine_guest_bridge.py','test_windows_interfaces.py',
     'test_windows_scenes.py','test_windows_dot_mode.py','test_windows_native.py','test_win16_debugger.py','test_win16_native.py'))
 
 REQUIRED_SOURCE_FILES+=WINDOWS_RUNTIME_FILES
+
+
+RECOVERED_UDC_RESOURCES = runpy.run_path(
+    str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py')
+)['REQUIRED_RECOVERED_UDC_RESOURCES']
+REQUIRED_SOURCE_FILES += tuple(
+    'src/fdisbull/' + name for name in sorted(RECOVERED_UDC_RESOURCES)
+    if 'src/fdisbull/' + name not in REQUIRED_SOURCE_FILES
+)
 
 
 def source_archive(path, files=REQUIRED_SOURCE_FILES):
@@ -1189,8 +1224,8 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
         "src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md",
         "src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md",
         "src/fdisbull/skills/fdisbull-investigate/references/media-modules.md",
-        "src/fdisbull/media.py",
-        "tests/test_media_modules.py",
+        "src/fdisbull/media.py", "src/fdisbull/shi.py",
+        "tests/test_media_modules.py", "tests/test_shi.py",
     ],
 )
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path, required):
@@ -1497,3 +1532,44 @@ def test_distribution_check_requires_source_concepts_reference(tmp_path, kind):
             output.writestr(member, '')
     with pytest.raises(ValueError, match=re.escape(resource)):
         check(archive)
+
+
+def test_authored_windows_source_contracts_include_both_fixtures(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    win16 = "tests/offline_win16_oracle.c"
+    pe32 = "src/fdisbull/wine_guest/selftest32.c"
+    build = runpy.run_path(str(root / "scripts/build_release.py"))
+    selected = {path.relative_to(root).as_posix() for path in build["release_files"](root)}
+    assert {win16, pe32} <= selected
+    manifest = (root / "MANIFEST.in").read_text().splitlines()
+    assert "include " + win16 in manifest
+    assert "recursive-include src/fdisbull *.py *.c *.sh" in manifest
+    checker = runpy.run_path(str(root / "scripts/check_dist.py"))
+    assert win16 in checker["REQUIRED_TEST_HELPERS"]
+    assert "wine_guest/selftest32.c" in checker["REQUIRED_PE_RESOURCES"]
+    for missing in (win16, pe32):
+        archive = tmp_path / ("missing-" + Path(missing).name + ".zip")
+        source_archive(archive, tuple(item for item in REQUIRED_SOURCE_FILES if item != missing))
+        with pytest.raises(ValueError, match=re.escape(missing)):
+            checker["check_archive"](archive)
+
+
+@pytest.mark.parametrize('resource', ['dos_udc.py','dos_mz_udc.py','zmachine_udc.py',
+    'uil_record.py','llvm_scalar_pilot.py','influence_pilot.py','dcc_asm_c.py',
+    'ghidra_asm_c.py','reko_asm_c.py','data/FdisbullGhidraAsmC.txt',
+    'shadowrun_snes_dialogue.py','game_sources/shadowrun_snes_transition.c'])
+def test_source_package_requires_recovered_compiler_seams(tmp_path, resource):
+    checker = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))
+    archive = tmp_path / 'fdisbull-recovered-source.zip'
+    missing = 'src/fdisbull/' + resource
+    source_archive(archive, tuple(p for p in REQUIRED_SOURCE_FILES if p != missing))
+    with pytest.raises(ValueError, match=re.escape(missing)):
+        checker['check_archive'](archive)
+
+
+def test_tool_zip_selects_all_tracked_runtime_and_test_support():
+    root = Path(__file__).resolve().parents[1]
+    build = runpy.run_path(str(root / "scripts/build_release.py"))
+    gate = runpy.run_path(str(root / "scripts/check_package_payloads.py"))
+    selected = {path.relative_to(root).as_posix() for path in build["release_files"](root)}
+    assert set(gate["tracked_payload"](root)) <= selected

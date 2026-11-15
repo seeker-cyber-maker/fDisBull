@@ -1,0 +1,849 @@
+--- a/qapi/misc.json
++++ b/qapi/misc.json
+@@ -191,6 +191,83 @@
+             'expected-state-generation': 'uint64',
+             'ram': [ 'Chip8LayerPatch' ], 'execute': [ 'Chip8LayerPatch' ] },
+   'returns': 'Chip8LayersInfo' }
++
++##
++# @Chip8FrameInfo:
++# Native receipt for one owned virtual 60 Hz CHIP-8 timer-tick sample.
++#
++# @model: Fixed native frame-sample model.
++# @subset: Fixed CHIP-8 CPU subset identifier.
++# @environment-model: Fixed full CHIP-8 environment identifier.
++# @state: Fence state: idle, armed, or completed.
++# @token: Current fence token, empty while idle.
++# @control-generation: Fence-control CAS generation.
++# @state-generation: Current generation, or the latched sample generation
++#     while a sample is pending/completed.
++# @baseline-virtual-ticks: Tick count captured at arm.
++# @baseline-deadline-ns: Absolute timer deadline captured at arm.
++# @completed-virtual-ticks: Tick count at the sampled timer boundary.
++# @completed-deadline-ns: Absolute deadline of the sampled tick.
++# @sampled-virtual-now-ns: Virtual clock reading when the tick was applied.
++# @phase-numerator: Rational 60 Hz phase after the sampled tick.
++# @frame-generation: Display mutation generation at the sample.
++# @pixels-hex: Sampled one-byte-per-pixel image in lowercase hexadecimal.
++# @pixels-sha256: SHA-256 of the decoded 2048 sampled pixel bytes.
++# @stop-pending: A sample is latched and awaits the next CHIP-8 helper boundary.
++# @stop-owned: The target currently owns the frame stop.
++# @stop-consumed: The owned frame stop was consumed at an instruction boundary.
++# @faulted: Sticky architected CHIP-8 fault is active.
++# @key-wait: FX0A is waiting for a key.
++# @layer-conflict: Execute-layer backing fault is active.
++##
++{ 'struct': 'Chip8FrameInfo',
++  'data': { 'model': 'str', 'subset': 'str', 'environment-model': 'str',
++            'state': 'str', 'token': 'str', 'control-generation': 'uint64',
++            'state-generation': 'uint64', 'baseline-virtual-ticks': 'uint64',
++            'baseline-deadline-ns': 'uint64',
++            'completed-virtual-ticks': 'uint64',
++            'completed-deadline-ns': 'uint64',
++            'sampled-virtual-now-ns': 'uint64',
++            'phase-numerator': 'uint8', 'frame-generation': 'uint64',
++            'pixels-hex': 'str', 'pixels-sha256': 'str',
++            'stop-pending': 'bool', 'stop-owned': 'bool',
++            'stop-consumed': 'bool', 'faulted': 'bool',
++            'key-wait': 'bool', 'layer-conflict': 'bool' } }
++
++##
++# @x-chip8-arm-frame:
++# Arm a stopped-state token-bound fence for exactly the next virtual tick.
++#
++# @token: Exactly 32 lowercase hexadecimal characters.
++# @expected-state-generation: CPU environment CAS value.
++# @expected-virtual-ticks: Current virtual tick counter.
++# @expected-deadline-ns: Current absolute virtual timer deadline.
++##
++{ 'command': 'x-chip8-arm-frame',
++  'data': { 'token': 'str', 'expected-state-generation': 'uint64',
++            'expected-virtual-ticks': 'uint64',
++            'expected-deadline-ns': 'uint64' },
++  'returns': 'Chip8FrameInfo' }
++
++##
++# @query-chip8-frame:
++# Read the current frame-fence receipt. If supplied, token must match.
++#
++# @token: Optional current fence token for strict receipt binding.
++##
++{ 'command': 'query-chip8-frame', 'data': { '*token': 'str' },
++  'returns': 'Chip8FrameInfo' }
++
++##
++# @x-chip8-cancel-frame:
++# Cancel an active/completed fence without reverting clock or display state.
++#
++# @token: Current fence token.
++# @expected-control-generation: Current fence-control CAS value.
++##
++{ 'command': 'x-chip8-cancel-frame',
++  'data': { 'token': 'str', 'expected-control-generation': 'uint64' },
++  'returns': 'Chip8FrameInfo' }
+ 
+ ##
+ # = Miscellanea
+--- a/system/qmp-chip8.c
++++ b/system/qmp-chip8.c
+@@ -9,6 +9,7 @@
+ 
+ #define CHIP8_LAYER_MODEL "fdisbull-chip8-native-layers-1"
+ #define CHIP8_LAYER_HEX_SIZE 8192
++#define CHIP8_FRAME_MODEL "fdisbull-chip8-native-frame-sample-1"
+ 
+ Chip8FaultInfo *qmp_query_chip8_fault(Error **errp)
+ {
+@@ -204,6 +205,133 @@
+     return chip8_layers_info(errp);
+ }
+ 
++static Chip8FrameInfo *chip8_frame_info(const char *expected_token,
++                                       bool check_token, Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Object *obj;
++    Error *local_err = NULL;
++    Chip8FrameInfo *info;
++
++    if (!cs || runstate_is_running()) {
++        error_setg(errp, "CHIP-8 frame receipt requires a stopped CPU");
++        return NULL;
++    }
++    obj = OBJECT(cs);
++    info = g_new0(Chip8FrameInfo, 1);
++#define FRAME_GET_STR(field, prop) do { \
++    info->field = object_property_get_str(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define FRAME_GET_U64(field, prop) do { \
++    info->field = object_property_get_uint(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define FRAME_GET_U8(field, prop) do { \
++    info->field = object_property_get_uint(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++#define FRAME_GET_BOOL(field, prop) do { \
++    info->field = object_property_get_bool(obj, prop, &local_err); \
++    if (local_err) goto fail; \
++} while (0)
++    info->model = g_strdup(CHIP8_FRAME_MODEL);
++    FRAME_GET_STR(subset, "cpu-subset");
++    FRAME_GET_STR(environment_model, "chip8-env-model");
++    FRAME_GET_STR(state, "chip8-frame-state");
++    FRAME_GET_STR(token, "chip8-frame-token");
++    FRAME_GET_U64(control_generation, "frame-control-generation");
++    FRAME_GET_U64(baseline_virtual_ticks, "frame-baseline-virtual-ticks");
++    FRAME_GET_U64(baseline_deadline_ns, "frame-baseline-deadline-ns");
++    FRAME_GET_U64(completed_virtual_ticks, "frame-completed-virtual-ticks");
++    FRAME_GET_U64(completed_deadline_ns, "frame-completed-deadline-ns");
++    FRAME_GET_U64(sampled_virtual_now_ns, "frame-sampled-virtual-now-ns");
++    FRAME_GET_U8(phase_numerator, "frame-sample-phase-numerator");
++    FRAME_GET_U64(frame_generation, "frame-sample-frame-generation");
++    FRAME_GET_STR(pixels_hex, "chip8-frame-pixels-hex");
++    FRAME_GET_STR(pixels_sha256, "chip8-frame-pixels-sha256");
++    FRAME_GET_BOOL(stop_pending, "frame-stop-pending");
++    if (info->stop_pending || !strcmp(info->state, "completed")) {
++        FRAME_GET_U64(state_generation, "frame-sample-state-generation");
++    } else {
++        FRAME_GET_U64(state_generation, "state-generation");
++    }
++    FRAME_GET_BOOL(stop_owned, "frame-stop-owned");
++    FRAME_GET_BOOL(stop_consumed, "frame-stop-consumed");
++    FRAME_GET_BOOL(faulted, "faulted");
++    FRAME_GET_BOOL(key_wait, "key-wait");
++    FRAME_GET_BOOL(layer_conflict, "frame-layer-conflict");
++#undef FRAME_GET_STR
++#undef FRAME_GET_U64
++#undef FRAME_GET_U8
++#undef FRAME_GET_BOOL
++    if (check_token && (!expected_token || strcmp(info->token, expected_token))) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: frame token differs");
++        qapi_free_Chip8FrameInfo(info);
++        return NULL;
++    }
++    return info;
++fail:
++    error_propagate(errp, local_err);
++    qapi_free_Chip8FrameInfo(info);
++    return NULL;
++}
++
++Chip8FrameInfo *qmp_query_chip8_frame(const char *token, Error **errp)
++{
++    return chip8_frame_info(token, token != NULL, errp);
++}
++
++Chip8FrameInfo *qmp_x_chip8_arm_frame(const char *token,
++                                      uint64_t expected_state_generation,
++                                      uint64_t expected_virtual_ticks,
++                                      uint64_t expected_deadline_ns,
++                                      Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Error *local_err = NULL;
++    char *command;
++
++    if (!cs) {
++        error_setg(errp, "CHIP-8 CPU is unavailable");
++        return NULL;
++    }
++    command = g_strdup_printf("%s:%" PRIu64 ":%" PRIu64 ":%" PRIu64,
++                              token, expected_state_generation,
++                              expected_virtual_ticks, expected_deadline_ns);
++    object_property_set_str(OBJECT(cs), "arm-frame-command", command,
++                            &local_err);
++    g_free(command);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_frame_info(token, true, errp);
++}
++
++Chip8FrameInfo *qmp_x_chip8_cancel_frame(
++    const char *token, uint64_t expected_control_generation, Error **errp)
++{
++    CPUState *cs = qemu_get_cpu(0);
++    Error *local_err = NULL;
++    char *command;
++
++    if (!cs) {
++        error_setg(errp, "CHIP-8 CPU is unavailable");
++        return NULL;
++    }
++    command = g_strdup_printf("%s:%" PRIu64, token,
++                              expected_control_generation);
++    object_property_set_str(OBJECT(cs), "cancel-frame-command", command,
++                            &local_err);
++    g_free(command);
++    if (local_err) {
++        error_propagate(errp, local_err);
++        return NULL;
++    }
++    return chip8_frame_info(NULL, false, errp);
++}
++
+ static bool chip8_layer_append_patches(GString *command,
+                                        Chip8LayerPatchList *items,
+                                        size_t *range_count, Error **errp)
+--- a/target/chip8/cpu.c
++++ b/target/chip8/cpu.c
+@@ -22,6 +22,9 @@
+ #include "cpu.h"
+ #include "exec/helper-proto.h"
+ 
++static bool chip8_layer_backing(Object *obj, uint16_t *mismatch,
++                                Error **errp);
++
+ static vaddr chip8_get_pc(CPUState *cs)
+ {
+     return CHIP8_CPU(cs)->env.pc;
+@@ -160,6 +163,103 @@
+     return g_strdup(CHIP8_LAYER_MODEL);
+ }
+ 
++static char *chip8_get_frame_model(Object *obj, Error **errp)
++{
++    return g_strdup(CHIP8_FRAME_MODEL);
++}
++
++static char *chip8_get_frame_state(Object *obj, Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    switch (env->frame_fence_state) {
++    case CHIP8_FRAME_IDLE:
++        return g_strdup("idle");
++    case CHIP8_FRAME_ARMED:
++        return g_strdup("armed");
++    case CHIP8_FRAME_COMPLETED:
++        return g_strdup("completed");
++    default:
++        error_setg(errp, "Invalid CHIP-8 frame fence state");
++        return NULL;
++    }
++}
++
++static char *chip8_get_frame_token(Object *obj, Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    return g_strdup(env->frame_fence_state == CHIP8_FRAME_IDLE ? "" :
++                    env->frame_fence_token);
++}
++
++static bool chip8_frame_has_sample(CPUArchState *env)
++{
++    return env->frame_stop_pending ||
++           env->frame_fence_state == CHIP8_FRAME_COMPLETED;
++}
++
++static char *chip8_get_frame_pixels_hex(Object *obj, Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    GString *s;
++    unsigned i;
++
++    if (!chip8_frame_has_sample(env)) {
++        return g_strdup("");
++    }
++    s = g_string_sized_new(sizeof(env->frame_sample_pixels) * 2);
++    for (i = 0; i < sizeof(env->frame_sample_pixels); i++) {
++        g_string_append_printf(s, "%02x", env->frame_sample_pixels[i]);
++    }
++    return g_string_free(s, false);
++}
++
++static char *chip8_get_frame_pixels_sha256(Object *obj, Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    uint8_t *digest = NULL;
++    size_t digest_len = 0;
++    char *hex;
++
++    if (!chip8_frame_has_sample(env)) {
++        return g_strdup("");
++    }
++    if (qcrypto_hash_bytes(QCRYPTO_HASH_ALGO_SHA256,
++                           (const char *)env->frame_sample_pixels,
++                           sizeof(env->frame_sample_pixels), &digest,
++                           &digest_len, errp) < 0) {
++        return NULL;
++    }
++    hex = g_malloc(digest_len * 2 + 1);
++    for (size_t i = 0; i < digest_len; i++) {
++        sprintf(hex + i * 2, "%02x", digest[i]);
++    }
++    g_free(digest);
++    return hex;
++}
++
++static bool chip8_get_frame_stop_pending(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.frame_stop_pending;
++}
++
++static bool chip8_get_frame_stop_owned(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.frame_stop_owned;
++}
++
++static bool chip8_get_frame_stop_consumed(Object *obj, Error **errp)
++{
++    return CHIP8_CPU(obj)->env.frame_stop_consumed;
++}
++
++static bool chip8_get_frame_layer_conflict(Object *obj, Error **errp)
++{
++    CPUArchState *env = &CHIP8_CPU(obj)->env;
++    bool valid = chip8_layer_backing(obj, NULL, errp);
++
++    return env->layer_faulted || !valid;
++}
++
+ static char *chip8_get_rng_model(Object *obj, Error **errp)
+ {
+     return g_strdup("fdisbull-lcg32-high8-v1");
+@@ -445,6 +545,10 @@
+                                  "layer operations require one stopped TCG CPU");
+         return;
+     }
++    if (env->frame_fence_state != CHIP8_FRAME_IDLE) {
++        chip8_layer_precondition(errp, "cancel frame fence before layer changes");
++        return;
++    }
+     parts = g_strsplit(value, "|", 3);
+     if (g_strv_length(parts) != 3 || !(comma = strchr(parts[0], ','))) {
+         chip8_layer_precondition(errp, "malformed generation or patch list");
+@@ -548,6 +652,10 @@
+         error_setg(errp, "CHIP-8 key updates require a stopped VM");
+         return;
+     }
++    if (cpu->env.frame_fence_state != CHIP8_FRAME_IDLE) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: cancel frame fence before key updates");
++        return;
++    }
+     errno = 0;
+     mask = strtoul(value, &end, 10);
+     if (errno || end == value || *end != ':') {
+@@ -576,6 +684,10 @@
+     unsigned long count, generation;
+     if (runstate_is_running()) {
+         error_setg(errp, "CHIP-8 manual ticks require a stopped VM");
++        return;
++    }
++    if (cpu->env.frame_fence_state != CHIP8_FRAME_IDLE) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: cancel frame fence before manual ticks");
+         return;
+     }
+     errno = 0;
+@@ -608,6 +720,10 @@
+         error_setg(errp, "CHIP-8 RNG seeding requires a stopped VM");
+         return;
+     }
++    if (cpu->env.frame_fence_state != CHIP8_FRAME_IDLE) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: cancel frame fence before RNG seeding");
++        return;
++    }
+     errno = 0;
+     seed = strtoul(value, &end, 10);
+     if (errno || end == value || *end != ':') {
+@@ -630,19 +746,209 @@
+     chip8_state_generation_advance(&cpu->env);
+ }
+ 
++static bool chip8_frame_token_valid(const char *token)
++{
++    size_t i;
++    if (!token || strlen(token) != 32) {
++        return false;
++    }
++    for (i = 0; i < 32; i++) {
++        if (!((token[i] >= '0' && token[i] <= '9') ||
++              (token[i] >= 'a' && token[i] <= 'f'))) {
++            return false;
++        }
++    }
++    return true;
++}
++
++static bool chip8_frame_parse_u64(const char *text, uint64_t *value)
++{
++    const char *p;
++    char *end;
++    unsigned long long parsed;
++
++    if (!text || !*text) {
++        return false;
++    }
++    for (p = text; *p; p++) {
++        if (*p < '0' || *p > '9') {
++            return false;
++        }
++    }
++    errno = 0;
++    parsed = g_ascii_strtoull(text, &end, 10);
++    if (errno || *end) {
++        return false;
++    }
++    *value = parsed;
++    return true;
++}
++
++static void chip8_frame_clear(CPUArchState *env)
++{
++    env->frame_fence_state = CHIP8_FRAME_IDLE;
++    memset(env->frame_fence_token, 0, sizeof(env->frame_fence_token));
++    env->frame_baseline_virtual_ticks = 0;
++    env->frame_baseline_deadline_ns = 0;
++    env->frame_completed_virtual_ticks = 0;
++    env->frame_completed_deadline_ns = 0;
++    env->frame_sampled_virtual_now_ns = 0;
++    env->frame_sample_state_generation = 0;
++    env->frame_sample_frame_generation = 0;
++    env->frame_sample_phase_numerator = 0;
++    memset(env->frame_sample_pixels, 0, sizeof(env->frame_sample_pixels));
++    env->frame_stop_pending = false;
++    env->frame_stop_owned = false;
++    env->frame_stop_consumed = false;
++}
++
++static void chip8_frame_arm_command(Object *obj, const char *value,
++                                    Error **errp)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    CPUArchState *env = &cpu->env;
++    g_auto(GStrv) parts = g_strsplit(value, ":", 4);
++    uint64_t state_generation, virtual_ticks, deadline_ns;
++    Error *local_err = NULL;
++
++    if (!tcg_enabled() || runstate_is_running() ||
++        qemu_get_cpu(0) != CPU(obj) || qemu_get_cpu(1)) {
++        error_setg(errp, "CHIP-8 frame fence requires one stopped CPU");
++        return;
++    }
++    if (!parts[0] || !parts[1] || !parts[2] || !parts[3] ||
++        !chip8_frame_token_valid(parts[0]) ||
++        !chip8_frame_parse_u64(parts[1], &state_generation) ||
++        !chip8_frame_parse_u64(parts[2], &virtual_ticks) ||
++        !chip8_frame_parse_u64(parts[3], &deadline_ns) ||
++        env->frame_fence_state != CHIP8_FRAME_IDLE ||
++        state_generation != env->state_generation ||
++        virtual_ticks != env->virtual_ticks ||
++        deadline_ns != env->next_deadline_ns ||
++        env->state_generation == UINT64_MAX ||
++        env->virtual_ticks == UINT64_MAX ||
++        env->next_deadline_ns > INT64_MAX - 16666667 ||
++        env->frame_control_generation > UINT64_MAX - 2 ||
++        env->faulted || env->key_wait || env->key_wait_stop_owned ||
++        env->layer_faulted || env->layer_stop_owned) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: stale, invalid, or unsafe frame arm");
++        return;
++    }
++    if (!chip8_layer_backing(obj, NULL, &local_err)) {
++        if (local_err) {
++            error_propagate(errp, local_err);
++        } else {
++            error_setg(errp, "CHIP8_FRAME_PRECONDITION: execute backing differs");
++        }
++        return;
++    }
++
++    chip8_frame_clear(env);
++    g_strlcpy(env->frame_fence_token, parts[0],
++              sizeof(env->frame_fence_token));
++    env->frame_baseline_virtual_ticks = env->virtual_ticks;
++    env->frame_baseline_deadline_ns = env->next_deadline_ns;
++    env->frame_fence_state = CHIP8_FRAME_ARMED;
++    env->frame_control_generation++;
++    memset(env->frame_last_cancelled_token, 0,
++           sizeof(env->frame_last_cancelled_token));
++    env->frame_last_cancel_expected_generation = 0;
++}
++
++static void chip8_frame_cancel_command(Object *obj, const char *value,
++                                       Error **errp)
++{
++    Chip8CPU *cpu = CHIP8_CPU(obj);
++    CPUArchState *env = &cpu->env;
++    g_auto(GStrv) parts = g_strsplit(value, ":", 3);
++    uint64_t generation;
++    char token[sizeof(env->frame_fence_token)];
++
++    if (runstate_is_running()) {
++        error_setg(errp, "CHIP-8 frame cancellation requires a stopped VM");
++        return;
++    }
++    if (!parts[0] || !parts[1] || !chip8_frame_token_valid(parts[0]) ||
++        !chip8_frame_parse_u64(parts[1], &generation)) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: malformed frame cancellation");
++        return;
++    }
++    if (env->frame_fence_state == CHIP8_FRAME_IDLE &&
++        !strcmp(parts[0], env->frame_last_cancelled_token) &&
++        generation == env->frame_last_cancel_expected_generation) {
++        return;
++    }
++    if (env->frame_fence_state == CHIP8_FRAME_IDLE ||
++        generation != env->frame_control_generation ||
++        strcmp(parts[0], env->frame_fence_token) ||
++        env->frame_control_generation == UINT64_MAX) {
++        error_setg(errp, "CHIP8_FRAME_PRECONDITION: stale frame cancellation");
++        return;
++    }
++
++    g_strlcpy(token, env->frame_fence_token, sizeof(token));
++    g_strlcpy(env->frame_last_cancelled_token, token,
++              sizeof(env->frame_last_cancelled_token));
++    env->frame_last_cancel_expected_generation = generation;
++    env->frame_control_generation++;
++    chip8_frame_clear(env);
++    if (cpu->tick_timer) {
++        timer_mod_ns(cpu->tick_timer, env->next_deadline_ns);
++    }
++}
++
+ static void chip8_tick_apply_cpu(CPUState *cs, run_on_cpu_data data)
+ {
+     Chip8CPU *cpu = CHIP8_CPU(cs);
++    CPUArchState *env = &cpu->env;
+     uint64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+-    uint64_t deadline = cpu->env.next_deadline_ns;
++    uint64_t deadline = env->next_deadline_ns;
+     uint32_t due = 0;
++
++    /* A completed/pending sample freezes further virtual-tick consumption. */
++    if (env->frame_stop_pending ||
++        env->frame_fence_state == CHIP8_FRAME_COMPLETED) {
++        return;
++    }
++
++    if (env->frame_fence_state == CHIP8_FRAME_ARMED) {
++        uint64_t consumed_deadline = deadline;
++        uint64_t interval;
++
++        if (now < deadline) {
++            return;
++        }
++        if (env->phase_numerator >= 20) {
++            env->phase_numerator -= 20;
++            interval = 16666667;
++        } else {
++            env->phase_numerator += 40;
++            interval = 16666666;
++        }
++        if (deadline > INT64_MAX - interval) {
++            return;
++        }
++        env->next_deadline_ns = deadline + interval;
++        chip8_apply_ticks(env, 1, false);
++        env->frame_completed_virtual_ticks = env->virtual_ticks;
++        env->frame_completed_deadline_ns = consumed_deadline;
++        env->frame_sampled_virtual_now_ns = now;
++        env->frame_sample_state_generation = env->state_generation;
++        env->frame_sample_phase_numerator = env->phase_numerator;
++        env->frame_sample_frame_generation = env->frame_generation;
++        memcpy(env->frame_sample_pixels, env->display,
++               sizeof(env->frame_sample_pixels));
++        env->frame_stop_pending = true;
++        return;
++    }
++
+     do {
+         uint64_t interval;
+-        if (cpu->env.phase_numerator >= 20) {
+-            cpu->env.phase_numerator -= 20;
++        if (env->phase_numerator >= 20) {
++            env->phase_numerator -= 20;
+             interval = 16666667;
+         } else {
+-            cpu->env.phase_numerator += 40;
++            env->phase_numerator += 40;
+             interval = 16666666;
+         }
+         if (deadline > INT64_MAX - interval) {
+@@ -653,9 +959,9 @@
+         due++;
+     } while (deadline <= now && due < 1000000);
+     if (due) {
+-        chip8_apply_ticks(&cpu->env, due, false);
+-    }
+-    cpu->env.next_deadline_ns = deadline;
++        chip8_apply_ticks(env, due, false);
++    }
++    env->next_deadline_ns = deadline;
+ }
+ 
+ static void chip8_tick_timer_cb(void *opaque)
+@@ -663,13 +969,17 @@
+     Chip8CPU *cpu = opaque;
+     CPUState *cs = CPU(cpu);
+     run_on_cpu(cs, chip8_tick_apply_cpu, RUN_ON_CPU_NULL);
+-    timer_mod_ns(cpu->tick_timer, cpu->env.next_deadline_ns);
++    if (!cpu->env.frame_stop_pending &&
++        cpu->env.frame_fence_state != CHIP8_FRAME_COMPLETED) {
++        timer_mod_ns(cpu->tick_timer, cpu->env.next_deadline_ns);
++    }
+ }
+ 
+ static void chip8_cpu_exec_enter(CPUState *cs)
+ {
+     CHIP8_CPU(cs)->env.key_wait_stop_owned = false;
+     CHIP8_CPU(cs)->env.layer_stop_owned = false;
++    CHIP8_CPU(cs)->env.frame_stop_owned = false;
+ }
+ 
+ static const gchar *chip8_gdb_arch_name(CPUState *cs)
+@@ -694,6 +1004,20 @@
+     object_property_add_str(obj, "chip8-env-model", chip8_get_env_model, NULL);
+     object_property_add_str(obj, "chip8-layer-model", chip8_get_layer_model,
+                             NULL);
++    object_property_add_str(obj, "chip8-frame-model", chip8_get_frame_model,
++                            NULL);
++    object_property_add_str(obj, "chip8-frame-state", chip8_get_frame_state,
++                            NULL);
++    object_property_add_str(obj, "chip8-frame-token", chip8_get_frame_token,
++                            NULL);
++    object_property_add_str(obj, "chip8-frame-pixels-hex",
++                            chip8_get_frame_pixels_hex, NULL);
++    object_property_add_str(obj, "chip8-frame-pixels-sha256",
++                            chip8_get_frame_pixels_sha256, NULL);
++    object_property_add_str(obj, "arm-frame-command", NULL,
++                            chip8_frame_arm_command);
++    object_property_add_str(obj, "cancel-frame-command", NULL,
++                            chip8_frame_cancel_command);
+     object_property_add_str(obj, "chip8-rng-model", chip8_get_rng_model, NULL);
+     object_property_add_str(obj, "display-pixels-hex", chip8_get_pixels_hex,
+                             NULL);
+@@ -718,11 +1042,20 @@
+     ADD_U64("next-deadline-ns", next_deadline_ns);
+     ADD_U64("rng-draws", rng_draws);
+     ADD_U64("layer-generation", layer_generation);
++    ADD_U64("frame-control-generation", frame_control_generation);
++    ADD_U64("frame-baseline-virtual-ticks", frame_baseline_virtual_ticks);
++    ADD_U64("frame-baseline-deadline-ns", frame_baseline_deadline_ns);
++    ADD_U64("frame-completed-virtual-ticks", frame_completed_virtual_ticks);
++    ADD_U64("frame-completed-deadline-ns", frame_completed_deadline_ns);
++    ADD_U64("frame-sampled-virtual-now-ns", frame_sampled_virtual_now_ns);
++    ADD_U64("frame-sample-state-generation", frame_sample_state_generation);
++    ADD_U64("frame-sample-frame-generation", frame_sample_frame_generation);
+     ADD_U16("layer-fault-address", layer_fault_address);
+     ADD_U16("layer-fault-pc", layer_fault_pc);
+     ADD_U32("rng-seed", rng_seed);
+     ADD_U32("rng-state", rng_state);
+     ADD_U8("phase-numerator", phase_numerator);
++    ADD_U8("frame-sample-phase-numerator", frame_sample_phase_numerator);
+     ADD_U8("delay-timer", delay_timer);
+     ADD_U8("sound-timer", sound_timer);
+     object_property_add_uint16_ptr(obj, "key-mask", &cpu->env.key_mask,
+@@ -741,6 +1074,14 @@
+                              chip8_get_layer_faulted, NULL);
+     object_property_add_bool(obj, "layer-stop-owned",
+                              chip8_get_layer_stop_owned, NULL);
++    object_property_add_bool(obj, "frame-stop-pending",
++                             chip8_get_frame_stop_pending, NULL);
++    object_property_add_bool(obj, "frame-stop-owned",
++                             chip8_get_frame_stop_owned, NULL);
++    object_property_add_bool(obj, "frame-stop-consumed",
++                             chip8_get_frame_stop_consumed, NULL);
++    object_property_add_bool(obj, "frame-layer-conflict",
++                             chip8_get_frame_layer_conflict, NULL);
+     object_property_add_bool(obj, "layer-backing-valid",
+                              chip8_get_layer_backing_valid, NULL);
+     object_property_add(obj, "layer-mismatch-address", "uint16",
+--- a/target/chip8/cpu.h
++++ b/target/chip8/cpu.h
+@@ -14,8 +14,15 @@
+ #define CHIP8_DISPLAY_PIXELS (CHIP8_DISPLAY_WIDTH * CHIP8_DISPLAY_HEIGHT)
+ #define CHIP8_FONT_BASE 0x50
+ #define CHIP8_LAYER_MODEL "fdisbull-chip8-native-layers-1"
+-#define CHIP8_LAYERS_SUBSET "fdisbull-chip8-layers-hooks-4"
+-#define CHIP8_LAYERS_ENV_MODEL "fdisbull-chip8-display-keypad-timers-rng-layers-3"
++#define CHIP8_LAYERS_SUBSET "fdisbull-chip8-frames-5"
++#define CHIP8_LAYERS_ENV_MODEL "fdisbull-chip8-display-keypad-timers-rng-layers-frames-4"
++#define CHIP8_FRAME_MODEL "fdisbull-chip8-native-frame-sample-1"
++
++typedef enum Chip8FrameFenceState {
++    CHIP8_FRAME_IDLE = 0,
++    CHIP8_FRAME_ARMED = 1,
++    CHIP8_FRAME_COMPLETED = 2,
++} Chip8FrameFenceState;
+ 
+ typedef enum Chip8Fault {
+     CHIP8_FAULT_NONE = 0,
+@@ -60,6 +67,24 @@
+     uint16_t layer_fault_address;
+     uint16_t layer_fault_pc;
+     bool layer_stop_owned;
++    /* Process-local sampling fence; never serialized in VMState. */
++    uint32_t frame_fence_state;
++    char frame_fence_token[33];
++    uint64_t frame_control_generation;
++    uint64_t frame_baseline_virtual_ticks;
++    uint64_t frame_baseline_deadline_ns;
++    uint64_t frame_completed_virtual_ticks;
++    uint64_t frame_completed_deadline_ns;
++    uint64_t frame_sampled_virtual_now_ns;
++    uint64_t frame_sample_state_generation;
++    uint64_t frame_sample_frame_generation;
++    uint8_t frame_sample_phase_numerator;
++    uint8_t frame_sample_pixels[CHIP8_DISPLAY_PIXELS];
++    bool frame_stop_pending;
++    bool frame_stop_owned;
++    bool frame_stop_consumed;
++    char frame_last_cancelled_token[33];
++    uint64_t frame_last_cancel_expected_generation;
+ } CPUArchState;
+ 
+ static inline void chip8_counter_add_saturating(uint64_t *value,
+@@ -98,6 +123,7 @@
+ void chip8_tcg_init(void);
+ void chip8_apply_ticks(CPUArchState *env, uint32_t count, bool manual);
+ void chip8_layer_check_or_stop(CPUArchState *env);
++void chip8_frame_stop_or_block(CPUArchState *env);
+ 
+ #define MMU_USER_IDX 0
+ 
+--- a/target/chip8/helper.c
++++ b/target/chip8/helper.c
+@@ -55,6 +55,26 @@
+     }
+ }
+ 
++void chip8_frame_stop_or_block(CPUArchState *env)
++{
++    CPUState *cs = env_cpu(env);
++
++    if (env->frame_fence_state == CHIP8_FRAME_ARMED &&
++        env->frame_stop_pending) {
++        env->frame_fence_state = CHIP8_FRAME_COMPLETED;
++        env->frame_stop_pending = false;
++        env->frame_stop_owned = true;
++        env->frame_stop_consumed = true;
++    } else if (env->frame_fence_state == CHIP8_FRAME_COMPLETED) {
++        /* Do not let an unacknowledged sample advance guest state. */
++        env->frame_stop_owned = true;
++    } else {
++        return;
++    }
++    cs->exception_index = EXCP_DEBUG;
++    cpu_loop_exit(cs);
++}
++
+ void helper_chip8_step(CPUArchState *env, uint32_t pc, uint32_t opcode)
+ {
+     uint32_t x = (opcode >> 8) & 0xf;
+@@ -69,6 +89,12 @@
+     if (env->faulted) {
+         chip8_raise(env, env->fault_pc, env->fault_opcode, env->fault_code);
+     }
++    if (env->key_wait_stop_owned) {
++        CPUState *cs = env_cpu(env);
++        cs->exception_index = EXCP_DEBUG;
++        cpu_loop_exit(cs);
++    }
++    chip8_frame_stop_or_block(env);
+     switch (opcode >> 12) {
+     case 0x0:
+         if (opcode == 0x00e0) {
+--- a/target/chip8/vmstate.c
++++ b/target/chip8/vmstate.c
+@@ -1,6 +1,22 @@
+ #include "qemu/osdep.h"
+ #include "migration/vmstate.h"
+ #include "cpu.h"
++
++static int chip8_cpu_pre_save(void *opaque)
++{
++    Chip8CPU *cpu = opaque;
++
++    /* The fence is process-local and cannot survive checkpoint export. */
++    return cpu->env.frame_fence_state == CHIP8_FRAME_IDLE ? 0 : -EBUSY;
++}
++
++static int chip8_cpu_pre_load(void *opaque)
++{
++    Chip8CPU *cpu = opaque;
++
++    /* Refuse replacing state underneath an unacknowledged live fence. */
++    return cpu->env.frame_fence_state == CHIP8_FRAME_IDLE ? 0 : -EBUSY;
++}
+ 
+ static int chip8_cpu_post_load(void *opaque, int version_id)
+ {
+@@ -54,13 +70,33 @@
+     /* The stop attribution is ephemeral, not a restored execution event. */
+     env->key_wait_stop_owned = false;
+     env->layer_stop_owned = false;
++    env->frame_fence_state = CHIP8_FRAME_IDLE;
++    memset(env->frame_fence_token, 0, sizeof(env->frame_fence_token));
++    env->frame_control_generation = 0;
++    env->frame_baseline_virtual_ticks = 0;
++    env->frame_baseline_deadline_ns = 0;
++    env->frame_completed_virtual_ticks = 0;
++    env->frame_completed_deadline_ns = 0;
++    env->frame_sampled_virtual_now_ns = 0;
++    env->frame_sample_state_generation = 0;
++    env->frame_sample_frame_generation = 0;
++    env->frame_sample_phase_numerator = 0;
++    memset(env->frame_sample_pixels, 0, sizeof(env->frame_sample_pixels));
++    env->frame_stop_pending = false;
++    env->frame_stop_owned = false;
++    env->frame_stop_consumed = false;
++    memset(env->frame_last_cancelled_token, 0,
++           sizeof(env->frame_last_cancelled_token));
++    env->frame_last_cancel_expected_generation = 0;
+     return 0;
+ }
+ 
+ const VMStateDescription vmstate_chip8_cpu = {
+     .name = "chip8-cpu",
+-    .version_id = 4,
+-    .minimum_version_id = 4,
++    .version_id = 5,
++    .minimum_version_id = 5,
++    .pre_load = chip8_cpu_pre_load,
++    .pre_save = chip8_cpu_pre_save,
+     .post_load = chip8_cpu_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UINT32_ARRAY(env.v, Chip8CPU, 16),

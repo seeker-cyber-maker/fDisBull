@@ -115,6 +115,9 @@ def write_scene(path):
 
 
 def quiet_player(python, output, name, *, player_path=None):
+    password_file = output / (name + '.password')
+    password_file.write_text('0' * 64 + '\n')
+    password_file.chmod(0o600)
     listener = socket.socket()
     listener.bind(('127.0.0.1', 0)); listener.listen(1); listener.settimeout(3)
     finish = threading.Event()
@@ -127,7 +130,8 @@ def quiet_player(python, output, name, *, player_path=None):
         except OSError:
             pass
     thread = threading.Thread(target=peer, daemon=True); thread.start()
-    argv = [python, '-m', 'fdisbull_player', '--connect', '127.0.0.1:' + str(listener.getsockname()[1])]
+    argv = [python, '-m', 'fdisbull_player', '--connect', '127.0.0.1:' + str(listener.getsockname()[1]),
+            '--connect-password-file', str(password_file)]
     if player_path is None:
         argv.insert(1, '-I')
         environment = None
@@ -144,3 +148,4 @@ def quiet_player(python, output, name, *, player_path=None):
                 return {'outer_timeout': True, 'exit_code': None}
     finally:
         finish.set(); listener.close(); thread.join(timeout=1)
+        password_file.unlink(missing_ok=True)

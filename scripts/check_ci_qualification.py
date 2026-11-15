@@ -245,7 +245,7 @@ def passing_junit(path, *, native=False):
 
 CHAT_CHECKS = frozenset({'dos_screenshot','dos_keyboard','dos_restore','pe_breakpoint','pe_memory',
     'pe_screenshot','pe_click','pe_trace','pe_restore','solver_counterexample','solver_equivalence',
-    'player_save','player_resume','skill_fdisbull','skill_gamefaqs'})
+    'player_save','player_resume','skill_fdisbull','skill_gamefaqs','cli_import','cli_analyze','cli_restart'})
 
 
 def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_artifacts, origin, boat):
@@ -271,7 +271,7 @@ def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_
         or receipt.get('execution_origin') != origin or receipt.get('local_run_id') != local_run_id
         or receipt.get('source_access') != 'absent' or receipt.get('source_check') != 'artifact-and-host-clone'):
         raise ValueError('Chat consumer receipt source or run mismatch')
-    for observed, expected_id, name in ((process,job_id,'chat-native-consumer'),(producer,producer_id,'chat-native-prepare')):
+    for observed, expected_id, name in ((process,job_id,'native-chat-consumer'),(producer,producer_id,'native-chat-prepare')):
         if (observed.get('execution_origin') != origin or observed.get('local_run_id') != local_run_id
             or observed.get('local_job_id') != expected_id or observed.get('job_name') != name
             or observed.get('source_commit') != source_commit or observed.get('termination') != 'exited'
@@ -319,7 +319,7 @@ def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_
         if not re.fullmatch(r'[0-9a-f]{64}', str(result.get(name, ''))):
             raise ValueError('Chat screenshot identity missing')
     runtime = result.get('runtime_sha256')
-    if not isinstance(runtime, dict) or set(runtime) != {'dos','wine'} or any(not re.fullmatch(r'[0-9a-f]{64}', str(x)) for x in runtime.values()):
+    if not isinstance(runtime, dict) or set(runtime) != {'dos','wine','windows'} or any(not re.fullmatch(r'[0-9a-f]{64}', str(x)) for x in runtime.values()):
         raise ValueError('Chat prepared runtime identity missing')
     with zipfile.ZipFile(local_path(root, archive['path'])) as zipped:
         members = [i for i in zipped.infolist() if i.filename == 'fdisbull-chat-offline/MANIFEST.json']

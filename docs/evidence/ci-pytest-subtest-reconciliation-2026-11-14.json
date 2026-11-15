@@ -1,0 +1,59 @@
+{
+  "automatic_controller_terminal_recovery_qualified": false,
+  "base_commit": "544b0175d9c40602f0cd1469387b6296139cc1fc",
+  "canonical_revalidation_and_manual_closure_pending": true,
+  "completed_linux_job": {
+    "attempt": "2",
+    "job_id": "132498683205",
+    "qualification_exit_code": 0,
+    "run_id": "43604381587",
+    "source_commit": "c59ba55bf5b541a4c99932905e8562c950f9c3c5",
+    "status": "success",
+    "workflow_control_commit": "e2b4fd7f4a492685bd8ccbf27ac7b2a7cc9dfa78"
+  },
+  "contract": [
+    "Only ordinary mismatched reports can use an already closed-inventory-bound tests.log",
+    "Exactly one complete final summary must reconcile every parent case, directly skipped case, all skipped nodes and a positive passed-subtest count",
+    "Absent, truncated, ambiguous, failing or unsupported summaries and malformed parent/suite structures are rejected",
+    "Equal-count legacy, strict/native and exactly26 required-contract behavior is preserved"
+  ],
+  "historical_controller_attention_preserved_sha256": "df025816ac46477e0be35447fe129b6f3f1473da55da175f28808dbea938fd39",
+  "no_CI_rerun_performed": true,
+  "problem": {
+    "actual_parent_passed": 11998,
+    "actual_parent_skipped": 418,
+    "actual_parent_testcases": 12416,
+    "actual_passed_subtests": 2379,
+    "actual_pytest_report_suite_tests": 14795,
+    "errors": 0,
+    "failures": 0,
+    "genuine_local_pytest_reproducer": "pytest 9.1.1: one passing parent plus two passing subtests produces suite tests=3 with one testcase"
+  },
+  "release_performed": false,
+  "schema": "fdisbull-focused-evidence-parser-verification-1",
+  "sources": {
+    "scripts/ci/production_evidence.py": "2d05f88ef2f98a21fb6201d795e86518e2ce0a2dc647b1a6822ddaeae125282f",
+    "tests/test_production_evidence.py": "13c677665d76c7011af260a1088544a005dcb18e672acd842f78720a848e6b26"
+  },
+  "system_fdisbull_installation_changed": false,
+  "verification": [
+    {
+      "result": "333 passed in 13.79s",
+      "scope": "evidence/runtime/qualification/producer/recovery/github"
+    },
+    {
+      "junit_sha256": "e1ebbe779606a4f28e49376fdc8bd36d6fea69ed579e10ec9d102d88927051a1",
+      "result": "52 passed in 0.76s",
+      "scope": "root independent full evidence suite"
+    },
+    {
+      "export_mutation": false,
+      "inventory_sha256": "fc61bab4c11ca0d147df7dae420e1d9a51762646d582c5dba5defd68852a6079",
+      "job_metadata_sha256": "1cee2242b246a6bdac5b19d3a7cc6ec049222d414c72d7a29d38e5f9b5267896",
+      "provider_calls": 0,
+      "result": "All local identity, source postcheck, closed inventory, JUnit+summary, 26contracts and four package checks passed; forbidden canonical-capture sentinel reached",
+      "scope": "Exact patched module executed in memory against actual closed Linux export",
+      "source_installed": false
+    }
+  ]
+}

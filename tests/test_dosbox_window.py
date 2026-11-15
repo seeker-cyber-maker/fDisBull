@@ -36,11 +36,16 @@ with os.fdopen(int(source), 'r') as reader, os.fdopen(int(sink), 'w') as writer:
     return executable, report
 
 
+@pytest.mark.parametrize('video_driver', [None, 'cocoa', 'x11'])
 @pytest.mark.parametrize('options', [{}, {'window': False}], ids=['default', 'explicit-headless'])
-def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkeypatch, options):
+def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkeypatch, options, video_driver):
     executable, report = transport
-    monkeypatch.setenv('SDL_VIDEODRIVER', 'dummy')
+    if video_driver is None:
+        monkeypatch.delenv('SDL_VIDEODRIVER', raising=False)
+    else:
+        monkeypatch.setenv('SDL_VIDEODRIVER', video_driver)
     monkeypatch.setenv('SDL_AUDIODRIVER', 'coreaudio')
+    monkeypatch.setenv('SDL_RENDER_DRIVER', 'metal')
     monkeypatch.setenv('DOSBOX_SECRET', 'discard')
     rpc = DOSBoxRPC(executable, tmp_path, **options)
     try:
@@ -48,13 +53,20 @@ def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkey
         assert '-agent-window' not in result['args'] and '--agent-window' not in result['args']
         assert result['env']['SDL_VIDEODRIVER'] == 'dummy'
         assert result['env']['SDL_AUDIODRIVER'] == 'dummy'
-        assert 'mixer nosound=true' in result['args']
-        assert 'midi mididevice=none' in result['args']
-        # Space-containing DOSBox settings require the section name, and must
-        # be passed as one argument paired with -set to suppress exit dialogs.
-        quit_setting = 'dosbox quit warning=false'
-        assert result['args'].count(quit_setting) == 1
-        assert result['args'][result['args'].index(quit_setting) - 1] == '-set'
+        assert result['env']['SDL_RENDER_DRIVER'] == 'software'
+        for flag in ('--nogui', '--nomenu', '--noconsole', '--fastlaunch'):
+            assert flag in result['args']
+        for setting in (
+            'dosbox quit warning=false',
+            'sdl videodriver=dummy',
+            'sdl output=surface',
+            'sdl showmenu=false',
+            'sdl usesystemcursor=false',
+            'mixer nosound=true',
+            'midi mididevice=none',
+        ):
+            assert result['args'].count(setting) == 1
+            assert result['args'][result['args'].index(setting) - 1] == '-set'
         assert 'DOSBOX_SECRET' not in result['env']
         assert rpc.capabilities['video']['headless'] is True
     finally:
@@ -71,7 +83,9 @@ def test_window_option_reaches_the_same_agent_and_keeps_display_env(transport, t
         result = json.loads(report.read_text())
         assert any(arg in ('-agent-window', '--agent-window') for arg in result['args'])
         assert '--agent-config' in result['args']
-        assert not any('quit warning' in arg for arg in result['args'])
+        quit_setting = 'dosbox quit warning=false'
+        assert result['args'].count(quit_setting) == 1
+        assert result['args'][result['args'].index(quit_setting) - 1] == '-set'
         assert result['env']['DISPLAY'] == ':77'
         assert 'SDL_VIDEODRIVER' not in result['env']
         assert rpc.capabilities['video']['headless'] is False
@@ -178,7 +192,7 @@ def test_project_records_window_request_without_changing_paused_entry_contract(t
             if method == 'state.get_registers':
                 return {'cpu_mode': 'real', 'segments': {'cs': '1000'}, 'instruction_pointer': '0000'}
             if method == 'session.stop': return {'operation_id': 'stop'}
-            if method == 'execution.wait': return {'state': 'stopped', 'running': False}
+            if method == 'execution.wait': return {'state': 'exited', 'running': False}
             raise AssertionError(method)
         def close(self): pass
 
@@ -273,3 +287,118 @@ def test_dot_mode_cli_alias_preserves_window_contract():
         dot=vars(parser().parse_args(base+['--dot-mode']))
         old=vars(parser().parse_args(base+['--window']))
         assert dot==old and dot['window'] is True
+
+
+def test_unclosed_rpc_finalizer_terminates_process_and_cleans_temporary_directory(tmp_path):
+    import gc
+    executable = tmp_path / 'persistent-agent'
+    executable.write_text(f'''#!{sys.executable}
+import json, os, sys, time
+from pathlib import Path
+args = sys.argv[1:]
+config = Path(args[args.index('--agent-config') + 1]).read_text()
+endpoint = next(line.split('=', 1)[1] for line in config.splitlines() if line.startswith('endpoint='))
+_, source, sink = endpoint.split(':')
+with os.fdopen(int(source), 'r') as reader, os.fdopen(int(sink), 'w') as writer:
+    line = reader.readline()
+    request = json.loads(line)
+    writer.write(json.dumps({{'jsonrpc': '2.0', 'id': request['id'], 'result': {{'video': {{'headless': True}}}}}}) + '\\n')
+    writer.flush()
+    time.sleep(30)
+''')
+    executable.chmod(0o755)
+    rpc = DOSBoxRPC(executable, tmp_path)
+    process = rpc.process
+    temp_dir = Path(rpc.temporary.name)
+    assert process.poll() is None and temp_dir.exists()
+    del rpc
+    gc.collect()
+    assert process.poll() is not None
+    assert not temp_dir.exists()
+
+
+def test_unclosed_rpc_in_reference_cycle_is_reaped_on_interpreter_exit(tmp_path):
+    import signal
+    import subprocess
+    import time
+    executable = tmp_path / 'persistent-agent'
+    executable.write_text(f'''#!{sys.executable}
+import json, os, sys, time
+from pathlib import Path
+args = sys.argv[1:]
+config = Path(args[args.index('--agent-config') + 1]).read_text()
+endpoint = next(line.split('=', 1)[1] for line in config.splitlines() if line.startswith('endpoint='))
+_, source, sink = endpoint.split(':')
+with os.fdopen(int(source), 'r') as reader, os.fdopen(int(sink), 'w') as writer:
+    line = reader.readline()
+    request = json.loads(line)
+    writer.write(json.dumps({{'jsonrpc': '2.0', 'id': request['id'], 'result': {{'video': {{'headless': True}}}}}}) + '\\n')
+    writer.flush()
+    time.sleep(30)
+''')
+    executable.chmod(0o755)
+    receipt = tmp_path / 'child_receipt.json'
+    script = f"""
+import json
+from pathlib import Path
+from fdisbull.dosbox_rpc import DOSBoxRPC
+rpc = DOSBoxRPC({str(executable)!r}, {str(tmp_path)!r})
+cycle = []
+cycle.append((cycle, rpc))
+Path({str(receipt)!r}).write_text(json.dumps({{'pid': rpc.process.pid, 'temp': rpc.temporary.name}}))
+"""
+    env = dict(os.environ)
+    env['PYTHONPATH'] = os.pathsep.join(
+        [str(Path(__file__).resolve().parents[1] / 'src')]
+        + ([env['PYTHONPATH']] if env.get('PYTHONPATH') else [])
+    )
+    completed = subprocess.run([sys.executable, '-c', script], env=env, timeout=10, check=True)
+    assert completed.returncode == 0
+    info = json.loads(receipt.read_text())
+    assert not Path(info['temp']).exists()
+    deadline = time.monotonic() + 3.0
+    alive = True
+    while time.monotonic() < deadline:
+        try:
+            os.kill(info['pid'], 0)
+        except ProcessLookupError:
+            alive = False
+            break
+        time.sleep(0.05)
+    if alive:
+        os.kill(info['pid'], signal.SIGKILL)
+    assert not alive
+
+
+def test_startup_eof_retains_bounded_log_tail_and_reaps_owned_process(tmp_path):
+    executable = tmp_path / 'early-exit-backend'
+    executable.write_text('#!/usr/bin/env python3\nprint("x" * 9000 + " diagnostic-tail", flush=True)\n')
+    executable.chmod(0o755)
+    spawned = []
+    with pytest.raises(OSError, match='diagnostic-tail') as caught:
+        DOSBoxRPC(executable, tmp_path, on_spawn=spawned.append)
+    assert len(str(caught.value)) < 4100
+    assert len(spawned) == 1 and spawned[0].poll() is not None
+
+
+def test_failed_owned_reaping_can_be_retried_after_temp_cleanup():
+    from types import SimpleNamespace
+    class Process:
+        attempts = 0
+        reaped = False
+        def poll(self): return 0 if self.reaped else None
+        def terminate(self): self.attempts += 1
+        def wait(self, timeout):
+            if self.attempts == 1:
+                raise RuntimeError('authored first reap failure')
+            self.reaped = True
+            return 0
+    rpc = DOSBoxRPC.__new__(DOSBoxRPC)
+    rpc.reader = rpc.writer = None
+    rpc.process = Process()
+    rpc.temporary = SimpleNamespace(name=None, cleanup=lambda: None)
+    with pytest.raises(RuntimeError, match='authored first reap failure'):
+        rpc.close()
+    assert rpc.temporary is None and rpc.close_evidence['process_reaped'] is False
+    assert rpc.close()['process_reaped'] is True
+    assert rpc.process.attempts == 2

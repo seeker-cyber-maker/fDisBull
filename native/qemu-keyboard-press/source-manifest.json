@@ -1,0 +1,38 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "command": "x-fdisbull-arm-keyboard-press",
+  "patch": "qemu-10.0.13-fdisbull-keyboard-press-v1.patch",
+  "patch_sha256": "0098d4301d8703d7d740b58ae0f048d0a73ec6e9c9ce10cec04457bebb1c4ed0",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_input_patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "requires_input_patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "requires_retrace_patch": "qemu-10.0.13-fdisbull-retrace-v1.patch",
+  "requires_retrace_patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c",
+  "requires_input_retrace_patch": "qemu-10.0.13-fdisbull-input-retrace-v1.patch",
+  "requires_input_retrace_patch_sha256": "5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80",
+  "files": [
+    {
+      "path": "qapi/fdisbull-input.json",
+      "base_sha256": "b1802eb818c0f67c9ba157bab4d72a479d8e3e6061ad50fc122e70e90f7a0de7",
+      "patched_sha256": "a8adb30dadcf40093d49e085cd3a2901aeb8bc404fd3312f190796141d504282"
+    },
+    {
+      "path": "system/fdisbull-input.c",
+      "base_sha256": "85957a5bf15d881bc2dbf11a20aa5163003eda61caeaf106416cfc5a063f0481",
+      "patched_sha256": "826cf7f697025d0dc80223f07d04f557bcbd5a7b37fa7171f2ed50e15e391426"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed forward and reverse with zero fuzz/offset against fresh official archive inputs and the exact five prior patches; both output members match the frozen implementation source",
+  "schema_validation": "QAPISchema(qapi/qapi-schema.json) passed on the freshly reproduced six-layer source",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

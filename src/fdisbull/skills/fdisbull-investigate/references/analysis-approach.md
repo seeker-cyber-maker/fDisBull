@@ -19,6 +19,9 @@ may start in the middle of this guide; do not make unrelated recovery a gate.
 - [Worked decision examples](#worked-decision-examples)
 - [Choose the next reference](#choose-the-next-reference)
 
+Need actual commands and example responses? Start with [next steps](next-steps.md);
+use [types and addresses](analysis-types.md) for mapping and layout questions.
+
 ## Start with an outcome and a finite evidence ledger
 
 For ordinary discovery, a question, useful result and next unlocked action are

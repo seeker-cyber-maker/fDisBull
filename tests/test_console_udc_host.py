@@ -15,6 +15,45 @@ HOST = module_from_spec(SPEC)
 SPEC.loader.exec_module(HOST)
 
 
+def test_instruction_checkpoint_plan_requires_explicit_phase_and_bounded_storage():
+    assert HOST.checkpoint_plan(None,None,10)==[]
+    assert HOST.checkpoint_plan(0x80962e,'0,3,9',10,2)==[0,3,9]
+    for pc,frames,limit in [(None,'0',1),(0x80962e,None,1),(0,'0',1),
+                            (0x1000000,'0',1),(True,'0',1),(0x80962e,'0',9)]:
+        with pytest.raises(ValueError):HOST.checkpoint_plan(pc,frames,10,limit)
+    selected=','.join(map(str,range(129)))
+    assert len(HOST.checkpoint_plan(0x80962e,selected,130,1)) == 129
+    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,selected,130,2)
+    assert len(HOST.checkpoint_plan(0x80962e,','.join(map(str,range(4097))),4097,1)) == 4097
+    with pytest.raises(ValueError):HOST.checkpoint_plan(0x80962e,','.join(map(str,range(6001))),6001)
+
+
+def test_controller_journal_reports_duplicate_conflicts_and_consumer_disagreement():
+    main = {'kind': 'main', 'serial': 4, 'held': 0x100, 'previous': 0,
+            'edge': 0x100, 'actor': None, 'video_frame': 12}
+    player = {**main, 'kind': 'player', 'actor': 0x42}
+    conflict = {**main, 'edge': 0}
+    result = HOST.controller_journal_summary([main, player, conflict], 2)
+    assert result['dropped'] == 2
+    assert result['duplicate_serials'] == [{'kind': 'main', 'serial': 4}]
+    assert result['conflicting_serials'] == [{'kind': 'main', 'serial': 4}]
+    assert result['consumer_disagreements'] == []
+    player['held'] = 0
+    assert HOST.controller_journal_summary([main, player], 0)['consumer_disagreements'] == [4]
+
+
+def test_modal_polls_may_repeat_with_different_input_within_a_single_main_pass():
+    modal = {'kind':'modal','serial':5,'held':0,'previous':0,'edge':0,
+             'actor':None,'pc':0x80a67d,'video_frame':12}
+    second = {**modal,'held':0x1000,'edge':0x1000,'video_frame':13}
+    result = HOST.controller_journal_summary([modal,second], 0)
+    assert result['samples'] == [modal,second]
+    assert result['duplicate_serials'] == []
+    assert result['conflicting_serials'] == []
+    conversation = {**modal,'kind':'conversation','context':'primary','source_return':0x91ac}
+    assert not HOST.controller_journal_summary([conversation,conversation], 0)['duplicate_serials']
+
+
 def test_watch_defaults_preserve_system_ram_and_allow_save_ram():
     watches = [{'name': 'old', 'offset': 0, 'length': 1},
                {'name': 'save', 'memory_id': 0, 'offset': 8191, 'length': 1}]

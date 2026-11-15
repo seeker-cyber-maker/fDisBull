@@ -1,0 +1,55 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "files": [
+    {
+      "path": "include/ui/input.h",
+      "base_sha256": "69efe9f954bf6937994eead227ce21b9ead6dd90b0ea610eace70849e8b3c4f4",
+      "patched_sha256": "4516ebd6a77a33ed178bdbc400a1a1ef1d7ceb78dd4d7078689d6c691d1add9d"
+    },
+    {
+      "path": "qapi/fdisbull-input.json",
+      "base_sha256": null,
+      "patched_sha256": "1ea60f5f1a3204a04594ea5b4b63aa418e8e7b2ad92761e303347cf660fca29b"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "cc0189a0ad79ad13eb845c7f0914d6ccd5eb44d143449adcbb98a07961e919c5",
+      "patched_sha256": "32c72a6e415de90fb567f6583bbf2bc39784300632a84bd9a7887a86fe469087"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "e92f94f87cdfe9a24ba6558f4dc83f05a3dd42b7ec4b33f14ba6fd5e06d28dc2",
+      "patched_sha256": "504d782590c63fbac4e5740e09017ba96e6c3789e9fb424c654cbfd39deef60c"
+    },
+    {
+      "path": "system/fdisbull-input.c",
+      "base_sha256": null,
+      "patched_sha256": "2836284501b04ef771037813ccb04699c092b140767ea59dae6d992962063222"
+    },
+    {
+      "path": "system/meson.build",
+      "base_sha256": "08c5ddef696e62d2eb57f4b07cd6b5a31da476237a883519282022fec02acf05",
+      "patched_sha256": "0031a00842d1922978b80fd19195713223eb3ea4c9928e1d241ccc86a0691766"
+    },
+    {
+      "path": "ui/input.c",
+      "base_sha256": "e7307b5d131c9ae0ac94fb1030ee071b9959a5fd9468fec6e55104c2f339cd14",
+      "patched_sha256": "77fa3efcc9917030b6313a540d58a274100589d15d8ace2a3ead4ffe911e56cc"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed after the exact current clock and media patches; every resulting file matches the private built source",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

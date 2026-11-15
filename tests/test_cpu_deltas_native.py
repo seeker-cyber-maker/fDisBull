@@ -1,5 +1,6 @@
 """Selected CPU/RAM delta contracts on an explicitly selected native backend."""
 import base64
+import hashlib
 import json
 import subprocess
 import sys
@@ -26,17 +27,43 @@ def test_delta_routes_and_script_limits_are_explicit():
             {'op':'delta-record','count':True}]})
 
 
-def test_real_delta_projection_freezes_until_native_recovery(native):
+def test_real_delta_projection_freezes_until_native_recovery(native,tmp_path):
     project,debug,_=native
     workspace=DebugWorkspace();workspace.sessions[debug.run_id]=debug
     def invoke(method,**params):
         return workspace.invoke(method,project.path,{'run':debug.run_id,**params})
     initial=observed(debug)
+    artifacts_before=project.debug_artifacts()['artifacts']
     with pytest.raises(ValueError,match='CPU deltas require'):
         debug.script({'format':'fdisbull-script-1','steps':[
             {'op':'trace','count':2}, {'op':'delta-start','ranges':[]}]})
     assert observed(debug)==initial
-    assert not project.debug_artifacts()['artifacts']
+    artifacts=project.debug_artifacts()['artifacts']
+    runs={item['id'] for item in project.debug_runs()['runs']}
+    assert all(item['kind'] in {'runtime-tracking','memory-snapshot'} for item in artifacts)
+    assert all(item['run'] in runs for item in artifacts)
+    assert {(item['id'],item['kind'],item['sha256']) for item in artifacts} == {
+            (item['id'],item['kind'],item['sha256']) for item in artifacts_before}
+    tracking=[item for item in artifacts if item['kind']=='runtime-tracking']
+    tracking_events={'source-observation','invalidate','observation-error','lifetime-end'}
+    assert tracking
+    for item in tracking:
+        assert item['name']=='runtime-tracking.json'
+        assert item['metadata']['automatic'] is True
+        assert item['metadata']['kind'] in tracking_events
+        output=tmp_path/f"tracking-{item['id']}.json"
+        exported=project.debug_export(item['id'],output)
+        data=output.read_bytes()
+        assert hashlib.sha256(data).hexdigest()==item['sha256']==exported['sha256']
+        record=json.loads(data)
+        assert set(record)=={'format','kind','document'}
+        assert record['format']=='fdisbull-automatic-runtime-tracking-1'
+        assert record['kind']==item['metadata']['kind']
+        assert isinstance(record['document'],dict)
+    for item in (a for a in artifacts if a['kind']=='memory-snapshot'):
+        assert item['name'].startswith('automatic-code-')
+        assert set(item['metadata'])=={'capture','snapshot'}
+        assert item['metadata']['snapshot']['format']=='fdisbull-memory-snapshot-1'
     started=invoke('debug-delta-start',ranges=[{'address':'1000:0000','length':512}],max_steps=12)
     assert started['anchor']['artifact']
     states=[]

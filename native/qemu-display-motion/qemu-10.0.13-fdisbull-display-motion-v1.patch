@@ -1,0 +1,759 @@
+diff --git a/include/system/fdisbull-display.h b/include/system/fdisbull-display.h
+new file mode 100644
+--- /dev/null
++++ b/include/system/fdisbull-display.h
+@@ -0,0 +1,24 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* Internal observations of the admitted VGA and retained display owner. */
++#ifndef SYSTEM_FDISBULL_DISPLAY_H
++#define SYSTEM_FDISBULL_DISPLAY_H
++
++#include "qapi/qapi-types-fdisbull-vga-configuration.h"
++
++/*
++ * Requires BQL, prior precise VGA admission and an initialized display owner.
++ * Unlike the public stopped-only query, input may call this while running or
++ * with an armed clock budget.  The current/display timestamps describe that
++ * actual observation; the published snapshot keeps its historical timestamp.
++ * The caller must apply its own stop/budget precedence and publication policy.
++ *
++ * This never admits an owner, renders, rearms a timer or repairs configuration
++ * history.  Valid empty/replaced/observing windows remain observable so a caller
++ * can cancel its old binding with evidence.  Invalidated identity is an error.
++ * The caller owns the returned immutable snapshot and must not use historical
++ * callback observations to replace a later live configuration frontier.
++ */
++FdisbullVgaConfigurationInfo *
++fdisbull_vga_configuration_snapshot_owned(Error **errp);
++
++#endif
+diff --git a/qapi/fdisbull-input.json b/qapi/fdisbull-input.json
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -1,6 +1,7 @@
+ # Experimental fDisBull one-shot physical input scheduling, API 1.
+ { 'include': 'ui.json' }
+ { 'include': 'fdisbull-retrace.json' }
++{ 'include': 'fdisbull-vga-configuration.json' }
+ 
+ ##
+ # @FdisbullInputState:
+@@ -169,6 +170,68 @@
+             'dispatched-count': 'uint64' } }
+ 
+ ##
++# @FdisbullDisplayMotionExpected:
++#
++# Exact caller expectation for a stopped retained publication and its current
++# VGA configuration.  Counts are supplied separately; native code neither
++# interprets pixel displacements nor validates a guest pointer scale.
++#
++# @epoch: Positive expected admitted native virtual-clock epoch.
++# @virtual-ns: Exact expected stopped timestamp at arm.
++# @device: Exact canonical path of the admitted primary VGA.
++# @model: Expected qemu-vga-configuration-fdisbull-v1 model.
++# @configuration-generation: Positive expected generation of both current
++#     configuration and the configuration observed at publication.
++# @window: Exact retained display owner token.
++# @update-id: Positive exact retained publication ID within that window.
++# @published-ns: Exact retained publication timestamp.
++# @width: Exact retained image width, 1..8192 pixels.
++# @height: Exact retained image height, 1..8192 pixels.
++#
++# Console and head are fixed at zero by native admission.  The publication
++# must already exist in an explicitly stopped observer.  This expectation
++# cannot establish current raster coherence, a BIOS mode or cursor mapping.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullDisplayMotionExpected',
++  'data': { 'epoch': 'uint64', 'virtual-ns': 'int', 'device': 'str',
++            'model': 'str', 'configuration-generation': 'uint64',
++            'window': 'str', 'update-id': 'uint64', 'published-ns': 'int',
++            'width': 'uint32', 'height': 'uint32' } }
++
++##
++# @FdisbullInputMotion:
++#
++# @dx: Declared QEMU relative X count, -127..127, positive right.
++# @dy: Declared QEMU relative Y count, -127..127, positive down.
++# @delay-ns: Fixed 2000000 ns delay from acceptance to the one attempt.
++# @armed: Immutable full display/configuration observation accepted at arm.
++# @checked: Immutable running timer-callback observation, absent until the
++#     guard is sampled.  The reused configuration-info fields describe the
++#     actual callback time, not a stopped public query.  The published stamp
++#     remains historical.  Stop/budget precedence can cancel before sampling.
++#
++# The pair is nonzero.  One batch emits nonzero X first and nonzero Y second,
++# then one sync; event-count is one or two.  A changed current generation
++# cancels as display-motion-configuration-changed.  Only with the same current
++# generation is a changed window/publication/state considered, cancelling as
++# display-motion-publication-changed.  Impossible history, regressions and
++# contradictions fail before selecting either cancellation reason.
++#
++# These observations never refresh after their initial capture, including on
++# cancellation or later queries.  They bind configuration and retained image
++# identity, not current pixels or pointer location.  Callback completion does
++# not establish device queue acceptance, guest consumption or pixel travel.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullInputMotion',
++  'data': { 'dx': 'int', 'dy': 'int', 'delay-ns': 'int',
++            'armed': 'FdisbullVgaConfigurationInfo',
++            '*checked': 'FdisbullVgaConfigurationInfo' } }
++
++##
+ # @FdisbullInputInfo:
+ #
+ # @api-version: Scheduling protocol version, one.
+@@ -183,13 +246,18 @@
+ # @dispatch-ns: Actual handler/sync completion time; only present if dispatched.
+ # @reason: Terminal reason of at most 256 bytes; absent while idle or armed.
+ # @retrace: Immutable modeled-retrace binding, present only for a retrace arm.
+-#     Mutually exclusive with press, typing and click.
++#     Mutually exclusive with press, typing, click and motion.
+ # @press: Finite timed keyboard plan and actual prefix, present only for a
+-#     keyboard-press arm.  Mutually exclusive with retrace, typing and click.
++#     keyboard-press arm.  Mutually exclusive with retrace, typing, click and
++#     motion.
+ # @typing: Finite timed text plan and actual prefix, present only for a
+-#     keyboard-type arm.  Mutually exclusive with press, retrace and click.
++#     keyboard-type arm.  Mutually exclusive with press, retrace, click and
++#     motion.
+ # @click: Timed mouse-button plan and actual prefix, present only for a
+-#     mouse-click arm.  Mutually exclusive with press, typing and retrace.
++#     mouse-click arm.  Mutually exclusive with press, typing, retrace and
++#     motion.
++# @motion: One display/configuration-bound relative motion batch, present
++#     only for a display-motion arm.  Mutually exclusive with all other plans.
+ #
+ # Terminal fields are retained unchanged until a new token is accepted.
+ # Top-level dispatch-ns is present only when every planned event completed;
+@@ -208,7 +276,8 @@
+             '*deadline-ns': 'int', '*terminal-ns': 'int',
+             '*dispatch-ns': 'int', '*reason': 'str',
+             '*retrace': 'FdisbullInputRetrace', '*press': 'FdisbullInputPress',
+-            '*typing': 'FdisbullInputType', '*click': 'FdisbullInputClick' } }
++            '*typing': 'FdisbullInputType', '*click': 'FdisbullInputClick',
++            '*motion': 'FdisbullInputMotion' } }
+ 
+ ##
+ # @x-fdisbull-query-input:
+@@ -317,8 +386,9 @@
+ #
+ # This command shares the existing scheduler, migration restriction and token
+ # history.  It clears old retrace/type/click descriptors; another accepted arm
+-# clears this press descriptor.  Physical held-key ownership remains the
+-# caller's responsibility, including resolution of a cancelled partial press.
++# clears this press descriptor.  Successful arm also clears motion.  Physical
++# held-key ownership remains the caller's responsibility, including resolution
++# of a cancelled partial press.
+ #
+ # Returns: Armed receipt with only its first step deadline established.
+ # Since: 10.0
+@@ -351,8 +421,8 @@
+ # into several runs.  Partial sequences require explicit caller recovery.
+ #
+ # Shares query/cancel, migration restriction and token history with other
+-# input modes.  Clears old press/retrace/click descriptors only on successful
+-# arm.
++# input modes.  Clears old press/retrace/click/motion descriptors only on
++# successful arm.
+ # Does not infer guest layout, neutralize held keys or Caps Lock, synthesize
+ # cleanup releases, replay callbacks or establish guest consumption.
+ #
+@@ -382,7 +452,7 @@
+ # is no implicit run, movement, trailing timer, replay or cleanup release.
+ #
+ # Shares query/cancel, migration restriction and token history with other
+-# input modes.  Successful arm clears press/typing/retrace descriptors;
++# input modes.  Successful arm clears press/typing/retrace/motion descriptors;
+ # another accepted arm clears click.  Refused arms preserve the old receipt
+ # and do not consume the requested token.  External button state and pending
+ # mouse accumulators are not neutralized.  Disabled, remote or full devices
+@@ -396,6 +466,50 @@
+   'returns': 'FdisbullInputInfo' }
+ 
+ ##
++# @x-fdisbull-arm-display-motion:
++#
++# @token: Unused input owner token of 1..128 bytes.
++# @dx: QEMU relative X count in -127..127, positive right.
++# @dy: QEMU relative Y count in -127..127, positive down.
++# @expected: Exact stopped publication and configuration expectation.
++#
++# Passively arm one nonzero relative-motion pair for 2 ms after acceptance.
++# Requires prior precise VGA admission, a stopped nonempty retained display
++# window, and matching current/published configuration generation and raw
++# values.  Every expected field must match one fresh full owned observation.
++# Neither guest pointer scale nor pixel arithmetic is inferred by this command.
++#
++# Native code prepares only nonzero X then nonzero Y events as one owned PS/2
++# batch.  At the deadline, stop and reached/equal clock-budget precedence run
++# before a fresh publication/configuration guard and selected-handler checks.
++# Impossible history fails before choosing configuration-change precedence
++# among valid binding changes.  A valid change cancels without any relative
++# callback; regressed or contradictory identity fails.  No guard failure
++# refreshes the display, rebases a request,
++# retries an event or consumes a new token.  The first actual VM stop consumes
++# an unfired attempt.  Completion does not stop the guest.
++#
++# Shares query/cancel, migration restriction and token history.  Accepted
++# arms clear other plan descriptors; other accepted arms clear motion.
++# Rejected arms preserve the preceding receipt and do not consume the token.
++# The host must retain a cancelled mapped plan's binding until explicit
++# cancellation; it must not convert those pending records to an ordinary or
++# retrace arm.  Independently requested lower-level input keeps its contract.
++#
++# No button event is requested.  Existing buttons, residual motion and device
++# mode are not neutralized.  Device FIFO acceptance, guest consumption,
++# actual pixel displacement and cursor position remain unknown.
++#
++# Returns: Armed receipt with immutable full binding evidence.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-display-motion',
++  'data': { 'token': 'str', 'dx': 'int', 'dy': 'int',
++            'expected': 'FdisbullDisplayMotionExpected' },
++  'returns': 'FdisbullInputInfo' }
++
++##
+ # @x-fdisbull-cancel-input:
+ #
+ # @token: Current owner token.
+diff --git a/system/fdisbull-display.c b/system/fdisbull-display.c
+--- a/system/fdisbull-display.c
++++ b/system/fdisbull-display.c
+@@ -20,6 +20,8 @@
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/timer.h"
++#include "system/fdisbull-display.h"
++#include "system/fdisbull-retrace.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+ #include "ui/console.h"
+@@ -506,20 +508,15 @@
+ }
+ 
+ 
+-FdisbullVgaConfigurationInfo *qmp_x_fdisbull_query_vga_configuration(Error **errp)
+-{
+-    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++static FdisbullVgaConfigurationInfo *display_configuration_info(
++    const FdisbullRetraceInfo *retrace, Error **errp)
++{
+     g_autoptr(FdisbullVgaConfigurationSnapshot) current = NULL;
+     FdisbullVgaConfigurationSnapshot *published;
+     FdisbullVgaConfigurationInfo *info;
+     Object *device;
+ 
+     assert(bql_locked());
+-    /* Existing admission pins exactly one selected primary VGA and its epoch. */
+-    retrace = qmp_x_fdisbull_query_retrace(errp);
+-    if (!retrace || !display_guard(errp)) {
+-        return NULL;
+-    }
+     device = object_resolve_path(retrace->device, NULL);
+     if (!device || (display_window.device && display_window.device != device)) {
+         display_invalidate("configuration device differs from display owner");
+@@ -533,8 +530,8 @@
+     }
+     if (current->epoch != display_window.epoch ||
+         current->virtual_ns != qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL)) {
+-        display_invalidate("configuration clock differs from stopped display");
+-        error_setg(errp, "VGA configuration clock changed across stopped query");
++        display_invalidate("configuration clock differs from display observation");
++        error_setg(errp, "VGA configuration clock changed across observation");
+         return NULL;
+     }
+     published = display_window.published_configuration;
+@@ -555,3 +552,46 @@
+     info->published = QAPI_CLONE(FdisbullVgaConfigurationSnapshot, published);
+     return info;
+ }
++
++FdisbullVgaConfigurationInfo *qmp_x_fdisbull_query_vga_configuration(Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++
++    assert(bql_locked());
++    /* Public admission and its stopped-only guards remain unchanged. */
++    retrace = qmp_x_fdisbull_query_retrace(errp);
++    if (!retrace || !display_guard(errp)) {
++        return NULL;
++    }
++    return display_configuration_info(retrace, errp);
++}
++
++FdisbullVgaConfigurationInfo *
++fdisbull_vga_configuration_snapshot_owned(Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++    QemuConsole *console;
++    Object *device;
++
++    assert(bql_locked());
++    /* This path never initializes a timer or admits a replacement VGA owner. */
++    retrace = fdisbull_retrace_snapshot_owned(errp);
++    if (!retrace) {
++        return NULL;
++    }
++    if (!display_window.initialized || display_window.invalidated ||
++        display_window.epoch != retrace->epoch) {
++        error_setg(errp, "Owned display configuration snapshot is unavailable; "
++                   "close an invalidated VM");
++        return NULL;
++    }
++    if (display_window.token &&
++        (!display_console(&console, &device) ||
++         console != display_window.console || device != display_window.device)) {
++        display_invalidate("owned display console identity changed");
++        error_setg(errp, "Owned display console identity changed; close the VM");
++        return NULL;
++    }
++    /* Empty/new windows are evidence, not permission to refresh or substitute. */
++    return display_configuration_info(retrace, errp);
++}
+diff --git a/system/fdisbull-input.c b/system/fdisbull-input.c
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -19,6 +19,7 @@
+ #include "qemu/timer.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-display.h"
+ #include "system/fdisbull-retrace.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+@@ -34,6 +35,8 @@
+ #define INPUT_PRESS_EDGE_DELAY_NS INT64_C(2000000)
+ #define INPUT_MAX_CLICK_STEPS 2
+ #define INPUT_CLICK_EDGE_DELAY_NS INT64_C(2000000)
++#define INPUT_MOTION_DELAY_NS INT64_C(2000000)
++#define INPUT_MOTION_REL_LIMIT 127
+ 
+ static struct {
+     bool initialized;
+@@ -48,6 +51,7 @@
+     FdisbullInputPress *press;
+     FdisbullInputType *typing;
+     FdisbullInputClick *click;
++    FdisbullInputMotion *motion;
+     FdisbullInputPressStepList *keyboard_next;
+     FdisbullInputBatch *keyboard_batches[INPUT_MAX_TYPE_STEPS];
+     FdisbullInputClickStepList *click_next;
+@@ -237,7 +241,260 @@
+     if (input_schedule.click) {
+         info->click = QAPI_CLONE(FdisbullInputClick, input_schedule.click);
+     }
++    if (input_schedule.motion) {
++        info->motion = QAPI_CLONE(FdisbullInputMotion, input_schedule.motion);
++    }
+     return info;
++}
++
++static bool input_motion_bytes_equal(const uint8List *a, const uint8List *b)
++{
++    while (a && b) {
++        if (a->value != b->value) {
++            return false;
++        }
++        a = a->next;
++        b = b->next;
++    }
++    return !a && !b;
++}
++
++static bool input_motion_words_equal(const uint16List *a, const uint16List *b)
++{
++    while (a && b) {
++        if (a->value != b->value) {
++            return false;
++        }
++        a = a->next;
++        b = b->next;
++    }
++    return !a && !b;
++}
++
++static bool input_motion_raw_equal(const FdisbullVgaConfigurationRaw *a,
++                                    const FdisbullVgaConfigurationRaw *b)
++{
++    /* Compare declared values, never QAPI list pointers or structure padding. */
++    return a && b &&
++        input_motion_bytes_equal(a->sequencer, b->sequencer) &&
++        input_motion_bytes_equal(a->sequencer_vbe, b->sequencer_vbe) &&
++        input_motion_bytes_equal(a->graphics, b->graphics) &&
++        input_motion_bytes_equal(a->crtc, b->crtc) &&
++        input_motion_bytes_equal(a->attribute_controls, b->attribute_controls) &&
++        input_motion_words_equal(a->vbe, b->vbe) &&
++        a->misc_output == b->misc_output &&
++        a->feature_control == b->feature_control &&
++        a->display_enabled == b->display_enabled &&
++        a->vbe_start_address == b->vbe_start_address &&
++        a->vbe_line_offset == b->vbe_line_offset &&
++        a->vbe_bank_mask == b->vbe_bank_mask &&
++        a->bank_offset == b->bank_offset && a->dac_8bit == b->dac_8bit &&
++        a->big_endian_framebuffer == b->big_endian_framebuffer &&
++        a->vram_size == b->vram_size && a->vbe_size == b->vbe_size &&
++        a->vbe_size_mask == b->vbe_size_mask;
++}
++
++static bool input_motion_identity_equal(
++    const FdisbullVgaConfigurationSnapshot *a,
++    const FdisbullVgaConfigurationSnapshot *b)
++{
++    return a && b && a->api_version == b->api_version &&
++        !g_strcmp0(a->model, b->model) && a->epoch == b->epoch &&
++        !g_strcmp0(a->device, b->device) &&
++        !g_strcmp0(a->device_type, b->device_type) &&
++        a->console == b->console && a->head == b->head;
++}
++
++static bool input_motion_snapshot_equal(
++    const FdisbullVgaConfigurationSnapshot *a,
++    const FdisbullVgaConfigurationSnapshot *b)
++{
++    return input_motion_identity_equal(a, b) &&
++        a->virtual_ns == b->virtual_ns &&
++        a->configuration_generation == b->configuration_generation &&
++        input_motion_raw_equal(a->raw, b->raw);
++}
++
++static bool input_motion_observation_coherent(
++    const FdisbullVgaConfigurationInfo *info)
++{
++    const FdisbullDisplayInfo *display;
++    const FdisbullVgaConfigurationSnapshot *current, *published;
++    bool have_publication;
++
++    if (!info || !info->display || !info->current) {
++        return false;
++    }
++    display = info->display;
++    current = info->current;
++    published = info->published;
++    have_publication = published != NULL;
++    if (current->api_version != 1 || !current->epoch ||
++        current->virtual_ns < 0 || !current->configuration_generation ||
++        g_strcmp0(current->model, "qemu-vga-configuration-fdisbull-v1") ||
++        g_strcmp0(current->device_type, "VGA") || !current->device ||
++        current->console || current->head || !current->raw ||
++        display->api_version != 1 || display->epoch != current->epoch ||
++        display->virtual_ns != current->virtual_ns ||
++        (g_strcmp0(display->state, "idle") &&
++         g_strcmp0(display->state, "observing") &&
++         g_strcmp0(display->state, "stopped")) ||
++        !!display->updates != have_publication ||
++        display->has_update_id != have_publication ||
++        display->has_published_ns != have_publication ||
++        display->has_width != have_publication ||
++        display->has_height != have_publication) {
++        return false;
++    }
++    if (!published) {
++        return true;
++    }
++    return display->token && display->has_start_ns &&
++        display->update_id == display->updates &&
++        display->start_ns <= display->published_ns &&
++        display->published_ns <= current->virtual_ns &&
++        display->width > 0 && display->width <= 8192 &&
++        display->height > 0 && display->height <= 8192 &&
++        input_motion_identity_equal(current, published) &&
++        published->raw &&
++        published->virtual_ns == display->published_ns &&
++        published->configuration_generation &&
++        published->configuration_generation <= current->configuration_generation &&
++        (published->configuration_generation != current->configuration_generation ||
++         input_motion_raw_equal(published->raw, current->raw));
++}
++
++static bool input_motion_display_equal(const FdisbullDisplayInfo *a,
++                                        const FdisbullDisplayInfo *b)
++{
++    /* The stopped publication is immutable except for observation time. */
++    return a->api_version == b->api_version && a->epoch == b->epoch &&
++        !g_strcmp0(a->state, b->state) && !g_strcmp0(a->token, b->token) &&
++        a->period_ns == b->period_ns && a->updates == b->updates &&
++        a->has_start_ns == b->has_start_ns && a->start_ns == b->start_ns &&
++        a->has_stop_ns == b->has_stop_ns && a->stop_ns == b->stop_ns &&
++        a->has_update_id == b->has_update_id && a->update_id == b->update_id &&
++        a->has_published_ns == b->has_published_ns &&
++        a->published_ns == b->published_ns &&
++        a->has_width == b->has_width && a->width == b->width &&
++        a->has_height == b->has_height && a->height == b->height;
++}
++
++static bool input_motion_check(int64_t now)
++{
++    FdisbullInputMotion *motion = input_schedule.motion;
++    FdisbullVgaConfigurationInfo *armed, *checked;
++    Error *err = NULL;
++
++    if (!motion) {
++        return true;
++    }
++    if (motion->checked || !input_motion_observation_coherent(motion->armed) ||
++        !motion->armed->published ||
++        g_strcmp0(motion->armed->display->state, "stopped") ||
++        motion->armed->current->configuration_generation !=
++            motion->armed->published->configuration_generation) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "display motion lost its immutable arm observation");
++        return false;
++    }
++    armed = motion->armed;
++    checked = fdisbull_vga_configuration_snapshot_owned(&err);
++    if (!checked) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     err ? error_get_pretty(err) :
++                           "display motion owned snapshot failed");
++        error_free(err);
++        return false;
++    }
++    /* Retain the actual guard observation even when it refuses this attempt. */
++    motion->checked = checked;
++    if (!input_motion_observation_coherent(checked) ||
++        checked->current->virtual_ns != now ||
++        checked->current->virtual_ns < armed->current->virtual_ns ||
++        checked->current->epoch != input_schedule.epoch ||
++        !input_motion_identity_equal(armed->current, checked->current) ||
++        checked->current->configuration_generation <
++            armed->current->configuration_generation) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "display motion clock, identity or generation regressed");
++        return false;
++    }
++    if (checked->current->configuration_generation ==
++        armed->current->configuration_generation &&
++        !input_motion_raw_equal(armed->current->raw, checked->current->raw)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "display motion raw state changed under one generation");
++        return false;
++    }
++    if (checked->published &&
++        (checked->published->virtual_ns < armed->published->virtual_ns ||
++         checked->published->configuration_generation <
++             armed->published->configuration_generation ||
++         (checked->published->configuration_generation ==
++              armed->current->configuration_generation &&
++          !input_motion_raw_equal(checked->published->raw, armed->current->raw)) ||
++         (checked->published->virtual_ns < armed->current->virtual_ns &&
++          checked->published->configuration_generation >
++              armed->current->configuration_generation))) {
++        /* Equal timestamps do not order paused QOM changes; strict order does. */
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "display motion publication configuration history regressed");
++        return false;
++    }
++    if (!g_strcmp0(checked->display->token, armed->display->token)) {
++        if (!checked->display->has_start_ns ||
++            checked->display->start_ns != armed->display->start_ns ||
++            checked->display->period_ns != armed->display->period_ns ||
++            checked->display->updates < armed->display->updates ||
++            (checked->display->has_published_ns &&
++             checked->display->published_ns < armed->display->published_ns)) {
++            input_finish(FDISBULL_INPUT_STATE_FAILED,
++                         "display motion retained window history regressed");
++            return false;
++        }
++        /*
++         * A state-only policy change can cancel, but it cannot hide a changed
++         * raster extent, publication time or frozen stamp under the same ID.
++         * State/stop fields are checked separately after cancellation policy.
++         */
++        if (checked->display->has_update_id &&
++            checked->display->update_id == armed->display->update_id &&
++            (checked->display->published_ns != armed->display->published_ns ||
++             checked->display->width != armed->display->width ||
++             checked->display->height != armed->display->height ||
++             !input_motion_snapshot_equal(armed->published,
++                                           checked->published))) {
++            input_finish(FDISBULL_INPUT_STATE_FAILED,
++                         "display motion publication changed under one identity");
++            return false;
++        }
++    }
++    /*
++     * Impossible histories above are failures, never ordinary cancellations.
++     * Configuration then has priority among otherwise valid binding changes.
++     */
++    if (checked->current->configuration_generation !=
++        armed->current->configuration_generation) {
++        input_finish(FDISBULL_INPUT_STATE_CANCELLED,
++                     "display-motion-configuration-changed");
++        return false;
++    }
++    if (g_strcmp0(checked->display->state, "stopped") ||
++        g_strcmp0(checked->display->token, armed->display->token) ||
++        !checked->display->has_update_id ||
++        checked->display->update_id != armed->display->update_id) {
++        input_finish(FDISBULL_INPUT_STATE_CANCELLED,
++                     "display-motion-publication-changed");
++        return false;
++    }
++    if (!input_motion_display_equal(armed->display, checked->display) ||
++        !input_motion_snapshot_equal(armed->published, checked->published)) {
++        input_finish(FDISBULL_INPUT_STATE_FAILED,
++                     "display motion publication changed under one identity");
++        return false;
++    }
++    return true;
+ }
+ 
+ static bool input_retrace_identity_equal(const FdisbullRetraceInfo *a,
+@@ -500,7 +757,8 @@
+         input_click_dispatch(clock->virtual_ns);
+         return;
+     }
+-    if (!input_retrace_check(clock->virtual_ns)) {
++    if (!input_retrace_check(clock->virtual_ns) ||
++        !input_motion_check(clock->virtual_ns)) {
+         return;
+     }
+     if (!qemu_input_fdisbull_dispatch(input_schedule.batch, &err)) {
+@@ -578,6 +836,7 @@
+ static FdisbullInputInfo *input_arm(const char *token, int64_t now,
+                                    int64_t deadline_ns, InputEventList *events,
+                                    const FdisbullInputRetrace *retrace,
++                                   const FdisbullInputMotion *motion,
+                                    Error **errp)
+ {
+     FdisbullInputBatch *batch;
+@@ -595,6 +854,9 @@
+     qapi_free_FdisbullInputRetrace(input_schedule.retrace);
+     input_schedule.retrace = retrace ? QAPI_CLONE(FdisbullInputRetrace, retrace)
+                                      : NULL;
++    qapi_free_FdisbullInputMotion(input_schedule.motion);
++    input_schedule.motion = motion ? QAPI_CLONE(FdisbullInputMotion, motion)
++                                    : NULL;
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
+     g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
+@@ -620,7 +882,7 @@
+                    "without signed clock overflow");
+         return NULL;
+     }
+-    return input_arm(token, now, now + delta_ns, events, NULL, errp);
++    return input_arm(token, now, now + delta_ns, events, NULL, NULL, errp);
+ }
+ 
+ static bool input_retrace_window(const FdisbullRetraceInfo *armed,
+@@ -715,7 +977,7 @@
+     retrace->window_end_ns = window_end_ns;
+     retrace->armed = g_steal_pointer(&armed);
+     return input_arm(token, retrace->armed->virtual_ns, target_ns, events,
+-                     retrace, errp);
++                     retrace, NULL, errp);
+ }
+ 
+ static FdisbullInputBatch *input_keyboard_prepare_step(QKeyCode code, bool down,
+@@ -810,6 +1072,7 @@
+ 
+     input_schedule.batch = NULL;
+     g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
++    g_clear_pointer(&input_schedule.motion, qapi_free_FdisbullInputMotion);
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
+     input_click_free_batches();
+@@ -978,6 +1241,7 @@
+ 
+     input_schedule.batch = NULL;
+     g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
++    g_clear_pointer(&input_schedule.motion, qapi_free_FdisbullInputMotion);
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
+     input_click_free_batches();
+@@ -1071,6 +1335,7 @@
+ 
+     input_schedule.batch = NULL;
+     g_clear_pointer(&input_schedule.retrace, qapi_free_FdisbullInputRetrace);
++    g_clear_pointer(&input_schedule.motion, qapi_free_FdisbullInputMotion);
+     input_keyboard_free_batches();
+     g_clear_pointer(&input_schedule.press, qapi_free_FdisbullInputPress);
+     g_clear_pointer(&input_schedule.typing, qapi_free_FdisbullInputType);
+@@ -1094,6 +1359,80 @@
+     return NULL;
+ }
+ 
++FdisbullInputInfo *qmp_x_fdisbull_arm_display_motion(
++    const char *token, int64_t dx, int64_t dy,
++    FdisbullDisplayMotionExpected *expected, Error **errp)
++{
++    g_autoptr(FdisbullVgaConfigurationInfo) armed = NULL;
++    FdisbullInputMotion motion = {
++        .dx = dx, .dy = dy, .delay_ns = INPUT_MOTION_DELAY_NS,
++    };
++    InputMoveEvent move_x = { .axis = INPUT_AXIS_X, .value = dx };
++    InputMoveEvent move_y = { .axis = INPUT_AXIS_Y, .value = dy };
++    InputEvent event_x = { .type = INPUT_EVENT_KIND_REL,
++                          .u.rel = { .data = &move_x } };
++    InputEvent event_y = { .type = INPUT_EVENT_KIND_REL,
++                          .u.rel = { .data = &move_y } };
++    InputEventList list_y = { .value = &event_y };
++    InputEventList list_x = { .value = &event_x, .next = dy ? &list_y : NULL };
++    const FdisbullDisplayInfo *display;
++    const FdisbullVgaConfigurationSnapshot *current, *published;
++    int64_t now;
++
++    if (!input_arm_guard(token, errp)) {
++        return NULL;
++    }
++    if (dx < -INPUT_MOTION_REL_LIMIT || dx > INPUT_MOTION_REL_LIMIT ||
++        dy < -INPUT_MOTION_REL_LIMIT || dy > INPUT_MOTION_REL_LIMIT ||
++        (!dx && !dy)) {
++        error_setg(errp, "Display motion requires a nonzero relative X/Y pair "
++                   "with each count in -127..127");
++        return NULL;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (now < 0 || now > INT64_MAX - INPUT_MOTION_DELAY_NS) {
++        error_setg(errp, "Display motion deadline exceeds signed virtual time");
++        return NULL;
++    }
++    armed = fdisbull_vga_configuration_snapshot_owned(errp);
++    if (!armed) {
++        return NULL;
++    }
++    if (!input_motion_observation_coherent(armed)) {
++        error_setg(errp, "Display motion requires coherent owned configuration "
++                   "and publication observations");
++        return NULL;
++    }
++    display = armed->display;
++    current = armed->current;
++    published = armed->published;
++    if (!expected || !published || g_strcmp0(display->state, "stopped") ||
++        !display->has_stop_ns || current->epoch != input_schedule.epoch ||
++        current->virtual_ns != now || expected->virtual_ns != now ||
++        expected->epoch != current->epoch ||
++        g_strcmp0(expected->device, current->device) ||
++        g_strcmp0(expected->model, current->model) ||
++        expected->configuration_generation != current->configuration_generation ||
++        expected->configuration_generation != published->configuration_generation ||
++        g_strcmp0(expected->window, display->token) ||
++        expected->update_id != display->update_id ||
++        expected->published_ns != display->published_ns ||
++        expected->width != display->width || expected->height != display->height ||
++        !input_motion_raw_equal(current->raw, published->raw)) {
++        error_setg(errp, "Display motion expectations differ from a stopped "
++                   "nonempty publication and its current configuration");
++        return NULL;
++    }
++    motion.armed = armed;
++    /*
++     * prepare() deep-copies only nonzero X then nonzero Y before accepting the
++     * token.  One final sync follows the batch.  No button event or zero-valued
++     * callback is invented, and native code does not interpret a pixel scale.
++     */
++    return input_arm(token, now, now + INPUT_MOTION_DELAY_NS,
++                     dx ? &list_x : &list_y, NULL, &motion, errp);
++}
++
+ FdisbullInputInfo *qmp_x_fdisbull_cancel_input(const char *token, Error **errp)
+ {
+     if (!input_guard(errp)) {

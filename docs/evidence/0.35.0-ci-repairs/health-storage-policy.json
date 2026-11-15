@@ -1,0 +1,92 @@
+{
+  "actual_interruption": {
+    "final_health_sha256": "6a449439b5f7d041943d99e0645ac9b2ee8f563a776f1fe8d5c276385278398d",
+    "health_transition": {
+      "components_healthy": 8,
+      "final_epoch": 1794714179.318429,
+      "final_free_bytes": 19835199488,
+      "final_healthy": false,
+      "policy_note": "the 20.1 GB disk threshold is obsolete under current user project policy",
+      "prior_epoch": 1794714119.2309744,
+      "prior_free_bytes": 20765491200,
+      "prior_healthy": true,
+      "sole_failure": {
+        "component": "disk",
+        "reason": "disk_below_20100000000_bytes"
+      },
+      "threshold_bytes": 20100000000
+    },
+    "intake_sha256": "e41265673aff4193ca865e531fc73da1cbdc4f0d69365506ce0827d90c3d970a",
+    "job_id": "4d698a11-8a54-421a-adfa-35ea534da2b4",
+    "phase": "package build",
+    "preserved_original": true,
+    "request_sha256": "a26c61026929fcca1a5b7b24ae3d00465efbf8adeff1d5929d666e2e3c8a7863",
+    "run_id": "e3d686a5-260f-4582-a1c9-104cc31263ab",
+    "source_commit": "72f415c1e367e029e7cccb70e961d06860829cb2",
+    "worker_exit": 143
+  },
+  "claim_limits": [
+    "This receipt covers the narrow policy correction and retained interruption evidence.",
+    "The partial Linux diagnostic does not replace full exact-successor CI.",
+    "Live deployment, release publication, offline-consumer and activation proofs are separate gates."
+  ],
+  "game_files_states_or_databases_included": false,
+  "legacy_fallback": {
+    "distinct_from_installed_production_adapter": true,
+    "fresh_nonnegative_exact_int_required": true,
+    "installed_recovery_gitlab_production_must_not_be_replaced": true,
+    "path": "scripts/ci/recovery_gitlab.py",
+    "reserve_removed": true
+  },
+  "linux_diagnostic": {
+    "container_stopped": true,
+    "cpus": 2,
+    "failed": 1,
+    "failed_node": "tests/test_ci_recovery_gitlab.py::test_default_provider_state_uses_git_common_directory",
+    "failure_reason": "Diagnostic git archive lacks .git; real git rev-parse exited128. This diagnostic is not a complete passing suite.",
+    "image_digest": "sha256:3c3ba8ad4c85eb63b7568f806434f14e33370056985da7fdf2673621cb1d7e93",
+    "junit_sha256": "e3d63fbedba4c42061ecd68331c6b52f41c81433426abc5973597c7e9ff724b7",
+    "memory_bytes": 1073741824,
+    "network": "none",
+    "original_result_preserved_as_failed": true,
+    "passed": 62,
+    "qualification_claim": false,
+    "result_sha256": "7aac310cc44cc4c39997e919f58af9c022584d891bb24421585a43f512b85424",
+    "skipped": 0,
+    "source_overlays": {
+      "scripts/ci/health_decision.py": "43ee153c0d5d4b2cbd1f4ce17001623002a8bdd95584b792f3f28148709efb5c",
+      "scripts/ci/offline-qualification.py": "8ee9ed79dfe0b3ce74e10e67c08c7d9368048422c8df03f09f66ba2695376c72",
+      "scripts/ci/recovery_gitlab.py": "3a96661871a85f3c4a25e4513472db70ba55fab32a6c1f5f4e3b2491ab4cb4d1",
+      "tests/test_ci_recovery_gitlab.py": "b257262e12150c372ef58d9c9a3c66fa4e1cfa7fb3e455d6237d0fd8b05022c2",
+      "tests/test_host_health_decision.py": "dd73b8c6181d224094a7460e04ca8cae4f4a7ddb33e93883873c685055ca616a",
+      "tests/test_offline_qualification.py": "79d79f42fc11043e6fa044ea898714145578248505155e98df428fb307a3259d"
+    },
+    "summary_sha256": "232cbdec8cce34cd068bd58476df16419da075844bdaf12bdbff60fd5b4bca2d"
+  },
+  "local_verification": {
+    "before_fix_regression": "Four low/reserve-telemetry cases failed against the exact old helper; three low/zero fallback cases failed before its fix.",
+    "host_policy_and_adapter": {
+      "junit_sha256": "24870ba5eb00d9ff503dfce904e55810dcdb145c8c23ae154eedfc24bdb0742f",
+      "passed": 35
+    },
+    "legacy_fallback": {
+      "passed": 28,
+      "stdout_sha256": "e3e932dc9db764b400ca120622f2d9533c638d5166c9f8fe7499f653954b0df2"
+    },
+    "platform": "macOS arm64",
+    "python": "3.13.13"
+  },
+  "maintained_helper": {
+    "all_eight_service_checks_preserved": true,
+    "corrected_sha256": "43ee153c0d5d4b2cbd1f4ce17001623002a8bdd95584b792f3f28148709efb5c",
+    "deployed_preimage_sha256": "34a5b8a626fc796df252e77946e50bd9a96dec678084649a80791618416d03d8",
+    "free_space_remains_telemetry": true,
+    "integrity_pin_updated": true,
+    "invalid_or_missing_telemetry_still_fails": true,
+    "journal_io_failure_still_prevents_adoption": true,
+    "minimum_free_bytes": null,
+    "path": "scripts/ci/health_decision.py"
+  },
+  "schema": "fdisbull-ci-health-storage-policy-repair-1",
+  "source_base": "72f415c1e367e029e7cccb70e961d06860829cb2"
+}

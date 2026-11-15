@@ -232,7 +232,7 @@ def test_truncated_page_and_overlapping_objects_fail():
     with pytest.raises(ValueError, match="ranges overlap"):
         load_le(le_file(object_bases=(0x10000, 0x10010)))
     with pytest.raises(ValueError, match="16-bit"):
-        load_le(le_file(object_flags=(0x45, 0x2043)))
+        load_le(le_file(object_flags=(0x45, 0x2043), object_sizes=(65537, 20)))
 
 
 def test_malformed_signatures_and_unsupported_page_encoding_fail():

@@ -57,7 +57,7 @@ def inspect_disc_path(path, *, mode=None, max_entries=10000,
               'valid': False, 'complete': False, 'loadable': False,
               'validation_scope': 'supported CUE layout and primary ISO metadata; file contents, EDC/ECC, audio and execution unverified',
               'warnings': [], 'data_tracks': []}
-    if path.suffix.lower() == '.cue':
+    if path.suffix.lower() in ('.cue', '.ins'):
         if mode is not None:
             raise ValueError('CUE declares track modes; mode override is not allowed')
         from .cue import inspect_cue_path

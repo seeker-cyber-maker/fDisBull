@@ -1,0 +1,72 @@
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -72,14 +72,53 @@
+ };
+ 
+ 
+-bool fdisbull_input_checkpoint_safe(Error **errp)
+-{
++/* Completed descriptors are retained receipts, not owned pending work. */
++static bool input_checkpoint_quiescent(void)
++{
++    unsigned i;
++    bool retained_metadata;
++
+     assert(bql_locked());
+     if (input_schedule.invalidated ||
+         input_schedule.state == FDISBULL_INPUT_STATE_ARMED ||
+         input_schedule.state == FDISBULL_INPUT_STATE_FAILED ||
+-        input_schedule.batch || input_schedule.retrace || input_schedule.press ||
+-        input_schedule.typing || input_schedule.click || input_schedule.motion) {
++        input_schedule.batch || input_schedule.keyboard_next ||
++        input_schedule.click_next ||
++        (input_schedule.initialized && timer_pending(&input_schedule.timer))) {
++        return false;
++    }
++    for (i = 0; i < INPUT_MAX_TYPE_STEPS; i++) {
++        if (input_schedule.keyboard_batches[i]) {
++            return false;
++        }
++    }
++    for (i = 0; i < INPUT_MAX_CLICK_STEPS; i++) {
++        if (input_schedule.click_batches[i]) {
++            return false;
++        }
++    }
++    retained_metadata = input_schedule.retrace || input_schedule.press ||
++                        input_schedule.typing || input_schedule.click ||
++                        input_schedule.motion;
++    if (!retained_metadata) {
++        return true;
++    }
++    if (input_schedule.state != FDISBULL_INPUT_STATE_DISPATCHED ||
++        !input_schedule.has_terminal || !input_schedule.has_dispatch ||
++        (input_schedule.press && input_schedule.press->dispatched_count !=
++                                 input_schedule.event_count) ||
++        (input_schedule.typing && input_schedule.typing->dispatched_count !=
++                                  input_schedule.event_count) ||
++        (input_schedule.click && input_schedule.click->dispatched_count !=
++                                 input_schedule.event_count)) {
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_input_checkpoint_safe(Error **errp)
++{
++    if (!input_checkpoint_quiescent()) {
+         error_setg(errp, "Instrumented checkpoint requires no pending native input schedule");
+         return false;
+     }
+@@ -89,10 +128,7 @@
+ bool fdisbull_input_checkpoint_owns_blocker(const Error *reason)
+ {
+     return reason && input_schedule.migration_blocker == reason &&
+-           input_schedule.state != FDISBULL_INPUT_STATE_ARMED &&
+-           !input_schedule.batch && !input_schedule.retrace &&
+-           !input_schedule.press && !input_schedule.typing &&
+-           !input_schedule.click && !input_schedule.motion;
++           input_checkpoint_quiescent();
+ }
+ 
+ static void input_timer_cb(void *opaque);

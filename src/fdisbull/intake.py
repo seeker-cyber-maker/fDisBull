@@ -93,6 +93,9 @@ def _hints(path, catalog):
             row = {key: _short(value[key]) for key in keys
                    if key in value and (value[key] is None or type(value[key]) in (str, int, bool))}
             row.update(companions=_strings(value.get('companions')), recovery=_strings(value.get('recovery')))
+            modules = value.get('decoder_modules', [])
+            if isinstance(modules, list):
+                row['decoder_modules'] = [_module(item) for item in modules[:64] if isinstance(item, dict)]
             result.append(row)
     return result
 
@@ -269,6 +272,11 @@ def intake_inventory(paths, *, catalog_path=None, max_files=MAX_FILES,
             record['candidate_profiles'] = _hints(path, catalog)
         for reason, action in _queue_reasons(record['identification']):
             enqueue(record, reason, action)
+        if record['identification']['status'] == 'unknown' and any(
+                module.get('binding_verified') and module.get('decoder_role') in ('pixel-reader', 'audio-reader', 'media-decoder')
+                for hint in record.get('candidate_profiles', []) for module in hint.get('decoder_modules', [])):
+            enqueue(record, 'context-decoder-validation-needed',
+                'A shipped decoder is available under an explicit consumer-context candidate. Select it with independent game evidence; the suffix has not established a global format signature.')
 
     def walk(root, path, member, depth):
         nonlocal visits, discovered, stop_reason

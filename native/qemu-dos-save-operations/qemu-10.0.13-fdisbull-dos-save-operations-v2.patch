@@ -1,0 +1,1240 @@
+--- a/qapi/fdisbull-dos-provenance.json
++++ b/qapi/fdisbull-dos-provenance.json
+@@ -18,12 +18,24 @@
+ # @accepted: Accepted byte count for a successful write, otherwise zero.
+ # @caller-pc: Caller linear address of the INT 21h instruction.
+ # @return-pc: Linear address immediately after the INT instruction.
++# @path: V2 DOS path captured at entry, empty when irrelevant.
++# @destination: V2 rename destination captured at entry, empty otherwise.
++# @offset-before: V2 file cursor before the operation.
++# @offset-after: V2 file cursor after the operation.
++# @size-before: V2 logical file size before the operation.
++# @size-after: V2 logical file size after the operation.
++# @mode: V2 AL mode for open or seek, otherwise zero.
++# @seek-offset: V2 signed CX:DX seek displacement, otherwise zero.
++# @dx: DOS DX value observed on return.
+ ##
+ { 'struct': 'FdisbullDosSaveWitnessEvent',
+   'data': { 'sequence': 'uint32', 'function': 'uint8', 'handle': 'uint16',
+             'carry': 'bool', 'ax': 'uint16', 'requested': 'uint16',
+             'accepted': 'uint16', 'caller-pc': 'uint32',
+-            'return-pc': 'uint32' } }
++            'return-pc': 'uint32', '*path': 'str', '*destination': 'str',
++            '*offset-before': 'uint32', '*offset-after': 'uint32',
++            '*size-before': 'uint32', '*size-after': 'uint32', '*mode': 'uint8',
++            '*seek-offset': 'int64', '*dx': 'uint16' } }
+ 
+ ##
+ # @FdisbullDosSaveWitnessInterruptFrame:
+@@ -74,6 +86,23 @@
+ # @hardware-interrupt-depth: Bounded unreturned hardware interrupt depth.
+ # @hardware-returns: Ordered hardware interrupt return frames, outermost first.
+ # @fault: Diagnostic when invalid.
++# @operation-policy: V2 observer mode, present only for save-v2.
++# @initial-exists: V2 final path existed at arm time.
++# @initial-payload-hex: V2 bytes of the preimage, empty when absent.
++# @temporary-path: V2 temporary root-D path, or empty.
++# @current-path: V2 currently selected file path, or empty.
++# @file-exists: V2 selected image currently exists.
++# @file-open: V2 selected image has an open DOS handle.
++# @final-exists: V2 final path currently exists.
++# @temporary-exists: V2 temporary path currently exists.
++# @file-offset: V2 current file cursor.
++# @final-size: V2 current selected file size.
++# @pending-path: V2 path captured at pending-call entry.
++# @pending-destination: V2 rename destination captured at entry.
++# @pending-offset-before: V2 cursor before the pending operation.
++# @pending-size-before: V2 size before the pending operation.
++# @pending-mode: V2 mode captured at entry.
++# @pending-seek-offset: V2 signed seek displacement captured at entry.
+ ##
+ { 'struct': 'FdisbullDosSaveWitnessInfo',
+   'data': { 'api-version': 'int', 'model': 'str', 'epoch': 'uint64',
+@@ -92,6 +121,14 @@
+             'pending-cs': 'uint16', 'pending-sp': 'uint16',
+             'pending-payload-hex': 'str', 'hardware-interrupt-depth': 'uint8',
+             'hardware-returns': ['FdisbullDosSaveWitnessInterruptFrame'],
++            '*operation-policy': 'str', '*initial-exists': 'bool',
++            '*initial-payload-hex': 'str', '*temporary-path': 'str',
++            '*current-path': 'str', '*file-exists': 'bool', '*file-open': 'bool',
++            '*final-exists': 'bool', '*temporary-exists': 'bool',
++            '*file-offset': 'uint32', '*final-size': 'uint32',
++            '*pending-path': 'str', '*pending-destination': 'str',
++            '*pending-offset-before': 'uint32', '*pending-size-before': 'uint32',
++            '*pending-mode': 'uint8', '*pending-seek-offset': 'int64',
+             '*fault': 'str' } }
+ 
+ ##
+@@ -112,6 +149,27 @@
+   'returns': 'FdisbullDosSaveWitnessInfo' }
+ 
+ ##
++# @x-fdisbull-arm-dos-save-operations:
++# @token: Opaque host owner token, at least 16 and at most 64 characters.
++# @child-psp: PSP identity observed for the admitted caller.
++# @source-ranges: Sorted, disjoint caller code ranges.
++# @dos-path: Final absolute root-D 8.3 path.
++# @int21-vector: Expected IVT value captured from the trusted kernel.
++# @initial-exists: Whether the authorized final path exists at arm time.
++# @initial-payload-hex: Exact authorized preimage bytes; empty if absent.
++# @temporary-path: Optional absent root-D 8.3 temporary path; empty if unused.
++#
++# Arm the bounded save-operations v2 observer. The stopped guest is not run.
++##
++{ 'command': 'x-fdisbull-arm-dos-save-operations',
++  'data': { 'token': 'str', 'child-psp': 'uint16',
++            'source-ranges': ['FdisbullDosSaveWitnessRange'],
++            'dos-path': 'str', 'int21-vector': 'uint32',
++            'initial-exists': 'bool', 'initial-payload-hex': 'str',
++            'temporary-path': 'str' },
++  'returns': 'FdisbullDosSaveWitnessInfo' }
++
++##
+ # @x-fdisbull-query-dos-save-witness:
+ # Query the current native DOS save witness without changing it.
+ ##
+--- a/target/i386/fdisbull-dos-provenance.c
++++ b/target/i386/fdisbull-dos-provenance.c
+@@ -34,6 +34,15 @@
+     uint16_t accepted;
+     uint32_t caller_pc;
+     uint32_t return_pc;
++    uint8_t path[16];
++    uint8_t destination[16];
++    uint32_t offset_before;
++    uint32_t offset_after;
++    uint32_t size_before;
++    uint32_t size_after;
++    uint8_t mode;
++    int64_t seek_offset;
++    uint16_t dx;
+ } DosWitnessEvent;
+ 
+ typedef struct DosWitnessInterruptFrame {
+@@ -81,6 +90,28 @@
+     uint8_t pending_payload[DOS_WITNESS_MAX_BYTES];
+     uint8_t hardware_depth;
+     DosWitnessInterruptFrame hardware_frames[DOS_WITNESS_MAX_HW_DEPTH];
++
++    /* Version 2 save-operation identity and the currently tracked file. */
++    uint8_t operation_policy;
++    bool initial_exists;
++    uint32_t initial_size;
++    uint8_t initial_payload[DOS_WITNESS_MAX_BYTES];
++    uint8_t temporary_path[16];
++    uint8_t current_path[16];
++    bool file_exists;
++    bool file_open;
++    bool final_exists;
++    bool temporary_exists;
++    uint32_t file_offset;
++    uint32_t final_size;
++    uint16_t current_handle;
++    bool pending_v2;
++    uint8_t pending_path[16];
++    uint8_t pending_destination[16];
++    uint32_t pending_offset_before;
++    uint32_t pending_size_before;
++    uint8_t pending_mode;
++    int64_t pending_seek_offset;
+ } DosWitnessState;
+ 
+ static DosWitnessState witness = {
+@@ -94,6 +125,7 @@
+ static uint64_t generation_highwater = 1;
+ static bool vmstate_registered;
+ static bool token_valid(const char *token);
++static bool normalize_dos_path(const char *path, char out[16], Error **errp);
+ 
+ static bool counter_advance(uint64_t *counter)
+ {
+@@ -144,7 +176,7 @@
+     uint64_t accepted_sum = 0;
+     uint32_t i;
+ 
+-    if (version_id != 1 || !state->epoch || !state->generation ||
++    if (version_id != 2 || !state->epoch || !state->generation ||
+         state->epoch == UINT64_MAX || state->generation == UINT64_MAX ||
+         !epoch_highwater || !generation_highwater ||
+         epoch_highwater == UINT64_MAX || generation_highwater == UINT64_MAX ||
+@@ -164,14 +196,86 @@
+                            state->phase == 0)) ||
+         (state->valid && state->phase == 7) ||
+         (!state->valid && state->phase != 7) ||
+-        (state->phase == 6 && (!state->create_seen || !state->close_seen ||
++        (state->phase == 6 && ((!state->operation_policy && !state->create_seen) ||
++                               !state->close_seen ||
+                                !state->flush_seen || !state->valid)) ||
+         (state->create_seen && state->created_handle == DOS_WITNESS_HANDLE_NONE)) {
+         return -EINVAL;
+     }
++
++    if (state->operation_policy > 1 ||
++        state->initial_size > DOS_WITNESS_MAX_BYTES ||
++        state->file_offset > DOS_WITNESS_MAX_BYTES ||
++        state->final_size > DOS_WITNESS_MAX_BYTES ||
++        !memchr(state->temporary_path, '\0', sizeof(state->temporary_path)) ||
++        !memchr(state->current_path, '\0', sizeof(state->current_path)) ||
++        !memchr(state->pending_path, '\0', sizeof(state->pending_path)) ||
++        !memchr(state->pending_destination, '\0', sizeof(state->pending_destination))) {
++        return -EINVAL;
++    }
++    if (state->operation_policy == 1) {
++        bool current_final = !strcmp((const char *)state->current_path,
++                                     (const char *)state->dos_path);
++        bool current_temp = state->temporary_path[0] &&
++            !strcmp((const char *)state->current_path,
++                    (const char *)state->temporary_path);
++
++        if (state->phase == 6 &&
++            (!state->final_exists || state->file_open || !state->close_seen ||
++             !state->flush_seen || !state->file_exists || state->temporary_exists ||
++             state->pending || state->hardware_depth || !current_final)) {
++            return -EINVAL;
++        }
++        if (state->file_open &&
++            (!state->file_exists || (!current_final && !current_temp) ||
++             state->current_handle == DOS_WITNESS_HANDLE_NONE ||
++             state->created_handle != state->current_handle)) {
++            return -EINVAL;
++        }
++        if (state->file_exists &&
++            (!state->current_path[0] || (!current_final && !current_temp))) {
++            return -EINVAL;
++        }
++        if (state->file_exists &&
++            ((current_final && !state->final_exists) ||
++             (current_temp && !state->temporary_exists))) {
++            return -EINVAL;
++        }
++        if ((state->temporary_exists && !state->temporary_path[0]) ||
++            (!state->file_exists && state->current_path[0])) {
++            return -EINVAL;
++        }
++        if (state->temporary_path[0] &&
++            (!strcmp((const char *)state->temporary_path,
++                     (const char *)state->dos_path) ||
++             state->temporary_path[0] != 'D' || state->temporary_path[1] != ':' ||
++             state->temporary_path[2] != '\\')) {
++            return -EINVAL;
++        }
++        if (state->current_path[0] &&
++            (state->current_path[0] != 'D' || state->current_path[1] != ':' ||
++             state->current_path[2] != '\\')) {
++            return -EINVAL;
++        }
++        if (state->pending_v2 &&
++            ((state->pending_path[0] &&
++              strcmp((const char *)state->pending_path,
++                     (const char *)state->dos_path) &&
++              strcmp((const char *)state->pending_path,
++                     (const char *)state->temporary_path)) ||
++             (state->pending_destination[0] &&
++              strcmp((const char *)state->pending_destination,
++                     (const char *)state->dos_path) &&
++              strcmp((const char *)state->pending_destination,
++                     (const char *)state->temporary_path)))) {
++            return -EINVAL;
++        }
++    }
+     for (i = 0; i < state->range_count; i++) {
+         uint64_t end = (uint64_t)state->ranges[i].start + state->ranges[i].size;
+-        if (!state->ranges[i].size || end > 0x100000 ||
++        if (!state->ranges[i].size ||
++            end > (version_id >= 2 && state->operation_policy == 1 ?
++                   0xA0000 : 0x100000) ||
+             (i && state->ranges[i].start <
+              (uint64_t)state->ranges[i - 1].start + state->ranges[i - 1].size)) {
+             return -EINVAL;
+@@ -181,16 +285,69 @@
+         const DosWitnessEvent *event = &state->events[i];
+         if (event->sequence != i + 1 || event->accepted > event->requested ||
+             (event->function == 0x40 && event->accepted &&
+-             event->accepted != event->requested)) {
++             event->accepted != event->requested) ||
++            (version_id >= 2 && state->operation_policy == 1 &&
++             (!memchr(event->path, '\0', sizeof(event->path)) ||
++              !memchr(event->destination, '\0', sizeof(event->destination)) ||
++              event->offset_before > DOS_WITNESS_MAX_BYTES ||
++              event->offset_after > DOS_WITNESS_MAX_BYTES ||
++              event->size_before > DOS_WITNESS_MAX_BYTES ||
++              event->size_after > DOS_WITNESS_MAX_BYTES || event->mode > 2 ||
++              (event->path[0] && strcmp((const char *)event->path,
++                                         (const char *)state->dos_path) &&
++               strcmp((const char *)event->path,
++                      (const char *)state->temporary_path)) ||
++              (event->destination[0] &&
++               strcmp((const char *)event->destination,
++                      (const char *)state->dos_path) &&
++               strcmp((const char *)event->destination,
++                      (const char *)state->temporary_path))))) {
+             return -EINVAL;
+         }
+         accepted_sum += event->accepted;
+     }
+     if (accepted_sum != state->bytes_written ||
+         (state->pending && state->pending_function == 0x40 &&
+-         state->pending_payload_size != state->pending_requested)) {
++         state->pending_payload_size != state->pending_requested) ||
++        (version_id >= 2 && state->operation_policy == 1 &&
++         (state->pending_v2 != state->pending ||
++          (!state->initial_exists && state->initial_size != 0)))) {
+         return -EINVAL;
+     }
++    if (version_id == 1) {
++        uint32_t j;
++        state->operation_policy = 0;
++        state->initial_exists = false;
++        state->initial_size = 0;
++        memset(state->initial_payload, 0, sizeof(state->initial_payload));
++        memset(state->temporary_path, 0, sizeof(state->temporary_path));
++        memset(state->current_path, 0, sizeof(state->current_path));
++        state->file_exists = false;
++        state->file_open = false;
++        state->final_exists = false;
++        state->temporary_exists = false;
++        state->file_offset = 0;
++        state->final_size = 0;
++        state->current_handle = DOS_WITNESS_HANDLE_NONE;
++        state->pending_v2 = false;
++        memset(state->pending_path, 0, sizeof(state->pending_path));
++        memset(state->pending_destination, 0, sizeof(state->pending_destination));
++        state->pending_offset_before = 0;
++        state->pending_size_before = 0;
++        state->pending_mode = 0;
++        state->pending_seek_offset = 0;
++        for (j = 0; j < state->event_count; j++) {
++            memset(state->events[j].path, 0, sizeof(state->events[j].path));
++            memset(state->events[j].destination, 0, sizeof(state->events[j].destination));
++            state->events[j].offset_before = 0;
++            state->events[j].offset_after = 0;
++            state->events[j].size_before = 0;
++            state->events[j].size_after = 0;
++            state->events[j].mode = 0;
++            state->events[j].seek_offset = 0;
++            state->events[j].dx = 0;
++        }
++    }
+     epoch_highwater = MAX(epoch_highwater, state->epoch) + 1;
+     generation_highwater = MAX(generation_highwater, state->generation) + 1;
+     state->epoch = epoch_highwater;
+@@ -211,8 +368,8 @@
+ 
+ static const VMStateDescription vmstate_dos_witness_event = {
+     .name = "fdisbull/dos-save-witness/event",
+-    .version_id = 1,
+-    .minimum_version_id = 1,
++    .version_id = 2,
++    .minimum_version_id = 2,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UINT32(sequence, DosWitnessEvent),
+         VMSTATE_UINT8(function, DosWitnessEvent),
+@@ -223,6 +380,15 @@
+         VMSTATE_UINT16(accepted, DosWitnessEvent),
+         VMSTATE_UINT32(caller_pc, DosWitnessEvent),
+         VMSTATE_UINT32(return_pc, DosWitnessEvent),
++        VMSTATE_BUFFER_V(path, DosWitnessEvent, 2),
++        VMSTATE_BUFFER_V(destination, DosWitnessEvent, 2),
++        VMSTATE_UINT32_V(offset_before, DosWitnessEvent, 2),
++        VMSTATE_UINT32_V(offset_after, DosWitnessEvent, 2),
++        VMSTATE_UINT32_V(size_before, DosWitnessEvent, 2),
++        VMSTATE_UINT32_V(size_after, DosWitnessEvent, 2),
++        VMSTATE_UINT8_V(mode, DosWitnessEvent, 2),
++        VMSTATE_INT64_V(seek_offset, DosWitnessEvent, 2),
++        VMSTATE_UINT16_V(dx, DosWitnessEvent, 2),
+         VMSTATE_END_OF_LIST()
+     }
+ };
+@@ -242,8 +408,8 @@
+ 
+ const VMStateDescription vmstate_fdisbull_dos_save_witness = {
+     .name = "fdisbull/dos-save-witness",
+-    .version_id = 1,
+-    .minimum_version_id = 1,
++    .version_id = 2,
++    .minimum_version_id = 2,
+     .pre_save = dos_witness_pre_save,
+     .post_load = dos_witness_post_load,
+     .fields = (const VMStateField[]) {
+@@ -287,6 +453,27 @@
+                              DOS_WITNESS_MAX_HW_DEPTH, 0,
+                              vmstate_dos_witness_interrupt_frame,
+                              DosWitnessInterruptFrame),
++        VMSTATE_UINT8_V(operation_policy, DosWitnessState, 2),
++        VMSTATE_BOOL_V(initial_exists, DosWitnessState, 2),
++        VMSTATE_UINT32_V(initial_size, DosWitnessState, 2),
++        VMSTATE_UINT8_ARRAY_V(initial_payload, DosWitnessState,
++                              sizeof(witness.initial_payload), 2),
++        VMSTATE_BUFFER_V(temporary_path, DosWitnessState, 2),
++        VMSTATE_BUFFER_V(current_path, DosWitnessState, 2),
++        VMSTATE_BOOL_V(file_exists, DosWitnessState, 2),
++        VMSTATE_BOOL_V(file_open, DosWitnessState, 2),
++        VMSTATE_BOOL_V(final_exists, DosWitnessState, 2),
++        VMSTATE_BOOL_V(temporary_exists, DosWitnessState, 2),
++        VMSTATE_UINT32_V(file_offset, DosWitnessState, 2),
++        VMSTATE_UINT32_V(final_size, DosWitnessState, 2),
++        VMSTATE_UINT16_V(current_handle, DosWitnessState, 2),
++        VMSTATE_BOOL_V(pending_v2, DosWitnessState, 2),
++        VMSTATE_BUFFER_V(pending_path, DosWitnessState, 2),
++        VMSTATE_BUFFER_V(pending_destination, DosWitnessState, 2),
++        VMSTATE_UINT32_V(pending_offset_before, DosWitnessState, 2),
++        VMSTATE_UINT32_V(pending_size_before, DosWitnessState, 2),
++        VMSTATE_UINT8_V(pending_mode, DosWitnessState, 2),
++        VMSTATE_INT64_V(pending_seek_offset, DosWitnessState, 2),
+         VMSTATE_END_OF_LIST()
+     }
+ };
+@@ -347,11 +534,10 @@
+     return true;
+ }
+ 
+-static bool read_dos_path(CPUState *cpu, CPUX86State *env, char *path,
+-                          size_t capacity)
++static bool read_dos_path_at(CPUState *cpu, uint32_t segment_base,
++                             uint32_t offset, char *path, size_t capacity)
+ {
+-    uint32_t offset = env->regs[R_EDX] & 0xffff;
+-    uint32_t address = env->segs[R_DS].base + offset;
++    uint32_t address = segment_base + offset;
+     size_t i;
+ 
+     for (i = 0; i + 1 < capacity; i++) {
+@@ -374,6 +560,20 @@
+     return false;
+ }
+ 
++static bool read_dos_path(CPUState *cpu, CPUX86State *env, char *path,
++                          size_t capacity)
++{
++    return read_dos_path_at(cpu, env->segs[R_DS].base,
++                            env->regs[R_EDX] & 0xffff, path, capacity);
++}
++
++static bool read_dos_destination(CPUState *cpu, CPUX86State *env, char *path,
++                                 size_t capacity)
++{
++    return read_dos_path_at(cpu, env->segs[R_ES].base,
++                            env->regs[R_EDI] & 0xffff, path, capacity);
++}
++
+ static bool read_int21_vector(CPUState *cpu, uint32_t *vector)
+ {
+     uint8_t bytes[4];
+@@ -420,6 +620,219 @@
+     }
+ }
+ 
++static bool v2_path_is_final(const char *path)
++{
++    return !g_ascii_strcasecmp(path, (const char *)witness.dos_path);
++}
++
++static bool v2_path_is_temp(const char *path)
++{
++    return witness.temporary_path[0] &&
++        !g_ascii_strcasecmp(path, (const char *)witness.temporary_path);
++}
++
++static bool v2_path_exists(const char *path)
++{
++    return v2_path_is_final(path) ? witness.final_exists :
++           v2_path_is_temp(path) ? witness.temporary_exists : false;
++}
++
++static void v2_update_ready_phase(void)
++{
++    if (witness.operation_policy == 1 && witness.active && witness.valid &&
++        !witness.pending && !witness.hardware_depth && witness.file_exists &&
++        !witness.file_open && witness.final_exists &&
++        !witness.temporary_exists && witness.close_seen && witness.flush_seen &&
++        !g_ascii_strcasecmp((const char *)witness.current_path,
++                            (const char *)witness.dos_path)) {
++        witness.phase = 6;
++    }
++}
++
++static bool v2_read_normalized_path(CPUState *cpu, CPUX86State *env,
++                                    bool destination, char path[16])
++{
++    char raw[64] = {0};
++    Error *err = NULL;
++    bool ok = destination ?
++        read_dos_destination(cpu, env, raw, sizeof(raw)) :
++        read_dos_path(cpu, env, raw, sizeof(raw));
++    if (ok) {
++        ok = normalize_dos_path(raw, path, &err);
++    }
++    error_free(err);
++    return ok;
++}
++
++static void record_entry_v2(CPUState *cpu, CPUX86State *env, uint8_t ah,
++                            uint32_t caller_pc, uint32_t return_pc)
++{
++    uint16_t handle = DOS_WITNESS_HANDLE_NONE;
++    uint16_t requested = 0;
++    uint8_t tmp[DOS_WITNESS_MAX_BYTES];
++    char path[16] = {0}, destination[16] = {0};
++    uint8_t mode = 0;
++    int64_t seek_offset = 0;
++    uint32_t offset_before = 0;
++    uint32_t size_before = 0;
++    bool has_path = false, has_destination = false;
++
++    if (witness.event_count >= DOS_WITNESS_MAX_EVENTS || witness.pending) {
++        witness_fault("INT 21h event bound or nested call exceeded");
++        return;
++    }
++
++    if (ah == 0x5b || ah == 0x3c || ah == 0x3d || ah == 0x40 ||
++        ah == 0x42 || ah == 0x68 || ah == 0x3e || ah == 0x41 ||
++        ah == 0x56 || ah == 0x0d) {
++        if (witness.phase == 6) {
++            witness.phase = witness.file_open ? 3 : 5;
++            witness.flush_seen = false;
++        }
++    }
++
++    switch (ah) {
++    case 0x5b: case 0x3c: case 0x3d: case 0x40: case 0x42:
++    case 0x68: case 0x3e: case 0x41: case 0x56: case 0x0d:
++        offset_before = witness.file_offset;
++        size_before = witness.final_size;
++        break;
++    default:
++        break;
++    }
++
++    if (ah == 0x5b || ah == 0x3c) {
++        if (!v2_read_normalized_path(cpu, env, false, path)) {
++            witness_fault("DOS create path could not be read safely");
++            return;
++        }
++        has_path = true;
++        if (!v2_path_is_final(path) && !v2_path_is_temp(path)) {
++            witness_fault("DOS create path is outside the admitted save paths");
++            return;
++        }
++        if (witness.file_open ||
++            (!g_ascii_strcasecmp(path, (const char *)witness.dos_path) &&
++             witness.current_path[0] && v2_path_is_temp((const char *)witness.current_path)) ||
++            (ah == 0x5b && v2_path_exists(path)) ||
++            (ah == 0x3c && v2_path_exists(path) &&
++             g_ascii_strcasecmp(path, (const char *)witness.current_path))) {
++            witness_fault("DOS create would replace an ineligible open or existing path");
++            return;
++        }
++        if (v2_path_is_temp(path) && !witness.temporary_path[0]) {
++            witness_fault("DOS temp path was not admitted");
++            return;
++        }
++    } else if (ah == 0x3d) {
++        mode = env->regs[R_EAX] & 0xff;
++        if (!v2_read_normalized_path(cpu, env, false, path) ||
++            g_ascii_strcasecmp(path, (const char *)witness.current_path) ||
++            (mode != 1 && mode != 2) || witness.file_open ||
++            !witness.file_exists || !witness.current_path[0]) {
++            witness_fault("DOS open is not a write-capable open of the current file");
++            return;
++        }
++        g_strlcpy(path, (const char *)witness.current_path, sizeof(path));
++        has_path = true;
++    } else if (ah == 0x40 || ah == 0x42 || ah == 0x68 || ah == 0x3e) {
++        handle = env->regs[R_EBX] & 0xffff;
++        if (!witness.file_open || handle != witness.current_handle ||
++            !witness.current_path[0]) {
++            witness_fault("DOS operation does not use the admitted open handle");
++            return;
++        }
++        g_strlcpy(path, (const char *)witness.current_path, sizeof(path));
++        has_path = true;
++        if (ah == 0x40) {
++            requested = env->regs[R_ECX] & 0xffff;
++            if (witness.bytes_written + requested > DOS_WITNESS_MAX_BYTES ||
++                witness.file_offset > witness.final_size ||
++                witness.file_offset + requested > DOS_WITNESS_MAX_BYTES) {
++                witness_fault("DOS write exceeds captured payload or file-size bound");
++                return;
++            }
++            if (requested) {
++                uint32_t data_offset = env->regs[R_EDX] & 0xffff;
++                uint32_t address = env->segs[R_DS].base + data_offset;
++                if ((uint64_t)data_offset + requested > 0x10000 ||
++                    !memory_read(cpu, address, tmp, requested)) {
++                    witness_fault("DOS write buffer was not readable RAM");
++                    return;
++                }
++                memcpy(witness.pending_payload, tmp, requested);
++            }
++        } else if (ah == 0x42) {
++            int32_t displacement = (int32_t)(((env->regs[R_ECX] & 0xffff) << 16) |
++                                              (env->regs[R_EDX] & 0xffff));
++            mode = env->regs[R_EAX] & 0xff;
++            seek_offset = displacement;
++            if (mode > 2) {
++                witness_fault("DOS seek origin is unsupported");
++                return;
++            }
++        }
++    } else if (ah == 0x41) {
++        if (!v2_read_normalized_path(cpu, env, false, path) ||
++            (!v2_path_is_final(path) && !v2_path_is_temp(path)) ||
++            !v2_path_exists(path) ||
++            (witness.file_open && !g_ascii_strcasecmp(path, (const char *)witness.current_path))) {
++            witness_fault("DOS delete is outside eligible closed save paths");
++            return;
++        }
++        has_path = true;
++    } else if (ah == 0x56) {
++        if (!v2_read_normalized_path(cpu, env, false, path) ||
++            !v2_read_normalized_path(cpu, env, true, destination) ||
++            !witness.file_exists || witness.file_open ||
++            g_ascii_strcasecmp(path, (const char *)witness.current_path) ||
++            (!v2_path_is_final(destination) && !v2_path_is_temp(destination)) ||
++            v2_path_exists(destination) || !g_ascii_strcasecmp(path, destination)) {
++            witness_fault("DOS rename is outside the admitted closed save paths");
++            return;
++        }
++        has_path = has_destination = true;
++    } else if (ah == 0x0d) {
++        if (witness.file_open || !witness.file_exists || witness.hardware_depth ||
++            g_ascii_strcasecmp((const char *)witness.current_path,
++                               (const char *)witness.dos_path)) {
++            witness_fault("DOS flush requires a closed final save file");
++            return;
++        }
++        g_strlcpy(path, (const char *)witness.current_path, sizeof(path));
++        has_path = true;
++    } else if (ah == 0x0f || ah == 0x10 || ah == 0x13 || ah == 0x14 ||
++               ah == 0x15 || ah == 0x16 || ah == 0x17 || ah == 0x21 ||
++               ah == 0x22 || ah == 0x23 || ah == 0x27 || ah == 0x28 ||
++               ah == 0x3f || ah == 0x43 || ah == 0x45 || ah == 0x46 ||
++               ah == 0x47 || ah == 0x5c || ah == 0x6c ||
++               !dos_call_observed(ah)) {
++        witness_fault("Unsupported DOS mutation during save-operations witness");
++        return;
++    }
++
++    witness.pending = true;
++    witness.pending_v2 = true;
++    witness.pending_function = ah;
++    witness.pending_handle = handle;
++    witness.pending_requested = requested;
++    witness.pending_caller_pc = caller_pc;
++    witness.pending_return_pc = return_pc;
++    witness.pending_ss = env->segs[R_SS].selector;
++    witness.pending_cs = env->segs[R_CS].selector;
++    witness.pending_sp = env->regs[R_ESP] & 0xffff;
++    witness.pending_payload_size = ah == 0x40 ? requested : 0;
++    witness.pending_mode = mode;
++    witness.pending_seek_offset = seek_offset;
++    witness.pending_offset_before = offset_before;
++    witness.pending_size_before = size_before;
++    memset(witness.pending_path, 0, sizeof(witness.pending_path));
++    memset(witness.pending_destination, 0, sizeof(witness.pending_destination));
++    if (has_path) g_strlcpy((char *)witness.pending_path, path, sizeof(witness.pending_path));
++    if (has_destination) g_strlcpy((char *)witness.pending_destination,
++                                   destination, sizeof(witness.pending_destination));
++}
++
+ static void record_entry(CPUState *cpu, CPUX86State *env, uint8_t ah,
+                          uint32_t caller_pc, uint32_t return_pc)
+ {
+@@ -430,6 +843,11 @@
+     uint32_t address;
+     char path[260];
+ 
++    if (witness.operation_policy == 1) {
++        record_entry_v2(cpu, env, ah, caller_pc, return_pc);
++        return;
++    }
++
+     if (witness.event_count >= DOS_WITNESS_MAX_EVENTS || witness.pending) {
+         witness_fault("INT 21h event bound or nested call exceeded");
+         return;
+@@ -527,6 +945,9 @@
+         frame->ss = env->segs[R_SS].selector;
+         frame->sp = env->regs[R_ESP] & 0xffff;
+         frame->return_pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
++        if (witness.operation_policy == 1 && witness.phase == 6) {
++            witness.phase = 5;
++        }
+         if (!counter_advance(&generation_highwater)) {
+             witness_fault("DOS save witness generation overflow");
+         } else {
+@@ -543,7 +964,13 @@
+              witness.pending_function == 0x40 ||
+              witness.pending_function == 0x68 ||
+              witness.pending_function == 0x3e ||
+-             witness.pending_function == 0x0d)) {
++             witness.pending_function == 0x0d ||
++             (witness.operation_policy == 1 &&
++              (witness.pending_function == 0x3c ||
++               witness.pending_function == 0x3d ||
++               witness.pending_function == 0x41 ||
++               witness.pending_function == 0x42 ||
++               witness.pending_function == 0x56)))) {
+             return;
+         }
+         witness_fault("Raw BIOS or absolute disk access outside DOS save call");
+@@ -561,12 +988,250 @@
+         return;
+     }
+     if (((env->regs[R_EAX] >> 8) & 0xff) == 0x4b ||
+-        ((env->regs[R_EAX] >> 8) & 0xff) == 0x50) {
++        ((env->regs[R_EAX] >> 8) & 0xff) == 0x50 ||
++        (witness.operation_policy == 1 &&
++         ((env->regs[R_EAX] >> 8) & 0xff) == 0x55)) {
+         witness_fault("EXEC or PSP switch invalidated save proof");
+         return;
+     }
+     record_entry(cpu, env, (env->regs[R_EAX] >> 8) & 0xff,
+                  caller_pc, return_pc);
++}
++
++static void complete_event_v2(CPUX86State *env, DosWitnessEvent *event)
++{
++    uint16_t ax = env->regs[R_EAX] & 0xffff;
++    uint16_t dx = env->regs[R_EDX] & 0xffff;
++    bool carry = cpu_compute_eflags(env) & CC_C;
++    uint8_t fn = witness.pending_function;
++
++    event->handle = witness.pending_handle;
++    event->dx = dx;
++    event->offset_before = witness.pending_offset_before;
++    event->offset_after = witness.file_offset;
++    event->size_before = witness.pending_size_before;
++    event->size_after = witness.pending_path[0] ? witness.final_size : 0;
++    event->mode = witness.pending_mode;
++    event->seek_offset = witness.pending_seek_offset;
++    event->requested = witness.pending_requested;
++    if (witness.pending_path[0]) {
++        g_strlcpy((char *)event->path, (const char *)witness.pending_path,
++                  sizeof(event->path));
++    }
++    if (witness.pending_destination[0]) {
++        g_strlcpy((char *)event->destination,
++                  (const char *)witness.pending_destination,
++                  sizeof(event->destination));
++    }
++
++    switch (fn) {
++    case 0x51:
++    case 0x62:
++        if ((env->regs[R_EBX] & 0xffff) != witness.child_psp) {
++            witness_fault("Current DOS PSP did not match the admitted caller");
++        }
++        event->handle = env->regs[R_EBX] & 0xffff;
++        break;
++    case 0x5b:
++    case 0x3c:
++    case 0x3d:
++        if (carry || ax == DOS_WITNESS_HANDLE_NONE) {
++            witness_fault("DOS create or open failed");
++            break;
++        }
++        if (fn == 0x3d && !witness.file_exists) {
++            witness_fault("DOS open returned a handle for an absent save file");
++            break;
++        }
++        if (fn != 0x3d) {
++            if (v2_path_is_final((const char *)witness.pending_path)) {
++                witness.final_exists = true;
++            } else if (v2_path_is_temp((const char *)witness.pending_path)) {
++                witness.temporary_exists = true;
++            } else {
++                witness_fault("DOS create return path was not admitted");
++                break;
++            }
++            witness.file_exists = true;
++            witness.file_offset = 0;
++            witness.final_size = 0;
++            witness.create_seen = true;
++        } else {
++            witness.file_offset = 0;
++        }
++        g_strlcpy((char *)witness.current_path,
++                  (const char *)witness.pending_path,
++                  sizeof(witness.current_path));
++        witness.current_handle = ax;
++        witness.created_handle = ax;
++        witness.file_open = true;
++        witness.commit_seen = false;
++        witness.close_seen = false;
++        witness.flush_seen = false;
++        event->handle = ax;
++        event->ax = ax;
++        event->offset_after = witness.file_offset;
++        event->size_after = witness.final_size;
++        witness.phase = fn == 0x3d ? 2 : 2;
++        break;
++    case 0x40:
++        if (carry || ax != witness.pending_requested) {
++            witness_fault("DOS write failed or was short");
++            break;
++        }
++        if (ax) {
++            if ((uint64_t)witness.bytes_written + ax > DOS_WITNESS_MAX_BYTES ||
++                (uint64_t)witness.file_offset + ax > DOS_WITNESS_MAX_BYTES ||
++                witness.file_offset > witness.final_size) {
++                witness_fault("DOS write result exceeded the bounded file image");
++                break;
++            }
++            memcpy(witness.payload + witness.bytes_written,
++                   witness.pending_payload, ax);
++            witness.bytes_written += ax;
++            event->accepted = ax;
++            witness.file_offset += ax;
++            witness.final_size = MAX(witness.final_size, witness.file_offset);
++        } else {
++            if (witness.file_offset > witness.final_size) {
++                witness_fault("DOS zero-count truncate would create an undefined hole");
++                break;
++            }
++            witness.final_size = witness.file_offset;
++        }
++        witness.commit_seen = false;
++        witness.close_seen = false;
++        witness.flush_seen = false;
++        witness.write_count++;
++        witness.phase = 3;
++        event->offset_after = witness.file_offset;
++        event->size_after = witness.final_size;
++        break;
++    case 0x42: {
++        int64_t base, result;
++        if (carry) {
++            witness_fault("DOS seek failed");
++            break;
++        }
++        base = witness.pending_mode == 0 ? 0 :
++               witness.pending_mode == 1 ? witness.pending_offset_before :
++               witness.pending_mode == 2 ? witness.pending_size_before : -1;
++        result = base + witness.pending_seek_offset;
++        if (base < 0 || result < 0 || result > DOS_WITNESS_MAX_BYTES ||
++            ((((uint32_t)dx << 16) | ax) != (uint32_t)result)) {
++            witness_fault("DOS seek result or offset was outside the bounded file");
++            break;
++        }
++        witness.file_offset = result;
++        event->offset_after = result;
++        event->size_after = witness.final_size;
++        break;
++    }
++    case 0x68:
++        if (carry) witness_fault("DOS commit failed");
++        else { witness.commit_seen = true; witness.phase = 4; }
++        break;
++    case 0x3e:
++        if (carry) witness_fault("DOS close failed");
++        else { witness.close_seen = true; witness.file_open = false; witness.phase = 5; }
++        break;
++    case 0x41:
++        if (carry) {
++            witness_fault("DOS delete failed");
++            break;
++        }
++        if (v2_path_is_final((const char *)witness.pending_path)) {
++            witness.final_exists = false;
++        } else if (v2_path_is_temp((const char *)witness.pending_path)) {
++            witness.temporary_exists = false;
++        } else {
++            witness_fault("DOS delete return path was not admitted");
++            break;
++        }
++        if (!g_ascii_strcasecmp((const char *)witness.current_path,
++                                (const char *)witness.pending_path)) {
++            witness.current_path[0] = 0;
++            witness.file_exists = false;
++            witness.file_offset = witness.final_size = 0;
++            witness.current_handle = DOS_WITNESS_HANDLE_NONE;
++            witness.close_seen = false;
++            witness.commit_seen = false;
++        }
++        witness.flush_seen = false;
++        witness.phase = witness.file_exists ? 5 : 1;
++        break;
++    case 0x56:
++        if (carry || !witness.pending_destination[0]) {
++            witness_fault("DOS rename failed");
++            break;
++        }
++        if (v2_path_is_final((const char *)witness.pending_path)) {
++            witness.final_exists = false;
++        } else if (v2_path_is_temp((const char *)witness.pending_path)) {
++            witness.temporary_exists = false;
++        }
++        if (v2_path_is_final((const char *)witness.pending_destination)) {
++            witness.final_exists = true;
++        } else if (v2_path_is_temp((const char *)witness.pending_destination)) {
++            witness.temporary_exists = true;
++        }
++        g_strlcpy((char *)witness.current_path,
++                  (const char *)witness.pending_destination,
++                  sizeof(witness.current_path));
++        witness.file_exists = true;
++        witness.current_handle = DOS_WITNESS_HANDLE_NONE;
++        witness.flush_seen = false;
++        witness.phase = 5;
++        break;
++    case 0x0d:
++        if (witness.file_open || !witness.file_exists || witness.hardware_depth ||
++            g_ascii_strcasecmp((const char *)witness.current_path,
++                               (const char *)witness.dos_path) ||
++            !witness.final_exists || witness.temporary_exists ||
++            !witness.close_seen) {
++            witness_fault("DOS flush completed without a closed final file");
++        } else {
++            witness.flush_seen = true;
++            witness.phase = 6;
++        }
++        break;
++    default:
++        break;
++    }
++
++    event->carry = carry;
++    event->ax = ax;
++    if (event->path[0]) {
++        event->size_after = witness.final_size;
++        event->offset_after = witness.file_offset;
++    } else {
++        event->size_before = 0;
++        event->size_after = 0;
++        event->offset_before = 0;
++        event->offset_after = 0;
++    }
++    witness.event_count++;
++    witness.pending = false;
++    witness.pending_v2 = false;
++    witness.pending_function = 0;
++    witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.pending_requested = 0;
++    witness.pending_caller_pc = 0;
++    witness.pending_return_pc = 0;
++    witness.pending_ss = witness.pending_cs = witness.pending_sp = 0;
++    witness.pending_payload_size = 0;
++    witness.pending_mode = 0;
++    witness.pending_seek_offset = 0;
++    witness.pending_offset_before = witness.pending_size_before = 0;
++    memset(witness.pending_payload, 0, sizeof(witness.pending_payload));
++    memset(witness.pending_path, 0, sizeof(witness.pending_path));
++    memset(witness.pending_destination, 0, sizeof(witness.pending_destination));
++    v2_update_ready_phase();
++    if (!counter_advance(&generation_highwater)) {
++        witness_fault("DOS save witness generation overflow");
++    } else {
++        witness.generation = generation_highwater;
++    }
+ }
+ 
+ void fdisbull_dos_save_witness_iret(CPUX86State *env)
+@@ -589,6 +1254,7 @@
+                 (env->regs[R_ESP] & 0xffff) == frame->sp) {
+                 memset(frame, 0, sizeof(*frame));
+                 witness.hardware_depth--;
++                v2_update_ready_phase();
+                 if (!counter_advance(&generation_highwater)) {
+                     witness_fault("DOS save witness generation overflow");
+                 } else {
+@@ -608,6 +1274,7 @@
+             (env->regs[R_ESP] & 0xffff) == frame->sp) {
+             memset(frame, 0, sizeof(*frame));
+             witness.hardware_depth--;
++            v2_update_ready_phase();
+             if (!counter_advance(&generation_highwater)) {
+                 witness_fault("DOS save witness generation overflow");
+             } else {
+@@ -629,6 +1296,15 @@
+         return;
+     }
+     event = &witness.events[witness.event_count];
++    if (witness.pending_v2) {
++        memset(event, 0, sizeof(*event));
++        event->sequence = witness.event_count + 1;
++        event->function = witness.pending_function;
++        event->caller_pc = witness.pending_caller_pc;
++        event->return_pc = witness.pending_return_pc;
++        complete_event_v2(env, event);
++        return;
++    }
+     memset(event, 0, sizeof(*event));
+     event->sequence = witness.event_count + 1;
+     event->function = witness.pending_function;
+@@ -740,11 +1416,22 @@
+     }
+     pc = (env->segs[R_CS].base + env->eip) & 0xfffff;
+     if (source_pc(pc) || witness.hardware_depth || !witness.pending ||
+-        (witness.pending_function != 0x5b &&
+-         witness.pending_function != 0x40 &&
+-         witness.pending_function != 0x68 &&
+-         witness.pending_function != 0x3e &&
+-         witness.pending_function != 0x0d)) {
++        (witness.operation_policy == 1 ?
++         (witness.pending_function != 0x5b &&
++          witness.pending_function != 0x3c &&
++          witness.pending_function != 0x3d &&
++          witness.pending_function != 0x40 &&
++          witness.pending_function != 0x42 &&
++          witness.pending_function != 0x68 &&
++          witness.pending_function != 0x3e &&
++          witness.pending_function != 0x41 &&
++          witness.pending_function != 0x56 &&
++          witness.pending_function != 0x0d) :
++         (witness.pending_function != 0x5b &&
++          witness.pending_function != 0x40 &&
++          witness.pending_function != 0x68 &&
++          witness.pending_function != 0x3e &&
++          witness.pending_function != 0x0d))) {
+         witness_fault("Unowned storage or DMA port write invalidated save proof");
+     }
+ }
+@@ -809,6 +1496,7 @@
+ 
+ static bool parse_ranges(const FdisbullDosSaveWitnessRangeList *list,
+                          DosWitnessRange *ranges, uint32_t *count,
++                         bool operations_v2,
+                          Error **errp)
+ {
+     const FdisbullDosSaveWitnessRangeList *it;
+@@ -817,13 +1505,14 @@
+ 
+     for (it = list; it; it = it->next) {
+         uint64_t end = (uint64_t)it->value->start + it->value->size;
+-        if (++n > DOS_WITNESS_MAX_RANGES || !it->value->size || end > 0x100000) {
++        if (++n > DOS_WITNESS_MAX_RANGES || !it->value->size ||
++            end > (operations_v2 ? 0xA0000 : 0x100000)) {
+             error_setg(errp, "Invalid DOS caller source range");
+             return false;
+         }
+         total += it->value->size;
+-        if (total > 0x10000) {
+-            error_setg(errp, "DOS caller source ranges exceed 64 KiB");
++        if (!operations_v2 && total > 0x10000) {
++            error_setg(errp, "DOS caller source ranges exceed legacy bound");
+             return false;
+         }
+         if (n > 1 && it->value->start <
+@@ -857,6 +1546,37 @@
+     return true;
+ }
+ 
++static bool decode_initial_payload(const char *hex, bool exists,
++                                   uint8_t *payload, uint32_t *size,
++                                   Error **errp)
++{
++    size_t n, i;
++    if (!hex) {
++        error_setg(errp, "Initial DOS payload is required");
++        return false;
++    }
++    n = strlen(hex);
++    if ((n & 1) || n / 2 > DOS_WITNESS_MAX_BYTES || (!exists && n)) {
++        error_setg(errp, "Initial DOS payload exceeds the bound or conflicts with existence");
++        return false;
++    }
++    for (i = 0; i < n; i += 2) {
++        int hi = g_ascii_xdigit_value(hex[i]);
++        int lo = g_ascii_xdigit_value(hex[i + 1]);
++        if (hi < 0 || lo < 0) {
++            error_setg(errp, "Initial DOS payload is not hexadecimal");
++            return false;
++        }
++        payload[i / 2] = (hi << 4) | lo;
++    }
++    *size = n / 2;
++    if (!exists && *size) {
++        error_setg(errp, "Absent initial DOS file must have an empty payload");
++        return false;
++    }
++    return true;
++}
++
+ static FdisbullDosSaveWitnessInfo *witness_info(Error **errp)
+ {
+     FdisbullDosSaveWitnessInfo *info = g_new0(FdisbullDosSaveWitnessInfo, 1);
+@@ -867,8 +1587,10 @@
+     uint32_t i;
+     (void)errp;
+ 
+-    info->api_version = DOS_WITNESS_API;
+-    info->model = g_strdup("qemu-pc-dos-save-witness-v1");
++    info->api_version = witness.operation_policy ? 2 : DOS_WITNESS_API;
++    info->model = g_strdup(witness.operation_policy ?
++                           "qemu-pc-dos-save-witness-v2" :
++                           "qemu-pc-dos-save-witness-v1");
+     info->epoch = witness.epoch;
+     info->generation = witness.generation;
+     info->active = witness.active;
+@@ -925,6 +1647,24 @@
+         dst->accepted = src->accepted;
+         dst->caller_pc = src->caller_pc;
+         dst->return_pc = src->return_pc;
++        if (witness.operation_policy) {
++            dst->path = g_strdup((const char *)src->path);
++            dst->destination = g_strdup((const char *)src->destination);
++            dst->has_offset_before = true;
++            dst->offset_before = src->offset_before;
++            dst->has_offset_after = true;
++            dst->offset_after = src->offset_after;
++            dst->has_size_before = true;
++            dst->size_before = src->size_before;
++            dst->has_size_after = true;
++            dst->size_after = src->size_after;
++            dst->has_mode = true;
++            dst->mode = src->mode;
++            dst->has_seek_offset = true;
++            dst->seek_offset = src->seek_offset;
++            dst->has_dx = true;
++            dst->dx = src->dx;
++        }
+         node->value = dst;
+         *etail = node;
+         etail = &node->next;
+@@ -952,6 +1692,42 @@
+         g_string_append_printf(hex, "%02x", witness.pending_payload[i]);
+     }
+     info->pending_payload_hex = g_string_free(hex, FALSE);
++    if (witness.operation_policy) {
++        GString *initial = g_string_sized_new(witness.initial_size * 2);
++        info->operation_policy = g_strdup("save-v2");
++        info->has_initial_exists = true;
++        info->initial_exists = witness.initial_exists;
++        for (i = 0; i < witness.initial_size; i++) {
++            g_string_append_printf(initial, "%02x", witness.initial_payload[i]);
++        }
++        info->initial_payload_hex = g_string_free(initial, FALSE);
++        info->temporary_path = g_strdup((const char *)witness.temporary_path);
++        info->current_path = g_strdup((const char *)witness.current_path);
++        info->has_file_exists = true;
++        info->file_exists = witness.file_exists;
++        info->has_file_open = true;
++        info->file_open = witness.file_open;
++        info->has_final_exists = true;
++        info->final_exists = witness.final_exists;
++        info->has_temporary_exists = true;
++        info->temporary_exists = witness.temporary_exists;
++        info->has_file_offset = true;
++        info->file_offset = witness.file_offset;
++        info->has_final_size = true;
++        info->final_size = witness.final_size;
++        if (witness.pending_v2) {
++            info->pending_path = g_strdup((const char *)witness.pending_path);
++            info->pending_destination = g_strdup((const char *)witness.pending_destination);
++            info->has_pending_offset_before = true;
++            info->pending_offset_before = witness.pending_offset_before;
++            info->has_pending_size_before = true;
++            info->pending_size_before = witness.pending_size_before;
++            info->has_pending_mode = true;
++            info->pending_mode = witness.pending_mode;
++            info->has_pending_seek_offset = true;
++            info->pending_seek_offset = witness.pending_seek_offset;
++        }
++    }
+     return info;
+ }
+ 
+@@ -985,7 +1761,7 @@
+         return NULL;
+     }
+     if (!token_valid(token) || !child_psp || !int21_vector ||
+-        !parse_ranges(source_ranges, ranges, &count, errp) ||
++        !parse_ranges(source_ranges, ranges, &count, false, errp) ||
+         !normalize_dos_path(dos_path, normalized, errp)) {
+         if (errp && !*errp) error_setg(errp, "Invalid DOS save witness identity");
+         return NULL;
+@@ -1004,6 +1780,7 @@
+     witness.int21_vector = int21_vector;
+     witness.created_handle = DOS_WITNESS_HANDLE_NONE;
+     witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.current_handle = DOS_WITNESS_HANDLE_NONE;
+     witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
+     witness.range_count = count;
+     memcpy(witness.ranges, ranges, count * sizeof(ranges[0]));
+@@ -1021,6 +1798,86 @@
+     return witness_info(errp);
+ }
+ 
++FdisbullDosSaveWitnessInfo *qmp_x_fdisbull_arm_dos_save_operations(
++    const char *token, uint16_t child_psp,
++    FdisbullDosSaveWitnessRangeList *source_ranges, const char *dos_path,
++    uint32_t int21_vector, bool initial_exists,
++    const char *initial_payload_hex, const char *temporary_path,
++    Error **errp)
++{
++    CPUState *cpu;
++    CPUX86State *env;
++    DosWitnessRange ranges[DOS_WITNESS_MAX_RANGES] = {0};
++    uint8_t initial[DOS_WITNESS_MAX_BYTES] = {0};
++    uint32_t count = 0, initial_size = 0;
++    char normalized[16] = {0}, temp[16] = {0};
++
++    if (!stopped_cpu(&cpu, &env, true, errp) || !witness_register_vmstate(errp)) {
++        return NULL;
++    }
++    if (witness.active || (witness.token[0] && witness.phase != 6)) {
++        error_setg(errp, "A DOS save witness is already active or unresolved");
++        return NULL;
++    }
++    if (!token_valid(token) || !child_psp || !int21_vector ||
++        !parse_ranges(source_ranges, ranges, &count, true, errp) ||
++        !normalize_dos_path(dos_path, normalized, errp) ||
++        !decode_initial_payload(initial_payload_hex, initial_exists, initial,
++                                &initial_size, errp)) {
++        if (errp && !*errp) error_setg(errp, "Invalid DOS save-operations identity");
++        return NULL;
++    }
++    if (temporary_path && temporary_path[0]) {
++        if (!normalize_dos_path(temporary_path, temp, errp) ||
++            !strcmp(temp, normalized)) {
++            if (errp && !*errp) error_setg(errp, "Temporary and final DOS paths must differ");
++            return NULL;
++        }
++    }
++    {
++        uint32_t actual_vector;
++        if (!read_int21_vector(cpu, &actual_vector) ||
++            actual_vector != int21_vector) {
++            error_setg(errp, "INT 21h vector differs from trusted kernel baseline");
++            return NULL;
++        }
++    }
++    memset(&witness, 0, sizeof(witness));
++    witness.epoch = epoch_highwater;
++    witness.child_psp = child_psp;
++    witness.int21_vector = int21_vector;
++    witness.created_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.pending_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.current_handle = DOS_WITNESS_HANDLE_NONE;
++    witness.range_count = count;
++    memcpy(witness.ranges, ranges, count * sizeof(ranges[0]));
++    memcpy(witness.initial_payload, initial, initial_size);
++    witness.initial_size = initial_size;
++    witness.initial_exists = initial_exists;
++    witness.final_exists = initial_exists;
++    g_strlcpy((char *)witness.token, token, sizeof(witness.token));
++    g_strlcpy((char *)witness.dos_path, normalized, sizeof(witness.dos_path));
++    g_strlcpy((char *)witness.temporary_path, temp, sizeof(witness.temporary_path));
++    witness.operation_policy = 1;
++    witness.file_exists = initial_exists;
++    witness.file_open = false;
++    witness.final_size = initial_size;
++    if (initial_exists) {
++        g_strlcpy((char *)witness.current_path, normalized,
++                  sizeof(witness.current_path));
++    }
++    witness.active = true;
++    witness.valid = true;
++    witness.phase = 1;
++    if (!counter_advance(&generation_highwater)) {
++        witness_fault("DOS save witness generation overflow");
++        error_setg(errp, "DOS save witness generation overflow");
++        return NULL;
++    }
++    witness.generation = generation_highwater;
++    return witness_info(errp);
++}
++
+ FdisbullDosSaveWitnessInfo *qmp_x_fdisbull_disarm_dos_save_witness(
+     const char *token, uint64_t expected_generation, Error **errp)
+ {

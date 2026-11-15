@@ -129,3 +129,72 @@ beside the result. A movie routine returning is not a natural campaign playthrou
 Preserve failed baseline routes and distinguish decoder output, rendering,
 audible output, arbitrary seeking and whole-game behavior. Canonical inputs
 stay separate from the compact variant and all licensed media stays private.
+
+## Installer and image intake
+
+Separate archive extraction, disc framing/filesystems, executable unpacking and
+installer execution. Do not run a setup program simply to obtain its files.
+
+1. Run `fdisbull-unpack catalog` and `fdisbull-unpack inspect /private/input`.
+2. Extract admitted layers with `fdisbull-unpack extract /private/input
+   /private/new-output --recursive`. Preserve `layers.json`, original sources,
+   companion descriptors and explicit omissions. Never describe a partial tree
+   as a complete disc or installed game. Avoid repeated extraction/hashing once
+   an unchanged source's retained evidence answers the question.
+3. For GOG/BIN, retain CUE/INS. Select a data track explicitly when ambiguous.
+   ISO files, raw sector images, filesystems and audio tracks are different
+   objects. Unsupported NRG/MDF/CCD/VCD or floppy layouts need a separately
+   qualified provider; renaming them to .iso is not conversion.
+4. Concatenated ZIPs need independent directory/offset validation. An ordinary
+   ZIP reader returning a few files does not establish whole-file accounting.
+   MPSLABS.001 contains three ZIP groups, not proof of three installation disks.
+5. Use the EXEPACK provider only for its admitted profiles. It reconstructs an
+   analysis envelope, not an automatically qualified runnable executable.
+   RTLink overlays are a different mechanism; do not add a DOS extender stub.
+6. Installer hardware investigation is opt-in native execution:
+   `fdisbull-installer-probe /private/INSTALL.EXE /private/new-capture
+   --executable /tools/dosbox-x --max-fetches 50000 --timeout-seconds 30`.
+   Only selected files are copied into scratch C:. Use `--companion` and JSON
+   `--arguments` explicitly. Do not mount the source directory or consume a
+   supplied autoexec/config. DOSBox alone is not a hostile-code host sandbox.
+7. Distinguish fetched calls, matched caller returns, inferred intent and missing
+   branches. DOS/BIOS/mouse/EMS/port observations describe emulated hardware, not
+   the host Mac. Static strings are hypotheses, not observed detection. Capture
+   OS version, video, mouse, memory and storage witnesses before changing the
+   environment; follow with bounded one-variable experiments as needed.
+8. Generic changed-code capture is packer-independent but does not establish an
+   original entry or recover arbitrary relocation/import tables. Preserve source
+   identity and use an explicit `--stop-offset` for a justified load-relative
+   boundary. Breakpoint captures are snapshots, not executable rebuilds. Keep
+   raw RAM/traces/game files outside Git, and do not publish extracted fonts.
+
+These installed entry points also work as `python -m fdisbull.unpack` and
+`python -m fdisbull.installer_probe`. They are not aliases for new shared JSON
+request methods. Read `docs/INSTALLER_LAYER_INTAKE.md` for profiles, test scope,
+provider contracts, limitations and the actual Dragonsphere/Ultima evidence.
+## Frame old Interplay MVE and inspect Castles II SLB
+
+```text
+fdisbull media-inspect /private/movie.mve --adapter mve
+fdisbull mve-frame /private/movie.mve /private/new-framed --keep-frames 32
+fdisbull media-inspect /private/SND190.SLB --adapter castles2-slb
+fdisbull media-inspect /private/SND190.SLB --adapter castles2-slb-playback
+fdisbull media-decode /private/SND190.SLB /private/new-sample \
+  --adapter castles2-slb --slot 515 \
+  --playback-profile castles2-ail-sb-mono-v1
+```
+
+MVE header recognition is separate from the explicit old indexed 0x06/0x10
+writer. Framing preserves codec family, frame numbering, audio and controls;
+first/last N images are checked exactly. Original ending packets restore needed
+references within a bounded search. Read pure-hold, warm-up and retained ranges
+from the manifest. A 16-bit packet length is not proof of native input-buffer
+capacity; no rewritten chunk may exceed the original maximum. Native tests must
+count presentations and check the actual ending and return, not just success.
+
+SLB has no global magic. Its explicit reader preserves original directory slots
+and duplicate-key variants. The playback profile maps selectors 11/22 to DSP
+time constants 166/211, keeping rational device timing separate from integer WAV
+rate and buffer-drain completion. Exports require the original slot and explicit
+profile; unknown selectors are not guessed. All current-query native flags stay
+false. See `docs/CASTLES2_MEDIA.md` for the implemented scope and native gates.

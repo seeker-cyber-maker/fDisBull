@@ -1,0 +1,946 @@
+--- a/include/ui/console.h
++++ b/include/ui/console.h
+@@ -383,6 +383,8 @@
+ 
+ void graphic_hw_update(QemuConsole *con);
+ void graphic_hw_update_done(QemuConsole *con);
++/* BQL must remain held between this check and graphic_hw_update(). */
++bool qemu_console_can_update_headless_sync(QemuConsole *con);
+ void graphic_hw_invalidate(QemuConsole *con);
+ void graphic_hw_text_update(QemuConsole *con, console_ch_t *chardata);
+ void graphic_hw_gl_block(QemuConsole *con, bool block);
+--- /dev/null
++++ b/qapi/fdisbull-audio.json
+@@ -0,0 +1,98 @@
++# Experimental fDisBull capture window, separate from clock extension API 1.
++{ 'include': 'run-state.json' }
++
++##
++# @FdisbullAudioChunk:
++#
++# @first-frame: First retained PCM frame, zero based within this window.
++# @frames: Number of complete PCM frames delivered in this callback.
++# @virtual-ns: QEMU virtual time of the delivery callback, not sample onset.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullAudioChunk',
++  'data': { 'first-frame': 'uint64', 'frames': 'uint64', 'virtual-ns': 'int' } }
++
++##
++# @FdisbullAudioInfo:
++#
++# @api-version: Capture protocol version, one.
++# @epoch: Native clock epoch.
++# @state: idle, capturing, stopped, overflow or invalidated.
++# @virtual-ns: Stopped observation time.
++# @token: Owning window token, absent before the first start.
++# @start-ns: Capture registration time, absent before start.
++# @stop-ns: Explicit stop time, absent until stopped.
++# @max-frames: Maximum retained PCM frames.
++# @frames: Retained PCM frames.
++# @dropped-frames: Callback frames refused after a capacity limit.
++# @rate: PCM frames per second, 32000.
++# @channels: Channel count, one.
++# @format: Sample format, u8.
++# @enabled: Most recent capture enable notification.
++# @chunks: Callback boundaries for the retained prefix.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullAudioInfo',
++  'data': { 'api-version': 'int', 'epoch': 'uint64', 'state': 'str',
++            'virtual-ns': 'int', '*token': 'str', '*start-ns': 'int',
++            '*stop-ns': 'int', 'max-frames': 'uint64', 'frames': 'uint64',
++            'dropped-frames': 'uint64', 'rate': 'int', 'channels': 'int',
++            'format': 'str', 'enabled': 'bool', 'chunks': ['FdisbullAudioChunk'] } }
++
++##
++# @x-fdisbull-query-audio:
++#
++# Observe an explicitly owned audio window without generating samples.
++# Requires the stopped native virtual-clock profile.
++#
++# Returns: Window receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-audio', 'returns': 'FdisbullAudioInfo' }
++
++##
++# @x-fdisbull-start-audio:
++#
++# @token: New owner token of 1..128 bytes.
++# @max-frames: Retained frame capacity, 1..1920000.
++#
++# Register capture on the explicit fdisbull-pc audiodev. Does not run the VM.
++# A prior active window must be stopped before replacement.
++#
++# Returns: Empty active window receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-start-audio',
++  'data': { 'token': 'str', 'max-frames': 'int' },
++  'returns': 'FdisbullAudioInfo' }
++
++##
++# @x-fdisbull-stop-audio:
++#
++# @token: Current owner token.
++#
++# Detach capture without flushing or advancing audio. Idempotent for this token.
++#
++# Returns: Retained window receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-stop-audio', 'data': { 'token': 'str' },
++  'returns': 'FdisbullAudioInfo' }
++
++##
++# @x-fdisbull-export-audio:
++#
++# @token: Current owner token.
++# @filename: New private output path for raw u8 mono PCM.
++#
++# Copy retained samples while stopped. No audio_run, flush or guest execution.
++# Overflowed windows are refused. The file is created exclusively.
++#
++# Returns: Receipt describing exactly the exported bytes.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-export-audio',
++  'data': { 'token': 'str', 'filename': 'str' },
++  'returns': 'FdisbullAudioInfo' }
+--- /dev/null
++++ b/qapi/fdisbull-display.json
+@@ -0,0 +1,99 @@
++# Experimental fDisBull renderer observation, separate from clock API 1.
++{ 'include': 'run-state.json' }
++
++##
++# @FdisbullDisplayInfo:
++#
++# A retained, completed synchronous renderer update.  An update does not
++# establish guest application frame completion or a VGA retrace boundary.
++#
++# @api-version: Observer protocol version, one.
++# @epoch: Native clock epoch.
++# @state: idle, observing, stopped or invalidated.
++# @virtual-ns: Stopped observation time.
++# @token: Owning observer token, absent before the first start.
++# @start-ns: Observer registration time, absent before start.
++# @stop-ns: Explicit stop time, absent until stopped.
++# @period-ns: Requested virtual observation period; zero before start.
++#     This is not a guest frame period.  Missed observations are not invented.
++# @updates: Completed owned publications within this token, initially zero.
++# @update-id: Latest publication ID, equal to updates, absent before publication.
++# @published-ns: Actual virtual publication time, absent before publication.
++# @width: Retained image width, absent before publication.
++# @height: Retained image height, absent before publication.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullDisplayInfo',
++  'data': { 'api-version': 'int', 'epoch': 'uint64', 'state': 'str',
++            'virtual-ns': 'int', '*token': 'str', '*start-ns': 'int',
++            '*stop-ns': 'int', 'period-ns': 'int', 'updates': 'uint64',
++            '*update-id': 'uint64', '*published-ns': 'int',
++            '*width': 'int', '*height': 'int' } }
++
++##
++# @x-fdisbull-query-display:
++#
++# Observe retained renderer state without updating the display or running the VM.
++# Requires the stopped native virtual-clock API 1 profile.
++#
++# Returns: Observer receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-display', 'returns': 'FdisbullDisplayInfo' }
++
++##
++# @x-fdisbull-start-display:
++#
++# @token: New owner token of 1..128 bytes.
++# @period-ns: Virtual observation period, 1000000..1000000000 nanoseconds.
++#
++# Arm an observer for headless synchronous standard VGA console zero.
++# Start neither renders nor runs the VM.  A prior observer must be explicitly
++# stopped before replacement.  The first deadline is one period after start;
++# later deadlines follow that phase, skipping any missed deadlines.
++#
++# Each callback copies a completed renderer update into owned RGB storage.
++# Only the latest update is retained; images are limited to 8192 pixels per
++# dimension and 16 MiB of packed RGB bytes.  Guest frame completion is unknown.
++# Reset, loss of the required profile or an observation error invalidates the
++# observer.  Migration stays blocked after the first successful start.
++#
++# Returns: Empty observing receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-start-display',
++  'data': { 'token': 'str', 'period-ns': 'int' },
++  'returns': 'FdisbullDisplayInfo' }
++
++##
++# @x-fdisbull-stop-display:
++#
++# @token: Current owner token.
++#
++# Disarm observation without rendering or running the VM.  Retains the latest
++# owned pixels and is idempotent for this token.
++#
++# Returns: Retained observer receipt.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-stop-display', 'data': { 'token': 'str' },
++  'returns': 'FdisbullDisplayInfo' }
++
++##
++# @x-fdisbull-export-display:
++#
++# @token: Current owner token.
++# @filename: New private output path for a binary PPM image.
++#
++# Copy the latest retained packed RGB pixels while stopped.  This command does
++# not call the renderer, advance time or execute guest instructions.  No update
++# is fabricated when the observer has not yet published.  The file is created
++# exclusively with private permissions.
++#
++# Returns: Receipt identifying the exported publication.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-export-display',
++  'data': { 'token': 'str', 'filename': 'str' },
++  'returns': 'FdisbullDisplayInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -60,6 +60,8 @@
+   qapi_all_modules += [
+     'acpi',
+     'audio',
++    'fdisbull-audio',
++    'fdisbull-display',
+     'cryptodev',
+     'qdev',
+     'pci',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -63,6 +63,8 @@
+ { 'include': 'misc.json' }
+ { 'include': 'misc-target.json' }
+ { 'include': 'audio.json' }
++{ 'include': 'fdisbull-audio.json' }
++{ 'include': 'fdisbull-display.json' }
+ { 'include': 'acpi.json' }
+ { 'include': 'pci.json' }
+ { 'include': 'stats.json' }
+--- /dev/null
++++ b/system/fdisbull-audio.c
+@@ -0,0 +1,259 @@
++/*
++ * Explicit bounded fDisBull audio capture, protocol version 1.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * All accesses run under BQL. Capture observes audio_run_capture output; it
++ * does not synthesize silence, flush voices, pace the host or run the guest.
++ */
++#include "qemu/osdep.h"
++#include "audio/audio.h"
++#include "migration/blocker.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-audio.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qemu/main-loop.h"
++#include "qemu/timer.h"
++#include "system/reset.h"
++
++#define AUDIO_RATE 32000
++#define MAX_FRAMES (AUDIO_RATE * 60)
++#define MAX_CHUNKS 8192
++
++static struct {
++    bool initialized;
++    bool invalidated;
++    bool enabled;
++    bool overflow;
++    bool stopped;
++    uint64_t epoch;
++    char *token;
++    int64_t start_ns;
++    int64_t stop_ns;
++    uint64_t max_frames;
++    uint64_t frames;
++    uint64_t dropped;
++    unsigned nchunks;
++    uint8_t *pcm;
++    FdisbullAudioChunk chunks[MAX_CHUNKS];
++    CaptureVoiceOut *capture;
++    Error *migration_blocker;
++} audio_window;
++
++static void audio_reset(void *opaque)
++{
++    if (audio_window.token) {
++        audio_window.invalidated = true;
++    }
++}
++
++static bool audio_guard(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    assert(bql_locked());
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock) {
++        return false;
++    }
++    if (!clock->budget_supported || clock->running || clock->pending_stop ||
++        (clock->status != RUN_STATE_PRELAUNCH &&
++         clock->status != RUN_STATE_PAUSED && clock->status != RUN_STATE_DEBUG) ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED ||
++        audio_window.invalidated ||
++        (audio_window.token && audio_window.epoch != clock->epoch)) {
++        error_setg(errp, "Audio capture requires a valid stopped native clock epoch");
++        return false;
++    }
++    if (!audio_window.initialized) {
++        audio_window.initialized = true;
++        qemu_register_reset(audio_reset, NULL);
++    }
++    audio_window.epoch = clock->epoch;
++    return true;
++}
++
++static bool audio_token(const char *token, Error **errp)
++{
++    if (!audio_window.token || strcmp(audio_window.token, token)) {
++        error_setg(errp, "Audio capture token does not own the current window");
++        return false;
++    }
++    return true;
++}
++
++static FdisbullAudioInfo *audio_info(void)
++{
++    FdisbullAudioInfo *info = g_new0(FdisbullAudioInfo, 1);
++    FdisbullAudioChunkList **tail = &info->chunks;
++    unsigned i;
++
++    info->api_version = 1;
++    info->epoch = audio_window.epoch;
++    info->state = g_strdup(audio_window.invalidated ? "invalidated" :
++                          audio_window.overflow ? "overflow" :
++                          audio_window.stopped ? "stopped" :
++                          audio_window.capture ? "capturing" : "idle");
++    info->virtual_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    info->token = g_strdup(audio_window.token);
++    info->has_start_ns = audio_window.token != NULL;
++    info->start_ns = audio_window.start_ns;
++    info->has_stop_ns = audio_window.stopped;
++    info->stop_ns = audio_window.stop_ns;
++    info->max_frames = audio_window.max_frames;
++    info->frames = audio_window.frames;
++    info->dropped_frames = audio_window.dropped;
++    info->rate = AUDIO_RATE;
++    info->channels = 1;
++    info->format = g_strdup("u8");
++    info->enabled = audio_window.enabled;
++    for (i = 0; i < audio_window.nchunks; i++) {
++        FdisbullAudioChunk *chunk = g_new0(FdisbullAudioChunk, 1);
++        *chunk = audio_window.chunks[i];
++        QAPI_LIST_APPEND(tail, chunk);
++    }
++    return info;
++}
++
++static void audio_notify(void *opaque, audcnotification_e cmd)
++{
++    assert(bql_locked());
++    audio_window.enabled = cmd == AUD_CNOTIFY_ENABLE;
++}
++
++static void audio_capture(void *opaque, const void *buf, int size)
++{
++    uint64_t keep;
++    FdisbullAudioChunk *chunk;
++
++    assert(bql_locked());
++    if (audio_window.invalidated || size <= 0) {
++        return;
++    }
++    keep = MIN((uint64_t)size, audio_window.max_frames - audio_window.frames);
++    if (audio_window.nchunks == MAX_CHUNKS) {
++        keep = 0;
++    }
++    if (keep) {
++        chunk = &audio_window.chunks[audio_window.nchunks++];
++        chunk->first_frame = audio_window.frames;
++        chunk->frames = keep;
++        chunk->virtual_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++        memcpy(audio_window.pcm + audio_window.frames, buf, keep);
++        audio_window.frames += keep;
++    }
++    if ((uint64_t)size != keep) {
++        audio_window.overflow = true;
++        if (UINT64_MAX - audio_window.dropped < (uint64_t)size - keep) {
++            audio_window.invalidated = true;
++        } else {
++            audio_window.dropped += size - keep;
++        }
++    }
++}
++
++static void audio_destroy(void *opaque)
++{
++    /* Storage is owned by the window, including after capture detachment. */
++}
++
++FdisbullAudioInfo *qmp_x_fdisbull_query_audio(Error **errp)
++{
++    return audio_guard(errp) ? audio_info() : NULL;
++}
++
++FdisbullAudioInfo *qmp_x_fdisbull_start_audio(const char *token,
++                                            int64_t max_frames, Error **errp)
++{
++    AudioState *state;
++    struct audsettings settings = { AUDIO_RATE, 1, AUDIO_FORMAT_U8, 0 };
++    struct audio_capture_ops ops = {
++        .notify = audio_notify, .capture = audio_capture,
++        .destroy = audio_destroy,
++    };
++
++    if (!audio_guard(errp)) {
++        return NULL;
++    }
++    if (audio_window.capture || !token[0] || strlen(token) > 128 ||
++        (audio_window.token && !strcmp(token, audio_window.token)) ||
++        max_frames < 1 || max_frames > MAX_FRAMES) {
++        error_setg(errp, "Start audio requires an inactive window, a new token "
++                   "and capacity of 1..1920000 frames");
++        return NULL;
++    }
++    state = audio_state_by_name("fdisbull-pc", errp);
++    if (!state) {
++        return NULL;
++    }
++    if (!audio_window.migration_blocker) {
++        error_setg(&audio_window.migration_blocker,
++                   "fDisBull retained audio does not support migration");
++        if (migrate_add_blocker(&audio_window.migration_blocker, errp) < 0) {
++            return NULL;
++        }
++    }
++    g_free(audio_window.pcm);
++    g_free(audio_window.token);
++    audio_window.pcm = g_malloc(max_frames);
++    audio_window.token = g_strdup(token);
++    audio_window.max_frames = max_frames;
++    audio_window.frames = audio_window.dropped = audio_window.nchunks = 0;
++    audio_window.overflow = audio_window.stopped = audio_window.enabled = false;
++    audio_window.start_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    audio_window.capture = AUD_add_capture(state, &settings, &ops, NULL);
++    if (!audio_window.capture) {
++        audio_window.invalidated = true;
++        error_setg(errp, "Native audio capture registration failed; close VM");
++        return NULL;
++    }
++    return audio_info();
++}
++
++FdisbullAudioInfo *qmp_x_fdisbull_stop_audio(const char *token, Error **errp)
++{
++    if (!audio_guard(errp) || !audio_token(token, errp)) {
++        return NULL;
++    }
++    if (audio_window.capture) {
++        AUD_del_capture(audio_window.capture, NULL);
++        audio_window.capture = NULL;
++        audio_window.stopped = true;
++        audio_window.stop_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    }
++    return audio_info();
++}
++
++FdisbullAudioInfo *qmp_x_fdisbull_export_audio(const char *token,
++                                             const char *filename, Error **errp)
++{
++    int fd;
++
++    if (!audio_guard(errp) || !audio_token(token, errp)) {
++        return NULL;
++    }
++    if (audio_window.overflow) {
++        error_setg(errp, "Audio capture overflowed; incomplete audio cannot be exported");
++        return NULL;
++    }
++    fd = open(filename, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
++    if (fd < 0) {
++        error_setg_errno(errp, errno, "Cannot create private audio export");
++        return NULL;
++    }
++    if (qemu_write_full(fd, audio_window.pcm, audio_window.frames) !=
++        audio_window.frames) {
++        int saved_errno = errno;
++        close(fd);
++        unlink(filename);
++        error_setg_errno(errp, saved_errno, "Cannot write private audio export");
++        return NULL;
++    }
++    if (close(fd)) {
++        int saved_errno = errno;
++        unlink(filename);
++        error_setg_errno(errp, saved_errno, "Cannot close private audio export");
++        return NULL;
++    }
++    return audio_info();
++}
+--- /dev/null
++++ b/system/fdisbull-display.c
+@@ -0,0 +1,415 @@
++/*
++ * Explicit retained fDisBull renderer observations, protocol version 1.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * All live accesses run under BQL.  A virtual timer observes synchronous VGA
++ * renderer completion, not guest application frames or modeled CRT retrace.
++ * Surface references are insufficient: standard VGA can expose guest VRAM
++ * directly, so every publication owns a complete packed RGB copy.
++ */
++#include "qemu/osdep.h"
++#include "hw/core/cpu.h"
++#include "migration/blocker.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-display.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qemu/main-loop.h"
++#include "qemu/timer.h"
++#include "system/reset.h"
++#include "system/runstate.h"
++#include "ui/console.h"
++
++#define DISPLAY_MIN_PERIOD_NS INT64_C(1000000)
++#define DISPLAY_MAX_PERIOD_NS INT64_C(1000000000)
++#define DISPLAY_MAX_DIMENSION 8192
++#define DISPLAY_MAX_RGB_BYTES (16 * 1024 * 1024)
++
++static struct {
++    bool initialized;
++    bool invalidated;
++    bool observing;
++    bool stopped;
++    uint64_t epoch;
++    char *token;
++    const char *failure;
++    int64_t start_ns;
++    int64_t stop_ns;
++    int64_t period_ns;
++    uint64_t updates;
++    int64_t published_ns;
++    int width;
++    int height;
++    size_t rgb_bytes;
++    uint8_t *rgb;
++    QemuConsole *console;
++    Object *device;
++    QEMUTimer timer;
++    Error *migration_blocker;
++} display_window;
++
++static void display_timer_cb(void *opaque);
++
++static void display_invalidate(const char *reason)
++{
++    assert(bql_locked());
++    if (display_window.initialized) {
++        timer_del(&display_window.timer);
++    }
++    display_window.invalidated = true;
++    display_window.observing = false;
++    display_window.failure = reason;
++    g_clear_pointer(&display_window.rgb, g_free);
++    display_window.rgb_bytes = 0;
++}
++
++static void display_reset(void *opaque)
++{
++    if (display_window.token) {
++        display_invalidate("reset invalidated the observer");
++    }
++}
++
++static void display_vm_state_change(void *opaque, bool running, RunState state)
++{
++    if (display_window.token && !running &&
++        state != RUN_STATE_PRELAUNCH && state != RUN_STATE_PAUSED &&
++        state != RUN_STATE_DEBUG) {
++        display_invalidate("unsupported VM state invalidated the observer");
++    }
++}
++
++static bool display_guard(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    CPUState *cpu;
++
++    assert(bql_locked());
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock) {
++        return false;
++    }
++    if (display_window.token &&
++        (!clock->budget_supported || display_window.epoch != clock->epoch)) {
++        display_invalidate("native clock profile or epoch changed");
++    }
++    if (display_window.invalidated) {
++        error_setg(errp, "Display observer invalidated: %s; close the VM",
++                   display_window.failure);
++        return false;
++    }
++    if (clock->api_version != 1 || !clock->budget_supported ||
++        clock->running || clock->pending_stop ||
++        (clock->status != RUN_STATE_PRELAUNCH &&
++         clock->status != RUN_STATE_PAUSED && clock->status != RUN_STATE_DEBUG) ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
++        error_setg(errp, "Display observation requires a valid stopped native "
++                   "clock API 1 epoch");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        if (!cpu->stopped) {
++            error_setg(errp, "Display observation requires one stopped vCPU");
++            return false;
++        }
++    }
++    if (!display_window.initialized) {
++        display_window.initialized = true;
++        timer_init_ns(&display_window.timer, QEMU_CLOCK_VIRTUAL,
++                      display_timer_cb, NULL);
++        qemu_register_reset(display_reset, NULL);
++        qemu_add_vm_change_state_handler(display_vm_state_change, NULL);
++    }
++    display_window.epoch = clock->epoch;
++    return true;
++}
++
++static bool display_token(const char *token, Error **errp)
++{
++    if (!display_window.token || strcmp(display_window.token, token)) {
++        error_setg(errp, "Display token does not own the current observer");
++        return false;
++    }
++    return true;
++}
++
++static FdisbullDisplayInfo *display_info(void)
++{
++    FdisbullDisplayInfo *info = g_new0(FdisbullDisplayInfo, 1);
++
++    info->api_version = 1;
++    info->epoch = display_window.epoch;
++    info->state = g_strdup(display_window.invalidated ? "invalidated" :
++                          display_window.stopped ? "stopped" :
++                          display_window.observing ? "observing" : "idle");
++    info->virtual_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    info->token = g_strdup(display_window.token);
++    info->has_start_ns = display_window.token != NULL;
++    info->start_ns = display_window.start_ns;
++    info->has_stop_ns = display_window.stopped;
++    info->stop_ns = display_window.stop_ns;
++    info->period_ns = display_window.period_ns;
++    info->updates = display_window.updates;
++    info->has_update_id = display_window.rgb != NULL;
++    info->update_id = display_window.updates;
++    info->has_published_ns = display_window.rgb != NULL;
++    info->published_ns = display_window.published_ns;
++    info->has_width = display_window.rgb != NULL;
++    info->width = display_window.width;
++    info->has_height = display_window.rgb != NULL;
++    info->height = display_window.height;
++    return info;
++}
++
++static bool display_console(QemuConsole **console, Object **device)
++{
++    QemuConsole *con = qemu_console_lookup_by_index(0);
++    Object *dev;
++
++    if (!qemu_console_can_update_headless_sync(con) ||
++        qemu_console_get_head(con) != 0) {
++        return false;
++    }
++    dev = object_property_get_link(OBJECT(con), "device", NULL);
++    if (!dev || strcmp(object_get_typename(dev), "VGA")) {
++        return false;
++    }
++    *console = con;
++    *device = dev;
++    return true;
++}
++
++static bool display_rearm(int64_t now)
++{
++    int64_t remaining;
++
++    if (now < display_window.start_ns) {
++        display_invalidate("virtual clock moved backwards");
++        return false;
++    }
++    remaining = display_window.period_ns -
++                (now - display_window.start_ns) % display_window.period_ns;
++    if (now > INT64_MAX - remaining) {
++        display_invalidate("observation deadline overflow");
++        return false;
++    }
++    timer_mod_ns(&display_window.timer, now + remaining);
++    return true;
++}
++
++static bool display_copy_pixels(void)
++{
++#ifdef CONFIG_PIXMAN
++    DisplaySurface *surface = qemu_console_surface(display_window.console);
++    g_autoptr(pixman_image_t) line = NULL;
++    g_autofree uint8_t *rgb = NULL;
++    int width, height, y;
++    size_t row_bytes, bytes;
++
++    if (!surface || !surface->image || surface_is_placeholder(surface) ||
++        !surface_data(surface) ||
++        !pixman_format_supported_source(surface_format(surface))) {
++        return false;
++    }
++    width = surface_width(surface);
++    height = surface_height(surface);
++    if (width < 1 || height < 1 || width > DISPLAY_MAX_DIMENSION ||
++        height > DISPLAY_MAX_DIMENSION || surface_stride(surface) <= 0 ||
++        (uint64_t)width * height * 3 > DISPLAY_MAX_RGB_BYTES) {
++        return false;
++    }
++    row_bytes = (size_t)width * 3;
++    bytes = row_bytes * height;
++    rgb = g_try_malloc(bytes);
++    line = qemu_pixman_linebuf_create(PIXMAN_BE_r8g8b8, width);
++    if (!rgb || !line) {
++        return false;
++    }
++    for (y = 0; y < height; y++) {
++        qemu_pixman_linebuf_fill(line, surface->image, width, 0, y);
++        memcpy(rgb + y * row_bytes, pixman_image_get_data(line), row_bytes);
++    }
++
++    /* Publish only after every row has been copied while the vCPU is idle. */
++    g_free(display_window.rgb);
++    display_window.rgb = g_steal_pointer(&rgb);
++    display_window.rgb_bytes = bytes;
++    display_window.width = width;
++    display_window.height = height;
++    return true;
++#else
++    return false;
++#endif
++}
++
++static void display_timer_cb(void *opaque)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    QemuConsole *con;
++    Object *dev;
++    CPUState *cpu;
++
++    assert(bql_locked());
++    if (!display_window.observing || display_window.invalidated) {
++        return;
++    }
++    clock = qmp_x_fdisbull_query_clock(NULL);
++    if (!clock || clock->api_version != 1 || !clock->budget_supported ||
++        clock->epoch != display_window.epoch) {
++        display_invalidate("native clock profile or epoch changed");
++        return;
++    }
++    /* A debugger or budget stop wins, even before runstate changes. */
++    if (!clock->running || clock->pending_stop) {
++        display_rearm(clock->virtual_ns);
++        return;
++    }
++    CPU_FOREACH(cpu) {
++        if (cpu->stop || cpu->stopped) {
++            display_rearm(clock->virtual_ns);
++            return;
++        }
++    }
++    if (!display_console(&con, &dev) || con != display_window.console ||
++        dev != display_window.device || display_window.updates == UINT64_MAX) {
++        display_invalidate("owned headless synchronous VGA console unavailable");
++        return;
++    }
++
++    /*
++     * The console check excludes asynchronous renderers, display listeners and
++     * queued screendump coroutines.  Standard VGA completes here under BQL;
++     * no guest instructions run between that completion and the owned copy.
++     */
++    graphic_hw_update(con);
++    if (!display_copy_pixels()) {
++        display_invalidate("renderer pixels unavailable or outside capture bounds");
++        return;
++    }
++    display_window.updates++;
++    display_window.published_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    display_rearm(display_window.published_ns);
++}
++
++FdisbullDisplayInfo *qmp_x_fdisbull_query_display(Error **errp)
++{
++    return display_guard(errp) ? display_info() : NULL;
++}
++
++FdisbullDisplayInfo *qmp_x_fdisbull_start_display(const char *token,
++                                                int64_t period_ns,
++                                                Error **errp)
++{
++    QemuConsole *con;
++    Object *dev;
++    int64_t now;
++
++    if (!display_guard(errp)) {
++        return NULL;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    if (display_window.observing || !token[0] || strlen(token) > 128 ||
++        (display_window.token && !strcmp(display_window.token, token)) ||
++        period_ns < DISPLAY_MIN_PERIOD_NS || period_ns > DISPLAY_MAX_PERIOD_NS ||
++        now < 0 || now > INT64_MAX - period_ns) {
++        error_setg(errp, "Start display requires an inactive observer, a new "
++                   "token and a period of 1000000..1000000000 ns without "
++                   "signed clock overflow");
++        return NULL;
++    }
++#ifndef CONFIG_PIXMAN
++    error_setg(errp, "Display observation requires pixman support");
++    return NULL;
++#endif
++    if (!display_console(&con, &dev)) {
++        error_setg(errp, "Display observation requires headless synchronous "
++                   "standard VGA console zero with no pending screendump");
++        return NULL;
++    }
++    if (!display_window.migration_blocker) {
++        error_setg(&display_window.migration_blocker,
++                   "fDisBull retained display does not support migration");
++        if (migrate_add_blocker(&display_window.migration_blocker, errp) < 0) {
++            return NULL;
++        }
++    }
++
++    object_ref(OBJECT(con));
++    object_ref(dev);
++    if (display_window.console) {
++        object_unref(OBJECT(display_window.console));
++    }
++    if (display_window.device) {
++        object_unref(display_window.device);
++    }
++    display_window.console = con;
++    display_window.device = dev;
++    g_clear_pointer(&display_window.rgb, g_free);
++    g_free(display_window.token);
++    display_window.token = g_strdup(token);
++    display_window.rgb_bytes = 0;
++    display_window.width = display_window.height = 0;
++    display_window.updates = 0;
++    display_window.published_ns = 0;
++    display_window.start_ns = now;
++    display_window.stop_ns = 0;
++    display_window.period_ns = period_ns;
++    display_window.stopped = false;
++    display_window.observing = true;
++    timer_mod_ns(&display_window.timer, now + period_ns);
++    return display_info();
++}
++
++FdisbullDisplayInfo *qmp_x_fdisbull_stop_display(const char *token, Error **errp)
++{
++    if (!display_guard(errp) || !display_token(token, errp)) {
++        return NULL;
++    }
++    if (display_window.observing) {
++        timer_del(&display_window.timer);
++        display_window.observing = false;
++        display_window.stopped = true;
++        display_window.stop_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    }
++    return display_info();
++}
++
++FdisbullDisplayInfo *qmp_x_fdisbull_export_display(const char *token,
++                                                 const char *filename,
++                                                 Error **errp)
++{
++    char header[64];
++    size_t header_len;
++    int fd, saved_errno;
++
++    if (!display_guard(errp) || !display_token(token, errp)) {
++        return NULL;
++    }
++    if (!display_window.rgb) {
++        error_setg(errp, "Display observer has no retained renderer publication");
++        return NULL;
++    }
++    header_len = snprintf(header, sizeof(header), "P6\n%d %d\n255\n",
++                          display_window.width, display_window.height);
++    fd = open(filename, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
++    if (fd < 0) {
++        error_setg_errno(errp, errno, "Cannot create private display export");
++        return NULL;
++    }
++    if (qemu_write_full(fd, header, header_len) != header_len ||
++        qemu_write_full(fd, display_window.rgb, display_window.rgb_bytes) !=
++        display_window.rgb_bytes) {
++        saved_errno = errno ? errno : EIO;
++        close(fd);
++        unlink(filename);
++        error_setg_errno(errp, saved_errno, "Cannot write private display export");
++        return NULL;
++    }
++    if (close(fd)) {
++        saved_errno = errno;
++        unlink(filename);
++        error_setg_errno(errp, saved_errno, "Cannot close private display export");
++        return NULL;
++    }
++    return display_info();
++}
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -15,6 +15,8 @@
+   'dirtylimit.c',
+   'dma-helpers.c',
+   'fdisbull-clock.c',
++  'fdisbull-audio.c',
++  'fdisbull-display.c',
+   'globals.c',
+   'memory_mapping.c',
+   'qdev-monitor.c',
+--- a/ui/console.c
++++ b/ui/console.c
+@@ -133,6 +133,16 @@
+     }
+ }
+ 
++bool qemu_console_can_update_headless_sync(QemuConsole *con)
++{
++    assert(bql_locked());
++    return qemu_console_is_graphic(con) && con->hw_ops &&
++           con->hw_ops->gfx_update && !con->hw_ops->gfx_update_async &&
++           !con->gl && !con->gl_block && con->ds &&
++           QLIST_EMPTY(&con->ds->listeners) &&
++           qemu_co_queue_empty(&con->dump_queue);
++}
++
+ void graphic_hw_update(QemuConsole *con)
+ {
+     bool async = false;

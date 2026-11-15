@@ -1,0 +1,65 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 with native/qemu-layers patch applied",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_sha256": "974a701ce218187be712d82a62a0339d0b09f0501d210485249ab4c21fe23c87",
+  "patch_file": "qemu-10.0.13-fdisbull-dos-checkpoint-status-v1.patch",
+  "patch_sha256": "b511b18156aa15dd993e4a760bc8b2f20a998e78c023384c8954f5f43422ca11",
+  "scope": "Read-only internal state query for exactly one ISA UART at COM2 I/O base 0x2f8, stopped single-vCPU system-mode TCG only",
+  "modified_files": [
+    {
+      "path": "qapi/fdisbull-dos-checkpoint.json",
+      "before_sha256": null,
+      "after_sha256": "98be72d691d9a988b13082bfef9b682ecf002086e6ddf9bf0193064031d92845"
+    },
+    {
+      "path": "qapi/meson.build",
+      "before_sha256": "9146b7aa7ac194c70062f53533a6f4588a87d5f6cd191f6b0e89d4ed09ee48ab",
+      "after_sha256": "5f9f776e9999e1235cc38c7e24666d6ab12152449e705ad48cf5f1a2b5067b23"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "before_sha256": "e2e9e4bd6506537c9424eb7963680f9ec79bbe47dcddf2b604891a7cbb9f0989",
+      "after_sha256": "a9bbd9387ede5762e33e68dd70c6e9396a56c7930aab5362c9ddef9571f60910"
+    },
+    {
+      "path": "system/fdisbull-dos-checkpoint.c",
+      "before_sha256": null,
+      "after_sha256": "4dc6cde714aa55cc41ac95aefb40f36627bf9ec699b1dbe599230d3d2c053dcb"
+    },
+    {
+      "path": "system/meson.build",
+      "before_sha256": "109aceb62a36fd67202e9384682c0f95c500f569d2ddc18a53a9c3bd48592289",
+      "after_sha256": "724a483766c2d251d6d3a8125e373df6e04fb61b42b04c6173ef32a62f4c7605"
+    }
+  ],
+  "reply_fields": [
+    "device-path",
+    "uart-path",
+    "device-type",
+    "index",
+    "iobase",
+    "irq",
+    "lsr",
+    "fifo-enabled",
+    "rx-fifo-bytes",
+    "tx-fifo-bytes",
+    "rbr",
+    "thr",
+    "tsr",
+    "tsr-retry",
+    "thre",
+    "temt",
+    "tx-idle",
+    "rx-empty"
+  ],
+  "limits": [
+    "No guest I/O-port register reads; no FIFO pops or LSR error clearing.",
+    "Host socket/chardev queues are not represented; host owner must also prove channel empty."
+  ],
+  "witness_tests": [
+    "tests/test_qemu_dos_checkpoint_sessions_native.py",
+    "tests/test_qemu_checkpoint_host_restart_native.py"
+  ]
+}

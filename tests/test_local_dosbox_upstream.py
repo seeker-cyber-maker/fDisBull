@@ -91,9 +91,9 @@ def test_untrusted_source_archives_fail_closed(archive_fixture, tmp_path, defect
         runner.upstream_archive_identity(path, digest, expected_commit=pin)
 
 
-def test_local_native_plan_without_archive_stops_before_admission(tmp_path, monkeypatch):
+def test_local_native_plan_without_archive_stops_before_output_or_worker(tmp_path, monkeypatch):
     monkeypatch.setattr(runner, 'source_identity', lambda path: ('a' * 40, 'fixture'))
-    monkeypatch.setattr(runner, 'admit_destinations', lambda *args: pytest.fail('No worker or allocation expected'))
+    monkeypatch.setattr(runner, 'observe_destinations', lambda *args: pytest.fail('No worker or output allocation expected'))
     with pytest.raises(ValueError, match='explicit pinned DOSBox upstream'):
         runner.execute(SimpleNamespace(source=tmp_path, profile='stable'))
 

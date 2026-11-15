@@ -1,0 +1,177 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 with native/qemu-task-context applied",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_file": "../qemu-task-context/qemu-10.0.13-fdisbull-task-context-v1.patch",
+  "base_patch_sha256": "227a5a2f3f509891f8d8837eef9a2bb94511ae2ae48423d4c0b8c2d8a3b74f79",
+  "patch_file": "qemu-10.0.13-fdisbull-task-private-v1.patch",
+  "patch_sha256": "32a9d153cf1a7ef8f021726586f5d5f0db0c5f6af4d7c8a1ef1ba501d4ce091f",
+  "scope": "Cooperative x86 TCG task-private RAM pages and instruction-fetch overlays, selected by a stable monitor anchor and guest doorbell; scoped to a stopped single-vCPU QMP control surface.",
+  "modified_files": [
+    {
+      "path": "accel/tcg/cpu-exec.c",
+      "before_sha256": "88973f2be9501f7eef5c4d5288383d9973ed4ca2fa3d22c0f765dd5b9de79012",
+      "after_sha256": "1c742729a1167ae77e78328a2b231887fcf6470d6540ebada0adb1929507fb33"
+    },
+    {
+      "path": "accel/tcg/cputlb.c",
+      "before_sha256": "74d49bbe6858135c1944eaffa1f3497c028bfac91f3e0ccb64940d34ceb39453",
+      "after_sha256": "6a80bf5231dce5cb2cffc7bd1e51d21473140d47e871ef27a21b6ef2d4e0da30"
+    },
+    {
+      "path": "qapi/fdisbull-task-private.json",
+      "before_sha256": null,
+      "after_sha256": "608c1b3d75bf286bee848b6d0c354ab63ef9f7f9363e69cd8867ed0439594133"
+    },
+    {
+      "path": "qapi/meson.build",
+      "before_sha256": "5f87ee729a997f6059d52edde25ce7fe3115d5d84b217e10a27c073070cf25fc",
+      "after_sha256": "703d39d4690939b445092a37b4681df2b2bebd8f02b12ef7885cabf5a039ff80"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "before_sha256": "69ec2a695d01bc13220e1f5a7d996d24854a8aeabc88d9039b5b56c3413e3ea4",
+      "after_sha256": "3d9a7bec52a2de90916d6c1a6dcc3f0743ca548bb9f578630f284768e64dcb29"
+    },
+    {
+      "path": "system/fdisbull-layers.c",
+      "before_sha256": "84bc387ed9c544441379b4b14f47d801e20f1c67bf7e304b022e69459935956f",
+      "after_sha256": "9148e8e8531132536a8f6c7f81f070e22b4c405bbefd6841eb8d05650fc09408"
+    },
+    {
+      "path": "system/fdisbull-task-private.h",
+      "before_sha256": null,
+      "after_sha256": "04fb0be2bb01c16ac4e987bd5d0142750a8b6432d753bd51f5ed4bf5ea59bc02"
+    },
+    {
+      "path": "target/i386/cpu.c",
+      "before_sha256": "8726a25707cb271e6a7a6c0bdee780a8960e4495811f1d0665a34a750e3bd6ca",
+      "after_sha256": "9b3a194f91bc1094ece0910ac727ba7e9e9d22f2cef7046c3bb495e9faf717b2"
+    },
+    {
+      "path": "target/i386/fdisbull-task-private.c",
+      "before_sha256": null,
+      "after_sha256": "6f7fd08285d5f265459a431c4802a5e8b238ed0c5463637ba7c998826ac62a50"
+    },
+    {
+      "path": "target/i386/meson.build",
+      "before_sha256": "4189f923a21a7e0d60deff77b68a4e98e8a00a6e3a90af9d28bb5e71d1ef45c4",
+      "after_sha256": "958591de86065a3601982a35230c3181972e830775804d0558bb52ecc7b077c7"
+    }
+  ],
+  "qmp_commands": [
+    {
+      "name": "x-fdisbull-task-monitor-init",
+      "arguments": [
+        "anchor-address",
+        "prepare-only?"
+      ],
+      "purpose": "Register the private RAM arena and migration state; prepare-only keeps a fresh destination disabled until VMState restore."
+    },
+    {
+      "name": "x-fdisbull-task-register",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation",
+        "pages[]"
+      ],
+      "purpose": "Register/extend a task lifetime and clone direct RAM pages into private backing."
+    },
+    {
+      "name": "x-fdisbull-task-layer-configure",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation",
+        "generation",
+        "ram[]",
+        "execute[]"
+      ],
+      "purpose": "Apply guarded private data writes and complete fetch-overlay configuration."
+    },
+    {
+      "name": "x-fdisbull-task-layer-read",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation",
+        "address",
+        "length",
+        "view?=ram|execute|base"
+      ],
+      "purpose": "Read an explicit task-private RAM, effective fetch, or shared base view."
+    },
+    {
+      "name": "x-fdisbull-task-layer-observe",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation"
+      ],
+      "purpose": "Read registry, selection, generations, page digests and overlay digests without mutation."
+    },
+    {
+      "name": "x-fdisbull-task-retire",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation"
+      ],
+      "purpose": "Tombstone an incarnation and revoke its active CPU view."
+    }
+  ],
+  "switch_protocol": {
+    "anchor_bytes": 56,
+    "layout": [
+      "FDBTASK1 (8 bytes)",
+      "UUID (16 bytes)",
+      "scheduler sequence (uint64 LE; even when stable)",
+      "task cookie (uint64 LE)",
+      "incarnation (uint64 LE)",
+      "state (uint32 LE; 1 active)",
+      "reserved (uint32 LE; zero)"
+    ],
+    "doorbell": "OUTW 0xF1DB, 0x4446 after publishing the new stable even anchor sequence",
+    "selection": "Initial stable registered anchor may select the first task; later selection changes only after a valid increasing even sequence and a doorbell at a TCG block boundary, before a stopped single-step result is exposed."
+  },
+  "bounds": {
+    "max_tasks": 16,
+    "max_pages_per_task": 16,
+    "page_size": 4096,
+    "private_arena_bytes": 1048576,
+    "max_execute_overlay_bytes_per_task": 65536,
+    "max_patch_bytes_per_configure": 65536,
+    "max_read_bytes": 4096
+  },
+  "migration": {
+    "vmstate_name": "fdisbull/task-private",
+    "vmstate_version": 1,
+    "state": "Task registry, page-slot assignments, fetch overlays, selected task and epoch/generation highwaters; private arena RAM travels as a RAMBlock. Destination QMP prepare-only initialization must occur before snapshot load."
+  },
+  "build_receipt": {
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "binary": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/task-private-runtime/build/qemu-system-x86_64",
+    "binary_sha256": "2d6f70abdbdf21b1b4376004898eaf0503608a248851550dc62c1b0f5e961dc3",
+    "build": "Incremental Ninja build completed successfully; no CI run by patch author."
+  },
+  "runtime_evidence": {
+    "owner": "Local native runtime verification",
+    "current_candidate": "899 broader local checks passed with zero failures or skips on the exact binary. Includes ten authored task-private cases: two five-visit cold-process restore profiles, retirement/invalid commits/atomic admission, two dormant-task protected/V86 restores, single-step plus selected-B restore, and reset revocation.",
+    "broader_regression": "task-private-regression-01: 899 passed, 0 failed, 0 skipped; further final admission-guard and documentation contracts recorded in the private verification receipt.",
+    "limitations": "Bounded cooperating-monitor witnesses, not QEMM/DESQview vendor compatibility or a full DOS scheduler qualification."
+  },
+  "limitations": [
+    "Only x86 system TCG is implemented; no non-x86 QMP stubs are supplied for multi-target builds.",
+    "Requires one vCPU; mutating and observation QMP commands require a stopped single-vCPU x86 TCG machine.",
+    "Task selection is cooperative: a monitor must publish FDBTASK1 and issue the OUTW doorbell. QEMU does not identify or schedule proprietary QEMM/DESQview tasks.",
+    "At most 16 task lifetimes and 16 4-KiB direct-RAM pages per task; one 1-MiB native arena.",
+    "Direct writable RAM only. Active legacy non-PAE page directory and page-table pages cannot be private; PAE paging is rejected while private pages are active.",
+    "Device memory, ROM/ROMD, discard-managed memory, DMA/IOMMU views, and device-side access to task-private RAM are unsupported. Devices and GDB physical memory use shared base RAM; use explicit QMP task-layer-read views for task-private inspection.",
+    "No claim is made about private DMA, other accelerators, multiple vCPUs, or arbitrary guest schedulers.",
+    "Guest self-modification of a configured fetch backing or mismatch of guarded expected bytes revokes the view and stops before stale overlay execution.",
+    "Task-private VMState is version 1 and is separate from the host controller sidecar."
+  ]
+}

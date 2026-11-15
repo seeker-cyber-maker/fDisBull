@@ -26,6 +26,8 @@ the runtime-navigation reference below; batch questions sharing a screen.
 
 | Need | Starting point | Evidence boundary |
 | --- | --- | --- |
+| Unsure which concrete probe to run or how to interpret its result | [next steps](next-steps.md) | Two executable recipes and bounded recovery branches; adapt arguments from observed state. |
+| Interpret a structure or locate candidate accesses | [types and addresses](analysis-types.md) | Authored layouts and static candidates, not observed runtime semantics. |
 | Resolve an unknown capability, changed setup or actual provider failure | `capabilities`, `methods`, `doctor` | Discover only the missing information; `doctor` runs separate runtime acceptance. Known operations can proceed directly. |
 | Unpack GOG installers, extract MZ/AGI members or audit AVI video | `media-modules`, `media-inspect`, `media-extract`, `gog-list`/`gog-unpack`, `capture-audit` | Non-executing structural extraction or full-frame RGBA hashing only; no guest clock mapping or execution proof. See [media-modules.md](media-modules.md). |
 | Identify or analyze an x86, ARM64 or Cortex-M binary | `identify`, `inspect`, `import`, `analyze`, `auto-analyze`, `analysis-status`, `functions`, `disasm`, `xrefs`, `render` | Static decoder facts and stored SQLite analysis only; candidate functions, indirect transfers and budget frontiers stay labeled. |
@@ -50,7 +52,7 @@ Inspect before importing so format, slice and image profile are explicit:
   alone is not format evidence), `--image ne` (or auto-detection) for 16-bit
   Win16 NE logical `ne:seg:offset` segments, and `--image ail` for Miles AIL 2
   `.ADV` audio drivers (`dos-services` names DIGPAK/MIDPAK `INT 66h` calls;
-  `omf-catalog` builds OMF library signature catalogs). Bounded 32-bit DOS/4GW
+  `omf-catalog` builds OMF library signature catalogs). Bounded mixed 16/32-bit DOS/4GW
   LE objects and internal fixups load into the existing x86 analyzer.
 - **Desktop & embedded:** import PE32/PE64 (plus optional `managed` .NET CIL),
   Linux ELF, Mach-O ARM64 (`--slice-arch arm64`, with `code-backings` and

@@ -21,10 +21,10 @@ def test_catalog_and_public_cli_need_no_project(capsys):
     assert report['ok']
     modules = {item['name']: item for item in report['result']['modules']}
     assert set(modules) == {'mz-envelope', 'agi-v2', 'gog-inno', 'gog-galaxy-upx', 'agi-picture', 'avi-capture', 'smacker', 'flic',
-                            'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2',
+                            'westwood-pak', 'westwood-cps', 'westwood-wsa', 'westwood-emc2', 'castles2-bob',
         'fab', 'pkware-dcl', 'mads-hag', 'mads-pack', 'mads-sprite', 'mads-tiles',
         'mads-depth', 'mads-background', 'mads-depth-map', 'mads-mask', 'mads-font',
-        'mads-dsr', 'mads-animation'}
+        'mads-dsr', 'mads-animation', 'kint6-ke', 'sherlock7-images', 'kint6-user-buttons', 'kint6-user-overlays', 'doom-wad', 'sherlock-shi', 'mve', 'castles2-slb', 'castles2-slb-playback', 'dinopark-act', 'dinopark-pic', 'dinopark-abt', 'dinopark-act-sequence', 'dinopark-abt-playback'}
     assert modules['gog-inno']['dependencies'] == []
     assert media_modules() == report['result']
     assert main(['media-modules']) == 0

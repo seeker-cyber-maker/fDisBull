@@ -247,6 +247,10 @@ class JsonLineBackend:
             raise ValueError("Backend response exceeds the line limit or is incomplete")
         return json.loads(line)
 
+    def authenticate(self, token):
+        if self._request({'op':'auth','token':token}) != {'status':'authenticated'}:
+            raise ValueError('Backend authentication failed')
+
     def observe(self):
         return self._request({"op": "observe"})
 

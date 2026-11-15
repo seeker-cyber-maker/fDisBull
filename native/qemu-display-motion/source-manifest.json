@@ -1,0 +1,58 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "command": "x-fdisbull-arm-display-motion",
+  "patch": "qemu-10.0.13-fdisbull-display-motion-v1.patch",
+  "patch_sha256": "27ca5b889e6be2758b812b7e19936281b4640dddf0b398519c209dd202937ec8",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_input_patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "requires_input_patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "requires_retrace_patch": "qemu-10.0.13-fdisbull-retrace-v1.patch",
+  "requires_retrace_patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c",
+  "requires_input_retrace_patch": "qemu-10.0.13-fdisbull-input-retrace-v1.patch",
+  "requires_input_retrace_patch_sha256": "5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80",
+  "requires_keyboard_press_patch": "qemu-10.0.13-fdisbull-keyboard-press-v1.patch",
+  "requires_keyboard_press_patch_sha256": "0098d4301d8703d7d740b58ae0f048d0a73ec6e9c9ce10cec04457bebb1c4ed0",
+  "requires_keyboard_type_patch": "qemu-10.0.13-fdisbull-keyboard-type-v1.patch",
+  "requires_keyboard_type_patch_sha256": "d680d253af93b60d3101ef74c1243e19e887b1cabdf0df194fdec0aafed23cc5",
+  "requires_mouse_click_patch": "qemu-10.0.13-fdisbull-mouse-click-v1.patch",
+  "requires_mouse_click_patch_sha256": "23f38d65391587b0be11af021fc3858872475d25a03719844b486719eee154d9",
+  "requires_display_probe_patch": "qemu-10.0.13-fdisbull-display-probe-v1.patch",
+  "requires_display_probe_patch_sha256": "d4dc9a87a9c00e807da66339bc8cf055779de754a937ce727b0baa143300f5aa",
+  "requires_vga_configuration_patch": "qemu-10.0.13-fdisbull-vga-configuration-v1.patch",
+  "requires_vga_configuration_patch_sha256": "960a2cee1ffc95705760d1af314f7081d94db4b7f70c96bbd7b73845451a5ad7",
+  "files": [
+    {
+      "path": "include/system/fdisbull-display.h",
+      "base_sha256": null,
+      "patched_sha256": "b2b61ec3ae12c0feb85e6a8cde4d79cb3aba74e77ec556929854a7e8e3e5cbe6"
+    },
+    {
+      "path": "qapi/fdisbull-input.json",
+      "base_sha256": "b382e2781dcda9b4faa645908eb7f7d5d5be86e57ab7bd1ef74f46c05378122c",
+      "patched_sha256": "42cd8fc6fe66f0d493b9e4e9e81611718c0f4150b1e93eb4f3fddf7a0a5236f2"
+    },
+    {
+      "path": "system/fdisbull-display.c",
+      "base_sha256": "195491fb95ba7690f4f22ebe65451853f658fa4922c0a9c5236ea9774bc87b37",
+      "patched_sha256": "4d7dc4220ec654ed8a397df2e4eeee7e98092f10a93d664fcf8b20e53f69db80"
+    },
+    {
+      "path": "system/fdisbull-input.c",
+      "base_sha256": "6efad0455bab39ded77ededca21f3d637b8d99901ff43873cd6cccb8910cd25f",
+      "patched_sha256": "1592470c37b506b3b66309c12ece55f0a3172fdf6d2c6dc3504f4911be024068"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed forward and reverse with zero fuzz/offset against the exact ten-layer source subset; forward matched all four resulting members, and reverse restored all three prior members and removed the new header",
+  "schema_validation": "Schema source inspected only; complete QAPI generation is reported separately by root integration receipts",
+  "native_build_and_runtime": "Not executed by this source-only preparation; reported separately by private build and native witness receipts"
+}

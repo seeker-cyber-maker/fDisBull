@@ -2,7 +2,7 @@
 
 **Designed by a human, refined by agents, and operated by agents.**
 
-**fDisBull** (`0.34.1` / `v0.34.1`) is an agent-first reverse-engineering,
+**fDisBull** is an agent-first reverse-engineering,
 headless native-debugging, scene-automation, and semantic-reconstruction
 (`UDL` → `UIL` → `UDC`) pipeline. It is not a human GUI disassembler—with over
 400 structured CLI/JSON methods, no human is meant to operate its low-level
@@ -11,6 +11,10 @@ media inspection, live emulator control, memory/event narrowing, state-binding,
 and Z3-checked code generation, leaving the agent only **a few bounded judgment
 decisions** along an automated seven-stage pipeline while giving the human
 clear milestone reports, visual evidence, and explicit approval gates.
+
+The intended next release is **0.35.0**, currently in integration. Follow the
+[release process](docs/RELEASE_PROCESS.md) and [current status](docs/RELEASE_STATUS.md)
+for qualification, package delivery and installation evidence.
 
 ## Built to minimize token usage and survive long investigations
 
@@ -92,7 +96,7 @@ stage that proves the answer:
    - **Human goal:** *"Have a coordinator and worker subagents map out an entire binary's subsystems in parallel without duplicating probes or burning millions of tokens on raw dumps."*
    - **Agent execution:** A single controller owns the live headless guest while parallel workers pull bounded, non-overlapping questions from the persistent dependency queue (`work-queue`, `run-work`), inspect shared `.fdb` facts and 64 KiB-capped `out-<sha256>` slices (`output-select`), and commit verified types, xrefs, and concepts back to SQLite.
 
-**Current release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
+**Previous tagged release (`0.34.1` / `v0.34.1`):** unifies deterministic capability
 preflight and build identity (`--version-json`, `preflight`), the top-level
 `fdisbull` skill router, the
 [7-stage methodology determinism review and Dragster A/B plan](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
@@ -132,7 +136,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | --- | --- |
 | Verify this copy's version, build identity, decoders, debuggers and preflight expectations without running a target | [Capabilities catalog](docs/CAPABILITIES.md) · [Methodology determinism & preflight](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md) |
 | Understand an x86, ARM64 or Cortex-M executable without running it | [Disassemble, type and search](#disassemble-type-and-search) |
-| Unpack a local GOG DOS installer (including Inno 5.6.2 natively) on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Unpack a local GOG DOS installer (including Inno 5.5.7/5.6.2 natively) on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Rebuild a caller-captured packed Windows PE or GOG Galaxy UPX wrapper | [CHimpREC captured-image recovery](docs/CHIMPREC.md) · [GOG Galaxy workflow](docs/GOG_UNPACKING.md#galaxy-upx-wrappers) |
 | Identify an unfamiliar executable or media file, inspect MADS resources/dialogs, or prepare a compact cinematic variant | [Format modules and header catalog](docs/FILE_FORMAT_REGISTRY.md) · [MADS media & conversation model](docs/MADS_MEDIA_RUNTIME.md) |
 | Inventory one game or a collection, compare editions or inspect resource/media formats | [Collection intake](docs/TARGET_COLLECTION_INTAKE.md) · [TAS/AVI capture audit](docs/TAS_CAPTURE_AUDIT.md) |
@@ -140,6 +144,7 @@ embedded originals. See [external targets and publication policy](docs/EXTERNAL_
 | Share structural types or search edition-pinned C source and verified DOS byte maps | [Portable type catalogs](docs/TYPE_CATALOGS.md) · [Source & concept search](docs/SOURCE_CONCEPT_SEARCH.md) · [Verified CivD maps](docs/CIVD_VERIFIED_SOURCE_MAPS.md) |
 | Debug an original DOS or Windows program headlessly | [Debug the original program](#debug-the-original-program) |
 | Inspect DOS `.SYS` drivers, QEMM/v86 mappings, DESQview modules, or narrow changing memory values | [DOS drivers & QEMM](docs/DOS_DRIVERS_AND_QEMM.md) · [DESQview and memory searching](docs/DESQVIEW_AND_MEMORY_SEARCH.md) |
+| Explore CHIP-8 CPU, pixels, keys and timers with an experimental native backend | [CHIP-8 QEMU profile](docs/CHIP8_QEMU.md) |
 | Find code or register values associated with an action, or stop at an instruction predicate | [Execution event searching](docs/EXECUTION_EVENT_SEARCH.md) |
 | Investigate a macOS ARM64 binary or capture a reversible macOS status-menu session | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) · [Reversible native capture](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Rewind execution, branch frame inputs, test code layers or run partial-RNG delta experiments | [Layers, states, rewind and experiments](#layers-states-rewind-and-experiments) |
@@ -199,7 +204,7 @@ profiles:
 - **DOS & 16/32-bit Windows:** classic MZ, explicit COM,
   [DOS `.SYS` device drivers](docs/DOS_DRIVERS_AND_QEMM.md) (`dos-sys-inspect`),
   [DESQview `.DVR` modules](docs/DESQVIEW_AND_MEMORY_SEARCH.md) (`desqview-module-inspect`),
-  bounded 32-bit [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
+  bounded per-object 16/32-bit [DOS/4GW LE](docs/dos4gw-le.md) objects and fixups, 16-bit
   [Win16 NE](docs/NE_LOADING.md) segments with logical `ne:seg:offset` addresses
   and symbolic relocations, OMF library signature catalogs (`omf-catalog`), and
   [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md) (Miles AIL 2 `.ADV` exports
@@ -289,7 +294,11 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   and mouse delivery, stored screenshots, and selected-PSP `guest_exit` versus
   `guest_tsr` termination tracking. Headless operation is the default;
   `--dot-mode` opens a watch-only window on compatible builds. A separate
-  Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
+  Linux/QEMU path retains DOSBox inside a guest. The experimental
+  [native QEMU DOS alternative](docs/DOS_QEMU_MIGRATION.md) boots a DOS disk
+  directly and launches original COM/MZ programs with observed entry, exit and
+  TSR identity. The [migration log](docs/DOS_QEMU_HANDOFF.md) tracks the remaining
+  slices; DOSBox remains the default and a selectable fallback.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
   retaining explicit CPU-mode and address-space limits.
@@ -301,6 +310,30 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   instructions and register values across actions. Agent headless launches
   disable the quit confirmation and mute audio; visible launch preferences
   remain separate.
+- **CHIP-8 targets:** [pinned conversion intake](docs/CHIP8_CONVERSION_INTAKE.md)
+  verifies one classic corpus member before creating a private project. A
+  [declared ISA/environment closure](docs/CHIP8_PACKAGE_CLOSURE.md) binds compatible
+  package definitions to that exact source; [source maps](docs/CHIP8_SOURCE_MAP_UDL.md)
+  retain bounded original-word and typed UDL candidates. An explicit [classic profile](docs/CHIP8_QEMU.md) adds
+  persistent disassembly and a separately built QEMU backend for stepping,
+  registers, RAM, breakpoints and native checkpoints. An optional device build
+  adds monochrome frames, held keys and virtual-clock timers. A further native
+  extension supports the declared 34-family classic instruction profile and
+  restores an explicit seeded RNG alongside CPU/RAM and device state. Bounded
+  layer, paused-hook and v4 full-checkpoint history witnesses passed locally on
+  macOS arm64. A separate v5 runtime adds bounded full-checkpoint histories at
+  native 60 Hz virtual-tick sample stops, with immutable PNGs and hash-bound
+  pixel/checkpoint state; 16 native cases passed locally. The sample records
+  actual callback lateness and does not claim VBlank, guest-frame completion,
+  or historical timing. A separate v6 extension adds owned hexadecimal keypad
+  edges, indexed frame input and checkpointed input restore without reinjection.
+  Histories require the explicit checkpoint tool. Optional v6 lossless frame
+  checkpoint delta witnesses passed locally on macOS arm64. A separate v6
+  selected CPU/RAM undo is freeze-only; eleven bounded native witnesses passed
+  locally on macOS arm64. Full recovery is required before execution. Bounded
+  v6 [comparative trials](docs/DEBUGGER_EXPERIMENTS.md#chip-8-v6-comparative-trials)
+  also passed authored native witnesses locally. Automatic replay, complete game
+  compatibility and conversion compatibility remain unqualified.
 - **Windows targets:** the [Windows debugger](docs/WINDOWS_ORIGINAL_RUNTIME_BRIDGE.md)
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped
@@ -415,12 +448,16 @@ notice-paused actions reconcile cleanly without silently replaying side effects.
   rooms and exits into the strict [`(z-world ...)` graph language](docs/Z_WORLD_LANGUAGE.md),
   and project exact-coordinate [Syndicate spatial Z scenes](docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md).
 
-## Direct guest interpreters: AGI, Z-machine and MADS
+## Direct guest interpreters: AGI, Z-machine MADS and KINT
 
 [Direct decoder modules](docs/DECODER_MODULES.md) (`decoder-modules`,
 `module-analyze`, `module-lift`) inspect interpreted game scripts in their own
 languages without creating an x86 disassembly project:
 
+- **KINT 6 / Sherlock 7:** inspects `.KE` guest instructions and virtual segment
+  declarations, and decodes documented [PNG tile/button/overlay atlases](docs/SHERLOCK7_MEDIA.md).
+  Static analysis and pixel extraction are available; execution and semantic
+  lifting remain separate work.
 - **Sierra AGI v2 (2.917):** combines the static [logic decoder](docs/AGI_LOGIC.md)
   (`agi-logic`), two-stage projectless [scene and resource census](docs/AGI_SCENE_CENSUS.md)
   (`agi-scenes`), compact `fdisbull-il-2` control-flow lifting, typed
@@ -513,9 +550,10 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 
 ## Status, testing and history
 
-GitLab (`brewster-jennings-group/fdisbull`) and the local Git hub are the
-release and CI authority; GitHub (`seeker-cyber-maker/fDisBull`) is an active
-public peer mirror. Read
+Original GitHub [`seeker-cyber-maker/fDisBull`](https://github.com/seeker-cyber-maker/fDisBull)
+is the source, review and release authority. The local hub and GitLab preserve
+recovery copies. n8n owns finite CI and release execution. Start with the
+[release process](docs/RELEASE_PROCESS.md), then read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
 [methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
@@ -547,3 +585,18 @@ project history is preserved in [historical snapshots](docs/PROJECT_HISTORY.md).
 
 No first-party distribution license has been selected. Public visibility does
 not grant an open-source license. See [third-party provenance](docs/THIRD_PARTY.md).
+
+
+### Structural investigation candidates
+
+`structure-scan` finds source-backed investigation avenues in extracted DOS/VM
+resources, NES/SNES ROMs and bounded console-ROM ZIPs. It keeps processor width,
+bank mapping, input/operation relationships and unresolved continuations explicit.
+Intent drafts and declared composition/trace checks support independent component
+reconstruction without presenting a structural match as a playable game.
+See [console and intent discovery](docs/STRUCTURE_CONSOLE_INTENTS.md) for the
+admitted profiles, agent commands and remaining execution boundaries.
+
+Recovered bounded compiler and analysis seams are documented in the
+[0.35 adapter integration map](docs/RECOVERED_UDC_ADAPTERS_0.35.md), including
+source identities, private-input exclusions and qualification limits.

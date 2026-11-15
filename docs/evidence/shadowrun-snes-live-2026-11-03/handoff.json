@@ -1,0 +1,46 @@
+{
+  "analysis_limit": 200,
+  "base": "c813158d24c19e4781973acb8c9e0a5f455ee111",
+  "format": "fdisbull-snes-live-handoff-1",
+  "friction": [
+    "snapshot equality hid mutable intra-frame scratch",
+    "source-fed component proof differs from autonomous seeded replay",
+    "actor ordering changes next-frame collision representation",
+    "owner entries are bytes and unaligned stores cross word positions",
+    "dense first-divergence exposed80B375negative-second-heightbranch",
+    "scripted placement at1051isnotwalking",
+    "existing saved evidence didnotreconnectanemulator",
+    "initialfull-suiteenvomitted52preparednativecases;focusedfollowuprestoredcoverage",
+    "restrictedUILrejectedternaryCsyntax;usedexplicitbranches"
+  ],
+  "limits": [
+    "fixedcaptured7Ftables/camera/NPCposeassumptionsnotgeneralruntimedetectors",
+    "200budgetnotoriginaltimer",
+    "NPCmotionisprojectedkinematicswithscript/render/animationedgesexcluded",
+    "presentationqueueeffectindicatorispossibleeffectnotverifiedwritecount"
+  ],
+  "next_dependencies": [
+    "scene/script/table-mutationgate",
+    "NPCdirection-animationedge80AA3C",
+    "NPCtaskcompletionC8C3anddispatchC9B0",
+    "composeNPCsintoactivescenewithcollidingandgravitybranches"
+  ],
+  "npc_first_unqualified_edge": {
+    "44": 2031,
+    "46": 2038
+  },
+  "observed_predecessor_state": "closed",
+  "predecessor_gitlab_iid": 40,
+  "skill_checks": {
+    "creator_validator": "passed with existing hostPython; testvenv lackedPyYAML; no dependencyinstalled",
+    "retrieval_tests_passed": 29
+  },
+  "source_hashes": {
+    "src/fdisbull/game_sources/shadowrun_snes_flags.c": "23fd9611bc32f4da9b8828822f32be885b5a672bf767bc7a467aaf5e3448160d",
+    "src/fdisbull/game_sources/shadowrun_snes_live.c": "4e5894addd2ccfb2ae36837f3a978fd1814a0a91dbf2a20a91c713b0ab9c9f82",
+    "src/fdisbull/game_sources/shadowrun_snes_npc.c": "114ed90a61878841583134f6886bf4109d36a8019e96d7654013d45c8d1f9d59",
+    "src/fdisbull/shadowrun_snes_live.py": "269acf76e59e60b6d642218855cc5069444bbac8abf32414df944de393e9e60d",
+    "src/fdisbull/shadowrun_snes_npc.py": "9159ceb2cf875dc4c39ba50414702bffdfee2ea23a5c5bd90cf0856ad73d93f5",
+    "src/fdisbull/skills/fdisbull-investigate/references/analysis-approach.md": "96053b38bab8e05997f145be676feb99d9588128b645e605cb117d252488f9d8"
+  }
+}

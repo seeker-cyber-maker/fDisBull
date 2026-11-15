@@ -1,10 +1,17 @@
 import json
 import queue
 import socket
+import stat
+import subprocess
+import sys
 import threading
+import time
+from pathlib import Path
 
 import pytest
 import fdisbull.text_host as module
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'player'))
+from fdisbull_player.player import JsonLineBackend
 
 
 def config():
@@ -62,14 +69,53 @@ def test_real_loopback_roundtrip_and_cleanup(monkeypatch):
     thread=threading.Thread(target=run); thread.start()
     endpoint=endpoints.get(timeout=3)
     assert endpoint['host']=='127.0.0.1'
+    assert stat.S_IMODE(Path(endpoint['password_file']).stat().st_mode)==0o600
+    assert stat.S_IMODE(Path(endpoint['password_file']).parent.stat().st_mode)==0o700
+    password=Path(endpoint['password_file']).read_text().strip()
     with socket.create_connection((endpoint['host'],endpoint['port']),timeout=2) as sock:
-        sock.sendall(b'{"op":"observe"}\n')
-        with sock.makefile('r',encoding='utf-8') as reader:
-            assert json.loads(reader.readline())['context']['title']=='Room'
+        sock.sendall(b'{"op":"auth","token":"wrong"}\n')
+        assert sock.recv(1)==b''
+    with socket.create_connection((endpoint['host'],endpoint['port']),timeout=2) as sock:
+        with sock.makefile('r',encoding='utf-8') as reader, sock.makefile('w',encoding='utf-8') as writer:
+            backend=JsonLineBackend(reader,writer)
+            backend.authenticate(password)
+            assert backend.observe()['context']['title']=='Room'
     thread.join(timeout=3)
     assert not thread.is_alive() and results.get()['status']=='disconnected'
+    assert not Path(endpoint['password_file']).exists()
     assert trace[-2:]==['session exit','project exit']
     assert trace.index(('state','saved-state')) < next(i for i,x in enumerate(trace) if isinstance(x,tuple) and x[0]=='bind')
+
+
+def test_incomplete_auth_line_cannot_extend_accept_deadline(monkeypatch):
+    trace=[];monkeypatch.setattr(module,'Project',fake_project(trace))
+    endpoints=queue.Queue();results=queue.Queue();cfg=config();cfg['timeout_ms']=200
+    thread=threading.Thread(target=lambda:results.put(module.host(cfg,on_listen=endpoints.put)))
+    thread.start();endpoint=endpoints.get(timeout=2)
+    with socket.create_connection((endpoint['host'],endpoint['port']),timeout=2) as sock:
+        until=time.monotonic()+0.6
+        while time.monotonic()<until:
+            try:sock.sendall(b'x')
+            except OSError:break
+            time.sleep(0.04)
+        thread.join(timeout=0.3)
+    assert not thread.is_alive()
+    assert results.get(timeout=1)['status']=='accept_timeout'
+
+
+def test_standalone_player_uses_private_password_file(monkeypatch):
+    trace=[];monkeypatch.setattr(module,'Project',fake_project(trace))
+    endpoints=queue.Queue();results=queue.Queue()
+    thread=threading.Thread(target=lambda:results.put(module.host(config(),on_listen=endpoints.put)))
+    thread.start();endpoint=endpoints.get(timeout=2)
+    player=Path(__file__).resolve().parents[1]/'player'
+    run=subprocess.run([sys.executable,'-m','fdisbull_player','--connect',
+                        endpoint['host']+':'+str(endpoint['port']),
+                        '--connect-password-file',endpoint['password_file']],
+                       input='quit\n',text=True,capture_output=True,cwd=player,timeout=5)
+    thread.join(timeout=2)
+    assert run.returncode==0,run.stderr
+    assert not thread.is_alive() and results.get(timeout=1)['status']=='disconnected'
 
 
 def test_invalid_config_fails_before_project_open(monkeypatch):

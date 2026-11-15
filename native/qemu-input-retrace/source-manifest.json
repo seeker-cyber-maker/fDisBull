@@ -1,0 +1,57 @@
+{
+  "qemu_version": "10.0.13",
+  "api_version": 1,
+  "model": "qemu-vga-precise-fdisbull-v1",
+  "command": "x-fdisbull-arm-input-retrace",
+  "patch": "qemu-10.0.13-fdisbull-input-retrace-v1.patch",
+  "patch_sha256": "5d80203da6c395aa987c8bdde80bb04db1badd169ce3bea258f50e0cdb6cdc80",
+  "requires_clock_patch": "qemu-10.0.13-fdisbull-clock-v1.patch",
+  "requires_clock_patch_sha256": "2127b71b7e45cc0e1a0351a405aed3b0a016e98af8d0540f74633c37b6b4dd4b",
+  "requires_media_patch": "qemu-10.0.13-fdisbull-media-v1.patch",
+  "requires_media_patch_sha256": "ad20d1d0670dc5eae166dee1b6be58f6d0a9f8d2386646f12007f342dbcb15a6",
+  "requires_input_patch": "qemu-10.0.13-fdisbull-input-v1.patch",
+  "requires_input_patch_sha256": "11ace3ccd39b2a2e507917197980b0b9181b5de3901161b2362be6ea53cbe6bb",
+  "requires_retrace_patch": "qemu-10.0.13-fdisbull-retrace-v1.patch",
+  "requires_retrace_patch_sha256": "9647eb1c7afc14aeea3e1fb826a389c3865e5d3ab420b060a8d3d45319044a1c",
+  "files": [
+    {
+      "path": "include/system/fdisbull-retrace.h",
+      "base_sha256": null,
+      "patched_sha256": "cbb4bc104a1dda87af28ee88db21cdf99c3190009414df854bce35b6290cb6c8"
+    },
+    {
+      "path": "qapi/fdisbull-input.json",
+      "base_sha256": "1ea60f5f1a3204a04594ea5b4b63aa418e8e7b2ad92761e303347cf660fca29b",
+      "patched_sha256": "b1802eb818c0f67c9ba157bab4d72a479d8e3e6061ad50fc122e70e90f7a0de7"
+    },
+    {
+      "path": "qapi/fdisbull-retrace.json",
+      "base_sha256": "6e5bd199619a378df7bb19262b3e7bbd1dbbb96678ac017adc8f703067176484",
+      "patched_sha256": "c479cc509a44e5a99cc4d71c8e92225ed6f22dcb5dbc0612c897bb67c39aad6a"
+    },
+    {
+      "path": "system/fdisbull-input.c",
+      "base_sha256": "2836284501b04ef771037813ccb04699c092b140767ea59dae6d992962063222",
+      "patched_sha256": "85957a5bf15d881bc2dbf11a20aa5163003eda61caeaf106416cfc5a063f0481"
+    },
+    {
+      "path": "system/fdisbull-retrace.c",
+      "base_sha256": "009ad797b0cac1701c1ebba97213c96b176fb92f0d7455fa9a4fcd70194e8cfe",
+      "patched_sha256": "a8e7ad7b56f08ecdf0c935a9fd74d057c8f6f44750f074392956f47fd42fe2d4"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_sha256": "65c11ed1e2d05dacf5b319c1d59a59e0674b7362df76231cff2fe66242fa310c",
+      "patched_sha256": "e334fd9eac7e29fcc6bce971a2c09b27d3c9c49c0a2b9395928c7d0ee363f177"
+    }
+  ],
+  "source_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "bytes": 141718608,
+    "verification": "Official TLS origin; observed SHA256 pinned for reproduction"
+  },
+  "patch_roundtrip": "Passed forward and reverse with zero fuzz/offset against freshly reproduced exact four-layer archive inputs; all six output members match the frozen implementation. Blank context prefixes are omitted in the unified patch.",
+  "schema_validation": "QAPISchema(qapi/qapi-schema.json) passed on the freshly reproduced five-layer source",
+  "native_build_and_runtime": "Reported separately by private build and native witness receipts"
+}

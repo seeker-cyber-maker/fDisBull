@@ -1,0 +1,696 @@
+{
+  "limits": [
+    "Counts overlap and must not be summed as unique coverage.",
+    "Cancellation has a complete journal with 82 sparse checkpoints."
+  ],
+  "result": "passed",
+  "routes": {
+    "cancel": {
+      "receipt_sha256": "1a40690c94348b9d1969f446cb52dd5d50fb973f1523cb27d20efe9bfc5d74f2",
+      "summary": {
+        "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+        "result": "passed",
+        "source_elements": {
+          "actor_entity_bytes": 8938,
+          "actor_fields": 33292,
+          "camera_words": 328,
+          "collision_elements": 103812,
+          "cursor_words": 902,
+          "item_bytes": 820,
+          "sprite_fields": 15580,
+          "task_fields": 18696,
+          "text_bytes": 194,
+          "window_fields": 2354
+        }
+      }
+    },
+    "door": {
+      "receipt_sha256": "6cfab5f4a689c37b4078832988da89cf3353fe80a9041cf75544f5e178d55048",
+      "summary": {
+        "compiler": {
+          "continuous_prefix": [
+            "title START",
+            [
+              1,
+              "main"
+            ],
+            [
+              2,
+              "main"
+            ]
+          ],
+          "native_elements": 4489290,
+          "sampled_one_step": [
+            [
+              63,
+              "main",
+              null,
+              null
+            ],
+            [
+              183,
+              "main",
+              null,
+              null
+            ],
+            [
+              300,
+              "main",
+              null,
+              null
+            ],
+            [
+              500,
+              "main",
+              null,
+              null
+            ],
+            [
+              800,
+              "main",
+              null,
+              null
+            ],
+            [
+              1200,
+              "main",
+              null,
+              null
+            ],
+            [
+              1600,
+              "main",
+              null,
+              null
+            ],
+            [
+              1887,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431538,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8437818,
+              null
+            ],
+            [
+              1900,
+              "main",
+              null,
+              null
+            ],
+            [
+              1950,
+              "main",
+              null,
+              null
+            ],
+            [
+              2009,
+              "main",
+              null,
+              null
+            ],
+            [
+              2010,
+              "main",
+              null,
+              null
+            ],
+            [
+              2233,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              2233,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              2243,
+              "main",
+              null,
+              null
+            ],
+            [
+              2244,
+              "main",
+              null,
+              null
+            ],
+            [
+              2255,
+              "main",
+              null,
+              null
+            ],
+            [
+              2310,
+              "main",
+              null,
+              null
+            ],
+            [
+              2362,
+              "main",
+              null,
+              null
+            ]
+          ]
+        },
+        "first_divergence": null,
+        "modal_steps": 119,
+        "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+        "public_steps": 2481,
+        "result": "passed",
+        "source_checkpoints": 2363,
+        "source_elements": {
+          "actor_entity_bytes": 262748,
+          "actor_fields": 953503,
+          "camera_words": 9452,
+          "collision_elements": 2968774,
+          "cursor_words": 25993,
+          "item_bytes": 23630,
+          "sprite_fields": 451942,
+          "task_fields": 552912,
+          "text_bytes": 49009,
+          "window_fields": 55463
+        }
+      }
+    },
+    "opening": {
+      "receipt_sha256": "5f85851932024dbd8f296999c360ff70e524c616c8247cc16ed0364881b29a96",
+      "summary": {
+        "compiler": {
+          "continuous_complete_state_prefix": [
+            "title START",
+            2,
+            3
+          ],
+          "native_elements": 1646073,
+          "sampled_one_step_from_native": [
+            63,
+            183,
+            300,
+            500,
+            800,
+            1200,
+            1600
+          ]
+        },
+        "first_divergence": null,
+        "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+        "result": "passed",
+        "source_checkpoints": 1615,
+        "source_elements": {
+          "actor_fields": 664302,
+          "collision_elements": 2022636,
+          "sprite_fields": 312090,
+          "task_fields": 387426,
+          "text_bytes": 40235,
+          "window_fields": 39510
+        }
+      }
+    },
+    "patch": {
+      "receipt_sha256": "8ac85718011eb132818fc83ef54ad1b921efe5e58f91aebe162017d6e511db8b",
+      "summary": {
+        "compiler": {
+          "continuous_prefix": [
+            "title START",
+            [
+              1,
+              "main"
+            ],
+            [
+              2,
+              "main"
+            ]
+          ],
+          "native_elements": 3142503,
+          "sampled_one_step": [
+            [
+              63,
+              "main",
+              null,
+              null
+            ],
+            [
+              183,
+              "main",
+              null,
+              null
+            ],
+            [
+              300,
+              "main",
+              null,
+              null
+            ],
+            [
+              500,
+              "main",
+              null,
+              null
+            ],
+            [
+              800,
+              "main",
+              null,
+              null
+            ],
+            [
+              1200,
+              "main",
+              null,
+              null
+            ],
+            [
+              1600,
+              "main",
+              null,
+              null
+            ],
+            [
+              1887,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431538,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8437818,
+              null
+            ],
+            [
+              1900,
+              "main",
+              null,
+              null
+            ],
+            [
+              1950,
+              "main",
+              null,
+              null
+            ]
+          ]
+        },
+        "first_divergence": null,
+        "modal_steps": 64,
+        "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+        "public_steps": 2036,
+        "result": "passed",
+        "source_checkpoints": 1973,
+        "source_elements": {
+          "actor_entity_bytes": 223703,
+          "actor_fields": 807778,
+          "camera_words": 7892,
+          "collision_elements": 2475792,
+          "cursor_words": 21703,
+          "item_bytes": 19730,
+          "sprite_fields": 379822,
+          "task_fields": 468447,
+          "text_bytes": 46279,
+          "window_fields": 47967
+        }
+      }
+    },
+    "repeat": {
+      "receipt_sha256": "ebb4641e32bc3b5d4fad7dbd43567957ae8dd1b32e652274ac2eaed00e3e251f",
+      "summary": {
+        "compiler": {
+          "continuous_prefix": [
+            "title START",
+            [
+              1,
+              "main"
+            ],
+            [
+              2,
+              "main"
+            ]
+          ],
+          "native_elements": 3441789,
+          "sampled_one_step": [
+            [
+              63,
+              "main",
+              null,
+              null
+            ],
+            [
+              183,
+              "main",
+              null,
+              null
+            ],
+            [
+              300,
+              "main",
+              null,
+              null
+            ],
+            [
+              500,
+              "main",
+              null,
+              null
+            ],
+            [
+              800,
+              "main",
+              null,
+              null
+            ],
+            [
+              1200,
+              "main",
+              null,
+              null
+            ],
+            [
+              1600,
+              "main",
+              null,
+              null
+            ],
+            [
+              1887,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8431538,
+              null
+            ],
+            [
+              1896,
+              "modal",
+              8437818,
+              null
+            ],
+            [
+              1900,
+              "main",
+              null,
+              null
+            ],
+            [
+              1950,
+              "main",
+              null,
+              null
+            ],
+            [
+              2009,
+              "main",
+              null,
+              null
+            ],
+            [
+              2010,
+              "main",
+              null,
+              null
+            ]
+          ]
+        },
+        "first_divergence": null,
+        "modal_steps": 64,
+        "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+        "public_steps": 2191,
+        "result": "passed",
+        "source_checkpoints": 2128,
+        "source_elements": {
+          "actor_entity_bytes": 239513,
+          "actor_fields": 866678,
+          "camera_words": 8512,
+          "collision_elements": 2672022,
+          "cursor_words": 23408,
+          "item_bytes": 21280,
+          "sprite_fields": 408652,
+          "task_fields": 502392,
+          "text_bytes": 47509,
+          "window_fields": 49700
+        }
+      }
+    },
+    "scalpel": {
+      "receipt_sha256": "8efa2252023e6f003a5d8c8a1451f25fea2c33e613927170fbc147b62dd1d1cb",
+      "summary": {
+        "compiler": {
+          "continuous_prefix": [
+            "title START",
+            [
+              1,
+              "main"
+            ],
+            [
+              2,
+              "main"
+            ]
+          ],
+          "native_elements": 2992860,
+          "sampled_one_step": [
+            [
+              63,
+              "main",
+              null,
+              null
+            ],
+            [
+              183,
+              "main",
+              null,
+              null
+            ],
+            [
+              300,
+              "main",
+              null,
+              null
+            ],
+            [
+              500,
+              "main",
+              null,
+              null
+            ],
+            [
+              800,
+              "main",
+              null,
+              null
+            ],
+            [
+              1200,
+              "main",
+              null,
+              null
+            ],
+            [
+              1600,
+              "main",
+              null,
+              null
+            ],
+            [
+              1851,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1851,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1851,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1851,
+              "modal",
+              8431229,
+              null
+            ],
+            [
+              1851,
+              "modal",
+              8431538,
+              null
+            ],
+            [
+              1851,
+              "modal",
+              8437818,
+              null
+            ],
+            [
+              1887,
+              "main",
+              null,
+              null
+            ],
+            [
+              1896,
+              "main",
+              null,
+              null
+            ],
+            [
+              1900,
+              "main",
+              null,
+              null
+            ]
+          ]
+        },
+        "first_divergence": null,
+        "modal_steps": 64,
+        "program_sha256": "f3db5c040b158a0ec15eb93d6e716f60be9750bdd6475936bf87127bb671f258",
+        "public_steps": 1991,
+        "result": "passed",
+        "source_checkpoints": 1928,
+        "source_elements": {
+          "actor_entity_bytes": 218798,
+          "actor_fields": 789508,
+          "camera_words": 7712,
+          "collision_elements": 2418434,
+          "cursor_words": 21208,
+          "item_bytes": 19280,
+          "sprite_fields": 371272,
+          "task_fields": 457494,
+          "text_bytes": 45231,
+          "window_fields": 47486
+        }
+      }
+    },
+    "scripted": {
+      "receipt_sha256": "f32fea5a67eb905283fb5665681c985818335911e58909ecbd1a2e61f0e5a379",
+      "summary": {
+        "first_divergence": null,
+        "program_sha256": "0f47ca0d9f85c7de2b607a9f72d361f8d61c92668efaa3cd8f4a07186e0ea78e",
+        "result": "passed",
+        "source_checkpoints": 60,
+        "source_fields": 17920
+      }
+    }
+  }
+}

@@ -1,0 +1,285 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "bounded classic CHIP-8 CPU and TCG system smoke target",
+  "base": {
+    "qemu_version": "10.0.13",
+    "source_archive": "R/native-runtime/qemu-10.0.13.tar.xz",
+    "source_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "patch_base": "unmodified QEMU 10.0.13 source archive"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-chip8-tcg-v1.patch",
+    "sha256": "81fdfca213e47439d2acadea0d05ddc1e3e810e732942e8bc35cd1e1e4101e69",
+    "modified_file_count": 26,
+    "added_file_count": 18,
+    "existing_file_count": 8,
+    "files": [
+      {
+        "path": "configs/devices/chip8-softmmu/default.mak",
+        "before_sha256": null,
+        "after_sha256": "e3c75f51029dacfc64e73d6e011945e24382dd944b66377f7ea661288a676b00",
+        "replayed_sha256": "e3c75f51029dacfc64e73d6e011945e24382dd944b66377f7ea661288a676b00",
+        "matches": true
+      },
+      {
+        "path": "configs/targets/chip8-softmmu.mak",
+        "before_sha256": null,
+        "after_sha256": "a35e9343a8d72b44b2b3bde03e469c13d987c56ee32585d3b3b3c345566d8896",
+        "replayed_sha256": "a35e9343a8d72b44b2b3bde03e469c13d987c56ee32585d3b3b3c345566d8896",
+        "matches": true
+      },
+      {
+        "path": "gdb-xml/chip8-core.xml",
+        "before_sha256": null,
+        "after_sha256": "9f3710cd32ab408b77e5044c3feee81a7c0b451c95f292b89656d64d52534f89",
+        "replayed_sha256": "9f3710cd32ab408b77e5044c3feee81a7c0b451c95f292b89656d64d52534f89",
+        "matches": true
+      },
+      {
+        "path": "hw/Kconfig",
+        "before_sha256": "f7940f36d1aa7b15a554f6378be03a85ddc9a40e2608b107c9d7c5dd2ccbe3d0",
+        "after_sha256": "15eed52c8dd848bef183d21c4f30e7b3b3c9a12b3e4d1662485089ec2e0741bb",
+        "replayed_sha256": "15eed52c8dd848bef183d21c4f30e7b3b3c9a12b3e4d1662485089ec2e0741bb",
+        "matches": true
+      },
+      {
+        "path": "hw/chip8/Kconfig",
+        "before_sha256": null,
+        "after_sha256": "08af690ebc1444f9a96441dcd785b41ab1b6baa9cdded13f9be0c844b27d5e18",
+        "replayed_sha256": "08af690ebc1444f9a96441dcd785b41ab1b6baa9cdded13f9be0c844b27d5e18",
+        "matches": true
+      },
+      {
+        "path": "hw/chip8/chip8-test.c",
+        "before_sha256": null,
+        "after_sha256": "52ffa5aeaff09330a15e7bb9d97768441cbb795265a41e40b5237de2cd0ad115",
+        "replayed_sha256": "52ffa5aeaff09330a15e7bb9d97768441cbb795265a41e40b5237de2cd0ad115",
+        "matches": true
+      },
+      {
+        "path": "hw/chip8/meson.build",
+        "before_sha256": null,
+        "after_sha256": "84da71924cc17ec4a8908d91e9a89f71907a63da2487a1221950cd68ef8dcf55",
+        "replayed_sha256": "84da71924cc17ec4a8908d91e9a89f71907a63da2487a1221950cd68ef8dcf55",
+        "matches": true
+      },
+      {
+        "path": "hw/meson.build",
+        "before_sha256": "c3bc3f1e22ff16eea62af2e2fe8642d1d683e9ec8307c5f05ba5d66171678d5b",
+        "after_sha256": "c67c698564aee60aae2c340da233c7b8a27431f7ac2b03be1bc8d5ea4e0b796f",
+        "replayed_sha256": "c67c698564aee60aae2c340da233c7b8a27431f7ac2b03be1bc8d5ea4e0b796f",
+        "matches": true
+      },
+      {
+        "path": "include/system/arch_init.h",
+        "before_sha256": "2bed554869e91d03a85060eb3e006592b7cf3488c029edab55c6a3f23201e20f",
+        "after_sha256": "87cd5762f23b2a082fffc952aaab8c8809dd12a9341d90751cbcf021f13237d6",
+        "replayed_sha256": "87cd5762f23b2a082fffc952aaab8c8809dd12a9341d90751cbcf021f13237d6",
+        "matches": true
+      },
+      {
+        "path": "qapi/misc-target.json",
+        "before_sha256": "6f0dec662bf3b6ff34f2fd02f0e6518c01b2c6043dcafdd69536446b6777f651",
+        "after_sha256": "0a78a308cbd32bee2bab5b14aa40282b442a4acb11758ad66b0a6dafdfaf526c",
+        "replayed_sha256": "0a78a308cbd32bee2bab5b14aa40282b442a4acb11758ad66b0a6dafdfaf526c",
+        "matches": true
+      },
+      {
+        "path": "qapi/misc.json",
+        "before_sha256": "7c509fa75d331f49ec544cc9d0424de3034a8f47a31d4c0c5b757b8748d3bdaf",
+        "after_sha256": "20b708ba5959f7b47fbc4ae01bc9c9643b8fdf504ec07fda988b7faa29a689f8",
+        "replayed_sha256": "20b708ba5959f7b47fbc4ae01bc9c9643b8fdf504ec07fda988b7faa29a689f8",
+        "matches": true
+      },
+      {
+        "path": "system/meson.build",
+        "before_sha256": "2c210634b93b229c1265d153ae5e592aa4b36834909051aeea5570c53d13e589",
+        "after_sha256": "64e65ab6a30bbf0ca3fc33f6490cec3001caa17e2f31b06e8146138338ad176f",
+        "replayed_sha256": "64e65ab6a30bbf0ca3fc33f6490cec3001caa17e2f31b06e8146138338ad176f",
+        "matches": true
+      },
+      {
+        "path": "system/qmp-chip8.c",
+        "before_sha256": null,
+        "after_sha256": "aaaf46d626abbce5c495df75d96ec21d0fb3f2e269ae64f4d12259cfd568e062",
+        "replayed_sha256": "aaaf46d626abbce5c495df75d96ec21d0fb3f2e269ae64f4d12259cfd568e062",
+        "matches": true
+      },
+      {
+        "path": "target/Kconfig",
+        "before_sha256": "ac823c76c3267069432d63943e82cb067fb9ead2451785b798558457327e6544",
+        "after_sha256": "03502ab258264d6ee4e92e0eb597d53d7996e37df6bec2cabfff82364b6cb2df",
+        "replayed_sha256": "03502ab258264d6ee4e92e0eb597d53d7996e37df6bec2cabfff82364b6cb2df",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/Kconfig",
+        "before_sha256": null,
+        "after_sha256": "a03c9111b4eccd8971f05cf689ca5ab6cd18c32a348700baf2ef4179788df4ba",
+        "replayed_sha256": "a03c9111b4eccd8971f05cf689ca5ab6cd18c32a348700baf2ef4179788df4ba",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/cpu-param.h",
+        "before_sha256": null,
+        "after_sha256": "467f9444d8f238ccba546e5449ab15fd0a1184f326c7dcaebf028f251f726ec2",
+        "replayed_sha256": "467f9444d8f238ccba546e5449ab15fd0a1184f326c7dcaebf028f251f726ec2",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/cpu-qom.h",
+        "before_sha256": null,
+        "after_sha256": "412f3c125b63f815e52f1ff31a1a75696de6f9c7bd77ea8bed84e7fb47b5efcd",
+        "replayed_sha256": "412f3c125b63f815e52f1ff31a1a75696de6f9c7bd77ea8bed84e7fb47b5efcd",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/cpu.c",
+        "before_sha256": null,
+        "after_sha256": "b4a55eb9169a8f1defd66f8e5468f557837bf5bfd3ecc00ee82f320be332623e",
+        "replayed_sha256": "b4a55eb9169a8f1defd66f8e5468f557837bf5bfd3ecc00ee82f320be332623e",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/cpu.h",
+        "before_sha256": null,
+        "after_sha256": "d3093921557d82c0a7acd46da350c3e279d336b7592a3544b7072013d3680561",
+        "replayed_sha256": "d3093921557d82c0a7acd46da350c3e279d336b7592a3544b7072013d3680561",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/gdbstub.c",
+        "before_sha256": null,
+        "after_sha256": "3b50464f4d900381178f4e7136ad8d92bfa24939726c13e5955f2003559d1945",
+        "replayed_sha256": "3b50464f4d900381178f4e7136ad8d92bfa24939726c13e5955f2003559d1945",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/helper.c",
+        "before_sha256": null,
+        "after_sha256": "fadc37aa33bc61a44a54ad680d24c6c17b24b876f907d1f5f408d8b6b82b9e40",
+        "replayed_sha256": "fadc37aa33bc61a44a54ad680d24c6c17b24b876f907d1f5f408d8b6b82b9e40",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/helper.h",
+        "before_sha256": null,
+        "after_sha256": "07dcc17d3dad9b303d6f7821c55437c7f9b838c42260edc75b73698082909885",
+        "replayed_sha256": "07dcc17d3dad9b303d6f7821c55437c7f9b838c42260edc75b73698082909885",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/meson.build",
+        "before_sha256": null,
+        "after_sha256": "4aadb5268224725b5da09d350b10eee3f777ac3cac72163a01f7d09212a88064",
+        "replayed_sha256": "4aadb5268224725b5da09d350b10eee3f777ac3cac72163a01f7d09212a88064",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/translate.c",
+        "before_sha256": null,
+        "after_sha256": "e671870dbd10f43cb9705c643a93da2b980b0e84e320e846d368b2cb7c6f47f7",
+        "replayed_sha256": "e671870dbd10f43cb9705c643a93da2b980b0e84e320e846d368b2cb7c6f47f7",
+        "matches": true
+      },
+      {
+        "path": "target/chip8/vmstate.c",
+        "before_sha256": null,
+        "after_sha256": "3e70f9165c21b68cbc6dbb0743fdab711e7fe9e713955606e347d6af8a770586",
+        "replayed_sha256": "3e70f9165c21b68cbc6dbb0743fdab711e7fe9e713955606e347d6af8a770586",
+        "matches": true
+      },
+      {
+        "path": "target/meson.build",
+        "before_sha256": "43d9537ac1fc911a9c76cd03ddc59753795e2acb3e76de4a9f0ba683c49f345b",
+        "after_sha256": "084caba83186e992469e5d7e56cad420630b9c3b442ae501a1959b2c8abe6e18",
+        "replayed_sha256": "084caba83186e992469e5d7e56cad420630b9c3b442ae501a1959b2c8abe6e18",
+        "matches": true
+      }
+    ],
+    "applied_verification": {
+      "receipt": "R/chip8-patch-replay-receipt.json",
+      "seeded_base_files": 8,
+      "new_files": 18,
+      "base_files_seeded_from_archive": true,
+      "all_after_hashes_match": true,
+      "result": "Applied patch to an isolated directory containing only the eight existing baseline files; verified all 26 touched-file output hashes against the candidate source."
+    }
+  },
+  "target": {
+    "qemu_target": "chip8-softmmu",
+    "machine": "chip8-test",
+    "binary": "qemu-system-chip8",
+    "cpu_model": "chip8-cpu",
+    "profile": "chip8-classic-pilot-default-v1",
+    "cpu_subset": "fdisbull-chip8-cpu-smoke-1",
+    "gdb_architecture": "chip8",
+    "gdb_registers": "V0..VF: 8-bit; I and PC: 16-bit; SP: 8-bit [0,16]; stack0..stack15: 16-bit little-endian",
+    "qmp_query": "query-chip8-fault",
+    "qmp_fields": [
+      "profile",
+      "cpu-subset",
+      "faulted",
+      "fault-code",
+      "fault-pc",
+      "fault-opcode"
+    ],
+    "memory_bytes": 4096,
+    "rom_load_address": 512,
+    "vmstate": "CPU state version 1 plus the machine RAM; exact-binary cold restore was tested; cross-binary compatibility is unqualified"
+  },
+  "build": {
+    "runtime": "R/native-runtime/chip8-runtime",
+    "source": "R/native-runtime/chip8-runtime",
+    "build_dir": "R/native-runtime/chip8-runtime/build-chip8",
+    "temporary_dir": "R/native-runtime/chip8-runtime/tmp-chip8",
+    "target": "chip8-softmmu",
+    "accelerator": "TCG",
+    "configure_command": "../configure --target-list=chip8-softmmu --without-default-features --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools --disable-docs --disable-guest-agent --disable-containers --disable-download --disable-install-blobs --disable-debug-info --disable-qom-cast-debug --audio-drv-list= --firmwarepath=../pc-bios --prefix=<build-chip8>/install --ninja=/Users/tiga/miniconda/bin/ninja --python=/Users/tiga/miniconda/bin/python3",
+    "build_command": "TMPDIR=../tmp-chip8 /Users/tiga/miniconda/bin/ninja -j4 qemu-system-chip8",
+    "candidate_binary": "R/native-runtime/chip8-runtime/build-chip8/qemu-system-chip8",
+    "candidate_binary_sha256": "65fa79f9104bf20997d9454fc0b0acabce2717816fd029323e6500bcd54cdbb6",
+    "candidate_binary_size": 6180856,
+    "build_result": "Configure and incremental target build completed successfully on macOS arm64."
+  },
+  "qualification": {
+    "status": "Bounded native target and parent preservation selections passed; broader compatibility, conversion and DOS parity gates remain open.",
+    "ci": false,
+    "cross_architecture_build": false,
+    "cross_binary_restore_qualified": false,
+    "native_cases": 12,
+    "native_passed": 12,
+    "native_failures": 0,
+    "native_errors": 0,
+    "native_skipped": 0,
+    "native_duration_seconds": 3.205,
+    "native_receipt": "R/chip8-native-03.log",
+    "native_xml": "R/chip8-native-03.xml",
+    "native_result": "R/chip8-native-03-result.json",
+    "smoke_observations": [
+      "QEMU paused startup and query-chip8-fault initial state returned expected profile/subset and zero fault fields.",
+      "One real GDB step executed ROM word 6001 at 0x200, changing V0 to 1 and PC to 0x202.",
+      "Fetch at terminal PC 0x1000 stopped as inspectable fault code 2 without exiting QEMU."
+    ],
+    "parent_preservation": {
+      "cases": 2658,
+      "files": 158,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "deselected": 1,
+      "deselection": "existing private DinoPark fixture unavailable",
+      "python_source_test_files": 1190,
+      "source_unchanged": true,
+      "xml": "R/chip8-preservation-final-02.xml",
+      "receipt": "R/chip8-final-receipt.json"
+    }
+  },
+  "limits": [
+    "This is an actual compiled QEMU TCG system target, but each instruction uses one helper-backed translation block; direct per-op TCG lowering and performance are unmeasured.",
+    "No screen, key input, timers, or sound devices are implemented.",
+    "The subset and named quirks are bounded; arbitrary CHIP-8 ROM compatibility and whole-program compatibility are not claimed.",
+    "Odd instruction fetch deliberately faults, unlike the Python pilot behavior.",
+    "Only a local macOS arm64 configure/build and native test selection were run. Linux, cross-architecture, hosted CI, and release installation are unverified."
+  ]
+}

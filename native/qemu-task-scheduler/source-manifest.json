@@ -1,0 +1,162 @@
+{
+  "component": "QEMU",
+  "version": "10.0.13",
+  "base_source": "QEMU 10.0.13 with native/qemu-task-context and native/qemu-task-private applied",
+  "base_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "base_patch_file": "../qemu-task-private/qemu-10.0.13-fdisbull-task-private-v1.patch",
+  "base_patch_sha256": "32a9d153cf1a7ef8f021726586f5d5f0db0c5f6af4d7c8a1ef1ba501d4ce091f",
+  "patch_file": "qemu-10.0.13-fdisbull-task-scheduler-v1.patch",
+  "patch_sha256": "e939efa9379027199b990143b2d04a122ca21787367dd20f00d0a071750db52f",
+  "scope": "Cooperative native x86 CPU slots and interrupt-frame ownership layered on the task-private RAM/fetch view. Not a vendor task manager or general DOS scheduler.",
+  "modified_files": [
+    {
+      "path": "qapi/qapi-schema.json",
+      "before_sha256": "3d9a7bec52a2de90916d6c1a6dcc3f0743ca548bb9f578630f284768e64dcb29",
+      "after_sha256": "de9a60d68a8526a123ddd39ff44b8095d92da4a7e5854c16726ad98e352f4eb4"
+    },
+    {
+      "path": "qapi/meson.build",
+      "before_sha256": "703d39d4690939b445092a37b4681df2b2bebd8f02b12ef7885cabf5a039ff80",
+      "after_sha256": "34b546d0db8184e2ac2534be8076e0dffb4096020ea3d5489a91add4366068ef"
+    },
+    {
+      "path": "target/i386/fdisbull-task-private.c",
+      "before_sha256": "6f7fd08285d5f265459a431c4802a5e8b238ed0c5463637ba7c998826ac62a50",
+      "after_sha256": "2906f9371bbfb48a8be84cd7d14ce3543b42acce9ff946f69b95b756d9ca99da"
+    },
+    {
+      "path": "target/i386/tcg/seg_helper.c",
+      "before_sha256": "a91928a44d0c55eac41adb548f886af62422970d18e33334859a4b59e427b0ca",
+      "after_sha256": "9d7d83d663c447787fa9b4680ae0da70b112a88e5d3e00b091ad3c3e8861eadf"
+    },
+    {
+      "path": "accel/tcg/cpu-exec.c",
+      "before_sha256": "1c742729a1167ae77e78328a2b231887fcf6470d6540ebada0adb1929507fb33",
+      "after_sha256": "c9005cf15c3fcb24427eaf38d89f95566f4c9d407605a8bfe3fa64c1363b85b8"
+    },
+    {
+      "path": "system/fdisbull-task-private.h",
+      "before_sha256": "04fb0be2bb01c16ac4e987bd5d0142750a8b6432d753bd51f5ed4bf5ea59bc02",
+      "after_sha256": "5facfd28237ec1f2b8ce5cba55fd0b72c2f79cdfc69b2648bcef4cbbb66a98d6"
+    },
+    {
+      "path": "qapi/fdisbull-task-scheduler.json",
+      "before_sha256": null,
+      "after_sha256": "558b193c93c0cc8edeae8208c425e898be56096b1e5ee80065a61c24b0026d4d"
+    },
+    {
+      "path": "target/i386/fdisbull-task-scheduler.h",
+      "before_sha256": null,
+      "after_sha256": "c6fdf2b789063150b5246f7ee7add1138488986b1c70f627153802436d8262b1"
+    }
+  ],
+  "qmp_commands": [
+    {
+      "name": "x-fdisbull-task-scheduler-init",
+      "arguments": [
+        "anchor-address",
+        "prepare-only?"
+      ],
+      "purpose": "Prepare migration state or initialize the scheduler from a stable FDBTASK1 monitor record."
+    },
+    {
+      "name": "x-fdisbull-task-slot-capture",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation",
+        "pages[]"
+      ],
+      "purpose": "Bind the stopped selected CPU context as a runnable native slot."
+    },
+    {
+      "name": "x-fdisbull-task-slot-fork",
+      "arguments": [
+        "parent-uuid",
+        "parent-cookie",
+        "parent-incarnation",
+        "uuid",
+        "cookie",
+        "incarnation",
+        "pages[]",
+        "entry-eip",
+        "registers[16]",
+        "eflags"
+      ],
+      "purpose": "Fork a child slot from the current parent context, overriding only EIP, GPRs, and flags."
+    },
+    {
+      "name": "x-fdisbull-task-slot-runnable",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation",
+        "runnable"
+      ],
+      "purpose": "Mark a stopped slot runnable or blocked; selection occurs at a native boundary."
+    },
+    {
+      "name": "x-fdisbull-task-scheduler-observe",
+      "arguments": [],
+      "purpose": "Read stable scheduler slots, selected task, CPU context hashes, and frame ownership."
+    },
+    {
+      "name": "x-fdisbull-task-context-read",
+      "arguments": [
+        "uuid",
+        "cookie",
+        "incarnation"
+      ],
+      "purpose": "Read one stopped slot architectural context and interrupt frames."
+    },
+    {
+      "name": "x-fdisbull-task-scheduler-disable",
+      "arguments": [],
+      "purpose": "Disable cooperative scheduling at a quiescent stopped state before host cleanup."
+    }
+  ],
+  "scheduler_protocol": {
+    "yield_vector": "INT 0x60",
+    "block_vector": "INT 0x62",
+    "selection": "Native round-robin over runnable, nonblocked registered CPU slots; the FDBTASK1 anchor is written by QEMU. Guest tasks do not choose slots.",
+    "preemption": "Cooperative only; no timer/IRQ preemption claim.",
+    "single_step": "A single-stepped yield stops at the incoming context before its first instruction; QEMU single-step debug delivery is not duplicated."
+  },
+  "supported_context": "Single-vCPU x86 system TCG, real mode, V86, and non-PAE 32-bit protected mode; common GPR, flags, DR0-DR3/DR6/DR7, segment, control, x87 and SSE state is captured. AVX-family, MPX, AMX, PAE, long mode, SMM, nested guest mode and PKRU/PKS state are rejected.",
+  "interrupt_frames": "Native-delivered frames are preflighted against private stack pages before guest writes, bound to SS identity, stack mask, gate width, size and ordered RAM backing pages, and checked before IRET. Task-gate switching is rejected while native scheduling is enabled.",
+  "migration": {
+    "vmstate_name": "fdisbull/task-private",
+    "vmstate_version": 3,
+    "state": "Task registry/private RAM, scheduler slots, canonical CPU contexts including per-slot DR0-DR3/DR6/DR7, runqueue and owned interrupt frames. Selected saved CPU context is rehydrated after load, including legacy x87 selectors absent from upstream CPU VMState."
+  },
+  "build_receipt": {
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "binary": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-runtime/native-scheduler-runtime/build/qemu-system-x86_64",
+    "binary_sha256": "8afc7ddf08771cb95ae8aa3f155b75e414daa1bdf14cdecc1cbee7f9cfbb5f80",
+    "build": "Incremental Ninja build completed successfully with TMPDIR set to the external native-scheduler-runtime/tmp and `ninja -C <external native-scheduler-runtime/build> -j8 qemu-system-x86_64`; retained QEMU 10.0.13 study configuration. No CI run by patch author."
+  },
+  "runtime_evidence": {
+    "status": "Root-owned native guest qualification passed 7/7 checks, zero skips, in 34.02 s against the exact binary hash above.",
+    "receipt_xml": "/Volumes/CODEX/Codex_Projects/active/fDisBull-local-studies/QEMU-DOSBox-Parity-20261110/native-scheduler-10.xml",
+    "checks": [
+      "V86 interrupt-frame ownership and cold restore",
+      "per-task x87 context and rounding restore",
+      "instrumented checkpoint profile",
+      "same-DR7/different-address guest watchpoint isolation",
+      "IRET-width refusal before frame pop",
+      "V86 GP error-code frame recording",
+      "unowned ring-0 stack refusal before any write"
+    ],
+    "audio_scope": "Instrumented profile recorded zero audio frames; evidence covers observer state/token continuity only, not PCM or audio-output continuation."
+  },
+  "limitations": [
+    "This is a bounded cooperative monitor interface, not QEMM/DESQview compatibility and not a general DOS scheduler.",
+    "No timer or asynchronous IRQ preemption is provided; machine-level interrupts remain global.",
+    "At most 16 CPU slots and the preceding private layer limit of 16 direct 4-KiB pages per task apply.",
+    "No PAE, long mode, SMM, nested guest, PKE/PKS, AVX/AVX-512, MPX or AMX contexts. Unsupported state fails closed.",
+    "Interrupt frames must map to direct private RAM. Task-gate switching is refused. Device DMA/IOMMU/GDB physical memory remain on the shared base view.",
+    "Only authored cooperating-monitor witnesses can support claims; no commercial task-manager compatibility is implied.",
+    "Per-slot debug state covers DR0-DR3, DR6 and DR7; guest hardware debug state is isolated across slots. GDB software breakpoints remain QEMU debugger state."
+  ]
+}

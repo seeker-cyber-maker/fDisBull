@@ -155,7 +155,7 @@ def test_real_remote_disconnect_during_qemu_boot_reaps_pending_machine(tmp_path)
     endpoint=Endpoint(database,qemu,tmp_path,backend='dosbox-qemu',kernel=kernel,initramfs=runtime)
     failures=[]
     with endpoint:
-        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3))
+        client=DOSRemoteDebugger(socket.create_connection(endpoint.address,timeout=3), password=Path(endpoint.password_file).read_text().strip())
         def launch():
             try:client.start(binary.name,bits=16)
             except (OSError,ValueError,AttributeError) as error:failures.append(type(error).__name__)

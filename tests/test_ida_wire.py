@@ -1,5 +1,6 @@
 """Wire invariants independent of the DOS and PE engine implementations."""
 import socket
+import stat
 import struct
 import threading
 import time
@@ -9,6 +10,37 @@ from pathlib import Path
 import pytest
 
 from fdisbull.ida_wire import Channel, Client, Reader, ProtocolError, dd, dq, ea, string
+
+
+def test_dos_endpoint_rejects_unauthenticated_peer_before_project_open(tmp_path, monkeypatch):
+    from fdisbull import ida_dosbox
+    project=tmp_path/'project.fdb';project.touch()
+    executable=tmp_path/'dosbox';executable.touch()
+    opened=[]
+    class FakeProject:
+        def __init__(self, path): opened.append(path)
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+    class FakeSession:
+        def __init__(self, *args, **kwargs): self.debug=None
+        def close(self): pass
+    monkeypatch.setattr(ida_dosbox,'Project',FakeProject)
+    monkeypatch.setattr(ida_dosbox,'Session',FakeSession)
+    with ida_dosbox.Endpoint(project, executable, tmp_path, idle_timeout=2) as endpoint:
+        with socket.create_connection(endpoint.address, timeout=2) as sock:
+            channel=Channel(sock); deadline=time.monotonic()+2
+            assert channel.receive(deadline)[0]==ida_dosbox.w.OPEN
+            channel.send(ida_dosbox.w.OK,dd(1)+string('wrong'),deadline)
+            assert sock.recv(1)==b''
+        assert opened==[]
+        assert stat.S_IMODE(Path(endpoint.password_file).stat().st_mode)==0o600
+        assert stat.S_IMODE(Path(endpoint.password_file).parent.stat().st_mode)==0o700
+        password=Path(endpoint.password_file).read_text().strip()
+        client=Client(socket.create_connection(endpoint.address,timeout=2),debugger_id=10,password=password)
+        client.close()
+        endpoint.thread.join(2)
+    assert opened==[project.resolve()]
+    assert not Path(endpoint.password_file).exists()
 
 
 @pytest.mark.parametrize('value,encoded', [

@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
+  "patch_sha256": "67c78a61cd3aa576fde0728edba341053717f6a3037f294d2c05e7aaf71a8bdc",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -84,8 +84,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "sha256": "5eaffe031a616c4e99e27b05dd749144b240accc3724aeb306fe90dbcbeaf833",
-      "size": 24971
+      "sha256": "cd33f6077a401abf94caf15168a643881e26ef17c4e5f38645130525b25ca7d6",
+      "size": 25282
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -186,6 +186,11 @@
       "path": "tools/headless_agent.py",
       "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7",
       "size": 9883
+    },
+    {
+      "path": "src/shell/shell.cpp",
+      "sha256": "38ab5378a7a36e00f68f10d31b07191709a65e084aaa456451b77388baca539e",
+      "size": 119965
     }
   ],
   "nasm_version": "2.16.03",
