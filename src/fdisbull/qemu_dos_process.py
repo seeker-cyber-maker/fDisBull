@@ -731,7 +731,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         return save_owned_machine_state(self, name, max_bytes=max_bytes)
 
     def load_machine_state(self, artifact, *, timeout_ms=60000, rebind_protected_source=False):
-        """Recover a distinct machine artifact and retire source authority."""
+        """Recover a machine; optionally admit a fresh stopped LE source view."""
         from .qemu_owned_checkpoint import load_owned_machine_state
         return load_owned_machine_state(self, artifact, timeout_ms=timeout_ms,
                                         rebind_protected_source=rebind_protected_source)

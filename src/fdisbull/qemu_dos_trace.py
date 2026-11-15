@@ -75,7 +75,19 @@ def _clock_bracket(session, before, after):
         _invalid(session.vm, 'Source clock bracket is not stable: ' + str(error))
 
 
-def _require_active(session, binding):
+def _require_active(session, binding, *, source_view='initial-dos'):
+    if source_view == 'embedded-le':
+        # An LE recipe has an independent, freshly observed namespace. Its
+        # current handle/owner/epoch do not revive the original MZ allocation.
+        # An out-of-scope stop may be retained only as a terminal boundary;
+        # the collector checks qualification before any predicate or step.
+        owner_valid = getattr(session, '_le_source_owner_valid', None)
+        if (binding is not getattr(session, '_le_source', None)
+                or not isinstance(binding, dict) or binding.get('source_view') != 'embedded-le'
+                or binding.get('state') not in ('qualified-stopped', 'out-of-scope')
+                or not callable(owner_valid) or not owner_valid(binding)):
+            raise ValueError('Source tracing requires the current owned LE binding epoch')
+        return
     process = session._process
     if (session.closed or session.vm.qmp is None
             or session.vm.process is None or session.vm.process.poll() is not None
@@ -241,7 +253,7 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
         metadata['machine_configuration']['native_clock_admission'] = deepcopy(session.vm.native_clock_admission)
     binding = le_binding if le_binding is not None else load_trace_binding(
         session.project, session.version['id'], metadata)
-    _require_active(session, binding)
+    _require_active(session, binding, source_view=source_view)
     if regions is None:
         regions = validate_regions([] if le_binding is not None else [dict(id=region.name, space='project',
             start=region.start, end=region.start + len(region.data))
@@ -263,6 +275,7 @@ def _collect(session, *, name, timeout_ms, max_steps, count=None, until=None,
     def observe(sequence):
         if le_binding is None:
             return _observe(session, binding, sequence, clocked=clocked)
+        _require_active(session, binding, source_view='embedded-le')
         raw, stopped = session._le_source_observe(binding, sequence, clocked=clocked)
         session._remaining()
         if len(_encoded(raw)) > MAX_BOUNDARY_BYTES:

@@ -276,3 +276,101 @@ def test_le_step_budget_then_saved_script_preserves_exact_source_predicate(activ
     assert match['matched_event']['site']['space'] == 'embedded-le'
     assert match['matched_event']['pc']['project'] is None
     assert len(o.intervals) == 3 and s._process == o.original_mapping
+
+
+def retire_mz_and_rebind(o):
+    """Use real binding admission on a machine-only recovered mapping shape."""
+    s = o.session
+    previous = s.dos_source_binding()['binding_id']
+    s._process['source_mapping'].update(live=False, live_ranges=[],
+        status='unqualified-after-owned-machine-restore')
+    s._owned_machine_restored = True
+    s.metadata['process'] = deepcopy(s._process)
+    fresh = s.dos_source_bind(expected_source_sha256=o.project.meta['source_sha256'])
+    assert fresh['live'] and fresh['binding_id'] != previous
+    return fresh
+
+
+@pytest.mark.parametrize('operation', ['trace', 'trace-until'])
+def test_fresh_le_collection_does_not_require_retired_mz_mapping(active_le, operation):
+    o, s = active_le, active_le.session
+    fresh = retire_mz_and_rebind(o)
+    if operation == 'trace':
+        saved = s.trace(count=2, bits=32, source_view='embedded-le')
+        assert saved['metadata']['complete']
+        artifact = saved['artifact']
+    else:
+        result = s.trace_until(dict(kind='register', register='eip', equals=0x50044),
+                               max_steps=3, source_view='embedded-le')
+        assert result['matched'] and result['exact_stop'] and result['source_window_closed']
+        artifact = result['trace_artifact']
+    doc = stored_trace(o, artifact)
+    assert doc['window']['closed'] and len(o.intervals) == 2
+    assert doc['mapping']['process']['source_mapping']['live'] is False
+    assert doc['mapping']['process']['source_mapping']['live_ranges'] == []
+    assert doc['native_process_capture']['binding_id'] == fresh['binding_id']
+    assert all(e['identity']['source_location']['source_view'] == 'embedded-le' for e in doc['events'])
+    assert all(e['project_address'] is None for e in doc['events'])
+    assert s._process['source_mapping']['live'] is False
+
+
+def test_retired_mz_mapping_still_refuses_explicit_initial_dos_trace(active_le):
+    o, s = active_le, active_le.session
+    retire_mz_and_rebind(o)
+    with pytest.raises(ValueError):
+        s.trace(count=1, bits=16, source_view='initial-dos')
+    with pytest.raises(ValueError, match='initial DOS process epoch'):
+        collector._require_active(s, {'capture_epoch':s._runtime_epoch})
+    assert not o.intervals
+
+
+@pytest.mark.parametrize('damage', ['copy', 'spoof', 'retired', 'pending', 'owner', 'process', 'epoch'])
+def test_le_active_guard_requires_exact_current_owned_handle(active_le, damage):
+    o, s = active_le, active_le.session
+    retire_mz_and_rebind(o)
+    binding = s._le_source
+    if damage == 'copy': binding = dict(binding)
+    elif damage == 'spoof': binding = dict(capture_epoch=s._runtime_epoch, source_view='embedded-le')
+    elif damage == 'retired': binding['state'] = 'retired'
+    elif damage == 'pending': binding['state'] = 'pending-owned-execution'
+    elif damage == 'owner': binding['owner'] = object()
+    elif damage == 'process': binding['process'] = object()
+    else: s._process['capture_epoch'] = 'another-epoch'
+    with pytest.raises(ValueError, match='current owned LE'):
+        collector._require_active(s, binding, source_view='embedded-le')
+    assert not o.intervals
+
+
+def test_unqualified_current_le_stop_records_boundary_with_retired_mz(active_le):
+    o, s = active_le, active_le.session
+    retire_mz_and_rebind(o)
+    o.peer.cpu['ip'] = 0x90000
+    result = s.trace_until(dict(kind='register', register='eip', equals=0x90000),
+                           max_steps=2, source_view='embedded-le')
+    assert result['outcome'] == 'source_boundary' and not result['matched']
+    assert not result['source_window_closed'] and not o.intervals
+    doc = stored_trace(o, result['trace_artifact'])
+    assert len(doc['events']) == 1
+    assert doc['events'][0]['identity']['source_location'] is None
+    assert not doc['events'][0]['source_qualification']['qualified']
+
+
+def test_replaced_installed_le_handle_cannot_reuse_captured_reference(active_le):
+    o, s = active_le, active_le.session
+    retire_mz_and_rebind(o)
+    o.after_step = lambda _: setattr(s, '_le_source', dict(s._le_source))
+    result = s.trace_until(dict(kind='register', register='eip', equals=0x50044),
+                           max_steps=3, source_view='embedded-le')
+    assert result['outcome'] == 'error' and not result['matched']
+    assert 'current owned LE' in result['error']['message']
+    assert len(o.intervals) == 1 and result['attempted_steps'] == 1
+    assert not result['source_window_closed']
+
+
+def test_machine_only_le_trace_does_not_bypass_frozen_partial_undo(active_le):
+    o, s = active_le, active_le.session
+    retire_mz_and_rebind(o)
+    s._qemu_cpu_delta_history = dict(frozen=True, valid=False)
+    with pytest.raises(ValueError, match='partial state is frozen'):
+        s.trace(count=1, bits=32, source_view='embedded-le')
+    assert not o.intervals
