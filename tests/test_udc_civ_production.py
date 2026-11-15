@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.udc import civ_production as civ
 from fdisbull.project import Project
 

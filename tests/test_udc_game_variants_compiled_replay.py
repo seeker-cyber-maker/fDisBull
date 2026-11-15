@@ -4,6 +4,9 @@ import shutil
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.udc.game_variants import (
     register_game_variants, replay_compiled, select_game_variants,
 )

@@ -104,17 +104,22 @@ def test_closed_pipe_has_structured_failure_instead_of_signal_termination(tmp_pa
  from fdisbull.udc_linux import decode_observation
  if platform.system()!='Linux' or platform.machine() not in ('x86_64','AMD64'):
   pytest.skip('Real Linux closed-reader pipe acceptance')
+ import fcntl
  plan,modules=example()
  build=build_linux_shell(plan,modules,tmp_path/'linux',service_adapters=adapters(),capture_state=True)
  reader,writer=os.pipe();os.close(reader)
  frame=tmp_path/'frame.bin'
  try:
+  high_writer=fcntl.fcntl(writer,fcntl.F_DUPFD_CLOEXEC,64)
+  os.close(writer);writer=high_writer
   if fault=='stdout':
    run=subprocess.run(['/bin/sh','-c','exec "$1" 3>"$2"','udc-run',str(tmp_path/'linux/program'),str(frame)],stdout=writer,stderr=subprocess.PIPE,timeout=10)
    decoded=decode_observation(frame.read_bytes(),build)
    assert run.returncode==decoded['status']==3 and decoded['state']['$sum']==1
   else:
-   run=subprocess.run(['/bin/sh','-c','exec "$1" 3>&"$2"','udc-run',str(tmp_path/'linux/program'),str(writer)],pass_fds=(writer,),capture_output=True,timeout=10)
+   # Dash accepts only single-digit descriptor operands; pass the high
+   # descriptor as stdin, duplicate to FD3, then restore ordinary stdin.
+   run=subprocess.run(['/bin/sh','-c','exec "$1" 3>&0 0</dev/null','udc-run',str(tmp_path/'linux/program')],stdin=writer,capture_output=True,timeout=10)
    assert run.returncode==4 and run.stdout==b'Win'
  finally:os.close(writer)
 
