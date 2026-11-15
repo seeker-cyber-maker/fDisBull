@@ -30,6 +30,8 @@ machine payload. `max_bytes` limits the full charge, must exceed the 8 MiB
 descriptor reservation, and cannot exceed 128 MiB. The project-wide 256 MiB
 runtime-artifact cap still applies. Saving another native snapshot can grow the
 private QCOW2; capture budgets account for the actual archive size.
+Independent admission/binding/workspace evidence also counts toward the project
+cap, beyond the machine+companion charge recorded per history node.
 
 Restore validates source, recipe, immutable references, creation/completion
 receipts and their capture order before spawning. It restores the machine,
@@ -65,13 +67,16 @@ physical gameplay is an **unobserved interval**, with no instruction-history or
 deterministic-replay claim. History charges both companion and machine bytes.
 Cold attachment inspects retained history and yields no live connection; an
 explicit node restore re-earns machine/source proof and then publishes a valid
-cursor. Native process ownership ends when its context/server closes.
+cursor. Capture requires that known native owner lineage; an independent source
+bind or source-checkpoint load cannot adopt a cold/foreign owner into history.
+Native process ownership ends when its context/server closes.
 
 ## Agent and offline interfaces
 
 Capabilities are `le_source_checkpoints` and `le_source_histories`. Live JSON
-methods use `debug-save-le-source-state`, `debug-load-le-source-state` and
-`debug-le-rewind-start/status/record` / `debug-le-rewind`. Saved-script operations
+methods use `debug-save-le-source-state`, `debug-load-le-source-state`,
+`debug-le-rewind-start`, `debug-le-rewind-status`, `debug-le-rewind-record` and
+`debug-le-rewind`. Saved-script operations
 omit the `debug-` prefix and require explicit `backend: "qemu-dos"`. Names,
 budgets, timeouts and capture-only options are literal; artifact/history/node
 references may resolve earlier results. Scripts reject malformed later LE
@@ -90,3 +95,7 @@ This contract is a stopped LE source qualification. Task/allocation lifetime,
 active layered source views, aliases, automatic step/frame histories, LE trials
 and LE selected undo require separate contracts. It does not qualify full
 DOSBox-X parity or backend removal. No CI is dispatched by these APIs.
+
+[Local qualification](evidence/qemu-le-source-history-2026-11-15/README.md) records
+the exact private wheel, authored standard/virtual native witnesses and original
+Doom hot/separate-host cold checkpoint/history acceptance.

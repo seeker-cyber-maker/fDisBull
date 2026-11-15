@@ -1,10 +1,10 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
-Latest local gate: [fresh LE admission after owned recovery](evidence/qemu-le-rebind-2026-11-15/README.md).
-Original Doom passes bounded hot/separate-Python-host cold recovery with fresh
-LE bindings and canonical source traces. Persisted source-bound checkpoints and
-history are the next explicitly requested seam; this gate does not supply them.
-Overall DOSBox-X parity remains open; DOSBox-X stays default and retained.
+Latest local gate: [persisted LE source checkpoints and capture history](evidence/qemu-le-source-history-2026-11-15/README.md).
+Original Doom passes an explicit source checkpoint and a two-node physical A/B
+capture history through hot and separate-Python-host cold restore, with fresh
+LE proof and exact saved CPU/source-site/PNG. Task/allocation lifetime and overall
+DOSBox-X parity remain open; DOSBox-X stays default and retained.
 
 ## Migration plan
 
@@ -6570,3 +6570,44 @@ display gap remain open. DOSBox-X stays default and retained, and DESQview
 completion remains deferred. No CI, native rebuild, release, merge, default
 switch or shared activation occurred. The prior description is preserved in
 [the archive](milestones/archive/117-description-before-owned-machine-20261114.md).
+
+## Persisted LE source checkpoint and capture history (2026-11-15)
+
+The [source contract](DOS_LE_SOURCE_CHECKPOINTS.md) and
+[qualification](evidence/qemu-le-source-history-2026-11-15/README.md) add explicit
+`save_le_source_state` / `load_le_source_state` and the separate
+`le_rewind_start/status/record` / `le_rewind` provider. The companion retains
+source/producer/admission/binding/GDT/placement/instruction/CPU proof, joined to
+one exact owned-machine artifact through immutable creation and joint-capture
+receipts. Machine+companion publication is atomic. Fresh source comparison and
+both atomic load completion events precede the full-load attestation.
+
+The first history is capture-only: one stopped full checkpoint per call, with
+intervening gameplay labeled unobserved. A cold attach or foreign owner cannot
+record until an explicit history-node restore establishes lineage. External LE
+bind/unbind invalidates before effects; producer/owner/handle/epoch fingerprints
+remain independent of MZ busy/cursor state. The old MZ flag stays false and old
+MZ/frame/trial/selected-undo formats are unchanged.
+
+Exact runtime `531d405f01158ad0b064c5b3683f4239065d4fe0`, wheel SHA-256
+`b70be8f4feb0bd432ba88d34f571d1b6cfb38946012b662f8f0c97180974b274`, has 713 equal
+source/wheel/private-install payloads. 613 selected installed host cases pass;
+33 native-suite cases pass (32 native routes and one fixture structure check),
+zero skips. Existing preservation checks remain in the selection.
+
+Original Doom uses a byte-exact earlier E1M1 machine archive and original
+workspace lineage in a new private qualification project. It saves explicit A
+and a history root A, moves with physical Up/Right input to distinct CPU/PNG B,
+and captures B. Explicit A plus both A/B history nodes restore exactly hot and
+in a separate Python host, including exposed CPU, canonical source site and PNG,
+under new owned processes/bindings/epochs. Six fresh source traces query after
+closure; exact companion/machine/history exports and offline inspection pass.
+Two history nodes charge 135,644,192 bytes; the 256 MiB project cap is unchanged.
+All nine Doom QEMU handles are reaped and both owned groups are freshly empty.
+Originals, executed EXE/WAD, native kit, prefix and previous evidence stay unchanged.
+
+This earns a saved/revalidated stopped LE relation with `lifetime_qualified=False`.
+Task/allocation lifetime, aliases/active layered source views, automatic LE
+step/frame histories, LE trials/selected undo and broader device/media/timing
+or portable delivery remain open. It does not earn DOSBox-X 1:1 parity or a
+default/removal change. No CI, native rebuild, release, merge or shared activation.

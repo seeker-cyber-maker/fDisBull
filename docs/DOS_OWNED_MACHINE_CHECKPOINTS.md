@@ -92,7 +92,8 @@ project. `load_state`, Anchor Stone loading and state forks do not accept them
 as source-bound checkpoints. Keep checkpoint bytes, private guest files and
 byte-retaining databases outside Git and release packages.
 
-This contract is a bounded recovery capability. Persisted protected LE source
-recipes/history continuity, broader DOS game compatibility and overall DOSBox-X
-parity remain separate qualification gates. No CI is required or dispatched by
-these operations.
+The separate [persisted LE checkpoint/history contract](DOS_LE_SOURCE_CHECKPOINTS.md)
+now joins saved source proofs to full machine states and revalidates them before
+completion. It keeps this machine archive format and the false MZ source flag.
+Broader DOS game compatibility, task/allocation lifetime and overall DOSBox-X
+parity remain separate qualification gates. No CI is dispatched by these operations.

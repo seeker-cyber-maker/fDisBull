@@ -1,0 +1,183 @@
+{
+  "constraints": {
+    "dosbox_x_default_and_retained": true,
+    "no_ci": true,
+    "no_commercial_bytes_in_git_or_packages": true,
+    "no_merge": true,
+    "no_native_rebuild": true,
+    "no_release": true,
+    "no_shared_activation": true
+  },
+  "contracts": {
+    "checkpoint_budget": "machine plus companion; independent admission/binding/workspace evidence also counts toward project cap",
+    "checkpoint_format": "fdisbull-qemu-dos-le-checkpoint-1",
+    "checkpoint_kind": "le-source-state",
+    "cold_attachment": "invalid cursor until explicit history-node restore",
+    "expected_proof_checked_before_completion_and_attestation": true,
+    "history_format": "fdisbull-qemu-dos-le-history-1",
+    "le_source_checkpoint_restored": true,
+    "lifetime_qualified": false,
+    "old_mz_and_other_provider_formats_unchanged": true,
+    "project_artifact_limit_bytes": 268435456,
+    "protected_source_rebound": true,
+    "recording": "one explicit stopped capture; intervening intervals unobserved",
+    "source_binding_restored": false,
+    "source_scope": "saved stopped LE relation revalidated after full owned-machine restore"
+  },
+  "date": "2026-11-15",
+  "doom": {
+    "all_9_qemu_handles_reaped_code_0": true,
+    "arguments": "-nosound -nomouse",
+    "both_owned_groups_freshly_empty": true,
+    "canonical_closed_database_sha256": "4a941e8b23fcc33902d017a94434ed61384e7247874f4cbd63f88714e4d07ad8",
+    "canonical_object_files": 574,
+    "cold": {
+      "attachment_valid": false,
+      "cpu_source_site_png_exact": true,
+      "explicit_a_restored": true,
+      "fresh_owners_bindings_epochs": true,
+      "history_a_and_b_restored": true,
+      "receipt_sha256": "ae9b3b1f18633c5e5cf5cc8cde157a2c889605627b46c3c70b75d762d45e556c",
+      "restores": 3,
+      "separate_python_process": true
+    },
+    "distinct_endpoints": {
+      "a_png_sha256": "973a12f508afdeca51be04e564b70090990e459a975b022832982517a3ede950",
+      "b_png_sha256": "0d3d9efce23ca46dcab9fae7643eb4cf1a90715191195dfe45052420618e4c7d",
+      "clock_ns_per_key": 200000000,
+      "cpu_changed": true,
+      "fresh_source_refusals": 0,
+      "physical_keys": [
+        "up",
+        "right"
+      ],
+      "png_changed": true
+    },
+    "executed_exe_wad_original_delivery_native_kit_prefix_r4_r5_unchanged": true,
+    "explicit_a": {
+      "artifact": "88443cea72e146d8af30d9651d924c8b",
+      "charged_size": 45015410,
+      "machine": {
+        "artifact": "45c35c7c520f45928c74780b469455e6",
+        "sha256": "47a347b3bc132f674edeec0b6b844d7fc88abb0decfe999f4715538071f550fc",
+        "size": 44410711
+      },
+      "sha256": "f2b21a673a18d15b024be68361080e9996f7ea1787542fbb67935a1d3ad51dda",
+      "size": 604699
+    },
+    "fresh_source_traces": 6,
+    "history": {
+      "charged_bytes": 135644192,
+      "final_manifest": "86e7533157b7412084c18835255c3bca",
+      "node_count": 2,
+      "nodes": [
+        {
+          "charged_size": 60219874,
+          "companion": {
+            "artifact": "44f2c39bfa18411898ee3d755174ef2c",
+            "sha256": "7bddf87a2b4ed02e0e82328063e6cfd60788dd780953442fd94d3ed9f87bc05b",
+            "size": 604699
+          },
+          "machine": {
+            "artifact": "b06498cd0fa64ffb9a90782156da918c",
+            "sha256": "c28c8e150fa59aa149b37b879e22ae79fbebe18fe7662f79c62a2d3d7ce8c69e",
+            "size": 59615175
+          },
+          "node": "b5c7933cadff40c6943d9a19c452bf37"
+        },
+        {
+          "charged_size": 75424318,
+          "companion": {
+            "artifact": "a08658965da84127b5fe02c6112711f5",
+            "sha256": "6288424b89fffeb966d24b94df28dd0e3205c44b2c119de7d46cc1fa9cc1608d",
+            "size": 604691
+          },
+          "machine": {
+            "artifact": "4216fa8cd9074cbf96137690dc59b711",
+            "sha256": "7cd68eba3875cb9a56cefa8756d9a844726d525c3f93096fd8652bbe8feb5ad6",
+            "size": 74819627
+          },
+          "node": "fa3a646c578545069fa787440189ddb0"
+        }
+      ]
+    },
+    "hot": {
+      "cpu_source_site_png_exact": true,
+      "explicit_a_restored": true,
+      "fresh_owners_bindings_epochs": true,
+      "history_a_and_b_restored": true,
+      "receipt_sha256": "9a3ff3fee79abb07ad9e2077de92b4212f757ba74ed59d57e03b569c9b52c09b",
+      "restores": 3
+    },
+    "offline_companion_machine_history_inspection_and_exact_exports": true,
+    "offline_source_queries": true,
+    "prepared_input": {
+      "archive_sha256": "7975550c822161f2a7c8e6fd75df073dc149552b28b5316214424b52d1dfd079",
+      "archive_size": 29271726,
+      "input_artifact_bytes": 42715361,
+      "method": "Byte-exact original E1M1 machine archive plus original workspace dependency/run lineage imported into a new private qualification project; no fresh startup claim",
+      "workspace_dependency_artifacts": 210
+    },
+    "recorded_distinct_binding_ids": 10,
+    "recorded_distinct_capture_epochs": 7,
+    "trace_scope": "One stored pre-instruction boundary and one attempted native debugger step interval per trace; no retirement or continuous instruction-history claim"
+  },
+  "independent_public_copy_gate": {
+    "canonical_Project_opened": false,
+    "canonical_db_and_all_574_objects_unchanged": true,
+    "cold_source_queries": 6,
+    "copied_cas_root_verified": true,
+    "exact_python_exports": 24,
+    "export_contents": "3 LE companions,3 linked machines,2 history manifests,6 traces,10 PNGs",
+    "fresh_cli_json_replies": 5,
+    "harness_limit": "An earlier harness-only query used artifact instead of documented trace; failure/exports retained, corrected in new destinations; not a native/tool failure",
+    "json_receipt_sha256": "faaf20f19987708d8d4282d02c9ea31b3540493b93cad41d0208dda76bd59548",
+    "json_reply_contents": "2 LE inspections,2 exact exports overlapping Python assets,1 source query",
+    "loaded_module_origins_and_hashes": 126,
+    "native_guest_started": false,
+    "python_receipt_sha256": "c8ca71421bde300389ce0228ed9b3c39f8379f980d438ba350ce468098aa5c8d",
+    "python_state_inspections": 6,
+    "runtime_commit": "531d405f01158ad0b064c5b3683f4239065d4fe0",
+    "success": true
+  },
+  "limitations": [
+    "Qualified stopped LE object relation; OS task/allocation lifetime and aliases remain unknown",
+    "Unlayered/unpaged protected32 single-vCPU+A20 eligibility; not new task-private layered source support",
+    "Capture-only history; automatic LE step/frame histories, LE trials and LE selected undo remain separate",
+    "No new Doom sound/mouse/fresh-start/full-playthrough/exit claim",
+    "Broader device/media/timing/portable delivery and full DOSBox-X replacement still unqualified"
+  ],
+  "negative_gates": [
+    "Same-CPU/same-epoch valid capture A source proof cannot be resealed onto capture B machine bytes",
+    "Immutable artifact/admission/bind/joint-capture receipts and order required",
+    "GDT/placement/CPU/canonical source/producer differences refuse before completion",
+    "Second completion-event failure commits neither completion and never attests/thaws",
+    "External LE bind/unbind invalidates cursor before effects; own busy scope does not mask MZ guard",
+    "Cold/foreign owner cannot capture into attached history before explicit node restore",
+    "Literal script/backend/provider routing, charged budgets, late deadlines and cleanup preserve refusals"
+  ],
+  "runtime_commit": "531d405f01158ad0b064c5b3683f4239065d4fe0",
+  "runtime_files": 713,
+  "schema": "fdisbull-qemu-le-source-history-verification-1",
+  "scope": "Persisted qualified stopped LE source checkpoints and capture-only full checkpoint DAG; task/allocation lifetime unqualified",
+  "source_wheel_private_install_equal": true,
+  "supervision": {
+    "advisory_limit": "Guard completion alone is not used as process absence proof; controller Popen returns and fresh independent group checks were clean, followed by a clean guarded cold run",
+    "guard_receipt_retention": "Parent-observed memory-run tool outputs only; no separately retained raw supervisor receipt",
+    "hot_guard_exit_advisory": "group_identity_uncertain",
+    "hot_guard_exit_code": 0,
+    "no_guard_bypass_or_hold_clearing": true
+  },
+  "tests": {
+    "errors": 0,
+    "failures": 0,
+    "fixture_structure_only_cases_in_suite": 1,
+    "host_receipt_sha256": "ca71221a54c41fea187519a5d789656935a0ac1e9b5137cec306de325c59d76d",
+    "native_receipt_sha256": "221518b308815d3ba8aa82f11e23ebe08f14d35e53ca0f551680eddb66b1f24c",
+    "native_route_cases_in_suite": 32,
+    "native_suite_cases": 33,
+    "selected_installed_host_cases": 613,
+    "skipped": 0
+  },
+  "wheel_sha256": "b70be8f4feb0bd432ba88d34f571d1b6cfb38946012b662f8f0c97180974b274"
+}

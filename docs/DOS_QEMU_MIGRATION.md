@@ -48,8 +48,11 @@ on restore. [Bounded original-Doom qualification](evidence/qemu-owned-machine-re
 includes hot recovery, a separate Python host and normal guest exit. An explicit
 `rebind_protected_source=True` load option can freshly admit an eligible stopped
 LE source view under the same lock/deadline. It issues a new handle and retains
-`source_binding_restored=False`; saved recipes and source-bound histories remain
-separate. This does not close the overall replacement gate.
+`source_binding_restored=False`. The separate
+[persisted LE checkpoint/history route](DOS_LE_SOURCE_CHECKPOINTS.md) now binds
+saved stopped source proofs to complete machine states and supports explicit
+capture-only history hot/cold restore. Task/allocation lifetime and the overall
+replacement gate remain open.
 
 Restricted standard raw checkpoints can preserve an attached automatic
 DESQview observer. Save temporarily suspends only its verified lifecycle

@@ -43,7 +43,10 @@ It deliberately retires source authority and does not advance the stronger
 source-bound checkpoint/history rows or the default/removal gates.
 The opt-in `rebind_protected_source=True` load option performs a fresh stopped
 LE admission after machine recovery. It never restores the old handle or MZ
-allocation authority; source-bound histories/trials/undo remain distinct.
+allocation authority. The separate
+[LE checkpoint and stopped-capture history](DOS_LE_SOURCE_CHECKPOINTS.md) now
+persists and revalidates that LE relation. Ordinary MZ histories, trials/undo and
+the default/removal gates retain their distinct qualification requirements.
 
 The trace slice adds source-bound stopped observations and `trace-until` to
 the original COM/MZ process adapter, plus persistent event-search integration.
