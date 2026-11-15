@@ -1,5 +1,10 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+Latest local gate: [owned-machine recovery for ordinary protected DOS](evidence/qemu-owned-machine-recovery-2026-11-14/README.md).
+Original Doom passes bounded hot recovery, a separate-Python-host restore and
+normal DOS exit from that checkpoint. Source-bound protected continuity and
+overall DOSBox-X parity remain open; DOSBox-X stays default and retained.
+
 ## Migration plan
 
 Transfer the existing DOS capabilities in dependency order. Keep `dosbox` as
@@ -6526,3 +6531,41 @@ portable delivery, the older strict DOSBox-X cold-reference display gap and
 broader compatibility remain open. No CI, native rebuild, release, merge or
 shared activation occurred. The prior MR description is preserved in
 [the archive](milestones/archive/117-description-before-doom-startup-20261114.md).
+
+## Explicit owned-machine recovery and ordinary Doom exit (2026-11-14)
+
+The [new qualification](evidence/qemu-owned-machine-recovery-2026-11-14/README.md)
+adds a separate `machine-state` contract for a DOS-launched machine whose
+original executable allocation/source lifetime is no longer qualified. Public
+Python, JSON and saved-script save/load plus offline inspection are available.
+The original source-bound formats, guards, histories and trial anchors remain
+strict. Restore retires MZ/LE/tracker authority and explicitly reports
+`source_binding_restored=False`; it does not reinterpret allocation shrink as
+proof of continued source ownership.
+
+Original Doom now passes bounded fresh E1M1 input, a 29,271,726-byte capture,
+different physical movement, exact CPU/PNG hot restore, and exact restore in a
+separate Python host after closing the original Project/session. A further
+bounded continuation restores the same archive and observes a genuine normal
+DOS `guest_exit` with code 0. The source ranges stay retired. All owned guests
+are reaped; originals, native kit and frozen prefix remain unchanged.
+
+Runtime `01d5c891c988916e964b049750211c5c32120a1f` is packaged as an exact
+711-file source/wheel/private-install payload. Wheel SHA-256:
+`d6b5226a3f0a81cf13baf109644b036fb00fe478d7d400bb3e3e069ab54b544c`.
+Fresh installed checks pass **397 host and 26 native cases, zero skips**.
+The native selection preserves the earlier 23 cases and adds three complete
+owned-recovery witnesses with changed allocation/disk/CPU/RAM, native layers,
+linear hooks, hot/cold restore, exit/TSR retirement, instrumented buffers and
+restored key consumption. Review also hardens completion locking and retains
+primary failures through nested cleanup. Failed fixtures/operator-window trials
+and the real 16 MiB artifact-publication defect remain retained; the latter is
+fixed without changing other-kind or aggregate limits.
+
+This closes a bounded machine-recovery/exit gate, not overall DOSBox-X parity.
+Protected source-bound checkpoint/history continuity, broader devices and
+compatibility, portable delivery and the older strict DOSBox-X cold-reference
+display gap remain open. DOSBox-X stays default and retained, and DESQview
+completion remains deferred. No CI, native rebuild, release, merge, default
+switch or shared activation occurred. The prior description is preserved in
+[the archive](milestones/archive/117-description-before-owned-machine-20261114.md).

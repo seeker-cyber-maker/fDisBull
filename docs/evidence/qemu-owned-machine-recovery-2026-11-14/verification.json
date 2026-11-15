@@ -1,0 +1,196 @@
+{
+  "artifact_limits": {
+    "native_state_mib": 128,
+    "other_kind_mib": 16,
+    "project_aggregate_mib": 256
+  },
+  "constraints": {
+    "no_ci": true,
+    "no_default_switch": true,
+    "no_merge": true,
+    "no_native_rebuild": true,
+    "no_original_doom_or_state_bytes": true,
+    "no_release": true,
+    "no_shared_activation": true
+  },
+  "date": "2026-11-14",
+  "default_backend": "dosbox",
+  "doom": {
+    "all_owned_guests_reaped": true,
+    "cold_restore": {
+      "cpu_exact": true,
+      "entry_owner_reaped": true,
+      "fresh_owner": true,
+      "post_restore_advance_ns": 100000000,
+      "reopened_project": true,
+      "restored_owner_reaped": true,
+      "screen_exact": true,
+      "separate_python_process": true,
+      "source_binding_restored": false
+    },
+    "direct_guest_code_ram_register_edits": false,
+    "guest_exit": {
+      "code": 0,
+      "final_enter": "additional bounded shutdown time or possible end-screen acknowledgment; requirement not inferred",
+      "final_enter_receipt": {
+        "complete_key_cycle_claim": false,
+        "elapsed_virtual_ns": 51760000,
+        "exclusive_causation_claim": false,
+        "keydown_callback_dispatched": true,
+        "keyup_callback_cancelled_on_guest_stop": true,
+        "requested_virtual_ns": 1000000000
+      },
+      "observer": "nonce-bound parent helper and DOS AH=4Dh return",
+      "outcome": "guest_exit",
+      "physical_keys": [
+        "escape",
+        "q",
+        "enter",
+        "y",
+        "enter"
+      ],
+      "reaping_evidence": "recorded Popen-handle reaping and owned-group-emptiness checks; concrete exit-continuation PIDs/PGID were not retained",
+      "resident": false,
+      "separate_continuation_from_same_checkpoint": true,
+      "source_mapping_live": false,
+      "source_ranges_empty": true,
+      "termination_packet_retention": "verified helper path and derived controller receipt; raw TERMINATED packet not retained",
+      "type": "normal"
+    },
+    "hot_restore": {
+      "cpu_exact": true,
+      "fresh_owner": true,
+      "intervening_cpu_different": true,
+      "intervening_screen_different": true,
+      "intervening_screen_sha256": "020bfe8307f19b947da2506a9d1d93ee85f4c952a4b7061fe35afca3b377c7a4",
+      "old_owner_reaped": true,
+      "saved_screen_sha256": "973a12f508afdeca51be04e564b70090990e459a975b022832982517a3ede950",
+      "screen_exact": true,
+      "source_binding_restored": false
+    },
+    "irq_masks_changed": false,
+    "le_source_binding": false,
+    "no_residual_owned_processes": true,
+    "original_exe_sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+    "original_inputs_and_prefix_unchanged": true,
+    "original_wad_sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+    "owned_checkpoint": {
+      "sha256": "7975550c822161f2a7c8e6fd75df073dc149552b28b5316214424b52d1dfd079",
+      "size": 29271726,
+      "source_binding_restored": false
+    },
+    "scope": "bounded original DOS Doom, -nosound -nomouse, ordinary public directory launch",
+    "strict_source_save": {
+      "owner_cpu_unchanged": true,
+      "reason": "DOS process allocation ownership changed",
+      "state_count_after": 0,
+      "state_count_before": 0,
+      "status": "refused"
+    }
+  },
+  "dosbox_x_retained": true,
+  "format": "fdisbull-owned-machine-recovery-evidence-1",
+  "full_dosbox_parity": false,
+  "independent_offline_reader": {
+    "canonical_Project_opened": false,
+    "canonical_database_unchanged": true,
+    "canonical_object_files": 479,
+    "copied_objects_equal": true,
+    "fresh_python_process": true,
+    "json_exact_exports": 2,
+    "json_receipt_sha256": "517438e041f04b0d4d6bf06a6c2e739140b4953fa94e27780ca300b665410be5",
+    "json_replies": 3,
+    "native_guest_started": false,
+    "owned_state_format": "fdisbull-qemu-owned-machine-qcow2-v1",
+    "python_exact_exports": 15,
+    "python_receipt_sha256": "48b7873e09a9e96c97aa1893a86fc1f76ebcfa642427e9ce0aa5bb491c3c7334",
+    "retained_artifacts": 227,
+    "retained_runs": 3,
+    "source_binding_restored": false
+  },
+  "limitations": [
+    "Machine recovery does not restore MZ/LE allocation or source-lifetime authority",
+    "Source-bound protected histories/traces/checkpoint continuity remain separate gates",
+    "Owned mode refuses source controls, task-private bindings/views/schedulers and active provenance observers; existing source-bound paths remain qualified separately",
+    "Single-vCPU supported non-PAE real/protected/V86 RAM witness contexts only",
+    "Doom audio, mouse and broader device/media/timing compatibility not established by -nosound -nomouse",
+    "Older strict DOSBox-X ATTT cold-reference display failure remains open",
+    "Local copied native kit still has same-Mac dependencies; no portable delivery or full 1:1 parity claim",
+    "Native tests reopened projects within pytest; separate-Python restore is supplied by the actual Doom controller"
+  ],
+  "private_receipt_sha256": {
+    "host-final-04.json": "6262f58595492a1e171b316734c1840db9a067ca106096e862e1f0d8678febdb",
+    "host-final-04/results.xml": "3b972aaeb03fc1e828f1d0721614e897cfe0c43907bcfdcfdcfa8d9b54e124d7",
+    "native-final-06.json": "5463db05ea968335a3bfb227817d6711eada96e7f92deddfc5faced76eab6d55",
+    "native-final-06/results.xml": "27abcf13105c0c8d811b43b21a94711141504b290ed7bc27df355de0cb9c3f2f",
+    "owned-doom-03/COLD-PROBE.json": "73c5048cac6c09f80ead61266013de7445f90d73acc6e7e9470fdb9f066491ed",
+    "owned-doom-03/PROBE.json": "a376620d310cdef3ba3f6e0013c9dc563461a6006214632e5856de7709a2fed7",
+    "owned-doom-exit-04/PROBE.json": "1e28d3e8802c9dfa2548a8a7bd15dd836b19cf8bd8d0cd698157fb1558a3a342",
+    "package-01d5c891.json": "b1278a5c9aea9ae28fd6703899428915803102f9e904c8fc8378217aa8d3e154"
+  },
+  "public_api": {
+    "capability": "owned_machine_checkpoints",
+    "format": "fdisbull-qemu-owned-machine-qcow2-v1",
+    "json": [
+      "debug-save-machine-state",
+      "debug-load-machine-state"
+    ],
+    "kind": "machine-state",
+    "python": [
+      "save_machine_state",
+      "load_machine_state"
+    ],
+    "script": [
+      "save-machine-state",
+      "load-machine-state"
+    ]
+  },
+  "qualification": {
+    "host": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 397
+    },
+    "native": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 26
+    },
+    "new_native_cases": 3,
+    "preservation_native_cases": 23,
+    "scope": [
+      "actual AH4A shrink and open-handle AA to BB rollback",
+      "changed CPU/RAM, backing physical/linear layers, linear hooks, hot and reopened-project restore",
+      "normal exit and TSR without source-authority resurrection; original strong checkpoint can restore source again",
+      "instrumented clock, nonconstant speaker PCM, display pixels, retrace and consumed/released restored Shift FIFO",
+      "retained source histories/trials/selected undo/frame ownership/task-private layers/hooks/RNG/checkpoints/IRQs and ordinary workload/file-service gates"
+    ]
+  },
+  "retained_trials": [
+    {
+      "id": "native-owned-01",
+      "reason": "interrupt-disabled fixture had no FIFO drain for Shift release; authored STI/BIOS-consumption variant passed",
+      "status": "2 pass, 1 fixture failure before restore"
+    },
+    {
+      "id": "owned-doom-01",
+      "status": "operator input-window expiry before capture; clean close"
+    },
+    {
+      "id": "owned-doom-02",
+      "reason": "new machine-state kind incorrectly inherited generic 16 MiB cap; corrected exact kind budget",
+      "status": "actual capture publication failure"
+    },
+    {
+      "guest_exit_claim": false,
+      "id": "owned-doom-03",
+      "status": "hot and separate-host recovery pass; input window ended after Quit selection"
+    }
+  ],
+  "runtime_commit": "01d5c891c988916e964b049750211c5c32120a1f",
+  "runtime_payload_files": 711,
+  "source_wheel_prefix_equal": true,
+  "wheel_sha256": "d6b5226a3f0a81cf13baf109644b036fb00fe478d7d400bb3e3e069ab54b544c"
+}

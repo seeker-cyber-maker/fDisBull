@@ -41,6 +41,14 @@ extension supplies guarded RAM and instruction-fetch views. The default-switch
 gate still requires qualification of the outstanding surfaces and compatibility
 campaigns.
 
+An explicit [owned-machine checkpoint](DOS_OWNED_MACHINE_CHECKPOINTS.md) now
+recovers a DOS-launched machine after its original executable allocation/source
+authority changes. It uses a separate artifact kind and retires source bindings
+on restore. [Bounded original-Doom qualification](evidence/qemu-owned-machine-recovery-2026-11-14/README.md)
+includes hot recovery, a separate Python host and normal guest exit. This does
+not supply protected source-bound history/checkpoint continuity or close the
+overall replacement gate.
+
 Restricted standard raw checkpoints can preserve an attached automatic
 DESQview observer. Save temporarily suspends only its verified lifecycle
 breakpoint while the guest remains paused, then repairs that control before

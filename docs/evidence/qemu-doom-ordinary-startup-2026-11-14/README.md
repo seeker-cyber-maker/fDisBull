@@ -1,5 +1,9 @@
 # Ordinary Doom startup, physical input and checkpoint boundary
 
+Later qualification: [explicit owned-machine recovery](../qemu-owned-machine-recovery-2026-11-14/README.md)
+now supplies bounded hot/cross-host restore and normal guest exit. The strict
+source-bound checkpoint refusal recorded below remains valid.
+
 Native QEMU now has a local ordinary original-Doom witness through launch,
 menu selection, a fresh E1M1 game, forward movement and turning. This uses the
 public directory-launch and physical-key APIs with `-nosound -nomouse`, without

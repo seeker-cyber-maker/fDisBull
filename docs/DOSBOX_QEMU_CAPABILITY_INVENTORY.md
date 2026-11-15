@@ -37,6 +37,11 @@ reopen the project, and check stale memory plan/rule refusal. Source-bound DOS
 process restore, instrumented profiles, state forks and history consumers
 remain unqualified; the checkpoint rows are partial.
 
+The separate native-only [owned-machine recovery contract](DOS_OWNED_MACHINE_CHECKPOINTS.md)
+now has [bounded original-Doom hot/cross-host/exit evidence](evidence/qemu-owned-machine-recovery-2026-11-14/README.md).
+It deliberately retires source authority and does not advance the stronger
+source-bound checkpoint/history rows or the default/removal gates.
+
 The trace slice adds source-bound stopped observations and `trace-until` to
 the original COM/MZ process adapter, plus persistent event-search integration.
 Runtime bytes and canonical relocated source sites are kept distinct. Native
