@@ -435,7 +435,49 @@ def _le_owned_restore(project, row, metadata, original_process, *, epoch=None):
         if type(mapping) is not dict or mapping.get('current_bytes') != 'not source-qualified':
             raise ValueError('LE owned restore current-byte lifecycle differs')
         mapping['current_bytes'] = original_process['source_mapping'].get('current_bytes')
-    return normalized, (sequence, receipt['process'])
+    return normalized, (sequence, receipt['process'], receipt)
+
+
+def _le_restored_clock(captured, current, restored):
+    """Qualify one captured native admission by its epoch-specific load event."""
+    configuration = captured.get('machine_configuration', {})
+    if configuration.get('clock_profile', {}).get('profile') != 'virtual':
+        return None
+    from types import SimpleNamespace
+    from .dosbox_rpc import DebuggerError
+    from .execution_clock import MAX_COUNTER, MAX_NS, validate_clock_admission
+    from .qemu_clock import _native_clock
+    from .qemu_instrumented_checkpoint import FORMAT
+    proof = restored[2].get('instrumentation')
+    if (type(proof) is not dict or proof.get('format') != FORMAT
+            or proof.get('host_clock_sync_restored') is not False
+            or type(proof.get('windows')) is not dict):
+        raise ValueError('LE restored source clock lacks its instrumentation receipt')
+    for field, minimum, maximum in (('source_epoch', 1, MAX_COUNTER),
+            ('native_epoch', 1, MAX_COUNTER), ('virtual_ns', 0, MAX_NS)):
+        _integer(proof.get(field), 'LE restored clock '+field, minimum, maximum)
+    admission = configuration.get('native_clock_admission')
+    if (type(admission) is not dict or proof['source_epoch'] == proof['native_epoch']
+            or admission.get('epoch') != proof['native_epoch']
+            or admission.get('virtual-ns') != proof['virtual_ns']
+            or admission.get('budget-state') in ('armed', 'fired', 'invalidated')):
+        raise ValueError('LE restored source clock differs from its load receipt')
+    validate_clock_admission(captured, backend='qemu-dos', native_epoch=proof['native_epoch'])
+    try:
+        # Reuse the native receipt grammar with an inert owner; no I/O or
+        # live monotone frontier is available or manufactured during a query.
+        _native_clock(SimpleNamespace(close=lambda: None), deepcopy(admission))
+    except DebuggerError as error:
+        raise ValueError('LE restored source clock admission is malformed') from error
+    original = current.get('machine_configuration', {}).get('native_clock_admission')
+    dynamic = {'epoch', 'virtual-ns', 'status', 'running', 'pending-stop', 'budget-state',
+        'budget-token', 'budget-start-ns', 'budget-deadline-ns', 'budget-fired-ns', 'budget-stopped-ns'}
+    if (type(original) is not dict
+            or _json({k:v for k,v in admission.items() if k not in dynamic})
+                != _json({k:v for k,v in original.items() if k not in dynamic})):
+        raise ValueError('LE restored source clock changed native capabilities')
+    configuration['native_clock_admission'] = deepcopy(original)
+    return dict(native_epoch=proof['native_epoch'], virtual_ns=proof['virtual_ns'])
 
 
 def _le_launch_binding(project, row, document, metadata):
@@ -465,6 +507,8 @@ def _le_launch_binding(project, row, document, metadata):
     captured_metadata, captured_restore = _le_owned_restore(project, row, captured_metadata,
         original_process, epoch=process['capture_epoch'])
     current_metadata, current_restore = _le_owned_restore(project, row, current_metadata, original_process)
+    restored_clock = (_le_restored_clock(captured_metadata, current_metadata, captured_restore)
+                      if captured_restore is not None else None)
     captured = load_trace_binding(project, row['version'], captured_metadata)
     current = load_trace_binding(project, row['version'], current_metadata)
     original = load_trace_binding(project, row['version'], dict(current_metadata, process=original_process))
@@ -481,7 +525,7 @@ def _le_launch_binding(project, row, document, metadata):
             proof = load_trace_binding(project, row['version'], dict(current_metadata, process=restored[1]))
             if _json(proof['identity']) != _json(original['identity']):
                 raise ValueError('LE owned restore changed immutable process launch facts')
-    return entry['sequence']
+    return entry['sequence'], restored_clock
 
 
 def _le_native_binding(project, row, document, metadata):
@@ -498,7 +542,7 @@ def _le_native_binding(project, row, document, metadata):
             or mapping.get('process', {}).get('capture_epoch') != recipe.get('capture_epoch')):
         raise ValueError('LE capture differs from its bound process epoch')
     _native_step_policy(capture.get('step_policy'))
-    entry_sequence = _le_launch_binding(project, row, document, metadata)
+    entry_sequence, restored_clock = _le_launch_binding(project, row, document, metadata)
     reference = mapping.get('protected_source_binding_artifact')
     if type(reference) is not dict:
         raise ValueError('LE capture lacks its owned source-binding artifact')
@@ -554,7 +598,8 @@ def _le_native_binding(project, row, document, metadata):
     if (len(gdt) != admission['gdt']['limit'] + 1
             or hashlib.sha256(gdt).hexdigest() != admission['gdt']['sha256']):
         raise ValueError('LE trace GDT differs from its initial admission')
-    return dict(image=image, recipe=recipe, gdt=gdt, ram_end=min(configuration['memory_mib'] << 20, 0xc0000000))
+    return dict(image=image, recipe=recipe, gdt=gdt, ram_end=min(configuration['memory_mib'] << 20, 0xc0000000),
+                restored_clock=restored_clock)
 
 
 def _le_native_events(document, compiled, binding):
@@ -724,12 +769,18 @@ def _trace(project, identifier, *, regions=None):
     if clock is not None:
         from .execution_clock import validate_clock_admission
 
-        validate_clock_admission(metadata, backend=expected['backend'], native_epoch=clock['native_epoch'])
-        fields = ('cpus', 'clock_profile', 'native_clock_admission')
+        restored_clock = le_binding.get('restored_clock') if le_binding is not None else None
+        admitted = mapping if restored_clock is not None else metadata
+        validate_clock_admission(admitted, backend=expected['backend'], native_epoch=clock['native_epoch'])
+        fields = ('cpus', 'clock_profile') if restored_clock is not None else (
+            'cpus', 'clock_profile', 'native_clock_admission')
         captured = mapping['machine_configuration']
         owned = metadata['machine_configuration']
         if _json({key: captured[key] for key in fields}) != _json({key: owned[key] for key in fields}):
             raise ValueError('Trace clock admission differs from its owning run')
+        if restored_clock is not None and (clock['native_epoch'] != restored_clock['native_epoch']
+                or clock['virtual_ns'] < restored_clock['virtual_ns']):
+            raise ValueError('LE source clock precedes its verified machine restore')
     if native_binding is not None:
         _native_events(document, compiled, native_binding)
     if le_binding is not None:

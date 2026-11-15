@@ -63,16 +63,25 @@ def owned_restore(project, run, launch, epoch):
         machine_state_restored=True, source_binding_restored=False, host_files_restored=False,
         capture_epoch=epoch, checkpoint_epoch=int(epoch.rsplit(':', 1)[1]),
         process=deepcopy(current['process']))
+    if launch['machine_configuration'].get('clock_profile', {}).get('profile') == 'virtual':
+        result['instrumentation'] = dict(format='fdisbull-instrumented-qemu-state-1',
+            source_epoch=launch['machine_configuration']['native_clock_admission']['epoch'],
+            native_epoch=2, virtual_ns=5000, windows={}, host_clock_sync_restored=False)
     return current, result
 
 
 @pytest.fixture
 def le_trace(owned, request):
     s, p = owned.session, owned.project
+    options = getattr(request, 'param', {})
     launch = metadata(p, run=s.run_id)
     launch['machine_configuration'] = dict(cpus=1, memory_mib=16)
+    if options.get('virtual'):
+        from fdisbull.qemu_clock import machine_clock_configuration
+        launch['machine_configuration'].update(clock_profile=machine_clock_configuration('virtual', 1),
+            native_clock_admission={'api-version':1, 'budget-state':'idle', 'budget-supported':True,
+                'epoch':1, 'pending-stop':False, 'running':False, 'status':'prelaunch', 'virtual-ns':0})
     s.metadata, s._process = deepcopy(launch), deepcopy(launch['process'])
-    options = getattr(request, 'param', {})
     s._runtime_epoch = options.get('epoch', launch['process']['capture_epoch'])
     s._process['capture_epoch'] = s._runtime_epoch
     with p.transaction(True):
@@ -100,6 +109,10 @@ def le_trace(owned, request):
     if restored is not None:
         operation(p, s.run_id, 'load-machine-state', restored)
     mapping = deepcopy(launch)
+    if restored is not None and options.get('virtual'):
+        mapping['machine_configuration']['native_clock_admission'].update(
+            epoch=restored['instrumentation']['native_epoch'],
+            **{'virtual-ns':restored['instrumentation']['virtual_ns']})
     mapping['process'] = deepcopy(s._process)
     mapping.update(protected_source_binding=recipe,
         protected_source_binding_artifact={key: binding[key] for key in ('artifact', 'sha256', 'size')},
@@ -131,6 +144,11 @@ def le_trace(owned, request):
             le_source_witness=dict(cpu=current, gdt_sha256=hashlib.sha256(gdt).hexdigest(), readback=reads),
             observation=dict(registers_stage='before-instruction', instruction_completed=None,
                              flags_materialized=True)))
+        if options.get('virtual'):
+            from test_execution_clock import clock
+            admitted = mapping['machine_configuration']['native_clock_admission']
+            events[-1]['clock'] = clock(run=s.run_id, epoch='e'*32, native_epoch=admitted['epoch'],
+                ns=admitted['virtual-ns']+128*sequence, icount=sequence, sequence=sequence*2-1)
     document = dict(version=1, run=dict(run=s.run_id), mapping=mapping,
         capture_epoch=recipe['capture_epoch'], native_process_capture=dict(format=CAPTURE_FORMAT,
             source_scope=SOURCE_SCOPE, binding_id=recipe['binding_id'],
@@ -268,7 +286,8 @@ def test_fresh_restore_epoch_binding_and_prior_trace_remain_historical(le_trace)
         predicate=dict(kind='mnemonic', equals='push')) == before
 
 
-@pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True)], indirect=True)
+@pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True),
+    dict(epoch='source-run:process:2', owned_restore=True, virtual=True)], indirect=True)
 def test_fresh_owned_restore_binding_keeps_cold_source_identity(le_trace, tmp_path):
     o = le_trace
     query = o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
@@ -285,6 +304,7 @@ def test_fresh_owned_restore_binding_keeps_cold_source_identity(le_trace, tmp_pa
         assert (tmp_path/'before.json').read_bytes() == (tmp_path/'after.json').read_bytes()
 
 
+@pytest.mark.parametrize('le_trace', [{}, dict(virtual=True)], indirect=True)
 def test_prior_le_trace_survives_actual_owned_restore_metadata(le_trace):
     o = le_trace
     query = o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
@@ -351,6 +371,52 @@ def test_owned_restore_exemption_requires_exact_lifecycle_and_immutable_launch(l
     replace_artifact(o.project, o.trace['artifact'], document)
     with pytest.raises(ValueError):
         o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
+
+
+@pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True, virtual=True)], indirect=True)
+@pytest.mark.parametrize('fault', ['admission-epoch', 'admission-time', 'native-capability', 'missing-proof',
+    'proof-epoch', 'proof-time', 'proof-source-epoch', 'clock-before-restore', 'cpus', 'profile', 'other-config'])
+def test_restored_le_clock_requires_exact_load_proof_and_immutable_configuration(le_trace, fault):
+    from fdisbull.qemu_clock import machine_clock_configuration
+    o = le_trace
+    document = deepcopy(o.document)
+    config = document['mapping']['machine_configuration']
+    if fault == 'admission-epoch': config['native_clock_admission']['epoch'] = 3
+    elif fault == 'admission-time': config['native_clock_admission']['virtual-ns'] += 1
+    elif fault == 'native-capability': config['native_clock_admission']['budget-supported'] = False
+    elif fault == 'clock-before-restore':
+        from test_execution_clock import clock
+        document['events'][0]['clock'] = clock(run=o.session.run_id, epoch='e'*32,
+            native_epoch=2, ns=4999, icount=1, sequence=1)
+    elif fault == 'cpus': config['cpus'] = 2
+    elif fault == 'profile': config['clock_profile'] = machine_clock_configuration('instruction', 1)
+    elif fault == 'other-config': config['memory_mib'] += 1
+    else:
+        row = o.project.db.execute("SELECT sequence,evidence FROM debug_events WHERE operation='load-machine-state'").fetchone()
+        result = json.loads(row['evidence'])
+        if fault == 'missing-proof': del result['instrumentation']
+        elif fault == 'proof-epoch': result['instrumentation']['native_epoch'] = 3
+        elif fault == 'proof-time': result['instrumentation']['virtual_ns'] += 1
+        else: result['instrumentation']['source_epoch'] = True
+        with o.project.transaction(True):
+            o.project.db.execute('UPDATE debug_events SET evidence=? WHERE sequence=?',
+                                (json.dumps(result), row['sequence']))
+    replace_artifact(o.project, o.trace['artifact'], document)
+    with pytest.raises(ValueError):
+        o.project.event_trace_query(o.trace['artifact'], predicate=dict(kind='mnemonic', equals='push'))
+
+
+@pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True, virtual=True)], indirect=True)
+def test_restored_le_clock_accepts_valid_stopped_budget_receipt(le_trace):
+    o = le_trace
+    document = deepcopy(o.document)
+    document['mapping']['machine_configuration']['native_clock_admission'].update({
+        'budget-state':'cancelled', 'budget-token':'authored-completed-budget',
+        'budget-start-ns':100, 'budget-deadline-ns':10000,
+        'budget-fired-ns':None, 'budget-stopped-ns':5000, 'status':'paused'})
+    replace_artifact(o.project, o.trace['artifact'], document)
+    assert o.project.event_trace_query(o.trace['artifact'],
+        predicate=dict(kind='mnemonic', equals='push'))['matched_count'] == 2
 
 
 def test_terminal_mode_boundary_is_queryable_without_source_site(le_trace):
