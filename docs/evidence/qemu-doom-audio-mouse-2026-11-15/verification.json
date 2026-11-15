@@ -179,6 +179,10 @@
       "sha256": "f5cac01e2d2f34d01cb272790d7ec7b7099343104c089918aeb21718e7e74219",
       "size": 264
     },
+    "media-independent-audit-01-addendum.json": {
+      "sha256": "a7be16c175fa8ddcbdb531ebba8002cc461613f97b8e770070c1f7c3126c4a7f",
+      "size": 1101
+    },
     "media-independent-audit-01.json": {
       "sha256": "6d13bce872e9e28d27070624535e6be562e1bf205ee20eb87e57ec651ea87130",
       "size": 19282
