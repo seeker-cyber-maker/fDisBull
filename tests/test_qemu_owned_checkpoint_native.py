@@ -328,8 +328,9 @@ def test_native_shrunk_allocation_machine_recovery_hot_and_cold(tmp_path, reside
 def test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner(tmp_path):
     """Restore a real tone and retained observer/input data under new owners.
 
-    speaker_tone deliberately disables guest interrupts. Held frame keys are
-    device/FIFO ownership evidence here, not a claim of guest consumption.
+    This authored speaker_tone variant enables guest interrupts after speaker
+    setup. Its BIOS can consume a restored Shift press before its release;
+    checkpoint equality still compares the original pending device/FIFO state.
     """
     from support.dos_process_fixture import BASELINE_CONFIG
     from support.qemu_audio_fixture import speaker_tone
@@ -348,7 +349,11 @@ def test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner(
     disk = prepare_dos_baseline(boot, tmp_path / 'instrumented-baseline.img',
         runtime['FDISBULL_QEMU_DOS_MCOPY'], config=b'SWITCHES=/F\r\n' + BASELINE_CONFIG)
     original, offsets = speaker_tone(tmp_path, nasm)
-    program = original + b'\0\0'
+    tone_ready = offsets['tone_ready_ip'] - 0x100
+    assert original[tone_ready] == 0x90
+    # Replace our fixture's post-setup NOP with STI, preserving every address.
+    # The native IRQ masks and debugger stepping policy are unchanged.
+    program = original[:tone_ready] + b'\xfb' + original[tone_ready + 1:] + b'\0\0'
     source = tmp_path / 'OWNEDPCM.COM'
     source.write_bytes(program)
     with Project.create(tmp_path / 'owned-instrumented.fdb', source, image='com') as project:
@@ -369,6 +374,9 @@ def test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner(
             before = debug.clock_observe()
             budget_receipt(debug.clock_advance(150_000_000, timeout_ms=10000),
                            150_000_000, before=before)
+            # Capture on our conventional-RAM loop, rather than possibly in
+            # a BIOS interrupt handler when the preceding budget expired.
+            park(debug, base + offsets['tone_ready_ip'] + 1 - 0x100)
             # The program remains in tone_loop: this dormant linear hook is
             # retained, but no pending hook step-over enters the checkpoint.
             hook = debug.hook(base + offsets['quiet_ready_ip'] - 0x100,
@@ -392,10 +400,15 @@ def test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner(
             saved = debug.save_machine_state()
             owner = debug.vm.process
 
-            assert debug.frame_inputs([dict(key='shift', pressed=False)])['held'] == []
             later_before = debug.clock_observe()
             budget_receipt(debug.clock_advance(100_000_000, timeout_ms=10000),
                            100_000_000, before=later_before)
+            assert int(debug.memory(0x417, length=1, space='physical')['hex'], 16) & 0x02
+            assert debug.frame_inputs([dict(key='shift', pressed=False)])['held'] == []
+            release_before = debug.clock_observe()
+            budget_receipt(debug.clock_advance(50_000_000, timeout_ms=10000),
+                           50_000_000, before=release_before)
+            assert int(debug.memory(0x417, length=1, space='physical')['hex'], 16) & 0x03 == 0
             assert debug.clock_observe()['virtual_ns'] > clock['virtual_ns']
             assert debug.audio_observe()['frames'] > audio['frames']
             assert debug.display_observe()['updates'] > display['updates']
@@ -443,7 +456,15 @@ def test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner(
             hooks = debug.hooks()['hooks']
             assert len(hooks) == 1 and hooks[0]['hook'] == hook['hook'] and hooks[0]['hits'] == 0
             assert hooks[0]['actions'] == [{'op': 'layers', 'layers': [fetch_after, ram_after]}]
+            consume_before = debug.clock_observe()
+            budget_receipt(debug.clock_advance(100_000_000, timeout_ms=10000),
+                           100_000_000, before=consume_before)
+            assert int(debug.memory(0x417, length=1, space='physical')['hex'], 16) & 0x02
             assert debug.frame_inputs([dict(key='shift', pressed=False)])['held'] == []
+            release_before = debug.clock_observe()
+            budget_receipt(debug.clock_advance(50_000_000, timeout_ms=10000),
+                           50_000_000, before=release_before)
+            assert int(debug.memory(0x417, length=1, space='physical')['hex'], 16) & 0x03 == 0
             debug.delete_hook(hook['hook'])
             debug.audio_stop()
             debug.display_stop()
