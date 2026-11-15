@@ -6611,3 +6611,46 @@ Task/allocation lifetime, aliases/active layered source views, automatic LE
 step/frame histories, LE trials/selected undo and broader device/media/timing
 or portable delivery remain open. It does not earn DOSBox-X 1:1 parity or a
 default/removal change. No CI, native rebuild, release, merge or shared activation.
+
+## Doom PC-speaker, PS/2 mouse and LE media recovery (2026-11-15)
+
+The [dated qualification](evidence/qemu-doom-audio-mouse-2026-11-15/README.md)
+and [driver/game recipe](DOS_DOOM_AUDIO_MOUSE.md) add a real application gate
+using the unchanged 531d405f wheel and d0499329 native kit. All 713 production
+files still match source/wheel/private prefix. The repository additions are
+an authored INT33 driver/recovery test and sanitized documentation/evidence.
+
+A fresh original-Doom boot loads pinned CuteMouse, enables mouse and PC-speaker
+SFX, disables music and enters E1M1 with no monsters. A public left-button shot
+changes ammo 50→49 and retains 6,784 nonconstant 32 kHz mono U8 samples. A
+512-count relative movement turns the camera while the matched 500 ms
+no-mouse control retains the forward view. Independent pitch analysis matches
+the 19 captured callback pitches to the original pistol sequence through an
+exact-matched divisor table; it does not establish the complete 27-tone
+envelope or exact onset/cadence.
+
+Explicit LE A plus two capture-history nodes pass six hot/separate-Python
+restores: exact exposed CPU, source site, clock/icount, PNG and audio
+count/chunks, with fresh source/clock/audio ownership and retired MZ authority.
+Literal A/root-A PCM is byte-exact after restore; a fresh shot changes ammo
+49→48 and extends the saved prefix to 12,864 samples. Hot and cold continuations
+are byte-identical. All eight Doom QEMU handles are reaped and both groups empty.
+No restored-B WAV was separately exported. Histories remain capture-only.
+
+Fresh checks pass 461 installed host cases and nine existing native preservation
+cases, plus the final new driver case separately. The authored guest observes
+exact unaccelerated INT33 counts 3/5, left/right press/release, unchanged
+pending/held-input save refusals, neutral hot/reopened-Project restore, fresh
+input and DOS exit 42. Its cold reopen is within the test process; the original
+Doom campaign supplies separate-Python recovery. The two failed fixture
+attempts (sampling race and independently explained CuteMouse adaptive gain)
+and initial controller argument error remain retained. The final driver oracle
+comes from its small-packet branch; production guards remain unchanged.
+
+**SB16 DMA/mixer/resampler persistence, OPL/FM state/music, and paired DOSBox-X
+audio/relative-mouse comparison remain open.** The headless DOSBox reference
+currently lacks comparable PCM capture and its absolute cursor seam does not
+feed relative mickeys. Full 1:1 parity and DOSBox-X removal remain unqualified.
+DOSBox-X stays default and retained. Trials, layers, hooks, IRQs and stronger
+checkpoint contracts retain their existing tests/scope. No CI, native rebuild,
+release, merge, shared activation or backend-default change occurred.

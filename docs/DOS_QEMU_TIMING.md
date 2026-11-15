@@ -1,5 +1,10 @@
 # Native QEMU timing synchronization
 
+For the pinned real DOS mouse driver, original Doom PC-speaker/input procedure
+and local LE media-recovery evidence, see
+[Doom audio and mouse qualification](DOS_DOOM_AUDIO_MOUSE.md). Device dispatch,
+guest consumption and retained mixer samples keep the distinctions below.
+
 The explicit native virtual-clock profile supports two separate controls:
 
 - **Host clock auto-sync:** maintain a persistent 1:1 mapping between QEMU

@@ -1,0 +1,270 @@
+{
+  "date": "2026-11-15",
+  "format": "fdisbull-doom-pcspeaker-mouse-local-qualification-1",
+  "game": {
+    "all_guests_reaped": true,
+    "groups_empty": true,
+    "history_advance": "capture",
+    "initial_mouse_shot_ammo": [
+      50,
+      49
+    ],
+    "le_source_checkpoint_restored": true,
+    "lifetime_qualified": false,
+    "mouse_control": {
+      "guest_ns": 500000000,
+      "relative_x": 512,
+      "top160_control_unchanged": true,
+      "top160_turn_changed": true
+    },
+    "native_handles": 8,
+    "original_mz_source_binding_restored": false,
+    "pcm": {
+      "continued_frames": 12864,
+      "continued_sha256": "e2cce0a8a9bdf5b153c9f612db69934769fba12e6119efa93c26452906721c58",
+      "hot_cold_continuation_equal": true,
+      "nonconstant_new_suffix": true,
+      "saved_frames": 6784,
+      "saved_sha256": "177b721216133de374a70c13a0a78da04d9d584f0cc49b1dcb86868db253b978"
+    },
+    "post_restore_mouse_shot_ammo": [
+      49,
+      48
+    ],
+    "restored_b_wav_exported": false,
+    "restores": [
+      {
+        "audio_chunks_count_exact": true,
+        "clock_icount_exact": true,
+        "cpu_exact": true,
+        "input_neutral": true,
+        "mode": "hot",
+        "png_exact": true,
+        "source": "shot-a",
+        "source_audio_owners_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-restore-a"
+      },
+      {
+        "audio_chunks_count_exact": true,
+        "clock_icount_exact": true,
+        "cpu_exact": true,
+        "input_neutral": true,
+        "mode": "hot",
+        "png_exact": true,
+        "source": "history-root-a",
+        "source_audio_owners_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-history-a"
+      },
+      {
+        "audio_chunks_count_exact": true,
+        "clock_icount_exact": true,
+        "cpu_exact": true,
+        "input_neutral": true,
+        "mode": "hot",
+        "png_exact": true,
+        "source": "history-b",
+        "source_audio_owners_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-history-b"
+      },
+      {
+        "audio_chunks_count_exact": true,
+        "clock_icount_exact": true,
+        "cpu_exact": true,
+        "input_neutral": true,
+        "mode": "cold",
+        "png_exact": true,
+        "source": "shot-a",
+        "source_audio_owners_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-explicit-a"
+      },
+      {
+        "audio_chunks_count_exact": true,
+        "clock_icount_exact": true,
+        "cpu_exact": true,
+        "input_neutral": true,
+        "mode": "cold",
+        "png_exact": true,
+        "source": "history-root-a",
+        "source_audio_owners_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-history-a"
+      },
+      {
+        "audio_chunks_count_exact": true,
+        "clock_icount_exact": true,
+        "cpu_exact": true,
+        "input_neutral": true,
+        "mode": "cold",
+        "png_exact": true,
+        "source": "history-b",
+        "source_audio_owners_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-history-b"
+      }
+    ],
+    "separate_python_processes": true
+  },
+  "inputs": {
+    "configuration": {
+      "snd_musicdevice": 0,
+      "snd_sfxdevice": 1,
+      "use_mouse": 1
+    },
+    "derived_config_sha256": "bb119320a1a497d0a6d3fe07e8ddedd217ed67d248c44ee075356a438331dab1",
+    "derived_system_image_sha256": "ebf62d5ea2197d03df33f1ab0cb95aa795b90d4da12510e4471c9c4222bacd05",
+    "driver_exe_sha256": "822cf550c9e19a22785722d2306aa08ede10ff20bfe931d5a81a15f77c5f363e",
+    "driver_package_sha256": "dd378ddfe5b6948d3073c12acaf0ca31bf60d0898f1cd708b6858083a14a41c7",
+    "fresh_gameplay_startup": true,
+    "originals": {
+      "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+    },
+    "parent_system_image_sha256": "badc71221f90a0ae823b23ee45b9372d8f6e4b819fecd301fed0ee4b7d0dadf2",
+    "prior_silent_archive_used": false
+  },
+  "pitch": {
+    "callbacks": 19,
+    "divisor_table_entries_exact": 128,
+    "divisor_table_sha256": "02647cafa5313af3970ec883c8bc76d1f7d4032889599e96ffcde5deaeb0c986",
+    "lossless_envelope_qualified": false,
+    "matched_pitches": 19,
+    "paired_dosbox_pcm": false,
+    "reference_commit": "a2dfd51fcc00d272dc8a17a97ccd6683333ff4ea",
+    "reference_url": "https://raw.githubusercontent.com/chocolate-doom/chocolate-doom/a2dfd51fcc00d272dc8a17a97ccd6683333ff4ea/src/i_pcsound.c",
+    "sign_samples_agree": 6783,
+    "sign_samples_total": 6784,
+    "source_slots": 27,
+    "source_slots_sampled": 19,
+    "uninterrupted_phase_qualified": false,
+    "unique_cadence_qualified": false,
+    "verdict": "callback-sampled-DPPISTOL-pitch-sequence-match"
+  },
+  "policy": {
+    "ci_dispatched": false,
+    "commercial_payload_published": false,
+    "default_backend": "dosbox",
+    "dosbox_retained": true,
+    "dosbox_retirement_allowed": false,
+    "release_published": false,
+    "shared_activation": false
+  },
+  "private_campaigns": {
+    "cold-01": {
+      "sha256": "4d969c986d9b1b05c37d39be8efc6a2e8254cd9d060746851f6c0c100b271b59",
+      "size": 328932
+    },
+    "hot-01": {
+      "sha256": "a1993925f024f111efa542e1c7c5e53b520805820cb95a9aa8347c66243af86d",
+      "size": 142221
+    },
+    "hot-02": {
+      "sha256": "447253b91ad6b0aa7ce42a6cf3165530d46d976aded1118a0b592767d87848a7",
+      "size": 602999
+    }
+  },
+  "private_receipts": {
+    "DOOM-VALIDATION.json": {
+      "sha256": "8c236693960c7381ccf6e701bfd370e7ce027334654447e47e7ebc14ba9f86dd",
+      "size": 2627
+    },
+    "INTAKE.json": {
+      "sha256": "dbfa2dcdb1c3c309e8f793000f7f1c1369ce3b96f09855ad16489a17df9ff627",
+      "size": 920
+    },
+    "controller-hashes.json": {
+      "sha256": "f5cac01e2d2f34d01cb272790d7ec7b7099343104c089918aeb21718e7e74219",
+      "size": 264
+    },
+    "media-independent-audit-01.json": {
+      "sha256": "6d13bce872e9e28d27070624535e6be562e1bf205ee20eb87e57ec651ea87130",
+      "size": 19282
+    },
+    "pcspeaker-analysis.json": {
+      "sha256": "ca9f133f8b4076eb636a5ef5d3e6e5ab8f02dbfbb497f98ec8975944348e1704",
+      "size": 6758
+    }
+  },
+  "qualified_scope": "Fresh original Doom PC-speaker SFX/PS2 application response and stopped LE media recovery; not paired DOSBox-X parity",
+  "remaining_gates": [
+    "SB16 DSP/DMA/IRQ/timer, software voice, bounded mixer/backend/resampler persistence",
+    "AdLib/OPL oscillator/envelope/buffer/timer persistence and FM music",
+    "Explicit DOSBox-X reference PCM capture and relative-mickey input/consumption seam",
+    "Same-input paired game audio/relative-mouse comparison and broader compatibility",
+    "Held/queued mouse input restoration, arbitrary cursor calibration, complete audio envelope/onset/host playback/drain",
+    "Continuous LE task/allocation/active layered-source lifetime, automatic histories and LE trials/undo remain separate"
+  ],
+  "retained_failures": [
+    "Initial Doom controller supplied unsupported gap_ms before mouse dispatch; closed/reaped, original controller retained.",
+    "Driver attempt1 sampled motion before button status and could stop after an intervening IRQ.",
+    "Driver attempt2 expected raw12 but measured36, independently explained by CuteMouse adaptive gain; final gate uses the independently specified <=4 small-packet branch."
+  ],
+  "runtime": {
+    "emulator_rebuilt": false,
+    "native_kit_files": 93,
+    "native_qemu_sha256": "d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d",
+    "production_files": 713,
+    "production_runtime_changed": false,
+    "qualification_parent": "46845c82da0da1f3c3087cbcd3d6cfd0e6568c41",
+    "source_wheel_private_install_equal": true,
+    "tool_commit": "531d405f01158ad0b064c5b3683f4239065d4fe0",
+    "wheel_sha256": "b70be8f4feb0bd432ba88d34f571d1b6cfb38946012b662f8f0c97180974b274"
+  },
+  "verification": {
+    "host": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 461,
+      "receipt_sha256": "f4871175bc1c8b13db89fc18ffcc42178e518fa52aea757e4f2e3f60d0a546e7",
+      "selection_sha256": "6eeec5cec6b1d19873363ad5c560f1222378622df8b625fffb0934cd08df8b9a",
+      "skipped": 0,
+      "warning": "Expected duplicate-ZIP-member warning from an existing malformed-archive test"
+    },
+    "native_mouse": {
+      "buttons": [
+        "left",
+        "right"
+      ],
+      "cold_scope": "Reopened Project and fresh launcher in one Python test process",
+      "cumulative_int33_x": [
+        3,
+        5
+      ],
+      "errors": 0,
+      "failures": 0,
+      "fixture_sha256": "84a8da87815da62e33e4ccf22007bea9b5eab3786a2762ff236a7ec63d5a58a5",
+      "guest_exit": 42,
+      "held_or_pending_restore": false,
+      "neutral_hot_cold_recovery": true,
+      "passed": 1,
+      "pending_held_capture_refused_without_mutation": true,
+      "physical_x": [
+        3,
+        2
+      ],
+      "receipt_sha256": "b071293bf71cdab0f19d8ed836b85022a55cf39ebb4a06971a016b905feeb3d2",
+      "selection_sha256": "9ffb0816e4a10238621731feef6d32be737d2ebe9e10cdb09d9902e06cb41997",
+      "skipped": 0,
+      "test_sha256": "ea123c438bb0eb882715802b3071d68a5b4cd1dec03faef5335c3f0442bca287"
+    },
+    "native_preservation": {
+      "cases": [
+        "test_native_cross_session_virtual_clock_audio_display_retrace_and_controls",
+        "test_native_virtual_only_midprogram_checkpoint_continues_original_dos[com]",
+        "test_native_virtual_only_midprogram_checkpoint_continues_original_dos[mz]",
+        "test_native_instrumented_checkpoint_refuses_active_host_sync_without_mutation",
+        "test_native_shrunk_allocation_machine_recovery_hot_and_cold[exit-physical]",
+        "test_native_shrunk_allocation_machine_recovery_hot_and_cold[tsr-linear]",
+        "test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner",
+        "test_native_rtc_cascade_and_nested_keyboard_cold_restore[8]",
+        "test_native_rtc_cascade_and_nested_keyboard_cold_restore[1]"
+      ],
+      "note": "This retained run also contains the failed first new driver fixture; its nine unchanged preservation cases passed.",
+      "passed": 9,
+      "receipt_sha256": "db9eaaf5063813f3fe3b2cb884ce83be7dd7f5f577b420d7165ab0ce0e84c065"
+    }
+  }
+}
