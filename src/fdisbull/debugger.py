@@ -291,6 +291,9 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         import zipfile
         row = self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
                               (artifact,)).fetchone()
+        if row is not None and row['kind']=='machine-state':
+            from .qemu_owned_checkpoint import inspect_owned_machine_state
+            return inspect_owned_machine_state(self, artifact)
         if row is None or row['kind']!='state':
             raise ValueError('Unknown native state artifact')
         data = bytes(row['data'])
@@ -339,7 +342,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
-        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1'):
+        if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1', 'fdisbull-qemu-owned-machine-qcow2-v1'):
             raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
@@ -1383,6 +1386,8 @@ class DebugWorkspace:
                    'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
+        methods.update({'debug-save-machine-state':'save_machine_state',
+                        'debug-load-machine-state':'load_machine_state'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
@@ -1449,6 +1454,10 @@ class DebugWorkspace:
             del self.sessions[run]
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
+        if method in ('debug-save-machine-state','debug-load-machine-state'):
+            if (getattr(selected,'metadata',{}).get('backend') != 'qemu-dos'
+                    or not getattr(selected,'capabilities',{}).get('owned_machine_checkpoints')):
+                raise ValueError('Owned-machine checkpoints require an enabled native QEMU DOS session')
         operation=getattr(selected,methods[method],None)
         if operation is None:
             if getattr(session,'metadata',{}).get('backend')=='qemu-dos':

@@ -114,9 +114,13 @@ def snapshot_job(vm, operation, *, tag, vmstate, devices, timeout_ms=30000,
             raise DebuggerError('Snapshot did not preserve stopped execution')
         return {'operation': operation, 'job_id': job_id, 'tag': tag,
                 'vmstate': vmstate, 'devices': list(devices), 'status': 'concluded'}
-    except BaseException:
+    except BaseException as error:
         if dispatched:
-            vm.close()
+            vm._fdisbull_control_quarantine = 'uncertain native snapshot job'
+            try:
+                vm.close()
+            except BaseException as cleanup_error:
+                error.machine_cleanup_error = type(cleanup_error).__name__
         raise
     finally:
         vm.lock.release()

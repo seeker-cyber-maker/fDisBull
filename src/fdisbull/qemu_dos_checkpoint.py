@@ -593,6 +593,7 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
             session._dos_task_binding = deepcopy(task_binding)
             session.metadata['dos_task_binding'] = deepcopy(task_binding)
             session._process = deepcopy(bundle['process'])
+            session._owned_machine_restored = False
             session._advance_epoch()
             session._set_deadline(deadline)
             private_layer_ids = restore_task_views(session, task_views, restored_views)

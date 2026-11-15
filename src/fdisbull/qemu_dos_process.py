@@ -187,6 +187,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         self._launching = True
         self._serial_buffer = bytearray()
         self._process = None
+        self._owned_machine_restored = False
         self._published = False
         self._dos_workspace_enabled = (boot_image is None or directory is not None
                                        or file_mode is not None or freedos_runtime is not None or generation is not None)
@@ -388,6 +389,9 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
             if self.capabilities['frame_key_ownership']:
                 self.capabilities['frame_timeline_input'] = 'owned stopped frame-key edges and checkpoint restore; ordinary leases and schedules excluded'
             self.capabilities['save_states'] = checkpoint_tool is not None
+            self.capabilities['owned_machine_checkpoints'] = bool(self.capabilities['rewind'])
+            self.capabilities['owned_machine_checkpoint_scope'] = (
+                'owned VM and private disk; original DOS source binding is retired on restore')
             self.capabilities['dos_protected_source_admission'] = True
             self.capabilities['dos_protected_source_binding'] = 'owned stopped LE source revalidation; not task/allocation lifetime'
             self.capabilities['source_trace'] = 'initial real16 DOS module or explicitly bound protected32 embedded LE source'
@@ -612,15 +616,16 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
             vector_scope='before/after observations; vector changes alone do not prove causation')
         mapping = self._process['source_mapping']
         mapping['live_ranges'] = []
-        if resident:
+        if resident and not getattr(self, '_owned_machine_restored', False):
             for block in retained:
                 start = max(block['start'], mapping['runtime_base'])
                 end = min(block['end'], mapping['runtime_base']+mapping['module_size'])
                 if start < end:
                     mapping['live_ranges'].append(dict(runtime_address=start,
                         project_address=mapping['static_base']+start-mapping['runtime_base'], length=end-start))
-        mapping.update(live=bool(mapping['live_ranges']),
-                       status='resident-allocation-intersection' if resident else 'invalidated-on-process-exit')
+        mapping.update(live=bool(mapping['live_ranges']), status=(
+            'retired-by-owned-machine-restore' if getattr(self, '_owned_machine_restored', False) else
+            'resident-allocation-intersection' if resident else 'invalidated-on-process-exit'))
         self._process.update(state='resident' if resident else 'exited', termination=termination,
                              capture_epoch=self._runtime_epoch)
         outcome = 'guest_tsr' if resident else 'guest_exit'
@@ -712,10 +717,23 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
 
     @machine_operation
     def save_state(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
+        if getattr(self, '_owned_machine_restored', False):
+            raise ValueError('Owned-machine recovery retired the DOS source binding; use save_machine_state')
         from .qemu_dos_checkpoint import COMMAND, save_process_state
         if COMMAND in self.vm.qmp_commands:
             return save_process_state(self, name, max_bytes)
         return self._save_entry_state_v1(name, max_bytes=max_bytes)
+
+    @machine_operation
+    def save_machine_state(self, name='dos-owned-machine.qcow2', *, max_bytes=None):
+        """Capture this owned VM without asserting current DOS source ownership."""
+        from .qemu_owned_checkpoint import save_owned_machine_state
+        return save_owned_machine_state(self, name, max_bytes=max_bytes)
+
+    def load_machine_state(self, artifact, *, timeout_ms=60000):
+        """Recover a distinct machine artifact and retire source authority."""
+        from .qemu_owned_checkpoint import load_owned_machine_state
+        return load_owned_machine_state(self, artifact, timeout_ms=timeout_ms)
 
     def _save_entry_state_v1(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
         from .external_files import _file_name
@@ -749,6 +767,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
     def load_state(self, artifact, *, timeout_ms=60000):
         from .qemu_dos_checkpoint import PROCESS_FORMATS, load_process_state
         row = self.project.db.execute('SELECT metadata FROM debug_artifacts WHERE id=?', (artifact,)).fetchone()
+        if row is not None and json.loads(row['metadata']).get('format') == 'fdisbull-qemu-owned-machine-qcow2-v1':
+            raise ValueError('Owned-machine artifacts require load_machine_state; no DOS source binding is restored')
         if row is not None and json.loads(row['metadata']).get('format') in PROCESS_FORMATS:
             return load_process_state(self, artifact, timeout_ms)
         return self._load_entry_state_v1(artifact, timeout_ms=timeout_ms)
@@ -811,6 +831,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 self._checkpoint_entry_clean = True
                 self._set_deadline(deadline)
                 self._process_checkpoint_verify_entry()
+                self._owned_machine_restored = False
                 self._checkpoint_epoch += 1
                 self._persist_process()
                 result = dict(artifact=artifact, sha256=row['sha256'], checkpoint_epoch=self._checkpoint_epoch,
@@ -931,7 +952,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
 
     @property
     def script_operations(self):
-        return super().script_operations | {'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',
+        return super().script_operations | {'save-machine-state', 'load-machine-state',
+            'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',
             'delta-start','delta-status','delta-record','delta-rewind','delta-recover',
             'frame-advance', 'frame-inputs', 'timeline-start', 'timeline-status', 'timeline-advance',
             'timeline-rewind', 'timeline-stop', 'timeline-pin', 'timeline-image'}

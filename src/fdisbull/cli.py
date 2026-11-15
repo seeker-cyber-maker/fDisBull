@@ -305,6 +305,8 @@ METHODS = {
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",
     "debug-save-state": "Compatibility name for saving a full native Anchor Stone; run,[name,max_bytes]",
     "debug-load-state": "Compatibility name for loading an Anchor Stone; run,artifact",
+    "debug-save-machine-state": "QEMU DOS owned VM/private-disk checkpoint, separate from source binding; run,[name,max_bytes]",
+    "debug-load-machine-state": "Recover QEMU DOS machine state and retire source binding; run,artifact,[timeout_ms]",
     "debug-rewind-start": "Start bounded native checkpoint history; run,[max_steps,max_bytes]; QEMU DOS/CHIP-8 also accept [history,timeout_ms]",
     "debug-rewind-status": "Inspect history cursor, budgets and validity; run; QEMU DOS/CHIP-8 accept [history] for persistent history",
     "debug-rewind-record": "Record DOSBox fetch intervals or QEMU DOS/CHIP-8 full checkpoints; run,[count,timeout_ms]; QEMU adds advance=step|capture",

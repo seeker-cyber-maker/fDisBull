@@ -117,6 +117,8 @@ by legacy `frame_probe`, coordinate clicks or scene readiness. See the
 
 For a DOS program that enters protected/v86 mode, read
 [protected-mode input, explicit RAM and native checkpoints](DOS_PROTECTED_RUNTIME.md).
+For explicit full-machine recovery after source ownership changes, use the
+separate [owned-machine checkpoint contract](DOS_OWNED_MACHINE_CHECKPOINTS.md).
 Keep guarded live RAM edits separate from edited-checkpoint interventions;
 queue acceptance alone does not prove game input consumption.
 

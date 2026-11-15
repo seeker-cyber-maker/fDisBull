@@ -79,6 +79,26 @@ def test_running_machine_refuses_before_job_dispatch():
     assert not vm.closed
 
 
+def test_snapshot_failure_retains_primary_when_disposal_fails():
+    vm = Machine('error')
+    def failed_close():
+        raise RuntimeError('secondary disposal failure')
+    vm.close = failed_close
+    with pytest.raises(DebuggerError, match='Snapshot job failed') as caught:
+        snapshot_job(vm, 'load', tag='one', vmstate='disk0', devices=['disk0'])
+    assert caught.value.machine_cleanup_error == 'RuntimeError'
+    assert vm._fdisbull_control_quarantine == 'uncertain native snapshot job'
+    assert not any(method == 'job-dismiss' for method, _ in vm.qmp.calls)
+    acquired = []
+    def next_caller():
+        if vm.lock.acquire(timeout=1):
+            acquired.append(True)
+            vm.lock.release()
+    caller = threading.Thread(target=next_caller)
+    caller.start(); caller.join(timeout=2)
+    assert acquired == [True] and not caller.is_alive()
+
+
 def test_pending_owned_input_refuses_before_qmp():
     vm = Machine()
     vm._physical_input = {'pending': [1], 'leases': {}, 'valid': True}

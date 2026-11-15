@@ -52,6 +52,7 @@ OPERATIONS = {
     'trace-until':'trace_until',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
+    'save-machine-state':'save_machine_state', 'load-machine-state':'load_machine_state',
     'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
     'rewind-start':'rewind_start', 'rewind-status':'rewind_status',
     'rewind-record':'rewind_record', 'rewind':'rewind',
@@ -169,6 +170,24 @@ def validate_script(script, *, session=None):
                             admit_native_rule_run(session)
                     if op in ('save-state','load-state') and (backend or actual) in ('qemu-machine','qemu-dos'):
                         raise ValueError('Unsupported operation for native QEMU scripts: '+op)
+                    if op in ('save-machine-state','load-machine-state'):
+                        if (backend or actual) != 'qemu-dos':
+                            raise ValueError('Owned-machine scripts require the qemu-dos backend')
+                        if session is not None:
+                            if not getattr(session,'capabilities',{}).get('owned_machine_checkpoints'):
+                                raise ValueError('Owned-machine checkpoints are not enabled')
+                            if session.project.db.in_transaction:
+                                raise ValueError('Owned-machine scripts require no caller transaction')
+                        if 'name' in params:
+                            from .external_files import _file_name
+                            _file_name(params['name'])
+                            if params['name'].startswith('$'):
+                                raise ValueError('Owned-machine checkpoint names must be literal')
+                        for key, bounds in (('max_bytes',(1,128*1024*1024)),('timeout_ms',(1,600000))):
+                            if key in params:
+                                bounded(params[key],key,*bounds)
+                        if 'artifact' in params and (not isinstance(params['artifact'],str) or not params['artifact']):
+                            raise ValueError('Owned-machine artifact must be a nonempty identifier or result reference')
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary
@@ -582,7 +601,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             for key in ('start','stop'):
                 call=step[key]
                 session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
-    restore_operations = {'load-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
+    restore_operations = {'load-state','load-machine-state','load-anchor-stone','rewind','delta-recover','timeline-rewind'}
     def frame_owned_keys():
         from .keyboard_input import KEYS
         result = session.keyboard_state() if native_frames else session.call('input.keyboard.state')
@@ -670,6 +689,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
+            if step['op']=='load-machine-state':
+                if 'timeout_ms' in params:
+                    bounded(params['timeout_ms'],'timeout_ms',1,600000)
+                params['timeout_ms']=min(params.get('timeout_ms',60000),remaining)
             if native_key_tracking and step['op']=='frame-inputs':
                 params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
             if native_frames and step['op'] in ('delta-start','delta-record','delta-rewind','delta-recover'):

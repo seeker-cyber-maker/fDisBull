@@ -135,7 +135,7 @@ class QemuDOSLEBindingMixin:
             return
         # Some native recovery paths deliberately bypass ordinary history
         # guards. Retire source authority before those operations as well.
-        mutating = {'load_state', 'load_anchor_stone', 'rewind', 'timeline_rewind',
+        mutating = {'load_state', 'load_machine_state', 'load_anchor_stone', 'rewind', 'timeline_rewind',
                     'restore_experiment', 'cpu_delta_rewind', 'cpu_delta_recover',
                     'write_registers', 'write_memory', 'write_engine_state'}
         task_read = {'dos_task_observe', 'dos_task_context', 'dos_task_scheduler_observe', 'dos_task_memory'}
