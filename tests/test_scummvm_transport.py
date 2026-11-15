@@ -1,6 +1,7 @@
 """Concurrent, fail-closed transport checks for the ScummVM JSON-lines bridge."""
 from concurrent.futures import ThreadPoolExecutor
 import os
+import socket
 import textwrap
 import threading
 import time
@@ -19,7 +20,9 @@ def _bridge(tmp_path, scenario):
 
         scenario = SCENARIO
         sock = socket.socket(fileno=int(os.environ['FDISBULL_SCUMMVM_FD']))
-        stream = sock.makefile('rwb', buffering=0)
+        # Read complete JSON lines without issuing one syscall per byte.
+        # Replies still use sendall directly, including fragmented replies.
+        stream = sock.makefile('rb', buffering=65536)
         def send(value, fragmented=False):
             data = (json.dumps(value, separators=(',', ':')) + '\\n').encode()
             if fragmented:
@@ -66,6 +69,14 @@ def _bridge(tmp_path, scenario):
                 send({'id':request_id, 'ok':True, 'value':42})
             elif scenario == 'no_pause':
                 send({'id':request_id, 'ok':True, 'value':42})
+            elif scenario == 'backpressure' and op == 'hold_reads':
+                send({'id':request_id, 'ok':True})
+                gate = pathlib.Path.cwd() / 'release-receive'
+                deadline = time.monotonic() + 10
+                while not gate.exists():
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError('test did not release receive gate')
+                    time.sleep(0.001)
             elif scenario == 'backpressure':
                 send({'id':request_id, 'ok':True, 'length':len(request['payload'])})
             elif op == 'quit':
@@ -166,7 +177,36 @@ def test_backend_refusal_keeps_a_valid_channel_and_large_send_drains(tmp_path):
         rpc.close()
     rpc = _start(tmp_path / 'backpressure', 'backpressure')
     try:
-        assert rpc.call('echo', {'payload':'x' * (2 * 1024 * 1024)}, timeout_ms=5000)['length'] == 2 * 1024 * 1024
+        rpc.call('hold_reads')
+        rpc.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4096)
+        partial = threading.Event()
+        sent = threading.Event()
+
+        class RecordingSocket:
+            def __init__(self, wrapped):
+                self.wrapped = wrapped
+
+            def __getattr__(self, name):
+                return getattr(self.wrapped, name)
+
+            def send(self, data):
+                count = self.wrapped.send(data)
+                if count < len(data):
+                    partial.set()
+                return count
+
+        rpc.sock = RecordingSocket(rpc.sock)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            pending = pool.submit(rpc.call, 'echo',
+                                  {'payload':'x' * (2 * 1024 * 1024)},
+                                  timeout_ms=5000, on_sent=sent.set)
+            try:
+                assert partial.wait(2), 'large request did not produce a partial write'
+                assert not sent.is_set(), 'request drained before backend resumed reads'
+            finally:
+                (rpc.root / 'release-receive').touch()
+            assert pending.result(timeout=5)['length'] == 2 * 1024 * 1024
+            assert sent.is_set()
     finally:
         rpc.close()
 
