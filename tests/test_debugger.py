@@ -133,8 +133,34 @@ def test_real_breakpoint_translation_trace_restart_and_patch_isolation(game,emul
     # All observations survive emulator and Project restart, inside SQLite.
     with Project(path) as reopened:
         artifacts=reopened.debug_artifacts(version=1)['artifacts']
-        assert {x['kind'] for x in artifacts}=={'trace','screenshot'}
-        assert reopened.debug_runs(version=1)['runs'][0]['state']=='exited'
+        kinds={x['kind'] for x in artifacts}
+        assert kinds=={'trace','screenshot','memory-snapshot','runtime-tracking'}
+        runs=reopened.debug_runs(version=1)['runs']
+        assert len(runs)==1 and runs[0]['state']=='exited'
+        assert {x['run'] for x in artifacts}=={runs[0]['id']}
+        snapshots=[x for x in artifacts if x['kind']=='memory-snapshot']
+        assert snapshots
+        for artifact in snapshots:
+            assert artifact['name'].startswith('automatic-code-')
+            assert set(artifact['metadata'])=={'capture','snapshot'}
+            assert artifact['metadata']['snapshot']['format']=='fdisbull-memory-snapshot-1'
+            assert artifact['metadata']['capture']['atomicity']=='owned paused CPU; no guest execution during capture'
+        tracking=[x for x in artifacts if x['kind']=='runtime-tracking']
+        assert tracking
+        tracking_events={'source-observation','invalidate','observation-error','lifetime-end'}
+        for artifact in tracking:
+            assert artifact['name']=='runtime-tracking.json'
+            assert artifact['metadata']['automatic'] is True
+            assert artifact['metadata']['kind'] in tracking_events
+            tracking_path=tmp_path/f"tracking-{artifact['id']}.json"
+            exported=reopened.debug_export(artifact['id'],tracking_path)
+            tracking_bytes=tracking_path.read_bytes()
+            assert hashlib.sha256(tracking_bytes).hexdigest()==artifact['sha256']==exported['sha256']
+            record=json.loads(tracking_bytes)
+            assert set(record)=={'format','kind','document'}
+            assert record['format']=='fdisbull-automatic-runtime-tracking-1'
+            assert record['kind']==artifact['metadata']['kind']
+            assert isinstance(record['document'],dict)
         output=tmp_path/'saved.png'
         reopened.debug_export(screenshot['artifact'],output)
         assert output.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
@@ -403,11 +429,25 @@ def test_native_state_fork_edits_and_reinjects_without_changing_parent(access_ga
             debug.load_state(parent['artifact'])
             assert debug.memory('1000:0100',length=2)['hex']=='0000'
             assert int(debug.registers()['general']['eax'],16)==0x1234
+        artifacts_before=db.debug_artifacts()['artifacts']
+        runs={item['id'] for item in db.debug_runs()['runs']}
+        assert all(item['kind'] in {'state','memory-snapshot','runtime-tracking'} for item in artifacts_before)
+        assert all(item['run'] in runs for item in artifacts_before)
+        tracking=[item for item in artifacts_before if item['kind']=='runtime-tracking']
+        tracking_events={'source-observation','invalidate','observation-error','lifetime-end'}
+        assert tracking
+        for item in tracking:
+            assert item['name']=='runtime-tracking.json'
+            assert item['metadata']['automatic'] is True
+            assert item['metadata']['kind'] in tracking_events
+        state_ids={item['id'] for item in artifacts_before if item['kind']=='state'}
+        assert state_ids=={parent['artifact'],fork['artifact']}
         with pytest.raises(ValueError,match='expected bytes mismatch'):
             db.debug_fork_state(parent['artifact'],emulator,binary.parent,
                 memory=[{'address':'1000:0100','expected_hex':'ffff','data_hex':'1111'}])
         assert db.disassembly(address='1000:0005',lines=1)['instructions'][0]['bytes']==static_before
-        assert len(db.debug_artifacts()['artifacts'])==2 # Failed edit creates no derivative snapshot.
+        artifacts_after=db.debug_artifacts()['artifacts']
+        assert {item['id'] for item in artifacts_after if item['kind']=='state'}==state_ids
 
 
 def test_real_explicit_seed_places_breakpoint_despite_persistent_backlog(tmp_path,emulator):
