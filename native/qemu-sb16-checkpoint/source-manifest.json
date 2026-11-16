@@ -1,0 +1,113 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Explicit U8 mono SB16 digital capture and passive checkpoint restoration",
+  "implementation_status": "Built separate local candidate; native acceptance pending",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-input-checkpoint-completion",
+    "prerequisite_manifest_sha256": "40c4c4cbe7393dea59f85ed686b4f870edd6460a31fdc8fc51696e8fd92ee9dc",
+    "prerequisite_binary_sha256": "d04993299ae8155d33e33644d1144f39e64d6224145c4671eef737e829e9815d",
+    "required_source_files": [
+      {
+        "path": "system/fdisbull-input.c",
+        "sha256": "4ea7a02a043c93293fc6655e1746dd1491eacf1b9ee98f31e75a6d47d1e158ed"
+      }
+    ]
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-sb16-checkpoint-v1.patch",
+    "sha256": "0ee06bde782d770f5b0fcf5050224f92b5eaf847e28e2036816f2495d628738d",
+    "modified_file_count": 13,
+    "files": [
+      {
+        "path": "audio/audio.c",
+        "before_sha256": "e24c37aa31cb828a97f25533232da4980528eda3709dab84214a38f409db5acf",
+        "after_sha256": "21ac0755a13e05406d900385d1bf125ac1fb52fc45d201c8a7828387a215ef39"
+      },
+      {
+        "path": "audio/mixeng.c",
+        "before_sha256": "9321b2f47dd2658922aec8612a5a017b59c1be3f08023958f1e27c5aa676ad04",
+        "after_sha256": "7aa4724bc0eaaea02293e533ac6f0474d7cf1930fe24bcb8c4da8eaf3f7dd78e"
+      },
+      {
+        "path": "audio/mixeng.h",
+        "before_sha256": "0231df4a9a815dbab58534ad137e6d34d305823913864c219950ec06511825f5",
+        "after_sha256": "f38f2522002066b107fbdc5a339e0471cb0b3942f16c709c0746e7ab32463382"
+      },
+      {
+        "path": "hw/audio/sb16.c",
+        "before_sha256": "8467caaacf0e91fa2b1ae68677bdb123e2a5d187b842e262ccdd89ca171063cc",
+        "after_sha256": "e3d163dbc28a91362bb1a3d4ef0945e78a142091e1624f92f055125561e75b8b"
+      },
+      {
+        "path": "hw/dma/i8257.c",
+        "before_sha256": "5cb4b7248a21a5b04b0055434ecbc41f3dcf57af8b8e03857a4efffe8ac3827b",
+        "after_sha256": "a7da60c3a1e5f3026611d4e914f96ab4dfa170387c2cb7a7393156ec7bf95f5f"
+      },
+      {
+        "path": "include/hw/dma/i8257.h",
+        "before_sha256": "ac19f6693843add24cffd64c210340c4d2d3333a9b4fe35856e61b76fa4adf62",
+        "after_sha256": "c968236d0809e1cf060f0de76363b78b2a62a2f879175d211cd8a3f984f1e228"
+      },
+      {
+        "path": "include/hw/audio/fdisbull-sb16.h",
+        "before_sha256": null,
+        "after_sha256": "ebdcdb362301a751fb533ecd2621a411c92d6891d29b712a46bb8038dabc8e5c"
+      },
+      {
+        "path": "include/system/fdisbull-instrumented-checkpoint.h",
+        "before_sha256": "e3a7ef6645af126784e9a39b8662f3df3c7ab2bef8fd0cb89ec05e05cfab30c9",
+        "after_sha256": "2c9d894600725a2c5e70aca8498e587fa6bc980da2a3818b69d91a82f8116f79"
+      },
+      {
+        "path": "system/fdisbull-audio.c",
+        "before_sha256": "5dfd0b86df43968573873fad66a1e38c510053d36514850b14843fa3e55326a9",
+        "after_sha256": "194e97833e6bcf47f4e79661d886602bf0de215ea79ad625e39eb87e8d58c2a7"
+      },
+      {
+        "path": "system/fdisbull-instrumented-checkpoint.c",
+        "before_sha256": "c4f05baee49ae418ff85ef929c57a702c247cc27567c9f807d1440647dda49ec",
+        "after_sha256": "43a7ca4359136516f4f49e9f17ace1c3da4d475e3c591731503bd0c09f2e19e8"
+      },
+      {
+        "path": "qapi/fdisbull-sb16.json",
+        "before_sha256": null,
+        "after_sha256": "17b8c9e028a17f15f36212a42a987d55e9def358fc5b083cf4341d2df5602fa3"
+      },
+      {
+        "path": "qapi/qapi-schema.json",
+        "before_sha256": "c159df31d554fcd8f053565dadb256c9a6afe7274f1f530354a646fcaa9ca23e",
+        "after_sha256": "41f1e9ccdddc1cf5d671d8af3c5827258f722b0e57828ee9cecf23c577beb42e"
+      },
+      {
+        "path": "qapi/meson.build",
+        "before_sha256": "013868bdcacb599d5c0da432e402ba2c71367ddd23b5a35822aa549d41819009",
+        "after_sha256": "618f988798acc5c2fca8065f2d66029e1838976a01dc60646a17d95ffeeb6af8"
+      }
+    ]
+  },
+  "contract": {
+    "audio_profile": "sb16",
+    "audiodev": "fdisbull-sb16",
+    "guest_pcm": "U8 mono 5000..45000 Hz",
+    "capture_pcm": "U8 mono 32000 Hz",
+    "core_format_version": 2,
+    "pcspeaker_core_format_version": 1,
+    "outer_instrumented_format_unchanged": true,
+    "ordinary_vmstate_v1_fields_unchanged": true,
+    "scope": "Exact-binary scoped instrumented snapshots; no cross-binary state compatibility, no OPL/FM",
+    "ci": false
+  },
+  "build": {
+    "platform": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "binary_sha256": "163a733c4e3aeb26673980c3a782f296458234ec0bd73158805a941fdd8e5a2b",
+    "binary_size": 24929976,
+    "receipt_sha256": "9ab91347c1314957fd3644fce5ecde55e3b59ecb9bc5ed9726f0c0c33da4a7fc",
+    "strategy": "Copied exact qualified build; regenerated QAPI/trace, recompiled all 23 recorded ABI-header consumers plus affected/new C objects (30 total), added new archive objects and replayed link/sign recipes.",
+    "input_scope": "1686 pinned declared inputs; not a hermetic SDK claim",
+    "parent_inputs_unchanged": true,
+    "ci": false
+  }
+}

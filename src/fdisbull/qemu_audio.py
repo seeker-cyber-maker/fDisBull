@@ -1,6 +1,6 @@
 """Bounded native audio output windows, independent of guest or host pacing.
 
-The optional PC-speaker profile captures QEMU mixer output. A sample callback
+The optional PC-speaker and SB16 profiles capture QEMU mixer output. A sample callback
 is a real output boundary, but its timestamp is not the onset time of each
 sample. Inactive intervals are not filled with invented silence. A stopped
 read never invokes the mixer, flushes a device or advances the machine.
@@ -24,15 +24,34 @@ AUDIO_COMMANDS = frozenset({
 AUDIO_RATE = 32000
 MAX_AUDIO_FRAMES = AUDIO_RATE * 60
 _FORMAT = dict(rate=AUDIO_RATE, channels=1, sample_format='u8', bytes_per_frame=1)
+SB16_COMMAND = 'x-fdisbull-query-sb16'
+_SB16_OPTIONS = dict(iobase=544, irq=7, dma=1, dma16=5, version=0x405)
 
 
 def machine_audio_configuration(profile, clock_profile):
-    if profile not in ('off', 'pc-speaker'):
-        raise ValueError('QEMU audio profile must be off or pc-speaker')
-    if profile == 'pc-speaker' and clock_profile != 'virtual':
-        raise ValueError('PC-speaker capture requires the explicit QEMU virtual clock profile')
-    return dict(profile=profile, devices=['pc-speaker'] if profile != 'off' else [],
-                host_playback=False, capture_format=deepcopy(_FORMAT) if profile != 'off' else None)
+    if profile not in ('off', 'pc-speaker', 'sb16'):
+        raise ValueError('QEMU audio profile must be off, pc-speaker or sb16')
+    if profile != 'off' and clock_profile != 'virtual':
+        raise ValueError('Audio capture requires the explicit QEMU virtual clock profile')
+    result = dict(profile=profile, devices=[profile] if profile != 'off' else [],
+                  host_playback=False, capture_format=deepcopy(_FORMAT) if profile != 'off' else None)
+    if profile == 'sb16':
+        result['device_options'] = deepcopy(_SB16_OPTIONS)
+    return result
+
+
+def machine_audio_arguments(profile):
+    """Fixed, headless output graph; no caller-supplied device arguments."""
+    if profile == 'off':
+        return []
+    machine_audio_configuration(profile, 'virtual')
+    identity = 'fdisbull-sb16' if profile == 'sb16' else 'fdisbull-pc'
+    args = ['-audiodev', 'none,id=' + identity +
+            ',timer-period=10000,out.frequency=32000,out.channels=1,out.format=u8']
+    if profile == 'sb16':
+        args += ['-device', 'sb16,audiodev=' + identity + ',' +
+                 ','.join(key + '=' + str(value) for key, value in _SB16_OPTIONS.items())]
+    return args
 
 
 def validate_audio_capacity(max_frames):
@@ -108,8 +127,20 @@ def _native_audio(vm, value, clock, *, token=None):
 
 
 def admit_audio(vm):
+    if vm.machine_configuration.get('audio_profile', {}).get('profile') == 'sb16':
+        if SB16_COMMAND not in vm.qmp_commands:
+            raise ValueError('SB16 capture and checkpoints require the native SB16 extension API 1')
+        value = vm.qmp.call(SB16_COMMAND)
+        expected = {'api-version': 1, **_SB16_OPTIONS, 'audiodev-id': 'fdisbull-sb16'}
+        if (not isinstance(value, dict)
+                or any(type(value.get(key)) is not type(item) or value[key] != item
+                       for key, item in expected.items())
+                or type(value.get('voice-present')) is not bool
+                or type(value.get('dma-active')) is not bool):
+            _invalid(vm, 'Invalid native SB16 device identity or checkpoint API')
+        vm.native_sb16_admission = deepcopy(value)
     if not AUDIO_COMMANDS <= vm.qmp_commands:
-        raise ValueError('PC-speaker capture requires the fDisBull audio extension API 1')
+        raise ValueError('Audio capture requires the fDisBull audio extension API 1')
     clock = dict(virtual_ns=vm.native_clock_admission['virtual-ns'],
                  virtual_clock=dict(native=vm.native_clock_admission))
     value = _native_audio(vm, vm.qmp.call('x-fdisbull-query-audio'), clock)
@@ -122,9 +153,10 @@ class QemuAudioMixin:
     def _audio_context(self):
         if self.project is None or self.project.db.in_transaction:
             raise ValueError('Audio capture requires a project outside a caller-owned transaction')
-        if self.vm.machine_configuration.get('audio_profile', {}).get('profile') != 'pc-speaker':
-            raise ValueError('Audio capture requires the explicit QEMU pc-speaker audio profile')
-        if self.vm.machine_configuration['audio_profile'] != machine_audio_configuration('pc-speaker', 'virtual'):
+        profile = self.vm.machine_configuration.get('audio_profile', {}).get('profile')
+        if profile not in ('pc-speaker', 'sb16'):
+            raise ValueError('Audio capture requires an explicit QEMU audio profile')
+        if self.vm.machine_configuration['audio_profile'] != machine_audio_configuration(profile, 'virtual'):
             _invalid(self.vm, 'Owned-machine audio profile changed within its observation epoch')
         self._stopped()
         return self.clock_observe()

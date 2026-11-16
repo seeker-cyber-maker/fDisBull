@@ -188,7 +188,7 @@ def restore(vm, record):
             raise DebuggerError('Restored frame key ownership differs from its checkpoint')
         adopt_frame_keys(vm, current_keys, expected_held=key_state['held'])
     windows = {}
-    if vm.machine_configuration.get('audio_profile', {}).get('profile') == 'pc-speaker':
+    if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16'):
         from .qemu_audio import _native_audio
         vm._audio_token = result.get('audio-token') or None
         actual = _native_audio(vm, vm.qmp.call('x-fdisbull-query-audio'), clock, token=vm._audio_token)

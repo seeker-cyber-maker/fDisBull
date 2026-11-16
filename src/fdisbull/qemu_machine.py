@@ -34,7 +34,7 @@ from .qemu_mapped_mouse import MAPPED_MOUSE_COMMANDS, validate_mapped_mouse_para
 from .qemu_layers import LAYER_COMMANDS, QemuLayerSessionMixin
 from .qemu_hooks import QemuHookSessionMixin
 from .qemu_surface import QemuSurfaceMixin
-from .qemu_audio import QemuAudioMixin, machine_audio_configuration, admit_audio
+from .qemu_audio import QemuAudioMixin, machine_audio_configuration, machine_audio_arguments, admit_audio
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
                            validate_display_probe_parameters)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
@@ -223,8 +223,7 @@ class QemuMachine:
                      '-smp',str(cpus),'-m',str(memory_mib)+'M','-nic','none','-display','none','-monitor','none','-no-reboot',
                      '-serial',f'file:{self.log_path}']
             command+=machine_retrace_arguments(retrace_profile)
-            if audio_profile=='pc-speaker':
-                command+=['-audiodev','none,id=fdisbull-pc,timer-period=10000,out.frequency=32000,out.channels=1,out.format=u8']
+            command+=machine_audio_arguments(audio_profile)
             if transport=='pipe':
                 self.gdb_path=root/'gdb';self.rpc_path=root/'rpc'
                 create_fifo_pair(self.gdb_path);create_fifo_pair(self.rpc_path)
@@ -275,8 +274,10 @@ class QemuMachine:
                 require_commands(self)
             if clock_profile=='virtual':
                 self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
-            if audio_profile=='pc-speaker':
+            if audio_profile in ('pc-speaker', 'sb16'):
                 self.machine_configuration['native_audio_admission']=admit_audio(self)
+                if audio_profile=='sb16':
+                    self.machine_configuration['native_sb16_admission']=self.native_sb16_admission
             if retrace_profile=='precise':
                 self.machine_configuration['native_retrace_admission']=admit_retrace(self)
             self.qmp.operation_deadline=None
@@ -692,7 +693,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
-            audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='pc-speaker',
+            audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16'),
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             renderer_probe=(virtual and DISPLAY_COMMANDS | DISPLAY_PROBE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
                             <= getattr(vm,'qmp_commands',frozenset())),

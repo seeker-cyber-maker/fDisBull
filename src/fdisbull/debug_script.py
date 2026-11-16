@@ -454,7 +454,7 @@ def validate_script(script, *, session=None):
                         validate_retrace_input_parameters(**literal)
                     if op in ('audio-start','audio-observe','audio-stop','capture-audio'):
                         if session is not None and not getattr(session,'capabilities',{}).get('audio_capture'):
-                            raise ValueError('Audio operations require the explicit QEMU pc-speaker audio profile')
+                            raise ValueError('Audio operations require an explicit QEMU audio profile')
                         if op=='audio-start' and 'max_frames' in params:
                             value=params['max_frames']
                             if not (isinstance(value,str) and value.startswith('$')):

@@ -835,7 +835,16 @@ API1 operations. Select `qemu_clock='virtual'`; add `qemu_audio='pc-speaker'`
 only for PC-speaker capture. The raw machine factory takes `clock_profile` and
 `audio_profile` instead. This profile uses QEMU's timer-driven `none` audiodev,
 32,000 Hz mono unsigned 8-bit PCM, and no host playback. Other sound devices
-remain unqualified. Host clock auto-sync is separate from media capture and
+remain unqualified by that profile. The separate `qemu_audio='sb16'` profile
+requires the additional `native/qemu-sb16-checkpoint/` extension and its passive
+`x-fdisbull-query-sb16` admission. It selects a single digital-only SB16 at
+220h/IRQ7/DMA1/HDMA5 with host playback disabled, preserving the same 32 kHz
+mono U8 capture contract. Its stopped checkpoint scope is an extant U8 mono
+guest voice at 5–45 kHz, including resampler/mixer queues, device credit,
+auxiliary timer and passively restored DMA state. Unsupported voice topologies
+refuse capture. OPL/FM, MIDI and paired DOSBox audio parity remain separate
+qualification gates. The old native runtime is refused for this new profile;
+retain it for its existing exact-binary checkpoints. Host clock auto-sync is separate from media capture and
 does not change its sampling rate, renderer cadence or playback qualification.
 
 Start windows at a caller-selected stopped point with

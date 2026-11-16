@@ -1,0 +1,1441 @@
+--- a/audio/audio.c
++++ b/audio/audio.c
+@@ -945,6 +945,487 @@
+     dst->r = src->r;
+ }
+ 
++/* SB16 uses a separate audiodev and a separate codec. The legacy PC-speaker
++ * codec above and below this block remains version 1 and equal-rate only.
++ * This version contains only scalar state and bounded sample/ring arrays;
++ * callbacks, opaque pointers, converters and list links belong to the freshly
++ * recreated device graph. The integer mixer ABI is pinned to this native kit. */
++#define FDISBULL_SB16_CORE_MAGIC UINT64_C(0x4644424155443032)
++#define FDISBULL_SB16_CORE_MAX (8 * 1024 * 1024)
++#define FDISBULL_SB16_HW_MAX UINT64_C(65536)
++#define FDISBULL_SB16_SW_MAX UINT64_C(92161)
++
++typedef struct FdisbullSB16Graph {
++    AudioState *state;
++    HWVoiceOut *hw;
++    SWVoiceOut *sw;
++    CaptureVoiceOut *cap;
++    SWVoiceOut *csw;
++} FdisbullSB16Graph;
++
++/* Every member is an explicit 64-bit scalar: no structure padding, pointers,
++ * host size_t or opaque rate object is copied into the private wire header. */
++typedef struct FdisbullSB16Core {
++    uint64_t magic, version, sample_size, byte_order;
++    uint64_t has_hw, has_sw, has_capture;
++    uint64_t hw_size, hw_pos, hw_timestamp, hw_enabled, hw_pending_disable;
++    uint64_t emul_size, emul_pos, emul_pending;
++    uint64_t sw_freq, sw_channels, sw_bits, sw_signed, sw_swap;
++    uint64_t sw_total, sw_active, sw_empty, sw_size, sw_pos;
++    uint64_t sw_mute;
++    int64_t sw_l, sw_r;
++    uint64_t rate_opos, rate_increment, rate_ipos;
++    int64_t rate_last_l, rate_last_r;
++    uint64_t cap_size, cap_pos, cap_timestamp, cap_enabled;
++    uint64_t csw_total, csw_active, csw_empty, csw_mute;
++    int64_t csw_l, csw_r;
++} FdisbullSB16Core;
++
++static bool fdisbull_audio_profile_exclusive(Error **errp)
++{
++    if (audio_state_by_name("fdisbull-pc", NULL) &&
++        audio_state_by_name("fdisbull-sb16", NULL)) {
++        error_setg(errp, "PC-speaker and SB16 checkpoint profiles are exclusive");
++        return false;
++    }
++    return true;
++}
++
++static bool fdisbull_sb16_volume_valid(uint64_t mute, int64_t l, int64_t r)
++{
++#ifdef FLOAT_MIXENG
++    return false;
++#else
++    return mute <= 1 && l >= 0 && r >= 0 &&
++           l <= nominal_volume.l && r <= nominal_volume.r;
++#endif
++}
++
++static bool fdisbull_sb16_samples_valid(const uint8_t *bytes, uint64_t frames)
++{
++#ifdef FLOAT_MIXENG
++    return false;
++#else
++    uint64_t i;
++
++    for (i = 0; i < frames; i++) {
++        st_sample value;
++        memcpy(&value, bytes + i * sizeof(value), sizeof(value));
++        /* Unsigned PCM's conversion subtracts IN_MAX >> 1, so positive
++         * full scale is +2^31 rather than INT32_MAX. */
++        if (value.l < INT32_MIN || value.l > INT64_C(2147483648) ||
++            value.r < INT32_MIN || value.r > INT64_C(2147483648)) {
++            return false;
++        }
++    }
++    return true;
++#endif
++}
++
++static bool fdisbull_sb16_pcm_valid(const struct audio_pcm_info *info)
++{
++    return info->freq >= 5000 && info->freq <= 45000 &&
++           (info->nchannels == 1 || info->nchannels == 2) &&
++           (info->bits == 8 || info->bits == 16) && !info->is_float &&
++           info->swap_endianness == (AUDIO_HOST_ENDIANNESS != 0) &&
++           info->bytes_per_frame == info->nchannels * (info->bits / 8) &&
++           info->bytes_per_second == info->freq * info->bytes_per_frame;
++}
++
++static bool fdisbull_sb16_activity_valid(uint64_t enabled, uint64_t pending,
++                                        uint64_t active)
++{
++    /* One active SW enables its HW. An inactive voice may still be draining
++     * the already mixed prefix until audio_run_out observes it empty. */
++    return enabled <= 1 && pending <= 1 && active <= 1 &&
++           (active ? enabled && !pending : enabled == pending);
++}
++
++static bool fdisbull_sb16_graph(FdisbullSB16Graph *graph, Error **errp)
++{
++    AudioState *s;
++    QEMUSoundCard *card;
++    HWVoiceOut *hw;
++    SWVoiceOut *sw = NULL;
++    CaptureVoiceOut *cap;
++    SWVoiceCap *sc = NULL;
++    FdisbullRateState rate;
++
++    assert(bql_locked());
++    memset(graph, 0, sizeof(*graph));
++#ifdef FLOAT_MIXENG
++    error_setg(errp, "SB16 checkpoint requires the pinned integer mixer ABI");
++    return false;
++#endif
++    if (!fdisbull_audio_profile_exclusive(errp)) {
++        return false;
++    }
++    s = audio_state_by_name("fdisbull-sb16", errp);
++    if (!s) {
++        return false;
++    }
++    card = QLIST_FIRST(&s->card_head);
++    if (!s->drv || strcmp(s->drv->name, "none") || !s->dev || s->vm_running ||
++        !audio_get_pdo_out(s->dev)->mixing_engine ||
++        !QLIST_EMPTY(&s->hw_head_in) || !card ||
++        QLIST_NEXT(card, entries) || card->state != s || !card->name ||
++        strcmp(card->name, "sb16")) {
++        error_setg(errp, "SB16 checkpoint requires its stopped single-card none backend");
++        return false;
++    }
++    hw = QLIST_FIRST(&s->hw_head_out);
++    if (hw) {
++        sw = QLIST_FIRST(&hw->sw_head);
++        if (QLIST_NEXT(hw, entries) || hw->s != s || hw->poll_mode ||
++            !fdisbull_audio_info_supported(&hw->info) ||
++            !fdisbull_audio_buffer_valid(&hw->mix_buf) ||
++            !sw || QLIST_NEXT(sw, entries) || sw->s != s || sw->card != card ||
++            sw->hw != hw || !sw->name || strcmp(sw->name, "sb16") ||
++            !sw->conv || !sw->callback.fn || !sw->callback.opaque ||
++            !fdisbull_sb16_pcm_valid(&sw->info) ||
++            sw->total_hw_samples_mixed > hw->mix_buf.size ||
++            sw->empty != (sw->total_hw_samples_mixed == 0) ||
++            !fdisbull_sb16_activity_valid(hw->enabled, hw->pending_disable, sw->active) ||
++            !sw->resample_buf.buffer || sw->resample_buf.pos > 1 ||
++            !sw->resample_buf.size || sw->resample_buf.size > FDISBULL_SB16_SW_MAX ||
++            sw->resample_buf.size !=
++                ((uint64_t)hw->mix_buf.size * sw->info.freq / 32000) + 1 ||
++            !st_rate_checkpoint_get(sw->rate, sw->info.freq, 32000, &rate) ||
++            !fdisbull_sb16_volume_valid(sw->vol.mute, sw->vol.l, sw->vol.r) ||
++            !fdisbull_sb16_samples_valid((uint8_t *)hw->mix_buf.buffer, hw->mix_buf.size) ||
++            !fdisbull_sb16_samples_valid((uint8_t *)sw->resample_buf.buffer, sw->resample_buf.size)) {
++            error_setg(errp, "SB16 checkpoint output voice, format or resampler is unsupported");
++            return false;
++        }
++        if ((hw->buf_emul && (!hw->size_emul || hw->size_emul > 65536 ||
++                hw->pos_emul >= hw->size_emul || hw->pending_emul > hw->size_emul)) ||
++            (!hw->buf_emul && (hw->size_emul || hw->pos_emul || hw->pending_emul))) {
++            error_setg(errp, "SB16 checkpoint backend ring is not bounded");
++            return false;
++        }
++        sc = QLIST_FIRST(&hw->cap_head);
++    }
++    cap = QLIST_FIRST(&s->cap_head);
++    if (cap) {
++        struct capture_callback *cb = QLIST_FIRST(&cap->cb_head);
++        SWVoiceOut *csw = QLIST_FIRST(&cap->hw.sw_head);
++        if (QLIST_NEXT(cap, entries) || cap->hw.s != s || !cb ||
++            QLIST_NEXT(cb, entries) || !cb->ops.capture || !cb->ops.notify ||
++            !fdisbull_audio_info_supported(&cap->hw.info) ||
++            !fdisbull_audio_buffer_valid(&cap->hw.mix_buf) ||
++            cap->hw.pending_disable || cap->hw.poll_mode ||
++            cap->hw.buf_emul || cap->hw.size_emul || cap->hw.pos_emul ||
++            cap->hw.pending_emul || !cap->buf ||
++            !fdisbull_sb16_samples_valid((uint8_t *)cap->hw.mix_buf.buffer,
++                                         cap->hw.mix_buf.size)) {
++            error_setg(errp, "SB16 checkpoint capture graph is unsupported");
++            return false;
++        }
++        if (hw) {
++            if (!sc || QLIST_NEXT(sc, entries) || sc->cap != cap || csw != &sc->sw ||
++                QLIST_NEXT(csw, entries) || csw->hw != &cap->hw ||
++                csw->total_hw_samples_mixed > cap->hw.mix_buf.size ||
++                csw->empty != (csw->total_hw_samples_mixed == 0) ||
++                csw->active != hw->enabled || cap->hw.enabled != hw->enabled ||
++                csw->resample_buf.pos ||
++                !fdisbull_audio_info_supported(&csw->info) ||
++                !st_rate_checkpoint_get(csw->rate, 32000, 32000, &rate) ||
++                !fdisbull_sb16_volume_valid(csw->vol.mute, csw->vol.l, csw->vol.r)) {
++                error_setg(errp, "SB16 checkpoint capture link differs from output");
++                return false;
++            }
++            graph->csw = csw;
++        } else if (sc || csw || cap->hw.enabled) {
++            error_setg(errp, "Silent SB16 checkpoint unexpectedly has a capture source");
++            return false;
++        }
++    } else if (sc) {
++        error_setg(errp, "SB16 checkpoint has an unowned capture link");
++        return false;
++    }
++    graph->state = s;
++    graph->hw = hw;
++    graph->sw = sw;
++    graph->cap = cap;
++    return true;
++}
++
++static char *fdisbull_sb16_export(Error **errp)
++{
++    FdisbullSB16Graph g;
++    FdisbullSB16Core h = { 0 };
++    FdisbullRateState rate;
++    g_autofree uint8_t *blob = NULL;
++    size_t hw_bytes, sw_bytes, cap_bytes, len;
++    uint8_t *p;
++
++    if (!fdisbull_sb16_graph(&g, errp)) {
++        return NULL;
++    }
++    h.magic = FDISBULL_SB16_CORE_MAGIC;
++    h.version = 2;
++    h.sample_size = sizeof(st_sample);
++    h.byte_order = G_BYTE_ORDER;
++    h.has_hw = !!g.hw;
++    h.has_sw = !!g.sw;
++    h.has_capture = !!g.cap;
++    if (g.hw) {
++        HWVoiceOut *hw = g.hw;
++        SWVoiceOut *sw = g.sw;
++        st_rate_checkpoint_get(sw->rate, sw->info.freq, 32000, &rate);
++        h.hw_size = hw->mix_buf.size; h.hw_pos = hw->mix_buf.pos;
++        h.hw_timestamp = hw->ts_helper; h.hw_enabled = hw->enabled;
++        h.hw_pending_disable = hw->pending_disable;
++        h.emul_size = hw->size_emul; h.emul_pos = hw->pos_emul;
++        h.emul_pending = hw->pending_emul;
++        h.sw_freq = sw->info.freq; h.sw_channels = sw->info.nchannels;
++        h.sw_bits = sw->info.bits; h.sw_signed = sw->info.is_signed;
++        h.sw_swap = sw->info.swap_endianness;
++        h.sw_total = sw->total_hw_samples_mixed;
++        h.sw_active = sw->active; h.sw_empty = sw->empty;
++        h.sw_size = sw->resample_buf.size; h.sw_pos = sw->resample_buf.pos;
++        h.sw_mute = sw->vol.mute; h.sw_l = sw->vol.l; h.sw_r = sw->vol.r;
++        h.rate_opos = rate.opos; h.rate_increment = rate.opos_inc;
++        h.rate_ipos = rate.ipos; h.rate_last_l = rate.ilast.l; h.rate_last_r = rate.ilast.r;
++    }
++    if (g.cap) {
++        h.cap_size = g.cap->hw.mix_buf.size; h.cap_pos = g.cap->hw.mix_buf.pos;
++        h.cap_timestamp = g.cap->hw.ts_helper; h.cap_enabled = g.cap->hw.enabled;
++        if (g.csw) {
++            h.csw_total = g.csw->total_hw_samples_mixed;
++            h.csw_active = g.csw->active; h.csw_empty = g.csw->empty;
++            h.csw_mute = g.csw->vol.mute; h.csw_l = g.csw->vol.l; h.csw_r = g.csw->vol.r;
++        }
++    }
++    hw_bytes = h.hw_size * sizeof(st_sample);
++    sw_bytes = h.sw_size * sizeof(st_sample);
++    cap_bytes = h.cap_size * sizeof(st_sample);
++    len = sizeof(h) + hw_bytes + sw_bytes + cap_bytes + h.emul_size;
++    if (len > FDISBULL_SB16_CORE_MAX * 3 / 4 - 3) {
++        error_setg(errp, "SB16 checkpoint mixer blob exceeds 8 MiB encoded budget");
++        return NULL;
++    }
++    blob = g_malloc0(len);
++    memcpy(blob, &h, sizeof(h));
++    p = blob + sizeof(h);
++    if (hw_bytes) { memcpy(p, g.hw->mix_buf.buffer, hw_bytes); p += hw_bytes; }
++    if (sw_bytes) { memcpy(p, g.sw->resample_buf.buffer, sw_bytes); p += sw_bytes; }
++    if (cap_bytes) { memcpy(p, g.cap->hw.mix_buf.buffer, cap_bytes); p += cap_bytes; }
++    /* Only initialized pending ring bytes are retained; unused bytes are
++     * canonical zero, exactly as in the version-1 codec. */
++    if (h.emul_pending) {
++        size_t first = audio_ring_posb(h.emul_pos, h.emul_pending, h.emul_size);
++        size_t count = MIN(h.emul_pending, h.emul_size - first);
++        memcpy(p + first, g.hw->buf_emul + first, count);
++        if (count < h.emul_pending) {
++            memcpy(p, g.hw->buf_emul, h.emul_pending - count);
++        }
++    }
++    return g_base64_encode(blob, len);
++}
++
++static bool fdisbull_sb16_import(const char *base64, Error **errp)
++{
++    FdisbullSB16Graph g;
++    FdisbullSB16Core h, empty = { 0 };
++    FdisbullRateState rate = { 0 };
++    g_autofree guchar *blob = NULL;
++    g_autofree char *canonical = NULL;
++    g_autofree uint8_t *emul = NULL;
++    gsize len;
++    size_t hw_bytes, sw_bytes, cap_bytes;
++    const uint8_t *p;
++
++    if (!base64 || !*base64 || strlen(base64) > FDISBULL_SB16_CORE_MAX) {
++        error_setg(errp, "SB16 checkpoint mixer encoding is missing or oversized");
++        return false;
++    }
++    blob = g_base64_decode(base64, &len);
++    canonical = g_base64_encode(blob, len);
++    if (strcmp(canonical, base64) || len < sizeof(h)) {
++        error_setg(errp, "SB16 checkpoint mixer encoding is not canonical");
++        return false;
++    }
++    memcpy(&h, blob, sizeof(h));
++    if (h.magic != FDISBULL_SB16_CORE_MAGIC || h.version != 2 ||
++        h.sample_size != sizeof(st_sample) || h.byte_order != G_BYTE_ORDER ||
++        h.has_hw > 1 || h.has_sw != h.has_hw || h.has_capture > 1 ||
++        h.hw_size > FDISBULL_SB16_HW_MAX || h.sw_size > FDISBULL_SB16_SW_MAX ||
++        h.cap_size > FDISBULL_SB16_HW_MAX || h.emul_size > 65536 ||
++        h.emul_pending > h.emul_size ||
++        (h.emul_size ? h.emul_pos >= h.emul_size : h.emul_pos != 0)) {
++        error_setg(errp, "SB16 checkpoint mixer header is incompatible");
++        return false;
++    }
++    if (h.has_hw) {
++        if (!h.hw_size || h.hw_pos >= h.hw_size ||
++            h.sw_freq < 5000 || h.sw_freq > 45000 ||
++            (h.sw_channels != 1 && h.sw_channels != 2) ||
++            (h.sw_bits != 8 && h.sw_bits != 16) || h.sw_signed > 1 ||
++            h.sw_swap != (AUDIO_HOST_ENDIANNESS != 0) ||
++            !h.sw_size || h.sw_size != h.hw_size * h.sw_freq / 32000 + 1 ||
++            h.sw_pos > 1 || h.sw_total > h.hw_size ||
++            h.sw_empty != (h.sw_total == 0) ||
++            !fdisbull_sb16_activity_valid(h.hw_enabled, h.hw_pending_disable, h.sw_active) ||
++            !fdisbull_sb16_volume_valid(h.sw_mute, h.sw_l, h.sw_r) ||
++            h.rate_ipos > UINT32_MAX) {
++            error_setg(errp, "SB16 checkpoint software voice state is invalid");
++            return false;
++        }
++        rate.opos = h.rate_opos; rate.opos_inc = h.rate_increment;
++        rate.ipos = h.rate_ipos; rate.ilast.l = h.rate_last_l; rate.ilast.r = h.rate_last_r;
++        if (!st_rate_checkpoint_validate(&rate, h.sw_freq, 32000)) {
++            error_setg(errp, "SB16 checkpoint resampler phase is invalid");
++            return false;
++        }
++    } else {
++        /* Presence cannot be used to smuggle unvalidated dormant fields. */
++        empty = h;
++        empty.magic = empty.version = empty.sample_size = empty.byte_order = 0;
++        empty.has_capture = 0;
++        empty.cap_size = empty.cap_pos = empty.cap_timestamp = empty.cap_enabled = 0;
++        if (memcmp(&empty, &(FdisbullSB16Core){0}, sizeof(empty))) {
++            error_setg(errp, "Silent SB16 checkpoint retains absent output state");
++            return false;
++        }
++    }
++    if (h.has_capture) {
++        if (!h.cap_size || h.cap_pos >= h.cap_size || h.cap_enabled > 1 ||
++            (h.has_hw && (h.csw_total > h.cap_size ||
++                h.csw_empty != (h.csw_total == 0) ||
++                h.csw_active != h.hw_enabled || h.cap_enabled != h.hw_enabled ||
++                !fdisbull_sb16_volume_valid(h.csw_mute, h.csw_l, h.csw_r))) ||
++            (!h.has_hw && (h.cap_enabled || h.csw_total || h.csw_active ||
++                           h.csw_empty || h.csw_mute || h.csw_l || h.csw_r))) {
++            error_setg(errp, "SB16 checkpoint capture state is invalid");
++            return false;
++        }
++    } else if (h.cap_size || h.cap_pos || h.cap_timestamp || h.cap_enabled ||
++               h.csw_total || h.csw_active || h.csw_empty || h.csw_mute ||
++               h.csw_l || h.csw_r) {
++        error_setg(errp, "SB16 checkpoint retains an absent capture voice");
++        return false;
++    }
++    hw_bytes = h.hw_size * sizeof(st_sample);
++    sw_bytes = h.sw_size * sizeof(st_sample);
++    cap_bytes = h.cap_size * sizeof(st_sample);
++    if (len != sizeof(h) + hw_bytes + sw_bytes + cap_bytes + h.emul_size ||
++        !fdisbull_sb16_samples_valid(blob + sizeof(h), h.hw_size + h.sw_size + h.cap_size)) {
++        error_setg(errp, "SB16 checkpoint mixer length or samples are invalid");
++        return false;
++    }
++    if (!fdisbull_sb16_graph(&g, errp)) {
++        return false;
++    }
++    if (h.has_hw != !!g.hw || h.has_capture != !!g.cap ||
++        (g.hw && (h.hw_size != g.hw->mix_buf.size ||
++            h.sw_size != g.sw->resample_buf.size || h.sw_freq != g.sw->info.freq ||
++            h.sw_channels != g.sw->info.nchannels || h.sw_bits != g.sw->info.bits ||
++            h.sw_signed != g.sw->info.is_signed || h.sw_swap != g.sw->info.swap_endianness)) ||
++        (g.cap && h.cap_size != g.cap->hw.mix_buf.size)) {
++        error_setg(errp, "SB16 checkpoint recreated graph or software format differs");
++        return false;
++    }
++    p = blob + sizeof(h) + hw_bytes + sw_bytes + cap_bytes;
++    if (h.emul_size) {
++        size_t first = audio_ring_posb(h.emul_pos, h.emul_pending, h.emul_size);
++        size_t i;
++        for (i = 0; i < h.emul_size; i++) {
++            size_t offset = (i + h.emul_size - first) % h.emul_size;
++            if (offset >= h.emul_pending && p[i]) {
++                error_setg(errp, "SB16 checkpoint unused backend bytes are not canonical");
++                return false;
++            }
++        }
++        emul = g_memdup2(p, h.emul_size);
++    }
++    /* Every input, allocation, link and destination check precedes mutation.
++     * The device's post_load recreated callbacks/converters, but may leave
++     * fresh inactive flags. Restore the saved draining/active state directly
++     * under BQL: do not run a callback, DMA or an audio timer here. */
++    p = blob + sizeof(h);
++    if (g.hw) {
++        memcpy(g.hw->mix_buf.buffer, p, hw_bytes); p += hw_bytes;
++        memcpy(g.sw->resample_buf.buffer, p, sw_bytes); p += sw_bytes;
++        g.hw->mix_buf.pos = h.hw_pos; g.hw->ts_helper = h.hw_timestamp;
++        g.hw->enabled = h.hw_enabled; g.hw->pending_disable = h.hw_pending_disable;
++        g_free(g.hw->buf_emul); g.hw->buf_emul = g_steal_pointer(&emul);
++        g.hw->size_emul = h.emul_size; g.hw->pos_emul = h.emul_pos;
++        g.hw->pending_emul = h.emul_pending;
++        g.sw->total_hw_samples_mixed = h.sw_total;
++        g.sw->active = h.sw_active; g.sw->empty = h.sw_empty;
++        g.sw->resample_buf.pos = h.sw_pos;
++        g.sw->vol.mute = h.sw_mute; g.sw->vol.l = h.sw_l; g.sw->vol.r = h.sw_r;
++        /* Already validated above; this operation only copies scalar fields. */
++        st_rate_checkpoint_import(g.sw->rate, h.sw_freq, 32000, &rate);
++    }
++    if (g.cap) {
++        memcpy(g.cap->hw.mix_buf.buffer, p, cap_bytes);
++        g.cap->hw.mix_buf.pos = h.cap_pos; g.cap->hw.ts_helper = h.cap_timestamp;
++        g.cap->hw.enabled = h.cap_enabled;
++        if (g.csw) {
++            g.csw->total_hw_samples_mixed = h.csw_total;
++            g.csw->active = h.csw_active; g.csw->empty = h.csw_empty;
++            g.csw->vol.mute = h.csw_mute; g.csw->vol.l = h.csw_l; g.csw->vol.r = h.csw_r;
++        }
++        /* Only the restored graph can set the live observer's enabled bit.
++         * This notification updates ownership metadata; no PCM callback,
++         * stream, timer or guest execution is dispatched. */
++        audio_notify_capture(g.cap, h.cap_enabled ? AUD_CNOTIFY_ENABLE :
++                                                   AUD_CNOTIFY_DISABLE);
++    }
++    return true;
++}
++
++static bool fdisbull_sb16_timer(int64_t *timer_ns, bool restore, Error **errp)
++{
++    FdisbullSB16Graph g;
++    bool needed, pending;
++    int64_t now;
++    uint64_t expiry;
++
++    if (!timer_ns || !fdisbull_sb16_graph(&g, errp)) {
++        return false;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    needed = audio_is_timer_needed(g.state);
++    if (g.state->period_ticks <= 0 || now < 0 ||
++        g.state->period_ticks > INT64_MAX - now) {
++        error_setg(errp, "SB16 checkpoint audio timer range is invalid");
++        return false;
++    }
++    if (!restore) {
++        pending = timer_pending(g.state->ts);
++        if (pending != g.state->timer_running || pending != needed) {
++            error_setg(errp, "SB16 checkpoint audio timer is not reconstructible");
++            return false;
++        }
++        if (!pending) {
++            *timer_ns = -1;
++            return true;
++        }
++        expiry = timer_expire_time_ns(g.state->ts);
++        if (expiry > (uint64_t)(now + g.state->period_ticks)) {
++            error_setg(errp, "SB16 checkpoint audio deadline would change on resume");
++            return false;
++        }
++        *timer_ns = expiry;
++        return true;
++    }
++    if (*timer_ns < -1 || (*timer_ns >= 0) != needed ||
++        (*timer_ns >= 0 && *timer_ns > now + g.state->period_ticks)) {
++        error_setg(errp, "Restored SB16 audio timer differs from output activity");
++        return false;
++    }
++    if (*timer_ns < 0) {
++        timer_del(g.state->ts); g.state->timer_running = false;
++    } else {
++        timer_mod_ns(g.state->ts, *timer_ns); g.state->timer_running = true;
++        g.state->timer_last = now;
++    }
++    return true;
++}
++
+ char *fdisbull_audio_output_checkpoint_export(Error **errp)
+ {
+     AudioState *s;
+@@ -956,6 +1437,12 @@
+     size_t len, hw_bytes, cap_bytes = 0;
+ 
+     assert(bql_locked());
++    if (!fdisbull_audio_profile_exclusive(errp)) {
++        return NULL;
++    }
++    if (audio_state_by_name("fdisbull-sb16", NULL)) {
++        return fdisbull_sb16_export(errp);
++    }
+     s = audio_state_by_name("fdisbull-pc", NULL);
+     if (!s) {
+         return g_strdup("");
+@@ -1027,6 +1514,12 @@
+     size_t hw_bytes, cap_bytes;
+ 
+     assert(bql_locked());
++    if (!fdisbull_audio_profile_exclusive(errp)) {
++        return false;
++    }
++    if (audio_state_by_name("fdisbull-sb16", NULL)) {
++        return fdisbull_sb16_import(base64, errp);
++    }
+     if (!base64) {
+         error_setg(errp, "Missing audio core checkpoint");
+         return false;
+@@ -1119,6 +1612,12 @@
+     uint64_t expiry;
+     int64_t now;
+ 
++    if (!fdisbull_audio_profile_exclusive(errp)) {
++        return false;
++    }
++    if (audio_state_by_name("fdisbull-sb16", NULL)) {
++        return fdisbull_sb16_timer(timer_ns, false, errp);
++    }
+     if (!timer_ns || !fdisbull_audio_output_graph_safe(&s, errp)) {
+         return false;
+     }
+@@ -1148,6 +1647,12 @@
+     AudioState *s;
+     int64_t now;
+ 
++    if (!fdisbull_audio_profile_exclusive(errp)) {
++        return false;
++    }
++    if (audio_state_by_name("fdisbull-sb16", NULL)) {
++        return fdisbull_sb16_timer(&timer_ns, true, errp);
++    }
+     if (!fdisbull_audio_output_graph_safe(&s, errp)) {
+         return false;
+     }
+--- a/audio/mixeng.c
++++ b/audio/mixeng.c
+@@ -440,6 +440,71 @@
+     g_free (opaque);
+ }
+ 
++bool st_rate_checkpoint_validate(const FdisbullRateState *state,
++                                 int inrate, int outrate)
++{
++#ifdef FLOAT_MIXENG
++    /* This private codec deliberately pins the integer mixer ABI. */
++    return false;
++#else
++    uint64_t increment, limit;
++
++    if (!state || inrate < 5000 || inrate > 45000 || outrate != 32000) {
++        return false;
++    }
++    increment = ((uint64_t)inrate << 32) / outrate;
++    /* rate_template wraps before producing a frame at ipos >= 0x10001.
++     * Input exhaustion can leave at most one ratio-sized input step beyond
++     * that frontier. Bound both counters before any later frame arithmetic. */
++    limit = UINT64_C(0x10001) + (inrate + outrate - 1) / outrate;
++    if (state->opos_inc != increment || state->ipos > limit ||
++        (state->opos >> 32) > limit ||
++        state->ilast.l < INT32_MIN || state->ilast.l > INT64_C(2147483648) ||
++        state->ilast.r < INT32_MIN || state->ilast.r > INT64_C(2147483648)) {
++        return false;
++    }
++    /* The equal-rate copy branch never consumes these phase fields. */
++    if (inrate == outrate && (state->opos || state->ipos ||
++                              state->ilast.l || state->ilast.r)) {
++        return false;
++    }
++    return true;
++#endif
++}
++
++bool st_rate_checkpoint_get(void *opaque, int inrate, int outrate,
++                            FdisbullRateState *state)
++{
++    struct rate *rate = opaque;
++
++    if (!rate || !state) {
++        return false;
++    }
++    memset(state, 0, sizeof(*state));
++    state->opos = rate->opos;
++    state->opos_inc = rate->opos_inc;
++    state->ipos = rate->ipos;
++    state->ilast.l = rate->ilast.l;
++    state->ilast.r = rate->ilast.r;
++    return st_rate_checkpoint_validate(state, inrate, outrate);
++}
++
++bool st_rate_checkpoint_import(void *opaque, int inrate, int outrate,
++                               const FdisbullRateState *state)
++{
++    struct rate *rate = opaque;
++
++    if (!rate || !st_rate_checkpoint_validate(state, inrate, outrate)) {
++        return false;
++    }
++    rate->opos = state->opos;
++    rate->opos_inc = state->opos_inc;
++    rate->ipos = state->ipos;
++    rate->ilast.l = state->ilast.l;
++    rate->ilast.r = state->ilast.r;
++    return true;
++}
++
+ /**
+  * st_rate_frames_out() - returns the number of frames the resampling code
+  * generates from frames_in frames
+--- a/audio/mixeng.h
++++ b/audio/mixeng.h
+@@ -52,6 +52,20 @@
+ void st_rate_flow_mix(void *opaque, st_sample *ibuf, st_sample *obuf,
+                       size_t *isamp, size_t *osamp);
+ void st_rate_stop (void *opaque);
++
++/* Pointer-free, same-build checkpoint state for the bounded SB16 resampler. */
++typedef struct FdisbullRateState {
++    uint64_t opos;
++    uint64_t opos_inc;
++    uint32_t ipos;
++    st_sample ilast;
++} FdisbullRateState;
++bool st_rate_checkpoint_get(void *opaque, int inrate, int outrate,
++                            FdisbullRateState *state);
++bool st_rate_checkpoint_validate(const FdisbullRateState *state,
++                                 int inrate, int outrate);
++bool st_rate_checkpoint_import(void *opaque, int inrate, int outrate,
++                               const FdisbullRateState *state);
+ uint32_t st_rate_frames_out(void *opaque, uint32_t frames_in);
+ uint32_t st_rate_frames_in(void *opaque, uint32_t frames_out);
+ void mixeng_clear (struct st_sample *buf, int len);
+--- a/hw/audio/sb16.c
++++ b/hw/audio/sb16.c
+@@ -25,6 +25,13 @@
+ #include "qemu/osdep.h"
+ #include "hw/audio/soundhw.h"
+ #include "audio/audio.h"
++#include "audio/audio_int.h"
++#include "hw/audio/fdisbull-sb16.h"
++#include "hw/dma/i8257.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/runstate.h"
++#include "qapi/qapi-commands-fdisbull-sb16.h"
++#include "qemu/error-report.h"
+ #include "hw/irq.h"
+ #include "hw/isa/isa.h"
+ #include "hw/qdev-properties.h"
+@@ -113,6 +120,17 @@
+     int mixer_nreg;
+     uint8_t mixer_regs[256];
+     PortioList portio_list;
++
++    /* Private, opt-in checkpoint subsection; never part of ordinary v1. */
++    bool checkpoint_loaded;
++    bool checkpoint_voice_present;
++    bool checkpoint_voice_active;
++    int32_t checkpoint_voice_freq;
++    int32_t checkpoint_voice_channels;
++    int32_t checkpoint_voice_format;
++    int32_t checkpoint_voice_endianness;
++    int64_t checkpoint_aux_deadline;
++    int64_t checkpoint_audio_deadline;
+ };
+ 
+ #define SAMPLE_RATE_MIN 5000
+@@ -1283,6 +1301,281 @@
+     s->audio_free = free;
+ }
+ 
++/* The selected digital-only profile is deliberately distinct from pcspk. */
++static SB16State *sb16_checkpoint_device(Error **errp)
++{
++    bool ambiguous = false;
++    Object *obj = object_resolve_path_type("", TYPE_SB16, &ambiguous);
++    SB16State *s;
++
++    if (ambiguous || !obj || !DEVICE(obj)->realized) {
++        error_setg(errp, "SB16 checkpoint requires exactly one realized SB16");
++        return NULL;
++    }
++    s = SB16(obj);
++    if (strcmp(audio_get_id(&s->card), "fdisbull-sb16")) {
++        error_setg(errp, "SB16 checkpoint requires audiodev fdisbull-sb16");
++        return NULL;
++    }
++    return s;
++}
++
++bool fdisbull_sb16_checkpoint_enabled(void)
++{
++    return sb16_checkpoint_device(NULL) != NULL;
++}
++
++static bool sb16_checkpoint_device_safe(SB16State *s, Error **errp)
++{
++    I8257State *low, *high;
++    int channel;
++    I8257State *active;
++
++    if (runstate_is_running() || !s->aux_ts ||
++        !object_dynamic_cast(OBJECT(s->isa_dma), TYPE_I8257) ||
++        !object_dynamic_cast(OBJECT(s->isa_hdma), TYPE_I8257)) {
++        error_setg(errp, "SB16 checkpoint requires stopped i8257 DMA");
++        return false;
++    }
++    low = I8257(s->isa_dma);
++    high = I8257(s->isa_hdma);
++    active = s->use_hdma ? high : low;
++    channel = (s->use_hdma ? s->hdma : s->dma) & 3;
++    if (low->running || high->running || s->dma_running < 0 ||
++        s->dma_running > 1 || s->audio_free < 0 ||
++        s->audio_free > 1048576 || s->use_hdma < 0 || s->use_hdma > 1 ||
++        (s->dma_running && (!s->voice || s->block_size <= 0 ||
++                           s->left_till_irq <= 0 ||
++                           !(active->status & (1 << (channel + 4)))))) {
++        error_setg(errp, "SB16 checkpoint DMA or audio credit is unsupported");
++        return false;
++    }
++    if (s->voice && (s->voice->info.bits != 8 ||
++        s->voice->info.is_signed || s->voice->info.is_float ||
++        s->voice->info.nchannels != 1 ||
++        s->voice->info.freq < SAMPLE_RATE_MIN ||
++        s->voice->info.freq > SAMPLE_RATE_MAX ||
++        s->voice->info.swap_endianness ||
++        s->voice->active < 0 || s->voice->active > 1)) {
++        error_setg(errp, "SB16 checkpoint supports U8 mono voices at 5000..45000 Hz");
++        return false;
++    }
++    if (timer_pending(s->aux_ts) &&
++        timer_expire_time_ns(s->aux_ts) > INT64_MAX) {
++        error_setg(errp, "SB16 auxiliary timer deadline is invalid");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_sb16_checkpoint_safe(Error **errp)
++{
++    SB16State *s = sb16_checkpoint_device(errp);
++    int64_t deadline;
++
++    return s && sb16_checkpoint_device_safe(s, errp) &&
++        fdisbull_audio_output_checkpoint_safe(&deadline, errp);
++}
++
++static bool sb16_checkpoint_needed(void *opaque)
++{
++    SB16State *s = opaque;
++    return fdisbull_instrumented_checkpoint_busy() &&
++        !strcmp(audio_get_id(&s->card), "fdisbull-sb16");
++}
++
++static int sb16_checkpoint_pre_save(void *opaque)
++{
++    SB16State *s = opaque;
++    g_autoptr(Error) err = NULL;
++
++    if (s != sb16_checkpoint_device(&err) ||
++        !sb16_checkpoint_device_safe(s, &err) ||
++        !fdisbull_audio_output_checkpoint_safe(&s->checkpoint_audio_deadline,
++                                               &err)) {
++        if (err) {
++            error_report_err(g_steal_pointer(&err));
++        }
++        return -EINVAL;
++    }
++    s->checkpoint_voice_present = s->voice != NULL;
++    s->checkpoint_voice_active = s->voice && s->voice->active;
++    s->checkpoint_voice_freq = s->voice ? s->voice->info.freq : 0;
++    s->checkpoint_voice_channels = s->voice ? s->voice->info.nchannels : 0;
++    s->checkpoint_voice_format = s->voice ? AUDIO_FORMAT_U8 : 0;
++    s->checkpoint_voice_endianness = 0;
++    s->checkpoint_aux_deadline = timer_pending(s->aux_ts) ?
++        timer_expire_time_ns(s->aux_ts) : -1;
++    return 0;
++}
++
++static int sb16_checkpoint_pre_load(void *opaque)
++{
++    SB16State *s = opaque;
++    s->checkpoint_loaded = false;
++    return 0;
++}
++
++static int sb16_checkpoint_post_load(void *opaque, int version_id)
++{
++    SB16State *s = opaque;
++    struct audsettings as;
++
++    if (!fdisbull_instrumented_checkpoint_busy() ||
++        s != sb16_checkpoint_device(NULL) ||
++        s->checkpoint_audio_deadline < -1 || s->checkpoint_aux_deadline < -1 ||
++        (!s->checkpoint_voice_present &&
++         (s->checkpoint_voice_active || s->checkpoint_voice_freq ||
++          s->checkpoint_voice_channels || s->checkpoint_voice_format ||
++          s->checkpoint_voice_endianness || s->dma_running)) ||
++        (s->checkpoint_voice_present &&
++         (s->checkpoint_voice_freq < SAMPLE_RATE_MIN ||
++          s->checkpoint_voice_freq > SAMPLE_RATE_MAX ||
++          s->checkpoint_voice_channels != 1 ||
++          s->checkpoint_voice_format != AUDIO_FORMAT_U8 ||
++          s->checkpoint_voice_endianness))) {
++        return -EINVAL;
++    }
++    if (s->voice) {
++        AUD_close_out(&s->card, s->voice);
++        s->voice = NULL;
++    }
++    timer_del(s->aux_ts);
++    if (s->checkpoint_voice_present) {
++        as.freq = s->checkpoint_voice_freq;
++        as.nchannels = s->checkpoint_voice_channels;
++        as.fmt = s->checkpoint_voice_format;
++        as.endianness = s->checkpoint_voice_endianness;
++        s->voice = AUD_open_out(&s->card, NULL, "sb16", s,
++                                SB_audio_callback, &as);
++        if (!s->voice) {
++            return -EINVAL;
++        }
++        /* This changes no ISA request and transfers no guest memory.  The
++         * private audio import subsequently restores exact mixer/ring state. */
++        AUD_set_active_out(s->voice, s->checkpoint_voice_active);
++    }
++    s->checkpoint_loaded = true;
++    return 0;
++}
++
++static bool sb16_checkpoint_dma_loaded(IsaDma *dma)
++{
++    I8257State *d = I8257(dma);
++    return d->checkpoint_loaded && d->status == d->checkpoint_status &&
++        d->running == d->checkpoint_running && !d->running &&
++        d->dma_bh_scheduled == d->checkpoint_bh_pending &&
++        d->checkpoint_deferred == d->checkpoint_bh_pending;
++}
++
++bool fdisbull_sb16_checkpoint_rearm(Error **errp)
++{
++    SB16State *s = sb16_checkpoint_device(errp);
++
++    if (!s) {
++        return false;
++    }
++    if (!fdisbull_instrumented_checkpoint_busy() || !s->checkpoint_loaded ||
++        !sb16_checkpoint_device_safe(s, errp) ||
++        !sb16_checkpoint_dma_loaded(s->isa_dma) ||
++        !sb16_checkpoint_dma_loaded(s->isa_hdma) ||
++        (s->voice != NULL) != s->checkpoint_voice_present ||
++        (s->voice && !!s->voice->active != s->checkpoint_voice_active)) {
++        if (!errp || !*errp) {
++            error_setg(errp, "SB16 scoped checkpoint state is absent or changed");
++        }
++        return false;
++    }
++    if (!fdisbull_audio_output_checkpoint_restore_timer(
++            s->checkpoint_audio_deadline, errp)) {
++        return false;
++    }
++    if (s->checkpoint_aux_deadline >= 0) {
++        timer_mod_ns(s->aux_ts, s->checkpoint_aux_deadline);
++    } else {
++        timer_del(s->aux_ts);
++    }
++    s->checkpoint_loaded = false;
++    I8257(s->isa_dma)->checkpoint_loaded = false;
++    I8257(s->isa_hdma)->checkpoint_loaded = false;
++    return true;
++}
++
++static const VMStateDescription vmstate_sb16_checkpoint = {
++    .name = "sb16/fdisbull-checkpoint",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = sb16_checkpoint_needed,
++    .pre_save = sb16_checkpoint_pre_save,
++    .post_load = sb16_checkpoint_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_INT32(audio_free, SB16State),
++        VMSTATE_BOOL(checkpoint_voice_present, SB16State),
++        VMSTATE_BOOL(checkpoint_voice_active, SB16State),
++        VMSTATE_INT32(checkpoint_voice_freq, SB16State),
++        VMSTATE_INT32(checkpoint_voice_channels, SB16State),
++        VMSTATE_INT32(checkpoint_voice_format, SB16State),
++        VMSTATE_INT32(checkpoint_voice_endianness, SB16State),
++        VMSTATE_INT64(checkpoint_aux_deadline, SB16State),
++        VMSTATE_INT64(checkpoint_audio_deadline, SB16State),
++        VMSTATE_END_OF_LIST()
++    },
++};
++
++FdisbullSb16Info *qmp_x_fdisbull_query_sb16(Error **errp)
++{
++    SB16State *s = sb16_checkpoint_device(errp);
++    FdisbullSb16Info *r;
++    I8257State *d;
++    I8257Regs *ch;
++    int channel, direction;
++
++    if (!s) {
++        return NULL;
++    }
++    if (runstate_is_running() ||
++        !object_dynamic_cast(OBJECT(s->isa_dma), TYPE_I8257) ||
++        !object_dynamic_cast(OBJECT(s->isa_hdma), TYPE_I8257)) {
++        error_setg(errp, "SB16 query requires stopped i8257 DMA");
++        return NULL;
++    }
++    d = I8257(s->use_hdma ? s->isa_hdma : s->isa_dma);
++    channel = (s->use_hdma ? s->hdma : s->dma) & 3;
++    ch = &d->regs[channel];
++    direction = (ch->mode & 0x20) ? -1 : 1;
++    r = g_new0(FdisbullSb16Info, 1);
++    r->api_version = 1;
++    r->iobase = s->port;
++    r->irq = s->irq;
++    r->dma = s->dma;
++    r->dma16 = s->hdma;
++    r->version = s->ver;
++    r->audiodev_id = g_strdup(audio_get_id(&s->card));
++    r->voice_present = s->voice != NULL;
++    r->voice_active = s->voice && s->voice->active;
++    r->voice_frequency = s->voice ? s->voice->info.freq : 0;
++    r->voice_channels = s->voice ? s->voice->info.nchannels : 0;
++    r->voice_bits = s->voice ? s->voice->info.bits : 0;
++    r->voice_signed = s->voice && s->voice->info.is_signed;
++    r->dma_active = s->dma_running;
++    r->audio_free = s->audio_free;
++    r->left_till_irq = s->left_till_irq;
++    r->block_size = s->block_size;
++    r->irq_status = s->mixer_regs[0x82];
++    r->dma_position = ch->now[1];
++    r->dma_length = (ch->base[1] + 1) << d->dshift;
++    r->dma_address = ((ch->pageh & 0x7f) << 24) | (ch->page << 16) |
++        (uint32_t)(ch->now[0] + ch->now[1] * direction);
++    r->dma_status = d->status;
++    r->dma_mask = d->mask;
++    r->dma_pending = d->dma_bh_scheduled;
++    r->dma_running = d->running;
++    r->aux_timer_pending = timer_pending(s->aux_ts);
++    r->aux_timer_deadline = r->aux_timer_pending ?
++        timer_expire_time_ns(s->aux_ts) : -1;
++    return r;
++}
++
+ static int sb16_post_load (void *opaque, int version_id)
+ {
+     SB16State *s = opaque;
+@@ -1293,6 +1586,10 @@
+     }
+     if (s->out_data_len < 0 || s->out_data_len > (int)sizeof(s->out_data)) {
+         return -1;
++    }
++    if (fdisbull_instrumented_checkpoint_busy() &&
++        !strcmp(audio_get_id(&s->card), "fdisbull-sb16")) {
++        return s->checkpoint_loaded ? 0 : -EINVAL;
+     }
+     if (s->voice) {
+         AUD_close_out (&s->card, s->voice);
+@@ -1330,6 +1627,7 @@
+     .name = "sb16",
+     .version_id = 1,
+     .minimum_version_id = 1,
++    .pre_load = sb16_checkpoint_pre_load,
+     .post_load = sb16_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UNUSED(  4 /* irq */
+@@ -1381,7 +1679,11 @@
+         VMSTATE_BUFFER (mixer_regs, SB16State),
+ 
+         VMSTATE_END_OF_LIST ()
+-    }
++    },
++    .subsections = (const VMStateDescription * const []) {
++        &vmstate_sb16_checkpoint,
++        NULL
++    },
+ };
+ 
+ static const MemoryRegionPortio sb16_ioport_list[] = {
+--- a/hw/dma/i8257.c
++++ b/hw/dma/i8257.c
+@@ -27,6 +27,9 @@
+ #include "hw/qdev-properties.h"
+ #include "migration/vmstate.h"
+ #include "hw/dma/i8257.h"
++#include "hw/audio/fdisbull-sb16.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/runstate.h"
+ #include "qapi/error.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/module.h"
+@@ -64,6 +67,41 @@
+ };
+ 
+ static void i8257_dma_run(void *opaque);
++
++static bool i8257_sb16_profile(void)
++{
++    return fdisbull_sb16_checkpoint_enabled();
++}
++
++static void i8257_dma_bh(void *opaque)
++{
++    I8257State *d = opaque;
++
++    if (i8257_sb16_profile()) {
++        /* BHs, unlike virtual timers, may be polled while the VM is paused. */
++        if (!runstate_is_running()) {
++            d->checkpoint_deferred = true;
++            d->dma_bh_scheduled = true;
++            return;
++        }
++        d->dma_bh_scheduled = false;
++        d->checkpoint_deferred = false;
++    }
++    i8257_dma_run(d);
++}
++
++static void i8257_checkpoint_runstate(void *opaque, bool running, RunState state)
++{
++    I8257State *d = opaque;
++
++    if (running && d->checkpoint_deferred) {
++        d->checkpoint_deferred = false;
++        if (d->dma_bh_scheduled) {
++            qemu_bh_schedule_idle(d->dma_bh);
++        }
++    }
++}
++
+ 
+ static const int channels[8] = {-1, 2, 3, 1, -1, -1, -1, 0};
+ 
+@@ -542,9 +580,76 @@
+     }
+ };
+ 
++static bool i8257_checkpoint_needed(void *opaque)
++{
++    return fdisbull_instrumented_checkpoint_busy() && i8257_sb16_profile();
++}
++
++static int i8257_checkpoint_pre_save(void *opaque)
++{
++    I8257State *d = opaque;
++
++    /* A reentrant transfer cannot be resumed as a passive stopped state. */
++    if (runstate_is_running() || d->running || (d->dshift != 0 && d->dshift != 1)) {
++        return -EINVAL;
++    }
++    d->checkpoint_status = d->status;
++    d->checkpoint_bh_pending = d->dma_bh_scheduled;
++    d->checkpoint_running = d->running;
++    return 0;
++}
++
++static int i8257_checkpoint_pre_load(void *opaque)
++{
++    I8257State *d = opaque;
++
++    d->checkpoint_loaded = false;
++    if (fdisbull_instrumented_checkpoint_busy() && i8257_sb16_profile()) {
++        qemu_bh_cancel(d->dma_bh);
++        d->checkpoint_deferred = false;
++    }
++    return 0;
++}
++
++static int i8257_checkpoint_post_load(void *opaque, int version_id)
++{
++    I8257State *d = opaque;
++
++    if (!fdisbull_instrumented_checkpoint_busy() || !i8257_sb16_profile() ||
++        runstate_is_running() || d->checkpoint_running ||
++        (d->dshift != 0 && d->dshift != 1)) {
++        return -EINVAL;
++    }
++    qemu_bh_cancel(d->dma_bh);
++    d->status = d->checkpoint_status;
++    d->running = d->checkpoint_running;
++    d->dma_bh_scheduled = d->checkpoint_bh_pending;
++    d->checkpoint_deferred = d->checkpoint_bh_pending;
++    d->checkpoint_loaded = true;
++    return 0;
++}
++
++static const VMStateDescription vmstate_i8257_checkpoint = {
++    .name = "dma/fdisbull-sb16-checkpoint",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = i8257_checkpoint_needed,
++    .pre_save = i8257_checkpoint_pre_save,
++    .post_load = i8257_checkpoint_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT8(checkpoint_status, I8257State),
++        VMSTATE_BOOL(checkpoint_bh_pending, I8257State),
++        VMSTATE_INT32(checkpoint_running, I8257State),
++        VMSTATE_END_OF_LIST()
++    },
++};
++
+ static int i8257_post_load(void *opaque, int version_id)
+ {
+     I8257State *d = opaque;
++    if (fdisbull_instrumented_checkpoint_busy() && i8257_sb16_profile()) {
++        return d->checkpoint_loaded ? 0 : -EINVAL;
++    }
+     i8257_dma_run(d);
+ 
+     return 0;
+@@ -554,6 +659,7 @@
+     .name = "dma",
+     .version_id = 1,
+     .minimum_version_id = 1,
++    .pre_load = i8257_checkpoint_pre_load,
+     .post_load = i8257_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UINT8(command, I8257State),
+@@ -563,7 +669,11 @@
+         VMSTATE_STRUCT_ARRAY(regs, I8257State, 4, 1, vmstate_i8257_regs,
+                              I8257Regs),
+         VMSTATE_END_OF_LIST()
+-    }
++    },
++    .subsections = (const VMStateDescription * const []) {
++        &vmstate_i8257_checkpoint,
++        NULL
++    },
+ };
+ 
+ static void i8257_realize(DeviceState *dev, Error **errp)
+@@ -595,7 +705,8 @@
+         d->regs[i].transfer_handler = i8257_phony_handler;
+     }
+ 
+-    d->dma_bh = qemu_bh_new(i8257_dma_run, d);
++    d->dma_bh = qemu_bh_new(i8257_dma_bh, d);
++    qdev_add_vm_change_state_handler(dev, i8257_checkpoint_runstate, d);
+ }
+ 
+ static const Property i8257_properties[] = {
+--- a/include/hw/dma/i8257.h
++++ b/include/hw/dma/i8257.h
+@@ -43,6 +43,13 @@
+     int running;
+     PortioList portio_page;
+     PortioList portio_pageh;
++
++    /* Opt-in SB16 checkpoints defer restored bottom halves until resume. */
++    bool checkpoint_loaded;
++    bool checkpoint_deferred;
++    uint8_t checkpoint_status;
++    bool checkpoint_bh_pending;
++    int32_t checkpoint_running;
+ };
+ 
+ void i8257_dma_init(Object *parent, ISABus *bus, bool high_page_enable);
+--- /dev/null
++++ b/include/hw/audio/fdisbull-sb16.h
+@@ -0,0 +1,10 @@
++#ifndef HW_AUDIO_FDISBULL_SB16_H
++#define HW_AUDIO_FDISBULL_SB16_H
++
++#include "qapi/error.h"
++
++bool fdisbull_sb16_checkpoint_enabled(void);
++bool fdisbull_sb16_checkpoint_safe(Error **errp);
++bool fdisbull_sb16_checkpoint_rearm(Error **errp);
++
++#endif
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -32,6 +32,7 @@
+                                            Error **errp);
+ 
+ FdisbullAudioInfo *fdisbull_audio_checkpoint_info(Error **errp);
++const char *fdisbull_audio_checkpoint_profile(void);
+ char *fdisbull_audio_checkpoint_pcm_base64(void);
+ bool fdisbull_audio_checkpoint_validate(
+     const FdisbullInstrumentedAudioState *state, uint64_t source_epoch,
+--- a/system/fdisbull-audio.c
++++ b/system/fdisbull-audio.c
+@@ -8,6 +8,7 @@
+ #include "qemu/osdep.h"
+ #include "audio/audio.h"
+ #include "hw/audio/pcspk.h"
++#include "hw/audio/fdisbull-sb16.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-audio.h"
+@@ -74,6 +75,30 @@
+     }
+     audio_window.epoch = clock->epoch;
+     return true;
++}
++
++static AudioState *checkpoint_audio_state(Error **errp)
++{
++    AudioState *pc = audio_state_by_name("fdisbull-pc", NULL);
++    AudioState *sb = audio_state_by_name("fdisbull-sb16", NULL);
++
++    if (pc && sb) {
++        error_setg(errp, "One explicit checkpoint audio graph is required");
++        return NULL;
++    }
++    if (!pc && !sb) {
++        error_setg(errp, "No explicit checkpoint audio graph is configured");
++        return NULL;
++    }
++    return sb ? sb : pc;
++}
++
++const char *fdisbull_audio_checkpoint_profile(void)
++{
++    /* Preserve the historical PC-speaker observer-profile spelling.  SB16
++     * also identifies a configured, initially silent device without a tap. */
++    return audio_state_by_name("fdisbull-sb16", NULL) ? "sb16" :
++           audio_window.token ? "pc-speaker" : "off";
+ }
+ 
+ static bool audio_token(const char *token, Error **errp)
+@@ -188,7 +213,7 @@
+                    "and capacity of 1..1920000 frames");
+         return NULL;
+     }
+-    state = audio_state_by_name("fdisbull-pc", errp);
++    state = checkpoint_audio_state(errp);
+     if (!state) {
+         return NULL;
+     }
+@@ -292,7 +317,8 @@
+     unsigned nchunks = 0;
+ 
+     if (!state || !state->profile ||
+-        (strcmp(state->profile, "off") && strcmp(state->profile, "pc-speaker")) ||
++        (strcmp(state->profile, "off") && strcmp(state->profile, "pc-speaker") &&
++         strcmp(state->profile, "sb16")) ||
+         !state->info || !state->core_base64 || strlen(state->core_base64) > 8 * 1024 * 1024 ||
+         !state->pcm_base64 || strlen(state->pcm_base64) > 4 * MAX_FRAMES / 3 + 8 ||
+         state->info->api_version != 1 || state->info->rate != AUDIO_RATE ||
+@@ -323,9 +349,9 @@
+     }
+     if (frames != state->info->frames ||
+         (state->active != !strcmp(state->info->state, "capturing")) ||
+-        (state->active && strcmp(state->profile, "pc-speaker")) ||
++        (state->active && !strcmp(state->profile, "off")) ||
+         (!state->info->token && (state->active || state->info->frames || nchunks)) ||
+-        (state->info->token && strcmp(state->profile, "pc-speaker"))) {
++        (state->info->token && !strcmp(state->profile, "off"))) {
+         error_setg(errp, "Native audio checkpoint state and retained frames disagree");
+         return false;
+     }
+@@ -364,11 +390,17 @@
+         .notify = audio_notify, .capture = audio_capture, .destroy = audio_destroy,
+     };
+     bool expected_enabled;
++    bool sb16_profile;
+ 
+     assert(bql_locked());
+     if (!audio_checkpoint_decode(state, &pcm, &pcm_bytes, errp) ||
+         !fdisbull_audio_checkpoint_validate(state, state->info->epoch,
+                                             state->info->virtual_ns, errp)) {
++        return false;
++    }
++    sb16_profile = !strcmp(state->profile, "sb16");
++    if (sb16_profile != !!audio_state_by_name("fdisbull-sb16", NULL)) {
++        error_setg(errp, "Restored audio graph differs from its saved profile");
+         return false;
+     }
+     if (!fdisbull_pcspk_checkpoint_rearm(errp)) {
+@@ -386,7 +418,7 @@
+         }
+     }
+     if (state->active) {
+-        audio = audio_state_by_name("fdisbull-pc", errp);
++        audio = checkpoint_audio_state(errp);
+         if (!audio) {
+             return false;
+         }
+@@ -416,7 +448,8 @@
+     expected_enabled = state->info->enabled;
+     if (state->active) {
+         audio_window.capture = AUD_add_capture(audio, &settings, &ops, NULL);
+-        if (!audio_window.capture || audio_window.enabled != expected_enabled) {
++        if (!audio_window.capture ||
++            (!sb16_profile && audio_window.enabled != expected_enabled)) {
+             audio_window.invalidated = true;
+             error_setg(errp, "Restored native PC-speaker capture profile differs");
+             return false;
+@@ -426,6 +459,15 @@
+         audio_window.invalidated = true;
+         return false;
+     }
++    if (sb16_profile &&
++        (!fdisbull_sb16_checkpoint_rearm(errp) ||
++         (state->active && audio_window.enabled != expected_enabled))) {
++        audio_window.invalidated = true;
++        if (!errp || !*errp) {
++            error_setg(errp, "Restored SB16 capture activity differs");
++        }
++        return false;
++    }
+     if (new_token) {
+         *new_token = audio_window.token;
+     }
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -6,6 +6,7 @@
+ #include "qemu/osdep.h"
+ #include "audio/audio.h"
+ #include "hw/audio/pcspk.h"
++#include "hw/audio/fdisbull-sb16.h"
+ #include "hw/core/cpu.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+@@ -130,7 +131,9 @@
+     }
+     if (!fdisbull_input_checkpoint_safe(errp) ||
+         !fdisbull_frame_keys_checkpoint_safe(errp) ||
+-        !fdisbull_pcspk_checkpoint_audio_safe(errp)) {
++        !fdisbull_pcspk_checkpoint_audio_safe(errp) ||
++        (audio_state_by_name("fdisbull-sb16", NULL) &&
++         !fdisbull_sb16_checkpoint_safe(errp))) {
+         return NULL;
+     }
+     audio = fdisbull_audio_checkpoint_info(errp);
+@@ -161,7 +164,7 @@
+     }
+ 
+     result->audio = g_new0(FdisbullInstrumentedAudioState, 1);
+-    result->audio->profile = g_strdup(audio->token ? "pc-speaker" : "off");
++    result->audio->profile = g_strdup(fdisbull_audio_checkpoint_profile());
+     result->audio->active = !strcmp(audio->state, "capturing");
+     result->audio->info = g_steal_pointer(&audio);
+     result->audio->pcm_base64 = fdisbull_audio_checkpoint_pcm_base64();
+--- /dev/null
++++ b/qapi/fdisbull-sb16.json
+@@ -0,0 +1,75 @@
++# Private stopped digital-only SB16 admission/observation, API 1.
++##
++# @FdisbullSb16Info:
++#
++# Passive state. No port read, IRQ acknowledgement, DMA transfer or timer tick.
++#
++# @api-version: api version observation.
++# @iobase: iobase observation.
++# @irq: irq observation.
++# @dma: dma observation.
++# @dma16: dma16 observation.
++# @version: version observation.
++# @audiodev-id: audiodev id observation.
++# @voice-present: voice present observation.
++# @voice-active: voice active observation.
++# @voice-frequency: voice frequency observation.
++# @voice-channels: voice channels observation.
++# @voice-bits: voice bits observation.
++# @voice-signed: voice signed observation.
++# @dma-active: dma active observation.
++# @audio-free: audio free observation.
++# @left-till-irq: left till irq observation.
++# @block-size: block size observation.
++# @irq-status: irq status observation.
++# @dma-position: dma position observation.
++# @dma-length: dma length observation.
++# @dma-address: dma address observation.
++# @dma-status: dma status observation.
++# @dma-mask: dma mask observation.
++# @dma-pending: dma pending observation.
++# @dma-running: dma running observation.
++# @aux-timer-pending: aux timer pending observation.
++# @aux-timer-deadline: aux timer deadline observation.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullSb16Info',
++  'data': { 'api-version': 'int',
++            'iobase': 'int',
++            'irq': 'int',
++            'dma': 'int',
++            'dma16': 'int',
++            'version': 'int',
++            'audiodev-id': 'str',
++            'voice-present': 'bool',
++            'voice-active': 'bool',
++            'voice-frequency': 'int',
++            'voice-channels': 'int',
++            'voice-bits': 'int',
++            'voice-signed': 'bool',
++            'dma-active': 'bool',
++            'audio-free': 'int',
++            'left-till-irq': 'int',
++            'block-size': 'int',
++            'irq-status': 'int',
++            'dma-position': 'int',
++            'dma-length': 'int',
++            'dma-address': 'uint32',
++            'dma-status': 'int',
++            'dma-mask': 'int',
++            'dma-pending': 'bool',
++            'dma-running': 'int',
++            'aux-timer-pending': 'bool',
++            'aux-timer-deadline': 'int' } }
++
++##
++# @x-fdisbull-query-sb16:
++#
++# Observe exactly one stopped SB16 selected by audiodev fdisbull-sb16.
++#
++# Returns: the passive selected-card state, or an error.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-sb16', 'returns': 'FdisbullSb16Info' }
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -64,6 +64,7 @@
+ { 'include': 'misc-target.json' }
+ { 'include': 'audio.json' }
+ { 'include': 'fdisbull-audio.json' }
++{ 'include': 'fdisbull-sb16.json' }
+ { 'include': 'fdisbull-display.json' }
+ { 'include': 'fdisbull-input.json' }
+ { 'include': 'fdisbull-retrace.json' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -61,6 +61,7 @@
+     'acpi',
+     'audio',
+     'fdisbull-audio',
++    'fdisbull-sb16',
+     'fdisbull-display',
+     'fdisbull-input',
+     'fdisbull-retrace',
