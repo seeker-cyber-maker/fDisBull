@@ -126,8 +126,9 @@ def owned(monkeypatch):
     return state
 
 
-def test_virtual_profile_requires_single_cpu_and_keeps_fixed_icount_arguments():
-    assert machine_clock_arguments('virtual') == machine_clock_arguments('instruction')
+def test_virtual_profile_requires_single_cpu_and_keeps_fixed_icount_with_vm_rtc():
+    assert machine_clock_arguments('virtual') == machine_clock_arguments('instruction') + [
+        '-rtc', 'base=utc,clock=vm,driftfix=none']
     assert machine_clock_configuration('virtual', 1)['virtual_ns_supported'] is True
     with pytest.raises(ValueError):
         machine_clock_configuration('virtual', 2)

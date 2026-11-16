@@ -1,5 +1,7 @@
 """Machine instruction observations never stand in for elapsed guest time."""
 from copy import deepcopy
+import hashlib
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -7,6 +9,8 @@ import pytest
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.qemu_clock import (MachineClockMixin, machine_clock_arguments,
                                  machine_clock_configuration)
+from test_qemu_owned_checkpoint import (runtime as owned_checkpoint_runtime,
+                                        rewrite as rewrite_owned_archive)
 
 
 class ClockPeer:
@@ -54,6 +58,87 @@ def test_explicit_instruction_profile_selects_single_tcg_without_recording():
         '-accel', 'tcg,thread=single', '-icount', 'shift=7,align=off,sleep=off']
     assert machine_clock_arguments('standard') == ['-accel', 'tcg,thread=multi']
     assert machine_clock_configuration('standard', 2)['read_source'] is None
+
+
+def test_virtual_profile_pins_vm_backed_rtc_without_fixing_the_initial_calendar():
+    assert machine_clock_configuration('virtual', 1)['rtc'] == {
+        'base': 'utc', 'clock': 'vm', 'driftfix': 'none'}
+    assert machine_clock_arguments('virtual') == [
+        '-accel', 'tcg,thread=single', '-icount', 'shift=7,align=off,sleep=off',
+        '-rtc', 'base=utc,clock=vm,driftfix=none']
+    # These profiles retain their pre-existing RTC defaults and launch identity.
+    for profile in ('standard', 'instruction'):
+        assert 'rtc' not in machine_clock_configuration(profile, 1)
+        assert '-rtc' not in machine_clock_arguments(profile)
+
+
+def test_legacy_virtual_descriptor_is_closed_before_any_native_observation():
+    context = ClockContext('virtual')
+    context.vm.machine_configuration['clock_profile'].pop('rtc', None)
+    def unexpected(command):
+        context.peer.calls.append(command)
+        pytest.fail('Legacy RTC descriptor reached native observation: ' + command)
+    context.vm.qmp = SimpleNamespace(call=unexpected)
+    with pytest.raises(DebuggerError, match='clock profile'):
+        context.clock_observe()
+    assert context.vm.closed and context.peer.calls == [] and context.events == []
+
+
+@pytest.mark.parametrize('rtc', [None, {},
+    {'base': 'localtime', 'clock': 'vm', 'driftfix': 'none'},
+    {'base': 'utc', 'clock': 'host', 'driftfix': 'none'},
+    {'base': 'utc', 'clock': 'rt', 'driftfix': 'none'},
+    {'base': 'utc', 'clock': 'vm', 'driftfix': 'slew'},
+    {'base': 'utc', 'clock': 'vm', 'driftfix': 'none', 'unrecorded': True},
+])
+def test_forged_virtual_rtc_policy_is_closed_before_any_native_observation(rtc):
+    context = ClockContext('virtual')
+    context.vm.machine_configuration['clock_profile']['rtc'] = rtc
+    with pytest.raises(DebuggerError, match='clock profile'):
+        context.clock_observe()
+    assert context.vm.closed and context.peer.calls == [] and context.events == []
+
+
+@pytest.mark.parametrize('rtc', [None,
+    {'base': 'utc', 'clock': 'host', 'driftfix': 'none'},
+    {'base': 'utc', 'clock': 'vm', 'driftfix': 'slew'},
+])
+def test_owned_archive_rtc_policy_differs_before_spawn_or_owner_retirement(
+        owned_checkpoint_runtime, monkeypatch, rtc):
+    from fdisbull import qemu_owned_checkpoint as owned
+    from fdisbull.qemu_instrumented_checkpoint import FORMAT
+
+    runtime = owned_checkpoint_runtime
+    session = runtime.session
+    saved = owned.save_owned_machine_state(session)
+    profile = machine_clock_configuration('virtual', 1)
+
+    def alter(bundle):
+        recorded = deepcopy(profile)
+        if rtc is None:
+            recorded.pop('rtc', None)
+        else:
+            recorded['rtc'] = rtc
+        bundle['runtime']['machine']['clock_profile'] = recorded
+        # This host test models the native instrumentation boundary. It uses
+        # the real archive/hash reader and runtime comparison, and must refuse
+        # before native import or a replacement QEMU can be requested.
+        state = json.dumps({'format': FORMAT, 'source-epoch': 1, 'virtual-ns': 0,
+                            'clock': {}, 'audio': {}, 'display': {}, 'retrace': {}})
+        bundle['instrumentation'] = dict(state=state,
+            sha256=hashlib.sha256(state.encode()).hexdigest(), icount=0)
+
+    rewrite_owned_archive(runtime, saved, alter)
+    session.vm.machine_configuration['clock_profile'] = profile
+    monkeypatch.setattr('fdisbull.qemu_instrumented_checkpoint.preflight', lambda _: None)
+    owner, epoch, cpu = session.vm, session._runtime_epoch, session.registers()
+    snapshots = list(runtime.snapshots)
+    with pytest.raises(ValueError, match='runtime identity differs'):
+        owned.load_owned_machine_state(session, saved['artifact'])
+    assert runtime.spawned == [] and runtime.snapshots == snapshots
+    assert session.vm is owner and not session.closed and not owner.closed
+    assert session._runtime_epoch == epoch and session.registers() == cpu
+    assert session.thawed == 0
 
 
 @pytest.mark.parametrize('profile,cpus', [('instruction', 2), ('standard', 0),

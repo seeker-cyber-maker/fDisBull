@@ -574,6 +574,13 @@ The optional `qemu_clock='virtual'` profile requires the fDisBull API1 clock
 extension on QEMU10.0.13; stock QEMU is rejected before guest execution. It
 uses the same single-CPU fixed-icount settings, observes
 `QEMU_CLOCK_VIRTUAL` directly as `virtual_ns`, and keeps `guest_ms=None`.
+The virtual profile also selects `-rtc base=utc,clock=vm,driftfix=none` and pins
+that RTC policy in its machine identity. UTC seeds the calendar at fresh launch;
+subsequent RTC progress follows virtual time, including paused checkpoints.
+This does not fix a universal calendar epoch. States with the earlier implicit
+host RTC require their original tool/launch policy; they cannot be loaded as
+VM-RTC states. Standard and instruction-only profiles keep their prior settings.
+
 Use `clock_advance(delta_ns, timeout_ms=1000)`, JSON `debug-clock-advance`,
 or script `clock-advance`. Integer durations are 1..60,000,000,000 ns.
 

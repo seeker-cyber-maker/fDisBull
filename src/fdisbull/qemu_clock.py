@@ -52,7 +52,7 @@ def machine_clock_configuration(profile, cpus):
         raise ValueError('QEMU counted clock profiles require exactly one machine CPU')
     instruction = profile in ('instruction', 'virtual')
     virtual = profile == 'virtual'
-    return dict(profile=profile, vcpus=cpus,
+    configuration = dict(profile=profile, vcpus=cpus,
                 tcg_thread='single' if instruction else 'multi',
                 shift=7 if instruction else None,
                 sleep=False if instruction else None,
@@ -61,14 +61,23 @@ def machine_clock_configuration(profile, cpus):
                 virtual_ns_supported=virtual, guest_ms_supported=False,
                 exact_instruction_budget=False,
                 limits=list(_VIRTUAL_LIMITS if virtual else _LIMITS))
+    if virtual:
+        # UTC seeds a fresh calendar from the host; subsequent RTC progress
+        # follows the saved VM clock, including while checkpointing is paused.
+        configuration['rtc'] = dict(base='utc', clock='vm', driftfix='none')
+    return configuration
 
 
 def machine_clock_arguments(profile):
     """Select TCG and optional fixed instruction counting, without recording."""
-    machine_clock_configuration(profile, 1)
+    configuration = machine_clock_configuration(profile, 1)
     if profile in ('instruction', 'virtual'):
-        return ['-accel', 'tcg,thread=single',
-                '-icount', 'shift=7,align=off,sleep=off']
+        arguments = ['-accel', 'tcg,thread=single',
+                     '-icount', 'shift=7,align=off,sleep=off']
+        if profile == 'virtual':
+            arguments += ['-rtc', ','.join(f'{key}={value}'
+                                          for key, value in configuration['rtc'].items())]
+        return arguments
     return ['-accel', 'tcg,thread=multi']
 
 
