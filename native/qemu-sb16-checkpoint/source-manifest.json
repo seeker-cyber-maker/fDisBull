@@ -1,7 +1,7 @@
 {
   "format": "fdisbull-qemu-native-source-manifest-1",
   "feature": "Explicit U8 mono/stereo SB16 digital capture and passive checkpoint restoration",
-  "implementation_status": "Local U8 mono/stereo authored PCM and hot/cold checkpoint gates passed; original Doom and broader parity qualification pending",
+  "implementation_status": "Locally qualified scoped authored U8 mono/stereo and original Doom stopped LE checkpoint/history restoration; paired parity remains open",
   "base": {
     "qemu_version": "10.0.13",
     "prerequisite_package": "native/qemu-input-checkpoint-completion",

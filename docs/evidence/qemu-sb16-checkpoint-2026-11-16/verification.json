@@ -1,0 +1,583 @@
+{
+  "contract": {
+    "admitted_guest_pcm": "unsigned 8-bit mono/stereo, 5000..45000 Hz",
+    "audiodev": "fdisbull-sb16",
+    "capture_pcm": {
+      "channels": 1,
+      "format": "unsigned 8-bit",
+      "rate": 32000
+    },
+    "cross_binary_state_compatibility": false,
+    "graph": "One SB16 source voice with bounded mixer/resampler/backend state and optional capture; initial no-voice graphs are supported.",
+    "maximum_audio_core_bytes": 8388608,
+    "ordinary_vmstate_v1_fields_unchanged": true,
+    "outer_instrumented_format_unchanged": true,
+    "pcspeaker_audio_core_version": 1,
+    "profile": "sb16",
+    "qualified_guest_rates": [
+      8000,
+      32000
+    ],
+    "restore_executes_guest": false,
+    "restored_state": [
+      "exact extant voice geometry, activity and pending disable",
+      "software sample buffer and fixed-point resampler state",
+      "hardware and capture rings, volume, mixed totals and pending backend bytes",
+      "DMA cursor/count/DREQ and deferred DMA scheduling",
+      "DSP audio availability, auxiliary IRQ deadline and mixer timer deadline"
+    ],
+    "sb16_audio_core_version": 2,
+    "unsupported_format_refusal_evidence": {
+      "host_profile_and_native_identity_guards_checked": true,
+      "native_signed_or_16bit_negative_probe": false,
+      "signed_or_16bit_native_guard_source_reviewed": true
+    }
+  },
+  "date": "2026-11-16",
+  "format": "fdisbull-sb16-checkpoint-local-qualification-1",
+  "independent_audit": {
+    "base_kit_files": 93,
+    "canonical_database_unchanged": true,
+    "controllers_and_guests_freshly_absent": true,
+    "distinct_export_artifacts": 6,
+    "dylibs": 16,
+    "future_cpu_equal_explicit_only": true,
+    "future_pcm_device_png_clock_icount_equal": 4,
+    "history_charged_bytes": 103462466,
+    "history_nodes": 2,
+    "hot_cold_export_files": 12,
+    "installed_files": 713,
+    "receipt_sha256": "1304dbc336f8ddee7aaf6e4fdda3d986493d33a9960f72a511f5d7b9c30892ec",
+    "receipt_size": 69291,
+    "scope": "Read-only closed receipts, actual PNG/WAV and checkpoint exports, readonly SQL joins and input rehash; no guest launch or source modification",
+    "selected_restores": 6
+  },
+  "original_doom": {
+    "all_guests_reaped": true,
+    "all_owner_returncodes_zero": true,
+    "ammo": [
+      50,
+      49,
+      48
+    ],
+    "capture_pcm": {
+      "channels": 1,
+      "format": "unsigned 8-bit",
+      "rate": 32000
+    },
+    "checkpoint_status": "passed-bounded-stopped-recovery",
+    "cold_exports": {
+      "companions": 3,
+      "linked_machine_states": 3,
+      "payloads": [
+        {
+          "sha256": "0d37ff1f95d322499c5812c5921836079dad66db2dc3fc8d4b1b9ab03935f541",
+          "size": 604644
+        },
+        {
+          "sha256": "223a299fcbb233cab9e7c79dc49534d2bdcd989c21b10f52846ca307dc3f477d",
+          "size": 43771793
+        },
+        {
+          "sha256": "23b197d1a97635ece89c120e14522c87b575f5db987b09ccc81ba194ec8f4676",
+          "size": 58481587
+        },
+        {
+          "sha256": "a0672ad4727b573f702400697e77d293ccec0f759eb5d5db2bc8498d85c13f07",
+          "size": 604442
+        },
+        {
+          "sha256": "bb1ea4d29c060953fc150a83f7275e54ec5067e324cae53e95839641e3edc596",
+          "size": 29157046
+        },
+        {
+          "sha256": "ccfeba5b4d1eed3ef1fb5a9bd07e3ee8b0d05f5d018480c907f93ffff6b9ca96",
+          "size": 604644
+        }
+      ],
+      "same_six_hot_cold_payloads": true
+    },
+    "cold_history_attach_live_authority": false,
+    "continuations": [
+      {
+        "chunks_exact": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "guest_ns": 600000000,
+        "instruction_counter_exact": true,
+        "mode": "hot",
+        "pcm_exact": true,
+        "png_exact": true,
+        "target": "hot-explicit-future",
+        "virtual_ns_exact": true
+      },
+      {
+        "chunks_exact": true,
+        "cpu_exact": false,
+        "device_exact": true,
+        "guest_ns": 600000000,
+        "instruction_counter_exact": true,
+        "mode": "hot",
+        "pcm_exact": true,
+        "png_exact": true,
+        "target": "hot-root-future",
+        "virtual_ns_exact": true
+      },
+      {
+        "chunks_exact": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "guest_ns": 600000000,
+        "instruction_counter_exact": true,
+        "mode": "cold",
+        "pcm_exact": true,
+        "png_exact": true,
+        "target": "cold-explicit-future",
+        "virtual_ns_exact": true
+      },
+      {
+        "chunks_exact": true,
+        "cpu_exact": false,
+        "device_exact": true,
+        "guest_ns": 600000000,
+        "instruction_counter_exact": true,
+        "mode": "cold",
+        "pcm_exact": true,
+        "png_exact": true,
+        "target": "cold-root-future",
+        "virtual_ns_exact": true
+      }
+    ],
+    "continuous_instruction_history": false,
+    "fresh_gameplay_startup": true,
+    "future_cpu_determinism_qualified": false,
+    "future_cpu_timing_limitation": "At the same 600 ms endpoint and instruction count, both explicit-checkpoint futures match full CPU; both history-root futures differ in full CPU. All four match full SB16 device, PNG, complete retained PCM and chunks. Exact stopped restoration passes; general future CPU/timing determinism remains open.",
+    "guest_memory_or_register_writes": false,
+    "guest_voice": {
+      "channels": 2,
+      "format": "unsigned 8-bit",
+      "rate": 11025
+    },
+    "history_advance": "capture",
+    "history_nodes": 2,
+    "hot_cold_checkpoint_qualified": true,
+    "immutable_inputs_verified": true,
+    "initial_input_observation_guest_ns": 600000000,
+    "inputs": {
+      "command_tails_equal": true,
+      "configuration": {
+        "mouseb_fire": 0,
+        "snd_musicdevice": 0,
+        "snd_sbdma": 1,
+        "snd_sbirq": 7,
+        "snd_sbport": 544,
+        "snd_sfxdevice": 3,
+        "use_mouse": 1
+      },
+      "derived_system_image_sha256": "8cb83364bb65b08ff2a0bf253c980ffcc2de5daa29c8ec5ab73b4395d9decb80",
+      "driver_sha256": "822cf550c9e19a22785722d2306aa08ede10ff20bfe931d5a81a15f77c5f363e",
+      "originals": {
+        "DOOM.EXE": {
+          "sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+          "size": 715493
+        },
+        "DOOM.WAD": {
+          "sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+          "size": 12408292
+        }
+      },
+      "parent_system_image_sha256": "ebf62d5ea2197d03df33f1ab0cb95aa795b90d4da12510e4471c9c4222bacd05",
+      "startup_sha256": "632714ead979c4c96bcf0c4d32ecd78628a187a4a1e43801a34966b33db13fd8"
+    },
+    "irq_mask_changes": false,
+    "le_trials_qualified": false,
+    "mouse_button": "left",
+    "mouse_hold_ms": 500,
+    "native_handles": 8,
+    "original_mz_source_binding_restored": false,
+    "private_campaign_receipts": {
+      "cold-01": {
+        "sha256": "ede9f340fb09f2ffb1ba6b9d41660d9d97fe8a03dd30b806ebec0fd6006efddb",
+        "size": 695309
+      },
+      "hot-01": {
+        "sha256": "13b6863b04ad125359f6cf1a69de20e2209f7f039fde3bac20c23bdab671c928",
+        "size": 1767563
+      }
+    },
+    "remaining_owned_members": [],
+    "restores": [
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "mode": "hot",
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "protected_source_rebound": true,
+        "source": "explicit-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-explicit-a"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "mode": "hot",
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "protected_source_rebound": true,
+        "source": "history-b",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-node-b"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "mode": "hot",
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "protected_source_rebound": true,
+        "source": "history-root-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-root-a"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "mode": "cold",
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "protected_source_rebound": true,
+        "source": "explicit-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-explicit-a"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "mode": "cold",
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "protected_source_rebound": true,
+        "source": "history-b",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-node-b"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "device_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "mode": "cold",
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "protected_source_rebound": true,
+        "source": "history-root-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-root-a"
+      }
+    ],
+    "retained_failed_attempts": [
+      {
+        "all_guests_reaped": true,
+        "cause": "Required nonconstant PCM was not retained: shot capture contained 3532 constant samples; later sound window was empty.",
+        "immutable_inputs_verified": true,
+        "label": "mono-hot-02",
+        "receipt": {
+          "sha256": "b642a83351d4586708e55702ae14a2eccd73d57cc9c598f156dad7e9d221a86d",
+          "size": 291831
+        },
+        "success": false
+      },
+      {
+        "all_guests_reaped": true,
+        "cause": "Current 96-byte LE source window was unmatched; bind performs admission internally and refused. The controller incorrectly assumed the stopped site would be eligible.",
+        "distinct_sample_values": 254,
+        "immutable_inputs_verified": true,
+        "label": "stereo-hot-01",
+        "nonconstant_capture_frames": 19169,
+        "receipt": {
+          "sha256": "84041a9d86480f400850745f973aa00ef6d937a27d49530993834e8dde33e5cd",
+          "size": 313467
+        },
+        "shot_ammo": [
+          50,
+          49
+        ],
+        "success": false
+      },
+      {
+        "all_guests_reaped": true,
+        "cause": "Explicit source admission also reported an unmatched current 96-byte LE window; binding properly refused source authority.",
+        "immutable_inputs_verified": true,
+        "label": "stereo-admitted-hot-01",
+        "receipt": {
+          "sha256": "0cde4c1786371bb8a1727fa99726214a31da1991db23b1e29d8e2bd13716592d",
+          "size": 399999
+        },
+        "success": false
+      }
+    ],
+    "retained_pcm_prefix_exact": true,
+    "saved_a": {
+      "chunks": 61,
+      "frames": 18927,
+      "icount": 327523920,
+      "pcm_sha256": "764e5e39de74f8b599aa951dca37bd8dbcea26a5d31ed48b8663cd2bdd09c2cc",
+      "png_sha256": "7d6f21a37a33a5dd1a86dd1a7d9ee3f0d4b4e0e7d889bf71b4eac6d3ba828e22",
+      "virtual_ns": 42015742881
+    },
+    "saved_b_and_original_future": {
+      "chunks": 122,
+      "frames": 37854,
+      "icount": 332211420,
+      "pcm_sha256": "67f5f20184dc84e579889b35daaabc6afa4133afcec9d3376ca9110ffbe1c518",
+      "png_sha256": "2d5496681ab00bda71feb727c72a5564d5c3db8bc8a0e726c9b636867981037d",
+      "virtual_ns": 42615742881
+    },
+    "second_shot_scope": "Continuation of the original long hold; no second mouse action between checkpoint A and original-future B.",
+    "separate_python_processes": true,
+    "task_or_allocation_lifetime_qualified": false
+  },
+  "policy": {
+    "ci_dispatched": false,
+    "commercial_payload_published": false,
+    "default_backend": "dosbox",
+    "dosbox_retained": true,
+    "dosbox_retirement_allowed": false,
+    "raw_private_evidence_included": false,
+    "release_published": false,
+    "shared_activation": false,
+    "system_installation_changed": false
+  },
+  "qualified_scope": "Explicit single SB16 digital U8 mono/stereo graph; exact-binary stopped instrumented checkpoint and byte-exact authored PCM hot/cold continuation, plus bounded original Doom LE source checkpoint/capture-history media recovery. No general future CPU determinism, paired DOSBox-X or ideal-amplitude parity claim.",
+  "remaining_gates": [
+    "Future CPU/timing determinism across original Doom history-root continuations; exact stopped recovery and bounded media continuation pass",
+    "Auto-init DMA, signed/16-bit PCM, other DMA routes, multiple voices and broader device configurations",
+    "AdLib/OPL/FM synthesis and music persistence",
+    "Same-input DOSBox-X PCM/relative-mouse reference and broader compatibility",
+    "Ideal amplitude, clipping, analogue output and host playback parity",
+    "Continuous LE task/allocation lifetime, automatic histories and LE trials/undo retain their existing separate scope"
+  ],
+  "retained_authored_failures": [
+    {
+      "cause": "Original continuation failed an idealized amplitude/onset oracle before restore; independent foreign-mixer source calculation matched all 32764 retained samples exactly.",
+      "label": "native-sb16-01",
+      "receipt": {
+        "sha256": "f1d8b926e20da6f3d850d6abca5180ddc57f45e622972817a585ff90701ea4ba",
+        "size": 759
+      }
+    },
+    {
+      "cause": "Guest report could straddle terminal DMA/IRQ timing; fixture now samples DMA again after observing IRQ, preserving full byte equality.",
+      "label": "native-sb16-02",
+      "receipt": {
+        "sha256": "943cd8b9bed23b028fdeb81b97ef85b633b072dc817c8975f9c0b5be7379867d",
+        "size": 713
+      }
+    }
+  ],
+  "runtime": {
+    "build_input_scope": "1686 pinned declared inputs; not a hermetic SDK claim",
+    "native_build_receipt": {
+      "sha256": "0d8a0226bbb58bcbe0996e92af8601d98f90f6f1621ebd2e00c570b4133a3988",
+      "size": 182009
+    },
+    "native_patch_files": 13,
+    "native_patch_sha256": "32b608e38a057997223127aa444dc9e3bbe2c38b771c2125b50a94bed392dac4",
+    "native_qemu_sha256": "29f9de9a92a4e7ea6785a831a6e68eb3f6e24fc5ac77f28484826a92da62db77",
+    "native_qemu_size": 24929976,
+    "native_source_manifest_sha256": "a239430c5444b1a0e95ea6361f2a17a3a65775f933706d27eb210edb1d3623a2",
+    "package_receipt": {
+      "sha256": "92eb2061a14d5dcbcc388207b0d914f4bf72863825fa0cd1d43bf53c9950ec72",
+      "size": 78545
+    },
+    "parent_native_inputs_unchanged": true,
+    "production_files": 713,
+    "source_wheel_private_install_equal": true,
+    "tool_commit": "106b507065d7c8854490d744836c52d384781270",
+    "wheel_sha256": "ef5fac19af1339e993d40a98540035ec222412785f56eebdb4b3090b07b53376"
+  },
+  "status": "authored-original-Doom-stopped-recovery-and-preservation-gates-passed; future-CPU-timing-open",
+  "verification": {
+    "host": {
+      "dependencies_unchanged": true,
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "43f965f2bd19f508807776343220f7df43d7036f0a9b4720cc5261075c2132c6",
+      "passed": 962,
+      "receipt": {
+        "sha256": "2c616faf8313e37ea964e3061b780e7e8211d4ee7e82602dcd76251af5fe7951",
+        "size": 1927
+      },
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "1e24f09aafb3de2c8de8f6198106b3a2a583ca00ca13a30fe69f08c729aca80a",
+      "skipped": 0,
+      "test_files_unchanged": true,
+      "warning": "Expected duplicate-ZIP-member warning from an existing malformed-archive negative."
+    },
+    "native_preservation": {
+      "all_guests_reaped": true,
+      "dependencies_unchanged": true,
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "66306a475f5e05570eed377b4ec35703d223d5e60f31419b8571adf9361be67f",
+      "passed": 10,
+      "receipt": {
+        "sha256": "50ca59c6b6b52af0080f7bb57ba766250ab821e3a46fb9796c46a722e4c393e4",
+        "size": 882
+      },
+      "remaining_owned_members": [],
+      "runtime_payload_unchanged": true,
+      "scope": [
+        "DOS mouse driver consumption and neutral-input recovery",
+        "instrumented clock/audio/display/retrace and active layers/hooks",
+        "owned machine recovery, frame keys and COM/MZ source continuation",
+        "nested RTC/keyboard cascade PIC/IRQ recovery"
+      ],
+      "selection_sha256": "d7eecc3a70a1d002c9c4950f9498850b5365da84dd81d82587275136f1269e23",
+      "skipped": 0,
+      "test_files_unchanged": true
+    },
+    "native_sb16": {
+      "all_guests_reaped": true,
+      "cases": [
+        "zero voice without capture",
+        "zero voice with capture",
+        "single-cycle DMA1 U8 mono at 8000 Hz",
+        "single-cycle DMA1 U8 mono at 32000 Hz",
+        "DSP80 auxiliary IRQ timer",
+        "single-cycle DMA1 U8 stereo at 8000 Hz",
+        "single-cycle DMA1 U8 stereo at 32000 Hz",
+        "inactive software voice with hardware draining"
+      ],
+      "cold_scope": "The four DMA waveform cases, auxiliary timer and draining case restore in a separate Python process; initial graph cases restore hot.",
+      "dependencies_unchanged": true,
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "d01c6a6214e394cb33b41dc6611ef1e0a345e6653c5787075fa511acc4caebe9",
+      "passed": 8,
+      "receipt": {
+        "sha256": "f4de05ee0b224ab01ad4aab5732d22483957f7f7023864c4d734b73a561233c5",
+        "size": 806
+      },
+      "remaining_owned_members": [],
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "dbf3bdafefcb7d3420b6633b03ceedc04c6f04fdc508242a9dd266341a032b77",
+      "skipped": 0,
+      "test_files_unchanged": true
+    },
+    "native_trials_and_draining": {
+      "all_guests_reaped": true,
+      "dependencies_unchanged": true,
+      "errors": 0,
+      "existing_preservation_cases": 3,
+      "failures": 0,
+      "junit_sha256": "89b07f17433f0a44134758f9071c8bb9e071f75401812642a7ff59baf343478c",
+      "new_sb16_cases": 1,
+      "note": "The draining case is rerun in the final eight-case suite; do not count it twice.",
+      "passed": 4,
+      "receipt": {
+        "sha256": "7afbd9c84d0342a968a13aa3862cb14903d921edf3391f619c6febf4d9fcf4c4",
+        "size": 1071
+      },
+      "remaining_owned_members": [],
+      "runtime_payload_unchanged": true,
+      "scope": [
+        "IRQ checkpoint histories and branches",
+        "comparative trials with private IRQ and held keys",
+        "full selected CPU/RAM undo, frozen projection and frame DAG"
+      ],
+      "selection_sha256": "ba2ed07197878444aa0fb8bfb3b132fbb47768618317661cfa533f7fc3db6194",
+      "skipped": 0,
+      "test_files_unchanged": true
+    },
+    "tests": {
+      "tests/support/qemu_sb16_fixture.py": "e7c42d78393aae18ab0ec5b72846bb9a8c4b17f17109fbe9e1bc461a334e02fb",
+      "tests/test_qemu_sb16_draining_native.py": "face3684cca16896bc79c969c2a617e66c17a06c9a9133b12cdd71b9c2866c20",
+      "tests/test_qemu_sb16_initial_native.py": "0e26438908fb8ea8b59e8ca7083b981f9049629816a5b7e1757af34745585d01",
+      "tests/test_qemu_sb16_native.py": "5bd5bf3b5c9eee3447c164b5c6d8378065413f084903240caec89ee61252ed76"
+    },
+    "unique_existing_native_preservation_cases": 13,
+    "unique_new_sb16_cases": 8
+  },
+  "waveform_oracle": {
+    "entire_expected_sequence_exact": true,
+    "foreign_laws": [
+      "Unsigned input centre 127; mono source duplicates left/right, stereo source supplies independent interleaved channels; capture sums left and right.",
+      "8 kHz conversion uses per-channel fixed-point quarter phases with UINT_MAX-t weights; 32 kHz uses the direct samples.",
+      "Native integer clipping and uint8 conversion include the negative-full-scale wrap boundary."
+    ],
+    "hardware_or_dosbox_waveform_parity": false,
+    "ideal_amplitude_or_saturation_parity": false,
+    "independent_original_continuation": {
+      "frames": 32764,
+      "mismatches": 0,
+      "offset": 0,
+      "receipt": {
+        "sha256": "b03b45e0a25f81c75ac0cea50ab4b392b89bb6dce9e54615c8de34ed83f50ac9",
+        "size": 1108
+      }
+    },
+    "leading_neutral_padding_limit_frames": 1024,
+    "neutral_padding_values": [
+      127,
+      128,
+      129
+    ],
+    "quantization_tolerance": 0,
+    "source": "Authored 8192-byte guest buffer; deterministic source identity checked in guest RAM. Foreign mixer laws are derived from pinned QEMU source, without fitted gain, rate or source offset.",
+    "trailing_neutral_padding_limit_frames": 2048
+  }
+}

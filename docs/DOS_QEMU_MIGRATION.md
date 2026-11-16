@@ -1639,7 +1639,8 @@ Capacity is 1..1,920,000 frames and at most 8192 callback records. Overflow is
 reported with a dropped-frame count and refuses a misleading complete WAV.
 Stop the old window and explicitly start another. Stop is idempotent, retains
 the captured prefix and does not flush the mixer. New windows start empty.
-Sound Blaster, FM/OPL and other devices remain separate qualification work.
+The separate digital SB16 profile below has its own device/checkpoint scope.
+FM/OPL and other devices remain separate qualification work.
 
 Both windows bind to the owned machine and native clock epoch. Reset or
 incompatible state invalidates them; generic migration after use is blocked.
@@ -2045,3 +2046,29 @@ default; the formal surface qualifications and seven campaigns remain open.
 new compiled TCG CPU/machine and the debugger's x86 coupling. It is an
 architecture-generalization proposal, with no CHIP-8 QEMU target built or run.
 It does not change the DOS parity gates or the default backend.
+
+### Digital SB16 capture and scoped checkpoint restoration
+
+The additional [SB16 native extension](../native/qemu-sb16-checkpoint/README.md)
+selects `qemu_audio='sb16'` with `qemu_clock='virtual'` (raw machine arguments
+are `audio_profile` and `clock_profile`). It requires passive
+`x-fdisbull-query-sb16` API 1 admission; an older native runtime refuses this
+profile. Retain old executables for their exact-binary saved states.
+
+The fixed device is 220h/IRQ7/DMA1/HDMA5, DSP 4.5, using a `none` audiodev and
+32 kHz mono U8 capture. Host playback remains disabled. The extant guest voice
+can be U8 mono or stereo at 5–45 kHz; signed/16-bit voice capture is refused.
+The same audio observation/export methods apply. Stopped scoped checkpoints
+retain device credit, pending DMA work, auxiliary/mixer timer deadlines,
+resampling phase/buffers and mixer/backend queues. Restore recreates pointers
+without transferring DMA while stopped. Capture-only, zero-voice, inactive and
+inactive-draining graphs are represented. PC-speaker format 1 remains separate
+from the new SB16 audio-core format 2.
+
+The integer mixer resamples L/R independently then sums them for mono output,
+duplicating a mono source. Existing gain/clipping/cast behavior stays intact.
+Exact retained and future PCM identity does not establish ideal amplitude or
+DOSBox-X waveform parity. The [dated qualification](evidence/qemu-sb16-checkpoint-2026-11-16/README.md)
+separates authored signal/IRQ checks from actual Doom and broader compatibility.
+OPL/FM, MIDI, general 16-bit/HDMA/auto-init/pause behavior and paired DOSBox-X
+comparison remain open. DOSBox-X stays default and retained; no CI is used.

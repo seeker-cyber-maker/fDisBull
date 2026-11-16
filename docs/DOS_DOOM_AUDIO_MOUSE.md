@@ -209,3 +209,30 @@ capture. Matching input dispatch, screenshots or nonempty WAVs cannot establish
 one-to-one audio/mouse parity across these different interfaces. Keep the
 remaining paired Doom and device/persistence gates open in the handoff and !117;
 do not remove or change the default DOSBox-X backend on this evidence alone.
+
+## Separate digital SB16 checkpoint slice
+
+The later [SB16 qualification](evidence/qemu-sb16-checkpoint-2026-11-16/README.md)
+uses a new exact native binary and `qemu_audio='sb16'`, with
+`snd_sfxdevice=3`, `snd_musicdevice=0`, mouse enabled and the matching
+`BLASTER=A220 I7 D1 H5 T6` guest environment. Derive a new private config and
+boot image, preserving their originals and the existing startup prefix. The
+observed Doom driver opens an unsigned 8-bit **stereo 11,025 Hz** voice; the
+retained capture remains **mono U8 32 kHz**. Merely selecting the PC-speaker
+profile does not qualify this driver graph.
+
+The application witness holds left mouse for 500 ms and continues for 600 ms.
+This is long enough to repeat firing: the actual frames show 50→49 at A and
+48 at B after the next 600 ms. Keep physical dispatch, observed ammo, retained
+PCM and source qualification as separate evidence. A current 96-byte window
+can be unmatched; `dos_source_bind()` already performs a fresh admission and
+must refuse that stop. A separate `dos_source_admit()` is useful for inspecting
+eligibility, not an authorization token or a way to bypass binding checks.
+
+Explicit LE A and capture-history nodes A/B are restored in hot and separate
+Python hosts. Selected saved CPU/site/PNG/device/clock/PCM must match exactly,
+with fresh owners and neutral input. Future PCM is checked separately from
+CPU stop identity: the accepted history-root continuations reproduce PCM,
+chunks, device state and PNG but do not reproduce the original future CPU
+endpoint. This slice does not qualify deterministic instruction replay,
+OPL/FM music, paired DOSBox-X audio or overall replacement parity.

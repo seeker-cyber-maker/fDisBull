@@ -444,3 +444,14 @@ recognized slices/statuses and existing test paths. New or removed surfaces
 must update the inventory deliberately. Keep implementation status separate
 from qualification receipts: a referenced test path, advertised capability or
 importable method is not evidence that the native replacement passed.
+
+### 2026-11-16: scoped digital SB16 audio
+
+The optional [SB16 extension](../native/qemu-sb16-checkpoint/README.md) adds
+U8 mono/stereo guest voices with retained 32 kHz mono U8 PCM and passive
+DSP/DMA/IRQ/timer/mixer checkpoint restoration. The
+[dated receipt](evidence/qemu-sb16-checkpoint-2026-11-16/README.md) gives the
+authored, application and preservation gates separately. This is an explicit
+profile and exact native-build contract. OPL/FM/music, ideal amplitude and
+paired DOSBox-X audio remain unqualified. The backend default and retirement
+gates do not change.

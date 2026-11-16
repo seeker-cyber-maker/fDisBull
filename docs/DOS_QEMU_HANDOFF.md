@@ -6654,3 +6654,65 @@ feed relative mickeys. Full 1:1 parity and DOSBox-X removal remain unqualified.
 DOSBox-X stays default and retained. Trials, layers, hooks, IRQs and stronger
 checkpoint contracts retain their existing tests/scope. No CI, native rebuild,
 release, merge, shared activation or backend-default change occurred.
+
+## Scoped SB16 digital checkpoints and Doom LE recovery (2026-11-16)
+
+The [dated qualification](evidence/qemu-sb16-checkpoint-2026-11-16/README.md)
+adds an explicit `qemu_audio='sb16'` profile over the input-completion native
+stack. Tool runtime `106b507065d7c8854490d744836c52d384781270` is frozen in a
+private wheel, SHA-256 `ef5fac19af1339e993d40a98540035ec222412785f56eebdb4b3090b07b53376`.
+All 713 production files equal committed source, wheel and private prefix.
+Native candidate SHA-256 is
+`29f9de9a92a4e7ea6785a831a6e68eb3f6e24fc5ac77f28484826a92da62db77`.
+The [incremental source package](../native/qemu-sb16-checkpoint/README.md)
+pins its exact prerequisite, thirteen source deltas and copied-build receipt.
+Old binaries, states and qualified kit remain intact; no cross-binary state
+compatibility is claimed. This is a same-Mac incremental build, not a clean
+portable build or shared installation.
+
+The graph admits one unsigned 8-bit mono/stereo guest voice and retains
+resampler phase/buffers, mixer/backend queues, device credit, DMA work and
+timer deadlines in bounded audio-core format 2. Reconstruction transfers no
+DMA while stopped. PC-speaker format 1 and ordinary VMState v1 field lists
+remain separate. Eight new native cases pass on the final exact tuple:
+mono/stereo 8/32 kHz complete authored waveform, delayed DSP80 IRQ, initial
+no-voice/capture-only graphs and inactive-draining hot/separate-Python recovery.
+The delayed command generates an IRQ, not synthetic PCM. The foreign integer
+mixer's L+R gain, clipping and cast boundary are preserved; exact output is not
+ideal-amplitude or DOSBox-X waveform parity.
+
+Fresh original Doom boots with CuteMouse, SB16 SFX and music disabled. Its
+observed voice is U8 stereo 11,025 Hz; capture remains mono U8 32 kHz without
+host playback. A 500 ms mouse hold produces ammo 50→49 at A, then 48 at B in
+the next interval. Explicit LE A and two capture-history nodes pass six
+hot/separate-Python restores with exact saved CPU, canonical source site,
+PNG, full exposed SB16 state, clock/icount and retained PCM/chunks. Every
+restore earns fresh source, clock and audio ownership; MZ authority and task
+lifetime remain unqualified. Cold history attach begins without a live cursor.
+
+A retains 18,927 PCM frames; its four 600 ms continuations reproduce the same
+37,854-frame PCM and callback chunks, device state and PNG. Both explicit-A
+future CPU endpoints match the original; both history-root future CPU endpoints
+differ (the hot example changes PC 189B34h→189B2Dh and RAX 1CDC54h→1CDC50h;
+the cold endpoint differs separately). Selected saved
+CPU restoration remains exact. These future results do not qualify deterministic
+instruction replay or full timing parity. All eight accepted campaign QEMU
+handles close and are reaped. Raw states, PCM, screens and FDB/CAS stay private.
+
+Preservation passes 962 installed host cases and thirteen existing native cases,
+covering media/mouse, layered checkpoints, frame-key ownership, nested IRQs,
+IRQ history and comparative-trial/selected-undo paths. No accepted check skips.
+Earlier authored oracle/sampling failures and three application attempts remain
+retained: constant PCM/no firing gate, and two unmatched stopped LE windows.
+Binding already performs fresh admission internally; it correctly refuses an
+unmatched window. The successful application campaign separately observes a
+qualified source match before binding and capture.
+
+This advances milestone 4 (clock/media/input), milestone 5 (checkpoints) and
+bounded application evidence for milestones 7/9 (histories/qualification).
+It does not complete any whole migration milestone. OPL/FM music, general
+16-bit/HDMA/auto-init/pause behavior, paired DOSBox-X audio/relative-mouse
+comparison, future CPU endpoint consistency and portable delivery remain open.
+Trials, histories, layers, hooks and IRQ contracts retain their existing scope.
+DOSBox-X stays default and retained. No CI, release, merge, shared activation or
+backend-default switch occurred.

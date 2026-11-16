@@ -72,6 +72,9 @@ pinned DOS boot image, mcopy, firmware, qemu-img and NASM; set
 uses the current host policy and one owner. Fresh results belong in the dated
 handoff/!117 receipt; source and compilation alone do not qualify behavior.
 
-Full auto-init/16-bit/HDMA playback, D0/D4 pause behavior, OPL/FM and a
-paired DOSBox waveform reference remain separate gates. DOSBox-X stays default
+The [dated local qualification](../../docs/evidence/qemu-sb16-checkpoint-2026-11-16/README.md)
+records authored mono/stereo, inactive-draining and actual Doom stopped LE
+checkpoint/history recovery. General auto-init/16-bit/HDMA playback beyond
+the observed application path, D0/D4 pause behavior, OPL/FM and a paired DOSBox
+waveform reference remain separate gates. DOSBox-X stays default
 and retained. This package changes no installation and dispatches no CI.
