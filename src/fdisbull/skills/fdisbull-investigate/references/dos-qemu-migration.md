@@ -1085,3 +1085,24 @@ fixture facts to arbitrary DOS drivers/games. Legacy coordinate click/frame
 operations and scene consumers remain unqualified. General `timed_input`,
 `absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false.
 DOSBox stays the default; all 134 promotion qualifications remain open.
+
+## Explicit combined SB16 and OPL2 audio
+
+Use `qemu_audio='sb16-opl'` (CLI `--qemu-audio sb16-opl`) with the virtual
+clock and a matching native candidate to select SB16 digital effects plus
+AdLib/YM3812 FM music. Admission requires both passive SB16 and OPL API 1
+identities. This selects one headless mixer at 32000 Hz, mono U8; AdLib feeds
+it signed 16-bit mono at 32000 Hz. The OPL2 synth has nine channels and eighteen
+operators. OPL3 and MIDI are outside this profile.
+
+The combined profile has a distinct machine/checkpoint identity. Its native
+state must retain operator phases, envelopes, feedback, LFO/cache selectors,
+private rhythm noise, pending synthesized samples, both software voices and
+mixer/capture/resampler frontiers. Restore must not replay register writes or
+synthesize while stopped. QEMU's existing AdLib timer convention expires an
+armed timer at the next port access; this profile does not establish hardware
+80/320 microsecond timer accuracy or analog audio fidelity. Private rhythm
+noise is repeatable, not a claim of chip-accurate noise. Existing `sb16`,
+PC-speaker and off profiles retain their descriptors. DOSBox-X stays default.
+Exact-binary local qualification is recorded separately in the migration evidence;
+none of these options proves general replay or replacement parity.

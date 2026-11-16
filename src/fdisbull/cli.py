@@ -2258,7 +2258,7 @@ def parser():
     c.add_argument("--qemu-firmware", help="Explicit QEMU firmware directory (-L), recorded in runtime identity")
     c.add_argument("--qemu-clock", choices=["standard", "instruction", "virtual"],
                    help="Explicit native clock profile; virtual requires the fDisBull QEMU clock extension")
-    c.add_argument("--qemu-audio", choices=["off", "pc-speaker", "sb16"],
+    c.add_argument("--qemu-audio", choices=["off", "pc-speaker", "sb16", "sb16-opl"],
                    help="Explicit native audio profile; capture requires virtual clock and the matching audio/checkpoint extension")
     c.add_argument("--qemu-retrace", choices=["standard", "precise"],
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")

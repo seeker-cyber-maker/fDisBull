@@ -274,10 +274,12 @@ class QemuMachine:
                 require_commands(self)
             if clock_profile=='virtual':
                 self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
-            if audio_profile in ('pc-speaker', 'sb16'):
+            if audio_profile in ('pc-speaker', 'sb16', 'sb16-opl'):
                 self.machine_configuration['native_audio_admission']=admit_audio(self)
-                if audio_profile=='sb16':
+                if audio_profile in ('sb16','sb16-opl'):
                     self.machine_configuration['native_sb16_admission']=self.native_sb16_admission
+                if audio_profile=='sb16-opl':
+                    self.machine_configuration['native_opl_admission']=self.native_opl_admission
             if retrace_profile=='precise':
                 self.machine_configuration['native_retrace_admission']=admit_retrace(self)
             self.qmp.operation_deadline=None
@@ -693,7 +695,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
-            audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16'),
+            audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl'),
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             renderer_probe=(virtual and DISPLAY_COMMANDS | DISPLAY_PROBE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
                             <= getattr(vm,'qmp_commands',frozenset())),

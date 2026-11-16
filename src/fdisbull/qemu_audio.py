@@ -1,6 +1,6 @@
 """Bounded native audio output windows, independent of guest or host pacing.
 
-The optional PC-speaker and SB16 profiles capture QEMU mixer output. A sample callback
+The optional PC-speaker, SB16 and SB16/OPL2 profiles capture QEMU mixer output. A sample callback
 is a real output boundary, but its timestamp is not the onset time of each
 sample. Inactive intervals are not filled with invented silence. A stopped
 read never invokes the mixer, flushes a device or advances the machine.
@@ -25,18 +25,22 @@ AUDIO_RATE = 32000
 MAX_AUDIO_FRAMES = AUDIO_RATE * 60
 _FORMAT = dict(rate=AUDIO_RATE, channels=1, sample_format='u8', bytes_per_frame=1)
 SB16_COMMAND = 'x-fdisbull-query-sb16'
+OPL_COMMAND = 'x-fdisbull-query-opl'
 _SB16_OPTIONS = dict(iobase=544, irq=7, dma=1, dma16=5, version=0x405)
 
 
 def machine_audio_configuration(profile, clock_profile):
-    if profile not in ('off', 'pc-speaker', 'sb16'):
-        raise ValueError('QEMU audio profile must be off, pc-speaker or sb16')
+    if profile not in ('off', 'pc-speaker', 'sb16', 'sb16-opl'):
+        raise ValueError('QEMU audio profile must be off, pc-speaker, sb16 or sb16-opl')
     if profile != 'off' and clock_profile != 'virtual':
         raise ValueError('Audio capture requires the explicit QEMU virtual clock profile')
     result = dict(profile=profile, devices=[profile] if profile != 'off' else [],
                   host_playback=False, capture_format=deepcopy(_FORMAT) if profile != 'off' else None)
-    if profile == 'sb16':
+    if profile in ('sb16', 'sb16-opl'):
         result['device_options'] = deepcopy(_SB16_OPTIONS)
+    if profile == 'sb16-opl':
+        result['devices'] = ['sb16', 'adlib']
+        result['opl_options'] = dict(iobase=544, freq=32000, checkpoint=True)
     return result
 
 
@@ -45,12 +49,15 @@ def machine_audio_arguments(profile):
     if profile == 'off':
         return []
     machine_audio_configuration(profile, 'virtual')
-    identity = 'fdisbull-sb16' if profile == 'sb16' else 'fdisbull-pc'
+    identity = 'fdisbull-' + profile if profile in ('sb16', 'sb16-opl') else 'fdisbull-pc'
     args = ['-audiodev', 'none,id=' + identity +
             ',timer-period=10000,out.frequency=32000,out.channels=1,out.format=u8']
-    if profile == 'sb16':
+    if profile in ('sb16', 'sb16-opl'):
         args += ['-device', 'sb16,audiodev=' + identity + ',' +
                  ','.join(key + '=' + str(value) for key, value in _SB16_OPTIONS.items())]
+    if profile == 'sb16-opl':
+        args += ['-device', 'adlib,audiodev=' + identity +
+                 ',iobase=544,freq=32000,fdisbull-checkpoint=on']
     return args
 
 
@@ -127,11 +134,12 @@ def _native_audio(vm, value, clock, *, token=None):
 
 
 def admit_audio(vm):
-    if vm.machine_configuration.get('audio_profile', {}).get('profile') == 'sb16':
+    profile = vm.machine_configuration.get('audio_profile', {}).get('profile')
+    if profile in ('sb16', 'sb16-opl'):
         if SB16_COMMAND not in vm.qmp_commands:
             raise ValueError('SB16 capture and checkpoints require the native SB16 extension API 1')
         value = vm.qmp.call(SB16_COMMAND)
-        expected = {'api-version': 1, **_SB16_OPTIONS, 'audiodev-id': 'fdisbull-sb16'}
+        expected = {'api-version': 1, **_SB16_OPTIONS, 'audiodev-id': 'fdisbull-' + profile}
         if (not isinstance(value, dict)
                 or any(type(value.get(key)) is not type(item) or value[key] != item
                        for key, item in expected.items())
@@ -139,6 +147,18 @@ def admit_audio(vm):
                 or type(value.get('dma-active')) is not bool):
             _invalid(vm, 'Invalid native SB16 device identity or checkpoint API')
         vm.native_sb16_admission = deepcopy(value)
+    if profile == 'sb16-opl':
+        if OPL_COMMAND not in vm.qmp_commands:
+            raise ValueError('OPL capture and checkpoints require the native OPL extension API 1')
+        value = vm.qmp.call(OPL_COMMAND)
+        expected = {'api-version': 1, 'iobase': 544, 'frequency': 32000,
+                    'audiodev-id': 'fdisbull-sb16-opl', 'checkpoint-enabled': True}
+        if (not isinstance(value, dict)
+                or any(type(value.get(key)) is not type(item) or value[key] != item
+                       for key, item in expected.items())
+                or type(value.get('active')) is not bool or type(value.get('enabled')) is not bool):
+            _invalid(vm, 'Invalid native OPL device identity or checkpoint API')
+        vm.native_opl_admission = deepcopy(value)
     if not AUDIO_COMMANDS <= vm.qmp_commands:
         raise ValueError('Audio capture requires the fDisBull audio extension API 1')
     clock = dict(virtual_ns=vm.native_clock_admission['virtual-ns'],
@@ -154,7 +174,7 @@ class QemuAudioMixin:
         if self.project is None or self.project.db.in_transaction:
             raise ValueError('Audio capture requires a project outside a caller-owned transaction')
         profile = self.vm.machine_configuration.get('audio_profile', {}).get('profile')
-        if profile not in ('pc-speaker', 'sb16'):
+        if profile not in ('pc-speaker', 'sb16', 'sb16-opl'):
             raise ValueError('Audio capture requires an explicit QEMU audio profile')
         if self.vm.machine_configuration['audio_profile'] != machine_audio_configuration(profile, 'virtual'):
             _invalid(self.vm, 'Owned-machine audio profile changed within its observation epoch')
