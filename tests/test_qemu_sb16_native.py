@@ -56,7 +56,7 @@ def _launch(project, runtime, directory, disk):
 def _symbols(debug, offsets):
     info = debug.dos_process_info()
     assert info['state'] == 'active'
-    excluded = ('report_size', 'dma_bytes', 'rate', 'silence')
+    excluded = ('report_size', 'dma_bytes', 'rate', 'silence', 'channels')
     return {key: com_address(info, value) for key, value in offsets.items() if key not in excluded}
 
 
@@ -86,28 +86,29 @@ def _pcm(project, debug, name):
     return samples, artifact, deepcopy(info['native']['chunks'])
 
 
-def _known_wave(samples, rate):
-    expected = linear_pcm(rate)
-    # Fixed rate, unity gain and zero source offset. Only a bounded leading
+def _known_wave(samples, rate, *, channels=1):
+    expected = linear_pcm(rate, channels=channels)
+    # Fixed foreign-mixer arithmetic and zero source offset. A bounded leading
     # mixer-silence frontier is allowed; it cannot hide skipped source PCM.
     candidates = []
     for start in range(min(1024, len(samples)) + 1):
         if any(abs(value - 128) > 1 for value in samples[:start]):
             break
-        if len(samples) >= start + 128 and all(abs(a - b) <= 1 for a, b in
-                zip(samples[start:start + 128], expected[:128])):
+        if len(samples) >= start + 128 and samples[start:start + 128] == expected[:128]:
             candidates.append(start)
     assert len(candidates) == 1, 'Known source onset was missing or ambiguous'
     start = candidates[0]
     assert len(samples) >= start + len(expected), 'Complete authored PCM sequence was not rendered'
     actual = samples[start:start + len(expected)]
-    assert all(abs(a - b) <= 1 for a, b in zip(actual, expected)), 'Known DSP/DMA waveform differs'
+    assert actual == expected, 'Known DSP/DMA waveform differs'
     tail = samples[start + len(expected):]
     assert len(tail) <= 2048 and all(abs(value - 128) <= 1 for value in tail), 'Unexpected output after the source tail'
-    return dict(source_rate=rate, output_rate=OUTPUT_RATE, source_frames=DMA_BYTES,
+    return dict(source_rate=rate, source_channels=channels, source_bytes=DMA_BYTES,
+        output_rate=OUTPUT_RATE, source_frames=DMA_BYTES // channels,
         expected_frames=len(expected), leading_silence_frames=start, trailing_silence_frames=len(tail),
-        source_sha256=hashlib.sha256(source_pcm()).hexdigest(), quantization_tolerance=1,
-        no_fitted_gain_rate_or_source_offset=True)
+        source_sha256=hashlib.sha256(source_pcm()).hexdigest(), quantization_tolerance=0,
+        mixer='pinned QEMU10 integer L+R (mono duplicated), centre127 and native clipping/cast',
+        ideal_amplitude_parity=False, no_fitted_gain_rate_or_source_offset=True)
 
 
 def _sample(project, debug, symbols, offsets, label):
@@ -139,7 +140,7 @@ def _continue(project, debug, symbols, offsets, control, label):
     assert state['device']['dma-active'] is False
     assert state['device']['aux-timer-pending'] is False
     samples = bytes.fromhex(state['pcm_hex'])
-    state['oracle'] = {'silence_command_is_irq_delay_not_pcm': True} if offsets['silence'] else _known_wave(samples, offsets['rate'])
+    state['oracle'] = {'silence_command_is_irq_delay_not_pcm': True} if offsets['silence'] else _known_wave(samples, offsets['rate'], channels=offsets['channels'])
     if offsets['silence']:
         assert samples == b''
     return state
@@ -201,21 +202,25 @@ def _child_restore(path):
     print(json.dumps({'passed': result['passed'], 'pid': os.getpid()}))
 
 
-@pytest.mark.parametrize(('rate', 'silence'), [(8000, False), (32000, False), (8000, True)],
-                         ids=['dma-8000', 'dma-32000', 'aux-silence-timer'])
-def test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold(tmp_path, rate, silence):
+@pytest.mark.parametrize(('rate', 'silence', 'channels'),
+                         [(8000, False, 1), (32000, False, 1), (8000, True, 1),
+                          (8000, False, 2), (32000, False, 2)],
+                         ids=['dma-8000', 'dma-32000', 'aux-silence-timer',
+                              'dma-stereo-8000', 'dma-stereo-32000'])
+def test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold(tmp_path, rate, silence, channels):
     runtime = _runtime()
     boot = Path(runtime['FDISBULL_QEMU_DOS_BOOT_IMAGE'])
     boot_hash = digest(boot)
     disk = prepare_dos_baseline(boot, tmp_path / 'sb16-boot.img', runtime['FDISBULL_QEMU_DOS_MCOPY'],
                                 config=b'SWITCHES=/F\r\n' + BASELINE_CONFIG)
-    code, offsets = sb16_pcm(tmp_path, runtime['NASM'], rate=rate, silence=silence)
+    code, offsets = sb16_pcm(tmp_path, runtime['NASM'], rate=rate, silence=silence, channels=channels)
     source = tmp_path / 'SB16.COM'
     source.write_bytes(code)
     db = tmp_path / 'sb16.fdb'
     control = dict(directory=str(tmp_path), db=str(db), disk=str(disk['image']),
         disk_sha256=disk['prepared_sha256'], source_sha256=digest(source), offsets=offsets)
-    report = dict(format='fdisbull-authored-sb16-native-1', success=False, rate=rate, silence=silence)
+    report = dict(format='fdisbull-authored-sb16-native-1', success=False, rate=rate,
+                  silence=silence, channels=channels)
     try:
         with Project.create(db, source, image='com') as project:
             with _launch(project, runtime, tmp_path, disk) as debug:
@@ -244,6 +249,7 @@ def test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold
                     control['deltas'] = [60_000_000, 30_000_000]
                 else:
                     assert device['dma-active'] is True and 0 < device['left-till-irq'] < DMA_BYTES
+                    assert device['voice-channels'] == channels and device['voice-frequency'] == rate
                     assert device['dma-length'] == DMA_BYTES and 0 < device['dma-position'] < DMA_BYTES
                     assert 0 < _word(debug, symbols, 'dma_count') < DMA_BYTES - 1
                     control['deltas'] = [1_200_000_000]

@@ -15,7 +15,7 @@ requires this extension before accepting `qemu_audio='sb16'`.
 
 ## Saved-state contract
 
-The supported guest voice is unsigned 8-bit mono at 5–45 kHz. A new bounded
+The supported guest voice is unsigned 8-bit mono/stereo at 5–45 kHz. A new bounded
 audio-core format 2 retains exact software-voice settings, volume, rate-converter
 phase/last sample and resample buffer, hardware/capture mixer rings, backend
 pending bytes, and inactive-draining flags. Zero-voice and capture-only graphs
@@ -37,6 +37,13 @@ Snapshots are authorized only through the existing one-use scoped token;
 ordinary migration blockers remain effective. Host synchronization, unresolved
 input schedules and ordinary held leases remain excluded. LE checkpoints earn
 a freshly verified stopped source relation, not continuous task lifetime.
+
+The pinned integer mixer resamples each channel and sums L+R for mono capture.
+A mono source is duplicated. Its existing gain, clipping and integer-cast edge
+behavior is preserved, including the negative-full-scale cast boundary. The
+authored oracle follows that foreign arithmetic exactly without fitted gain,
+rate or source offset. This qualifies retained output identity, not ideal
+amplitude or DOSBox-X waveform parity.
 
 ## Apply and build
 
@@ -65,6 +72,6 @@ pinned DOS boot image, mcopy, firmware, qemu-img and NASM; set
 uses the current host policy and one owner. Fresh results belong in the dated
 handoff/!117 receipt; source and compilation alone do not qualify behavior.
 
-Full auto-init/16-bit/stereo/HDMA playback, D0/D4 pause behavior, OPL/FM and a
+Full auto-init/16-bit/HDMA playback, D0/D4 pause behavior, OPL/FM and a
 paired DOSBox waveform reference remain separate gates. DOSBox-X stays default
 and retained. This package changes no installation and dispatches no CI.

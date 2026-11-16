@@ -671,7 +671,7 @@
  };
  
  #define SAMPLE_RATE_MIN 5000
-@@ -1283,6 +1301,281 @@
+@@ -1283,6 +1301,282 @@
      s->audio_free = free;
  }
  
@@ -726,12 +726,12 @@
 +    }
 +    if (s->voice && (s->voice->info.bits != 8 ||
 +        s->voice->info.is_signed || s->voice->info.is_float ||
-+        s->voice->info.nchannels != 1 ||
++        (s->voice->info.nchannels != 1 && s->voice->info.nchannels != 2) ||
 +        s->voice->info.freq < SAMPLE_RATE_MIN ||
 +        s->voice->info.freq > SAMPLE_RATE_MAX ||
 +        s->voice->info.swap_endianness ||
 +        s->voice->active < 0 || s->voice->active > 1)) {
-+        error_setg(errp, "SB16 checkpoint supports U8 mono voices at 5000..45000 Hz");
++        error_setg(errp, "SB16 checkpoint supports U8 mono/stereo voices at 5000..45000 Hz");
 +        return false;
 +    }
 +    if (timer_pending(s->aux_ts) &&
@@ -805,7 +805,8 @@
 +        (s->checkpoint_voice_present &&
 +         (s->checkpoint_voice_freq < SAMPLE_RATE_MIN ||
 +          s->checkpoint_voice_freq > SAMPLE_RATE_MAX ||
-+          s->checkpoint_voice_channels != 1 ||
++          (s->checkpoint_voice_channels != 1 &&
++           s->checkpoint_voice_channels != 2) ||
 +          s->checkpoint_voice_format != AUDIO_FORMAT_U8 ||
 +          s->checkpoint_voice_endianness))) {
 +        return -EINVAL;
@@ -953,7 +954,7 @@
  static int sb16_post_load (void *opaque, int version_id)
  {
      SB16State *s = opaque;
-@@ -1293,6 +1586,10 @@
+@@ -1293,6 +1587,10 @@
      }
      if (s->out_data_len < 0 || s->out_data_len > (int)sizeof(s->out_data)) {
          return -1;
@@ -964,7 +965,7 @@
      }
      if (s->voice) {
          AUD_close_out (&s->card, s->voice);
-@@ -1330,6 +1627,7 @@
+@@ -1330,6 +1628,7 @@
      .name = "sb16",
      .version_id = 1,
      .minimum_version_id = 1,
@@ -972,7 +973,7 @@
      .post_load = sb16_post_load,
      .fields = (const VMStateField[]) {
          VMSTATE_UNUSED(  4 /* irq */
-@@ -1381,7 +1679,11 @@
+@@ -1381,7 +1680,11 @@
          VMSTATE_BUFFER (mixer_regs, SB16State),
  
          VMSTATE_END_OF_LIST ()

@@ -1,7 +1,7 @@
 {
   "format": "fdisbull-qemu-native-source-manifest-1",
-  "feature": "Explicit U8 mono SB16 digital capture and passive checkpoint restoration",
-  "implementation_status": "Built separate local candidate; native acceptance pending",
+  "feature": "Explicit U8 mono/stereo SB16 digital capture and passive checkpoint restoration",
+  "implementation_status": "Local U8 mono/stereo authored PCM and hot/cold checkpoint gates passed; original Doom and broader parity qualification pending",
   "base": {
     "qemu_version": "10.0.13",
     "prerequisite_package": "native/qemu-input-checkpoint-completion",
@@ -16,7 +16,7 @@
   },
   "patch": {
     "file": "qemu-10.0.13-fdisbull-sb16-checkpoint-v1.patch",
-    "sha256": "0ee06bde782d770f5b0fcf5050224f92b5eaf847e28e2036816f2495d628738d",
+    "sha256": "32b608e38a057997223127aa444dc9e3bbe2c38b771c2125b50a94bed392dac4",
     "modified_file_count": 13,
     "files": [
       {
@@ -37,7 +37,7 @@
       {
         "path": "hw/audio/sb16.c",
         "before_sha256": "8467caaacf0e91fa2b1ae68677bdb123e2a5d187b842e262ccdd89ca171063cc",
-        "after_sha256": "e3d163dbc28a91362bb1a3d4ef0945e78a142091e1624f92f055125561e75b8b"
+        "after_sha256": "e5bf2417ab161b06d759ca759e5ad6b84fea01b4ce3b55116452502f16c24fe2"
       },
       {
         "path": "hw/dma/i8257.c",
@@ -89,7 +89,7 @@
   "contract": {
     "audio_profile": "sb16",
     "audiodev": "fdisbull-sb16",
-    "guest_pcm": "U8 mono 5000..45000 Hz",
+    "guest_pcm": "U8 mono/stereo 5000..45000 Hz",
     "capture_pcm": "U8 mono 32000 Hz",
     "core_format_version": 2,
     "pcspeaker_core_format_version": 1,
@@ -102,9 +102,9 @@
     "platform": "macOS arm64",
     "target": "x86_64-softmmu",
     "accelerator": "TCG",
-    "binary_sha256": "163a733c4e3aeb26673980c3a782f296458234ec0bd73158805a941fdd8e5a2b",
+    "binary_sha256": "29f9de9a92a4e7ea6785a831a6e68eb3f6e24fc5ac77f28484826a92da62db77",
     "binary_size": 24929976,
-    "receipt_sha256": "9ab91347c1314957fd3644fce5ecde55e3b59ecb9bc5ed9726f0c0c33da4a7fc",
+    "receipt_sha256": "0d8a0226bbb58bcbe0996e92af8601d98f90f6f1621ebd2e00c570b4133a3988",
     "strategy": "Copied exact qualified build; regenerated QAPI/trace, recompiled all 23 recorded ABI-header consumers plus affected/new C objects (30 total), added new archive objects and replayed link/sign recipes.",
     "input_scope": "1686 pinned declared inputs; not a hermetic SDK claim",
     "parent_inputs_unchanged": true,

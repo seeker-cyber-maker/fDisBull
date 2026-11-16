@@ -16,25 +16,43 @@ def source_pcm(length=DMA_BYTES):
     return bytes(32 + ((37 * n + 17 * (n >> 5)) % 192) for n in range(length))
 
 
-def linear_pcm(rate):
-    """Analytic equal-rate/4x linear waveform, before output quantization.
+def linear_pcm(rate, *, channels=1):
+    """Independent expected output of the pinned foreign QEMU mono capture.
 
-The 4x interpolator requires a following source sample. Its complete output
-therefore contains four samples per adjacent input pair. Native integer mixer
-quantization is checked separately with a one-U8-unit tolerance, never a
-fitted amplitude/frequency or an arbitrary source-stream offset.
+QEMU 10.0.13 mixeng_template duplicates mono into L/R and sums them on mono
+capture; stereo source bytes instead supply distinct interleaved L/R channels.
+Its integer unsigned centre is 127, with native threshold/cast rules
+even at negative full scale. rate_template weights by UINT_MAX-t, not 2**32-t.
+These laws describe the unmodified upstream mixer, not our checkpoint codec;
+gain, rate, source offset and clipping behavior are never fitted to capture.
+The 4x interpolator needs a following source sample: four outputs per pair.
 """
+    if type(channels) is not int or channels not in (1, 2):
+        raise ValueError('Authored waveform supports mono or interleaved stereo')
     source = source_pcm()
+    frames = [(value, value) for value in source] if channels == 1 else list(zip(source[::2], source[1::2]))
+    def clip(left, right):
+        value = left + right
+        if value >= 0x7fffffff:
+            return 255
+        if value < -(1 << 31):
+            return 0
+        return ((value >> 24) + 127) & 255
     if rate == OUTPUT_RATE:
-        return source
+        return bytes(clip((left - 127) << 24, (right - 127) << 24) for left, right in frames)
     if rate != 8000:
         raise ValueError('Authored waveform oracle supports only 8000 and 32000 Hz')
-    return bytes(((4 - phase) * left + phase * right) // 4
-                 for left, right in zip(source, source[1:]) for phase in range(4))
+    def interpolate(first, second, phase):
+        first, second = (first - 127) << 24, (second - 127) << 24
+        fraction = phase << 30
+        return (first * (0xffffffff - fraction) + second * fraction) >> 32
+    return bytes(clip(interpolate(first[0], second[0], phase),
+                      interpolate(first[1], second[1], phase))
+                 for first, second in zip(frames, frames[1:]) for phase in range(4))
 
 
-def sb16_pcm(directory, nasm, *, rate=8000, silence=False):
-    """COM uses DSP C0h, unsigned mono DMA1/IRQ7, or DSP80h's timer.
+def sb16_pcm(directory, nasm, *, rate=8000, silence=False, channels=1):
+    """COM uses DSP C0h, unsigned mono/stereo DMA1/IRQ7, or DSP80h's timer.
 
 An arena twice the transfer size provides an 8192-byte physically aligned
 buffer inside the original COM allocation. That alignment cannot cross an
@@ -43,7 +61,9 @@ needed. IRQ7 is acknowledged through the 8-bit DSP status port and the PIC.
 The program continuously records DMA1 registers, and exits only on a physical
 Q key after the observed IRQ. DSP80h is an IRQ delay, not generated PCM silence.
 """
-    if rate not in (8000, OUTPUT_RATE) or type(silence) is not bool or silence and rate != 8000:
+    if (rate not in (8000, OUTPUT_RATE) or type(silence) is not bool
+            or type(channels) is not int or channels not in (1, 2)
+            or silence and (rate != 8000 or channels != 1)):
         raise ValueError('Unsupported authored SB16 profile')
     names = ('ready', 'started', 'inflight', 'finished', 'failed', 'report', 'report_end',
              'reset_byte', 'major', 'minor', 'irq_count', 'stage', 'dma_offset', 'dma_page',
@@ -72,14 +92,16 @@ Q key after the observed IRQ. DSP80h is an IRQ delay, not generated PCM silence.
     mov al,1
     out 0ah,al
 ''' if not silence else ''
+    mode = '    xor al,al\n' if channels == 1 else '    mov al,20h\n'
+    length = DMA_BYTES // channels - 1
     start = r'''
     mov al,0c0h
     call dsp_write
-    xor al,al
+''' + mode + r'''
     call dsp_write
-    mov al,0ffh
+    mov al,''' + str(length & 255) + r'''
     call dsp_write
-    mov al,1fh
+    mov al,''' + str(length >> 8) + r'''
     call dsp_write
 ''' if not silence else r'''
     mov al,80h
@@ -193,6 +215,9 @@ inflight:
     call sample_dma
     cmp word [irq_count],0
     je inflight
+    ; The ISR proves the single transfer completed. Sample once more while
+    ; DREQ is cleared: active two-byte counter reads may straddle completion.
+    call sample_dma
     mov word [stage],2
 finished:
     nop
@@ -313,12 +338,13 @@ arena:
     dw reset_byte,major,minor,irq_count,stage,dma_offset,dma_page
     dw dma_address,dma_count,buffer_offset,buffer_physical,arena
 '''
-    code = assemble(directory, 'sb16-' + ('silence' if silence else str(rate)), text, nasm)
+    name = 'silence' if silence else str(rate) + ('-stereo' if channels == 2 else '')
+    code = assemble(directory, 'sb16-' + name, text, nasm)
     footer = 4 + 2 * len(names)
     if code[-footer:-footer + 4] != b'SBF1':
         raise ValueError('Authored SB16 fixture footer is missing')
     symbols = dict(zip(names, struct.unpack_from('<' + 'H' * len(names), code,
                                                 len(code) - footer + 4), strict=True))
     symbols.update(report_size=symbols['report_end'] - symbols['report'], dma_bytes=DMA_BYTES,
-                   rate=rate, silence=silence)
+                   rate=rate, silence=silence, channels=channels)
     return code, symbols

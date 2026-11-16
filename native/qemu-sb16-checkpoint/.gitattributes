@@ -1,0 +1,2 @@
+# Preserve structural unified-diff context, as in patches/.gitattributes.
+*.patch -whitespace
