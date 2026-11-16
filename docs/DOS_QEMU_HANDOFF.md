@@ -6818,3 +6818,28 @@ and broad mixed-device/portable qualification remain open. QEMU's existing
 AdLib timers expire at the next port access, and the private noise generator
 is repeatable rather than a hardware LFSR model. DOSBox-X remains default and
 retained. No CI, release, merge or shared installation/activation occurred.
+
+## 2026-11-16: paired Doom audio comparison
+
+Both frozen backends complete an unchanged original Doom executable with the
+same private 512-command E1M5 DEMO1 prefix: music-only, effects-only and mixed,
+two fresh runs each. All twelve native captures produce nonconstant PCM and
+normal DOS exit 0, with clean owner closure. QEMU uses one continuous run and
+has no dropped prefix samples. This is a docs-only comparison of the accepted
+OPL/SB16/timing tuple; existing trials, histories, layers, hooks, checkpoints
+and IRQ implementations and prior qualification artifacts stay unchanged.
+
+The comparison identifies a 32 kHz mono U8 versus 48 kHz stereo S16 capture
+gap, lost stereo separation in QEMU's selected profile, greater DC offset and
+more native sample-limit occupancy in its effects/mixed recordings. Fresh-run
+PCM varies on both backends. Different acquisition frontiers prevent treating
+output durations or whole-recording RMS ratios as game-speed or calibrated-gain
+errors. Full-demo QEMU overflow and a failed, cadence-confounded split-capture
+probe remain recorded; rolling capture stays unqualified.
+
+See the [bounded comparison](evidence/qemu-dosbox-doom-audio-2026-11-16/README.md)
+and [sanitized metrics](evidence/qemu-dosbox-doom-audio-2026-11-16/verification.json).
+The next gate is common acquisition/event boundaries and investigation of the
+selected audio profile's DC/sample-limit behavior. No 1:1 parity or migration
+milestone is declared complete. DOSBox-X remains default and retained. No CI,
+release, merge, rebuild or shared installation/activation occurs.

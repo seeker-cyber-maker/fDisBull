@@ -1,0 +1,1140 @@
+{
+  "analysis": {
+    "analyzer": {
+      "sha256": "62be7cd93ba9f0853242a5c9619040a8eb65f95987692affd275e87cdcb1422b",
+      "size": 32937
+    },
+    "controller": {
+      "sha256": "e649e33c72f4f567e89b99d7390d628a433b842e53f124aaa27a0dec7fc60075",
+      "size": 13438
+    },
+    "finite_batch": {
+      "sha256": "a94bb36eb832d0fd63fcd0139e4316d3c8ccf78fc30249993c141b5b640564d4",
+      "size": 1346
+    },
+    "manifest": {
+      "sha256": "81506af8e77a29dcec48388e76349b2489fe20f47f9d43ff0a9d9e0c9064e820",
+      "size": 7743
+    },
+    "parity_score": null,
+    "protocol": {
+      "WAVE_container": "Exact finalized RIFF size; one preceding PCM fmt and one frame-aligned data chunk; bounded even-aligned chunks with padding. Only an odd terminal data chunk may omit its pad, explicitly labeled Python-wave-writer-compatible. No bytes are padded or modified.",
+      "analytical_OPL_clock_note": {
+        "DOSBox_MAME_OPL2_hz": 3600000,
+        "qemu_hz": 3579545,
+        "retuning_applied": false
+      },
+      "comparison_scope": "Descriptive metrics, not an audio-parity pass/fail oracle.",
+      "cross_backend_PSD": {
+        "alignment": false,
+        "grid_hz": 2.0,
+        "level_adjustment": false,
+        "metric": "integral of absolute PSD difference, full-scale squared",
+        "range": "0 <= frequency < 16000 Hz"
+      },
+      "envelope": {
+        "last_partial_window": "retained and marked",
+        "origin": "WAV output sample 0",
+        "seconds": 0.25
+      },
+      "forbidden_operations": [
+        "onset trimming",
+        "resampling",
+        "silence filling",
+        "gain fitting",
+        "peak/RMS normalization",
+        "DC removal",
+        "lag correction",
+        "time stretch"
+      ],
+      "mono_projection": "(L + R) / 2 for stereo; unchanged for mono",
+      "native_PCM_conversion": {
+        "s16le": "code / 32768",
+        "u8": "(code - 128) / 128"
+      },
+      "rail_fraction": "Exact native minimum/maximum code; projected mono reaches a rail only when its average does.",
+      "stereo_correlation": "Centered Pearson correlation; null if either channel is constant",
+      "stereo_mid_side": "mid=(L+R)/2, side=(L-R)/2; energy includes DC",
+      "time_scope": "WAV output samples only; neither WAV duration nor callback delivery establishes guest/game elapsed time.",
+      "version": 1,
+      "welch": {
+        "average": "mean",
+        "band_integration": "sum(PSD bins) * 2 Hz on [low, high); Nyquist bin reported separately",
+        "bands_hz": [
+          0,
+          50,
+          200,
+          1000,
+          4000,
+          8000,
+          16000,
+          24000
+        ],
+        "detrend": false,
+        "frequency_spacing_hz": 2.0,
+        "outside_native_Nyquist": "null; never filled with zero",
+        "overlap_fraction": 0.5,
+        "partial_last_segment": "not used",
+        "scaling": "density",
+        "short_capture": "PSD null unless one complete 0.5-second segment exists",
+        "window": "periodic Hann",
+        "window_seconds": 0.5
+      }
+    },
+    "result": {
+      "sha256": "f8731bb0a579c667816a22ed75898a257791cb69293442a12244e01a6afee81d",
+      "size": 10947535
+    },
+    "self_test": {
+      "sha256": "437ddda63b73fc94222a65b300859faca9c748199b6a57dac5e4eb6d9c527aef",
+      "size": 3579
+    },
+    "self_test_checks": 35
+  },
+  "analysis_complete": true,
+  "backend_default": "dosbox-x",
+  "capture_complete": true,
+  "capture_protocol": {
+    "audio_writer_boundaries_differ": true,
+    "conditions": [
+      "music-only",
+      "sfx-only",
+      "mixed"
+    ],
+    "dosbox": "CAPW alias DX-CAPTURE /A /-D; original relocated16-byte MZ entry and matching child PSP normal DOS exit; finalized WAV before close; default mixer48000stereoS16/no post-exit delay",
+    "fresh_processes": 12,
+    "live_game_time_alignment": false,
+    "qemu": "one continuous run from MZ entry to nonce-bound helper normal DOS return; explicit sb16-opl; max1920000 frames; zero dropped frames in all6 prefix cases",
+    "repeats_per_backend_condition": 2
+  },
+  "captures": [
+    {
+      "WAV": {
+        "sha256": "ed7b896e65117992632fb12e45e8f56389b645c6e29445e8e479ac818752d1bf",
+        "size": 749868
+      },
+      "backend": "qemu",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "32bdf16f3240dbd136366cbb1b5757ffdf90f542d788c3971d1979a0db87b942",
+        "size": 978652
+      },
+      "condition": "music-only",
+      "frames": 749824,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "qemu-music-only-1",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 5.3099739880017545,
+        "dc": 0.03548273286464557,
+        "distinct": 49,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.359375,
+        "rms": 0.06767923926031127,
+        "samples": 749824,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "mono": {
+          "crest_factor": 5.3099739880017545,
+          "dc": 0.03548273286464557,
+          "distinct": 49,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.359375,
+          "rms": 0.06767923926031127,
+          "samples": 749824,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 1,
+        "rate": 32000,
+        "width": 1
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 23.432,
+      "pcm_sha256": "96a8406967c03c43e24188b4cb275eb5ba933e7f34a2dd20ad84cacce1c7d276",
+      "reaped": true,
+      "repeat": 1,
+      "stereo": null
+    },
+    {
+      "WAV": {
+        "sha256": "c755fd29a71b124423120c45722363995b651d94138533d3055e9c75515d064c",
+        "size": 748268
+      },
+      "backend": "qemu",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "09c2fd7877437988d8e5f89ec1f8c18f85fe323586a7215cd7e0f11646fef99d",
+        "size": 976783
+      },
+      "condition": "music-only",
+      "frames": 748224,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "qemu-music-only-2",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 5.31236106581029,
+        "dc": 0.035426337483828375,
+        "distinct": 48,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.359375,
+        "rms": 0.06764882799719579,
+        "samples": 748224,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "mono": {
+          "crest_factor": 5.31236106581029,
+          "dc": 0.035426337483828375,
+          "distinct": 48,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.359375,
+          "rms": 0.06764882799719579,
+          "samples": 748224,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 1,
+        "rate": 32000,
+        "width": 1
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 23.382,
+      "pcm_sha256": "b9106df5c72c5be3af9ade16eaefc3e2221e4b8ef9f7813ab66f4a1c545fb94e",
+      "reaped": true,
+      "repeat": 2,
+      "stereo": null
+    },
+    {
+      "WAV": {
+        "sha256": "b011fc2f7d38fa7d9d2c9d5efa479ff623ac957ae073f3495186234fd486c235",
+        "size": 10798316
+      },
+      "backend": "dosbox",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "e8510eedb73908ba0fc319a749d0cf53e2f82a30b51ce50855b49331f5fd16b3",
+        "size": 8618
+      },
+      "condition": "music-only",
+      "frames": 2699568,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "dosbox-music-only-1",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 5.365383720808378,
+        "dc": 8.129074360665068e-05,
+        "distinct": 3775,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.08746337890625,
+        "rms": 0.016301421008723734,
+        "samples": 2699568,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "left": {
+          "crest_factor": 5.365383720808378,
+          "dc": 8.129074360665068e-05,
+          "distinct": 3775,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.08746337890625,
+          "rms": 0.016301421008723734,
+          "samples": 2699568,
+          "upper_rail_fraction": 0.0
+        },
+        "right": {
+          "crest_factor": 5.365383720808378,
+          "dc": 8.129074360665068e-05,
+          "distinct": 3775,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.08746337890625,
+          "rms": 0.016301421008723734,
+          "samples": 2699568,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 2,
+        "rate": 48000,
+        "width": 2
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 56.241,
+      "pcm_sha256": "6a73c1b8913a63eb7c2dc18b91a1cf94327fc785bc562628598cf0ee8d11673a",
+      "reaped": true,
+      "repeat": 1,
+      "stereo": {
+        "centered_channel_correlation": 1.0,
+        "mid_mean_square": 0.00026573632690365956,
+        "side_fraction_of_mid_plus_side": 0.0,
+        "side_mean_square": 0.0
+      }
+    },
+    {
+      "WAV": {
+        "sha256": "6f13275e5413eb00c1ebca00abeadcf65ecde7dc5d9b9566a737500c77b79ff4",
+        "size": 10803500
+      },
+      "backend": "dosbox",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "60aba41dea20fd62dee5f0f7a2ebdb6f99df9bf8bfc3da7d58a6067cf15276d7",
+        "size": 8618
+      },
+      "condition": "music-only",
+      "frames": 2700864,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "dosbox-music-only-2",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 5.331523117874599,
+        "dc": 8.083345178139638e-05,
+        "distinct": 3760,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.086883544921875,
+        "rms": 0.016296195852661136,
+        "samples": 2700864,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "left": {
+          "crest_factor": 5.331523117874599,
+          "dc": 8.083345178139638e-05,
+          "distinct": 3760,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.086883544921875,
+          "rms": 0.016296195852661136,
+          "samples": 2700864,
+          "upper_rail_fraction": 0.0
+        },
+        "right": {
+          "crest_factor": 5.331523117874599,
+          "dc": 8.083345178139638e-05,
+          "distinct": 3760,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.086883544921875,
+          "rms": 0.016296195852661136,
+          "samples": 2700864,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 2,
+        "rate": 48000,
+        "width": 2
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 56.268,
+      "pcm_sha256": "7ac6ba600956c07b54ccdfa8aa7fbddb00fc46a21600d892d27f8dad14a5014c",
+      "reaped": true,
+      "repeat": 2,
+      "stereo": {
+        "centered_channel_correlation": 1.0,
+        "mid_mean_square": 0.00026556599926828996,
+        "side_fraction_of_mid_plus_side": 0.0,
+        "side_mean_square": 0.0
+      }
+    },
+    {
+      "WAV": {
+        "sha256": "325482e90bc0291739cffef188a0e368b3292a1f28c0249f1e395dd98d558003",
+        "size": 773548
+      },
+      "backend": "qemu",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "b3f372e57593644b759dbfe0e2d48554dcc2714f838d2f609b957af00eaac3bb",
+        "size": 1009048
+      },
+      "condition": "sfx-only",
+      "frames": 773504,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "qemu-sfx-only-1",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 4.806844055840306,
+        "dc": -0.010980803347494001,
+        "distinct": 256,
+        "lower_rail_fraction": 0.0021357355618070494,
+        "peak": 1.0,
+        "rms": 0.20803670524426562,
+        "samples": 773504,
+        "upper_rail_fraction": 0.0015862878537150423
+      },
+      "native_channels_raw": {
+        "mono": {
+          "crest_factor": 4.806844055840306,
+          "dc": -0.010980803347494001,
+          "distinct": 256,
+          "lower_rail_fraction": 0.0021357355618070494,
+          "peak": 1.0,
+          "rms": 0.20803670524426562,
+          "samples": 773504,
+          "upper_rail_fraction": 0.0015862878537150423
+        }
+      },
+      "native_format": {
+        "channels": 1,
+        "rate": 32000,
+        "width": 1
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 24.172,
+      "pcm_sha256": "d1cb4540313e78a279148d5aa43a273f4ee904a4a8dbff7708e57c6cdfb85d43",
+      "reaped": true,
+      "repeat": 1,
+      "stereo": null
+    },
+    {
+      "WAV": {
+        "sha256": "785ae7c43392b718e6dd052d4922a8a624511d5c76092e4dae5489235ddaf41f",
+        "size": 772908
+      },
+      "backend": "qemu",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "87e0fd38ca06f8765af06390a1ae9648a51cfc4488c62d7becd00cef9d3a37e0",
+        "size": 1008297
+      },
+      "condition": "sfx-only",
+      "frames": 772864,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "qemu-sfx-only-2",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 4.778080143078098,
+        "dc": -0.011340671677035029,
+        "distinct": 256,
+        "lower_rail_fraction": 0.0022668930109307718,
+        "peak": 1.0,
+        "rms": 0.20928908056276088,
+        "samples": 772864,
+        "upper_rail_fraction": 0.00160571588274263
+      },
+      "native_channels_raw": {
+        "mono": {
+          "crest_factor": 4.778080143078098,
+          "dc": -0.011340671677035029,
+          "distinct": 256,
+          "lower_rail_fraction": 0.0022668930109307718,
+          "peak": 1.0,
+          "rms": 0.20928908056276088,
+          "samples": 772864,
+          "upper_rail_fraction": 0.00160571588274263
+        }
+      },
+      "native_format": {
+        "channels": 1,
+        "rate": 32000,
+        "width": 1
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 24.152,
+      "pcm_sha256": "7da992389a44f9655880f37c310362df0940a58a9324734ceb116784459a3e0c",
+      "reaped": true,
+      "repeat": 2,
+      "stereo": null
+    },
+    {
+      "WAV": {
+        "sha256": "6f50ca53334cd6feb0e9246776b7e8012f40ef643d61f97e2701ff7ec83c5e9a",
+        "size": 11562284
+      },
+      "backend": "dosbox",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "bec1c5fc4b48dc1f60bc8ea508c1a9ee16a4d29baa5ce19d06343e51996273c9",
+        "size": 8597
+      },
+      "condition": "sfx-only",
+      "frames": 2890560,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "dosbox-sfx-only-1",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 13.242027336545886,
+        "dc": 0.00016185419907617922,
+        "distinct": 57673,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.9779052734375,
+        "rms": 0.07384860705872712,
+        "samples": 2890560,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "left": {
+          "crest_factor": 13.57094566698199,
+          "dc": 7.204625689150631e-05,
+          "distinct": 32295,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.980194091796875,
+          "rms": 0.07222739784314958,
+          "samples": 2890560,
+          "upper_rail_fraction": 0.0
+        },
+        "right": {
+          "crest_factor": 12.69622254472716,
+          "dc": 0.0002516621412608521,
+          "distinct": 34111,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.981170654296875,
+          "rms": 0.077280517952512,
+          "samples": 2890560,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 2,
+        "rate": 48000,
+        "width": 2
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 60.22,
+      "pcm_sha256": "66182717b9ee5b762306a99352c050f4ca29fcf07d0ee453735a1e3b5cc45600",
+      "reaped": true,
+      "repeat": 1,
+      "stereo": {
+        "centered_channel_correlation": 0.9517962585714114,
+        "mid_mean_square": 0.005453616764514281,
+        "side_fraction_of_mid_plus_side": 0.025189027129739496,
+        "side_mean_square": 0.00014092096258628737
+      }
+    },
+    {
+      "WAV": {
+        "sha256": "1475c7116b0d4dcc90344284b35a4a2bd832257355e5634c22dfd57686a2340a",
+        "size": 11573420
+      },
+      "backend": "dosbox",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "68516c06abbc3149ebd8610bbd3ca500d23eaef1279699d99909dc3331dcde76",
+        "size": 8598
+      },
+      "condition": "sfx-only",
+      "frames": 2893344,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "dosbox-sfx-only-2",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 12.069317440133137,
+        "dc": -1.7890319263934957e-05,
+        "distinct": 57547,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.8905792236328125,
+        "rms": 0.073788698329488,
+        "samples": 2893344,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "left": {
+          "crest_factor": 12.235304484955662,
+          "dc": -1.421192748500956e-05,
+          "distinct": 32142,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.883270263671875,
+          "rms": 0.07219029691969907,
+          "samples": 2893344,
+          "upper_rail_fraction": 0.0
+        },
+        "right": {
+          "crest_factor": 11.653227291192346,
+          "dc": -2.1568711042860354e-05,
+          "distinct": 33994,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.899627685546875,
+          "rms": 0.07719987459841487,
+          "samples": 2893344,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 2,
+        "rate": 48000,
+        "width": 2
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 60.278,
+      "pcm_sha256": "79a27887a4009922f9a85ad56ab344321a1fc3649f8f67bb74eefe993be8466a",
+      "reaped": true,
+      "repeat": 2,
+      "stereo": {
+        "centered_channel_correlation": 0.9517021867185482,
+        "mid_mean_square": 0.005444772001160187,
+        "side_fraction_of_mid_plus_side": 0.02521789081503257,
+        "side_mean_square": 0.00014085780252246082
+      }
+    },
+    {
+      "WAV": {
+        "sha256": "962ff8dff2212bf6ab29fe3b7f55fb7e763153bf3e84085bcbc81ee2ce308093",
+        "size": 789294
+      },
+      "backend": "qemu",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "9c7fa7a4549e1b35f10ae1c3c7afff64cbf110e1861fecbfb7d375b9a320b4c7",
+        "size": 1026603
+      },
+      "condition": "mixed",
+      "frames": 789250,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "qemu-mixed-1",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 4.637795181239529,
+        "dc": 0.036579347481786505,
+        "distinct": 256,
+        "lower_rail_fraction": 0.0015584415584415584,
+        "peak": 1.0,
+        "rms": 0.21561969878383747,
+        "samples": 789250,
+        "upper_rail_fraction": 0.002471967057332911
+      },
+      "native_channels_raw": {
+        "mono": {
+          "crest_factor": 4.637795181239529,
+          "dc": 0.036579347481786505,
+          "distinct": 256,
+          "lower_rail_fraction": 0.0015584415584415584,
+          "peak": 1.0,
+          "rms": 0.21561969878383747,
+          "samples": 789250,
+          "upper_rail_fraction": 0.002471967057332911
+        }
+      },
+      "native_format": {
+        "channels": 1,
+        "rate": 32000,
+        "width": 1
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 24.6640625,
+      "pcm_sha256": "6a76eb58d235ba686988714d45b331c3cd25d45c5d4862cbfae6fe24d015ae1c",
+      "reaped": true,
+      "repeat": 1,
+      "stereo": null
+    },
+    {
+      "WAV": {
+        "sha256": "e6b95d0547b4561c4c7be7c17fbea0624db79adb5984cd7edf42ddd5dc74f72e",
+        "size": 789294
+      },
+      "backend": "qemu",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "81e56e89c990c231c0f78b071e094afe511c1aa603e90a4ab7341b426a9be72f",
+        "size": 1026603
+      },
+      "condition": "mixed",
+      "frames": 789250,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "qemu-mixed-2",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 4.665905799114567,
+        "dc": 0.03702944844789357,
+        "distinct": 256,
+        "lower_rail_fraction": 0.001206208425720621,
+        "peak": 1.0,
+        "rms": 0.21432065777876755,
+        "samples": 789250,
+        "upper_rail_fraction": 0.00247576813430472
+      },
+      "native_channels_raw": {
+        "mono": {
+          "crest_factor": 4.665905799114567,
+          "dc": 0.03702944844789357,
+          "distinct": 256,
+          "lower_rail_fraction": 0.001206208425720621,
+          "peak": 1.0,
+          "rms": 0.21432065777876755,
+          "samples": 789250,
+          "upper_rail_fraction": 0.00247576813430472
+        }
+      },
+      "native_format": {
+        "channels": 1,
+        "rate": 32000,
+        "width": 1
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 24.6640625,
+      "pcm_sha256": "fdfbe151c61b9b39d210ed3756b9df0377e00a5c39ccda5e8876d4c15fbc43c2",
+      "reaped": true,
+      "repeat": 2,
+      "stereo": null
+    },
+    {
+      "WAV": {
+        "sha256": "c2110fcefa32783cf72375a25b722cb97bc6015c33596138d26dce894fedbd13",
+        "size": 11894060
+      },
+      "backend": "dosbox",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "9e44cae3595381473668be26ef902f8b7444e645c240b3982700b0268b56e36b",
+        "size": 8569
+      },
+      "condition": "mixed",
+      "frames": 2973504,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "dosbox-mixed-1",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 12.952743223302674,
+        "dc": 0.0005978342407151683,
+        "distinct": 57818,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.974609375,
+        "rms": 0.07524347222807798,
+        "samples": 2973504,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "left": {
+          "crest_factor": 13.208009728033238,
+          "dc": 0.0007167204867156255,
+          "distinct": 32174,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.972991943359375,
+          "rms": 0.07366681001864012,
+          "samples": 2973504,
+          "upper_rail_fraction": 0.0
+        },
+        "right": {
+          "crest_factor": 12.72654377825941,
+          "dc": 0.00047894799471471096,
+          "distinct": 34171,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.999969482421875,
+          "rms": 0.0785735310265549,
+          "samples": 2973504,
+          "upper_rail_fraction": 1.0089106992961839e-06
+        }
+      },
+      "native_format": {
+        "channels": 2,
+        "rate": 48000,
+        "width": 2
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 61.948,
+      "pcm_sha256": "e67dd76b3972e5dcd2febffb2fda6fa4e31811c32467f6f877925ed12d36e7ce",
+      "reaped": true,
+      "repeat": 1,
+      "stereo": {
+        "centered_channel_correlation": 0.9541520756683483,
+        "mid_mean_square": 0.0056615801129375415,
+        "side_fraction_of_mid_plus_side": 0.023915873496688056,
+        "side_mean_square": 0.00013871922521415953
+      }
+    },
+    {
+      "WAV": {
+        "sha256": "d9954584011290fa5f38d8ca18c52436693e8bbc8fc4e2a016cd3eb71a564310",
+        "size": 11883116
+      },
+      "backend": "dosbox",
+      "capture_complete": true,
+      "capture_receipt": {
+        "sha256": "d15a70b0ea31d96bdb1b2e2916ab6b7671d5dace13da83d6e2cb9335ac6534c0",
+        "size": 8568
+      },
+      "condition": "mixed",
+      "frames": 2970768,
+      "guest_or_game_elapsed_seconds": null,
+      "id": "dosbox-mixed-2",
+      "inputs_unchanged": true,
+      "mono_raw": {
+        "crest_factor": 13.259128433865323,
+        "dc": -6.569696478278618e-06,
+        "distinct": 58249,
+        "lower_rail_fraction": 0.0,
+        "peak": 0.9973907470703125,
+        "rms": 0.07522294938503371,
+        "samples": 2970768,
+        "upper_rail_fraction": 0.0
+      },
+      "native_channels_raw": {
+        "left": {
+          "crest_factor": 13.546630071997765,
+          "dc": 6.67920160660055e-05,
+          "distinct": 32469,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.997528076171875,
+          "rms": 0.07363662186611747,
+          "samples": 2970768,
+          "upper_rail_fraction": 0.0
+        },
+        "right": {
+          "crest_factor": 12.717167951856865,
+          "dc": -7.993140902256273e-05,
+          "distinct": 34329,
+          "lower_rail_fraction": 0.0,
+          "peak": 0.99896240234375,
+          "rms": 0.0785522693515964,
+          "samples": 2970768,
+          "upper_rail_fraction": 0.0
+        }
+      },
+      "native_format": {
+        "channels": 2,
+        "rate": 48000,
+        "width": 2
+      },
+      "native_returncode": 0,
+      "normal_guest_exit": true,
+      "output_sample_duration_seconds": 61.891,
+      "pcm_sha256": "7f90ec94a2e7824d500f767fe0605e0a633b78e11b7b0aaa1687460a4056b069",
+      "reaped": true,
+      "repeat": 2,
+      "stereo": {
+        "centered_channel_correlation": 0.954405282277494,
+        "mid_mean_square": 0.0056584921141833435,
+        "side_fraction_of_mid_plus_side": 0.02379292385513975,
+        "side_mean_square": 0.00013791343588631687
+      }
+    }
+  ],
+  "changes": {
+    "ci": false,
+    "docs_only": true,
+    "native": false,
+    "packaging": false,
+    "production": false,
+    "release": false,
+    "shared_activation": false
+  },
+  "comparisons": [
+    {
+      "a": "qemu-music-only-1",
+      "b": "qemu-music-only-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 1.5172647675909498e-05,
+      "condition": "music-only",
+      "dc_difference": 5.639538081719797e-05,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "within-backend-independent-repeat",
+      "output_sample_duration_difference_seconds": 0.04999999999999716,
+      "parity_pass": null,
+      "rms_a_over_b_db": 0.0039038299293688663,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-music-only-1",
+      "b": "dosbox-music-only-1",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.004418349147178127,
+      "condition": "music-only",
+      "dc_difference": 0.03540144212103892,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "paired-repeat-index-cross-backend",
+      "output_sample_duration_difference_seconds": -32.809,
+      "parity_pass": null,
+      "rms_a_over_b_db": 12.36460009109113,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-music-only-2",
+      "b": "dosbox-music-only-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.0044063092650695225,
+      "condition": "music-only",
+      "dc_difference": 0.035345504032046976,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "paired-repeat-index-cross-backend",
+      "output_sample_duration_difference_seconds": -32.885999999999996,
+      "parity_pass": null,
+      "rms_a_over_b_db": 12.363480828480476,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "dosbox-music-only-1",
+      "b": "dosbox-music-only-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 1.26270226472513e-06,
+      "condition": "music-only",
+      "dc_difference": 4.5729182525429553e-07,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "within-backend-independent-repeat",
+      "output_sample_duration_difference_seconds": -0.027000000000001023,
+      "parity_pass": null,
+      "rms_a_over_b_db": 0.002784567318713797,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-sfx-only-1",
+      "b": "qemu-sfx-only-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.0067176580207029156,
+      "condition": "sfx-only",
+      "dc_difference": 0.00035986832954102745,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "within-backend-independent-repeat",
+      "output_sample_duration_difference_seconds": 0.019999999999999574,
+      "parity_pass": null,
+      "rms_a_over_b_db": -0.05213206002000545,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-sfx-only-1",
+      "b": "dosbox-sfx-only-1",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.03884450870597456,
+      "condition": "sfx-only",
+      "dc_difference": -0.01114265754657018,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "paired-repeat-index-cross-backend",
+      "output_sample_duration_difference_seconds": -36.048,
+      "parity_pass": null,
+      "rms_a_over_b_db": 8.995953181222642,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-sfx-only-2",
+      "b": "dosbox-sfx-only-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.038978512929768054,
+      "condition": "sfx-only",
+      "dc_difference": -0.011322781357771095,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "paired-repeat-index-cross-backend",
+      "output_sample_duration_difference_seconds": -36.126,
+      "parity_pass": null,
+      "rms_a_over_b_db": 9.055134416757198,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "dosbox-sfx-only-1",
+      "b": "dosbox-sfx-only-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.00033722630389007536,
+      "condition": "sfx-only",
+      "dc_difference": 0.00017974451834011418,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "within-backend-independent-repeat",
+      "output_sample_duration_difference_seconds": -0.05799999999999983,
+      "parity_pass": null,
+      "rms_a_over_b_db": 0.007049175514551155,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-mixed-1",
+      "b": "qemu-mixed-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.006963629120802992,
+      "condition": "mixed",
+      "dc_difference": -0.0004501009661070643,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "within-backend-independent-repeat",
+      "output_sample_duration_difference_seconds": 0.0,
+      "parity_pass": null,
+      "rms_a_over_b_db": 0.052488029881178594,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-mixed-1",
+      "b": "dosbox-mixed-1",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.041565417988918045,
+      "condition": "mixed",
+      "dc_difference": 0.035981513241071336,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "paired-repeat-index-cross-backend",
+      "output_sample_duration_difference_seconds": -37.2839375,
+      "parity_pass": null,
+      "rms_a_over_b_db": 9.144392129261943,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "qemu-mixed-2",
+      "b": "dosbox-mixed-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.04164548656077545,
+      "condition": "mixed",
+      "dc_difference": 0.037036018144371845,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "paired-repeat-index-cross-backend",
+      "output_sample_duration_difference_seconds": -37.2269375,
+      "parity_pass": null,
+      "rms_a_over_b_db": 9.094273520397577,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    },
+    {
+      "a": "dosbox-mixed-1",
+      "b": "dosbox-mixed-2",
+      "common_0_to_16k_2hz_PSD_absolute_difference_integral": 0.0005798178160734234,
+      "condition": "mixed",
+      "dc_difference": 0.0006044039371934469,
+      "fitted_gain": null,
+      "fitted_lag": null,
+      "fitted_offset": null,
+      "kind": "within-backend-independent-repeat",
+      "output_sample_duration_difference_seconds": 0.05700000000000216,
+      "parity_pass": null,
+      "rms_a_over_b_db": 0.0023694210168118193,
+      "scope": "Unaligned descriptive native-rate output metrics; not guest-timing or waveform-equivalence evidence."
+    }
+  ],
+  "date": "2026-11-16",
+  "excluded": [
+    "commercial bytes",
+    "demo commands",
+    "audio",
+    "waveforms",
+    "game images",
+    "states",
+    "memory/register dumps",
+    "FDB/CAS payloads",
+    "private absolute paths"
+  ],
+  "format": "fdisbull-private-target-sanitized-audio-comparison-1",
+  "fresh_repeat_PCM_equal": {
+    "dosbox": {
+      "mixed": false,
+      "music-only": false,
+      "sfx-only": false
+    },
+    "qemu": {
+      "mixed": false,
+      "music-only": false,
+      "sfx-only": false
+    }
+  },
+  "independent_audit": {
+    "capture_audit": {
+      "sha256": "4ac6729ee671e22a2a2983c5a059c0ae4cf70a9afb55db1e0ce905d8929f3c0a",
+      "size": 27371
+    },
+    "closed_capture_cases": 12,
+    "distinct_controller_PIDs": 12,
+    "distinct_native_owners": 12,
+    "independently_recomputed_scalar_and_stereo_values": 264,
+    "known_owner_PIDs_and_groups_absent": true,
+    "max_absolute_metric_error": 3.22e-14,
+    "native_source_comparison_audit": {
+      "sha256": "7c2f34ce5ce28915782855bd2904271f62bdf4ab299d7620c257bc92c9cecb45",
+      "size": 22136
+    },
+    "no_new_VM_or_DB_open": true,
+    "pinned_files_rehashed": 100,
+    "preservation_audit": {
+      "sha256": "4b85e6faf0563ac6ab3432e4a0e559d4ff98d993233b0a95b4f85e0bdfe5bf26",
+      "size": 11990
+    },
+    "status": "pass-bounded"
+  },
+  "limitations": [
+    "No auditory panel or hardware audio oracle.",
+    "No trimming,resampling,silence fill,gain/DC fitting,lag correction or time stretch.",
+    "Whole-recording RMS and spectra combine unequal acquisition coverage,DC,mixer and synth differences; not calibrated gain,pitch or speed error.",
+    "Native code rail occupancy is descriptive and does not locate upstream clipping.",
+    "Fresh-run variability is separate from exact continuation after a fixed checkpoint.",
+    "DOSBox active-capture checkpoint writer/mixer frontier continuity remains unqualified.",
+    "OPL3,MIDI,general replay,portable build and full migration parity remain open."
+  ],
+  "parity_qualified": false,
+  "preservation": {
+    "engine_identity_unchanged": true,
+    "installed_files_verified": 713,
+    "new_regression_suite": false,
+    "prior_CAS_bytes": 161450545,
+    "prior_CAS_files_verified": 588,
+    "prior_database_unchanged": true,
+    "prior_host_and_native_receipts_unchanged": true,
+    "prior_qualification": "six selected Doom hot/cold restores,four strict600ms futures,2149host/26native previously accepted; not rerun in this comparison"
+  },
+  "retained_nonacceptance": {
+    "full_DOSBox_DEMO1": "six complete supporting captures remain private; not pooled into primary512-command matrix",
+    "full_QEMU_DEMO1": {
+      "dropped_frames": 131025,
+      "reason": "capture overflow",
+      "receipt": {
+        "sha256": "9ba9c9cbd82b5a0bf15b715d08b2ceea849a283a5b9855635846e653d210a3c0",
+        "size": 6717311
+      },
+      "retained_frames": 1920000,
+      "success": false
+    },
+    "rolling_split": {
+      "continuous_frames": 30751,
+      "reason": "PCM/chunks/OPL/SB future equality failed; baseline600ms versus split300+300ms changes VM resume cadence too; tap restart causation unresolved",
+      "receipt": {
+        "sha256": "dd751381386bf15a92ef0e8c9e17fe989aec24f0cf8292908f97c1353faa57ca",
+        "size": 920858
+      },
+      "recombined_frames": 30732,
+      "success": false
+    }
+  },
+  "runtime": {
+    "dosbox_native_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "package_sha256": "dfc8c3f95a852800532bab48f86d2639b5593384d8c0b679de20542fabfd9b9e",
+    "qemu_native_sha256": "01773e0f8e4976db24449442e9e79f6f0042f9a1c21529a13b35dc8856991924",
+    "tool_commit": "8e1c9c8cbc1a0314a18a6d533a51ed9fd36814d2",
+    "wheel_sha256": "902bf97034e6470d9df0d3fb5d4198dbf47be02faa42a1cf439ad5ca2e0ef8c9"
+  },
+  "source_inspection": {
+    "SB_mixer": "QEMU volume-register writes store values without output-volume update; DOSBox applies master times DAC/FM gain",
+    "acquisition": "DOSBox millisecond mixer records intervals including silence; QEMU tap receives only backend-played enabled-voice frames without inactive-time fill; enabled zero samples may still be recorded",
+    "ideal_equal_unclipped_channels_ratio_db": 6.020599913279624,
+    "mono_law": "QEMU duplicates mono into L/R and mono output clips L+R; analysis projects DOSBox stereo as (L+R)/2",
+    "new_native_probe": false,
+    "root_cause_established": false,
+    "whole_recording_ratios_explained": false
+  },
+  "status": "bounded-paired-captures-and-descriptive-analysis",
+  "workload": {
+    "derivation": "unchanged13-byte header and first512 four-byte commands; appended normal0x80 end marker; external file, original EXE/WAD untouched",
+    "inputs": {
+      "sha256": "55ab683864ef1c6e4d87b6b18d831d0db602670611c65e6f6692c1bea8246558",
+      "size": 15066
+    },
+    "live_tic_anchor": false,
+    "map": "E1M5",
+    "mode": "normal -playdemo AUD512; not timedemo",
+    "music_device": 2,
+    "music_volume": 10,
+    "original_DEMO1_sha256": "7c3817081eb5cf32a118195492dd8b134e7617f142ecd1eed028cdfa60927679",
+    "original_EXE_sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+    "original_WAD_sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+    "original_commands": 1710,
+    "prefix_commands": 512,
+    "prefix_sha256": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+    "prefix_size": 2062,
+    "sb_dma": 1,
+    "sb_high_dma": 5,
+    "sb_iobase": 544,
+    "sb_irq": 7,
+    "sfx_device": 3,
+    "sfx_volume": 13,
+    "shot_count": null,
+    "static_fire_button_commands": 54
+  }
+}
