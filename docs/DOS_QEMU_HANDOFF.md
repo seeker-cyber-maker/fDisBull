@@ -6716,3 +6716,76 @@ comparison, future CPU endpoint consistency and portable delivery remain open.
 Trials, histories, layers, hooks and IRQ contracts retain their existing scope.
 DOSBox-X stays default and retained. No CI, release, merge, shared activation or
 backend-default switch occurred.
+
+## History-root CPU timing correction (2026-11-16)
+
+The [dated qualification](evidence/qemu-history-cpu-timing-2026-11-16/README.md)
+closes the observed original-Doom CPU continuation discrepancy for the corrected
+local tuple. Frozen tool commit `ee9694ca5f2e22997d98eb2dabec143085e7a0e3`, wheel
+SHA-256 `c4d1b8ec796d0121cd100a8555a38f594130dfc32dc30e4d13d1139f437f830a`,
+and native SHA-256
+`9be74ad11dd02f0bc488e56e27df1a6326be13bd5cd07c3c64c74d14b228d32a`
+are independently pinned. All 713 production files equal source, wheel and
+private prefix. The [four-source native delta](../native/qemu-sb16-dma-service/README.md)
+replays exactly over the retained SB16 prerequisite. This remains a same-Mac
+incremental build and private feature installation, without shared activation.
+
+The old explicit/root native streams differed by one RTC seconds byte while
+virtual time and CPU were stopped: QEMU's default RTC used host time and its
+pre-save hook refreshed CMOS. The virtual profile now pins
+`base=utc,clock=vm,driftfix=none` in launch arguments and compatibility identity.
+Standard and instruction-only profiles remain unchanged. A real guest regression
+fails the old prefix after a 2.2-second host pause and passes the corrected one.
+Old/missing/HOST RTC identities refuse load before replacing a valid owner.
+Old binaries, tool prefixes, checkpoints and private evidence remain retained;
+HOST and VM RTC timestamp coordinates are not silently interchanged.
+
+RTC correction alone did not fix CPU continuation. The next strict Doom run
+still differed in CPU and 7,732 PCM bytes, despite identical saved native
+streams and equal PCM frame counts. Six bounded old-tuple continuations also
+showed the discrepancy with both explicit and history paths, including repeated
+loads of the same artifact. History bookkeeping was not the sole cause.
+
+The selected SB16 DMA channel previously depended on host-polled idle work.
+It now consumes credit synchronously at the virtual audio callback, and ordinary
+guest I/O remains a deterministic service point. Exact registered ownership,
+mask/DREQ, paused/busy and reentrancy checks protect the selected channel;
+nonselected DMA requests keep their legacy route. No idle callback services the
+selected stream. The ordinary/scoped VMState field lists and audio-core versions
+remain unchanged. Exact binary identity fences the new scheduling model.
+
+Fresh original Doom with mouse/SB16 SFX and music disabled now passes all six
+selected source/machine/history restores and all four 600 ms continuations with
+**full exposed CPU**, SB16 query, exact PNG, PCM bytes/chunks, virtual time and
+instruction count. A deliberate host pause between explicit A and history root
+A preserves their complete native streams byte-for-byte, including RTC. The
+saved 18,958-frame prefix extends identically to 37,916 frames. Actual HUDs show
+50→49→49; one incorrect 48-bullet request note is explicitly corrected. All eight
+accepted campaign QEMU handles close/reap, source/clock/audio owners and epochs
+renew, MZ authority stays retired and cold history attachment invents no cursor.
+The independent closed-state audit checks twelve exports/six artifacts, readonly
+completion joins, 497 referenced pins and fresh absence of the known processes.
+
+Final checks pass **2,138 installed host cases and 23 native cases**, no skips.
+The latter are ten audio/RTC/mutable-ring cases plus thirteen existing media,
+mouse, checkpoint/layer/frame-key, cascade/nested-IRQ, IRQ-history and
+trial/selected-undo preservation cases. The mutable 11,025 Hz stereo ring test
+also passes the old runtime, so it is supplementary coverage rather than a red
+reproducer. The actual Doom failures remain the CPU/audio counterexamples.
+
+The original draining fixture's final IRQ moved inside the mixer callback,
+where its remaining PCM had already been captured. Its revised opt-in guest
+controller I/O creates a genuine queued tail near terminal count; the required
+nonconstant future audio, full waveform and hot/separate-Python comparisons
+remain intact. All five default waveform fixtures retain exact bytes/offsets.
+An initial every-loop unmask variant timed out; the bounded terminal-count
+variant passes. These failures and the first compile's corrected interface-macro
+typo remain retained rather than reclassified as acceptance.
+
+This advances bounded milestones 4/5/7/9 without declaring a whole migration
+milestone complete. It is not general QEMU record/replay or retired-instruction
+coverage, full mixed-device timing compatibility, FM/OPL music, ideal audio
+amplitude, paired DOSBox-X parity or portable delivery. Trials, histories,
+task-private layers, hooks, checkpoints and IRQs retain their existing scope.
+DOSBox-X stays default and retained. No CI, release, merge or shared installation
+change occurred. Commercial payloads, raw states, media and FDB/CAS remain private.

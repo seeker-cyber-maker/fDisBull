@@ -1,0 +1,66 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Virtual-callback service for the selected SB16 DMA channel",
+  "implementation_status": "Locally qualified strict original Doom hot/separate-process CPU/media futures, ten authored audio/RTC/ring cases and thirteen existing native preservation cases; general parity remains open",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-sb16-checkpoint",
+    "prerequisite_manifest_sha256": "a239430c5444b1a0e95ea6361f2a17a3a65775f933706d27eb210edb1d3623a2",
+    "prerequisite_binary_sha256": "29f9de9a92a4e7ea6785a831a6e68eb3f6e24fc5ac77f28484826a92da62db77"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-sb16-dma-service-v1.patch",
+    "sha256": "bb070f92616944c592b9eebf37da8283e13f1d12e6eb3c7b8bfa870da5384404",
+    "modified_file_count": 4,
+    "files": [
+      {
+        "path": "hw/audio/sb16.c",
+        "before_sha256": "e5bf2417ab161b06d759ca759e5ad6b84fea01b4ce3b55116452502f16c24fe2",
+        "after_sha256": "eb9826a48d98036acb0c941b68a48f9c67b9432eb0f719a2cf43beb04c6f871d"
+      },
+      {
+        "path": "hw/dma/i8257.c",
+        "before_sha256": "a7da60c3a1e5f3026611d4e914f96ab4dfa170387c2cb7a7393156ec7bf95f5f",
+        "after_sha256": "a3b58d28c4baf936e913b7f0bbded609fb957b70a96d050753e6e5b076bcfcdf"
+      },
+      {
+        "path": "include/hw/audio/fdisbull-sb16.h",
+        "before_sha256": "ebdcdb362301a751fb533ecd2621a411c92d6891d29b712a46bb8038dabc8e5c",
+        "after_sha256": "dc973033f2808af207d3519d8765a711e8dba600ff69dda153cfe29fbc90383c"
+      },
+      {
+        "path": "include/hw/dma/i8257.h",
+        "before_sha256": "c968236d0809e1cf060f0de76363b78b2a62a2f879175d211cd8a3f984f1e228",
+        "after_sha256": "81d67b1ef404d8aff012ab4cfe20dd8120656268d3e52e2ffc338cf2051874c9"
+      }
+    ]
+  },
+  "contract": {
+    "audio_profile": "sb16",
+    "audiodev": "fdisbull-sb16",
+    "rtc": {
+      "base": "utc",
+      "clock": "vm",
+      "driftfix": "none"
+    },
+    "dma_service": "Selected channel only at virtual audio callback or deterministic guest I/O; never host idle BH",
+    "ordinary_dma_preserved": "Legacy path retained for nonselected channels; bounded boot/preservation qualified, broader concurrent mixed-device stress open",
+    "paused_restore_transfers": false,
+    "ordinary_and_scoped_vmstate_unchanged": true,
+    "audio_core_format_unchanged": 2,
+    "scope": "Exact-binary scoped checkpoints and bounded repeated continuation; no general replay or paired DOSBox-X parity",
+    "ci": false
+  },
+  "build": {
+    "platform": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "binary_sha256": "9be74ad11dd02f0bc488e56e27df1a6326be13bd5cd07c3c64c74d14b228d32a",
+    "binary_size": 24930232,
+    "receipt_sha256": "15e365ff2d167b4ad47be6fb22c4c0269fe3dc3426a23467b25b15998a5d4cdd",
+    "strategy": "Separate source/build copies; same QAPI/trace and 30 serial compilations including all 23 recorded affected ABI-header consumers, archive update and retained782-argument link/sign recipe",
+    "input_scope": "1688 declared inputs; same-Mac incremental build, not a hermetic SDK or clean-portable build",
+    "parent_inputs_unchanged": true,
+    "ci": false
+  }
+}

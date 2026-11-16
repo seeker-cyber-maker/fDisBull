@@ -455,3 +455,13 @@ authored, application and preservation gates separately. This is an explicit
 profile and exact native-build contract. OPL/FM/music, ideal amplitude and
 paired DOSBox-X audio remain unqualified. The backend default and retirement
 gates do not change.
+
+### 2026-11-16: corrected bounded history-root CPU continuation
+
+The [timing fix](evidence/qemu-history-cpu-timing-2026-11-16/README.md) pins the
+virtual profile's RTC to VM time and moves selected SB16 DMA service off the
+host idle loop. The actual Doom explicit/root continuations now match full
+exposed CPU as well as PCM/chunks, device, image and clock/count across hot and
+separate-process recovery. This resolves the observed endpoint discrepancy
+for the qualified tuple. It does not enable general deterministic replay,
+complete a whole migration milestone or change the default/removal gates.

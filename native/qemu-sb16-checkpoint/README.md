@@ -78,3 +78,8 @@ checkpoint/history recovery. General auto-init/16-bit/HDMA playback beyond
 the observed application path, D0/D4 pause behavior, OPL/FM and a paired DOSBox
 waveform reference remain separate gates. DOSBox-X stays default
 and retained. This package changes no installation and dispatches no CI.
+
+The later [selected DMA service correction](../qemu-sb16-dma-service/README.md)
+provides a separately pinned native candidate for bounded full-CPU/media
+continuation consistency with the VM-RTC tool profile. This original package
+and binary remain retained for their existing exact-binary states.

@@ -1,0 +1,682 @@
+{
+  "claim_limits": [
+    "Results are finite source-bound observations, not all-instruction retirement or unrestricted deterministic replay.",
+    "Fresh launch calendar uses current UTC; checkpoint clock policy does not fix a universal fresh-start date.",
+    "Foreign mixer amplitude/clipping laws remain unchanged; no ideal amplitude or paired DOSBox-X waveform parity.",
+    "Capture-only LE histories do not qualify continuous task/allocation lifetime, automatic instruction histories or LE trials.",
+    "OPL/FM, broader devices/configurations and paired replacement parity remain open.",
+    "Nonselected DMA retains its legacy path; broader concurrent mixed-device DMA stress remains open beyond the bounded boot/preservation gate."
+  ],
+  "date": "2026-11-16",
+  "doom": {
+    "all_cold_guests_reaped": true,
+    "all_cold_owner_returncodes_zero": true,
+    "all_hot_guests_reaped": true,
+    "all_hot_owner_returncodes_zero": true,
+    "capture": {
+      "channels": 1,
+      "format": "U8",
+      "rate": 32000
+    },
+    "cold_continuations": [
+      {
+        "chunks_exact": true,
+        "cpu_exact": true,
+        "guest_ns": 600000000,
+        "icount_exact": true,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "target": "cold-explicit-future",
+        "virtual_ns_exact": true
+      },
+      {
+        "chunks_exact": true,
+        "cpu_exact": true,
+        "guest_ns": 600000000,
+        "icount_exact": true,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "target": "cold-root-future",
+        "virtual_ns_exact": true
+      }
+    ],
+    "cold_history_attach_live_authority": false,
+    "cold_native_handles": 4,
+    "cold_receipt": {
+      "sha256": "89142abcd7f2e23d5eedab57cc32962dee9c62776fe4c7612204bd2e1f6fe0a3",
+      "size": 703060
+    },
+    "cold_selected_restores": [
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "source": "explicit-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-explicit-a"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "source": "history-b",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-node-b"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "source": "history-root-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "cold-root-a"
+      }
+    ],
+    "cold_status": "passed",
+    "export_payloads": [
+      {
+        "sha256": "30ef0295b0582b36f0a79c4031f37d8901ebf50cd31af8c26625b3dcb77f0e59",
+        "size": 604714
+      },
+      {
+        "sha256": "34f05bd1cddb703e9fab94326bba01ad7143047ed52db6d7407acd66a736d91d",
+        "size": 29157103
+      },
+      {
+        "sha256": "4ac6eb9332c90c7ef07a139e6a07bbe9cbbbaac5cb7d811be8127ccbed4f889f",
+        "size": 604675
+      },
+      {
+        "sha256": "9cc59398cec06fa7f13f6392187130a99e8f8dc573d2b64cba94fc389d5d8325",
+        "size": 58481699
+      },
+      {
+        "sha256": "cfeaacb953756e9758af637ecfc31a140187aced3225e86a17b105cca376f274",
+        "size": 604675
+      },
+      {
+        "sha256": "fae2e5dd1d2288dda88c14510fb4bbf0c180d1efb83e64899ed6ef1833a6bb0c",
+        "size": 43771850
+      }
+    ],
+    "general_record_replay_qualified": false,
+    "guest_memory_or_register_writes": false,
+    "guest_voice": {
+      "channels": 2,
+      "format": "U8",
+      "rate": 11025
+    },
+    "history_advance": "capture",
+    "history_nodes": 2,
+    "hot_continuations": [
+      {
+        "chunks_exact": true,
+        "cpu_exact": true,
+        "guest_ns": 600000000,
+        "icount_exact": true,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "target": "hot-explicit-future",
+        "virtual_ns_exact": true
+      },
+      {
+        "chunks_exact": true,
+        "cpu_exact": true,
+        "guest_ns": 600000000,
+        "icount_exact": true,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "target": "hot-root-future",
+        "virtual_ns_exact": true
+      }
+    ],
+    "hot_native_handles": 4,
+    "hot_receipt": {
+      "sha256": "e8a4c2eac22dfc0896ed7b0447dca623540520036cd1c130091b32a55770a8fd",
+      "size": 1883032
+    },
+    "hot_selected_restores": [
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "source": "explicit-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-explicit-a"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "source": "history-b",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-node-b"
+      },
+      {
+        "audio_owner_fresh": true,
+        "capture_epoch_fresh": true,
+        "chunks_exact": true,
+        "clock_and_icount_exact": true,
+        "clock_owner_fresh": true,
+        "cpu_exact": true,
+        "le_source_checkpoint_restored": true,
+        "lifetime_qualified": false,
+        "original_mz_source_binding_restored": false,
+        "pcm_exact": true,
+        "png_exact": true,
+        "sb16_device_exact": true,
+        "source": "history-root-a",
+        "source_owner_fresh": true,
+        "source_site_exact": true,
+        "target": "hot-root-a"
+      }
+    ],
+    "hot_status": "passed",
+    "immutable_inputs_verified": true,
+    "input": {
+      "ammo": [
+        50,
+        49,
+        49
+      ],
+      "button": "left",
+      "hold_ms": 500,
+      "observed_guest_ns": 600000000,
+      "scope": "One physical long hold; the retained A/B images both show49. A raw note claiming48 is incorrect."
+    },
+    "irq_mask_changes": false,
+    "le_trials_qualified": false,
+    "private_independent_audit": {
+      "absolute_homebrew_libraries": 16,
+      "cas_hashes_verified": true,
+      "closed_database_unchanged": true,
+      "current_referenced_file_pins": 497,
+      "distinct_export_artifacts": 6,
+      "export_instances_verified": 12,
+      "history_charged_bytes": 103462938,
+      "history_nodes": 2,
+      "known_Doom_guests_and_groups_absent": true,
+      "native_kit_files": 93,
+      "native_stream_comparison": {
+        "all_cpu_ram_device_timer_sections_equal": true,
+        "changed_bytes": 0,
+        "equal": true,
+        "guest_disk_equal": true,
+        "instrumentation_equal": true,
+        "rtc_equal": true,
+        "sha256": "4f62b664037631ad37abb5d1854632fabcaa4db8cf7137709754ded105e3cb53",
+        "size": 14516408
+      },
+      "other_process_groups_examined": false,
+      "production_files": 713,
+      "receipt": {
+        "sha256": "832b6708ff7c5766cdc68bebde4f43ba5dba1576aafd269532afa6ec0ebc25b1",
+        "size": 32725
+      },
+      "referenced_pin_index_sha256": "2391a92d12295f17f4ca9e7ef2c9e114a5e1faf1e77e4112f5990f54e872bf46",
+      "selected_restore_count": 6,
+      "status": "pass-bounded-full-cpu-continuation",
+      "strict_full_cpu_future_count": 4
+    },
+    "remaining_cold_owned_members": [],
+    "remaining_hot_owned_members": [],
+    "retained_A_PCM_prefix_exact": true,
+    "same_six_companion_machine_exports_hot_cold": true,
+    "saved_a": {
+      "chunks": 61,
+      "pcm_frames": 18958,
+      "pcm_sha256": "4dce947202f178d0507a7c630c4e9539661cf0c6e008538ba0e7cdd9e16d79f5",
+      "png_sha256": "3472c20a6eb41113321319ef13a13e932ddac4e4024653d68556df9276c22bd9"
+    },
+    "saved_b_and_future": {
+      "chunks": 122,
+      "pcm_frames": 37916,
+      "pcm_sha256": "2c5f5edee088ac535663e328f9ccc7e4f26607c01641891c0ef25c58cb0bcd1e",
+      "png_sha256": "692f45ba61ba6dc45e27893abb90d5b92a0608b8217dc7ac2ff5642b317e3749"
+    },
+    "separate_python_processes": true,
+    "source_originals": {
+      "DOOM.EXE": {
+        "sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+        "size": 715493
+      },
+      "DOOM.WAD": {
+        "sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+        "size": 12408292
+      }
+    },
+    "strict_full_cpu_future_count": 4,
+    "strict_selected_restore_count": 6,
+    "task_or_allocation_lifetime_qualified": false,
+    "total_native_handles": 8
+  },
+  "faults": {
+    "dma": {
+      "baseline_receipt": {
+        "sha256": "0dd9bd8ef4f1277864060c6e63a336bc5d37b17008cc02881f56645b398e96c5",
+        "size": 1289712
+      },
+      "cause": "Selected SB16 DMA was repeatedly serviced by host-polled idle bottom halves, outside the virtual audio callback frontier. Equal saved state and timer endpoints did not determine those live service intervals.",
+      "fix": "Only exact selected SB16 channels consume credit synchronously at the virtual audio callback; host idle BH skips them. Guest I/O, unrelated channels, masks, DREQ, real IRQ acknowledgement and legacy audiodevs retain their existing paths.",
+      "none_backend_RateCtl_patch": false,
+      "old_baseline_future_cpu_failures": 6,
+      "old_baseline_selected_routes": 6,
+      "ordinary_and_scoped_vmstate_layouts_unchanged": true,
+      "ordinary_dma_preservation_scope": "Legacy path retained for nonselected channels; bounded boot and preservation pass. Broader concurrent mixed-device stress remains open.",
+      "paused_or_instrumented_busy_service": false,
+      "reentrant_selected_only_idle_rearm": false,
+      "rtc_only_explicit_root_native_stream_equal": true,
+      "rtc_only_failed_receipt": {
+        "sha256": "0d9e7db8cbcd33fe4498fab5623b0de269247d9f5ef978dc9cc88edafcaad79d",
+        "size": 1491214
+      },
+      "rtc_only_forensic_receipt": {
+        "sha256": "4b34959313c0c8e17b6e7b8749e48d2bf032d9d524297fa17e62b173df25378e",
+        "size": 20463
+      },
+      "rtc_only_future_pcm_byte_mismatches": 7732,
+      "rtc_only_future_pcm_equal": false,
+      "rtc_only_native_stream_size": 14516408,
+      "rtc_only_stream_sha256": "6669e141741aa09e3707b5cc1f4f66c72928cacc15ed9aabc6e159fefc192ce9",
+      "rtc_only_strict_Doom_passed": false
+    },
+    "rtc": {
+      "cause": "Virtual profile omitted an RTC selection, leaving QEMU_CLOCK_HOST. RTC pre-save updates CMOS while virtual time and instructions remain stopped.",
+      "forensic_receipt": {
+        "sha256": "b478f2e5226316e4a6a5c2ab2a1a2964afe98589bae34d52481ea0e1241a62ba",
+        "size": 6822
+      },
+      "guest_observed_old_added_seconds": 2,
+      "host_wait_seconds": 2.2,
+      "initial_calendar": "Host UTC seed at fresh launch; not a fixed date",
+      "legacy_or_forged_policy_refused_before_restore_mutation": true,
+      "new_native_guest_passed": true,
+      "new_policy": {
+        "base": "utc",
+        "clock": "vm",
+        "driftfix": "none"
+      },
+      "old_changed_field": "mc146818rtc.cmos_data[0]",
+      "old_native_guest_host_pause_failure": true,
+      "old_snapshot_changed_native_bytes": 1,
+      "policy_recorded_in_runtime_identity": true,
+      "rtc_alone_proves_cpu_future_cause": false,
+      "rtc_interrupts_enabled_in_that_old_capture": false,
+      "standard_and_instruction_profiles_unchanged": true
+    }
+  },
+  "format": "fdisbull-history-cpu-timing-local-qualification-1",
+  "policy": {
+    "ci_dispatched": false,
+    "commercial_payload_published": false,
+    "default_backend": "dosbox",
+    "dosbox_retained": true,
+    "dosbox_retirement_allowed": false,
+    "raw_private_evidence_included": false,
+    "release_published": false,
+    "shared_activation": false,
+    "system_installation_changed": false
+  },
+  "qualified_scope": "Bounded strict hot and separate-process cold continuation from explicit LE checkpoint and capture-history root under the corrected RTC/DMA tuple; no general record/replay or paired emulator parity claim.",
+  "runtime": {
+    "cross_binary_state_compatibility": false,
+    "emulator_rebuilt": true,
+    "native_build_input_scope": "1688 declared inputs; same-Mac incremental build, not a hermetic SDK or clean-portable build",
+    "native_build_receipt": {
+      "sha256": "15e365ff2d167b4ad47be6fb22c4c0269fe3dc3426a23467b25b15998a5d4cdd",
+      "size": 185117
+    },
+    "native_patch_files": 4,
+    "native_patch_replay_receipt": {
+      "sha256": "1cc8749a67e8db143357bcaad42e29bdbe68ccdc9f2a807fc4abdf95e330afd8",
+      "size": 1269
+    },
+    "native_patch_sha256": "bb070f92616944c592b9eebf37da8283e13f1d12e6eb3c7b8bfa870da5384404",
+    "native_qemu_sha256": "9be74ad11dd02f0bc488e56e27df1a6326be13bd5cd07c3c64c74d14b228d32a",
+    "native_qemu_size": 24930232,
+    "native_source_manifest_sha256": "4883c83048b254ee33ca1d68db80c7521ebdeb43d845d38b02437c0ae0dfa9df",
+    "old_binary_and_producer_bound_states_preserved": true,
+    "package_receipt": {
+      "sha256": "7deb24db85eeaf04f6bacecea98fdacb64474955ce624d17e692c8fff6c901ba",
+      "size": 78551
+    },
+    "production_files": 713,
+    "source_wheel_private_install_equal": true,
+    "tool_commit": "ee9694ca5f2e22997d98eb2dabec143085e7a0e3",
+    "wheel_sha256": "c4d1b8ec796d0121cd100a8555a38f594130dfc32dc30e4d13d1139f437f830a"
+  },
+  "status": "passed-local-bounded-RTC-DMA-Doom-qualification",
+  "verification": {
+    "broad_host_preservation": {
+      "cases": 2138,
+      "errors": 0,
+      "failures": 0,
+      "junit_sha256": "021f8964b2853000cd333686b3858e4cac78be7a49e47432f69c42323185c6ac",
+      "receipt": {
+        "sha256": "c37b012714eb28b211e022536c143463d8d1bacbb47ce89734baac678f4e9030",
+        "size": 2918
+      },
+      "skipped": 0,
+      "status": "passed",
+      "warning": "Expected duplicate-ZIP-member warning from an existing malformed-archive negative."
+    },
+    "combined_native_acceptance_preservation": {
+      "all_owned_members_reaped": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 23
+      },
+      "dependencies_unchanged": true,
+      "existing_preservation_cases": 13,
+      "junit_sha256": "6a78e61ae44a05f83eb7bf7b047b74f2b82f46e7ed4c35ffb5f897c03d7a73dc",
+      "new_audio_rtc_ring_cases": 10,
+      "overlap_counting": false,
+      "receipt": {
+        "sha256": "c8739f39f1f0eaa90da0c215c2c1b82521e13b4e71f68480446500499238bd0e",
+        "size": 1453
+      },
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "97678571bf93a82d026b2bedbc403e693168a5aec9d9ae9adaaace1644340748",
+      "status": "passed",
+      "test_files_unchanged": true
+    },
+    "draining_fixture_retained_attempts": [
+      {
+        "cause": "Synchronous service had already captured the old fixture tail; the nonconstant future-tail assertion failed.",
+        "label": "initial-native-selection",
+        "receipt": {
+          "sha256": "f3ea6db3d81d6a72fb8a823c05a5a2b41df2151c3c6557d61a0c335d351fe265",
+          "size": 897
+        }
+      },
+      {
+        "cause": "Guest test variant issued programmed-I/O unmask every loop and timed out before the required breakpoint.",
+        "label": "native-drain-02",
+        "receipt": {
+          "sha256": "4d2f949e741b2cb3070d0bbd9466eb841f7e3483ca523ee5d89e0101da033a7c",
+          "size": 722
+        },
+        "success": false
+      },
+      {
+        "cause": "Guest-only threshold unmask creates a genuine queued tail; original nonconstant-tail and exact hot/cold comparisons all pass.",
+        "label": "native-drain-03",
+        "receipt": {
+          "sha256": "027a73cd6a0a188666d971a2b348a24c8bdc8c004129b2533bcd5a4e8d6fc3d1",
+          "size": 722
+        },
+        "success": true
+      }
+    ],
+    "draining_fixture_revision": {
+      "existing_tail_assertions_unchanged": true,
+      "five_default_COM_byte_identities_preserved": true,
+      "guest_service_policy": "Opt-in guest unmask only after sampled remaining DMA counter falls below80; no production servicing override.",
+      "hot_and_separate_process_cold_tail_assertions_passed": true,
+      "opt_in_guest_unmask_creates_real_queued_tail": true,
+      "standalone_native_receipt": {
+        "sha256": "027a73cd6a0a188666d971a2b348a24c8bdc8c004129b2533bcd5a4e8d6fc3d1",
+        "size": 722
+      },
+      "static_receipt": {
+        "sha256": "7d1f20bf4a60aed41ef251ac109a1f96162304e0f619c64e00ceb2f77381e565",
+        "size": 1882
+      },
+      "status": "standalone native03 and final combined native-complete-03 passed"
+    },
+    "final_ten_native_acceptance": {
+      "cases": 10,
+      "composition": {
+        "RTC_calendar": 1,
+        "mutable_stereo_ring": 1,
+        "retained_SB16_cases": 8
+      },
+      "selection_subset": "native-complete-03",
+      "status": "passed",
+      "testcases": [
+        "test_native_sb16_inactive_draining_checkpoint_hot_and_separate_process_cold",
+        "test_native_sb16_mutable_stereo_ring_explicit_and_history_root_full_cpu_continuation",
+        "test_native_sb16_zero_and_inactive_voice_graph_restore[no-window]",
+        "test_native_sb16_zero_and_inactive_voice_graph_restore[capture-only]",
+        "test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold[dma-8000]",
+        "test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold[dma-32000]",
+        "test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold[aux-silence-timer]",
+        "test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold[dma-stereo-8000]",
+        "test_native_sb16_known_pcm_and_inflight_checkpoint_hot_separate_process_cold[dma-stereo-32000]",
+        "test_native_rtc_calendar_preserves_stopped_time_and_both_checkpoint_continuations"
+      ]
+    },
+    "mutable_ring_old_runtime": {
+      "passed": true,
+      "regression_reproduced": false,
+      "scope": "Useful coverage for a guest-produced mutable 11025 Hz stereo auto-init DMA ring; its passing old run is not a red reproduction."
+    },
+    "native_dma_initial_selection": {
+      "executed_cases": 9,
+      "failure": "Inactive-draining fixture reached a state whose remaining PCM had already been captured at the new synchronous frontier. Its required nonconstant future tail was empty.",
+      "full_selection_passed": false,
+      "passed_before_failure": 8,
+      "requested_cases": 10,
+      "rerun_status": "complete native-complete-03 passed; initial failure retained"
+    },
+    "retained_runs": {
+      "host-preservation-01": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 2138
+        },
+        "dependencies_unchanged": true,
+        "junit_sha256": "021f8964b2853000cd333686b3858e4cac78be7a49e47432f69c42323185c6ac",
+        "receipt": {
+          "sha256": "c37b012714eb28b211e022536c143463d8d1bacbb47ce89734baac678f4e9030",
+          "size": 2918
+        },
+        "runtime_payload_unchanged": true,
+        "selection_sha256": "d420de81b56d8d998016131db7c313af95e8a57a21cfa0bf0bb83ace10ec8373",
+        "success": true,
+        "test_files_unchanged": true,
+        "warning": "Expected duplicate-ZIP-member warning from an existing malformed-archive negative."
+      },
+      "native-complete-03": {
+        "all_owned_members_reaped": true,
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 23
+        },
+        "dependencies_unchanged": true,
+        "existing_preservation_cases": 13,
+        "junit_sha256": "6a78e61ae44a05f83eb7bf7b047b74f2b82f46e7ed4c35ffb5f897c03d7a73dc",
+        "new_audio_rtc_ring_cases": 10,
+        "overlap_counting": false,
+        "receipt": {
+          "sha256": "c8739f39f1f0eaa90da0c215c2c1b82521e13b4e71f68480446500499238bd0e",
+          "size": 1453
+        },
+        "runtime_payload_unchanged": true,
+        "selection_sha256": "97678571bf93a82d026b2bedbc403e693168a5aec9d9ae9adaaace1644340748",
+        "status": "passed",
+        "test_files_unchanged": true
+      },
+      "native-dma-acceptance-01": {
+        "all_owned_members_reaped": true,
+        "counts": {
+          "errors": 0,
+          "failures": 1,
+          "skipped": 0,
+          "tests": 9
+        },
+        "junit_sha256": "1a43cf9fd69011ae73653310e97ecd206e7fc140261726ed5f93ee1a88cba4f8",
+        "receipt": {
+          "sha256": "f3ea6db3d81d6a72fb8a823c05a5a2b41df2151c3c6557d61a0c335d351fe265",
+          "size": 897
+        },
+        "selection_sha256": "5c328d06752573f74fc0f0be78c4aa074839a9461f4e47c0731925c859da8219",
+        "success": false
+      },
+      "native-drain-02": {
+        "counts": {
+          "errors": 0,
+          "failures": 1,
+          "skipped": 0,
+          "tests": 1
+        },
+        "dependencies_unchanged": true,
+        "junit_sha256": "ab69285288e5354316dbdeeed005a42c296f3147293ad777660ba91e7b2427d1",
+        "receipt": {
+          "sha256": "4d2f949e741b2cb3070d0bbd9466eb841f7e3483ca523ee5d89e0101da033a7c",
+          "size": 722
+        },
+        "runtime_payload_unchanged": true,
+        "selection_sha256": "488866b9db75370456d84977a7e1cfac1f7a660abab36249f09e1bf0dca149e3",
+        "success": false,
+        "test_files_unchanged": true
+      },
+      "native-drain-03": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "dependencies_unchanged": true,
+        "junit_sha256": "dd1141726f09eb16e63f60b41e24d9df613e89f888ca58d0c76b83dc042c3d99",
+        "receipt": {
+          "sha256": "027a73cd6a0a188666d971a2b348a24c8bdc8c004129b2533bcd5a4e8d6fc3d1",
+          "size": 722
+        },
+        "runtime_payload_unchanged": true,
+        "selection_sha256": "a7a93ce090a6383cae99b0463601cb351172e8d5f871118c9dbcef417344468e",
+        "success": true,
+        "test_files_unchanged": true
+      },
+      "native-ring-red-01": {
+        "all_owned_members_reaped": true,
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "junit_sha256": "1dd80ba5861d126d671f4e88ec76eaa310753c2af43fa9e008cffc490ccb9c79",
+        "receipt": {
+          "sha256": "db44fdae84db1b0d209592c9125e68511be34019cea37063d69ea3a961e1bbab",
+          "size": 717
+        },
+        "selection_sha256": "fb07cabeb5a54c15777216e52a450cdac4d98cb64b60857838acbbe71881bec9",
+        "success": true
+      },
+      "native-rtc-green-01": {
+        "all_owned_members_reaped": true,
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "junit_sha256": "ed17f5018baef3fc7f3c9c6eccc5ef9d46088f1d63f15f54e6e9d80a0434f640",
+        "receipt": {
+          "sha256": "481303b2bd9f3858a3beb548e7b11e5bb514dabf3aec67dff187978458970226",
+          "size": 722
+        },
+        "selection_sha256": "8b04ffce942276d7fd5d368df33214f4f30abfd76462a9aaa7bc0d273c7f08ad",
+        "success": true
+      },
+      "native-rtc-red-01": {
+        "all_owned_members_reaped": true,
+        "counts": {
+          "errors": 0,
+          "failures": 1,
+          "skipped": 0,
+          "tests": 1
+        },
+        "junit_sha256": "0ea9f6375a9d74773f5e408ebfe26b5a8ccdf712d2e9cb03c8f2c6e9dad40cba",
+        "receipt": {
+          "sha256": "885945a910ea4c9e017bee1fc3758197175caf5779917f125f083f49eb570fb7",
+          "size": 723
+        },
+        "selection_sha256": "cddb16e2b807c0a5332f8e2fd2d51e94900555bd6ca9264c856e7e8ef001d30c",
+        "success": false
+      }
+    },
+    "thirteen_existing_native_preservation": {
+      "cases": 13,
+      "selection_subset": "native-complete-03",
+      "status": "passed",
+      "testcases": [
+        "test_native_int33_driver_motion_buttons_and_neutral_hot_cold_checkpoint",
+        "test_native_cross_session_virtual_clock_audio_display_retrace_and_controls",
+        "test_native_virtual_only_midprogram_checkpoint_continues_original_dos[com]",
+        "test_native_virtual_only_midprogram_checkpoint_continues_original_dos[mz]",
+        "test_native_instrumented_checkpoint_refuses_active_host_sync_without_mutation",
+        "test_native_shrunk_allocation_machine_recovery_hot_and_cold[exit-physical]",
+        "test_native_shrunk_allocation_machine_recovery_hot_and_cold[tsr-linear]",
+        "test_native_owned_machine_restores_instrumented_buffers_and_frame_key_owner",
+        "test_native_rtc_cascade_and_nested_keyboard_cold_restore[8]",
+        "test_native_rtc_cascade_and_nested_keyboard_cold_restore[1]",
+        "test_native_irq_checkpoint_history_rewinds_branches_and_cold_restores",
+        "test_native_experiment_restores_private_irq_and_held_keys",
+        "test_native_experiment_full_restore_recovers_frozen_projection_and_keeps_frame_dag"
+      ]
+    }
+  }
+}

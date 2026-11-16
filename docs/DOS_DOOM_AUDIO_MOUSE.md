@@ -236,3 +236,29 @@ CPU stop identity: the accepted history-root continuations reproduce PCM,
 chunks, device state and PNG but do not reproduce the original future CPU
 endpoint. This slice does not qualify deterministic instruction replay,
 OPL/FM music, paired DOSBox-X audio or overall replacement parity.
+
+## Corrected history-root continuation (2026-11-16)
+
+The [new timing qualification](evidence/qemu-history-cpu-timing-2026-11-16/README.md)
+supersedes the earlier future-CPU limitation for its exact corrected tuple.
+The tool pins a VM-backed RTC, and the
+[selected SB16 DMA extension](../native/qemu-sb16-dma-service/README.md) consumes
+audio credit at a virtual callback rather than a host-polled background task.
+RTC correction alone was insufficient: a retained strict campaign still differed
+in CPU and 7,732 PCM bytes despite equal frame counts. Both mechanisms are
+recorded separately in the dated evidence.
+
+A fresh original-Doom campaign now requires six exact selected restores and
+four exact 600 ms continuations, including full exposed CPU, canonical source,
+SB16 query, PNG, PCM bytes/chunks, virtual time and instruction count. Its
+500 ms mouse hold gives 50→49 bullets at A and retains 49 at B; the actual HUD
+and an explicit correction take precedence over one earlier mistaken 48-bullet
+request description. The saved 18,958-frame PCM prefix extends identically to
+37,916 frames. A deliberate 2.2-second host pause between explicit A and history
+root A leaves their stopped state unchanged. The independent audit confirms
+byte-identical native state streams, including RTC, and all four CPU futures.
+
+Use the new exact native binary for these checkpoints; old runtimes/states are
+retained and are not silently reinterpreted. Histories remain capture-only.
+General replay, FM/OPL music, ideal audio amplitude and paired DOSBox-X parity
+remain separate gates. DOSBox-X stays default and retained; no CI is used.

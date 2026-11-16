@@ -1,0 +1,2 @@
+# Preserve structural unified-diff context.
+*.patch -whitespace

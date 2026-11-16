@@ -116,7 +116,8 @@ def test_native_sb16_inactive_draining_checkpoint_hot_and_separate_process_cold(
     disk = prepare_dos_baseline(
         boot, tmp_path / 'draining-boot.img', runtime['FDISBULL_QEMU_DOS_MCOPY'],
         config=b'SWITCHES=/F\r\n' + BASELINE_CONFIG)
-    code, offsets = sb16_pcm(tmp_path, runtime['NASM'], rate=8000)
+    code, offsets = sb16_pcm(tmp_path, runtime['NASM'], rate=8000,
+                             guest_dma_service=True)
     source = tmp_path / 'SB16.COM'
     source.write_bytes(code)
     db = tmp_path / 'draining.fdb'

@@ -1,0 +1,219 @@
+--- a/hw/audio/sb16.c
++++ b/hw/audio/sb16.c
+@@ -1299,6 +1299,12 @@
+ {
+     SB16State *s = opaque;
+     s->audio_free = free;
++    /* A selected stream consumes the new credit on the vCPU audio-timer
++     * frontier, never on a host idle-BH frontier. Ordinary SB16 is unchanged. */
++    if (runstate_is_running() && !fdisbull_instrumented_checkpoint_busy()) {
++        i8257_fdisbull_service_sb16(s->use_hdma ? s->isa_hdma : s->isa_dma,
++                                   s->use_hdma ? s->hdma : s->dma);
++    }
+ }
+ 
+ /* The selected digital-only profile is deliberately distinct from pcspk. */
+@@ -1323,6 +1329,22 @@
+ bool fdisbull_sb16_checkpoint_enabled(void)
+ {
+     return sb16_checkpoint_device(NULL) != NULL;
++}
++
++bool fdisbull_sb16_dma_channel(IsaDma *dma, int nchan)
++{
++    SB16State *s = sb16_checkpoint_device(NULL);
++    I8257Regs *channel;
++
++    if (!s || !dma || nchan < 0 || nchan > 7 ||
++        !object_dynamic_cast(OBJECT(dma), TYPE_I8257) ||
++        !((dma == s->isa_dma && nchan == s->dma) ||
++          (dma == s->isa_hdma && nchan == s->hdma)) ||
++        I8257(dma)->dshift != (nchan >> 2)) {
++        return false;
++    }
++    channel = &I8257(dma)->regs[nchan & 3];
++    return channel->transfer_handler == SB_read_DMA && channel->opaque == s;
+ }
+ 
+ static bool sb16_checkpoint_device_safe(SB16State *s, Error **errp)
+--- a/hw/dma/i8257.c
++++ b/hw/dma/i8257.c
+@@ -67,6 +67,7 @@
+ };
+ 
+ static void i8257_dma_run(void *opaque);
++static void i8257_dma_run_channels(I8257State *d, bool from_host_bh);
+ 
+ static bool i8257_sb16_profile(void)
+ {
+@@ -87,7 +88,7 @@
+         d->dma_bh_scheduled = false;
+         d->checkpoint_deferred = false;
+     }
+-    i8257_dma_run(d);
++    i8257_dma_run_channels(d, true);
+ }
+ 
+ static void i8257_checkpoint_runstate(void *opaque, bool running, RunState state)
+@@ -384,35 +385,108 @@
+     }
+ }
+ 
+-static void i8257_dma_run(void *opaque)
+-{
+-    I8257State *d = opaque;
++static bool i8257_selected_sb16_channel(I8257State *d, int ichan)
++{
++    if (d->dshift != 0 && d->dshift != 1) {
++        return false;
++    }
++    return fdisbull_sb16_dma_channel(ISADMA(d), ichan + (d->dshift << 2));
++}
++
++static bool i8257_nonselected_request(I8257State *d)
++{
+     int ichan;
+-    int rearm = 0;
++
++    for (ichan = 0; ichan < 4; ichan++) {
++        int mask = 1 << ichan;
++        if (!(d->mask & mask) && (d->status & (mask << 4)) &&
++            !i8257_selected_sb16_channel(d, ichan)) {
++            return true;
++        }
++    }
++    return false;
++}
++
++static void i8257_dma_rearm(I8257State *d)
++{
++    /* Do not cancel a previously pending nonselected controller callback. */
++    qemu_bh_schedule_idle(d->dma_bh);
++    d->dma_bh_scheduled = true;
++}
++
++static void i8257_dma_run_channels(I8257State *d, bool from_host_bh)
++{
++    int ichan;
++    bool rearm = false;
+ 
+     if (d->running) {
+-        rearm = 1;
++        /* A single-cycle SB completion releases DREQ reentrantly. That
++         * release must not create selected-only host work. Ordinary device
++         * reentrancy and pending nonselected requests retain legacy service. */
++        rearm = !d->checkpoint_sb16_servicing ||
++                i8257_nonselected_request(d);
+         goto out;
+-    } else {
+-        d->running = 1;
+-    }
++    }
++    d->running = 1;
+ 
+     for (ichan = 0; ichan < 4; ichan++) {
+-        int mask;
+-
+-        mask = 1 << ichan;
+-
+-        if ((0 == (d->mask & mask)) && (0 != (d->status & (mask << 4)))) {
++        int mask = 1 << ichan;
++        bool selected = i8257_selected_sb16_channel(d, ichan);
++
++        if (from_host_bh && selected) {
++            continue;
++        }
++        if (!(d->mask & mask) && (d->status & (mask << 4))) {
++            d->checkpoint_sb16_servicing = selected;
+             i8257_channel_run(d, ichan);
+-            rearm = 1;
++            d->checkpoint_sb16_servicing = false;
++            /* Guest-I/O calls still service every requested channel, but a
++             * selected SB stream is next serviced by its audio callback. */
++            rearm |= !selected;
+         }
+     }
+ 
+     d->running = 0;
+ out:
+     if (rearm) {
+-        qemu_bh_schedule_idle(d->dma_bh);
+-        d->dma_bh_scheduled = true;
++        i8257_dma_rearm(d);
++    }
++}
++
++static void i8257_dma_run(void *opaque)
++{
++    i8257_dma_run_channels(opaque, false);
++}
++
++void i8257_fdisbull_service_sb16(IsaDma *obj, int nchan)
++{
++    I8257State *d;
++    int ichan, mask;
++
++    if (!obj || !runstate_is_running() ||
++        fdisbull_instrumented_checkpoint_busy() ||
++        !fdisbull_sb16_dma_channel(obj, nchan)) {
++        return;
++    }
++    d = I8257(obj);
++    ichan = nchan & 3;
++    mask = 1 << ichan;
++    if (d->running) {
++        if (i8257_nonselected_request(d)) {
++            i8257_dma_rearm(d);
++        }
++        return;
++    }
++    if ((d->mask & mask) || !(d->status & (mask << 4))) {
++        return;
++    }
++    d->running = 1;
++    d->checkpoint_sb16_servicing = true;
++    i8257_channel_run(d, ichan);
++    d->checkpoint_sb16_servicing = false;
++    d->running = 0;
++    if (i8257_nonselected_request(d)) {
++        i8257_dma_rearm(d);
+     }
+ }
+ 
+@@ -604,6 +678,7 @@
+     I8257State *d = opaque;
+ 
+     d->checkpoint_loaded = false;
++    d->checkpoint_sb16_servicing = false;
+     if (fdisbull_instrumented_checkpoint_busy() && i8257_sb16_profile()) {
+         qemu_bh_cancel(d->dma_bh);
+         d->checkpoint_deferred = false;
+--- a/include/hw/audio/fdisbull-sb16.h
++++ b/include/hw/audio/fdisbull-sb16.h
+@@ -3,7 +3,11 @@
+ 
+ #include "qapi/error.h"
+ 
++struct IsaDma;
++
+ bool fdisbull_sb16_checkpoint_enabled(void);
++/* Exact selected card/channel/registered-handler ownership; no I/O. */
++bool fdisbull_sb16_dma_channel(struct IsaDma *dma, int nchan);
+ bool fdisbull_sb16_checkpoint_safe(Error **errp);
+ bool fdisbull_sb16_checkpoint_rearm(Error **errp);
+ 
+--- a/include/hw/dma/i8257.h
++++ b/include/hw/dma/i8257.h
+@@ -50,8 +50,12 @@
+     uint8_t checkpoint_status;
+     bool checkpoint_bh_pending;
+     int32_t checkpoint_running;
++    /* Transient reentrancy context; captures require running == 0. */
++    bool checkpoint_sb16_servicing;
+ };
+ 
+ void i8257_dma_init(Object *parent, ISABus *bus, bool high_page_enable);
++/* Service only the selected SB channel at its virtual audio callback. */
++void i8257_fdisbull_service_sb16(IsaDma *obj, int nchan);
+ 
+ #endif

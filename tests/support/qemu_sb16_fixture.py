@@ -51,7 +51,8 @@ The 4x interpolator needs a following source sample: four outputs per pair.
                  for first, second in zip(frames, frames[1:]) for phase in range(4))
 
 
-def sb16_pcm(directory, nasm, *, rate=8000, silence=False, channels=1):
+def sb16_pcm(directory, nasm, *, rate=8000, silence=False, channels=1,
+             guest_dma_service=False):
     """COM uses DSP C0h, unsigned mono/stereo DMA1/IRQ7, or DSP80h's timer.
 
 An arena twice the transfer size provides an 8192-byte physically aligned
@@ -60,10 +61,13 @@ buffer inside the original COM allocation. That alignment cannot cross an
 needed. IRQ7 is acknowledged through the 8-bit DSP status port and the PIC.
 The program continuously records DMA1 registers, and exits only on a physical
 Q key after the observed IRQ. DSP80h is an IRQ delay, not generated PCM silence.
+The opt-in guest DMA service is only for the draining-frontier witness: an
+ordinary channel-unmask port write queues PCM between audio callbacks.
 """
     if (rate not in (8000, OUTPUT_RATE) or type(silence) is not bool
             or type(channels) is not int or channels not in (1, 2)
-            or silence and (rate != 8000 or channels != 1)):
+            or type(guest_dma_service) is not bool
+            or silence and (rate != 8000 or channels != 1 or guest_dma_service)):
         raise ValueError('Unsupported authored SB16 profile')
     names = ('ready', 'started', 'inflight', 'finished', 'failed', 'report', 'report_end',
              'reset_byte', 'major', 'minor', 'irq_count', 'stage', 'dma_offset', 'dma_page',
@@ -213,6 +217,16 @@ started:
 inflight:
     nop
     call sample_dma
+''' + (r'''
+    ; The sampled controller count is remaining bytes minus one. Queue only
+    ; the final <=80-byte remainder between callbacks; do not busy-service
+    ; the entire stream. The normal guest-I/O path honors available credit.
+    cmp word [dma_count],80
+    jae guest_service_done
+    mov al,1
+    out 0ah,al
+guest_service_done:
+''' if guest_dma_service else '') + r'''
     cmp word [irq_count],0
     je inflight
     ; The ISR proves the single transfer completed. Sample once more while

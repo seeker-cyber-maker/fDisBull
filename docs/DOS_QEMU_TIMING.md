@@ -604,3 +604,23 @@ literal's capability, parameter and transaction rules. Input newly armed by an
 earlier script step is checked again when wait executes. Static prediction of
 all cross-step resource states is not provided; failure stops the route and
 uses its existing owned-input cleanup policy.
+
+## RTC and selected SB16 continuation consistency
+
+The virtual profile explicitly selects `-rtc base=utc,clock=vm,driftfix=none`
+and retains that policy in checkpoint/history compatibility identity. UTC seeds
+the calendar at fresh launch; subsequent progress follows virtual time. A paused
+host wait cannot advance this RTC. Standard and instruction-only profiles keep
+their prior launch settings. An earlier implicit host-RTC archive is refused by
+a new VM-RTC owner before replacement; retain its original tool/runtime policy.
+
+For digital SB16, the additional
+[DMA service extension](../native/qemu-sb16-dma-service/README.md) services only
+the selected channel at the virtual audio callback or ordinary guest I/O. Host
+idle callbacks no longer choose that channel's transfer/IRQ frontier. Other
+channels keep their legacy path. The
+[dated qualification](evidence/qemu-history-cpu-timing-2026-11-16/README.md)
+now checks complete CPU/device/image/PCM/callback/time/count endpoints for both
+explicit and history-root continuations, including separate-process restore.
+This closes the observed workflow divergence; it is not general record/replay,
+a retired-instruction counter, cycle accuracy or paired DOSBox-X timing parity.
