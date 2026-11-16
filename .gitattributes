@@ -2,6 +2,7 @@
 docs/evidence/** -whitespace
 experimental/dosbox-x/**/headless-agent.patch -whitespace
 experimental/dosbox-x/headless-agent.patch -whitespace
+native/qemu-opl-checkpoint/*.patch -whitespace
 examples/dinopark/evidence/** -whitespace
 src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt -whitespace
 
