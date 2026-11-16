@@ -1,0 +1,121 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Explicit mixed SB16 and YM3812 OPL2 checkpoints",
+  "implementation_status": "Locally qualified original Doom hot/separate-process full CPU/media futures, authored FM/persistence and 23 existing native preservation cases; general parity remains open",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-sb16-dma-service",
+    "prerequisite_manifest_sha256": "4883c83048b254ee33ca1d68db80c7521ebdeb43d845d38b02437c0ae0dfa9df",
+    "prerequisite_binary_sha256": "9be74ad11dd02f0bc488e56e27df1a6326be13bd5cd07c3c64c74d14b228d32a"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-opl-checkpoint-v1.patch",
+    "sha256": "1266e298c9c838b3a8f81a5a69757a9a4fd6d1a7a0ebfe6c82b751dfc6c003e1",
+    "modified_file_count": 9,
+    "files": [
+      {
+        "path": "audio/audio.c",
+        "before_sha256": "21ac0755a13e05406d900385d1bf125ac1fb52fc45d201c8a7828387a215ef39",
+        "after_sha256": "a58b697c078344f366b860d254523a36cf5894e689ee154f53874a031070dec5"
+      },
+      {
+        "path": "hw/audio/adlib.c",
+        "before_sha256": "f6b7474dd0a5bfc97da331746b76fc048595eed3e2afd73aea30eb3095043d2a",
+        "after_sha256": "86fd91b8cb40a35a654dff2f366de3d40ec2863f10634204e8577754c64465e1"
+      },
+      {
+        "path": "hw/audio/fmopl.c",
+        "before_sha256": "f643502c082bf1def8770ace5c682d80664e5bd34f42cf7e059e2ae52443208a",
+        "after_sha256": "ff69b867446592756951e6aca3c59c83e98b40343ca7085ce39e49c5a112e017"
+      },
+      {
+        "path": "hw/audio/fmopl.h",
+        "before_sha256": "300b217323cb7f7b23ebbd0062ecb2c544ae82e9dab60b2de33e1854377b90a3",
+        "after_sha256": "70aadefa22498cbbf7fea3db416f4d03145d2bc2422eecb7fe26f32f5a4b7132"
+      },
+      {
+        "path": "hw/audio/sb16.c",
+        "before_sha256": "eb9826a48d98036acb0c941b68a48f9c67b9432eb0f719a2cf43beb04c6f871d",
+        "after_sha256": "b46e9fca1131910a74b746942b50cfb4c4d7f78f2ae03eaa4deefe9e93dfab02"
+      },
+      {
+        "path": "include/hw/audio/fdisbull-opl.h",
+        "before_sha256": null,
+        "after_sha256": "0f31afcbf42bc704785f9372dd731868b139737da737db67cbbb3ee73c4e2770"
+      },
+      {
+        "path": "system/fdisbull-audio.c",
+        "before_sha256": "194e97833e6bcf47f4e79661d886602bf0de215ea79ad625e39eb87e8d58c2a7",
+        "after_sha256": "39e3ed1c68c11e33d8965c00e938c8b3178b1a9201334753b344b5371068c098"
+      },
+      {
+        "path": "system/fdisbull-instrumented-checkpoint.c",
+        "before_sha256": "43a7ca4359136516f4f49e9f17ace1c3da4d475e3c591731503bd0c09f2e19e8",
+        "after_sha256": "9fa799b610ac817742276fe77a0d8cfbf43627068a29feca2ed94164f411be7b"
+      },
+      {
+        "path": "qapi/fdisbull-sb16.json",
+        "before_sha256": "17b8c9e028a17f15f36212a42a987d55e9def358fc5b083cf4341d2df5602fa3",
+        "after_sha256": "2aa6e5f23a49fed6b256f9cbe5885694b8419864a3c8c9e7b817afe976f9b724"
+      }
+    ]
+  },
+  "contract": {
+    "profile": "sb16-opl",
+    "audiodev": "fdisbull-sb16-opl",
+    "core_format": 3,
+    "old_core_formats_preserved": [
+      1,
+      2
+    ],
+    "opl": "YM3812, nine channels, eighteen operators; 32000 Hz signed16 mono source",
+    "capture": "32000 Hz mono U8, none backend; optional SB16 U8 mono/stereo 5000..45000 Hz",
+    "timer_semantics": "Existing immediate expiration of an armed AdLib timer at next guest OPL port access",
+    "noise": "Private per-chip checkpointed xorshift32; hardware LFSR fidelity unqualified",
+    "generic_adlib_noise_unchanged": true,
+    "scope": "Exact-binary scoped instrumented snapshots; OPL3, MIDI, analog fidelity and general parity unqualified",
+    "ci": false
+  },
+  "build": {
+    "platform": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "accelerator": "TCG",
+    "binary_sha256": "01773e0f8e4976db24449442e9e79f6f0042f9a1c21529a13b35dc8856991924",
+    "binary_size": 24950696,
+    "receipt_sha256": "4401ab060bf75d543631a33fe9f5284ff6750b1144718c3fcf0058d762d8151a",
+    "strategy": "Separate source/build copies, QAPI/trace generation, 32 serial compilations including all 25 recorded affected header consumers, archive update, retained 782-argument link/sign recipe",
+    "declared_inputs": 1696,
+    "parent_inputs_unchanged": true,
+    "ci": false
+  },
+  "verification": {
+    "host": {
+      "passed": 2149,
+      "receipt_sha256": "116b8317105273711ff72c085375f6f5f167a7d408861b15ab09da06a19d3f79"
+    },
+    "native_preservation": {
+      "passed": 23,
+      "receipt_sha256": "cd486e779e98e34b3064d9e1f04b931d025da5c289559674e34d166760749b8d"
+    },
+    "native_opl_combined": {
+      "passed": 1,
+      "receipt_sha256": "4e424ec2e5d7ffcee80170f29ecad60889993992d4d4098e7a6afbfb92e5b2b9"
+    },
+    "native_opl_initial": {
+      "passed": 2,
+      "receipt_sha256": "1f3c1a68cf15c5d9d7407bd0d4c54f55fa06a79411a609996c8df3aaeb7316cf"
+    },
+    "synth_harness": {
+      "receipt_sha256": "e65a9ae6b72c827843c40a1457c6c2e4078ac024b697c51ef076104685369cad",
+      "hot_and_cold": true,
+      "malformed_cases_per_process": 18
+    },
+    "doom": {
+      "selected_restores": 6,
+      "full_cpu_futures": 4,
+      "hot_receipt_sha256": "c0e3d4827b1a313cc689f50854f7e1e06d17b3eb257a05357820e2ee0f11477e",
+      "cold_receipt_sha256": "d723e89b2379ea26a7a06dee71173c13098897b8df6c86ade8f8f7a473832ca9",
+      "independent_audit_sha256": "3d7af3efc94b7b210a05b79859f701ab0ae4ca2265b266f11a3773073800d2eb"
+    }
+  }
+}

@@ -624,3 +624,17 @@ now checks complete CPU/device/image/PCM/callback/time/count endpoints for both
 explicit and history-root continuations, including separate-process restore.
 This closes the observed workflow divergence; it is not general record/replay,
 a retired-instruction counter, cycle accuracy or paired DOSBox-X timing parity.
+
+## Combined OPL2/SB16 continuation, 2026-11-16
+
+The `sb16-opl` exact-binary profile retains the corrected VM-backed RTC and
+selected synchronous SB16 DMA service. Core3 additionally saves software-voice
+callback order so fresh construction cannot reorder FM synthesis versus SB16
+DMA/IRQ credit. Both independently saved device wrappers must agree on the
+shared audio deadline before rearming it; restore runs no mixer/device callback.
+
+Original Doom passes all four 600 ms hot/separate-Python futures with full CPU,
+virtual time/instruction count, OPL/SB16 query, image and PCM/chunk equality.
+[Qualification](evidence/qemu-opl-checkpoint-2026-11-16/README.md). AdLib's inherited
+next-port-access timer expiration is preserved, not evidence of hardware timer
+accuracy. General replay and full DOSBox-X timing parity remain open.

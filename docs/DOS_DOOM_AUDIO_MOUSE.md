@@ -262,3 +262,24 @@ Use the new exact native binary for these checkpoints; old runtimes/states are
 retained and are not silently reinterpreted. Histories remain capture-only.
 General replay, FM/OPL music, ideal audio amplitude and paired DOSBox-X parity
 remain separate gates. DOSBox-X stays default and retained; no CI is used.
+
+## 2026-11-16: OPL2 music plus SB16 effects
+
+The separate opt-in `qemu_audio='sb16-opl'` profile now qualifies bounded
+original-Doom music/effects persistence on the frozen local tuple. A fresh
+private configuration selected AdLib music (device2, volume10), SB16 digital
+effects (device3, IRQ7/DMA1/HDMA5) and the existing CuteMouse PS/2 driver.
+Actual OPL operators and nonconstant PCM were observed before firing. Mouse
+input then changed ammo 50→49→48 with music still active.
+
+Six selected restores and four 600 ms futures across hot and separate-process
+cold invocations matched full CPU, OPL/SB16 state, source identity, PNG, PCM and
+callback/time/count frontiers. This adds FM state rather than weakening the
+previous CPU-timing gate. The authored guest separately checks 440 Hz pitch,
+octave, key-off, percussion noise, pending DATA writes and timer flag behavior.
+[Evidence and scope](evidence/qemu-opl-checkpoint-2026-11-16/README.md).
+
+This is YM3812/OPL2 at the pinned integer mixer, not OPL3/MIDI or analog fidelity.
+The inherited AdLib timer convention is port-triggered expiration; hardware
+80/320 microsecond accuracy is unqualified. Paired DOSBox-X audio comparison and
+full replacement parity remain open. DOSBox-X stays default; no CI was run.

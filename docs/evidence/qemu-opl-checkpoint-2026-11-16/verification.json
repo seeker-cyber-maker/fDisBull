@@ -1,0 +1,502 @@
+{
+  "date": "2026-11-16",
+  "doom": {
+    "all_guests_reaped": true,
+    "all_native_handles_closed_returncode_zero": true,
+    "cold_attach_live_cursor": null,
+    "cold_attach_valid": false,
+    "cold_receipt": {
+      "sha256": "d723e89b2379ea26a7a06dee71173c13098897b8df6c86ade8f8f7a473832ca9",
+      "size": 833247
+    },
+    "distinct_export_artifacts": 6,
+    "explicit_a_vs_root_native_state": {
+      "bytes": 14534202,
+      "changed_bytes": 0,
+      "decoded_sections": 37,
+      "equal": true,
+      "guest_disk_equal": true,
+      "includes_adlib": true,
+      "instrumentation_equal": true,
+      "sha256": "c68d793bea2f1cfd8151738c00caf89068ca6425e49f2771c0af32fa5e5c97c9"
+    },
+    "export_instances": 12,
+    "future_matrix": [
+      {
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "hot-explicit-future"
+      },
+      {
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "hot-root-future"
+      },
+      {
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "cold-explicit-future"
+      },
+      {
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "cold-root-future"
+      }
+    ],
+    "future_ns": 600000000,
+    "future_suffix": {
+      "frames": 19010,
+      "sha256": "1d7077e45720df9f1b21e8e428fc723b42903ca7027c3893a8efd0e053632475"
+    },
+    "guest_DOS_exit_claim": false,
+    "guest_memory_or_register_writes": false,
+    "history_charged_bytes": 103567621,
+    "history_nodes": 2,
+    "hot_receipt": {
+      "sha256": "c0e3d4827b1a313cc689f50854f7e1e06d17b3eb257a05357820e2ee0f11477e",
+      "size": 2367204
+    },
+    "immutable_inputs_verified": true,
+    "independent_closed_audit": {
+      "absolute_libraries": 16,
+      "adjacent_atomic_load_pairs": 6,
+      "artifact_creation_joins": 9,
+      "canonical_payload_files": 713,
+      "cas_bytes": 161450545,
+      "cas_files": 588,
+      "database_and_cas_unchanged": true,
+      "exited_runs": 2,
+      "known_doom_groups_and_pids_absent": true,
+      "other_process_groups_not_examined": true,
+      "read_mode": "mode=ro&immutable=1; query_only=ON",
+      "receipt": {
+        "sha256": "3d7af3efc94b7b210a05b79859f701ab0ae4ca2265b266f11a3773073800d2eb",
+        "size": 39139
+      },
+      "reference_pins": 503,
+      "runtime_kit_files": 93,
+      "save_creation_chains": 3,
+      "status": "passed"
+    },
+    "inherited_metadata_note": "Probe format/scope label retains the prior SB16-only wording. Actual sb16-opl configuration and retained OPL queries define the mixed-device observations.",
+    "irq_mask_changes": false,
+    "music_before_fire": {
+      "active_operators": 4,
+      "actual_opl_active": true,
+      "distinct_sample_values": 69,
+      "individual_device_PCM_isolated": false,
+      "keyon_mask": 128,
+      "pcm_frames": 19277
+    },
+    "observed_ammo": [
+      50,
+      49,
+      48
+    ],
+    "original_MZ_ownership_restored": false,
+    "remaining_owned_members": [],
+    "restore_matrix": [
+      {
+        "fresh_audio_window": true,
+        "fresh_binding_id": true,
+        "fresh_capture_epoch": true,
+        "fresh_clock_epoch": true,
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "hot-explicit-a"
+      },
+      {
+        "fresh_audio_window": true,
+        "fresh_binding_id": true,
+        "fresh_capture_epoch": true,
+        "fresh_clock_epoch": true,
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "hot-root-a"
+      },
+      {
+        "fresh_audio_window": true,
+        "fresh_binding_id": true,
+        "fresh_capture_epoch": true,
+        "fresh_clock_epoch": true,
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "hot-node-b"
+      },
+      {
+        "fresh_audio_window": true,
+        "fresh_binding_id": true,
+        "fresh_capture_epoch": true,
+        "fresh_clock_epoch": true,
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "cold-explicit-a"
+      },
+      {
+        "fresh_audio_window": true,
+        "fresh_binding_id": true,
+        "fresh_capture_epoch": true,
+        "fresh_clock_epoch": true,
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "cold-root-a"
+      },
+      {
+        "fresh_audio_window": true,
+        "fresh_binding_id": true,
+        "fresh_capture_epoch": true,
+        "fresh_clock_epoch": true,
+        "matched": {
+          "chunks": true,
+          "cpu": true,
+          "device": true,
+          "icount": true,
+          "opl": true,
+          "pcm": true,
+          "png": true,
+          "source_instruction_sha256": true,
+          "source_location": true,
+          "virtual_ns": true
+        },
+        "route": "cold-node-b"
+      }
+    ],
+    "retained_A_PCM_prefix_exact": true,
+    "same_six_companion_machine_exports_hot_cold": true,
+    "saved_a": {
+      "chunks": 122,
+      "icount": 332215434,
+      "pcm_frames": 38390,
+      "pcm_sha256": "117db86f52414b8629571db3fed01325d90f39fa1ce1d6dc1fa27c5e8a769002",
+      "png_sha256": "84f525acb52116cba038a954e72023337b15bfbf816584bed7b2c4a27161c8fb",
+      "virtual_ns": 42670668282
+    },
+    "saved_b_and_original_future": {
+      "chunks": 183,
+      "icount": 336902934,
+      "pcm_frames": 57400,
+      "pcm_sha256": "6e219879c77b97ea734273b5a107c35725d5ea33b7bb5ddcbe6c0482769fde83",
+      "png_sha256": "ad4bfb3e85c838b0fa0a5ed23afede666ee8a48b17998b3abbc10a2b139ee7d1",
+      "virtual_ns": 43270668282
+    },
+    "selected_restore_count": 6,
+    "separate_python_processes": true,
+    "status": "passed-controller-direct-comparisons-and-independent-closed-audit",
+    "strict_full_cpu_future_count": 4,
+    "total_native_handles": 8
+  },
+  "format": "fdisbull-opl-checkpoint-local-qualification-1",
+  "graph": {
+    "audiodev": "fdisbull-sb16-opl",
+    "blob_max_bytes": 8388608,
+    "capture": {
+      "backend": "none",
+      "channels": 1,
+      "rate_hz": 32000,
+      "sample_format": "U8"
+    },
+    "capture_and_shared_timer_revalidated": true,
+    "core_format": 3,
+    "mandatory_OPL_voice": "32000 Hz signed16 mono",
+    "old_core_formats_preserved": [
+      1,
+      2
+    ],
+    "optional_SB16_voice": "unsigned8 mono/stereo 5000..45000 Hz",
+    "passive_OPL_query_api": 1,
+    "pointer_free_synth_state": true,
+    "profile": "sb16-opl",
+    "restore_guest_OPL_write_replay": false,
+    "stable_voice_identity_and_saved_callback_order": true
+  },
+  "limitations": {
+    "LE_histories": "Capture-only across unobserved intervals; no task/allocation lifetime, instruction retirement or LE trials qualification.",
+    "OPL": "YM3812 OPL2 only; OPL3, MIDI and unsupported mode bits unqualified.",
+    "fidelity": "No bit-exact hardware, analog or paired DOSBox-X audio claim.",
+    "foreign_mixer": "Existing amplitude/clipping laws unchanged.",
+    "noise": "Private checkpointed xorshift32, not qualified hardware noise; ordinary AdLib unchanged.",
+    "replay": "Bounded exact-tuple continuation only; not general record/replay.",
+    "timers": "Stock forced expiration of an armed timer on next guest OPL port access, not hardware timing fidelity."
+  },
+  "policy": {
+    "ci_dispatched": false,
+    "commercial_payload_published": false,
+    "default_backend": "dosbox",
+    "dosbox_retained": true,
+    "dosbox_retirement_allowed": false,
+    "raw_private_evidence_included": false,
+    "release_published": false,
+    "shared_activation": false,
+    "system_installation_changed": false
+  },
+  "qualified_scope": "Exact-binary bounded mixed YM3812 OPL2/SB16 hot and separate-process cold checkpoint and capture-history continuation; no hardware fidelity, general replay or paired emulator parity claim.",
+  "runtime": {
+    "build_warnings": [
+      "Nonfatal macro-redefinition warnings",
+      "Nonfatal cleanup-attribute warnings"
+    ],
+    "cross_binary_state_compatibility": false,
+    "native_build_receipt": {
+      "sha256": "4401ab060bf75d543631a33fe9f5284ff6750b1144718c3fcf0058d762d8151a",
+      "size": 190889
+    },
+    "native_build_scope": "Separate-source incremental macOS arm64 TCG build; not clean-portable or CI.",
+    "native_patch_files": 9,
+    "native_patch_sha256": "1266e298c9c838b3a8f81a5a69757a9a4fd6d1a7a0ebfe6c82b751dfc6c003e1",
+    "native_qemu_sha256": "01773e0f8e4976db24449442e9e79f6f0042f9a1c21529a13b35dc8856991924",
+    "native_qemu_size": 24950696,
+    "native_source_manifest_sha256": "530696c0959055c4070dd118c069f45850f0c3215a62618e55b5a23e8737b578",
+    "old_binary_and_producer_bound_states_preserved": true,
+    "package_receipt": {
+      "sha256": "dfc8c3f95a852800532bab48f86d2639b5593384d8c0b679de20542fabfd9b9e",
+      "size": 78543
+    },
+    "patch_reconstruction_receipt": {
+      "sha256": "d391ca6f0e8c3d3a35a4c3b69c0de0afb3bc5cf529238ce21b9ca0ecfe16366c",
+      "size": 255
+    },
+    "production_files": 713,
+    "source_wheel_private_install_equal": true,
+    "tool_commit": "8e1c9c8cbc1a0314a18a6d533a51ed9fd36814d2",
+    "wheel_sha256": "902bf97034e6470d9df0d3fb5d4198dbf47be02faa42a1cf439ad5ca2e0ef8c9"
+  },
+  "status": "passed-bounded-local-qualification-and-independent-closed-audit",
+  "verification": {
+    "accepted_native_composition": {
+      "combined_OPL": 1,
+      "initial_graph_parameters": 2,
+      "retained_preservation": 23
+    },
+    "accepted_native_unique_cases": 26,
+    "combined_OPL_native": {
+      "all_owned_members_reaped": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 1
+      },
+      "dependencies_unchanged": true,
+      "elapsed_seconds": 12.19,
+      "junit_sha256": "7790f8b92a4ca27301e5e70c4f2096648327a15629f02573f4ebc7ab1784fb3f",
+      "receipt": {
+        "sha256": "4e424ec2e5d7ffcee80170f29ecad60889993992d4d4098e7a6afbfb92e5b2b9",
+        "size": 712
+      },
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "5b257592f9614287bf101957740e046d9d2fc65cd217289f510092c9f7623c4b",
+      "status": "passed",
+      "test_files_unchanged": true
+    },
+    "combined_oracles": {
+      "active_rhythm_noise_and_pending_DATA_only_write": true,
+      "full_future_CPU_required": true,
+      "future_ns": 600000000,
+      "guest_produced_11025_stereo_auto_init_ring": true,
+      "hot_and_cold_restore_routes_each": 2,
+      "independent_pitch_relative_tolerance": 0.015,
+      "octave_and_keyoff_checked": true,
+      "stock_timer_status_and_passive_query_checked": true
+    },
+    "host_preservation": {
+      "all_owned_members_reaped": null,
+      "cleanup_scope": "Ordinary host checks did not launch native guests; owned-group cleanup is recorded separately by native runs.",
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 2149
+      },
+      "dependencies_unchanged": true,
+      "elapsed_seconds": 97.56,
+      "junit_sha256": "ac3c3b53b5715d91b7ec8451cb073a4c194227877577338fb1b42d612d6b82fb",
+      "receipt": {
+        "sha256": "116b8317105273711ff72c085375f6f5f167a7d408861b15ab09da06a19d3f79",
+        "size": 2946
+      },
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "0ef99677cf3ddf22160e3ea6e6a9b124d3b5b3ca96ca606e503dbbe8d05f8fe2",
+      "status": "passed",
+      "test_files_unchanged": true
+    },
+    "initial_graph_native": {
+      "all_owned_members_reaped": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 2
+      },
+      "dependencies_unchanged": true,
+      "elapsed_seconds": 4.71,
+      "junit_sha256": "487e473c32a4a7d571a3da8c8e833e0141c7937cd9bde5eebdbeb3b4b42a2040",
+      "receipt": {
+        "sha256": "1f3c1a68cf15c5d9d7407bd0d4c54f55fa06a79411a609996c8df3aaeb7316cf",
+        "size": 719
+      },
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "1fbd104a2ade1cf81f3a13980bb58cbcb4c56650b13e1ef8ccf671f11816d591",
+      "status": "passed",
+      "test_files_unchanged": true
+    },
+    "initial_graph_retained_failure": {
+      "cause": "Test incorrectly expected no SB16 voice after the authored guest DSP reset. Reset legitimately creates an inactive 11025 Hz mono U8 voice.",
+      "correction": "Future requires that exact inactive voice; saved/restored entry still requires no SB16 voice. All full CPU/PCM/device/chunk/time assertions retained.",
+      "production_or_binary_changed": false,
+      "receipt": {
+        "sha256": "42dfbf8493b7cb37d802bb939126f22ca8b3f6756a1cc794a86807adcc3ff290",
+        "size": 721
+      }
+    },
+    "native_preservation": {
+      "all_owned_members_reaped": true,
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 23
+      },
+      "dependencies_unchanged": true,
+      "elapsed_seconds": 116.9,
+      "junit_sha256": "50f954a5a779f6a8763ecda62d0297d4ec68d10ba5799c46859b67320ffe1d86",
+      "receipt": {
+        "sha256": "cd486e779e98e34b3064d9e1f04b931d025da5c289559674e34d166760749b8d",
+        "size": 1453
+      },
+      "runtime_payload_unchanged": true,
+      "selection_sha256": "e69d49d461a168677780baf1e3f0ff5fdd8d80ab252cc68c562286990e95816f",
+      "status": "passed",
+      "test_files_unchanged": true
+    },
+    "overlap_counting": false,
+    "standalone_synth": {
+      "checks": [
+        {
+          "active_channels": 9,
+          "active_operators": 18,
+          "cached_depth_divergence": true,
+          "corrupt_states_rejected_atomically": 18,
+          "fidelity_oracle": false,
+          "future_frames": 2287,
+          "mode": "hot",
+          "passed": true,
+          "pending_data_only_write": true,
+          "pointer_free": true
+        },
+        {
+          "active_channels": 9,
+          "active_operators": 18,
+          "cached_depth_divergence": true,
+          "corrupt_states_rejected_atomically": 18,
+          "fidelity_oracle": false,
+          "future_frames": 2287,
+          "mode": "cold",
+          "passed": true,
+          "pending_data_only_write": true,
+          "pointer_free": true
+        }
+      ],
+      "complete_future_PCM_and_final_state_equal": true,
+      "harness_source_sha256": "7ba2c5688e83591b0c1feb8474575bcce6515d454c2441fb0857226b4ceeeb66",
+      "included_in_native_case_count": false,
+      "independent_hardware_fidelity_oracle": false,
+      "invalid_states_preserve_full_state_and_external_timer_callbacks": true,
+      "receipt": {
+        "sha256": "e65a9ae6b72c827843c40a1457c6c2e4078ac024b697c51ef076104685369cad",
+        "size": 10320
+      },
+      "status": "passed",
+      "valid_restore_timer_callback_replay": false
+    }
+  }
+}

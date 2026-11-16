@@ -465,3 +465,19 @@ exposed CPU as well as PCM/chunks, device, image and clock/count across hot and
 separate-process recovery. This resolves the observed endpoint discrepancy
 for the qualified tuple. It does not enable general deterministic replay,
 complete a whole migration milestone or change the default/removal gates.
+
+## 2026-11-16 OPL2 qualification update
+
+The distinct `sb16-opl` profile provides bounded combined FM music and digital
+effects persistence on its exact native/tool tuple. It retains OPL operator,
+envelope/LFO/noise/register and wrapper state plus two named audio voices and
+callback order. Original Doom passes six hot/cold selections and all four full
+CPU/media continuations through explicit and history-root checkpoints.
+[Detailed gates](evidence/qemu-opl-checkpoint-2026-11-16/README.md) keep signal,
+persistence, native preservation and broader compatibility evidence separate.
+
+FM/OPL2 is no longer wholly untested, but this does not close general device
+parity: OPL3, MIDI, hardware-timed AdLib timers, analog waveform fidelity, paired
+DOSBox-X comparison, broad mixed-device stress and portable delivery remain
+unqualified. Existing trials, histories, layers, hooks and IRQ contracts retain
+their prior scope. DOSBox-X remains the default and is retained. No CI.

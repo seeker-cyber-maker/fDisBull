@@ -2072,3 +2072,13 @@ DOSBox-X waveform parity. The [dated qualification](evidence/qemu-sb16-checkpoin
 separates authored signal/IRQ checks from actual Doom and broader compatibility.
 OPL/FM, MIDI, general 16-bit/HDMA/auto-init/pause behavior and paired DOSBox-X
 comparison remain open. DOSBox-X stays default and retained; no CI is used.
+
+## OPL2 music/checkpoint slice, 2026-11-16
+
+The explicit `sb16-opl` profile adds YM3812 music with a separate two-voice core3
+checkpoint contract. Original Doom hot/separate-process restore and full CPU/PCM
+futures pass locally; the prior RTC/SB16 service correction and existing profile
+identities are preserved. [Evidence](evidence/qemu-opl-checkpoint-2026-11-16/README.md)
+separates delivered music/persistence from preservation checks and still-open
+hardware/compatibility gates. No whole migration milestone or 1:1 replacement
+is declared complete. DOSBox-X stays default and retained. Still no CI.

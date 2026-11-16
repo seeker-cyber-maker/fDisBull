@@ -6789,3 +6789,32 @@ amplitude, paired DOSBox-X parity or portable delivery. Trials, histories,
 task-private layers, hooks, checkpoints and IRQs retain their existing scope.
 DOSBox-X stays default and retained. No CI, release, merge or shared installation
 change occurred. Commercial payloads, raw states, media and FDB/CAS remain private.
+
+## 2026-11-16: mixed OPL2 music and SB16 checkpoint continuation
+
+The explicit `sb16-opl` profile adds headless AdLib/YM3812 music beside SB16
+digital effects. It uses a distinct audio/checkpoint identity. Native core3
+retains both named software voices, their callback order, resampler/buffer
+frontiers, shared mixer/capture state and deadline. The synth codec retains
+operator phases/envelopes/feedback, actual cached LFO selectors, pending register
+address, a register shadow and private per-chip rhythm noise. Restore imports
+state directly without replaying register writes or producing stopped samples.
+The old PC-speaker/core1 and SB16/core2 implementations stay unchanged.
+
+Original private Doom E1M1 produced FM music before firing and mixed music/effects
+after mouse input. All six hot/separate-Python selected restores and four
+600 ms explicit/history-root futures matched full exposed CPU, canonical LE
+source, OPL/SB16 queries, PNG, PCM bytes/chunks, virtual time and instruction
+count. PCM at A had 38,390 frames and extended identically to 57,400. The
+observed HUD progression was 50 to 49 to 48; no exact-one-shot claim is made.
+This preserves the corrected virtual RTC and selected SB16 DMA timing contract.
+
+See [qualification](evidence/qemu-opl-checkpoint-2026-11-16/README.md),
+[sanitized receipt](evidence/qemu-opl-checkpoint-2026-11-16/verification.json)
+and [native delta](../native/qemu-opl-checkpoint/README.md). This is exact-binary
+bounded persistence, not general record/replay or paired DOSBox-X parity. OPL2
+is supported by this tuple; OPL3/MIDI, analog fidelity, hardware timer accuracy
+and broad mixed-device/portable qualification remain open. QEMU's existing
+AdLib timers expire at the next port access, and the private noise generator
+is repeatable rather than a hardware LFSR model. DOSBox-X remains default and
+retained. No CI, release, merge or shared installation/activation occurred.

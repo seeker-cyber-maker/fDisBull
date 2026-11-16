@@ -1,0 +1,1447 @@
+--- a/audio/audio.c
++++ b/audio/audio.c
+@@ -1426,6 +1426,526 @@
+     return true;
+ }
+ 
++/* The opt-in mixed graph has one HW/capture path and named, independently
++ * checkpointed software voices. Neither the v1 nor v2 wire format changes. */
++#define FDISBULL_OPL_CORE_MAGIC UINT64_C(0x4644424155443033)
++#define FDISBULL_OPL_ADLIB 0
++#define FDISBULL_OPL_SB16 1
++#define FDISBULL_OPL_VOICES 2
++
++typedef struct FdisbullOplVoice {
++    uint64_t present, freq, channels, bits, is_signed, swap;
++    uint64_t total, active, empty, size, pos, mute;
++    int64_t l, r;
++    uint64_t rate_opos, rate_increment, rate_ipos;
++    int64_t rate_last_l, rate_last_r;
++} FdisbullOplVoice;
++
++typedef struct FdisbullOplCore {
++    uint64_t magic, version, sample_size, byte_order;
++    uint64_t first_voice, has_capture;
++    uint64_t hw_size, hw_pos, hw_timestamp, hw_enabled, hw_pending_disable;
++    uint64_t emul_size, emul_pos, emul_pending;
++    FdisbullOplVoice voice[FDISBULL_OPL_VOICES];
++    uint64_t cap_size, cap_pos, cap_timestamp, cap_enabled;
++    uint64_t csw_total, csw_active, csw_empty, csw_mute;
++    int64_t csw_l, csw_r;
++} FdisbullOplCore;
++
++typedef struct FdisbullOplGraph {
++    AudioState *state;
++    HWVoiceOut *hw;
++    SWVoiceOut *voice[FDISBULL_OPL_VOICES];
++    unsigned first_voice;
++    CaptureVoiceOut *cap;
++    SWVoiceOut *csw;
++} FdisbullOplGraph;
++
++static bool fdisbull_opl_samples_valid(const uint8_t *bytes, uint64_t frames)
++{
++    uint64_t i;
++
++#ifdef FLOAT_MIXENG
++    return false;
++#endif
++    /* Source buffers retain one conversion's range; an HW/capture ring can
++     * contain the sum of both admitted voices, including a draining prefix. */
++    for (i = 0; i < frames; i++) {
++        st_sample value;
++        memcpy(&value, bytes + i * sizeof(value), sizeof(value));
++        if (value.l < -INT64_C(4294967296) ||
++            value.l > INT64_C(4294967296) ||
++            value.r < -INT64_C(4294967296) ||
++            value.r > INT64_C(4294967296)) {
++            return false;
++        }
++    }
++    return true;
++}
++
++static bool fdisbull_opl_activity_valid(uint64_t enabled, uint64_t pending,
++                                       bool active)
++{
++    return enabled <= 1 && pending <= 1 &&
++           (active ? enabled && !pending : enabled == pending);
++}
++
++static bool fdisbull_opl_voice_info(const struct audio_pcm_info *info,
++                                   unsigned identity)
++{
++    if (identity == FDISBULL_OPL_ADLIB) {
++        return info->freq == 32000 && info->nchannels == 1 &&
++               info->bits == 16 && info->is_signed && !info->is_float &&
++               !info->swap_endianness && info->bytes_per_frame == 2 &&
++               info->bytes_per_second == 64000;
++    }
++    return fdisbull_sb16_pcm_valid(info);
++}
++
++static bool fdisbull_opl_graph(FdisbullOplGraph *g, Error **errp)
++{
++    QEMUSoundCard *card, *cards[FDISBULL_OPL_VOICES] = { NULL };
++    SWVoiceOut *sw, *first;
++    SWVoiceCap *sc;
++    FdisbullRateState rate;
++    unsigned count = 0;
++    bool active = false;
++
++    assert(bql_locked());
++    memset(g, 0, sizeof(*g));
++#ifdef FLOAT_MIXENG
++    error_setg(errp, "Mixed OPL checkpoint requires the pinned integer mixer");
++    return false;
++#endif
++    if (audio_state_by_name("fdisbull-pc", NULL) ||
++        audio_state_by_name("fdisbull-sb16", NULL)) {
++        error_setg(errp, "Mixed OPL checkpoint requires an exclusive audio profile");
++        return false;
++    }
++    g->state = audio_state_by_name("fdisbull-sb16-opl", errp);
++    if (!g->state) {
++        return false;
++    }
++    if (!g->state->drv || strcmp(g->state->drv->name, "none") ||
++        !g->state->dev || g->state->vm_running ||
++        !audio_get_pdo_out(g->state->dev)->mixing_engine ||
++        !QLIST_EMPTY(&g->state->hw_head_in)) {
++        error_setg(errp, "Mixed OPL checkpoint requires its stopped none backend");
++        return false;
++    }
++    QLIST_FOREACH(card, &g->state->card_head, entries) {
++        unsigned id;
++        if (!card->name || card->state != g->state) {
++            goto graph_error;
++        }
++        if (!strcmp(card->name, "adlib")) {
++            id = FDISBULL_OPL_ADLIB;
++        } else if (!strcmp(card->name, "sb16")) {
++            id = FDISBULL_OPL_SB16;
++        } else {
++            goto graph_error;
++        }
++        if (cards[id]) {
++            goto graph_error;
++        }
++        cards[id] = card;
++    }
++    g->hw = QLIST_FIRST(&g->state->hw_head_out);
++    if (!cards[0] || !cards[1] || !g->hw || QLIST_NEXT(g->hw, entries) ||
++        g->hw->s != g->state || g->hw->poll_mode ||
++        !fdisbull_audio_info_supported(&g->hw->info) ||
++        !fdisbull_audio_buffer_valid(&g->hw->mix_buf) ||
++        !fdisbull_opl_samples_valid((uint8_t *)g->hw->mix_buf.buffer,
++                                   g->hw->mix_buf.size)) {
++        goto graph_error;
++    }
++    first = QLIST_FIRST(&g->hw->sw_head);
++    QLIST_FOREACH(sw, &g->hw->sw_head, entries) {
++        unsigned id;
++        if (!sw->name) {
++            goto graph_error;
++        }
++        if (!strcmp(sw->name, "adlib")) {
++            id = FDISBULL_OPL_ADLIB;
++        } else if (!strcmp(sw->name, "sb16")) {
++            id = FDISBULL_OPL_SB16;
++        } else {
++            goto graph_error;
++        }
++        if (++count > 2 || g->voice[id] || sw->card != cards[id] ||
++            sw->s != g->state || sw->hw != g->hw || !sw->conv ||
++            !sw->callback.fn || !sw->callback.opaque ||
++            !fdisbull_opl_voice_info(&sw->info, id) ||
++            sw->active < 0 || sw->active > 1 ||
++            sw->total_hw_samples_mixed > g->hw->mix_buf.size ||
++            sw->empty != (sw->total_hw_samples_mixed == 0) ||
++            !sw->resample_buf.buffer || sw->resample_buf.pos > 1 ||
++            !sw->resample_buf.size || sw->resample_buf.size > FDISBULL_SB16_SW_MAX ||
++            sw->resample_buf.size !=
++                ((uint64_t)g->hw->mix_buf.size * sw->info.freq / 32000) + 1 ||
++            !st_rate_checkpoint_get(sw->rate, sw->info.freq, 32000, &rate) ||
++            !fdisbull_sb16_volume_valid(sw->vol.mute, sw->vol.l, sw->vol.r) ||
++            !fdisbull_sb16_samples_valid((uint8_t *)sw->resample_buf.buffer,
++                                       sw->resample_buf.size)) {
++            goto graph_error;
++        }
++        g->voice[id] = sw;
++        active |= sw->active;
++    }
++    if (!g->voice[FDISBULL_OPL_ADLIB] ||
++        !fdisbull_opl_activity_valid(g->hw->enabled, g->hw->pending_disable,
++                                     active)) {
++        goto graph_error;
++    }
++    g->first_voice = first == g->voice[FDISBULL_OPL_ADLIB] ?
++                     FDISBULL_OPL_ADLIB : FDISBULL_OPL_SB16;
++    if ((g->hw->buf_emul && (!g->hw->size_emul || g->hw->size_emul > 65536 ||
++            g->hw->pos_emul >= g->hw->size_emul ||
++            g->hw->pending_emul > g->hw->size_emul)) ||
++        (!g->hw->buf_emul && (g->hw->size_emul || g->hw->pos_emul ||
++                            g->hw->pending_emul))) {
++        goto graph_error;
++    }
++    sc = QLIST_FIRST(&g->hw->cap_head);
++    g->cap = QLIST_FIRST(&g->state->cap_head);
++    if (g->cap) {
++        struct capture_callback *cb = QLIST_FIRST(&g->cap->cb_head);
++        g->csw = QLIST_FIRST(&g->cap->hw.sw_head);
++        if (QLIST_NEXT(g->cap, entries) || g->cap->hw.s != g->state ||
++            !cb || QLIST_NEXT(cb, entries) || !cb->ops.capture || !cb->ops.notify ||
++            !fdisbull_audio_info_supported(&g->cap->hw.info) ||
++            !fdisbull_audio_buffer_valid(&g->cap->hw.mix_buf) ||
++            g->cap->hw.pending_disable || g->cap->hw.poll_mode ||
++            g->cap->hw.buf_emul || g->cap->hw.size_emul ||
++            g->cap->hw.pos_emul || g->cap->hw.pending_emul || !g->cap->buf ||
++            !fdisbull_opl_samples_valid((uint8_t *)g->cap->hw.mix_buf.buffer,
++                                       g->cap->hw.mix_buf.size) ||
++            !sc || QLIST_NEXT(sc, entries) || sc->cap != g->cap ||
++            g->csw != &sc->sw || QLIST_NEXT(g->csw, entries) ||
++            g->csw->hw != &g->cap->hw ||
++            g->csw->total_hw_samples_mixed > g->cap->hw.mix_buf.size ||
++            g->csw->empty != (g->csw->total_hw_samples_mixed == 0) ||
++            g->csw->active != g->hw->enabled ||
++            g->cap->hw.enabled != g->hw->enabled || g->csw->resample_buf.pos ||
++            !fdisbull_audio_info_supported(&g->csw->info) ||
++            !st_rate_checkpoint_get(g->csw->rate, 32000, 32000, &rate) ||
++            !fdisbull_sb16_volume_valid(g->csw->vol.mute,
++                                       g->csw->vol.l, g->csw->vol.r)) {
++            goto graph_error;
++        }
++    } else if (sc) {
++        goto graph_error;
++    }
++    return true;
++
++graph_error:
++    error_setg(errp, "Mixed OPL checkpoint graph, voice or bounded buffers differ");
++    return false;
++}
++
++static void fdisbull_opl_voice_export(SWVoiceOut *sw, FdisbullOplVoice *v)
++{
++    FdisbullRateState rate;
++
++    if (!sw) {
++        return;
++    }
++    st_rate_checkpoint_get(sw->rate, sw->info.freq, 32000, &rate);
++    v->present = 1; v->freq = sw->info.freq; v->channels = sw->info.nchannels;
++    v->bits = sw->info.bits; v->is_signed = sw->info.is_signed;
++    v->swap = sw->info.swap_endianness;
++    v->total = sw->total_hw_samples_mixed; v->active = sw->active;
++    v->empty = sw->empty; v->size = sw->resample_buf.size;
++    v->pos = sw->resample_buf.pos; v->mute = sw->vol.mute;
++    v->l = sw->vol.l; v->r = sw->vol.r;
++    v->rate_opos = rate.opos; v->rate_increment = rate.opos_inc;
++    v->rate_ipos = rate.ipos;
++    v->rate_last_l = rate.ilast.l; v->rate_last_r = rate.ilast.r;
++}
++
++static char *fdisbull_opl_export(Error **errp)
++{
++    FdisbullOplGraph g;
++    FdisbullOplCore h = { 0 };
++    g_autofree uint8_t *blob = NULL;
++    uint8_t *p;
++    size_t len;
++    unsigned i;
++
++    if (!fdisbull_opl_graph(&g, errp)) {
++        return NULL;
++    }
++    h.magic = FDISBULL_OPL_CORE_MAGIC; h.version = 3;
++    h.sample_size = sizeof(st_sample); h.byte_order = G_BYTE_ORDER;
++    h.first_voice = g.first_voice; h.has_capture = g.cap != NULL;
++    h.hw_size = g.hw->mix_buf.size; h.hw_pos = g.hw->mix_buf.pos;
++    h.hw_timestamp = g.hw->ts_helper; h.hw_enabled = g.hw->enabled;
++    h.hw_pending_disable = g.hw->pending_disable;
++    h.emul_size = g.hw->size_emul; h.emul_pos = g.hw->pos_emul;
++    h.emul_pending = g.hw->pending_emul;
++    len = sizeof(h) + h.hw_size * sizeof(st_sample) + h.emul_size;
++    for (i = 0; i < 2; i++) {
++        fdisbull_opl_voice_export(g.voice[i], &h.voice[i]);
++        len += h.voice[i].size * sizeof(st_sample);
++    }
++    if (g.cap) {
++        h.cap_size = g.cap->hw.mix_buf.size; h.cap_pos = g.cap->hw.mix_buf.pos;
++        h.cap_timestamp = g.cap->hw.ts_helper; h.cap_enabled = g.cap->hw.enabled;
++        h.csw_total = g.csw->total_hw_samples_mixed; h.csw_active = g.csw->active;
++        h.csw_empty = g.csw->empty; h.csw_mute = g.csw->vol.mute;
++        h.csw_l = g.csw->vol.l; h.csw_r = g.csw->vol.r;
++        len += h.cap_size * sizeof(st_sample);
++    }
++    if (4 * ((len + 2) / 3) > FDISBULL_SB16_CORE_MAX) {
++        error_setg(errp, "Mixed OPL checkpoint encoding exceeds its byte budget");
++        return NULL;
++    }
++    blob = g_malloc0(len); p = blob;
++    memcpy(p, &h, sizeof(h)); p += sizeof(h);
++    memcpy(p, g.hw->mix_buf.buffer, h.hw_size * sizeof(st_sample));
++    p += h.hw_size * sizeof(st_sample);
++    for (i = 0; i < 2; i++) {
++        if (g.voice[i]) {
++            memcpy(p, g.voice[i]->resample_buf.buffer, h.voice[i].size * sizeof(st_sample));
++            p += h.voice[i].size * sizeof(st_sample);
++        }
++    }
++    if (g.cap) {
++        memcpy(p, g.cap->hw.mix_buf.buffer, h.cap_size * sizeof(st_sample));
++        p += h.cap_size * sizeof(st_sample);
++    }
++    if (h.emul_pending) {
++        size_t first = audio_ring_posb(h.emul_pos, h.emul_pending, h.emul_size);
++        size_t count = MIN(h.emul_pending, h.emul_size - first);
++        memcpy(p + first, g.hw->buf_emul + first, count);
++        if (count < h.emul_pending) {
++            memcpy(p, g.hw->buf_emul, h.emul_pending - count);
++        }
++    }
++    return g_base64_encode(blob, len);
++}
++
++static bool fdisbull_opl_voice_valid(const FdisbullOplVoice *v,
++                                    uint64_t hw_size, unsigned id,
++                                    FdisbullRateState *rate)
++{
++    if (!v->present) {
++        return id == FDISBULL_OPL_SB16 &&
++               !memcmp(v, &(FdisbullOplVoice){ 0 }, sizeof(*v));
++    }
++    if (v->present != 1 || v->freq < 5000 || v->freq > 45000 ||
++        (v->channels != 1 && v->channels != 2) ||
++        (v->bits != 8 && v->bits != 16) || v->is_signed > 1 ||
++        v->swap > 1 || v->total > hw_size || v->active > 1 ||
++        v->empty != (v->total == 0) || v->pos > 1 ||
++        !v->size || v->size > FDISBULL_SB16_SW_MAX ||
++        v->size != hw_size * v->freq / 32000 + 1 ||
++        !fdisbull_sb16_volume_valid(v->mute, v->l, v->r) ||
++        v->rate_ipos > UINT32_MAX ||
++        (id == FDISBULL_OPL_ADLIB &&
++            (v->freq != 32000 || v->channels != 1 || v->bits != 16 ||
++             !v->is_signed || v->swap)) ||
++        (id == FDISBULL_OPL_SB16 && v->swap != (AUDIO_HOST_ENDIANNESS != 0))) {
++        return false;
++    }
++    rate->opos = v->rate_opos; rate->opos_inc = v->rate_increment;
++    rate->ipos = v->rate_ipos;
++    rate->ilast.l = v->rate_last_l; rate->ilast.r = v->rate_last_r;
++    return st_rate_checkpoint_validate(rate, v->freq, 32000);
++}
++
++static bool fdisbull_opl_import(const char *base64, Error **errp)
++{
++    FdisbullOplCore h;
++    FdisbullOplGraph g;
++    FdisbullRateState rates[2];
++    g_autofree guchar *blob = NULL;
++    g_autofree char *canonical = NULL;
++    g_autofree uint8_t *emul = NULL;
++    const uint8_t *hw_data, *sw_data[2], *cap_data, *p;
++    gsize len;
++    size_t expected;
++    unsigned i;
++    bool active;
++
++    if (!base64 || !*base64 || strlen(base64) > FDISBULL_SB16_CORE_MAX) {
++        error_setg(errp, "Mixed OPL checkpoint encoding is missing or oversized");
++        return false;
++    }
++    blob = g_base64_decode(base64, &len);
++    canonical = g_base64_encode(blob, len);
++    if (strcmp(canonical, base64) || len < sizeof(h)) {
++        error_setg(errp, "Mixed OPL checkpoint encoding is not canonical");
++        return false;
++    }
++    memcpy(&h, blob, sizeof(h));
++    active = h.voice[0].active || h.voice[1].active;
++    if (h.magic != FDISBULL_OPL_CORE_MAGIC || h.version != 3 ||
++        h.sample_size != sizeof(st_sample) || h.byte_order != G_BYTE_ORDER ||
++        !h.hw_size || h.hw_size > FDISBULL_SB16_HW_MAX || h.hw_pos >= h.hw_size ||
++        h.first_voice > 1 || (h.first_voice == 1 && !h.voice[1].present) ||
++        h.has_capture > 1 || h.cap_size > FDISBULL_SB16_HW_MAX ||
++        h.emul_size > 65536 || h.emul_pending > h.emul_size ||
++        (h.emul_size ? h.emul_pos >= h.emul_size : h.emul_pos != 0) ||
++        !fdisbull_opl_activity_valid(h.hw_enabled, h.hw_pending_disable, active) ||
++        !fdisbull_opl_voice_valid(&h.voice[0], h.hw_size, 0, &rates[0]) ||
++        !fdisbull_opl_voice_valid(&h.voice[1], h.hw_size, 1, &rates[1])) {
++        error_setg(errp, "Mixed OPL checkpoint header or software state is invalid");
++        return false;
++    }
++    if (h.has_capture) {
++        if (!h.cap_size || h.cap_pos >= h.cap_size || h.csw_total > h.cap_size ||
++            h.csw_empty != (h.csw_total == 0) || h.csw_active != h.hw_enabled ||
++            h.cap_enabled != h.hw_enabled ||
++            !fdisbull_sb16_volume_valid(h.csw_mute, h.csw_l, h.csw_r)) {
++            error_setg(errp, "Mixed OPL checkpoint capture state is invalid");
++            return false;
++        }
++    } else if (h.cap_size || h.cap_pos || h.cap_timestamp || h.cap_enabled ||
++               h.csw_total || h.csw_active || h.csw_empty || h.csw_mute ||
++               h.csw_l || h.csw_r) {
++        error_setg(errp, "Mixed OPL checkpoint retains an absent capture");
++        return false;
++    }
++    expected = sizeof(h) + (h.hw_size + h.voice[0].size + h.voice[1].size +
++                            h.cap_size) * sizeof(st_sample) + h.emul_size;
++    if (len != expected || !fdisbull_opl_graph(&g, errp)) {
++        if (len != expected) {
++            error_setg(errp, "Mixed OPL checkpoint payload length differs");
++        }
++        return false;
++    }
++    if (g.hw->mix_buf.size != h.hw_size || !!g.cap != h.has_capture ||
++        (g.cap && g.cap->hw.mix_buf.size != h.cap_size)) {
++        goto destination_error;
++    }
++    for (i = 0; i < 2; i++) {
++        SWVoiceOut *sw = g.voice[i];
++        FdisbullOplVoice *v = &h.voice[i];
++        if (!!sw != v->present || (sw &&
++            (sw->info.freq != v->freq || sw->info.nchannels != v->channels ||
++             sw->info.bits != v->bits || sw->info.is_signed != v->is_signed ||
++             sw->info.swap_endianness != v->swap || sw->resample_buf.size != v->size))) {
++            goto destination_error;
++        }
++    }
++    p = blob + sizeof(h); hw_data = p; p += h.hw_size * sizeof(st_sample);
++    if (!fdisbull_opl_samples_valid(hw_data, h.hw_size)) {
++        goto sample_error;
++    }
++    for (i = 0; i < 2; i++) {
++        sw_data[i] = p; p += h.voice[i].size * sizeof(st_sample);
++        if (!fdisbull_sb16_samples_valid(sw_data[i], h.voice[i].size)) {
++            goto sample_error;
++        }
++    }
++    cap_data = p; p += h.cap_size * sizeof(st_sample);
++    if (!fdisbull_opl_samples_valid(cap_data, h.cap_size)) {
++        goto sample_error;
++    }
++    if (h.emul_size) {
++        size_t first = audio_ring_posb(h.emul_pos, h.emul_pending, h.emul_size);
++        for (i = 0; i < h.emul_size; i++) {
++            if ((i + h.emul_size - first) % h.emul_size >= h.emul_pending && p[i]) {
++                error_setg(errp, "Mixed OPL unused backend bytes are not canonical");
++                return false;
++            }
++        }
++        emul = g_memdup2(p, h.emul_size);
++    }
++    /* The entire input, graph and allocation are validated before mutation. */
++    memcpy(g.hw->mix_buf.buffer, hw_data, h.hw_size * sizeof(st_sample));
++    g.hw->mix_buf.pos = h.hw_pos; g.hw->ts_helper = h.hw_timestamp;
++    g.hw->enabled = h.hw_enabled; g.hw->pending_disable = h.hw_pending_disable;
++    g_free(g.hw->buf_emul); g.hw->buf_emul = g_steal_pointer(&emul);
++    g.hw->size_emul = h.emul_size; g.hw->pos_emul = h.emul_pos;
++    g.hw->pending_emul = h.emul_pending;
++    for (i = 0; i < 2; i++) {
++        SWVoiceOut *sw = g.voice[i];
++        FdisbullOplVoice *v = &h.voice[i];
++        if (!sw) {
++            continue;
++        }
++        memcpy(sw->resample_buf.buffer, sw_data[i], v->size * sizeof(st_sample));
++        sw->total_hw_samples_mixed = v->total;
++        sw->active = v->active; sw->empty = v->empty; sw->resample_buf.pos = v->pos;
++        sw->vol.mute = v->mute; sw->vol.l = v->l; sw->vol.r = v->r;
++        st_rate_checkpoint_import(sw->rate, v->freq, 32000, &rates[i]);
++    }
++    if (g.voice[1]) {
++        /* Preserve callback sequencing by named identity, not fresh list order. */
++        QLIST_REMOVE(g.voice[0], entries); QLIST_REMOVE(g.voice[1], entries);
++        QLIST_INSERT_HEAD(&g.hw->sw_head, g.voice[1 - h.first_voice], entries);
++        QLIST_INSERT_HEAD(&g.hw->sw_head, g.voice[h.first_voice], entries);
++    }
++    if (g.cap) {
++        memcpy(g.cap->hw.mix_buf.buffer, cap_data, h.cap_size * sizeof(st_sample));
++        g.cap->hw.mix_buf.pos = h.cap_pos; g.cap->hw.ts_helper = h.cap_timestamp;
++        g.cap->hw.enabled = h.cap_enabled;
++        g.csw->total_hw_samples_mixed = h.csw_total;
++        g.csw->active = h.csw_active; g.csw->empty = h.csw_empty;
++        g.csw->vol.mute = h.csw_mute; g.csw->vol.l = h.csw_l; g.csw->vol.r = h.csw_r;
++        audio_notify_capture(g.cap, h.cap_enabled ? AUD_CNOTIFY_ENABLE : AUD_CNOTIFY_DISABLE);
++    }
++    return true;
++
++destination_error:
++    error_setg(errp, "Mixed OPL checkpoint differs from reconstructed voice geometry");
++    return false;
++sample_error:
++    error_setg(errp, "Mixed OPL checkpoint sample range is invalid");
++    return false;
++}
++
++static bool fdisbull_opl_timer(int64_t *timer_ns, bool restore, Error **errp)
++{
++    FdisbullOplGraph g;
++    bool needed, pending;
++    int64_t now;
++    uint64_t expiry;
++
++    if (!timer_ns || !fdisbull_opl_graph(&g, errp)) {
++        return false;
++    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    needed = audio_is_timer_needed(g.state);
++    if (g.state->period_ticks <= 0 || now < 0 ||
++        g.state->period_ticks > INT64_MAX - now) {
++        error_setg(errp, "Mixed OPL checkpoint timer range is invalid");
++        return false;
++    }
++    if (!restore) {
++        pending = timer_pending(g.state->ts);
++        if (pending != g.state->timer_running || pending != needed) {
++            error_setg(errp, "Mixed OPL checkpoint timer is not reconstructible");
++            return false;
++        }
++        if (!pending) {
++            *timer_ns = -1;
++            return true;
++        }
++        expiry = timer_expire_time_ns(g.state->ts);
++        if (expiry > (uint64_t)(now + g.state->period_ticks)) {
++            error_setg(errp, "Mixed OPL checkpoint deadline would change on resume");
++            return false;
++        }
++        *timer_ns = expiry;
++        return true;
++    }
++    if (*timer_ns < -1 || (*timer_ns >= 0) != needed ||
++        (*timer_ns >= 0 && *timer_ns > now + g.state->period_ticks)) {
++        error_setg(errp, "Restored mixed OPL timer differs from output activity");
++        return false;
++    }
++    if (*timer_ns < 0) {
++        timer_del(g.state->ts); g.state->timer_running = false;
++    } else {
++        timer_mod_ns(g.state->ts, *timer_ns); g.state->timer_running = true;
++        g.state->timer_last = now;
++    }
++    return true;
++}
++
+ char *fdisbull_audio_output_checkpoint_export(Error **errp)
+ {
+     AudioState *s;
+@@ -1437,6 +1957,9 @@
+     size_t len, hw_bytes, cap_bytes = 0;
+ 
+     assert(bql_locked());
++    if (audio_state_by_name("fdisbull-sb16-opl", NULL)) {
++        return fdisbull_opl_export(errp);
++    }
+     if (!fdisbull_audio_profile_exclusive(errp)) {
+         return NULL;
+     }
+@@ -1514,6 +2037,9 @@
+     size_t hw_bytes, cap_bytes;
+ 
+     assert(bql_locked());
++    if (audio_state_by_name("fdisbull-sb16-opl", NULL)) {
++        return fdisbull_opl_import(base64, errp);
++    }
+     if (!fdisbull_audio_profile_exclusive(errp)) {
+         return false;
+     }
+@@ -1612,6 +2138,9 @@
+     uint64_t expiry;
+     int64_t now;
+ 
++    if (audio_state_by_name("fdisbull-sb16-opl", NULL)) {
++        return fdisbull_opl_timer(timer_ns, false, errp);
++    }
+     if (!fdisbull_audio_profile_exclusive(errp)) {
+         return false;
+     }
+@@ -1647,6 +2176,9 @@
+     AudioState *s;
+     int64_t now;
+ 
++    if (audio_state_by_name("fdisbull-sb16-opl", NULL)) {
++        return fdisbull_opl_timer(&timer_ns, true, errp);
++    }
+     if (!fdisbull_audio_profile_exclusive(errp)) {
+         return false;
+     }
+--- a/hw/audio/adlib.c
++++ b/hw/audio/adlib.c
+@@ -27,6 +27,13 @@
+ #include "qemu/module.h"
+ #include "hw/audio/soundhw.h"
+ #include "audio/audio.h"
++#include "audio/audio_int.h"
++#include "hw/audio/fdisbull-opl.h"
++#include "migration/vmstate.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/runstate.h"
++#include "qapi/qapi-commands-fdisbull-sb16.h"
++#include "qemu/error-report.h"
+ #include "hw/isa/isa.h"
+ #include "hw/qdev-properties.h"
+ #include "qom/object.h"
+@@ -74,6 +81,15 @@
+     QEMUAudioTimeStamp ats;
+     FM_OPL *opl;
+     PortioList port_list;
++    bool fdisbull_checkpoint;
++    bool checkpoint_loaded;
++    bool checkpoint_voice_active;
++    int64_t checkpoint_audio_deadline;
++    union {
++        OPLCheckpointState checkpoint_synth;
++        uint8_t checkpoint_synth_bytes[sizeof(OPLCheckpointState)];
++    };
++    int16_t checkpoint_mixbuf[1025];
+ };
+ 
+ static void adlib_stop_opl_timer (AdlibState *s, size_t n)
+@@ -266,6 +282,15 @@
+     }
+     else {
+         OPLSetTimerHandler(s->opl, timer_handler, s);
++        if (s->fdisbull_checkpoint) {
++            if (s->freq != 32000 || s->port != 0x220 ||
++                strcmp(audio_get_id(&s->card), "fdisbull-sb16-opl")) {
++                Adlib_fini(s);
++                error_setg(errp, "Private OPL checkpoint requires 32000 Hz/0x220/fdisbull-sb16-opl");
++                return;
++            }
++            OPLSetCheckpointMode(s->opl);
++        }
+         s->enabled = 1;
+     }
+ 
+@@ -297,8 +322,222 @@
+     portio_list_add (&s->port_list, isa_address_space_io(&s->parent_obj), 0);
+ }
+ 
++
++static AdlibState *checkpoint_adlib(Error **errp)
++{
++    bool ambiguous = false;
++    Object *obj = object_resolve_path_type("", TYPE_ADLIB, &ambiguous);
++    AdlibState *s;
++    if (ambiguous || !obj || !DEVICE(obj)->realized) {
++        error_setg(errp, "OPL checkpoint requires exactly one realized AdLib");
++        return NULL;
++    }
++    s = ADLIB(obj);
++    if (!s->fdisbull_checkpoint ||
++        strcmp(audio_get_id(&s->card), "fdisbull-sb16-opl")) {
++        error_setg(errp, "OPL checkpoint profile/property is not selected");
++        return NULL;
++    }
++    return s;
++}
++
++static bool checkpoint_wrapper_safe(AdlibState *s, Error **errp)
++{
++    OPLCheckpointState state;
++    if (runstate_is_running() || !s->opl || !s->voice || !s->mixbuf ||
++        s->freq != 32000 || s->port != 0x220 || s->samples != 1025 ||
++        s->left < 0 || s->left > s->samples || s->pos < 0 || s->pos >= s->samples ||
++        s->left > s->samples - s->pos ||
++        s->bufpos != 0 || (s->enabled != 0 && s->enabled != 1) ||
++        (s->active != 0 && s->active != 1) ||
++        s->ticking[0] < 0 || s->ticking[0] > 1 ||
++        s->ticking[1] < 0 || s->ticking[1] > 1 ||
++        s->dexp[0] > 100000 || s->dexp[1] > 100000 ||
++        s->voice->info.freq != 32000 || s->voice->info.nchannels != 1 ||
++        s->voice->info.bits != 16 || !s->voice->info.is_signed ||
++        s->voice->info.is_float || s->voice->info.swap_endianness ||
++        s->voice->active < 0 || s->voice->active > 1 ||
++        !OPLCheckpointGet(s->opl, &state)) {
++        error_setg(errp, "OPL checkpoint wrapper, voice or synth state is unsupported");
++        return false;
++    }
++    return true;
++}
++
++bool fdisbull_opl_checkpoint_safe(Error **errp)
++{
++    AdlibState *s = checkpoint_adlib(errp);
++    int64_t deadline;
++    return s && checkpoint_wrapper_safe(s, errp) &&
++        fdisbull_audio_output_checkpoint_safe(&deadline, errp);
++}
++
++static bool adlib_checkpoint_needed(void *opaque)
++{
++    AdlibState *s = opaque;
++    return s->fdisbull_checkpoint && fdisbull_instrumented_checkpoint_busy() &&
++        !strcmp(audio_get_id(&s->card), "fdisbull-sb16-opl");
++}
++
++static int adlib_checkpoint_pre_save(void *opaque)
++{
++    AdlibState *s = opaque;
++    g_autoptr(Error) err = NULL;
++    if (s != checkpoint_adlib(&err) || !checkpoint_wrapper_safe(s, &err) ||
++        !fdisbull_audio_output_checkpoint_safe(&s->checkpoint_audio_deadline, &err) ||
++        !OPLCheckpointGet(s->opl, &s->checkpoint_synth)) {
++        if (err) error_report_err(g_steal_pointer(&err));
++        return -EINVAL;
++    }
++    s->checkpoint_voice_active = s->voice->active;
++    memcpy(s->checkpoint_mixbuf, s->mixbuf, sizeof(s->checkpoint_mixbuf));
++    return 0;
++}
++
++static int adlib_checkpoint_pre_load(void *opaque)
++{
++    AdlibState *s = opaque;
++    s->checkpoint_loaded = false;
++    return 0;
++}
++
++static int adlib_checkpoint_post_load(void *opaque, int version_id)
++{
++    AdlibState *s = opaque;
++    if (!fdisbull_instrumented_checkpoint_busy() ||
++        s != checkpoint_adlib(NULL) || s->checkpoint_audio_deadline < -1 ||
++        !checkpoint_wrapper_safe(s, NULL) ||
++        !OPLCheckpointValidate(s->opl, &s->checkpoint_synth)) {
++        return -EINVAL;
++    }
++    if (!OPLCheckpointPut(s->opl, &s->checkpoint_synth)) return -EINVAL;
++    memcpy(s->mixbuf, s->checkpoint_mixbuf, sizeof(s->checkpoint_mixbuf));
++    AUD_set_active_out(s->voice, s->checkpoint_voice_active);
++    s->checkpoint_loaded = true;
++    return 0;
++}
++
++bool fdisbull_opl_checkpoint_rearm(Error **errp)
++{
++    AdlibState *s = checkpoint_adlib(errp);
++    OPLCheckpointState current;
++    int64_t current_deadline;
++    if (!s) return false;
++    if (!fdisbull_instrumented_checkpoint_busy() || !s->checkpoint_loaded ||
++        !checkpoint_wrapper_safe(s, errp) ||
++        !!s->voice->active != s->checkpoint_voice_active ||
++        !OPLCheckpointGet(s->opl, &current) ||
++        memcmp(&current, &s->checkpoint_synth, sizeof(current))) {
++        if (!errp || !*errp) error_setg(errp, "OPL scoped restored state is absent or changed");
++        return false;
++    }
++    /* SB16 rearms this shared graph first. Its independently saved deadline
++     * must agree; a contradictory wrapper must never win by loading last. */
++    if (!fdisbull_audio_output_checkpoint_safe(&current_deadline, errp)) {
++        return false;
++    }
++    if (current_deadline != s->checkpoint_audio_deadline) {
++        error_setg(errp, "OPL and shared audio checkpoint deadlines disagree");
++        return false;
++    }
++    if (!fdisbull_audio_output_checkpoint_restore_timer(s->checkpoint_audio_deadline, errp)) {
++        return false;
++    }
++    s->checkpoint_loaded = false;
++    return true;
++}
++
++static const VMStateDescription vmstate_adlib_checkpoint = {
++    .name = "adlib/fdisbull-checkpoint",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = adlib_checkpoint_needed,
++    .pre_save = adlib_checkpoint_pre_save,
++    .post_load = adlib_checkpoint_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32(freq, AdlibState),
++        VMSTATE_UINT32(port, AdlibState),
++        VMSTATE_INT32_ARRAY(ticking, AdlibState, 2),
++        VMSTATE_UINT64_ARRAY(dexp, AdlibState, 2),
++        VMSTATE_INT32(enabled, AdlibState),
++        VMSTATE_INT32(active, AdlibState),
++        VMSTATE_INT32(bufpos, AdlibState),
++        VMSTATE_INT32(left, AdlibState),
++        VMSTATE_INT32(pos, AdlibState),
++        VMSTATE_INT32(samples, AdlibState),
++        VMSTATE_UINT64(ats.old_ts, AdlibState),
++        VMSTATE_BOOL(checkpoint_voice_active, AdlibState),
++        VMSTATE_INT64(checkpoint_audio_deadline, AdlibState),
++        VMSTATE_BUFFER(checkpoint_synth_bytes, AdlibState),
++        VMSTATE_INT16_ARRAY(checkpoint_mixbuf, AdlibState, 1025),
++        VMSTATE_END_OF_LIST()
++    },
++};
++
++static const VMStateDescription vmstate_adlib = {
++    .name = "adlib",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = adlib_checkpoint_needed,
++    .pre_load = adlib_checkpoint_pre_load,
++    .fields = (const VMStateField[]) { VMSTATE_END_OF_LIST() },
++    .subsections = (const VMStateDescription * const []) {
++        &vmstate_adlib_checkpoint, NULL
++    },
++};
++
++static char *checkpoint_hash(const void *data, size_t size)
++{
++    return g_compute_checksum_for_data(G_CHECKSUM_SHA256, data, size);
++}
++
++FdisbullOplInfo *qmp_x_fdisbull_query_opl(Error **errp)
++{
++    AdlibState *s = checkpoint_adlib(errp);
++    OPLCheckpointState state;
++    FdisbullOplInfo *r;
++    GChecksum *sum;
++    uint64_t wrapper[14];
++    int c, n;
++    if (!s || !checkpoint_wrapper_safe(s, errp) || !OPLCheckpointGet(s->opl, &state)) {
++        return NULL;
++    }
++    r = g_new0(FdisbullOplInfo, 1);
++    r->api_version = 1; r->iobase = s->port; r->frequency = s->freq;
++    r->audiodev_id = g_strdup(audio_get_id(&s->card));
++    r->checkpoint_enabled = s->fdisbull_checkpoint;
++    r->active = s->active; r->enabled = s->enabled;
++    r->address = state.address; r->status = state.status; r->status_mask = state.statusmask;
++    r->mode = state.mode; r->rhythm = state.rhythm;
++    r->timer1_ticking = s->ticking[0]; r->timer2_ticking = s->ticking[1];
++    r->timer1_expiry_us = s->dexp[0]; r->timer2_expiry_us = s->dexp[1];
++    r->noise_state = state.noise;
++    r->synth_state_sha256 = checkpoint_hash(&state, sizeof(state));
++    r->register_sha256 = checkpoint_hash(state.registers, sizeof(state.registers));
++    for (c = 0; c < 9; c++) {
++        r->keyon_mask |= state.channel[c].keyon << c;
++        for (n = 0; n < 2; n++) {
++            r->active_operators += state.channel[c].slot[n].evc < (UINT32_C(8192) << 16);
++        }
++    }
++    wrapper[0] = s->freq; wrapper[1] = s->port; wrapper[2] = s->enabled;
++    wrapper[3] = s->active; wrapper[4] = s->bufpos; wrapper[5] = s->left;
++    wrapper[6] = s->pos; wrapper[7] = s->samples; wrapper[8] = s->ats.old_ts;
++    wrapper[9] = s->ticking[0]; wrapper[10] = s->ticking[1];
++    wrapper[11] = s->dexp[0]; wrapper[12] = s->dexp[1];
++    wrapper[13] = s->voice->active;
++    sum = g_checksum_new(G_CHECKSUM_SHA256);
++    g_checksum_update(sum, (const guchar *)&state, sizeof(state));
++    g_checksum_update(sum, (const guchar *)wrapper, sizeof(wrapper));
++    g_checksum_update(sum, (const guchar *)s->mixbuf, sizeof(s->checkpoint_mixbuf));
++    r->state_sha256 = g_strdup(g_checksum_get_string(sum));
++    g_checksum_free(sum);
++    return r;
++}
++
+ static const Property adlib_properties[] = {
+     DEFINE_AUDIO_PROPERTIES(AdlibState, card),
++    DEFINE_PROP_BOOL("fdisbull-checkpoint", AdlibState, fdisbull_checkpoint, false),
+     DEFINE_PROP_UINT32 ("iobase",  AdlibState, port, 0x220),
+     DEFINE_PROP_UINT32 ("freq",    AdlibState, freq,  44100),
+ };
+@@ -308,6 +547,7 @@
+     DeviceClass *dc = DEVICE_CLASS (klass);
+ 
+     dc->realize = adlib_realizefn;
++    dc->vmsd = &vmstate_adlib;
+     set_bit(DEVICE_CATEGORY_SOUND, dc->categories);
+     dc->desc = ADLIB_DESC;
+     device_class_set_props(dc, adlib_properties);
+--- a/hw/audio/fmopl.c
++++ b/hw/audio/fmopl.c
+@@ -485,10 +485,21 @@
+ 
+ /* ---------- calcrate rhythm block ---------- */
+ #define WHITE_NOISE_db 6.0
+-static inline void OPL_CALC_RH( OPL_CH *CH )
++static inline void OPL_CALC_RH(FM_OPL *OPL, OPL_CH *CH)
+ {
+ 	uint32_t env_tam,env_sd,env_top,env_hh;
+-	int whitenoise = (rand()&1)*(WHITE_NOISE_db/EG_STEP);
++	uint32_t noise;
++    if (OPL->checkpoint_enabled) {
++        /* Private deterministic per-chip stream, not a hardware-noise claim. */
++        noise = OPL->checkpoint_noise;
++        noise ^= noise << 13;
++        noise ^= noise >> 17;
++        noise ^= noise << 5;
++        OPL->checkpoint_noise = noise;
++    } else {
++        noise = rand();
++    }
++    int whitenoise = (noise & 1) * (WHITE_NOISE_db / EG_STEP);
+ 	int32_t tone8;
+ 
+ 	OPL_SLOT *SLOT;
+@@ -1017,7 +1028,7 @@
+ 			OPL_CALC_CH(CH);
+ 		/* Rythn part */
+ 		if(rhythm)
+-			OPL_CALC_RH(S_CH);
++			OPL_CALC_RH(OPL, S_CH);
+ 		/* limit check */
+ 		data = Limit( outd[0] , OPL_MAXOUT, OPL_MINOUT );
+ 		/* store to sound buffer */
+@@ -1157,6 +1168,9 @@
+ 		fprintf(opl_dbg_fp,"%c%c%c",0x10+opl_dbg_chip,OPL->address,v);
+ 	}
+ #endif
++        if (OPL->checkpoint_enabled) {
++            OPL->checkpoint_registers[OPL->address] = v;
++        }
+ 		OPLWriteReg(OPL,OPL->address,v);
+ 	}
+ 	return OPL->status>>7;
+@@ -1209,3 +1223,243 @@
+     }
+ 	return OPL->status>>7;
+ }
++
++
++/* Private stopped-state codec. The wrapper admits only one enabled chip. */
++G_STATIC_ASSERT(sizeof(OPLCheckpointSlot) == 23 * sizeof(uint32_t));
++G_STATIC_ASSERT(sizeof(OPLCheckpointChannel) == 55 * sizeof(uint32_t));
++G_STATIC_ASSERT(sizeof(OPLCheckpointState) == 580 * sizeof(uint32_t));
++void OPLSetCheckpointMode(FM_OPL *opl)
++{
++    opl->checkpoint_enabled = true;
++    opl->checkpoint_noise = UINT32_C(0x6d2b79f5);
++    memset(opl->checkpoint_registers, 0, sizeof(opl->checkpoint_registers));
++}
++
++static int checkpoint_rate_index(int32_t *ptr, int32_t *table, bool zero)
++{
++    int i;
++    for (i = 0; i < 16; i++) {
++        if (ptr == ((zero && !i) ? RATE_0 : &table[i * 4])) {
++            return i;
++        }
++    }
++    return -1;
++}
++
++static int checkpoint_depth(int32_t *ptr, int32_t *table, int count)
++{
++    if (ptr == table) return 0;
++    if (ptr == table + count) return 1;
++    return -1;
++}
++
++static int checkpoint_wave(int32_t **ptr)
++{
++    int i;
++    for (i = 0; i < 4; i++) {
++        if (ptr == &SIN_TABLE[i * SIN_ENT]) return i;
++    }
++    return -1;
++}
++
++bool OPLCheckpointGet(FM_OPL *opl, OPLCheckpointState *state)
++{
++    int c, n;
++    if (!opl || !state || !opl->checkpoint_enabled || opl->max_ch != 9) {
++        return false;
++    }
++    memset(state, 0, sizeof(*state));
++    state->version = 1;
++    state->clock = opl->clock;
++    state->rate = opl->rate;
++    state->address = opl->address;
++    state->status = opl->status;
++    state->statusmask = opl->statusmask;
++    state->mode = opl->mode;
++    state->T0 = opl->T[0];
++    state->T1 = opl->T[1];
++    state->st0 = opl->st[0];
++    state->st1 = opl->st[1];
++    state->rhythm = opl->rhythm;
++    state->amsCnt = opl->amsCnt;
++    state->vibCnt = opl->vibCnt;
++    state->wavesel = opl->wavesel;
++    state->noise = opl->checkpoint_noise;
++    state->ams_depth = checkpoint_depth(opl->ams_table, AMS_TABLE, AMS_ENT);
++    state->vib_depth = checkpoint_depth(opl->vib_table, VIB_TABLE, VIB_ENT);
++    state->cache_ready = cur_chip == opl;
++    if (state->cache_ready) {
++        state->cache_ams_depth = checkpoint_depth(ams_table, AMS_TABLE, AMS_ENT);
++        state->cache_vib_depth = checkpoint_depth(vib_table, VIB_TABLE, VIB_ENT);
++    }
++    memcpy(state->registers, opl->checkpoint_registers, sizeof(state->registers));
++    for (c = 0; c < 9; c++) {
++        OPL_CH *ch = &opl->P_CH[c];
++        OPLCheckpointChannel *out = &state->channel[c];
++        out->CON = ch->CON;
++        out->FB = ch->FB;
++        out->op1_out0 = ch->op1_out[0];
++        out->op1_out1 = ch->op1_out[1];
++        out->block_fnum = ch->block_fnum;
++        out->kcode = ch->kcode;
++        out->fc = ch->fc;
++        out->ksl_base = ch->ksl_base;
++        out->keyon = ch->keyon;
++        if (ch->connect1 != (ch->CON ? outd : &feedback2) || ch->connect2 != outd) {
++            return false;
++        }
++        for (n = 0; n < 2; n++) {
++            OPL_SLOT *in = &ch->SLOT[n];
++            OPLCheckpointSlot *dst = &out->slot[n];
++            dst->TL = in->TL;
++            dst->TLL = in->TLL;
++            dst->KSR = in->KSR;
++            dst->SL = in->SL;
++            dst->ksl = in->ksl;
++            dst->ksr = in->ksr;
++            dst->mul = in->mul;
++            dst->Cnt = in->Cnt;
++            dst->Incr = in->Incr;
++            dst->eg_typ = in->eg_typ;
++            dst->evm = in->evm;
++            dst->evc = in->evc;
++            dst->eve = in->eve;
++            dst->evs = in->evs;
++            dst->evsa = in->evsa;
++            dst->evsd = in->evsd;
++            dst->evsr = in->evsr;
++            dst->ams = in->ams;
++            dst->vib = in->vib;
++            dst->ar_index = checkpoint_rate_index(in->AR, opl->AR_TABLE, true);
++            dst->dr_index = checkpoint_rate_index(in->DR, opl->DR_TABLE, true);
++            dst->rr_index = checkpoint_rate_index(in->RR, opl->DR_TABLE, false);
++            dst->wave_index = checkpoint_wave(in->wavetable);
++        }
++    }
++    return OPLCheckpointValidate(opl, state);
++}
++
++bool OPLCheckpointValidate(FM_OPL *opl, const OPLCheckpointState *state)
++{
++    int c, n;
++    if (!opl || !state || !opl->checkpoint_enabled || opl->max_ch != 9 ||
++        state->version != 1 || state->clock != opl->clock ||
++        state->rate != opl->rate || state->clock != 3579545 || state->rate != 32000 ||
++        state->address > 255 || state->status > 255 || state->statusmask > 255 ||
++        state->mode != 0 || !state->T0 || state->T0 > 1024 || state->T0 % 4 ||
++        !state->T1 || state->T1 > 4096 || state->T1 % 16 ||
++        state->st0 > 1 || state->st1 > 1 || state->rhythm > 63 ||
++        (state->wavesel != 0 && state->wavesel != 32) || !state->noise ||
++        state->ams_depth > 1 || state->vib_depth > 1 || state->cache_ready > 1 ||
++        state->cache_ams_depth > 1 || state->cache_vib_depth > 1 ||
++        (!state->cache_ready && (state->cache_ams_depth || state->cache_vib_depth))) {
++        return false;
++    }
++    for (c = 0; c < 9; c++) {
++        const OPLCheckpointChannel *ch = &state->channel[c];
++        if (ch->CON > 1 || (ch->FB && (ch->FB < 2 || ch->FB > 8)) ||
++            ch->block_fnum > 0x1fff || ch->kcode > 15 || ch->keyon > 1 ||
++            (int32_t)ch->op1_out0 < -(1 << TL_BITS) ||
++            (int32_t)ch->op1_out0 > (1 << TL_BITS) ||
++            (int32_t)ch->op1_out1 < -(1 << TL_BITS) ||
++            (int32_t)ch->op1_out1 > (1 << TL_BITS)) return false;
++        for (n = 0; n < 2; n++) {
++            const OPLCheckpointSlot *s = &ch->slot[n];
++            bool known_mul = false, known_sl = false;
++            int i;
++            for (i = 0; i < 16; i++) {
++                known_mul |= s->mul == MUL_TABLE[i];
++                known_sl |= s->SL == SL_TABLE[i];
++            }
++            if (!known_mul || !known_sl || s->TL > 2016 || s->TLL > 65535 ||
++                (s->KSR != 0 && s->KSR != 2) || s->ksr > 15 ||
++                (s->ksl != 0 && s->ksl != 1 && s->ksl != 2 && s->ksl != 31) ||
++                s->eg_typ > 1 || s->evm > 2 || s->evc > EG_OFF ||
++                s->eve > EG_OFF + 1 || s->evs > EG_AED - 1 ||
++                s->evsa > EG_AED - 1 || s->evsd > EG_AED - 1 || s->evsr > EG_AED - 1 ||
++                (s->ams != 0 && s->ams != 128) || (s->vib != 0 && s->vib != 64) ||
++                s->ar_index > 15 || s->dr_index > 15 || s->rr_index > 15 ||
++                s->wave_index > 3) return false;
++        }
++    }
++    return true;
++}
++
++bool OPLCheckpointPut(FM_OPL *opl, const OPLCheckpointState *state)
++{
++    int c, n;
++    if (!OPLCheckpointValidate(opl, state)) return false;
++    opl->clock = state->clock;
++    opl->rate = state->rate;
++    opl->address = state->address;
++    opl->status = state->status;
++    opl->statusmask = state->statusmask;
++    opl->mode = state->mode;
++    opl->T[0] = state->T0;
++    opl->T[1] = state->T1;
++    opl->st[0] = state->st0;
++    opl->st[1] = state->st1;
++    opl->rhythm = state->rhythm;
++    opl->amsCnt = state->amsCnt;
++    opl->vibCnt = state->vibCnt;
++    opl->wavesel = state->wavesel;
++    opl->checkpoint_noise = state->noise;
++    opl->ams_table = &AMS_TABLE[state->ams_depth * AMS_ENT];
++    opl->vib_table = &VIB_TABLE[state->vib_depth * VIB_ENT];
++    memcpy(opl->checkpoint_registers, state->registers, sizeof(state->registers));
++    for (c = 0; c < 9; c++) {
++        OPL_CH *ch = &opl->P_CH[c];
++        const OPLCheckpointChannel *in = &state->channel[c];
++        ch->CON = in->CON;
++        ch->FB = in->FB;
++        ch->op1_out[0] = in->op1_out0;
++        ch->op1_out[1] = in->op1_out1;
++        ch->block_fnum = in->block_fnum;
++        ch->kcode = in->kcode;
++        ch->fc = in->fc;
++        ch->ksl_base = in->ksl_base;
++        ch->keyon = in->keyon;
++        set_algorithm(ch);
++        for (n = 0; n < 2; n++) {
++            OPL_SLOT *out = &ch->SLOT[n];
++            const OPLCheckpointSlot *src = &in->slot[n];
++            out->TL = src->TL;
++            out->TLL = src->TLL;
++            out->KSR = src->KSR;
++            out->SL = src->SL;
++            out->ksl = src->ksl;
++            out->ksr = src->ksr;
++            out->mul = src->mul;
++            out->Cnt = src->Cnt;
++            out->Incr = src->Incr;
++            out->eg_typ = src->eg_typ;
++            out->evm = src->evm;
++            out->evc = src->evc;
++            out->eve = src->eve;
++            out->evs = src->evs;
++            out->evsa = src->evsa;
++            out->evsd = src->evsd;
++            out->evsr = src->evsr;
++            out->ams = src->ams;
++            out->vib = src->vib;
++            out->AR = src->ar_index ? &opl->AR_TABLE[src->ar_index * 4] : RATE_0;
++            out->DR = src->dr_index ? &opl->DR_TABLE[src->dr_index * 4] : RATE_0;
++            out->RR = &opl->DR_TABLE[src->rr_index * 4];
++            out->wavetable = &SIN_TABLE[src->wave_index * SIN_ENT];
++        }
++    }
++    /* Rebuild the actual cached selectors, even if a prior BD write made
++     * them differ from the per-chip selectors. Do not write/key-on registers. */
++    cur_chip = NULL;
++    if (state->cache_ready) {
++        cur_chip = opl;
++        S_CH = opl->P_CH; E_CH = &S_CH[9];
++        SLOT7_1 = &S_CH[7].SLOT[0]; SLOT7_2 = &S_CH[7].SLOT[1];
++        SLOT8_1 = &S_CH[8].SLOT[0]; SLOT8_2 = &S_CH[8].SLOT[1];
++        amsIncr = opl->amsIncr; vibIncr = opl->vibIncr;
++        ams_table = &AMS_TABLE[state->cache_ams_depth * AMS_ENT];
++        vib_table = &VIB_TABLE[state->cache_vib_depth * VIB_ENT];
++    }
++    return true;
++}
+--- a/hw/audio/fmopl.h
++++ b/hw/audio/fmopl.h
+@@ -87,7 +87,81 @@
+ 	/* external event callback handler */
+ 	OPL_TIMERHANDLER  TimerHandler;		/* TIMER handler   */
+     void *TimerParam; /* TIMER parameter */
++    /* Explicit private profile only; ordinary OPL retains libc rand(). */
++    bool checkpoint_enabled;
++    uint32_t checkpoint_noise;
++    uint8_t checkpoint_registers[256];
+ } FM_OPL;
++
++/* Same-native-build pointer-free private state. All members are 32-bit
++ * words or byte arrays; fresh tables and callbacks are never serialized. */
++typedef struct OPLCheckpointSlot {
++    uint32_t TL;
++    uint32_t TLL;
++    uint32_t KSR;
++    uint32_t SL;
++    uint32_t ksl;
++    uint32_t ksr;
++    uint32_t mul;
++    uint32_t Cnt;
++    uint32_t Incr;
++    uint32_t eg_typ;
++    uint32_t evm;
++    uint32_t evc;
++    uint32_t eve;
++    uint32_t evs;
++    uint32_t evsa;
++    uint32_t evsd;
++    uint32_t evsr;
++    uint32_t ams;
++    uint32_t vib;
++    uint32_t ar_index;
++    uint32_t dr_index;
++    uint32_t rr_index;
++    uint32_t wave_index;
++} OPLCheckpointSlot;
++typedef struct OPLCheckpointChannel {
++    OPLCheckpointSlot slot[2];
++    uint32_t CON;
++    uint32_t FB;
++    uint32_t op1_out0;
++    uint32_t op1_out1;
++    uint32_t block_fnum;
++    uint32_t kcode;
++    uint32_t fc;
++    uint32_t ksl_base;
++    uint32_t keyon;
++} OPLCheckpointChannel;
++typedef struct OPLCheckpointState {
++    uint32_t version;
++    uint32_t clock;
++    uint32_t rate;
++    uint32_t address;
++    uint32_t status;
++    uint32_t statusmask;
++    uint32_t mode;
++    uint32_t T0;
++    uint32_t T1;
++    uint32_t st0;
++    uint32_t st1;
++    uint32_t rhythm;
++    uint32_t amsCnt;
++    uint32_t vibCnt;
++    uint32_t wavesel;
++    uint32_t ams_depth;
++    uint32_t vib_depth;
++    uint32_t cache_ready;
++    uint32_t cache_ams_depth;
++    uint32_t cache_vib_depth;
++    uint32_t noise;
++    OPLCheckpointChannel channel[9];
++    uint8_t registers[256];
++} OPLCheckpointState;
++
++void OPLSetCheckpointMode(FM_OPL *opl);
++bool OPLCheckpointGet(FM_OPL *opl, OPLCheckpointState *state);
++bool OPLCheckpointValidate(FM_OPL *opl, const OPLCheckpointState *state);
++bool OPLCheckpointPut(FM_OPL *opl, const OPLCheckpointState *state);
+ 
+ /* ---------- Generic interface section ---------- */
+ FM_OPL *OPLCreate(int clock, int rate);
+--- a/hw/audio/sb16.c
++++ b/hw/audio/sb16.c
+@@ -1307,7 +1307,7 @@
+     }
+ }
+ 
+-/* The selected digital-only profile is deliberately distinct from pcspk. */
++/* Explicit digital-only and combined OPL2 profiles share this SB16 scope. */
+ static SB16State *sb16_checkpoint_device(Error **errp)
+ {
+     bool ambiguous = false;
+@@ -1319,7 +1319,8 @@
+         return NULL;
+     }
+     s = SB16(obj);
+-    if (strcmp(audio_get_id(&s->card), "fdisbull-sb16")) {
++    if (strcmp(audio_get_id(&s->card), "fdisbull-sb16") &&
++        strcmp(audio_get_id(&s->card), "fdisbull-sb16-opl")) {
+         error_setg(errp, "SB16 checkpoint requires audiodev fdisbull-sb16");
+         return NULL;
+     }
+@@ -1403,7 +1404,8 @@
+ {
+     SB16State *s = opaque;
+     return fdisbull_instrumented_checkpoint_busy() &&
+-        !strcmp(audio_get_id(&s->card), "fdisbull-sb16");
++        (!strcmp(audio_get_id(&s->card), "fdisbull-sb16") ||
++         !strcmp(audio_get_id(&s->card), "fdisbull-sb16-opl"));
+ }
+ 
+ static int sb16_checkpoint_pre_save(void *opaque)
+@@ -1611,7 +1613,8 @@
+         return -1;
+     }
+     if (fdisbull_instrumented_checkpoint_busy() &&
+-        !strcmp(audio_get_id(&s->card), "fdisbull-sb16")) {
++        (!strcmp(audio_get_id(&s->card), "fdisbull-sb16") ||
++         !strcmp(audio_get_id(&s->card), "fdisbull-sb16-opl"))) {
+         return s->checkpoint_loaded ? 0 : -EINVAL;
+     }
+     if (s->voice) {
+--- /dev/null
++++ b/include/hw/audio/fdisbull-opl.h
+@@ -0,0 +1,9 @@
++#ifndef HW_AUDIO_FDISBULL_OPL_H
++#define HW_AUDIO_FDISBULL_OPL_H
++
++#include "qapi/error.h"
++
++bool fdisbull_opl_checkpoint_safe(Error **errp);
++bool fdisbull_opl_checkpoint_rearm(Error **errp);
++
++#endif
+--- a/system/fdisbull-audio.c
++++ b/system/fdisbull-audio.c
+@@ -9,6 +9,7 @@
+ #include "audio/audio.h"
+ #include "hw/audio/pcspk.h"
+ #include "hw/audio/fdisbull-sb16.h"
++#include "hw/audio/fdisbull-opl.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-audio.h"
+@@ -82,22 +83,25 @@
+     AudioState *pc = audio_state_by_name("fdisbull-pc", NULL);
+     AudioState *sb = audio_state_by_name("fdisbull-sb16", NULL);
+ 
+-    if (pc && sb) {
++    AudioState *opl = audio_state_by_name("fdisbull-sb16-opl", NULL);
++
++    if (!!pc + !!sb + !!opl > 1) {
+         error_setg(errp, "One explicit checkpoint audio graph is required");
+         return NULL;
+     }
+-    if (!pc && !sb) {
++    if (!pc && !sb && !opl) {
+         error_setg(errp, "No explicit checkpoint audio graph is configured");
+         return NULL;
+     }
+-    return sb ? sb : pc;
++    return opl ? opl : sb ? sb : pc;
+ }
+ 
+ const char *fdisbull_audio_checkpoint_profile(void)
+ {
+     /* Preserve the historical PC-speaker observer-profile spelling.  SB16
+      * also identifies a configured, initially silent device without a tap. */
+-    return audio_state_by_name("fdisbull-sb16", NULL) ? "sb16" :
++    return audio_state_by_name("fdisbull-sb16-opl", NULL) ? "sb16-opl" :
++           audio_state_by_name("fdisbull-sb16", NULL) ? "sb16" :
+            audio_window.token ? "pc-speaker" : "off";
+ }
+ 
+@@ -318,7 +322,7 @@
+ 
+     if (!state || !state->profile ||
+         (strcmp(state->profile, "off") && strcmp(state->profile, "pc-speaker") &&
+-         strcmp(state->profile, "sb16")) ||
++         strcmp(state->profile, "sb16") && strcmp(state->profile, "sb16-opl")) ||
+         !state->info || !state->core_base64 || strlen(state->core_base64) > 8 * 1024 * 1024 ||
+         !state->pcm_base64 || strlen(state->pcm_base64) > 4 * MAX_FRAMES / 3 + 8 ||
+         state->info->api_version != 1 || state->info->rate != AUDIO_RATE ||
+@@ -390,7 +394,7 @@
+         .notify = audio_notify, .capture = audio_capture, .destroy = audio_destroy,
+     };
+     bool expected_enabled;
+-    bool sb16_profile;
++    bool sb16_profile, opl_profile;
+ 
+     assert(bql_locked());
+     if (!audio_checkpoint_decode(state, &pcm, &pcm_bytes, errp) ||
+@@ -398,8 +402,10 @@
+                                             state->info->virtual_ns, errp)) {
+         return false;
+     }
+-    sb16_profile = !strcmp(state->profile, "sb16");
+-    if (sb16_profile != !!audio_state_by_name("fdisbull-sb16", NULL)) {
++    opl_profile = !strcmp(state->profile, "sb16-opl");
++    sb16_profile = !strcmp(state->profile, "sb16") || opl_profile;
++    if (opl_profile != !!audio_state_by_name("fdisbull-sb16-opl", NULL) ||
++        (!strcmp(state->profile, "sb16")) != !!audio_state_by_name("fdisbull-sb16", NULL)) {
+         error_setg(errp, "Restored audio graph differs from its saved profile");
+         return false;
+     }
+@@ -461,6 +467,7 @@
+     }
+     if (sb16_profile &&
+         (!fdisbull_sb16_checkpoint_rearm(errp) ||
++         (opl_profile && !fdisbull_opl_checkpoint_rearm(errp)) ||
+          (state->active && audio_window.enabled != expected_enabled))) {
+         audio_window.invalidated = true;
+         if (!errp || !*errp) {
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -7,6 +7,7 @@
+ #include "audio/audio.h"
+ #include "hw/audio/pcspk.h"
+ #include "hw/audio/fdisbull-sb16.h"
++#include "hw/audio/fdisbull-opl.h"
+ #include "hw/core/cpu.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+@@ -132,8 +133,11 @@
+     if (!fdisbull_input_checkpoint_safe(errp) ||
+         !fdisbull_frame_keys_checkpoint_safe(errp) ||
+         !fdisbull_pcspk_checkpoint_audio_safe(errp) ||
+-        (audio_state_by_name("fdisbull-sb16", NULL) &&
+-         !fdisbull_sb16_checkpoint_safe(errp))) {
++        ((audio_state_by_name("fdisbull-sb16", NULL) ||
++          audio_state_by_name("fdisbull-sb16-opl", NULL)) &&
++         !fdisbull_sb16_checkpoint_safe(errp)) ||
++        (audio_state_by_name("fdisbull-sb16-opl", NULL) &&
++         !fdisbull_opl_checkpoint_safe(errp))) {
+         return NULL;
+     }
+     audio = fdisbull_audio_checkpoint_info(errp);
+--- a/qapi/fdisbull-sb16.json
++++ b/qapi/fdisbull-sb16.json
+@@ -73,3 +73,67 @@
+ # Since: 10.0
+ ##
+ { 'command': 'x-fdisbull-query-sb16', 'returns': 'FdisbullSb16Info' }
++
++##
++# @FdisbullOplInfo:
++#
++# Passive selected OPL2 state; observation never reads a port or synthesizes.
++#
++# @api-version: api-version observation.
++# @iobase: iobase observation.
++# @frequency: frequency observation.
++# @audiodev-id: audiodev-id observation.
++# @checkpoint-enabled: checkpoint-enabled observation.
++# @active: active observation.
++# @enabled: enabled observation.
++# @address: address observation.
++# @status: status observation.
++# @status-mask: status-mask observation.
++# @mode: mode observation.
++# @rhythm: rhythm observation.
++# @timer1-ticking: timer1-ticking observation.
++# @timer2-ticking: timer2-ticking observation.
++# @timer1-expiry-us: timer1-expiry-us observation.
++# @timer2-expiry-us: timer2-expiry-us observation.
++# @noise-state: noise-state observation.
++# @state-sha256: state-sha256 observation.
++# @synth-state-sha256: synth-state-sha256 observation.
++# @register-sha256: register-sha256 observation.
++# @keyon-mask: keyon-mask observation.
++# @active-operators: active-operators observation.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullOplInfo', 'data': { 'api-version': 'int',
++    'iobase': 'int',
++    'frequency': 'int',
++    'audiodev-id': 'str',
++    'checkpoint-enabled': 'bool',
++    'active': 'bool',
++    'enabled': 'bool',
++    'address': 'int',
++    'status': 'int',
++    'status-mask': 'int',
++    'mode': 'int',
++    'rhythm': 'int',
++    'timer1-ticking': 'bool',
++    'timer2-ticking': 'bool',
++    'timer1-expiry-us': 'uint64',
++    'timer2-expiry-us': 'uint64',
++    'noise-state': 'uint32',
++    'state-sha256': 'str',
++    'synth-state-sha256': 'str',
++    'register-sha256': 'str',
++    'keyon-mask': 'int',
++    'active-operators': 'int' } }
++
++##
++# @x-fdisbull-query-opl:
++#
++# Observe the explicitly selected stopped OPL2 device without side effects.
++#
++# Returns: the selected device state.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-opl', 'returns': 'FdisbullOplInfo' }
