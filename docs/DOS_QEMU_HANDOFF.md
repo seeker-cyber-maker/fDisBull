@@ -6843,3 +6843,26 @@ The next gate is common acquisition/event boundaries and investigation of the
 selected audio profile's DC/sample-limit behavior. No 1:1 parity or migration
 milestone is declared complete. DOSBox-X remains default and retained. No CI,
 release, merge, rebuild or shared installation/activation occurs.
+
+## 2026-11-16: passive mixer gains and paired authored tones
+
+The optional native mixer API now exposes actual stopped software-voice Q32
+gains, mute, stable identities and PCM/channel-conversion metadata through
+Python, debug JSON and saved scripts. It does not change mixing, volume
+application, timing or checkpoint formats. Older binaries keep their prior
+operations; DOSBox-X remains default and its passive query is explicitly absent.
+
+The same authored COM produces approximately 440 Hz OPL and 500/800 Hz stereo SB
+components on both engines. Four normal guest exits and raw captures verify
+QEMU mono channel collapse and DOSBox stereo separation. A corrected test
+description distinguishes buffer capacity from C0 sample count; strict DOSBox
+DMA progress passes, while QEMU's inherited single-cycle stereo multiplier
+remains a recorded parity difference. No engine workaround was applied.
+
+See [qualification](evidence/qemu-mixer-tones-2026-11-16/README.md) and
+[sanitized verification](evidence/qemu-mixer-tones-2026-11-16/verification.json).
+The selected 2,198 host and 28 distinct native cases pass without skips, including exact
+mixer readback with OPL hot/cold checkpoint futures and initial silent graphs.
+Prior 713-file runtime, Doom database/588 objects and comparison artifacts remain
+untouched. Trials, histories, layers, hooks, CPU timing, checkpoints and IRQs
+retain their existing scope. No CI, release, merge or shared activation.

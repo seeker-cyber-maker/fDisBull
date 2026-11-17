@@ -1,0 +1,840 @@
+{
+  "analysis_scope": {
+    "exact_cross_engine_PCM_CPU_or_duration_claim": false,
+    "frequency_only_DC_removal": true,
+    "frequency_search": "Independent expected-frequency +/-4 percent,1Hz grid; OPL acceptance1.5percent and meaningful relative strength; selected stereo components3percent plus dominance/strength checks",
+    "guest_time_from_WAV": false,
+    "independent_audit": "Whole-record NumPy FFT and scalar recomputation; no fitted waveform/gain/time alignment",
+    "only_expected_dominant_DOSBox_stereo_components_published": true,
+    "raw_DC_RMS_and_rails_separate": true,
+    "raw_native_formats_retained": true,
+    "whole_record": true
+  },
+  "cases": [
+    {
+      "backends": {
+        "dosbox": {
+          "PIC_mask_restored": true,
+          "analysis": {
+            "channels": 2,
+            "channels_analysis": [
+              {
+                "ac_rms": 0.01402303132891655,
+                "dc_mean": -1.8374739445733947e-05,
+                "lower_rail_samples": 0,
+                "maximum_code": 764,
+                "minimum_code": -766,
+                "rms_including_dc": 0.014023043367358769,
+                "upper_rail_samples": 0
+              },
+              {
+                "ac_rms": 0.01402303132891655,
+                "dc_mean": -1.8374739445733947e-05,
+                "lower_rail_samples": 0,
+                "maximum_code": 764,
+                "minimum_code": -766,
+                "rms_including_dc": 0.014023043367358769,
+                "upper_rail_samples": 0
+              }
+            ],
+            "cross_engine_pcm_equal_claim": false,
+            "frames": 19872,
+            "frequencies": [
+              {
+                "expected_hz": 439.990594651964,
+                "measured_hz": 440,
+                "relative_error": 2.1376247925086744e-05,
+                "search_step_hz": 1,
+                "strength": 0.016884204244409413
+              },
+              {
+                "expected_hz": 439.990594651964,
+                "measured_hz": 440,
+                "relative_error": 2.1376247925086744e-05,
+                "search_step_hz": 1,
+                "strength": 0.016884204244409413
+              }
+            ],
+            "frequency_analysis_dc_removed_only": true,
+            "gain_or_time_fit": false,
+            "guest_elapsed_seconds": null,
+            "pcm_sha256": "7c5c3269794945fe58748c99c86a3ca566cadc47b06ee62fa73c556ca9001667",
+            "rate": 48000,
+            "sample_duration_seconds": 0.414,
+            "silent_intervals_synthesized": false,
+            "whole_record_untrimmed": true,
+            "width": 2
+          },
+          "documented_dma_progress": {},
+          "irq_count": 0,
+          "irq_vector_restored": true,
+          "native_exit_code": 0,
+          "normal_guest_exit_code": 42,
+          "passive_mixer_readback_available": false,
+          "reaped": true,
+          "wave": {
+            "sha256": "ccd9c0b5799df14819a622118e4e22d7596492b8a127cdfcbaf2eadf13c09413",
+            "size": 79532
+          },
+          "wave_finalized_before_close": true
+        },
+        "qemu": {
+          "PIC_mask_restored": true,
+          "analysis": {
+            "channels": 1,
+            "channels_analysis": [
+              {
+                "ac_rms": 0.038972932835651966,
+                "dc_mean": -0.010745317944250871,
+                "lower_rail_samples": 0,
+                "maximum_code": 135,
+                "minimum_code": 118,
+                "rms_including_dc": 0.04042711159030878,
+                "upper_rail_samples": 0
+              }
+            ],
+            "cross_engine_pcm_equal_claim": false,
+            "frames": 14350,
+            "frequencies": [
+              {
+                "expected_hz": 439.990594651964,
+                "measured_hz": 440,
+                "relative_error": 2.1376247925086744e-05,
+                "search_step_hz": 1,
+                "strength": 0.048018662552604785
+              }
+            ],
+            "frequency_analysis_dc_removed_only": true,
+            "gain_or_time_fit": false,
+            "guest_elapsed_seconds": null,
+            "pcm_sha256": "0badbe8e9348517e77853e11c43991e08e6d025fa611ed3c6786b6e73dab20cd",
+            "rate": 32000,
+            "sample_duration_seconds": 0.4484375,
+            "silent_intervals_synthesized": false,
+            "whole_record_untrimmed": true,
+            "width": 1
+          },
+          "dropped_frames": 0,
+          "irq_count": 0,
+          "irq_vector_restored": true,
+          "mixer_done": {
+            "api-version": 1,
+            "audiodevs": [
+              {
+                "audiodev-id": "fdisbull-sb16-opl",
+                "captures": [
+                  {
+                    "enabled": true,
+                    "format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    }
+                  }
+                ],
+                "cards": [
+                  "adlib",
+                  "sb16"
+                ],
+                "driver": "none",
+                "mixing-engine": true,
+                "voices": [
+                  {
+                    "active": true,
+                    "card-id": "adlib",
+                    "format": {
+                      "bits": 16,
+                      "bytes-per-frame": 2,
+                      "bytes-per-second": 64000,
+                      "channels": 1,
+                      "is-signed": true,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "gain": {
+                      "left": 4294967296,
+                      "mute": false,
+                      "right": 4294967296
+                    },
+                    "hardware-enabled": true,
+                    "hardware-format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "hardware-pending-disable": false,
+                    "software-volume-applied": true,
+                    "voice-id": "adlib"
+                  }
+                ]
+              }
+            ],
+            "gain-scale": 4294967296,
+            "mono-input": "duplicate-to-left-right",
+            "mono-output": "sum-then-clip",
+            "stereo-output": "clip-left-right"
+          },
+          "mixer_passive_cpu_clock": true,
+          "mixer_ready": {
+            "api-version": 1,
+            "audiodevs": [
+              {
+                "audiodev-id": "fdisbull-sb16-opl",
+                "captures": [],
+                "cards": [
+                  "adlib",
+                  "sb16"
+                ],
+                "driver": "none",
+                "mixing-engine": true,
+                "voices": [
+                  {
+                    "active": true,
+                    "card-id": "adlib",
+                    "format": {
+                      "bits": 16,
+                      "bytes-per-frame": 2,
+                      "bytes-per-second": 64000,
+                      "channels": 1,
+                      "is-signed": true,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "gain": {
+                      "left": 4294967296,
+                      "mute": false,
+                      "right": 4294967296
+                    },
+                    "hardware-enabled": true,
+                    "hardware-format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "hardware-pending-disable": false,
+                    "software-volume-applied": true,
+                    "voice-id": "adlib"
+                  }
+                ]
+              }
+            ],
+            "gain-scale": 4294967296,
+            "mono-input": "duplicate-to-left-right",
+            "mono-output": "sum-then-clip",
+            "stereo-output": "clip-left-right"
+          },
+          "native_exit_code": 0,
+          "normal_guest_exit_code": 42,
+          "reaped": true,
+          "wave": {
+            "sha256": "0f2530e0bda6816d61fa5332fc48326e9c903f086ed94316cd83760745ea7233",
+            "size": 14394
+          }
+        }
+      },
+      "dma_request": null,
+      "mode": "O",
+      "receipt": {
+        "sha256": "37ac36897e75b61b25dce203ae41009be556fdc66818016dc0b679f880daab5b",
+        "size": 118925
+      },
+      "source_bytes": 17289,
+      "source_sha256": "c903924f5470d3e9c38a4406c5a3722af1197b52bcad2d2483b34c4c2c46d7db"
+    },
+    {
+      "backends": {
+        "dosbox": {
+          "PIC_mask_restored": true,
+          "analysis": {
+            "channels": 2,
+            "channels_analysis": [
+              {
+                "ac_rms": 0.12104744333501949,
+                "dc_mean": -3.9868989515115745e-05,
+                "lower_rail_samples": 0,
+                "maximum_code": 8184,
+                "minimum_code": -8190,
+                "rms_including_dc": 0.12104744990077684,
+                "upper_rail_samples": 0
+              },
+              {
+                "ac_rms": 0.044898773749590816,
+                "dc_mean": 5.965940189042035e-05,
+                "lower_rail_samples": 0,
+                "maximum_code": 3066,
+                "minimum_code": -3068,
+                "rms_including_dc": 0.04489881338589227,
+                "upper_rail_samples": 0
+              }
+            ],
+            "cross_engine_pcm_equal_claim": false,
+            "frames": 6566,
+            "frequencies": [
+              {
+                "channel": "left",
+                "expected_hz": 500.0,
+                "measured_hz": 500,
+                "relative_error": 0.0,
+                "search_step_hz": 1,
+                "strength": 0.11708835457726392
+              },
+              {
+                "channel": "right",
+                "expected_hz": 800.0,
+                "measured_hz": 800,
+                "relative_error": 0.0,
+                "search_step_hz": 1,
+                "strength": 0.04338965083011118
+              }
+            ],
+            "frequency_analysis_dc_removed_only": true,
+            "gain_or_time_fit": false,
+            "guest_elapsed_seconds": null,
+            "pcm_sha256": "c206b0252cb61dd0aa7b3da9d1da2fa20d8d8aa8c38f37a8d6a014b5ee1135bf",
+            "rate": 48000,
+            "sample_duration_seconds": 0.13679166666666667,
+            "silent_intervals_synthesized": false,
+            "whole_record_untrimmed": true,
+            "width": 2
+          },
+          "documented_dma_progress": {
+            "completed_bytes": 4096,
+            "final_count": 4095,
+            "remaining_bytes": 4096
+          },
+          "irq_count": 1,
+          "irq_vector_restored": true,
+          "native_exit_code": 0,
+          "normal_guest_exit_code": 42,
+          "passive_mixer_readback_available": false,
+          "reaped": true,
+          "wave": {
+            "sha256": "6c1cf7afa23dc627e2bf8f6954ecb19d7c4b7ccf8af7960bd480f730133be3c4",
+            "size": 26308
+          },
+          "wave_finalized_before_close": true
+        },
+        "qemu": {
+          "PIC_mask_restored": true,
+          "analysis": {
+            "channels": 1,
+            "channels_analysis": [
+              {
+                "ac_rms": 0.18938160032672796,
+                "dc_mean": 0.008068084716796875,
+                "lower_rail_samples": 0,
+                "maximum_code": 173,
+                "minimum_code": 85,
+                "rms_including_dc": 0.18955338175118358,
+                "upper_rail_samples": 0
+              }
+            ],
+            "cross_engine_pcm_equal_claim": false,
+            "frames": 4096,
+            "frequencies": [
+              {
+                "left": {
+                  "expected_hz": 500.0,
+                  "measured_hz": 500,
+                  "relative_error": 0.0,
+                  "search_step_hz": 1,
+                  "strength": 0.2509504027001535
+                },
+                "right": {
+                  "expected_hz": 800.0,
+                  "measured_hz": 800,
+                  "relative_error": 0.0,
+                  "search_step_hz": 1,
+                  "strength": 0.0939725732162459
+                }
+              }
+            ],
+            "frequency_analysis_dc_removed_only": true,
+            "gain_or_time_fit": false,
+            "guest_elapsed_seconds": null,
+            "pcm_sha256": "133bf0f2375933b78fd6ebe0e3bc16203d8f1b16c7be98b2aa3db43890b4f7d8",
+            "rate": 32000,
+            "sample_duration_seconds": 0.128,
+            "silent_intervals_synthesized": false,
+            "whole_record_untrimmed": true,
+            "width": 1
+          },
+          "dropped_frames": 0,
+          "irq_count": 1,
+          "irq_vector_restored": true,
+          "mixer_done": {
+            "api-version": 1,
+            "audiodevs": [
+              {
+                "audiodev-id": "fdisbull-sb16-opl",
+                "captures": [
+                  {
+                    "enabled": false,
+                    "format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    }
+                  }
+                ],
+                "cards": [
+                  "adlib",
+                  "sb16"
+                ],
+                "driver": "none",
+                "mixing-engine": true,
+                "voices": [
+                  {
+                    "active": false,
+                    "card-id": "adlib",
+                    "format": {
+                      "bits": 16,
+                      "bytes-per-frame": 2,
+                      "bytes-per-second": 64000,
+                      "channels": 1,
+                      "is-signed": true,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "gain": {
+                      "left": 4294967296,
+                      "mute": false,
+                      "right": 4294967296
+                    },
+                    "hardware-enabled": false,
+                    "hardware-format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "hardware-pending-disable": false,
+                    "software-volume-applied": true,
+                    "voice-id": "adlib"
+                  },
+                  {
+                    "active": false,
+                    "card-id": "sb16",
+                    "format": {
+                      "bits": 8,
+                      "bytes-per-frame": 2,
+                      "bytes-per-second": 64000,
+                      "channels": 2,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "gain": {
+                      "left": 4294967296,
+                      "mute": false,
+                      "right": 4294967296
+                    },
+                    "hardware-enabled": false,
+                    "hardware-format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "hardware-pending-disable": false,
+                    "software-volume-applied": true,
+                    "voice-id": "sb16"
+                  }
+                ]
+              }
+            ],
+            "gain-scale": 4294967296,
+            "mono-input": "duplicate-to-left-right",
+            "mono-output": "sum-then-clip",
+            "stereo-output": "clip-left-right"
+          },
+          "mixer_passive_cpu_clock": true,
+          "mixer_ready": {
+            "api-version": 1,
+            "audiodevs": [
+              {
+                "audiodev-id": "fdisbull-sb16-opl",
+                "captures": [],
+                "cards": [
+                  "adlib",
+                  "sb16"
+                ],
+                "driver": "none",
+                "mixing-engine": true,
+                "voices": [
+                  {
+                    "active": false,
+                    "card-id": "adlib",
+                    "format": {
+                      "bits": 16,
+                      "bytes-per-frame": 2,
+                      "bytes-per-second": 64000,
+                      "channels": 1,
+                      "is-signed": true,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "gain": {
+                      "left": 4294967296,
+                      "mute": false,
+                      "right": 4294967296
+                    },
+                    "hardware-enabled": false,
+                    "hardware-format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "hardware-pending-disable": false,
+                    "software-volume-applied": true,
+                    "voice-id": "adlib"
+                  },
+                  {
+                    "active": false,
+                    "card-id": "sb16",
+                    "format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 11025,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 11025,
+                      "swap-endianness": false
+                    },
+                    "gain": {
+                      "left": 4294967296,
+                      "mute": false,
+                      "right": 4294967296
+                    },
+                    "hardware-enabled": false,
+                    "hardware-format": {
+                      "bits": 8,
+                      "bytes-per-frame": 1,
+                      "bytes-per-second": 32000,
+                      "channels": 1,
+                      "is-signed": false,
+                      "rate": 32000,
+                      "swap-endianness": false
+                    },
+                    "hardware-pending-disable": false,
+                    "software-volume-applied": true,
+                    "voice-id": "sb16"
+                  }
+                ]
+              }
+            ],
+            "gain-scale": 4294967296,
+            "mono-input": "duplicate-to-left-right",
+            "mono-output": "sum-then-clip",
+            "stereo-output": "clip-left-right"
+          },
+          "native_exit_code": 0,
+          "normal_guest_exit_code": 42,
+          "reaped": true,
+          "wave": {
+            "sha256": "8bde337581e8ae355c5ec326cc5b722dc9bc50dee53c46fe26b51357c53902ed",
+            "size": 4140
+          }
+        }
+      },
+      "dma_request": {
+        "command": "0xc0",
+        "documented_stereo_frames": 2048,
+        "documented_transfer_bytes": 4096,
+        "equal_transfer_extent_or_duration_claim": false,
+        "existing_qemu_single_cycle_stereo_compatibility_multiplier": 2,
+        "length_word": 4095,
+        "mode": "0x20",
+        "requested_samples": 4096,
+        "source_capacity_bytes": 8192,
+        "source_capacity_frames": 4096,
+        "unit": "eight-bit channel samples"
+      },
+      "mode": "S",
+      "receipt": {
+        "sha256": "254946d774f8a1483f2c3d9afa71c6afcef93fdec897cd3a1432417931d3322c",
+        "size": 109791
+      },
+      "source_bytes": 17289,
+      "source_sha256": "c903924f5470d3e9c38a4406c5a3722af1197b52bcad2d2483b34c4c2c46d7db"
+    }
+  ],
+  "date": "2026-11-16",
+  "default_backend": "dosbox-x",
+  "excluded": [
+    "commercial inputs",
+    "audio",
+    "waveforms",
+    "emulator states",
+    "FDB/CAS payloads",
+    "guest memory/register dumps",
+    "private absolute paths"
+  ],
+  "format": "fdisbull-sanitized-mixer-tone-qualification-1",
+  "implementation": {
+    "capability": "mixer_gain_readback",
+    "gain_scale": 4294967296,
+    "json_method": "debug-mixer-observe",
+    "mixer_math_timing_or_gain_law_changed": false,
+    "native_api_version": 1,
+    "native_command": "x-fdisbull-query-mixer",
+    "old_binary_command_optional": true,
+    "python_method": "mixer_observe",
+    "script_operation": "mixer-observe",
+    "source_files_changed_native": 2,
+    "state_layout_or_codec_changed": false
+  },
+  "independent_audits": {
+    "known_PIDs_absent": 11,
+    "native_and_retention": {
+      "sha256": "c13f12379e17e36000477918010aaa1d4205b283b9f8d2470ab27b6f929b26a2",
+      "size": 10231
+    },
+    "owned_groups_empty": 6,
+    "paired_tones": {
+      "sha256": "414110b21e57d0685b1a5dc7724fd6d27779edc5a1eaa9de2cb79aba34630df5",
+      "size": 24955
+    },
+    "runtime": {
+      "sha256": "9f744960914d7bce991592b8af3e0092f93b1360a9626b345223a46ff46c93c1",
+      "size": 21858
+    }
+  },
+  "initial_description_correction": {
+    "DSP_request_channel_samples": 4096,
+    "documented_stereo_frames": 2048,
+    "finding": {
+      "sha256": "f70aa4ac0ffa8551678a9715f11701898839a4006c5c153dd4021918500a83ea",
+      "size": 17088
+    },
+    "guest_COM_bytes_unchanged": true,
+    "initial_and_final_runs_not_counted_twice": true,
+    "initial_phase": {
+      "sha256": "d2adb587bab9de595548db3f27f3e64ac8a271066e015898a72335c31de50977",
+      "size": 720
+    },
+    "primary_reference": "https://pdos.csail.mit.edu/6.1810/2017/readings/hardware/SoundBlaster.pdf#page=109",
+    "source_capacity_frames": 4096,
+    "strict_DOSBox_DMA_progress_added": true
+  },
+  "native_build": {
+    "archive_members_replaced": 9,
+    "changed_header_consumers": 28,
+    "compile_count": 30,
+    "kind": "incremental copy with recorded dependency closure",
+    "plan": {
+      "sha256": "597031a1d5ee867040e6222e3f3c34f10e3b3514e5b406fe19c951637184fe49",
+      "size": 672797
+    },
+    "platform": "macOS arm64",
+    "portable_clean_build_qualified": false,
+    "receipt": {
+      "sha256": "39a4560ec07d11adcdd7614f8907cdbf8db44e63f10dcea4b80774e207edc131",
+      "size": 134560
+    },
+    "source_reconstruction": {
+      "sha256": "a5eb53a2b0159607957f5ce22490bcd30abc7509bfd92e30c20a6281dc400493",
+      "size": 150
+    },
+    "steps": 33,
+    "target": "x86_64-softmmu"
+  },
+  "no_ci": true,
+  "no_release": true,
+  "no_shared_activation": true,
+  "open_gaps": [
+    "QEMU selected capture remains mono U8; DOSBox capture remains stereo S16.",
+    "Existing single-cycle SB16 stereo length multiplier differs from documented/DOSBox request extent; auto-init branch unchanged.",
+    "Readback describes SW gain, not guest SB-register gain application, calibrated amplitude, analog output or perceived loudness.",
+    "DOSBox retained RPC has no passive mixer query; shell MIXER is not used.",
+    "DC/rail behavior,long capture,rolling capture,broader device fidelity and full1:1parity remain open."
+  ],
+  "parity_qualified": false,
+  "preservation": {
+    "authored_OPL_hot_cold_selected_restores_with_exact_mixer": 4,
+    "fresh_native_gates": "Existing SB16/RTC/media/mouse/layer/frame-key/cascade-IRQ/history/trial/selected-undo gates plus OPL hot/cold and initial graph",
+    "initial_graph_restores_and_tone_futures": 2,
+    "new_commercial_Doom_campaign_run": false,
+    "new_mixer_native_state_compared_across_hot_and_separate_process_cold": true,
+    "prior713file_package_and_Doom_DB588objects_retained": true,
+    "prior_paired_Doom_comparison_artifacts_retained": true,
+    "strict_600ms_futures_with_exact_mixer": 4
+  },
+  "qualification": {
+    "distinct_native_cases": 28,
+    "errors": 0,
+    "failures": 0,
+    "host_tests": 2198,
+    "host_warning": "Expected duplicate owned-machine.json in malformed-archive negative test",
+    "native_case_composition": {
+      "combined_opl_checkpoint": 1,
+      "initial_opl_graph": 2,
+      "paired_tones": 2,
+      "preservation": 23
+    },
+    "paired_guest_processes": 4,
+    "phases": {
+      "host-preservation-02": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 2198
+        },
+        "dependencies_unchanged": true,
+        "junit": {
+          "sha256": "4a4e92d7fbfdb1386f593ecd15fe0e243e761f604ade1d4dcff7742c29be1d23",
+          "size": 328331
+        },
+        "owned_groups_empty": true,
+        "payload_unchanged": true,
+        "receipt": {
+          "sha256": "114078c69beaaff527c0b6a048b32811124ffa87fa6d52817853fbdd00de62e1",
+          "size": 3027
+        },
+        "selection": {
+          "sha256": "d08efb2fe57a3378555efd6da19f0fdafb8ed61d0b2f1268767514cd051f0137",
+          "size": 115317
+        },
+        "test_files_unchanged": true
+      },
+      "native-opl-01": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "dependencies_unchanged": true,
+        "junit": {
+          "sha256": "b09662b5441593cdf1895e3c46db89e1715ecba3ace2cc7aff1fb9cade6bd140",
+          "size": 412
+        },
+        "owned_groups_empty": true,
+        "payload_unchanged": true,
+        "receipt": {
+          "sha256": "ac864a0b32b2f50b1c5135ee7ad943111b990785b85acf7f61898550548cede7",
+          "size": 712
+        },
+        "selection": {
+          "sha256": "367b29fcf3e7211af6f5f66fd46c83381023fd007866af550cf1556a75a15031",
+          "size": 113182
+        },
+        "test_files_unchanged": true
+      },
+      "native-opl-initial-01": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 2
+        },
+        "dependencies_unchanged": true,
+        "junit": {
+          "sha256": "2f478cda830c5b0eb5a225e010e5a9f8339739d6b18041fd6fb1d7c05c98b309",
+          "size": 582
+        },
+        "owned_groups_empty": true,
+        "payload_unchanged": true,
+        "receipt": {
+          "sha256": "900eb7a6dd416301369b7c1815f64f363324429d9a6673d2b1f94a24b461e286",
+          "size": 719
+        },
+        "selection": {
+          "sha256": "c04a03670adb9f4b523d087ae3d317223a65e7488f24d6acfcadf646d737f6f8",
+          "size": 113198
+        },
+        "test_files_unchanged": true
+      },
+      "native-paired-02": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 2
+        },
+        "dependencies_unchanged": true,
+        "junit": {
+          "sha256": "dad84447a495b48f83b327825bf7b1de6e0f12e34f7f36ea03d074f365a61ae5",
+          "size": 618
+        },
+        "owned_groups_empty": true,
+        "payload_unchanged": true,
+        "receipt": {
+          "sha256": "40ad78d368733550656acd6260266867c075c82d4a3268858c123e948ca087de",
+          "size": 719
+        },
+        "selection": {
+          "sha256": "298b77d847e731ba90306b894836835d9fd866de46555ba76f98ad69fb80ddf0",
+          "size": 113193
+        },
+        "test_files_unchanged": true
+      },
+      "native-preservation-01": {
+        "counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 23
+        },
+        "dependencies_unchanged": true,
+        "junit": {
+          "sha256": "73e438a476e3c48a6410aa658c672b3bf4d9fba0c9e1ff7d7585e7422cf0ef90",
+          "size": 3888
+        },
+        "owned_groups_empty": true,
+        "payload_unchanged": true,
+        "receipt": {
+          "sha256": "481e8439fed39672d1f76a4c9241fdfdb959fef4a81e7c06a88c39690af34be4",
+          "size": 1453
+        },
+        "selection": {
+          "sha256": "bd2d1638fe4e034a23ff537f01d84aaf754ddd9f0c828f0f6ad9c4091dc2bcc7",
+          "size": 113931
+        },
+        "test_files_unchanged": true
+      }
+    },
+    "skips": 0
+  },
+  "runtime": {
+    "dosbox_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "new_qemu_sha256": "055b58eb5d7625ca836c097f8b0683751b63ea84ee32e727c024ac9c12243455",
+    "package": {
+      "sha256": "017068724f09bc318cffee730cbb187e0679198329a2bcb8888f64d4b0fb3a95",
+      "size": 78630
+    },
+    "payload_files": 714,
+    "retained_parent_qemu_sha256": "01773e0f8e4976db24449442e9e79f6f0042f9a1c21529a13b35dc8856991924",
+    "test_correction_commit": "9500b0b529fb5cc0087bc28170cdc6e8c42e020b",
+    "tool_commit": "641a90e794edc2d22e974501ef765367d0822843",
+    "wheel_sha256": "779ddbd677b8f47682a1644d1c7121c8aca369b60dcae0a6e9f7e08395d6736d"
+  },
+  "status": "local-bounded-readback-and-paired-tones-qualified"
+}

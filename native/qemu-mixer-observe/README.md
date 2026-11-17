@@ -4,7 +4,8 @@ This incremental QEMU 10.0.13 patch extends the exact
 [OPL checkpoint parent](../qemu-opl-checkpoint/README.md). The adjacent
 [source manifest](source-manifest.json) pins the prerequisite and both
 before/after source identities. A separate macOS arm64 incremental build passes 30 serial compilations and
-the retained archive/link/sign recipe; runtime qualification is pending. Keep earlier native runtimes for their own producer-bound states.
+the retained archive/link/sign recipe. The [local qualification](../../docs/evidence/qemu-mixer-tones-2026-11-16/README.md)
+records the exact candidate and bounded preservation/tone gates. Keep earlier native runtimes for their own producer-bound states.
 
 `x-fdisbull-query-mixer` observes the current stopped output graph under BQL.
 It reports actual audiodev IDs, registered card names, software voice names,

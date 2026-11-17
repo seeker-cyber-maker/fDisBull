@@ -49,7 +49,7 @@
   },
   "feature": "Passive stopped mixer gain and PCM-format readback",
   "format": "fdisbull-qemu-native-source-manifest-1",
-  "implementation_status": "Source and isolated incremental native build ready; runtime qualification pending",
+  "implementation_status": "Locally qualified passive mixer readback and paired tone slice",
   "patch": {
     "file": "qemu-10.0.13-fdisbull-mixer-observe-v1.patch",
     "files": [
@@ -69,7 +69,8 @@
   },
   "verification": {
     "default_build_plan": "Read-only command metadata and alias remapping verified; generation/native compile remain root-owned.",
-    "native_runtime_status": "pending",
+    "evidence": "docs/evidence/qemu-mixer-tones-2026-11-16",
+    "native_runtime_status": "28 distinct native cases pass; paired single-cycle transfer extent remains unqualified",
     "scope": "Readback only; no mixer parity fix, gain-law change, snapshot portability, audio fidelity or general DOSBox-X parity claim.",
     "source_review": "Independent read-only review found no concrete mutation/identity/bounds blocker on exact source hashes."
   }
