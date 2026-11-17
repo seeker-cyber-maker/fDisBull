@@ -16,6 +16,7 @@ import pytest
 from fdisbull.project import Project
 from support.dos_process_fixture import BASELINE_CONFIG, digest, prepare_dos_baseline
 from support.qemu_opl_fixture import note_frequency, opl_program
+from support.qemu_mixer_assertions import mixer_snapshot
 from test_qemu_clock_budget_native import budget_receipt, park
 from test_qemu_dos_process_native import com_address
 from test_qemu_opl_native import _launch, _opl, _pitch, _quit, _runtime, _sb, _symbols
@@ -32,12 +33,12 @@ def _snapshot(project, debug, label):
         audio_state=audio['state'], capture_enabled=audio['native']['enabled'],
         frames=audio['frames'], dropped_frames=audio['dropped_frames'],
         pcm_hex=pcm, audio_artifact=artifact, window=audio.get('window'),
-        chunks=chunks, clock=debug.clock_observe())
+        chunks=chunks, clock=debug.clock_observe(), mixer=mixer_snapshot(debug))
 
 
 def _assert_exact(actual, expected):
     for key in ('cpu', 'opl', 'sb', 'audio_state', 'capture_enabled', 'frames',
-                'dropped_frames', 'pcm_hex', 'chunks'):
+                'dropped_frames', 'pcm_hex', 'chunks', 'mixer'):
         assert actual[key] == expected[key], key
     assert actual['clock']['virtual_ns'] == expected['clock']['virtual_ns']
     assert actual['clock']['counter']['value'] == expected['clock']['counter']['value']

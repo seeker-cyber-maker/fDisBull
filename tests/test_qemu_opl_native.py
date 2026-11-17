@@ -25,6 +25,7 @@ from fdisbull.project import Project
 from support.dos_process_fixture import BASELINE_CONFIG, digest, prepare_dos_baseline
 from support.qemu_opl_fixture import OPL_BLOCK, PENDING_ADDRESS, note_frequency, opl_program
 from support.qemu_sb16_ring_fixture import BLOCK_BYTES, BLOCKS, RING_BYTES, block_pcm, ring_pcm
+from support.qemu_mixer_assertions import mixer_snapshot
 from test_qemu_clock_budget_native import budget_receipt, park
 from test_qemu_dos_process_native import assert_completion, com_address, read_bytes
 from test_qemu_sb16_native import _pcm
@@ -141,7 +142,7 @@ def _sample(project, debug, offsets, label):
         irq_count=number('irq_count', 4), produced_bytes=number('produced_bytes', 4),
         buffer_physical=physical, opl=opl, sb=_sb(debug), clock=debug.clock_observe(),
         pcm_hex=pcm.hex(), pcm_sha256=hashlib.sha256(pcm).hexdigest(),
-        audio_artifact=artifact, chunks=chunks)
+        audio_artifact=artifact, chunks=chunks, mixer=mixer_snapshot(debug))
 
 
 def _assert_exact(actual, expected):
@@ -149,7 +150,7 @@ def _assert_exact(actual, expected):
                 'timer1_status', 'timer2_status', 'timer_reset_status', 'resume_status',
                 'resume_reset_status', 'ring_hex', 'generations', 'refill_active',
                 'irq_count', 'produced_bytes', 'buffer_physical', 'opl', 'sb',
-                'pcm_hex', 'pcm_sha256', 'chunks'):
+                'pcm_hex', 'pcm_sha256', 'chunks', 'mixer'):
         assert actual[key] == expected[key], key
     assert actual['clock']['virtual_ns'] == expected['clock']['virtual_ns']
     assert actual['clock']['counter']['value'] == expected['clock']['counter']['value']

@@ -638,3 +638,34 @@ virtual time/instruction count, OPL/SB16 query, image and PCM/chunk equality.
 [Qualification](evidence/qemu-opl-checkpoint-2026-11-16/README.md). AdLib's inherited
 next-port-access timer expiration is preserved, not evidence of hardware timer
 accuracy. General replay and full DOSBox-X timing parity remain open.
+
+## Passive mixer gain readback
+
+`debug.mixer_observe()` (JSON `debug-mixer-observe`, saved-script
+`mixer-observe`) requires the optional native `x-fdisbull-query-mixer` API 1,
+an explicit audio profile and the virtual clock. Inspect capability
+`mixer_gain_readback` first. Older native binaries retain their existing audio
+operations and report this new capability unavailable.
+
+Readback requires a stopped project outside a caller-owned transaction. One
+machine lock/deadline covers observation and persistence. The receipt brackets
+the query with unchanged virtual time/instruction count and retains the exact
+native graph: actual audiodev/card/voice identities, source and hardware PCM
+formats, active/draining flags, mute and left/right software gains. Gains are
+exact integers divided by `gain-scale=4294967296`; mute remains separate.
+An initially inactive card may have no voice. Capture descriptors appear only
+when a tap exists. Missing identities are not replaced with invented controls.
+
+`software-volume-applied` distinguishes a scalar applied by mixeng from a
+backend volume callback. There is no synthetic master control or inference
+that guest SB mixer registers affect these scalars. Readback neither writes
+volume, activates a voice, flushes samples nor runs the guest. It is read-only
+for ordinary/protected DOS histories and selected CPU/RAM undo guards.
+
+The receipt describes the existing integer conversion: mono input duplicates
+into left/right accumulators, mono output sums then clips, stereo output clips
+each channel. Observation changes none of those laws, rates or sample formats.
+Software gain is not calibrated physical output or perceived loudness. Reject
+malformed, ambiguous, oversized or changing native evidence instead of treating
+it as a successful observation. Exact native binary compatibility still fences
+checkpoint loading; earlier accepted binaries and their states remain retained.

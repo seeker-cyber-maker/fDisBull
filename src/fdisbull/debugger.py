@@ -1429,6 +1429,7 @@ class DebugWorkspace:
         methods.update({'debug-clock-observe':'clock_observe','debug-clock-advance':'clock_advance',
                         'debug-capture-surface':'capture_surface',
                         'debug-audio-start':'audio_start','debug-audio-observe':'audio_observe',
+                        'debug-mixer-observe':'mixer_observe',
                         'debug-audio-stop':'audio_stop','debug-capture-audio':'capture_audio',
                         'debug-display-start':'display_start','debug-display-observe':'display_observe',
                         'debug-display-stop':'display_stop','debug-capture-display':'capture_display',

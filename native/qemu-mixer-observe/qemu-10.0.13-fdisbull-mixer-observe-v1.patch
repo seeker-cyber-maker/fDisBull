@@ -1,0 +1,414 @@
+--- a/audio/audio.c
++++ b/audio/audio.c
+@@ -32,6 +32,7 @@
+ #include "qapi/qobject-input-visitor.h"
+ #include "qapi/qapi-visit-audio.h"
+ #include "qapi/qapi-commands-audio.h"
++#include "qapi/qapi-commands-fdisbull-audio.h"
+ #include "qobject/qdict.h"
+ #include "qemu/cutils.h"
+ #include "qemu/error-report.h"
+@@ -3679,6 +3680,255 @@
+     return bytes;
+ }
+ 
++#ifndef FLOAT_MIXENG
++/* Readback only: identities come from the live graph, never host pointers. */
++#define FDISBULL_MIXER_DEVS 8
++#define FDISBULL_MIXER_ITEMS 32
++#define FDISBULL_MIXER_NAME 128
++
++static bool fdisbull_mixer_name(const char *name)
++{
++    size_t len = name ? strnlen(name, FDISBULL_MIXER_NAME + 1) : 0;
++    return len && len <= FDISBULL_MIXER_NAME && g_utf8_validate(name, len, NULL);
++}
++
++static bool fdisbull_mixer_format_valid(const struct audio_pcm_info *info)
++{
++    return !info->is_float && info->freq >= 1 && info->freq <= 192000 &&
++        (info->is_signed == 0 || info->is_signed == 1) &&
++        (info->nchannels == 1 || info->nchannels == 2) &&
++        (info->bits == 8 || info->bits == 16 || info->bits == 32) &&
++        (info->swap_endianness == 0 || info->swap_endianness == 1) &&
++        info->bytes_per_frame == info->nchannels * (info->bits / 8) &&
++        info->bytes_per_second == info->freq * info->bytes_per_frame;
++}
++
++static FdisbullMixerFormat *fdisbull_mixer_format(const struct audio_pcm_info *info)
++{
++    FdisbullMixerFormat *result = g_new0(FdisbullMixerFormat, 1);
++    result->rate = info->freq;
++    result->channels = info->nchannels;
++    result->bits = info->bits;
++    result->is_signed = info->is_signed;
++    result->swap_endianness = info->swap_endianness;
++    result->bytes_per_frame = info->bytes_per_frame;
++    result->bytes_per_second = info->bytes_per_second;
++    return result;
++}
++
++static int fdisbull_mixer_dev_compare(const void *a, const void *b)
++{
++    const AudioState *x = *(AudioState * const *)a;
++    const AudioState *y = *(AudioState * const *)b;
++    return strcmp(x->dev->id, y->dev->id);
++}
++
++static int fdisbull_mixer_card_compare(const void *a, const void *b)
++{
++    const QEMUSoundCard *x = *(QEMUSoundCard * const *)a;
++    const QEMUSoundCard *y = *(QEMUSoundCard * const *)b;
++    return strcmp(x->name, y->name);
++}
++
++static int fdisbull_mixer_voice_compare(const void *a, const void *b)
++{
++    const SWVoiceOut *x = *(SWVoiceOut * const *)a;
++    const SWVoiceOut *y = *(SWVoiceOut * const *)b;
++    int order = strcmp(x->card->name, y->card->name);
++    return order ? order : strcmp(x->name, y->name);
++}
++
++static int fdisbull_mixer_capture_compare(const void *a, const void *b)
++{
++    const CaptureVoiceOut *x = *(CaptureVoiceOut * const *)a;
++    const CaptureVoiceOut *y = *(CaptureVoiceOut * const *)b;
++    const struct audio_pcm_info *p = &x->hw.info, *q = &y->hw.info;
++#define MIXER_CMP(field) do { if (p->field != q->field) { \
++    return p->field < q->field ? -1 : 1; } } while (0)
++    MIXER_CMP(freq);
++    MIXER_CMP(nchannels);
++    MIXER_CMP(bits);
++    MIXER_CMP(is_signed);
++    MIXER_CMP(swap_endianness);
++#undef MIXER_CMP
++    return 0;
++}
++
++static bool fdisbull_mixer_card_present(QEMUSoundCard **cards, unsigned count,
++                                        QEMUSoundCard *card)
++{
++    unsigned i;
++    for (i = 0; i < count; i++) {
++        if (cards[i] == card) {
++            return true;
++        }
++    }
++    return false;
++}
++#endif
++
++FdisbullMixerInfo *qmp_x_fdisbull_query_mixer(Error **errp)
++{
++    assert(bql_locked());
++#ifdef FLOAT_MIXENG
++    error_setg(errp, "Mixer readback requires the integer mixer ABI");
++    return NULL;
++#else
++    g_autoptr(FdisbullMixerInfo) result = NULL;
++    AudioState *states[FDISBULL_MIXER_DEVS], *s;
++    unsigned nstates = 0, total_cards = 0, total_voices = 0;
++    unsigned total_captures = 0, total_hw = 0, i;
++    FdisbullMixerAudiodevList **dev_tail;
++
++    if (runstate_is_running() || nominal_volume.l != (1ULL << 32) ||
++        nominal_volume.r != (1ULL << 32)) {
++        error_setg(errp, "Mixer readback requires a stopped integer mixer");
++        return NULL;
++    }
++    QTAILQ_FOREACH(s, &audio_states, list) {
++        if (nstates == FDISBULL_MIXER_DEVS || s->vm_running ||
++            !s->dev || !s->drv || !fdisbull_mixer_name(s->dev->id) ||
++            !fdisbull_mixer_name(s->drv->name)) {
++            error_setg(errp, "Mixer audiodev identity, state or count is invalid");
++            return NULL;
++        }
++        states[nstates++] = s;
++    }
++    qsort(states, nstates, sizeof(states[0]), fdisbull_mixer_dev_compare);
++    for (i = 1; i < nstates; i++) {
++        if (!fdisbull_mixer_dev_compare(&states[i - 1], &states[i])) {
++            error_setg(errp, "Mixer audiodev identities are ambiguous");
++            return NULL;
++        }
++    }
++    result = g_new0(FdisbullMixerInfo, 1);
++    result->api_version = 1;
++    result->gain_scale = 1ULL << 32;
++    result->mono_input = g_strdup("duplicate-to-left-right");
++    result->mono_output = g_strdup("sum-then-clip");
++    result->stereo_output = g_strdup("clip-left-right");
++    dev_tail = &result->audiodevs;
++    for (i = 0; i < nstates; i++) {
++        QEMUSoundCard *cards[FDISBULL_MIXER_ITEMS], *card;
++        SWVoiceOut *voices[FDISBULL_MIXER_ITEMS], *sw;
++        CaptureVoiceOut *captures[FDISBULL_MIXER_ITEMS], *cap;
++        HWVoiceOut *hw;
++        unsigned ncards = 0, nvoices = 0, ncaptures = 0, j;
++        FdisbullMixerAudiodev *dev;
++        FdisbullMixerVoiceList **voice_tail;
++        FdisbullMixerCaptureList **capture_tail;
++        strList **card_tail;
++        AudiodevPerDirectionOptions *pdo;
++
++        s = states[i];
++        pdo = audio_get_pdo_out(s->dev);
++        if (!pdo) {
++            error_setg(errp, "Mixer audiodev has no output configuration");
++            return NULL;
++        }
++        QLIST_FOREACH(card, &s->card_head, entries) {
++            if (total_cards == FDISBULL_MIXER_ITEMS || card->state != s ||
++                !fdisbull_mixer_name(card->name)) {
++                error_setg(errp, "Mixer card identity or count is invalid");
++                return NULL;
++            }
++            cards[ncards++] = card;
++            total_cards++;
++        }
++        qsort(cards, ncards, sizeof(cards[0]), fdisbull_mixer_card_compare);
++        for (j = 1; j < ncards; j++) {
++            if (!fdisbull_mixer_card_compare(&cards[j - 1], &cards[j])) {
++                error_setg(errp, "Mixer card identities are ambiguous");
++                return NULL;
++            }
++        }
++        QLIST_FOREACH(hw, &s->hw_head_out, entries) {
++            if (total_hw++ == FDISBULL_MIXER_ITEMS || hw->s != s ||
++                !hw->pcm_ops || !fdisbull_mixer_format_valid(&hw->info) ||
++                hw->enabled < 0 || hw->enabled > 1 ||
++                hw->pending_disable < 0 || hw->pending_disable > 1) {
++                error_setg(errp, "Mixer HW format, state or count is invalid");
++                return NULL;
++            }
++            QLIST_FOREACH(sw, &hw->sw_head, entries) {
++                if (total_voices == FDISBULL_MIXER_ITEMS || sw->s != s ||
++                    sw->hw != hw || !fdisbull_mixer_card_present(cards, ncards, sw->card) ||
++                    !fdisbull_mixer_name(sw->name) ||
++                    !fdisbull_mixer_format_valid(&sw->info) ||
++                    sw->active < 0 || sw->active > 1 ||
++                    sw->vol.mute < 0 || sw->vol.mute > 1 ||
++                    sw->vol.l < 0 || sw->vol.r < 0 ||
++                    sw->vol.l > nominal_volume.l || sw->vol.r > nominal_volume.r) {
++                    error_setg(errp, "Mixer software voice identity, format, gain or count is invalid");
++                    return NULL;
++                }
++                voices[nvoices++] = sw;
++                total_voices++;
++            }
++        }
++        qsort(voices, nvoices, sizeof(voices[0]), fdisbull_mixer_voice_compare);
++        for (j = 1; j < nvoices; j++) {
++            if (!fdisbull_mixer_voice_compare(&voices[j - 1], &voices[j])) {
++                error_setg(errp, "Mixer software voice identities are ambiguous");
++                return NULL;
++            }
++        }
++        QLIST_FOREACH(cap, &s->cap_head, entries) {
++            if (total_captures == FDISBULL_MIXER_ITEMS || cap->hw.s != s ||
++                !fdisbull_mixer_format_valid(&cap->hw.info) ||
++                cap->hw.enabled < 0 || cap->hw.enabled > 1) {
++                error_setg(errp, "Mixer capture format, state or count is invalid");
++                return NULL;
++            }
++            captures[ncaptures++] = cap;
++            total_captures++;
++        }
++        qsort(captures, ncaptures, sizeof(captures[0]), fdisbull_mixer_capture_compare);
++        for (j = 1; j < ncaptures; j++) {
++            if (!fdisbull_mixer_capture_compare(&captures[j - 1], &captures[j])) {
++                error_setg(errp, "Mixer capture format identities are ambiguous");
++                return NULL;
++            }
++        }
++        dev = g_new0(FdisbullMixerAudiodev, 1);
++        QAPI_LIST_APPEND(dev_tail, dev);
++        dev->audiodev_id = g_strdup(s->dev->id);
++        dev->driver = g_strdup(s->drv->name);
++        dev->mixing_engine = pdo->mixing_engine;
++        card_tail = &dev->cards;
++        for (j = 0; j < ncards; j++) {
++            QAPI_LIST_APPEND(card_tail, g_strdup(cards[j]->name));
++        }
++        voice_tail = &dev->voices;
++        for (j = 0; j < nvoices; j++) {
++            FdisbullMixerVoice *voice = g_new0(FdisbullMixerVoice, 1);
++            sw = voices[j]; hw = sw->hw;
++            voice->card_id = g_strdup(sw->card->name);
++            voice->voice_id = g_strdup(sw->name);
++            voice->active = sw->active;
++            voice->gain = g_new0(FdisbullMixerGain, 1);
++            voice->gain->mute = sw->vol.mute;
++            voice->gain->left = sw->vol.l;
++            voice->gain->right = sw->vol.r;
++            voice->software_volume_applied = pdo->mixing_engine && !hw->pcm_ops->volume_out;
++            voice->format = fdisbull_mixer_format(&sw->info);
++            voice->hardware_format = fdisbull_mixer_format(&hw->info);
++            voice->hardware_enabled = hw->enabled;
++            voice->hardware_pending_disable = hw->pending_disable;
++            QAPI_LIST_APPEND(voice_tail, voice);
++        }
++        capture_tail = &dev->captures;
++        for (j = 0; j < ncaptures; j++) {
++            FdisbullMixerCapture *capture = g_new0(FdisbullMixerCapture, 1);
++            capture->format = fdisbull_mixer_format(&captures[j]->hw.info);
++            capture->enabled = captures[j]->hw.enabled;
++            QAPI_LIST_APPEND(capture_tail, capture);
++        }
++    }
++    return g_steal_pointer(&result);
++#endif
++}
++
+ AudiodevList *qmp_query_audiodevs(Error **errp)
+ {
+     AudiodevList *ret = NULL;
+--- a/qapi/fdisbull-audio.json
++++ b/qapi/fdisbull-audio.json
+@@ -96,3 +96,145 @@
+ { 'command': 'x-fdisbull-export-audio',
+   'data': { 'token': 'str', 'filename': 'str' },
+   'returns': 'FdisbullAudioInfo' }
++
++# Passive mixer observation; independent of capture-window ownership.
++
++##
++# @FdisbullMixerAudiodev:
++#
++# One actual initialized audiodev, with sorted current card/voice identities.
++#
++# @audiodev-id: Actual initialized audiodev ID.
++# @captures: Sorted existing capture descriptors; empty before capture registration.
++# @cards: Sorted existing registered card names.
++# @driver: Actual initialized backend driver name.
++# @mixing-engine: Actual audiodev output mixing-engine setting.
++# @voices: Sorted existing voices; an initially silent card may have none.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullMixerAudiodev',
++  'data': { 'audiodev-id': 'str',
++            'captures': ['FdisbullMixerCapture'],
++            'cards': ['str'],
++            'driver': 'str',
++            'mixing-engine': 'bool',
++            'voices': ['FdisbullMixerVoice'] } }
++
++##
++# @FdisbullMixerCapture:
++#
++# One existing observer tap; absent taps produce no fabricated descriptor.
++#
++# @enabled: Actual observer tap enabled flag.
++# @format: Actual software voice or tap PCM geometry.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullMixerCapture',
++  'data': { 'enabled': 'bool',
++            'format': 'FdisbullMixerFormat' } }
++
++##
++# @FdisbullMixerFormat:
++#
++# Actual integer PCM geometry; no sample conversion is performed by observation.
++#
++# @bits: Integer PCM sample bits, 8, 16 or 32.
++# @bytes-per-frame: Channels times bytes per sample.
++# @bytes-per-second: Rate times bytes per frame.
++# @channels: PCM channel count, one or two.
++# @is-signed: Whether integer PCM samples are signed.
++# @rate: PCM frames per second.
++# @swap-endianness: Whether samples use the non-native byte order.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullMixerFormat',
++  'data': { 'bits': 'int',
++            'bytes-per-frame': 'int',
++            'bytes-per-second': 'int',
++            'channels': 'int',
++            'is-signed': 'bool',
++            'rate': 'int',
++            'swap-endianness': 'bool' } }
++
++##
++# @FdisbullMixerGain:
++#
++# Actual software voice gain scalars; no guest mixer-register law is inferred.
++#
++# @left: Raw left software gain, 0 through gain-scale.
++# @mute: Actual software mute scalar.
++# @right: Raw right software gain, 0 through gain-scale.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullMixerGain',
++  'data': { 'left': 'uint64',
++            'mute': 'bool',
++            'right': 'uint64' } }
++
++##
++# @FdisbullMixerInfo:
++#
++# Bounded stopped mixer readback. There is no synthetic master gain.
++#
++# @api-version: Readback protocol version, one.
++# @audiodevs: Sorted actual audiodevs; at most eight.
++# @gain-scale: Integer gain denominator, 4294967296 for unity.
++# @mono-input: Existing channel law, duplicate-to-left-right.
++# @mono-output: Existing channel law, sum-then-clip.
++# @stereo-output: Existing channel law, clip-left-right.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullMixerInfo',
++  'data': { 'api-version': 'int',
++            'audiodevs': ['FdisbullMixerAudiodev'],
++            'gain-scale': 'uint64',
++            'mono-input': 'str',
++            'mono-output': 'str',
++            'stereo-output': 'str' } }
++
++##
++# @FdisbullMixerVoice:
++#
++# One existing guest output software voice with its actual card/name identity.
++#
++# @active: Actual current software voice active flag.
++# @card-id: Actual registered card name, unique within the audiodev.
++# @format: Actual software voice or tap PCM geometry.
++# @gain: Actual SWVoiceOut volume state.
++# @hardware-enabled: Actual output HW enabled flag.
++# @hardware-format: Actual associated output HW PCM geometry.
++# @hardware-pending-disable: Actual output HW draining/pending-disable flag.
++# @software-volume-applied: True only for mixeng with no backend volume callback.
++# @voice-id: Actual software voice name, unique within its card.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullMixerVoice',
++  'data': { 'active': 'bool',
++            'card-id': 'str',
++            'format': 'FdisbullMixerFormat',
++            'gain': 'FdisbullMixerGain',
++            'hardware-enabled': 'bool',
++            'hardware-format': 'FdisbullMixerFormat',
++            'hardware-pending-disable': 'bool',
++            'software-volume-applied': 'bool',
++            'voice-id': 'str' } }
++
++##
++# @x-fdisbull-query-mixer:
++#
++# Observe existing integer mixer gains and PCM formats under BQL while stopped.
++# Refuses running, ambiguous, malformed or oversized graphs. Does not flush,
++# activate voices, execute guest code, write gains, or alter timers. Limits are
++# eight audiodevs and 32 total cards, voices and capture taps; names are 128 bytes.
++#
++# Returns: Actual current output graph, with no synthetic master gain.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-mixer', 'returns': 'FdisbullMixerInfo' }

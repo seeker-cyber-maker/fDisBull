@@ -35,6 +35,7 @@ from .qemu_layers import LAYER_COMMANDS, QemuLayerSessionMixin
 from .qemu_hooks import QemuHookSessionMixin
 from .qemu_surface import QemuSurfaceMixin
 from .qemu_audio import QemuAudioMixin, machine_audio_configuration, machine_audio_arguments, admit_audio
+from .qemu_mixer import QemuMixerMixin, MIXER_COMMAND
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
                            validate_display_probe_parameters)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
@@ -629,7 +630,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
 
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
-                     QemuSurfaceMixin, QemuAudioMixin, QemuDisplayMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -644,6 +645,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     capture_surface=machine_io_operation(QemuSurfaceMixin.capture_surface)
     audio_start=machine_io_operation(QemuAudioMixin.audio_start,close_on_timeout=True)
     audio_observe=machine_io_operation(QemuAudioMixin.audio_observe)
+    mixer_observe=machine_io_operation(QemuMixerMixin.mixer_observe)
     audio_stop=machine_io_operation(QemuAudioMixin.audio_stop,close_on_timeout=True)
     capture_audio=machine_io_operation(QemuAudioMixin.capture_audio)
     display_start=machine_io_operation(QemuDisplayMixin.display_start,close_on_timeout=True)
@@ -696,6 +698,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl'),
+            mixer_gain_readback=(virtual and MIXER_COMMAND in getattr(vm,'qmp_commands',())
+                and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl')),
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
             renderer_probe=(virtual and DISPLAY_COMMANDS | DISPLAY_PROBE_COMMANDS | VIRTUAL_CLOCK_COMMANDS
                             <= getattr(vm,'qmp_commands',frozenset())),
@@ -1704,7 +1708,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         return {'step','run','wait','registers','memory','memory-translation','qemm-observe','desqview-observe',
                 'memory-snapshot','memory-apply','memory-rule-tick','memory-rule-run','breakpoint','delete-breakpoint','trace','screenshot',
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
-                'audio-start','audio-observe','audio-stop','capture-audio',
+                'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',

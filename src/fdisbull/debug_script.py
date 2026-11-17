@@ -35,6 +35,7 @@ OPERATIONS = {
     'input-schedule-retrace':'input_schedule_retrace',
     'clock-observe':'clock_observe','clock-advance':'clock_advance','capture-surface':'capture_surface',
     'audio-start':'audio_start','audio-observe':'audio_observe','audio-stop':'audio_stop','capture-audio':'capture_audio',
+    'mixer-observe':'mixer_observe',
     'display-start':'display_start','display-observe':'display_observe','display-stop':'display_stop','capture-display':'capture_display',
     'display-probe':'display_probe',
     'vga-configuration':'vga_configuration_observe',
@@ -452,6 +453,9 @@ def validate_script(script, *, session=None):
                                  if key in ('edge','timeout_ms')
                                  and not (isinstance(value,str) and value.startswith('$'))}
                         validate_retrace_input_parameters(**literal)
+                    if op=='mixer-observe':
+                        if session is not None and not getattr(session,'capabilities',{}).get('mixer_gain_readback'):
+                            raise ValueError('Mixer gain readback requires the optional native mixer extension and audio profile')
                     if op in ('audio-start','audio-observe','audio-stop','capture-audio'):
                         if session is not None and not getattr(session,'capabilities',{}).get('audio_capture'):
                             raise ValueError('Audio operations require an explicit QEMU audio profile')
@@ -569,7 +573,7 @@ def validate_script(script, *, session=None):
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
                  'clock-observe','clock-advance','wait','memory-rule-run','capture-surface','screenshot',
-                 'audio-start','audio-observe','audio-stop','capture-audio',
+                 'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                  'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
         project=getattr(session,'project',None)

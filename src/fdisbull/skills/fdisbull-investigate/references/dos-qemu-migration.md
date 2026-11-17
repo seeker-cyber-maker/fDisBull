@@ -1106,3 +1106,20 @@ noise is repeatable, not a claim of chip-accurate noise. Existing `sb16`,
 PC-speaker and off profiles retain their descriptors. DOSBox-X stays default.
 Exact-binary local qualification is recorded separately in the migration evidence;
 none of these options proves general replay or replacement parity.
+
+## Passive mixer gains
+
+When `capabilities['mixer_gain_readback']` is true, use `mixer_observe()` or
+JSON `debug-mixer-observe` / script `mixer-observe` while stopped. This optional
+native query works without starting a capture window. It retains actual card
+and voice identities, mute, exact Q32 left/right software gains and PCM formats
+inside unchanged clock brackets. Divide raw gains by native `gain-scale` to
+read their software multiplier. Do not invent a master setting or infer that
+SB mixer-register writes have been applied. Missing/inactive voices remain
+explicit, and a backend-volume callback is distinguished from software mixing.
+
+Observation never runs, flushes, changes gain or changes channel conversion.
+It preserves history and selected-undo read-only guards. Older native binaries
+keep their existing capabilities and refuse only this unavailable operation.
+DOSBox-X's retained RPC has no equivalent passive mixer readback; running its
+shell `MIXER` command updates volume state and must not be labeled passive.
