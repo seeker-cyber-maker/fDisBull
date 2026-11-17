@@ -27,7 +27,8 @@ from fdisbull.dosbox_rpc import DOSBoxRPC
 from fdisbull.project import Project
 from support.dos_process_fixture import BASELINE_CONFIG, digest, prepare_dos_baseline
 from support.qemu_paired_tone_fixture import (
-    SOURCE_BYTES, SOURCE_FRAMES, SOURCE_RATE, expected_frequencies,
+    DSP_REQUEST_SAMPLES, REQUESTED_STEREO_FRAMES, SOURCE_BYTES, SOURCE_FRAMES,
+    SOURCE_RATE, expected_frequencies,
     paired_tone, parse_report, source_stereo,
 )
 from test_qemu_clock_budget_native import park
@@ -150,7 +151,7 @@ def _report_checks(report, mode, phase):
     assert report['mode'] == ord(mode) and report['phase'] == phase and report['failure'] == 0
     if mode == 'S':
         assert (report['reset_byte'], report['major'], report['minor']) == (0xaa, 4, 5)
-        assert (report['source_rate'], report['source_frames']) == (SOURCE_RATE, SOURCE_FRAMES)
+        assert (report['source_rate'], report['source_capacity_frames']) == (SOURCE_RATE, SOURCE_FRAMES)
         assert report['buffer_physical'] % SOURCE_BYTES == 0
         assert report['buffer_physical'] & 0xffff <= 0xe000
         assert report['irq_count'] == (1 if phase == 3 else 0)
@@ -267,6 +268,13 @@ def _dosbox(directory, source, code, offsets, mode, runtime, result):
         result['tone_done_stop'] = run_to('tone_done')
         result['done'] = parse_report(read(cs * 16 + offsets['report'], offsets['report_size']))
         _report_checks(result['done'], mode, 3)
+        if mode == 'S':
+            initial_address = result['ready']['buffer_physical'] & 0xffff
+            assert result['done']['dma_address'] == (initial_address + DSP_REQUEST_SAMPLES) & 0xffff
+            assert result['done']['dma_count'] == SOURCE_BYTES - DSP_REQUEST_SAMPLES - 1
+            result['documented_dma_progress'] = dict(initial_address=initial_address,
+                completed_bytes=DSP_REQUEST_SAMPLES, remaining_bytes=SOURCE_BYTES - DSP_REQUEST_SAMPLES,
+                final_address=result['done']['dma_address'], final_count=result['done']['dma_count'])
         assert read(0x3c, 4) == original_vector
         result['irq_vector_restored'] = True
         result['exit'] = continue_once()
@@ -309,6 +317,13 @@ def test_native_same_authored_tone_program_has_paired_guest_completion_and_indep
     result = dict(format='fdisbull-paired-authored-tone-native-1', success=False, mode=mode,
         source_sha256=hashlib.sha256(code).hexdigest(), source_bytes=len(code), offsets=offsets,
         expected_frequencies=expected_frequencies(), backends={}, no_guest_memory_or_register_writes=True,
+        dma_request=(dict(command='0xc0', mode='0x20', length_word=DSP_REQUEST_SAMPLES - 1,
+            unit='eight-bit channel samples', requested_samples=DSP_REQUEST_SAMPLES,
+            documented_transfer_bytes=DSP_REQUEST_SAMPLES,
+            documented_stereo_frames=REQUESTED_STEREO_FRAMES,
+            source_capacity_frames=SOURCE_FRAMES, source_capacity_bytes=SOURCE_BYTES,
+            existing_qemu_single_cycle_stereo_compatibility_multiplier=2,
+            equal_transfer_extent_or_duration_claim=False) if mode == 'S' else None),
         single_continuous_tone_run_per_backend=True, capture_restart=False,
         no_cross_engine_cpu_timing_pcm_or_gain_equality_claim=True)
     try:

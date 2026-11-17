@@ -8,7 +8,10 @@ from support.dos_process_fixture import assemble
 
 
 SOURCE_RATE = 32000
+# Source buffer capacity; this is not the DSP command's scalar-sample count.
 SOURCE_FRAMES = 4096
+DSP_REQUEST_SAMPLES = 4096
+REQUESTED_STEREO_FRAMES = DSP_REQUEST_SAMPLES // 2
 SOURCE_BYTES = SOURCE_FRAMES * 2
 LEFT_PERIOD, RIGHT_PERIOD = 64, 40
 LEFT_AMPLITUDE, RIGHT_AMPLITUDE = 32, 12
@@ -34,7 +37,7 @@ def expected_frequencies():
 REPORT_FIELDS = (
     ('mode', 1), ('phase', 1), ('reset_byte', 1), ('major', 1), ('minor', 1),
     ('old_mask', 1), ('restored_mask', 1), ('irq_count', 2), ('source_rate', 2),
-    ('source_frames', 2), ('buffer_physical', 4), ('dma_address', 2),
+    ('source_capacity_frames', 2), ('buffer_physical', 4), ('dma_address', 2),
     ('dma_count', 2), ('start_ticks', 4), ('sound_end_ticks', 4),
     ('done_ticks', 4), ('failure', 2),
 )
@@ -58,6 +61,10 @@ def paired_tone(directory, nasm):
     guest completion, a two-BIOS-tick tail, and restoration of the IRQ7 vector
     and mask. Controllers place native breakpoints only at those boundaries.
     No debugger/host writes are used. IRQ0 and the PIT configuration stay intact.
+    The buffer holds4096 stereo frames. C0h requests4096 eight-bit channel
+    samples (2048 stereo frames per Creative's documented length unit). The
+    existing QEMU single-cycle compatibility multiplier is a separate observed
+    model difference; it is not used as the hardware transfer-size oracle.
     """
     labels = ('tone_ready', 'tone_done', 'failed', 'report', 'arena')
     source = r'''

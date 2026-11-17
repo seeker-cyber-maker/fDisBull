@@ -6,7 +6,8 @@ import wave
 import pytest
 
 from support.qemu_paired_tone_fixture import (
-    LEFT_PERIOD, RIGHT_PERIOD, SOURCE_BYTES, SOURCE_FRAMES, SOURCE_RATE,
+    DSP_REQUEST_SAMPLES, REQUESTED_STEREO_FRAMES, LEFT_PERIOD, RIGHT_PERIOD,
+    SOURCE_BYTES, SOURCE_FRAMES, SOURCE_RATE,
     expected_frequencies, source_stereo,
 )
 from test_qemu_paired_tone_native import analyze_wav
@@ -66,3 +67,12 @@ def test_opl_oracle_rejects_weak_expected_residual_under_wrong_dominant_tone(tmp
     _wav(path, 1, rate, values, 2)
     with pytest.raises(AssertionError):
         analyze_wav(path, 'O', 'qemu')
+
+
+def test_dsp_c0_length_counts_eight_bit_channel_samples_not_stereo_frames():
+    # Creative Hardware Programming Guide6-24: Cxh length is8-bit samples-1.
+    assert DSP_REQUEST_SAMPLES == 4096 and DSP_REQUEST_SAMPLES - 1 == 0x0fff
+    assert REQUESTED_STEREO_FRAMES == 2048
+    assert SOURCE_FRAMES == 4096 and SOURCE_BYTES == 8192
+    assert DSP_REQUEST_SAMPLES * 1 == 4096  # Bytes, independent of stereo framing.
+    assert SOURCE_BYTES - DSP_REQUEST_SAMPLES - 1 == 4095
