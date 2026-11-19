@@ -5,6 +5,8 @@ FDISBULL_QEMU_DOS_BOOT_IMAGE, FDISBULL_QEMU_DOS_MCOPY,
 FDISBULL_QEMU_DOS_FIRMWARE, FDISBULL_QEMU_IMG and NASM.
 FDISBULL_REQUIRE_QEMU_MIXER=1 or FDISBULL_REQUIRE_QEMU_PAIRED_TONE=1 makes
 missing prerequisites fail. Only the native owner runs these opt-in tests.
+The legacy comparison keeps the default U8 mono QEMU capture. The separate
+S16 stereo case requires audio_stereo_capture and never substitutes mono.
 No cross-engine waveform/gain/CPU/timing identity or hardware fidelity claim.
 """
 from __future__ import annotations
@@ -97,12 +99,19 @@ def _frequency(values, rate, expected):
                 relative_error=abs(frequency / expected - 1), search_step_hz=1)
 
 
-def analyze_wav(path, mode, backend):
+def analyze_wav(path, mode, backend, *, capture_format=None):
     """Keep DC-inclusive levels, rails, channels and pitch as separate facts."""
+    assert capture_format in (None, 'u8-mono', 's16-stereo')
     with wave.open(str(path), 'rb') as stream:
         channels, width, rate, frames = stream.getparams()[:4]
         raw = stream.readframes(frames)
     assert width in (1, 2) and channels in (1, 2)
+    if capture_format == 's16-stereo':
+        assert (channels, width) == (2, 2), 'Requested S16 stereo capture geometry was not retained'
+        if backend == 'qemu':
+            assert rate == 32000
+    elif capture_format == 'u8-mono':
+        assert (rate, channels, width) == (32000, 1, 1)
     assert len(raw) == frames * width * channels and frames >= rate // 10
     codes = list(raw) if width == 1 else list(struct.unpack('<' + 'h' * (len(raw) // 2), raw))
     centre, scale, lower, upper = (128, 128, 0, 255) if width == 1 else (0, 32768, -32768, 32767)
@@ -128,7 +137,7 @@ def analyze_wav(path, mode, backend):
     else:
         observed = [dict(left=_frequency(values, rate, frequencies['left']),
                          right=_frequency(values, rate, frequencies['right'])) for values in signals]
-        if backend == 'qemu':
+        if backend == 'qemu' and capture_format != 's16-stereo':
             assert channels == 1
             for name in ('left', 'right'):
                 assert observed[0][name]['relative_error'] < .03
@@ -139,7 +148,12 @@ def analyze_wav(path, mode, backend):
             assert observed[1]['right']['relative_error'] < .03
             assert observed[0]['left']['strength'] > 3 * observed[0]['right']['strength']
             assert observed[1]['right']['strength'] > 3 * observed[1]['left']['strength']
+            if capture_format == 's16-stereo':
+                for index, name in enumerate(('left', 'right')):
+                    assert observed[index][name]['strength'] > max(.0001, facts[index]['ac_rms'] * .2)
     return dict(rate=rate, channels=channels, width=width, frames=frames,
+        pcm_bytes=len(raw), pcm_encoding='u8' if width == 1 else 's16le',
+        channel_order=['mono'] if channels == 1 else ['left', 'right'],
         sample_duration_seconds=frames / rate, guest_elapsed_seconds=None,
         pcm_sha256=hashlib.sha256(raw).hexdigest(), channels_analysis=facts,
         frequencies=observed, whole_record_untrimmed=True,
@@ -181,7 +195,7 @@ def _mixer(debug):
     return dict(supported=True, value=value, stopped_cpu_clock_unchanged=True)
 
 
-def _qemu(directory, source, code, offsets, mode, runtime, result):
+def _qemu(directory, source, code, offsets, mode, runtime, result, *, capture_format=None):
     with Project.create(directory / 'tone.fdb', source, image='com') as project:
         with project.debugger(runtime['qemu'], directory, backend='qemu-dos',
             dos_boot_image=str(runtime['disk']['image']), dos_mcopy=str(runtime['mcopy']),
@@ -201,7 +215,15 @@ def _qemu(directory, source, code, offsets, mode, runtime, result):
             result['mixer_ready'] = _mixer(debug)
             if mode == 'S':
                 assert read(result['ready']['buffer_physical'], SOURCE_BYTES) == source_stereo()
-            result['audio_start'] = debug.audio_start(max_frames=100000)
+            audio_options = dict(max_frames=100000)
+            if capture_format is not None:
+                assert capture_format == 's16-stereo'
+                assert debug.capabilities.get('audio_stereo_capture') is True
+                audio_options['capture_format'] = capture_format
+            result['audio_start'] = debug.audio_start(**audio_options)
+            if capture_format == 's16-stereo':
+                assert result['audio_start']['sample_format'] == dict(
+                    rate=32000, channels=2, sample_format='s16', bytes_per_frame=4)
             # Exactly one native continuation spans the actual tone and its tail.
             result['tone_done_stop'] = park(debug, symbols['tone_done'])
             assert result['tone_done_stop']['timed_out'] is False
@@ -218,6 +240,8 @@ def _qemu(directory, source, code, offsets, mode, runtime, result):
             result['audio_artifact'] = artifact
             result['audio'] = debug.audio_observe()
             assert result['audio']['dropped_frames'] == 0 and result['audio']['state'] == 'stopped'
+            if capture_format == 's16-stereo':
+                assert result['audio']['sample_format'] == result['audio_start']['sample_format']
             owner = debug.vm.process
         result['native_returncode'], result['reaped'] = owner.returncode, owner.poll() is not None
     assert result['reaped'] and result['native_returncode'] == 0
@@ -312,9 +336,17 @@ def _dosbox(directory, source, code, offsets, mode, runtime, result):
 
 @pytest.mark.parametrize('mode', ['O', 'S'], ids=['opl-only', 'sb16-asymmetric-stereo'])
 def test_native_same_authored_tone_program_has_paired_guest_completion_and_independent_audio(tmp_path, paired_tone_runtime, mode):
-    runtime = paired_tone_runtime
+    _paired_tone_comparison(tmp_path, paired_tone_runtime, mode)
+
+
+def test_native_explicit_s16_capture_preserves_asymmetric_stereo_on_both_engines(tmp_path, paired_tone_runtime):
+    _paired_tone_comparison(tmp_path, paired_tone_runtime, 'S', capture_format='s16-stereo')
+
+
+def _paired_tone_comparison(tmp_path, runtime, mode, *, capture_format=None):
     code, offsets = paired_tone(tmp_path, runtime['nasm'])
     result = dict(format='fdisbull-paired-authored-tone-native-1', success=False, mode=mode,
+        requested_qemu_capture_format=capture_format or 'legacy-default',
         source_sha256=hashlib.sha256(code).hexdigest(), source_bytes=len(code), offsets=offsets,
         expected_frequencies=expected_frequencies(), backends={}, no_guest_memory_or_register_writes=True,
         dma_request=(dict(command='0xc0', mode='0x20', length_word=DSP_REQUEST_SAMPLES - 1,
@@ -333,16 +365,25 @@ def test_native_same_authored_tone_program_has_paired_guest_completion_and_indep
             source = directory / 'PAIR.COM'
             source.write_bytes(code)
             evidence = result['backends'][backend] = dict(source=_pin(source))
-            run(directory, source, code, offsets, mode, runtime, evidence)
+            if backend == 'qemu':
+                run(directory, source, code, offsets, mode, runtime, evidence,
+                    capture_format=capture_format)
+            else:
+                run(directory, source, code, offsets, mode, runtime, evidence)
             evidence['wav'] = _pin(directory / 'audio.wav')
-            evidence['analysis'] = analyze_wav(directory / 'audio.wav', mode, backend)
+            evidence['analysis'] = analyze_wav(directory / 'audio.wav', mode, backend,
+                capture_format=capture_format)
             actual = evidence['analysis']
+            expected = ((32000, 2, 2) if capture_format == 's16-stereo' else (32000, 1, 1))
             assert (actual['rate'], actual['channels'], actual['width']) == (
-                (32000, 1, 1) if backend == 'qemu' else (48000, 2, 2))
+                expected if backend == 'qemu' else (48000, 2, 2))
+            if backend == 'qemu':
+                assert actual['frames'] == evidence['audio']['frames']
         if mode == 'S':
-            assert result['backends']['qemu']['analysis']['channels'] == 1
+            assert result['backends']['qemu']['analysis']['channels'] == (
+                2 if capture_format == 's16-stereo' else 1)
             assert result['backends']['dosbox']['analysis']['channels'] == 2
-            result['stereo_information_loss_observed'] = True
+            result['stereo_information_loss_observed'] = capture_format != 's16-stereo'
         result['success'] = True
     except BaseException as error:
         result['error'] = dict(type=type(error).__name__, message=str(error))

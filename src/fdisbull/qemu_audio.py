@@ -21,9 +21,14 @@ AUDIO_COMMANDS = frozenset({
     'x-fdisbull-query-audio', 'x-fdisbull-start-audio',
     'x-fdisbull-stop-audio', 'x-fdisbull-export-audio',
 })
+AUDIO_FORMAT_COMMAND = 'x-fdisbull-start-audio-format'
 AUDIO_RATE = 32000
 MAX_AUDIO_FRAMES = AUDIO_RATE * 60
 _FORMAT = dict(rate=AUDIO_RATE, channels=1, sample_format='u8', bytes_per_frame=1)
+_CAPTURE_FORMATS = {
+    'u8-mono': _FORMAT,
+    's16-stereo': dict(rate=AUDIO_RATE, channels=2, sample_format='s16', bytes_per_frame=4),
+}
 SB16_COMMAND = 'x-fdisbull-query-sb16'
 OPL_COMMAND = 'x-fdisbull-query-opl'
 _SB16_OPTIONS = dict(iobase=544, irq=7, dma=1, dma16=5, version=0x405)
@@ -66,16 +71,46 @@ def validate_audio_capacity(max_frames):
         raise ValueError('Audio max_frames must be an integer in 1..1920000')
 
 
+def validate_audio_capture_format(capture_format):
+    if type(capture_format) is not str or capture_format not in _CAPTURE_FORMATS:
+        raise ValueError('Audio capture_format must be u8-mono or s16-stereo')
+
+
+def require_audio_capture_format(vm, capture_format):
+    """Check an optional window format without acquiring or mutating ownership."""
+    validate_audio_capture_format(capture_format)
+    if capture_format == 's16-stereo' and (
+            vm.machine_configuration.get('clock_profile', {}).get('profile') != 'virtual'
+            or vm.machine_configuration.get('audio_profile', {}).get('profile') != 'sb16-opl'
+            or AUDIO_FORMAT_COMMAND not in getattr(vm, 'qmp_commands', ())):
+        raise ValueError('Audio stereo capture requires the sb16-opl profile and optional native format extension')
+
+
+def audio_capture_format(info):
+    """Decode known saved geometry; live receipts must match owned geometry too."""
+    if isinstance(info, dict):
+        for name, expected in _CAPTURE_FORMATS.items():
+            if (type(info.get('rate')) is int and info['rate'] == expected['rate']
+                    and type(info.get('channels')) is int and info['channels'] == expected['channels']
+                    and info.get('format') == expected['sample_format']):
+                if info.get('state') != 'idle' or name == 'u8-mono':
+                    return name
+    raise ValueError('Invalid native audio capture format')
+
+
 def _invalid(vm, message):
     vm.close()
     raise DebuggerError(message)
 
 
-def _native_audio(vm, value, clock, *, token=None):
+def _native_audio(vm, value, clock, *, token=None, capture_format=None):
     def integer(item, maximum=(1 << 63) - 1):
         return type(item) is int and 0 <= item <= maximum
 
     native_clock = clock['virtual_clock']['native']
+    if capture_format is None:
+        capture_format = getattr(vm, '_audio_capture_format', 'u8-mono')
+    expected_format = _CAPTURE_FORMATS[capture_format]
     required = {'api-version', 'epoch', 'state', 'virtual-ns', 'max-frames',
                 'frames', 'dropped-frames', 'rate', 'channels', 'format', 'enabled', 'chunks'}
     if (not isinstance(value, dict) or not required <= value.keys()
@@ -84,9 +119,9 @@ def _native_audio(vm, value, clock, *, token=None):
             or value['epoch'] != native_clock['epoch']
             or not integer(value['virtual-ns']) or value['virtual-ns'] != clock['virtual_ns']
             or value['state'] not in ('idle', 'capturing', 'stopped', 'overflow')
-            or type(value['rate']) is not int or value['rate'] != AUDIO_RATE
-            or type(value['channels']) is not int or value['channels'] != 1
-            or value['format'] != 'u8' or type(value['enabled']) is not bool
+            or type(value['rate']) is not int or value['rate'] != expected_format['rate']
+            or type(value['channels']) is not int or value['channels'] != expected_format['channels']
+            or value['format'] != expected_format['sample_format'] or type(value['enabled']) is not bool
             or not integer(value['max-frames'], MAX_AUDIO_FRAMES)
             or not integer(value['frames'], value['max-frames'])
             or not integer(value['dropped-frames'], (1 << 64) - 1)
@@ -125,6 +160,7 @@ def _native_audio(vm, value, clock, *, token=None):
                 or value['chunks'][:len(prior['chunks'])] != prior['chunks']
                 or value.get('start-ns') != prior.get('start-ns')
                 or value['max-frames'] != prior['max-frames']
+                or any(value[key] != prior[key] for key in ('rate', 'channels', 'format'))
                 or 'stop-ns' in prior and value.get('stop-ns') != prior['stop-ns']):
             _invalid(vm, 'Native audio window regressed or changed identity')
         if 'stop-ns' in prior and any(value.get(key) != item for key, item in prior.items() if key != 'virtual-ns'):
@@ -191,7 +227,8 @@ class QemuAudioMixin:
                     observed_ns=native['virtual-ns'], start_ns=native.get('start-ns'),
                     stop_ns=native.get('stop-ns'), clock_domain='QEMU_CLOCK_VIRTUAL',
                     frames=native['frames'], max_frames=native['max-frames'],
-                    dropped_frames=native['dropped-frames'], sample_format=deepcopy(_FORMAT),
+                    dropped_frames=native['dropped-frames'],
+                    sample_format=deepcopy(_CAPTURE_FORMATS[audio_capture_format(native)]),
                     sample_duration_ns=native['frames'] * 31250,
                     clock=deepcopy(clock), native=deepcopy(native),
                     guest_audio_complete=None, device_queue_drained=None,
@@ -205,21 +242,29 @@ class QemuAudioMixin:
         self._event('machine-audio-observe', result)
         return result
 
-    def audio_start(self, *, max_frames=320000):
+    def audio_start(self, *, max_frames=320000, capture_format='u8-mono'):
+        """Start a bounded window; stereo S16LE requires the combined SB16/OPL graph."""
         validate_audio_capacity(max_frames)
+        require_audio_capture_format(self.vm, capture_format)
         clock = self._audio_context()
         prior = self._audio_read(clock)
         if prior['state'] != 'idle' and 'stop-ns' not in prior:
             raise ValueError('Stop the current audio capture window before starting another')
         token = uuid.uuid4().hex
+        command = 'x-fdisbull-start-audio'
+        arguments = {'token': token, 'max-frames': max_frames}
+        if capture_format != 'u8-mono':
+            command = AUDIO_FORMAT_COMMAND
+            arguments['capture-format'] = capture_format
         try:
-            native = _native_audio(self.vm, self.vm.qmp.call('x-fdisbull-start-audio',
-                {'token': token, 'max-frames': max_frames}), clock, token=token)
+            native = _native_audio(self.vm, self.vm.qmp.call(command, arguments), clock,
+                                   token=token, capture_format=capture_format)
             if (native['state'] != 'capturing' or native['frames'] != 0
                     or native['start-ns'] != clock['virtual_ns']
                     or native['max-frames'] != max_frames):
                 _invalid(self.vm, 'Native audio start differs from the requested window')
             self.vm._audio_token = token
+            self.vm._audio_capture_format = capture_format
             result = self._audio_receipt(native, clock)
             self._event('machine-audio-start', result)
             return result
@@ -261,17 +306,19 @@ class QemuAudioMixin:
                 {'token': prior['token'], 'filename': str(path)}), clock, token=prior['token'])
             if native != prior:
                 _invalid(self.vm, 'Native audio changed across its stopped export')
-            if not path.is_file() or path.stat().st_size != native['frames']:
+            sample_format = _CAPTURE_FORMATS[audio_capture_format(native)]
+            pcm_bytes = native['frames'] * sample_format['bytes_per_frame']
+            if not path.is_file() or path.stat().st_size != pcm_bytes:
                 _invalid(self.vm, 'Native audio export length differs from its sample receipt')
             pcm = path.read_bytes()
-            if len(pcm) != native['frames']:
+            if len(pcm) != pcm_bytes:
                 _invalid(self.vm, 'Native PCM changed length during its stopped read')
             previous = getattr(self.vm, '_audio_export', None)
             if previous is not None and previous['token'] == native['token']:
-                if (len(pcm) < previous['frames'] or
-                        hashlib.sha256(pcm[:previous['frames']]).hexdigest() != previous['sha256']):
+                if (len(pcm) < previous['bytes'] or
+                        hashlib.sha256(pcm[:previous['bytes']]).hexdigest() != previous['sha256']):
                     _invalid(self.vm, 'Retained native PCM changed within the same audio window')
-            self.vm._audio_export = dict(token=native['token'], frames=len(pcm),
+            self.vm._audio_export = dict(token=native['token'], frames=native['frames'], bytes=len(pcm),
                                          sha256=hashlib.sha256(pcm).hexdigest())
             after = self.clock_observe()
             if (clock['epoch'] != after['epoch'] or clock['counter'] != after['counter']
@@ -284,9 +331,9 @@ class QemuAudioMixin:
             path.unlink(missing_ok=True)
         output = io.BytesIO()
         with wave.open(output, 'wb') as stream:
-            stream.setnchannels(1)
-            stream.setsampwidth(1)
-            stream.setframerate(AUDIO_RATE)
+            stream.setnchannels(sample_format['channels'])
+            stream.setsampwidth(sample_format['bytes_per_frame'] // sample_format['channels'])
+            stream.setframerate(sample_format['rate'])
             stream.writeframes(pcm)
         data = output.getvalue()
         metadata = self._audio_receipt(native, clock)

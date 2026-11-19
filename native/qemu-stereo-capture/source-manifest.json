@@ -1,0 +1,60 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Opt-in signed16 stereo capture on the combined SB16 and OPL2 graph",
+  "implementation_status": "Source implemented; native build and qualification pending",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-mixer-observe",
+    "prerequisite_manifest_sha256": "00cf3cd90b37f6e2cc851fbde2e5ba8f42fd1b4cc2a4eb507dc7b89678cfb44d",
+    "prerequisite_binary_sha256": "055b58eb5d7625ca836c097f8b0683751b63ea84ee32e727c024ac9c12243455"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-stereo-capture-v1.patch",
+    "sha256": "028f4b32a3f6544d3ed2501c44e2c9a8f1bb0358d2658396ba7dbd5dc06a2e48",
+    "modified_file_count": 3,
+    "files": [
+      {
+        "path": "audio/audio.c",
+        "before_sha256": "b6a0593d402c8a4dda3223c629758476c8c500c51df062f5d117defaf709c663",
+        "after_sha256": "8bd0b5b3f40502fc4af61e8b41c615f4d048a70ee608c23aa789ef8e6978f773"
+      },
+      {
+        "path": "qapi/fdisbull-audio.json",
+        "before_sha256": "56b78ffb4d645880a8a5971743e338cd8a630246d692ac0b7bfdc24ecb1cb2f3",
+        "after_sha256": "950edd99f1e6243dcb6dd30ded541acd8b04ee8aba3b3c3a60c95d09370012ed"
+      },
+      {
+        "path": "system/fdisbull-audio.c",
+        "before_sha256": "39e3ed1c68c11e33d8965c00e938c8b3178b1a9201334753b344b5371068c098",
+        "after_sha256": "aa2e545bc4aa23e2c7975d3a0f0987227e786830008690194a2ea39a5b5e3c6c"
+      }
+    ]
+  },
+  "contract": {
+    "profile": "sb16-opl",
+    "command": "x-fdisbull-start-audio-format",
+    "capture_format": "s16-stereo",
+    "rate": 32000,
+    "channels": 2,
+    "sample_format": "s16",
+    "byte_order": "little-endian",
+    "bytes_per_frame": 4,
+    "maximum_frames": 1920000,
+    "maximum_pcm_bytes": 7680000,
+    "core_format": 4,
+    "old_core_formats_preserved": [
+      1,
+      2,
+      3
+    ],
+    "legacy_default": "32000Hz mono unsigned8",
+    "scope": "Observer capture only; guest device formats/gains, hardware output, pacing, DMA/IRQ and OPL synthesis unchanged. Exact-producer restore only; no full parity promotion."
+  },
+  "verification": {
+    "qapi_schema": "passed",
+    "independent_source_review": "no blocking defect found",
+    "native_build": "pending",
+    "native_runtime": "pending",
+    "ci": false
+  }
+}

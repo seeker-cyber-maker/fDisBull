@@ -194,7 +194,7 @@ METHODS = {
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
-    "debug-audio-start": "Start a bounded native PC-speaker PCM capture window without running; run,[max_frames]",
+    "debug-audio-start": "Start bounded native PCM capture without running (default u8-mono; s16-stereo requires sb16-opl); run,[max_frames],[capture_format]",
     "debug-audio-observe": "Observe native retained PCM frames and callback timestamps; run",
     "debug-mixer-observe": "Read stopped native software-voice gains and channel formats without changing audio; run",
     "debug-audio-stop": "Stop native audio capture without flushing or advancing the machine; run",

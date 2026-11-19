@@ -1473,3 +1473,117 @@ def test_selected_delivery_inventory_detects_omission_and_changed_bytes(tmp_path
             damaged[member] = b"modified after source inventory"
         with pytest.raises(ValueError, match=re.escape(name)):
             gate["check_payload"](inventory, damaged, kind)
+
+
+def _native_distribution_payload(root, kind, monkeypatch):
+    """Read the native bytes chosen by each real source-distribution selector."""
+    project = Path(__file__).resolve().parents[1]
+    if kind == "tool":
+        build = runpy.run_path(str(project / "scripts/build_release.py"))
+        paths = build["release_files"](root)
+    else:
+        from setuptools.command.egg_info import FileList
+
+        monkeypatch.chdir(root)
+        manifest = FileList()
+        for line in (project / "MANIFEST.in").read_text().splitlines():
+            if line.strip() and not line.lstrip().startswith("#"):
+                manifest.process_template_line(line)
+        paths = [root / name for name in manifest.files]
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in paths
+        if path.is_relative_to(root / "native")
+    }
+
+
+@pytest.mark.parametrize("kind", ("sdist", "tool"))
+def test_native_source_distribution_preserves_actual_authored_bytes(kind, monkeypatch):
+    root = Path(__file__).resolve().parents[1]
+    # The reviewed source tree is independent of the packaging allowlists.
+    # Comparing every file catches new packages, patch prerequisites and harnesses.
+    expected = {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in (root / "native").rglob("*")
+        if path.is_file()
+    }
+    assert expected, "The native source fixture must not be empty"
+    actual = _native_distribution_payload(root, kind, monkeypatch)
+    assert actual == expected
+
+
+@pytest.mark.parametrize("kind", ("sdist", "tool"))
+def test_native_source_selection_accepts_future_packages_but_excludes_runtime_bytes(
+    tmp_path, kind, monkeypatch
+):
+    root = Path(__file__).resolve().parents[1]
+    build = runpy.run_path(str(root / "scripts/build_release.py"))
+    for name in (*build["ROOT_FILES"], *build["DOC_EXAMPLE_FILES"]):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("")
+    authored = {
+        "native/qemu-future/README.md": b"Authored source package\n",
+        "native/qemu-future/source-manifest.json": b'{"authored": true}\n',
+        "native/qemu-future/change.patch": b"--- a/source.c\n+++ b/source.c\n",
+        "native/qemu-future/.gitattributes": b"*.patch -text\n",
+        "native/qemu-future/tests/harness.c": b"int main(void) { return 0; }\n",
+        "native/qemu-future/include/state.h": b"struct state { int ready; };\n",
+    }
+    private = {
+        "native/qemu-future/" + name: b"Private runtime or build artifact"
+        for name in (
+            "disk.img", "disk.qcow2", "checkpoint.sav", "checkpoint.state",
+            "target.bin", "target.exe", "target.com", "project.fdb",
+            "private.sqlite", "capture.wav", "audio.pcm", "source.o",
+            "libqemu.a", "qemu-system-x86_64", "__pycache__/helper.pyc",
+        )
+    }
+    for name, data in {**authored, **private}.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    assert _native_distribution_payload(tmp_path, kind, monkeypatch) == authored
+
+
+@pytest.mark.parametrize("kind", ("sdist", "tool"))
+@pytest.mark.parametrize("damage", ("missing", "changed"))
+def test_native_payload_inventory_detects_missing_and_changed_authored_bytes(
+    tmp_path, kind, damage
+):
+    root = Path(__file__).resolve().parents[1]
+    gate = runpy.run_path(str(root / "scripts/check_package_payloads.py"))
+    source = {
+        "src/fdisbull/__init__.py": b"core",
+        "player/fdisbull_player/__init__.py": b"player",
+        # Unknown future source types must fail completeness, not vanish from
+        # the inventory when a producer's authored-file allowlist needs updating.
+        "native/qemu-future/build-control": b"Authored build instructions\n",
+    }
+    source.update({
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in (root / "native").rglob("*")
+        if path.is_file()
+    })
+    repo = tmp_path / "source"
+    for name, data in source.items():
+        path = repo / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    inventory = gate["tracked_payload"](repo)
+    assert inventory == source
+    archive = {"fdisbull-test/" + name: data for name, data in source.items()}
+    gate["check_payload"](inventory, archive, kind)
+    for name in source:
+        if not name.startswith("native/"):
+            continue
+        damaged = dict(archive)
+        member = "fdisbull-test/" + name
+        if damage == "missing":
+            del damaged[member]
+        else:
+            damaged[member] += b"Modified after source inventory\n"
+        with pytest.raises(ValueError, match=re.escape(name)):
+            gate["check_payload"](inventory, damaged, kind)

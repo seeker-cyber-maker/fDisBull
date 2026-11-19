@@ -34,7 +34,8 @@ from .qemu_mapped_mouse import MAPPED_MOUSE_COMMANDS, validate_mapped_mouse_para
 from .qemu_layers import LAYER_COMMANDS, QemuLayerSessionMixin
 from .qemu_hooks import QemuHookSessionMixin
 from .qemu_surface import QemuSurfaceMixin
-from .qemu_audio import QemuAudioMixin, machine_audio_configuration, machine_audio_arguments, admit_audio
+from .qemu_audio import (QemuAudioMixin, machine_audio_configuration, machine_audio_arguments,
+                         admit_audio, AUDIO_FORMAT_COMMAND)
 from .qemu_mixer import QemuMixerMixin, MIXER_COMMAND
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
                            validate_display_probe_parameters)
@@ -698,6 +699,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl'),
+            audio_stereo_capture=(virtual and AUDIO_FORMAT_COMMAND in getattr(vm,'qmp_commands',())
+                and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='sb16-opl'),
             mixer_gain_readback=(virtual and MIXER_COMMAND in getattr(vm,'qmp_commands',())
                 and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl')),
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),

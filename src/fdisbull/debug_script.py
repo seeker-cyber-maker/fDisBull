@@ -464,6 +464,14 @@ def validate_script(script, *, session=None):
                             if not (isinstance(value,str) and value.startswith('$')):
                                 from .qemu_audio import validate_audio_capacity
                                 validate_audio_capacity(value)
+                        if op=='audio-start' and 'capture_format' in params:
+                            value=params['capture_format']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                from .qemu_audio import validate_audio_capture_format
+                                validate_audio_capture_format(value)
+                                if (value=='s16-stereo' and session is not None
+                                        and not getattr(session,'capabilities',{}).get('audio_stereo_capture')):
+                                    raise ValueError('Audio stereo capture requires the sb16-opl profile and optional native format extension')
                     if op in ('display-start','display-observe','display-stop','capture-display'):
                         if session is not None and not getattr(session,'capabilities',{}).get('renderer_capture'):
                             raise ValueError('Renderer operations require the native display extension and virtual clock')
