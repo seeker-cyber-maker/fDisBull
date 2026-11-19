@@ -3796,7 +3796,7 @@ index 6ba9ffa..2d72e6a 100644
  	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return;
  
 diff --git a/src/dosbox.cpp b/src/dosbox.cpp
-index 53895a2..b523884 100644
+index 53895a2..f4a0fbc 100644
 --- a/src/dosbox.cpp
 +++ b/src/dosbox.cpp
 @@ -54,6 +54,7 @@
@@ -3807,10 +3807,20 @@ index 53895a2..b523884 100644
  #endif // defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
  #include "debug.h"
  #include "cpu.h"
-@@ -471,8 +472,23 @@ static Bitu Normal_Loop(void) {
+@@ -471,8 +472,33 @@ static Bitu Normal_Loop(void) {
          while (1) {
  #if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
              dosbox_agent::AGENT_BridgePump();
++            // Pause publishes its stop while this loop is still on the stack.
++            // Hand off before PIC/timer work even if a nested step consumed
++            // the one-shot exit flag. Runwatch is still executing.
++            bool IsDebuggerActive(void);
++            bool IsDebuggerRunwatch(void);
++            if (dosbox_agent::AGENT_IsSession() &&
++                IsDebuggerActive() && !IsDebuggerRunwatch()) {
++                (void)DEBUG_ExitLoop();
++                return 0;
++            }
 +            if (dosbox_agent::AGENT_FrameStepStopRequested()) {
 +                DEBUG_EnableDebugger();
 +                (void)DEBUG_ExitLoop();

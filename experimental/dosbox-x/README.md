@@ -1,5 +1,13 @@
 # DOSBox-X headless debugger
 
+The current candidate also hands a stopped agent session out of the normal
+loop immediately after the agent command pump, before PIC/timer work. This
+corrects the source path that allowed guest milliseconds to advance after an
+ordinary pause reply. Both patch variants retain the existing continue,
+runwatch and frame-step paths. See the [pause correction and qualification
+limits](../../docs/DOS_PAUSE_QUIESCENCE_FIX.md). A rebuilt native producer is
+required; historical executable identities below do not include this change.
+
 The current 0.19 development patch also fixes agent continuation from BIOS
 callbacks. Continue resumes through the normal emulator loop, rather than
 executing and discarding one decoder result inside the debugger's `RUN`
@@ -36,7 +44,7 @@ for the tested source, cloud rerun, and compatibility limits. A rebuild is requi
 
 - `recovered-work.patch`: original unfinished archive checkpoint, preserved unchanged.
 - `headless-agent.patch`: complete current patch against the baseline, including recovered cloud changes and local fixes. Apply this patch alone to the clean baseline.
-- `source-manifest.json`: hashes for the complete patch and all 32 resulting source files; see [spectator verification](../../docs/VERIFICATION-SPECTATOR-CLOUD.md) for the earlier bounded build and test evidence.
+- `source-manifest.json`: hashes for the complete patch and all 37 resulting source files; see [spectator verification](../../docs/VERIFICATION-SPECTATOR-CLOUD.md) for the earlier bounded build and test evidence.
 - `evidence/2026-10-23/`: real guest acceptance JSON and screenshots, client/transport test log, and a separate command-line launcher result.
 
 The restored changes include the pipe client/tests, package exports, SDL header placement, launcher diagnostics, and guest acceptance runner. Earlier passing-test statements were independently rechecked locally.

@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
+  "patch_sha256": "20fd864b63057f486ddb4a6eee78e24b7b548b312029a37280684ffd69b2d9d2",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -129,8 +129,8 @@
     },
     {
       "path": "src/dosbox.cpp",
-      "sha256": "ebbf44f50db5e973420cc594f68b02a777d2d97e91dd68c7db68c10ccfb19d31",
-      "size": 343274
+      "sha256": "e3704ede473a6710e2ca935256ab070cd48dfab469300b2909e77bc9ad7163d9",
+      "size": 343776
     },
     {
       "path": "src/gui/render.cpp",
@@ -206,7 +206,7 @@
   },
   "verification_scope_note": "Source replay hashes are retained here. Runtime qualification and limitations are recorded separately in repository verification documents.",
   "keyboard_held_leases": "source merged; see verification record for tested scope",
-  "source_replay_files_verified": 36,
+  "source_replay_files_verified": 37,
   "dos_guest_exit": {
     "capability": "lifecycle.dos_guest_exit",
     "normal_stop": "guest_exit",
@@ -230,5 +230,17 @@
       "pending VGA resize"
     ],
     "guest_phase_restore": "Preserve loaded PIC queue/controllers/ticks/CPU cycle budgets and VGA draw/drift fields across mandatory host renderer repair"
+  },
+  "ordinary_pause_quiescence": {
+    "source_paths": [
+      "src/dosbox.cpp"
+    ],
+    "boundary": "After agent bridge pump, before PIC_RunQueue and TIMER_AddTick",
+    "guard": "Agent session with debugger active and runwatch inactive; consume pending exit and return",
+    "preserved": "Continue, step-over and runwatch execute; both frame-step boundaries remain unchanged",
+    "source_regression": "tests/test_dosbox_pause_source.py",
+    "native_regression": "tests/test_dosbox_pause_native.py",
+    "native_verification": "Pending a rebuilt exact producer; previous stock stopped-clock failures remain preserved",
+    "verification_document": "docs/DOS_PAUSE_QUIESCENCE_FIX.md"
   }
 }

@@ -1,5 +1,13 @@
 # Temporal code layers backend
 
+The current candidate includes the same [ordinary-pause clock
+correction](../../../docs/DOS_PAUSE_QUIESCENCE_FIX.md) as the stable patch.
+An agent stop now returns from the normal loop before further PIC/timer work;
+continue, runwatch and both frame-step boundaries keep their existing paths.
+All 38 resulting source-file identities were replayed for this candidate.
+Native qualification requires a fresh build; prior executable/state identities
+remain bound to their historical source and evidence.
+
 The current 0.19 development patch also includes the
 [callback-safe continuation fix](../../../docs/DOS_CONTINUE_CALLBACK_FIX.md).
 The normal emulator loop dispatches the pending BIOS callback when an agent
