@@ -72,7 +72,11 @@ class VoiceCase:
 
     @property
     def block_bytes(self):
-        value = BLOCK_BYTES if self.auto else SINGLE_BYTES
+        # The none backend has 1024 frames (audio/noaudio.c:no_init_out).
+        # At 32000 Hz its first S16 stereo credit is 4096 bytes, so a
+        # 4096-byte single cycle finishes before wait_progress can select it.
+        # Keep 2048 S16 frames per single cycle; DSP counts remain samples.
+        value = BLOCK_BYTES if self.auto else SINGLE_BYTES * self.channels
         return value + 2 if self.geometry == 'partial-block' else value
 
     @property

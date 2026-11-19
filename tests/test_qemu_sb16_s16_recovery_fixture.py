@@ -37,6 +37,33 @@ def test_new_authorship_and_case_ids_are_explicit_and_unique():
     assert {case.encoding for case in UNSAFE_CASES} >= {'s8', 'u16'}
 
 
+def test_single_cycle_geometry_keeps_progress_before_completion():
+    # Native gate 01 observed these first credits under the fixed 32000-Hz
+    # headless output graph. This checks fixture geometry, not native timing.
+    expected = {1: (4096, 514, 8000), 2: (8192, 4096, 32000)}
+    for case in POSITIVE_CASES[:4]:
+        block_bytes, initial_credit, rate = expected[case.channels]
+        assert not case.auto and case.frontier == 'running'
+        assert case.bits == 16 and case.rate == rate
+        assert case.block_bytes == block_bytes
+        assert 0 < initial_credit < case.block_bytes <= case.dma_bytes == RING_BYTES
+        assert case.block_bytes % (2 * case.channels) == 0
+
+
+def test_partial_stereo_witnesses_stay_misaligned_after_block_growth():
+    cases = {case.geometry: case for case in UNSAFE_CASES}
+    partial_block, partial_ring = cases['partial-block'], cases['partial-ring']
+    assert partial_block.channels == partial_ring.channels == 2
+    assert partial_block.bits == partial_ring.bits == 16
+    assert (partial_block.block_bytes, partial_block.dma_bytes) == (8194, 8192)
+    assert (partial_ring.block_bytes, partial_ring.dma_bytes) == (8192, 8190)
+    assert partial_block.block_bytes % 4 == partial_ring.dma_bytes % 4 == 2
+    # Each negative witness exceeds its DMA extent by exactly the partial
+    # stereo frame; it is captured at started, before a progress requirement.
+    assert partial_block.block_bytes - partial_block.dma_bytes == 2
+    assert partial_ring.block_bytes - partial_ring.dma_bytes == 2
+
+
 @pytest.mark.parametrize('fields', [
     dict(name='../escape'), dict(name=''), dict(channels=True), dict(channels=3),
     dict(auto=1), dict(fifo=0), dict(rate=True), dict(rate=4999), dict(rate=45001),
