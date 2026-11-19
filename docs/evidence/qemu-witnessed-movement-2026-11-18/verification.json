@@ -1,0 +1,35 @@
+{
+  "format": "fdisbull-witnessed-movement-evidence-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "integration_commit": "ec3a6ec548a46b3dd2c4f5149446b823c6005891",
+  "final_module_sha256": "5d20222d798c17dc56bae05218f3a1544f536ac9b2b7778474bc5e97dde2915d",
+  "native_module_sha256": "9b50de6e65bb5a86b070562e66eb6974cc32c793bf3b102a8a1c770b124a360e",
+  "native_passed": 4,
+  "native_receipt_sha256": "c98b3daaa033821fdebd9ce8351a7a0f535429d7883058fbb59884ca57960cdf",
+  "qemu_sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40",
+  "dosbox_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+  "root_host_passed": 33,
+  "root_host_xml_sha256": "93915cb6ce2240fc14d35a558eedfc442fe0192f7baf99c65c89843089a3dd98",
+  "post_native_change": "Pure partial-validator duplicate-reference refusal plus regression only; no native control/fixture changes.",
+  "independent_cases": [
+    "two distinct held keys and reversed release order",
+    "ambiguous native arm before advance",
+    "changed owner epoch after first advance",
+    "late artifact publication"
+  ],
+  "preserved_failures": [
+    "initial host-QMP held-key delivery raced virtual cutoff; replaced with one-shot native scheduled batch",
+    "identical deferred progress field references bypassed duplicate preflight before earlier actual RAM write; pure validator corrected"
+  ],
+  "all_native_owners_reaped": true,
+  "source_and_original_boot_unchanged": true,
+  "qualification_changed": false,
+  "limits": [
+    "Held physical keys only; no timed press/type control expansion",
+    "Runtime RAM scalars and sample progress only; scene/map/frame/source-address progress refused",
+    "No inferred collision or completed guest frame",
+    "Native first-stop closes rather than cleanup execution or injected release",
+    "No full game or migration qualification"
+  ]
+}

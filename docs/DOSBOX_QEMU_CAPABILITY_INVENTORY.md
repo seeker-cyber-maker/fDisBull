@@ -3,8 +3,8 @@
 This inventory preserves the migration boundary at
 `089c1841c415eb2b5cdfa90d03b6291a07f73919` and reconciles source availability
 against `1b3c11736fff947b5b34b6d7014cfe425bd6d074`, with the stereo and bounded
-macro, runtime-memory, bounded host-proof and spatial-policy integrations through
-`fd76b120b188aab98badeb030fb2094d1a5180fb`.
+macro, runtime-memory, bounded host-proof, spatial-policy and movement integrations through
+`ec3a6ec548a46b3dd2c4f5149446b823c6005891`.
 It is a coverage ledger, not a runtime parity claim. Each surface
 needs native acceptance, affected DOSBox regressions and a reviewed observable
 comparison before its qualification advances.
@@ -31,8 +31,8 @@ listed test sets are reusable selections; only separately linked execution
 receipts establish results. A missing runtime, skipped native case or absent
 primitive remains an open gate.
 
-Source inspection finds all sixty-six public routes currently marked partial on
-`QemuDOSProcessSession`; the seventeen routes marked pending are absent.
+Source inspection finds all sixty-seven public routes currently marked partial on
+`QemuDOSProcessSession`; the sixteen routes marked pending are absent.
 Method presence establishes availability only. In particular:
 
 - Native checkpoint rewind, selected CPU/RAM undo, renderer timelines,
@@ -51,8 +51,10 @@ Method presence establishes availability only. In particular:
 - The independently reviewed [bounded macro adapter](QEMU_MACROS.md) now
   composes admitted native input, run, wait and observation primitives while
   preserving held-key ownership and incomplete stops. The [host proof adapter](QEMU_MODEL_PROOFS.md) now checks caller-supplied
-  finite-width models with run provenance and no guest effects. Movement,
-  scene/workflow and screenshot-hook adapters remain pending. Macro route
+  finite-width models with run provenance and no guest effects. The
+  [witnessed movement adapter](QEMU_WITNESSED_MOVEMENT.md) now composes held keys,
+  explicit runtime RAM predicates and native virtual time. Richer movement,
+  scene/workflow and screenshot-hook contracts remain pending. Macro route
   availability does not qualify their separate contracts. The
   [integrated native evidence](evidence/qemu-macros-runtime-memory-2026-11-18/README.md)
   covers two macro and two runtime-memory cases without native skips.
@@ -369,7 +371,7 @@ dispatch are outside this router dictionary.
 | CPU/RAM deltas | `debug-delta-start`, `debug-delta-status`, `debug-delta-record`, `debug-delta-rewind`, `debug-delta-recover` | Native selected projections, guarded inverse, frozen partial-state boundary and full recovery exist. Hidden CPU/device rollback and continued execution from a partial inverse are not claimed |
 | Frame history | `debug-timeline-start`, `debug-timeline-status`, `debug-timeline-advance`, `debug-timeline-rewind`, `debug-timeline-stop`, `debug-timeline-pin`, `debug-timeline-image` | Bounded checkpoint/PNG renderer DAGs, full or lossless delta retention, branches, pin reconstruction and fresh held-key ownership exist. Completed guest frames and broader file-aware composition remain open |
 | Scenes | `debug-scene-check`, `debug-scene-assert`, `debug-scene-click`, `debug-scene-act`, `debug-scene-wait`, `debug-scene-navigation` | Reusable host algorithms, pending native frame/input dependencies |
-| Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Bounded macro route is implemented with native ownership and one total deadline. Movement/proof adapters and their observed postconditions remain pending |
+| Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Bounded macro route is implemented with native ownership and one total deadline. Bounded model proofs and witnessed held-key movement are implemented; richer postconditions remain pending |
 | Higher workflows and policy | `debug-workflow-observe`, `debug-workflow-act`, `debug-text-observe`, `debug-text-act`, `debug-assisted-travel`, `debug-spatial-policy`, `debug-spatial-action` | Pending coherent lower-level composition; preserve physical/assisted/story/fair-play distinctions |
 
 The QEMU-only scheduling routes are `debug-input-schedule` and

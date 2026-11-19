@@ -1143,8 +1143,8 @@
       "operation": "move",
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.move(): literal held-key macros, typed owned leases, witnessed runtime-memory scalar predicates and sample progress under one inherited deadline/native virtual clock. First stop preserved; uncertain composed input closes. Scene/map/frame/timed controls remain refused.",
       "qualification": "unqualified"
     },
     {
@@ -1893,6 +1893,6 @@
     "qualification_changed": false,
     "note": "Current source availability and executable remaining work are separate from historical inventory_base and runtime qualification. All 141 rows and seven campaigns remain open.",
     "timezone": "America/New_York",
-    "integration_commit": "fd76b120b188aab98badeb030fb2094d1a5180fb"
+    "integration_commit": "ec3a6ec548a46b3dd2c4f5149446b823c6005891"
   }
 }

@@ -4,17 +4,18 @@
   "audit": {
     "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
     "date": "2026-11-18",
-    "scope": "Source reconciliation with stereo, macro, runtime-memory and bounded host-proof adapters; scoped native/audio/game executions linked separately.",
-    "public_methods_present": 66,
-    "public_methods_absent": 17,
+    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy and witnessed movement adapters; scoped native/audio/game executions linked separately.",
+    "public_methods_present": 67,
+    "public_methods_absent": 16,
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "fd76b120b188aab98badeb030fb2094d1a5180fb",
+    "integration_commit": "ec3a6ec548a46b3dd2c4f5149446b823c6005891",
     "timezone": "America/New_York",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
     "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
-    "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion."
+    "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion.",
+    "movement": "Held-key physical movement with caller-witnessed runtime RAM and sample progress. Four paired/native cases and independent33case host gate passed; native evidence precedes pure duplicate-reference validation correction."
   },
   "coverage": {
     "rpc_methods": 35,
@@ -917,6 +918,31 @@
       ],
       "execution": "2scoped Linux cases passed with frozen71bef producer.",
       "scope": "Older native owned-machine and source-process restore cannot undo newer host fair-play restriction."
+    },
+    "movement-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_movement.py",
+        "tests/test_qemu_movement_review.py"
+      ],
+      "execution": "33 passed in final independent root gate; adjacent186 and prior32 overlap.",
+      "scope": "Literal/pre-effect admission, typed start/stop leases, native schedule composition, owner/epoch/stop preservation and late publication."
+    },
+    "movement-native": {
+      "environment_profile": "paired-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_movement_native.py"
+      ],
+      "execution": "4 paired/native cases passed on frozen71bef and installed DOSBox reference; source pinned before pure partial-reference correction.",
+      "scope": "Authored IRQ1 makes/breaks and BIOS ticks, held movement, two quiet ticks after release, first IRQ stop, caller-held lease preservation."
     }
   },
   "work_groups": [
@@ -1431,14 +1457,15 @@
         "debug-proof-check"
       ],
       "qualification": "unqualified",
-      "implementation": "bounded_macro_and_host_proof_adapters_integrated; movement_adapter_pending",
+      "implementation": "bounded_macro_host_proof_and_witnessed_held_key_movement_adapters_integrated",
       "source_paths": [
         "src/fdisbull/input_macros.py",
         "src/fdisbull/movement.py",
         "src/fdisbull/qemu_input_schedule.py",
         "src/fdisbull/qemu_macros.py",
         "src/fdisbull/qemu_proofs.py",
-        "src/fdisbull/proofs.py"
+        "src/fdisbull/proofs.py",
+        "src/fdisbull/qemu_movement.py"
       ],
       "depends_on": [
         "clock-and-physical-input",
@@ -1450,11 +1477,13 @@
         "histories-native",
         "macro-host",
         "macro-native",
-        "proof-host"
+        "proof-host",
+        "movement-host",
+        "movement-native"
       ],
       "remaining_work": [
         "Review paired macro observable equivalence beyond accepted public/script ATTT moves, partial-input stop and evidence-reopen witnesses.",
-        "Implement movement with explicit physical versus assisted action policy, source/control and total budget bounds; retain the host-only proof model-fidelity boundary.",
+        "Qualify richer movement controls, scene/map/frame progress, explicit physical-versus-assisted policies and actual-game postconditions beyond held-key witnessed RAM. Retain the host-only proof model-fidelity boundary.",
         "Add public/script/native and paired scenarios for partial input, early stop, lost ownership and actual observed effects."
       ],
       "minimum_acceptance": [
@@ -1836,6 +1865,7 @@
     "docs/evidence/qemu-doom-stereo-2026-11-18/verification.json",
     "docs/evidence/qemu-model-proofs-2026-11-18/verification.json",
     "docs/evidence/qemu-final-doom-stereo-2026-11-18/verification.json",
-    "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json"
+    "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json",
+    "docs/evidence/qemu-witnessed-movement-2026-11-18/verification.json"
   ]
 }
