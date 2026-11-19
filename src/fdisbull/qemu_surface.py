@@ -75,7 +75,12 @@ class QemuSurfaceMixin:
             scope=('Observed with all vCPUs stopped under the owned machine lock; '
                    'selected CPU and clock bracket. No completed guest frame, '
                    'frame freshness, UI readiness or input-consumption claim.'))
+        from .qemu_screenshot_hooks import surface_hook_evidence, retain_surface_hook_capture
+        hook_evidence = surface_hook_evidence(self)
+        if hook_evidence is not None:
+            metadata['screenshot_hooks'] = hook_evidence
         artifact = self._artifact(name, 'screenshot', data, metadata)
+        retain_surface_hook_capture(self, artifact)
         self._event('machine-capture-surface', dict(
             artifact=artifact['artifact'], capture_id=capture_id,
             sha256=metadata['sha256'], source=metadata['source'],

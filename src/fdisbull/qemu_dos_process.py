@@ -42,6 +42,7 @@ from .qemu_proofs import QemuProofMixin
 from .qemu_spatial_policy import QemuSpatialPolicyMixin, initial_policy
 from .qemu_movement import QemuMovementMixin
 from .qemu_scenes import QemuSceneObservationMixin
+from .qemu_screenshot_hooks import QemuScreenshotHookMixin
 
 
 def _sha(data):
@@ -168,7 +169,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -355,6 +356,7 @@ class QemuDOSProcessSession(QemuSceneObservationMixin, QemuMovementMixin, QemuSp
                 source_trace='stopped boundaries in the initial verified real-mode DOS module',
                 source_trace_clock=vm.machine_configuration['clock_profile']['profile'] == 'virtual',
                 execution_event_search=True, input_macros=True,
+                screenshot_hooks='stopped-surface passive reads and guarded layers; require_fresh_frame=false only',
                 runtime_memory_bindings=True,
                 bounded_model_proofs=True,
                 spatial_policy=True,
@@ -1016,7 +1018,7 @@ class QemuDOSProcessSession(QemuSceneObservationMixin, QemuMovementMixin, QemuSp
 
     @property
     def script_operations(self):
-        return super().script_operations | {'scene-check', 'scene-assert', 'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+        return super().script_operations | {'screenshot-hooks', 'scene-check', 'scene-assert', 'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
             'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',
