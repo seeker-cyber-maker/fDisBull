@@ -1350,8 +1350,8 @@
       "operation": "spatial_policy",
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.spatial_policy(): shared voluntary host mode and irreversible same-session fair-play latch, dedicated bounded lock, exact project/run provenance and literal script transition admission. Native owner restoration cannot rewind host policy; no movement/assistance/frame/RAM authority granted.",
       "qualification": "unqualified"
     },
     {
@@ -1893,6 +1893,6 @@
     "qualification_changed": false,
     "note": "Current source availability and executable remaining work are separate from historical inventory_base and runtime qualification. All 141 rows and seven campaigns remain open.",
     "timezone": "America/New_York",
-    "integration_commit": "55fdd2dbf797e99bb32f7e9d44295fe19b6b9e4b"
+    "integration_commit": "fd76b120b188aab98badeb030fb2094d1a5180fb"
   }
 }

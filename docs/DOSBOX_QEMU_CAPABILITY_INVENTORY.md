@@ -3,8 +3,8 @@
 This inventory preserves the migration boundary at
 `089c1841c415eb2b5cdfa90d03b6291a07f73919` and reconciles source availability
 against `1b3c11736fff947b5b34b6d7014cfe425bd6d074`, with the stereo and bounded
-macro, runtime-memory and bounded host-proof integrations through
-`55fdd2dbf797e99bb32f7e9d44295fe19b6b9e4b`.
+macro, runtime-memory, bounded host-proof and spatial-policy integrations through
+`fd76b120b188aab98badeb030fb2094d1a5180fb`.
 It is a coverage ledger, not a runtime parity claim. Each surface
 needs native acceptance, affected DOSBox regressions and a reviewed observable
 comparison before its qualification advances.
@@ -31,8 +31,8 @@ listed test sets are reusable selections; only separately linked execution
 receipts establish results. A missing runtime, skipped native case or absent
 primitive remains an open gate.
 
-Source inspection finds all sixty-five public routes currently marked partial on
-`QemuDOSProcessSession`; the eighteen routes marked pending are absent.
+Source inspection finds all sixty-six public routes currently marked partial on
+`QemuDOSProcessSession`; the seventeen routes marked pending are absent.
 Method presence establishes availability only. In particular:
 
 - Native checkpoint rewind, selected CPU/RAM undo, renderer timelines,
@@ -56,6 +56,9 @@ Method presence establishes availability only. In particular:
   availability does not qualify their separate contracts. The
   [integrated native evidence](evidence/qemu-macros-runtime-memory-2026-11-18/README.md)
   covers two macro and two runtime-memory cases without native skips.
+- The [host spatial policy](QEMU_SPATIAL_POLICY.md) now preserves the shared
+  voluntary mode and irreversible fair-play latch through actual native owner
+  replacement. It does not add the still-missing spatial action/scene routes.
 - The [explicit stereo capture evidence](evidence/qemu-stereo-capture-2026-11-18/README.md)
   records nine native cases on macOS and nine on Linux, including paired
   asymmetric tones, hot/cold futures and malformed core4 refusal. General

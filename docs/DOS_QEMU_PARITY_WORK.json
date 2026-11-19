@@ -5,15 +5,16 @@
     "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
     "date": "2026-11-18",
     "scope": "Source reconciliation with stereo, macro, runtime-memory and bounded host-proof adapters; scoped native/audio/game executions linked separately.",
-    "public_methods_present": 65,
-    "public_methods_absent": 18,
+    "public_methods_present": 66,
+    "public_methods_absent": 17,
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "55fdd2dbf797e99bb32f7e9d44295fe19b6b9e4b",
+    "integration_commit": "fd76b120b188aab98badeb030fb2094d1a5180fb",
     "timezone": "America/New_York",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
-    "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim."
+    "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
+    "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion."
   },
   "coverage": {
     "rpc_methods": 35,
@@ -891,6 +892,31 @@
       ],
       "execution": "61 cases passed in independent selection including four external regressions; see linked proof evidence.",
       "scope": "Shared finite-width model results, persisted run identity, inherited deadlines, partial-literal validation and no native effects."
+    },
+    "spatial-policy-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_spatial_policy.py",
+        "tests/test_spatial_modes.py"
+      ],
+      "execution": "38new host cases plus2independent lock/race probes passed; adjacent203case run overlaps.",
+      "scope": "Voluntary policy route, launch routing, preflight/deadline, irreversible latch and event persistence."
+    },
+    "spatial-policy-native": {
+      "environment_profile": "native-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_spatial_policy_native.py"
+      ],
+      "execution": "2scoped Linux cases passed with frozen71bef producer.",
+      "scope": "Older native owned-machine and source-process restore cannot undo newer host fair-play restriction."
     }
   },
   "work_groups": [
@@ -1455,11 +1481,12 @@
         "debug-workflow-observe"
       ],
       "qualification": "unqualified",
-      "implementation": "legacy_public_routes_absent",
+      "implementation": "host_spatial_policy_integrated; scene_and_action_routes_pending",
       "source_paths": [
         "src/fdisbull/scenes.py",
         "src/fdisbull/spatial.py",
-        "src/fdisbull/text_projection.py"
+        "src/fdisbull/text_projection.py",
+        "src/fdisbull/qemu_spatial_policy.py"
       ],
       "depends_on": [
         "coherent-frames",
@@ -1471,7 +1498,9 @@
         "workflow-legacy",
         "renderer-frame-native",
         "mapped-mouse-native",
-        "histories-native"
+        "histories-native",
+        "spatial-policy-host",
+        "spatial-policy-native"
       ],
       "remaining_work": [
         "Add explicit native adapters after frame/input/source/control dependencies are qualified; importing the DOSBox mixins is insufficient.",
@@ -1615,7 +1644,7 @@
       "implemented": "Optional s16-stereo capture is scoped to virtual sb16-opl; u8-mono remains default and old-command compatible. Nine native cases passed on each of macOS and Linux, including asymmetric tones, initial graphs, malformed core4 and 600 ms hot/cold futures.",
       "remaining": [
         "Qualify remaining long/rolling/max-boundary capture and real-game compositions; preserve the tested old mono checkpoint path.",
-        "Resolve or explicitly qualify the documented SB16 single-cycle stereo length mismatch, DC/rail behavior, guest mixer gain application, bounded/long/rolling capture and actual game audio expectations."
+        "Complete executing-producer identity correction and exact old-state rejection; qualify corrected producer on macOS and actual games, then DC/rail behavior, mixer gain and bounded/long/rolling capture."
       ],
       "historical_record": "docs/evidence/qemu-mixer-tones-2026-11-16/verification.json",
       "evidence": "docs/evidence/qemu-stereo-capture-2026-11-18/verification.json"
@@ -1806,6 +1835,7 @@
     "docs/evidence/qemu-macros-runtime-memory-2026-11-18/verification.json",
     "docs/evidence/qemu-doom-stereo-2026-11-18/verification.json",
     "docs/evidence/qemu-model-proofs-2026-11-18/verification.json",
-    "docs/evidence/qemu-final-doom-stereo-2026-11-18/verification.json"
+    "docs/evidence/qemu-final-doom-stereo-2026-11-18/verification.json",
+    "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json"
   ]
 }

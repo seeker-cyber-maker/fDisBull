@@ -3,7 +3,9 @@
 This incremental QEMU10.0.13 patch follows
 [stereo capture](../qemu-stereo-capture/README.md). The adjacent
 [source manifest](source-manifest.json) pins its parent and the one changed
-file. Candidate build and runtime qualification are pending.
+file. Separate Linux and macOS builds pass. The [scoped evidence](../../docs/evidence/qemu-sb16-transfer-count-2026-11-18/README.md)
+records passing Linux counts/playback/recovery and an open host producer-identity
+defect discovered by the old-state negative control.
 
 Creative's [Hardware Programming Reference, sections3-27,3-29,6-23 and6-24](https://ardent-tool.com/sound/Dev_Kit_SB_Series_Hardware_Programming_Ref_DSA0085515.pdf)
 defines Bx/Cx lengths as channel samples minus one. Cx samples occupy one byte;

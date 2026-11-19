@@ -1,7 +1,7 @@
 {
   "format": "fdisbull-qemu-native-source-manifest-1",
   "feature": "Documented Bx/Cx single-cycle stereo channel-sample counts",
-  "implementation_status": "Source correction prepared; native baseline proves discrepancy; candidate build and runtime qualification pending",
+  "implementation_status": "Implemented and built separately on Linux and macOS; documented count and affected Linux playback/recovery gates pass; executing-producer identity defect found in host launcher fingerprint and under correction.",
   "base": {
     "qemu_version": "10.0.13",
     "prerequisite_package": "native/qemu-stereo-capture",
@@ -35,8 +35,26 @@
     "host_oracle": "18 count/report/assembly checks and 49 combined adjacent host cases passed; two old generated-COM extent regressions fail before correction",
     "baseline_native": "Eight identical-guest pairs: DOSBox documented count8/8; frozen QEMU mono4 pass and stereo4 fail at doubled extent, no wrap; all owners reaped",
     "s16_checkpoint": "Four explicit refusals preserved stopped owner, CPU, clock and device state",
-    "candidate_native_build": "pending",
-    "candidate_native_runtime": "pending",
-    "ci": false
-  }
+    "candidate_native_build": "Linux fresh build and relocated QMP smoke pass; macOS pinned single-file incremental compile/link/sign pass.",
+    "candidate_native_runtime": "Linux8count pairs pass; adjacent16/18pass with2invalid100ms analyzer floors retained, corrected64ms analyzer root21host and2native cases pass. No assertions beyond duration floor changed.",
+    "ci": false,
+    "producer_guard": "Open counterexample: byte-identical shell launchers hide distinct executing ELFs from old host compatibility identity; load not attempted. Separate host fix required.",
+    "macos_runtime": "Pending on new count producer."
+  },
+  "builds": {
+    "linux": {
+      "native_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+      "qemu_img_sha256": "e31a8b11a9c4f986383fcc789a19f9ab4b2703965c9ff912cb224f3568f69162",
+      "receipt_sha256": "e081fdeae474b0474671fd57c15446707d326fb677a7d5fc913e55abb59edadb",
+      "original_source_unchanged": true
+    },
+    "macos": {
+      "native_sha256": "d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268",
+      "bytes": 24990920,
+      "receipt_sha256": "b8ba5524209b15061334e970fa3370801f105ced8da1abf5994a445ec8475d61",
+      "compile_files": 1,
+      "qualified_parent_preserved": true
+    }
+  },
+  "evidence": "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json"
 }

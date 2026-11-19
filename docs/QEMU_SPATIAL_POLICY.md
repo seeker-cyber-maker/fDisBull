@@ -53,6 +53,10 @@ existing DOSBox host method and tests source/ownership/deadline behavior, script
 admission, event reopening and the actual owned-machine loader boundary.
 `tests/test_qemu_spatial_policy_native.py` supplies authored COM witnesses for
 older native machine and source-process checkpoint restoration after a newer
-fair-play latch. Only executed native receipts establish those outcomes.
+fair-play latch. The executed Linux baseline witness passed both cases with
+QEMU ELF SHA-256 `71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40`;
+both owners were replaced and all owned processes were reaped. The adjacent
+host gate passed 203 tests, and an independent host review passed 40 tests,
+including two separate lock/deadline and racing-latch probes.
 No compatibility campaign or backend-default decision follows from method
 availability or these bounded policy checks.
