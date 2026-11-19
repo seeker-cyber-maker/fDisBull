@@ -291,6 +291,7 @@ class QemuWaitMixin:
                     break
                 delivery = run.get('input_delivery')
                 if delivery is not None and (delivery.get('requires_resolution') or
+                        delivery.get('delivery') == 'not_dispatched' or
                         delivery.get('state') in ('cancelled', 'failed')):
                     result.update(outcome='input_interrupted', stop=run, input_interrupted=delivery)
                     break

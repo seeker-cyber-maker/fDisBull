@@ -36,6 +36,7 @@ from .qemu_experiments import QemuExperimentMixin
 from .qemu_workspace import QemuDOSWorkspaceMixin as QemuWorkspaceMixin
 from .qemu_dos_source_admission import QemuDOSSourceAdmissionMixin
 from .qemu_dos_le_binding import QemuDOSLEBindingMixin
+from .qemu_macros import QemuMacroSessionMixin
 
 
 def _sha(data):
@@ -162,7 +163,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -346,7 +347,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 dos_driver_observation='validated device-header chain; successful device I/O unqualified',
                 source_trace='stopped boundaries in the initial verified real-mode DOS module',
                 source_trace_clock=vm.machine_configuration['clock_profile']['profile'] == 'virtual',
-                execution_event_search=True,
+                execution_event_search=True, input_macros=True,
                 trace_until='source-bound predicates; virtual-time ranges with the virtual profile; queued input unqualified',
                 desqview_observation=True,
                 qemm_observation=profile['memory_manager']['configured'] == 'qemm',
@@ -991,7 +992,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
 
     @property
     def script_operations(self):
-        return super().script_operations | {'save-machine-state', 'load-machine-state',
+        return super().script_operations | {'macro', 'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',
             'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',

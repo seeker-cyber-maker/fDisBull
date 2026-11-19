@@ -799,6 +799,18 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
+                if (step['op']=='macro'
+                        and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
+                    # A returned native lease is owned by this outer route.
+                    # Preserve entry holds for observation-only macros, but do
+                    # not strand an inner macro's input if a later step fails.
+                    inner_steps=(result.get('execution') or {}).get('steps',[])
+                    before_input=(result.get('input_before') or {}).get('physical')
+                    after_input=(result.get('input_after') or {}).get('physical')
+                    if (any(item.get('op') in ('keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type')
+                            for item in inner_steps)
+                            or isinstance(before_input,dict) and isinstance(after_input,dict) and before_input!=after_input):
+                        keyboard_touched=True
                 if native_key_tracking:
                     record_frame_result(step['op'],result)
                 if track_restored_input and step['op'] in restore_operations:
