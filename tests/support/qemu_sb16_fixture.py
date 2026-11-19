@@ -97,7 +97,8 @@ ordinary channel-unmask port write queues PCM between audio callbacks.
     out 0ah,al
 ''' if not silence else ''
     mode = '    xor al,al\n' if channels == 1 else '    mov al,20h\n'
-    length = DMA_BYTES // channels - 1
+    # C0h counts eight-bit channel samples; stereo does not halve the count.
+    length = DMA_BYTES - 1
     start = r'''
     mov al,0c0h
     call dsp_write

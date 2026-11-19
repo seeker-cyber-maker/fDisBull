@@ -63,8 +63,8 @@ def paired_tone(directory, nasm):
     No debugger/host writes are used. IRQ0 and the PIT configuration stay intact.
     The buffer holds4096 stereo frames. C0h requests4096 eight-bit channel
     samples (2048 stereo frames per Creative's documented length unit). The
-    existing QEMU single-cycle compatibility multiplier is a separate observed
-    model difference; it is not used as the hardware transfer-size oracle.
+    frozen pre-correction QEMU multiplier is a separately retained historical
+    difference; it is not used as the hardware transfer-size oracle.
     """
     labels = ('tone_ready', 'tone_done', 'failed', 'report', 'arena')
     source = r'''

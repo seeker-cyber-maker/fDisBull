@@ -144,12 +144,12 @@ initial_fill:
     out 0ah,al
 ready:
     nop
-    ; Auto-init 8-bit output, unsigned stereo, 128 frames per IRQ.
+    ; Auto-init 8-bit output: 256 channel samples =128 stereo frames per IRQ.
     mov al,0c6h
     call dsp_write
     mov al,20h
     call dsp_write
-    mov al,127
+    mov al,255
     call dsp_write
     xor al,al
     call dsp_write

@@ -1,0 +1,42 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Documented Bx/Cx single-cycle stereo channel-sample counts",
+  "implementation_status": "Source correction prepared; native baseline proves discrepancy; candidate build and runtime qualification pending",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-stereo-capture",
+    "prerequisite_manifest_sha256": "4a9e980a985915e8b6d5571483e9a8aca59f5f17a2d9e1beb8280f235209e395",
+    "prerequisite_binary_sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-sb16-transfer-count-v1.patch",
+    "sha256": "2739b4dfc1e10ddc8ad596cff30a7f253133f47b596b9665649acd0a604bef4d",
+    "modified_file_count": 1,
+    "files": [
+      {
+        "path": "hw/audio/sb16.c",
+        "before_sha256": "b46e9fca1131910a74b746942b50cfb4c4d7f78f2ae03eaa4deefe9e93dfab02",
+        "after_sha256": "ec165ad5080f6a8f184a0becfc5ab3f58de6c8757a40fba9fee4f840ceaf4d21"
+      }
+    ]
+  },
+  "contract": {
+    "dsp_length_unit": "channel samples minus one",
+    "eight_bit_bytes_per_sample": 1,
+    "sixteen_bit_bytes_per_sample": 2,
+    "extra_stereo_multiplier": false,
+    "legacy_dma_cmd8_unchanged": true,
+    "auto_init_arithmetic_unchanged": true,
+    "dma_service_scheduler_unchanged": true,
+    "checkpoint_scope": "Existing unsigned8 voice admission only; signed16 playback does not imply checkpoint support",
+    "state_compatibility": "Exact producer only; old binary and receipts preserved"
+  },
+  "verification": {
+    "host_oracle": "18 count/report/assembly checks and 49 combined adjacent host cases passed; two old generated-COM extent regressions fail before correction",
+    "baseline_native": "Eight identical-guest pairs: DOSBox documented count8/8; frozen QEMU mono4 pass and stereo4 fail at doubled extent, no wrap; all owners reaped",
+    "s16_checkpoint": "Four explicit refusals preserved stopped owner, CPU, clock and device state",
+    "candidate_native_build": "pending",
+    "candidate_native_runtime": "pending",
+    "ci": false
+  }
+}

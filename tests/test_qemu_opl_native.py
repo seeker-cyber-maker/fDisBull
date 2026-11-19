@@ -522,6 +522,7 @@ def _combined_checkpoint(tmp_path, *, capture_format=None):
                 assert (captured['opl']['timer1-expiry-us'], captured['opl']['timer2-expiry-us']) == (160, 643)
                 assert captured['sb']['dma-active'] is True and captured['sb']['voice-channels'] == 2
                 assert captured['sb']['voice-frequency'] == 11025 and captured['sb']['dma-length'] == RING_BYTES
+                assert captured['sb']['block-size'] == BLOCK_BYTES
                 if capture_format == 's16-stereo':
                     assert captured['sample_format'] == STEREO_FORMAT
                     assert captured['stereo_channels_differ'] is True

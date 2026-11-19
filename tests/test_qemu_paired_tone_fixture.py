@@ -128,6 +128,59 @@ def test_explicit_s16_stereo_oracle_rejects_swapped_and_duplicated_mono(tmp_path
         analyze_wav(path, 'S', 'qemu', capture_format='s16-stereo')
 
 
+@pytest.mark.parametrize('rate,backend,encoding', [(32000, 'qemu', 'u8-mono'),
+    (32000, 'qemu', 's16-stereo'), (48000, 'dosbox', 's16-stereo')])
+def test_complete_documented_64ms_window_passes_and_one_frame_short_fails(tmp_path, rate, backend, encoding):
+    count = (rate * REQUESTED_STEREO_FRAMES + SOURCE_RATE - 1) // SOURCE_RATE
+    left = [round(256 + 6000 * math.sin(2 * math.pi * 500 * n / rate)) for n in range(count)]
+    right = [round(-768 + 2000 * math.sin(2 * math.pi * 800 * n / rate)) for n in range(count)]
+    if encoding == 'u8-mono':
+        channels, width = 1, 1
+        values = [round(128 + 32 * math.sin(2 * math.pi * 500 * n / rate)
+                        + 12 * math.sin(2 * math.pi * 800 * n / rate)) for n in range(count)]
+    else:
+        channels, width = 2, 2
+        values = [value for pair in zip(left, right) for value in pair]
+    complete = tmp_path / 'complete.wav'
+    _wav(complete, channels, rate, values, width)
+    report = analyze_wav(complete, 'S', backend, capture_format=encoding)
+    assert report['frames'] == report['minimum_frames'] == count
+    assert report['sample_duration_seconds'] == 0.064
+    assert report['whole_record_untrimmed'] is True and report['gain_or_time_fit'] is False
+    short = tmp_path / 'one-frame-short.wav'
+    _wav(short, channels, rate, values[:-channels], width)
+    with pytest.raises(AssertionError):
+        analyze_wav(short, 'S', backend, capture_format=encoding)
+
+
+@pytest.mark.parametrize('fault', ['swapped', 'duplicated-mix', 'duplicated-left', 'duplicated-right'])
+def test_complete_64ms_stereo_window_rejects_swapped_and_duplicated_lanes(tmp_path, fault):
+    left, right = (lane[:REQUESTED_STEREO_FRAMES] for lane in _signed_stereo_lanes())
+    if fault == 'swapped':
+        left, right = right, left
+    else:
+        mono = ([round((a + b) / 2) for a, b in zip(left, right)]
+                if fault == 'duplicated-mix' else left if fault == 'duplicated-left' else right)
+        left = right = mono
+    path = tmp_path / f'64ms-{fault}.wav'
+    _wav(path, 2, SOURCE_RATE, [value for pair in zip(left, right) for value in pair], 2)
+    with pytest.raises(AssertionError):
+        analyze_wav(path, 'S', 'qemu', capture_format='s16-stereo')
+
+
+def test_opl_minimum_remains_100ms(tmp_path):
+    frequency, rate = expected_frequencies()['opl'], 48000
+    values = [round(400 + 5000 * math.sin(2 * math.pi * frequency * n / rate))
+              for n in range(rate // 10)]
+    path = tmp_path / 'opl-complete.wav'
+    _wav(path, 2, rate, [value for v in values for value in (v, v)], 2)
+    assert analyze_wav(path, 'O', 'dosbox')['minimum_frames'] == rate // 10
+    short = tmp_path / 'opl-short.wav'
+    _wav(short, 2, rate, [value for v in values[:-1] for value in (v, v)], 2)
+    with pytest.raises(AssertionError):
+        analyze_wav(short, 'O', 'dosbox')
+
+
 @pytest.mark.parametrize('channels,width', [(1, 2), (2, 1)])
 def test_explicit_s16_stereo_oracle_rejects_legacy_capture_geometry(tmp_path, channels, width):
     left, _ = _signed_stereo_lanes()

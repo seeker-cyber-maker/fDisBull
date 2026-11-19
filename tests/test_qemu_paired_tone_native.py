@@ -112,7 +112,11 @@ def analyze_wav(path, mode, backend, *, capture_format=None):
             assert rate == 32000
     elif capture_format == 'u8-mono':
         assert (rate, channels, width) == (32000, 1, 1)
-    assert len(raw) == frames * width * channels and frames >= rate // 10
+    # The unchanged C0h guest requests2048 stereo frames at32kHz (64ms).
+    # Round up at the observed capture rate so a partial requested window fails.
+    minimum_frames = ((rate * REQUESTED_STEREO_FRAMES + SOURCE_RATE - 1) // SOURCE_RATE
+                      if mode == 'S' else rate // 10)
+    assert len(raw) == frames * width * channels and frames >= minimum_frames
     codes = list(raw) if width == 1 else list(struct.unpack('<' + 'h' * (len(raw) // 2), raw))
     centre, scale, lower, upper = (128, 128, 0, 255) if width == 1 else (0, 32768, -32768, 32767)
     facts, signals = [], []
@@ -152,6 +156,7 @@ def analyze_wav(path, mode, backend, *, capture_format=None):
                 for index, name in enumerate(('left', 'right')):
                     assert observed[index][name]['strength'] > max(.0001, facts[index]['ac_rms'] * .2)
     return dict(rate=rate, channels=channels, width=width, frames=frames,
+        minimum_frames=minimum_frames,
         pcm_bytes=len(raw), pcm_encoding='u8' if width == 1 else 's16le',
         channel_order=['mono'] if channels == 1 else ['left', 'right'],
         sample_duration_seconds=frames / rate, guest_elapsed_seconds=None,
@@ -229,6 +234,13 @@ def _qemu(directory, source, code, offsets, mode, runtime, result, *, capture_fo
             assert result['tone_done_stop']['timed_out'] is False
             result['done'] = parse_report(read(symbols['report'], offsets['report_size']))
             _report_checks(result['done'], mode, 3)
+            if mode == 'S':
+                initial_address = result['ready']['buffer_physical'] & 0xffff
+                assert result['done']['dma_address'] == (initial_address + DSP_REQUEST_SAMPLES) & 0xffff
+                assert result['done']['dma_count'] == SOURCE_BYTES - DSP_REQUEST_SAMPLES - 1
+                result['documented_dma_progress'] = dict(initial_address=initial_address,
+                    completed_bytes=DSP_REQUEST_SAMPLES, remaining_bytes=SOURCE_BYTES - DSP_REQUEST_SAMPLES,
+                    final_address=result['done']['dma_address'], final_count=result['done']['dma_count'])
             assert read(0x3c, 4) == original_vector
             result['irq_vector_restored'] = True
             result['mixer_done'] = _mixer(debug)
@@ -345,7 +357,7 @@ def test_native_explicit_s16_capture_preserves_asymmetric_stereo_on_both_engines
 
 def _paired_tone_comparison(tmp_path, runtime, mode, *, capture_format=None):
     code, offsets = paired_tone(tmp_path, runtime['nasm'])
-    result = dict(format='fdisbull-paired-authored-tone-native-1', success=False, mode=mode,
+    result = dict(format='fdisbull-paired-authored-tone-native-2', success=False, mode=mode,
         requested_qemu_capture_format=capture_format or 'legacy-default',
         source_sha256=hashlib.sha256(code).hexdigest(), source_bytes=len(code), offsets=offsets,
         expected_frequencies=expected_frequencies(), backends={}, no_guest_memory_or_register_writes=True,
@@ -354,8 +366,8 @@ def _paired_tone_comparison(tmp_path, runtime, mode, *, capture_format=None):
             documented_transfer_bytes=DSP_REQUEST_SAMPLES,
             documented_stereo_frames=REQUESTED_STEREO_FRAMES,
             source_capacity_frames=SOURCE_FRAMES, source_capacity_bytes=SOURCE_BYTES,
-            existing_qemu_single_cycle_stereo_compatibility_multiplier=2,
-            equal_transfer_extent_or_duration_claim=False) if mode == 'S' else None),
+            documented_transfer_extent_required_on_both_engines=True,
+            equal_duration_or_pcm_claim=False) if mode == 'S' else None),
         single_continuous_tone_run_per_backend=True, capture_restart=False,
         no_cross_engine_cpu_timing_pcm_or_gain_equality_claim=True)
     try:
