@@ -1,7 +1,7 @@
 {
   "format": "fdisbull-qemu-native-source-manifest-1",
   "feature": "Opt-in signed16 stereo capture on the combined SB16 and OPL2 graph",
-  "implementation_status": "Source implemented; native build and qualification pending",
+  "implementation_status": "Implemented; nine native stereo/mono/hot-cold/corruption cases passed on macOS and Linux; broader migration qualification open",
   "base": {
     "qemu_version": "10.0.13",
     "prerequisite_package": "native/qemu-mixer-observe",
@@ -53,8 +53,9 @@
   "verification": {
     "qapi_schema": "passed",
     "independent_source_review": "no blocking defect found",
-    "native_build": "pending",
-    "native_runtime": "pending",
-    "ci": false
+    "native_build": "passed on macOS and Debian 13 Linux x86_64",
+    "native_runtime": "9 cases passed on each host, zero failures/errors/skips in accepted runs",
+    "ci": false,
+    "evidence": "docs/evidence/qemu-stereo-capture-2026-11-18/verification.json"
   }
 }

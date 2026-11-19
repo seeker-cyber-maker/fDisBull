@@ -6866,3 +6866,23 @@ mixer readback with OPL hot/cold checkpoint futures and initial silent graphs.
 Prior 713-file runtime, Doom database/588 objects and comparison artifacts remain
 untouched. Trials, histories, layers, hooks, CPU timing, checkpoints and IRQs
 retain their existing scope. No CI, release, merge or shared activation.
+
+## 2026-11-18 — explicit stereo capture on macOS and Linux
+
+The opt-in signed16 stereo observer now has fresh native execution on both
+hosts: nine cases passed on macOS at source
+`8b828a4be2411d3bbec265972eaccb787813b9e6`, and the same nine passed on
+Linux at `cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce`, with zero failures,
+errors or skips in the accepted runs. The
+[scoped stereo evidence](evidence/qemu-stereo-capture-2026-11-18/README.md)
+records exact native/source identities, the new private wheel, paired channel
+oracles, 600 ms hot/cold continuations, corruption cleanup, initial graphs and
+legacy mono preservation. It also retains the corrected build/test setup
+failures and the Linux distribution limit.
+
+The bounded [QEMU macro adapter](QEMU_MACROS.md) is integrated and independently
+reviewed. It preserves owned input and first-stop behavior under one deadline;
+its actual public/native witness is still being completed. The reconciled
+[work plan](DOS_QEMU_PARITY_WORK.json) distinguishes this source availability
+from pending movement/proof and frame/scene contracts. No migration row,
+campaign, default-switch or DOSBox retirement gate is promoted by these totals.

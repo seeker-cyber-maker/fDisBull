@@ -3,8 +3,12 @@
 This incremental QEMU 10.0.13 package extends the exact
 [passive mixer parent](../qemu-mixer-observe/README.md). The adjacent
 [source manifest](source-manifest.json) pins the prerequisite and the three
-before/after source identities. Native compilation and runtime qualification
-are pending; source implementation alone does not qualify this package.
+before/after source identities. The
+[November 18 native evidence](../../docs/evidence/qemu-stereo-capture-2026-11-18/README.md)
+records successful macOS and Linux builds and nine native cases on each host,
+including asymmetric stereo, hot and separate-process cold continuation,
+malformed core4 refusal and legacy mono preservation. These results qualify
+that bounded observer contract; full migration qualification remains open.
 
 `x-fdisbull-start-audio-format` accepts an immutable capture format for a new
 window: the historical `u8-mono`, or `s16-stereo` on the exclusive `sb16-opl`

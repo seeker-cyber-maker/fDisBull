@@ -1,0 +1,145 @@
+{
+  "format": "fdisbull-qemu-stereo-capture-evidence-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "scope": "Opt-in virtual sb16-opl signed16 stereo observer; exact-producer restore; no full DOSBox-X parity promotion.",
+  "source_package": "native/qemu-stereo-capture",
+  "patch_sha256": "028f4b32a3f6544d3ed2501c44e2c9a8f1bb0358d2658396ba7dbd5dc06a2e48",
+  "native_source_files": [
+    {
+      "path": "audio/audio.c",
+      "before_sha256": "b6a0593d402c8a4dda3223c629758476c8c500c51df062f5d117defaf709c663",
+      "after_sha256": "8bd0b5b3f40502fc4af61e8b41c615f4d048a70ee608c23aa789ef8e6978f773"
+    },
+    {
+      "path": "qapi/fdisbull-audio.json",
+      "before_sha256": "56b78ffb4d645880a8a5971743e338cd8a630246d692ac0b7bfdc24ecb1cb2f3",
+      "after_sha256": "950edd99f1e6243dcb6dd30ded541acd8b04ee8aba3b3c3a60c95d09370012ed"
+    },
+    {
+      "path": "system/fdisbull-audio.c",
+      "before_sha256": "39e3ed1c68c11e33d8965c00e938c8b3178b1a9201334753b344b5371068c098",
+      "after_sha256": "aa2e545bc4aa23e2c7975d3a0f0987227e786830008690194a2ea39a5b5e3c6c"
+    }
+  ],
+  "upstream_archive": {
+    "name": "qemu-10.0.13.tar.xz",
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa"
+  },
+  "test_files": {
+    "tests/test_qemu_opl_initial_native.py": "5f30da98ce9a217d6950d5fec72e8110162e68d25810ba1428a1973375911679",
+    "tests/test_qemu_opl_native.py": "a6372fac97308f777b7f6c789b6d4647c87dba5e3dbb64c77209b803a8b4e955",
+    "tests/test_qemu_paired_tone_native.py": "da72320c25d14bcd1ab6c31dcc25898dd2d8b88d3c7bb1ce530a6ce978796927"
+  },
+  "test_nodes": [
+    "tests/test_qemu_paired_tone_native.py::test_native_same_authored_tone_program_has_paired_guest_completion_and_independent_audio[opl-only]",
+    "tests/test_qemu_paired_tone_native.py::test_native_same_authored_tone_program_has_paired_guest_completion_and_independent_audio[sb16-asymmetric-stereo]",
+    "tests/test_qemu_paired_tone_native.py::test_native_explicit_s16_capture_preserves_asymmetric_stereo_on_both_engines",
+    "tests/test_qemu_opl_native.py::test_native_opl_pitch_gates_noise_timers_and_combined_checkpoint_hot_separate_process_cold",
+    "tests/test_qemu_opl_native.py::test_native_s16_stereo_opl_sb16_checkpoint_hot_separate_process_cold",
+    "tests/test_qemu_opl_initial_native.py::test_native_opl_initial_graph_checkpoint_and_actual_tone_continuation[idle-observer]",
+    "tests/test_qemu_opl_initial_native.py::test_native_opl_initial_graph_checkpoint_and_actual_tone_continuation[capture-only-window]",
+    "tests/test_qemu_opl_initial_native.py::test_native_opl_initial_s16_stereo_empty_checkpoint_and_tone_continuation[armed-empty]",
+    "tests/test_qemu_opl_initial_native.py::test_native_opl_initial_s16_stereo_empty_checkpoint_and_tone_continuation[stopped-empty]"
+  ],
+  "runs": [
+    {
+      "host": "macOS",
+      "source_commit": "8b828a4be2411d3bbec265972eaccb787813b9e6",
+      "native": {
+        "bytes": 24999020,
+        "sha256": "e91b189bc62c6bb1e2d6424289480f2b9f431447d37f9bd4b420852e4889babd"
+      },
+      "package": {
+        "version": "0.33.0",
+        "wheel_sha256": "33ab61b6d71bab581215da190e0c9f2d298a09ccb85b27ec45832fbccde6bc03",
+        "source_wheel_prefix_equal": true,
+        "production_files": 714
+      },
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 9
+      },
+      "controller_elapsed_seconds": 48.73917029192671,
+      "private_receipt": {
+        "basename": "native-stereo-01.json",
+        "sha256": "1cc593cf3a6897f356df86ac1a62f6e0e41157641302a04a020c311dba22d486"
+      },
+      "runtime_payload_unchanged": true,
+      "test_files_unchanged": true,
+      "dependencies_unchanged": true,
+      "unexpected_owned_members": [],
+      "remaining_owned_members": []
+    },
+    {
+      "host": "Debian 13 Linux x86_64",
+      "source_commit": "cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce",
+      "native": {
+        "bytes": 29465568,
+        "sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40"
+      },
+      "qemu_img": {
+        "bytes": 2311744,
+        "sha256": "3a879e554297fece6f83093b89c67e891fa36ba29bf0f73a9d5cb0aff6681bbe"
+      },
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 9
+      },
+      "elapsed_seconds": 37.49,
+      "start_utc": "2026-11-19T04:21:09.482070+00:00",
+      "end_utc": "2026-11-19T04:21:46.969812+00:00",
+      "private_receipt": {
+        "basename": "native-stereo-nine-repeat-summary.json",
+        "sha256": "04fa9c255be4022f0ba6033e0d2a938e8fc0cb1b96114559253bc3830330fcea"
+      },
+      "junit_sha256": "543ea1c286125e210abfe8acde98b5bbb3f17d10ca44615eed221f415dc30be1",
+      "source_files_unchanged": true,
+      "boot_unchanged": true,
+      "boot_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+      "dosbox_native_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+      "build": {
+        "elapsed_seconds": 86.08,
+        "maximum_jobs": 4,
+        "returncode": 0,
+        "source_inputs_unchanged": true
+      },
+      "portability_scope": "Relocated-prefix smoke plus nine native cases on this Debian 13 host; GLIBC 2.38 symbol floor; no other-distribution claim."
+    }
+  ],
+  "retained_failures": [
+    {
+      "host": "macOS",
+      "stage": "archive",
+      "cause": "Temporary archive file could not be created; pinned continuation with private TMPDIR passed.",
+      "source_changed_for_retry": false
+    },
+    {
+      "host": "Linux",
+      "stage": "first native selection",
+      "counts": {
+        "tests": 9,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cause": "Cold child lacked import path; exact source PYTHONPATH propagated for complete nine-case repeat.",
+      "private_receipt_sha256": "004c93de6a69b298a6dddacaebd10a4ad52f9061ffa5cffc5737b344a9d67f50",
+      "source_changed_for_retry": false
+    }
+  ],
+  "promotion": {
+    "qualified_inventory_rows": 0,
+    "qualified_campaigns": 0,
+    "default_backend": "dosbox",
+    "dosbox_retirement_allowed": false
+  },
+  "hosted_ci": false,
+  "release_published": false,
+  "shared_installation_activated": false,
+  "commercial_payloads_in_evidence": false
+}

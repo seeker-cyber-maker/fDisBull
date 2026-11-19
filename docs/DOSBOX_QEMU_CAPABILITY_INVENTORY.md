@@ -2,8 +2,9 @@
 
 This inventory preserves the migration boundary at
 `089c1841c415eb2b5cdfa90d03b6291a07f73919` and reconciles source availability
-against `1b3c11736fff947b5b34b6d7014cfe425bd6d074`, including the explicit stereo
-host API. It is a coverage ledger, not a runtime parity claim. Each surface
+against `1b3c11736fff947b5b34b6d7014cfe425bd6d074`, with the stereo and bounded
+macro integrations through `cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce`.
+It is a coverage ledger, not a runtime parity claim. Each surface
 needs native acceptance, affected DOSBox regressions and a reviewed observable
 comparison before its qualification advances.
 
@@ -25,11 +26,12 @@ The machine-readable [remaining work plan](DOS_QEMU_PARITY_WORK.json) assigns
 every identifier to exactly one of eighteen contract groups. It supplies
 existing pytest argument lists, explicit runtime inputs, missing adapters and
 primitives, and the minimum independent observations for each campaign. The
-listed checks have **not** been run by this reconciliation. A missing runtime,
-skipped native case or absent primitive remains an open gate.
+listed test sets are reusable selections; only separately linked execution
+receipts establish results. A missing runtime, skipped native case or absent
+primitive remains an open gate.
 
-Source inspection finds all sixty public routes currently marked partial on
-`QemuDOSProcessSession`; the twenty-three routes marked pending are absent.
+Source inspection finds all sixty-one public routes currently marked partial on
+`QemuDOSProcessSession`; the twenty-two routes marked pending are absent.
 Method presence establishes availability only. In particular:
 
 - Native checkpoint rewind, selected CPU/RAM undo, renderer timelines,
@@ -44,9 +46,15 @@ Method presence establishes availability only. In particular:
   coordinate scaling are prerequisites for the missing completed-frame,
   absolute/INT33 click and coherent frame consumer contracts. Keep those
   distinctions visible through input routing, controls and recovery.
-- Scene/workflow, macro/movement/proof and screenshot-hook adapters remain
-  pending at this audited source. A separate macro candidate does not change
-  this ledger until integration and independent review.
+- The independently reviewed [bounded macro adapter](QEMU_MACROS.md) now
+  composes admitted native input, run, wait and observation primitives while
+  preserving held-key ownership and incomplete stops. Movement/proof,
+  scene/workflow and screenshot-hook adapters remain pending. Macro route
+  availability does not qualify their separate contracts.
+- The [explicit stereo capture evidence](evidence/qemu-stereo-capture-2026-11-18/README.md)
+  records nine native cases on macOS and nine on Linux, including paired
+  asymmetric tones, hot/cold futures and malformed core4 refusal. General
+  audio fidelity and real-game composition remain separate obligations.
 - The existing paired Tic-Tac-Toe file now covers full rounds, recovery/replay,
   reset and guest exit. Original Five Dice and Snake add source-assisted
   complete-game/RNG and keyboard/growth/clock/exit witnesses. Actual
@@ -347,7 +355,7 @@ dispatch are outside this router dictionary.
 | CPU/RAM deltas | `debug-delta-start`, `debug-delta-status`, `debug-delta-record`, `debug-delta-rewind`, `debug-delta-recover` | Native selected projections, guarded inverse, frozen partial-state boundary and full recovery exist. Hidden CPU/device rollback and continued execution from a partial inverse are not claimed |
 | Frame history | `debug-timeline-start`, `debug-timeline-status`, `debug-timeline-advance`, `debug-timeline-rewind`, `debug-timeline-stop`, `debug-timeline-pin`, `debug-timeline-image` | Bounded checkpoint/PNG renderer DAGs, full or lossless delta retention, branches, pin reconstruction and fresh held-key ownership exist. Completed guest frames and broader file-aware composition remain open |
 | Scenes | `debug-scene-check`, `debug-scene-assert`, `debug-scene-click`, `debug-scene-act`, `debug-scene-wait`, `debug-scene-navigation` | Reusable host algorithms, pending native frame/input dependencies |
-| Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Reusable host algorithms, pending source/control/budget adapter and observed native effects |
+| Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Bounded macro route is implemented with native ownership and one total deadline. Movement/proof adapters and their observed postconditions remain pending |
 | Higher workflows and policy | `debug-workflow-observe`, `debug-workflow-act`, `debug-text-observe`, `debug-text-act`, `debug-assisted-travel`, `debug-spatial-policy`, `debug-spatial-action` | Pending coherent lower-level composition; preserve physical/assisted/story/fair-play distinctions |
 
 The QEMU-only scheduling routes are `debug-input-schedule` and

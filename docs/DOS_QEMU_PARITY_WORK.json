@@ -3,13 +3,15 @@
   "inventory": "src/fdisbull/data/dos-migration.json",
   "audit": {
     "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
-    "date": "2026-11-19",
-    "scope": "Source reconciliation plus integrated host stereo API; no runtime campaign executed.",
-    "public_methods_present": 60,
-    "public_methods_absent": 23,
+    "date": "2026-11-18",
+    "scope": "Source reconciliation with integrated stereo and bounded macro adapters; scoped native stereo execution linked separately.",
+    "public_methods_present": 61,
+    "public_methods_absent": 22,
     "method_presence_is_not_qualification": true,
-    "native_stereo": "Host/API slice inspected; native build and hot/cold/paired acceptance are separate integration gates.",
-    "macro": "Pending until its separate code patch is integrated and independently reviewed."
+    "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
+    "macro": "Bounded adapter integrated and independently reviewed at cfe53a7; native public-result witness under investigation.",
+    "integration_commit": "cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce",
+    "timezone": "America/New_York"
   },
   "coverage": {
     "rpc_methods": 35,
@@ -45,7 +47,7 @@
       "No sum of host/authored-test counts qualifies vendor or whole-game behavior.",
       "Record runtime/test/source/input hashes and exact test nodes; use private paths for licensed payloads and bulky runtime evidence."
     ],
-    "test_selection": "The 40 test sets are reusable affected-contract selections, not a mandatory rerun of every file after each edit. To close all 141 rows, each minimum_acceptance obligation needs fresh direct evidence; unsupported primitives require new checks before their consumers can qualify."
+    "test_selection": "The 42 test sets are reusable affected-contract selections, not a mandatory rerun of every file after each edit. To close all 141 rows, each minimum_acceptance obligation needs fresh direct evidence; unsupported primitives require new checks before their consumers can qualify."
   },
   "environment_profiles": {
     "host": {
@@ -823,6 +825,32 @@
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Actual DOSBox-in-QEMU protocol/native-process and endpoint cases; this mixed file is not a host-only substitute for fallback boot."
+    },
+    "macro-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_macros.py",
+        "tests/test_qemu_wait.py",
+        "tests/test_input_macros.py"
+      ],
+      "execution": "Independent host selections passed during integration; exact receipts separate.",
+      "scope": "Macro expansion, primitive and input ownership, deadlines, stop preservation and legacy regression."
+    },
+    "macro-native": {
+      "environment_profile": "paired-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_macros_native.py"
+      ],
+      "execution": "First native witness exposed a large-result delivery reference assumption; correction under review.",
+      "scope": "Actual ATTT moves via public and saved-script macros, preflight/input preservation and cold persisted evidence."
     }
   },
   "work_groups": [
@@ -1334,11 +1362,12 @@
         "debug-proof-check"
       ],
       "qualification": "unqualified",
-      "implementation": "legacy_public_routes_absent_at_audited_head",
+      "implementation": "bounded_macro_adapter_integrated; movement_and_proof_adapters_pending",
       "source_paths": [
         "src/fdisbull/input_macros.py",
         "src/fdisbull/movement.py",
-        "src/fdisbull/qemu_input_schedule.py"
+        "src/fdisbull/qemu_input_schedule.py",
+        "src/fdisbull/qemu_macros.py"
       ],
       "depends_on": [
         "clock-and-physical-input",
@@ -1347,10 +1376,12 @@
       "existing_test_sets": [
         "workflow-legacy",
         "clock-input-native",
-        "histories-native"
+        "histories-native",
+        "macro-host",
+        "macro-native"
       ],
       "remaining_work": [
-        "Integrate and independently review the bounded native macro adapter before changing its availability; it was absent during this audit.",
+        "Complete native public/script macro acceptance, including large-result retrieval, and paired observable review; integrated source and host review do not establish whole-game behavior.",
         "Implement movement/proof adapters with explicit physical versus assisted action policy, source/control and total budget bounds.",
         "Add public/script/native and paired scenarios for partial input, early stop, lost ownership and actual observed effects."
       ],
@@ -1535,12 +1566,13 @@
         "audio-native",
         "audio-paired"
       ],
-      "implemented": "Optional s16-stereo capture is scoped to virtual sb16-opl; u8-mono remains default and old-command compatible.",
+      "implemented": "Optional s16-stereo capture is scoped to virtual sb16-opl; u8-mono remains default and old-command compatible. Nine native cases passed on each of macOS and Linux, including asymmetric tones, initial graphs, malformed core4 and 600 ms hot/cold futures.",
       "remaining": [
-        "Finish native build and asymmetric stereo/whole-frame/overflow/core4 corruption/hot+cold future checks; keep old mono checkpoint acceptance.",
+        "Qualify remaining long/rolling/max-boundary capture and real-game compositions; preserve the tested old mono checkpoint path.",
         "Resolve or explicitly qualify the documented SB16 single-cycle stereo length mismatch, DC/rail behavior, guest mixer gain application, bounded/long/rolling capture and actual game audio expectations."
       ],
-      "historical_record": "docs/evidence/qemu-mixer-tones-2026-11-16/verification.json"
+      "historical_record": "docs/evidence/qemu-mixer-tones-2026-11-16/verification.json",
+      "evidence": "docs/evidence/qemu-stereo-capture-2026-11-18/verification.json"
     }
   ],
   "required_campaigns": [
@@ -1723,5 +1755,7 @@
     "affected DOSBox regression and public/consumer routes",
     "recovery/epoch/failure evidence where the surface owns state or effects"
   ],
-  "evidence_added_by_this_reconciliation": []
+  "evidence_added_by_this_reconciliation": [
+    "docs/evidence/qemu-stereo-capture-2026-11-18/verification.json"
+  ]
 }
