@@ -12,6 +12,7 @@ from fdisbull.cli import respond
 from fdisbull.debug_script import execute_script
 from fdisbull.debugger import DebugWorkspace
 from fdisbull.input_macros import expand_macro
+from fdisbull.output_limits import OutputPolicy, output_policy_context
 from fdisbull.qemu_dos_process import QemuDOSProcessSession
 from test_qemu_clock_budget import owned
 from test_qemu_io_deadlines import QMPWire, observation
@@ -172,6 +173,43 @@ def test_public_macro_returns_native_lease_and_persists_unchanged_delivery_claim
     assert json.loads(row[0])['outputs']['lease'] == token
     artifact = o.project.db.execute('SELECT kind FROM debug_artifacts WHERE id=?', (result['artifact'],)).fetchone()
     assert artifact['kind'] == 'macro-result'
+
+
+def test_public_macro_spill_retrieves_exact_effect_result_without_replay(macro_owner, tmp_path):
+    o = macro_owner
+    saved = define(o, [dict(op='keyboard.key-down', key='ctrl', **{'as': 'down'}), dict(op='run')],
+                   outputs=dict(lease='$down.lease'))
+    workspace = DebugWorkspace()
+    workspace.sessions[o.session.run_id] = o.session
+    policy = OutputPolicy(4096, artifact_dir=tmp_path / 'outputs')
+    try:
+        with output_policy_context(policy):
+            reply = respond(dict(method='debug-macro', params=dict(project=str(o.project.path),
+                run=o.session.run_id, macro_set=saved, name='action', timeout_ms=500)), debugger=workspace)
+            assert reply['ok'], reply
+            reference = reply['result']
+            assert reference['format'] == 'fdisbull-output-ref-1'
+            assert reference['status'] == 'artifact_required' and reference['retry_safe'] is False
+            assert reference['complete'] is False and reference['execution']['ok'] is True
+            calls = len(o.wire.requests)
+            for pointer, expected in (('/ok', True), ('/result/ok', True)):
+                selected = respond(dict(method='output-select', params=dict(
+                    artifact=reference['artifact']['id'], pointer=pointer)))
+                assert selected['ok'] and selected['result']['complete'], selected
+                assert selected['result']['value'] is expected
+            exported = tmp_path / 'public-macro-response.json'
+            delivered = respond(dict(method='output-export', params=dict(
+                artifact=reference['artifact']['id'], output=str(exported))))
+            assert delivered['ok'], delivered
+            recovered = json.loads(exported.read_bytes())
+            result = recovered['result']
+            assert recovered['ok'] and result['ok']
+            token = result['outputs']['lease']
+            assert o.session.input_state()['leases'][token]['make'] == 'qmp_accepted'
+            assert len(o.executions) == len(o.wire.input_batches) == 1
+            assert len(o.wire.requests) == calls
+    finally:
+        workspace.sessions.clear()
 
 
 def test_typed_native_lease_parameter_releases_only_its_owner(macro_owner):
