@@ -19,7 +19,8 @@
     "executed_image": "OS-observed main-image producer identity gates shared QEMU capture/restore; 7 final Linux native and 8 final installed Mac native cases passed. Independent49 and root166 host cases overlap broader author gates.",
     "runtime_scenes": "Explicit passive scene-2 runtime-memory check/assert integrated; 55 independent and 618 integrated host cases, plus2 exact-source authored native cases pass. No frame/action/workflow qualification.",
     "screenshot_hooks": "Stopped-surface passive/assert/layer hooks integrated; 37 independent and273 integrated host cases plus1 exact-source authored native case pass. A post-test receipt export failure was recovered read-only; fresh-frame/execution hooks remain open.",
-    "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open."
+    "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open.",
+    "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification."
   },
   "coverage": {
     "rpc_methods": 35,
@@ -1931,6 +1932,7 @@
     "docs/evidence/qemu-witnessed-movement-2026-11-18/verification.json",
     "docs/evidence/qemu-executed-image-2026-11-18/verification.json",
     "docs/evidence/qemu-runtime-scenes-2026-11-18/verification.json",
-    "docs/evidence/qemu-screenshot-hooks-2026-11-18/verification.json"
+    "docs/evidence/qemu-screenshot-hooks-2026-11-18/verification.json",
+    "docs/evidence/qemu-desqview-installed-2026-11-18/verification.json"
   ]
 }
