@@ -21,13 +21,14 @@
     "screenshot_hooks": "Stopped-surface passive/assert/layer hooks integrated; 37 independent and273 integrated host cases plus1 exact-source authored native case pass. A post-test receipt export failure was recovered read-only; fresh-frame/execution hooks remain open. The identical authored native case also passed in the privately installed Mac wheel at43bd549.",
     "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open.",
     "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification.",
-    "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification."
+    "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification.",
+    "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign."
   },
   "coverage": {
-    "rpc_methods": 35,
+    "rpc_methods": 37,
     "public_methods": 83,
     "extra_surfaces": 23,
-    "total": 141,
+    "total": 143,
     "partition": "Every inventory identifier appears in exactly one work_group; dependencies and campaigns may reuse groups."
   },
   "policy": {
@@ -57,7 +58,7 @@
       "No sum of host/authored-test counts qualifies vendor or whole-game behavior.",
       "Record runtime/test/source/input hashes and exact test nodes; use private paths for licensed payloads and bulky runtime evidence."
     ],
-    "test_selection": "These test sets are reusable affected-contract selections, not a mandatory rerun of every file after each edit. To close all141rows, each minimum_acceptance obligation needs fresh direct evidence; unsupported primitives require new checks before their consumers can qualify."
+    "test_selection": "These test sets are reusable affected-contract selections, not a mandatory rerun of every file after each edit. To close all 143 rows, each minimum_acceptance obligation needs fresh direct evidence; unsupported primitives require new checks before their consumers can qualify."
   },
   "environment_profiles": {
     "host": {
@@ -215,7 +216,9 @@
         "tests/test_debug_semantics.py",
         "tests/test_qemu_dos.py",
         "tests/test_qemu_operation_deadlines.py",
-        "tests/test_qemu_io_public.py"
+        "tests/test_qemu_io_public.py",
+        "tests/test_dosbox_rpc_census.py",
+        "tests/test_runtime_source_matching.py"
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
@@ -1044,6 +1047,8 @@
         "debug-status",
         "debug-write-memory",
         "debug-write-registers",
+        "debug.output.read",
+        "debugger.execute_command",
         "execution.continue",
         "execution.pause",
         "execution.step",
@@ -1062,7 +1067,8 @@
         "src/fdisbull/qemu_machine.py",
         "src/fdisbull/qemu_control.py",
         "src/fdisbull/debugger.py",
-        "src/fdisbull/debug_script.py"
+        "src/fdisbull/debug_script.py",
+        "src/fdisbull/runtime_source_matching.py"
       ],
       "depends_on": [],
       "existing_test_sets": [
@@ -1073,12 +1079,14 @@
       ],
       "remaining_work": [
         "Compare remaining legacy continue/pause/wait, breakpoint-list and reply-schema obligations; the existing paired COM covers registers, memory, one breakpoint/step and exit only.",
-        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation."
+        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation.",
+        "Qualify or explicitly disposition diagnostic output cursors and stopped HELP/CPU/PIC replies, including the existing protected CPU/GDT source-matching consumer. QEMU internal monitor reads do not establish the complete public diagnostic contract."
       ],
       "minimum_acceptance": [
         "Same original COM/MZ bytes and immutable source/disk inputs; correct context, widths, stop cause and selected-process lifecycle.",
         "Python, JSON and saved scripts agree on admitted operation and single execution; invalid input and unsupported operations refuse before effects.",
-        "Dispatch uncertainty/deadline/persistence failures close and reap the owner, preserve evidence, and never retry on another backend."
+        "Dispatch uncertainty/deadline/persistence failures close and reap the owner, preserve evidence, and never retry on another backend.",
+        "The intended diagnostic consumer preserves stopped identity, read-only scope, raw/parsed reply and cursor/rejection semantics, or records a separately reviewed compatibility disposition; no arbitrary monitor passthrough or qualification by source census."
       ]
     },
     {
@@ -1936,7 +1944,7 @@
       "accept": [
         "Both retained selectors remain usable; no automatic retry/fallback after an uncertain action.",
         "Each backend launches its own compatible state/runtime; DOSBox save files are never loaded as QEMU checkpoints.",
-        "Default stays dosbox until all 141 surfaces and seven campaigns have reviewed evidence; removal remains a separate review."
+        "Default stays dosbox until all 143 surfaces and seven campaigns have reviewed evidence; removal remains a separate review."
       ],
       "qualification": "unqualified",
       "execution": "not_run_by_this_reconciliation"

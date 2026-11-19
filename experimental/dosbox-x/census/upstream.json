@@ -1,0 +1,20 @@
+{
+  "format": "fdisbull-dosbox-rpc-census-upstream-1",
+  "upstream": "https://github.com/joncampbell123/dosbox-x",
+  "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "member": "src/agent/server/agent_server.cpp",
+  "member_bytes": 160141,
+  "member_sha256": "dbeb7b764301c1c982ac1222b13f84373338986ef6c64620825cbee3f888e6dc",
+  "source_archive": "upstream.tar.xz from retained 0.34.1 corresponding-source companion",
+  "source_archive_sha256": "bc442b7ade6ce3f05e280dacd7984a770d6ee576b0d8f29cf94e66f917819f4a",
+  "license": "../COPYING",
+  "license_sha256": "93c59ba0fd92fef7746f0e0809cb49a0c27ab21376da0ac6a583688401afd441",
+  "scope": "Only the complete upstream RPC server is retained for offline exact patch replay; not an emulator source distribution, native implementation or runtime qualification.",
+  "prefix_fallbacks": {
+    "input.mouse.state": {
+      "prefix": "input.mouse.",
+      "required_statement": "else if (success && !probe) success = AGENT_MouseGetState(&mouse, &error);",
+      "disposition": "The rejecting IsKnownMethod filter admits only declared methods. Other mouse names are exact branches; state is the reviewed remaining non-mutation fallback."
+    }
+  }
+}

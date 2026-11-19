@@ -11,6 +11,7 @@ import pytest
 from fdisbull.cli import main, respond
 from fdisbull.debugger import DebugSession, DebugWorkspace
 from fdisbull.dos_migration import migration_status
+from scripts.dosbox_rpc_census import census
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,16 +48,14 @@ def test_native_protocol_and_host_consumers_have_no_unclassified_dos_methods():
     report = migration_status(details=True)
     declared = {row['method'] for row in report['rpc_methods']}
     assert len(declared) == len(report['rpc_methods'])
-    discovered = set()
-    # Inspect the supplied native source patches, including layer-only commands.
-    for path in (ROOT / 'experimental/dosbox-x/headless-agent.patch',
-                 ROOT / 'experimental/dosbox-x/layers/headless-agent.patch'):
-        text = '\n'.join(line for line in path.read_text().splitlines() if not line.startswith('-'))
-        discovered.update(re.findall(r'\bmethod\s*==\s*"([a-z][a-z_.]+)"', text))
+    # Full-source replay includes unchanged upstream diagnostics outside every
+    # patch hunk. It validates declarations and dispatch, with pinned inputs.
+    discovered = set(census(ROOT)['methods'])
     modules = {Path(inspect.getfile(cls)) for cls in DebugSession.__mro__ if cls is not object}
     modules.update(ROOT / ('src/fdisbull/' + name) for name in (
         'dosbox_rpc.py', 'debug_state.py', 'runtime_observations.py',
-        'debug_wait.py', 'screenshot_codecs.py', 'runtime_code.py', 'keyboard_input.py', 'frame_coherence.py'))
+        'debug_wait.py', 'screenshot_codecs.py', 'runtime_code.py', 'keyboard_input.py',
+        'frame_coherence.py', 'runtime_source_matching.py'))
     for path in modules:
         if not path.is_file():
             continue
@@ -67,7 +66,9 @@ def test_native_protocol_and_host_consumers_have_no_unclassified_dos_methods():
                 method = node.args[0].value
                 if node.func.attr == '_keyboard_call':
                     method = 'input.keyboard.' + method
-                if re.fullmatch(r'(agent|session|execution|state|memory|breakpoints|trace|video|input|frame|layers)\.[a-z_.]+', method):
+                # No namespace allowlist: a new diagnostic family must not
+                # disappear just because its prefix was absent historically.
+                if re.fullmatch(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+', method):
                     discovered.add(method)
     assert discovered == declared
 
@@ -99,6 +100,35 @@ def test_unqualified_slices_keep_default_and_fallback_policy_explicit():
     assert 'public_methods' not in report  # The ordinary summary stays compact.
     report['default_backend'] = 'accidental-caller-mutation'
     assert migration_status()['default_backend'] == 'dosbox'
+
+
+def test_diagnostic_rpc_consumers_remain_unqualified_until_dispositioned():
+    output = migration_status(surface='debug.output.read')['rpc_methods'][0]
+    diagnostic = migration_status(surface='debugger.execute_command')['rpc_methods'][0]
+    assert output['qualification'] == diagnostic['qualification'] == 'unqualified'
+    assert output['current_status'] == 'pending'
+    assert diagnostic['current_status'] == 'partial'
+    assert diagnostic['legacy_contract']['allowed_commands'] == ['HELP', 'CPU', 'PIC']
+    assert diagnostic['legacy_contract']['requires_stopped'] is True
+    assert 'runtime_source_matching._descriptors' in diagnostic['consumers']
+    assert output['disposition']['status'] == diagnostic['disposition']['status'] == 'open'
+    assert migration_status()['default_switch_gate']['eligible'] is False
+
+
+def test_work_plan_partitions_every_inventory_obligation_once():
+    report = migration_status(details=True)
+    plan = json.loads((ROOT / 'docs/DOS_QEMU_PARITY_WORK.json').read_text())
+    rows = [r for key in ('rpc_methods', 'public_methods', 'extra_surfaces') for r in report[key]]
+    identifiers = [r.get('method', r.get('id')) for r in rows]
+    planned = [name for group in plan['work_groups'] for name in group['surface_ids']]
+    assert len(planned) == len(set(planned))
+    assert set(planned) == set(identifiers)
+    assert {key: plan['coverage'][key] for key in report['inventory_counts']} == report['inventory_counts']
+    assert plan['coverage']['total'] == len(rows) == 143
+    assert report['inventory_counts']['rpc_methods'] == 37
+    assert report['default_switch_gate']['unqualified_surfaces'] == len(rows)
+    assert plan['policy']['qualified_surfaces_added'] == 0
+    assert plan['policy']['qualified_campaigns_added'] == 0
 
 
 def test_catalog_is_projectless_and_filterable(tmp_path, capsys):

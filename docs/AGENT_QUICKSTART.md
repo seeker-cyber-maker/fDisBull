@@ -104,7 +104,7 @@ synchronized release `hold_ms` after the actual down callback. Use JSON
 `clock_sync_step()` can supply one bounded execution attempt. No movement is
 requested, but prior mouse accumulators and external button state can affect
 packets. Coordinate `click(x, y)` and `click-frame` remain unsupported on native
-QEMU; all 127 default-promotion qualifications stay open.
+QEMU; all 143 default-promotion qualifications stay open.
 
 For sparse image observations, inspect `renderer_probe` and use
 `display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON

@@ -18,10 +18,10 @@ required behavior is missing, unqualified, or has no recovery path.
 ## Current remaining work
 
 The packaged [source inventory](../src/fdisbull/data/dos-migration.json) contains
-**141 required surfaces: 35 backend RPCs, 83 public routes and 23 extra
+**143 required surfaces: 37 backend RPCs, 83 public routes and 23 extra
 surfaces**, plus **seven required compatibility campaigns**. Every qualification
 remains open. The original nine extra surfaces have been joined by fourteen
-explicit workspace/file-service surfaces; the old 127/134 totals are historical.
+explicit workspace/file-service surfaces; the old 127/134/141 totals are historical.
 
 The machine-readable [remaining work plan](DOS_QEMU_PARITY_WORK.json) assigns
 every identifier to exactly one of eighteen contract groups. It supplies
@@ -31,8 +31,8 @@ listed test sets are reusable selections; only separately linked execution
 receipts establish results. A missing runtime, skipped native case or absent
 primitive remains an open gate.
 
-Source inspection finds all sixty-seven public routes currently marked partial on
-`QemuDOSProcessSession`; the sixteen routes marked pending are absent.
+Source inspection finds all seventy public routes currently marked partial on
+`QemuDOSProcessSession`; the thirteen routes marked pending are absent.
 Method presence establishes availability only. In particular:
 
 - Native checkpoint rewind, selected CPU/RAM undo, renderer timelines,
@@ -256,14 +256,14 @@ DOSBox as a Linux process inside QEMU and forwards the DOSBox protocol. Its
 `dos-cpu` context and outer `machine` context are different CPUs. Passing its
 tests does not establish native DOS-on-QEMU compatibility.
 
-The audited DOSBox surface comprises **35 backend RPC methods** and **83
+The audited DOSBox surface comprises **37 backend RPC methods** and **83
 public debugger route names** resolving on `DebugSession`. Two of those public
 routes intentionally refuse direct DOS writes. Counting names alone is
 insufficient: inherited methods can still reject the selected backend, and
 apparently similar operations can have different timing, state or address
 semantics.
 
-Together with the twenty-three extra surfaces, **all 141 default-switch
+Together with the twenty-three extra surfaces, **all 143 default-switch
 qualification rows remain open**. New native prerequisites do not promote
 their legacy consumers or a compatibility campaign. DOSBox remains the default
 and both DOSBox selectors remain available.
@@ -284,7 +284,7 @@ This adds a sparse renderer observation prerequisite. `video.probe` and
 `debug-frame-probe` remain pending: their legacy mode/frame/state identities are
 not supplied by a renderer update. Coordinate clicks, INT33 mapping, application
 readiness and completed guest frames remain separate. Full pixel hashes still
-come from `capture_display()`. All 141 promotion qualifications remain open.
+come from `capture_display()`. All 143 promotion qualifications remain open.
 
 The bounded [public DESQview raw-checkpoint witness](DOS_QEMU_HANDOFF.md#public-desqview-checkpoints-and-fresh-physical-qualification-2026-11-14) now composes an attached automatic observer with standard raw save/load. Save suspends only its verified native control while paused; restore replaces the owner/epoch and requires fresh snapshot/certificate authority. Two original-guest endpoint pairs and eleven preservation cases passed locally. User/hook breakpoints, active raw layers, pending lifecycle stops and unreleased input still refuse. The original selected RAM window was unchanged before restore, so this is saved-window preservation; changed-RAM recovery has separate authored witnesses. Broader parity and default-switch gates remain open.
 
@@ -310,14 +310,18 @@ compound consumers.
 
 ## Complete backend RPC ledger
 
-The table covers the stable and layers patches. `layers.configure` requires
-the layers profile. Names were cross-checked against the DOS session/helper
-calls, patch dispatch conditions, and strings in the supplied DOSBox backend;
-that last check is not runtime qualification.
+The table covers the complete pinned stable and layers server sources.
+`layers.configure` requires the layers profile. The offline source census
+reconstructs both servers, validates their hashes and reconciles known-method
+declarations with exact dispatch and explicitly reviewed prefix fallbacks.
+Host consumer calls are checked separately. Neither census is runtime
+qualification.
 
 | RPC methods | Slice | Existing native seam and remaining distinction |
 | --- | --- | --- |
 | `agent.capabilities` | Core | Machine capability metadata exists; advertise only implemented, admitted operations and distinguish availability from qualification |
+| `debug.output.read` | Core | Cursor-paged diagnostic output has no equivalent public QEMU cursor; owner logs and event artifacts need an explicit consumer/retention disposition |
+| `debugger.execute_command` | Core | Stopped `HELP`/`CPU`/`PIC` only. The protected source matcher has a bounded QEMU CPU/GDT alternative; raw/parsed replies, HELP/PIC and rejection semantics remain unqualified |
 | `session.start` | DOS process | Native COM/MZ adapter now uses actual DOS EXEC, verifies PSP/MCB, ordered relocations and exact loader writes, then stops at entry; protected/V86 and full DOSBox launch parity remain unqualified |
 | `session.status`, `session.stop` | Core / DOS process | Machine status/cleanup exist; machine stop or process reaping is not selected DOS process termination |
 | `execution.continue`, `execution.pause`, `execution.step`, `execution.wait` | Core | QMP/GDB control exists; bounded machine run is not the DOS asynchronous-operation schema or guest-time run contract |
@@ -387,7 +391,7 @@ native surfaces, not new names in the 83-route legacy DOSBox qualification set.
 `GuestMouse` facade or legacy `DebugSession` stub. It does not replace the
 coordinate/frame behavior of `debug-click` or `debug-click-frame`, and it adds
 no row to the legacy RPC/public-route set. The complete current inventory has
-141 required surfaces, including its explicit workspace additions.
+143 required surfaces, including its explicit workspace additions.
 
 ### Surfaces a method count does not cover
 
@@ -432,7 +436,7 @@ configuration vector. See the [configuration contract](DOS_QEMU_MIGRATION.md#obs
 This separate QEMU observation adds no row to the frozen DOSBox promotion
 inventory. A publication stamp does not prove raster coherence, guest frame
 completion, BIOS mode identity, INT33 mapping or scene readiness. Native reset,
-overflow and restore invalidation do not supply checkpoint parity. All 141
+overflow and restore invalidation do not supply checkpoint parity. All 143
 promotion qualifications remain open and DOSBox remains the default.
 
 The eleventh optional [display-motion extension](../native/qemu-display-motion/README.md)
@@ -451,7 +455,7 @@ or verified driver calibration. Count values fit −127..127, with no rounding o
 splitting; packet acceptance still remains unknown. An authored guest separates
 packet receipt, application pointer commit and drawing, including a deliberately
 wrong scale. Actual pixel travel, pointer position, raster freshness and arbitrary
-INT33 behavior remain unqualified. This adds no promotion row; all 141 remain open.
+INT33 behavior remain unqualified. This adds no promotion row; all 143 remain open.
 See the [mapped motion contract](DOS_QEMU_MIGRATION.md#move-with-a-declared-image-to-relative-scale).
 
 ## Regression witnesses and promotion gates
@@ -505,20 +509,43 @@ not replaying an uncertain mutation or loading an incompatible checkpoint.
 
 ## Preventing inventory drift
 
-The coverage check should derive public routes from the router and
-`DebugSession` inheritance, including methods that explicitly refuse. Derive
-raw RPC names from literal `.call(...)` first arguments in the session/mixin
-and helper modules; expand literal `_keyboard_call(...)` operations; add
-`method == "..."` dispatch names from added/context lines of the stable and
-layers patches. Ignore deleted lines, trailing-dot dispatch prefixes and
-filenames such as `agent.env`.
+The coverage check derives public routes from the router and `DebugSession`
+inheritance, including methods that explicitly refuse. Raw native names come
+from the **complete reconstructed server**, not patch hunks:
 
-At this baseline that extraction produces exactly the 35 RPC names above and
-83 public routes. Require set equality with the ledger, unique entries,
-recognized slices/statuses and existing test paths. New or removed surfaces
-must update the inventory deliberately. Keep implementation status separate
-from qualification receipts: a referenced test path, advertised capability or
-importable method is not evidence that the native replacement passed.
+```sh
+python scripts/dosbox_rpc_census.py
+```
+
+The [160 KB pinned upstream member](../experimental/dosbox-x/census/README.md)
+makes exact in-memory stable/layers reconstruction possible in ordinary offline
+tests. Baseline/member, patch and resulting-source identities must all match.
+The helper reconciles the complete known-method filter with every dispatch
+use, rejects unknown syntax and requires explicit statement evidence for the
+existing `input.mouse.state` prefix fallback. It accepts no new method merely
+because its namespace resembles an old one.
+
+The host literal scan covers session/mixin helpers and
+`runtime_source_matching`, expands literal `_keyboard_call` operations and
+accepts all syntactically valid RPC namespaces. In particular,
+`runtime_source_matching._descriptors` calls `debugger.execute_command` with
+`CPU`; its QEMU monitor-read alternative is a partial consumer implementation,
+not full public diagnostic compatibility.
+
+There are 36 stable / 37 layer-profile RPC names and 83 legacy public routes.
+The earlier 35-row RPC ledger missed unchanged upstream `debug.output.read`
+and `debugger.execute_command` because neither name occurs in a supplied patch
+hunk. Both are now explicit unqualified obligations, bringing the current gate
+to **143 surfaces plus seven campaigns**. The diagnostics are read-only and
+restricted; no arbitrary monitor-command passthrough is added.
+
+Tests require exact ledger equality, unique entries, complete work-plan
+partitioning, recognized slices and existing witnesses. They also reject
+missing/extra declarations or dispatch, missing fallback code and source/hash
+drift. A native patch/manifest update is checked automatically against the
+same pinned baseline, without rewriting a generated census list. New or
+removed surfaces require deliberate inventory changes. Referenced tests,
+advertised capabilities and importable methods never qualify native parity.
 
 ### 2026-11-16: scoped digital SB16 audio
 
