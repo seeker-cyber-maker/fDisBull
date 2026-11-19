@@ -1,0 +1,555 @@
+{
+  "accepted_qemu_owners": {
+    "count": 8,
+    "reaped": 8,
+    "returncodes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "cases": {
+    "plutonia": {
+      "arguments": "-warp 1 -skill 2 -nomonsters -config D:\\BASE.CFG",
+      "configuration": {
+        "blaster": "A220 I7 D1 H5 T6",
+        "change": {
+          "snd_musicdevice": {
+            "after": 2,
+            "before": 3
+          }
+        },
+        "derived_sha256": "0439d94d7abca6cf1759c97bca4670ad2ccf155b60d5cca78f3755847a86976b",
+        "music_volume": 8,
+        "parent_sha256": "1ef267db139e17361293c3e966a89d5b1f879e236b5f4d0d5ddc8109c73bb406",
+        "sfx_volume": 8
+      },
+      "directory_bytes": 18963571,
+      "dosbox": {
+        "capture": {
+          "differing_lane_frames": 319973,
+          "frames": 2037936,
+          "pcm_sha256": "aee3bb69a7a15a135b91c8240150df60e4ceb8596d62a6470c4f0742ea62c4bc",
+          "raw_unnormalized": true,
+          "wav_sha256": "01606dd9348550f37beef08548aeaaebb54e66036f15021383db15d74f0ed1b6"
+        },
+        "normal_guest_exit": {
+          "code": 0,
+          "resident": false,
+          "source": "DOS_Terminate",
+          "stage": "after-process-cleanup"
+        },
+        "original_relocated_entry_verified": true,
+        "owner": {
+          "reaped": true,
+          "returncode": 0
+        },
+        "physical_input": {
+          "ammo_after": 49,
+          "ammo_after_hot_restore": 50,
+          "ammo_before": 50,
+          "hold_ms": 300,
+          "key": "ctrl",
+          "observation_window_requested_ms": 3000
+        },
+        "receipt_sha256": "848e67e408d572d591e1f87fae4e7b658c5ad4dd0bbf56658f66ba24259d54e2",
+        "register_matches": {
+          "address_context": true,
+          "cpu_mode": true,
+          "flags": true,
+          "general": true,
+          "instruction_pointer": true,
+          "segments": true
+        },
+        "status": "passed"
+      },
+      "prior_refusal": {
+        "message": "Workspace file bytes exceed the capture bound",
+        "receipt_sha256": "e1a52f7a02c5a5d5667497305c28f7df107e158fe8c886cd7c608861f7e8ed85",
+        "vm_spawned": false
+      },
+      "qemu": {
+        "audio": {
+          "A": {
+            "audio_frames": 34683,
+            "chunks": 112,
+            "differing_lane_frames": 2924,
+            "pcm_sha256": "beb621d511219c870c5d0b7fa5410faca71f94e980ff382bde9afeae1a2298c2",
+            "statistics": [
+              {
+                "dc": 0.026332592464416556,
+                "frames": 34683,
+                "max": 15936,
+                "min": -14836,
+                "rails": 0,
+                "rms": 0.06348724552611694
+              },
+              {
+                "dc": 0.026336546735849065,
+                "frames": 34683,
+                "max": 15680,
+                "min": -14591,
+                "rails": 0,
+                "rms": 0.06274356690627188
+              }
+            ]
+          },
+          "B": {
+            "audio_frames": 53300,
+            "chunks": 173,
+            "differing_lane_frames": 4235,
+            "pcm_sha256": "7b24534f8177e75e8943e1d6167fcf156477ce58c8e037ccfefdaf7e3380d238"
+          },
+          "before-shot": {
+            "audio_frames": 12300,
+            "chunks": 40,
+            "differing_lane_frames": 0,
+            "pcm_sha256": "3ef1453b9be9a288882afe1860b992edb342c3a711e6730057f680628d54fa46"
+          }
+        },
+        "checkpoint": {
+          "artifact": {
+            "bytes": 37353625,
+            "sha256": "16a575785daa1a43058255e633cdaba048bd583648514441d5e6f0fac13b543c"
+          },
+          "format": "fdisbull-qemu-owned-machine-qcow2-v1",
+          "future_ns": 600000000,
+          "hot_future_exact": true,
+          "hot_selected_exact": true,
+          "protected_source_rebound": false,
+          "separate_python_cold_future_exact": true,
+          "separate_python_cold_selected_exact": true,
+          "source_binding_restored": false
+        },
+        "cold_receipt_sha256": "8e72f3a9898297f9e636407e397306332a539cf033d34f5c889e2e69fb34cbff",
+        "inputs_unchanged": {
+          "boot_unchanged": true,
+          "game_inputs_unchanged": {
+            "BASE.CFG": true,
+            "DOOM2.EXE": true,
+            "PLUTONIA.WAD": true
+          },
+          "original_inputs_unchanged": {
+            "DOOM2.EXE": true,
+            "PLUTONIA.WAD": true
+          }
+        },
+        "owners": {
+          "count": 4,
+          "reaped": 4,
+          "returncodes": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "physical_input": {
+          "advance_after_arm_ns": 700000000,
+          "ammo_after": 49,
+          "ammo_before": 50,
+          "hold_ms": 300,
+          "key": "ctrl",
+          "observed": "Original Map01 HUD and firing image"
+        },
+        "receipt_sha256": "dc3cbb15d885a355d86c5477999cdd0995fffc0de0f71eb4037b98a41c50cf72",
+        "screenshot_sha256": {
+          "A.png": "ebfdb3b6060c1171cf5dddb6ef8f12b8f2551bdaa05f325ed018c10125cfe3e1",
+          "B.png": "5b20975d04eb754b23e064da439368db245eea18084f1b81d578c6164786c013",
+          "after-shot.png": "ebfdb3b6060c1171cf5dddb6ef8f12b8f2551bdaa05f325ed018c10125cfe3e1",
+          "startup-60s.png": "c27de062c2d99e1d36d0d4b3b0540c53eae2e04e7de60bdc29517113a4483cc7"
+        },
+        "selected_and_future_png_hashes_exact_hot_and_cold": true,
+        "status": "passed"
+      },
+      "source": {
+        "BASE.CFG": {
+          "bytes": 770,
+          "sha256": "0439d94d7abca6cf1759c97bca4670ad2ccf155b60d5cca78f3755847a86976b"
+        },
+        "DOOM2.EXE": {
+          "bytes": 722629,
+          "sha256": "5b695dcd165fe1d1c8bcf405e0c6a5c4855d37ade7d4b8a6f125ff0c356b1633"
+        },
+        "PLUTONIA.WAD": {
+          "bytes": 18240172,
+          "sha256": "f31395fb5580ef8fee26514b34874f8ab354c78fbbed35c8bfe04ec42ddc0c80"
+        }
+      }
+    },
+    "tnt": {
+      "arguments": "-warp 1 -skill 2 -nomonsters -config D:\\BASE.CFG",
+      "configuration": {
+        "blaster": "A220 I7 D1 H5 T6",
+        "change": {
+          "snd_musicdevice": {
+            "after": 2,
+            "before": 3
+          }
+        },
+        "derived_sha256": "6e9533bd6e00638a7a72b3509b7be9ba5a02f2eb39809f398f59b6c450e9e4f5",
+        "music_volume": 8,
+        "parent_sha256": "e761b3615e408a1d55068db4adb370fcd6668e29087d4d2a140ba1558e172c4f",
+        "sfx_volume": 8
+      },
+      "directory_bytes": 19378242,
+      "dosbox": {
+        "capture": {
+          "differing_lane_frames": 338684,
+          "frames": 2182176,
+          "pcm_sha256": "8bb80725c8a961b294db65a20212aba61034fb8496dbffba4fb1d6a59e98aade",
+          "raw_unnormalized": true,
+          "wav_sha256": "548474423405cf521e3cdbc76976e0a19fa5a2e8cfc85bee154427b33f54a05d"
+        },
+        "earlier_observation_limit": "Initial startup frame was black and short input windows did not establish a shot. The later retained physical input window visibly changed ammo50 to49; a subsequent load restored50.",
+        "normal_guest_exit": {
+          "code": 0,
+          "resident": false,
+          "source": "DOS_Terminate",
+          "stage": "after-process-cleanup"
+        },
+        "original_relocated_entry_verified": true,
+        "owner": {
+          "reaped": true,
+          "returncode": 0
+        },
+        "physical_input": {
+          "ammo_after": 49,
+          "ammo_after_hot_restore": 50,
+          "ammo_before": 50,
+          "hold_ms": 300,
+          "key": "ctrl",
+          "observation_window_requested_ms": 3000
+        },
+        "receipt_sha256": "7460269c417c1845035ad153179d821e0c559dfc83896420e1d1d96dd9e6235c",
+        "register_matches": {
+          "address_context": true,
+          "cpu_mode": true,
+          "flags": true,
+          "general": true,
+          "instruction_pointer": true,
+          "segments": true
+        },
+        "status": "passed"
+      },
+      "prior_refusal": {
+        "message": "Workspace file bytes exceed the capture bound",
+        "receipt_sha256": "19115f7753dd6a3e48963bfeb12d61ff7bc1dbe8c904fb22fbc7b954cb49f958",
+        "vm_spawned": false
+      },
+      "qemu": {
+        "audio": {
+          "A": {
+            "audio_frames": 34845,
+            "chunks": 112,
+            "differing_lane_frames": 0,
+            "pcm_sha256": "b40f1a05d6fa2145c519ab5db38fa2ade8aee6187c58739a2cedd789f0b32eac",
+            "statistics": [
+              {
+                "dc": 0.02701143989229086,
+                "frames": 34845,
+                "max": 15577,
+                "min": -14705,
+                "rails": 0,
+                "rms": 0.06958486587307039
+              },
+              {
+                "dc": 0.02701143989229086,
+                "frames": 34845,
+                "max": 15577,
+                "min": -14705,
+                "rails": 0,
+                "rms": 0.06958486587307039
+              }
+            ]
+          },
+          "B": {
+            "audio_frames": 53763,
+            "chunks": 173,
+            "differing_lane_frames": 0,
+            "pcm_sha256": "8e113d74335e316fa022e5dda419129c3580b79034c2a96d72d6e3970bcdc00a"
+          },
+          "before-shot": {
+            "audio_frames": 12727,
+            "chunks": 40,
+            "differing_lane_frames": 0,
+            "pcm_sha256": "0a085e5a3834cb1ca32fd071c46511b386869a4bfbee7a209ba020a66f443f29"
+          }
+        },
+        "checkpoint": {
+          "artifact": {
+            "bytes": 37749257,
+            "sha256": "d31f02250c056c37466e8e0473abd4bb6910e73c2499b85d230fdc56a430d209"
+          },
+          "format": "fdisbull-qemu-owned-machine-qcow2-v1",
+          "future_ns": 600000000,
+          "hot_future_exact": true,
+          "hot_selected_exact": true,
+          "protected_source_rebound": false,
+          "separate_python_cold_future_exact": true,
+          "separate_python_cold_selected_exact": true,
+          "source_binding_restored": false
+        },
+        "cold_receipt_sha256": "54e61b260ddfdc6771e35ae802ba2c6faffb63e85fe8e218bef332965e979f35",
+        "inputs_unchanged": {
+          "boot_unchanged": true,
+          "game_inputs_unchanged": {
+            "BASE.CFG": true,
+            "DOOM2.EXE": true,
+            "TNT.WAD": true
+          },
+          "original_inputs_unchanged": {
+            "DOOM2.EXE": true,
+            "TNT.WAD": true
+          }
+        },
+        "owners": {
+          "count": 4,
+          "reaped": 4,
+          "returncodes": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "physical_input": {
+          "advance_after_arm_ns": 700000000,
+          "ammo_after": 49,
+          "ammo_before": 50,
+          "hold_ms": 300,
+          "key": "ctrl",
+          "observed": "Original Map01 HUD and firing image"
+        },
+        "receipt_sha256": "0bf5b8da3ca0c96525334454f8539c0b6ce22921f8b2df599609fd488cd0617e",
+        "screenshot_sha256": {
+          "A.png": "7d51a7d5d7b3bb117e4e091e6049f4bf5471e5c7861d15419ab9a48b05a1d60d",
+          "B.png": "7196fe57b54677cbd95fb30a9ae6f3766685083f93b2664737998e7c2e3838dc",
+          "after-shot.png": "7d51a7d5d7b3bb117e4e091e6049f4bf5471e5c7861d15419ab9a48b05a1d60d",
+          "startup-60s.png": "0deebe04d69c4929bd171808309b483635b0621d08273a85a470e519db1f7412"
+        },
+        "selected_and_future_png_hashes_exact_hot_and_cold": true,
+        "status": "passed"
+      },
+      "source": {
+        "BASE.CFG": {
+          "bytes": 817,
+          "sha256": "6e9533bd6e00638a7a72b3509b7be9ba5a02f2eb39809f398f59b6c450e9e4f5"
+        },
+        "DOOM2.EXE": {
+          "bytes": 722629,
+          "sha256": "5b695dcd165fe1d1c8bcf405e0c6a5c4855d37ade7d4b8a6f125ff0c356b1633"
+        },
+        "TNT.WAD": {
+          "bytes": 18654796,
+          "sha256": "be3130f780037d0a640fce5639f4e2df88ce2d36128725a675f9aec1b6048228"
+        }
+      }
+    }
+  },
+  "claims": {
+    "audio_fidelity": false,
+    "cross_engine_sample_alignment": false,
+    "dosbox_normal_guest_exit": true,
+    "dosbox_same_owner_hot_restore": true,
+    "dosbox_separate_python_cold_restore": false,
+    "full_parity": false,
+    "game_or_state_bytes_published": false,
+    "hosted_ci": false,
+    "le_source_admission": false,
+    "protected_source_rebound": false,
+    "qemu_final_doom_guest_exit": false,
+    "qemu_hot_and_cold_600ms_future": true,
+    "qemu_hot_and_cold_selected_restore": true,
+    "source_binding_restored": false
+  },
+  "comparison_observables": [
+    "full exposed CPU",
+    "PNG bytes",
+    "PCM bytes",
+    "PCM callback chunks",
+    "OPL state",
+    "SB16 state",
+    "mixer state",
+    "virtual nanoseconds",
+    "instruction counter"
+  ],
+  "dosbox": {
+    "binary_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+    "capture": {
+      "bytes_per_frame": 4,
+      "channels": 2,
+      "rate": 48000,
+      "sample_format": "s16"
+    },
+    "fdisbull_version": "0.34.1",
+    "native_version": "DOSBox-X2026.10.01 f1c4414"
+  },
+  "evidence_date": "2026-11-18",
+  "format": "fdisbull-final-doom-stereo-verification-1",
+  "known_count_counterexample": {
+    "cases": 8,
+    "dma_wrap": false,
+    "dosbox_documented_extent_passes": 8,
+    "native_binary_sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40",
+    "native_owners": 16,
+    "qemu_mono_passes": 4,
+    "qemu_stereo_failures": 4,
+    "reaped": 16,
+    "receipt_sha256": "0a9724bd7b9bb719ee3bf6549b44edc81c591b399ad63b2f2604c096d38c0a1f",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "source_commit": "bdaa83dbab59304c9cffecc6752673ff4e2a28c4",
+    "variants": [
+      {
+        "bits": 8,
+        "channels": 1,
+        "dosbox_observed_bytes": 1024,
+        "expected_bytes": 1024,
+        "fifo": false,
+        "qemu_observed_bytes": 1024
+      },
+      {
+        "bits": 16,
+        "channels": 1,
+        "dosbox_observed_bytes": 2048,
+        "expected_bytes": 2048,
+        "fifo": false,
+        "qemu_observed_bytes": 2048
+      },
+      {
+        "bits": 8,
+        "channels": 2,
+        "dosbox_observed_bytes": 1024,
+        "expected_bytes": 1024,
+        "fifo": false,
+        "qemu_observed_bytes": 2048
+      },
+      {
+        "bits": 16,
+        "channels": 2,
+        "dosbox_observed_bytes": 2048,
+        "expected_bytes": 2048,
+        "fifo": false,
+        "qemu_observed_bytes": 4096
+      },
+      {
+        "bits": 8,
+        "channels": 1,
+        "dosbox_observed_bytes": 1024,
+        "expected_bytes": 1024,
+        "fifo": true,
+        "qemu_observed_bytes": 1024
+      },
+      {
+        "bits": 16,
+        "channels": 1,
+        "dosbox_observed_bytes": 2048,
+        "expected_bytes": 2048,
+        "fifo": true,
+        "qemu_observed_bytes": 2048
+      },
+      {
+        "bits": 8,
+        "channels": 2,
+        "dosbox_observed_bytes": 1024,
+        "expected_bytes": 1024,
+        "fifo": true,
+        "qemu_observed_bytes": 2048
+      },
+      {
+        "bits": 16,
+        "channels": 2,
+        "dosbox_observed_bytes": 2048,
+        "expected_bytes": 2048,
+        "fifo": true,
+        "qemu_observed_bytes": 4096
+      }
+    ]
+  },
+  "observed_utc": "2026-11-19T04:54:20.778932+00:00",
+  "prior_refusal_owners": {
+    "count": 0
+  },
+  "private_receipt_hashes": {
+    "dosbox_summary": "3c14c7e11f8b16985eb55586ec73293cecdbc4713520840c359e54035b6161e1",
+    "stereo_summary": "ae2f5c56b45d27e20631ce51889b760c5b6bd184ce338c30afd850766062e0d6"
+  },
+  "qemu": {
+    "binary": {
+      "bytes": 29465568,
+      "sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40"
+    },
+    "capture": {
+      "bytes_per_frame": 4,
+      "channels": 2,
+      "rate": 32000,
+      "sample_format": "s16"
+    },
+    "observed_doom_sb16_voice": {
+      "bits": 8,
+      "channels": 2,
+      "rate": 11025,
+      "signed": false
+    },
+    "platform": "Linux x86_64",
+    "stereo_patch_sha256": "028f4b32a3f6544d3ed2501c44e2c9a8f1bb0358d2658396ba7dbd5dc06a2e48",
+    "version": "10.0.13"
+  },
+  "scope": "Local Linux original TNT and Plutonia input and exact machine/audio persistence; full parity unqualified",
+  "source_clean_and_unchanged": true,
+  "source_commit": "f35d387f8f0aec330b886e6897d40813c8126f39",
+  "workspace_fix": {
+    "cap_bytes": 25165824,
+    "commit": "f35d387f8f0aec330b886e6897d40813c8126f39",
+    "fat_volume_bytes": 33554432,
+    "host_tests": {
+      "focused_after_change": {
+        "errors": 0,
+        "failures": 0,
+        "seconds": 12.777,
+        "skips": 0,
+        "tests": 68
+      },
+      "independent_root_review": {
+        "errors": 0,
+        "failures": 0,
+        "seconds": 4.43,
+        "skips": 0,
+        "tests": 4
+      },
+      "new_regressions_before_change": {
+        "errors": 0,
+        "expected_failure": "Workspace file bytes exceed the capture bound",
+        "failures": 4,
+        "seconds": 1.745,
+        "skips": 0,
+        "tests": 4
+      }
+    },
+    "native_disk_cap_bytes": 67108864,
+    "patch_sha256": "e26c6c6dbcdc4f1f381d4da332cbe6fb05e758c215cf761acf03e3b808c0271e",
+    "prior_cap_bytes": 16777216
+  }
+}

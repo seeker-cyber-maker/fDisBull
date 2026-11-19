@@ -3,7 +3,8 @@
 This inventory preserves the migration boundary at
 `089c1841c415eb2b5cdfa90d03b6291a07f73919` and reconciles source availability
 against `1b3c11736fff947b5b34b6d7014cfe425bd6d074`, with the stereo and bounded
-macro integrations through `cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce`.
+macro, runtime-memory and bounded host-proof integrations through
+`55fdd2dbf797e99bb32f7e9d44295fe19b6b9e4b`.
 It is a coverage ledger, not a runtime parity claim. Each surface
 needs native acceptance, affected DOSBox regressions and a reviewed observable
 comparison before its qualification advances.
@@ -30,8 +31,8 @@ listed test sets are reusable selections; only separately linked execution
 receipts establish results. A missing runtime, skipped native case or absent
 primitive remains an open gate.
 
-Source inspection finds all sixty-one public routes currently marked partial on
-`QemuDOSProcessSession`; the twenty-two routes marked pending are absent.
+Source inspection finds all sixty-five public routes currently marked partial on
+`QemuDOSProcessSession`; the eighteen routes marked pending are absent.
 Method presence establishes availability only. In particular:
 
 - Native checkpoint rewind, selected CPU/RAM undo, renderer timelines,
@@ -40,21 +41,31 @@ Method presence establishes availability only. In particular:
   work is contract composition and qualification, not a fresh port.
 - Protected LE admission, stopped source binding, trace/event identity and
   separate LE checkpoint/capture histories exist. They do not recreate the old
-  MZ allocation authority or supply the three absent legacy runtime-memory
-  binding routes.
+  MZ allocation authority. The three [runtime RAM routes](QEMU_RUNTIME_MEMORY.md)
+  now supply explicit ordinary physical or observed unpaged linear witnesses
+  with their own owner/epoch and write guards.
 - Retained renderer probes, physical timed mouse buttons and declared relative
   coordinate scaling are prerequisites for the missing completed-frame,
   absolute/INT33 click and coherent frame consumer contracts. Keep those
   distinctions visible through input routing, controls and recovery.
 - The independently reviewed [bounded macro adapter](QEMU_MACROS.md) now
   composes admitted native input, run, wait and observation primitives while
-  preserving held-key ownership and incomplete stops. Movement/proof,
+  preserving held-key ownership and incomplete stops. The [host proof adapter](QEMU_MODEL_PROOFS.md) now checks caller-supplied
+  finite-width models with run provenance and no guest effects. Movement,
   scene/workflow and screenshot-hook adapters remain pending. Macro route
-  availability does not qualify their separate contracts.
+  availability does not qualify their separate contracts. The
+  [integrated native evidence](evidence/qemu-macros-runtime-memory-2026-11-18/README.md)
+  covers two macro and two runtime-memory cases without native skips.
 - The [explicit stereo capture evidence](evidence/qemu-stereo-capture-2026-11-18/README.md)
   records nine native cases on macOS and nine on Linux, including paired
   asymmetric tones, hot/cold futures and malformed core4 refusal. General
   audio fidelity and real-game composition remain separate obligations.
+- Original [Ultimate Doom](evidence/qemu-doom-stereo-2026-11-18/README.md),
+  [TNT and Plutonia](evidence/qemu-final-doom-stereo-2026-11-18/README.md)
+  now have paired installed-DOSBox/QEMU boot and firing observations, plus exact
+  QEMU hot/cold 600 ms machine/audio futures. Their frozen producer still has
+  the separately reproduced single-cycle stereo length bug. These bounded
+  game receipts do not qualify audio fidelity or the full real-game campaign.
 - The existing paired Tic-Tac-Toe file now covers full rounds, recovery/replay,
   reset and guest exit. Original Five Dice and Snake add source-assisted
   complete-game/RNG and keyboard/growth/clock/exit witnesses. Actual

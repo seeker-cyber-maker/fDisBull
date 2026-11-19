@@ -783,8 +783,8 @@
       "operation": "bind_runtime_memory",
       "slice": "dos-process",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.bind_runtime_memory(): explicit masked RAM witness bound to the owned VM/process/project/version and runtime/checkpoint epochs; ordinary physical or observed unpaged linear RAM only.",
       "qualification": "unqualified"
     },
     {
@@ -1090,7 +1090,7 @@
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.macro(); immutable typed expansion, literal whole-route admission, native lease ownership, one inherited deadline, first-stop/no-replay boundaries and persistent evidence. Native witness and broader movement/scene qualification remain separate.",
+      "native_route": "QemuDOSProcessSession.macro(); immutable typed expansion, literal whole-route admission, native lease ownership, one inherited deadline, first-stop/no-replay boundaries and persistent evidence. Two authored ATTT native cases pass, including public large-result retrieval and interrupted-chord cleanup; broader movement/scene qualification remains separate.",
       "qualification": "unqualified"
     },
     {
@@ -1152,8 +1152,8 @@
       "operation": "proof_check",
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.proof_check(): existing finite-width host model engine with exact project/source/version/run provenance, shared result schema and persistence; inherited solver/host deadline and literal script preflight. No guest observation, native control, source mapping or model-fidelity inference.",
       "qualification": "unqualified"
     },
     {
@@ -1224,8 +1224,8 @@
       "operation": "runtime_memory",
       "slice": "dos-process",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.runtime_memory(): recheck witness and owner/context under one stopped lock/deadline; stale IDs/names refuse after restore. Fresh physical witness does not revive retired source authority.",
       "qualification": "unqualified"
     },
     {
@@ -1512,8 +1512,8 @@
       "operation": "write_runtime_memory",
       "slice": "dos-process",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.write_runtime_memory(): expected-byte guarded live write, readback/identity verification, witness consumption and uncertain-write closure; no save/load or automatic replay.",
       "qualification": "unqualified"
     }
   ],
@@ -1888,9 +1888,11 @@
   ],
   "source_reconciliation": {
     "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
-    "date": "2026-11-19",
+    "date": "2026-11-18",
     "work_plan": "docs/DOS_QEMU_PARITY_WORK.json",
     "qualification_changed": false,
-    "note": "Current source availability and executable remaining work are separate from historical inventory_base and runtime qualification. All 141 rows and seven campaigns remain open."
+    "note": "Current source availability and executable remaining work are separate from historical inventory_base and runtime qualification. All 141 rows and seven campaigns remain open.",
+    "timezone": "America/New_York",
+    "integration_commit": "55fdd2dbf797e99bb32f7e9d44295fe19b6b9e4b"
   }
 }
