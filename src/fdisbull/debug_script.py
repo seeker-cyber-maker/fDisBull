@@ -423,6 +423,10 @@ def validate_script(script, *, session=None):
                         offset=params.get('offset',0)
                         if not (isinstance(offset,str) and offset.startswith('$')):
                             bounded(offset,'runtime view offset',0,65535)
+                    if ((backend or actual)=='qemu-dos'
+                            and op in ('bind-runtime-memory','runtime-memory','write-runtime-memory')):
+                        from .qemu_runtime_memory import validate_script_parameters
+                        validate_script_parameters(op, params, session=session)
                     if op=='step':
                         for key,limits in (('count',(1,10000)),('timeout_ms',(1,600000))):
                             value=params.get(key)
