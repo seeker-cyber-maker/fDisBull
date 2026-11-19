@@ -74,6 +74,8 @@ class Native:
         self.qmp_commands = frozenset({process_checkpoint.COMMAND})
         self.calls = []; self.points = set(); self.gdb = self
         self.qmp = SimpleNamespace(call=self.call, operation_deadline=None)
+        from support.qemu_image_fixture import attach_image
+        attach_image(self)
 
     def debugger(self):
         return self.gdb
@@ -373,6 +375,36 @@ def rewrite(runtime, saved, change):
     with runtime.project.transaction(True):
         runtime.project.db.execute('UPDATE debug_artifacts SET data=?,sha256=?,metadata=? WHERE id=?',
             (data, owned._sha(data), json.dumps(metadata), saved['artifact']))
+
+
+def test_fresh_producer_mismatch_refuses_before_import_and_preserves_old_owner(runtime,monkeypatch):
+    from fdisbull import qemu_machine
+    session=runtime.session;old=session.vm
+    saved=owned.save_owned_machine_state(session)
+    original=qemu_machine.QemuMachine
+    def changed(**kwargs):
+        fresh=original(**kwargs)
+        fresh.inputs['qemu_image']['sha256']='8'*64
+        fresh._qemu_image_proof.identity=deepcopy(fresh.inputs['qemu_image'])
+        return fresh
+    monkeypatch.setattr(qemu_machine,'QemuMachine',changed)
+    before=(bytes(old.memory),deepcopy(old.cpu),deepcopy(session.breakpoints))
+    with pytest.raises(ValueError,match='Fresh owned machine runtime identity differs'):
+        owned.load_owned_machine_state(session,saved['artifact'])
+    assert session.vm is old and not old.closed and not session.closed
+    assert [operation for operation,_ in runtime.snapshots]==['save']
+    assert runtime.spawned[-1].closed
+    assert (bytes(old.memory),old.cpu,session.breakpoints)==before
+
+
+def test_legacy_producer_archive_refuses_before_fresh_owner(runtime):
+    session=runtime.session;old=session.vm
+    saved=owned.save_owned_machine_state(session)
+    rewrite(runtime,saved,lambda bundle:bundle['runtime']['inputs'].pop('qemu_image'))
+    with pytest.raises(ValueError,match='legacy producer is unqualified'):
+        owned.load_owned_machine_state(session,saved['artifact'])
+    assert session.vm is old and not old.closed and not runtime.spawned
+    assert [operation for operation,_ in runtime.snapshots]==['save']
 
 
 def test_consistent_outer_archive_with_invalid_ram_fence_refuses_before_spawn(runtime):

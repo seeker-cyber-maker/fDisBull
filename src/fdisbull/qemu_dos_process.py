@@ -683,6 +683,8 @@ class QemuDOSProcessSession(QemuMovementMixin, QemuSpatialPolicyMixin, QemuProof
         from .qemu_input import require_released_machine_input
         if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
             raise ValueError('Restricted DOS process checkpoints are not enabled')
+        from .qemu_image import verify
+        verify(self.vm)
         if self.project.db.in_transaction:
             raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
         self._stopped()
@@ -848,6 +850,8 @@ class QemuDOSProcessSession(QemuMovementMixin, QemuSpatialPolicyMixin, QemuProof
             if row is None or row['kind'] != 'state' or row['version'] != self.version['id'] or row['run'] != self.run_id:
                 raise ValueError('Process checkpoint must belong to this live session and version')
             data = bytes(row['data']); metadata = json.loads(row['metadata'])
+            from .qemu_image import ProducerMismatch, require_record, verify
+            require_record(metadata.get('runtime_inputs'))
             expected = dict(format='fdisbull-qemu-dos-entry-qcow2-v1', run=self.run_id,
                 source_sha256=self.metadata['source_sha256'], version_sha256=self.metadata['version_sha256'],
                 runtime_inputs=self.vm.inputs, machine_configuration=self.vm.machine_configuration,
@@ -863,8 +867,9 @@ class QemuDOSProcessSession(QemuMovementMixin, QemuSpatialPolicyMixin, QemuProof
                     image = Path(directory)/'state.qcow2'; image.write_bytes(data)
                     new = QemuMachine(**dict(self._checkpoint_launch, timeout_ms=remaining()), _checkpoint_image=image)
                 if new.inputs != owner.inputs or new.machine_configuration != owner.machine_configuration:
-                    raise DebuggerError('Fresh process checkpoint machine identity differs')
+                    raise ProducerMismatch('Fresh process checkpoint machine identity differs')
                 new.operation_deadline = deadline; new.qmp.operation_deadline = deadline
+                verify(new,deadline)
                 snapshot_job(new, 'load', tag=metadata['tag'], vmstate='disk0', devices=['disk0'], timeout_ms=remaining())
                 context = MachineContext(new); actual = context.registers()
                 for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
@@ -892,9 +897,13 @@ class QemuDOSProcessSession(QemuMovementMixin, QemuSpatialPolicyMixin, QemuProof
                 self._event('load-state', result); remaining()
                 self._set_deadline(None)
                 return result
-            except BaseException:
-                if new is not None: new.close()
-                self.close()
+            except BaseException as error:
+                if new is not None:
+                    try:new.close()
+                    except BaseException as cleanup:error.new_machine_cleanup_error=type(cleanup).__name__
+                if not isinstance(error,ProducerMismatch):
+                    try:self.close()
+                    except BaseException as cleanup:error.machine_cleanup_error=type(cleanup).__name__
                 raise
         finally:
             owner.lock.release()

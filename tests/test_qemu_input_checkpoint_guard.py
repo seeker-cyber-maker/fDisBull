@@ -34,6 +34,8 @@ class InputOwner(QemuPhysicalInputMixin):
         self.run_id = 'machine-input-owner'
         self.vm = SimpleNamespace(qmp=InputPeer(), qmp_commands={'input-send-event'},
                                   lock=threading.RLock(), closed=False)
+        from support.qemu_image_fixture import attach_image
+        attach_image(self.vm)
 
     def dispatch(self):
         self.vm.qmp.running = True

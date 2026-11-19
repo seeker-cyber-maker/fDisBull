@@ -51,6 +51,8 @@ class Harness:
         self.vm = SimpleNamespace(lock=threading.RLock(), operation_deadline=None, qmp=None, gdb=None,
             checkpoint_disk=checkpoint_disk, qmp_commands={COMMAND},
             process=SimpleNamespace(poll=lambda: None))
+        from support.qemu_image_fixture import attach_image
+        attach_image(self.vm)
         self._checkpoint_launch = {'checkpoint_tool':'fake-qemu-img'}
         self._process = {'state':'active','machine_closed':False}
         self.guest_profile = {'schema':1,'profile_sha256':'1'*64}

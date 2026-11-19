@@ -210,6 +210,9 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
 
     def _load_native_state(self,artifact):
         row,document,path=get_state(self.project,artifact,self.version['id'])
+        from .qemu_image import ProducerMismatch, compatible, verify
+        verify(self.rpc.vm)
+        compatible(self.rpc.inputs,document['metadata'].get('runtime_inputs'))
         for name in ('qemu','kernel','initramfs'):
             if self.rpc.inputs[name]['sha256']!=document['metadata']['runtime_inputs'][name]['sha256']:
                 raise ValueError('Native state backend identity mismatch: '+name)
@@ -221,13 +224,16 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
         if self.metadata['runtime_profile']!=document['metadata']['runtime_profile']:raise ValueError('Native state runtime profile mismatch')
         from .wine_rpc import WineQemuRPC
         options=[self.rpc.inputs[n]['path'] for n in ('qemu','kernel','initramfs')]
-        self.rpc.close()
+        old=self.rpc;retired=False
+        def retire():
+            nonlocal retired
+            retired=True;old.close()
         try:
-            replacement=WineQemuRPC(*options,restore=path,memory_mib=document['metadata'].get('memory_mib',4096))
+            replacement=WineQemuRPC(*options,restore=path,memory_mib=document['metadata'].get('memory_mib',4096),
+                                   expected_runtime_inputs=document['metadata']['runtime_inputs'],
+                                   _on_restore_admitted=retire)
             try:
-                if any(replacement.inputs[n]['sha256']!=document['metadata']['runtime_inputs'][n]['sha256']
-                       for n in ('qemu','kernel','initramfs')):
-                    raise ValueError('Native state runtime identity changed during VM replacement')
+                compatible(replacement.inputs,document['metadata']['runtime_inputs'])
                 if hasattr(self,'_cpu_delta_bind_rpc'):self._cpu_delta_bind_rpc(replacement)
             except BaseException:
                 replacement.close();raise
@@ -251,7 +257,11 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
             with self.project.transaction(True):
                 self.project.db.execute('UPDATE debug_runs SET metadata=? WHERE id=?',(json.dumps(self.metadata),self.run_id))
             self._event('load-state',result);return result
-        except BaseException:self.close();raise
+        except BaseException as error:
+            if retired or not isinstance(error,ProducerMismatch):
+                try:self.close()
+                except BaseException as cleanup:error.machine_cleanup_error=type(cleanup).__name__
+            raise
 
     def write_registers(self,registers):
         lock=getattr(self,'_delta_lock',None) or getattr(self.rpc,'lock',None)

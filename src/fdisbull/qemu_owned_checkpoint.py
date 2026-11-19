@@ -663,6 +663,8 @@ def _load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protec
         _preflight(session)
         _serial_idle(session)
         row, metadata, machine, bundle = _read_artifact(session.project, artifact, session.version['id'])
+        from .qemu_image import ProducerMismatch, require_record, verify
+        require_record(bundle.get('runtime', {}).get('inputs'))
         expected = dict(format=FORMAT, source_sha256=session.metadata['source_sha256'],
             version_sha256=session.metadata['version_sha256'], version=session.version['id'],
             runtime=_compatibility(session), source_binding_restored=False)
@@ -704,7 +706,8 @@ def _load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protec
             fresh = SimpleNamespace(vm=new, guest_profile=session.guest_profile,
                 _workspace_launch_identity=getattr(session, '_workspace_launch_identity', None))
             if _compatibility(fresh) != bundle['runtime']:
-                raise DebuggerError('Fresh owned machine runtime identity differs')
+                raise ProducerMismatch('Fresh owned machine runtime identity differs')
+            verify(new,deadline)
             if _disk_identity(new) != bundle['disk']:
                 raise DebuggerError('Fresh owned machine disk graph differs')
             if bundle['native_task'] is not None and read_task_context(new) is None:
@@ -795,5 +798,9 @@ def _load_owned_machine_state(session, artifact, timeout_ms=60000, rebind_protec
             attest_machine_restore(session, result)
             return result
         except BaseException as error:
-            _close_uncertain(session, error, new)
+            if isinstance(error,ProducerMismatch):
+                if new is not None:
+                    try:new.close()
+                    except BaseException as cleanup:error.new_machine_cleanup_error=type(cleanup).__name__
+            else:_close_uncertain(session, error, new)
             raise

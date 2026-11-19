@@ -24,24 +24,30 @@ class WineQemuRPC:
         from .wine_runtime import resources
         return resources()
 
-    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None,on_spawn=None,memory_mib=4096):
+    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None,on_spawn=None,memory_mib=4096,
+                 expected_runtime_inputs=None, _on_restore_admitted=None):
         self.process = None;self.socket = None;self.sequence = 0
         self.qmp=None;self.vm=None
         self.lock = threading.Lock();self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-pe-')
         root=Path(self.temporary.name)
         self.log_path=root/'boot.log'
         try:
+            from .qemu_image import ProducerMismatch, compatible, require_record, verify
+            if restore is not None:require_record(expected_runtime_inputs)
             from .qemu_machine import QemuMachine
             self.temporary.cleanup()
             self.vm=QemuMachine(executable,kernel=kernel,initramfs=initramfs,
                                 restore=restore is not None,timeout_ms=boot_timeout_ms,on_spawn=on_spawn,memory_mib=memory_mib)
             self.process=self.vm.process;self.qmp=self.vm.qmp;self.temporary=self.vm.temporary
             self.inputs=self.vm.inputs;self.command=self.vm.command;self.log_path=self.vm.log_path
+            if restore is not None:compatible(self.inputs,expected_runtime_inputs)
             self.lock=self.vm.lock
             deadline=time.monotonic()+boot_timeout_ms/1000
             self.socket=self.vm.serial(deadline)
             if restore is None:hello=self._read(deadline)
             else:
+                verify(self.vm,deadline)
+                if _on_restore_admitted is not None:_on_restore_admitted()
                 self.qmp.restore(restore,timeout_ms=boot_timeout_ms)
                 hello=self.call('identity',timeout_ms=30000)
             self.hello=hello
@@ -60,6 +66,7 @@ class WineQemuRPC:
         except BaseException as error:
             diagnostics=self._diagnostics()
             self.close()
+            if isinstance(error,ProducerMismatch):raise
             if isinstance(error,Exception):
                 raise DebuggerError(str(error)+diagnostics) from error
             raise
@@ -146,5 +153,7 @@ class WineQemuRPC:
             # explicitly release/cancel its physical input. It is not a failed
             # or partially dispatched native migration.
             require_released_machine_input(self.vm)
+            from .qemu_image import verify
+            verify(self.vm)
             try:return self.qmp.save(path)
             except BaseException:self.close();raise

@@ -899,6 +899,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             bounded(max_bytes,'max_bytes',1,256*1024*1024)
         if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
             raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
+        runtime_preflight=getattr(self,'_checkpoint_runtime_preflight',None)
+        if runtime_preflight is not None:runtime_preflight()
         if not self.rpc.capabilities.get('save_states'):
             raise DebuggerError('DOSBox build lacks native state operations')
         _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
@@ -962,6 +964,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
         metadata = checkpoint['metadata']; data = checkpoint['data']
         if hashlib.sha256(data).hexdigest()!=checkpoint['sha256']:
             raise ValueError('Stored state hash mismatch')
+        runtime_preflight=getattr(self,'_checkpoint_runtime_preflight',None)
+        if runtime_preflight is not None:runtime_preflight(metadata)
         for field in ('source_sha256','version_sha256','emulator_sha256','runtime_load_segment','runtime_profile','game_dir'):
             if metadata.get(field) != self.metadata.get(field):
                 raise ValueError('State compatibility mismatch: '+field)
