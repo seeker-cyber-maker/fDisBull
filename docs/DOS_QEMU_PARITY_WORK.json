@@ -10,12 +10,13 @@
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "ec3a6ec548a46b3dd2c4f5149446b823c6005891",
+    "integration_commit": "6473b808d48203fd255833e5e77b0b8249120269",
     "timezone": "America/New_York",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
     "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
     "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion.",
-    "movement": "Held-key physical movement with caller-witnessed runtime RAM and sample progress. Four paired/native cases and independent33case host gate passed; native evidence precedes pure duplicate-reference validation correction."
+    "movement": "Held-key physical movement with caller-witnessed runtime RAM and sample progress. Four paired/native cases and independent33case host gate passed; native evidence precedes pure duplicate-reference validation correction.",
+    "executed_image": "OS-observed main-image producer identity gates shared QEMU capture/restore;7final native,49independent host and166root integrated cases passed. Mac positive prototype separate."
   },
   "coverage": {
     "rpc_methods": 35,
@@ -1866,6 +1867,7 @@
     "docs/evidence/qemu-model-proofs-2026-11-18/verification.json",
     "docs/evidence/qemu-final-doom-stereo-2026-11-18/verification.json",
     "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json",
-    "docs/evidence/qemu-witnessed-movement-2026-11-18/verification.json"
+    "docs/evidence/qemu-witnessed-movement-2026-11-18/verification.json",
+    "docs/evidence/qemu-executed-image-2026-11-18/verification.json"
   ]
 }

@@ -22,17 +22,20 @@ auto-init ring fixture independently programmed128samples while describing a
 Historical exact-replay receipts remain valid for their original programs and
 producers, while correct IRQ/block cadence requires these new witnesses.
 
-## Open producer identity counterexample
+## Producer identity counterexample and resolution
 
 The old-producer state rejection test found a host admission defect: byte-
 identical shell launchers hide different executing QEMU binaries from the old
 fingerprint. With other inputs held fixed, their portable compatibility values
 are identical. The test stopped before loading state and reaped both owners.
-A separate host change must bind the executing binary and compare a fresh
-replacement before state load. These playback/count results do not establish
-that still-open producer rejection guarantee.
+The separately reviewed [executing-image change](../qemu-executed-image-2026-11-18/README.md)
+now binds the actual producer and checks a fresh destination before import. Its
+negative and same-producer native receipts establish that scoped guarantee.
 
 S16 guest playback does not extend the existing U8-only voice checkpoint
 contract. Four explicit S16 refusals preserve the stopped owner, CPU, clock and
-device state. Native macOS playback and actual Doom regression on the corrected
-producer remain separate gates, as do Miles compatibility and full fidelity.
+device state. All 26 selected native count and adjacent audio/checkpoint cases now pass on
+the corrected Mac binary through a fresh 718-file installed package, with no
+skips or residual owners and unchanged payload/tests/dependencies. Actual Doom
+regression on this producer, Miles compatibility and full fidelity remain
+separate gates.

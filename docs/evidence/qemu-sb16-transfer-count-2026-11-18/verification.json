@@ -84,6 +84,22 @@
       "source_files_unchanged": true,
       "boot_unchanged": true,
       "receipt_sha256": "4d6631c330584d1e6bb742968a016fe8139cd356c4ebaf4cf1d626c06ef4b971"
+    },
+    "macos-count-and-adjacent": {
+      "source_head": "e1cfb13b2d3a7b8fefe4b88786c6d9fb5296417b",
+      "counts": {
+        "tests": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "elapsed_seconds": 101.09973041713238,
+      "receipt_sha256": "1ff9f39a31b16725c63debcfd4b554ee8d3979533993497aa5762cd6628e1a45",
+      "installed_prefix_files": 718,
+      "runtime_payload_unchanged": true,
+      "test_files_unchanged": true,
+      "dependencies_unchanged": true,
+      "remaining_owned_members": []
     }
   },
   "count_results": {
@@ -123,12 +139,13 @@
     "wrapper_sha256": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c",
     "observed": "Saved/current compatibility equal for distinct actualELFs behind byte-identical launchers when other inputs held fixed. Negative control failed prerequisite before load; both owners reaped.",
     "load_attempted": false,
-    "status": "Host fix in progress; no producer rejection qualification."
+    "status": "Resolved in separate executing-image host change6473b808; see linked evidence.",
+    "resolution_evidence": "docs/evidence/qemu-executed-image-2026-11-18/verification.json"
   },
   "limits": [
     "S16 guest voice checkpoints remain refused; S16 output capture is a separate format.",
     "Miles setsound.exe compatibility unqualified; frozen previous producer retained.",
-    "Actual Doom regression on corrected producer and new macOS native selection pending.",
+    "Actual Doom regression on corrected producer remains pending; macOS26case count/adjacent selection passed.",
     "No ADC/ADPCM, general timing/audio fidelity or full DOSBox-X parity."
   ],
   "qualification_changed": false

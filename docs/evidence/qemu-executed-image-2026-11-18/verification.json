@@ -1,0 +1,61 @@
+{
+  "format": "fdisbull-qemu-executed-image-evidence-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "integration_commit": "6473b808d48203fd255833e5e77b0b8249120269",
+  "reviewed_native_source": "bb1cddf8cb26c2c68669e14e4f9236ecf87da168",
+  "patch_sha256": "46bf9d1606ed15e306ef19dcf2e79ddaffa98a17dc151224e0fa7587361ca9a8",
+  "helper_sha256": "8956648bd463d037d7108cbec5eb676406b8035501132ac6da924134ecb8c283",
+  "native": {
+    "passed": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 40.37,
+    "receipt_sha256": "868fde5ecdf8f186590a6c0af8733c2c074618120614b1b69fa7ef923a039ae2",
+    "old_image_sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40",
+    "new_image_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+    "identical_launcher_sha256": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c",
+    "incompatible_state_refused_before_import": true,
+    "fresh_destination_checked_before_import": true,
+    "original_healthy_owner_preserved": true,
+    "known_native_owners_reaped": true
+  },
+  "host": {
+    "broad_passed": 3590,
+    "intentional_native_skips": 499,
+    "independent_passed": 49,
+    "independent_probes": 10,
+    "review_sha256": "344bf986a15ad9bdacd0a5d433b7c667f419f581697dc5d91b3151f36829e38a",
+    "final_validation_sha256": "4babb467d784184d2117aa209be8e177eef924f38bd4a7daf32863a301df9a9b",
+    "root_integrated_passed": 166,
+    "root_integrated_xml_sha256": "2bbfc054371ee3a8d3474e9530f96fff07aed71068609d92ef8c7f900564c60d",
+    "counts_overlap": true
+  },
+  "macos_prototype": {
+    "helper_sha256": "287919faef4c9dad251136913b24e1eb9dc5109fef5fcfada45ea35169d414f0",
+    "receipt_sha256": "89dfdd2129f849560a1ed753f41840d313fe81f6ed50ac4b63dda86af3d05ff2",
+    "image_sha256": "d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268",
+    "mapped_vnode_and_descriptor_hash_match": true,
+    "qmp_cpu_owned_pid_match": true,
+    "guest_advanced": false,
+    "owner_returncode": 0,
+    "scope": "Positive helper ABI/main-image only; final integrated Mac native consumer gate separate."
+  },
+  "resolved_review_findings": [
+    "Darwin peer disappearance and unobservable cleanup preserve original error",
+    "captured Linux descendant without pidfd cannot fall back to PID signal",
+    "Wine cold constructor forwards expected runtime inputs",
+    "DOSBox-in-QEMU cached timeline uses capture/restore preflight",
+    "known Popen owner reaped even when transport close raises"
+  ],
+  "limits": [
+    "Measures main executable, not loaded libraries or adversarial QMP attestation",
+    "Legacy states lacking producer identity refuse explicitly",
+    "Darwin captured-descendant fallback retains documented residual PID-reuse race",
+    "Arbitrary forwarded descendants unobserved before QMP CPU admission have unqualified cleanup",
+    "Standalone CHIP-8 owner is outside this shared QemuMachine change",
+    "No global parity or default change"
+  ],
+  "qualification_changed": false
+}
