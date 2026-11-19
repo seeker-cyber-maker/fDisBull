@@ -423,6 +423,9 @@ def validate_script(script, *, session=None):
                         offset=params.get('offset',0)
                         if not (isinstance(offset,str) and offset.startswith('$')):
                             bounded(offset,'runtime view offset',0,65535)
+                    if op=='proof-check' and (backend or actual)=='qemu-dos':
+                        from .qemu_proofs import validate_proof_parameters
+                        validate_proof_parameters(**params, allow_references=True, session=session)
                     if ((backend or actual)=='qemu-dos'
                             and op in ('bind-runtime-memory','runtime-memory','write-runtime-memory')):
                         from .qemu_runtime_memory import validate_script_parameters
@@ -778,6 +781,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                              'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
+                if (requested is None and step['op']=='proof-check'
+                        and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
+                    requested=1000
                 if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration','mouse.move-mapped') else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
             if (step['op']=='memory-rule-run'

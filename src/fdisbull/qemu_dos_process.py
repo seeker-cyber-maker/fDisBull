@@ -38,6 +38,7 @@ from .qemu_dos_source_admission import QemuDOSSourceAdmissionMixin
 from .qemu_dos_le_binding import QemuDOSLEBindingMixin
 from .qemu_macros import QemuMacroSessionMixin
 from .qemu_runtime_memory import QemuRuntimeMemoryMixin
+from .qemu_proofs import QemuProofMixin
 
 
 def _sha(data):
@@ -164,7 +165,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -350,6 +351,7 @@ class QemuDOSProcessSession(QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuD
                 source_trace_clock=vm.machine_configuration['clock_profile']['profile'] == 'virtual',
                 execution_event_search=True, input_macros=True,
                 runtime_memory_bindings=True,
+                bounded_model_proofs=True,
                 runtime_memory_scope='witnessed ordinary physical RAM or observed unpaged linear RAM; no source/task/allocation lifetime inference',
                 trace_until='source-bound predicates; virtual-time ranges with the virtual profile; queued input unqualified',
                 desqview_observation=True,
@@ -995,7 +997,7 @@ class QemuDOSProcessSession(QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuD
 
     @property
     def script_operations(self):
-        return super().script_operations | {'macro', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+        return super().script_operations | {'macro', 'proof-check', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
             'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',
