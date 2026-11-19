@@ -57,5 +57,37 @@
     "Standalone CHIP-8 owner is outside this shared QemuMachine change",
     "No global parity or default change"
   ],
-  "qualification_changed": false
+  "qualification_changed": false,
+  "macos_native": {
+    "integration_commit": "6473b808d48203fd255833e5e77b0b8249120269",
+    "passed": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "pytest_elapsed_seconds": 64.32,
+    "runner_elapsed_seconds": 64.53802833310328,
+    "receipt_sha256": "6e544f9e7379e8944aad45fc9b6b8c4b0f2a52070e2fae42c02f3365f5e00373",
+    "selection_sha256": "0a20b11c368a97f86c427abe0bfaa10c45d69591851fa59dcc5b7d7ae545c2d8",
+    "selection_estimated_cases": 7,
+    "collected_cases": 8,
+    "case_scope": "One producer rejection, five SB16 variants including auxiliary silence, two OPL hot/separate-Python cold cases",
+    "wheel_sha256": "ee4de534983094fc6f52e7dc7af2446ce18a441bc86bfa6998e3558a70baae56",
+    "package_manifest_sha256": "d0691066e2d5d0bc78e8e1ddef54495a96b08623cbb14ca389906ae19509f574",
+    "source_wheel_installed_files": 720,
+    "old_image_sha256": "e91b189bc62c6bb1e2d6424289480f2b9f431447d37f9bd4b420852e4889babd",
+    "new_image_sha256": "d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268",
+    "identical_launcher_sha256": "237d80ade6103173941b3926d3fa5bc0c26841db18c37b45a4f6b390afe81b86",
+    "pinned_dependencies": 98,
+    "runtime_payload_unchanged": true,
+    "test_files_unchanged": true,
+    "dependencies_unchanged": true,
+    "unexpected_owned_members": [],
+    "remaining_owned_members": [],
+    "incompatible_state_refused_before_import": true,
+    "fresh_destination_checked_before_import": true,
+    "original_healthy_owner_preserved": true,
+    "known_native_owners_reaped": true,
+    "no_ci": true,
+    "no_shared_activation": true
+  }
 }

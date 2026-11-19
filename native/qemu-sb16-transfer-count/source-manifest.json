@@ -1,7 +1,7 @@
 {
   "format": "fdisbull-qemu-native-source-manifest-1",
   "feature": "Documented Bx/Cx single-cycle stereo channel-sample counts",
-  "implementation_status": "Implemented and built separately on Linux and macOS; documented count and affected Linux playback/recovery gates pass; executing-producer identity defect found in host launcher fingerprint and under correction.",
+  "implementation_status": "Implemented and built separately on Linux and macOS; scoped count/playback/recovery and installed macOS26-case gates pass. Separate executing-image compatibility correction passes native rejection and same-producer recovery on both hosts.",
   "base": {
     "qemu_version": "10.0.13",
     "prerequisite_package": "native/qemu-stereo-capture",
@@ -38,8 +38,8 @@
     "candidate_native_build": "Linux fresh build and relocated QMP smoke pass; macOS pinned single-file incremental compile/link/sign pass.",
     "candidate_native_runtime": "Linux8count pairs pass; adjacent16/18pass with2invalid100ms analyzer floors retained, corrected64ms analyzer root21host and2native cases pass. No assertions beyond duration floor changed.",
     "ci": false,
-    "producer_guard": "Open counterexample: byte-identical shell launchers hide distinct executing ELFs from old host compatibility identity; load not attempted. Separate host fix required.",
-    "macos_runtime": "Pending on new count producer."
+    "producer_guard": "Resolved by the executing-image host identity change: incompatible producer states refuse before import; fresh destination mismatch preserves the healthy original stopped owner. Seven Linux and eight installed macOS native cases pass. See docs/evidence/qemu-executed-image-2026-11-18/verification.json.",
+    "macos_runtime": "Installed718-file package passes26count/audio cases on corrected signed producer; subsequent integrated720-file package passes8producer/recovery cases. Counts overlap. Sources, payloads and dependencies unchanged; owned processes reaped."
   },
   "builds": {
     "linux": {
