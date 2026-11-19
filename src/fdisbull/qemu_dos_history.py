@@ -28,7 +28,7 @@ MAX_STATE = 128 * 1024 * 1024
 # Every other operation invalidates the live edge before it can be dispatched.
 _READ_ONLY = frozenset({
     'rewind_status', 'status', 'registers', 'memory', 'memory_snapshot',
-    'bind_runtime_memory', 'runtime_memory',
+    'bind_runtime_memory', 'runtime_memory', 'scene_check', 'scene_assert',
     'memory_translation', 'dos_process_info', 'dos_source_admit', 'dos_source_bind', 'dos_source_binding', 'dos_source_unbind', '_le_source_refresh', 'tracking_status', 'dos_task_observe',
     'dos_task_context', 'dos_task_scheduler_observe', 'dos_task_memory',
     'dos_task_layers', 'code',

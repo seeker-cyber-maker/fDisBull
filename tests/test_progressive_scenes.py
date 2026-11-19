@@ -22,7 +22,7 @@ class Project(ProgressiveSceneProjectMixin):
         with self.db: yield
     def debug_scene_info(self, scene, *, version=None):
         if scene != 'rev1' or version != 1: raise ValueError('unknown scene')
-        return {'id':'rev1', 'definition':{'objects':[{'id':'object1'}]}}
+        return {'id':'rev1', 'definition':{'format':'fdisbull-scene-1','objects':[{'id':'object1'}]}}
 
 
 class Scene:
@@ -219,7 +219,7 @@ def test_real_project_restart_and_resource_drift(tmp_path):
     class RealProject(Base):
         def debug_scene_info(self, scene, *, version=None):
             if scene != 'scene-id' or version != 1: raise ValueError('Unknown scene')
-            return {'id':'scene-id', 'definition':{'objects':[{'id':'button-id'}]}}
+            return {'id':'scene-id', 'definition':{'format':'fdisbull-scene-1','objects':[{'id':'button-id'}]}}
     root = tmp_path/'game'; root.mkdir()
     binary = root/'GAME.EXE'; binary.write_bytes(mz_file(bytes.fromhex('ebfe') + bytes(1024),ss=0,sp=0x400))
     resource = root/'LOGIC.0'; resource.write_bytes(b'original')

@@ -217,6 +217,9 @@ class SceneProjectMixin(SceneBundleMixin):
         return row,metadata
 
     def debug_save_scene(self, name, definition, *, parent=None, version=None, author='agent'):
+        from .runtime_scenes import is_runtime_scene, save_scene
+        if is_runtime_scene(definition):
+            return save_scene(self,name,definition,parent=parent,version=version,author=author)
         scene_name=globals()['name'](name);v=self.version(version)['id']
         if not isinstance(author,str) or not 1<=len(author)<=256:raise ValueError('Scene author required')
         if len(encoded(definition))>1024*1024:raise ValueError('Scene exceeds 1 MiB')
@@ -243,6 +246,7 @@ class SceneProjectMixin(SceneBundleMixin):
         previous=self.db.execute('SELECT id FROM debug_scene_revisions WHERE scene=? ORDER BY rowid DESC LIMIT 1',(root_id,)).fetchone()
         if (previous['id'] if previous else None)!=parent:raise ValueError('Scene parent must be the current revision')
         prior=self.debug_scene_info(parent,version=v)['definition'] if parent else {'objects':[]}
+        if parent and prior.get('format')!='fdisbull-scene-1':raise ValueError('Scene revisions cannot change observation profile')
         old_by_name={o['name']:o for o in prior['objects']};old_ids={o['id']:o for o in prior['objects']}
         names=set();ids=set();evidence=[]
         reference=doc.get('reference');_,metadata=self._scene_snapshot(reference,v)
@@ -309,6 +313,11 @@ class SceneProjectMixin(SceneBundleMixin):
         if row is None:raise ValueError('Unknown scene revision for this byte version')
         doc=json.loads(row['document'])
         if hashlib.sha256(encoded(doc)).hexdigest()!=row['sha256']:raise ValueError('Scene manifest hash mismatch')
+        if doc.get('format')=='fdisbull-scene-2':
+            from .runtime_scenes import validate_stored
+            validate_stored(self,row,doc)
+            return {k:row[k] for k in ('id','scene','version','name','parent','created','author','sha256')}|{'definition':doc}
+        if doc.get('format')!='fdisbull-scene-1':raise ValueError('Unknown scene observation profile')
         if 'coordinate_domains' in doc:
             from .scene_domains import validate_coordinate_domains
             validate_coordinate_domains(doc['coordinate_domains'])
@@ -324,6 +333,8 @@ class SceneProjectMixin(SceneBundleMixin):
         from .scene_domains import audit_coordinate_domains
         integer(max_checks,1,8192)
         info=self.debug_scene_info(scene,version=version)
+        from .runtime_scenes import require_frame_scene
+        require_frame_scene(info)
         result=dict(format='fdisbull-stored-scene-domain-audit-1',scene_revision=info['id'],
                     manifest_sha256=info['sha256'],reference=info['definition']['reference'],
                     historical_only=True,live_state_verified=False,navigation_authority='none')
@@ -357,6 +368,8 @@ class SceneProjectMixin(SceneBundleMixin):
         _file_name(name)
         if labels not in ('names','numbers'):raise ValueError('labels must be names or numbers')
         info=self.debug_scene_info(scene,version=version);doc=info['definition']
+        from .runtime_scenes import require_frame_scene
+        require_frame_scene(info)
         artifact=artifact or doc['reference'];row,meta=self._scene_snapshot(artifact,info['version'])
         if video_signature(meta)!=doc['video']:raise ValueError('Overlay frame does not match scene video signature')
         base=bytes(row['data'])
@@ -398,15 +411,16 @@ class SceneError(ValueError):
         super().__init__('Scene operation '+result['status']+'; observation '+result.get('observation','not stored'))
 
 
-def _evaluate(spec, session, samples, observations, reads, baseline=None):
+def _evaluate(spec, session, samples, observations, reads, baseline=None, *, guard=None):
+    if guard is not None:guard()
     op,data=next(iter(spec.items()))
     if op=='constant':return data
     if op in ('all','any'):
-        values=[_evaluate(p,session,samples,observations,reads,baseline) for p in data]
+        values=[_evaluate(p,session,samples,observations,reads,baseline,guard=guard) for p in data]
         if None in values:return None
         return all(values) if op=='all' else any(values)
     if op=='not':
-        value=_evaluate(data,session,samples,observations,reads,baseline)
+        value=_evaluate(data,session,samples,observations,reads,baseline,guard=guard)
         return None if value is None else not value
     if op=='pixels':
         tolerance=data.get('tolerance',0)
@@ -480,6 +494,8 @@ class SceneHandle:
     def __init__(self, session, scene):
         self.session=session
         self.info=session.project.debug_scene_info(scene,version=session.version['id'])
+        from .runtime_scenes import require_frame_scene
+        require_frame_scene(self.info)
         self.revision=self.info['id']
 
     def _observer_stop(self, stop, previous=None):
@@ -502,8 +518,10 @@ class SceneHandle:
         # Reverify persisted manifest/evidence on each operation, never a cached
         # availability result, including across load_state/camera/layer changes.
         self.info=p.debug_scene_info(self.revision,version=d.version['id']);doc=self.info['definition']
+        from .runtime_scenes import require_frame_scene
+        require_frame_scene(self.info)
         selected=self._object(target) if target is not None else None
-        others=[s for s in p.debug_scenes(version=d.version['id'])['scenes'] if s['scene']!=self.info['scene'] and s['definition']['video']==doc['video']]
+        others=[s for s in p.debug_scenes(version=d.version['id'])['scenes'] if s['scene']!=self.info['scene'] and s['definition'].get('format')=='fdisbull-scene-1' and s['definition']['video']==doc['video']]
         result=dict(scene_revision=self.revision,manifest_sha256=self.info['sha256'],object_id=selected['id'] if selected else None,
                     status='unavailable',complete=False,availability={},evidence=[],conflicts=[],handlers=[],run=d.run_id)
         reads=ObservationReads(d)

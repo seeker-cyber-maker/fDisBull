@@ -411,6 +411,28 @@ def validate_script(script, *, session=None):
                         value=params['slice_ms']
                         if not (isinstance(value,str) and value.startswith('$')):
                             bounded(value,'slice_ms',1,1000)
+                    if op in ('scene-check','scene-assert') and (backend or actual)=='qemu-dos':
+                        from .runtime_scenes import validate_parameters
+                        validate_parameters(**params,allow_references=True)
+                        if session is not None:
+                            from .qemu_scenes import preflight
+                            preflight(session,**params,allow_references=True)
+                    if session is not None:
+                        from .runtime_scenes import require_frame_scene
+                        frame_scenes=[]
+                        if op in ('scene-navigation','scene-click','scene-act','scene-wait','move'):
+                            frame_scenes.append(params.get('scene'))
+                        if op in ('scene-check','scene-assert') and (backend or actual)!='qemu-dos':
+                            frame_scenes.append(params.get('scene'))
+                        plan=params.get('plan') if op=='assisted-travel' else params.get('travel_plan') if op=='spatial-action' else None
+                        if isinstance(plan,dict):
+                            frame_scenes.extend(plan.get(key) for key in ('scene_revision','destination_scene'))
+                        map_revision=params.get('map_revision') if op=='spatial-action' else params.get('spatial_map') if op=='move' else None
+                        if isinstance(map_revision,str) and not map_revision.startswith('$'):
+                            frame_scenes.append(session.project.debug_spatial_map_info(map_revision,version=session.version['id'])['document']['source']['context'])
+                        for selected_scene in frame_scenes:
+                            if isinstance(selected_scene,str) and not selected_scene.startswith('$'):
+                                require_frame_scene(session.project.debug_scene_info(selected_scene,version=session.version['id']))
                     if op=='write-runtime-memory':
                         from .debug_state import byte_string
                         literal={}

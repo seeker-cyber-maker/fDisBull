@@ -152,7 +152,7 @@ METHODS = {
     "debug-keyboard-up": "Consume an owned lease and queue physical break; run,lease",
     "debug-scene-navigation": "Check an actor footprint in explicit game-space geometry; run,scene,point,[footprint]",
     "agent-skill": "Discover or read bundled skills; [skill,list,index,reference]; no project required",
-    "debug-save-scene": "Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]",
+    "debug-save-scene": "Save a frame-backed scene-1 manifest or explicit scene-2 runtime-memory profile; name,definition,[parent,version,author]",
     "debug-scenes": "List current scene revisions; [version]",
     "debug-scene-info": "Read a scene manifest, evidence and persistent object identities; scene,[version]",
     "debug-scene-domain-audit": "Audit stored object extents and expected margins; scene,[version,max_checks]",

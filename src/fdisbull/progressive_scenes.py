@@ -98,6 +98,8 @@ def _validate(project, doc, version):
         if action['kind'] not in ('scene','movement','assisted-travel','spatial'):
             raise ValueError('Unsupported action kind')
         scene = project.debug_scene_info(action['scene_revision'], version=version)
+        from .runtime_scenes import require_frame_scene
+        require_frame_scene(scene)
         if scene['id'] != action['scene_revision']:
             raise ValueError('Action must pin a scene revision')
         if (action['kind'] == 'scene' or action['object_id'] is not None) and not any(o['id'] == action['object_id'] for o in scene['definition']['objects']):
