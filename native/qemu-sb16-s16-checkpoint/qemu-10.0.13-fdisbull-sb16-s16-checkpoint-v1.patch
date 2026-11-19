@@ -1,0 +1,109 @@
+--- a/hw/audio/sb16.c
++++ b/hw/audio/sb16.c
+@@ -1342,10 +1342,56 @@
+     return channel->transfer_handler == SB_read_DMA && channel->opaque == s;
+ }
+ 
++static bool sb16_checkpoint_voice_format(SWVoiceOut *voice, int32_t *format)
++{
++    if (!voice || (voice->info.bits == 8 && !voice->info.is_signed)) {
++        *format = AUDIO_FORMAT_U8;
++        return true;
++    }
++    if (voice->info.bits == 16 && voice->info.is_signed == 1) {
++        *format = AUDIO_FORMAT_S16;
++        return true;
++    }
++    return false;
++}
++
++static bool sb16_checkpoint_s16_dma_safe(SB16State *s)
++{
++    I8257State *d = I8257(s->isa_hdma);
++    I8257Regs *r = &d->regs[s->hdma & 3];
++    int frame_bytes = s->voice->info.nchannels * 2;
++    int dma_bytes = ((int)r->base[1] + 1) * 2;
++
++    /* This extension covers complete signed frames on incrementing DMA5.
++     * Do not promote the existing decrement-path 16-bit ambiguity, partial
++     * frames, another transfer owner, or a mismatched live DSP voice.  The
++     * current DMA position and SB16 credit are bytes; DMA registers are words.
++     * Masked DREQ and pending IRQ (including an older 8-bit IRQ) are preserved
++     * by their existing codecs, not normalized or inferred from this format. */
++    return s->use_hdma == 1 && s->hdma == 5 && d->dshift == 1 &&
++        fdisbull_sb16_dma_channel(s->isa_hdma, s->hdma) &&
++        !(r->mode & 0x20) && (r->mode & 0x0c) == 0x08 &&
++        r->now[0] >= 0 && r->now[0] <= 131070 && !(r->now[0] & 1) &&
++        r->now[1] >= 0 && r->now[1] < dma_bytes &&
++        !(r->now[1] % frame_bytes) && !(dma_bytes % frame_bytes) &&
++        s->fmt_bits == 16 && s->fmt_signed == 1 &&
++        s->fmt == AUDIO_FORMAT_S16 &&
++        s->fmt_stereo == s->voice->info.nchannels - 1 &&
++        s->align == frame_bytes - 1 &&
++        s->bytes_per_second == s->voice->info.freq * frame_bytes &&
++        s->block_size > 0 && s->block_size <= 131072 &&
++        !(s->block_size % frame_bytes) &&
++        s->left_till_irq > 0 && s->left_till_irq <= s->block_size &&
++        !(s->left_till_irq % frame_bytes) &&
++        (s->dma_auto == 0 || s->dma_auto == 1) &&
++        (s->fifo == 0 || s->fifo == 1);
++}
++
+ static bool sb16_checkpoint_device_safe(SB16State *s, Error **errp)
+ {
+     I8257State *low, *high;
+     int channel;
++    int32_t voice_format;
+     I8257State *active;
+ 
+     if (runstate_is_running() || !s->aux_ts ||
+@@ -1367,14 +1413,23 @@
+         error_setg(errp, "SB16 checkpoint DMA or audio credit is unsupported");
+         return false;
+     }
+-    if (s->voice && (s->voice->info.bits != 8 ||
+-        s->voice->info.is_signed || s->voice->info.is_float ||
++    if (!sb16_checkpoint_voice_format(s->voice, &voice_format) ||
++        (s->voice && (s->voice->info.is_float ||
+         (s->voice->info.nchannels != 1 && s->voice->info.nchannels != 2) ||
+         s->voice->info.freq < SAMPLE_RATE_MIN ||
+         s->voice->info.freq > SAMPLE_RATE_MAX ||
+-        s->voice->info.swap_endianness ||
+-        s->voice->active < 0 || s->voice->active > 1)) {
+-        error_setg(errp, "SB16 checkpoint supports U8 mono/stereo voices at 5000..45000 Hz");
++        (voice_format == AUDIO_FORMAT_U8 ? s->voice->info.swap_endianness :
++         s->voice->info.swap_endianness != (AUDIO_HOST_ENDIANNESS != 0)) ||
++        s->voice->active < 0 || s->voice->active > 1))) {
++        error_setg(errp, "SB16 checkpoint supports U8 or signed little-endian S16 mono/stereo voices at 5000..45000 Hz");
++        return false;
++    }
++    if (s->voice && voice_format == AUDIO_FORMAT_S16 &&
++        (s->voice->info.bytes_per_frame != s->voice->info.nchannels * 2 ||
++         s->voice->info.bytes_per_second !=
++             s->voice->info.freq * s->voice->info.bytes_per_frame ||
++         !sb16_checkpoint_s16_dma_safe(s))) {
++        error_setg(errp, "SB16 S16 checkpoint requires coherent complete frames on incrementing DMA5");
+         return false;
+     }
+     if (timer_pending(s->aux_ts) &&
+@@ -1420,7 +1475,9 @@
+     s->checkpoint_voice_active = s->voice && s->voice->active;
+     s->checkpoint_voice_freq = s->voice ? s->voice->info.freq : 0;
+     s->checkpoint_voice_channels = s->voice ? s->voice->info.nchannels : 0;
+-    s->checkpoint_voice_format = s->voice ? AUDIO_FORMAT_U8 : 0;
++    if (!sb16_checkpoint_voice_format(s->voice, &s->checkpoint_voice_format)) {
++        return -EINVAL;
++    }
+     s->checkpoint_voice_endianness = 0;
+     s->checkpoint_aux_deadline = timer_pending(s->aux_ts) ?
+         timer_expire_time_ns(s->aux_ts) : -1;
+@@ -1451,7 +1508,8 @@
+           s->checkpoint_voice_freq > SAMPLE_RATE_MAX ||
+           (s->checkpoint_voice_channels != 1 &&
+            s->checkpoint_voice_channels != 2) ||
+-          s->checkpoint_voice_format != AUDIO_FORMAT_U8 ||
++          (s->checkpoint_voice_format != AUDIO_FORMAT_U8 &&
++           s->checkpoint_voice_format != AUDIO_FORMAT_S16) ||
+           s->checkpoint_voice_endianness))) {
+         return -EINVAL;
+     }

@@ -1,0 +1,89 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "Exact-producer signed little-endian S16 SB16 checkpoint restoration",
+  "implementation_status": "Exact native patch recovered; replacement qualification is pending. Historical runs do not qualify a newly built producer.",
+  "base": {
+    "qemu_version": "10.0.13",
+    "prerequisite_package": "native/qemu-sb16-transfer-count",
+    "prerequisite_manifest_sha256": "5ac4b509a817387ce68411e67ff0960f280d4721d9b6a7d3232063d4a9d5dc77",
+    "historical_prerequisite_binary_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-sb16-s16-checkpoint-v1.patch",
+    "bytes": 4982,
+    "sha256": "e92132b8548ad2a5967c38111173f703cd66ccb1c83f0fd76a647447d5eeb5d1",
+    "strip": 1,
+    "modified_file_count": 1,
+    "files": [
+      {
+        "path": "hw/audio/sb16.c",
+        "before_sha256": "ec165ad5080f6a8f184a0becfc5ab3f58de6c8757a40fba9fee4f840ceaf4d21",
+        "after_sha256": "b0b31159f2a7cb87fe2f8bf27bc4050541435ddd24759ab11dd9250576b845f0"
+      }
+    ]
+  },
+  "contract": {
+    "guest_pcm_extension": "Signed little-endian S16 mono/stereo, 5000..45000 Hz",
+    "dma_channel": 5,
+    "dma_direction": "Incrementing memory-to-device",
+    "dma_register_unit": "16-bit words",
+    "internal_dma_position_unit": "Bytes",
+    "complete_frames_required": true,
+    "live_dsp_voice_agreement_required": true,
+    "pending_irq_and_dreq_preserved": true,
+    "capture_default_unchanged": true,
+    "qapi_unchanged": true,
+    "ordinary_vmstate_layout_unchanged": true,
+    "audio_core_layout_unchanged": true,
+    "state_compatibility": "Exact executing native producer only; no cross-binary import",
+    "scope": "Only the SB16 admission and saved voice format extend; existing controller, audio-core, timer and ownership guards remain binding."
+  },
+  "recovery": {
+    "kind": "Exact patch and source pins; newly authored manifest",
+    "date": "2026-11-19",
+    "original_integration_commit": "483ebe7d747de646eefa3996f3b74cfacd3d147d",
+    "original_integration_object_recovered": false,
+    "original_fixture_and_raw_results_recovered": false,
+    "source_pin_evidence": "Recovered native-source-change.json and independent destination byte/hash verification",
+    "historical_results_are_new_qualification": false
+  },
+  "verification": {
+    "source_replay": {
+      "status": "passed",
+      "parent_patch_applications": 31,
+      "candidate_additional_patch_applications": 1,
+      "patch_fuzz": 0,
+      "files_differing_between_trees": [
+        "hw/audio/sb16.c"
+      ],
+      "entries_per_tree": 86031,
+      "regular_files_per_tree": 79601,
+      "preparation_receipt_sha256": "754b9ed58ff43a3a356ef5c2883569ec1d3a37d8738a8e89d0aa9a7ba620d5ba",
+      "independent_full_tree_review_sha256": "4728713e77568e020bc069d67fed04fbd2873fc103e24cd9ea0ceb8c783efc00"
+    },
+    "host_admission": {
+      "production_c_helper_probes": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "undefined_behavior_sanitizer": true,
+        "junit_sha256": "04b533aa163dd4fe99eb1200107391767463352664b5c74e077609c4552a7418"
+      },
+      "fixture_and_oracle_revision": {
+        "passed": 121,
+        "failed": 0,
+        "skipped": 0,
+        "native_driver_sha256": "45dc1396f97cc8846209c28fcd419e9e81f6f1d9b86e5b690a7d8709ddcf9820",
+        "junit_sha256": "a3278ac0375295aa3e65096541a25aa5e0384ca069b452d6830916777ac08f26",
+        "initial_layout_failure_receipt_sha256": "05bddea76d0f0e784892e1bba00fb6b5be7e4c4dcc7d7128787e656f6bf07f46",
+        "later_log_and_cleanup_delta": "12 new host cases passed; full121-case gate passed with unchanged inputs before/after"
+      },
+      "native_qemu_executed": false
+    },
+    "candidate_build": "pending",
+    "candidate_native": "pending",
+    "legacy_refusal_control": "Keep the published test_qemu_sb16_count_native.py S16 refusal assertions on the explicitly selected legacy producer.",
+    "ci": false,
+    "macos_native": "unverified"
+  }
+}
