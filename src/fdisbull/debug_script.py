@@ -521,9 +521,15 @@ def validate_script(script, *, session=None):
                                  if not (isinstance(value,str) and value.startswith('$'))}
                         validate_clock_sync_options(**literal)
                     if op=='move':
-                        from .movement import validate_movement, _call
-                        _call(params['start']);_call(params['stop'])
-                        validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
+                        if (backend or actual)=='qemu-dos':
+                            from .qemu_movement import validate_parameters, control_plans
+                            validate_parameters(**params, allow_references=True)
+                            if session is not None:
+                                control_plans(session,params['macro_set'],params['start'],params['stop'],allow_references=True)
+                        else:
+                            from .movement import validate_movement, _call
+                            _call(params['start']);_call(params['stop'])
+                            validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
                     if op=='keyboard.key-down':
                         from .keyboard_input import KEYS
                         if not isinstance(params['key'],str) or params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
@@ -653,9 +659,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             params={k:v for k,v in step.items() if k not in ('op','as','expect','timeout_ms')}
             session._macro_plan(**params)
         elif step['op']=='move':
-            for key in ('start','stop'):
-                call=step[key]
-                session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
+            if getattr(session,'metadata',{}).get('backend')=='qemu-dos':
+                from .qemu_movement import control_plans
+                control_plans(session,step['macro_set'],step['start'],step['stop'],allow_references=True)
+            else:
+                for key in ('start','stop'):
+                    call=step[key]
+                    session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
     restore_operations = {'load-state','load-machine-state','load-le-source-state','le-rewind',
                           'load-anchor-stone','rewind','delta-recover','timeline-rewind'}
     def frame_owned_keys():
@@ -744,7 +754,23 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             remaining = int((deadline-time.monotonic())*1000)
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
-            params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
+            unresolved = {k:v for k,v in step.items() if k not in ('op','as','expect')}
+            if step['op']=='move' and getattr(session,'metadata',{}).get('backend')=='qemu-dos':
+                # Only this already validated local lease namespace belongs to
+                # the movement start, even if an outer binding is named start.
+                from .qemu_movement import local_lease_reference
+                def stop_arguments(value):
+                    if local_lease_reference(value):return value
+                    if isinstance(value,dict):return {k:stop_arguments(v) for k,v in value.items()}
+                    if isinstance(value,list):return [stop_arguments(v) for v in value]
+                    return resolve(value)
+                stop_value=unresolved.pop('stop')
+                params=resolve(unresolved)
+                if isinstance(stop_value,dict):
+                    params['stop']={k:(stop_arguments(v) if k=='args' else resolve(v)) for k,v in stop_value.items()}
+                else:params['stop']=resolve(stop_value)
+            else:
+                params = resolve(unresolved)
             if step['op'] in ('load-machine-state','save-le-source-state','load-le-source-state',
                               'le-rewind-start','le-rewind-record','le-rewind'):
                 if 'timeout_ms' in params:

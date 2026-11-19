@@ -65,7 +65,7 @@ def test_policy_does_not_grant_missing_consumers_or_touch_frozen_source_input(ow
     s.vm.operation_guard = s.vm.history_operation_guard = forbidden
     assert s.spatial_policy('assisted')['assisted_travel'] is True
     assert all(not hasattr(s, operation) for operation in (
-        'assisted_travel', 'spatial_action', 'scene_check', 'click', 'frame_probe', 'move'))
+        'assisted_travel', 'spatial_action', 'scene_check', 'click', 'frame_probe'))
     assert (s._qemu_cpu_delta_history, s._dos_history, s.vm._physical_input, s._process) == before
     no_native(owned)
 

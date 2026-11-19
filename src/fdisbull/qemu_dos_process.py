@@ -40,6 +40,7 @@ from .qemu_macros import QemuMacroSessionMixin
 from .qemu_runtime_memory import QemuRuntimeMemoryMixin
 from .qemu_proofs import QemuProofMixin
 from .qemu_spatial_policy import QemuSpatialPolicyMixin, initial_policy
+from .qemu_movement import QemuMovementMixin
 
 
 def _sha(data):
@@ -166,7 +167,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -356,6 +357,7 @@ class QemuDOSProcessSession(QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeM
                 runtime_memory_bindings=True,
                 bounded_model_proofs=True,
                 spatial_policy=True,
+                witnessed_movement='held keyboard leases; runtime_memory scalars; sample progress; native virtual clock only',
                 spatial_policy_scope='voluntary host permission only; no frame, action, assistance or memory authority',
                 runtime_memory_scope='witnessed ordinary physical RAM or observed unpaged linear RAM; no source/task/allocation lifetime inference',
                 trace_until='source-bound predicates; virtual-time ranges with the virtual profile; queued input unqualified',
@@ -1002,7 +1004,7 @@ class QemuDOSProcessSession(QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeM
 
     @property
     def script_operations(self):
-        return super().script_operations | {'macro', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+        return super().script_operations | {'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
             'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',
