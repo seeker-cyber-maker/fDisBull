@@ -1,0 +1,67 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+  "patch": "qemu-raster-proof.patch",
+  "patch_sha256": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+  "scope": "Opt-in typed complete-raster evidence for exact chain-4 320x200; no frame/cadence API",
+  "files": [
+    {
+      "path": "hw/display/fdisbull-raster.h",
+      "base_sha256": null,
+      "patched_sha256": "294d829209adaaaef183aee9de973abd00a4f63178e4ee8e5a79deb701452c80"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_sha256": "6ee47c534ef1735520d729ffd077019c4efd385bd9e87b01971bec3423962d26",
+      "patched_sha256": "3a7e6935fce93f2a04b4474cb7f72e9e3ffc0e7c1dc128ee4f2030ef6cb312cb"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_sha256": "109487582c35626640eef6517907b4a3af75db10f9a22a3db300580a9a65d7f4",
+      "patched_sha256": "5f5ad4701d770c63d2e038247d8b9da73db7eaae359b0cbbf2101b16110170d6"
+    },
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_sha256": "ba30974a5b55d8f5607ab4b41cc86f395b818364b8d11a79418db57485afce2b",
+      "patched_sha256": "a279f17806b71d7fff1fac18b55e8251736af4f369a237bd88a57cbdcaa92159"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_sha256": "71fd3e00c6fb0ba0ebe1b929cc6a32eef0a289d20c96262b9e733fead038c4a9",
+      "patched_sha256": "a0c2741780f6fbf8f55503c670ef4a3452fd0d1e9a9633e8f6169a648088703c"
+    },
+    {
+      "path": "qapi/fdisbull-raster.json",
+      "base_sha256": null,
+      "patched_sha256": "ecde64ad9164ee04a53ddfa34917631e29e7b7a0c4f8de52367e66b19ead2186"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "618f988798acc5c2fca8065f2d66029e1838976a01dc60646a17d95ffeeb6af8",
+      "patched_sha256": "cd057968f4f9536c295ebd01b62f5afc0988f417b3adf652383de31b103b58d0"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "41f1e9ccdddc1cf5d671d8af3c5827258f722b0e57828ee9cecf23c577beb42e",
+      "patched_sha256": "ce2c2eaff77b3aadb076f2c228e24da884fe26c7c4fc82251814eaa7c7a5c42b"
+    },
+    {
+      "path": "system/fdisbull-retrace.c",
+      "base_sha256": "52d842553b10e322fa9f5fc099c6a3babf6bd0dee68a5aa2d51ed19d5677a0b6",
+      "patched_sha256": "3d443c11787521562e31630b614d3f7f6d6408814e57d8cc247940c6332f5914"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_sha256": "7594ca414d754423840e15215052da9b3b4650da3b03925bcae1cd833f2b6cef",
+      "patched_sha256": "c1f6b78cf7861b020514b3ac139b79af10c0d181a16c8a0d70b6bac79d68c6b0"
+    }
+  ],
+  "qualification": {
+    "source_qapi_generation": "passed",
+    "compiled_source_probe": "passed-9",
+    "build": "passed-private-linux-x86_64",
+    "native": "passed-4-authored-and-9-adjacent-retained-cases",
+    "evidence": "verification.json"
+  }
+}

@@ -1,0 +1,729 @@
+diff --git a/hw/display/fdisbull-raster.h b/hw/display/fdisbull-raster.h
+new file mode 100644
+--- /dev/null
++++ b/hw/display/fdisbull-raster.h
+@@ -0,0 +1,91 @@
++/* Bounded renderer-source admission; not a video frame or scanout model.
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++#ifndef HW_FDISBULL_RASTER_H
++#define HW_FDISBULL_RASTER_H
++
++#include <stdbool.h>
++#include <stddef.h>
++#include <stdint.h>
++#include <string.h>
++
++typedef struct FdisbullChain4Geometry {
++    bool display_enabled;
++    bool graphics;
++    bool vbe_enabled;
++    bool chain4;
++    int width, height, depth, shift_control, multi_scan;
++    unsigned crtc_mode, attribute_mode, plane_enable, hpel;
++    uint64_t start_address, line_offset, line_compare, vram_size;
++    int64_t bank_offset;
++} FdisbullChain4Geometry;
++
++/* Keep this pure: admission must not repair renderer caches or guest state. */
++static inline const char *
++fdisbull_chain4_admission(const FdisbullChain4Geometry *g)
++{
++    if (!g->display_enabled || !g->graphics) {
++        return "display-disabled-or-not-graphics";
++    }
++    if (g->vbe_enabled || !g->chain4 || g->depth != 0 ||
++        g->shift_control != 2) {
++        return "unsupported-pixel-interpretation";
++    }
++    if (g->width != 640 || g->height != 400 || g->multi_scan != 1) {
++        return "unsupported-source-extent";
++    }
++    if ((g->crtc_mode & 3) != 3 || g->attribute_mode != 0x41 ||
++        (g->plane_enable & 15) != 15) {
++        return "unsupported-address-or-plane-mode";
++    }
++    if (g->start_address || g->bank_offset || g->line_offset != 320 ||
++        g->line_compare < 400 || g->hpel) {
++        return "unsupported-origin-pitch-split-or-panning";
++    }
++    if (g->vram_size < 64000) {
++        return "incomplete-source-storage";
++    }
++    return NULL;
++}
++
++/* Verify every pixel, including all duplication and the final source row.
++ * Inputs are the admitted native packed XRGB32 surface, actual source indices
++ * and native-expanded palette. Outputs are owned canonical RGB888 copies.
++ */
++static inline bool fdisbull_chain4_copy_verify(
++    const uint8_t *pixels, size_t pixel_bytes,
++    const uint8_t *indices, size_t index_bytes, const uint32_t *palette,
++    uint8_t *surface_rgb, size_t surface_bytes,
++    uint8_t *source_rgb, size_t source_bytes)
++{
++    unsigned x, y;
++
++    if (!pixels || !indices || !palette || !surface_rgb || !source_rgb ||
++        pixel_bytes != 640u * 400u * 4u || index_bytes != 320u * 200u ||
++        surface_bytes != 640u * 400u * 3u ||
++        source_bytes != 320u * 200u * 3u) {
++        return false;
++    }
++    for (y = 0; y < 400; y++) {
++        for (x = 0; x < 640; x++) {
++            uint32_t pixel;
++            uint32_t expected = palette[indices[(y / 2) * 320 + x / 2]];
++            uint8_t *rgb = surface_rgb + ((size_t)y * 640 + x) * 3;
++
++            memcpy(&pixel, pixels + ((size_t)y * 640 + x) * 4, sizeof(pixel));
++            if ((pixel & 0xffffff) != expected) {
++                return false;
++            }
++            rgb[0] = pixel >> 16;
++            rgb[1] = pixel >> 8;
++            rgb[2] = pixel;
++            if (!(x & 1) && !(y & 1)) {
++                memcpy(source_rgb + ((size_t)(y / 2) * 320 + x / 2) * 3,
++                       rgb, 3);
++            }
++        }
++    }
++    return true;
++}
++
++#endif
+diff --git a/hw/display/vga.c b/hw/display/vga.c
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -28,6 +28,11 @@
+ #include "qapi/error.h"
+ #include "qapi/qapi-types-fdisbull-retrace.h"
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
++#include "qapi/qapi-types-fdisbull-raster.h"
++#include "qapi/clone-visitor.h"
++#include "qapi/qapi-visit-fdisbull-raster.h"
++#include "qapi/qapi-visit-fdisbull-vga-configuration.h"
++#include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
+ #include "exec/tswap.h"
+ #include "hw/display/vga.h"
+@@ -35,6 +40,7 @@
+ #include "hw/pci/pci.h"
+ #include "vga_int.h"
+ #include "vga_regs.h"
++#include "fdisbull-raster.h"
+ #include "ui/pixel_ops.h"
+ #include "ui/console.h"
+ #include "qemu/timer.h"
+@@ -1776,6 +1782,199 @@
+     *pheight = height;
+ }
+ 
++static void vga_fdisbull_raster_clear(VGACommonState *s, const char *reason,
++                                     bool attempted)
++{
++    if (!s->fdisbull_raster_proof) {
++        return;
++    }
++    g_clear_pointer(&s->fdisbull_raster_result, qapi_free_FdisbullRasterProof);
++    s->fdisbull_raster_result = g_new0(FdisbullRasterProof, 1);
++    s->fdisbull_raster_result->outcome = FDISBULL_RASTER_OUTCOME_UNAVAILABLE;
++    s->fdisbull_raster_result->reason = g_strdup(reason);
++    s->fdisbull_raster_result->attempted = attempted;
++    s->fdisbull_raster_result->has_attempt_ns = attempted;
++    if (attempted) {
++        s->fdisbull_raster_result->attempt_ns =
++            qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    }
++}
++
++static void vga_fdisbull_raster_invalidate(VGACommonState *s, const char *reason)
++{
++    if (s->fdisbull_raster_proof) {
++        s->fdisbull_raster_cache_valid = false;
++        s->fdisbull_raster_cache_configuration = 0;
++        vga_fdisbull_raster_clear(s, reason, false);
++    }
++}
++
++FdisbullRasterProof *vga_fdisbull_raster_query(VGACommonState *s, Error **errp)
++{
++    const FdisbullRasterProof *saved = s->fdisbull_raster_result;
++    FdisbullRasterProof *result;
++
++    assert(bql_locked());
++    if (!s->fdisbull_raster_proof) {
++        error_setg(errp, "Raster proof is not enabled");
++        return NULL;
++    }
++    result = g_new0(FdisbullRasterProof, 1);
++    if (!saved) {
++        result->outcome = FDISBULL_RASTER_OUTCOME_UNAVAILABLE;
++        result->reason = g_strdup("no-renderer-attempt");
++        return result;
++    }
++    result->outcome = saved->outcome;
++    result->reason = g_strdup(saved->reason);
++    result->attempted = saved->attempted;
++    result->has_attempt_ns = saved->has_attempt_ns;
++    result->attempt_ns = saved->attempt_ns;
++    if (saved->source) {
++        result->source = QAPI_CLONE(FdisbullRasterSource, saved->source);
++        result->producing_configuration = QAPI_CLONE(
++            FdisbullVgaConfigurationSnapshot, saved->producing_configuration);
++    }
++    return result;
++}
++
++static FdisbullChain4Geometry vga_fdisbull_chain4_geometry(
++    VGACommonState *s, int width, int height, int depth, int shift_control,
++    int multi_scan)
++{
++    return (FdisbullChain4Geometry) {
++        .display_enabled = !!(s->ar_index & 0x20),
++        .graphics = !!(s->gr[VGA_GFX_MISC] & VGA_GR06_GRAPHICS_MODE),
++        .vbe_enabled = vbe_enabled(s),
++        .chain4 = !!(sr(s, VGA_SEQ_MEMORY_MODE) & VGA_SR04_CHN_4M),
++        .width = width, .height = height, .depth = depth,
++        .shift_control = shift_control, .multi_scan = multi_scan,
++        .crtc_mode = s->cr[VGA_CRTC_MODE],
++        .attribute_mode = s->ar[VGA_ATC_MODE],
++        .plane_enable = s->ar[VGA_ATC_PLANE_ENABLE],
++        .hpel = s->params.hpel & 7,
++        .start_address = (uint64_t)s->params.start_addr * 4,
++        .line_offset = s->params.line_offset,
++        .line_compare = s->params.line_compare,
++        .vram_size = s->vbe_size,
++        .bank_offset = s->bank_offset,
++    };
++}
++
++static void vga_fdisbull_raster_complete(
++    VGACommonState *s, const FdisbullChain4Geometry *geometry,
++    int rows_considered, int rows_redrawn)
++{
++    g_autofree uint8_t *surface_rgb = NULL;
++    g_autofree uint8_t *source_rgb = NULL;
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(FdisbullVgaConfigurationSnapshot) configuration = NULL;
++    DisplaySurface *surface = qemu_console_surface(s->con);
++    FdisbullRasterProof *result = s->fdisbull_raster_result;
++    FdisbullRasterSource *source;
++    const char *reason = fdisbull_chain4_admission(geometry);
++    uint8_t palette_rgb[256 * 3];
++    uint32_t palette[256];
++    Object *device;
++    int i, channel;
++
++    assert(bql_locked());
++    if (reason) {
++        goto unavailable;
++    }
++    if (fdisbull_instrumented_checkpoint_busy() ||
++        !qemu_console_can_update_headless_sync(s->con)) {
++        reason = "renderer-not-owned-headless-synchronous";
++        goto unavailable;
++    }
++    if (rows_considered != 400 || rows_redrawn < 0 || rows_redrawn > 400 ||
++        (!rows_redrawn && !s->fdisbull_raster_cache_valid)) {
++        reason = "incomplete-renderer-extent";
++        goto unavailable;
++    }
++    if (!surface || surface_is_placeholder(surface) ||
++        !surface_is_allocated(surface) || !surface_data(surface) ||
++        surface_width(surface) != 640 || surface_height(surface) != 400 ||
++        surface_format(surface) != qemu_default_pixman_format(32, true) ||
++        surface_stride(surface) != 640 * 4) {
++        reason = "unsupported-owned-surface";
++        goto unavailable;
++    }
++    /* Capture one owned complete RGB raster; never hash guest-shared pixels. */
++    surface_rgb = g_malloc(640 * 400 * 3);
++    source_rgb = g_malloc(320 * 200 * 3);
++    for (i = 0; i < 256; i++) {
++        for (channel = 0; channel < 3; channel++) {
++            uint8_t raw = s->palette[i * 3 + channel];
++            palette_rgb[i * 3 + channel] = s->dac_8bit ? raw : c6_to_8(raw);
++        }
++        palette[i] = rgb_to_pixel32(palette_rgb[i * 3],
++                                    palette_rgb[i * 3 + 1],
++                                    palette_rgb[i * 3 + 2]);
++        if (s->last_palette[i] != palette[i]) {
++            reason = "renderer-palette-cache-mismatch";
++            goto unavailable;
++        }
++    }
++    if (!fdisbull_chain4_copy_verify(surface_data(surface), 640 * 400 * 4,
++                                    s->vram_ptr, 320 * 200, palette,
++                                    surface_rgb, 640 * 400 * 3,
++                                    source_rgb, 320 * 200 * 3)) {
++        reason = "raster-source-or-duplication-mismatch";
++        goto unavailable;
++    }
++    clock = qmp_x_fdisbull_query_clock(NULL);
++    if (!clock || clock->api_version != 1 || !clock->budget_supported ||
++        clock->virtual_ns < 0) {
++        reason = "native-clock-profile-unavailable";
++        goto unavailable;
++    }
++    device = object_property_get_link(OBJECT(s->con), "device", NULL);
++    configuration = pci_std_vga_fdisbull_configuration_snapshot(
++        device, clock->epoch, clock->virtual_ns, NULL);
++    if (!configuration) {
++        reason = "producing-configuration-unavailable";
++        goto unavailable;
++    }
++    source = g_new0(FdisbullRasterSource, 1);
++    source->profile = g_strdup("qemu-vga-chain4-320x200-raster-v1");
++    source->width = 320;
++    source->height = 200;
++    source->source_bpp = 8;
++    source->surface_width = 640;
++    source->surface_height = 400;
++    source->column_duplication = 2;
++    source->row_duplication = 2;
++    source->line_offset = 320;
++    source->draw_handler = g_strdup("vga_draw_line8d2");
++    source->dac_8bit = s->dac_8bit;
++    source->rows_considered = rows_considered;
++    source->rows_redrawn = rows_redrawn;
++    source->source_index_sha256 = g_compute_checksum_for_data(
++        G_CHECKSUM_SHA256, s->vram_ptr, 64000);
++    source->palette_rgb_sha256 = g_compute_checksum_for_data(
++        G_CHECKSUM_SHA256, palette_rgb, sizeof(palette_rgb));
++    source->source_rgb_sha256 = g_compute_checksum_for_data(
++        G_CHECKSUM_SHA256, source_rgb, 320 * 200 * 3);
++    source->surface_rgb_sha256 = g_compute_checksum_for_data(
++        G_CHECKSUM_SHA256, surface_rgb, 640 * 400 * 3);
++    g_clear_pointer(&result->reason, g_free);
++    result->source = source;
++    result->producing_configuration = g_steal_pointer(&configuration);
++    result->attempt_ns = clock->virtual_ns;
++    result->outcome = rows_redrawn ? FDISBULL_RASTER_OUTCOME_UPDATED :
++                                   FDISBULL_RASTER_OUTCOME_VALID_UNCHANGED;
++    s->fdisbull_raster_cache_valid = true;
++    s->fdisbull_raster_cache_configuration =
++        result->producing_configuration->configuration_generation;
++    return;
++
++unavailable:
++    s->fdisbull_raster_cache_valid = false;
++    g_free(result->reason);
++    result->reason = g_strdup(reason);
++}
++
+ void vga_invalidate_scanlines(VGACommonState *s, int y1, int y2)
+ {
+     int y;
+@@ -1822,6 +2021,8 @@
+     uint32_t v, addr1, addr;
+     vga_draw_line_func *vga_draw_line = NULL;
+     bool allocate_surface, force_shadow = false;
++    FdisbullChain4Geometry raster_geometry = { 0 };
++    int raster_redrawn = 0;
+     pixman_format_code_t format;
+ #if HOST_BIG_ENDIAN
+     bool byteswap = !s->big_endian_fb;
+@@ -1847,6 +2048,16 @@
+         multi_scan = double_scan;
+     }
+     multi_run = multi_scan;
++    if (s->fdisbull_raster_proof) {
++        raster_geometry = vga_fdisbull_chain4_geometry(
++            s, width, height, depth, shift_control, multi_scan);
++        if (!fdisbull_chain4_admission(&raster_geometry) &&
++            (!s->fdisbull_raster_cache_valid ||
++             s->fdisbull_raster_cache_configuration !=
++             s->fdisbull_configuration_generation)) {
++            full_update = 1;
++        }
++    }
+     if (shift_control != s->shift_control ||
+         double_scan != s->double_scan) {
+         full_update = 1;
+@@ -2040,6 +2251,7 @@
+         /* explicit invalidation for the hardware cursor (cirrus only) */
+         update |= vga_scanline_invalidated(s, y);
+         if (update) {
++            raster_redrawn++;
+             if (y_start < 0)
+                 y_start = y;
+             if (surface_is_allocated(surface)) {
+@@ -2084,6 +2296,9 @@
+     }
+     g_free(snap);
+     memset(s->invalidated_y_table, 0, sizeof(s->invalidated_y_table));
++    if (s->fdisbull_raster_proof) {
++        vga_fdisbull_raster_complete(s, &raster_geometry, y, raster_redrawn);
++    }
+ }
+ 
+ static void vga_draw_blank(VGACommonState *s, int full_update)
+@@ -2124,6 +2339,7 @@
+     int full_update, graphic_mode;
+ 
+     qemu_flush_coalesced_mmio_buffer();
++    vga_fdisbull_raster_clear(s, "unsupported-renderer-mode", true);
+ 
+     if (surface_bits_per_pixel(surface) == 0) {
+         /* nothing to do */
+@@ -2152,6 +2368,10 @@
+             break;
+         }
+     }
++    if (s->fdisbull_raster_proof &&
++        s->fdisbull_raster_result->outcome == FDISBULL_RASTER_OUTCOME_UNAVAILABLE) {
++        s->fdisbull_raster_cache_valid = false;
++    }
+ }
+ 
+ /* force a full display refresh */
+@@ -2161,10 +2381,12 @@
+ 
+     s->last_width = -1;
+     s->last_height = -1;
++    vga_fdisbull_raster_invalidate(s, "renderer-invalidated");
+ }
+ 
+ void vga_common_reset(VGACommonState *s)
+ {
++    vga_fdisbull_raster_invalidate(s, "native-reset");
+     if (s->fdisbull_retrace) {
+         s->fdisbull_retrace_initialized = false;
+         vga_fdisbull_retrace_advance_generation(s);
+@@ -2441,6 +2663,8 @@
+ {
+     VGACommonState *s = opaque;
+ 
++    vga_fdisbull_raster_invalidate(s, "native-load");
++
+     /* force refresh */
+     s->graphic_mode = -1;
+     vbe_update_vgaregs(s);
+@@ -2539,6 +2763,12 @@
+ {
+     int i, j, v, b;
+     Error *local_err = NULL;
++
++    if (s->fdisbull_raster_proof && !s->fdisbull_retrace) {
++        error_setg(errp, "x-fdisbull-raster-proof requires the explicit "
++                   "precise x-fdisbull-retrace profile");
++        return false;
++    }
+ 
+     if (s->fdisbull_retrace) {
+         if (vga_retrace_method != VGA_RETRACE_PRECISE ||
+diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -186,6 +186,11 @@
+     bool fdisbull_configuration_invalidated;
+     uint64_t fdisbull_configuration_generation;
+     VGAConfigurationState fdisbull_configuration_committed;
++    /* Private raster evidence is process-local and is never migrated. */
++    bool fdisbull_raster_proof;
++    bool fdisbull_raster_cache_valid;
++    uint64_t fdisbull_raster_cache_configuration;
++    struct FdisbullRasterProof *fdisbull_raster_result;
+     uint8_t is_vbe_vmstate;
+ } VGACommonState;
+ 
+@@ -218,6 +223,8 @@
+ bool vga_fdisbull_configuration_query(
+     VGACommonState *s, struct FdisbullVgaConfigurationSnapshot *info,
+     Error **errp);
++struct FdisbullRasterProof *vga_fdisbull_raster_query(VGACommonState *s,
++                                                   Error **errp);
+ 
+ void vga_dirty_log_start(VGACommonState *s);
+ void vga_dirty_log_stop(VGACommonState *s);
+diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -31,6 +31,7 @@
+ #include "qapi/error.h"
+ #include "qapi/qapi-types-fdisbull-retrace.h"
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
++#include "qapi/qapi-types-fdisbull-raster.h"
+ #include "qemu/main-loop.h"
+ #include "migration/vmstate.h"
+ #include "vga_int.h"
+@@ -129,6 +130,46 @@
+     info->console = 0;
+     info->head = 0;
+     return g_steal_pointer(&info);
++}
++
++FdisbullRasterProof *pci_std_vga_fdisbull_raster_query(
++    Object *obj, uint64_t epoch, int64_t virtual_ns, Error **errp)
++{
++    g_autoptr(FdisbullVgaConfigurationSnapshot) current = NULL;
++    g_autoptr(FdisbullRasterProof) result = NULL;
++    VGACommonState *s;
++
++    assert(bql_locked());
++    if (!pci_std_vga_fdisbull_configuration_selected(obj) ||
++        !PCI_VGA(obj)->vga.fdisbull_raster_proof) {
++        error_setg(errp, "Raster proof requires explicit primary "
++                   "VGA.x-fdisbull-raster-proof=on");
++        return NULL;
++    }
++    current = pci_std_vga_fdisbull_configuration_snapshot(
++        obj, epoch, virtual_ns, errp);
++    if (!current) {
++        return NULL;
++    }
++    s = &PCI_VGA(obj)->vga;
++    result = vga_fdisbull_raster_query(s, errp);
++    if (!result) {
++        return NULL;
++    }
++    result->api_version = 1;
++    result->model = g_strdup("qemu-vga-raster-proof-v1");
++    result->epoch = epoch;
++    result->virtual_ns = virtual_ns;
++    result->device = g_strdup(current->device);
++    result->device_type = g_strdup("VGA");
++    result->console = 0;
++    result->head = 0;
++    result->current_configuration_matches =
++        result->producing_configuration &&
++        result->producing_configuration->epoch == epoch &&
++        result->producing_configuration->configuration_generation ==
++        current->configuration_generation;
++    return g_steal_pointer(&result);
+ }
+ 
+ static const VMStateDescription vmstate_vga_pci = {
+@@ -408,6 +449,8 @@
+ 
+ static const Property vga_pci_properties[] = {
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
++    DEFINE_PROP_BOOL("x-fdisbull-raster-proof", PCIVGAState,
++                     vga.fdisbull_raster_proof, false),
+     DEFINE_PROP_UINT32("vgamem_mb", PCIVGAState, vga.vram_size_mb, 16),
+     DEFINE_PROP_BIT("mmio", PCIVGAState, flags, PCI_VGA_FLAG_ENABLE_MMIO, true),
+     DEFINE_PROP_BIT("qemu-extended-regs",
+@@ -440,12 +483,21 @@
+     adevc->build_dev_aml = build_vga_aml;
+ }
+ 
++static void vga_pci_instance_finalize(Object *obj)
++{
++    PCIVGAState *d = PCI_VGA(obj);
++
++    g_clear_pointer(&d->vga.fdisbull_raster_result,
++                    qapi_free_FdisbullRasterProof);
++}
++
+ static const TypeInfo vga_pci_type_info = {
+     .name = TYPE_PCI_VGA,
+     .parent = TYPE_PCI_DEVICE,
+     .instance_size = sizeof(PCIVGAState),
+     .abstract = true,
+     .class_init = vga_pci_class_init,
++    .instance_finalize = vga_pci_instance_finalize,
+     .interfaces = (InterfaceInfo[]) {
+         { INTERFACE_CONVENTIONAL_PCI_DEVICE },
+         { TYPE_ACPI_DEV_AML_IF },
+diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -37,6 +37,9 @@
+ struct FdisbullVgaConfigurationSnapshot *
+ pci_std_vga_fdisbull_configuration_snapshot(Object *obj, uint64_t epoch,
+                                            int64_t virtual_ns, Error **errp);
++struct FdisbullRasterProof;
++struct FdisbullRasterProof *pci_std_vga_fdisbull_raster_query(
++    Object *obj, uint64_t epoch, int64_t virtual_ns, Error **errp);
+ bool pci_std_vga_fdisbull_checkpoint_restore(
+     Object *obj, const struct FdisbullRetraceInfo *retrace,
+     const struct FdisbullVgaConfigurationSnapshot *configuration,
+diff --git a/qapi/fdisbull-raster.json b/qapi/fdisbull-raster.json
+new file mode 100644
+--- /dev/null
++++ b/qapi/fdisbull-raster.json
+@@ -0,0 +1,107 @@
++# Private successful-raster evidence. This is not a completed-frame API.
++{ 'include': 'fdisbull-vga-configuration.json' }
++
++##
++# @FdisbullRasterOutcome:
++#
++# @unavailable: No current admitted complete-raster proof.
++# @valid-unchanged: A complete previously valid raster was checked again;
++#     the renderer did not redraw any row during this attempt.
++# @updated: The renderer redrew one or more rows and the complete owned raster
++#     was checked against the admitted source interpretation.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullRasterOutcome',
++  'data': [ 'unavailable', 'valid-unchanged', 'updated' ] }
++
++##
++# @FdisbullRasterSource:
++#
++# @profile: qemu-vga-chain4-320x200-raster-v1.
++# @width: Native source pixels, 320.
++# @height: Native source rows, 200.
++# @source-bpp: Palette index width, 8.
++# @surface-width: Owned renderer surface width, 640.
++# @surface-height: Owned renderer surface height, 400.
++# @column-duplication: Proven horizontal duplication, 2.
++# @row-duplication: Proven vertical duplication, 2.
++# @start-address: Native VRAM byte origin, zero.
++# @line-offset: Native source row stride, 320 bytes.
++# @draw-handler: Exact admitted handler, vga_draw_line8d2.
++# @dac-8bit: False means QEMU's native c6_to_8 interpretation was used.
++# @rows-considered: Renderer rows visited, exactly 400.
++# @rows-redrawn: Renderer rows actually updated, 0..400.
++# @source-index-sha256: SHA-256 of the 64000 source palette indices.
++# @palette-rgb-sha256: SHA-256 of all 256 native-expanded RGB triples.
++# @source-rgb-sha256: SHA-256 of the owned 320x200 RGB888 source raster.
++# @surface-rgb-sha256: SHA-256 of the owned 640x400 RGB888 renderer raster.
++#
++# Every surface pixel is verified against the declared source palette index
++# and exact 2x2 duplication. Hashes exclude padding and alpha. No scanline
++# sampling, application drawing, input consumption or cadence claim is made.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullRasterSource',
++  'data': { 'profile': 'str', 'width': 'int', 'height': 'int',
++            'source-bpp': 'int', 'surface-width': 'int',
++            'surface-height': 'int', 'column-duplication': 'int',
++            'row-duplication': 'int', 'start-address': 'uint64',
++            'line-offset': 'uint64', 'draw-handler': 'str',
++            'dac-8bit': 'bool', 'rows-considered': 'int',
++            'rows-redrawn': 'int', 'source-index-sha256': 'str',
++            'palette-rgb-sha256': 'str', 'source-rgb-sha256': 'str',
++            'surface-rgb-sha256': 'str' } }
++
++##
++# @FdisbullRasterProof:
++#
++# @api-version: Private protocol version, 1.
++# @model: qemu-vga-raster-proof-v1.
++# @epoch: Actual native clock epoch at this passive stopped query.
++# @virtual-ns: Actual QEMU_CLOCK_VIRTUAL query timestamp.
++# @device: Canonical selected standard VGA device path.
++# @device-type: Exact native type VGA.
++# @console: Owned console zero.
++# @head: Owned head zero.
++# @outcome: Latest synchronous renderer attempt's typed result.
++# @reason: Explanation when unavailable; absent on success.
++# @attempted: Whether an attempt has occurred since invalidation.
++# @attempt-ns: Actual native timestamp of that attempt, when attempted.
++# @source: Full-source proof, present exactly for a successful admitted result.
++# @producing-configuration: Frozen configuration captured with the proof.
++# @current-configuration-matches: Current configuration still has the producing
++#     generation. This does not prove current VRAM/palette or game readiness.
++#
++# No frame IDs, mode IDs, display update IDs or state revisions are supplied.
++# A reset, load or renderer invalidation destroys the current proof. A passive
++# query never reconstitutes it from saved counters or current pixels.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullRasterProof',
++  'data': { 'api-version': 'int', 'model': 'str', 'epoch': 'uint64',
++            'virtual-ns': 'int', 'device': 'str', 'device-type': 'str',
++            'console': 'int', 'head': 'int',
++            'outcome': 'FdisbullRasterOutcome', '*reason': 'str',
++            'attempted': 'bool', '*attempt-ns': 'int',
++            '*source': 'FdisbullRasterSource',
++            '*producing-configuration': 'FdisbullVgaConfigurationSnapshot',
++            'current-configuration-matches': 'bool' } }
++
++##
++# @x-fdisbull-query-raster-proof:
++#
++# Read the latest actual synchronous renderer attempt. Requires the stopped
++# native clock, admitted exact primary precise VGA, and explicit
++# VGA.x-fdisbull-raster-proof=on. The query performs no rendering, guest I/O,
++# timer action, execution, pixel conversion, hashing or file creation, even
++# when the proof is empty or invalid. Existing display APIs are unchanged.
++#
++# Returns: Private raster evidence only; not a completed-frame capability.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-raster-proof',
++  'returns': 'FdisbullRasterProof' }
+diff --git a/qapi/meson.build b/qapi/meson.build
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -65,6 +65,7 @@
+     'fdisbull-display',
+     'fdisbull-input',
+     'fdisbull-retrace',
++    'fdisbull-raster',
+     'fdisbull-vga-configuration',
+     'fdisbull-layers',
+   'fdisbull-dos-checkpoint',
+diff --git a/qapi/qapi-schema.json b/qapi/qapi-schema.json
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -69,6 +69,7 @@
+ { 'include': 'fdisbull-input.json' }
+ { 'include': 'fdisbull-retrace.json' }
+ { 'include': 'fdisbull-vga-configuration.json' }
++{ 'include': 'fdisbull-raster.json' }
+ { 'include': 'fdisbull-layers.json' }
+ { 'include': 'fdisbull-dos-checkpoint.json' }
+ { 'include': 'fdisbull-instrumented-checkpoint.json' }
+diff --git a/system/fdisbull-retrace.c b/system/fdisbull-retrace.c
+--- a/system/fdisbull-retrace.c
++++ b/system/fdisbull-retrace.c
+@@ -13,6 +13,7 @@
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "qapi/qapi-commands-fdisbull-raster.h"
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
+ #include "system/fdisbull-retrace.h"
+@@ -184,6 +185,19 @@
+     return retrace_snapshot(clock, false, errp);
+ }
+ 
++FdisbullRasterProof *qmp_x_fdisbull_query_raster_proof(Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++
++    /* Reuse exact stopped owner/clock admission; never trigger a renderer. */
++    retrace = qmp_x_fdisbull_query_retrace(errp);
++    if (!retrace) {
++        return NULL;
++    }
++    return pci_std_vga_fdisbull_raster_query(
++        retrace_owner.device, retrace->epoch, retrace->virtual_ns, errp);
++}
++
+ bool fdisbull_retrace_checkpoint_admitted(void)
+ {
+     return retrace_owner.device != NULL && !retrace_owner.invalidated;
+diff --git a/system/fdisbull-retrace-stub.c b/system/fdisbull-retrace-stub.c
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -8,6 +8,7 @@
+ #include "hw/display/vga.h"
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
+ #include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "qapi/qapi-commands-fdisbull-raster.h"
+ #include "system/fdisbull-retrace.h"
+ 
+ FdisbullRetraceInfo *qmp_x_fdisbull_query_retrace(Error **errp)
+@@ -39,3 +40,9 @@
+ {
+     return false;
+ }
++
++FdisbullRasterProof *qmp_x_fdisbull_query_raster_proof(Error **errp)
++{
++    error_setg(errp, "Raster proof requires standard PCI VGA support");
++    return NULL;
++}

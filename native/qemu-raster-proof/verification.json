@@ -1,0 +1,259 @@
+{
+  "format": "fdisbull-raster-proof-prerequisite-verification-1",
+  "scope": "Opt-in complete-raster source proof; no frame-1, video cadence, application completion or parity promotion",
+  "host_base_commit": "307f413c8178ee2764794bec7c4a1b370dd457c3",
+  "native_patch_sha256": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+  "base_qemu_elf_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+  "candidate_qemu_elf_sha256": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+  "candidate_qemu_img_elf_sha256": "7f6d40f65c48dc709bbe1f977953cece0f45455300d6c655992ee31a800f1844",
+  "candidate_launcher_sha256": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c",
+  "runtime_files_sha256": {
+    "bin/qemu-img": "c87eafe06335bc4ee0def86688846e73708edb066c537c4c1f2d6df0503df51a",
+    "bin/qemu-system-x86_64": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c",
+    "lib/libatomic.so.1": "9558489f171274c220104894258f483055853ed8a23d4ff754c850ce55765aa2",
+    "lib/libglib-2.0.so.0": "980ab64e995225de1543779e3bafafac9d705904d42ca3b5eb76e7a336cc5e1d",
+    "lib/libpcre2-8.so.0": "8dde125b341abfdf4a596d2974cd3048e350cbc8d2d77acd54ea044f7815ca77",
+    "lib/libpixman-1.so.0": "806ef6cd6ff8dace4332b8d611afe2f1c5ec0c1b743ea7ed0ebd48ed307618cd",
+    "lib/libz.so.1": "85590dd58edf5445e18bc7193e5ebc01ac5841f1ae187e97705a662e90c6421e",
+    "libexec/qemu-img": "7f6d40f65c48dc709bbe1f977953cece0f45455300d6c655992ee31a800f1844",
+    "libexec/qemu-system-x86_64": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+    "manifest.json": "5e62994a350bcd20cea7ba1f97edcf9f66910cda34d0007faac765a850c7d94d",
+    "share/licenses/libatomic1-copyright": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+    "share/licenses/libglib2.0-0t64-copyright": "b9fe78c8a0720c051c9ac8e8c6f25663b54f228e501d24fc0ba89c66cec7f7c1",
+    "share/licenses/libpcre2-8-0-copyright": "e915cde4251f96ec6af107ecd2e194440a4e69440893b0c982802f8a1e4ae40a",
+    "share/licenses/libpixman-1-0-copyright": "1b3fb5690861e15ca4fd6640fd4def4b2576617942eec04b6fcb7d8bc6c4c9da",
+    "share/licenses/qemu-COPYING": "6f04ae8364d0079a192b14635f4b1da294ce18724c034c39a6a41d1b09df6100",
+    "share/licenses/qemu-COPYING.LIB": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+    "share/licenses/qemu-LICENSE": "139c64b7a9ae62858ff969aae622ecfcf4f1519655bd92d2e70a1a2fb615690e",
+    "share/licenses/zlib1g-copyright": "9e5b96d63773a5d177ba264254390f792be07e41748ebd94730981c6cac31cc6",
+    "share/provenance/build-status.json": "e081fdeae474b0474671fd57c15446707d326fb677a7d5fc913e55abb59edadb",
+    "share/provenance/configure-command.json": "be42d9ad7a7d12ad1f2d33d969ed1908ac7a5d91eead9e3fff91c2873e89284f",
+    "share/provenance/native-source-manifest.json": "728e63de997022909ea19c33dcaf75e1d12a0cfc1f1a70fc53950daa5bdf5de2",
+    "share/provenance/qemu-10.0.13-fdisbull-sb16-transfer-count-v1.patch": "2739b4dfc1e10ddc8ad596cff30a7f253133f47b596b9665649acd0a604bef4d",
+    "share/provenance/qemu-stereo-capture.patch": "028f4b32a3f6544d3ed2501c44e2c9a8f1bb0358d2658396ba7dbd5dc06a2e48",
+    "share/provenance/reconstruction.json": "950d82e4239f02158e6690967c39b5e815ea2b3e13111a84e78b52691269f31a",
+    "share/provenance/source-inputs-before.json": "f9284392858b04f9f7aabe1f82dd0a89b0fcc2679b532f2527cfad49929e23c7",
+    "share/qemu/bios-256k.bin": "f1d4f396011197eb989029659cde250751cc711c336b8fbbe6f77cfe0dc5dcd8",
+    "share/qemu/bios.bin": "8244f3e5eaca828cc0a6a963f1fad15d68d8d3c0b5c80b8451b3067a85f14ae1",
+    "share/qemu/kvmvapic.bin": "cdf057a71b07e3b52b19cbe210bdefa59250d01a9810b960f7fe1f98eed95a27",
+    "share/qemu/linuxboot.bin": "1ecfb26c19da9dc00cdec0d0d738db69aeea4f1231c0c0ffc483ff69b3cda6ce",
+    "share/qemu/linuxboot_dma.bin": "9c49e255340c78fc12e54ed043462bca02fb7fca29b7cfab62ff88a5344b6950",
+    "share/qemu/multiboot.bin": "13a3f9f119797b8776105f020f36572ce6a20fa2c60d3b8112818bfaefcdd348",
+    "share/qemu/pvh.bin": "918ff03a118615c2f4611a5df2d9496aabe099b5cfaaf69e544ebf973305d59d",
+    "share/qemu/vgabios-cirrus.bin": "305d3b15f67e65f1899a1664621f6b471e4345d33fd9eb4f6320b4559f6a04f2",
+    "share/qemu/vgabios-stdvga.bin": "651513519f9e0d5b99d3b051a8f5c68db69e987339b59a441d371068c34c146b"
+  },
+  "authored_com": {
+    "bytes": 403,
+    "sha256": "c8b2d5fe8808ca0a8d20ce70d00f15abd7799b2b2088451666ed042802dd0dfd"
+  },
+  "test_files_sha256": {
+    "tests/test_qemu_raster_proof_source.py": "fa2aa5822e8ef7522ceeb02e0fc05a1f13bed6d2f28e4774744bc5bed428c7f7",
+    "tests/test_qemu_raster_proof_native.py": "612ef12f68ee6fde7b7fafff98592b9627d9ea8690b349090fa92666ec7b393f",
+    "tests/support/qemu_raster_proof_fixture.py": "14c298e247974e231a473b607a4a6597f58f4d889b5691776dbbd6759ec07e99"
+  },
+  "source_probe": {
+    "passed": 9,
+    "failed": 0,
+    "xml_sha256": "81d6eeb72ce27ed7a1f1797100f1ca4dd937178924006a1843c0e8d12e10624b"
+  },
+  "build": {
+    "returncode": 0,
+    "max_jobs": 4,
+    "maximum_seconds": 600,
+    "minimum_free_bytes": 42949672960,
+    "elapsed_seconds": 15.018,
+    "base_unchanged": true,
+    "candidate_source_unchanged": true,
+    "receipt_sha256": "6f50ac6abde1e20a16b3094be62458abaf63e7ee8be6118bf62cace9d28e59c9",
+    "log_sha256": "7d431f7092c99501fc6cad15bdb15f2a0415831f623838e7ebf5da8430e9928d",
+    "configure_receipt_sha256": "f431a040c043d90fea4f319b337e1e3903cf3e02197181baa54e734b1445cc13",
+    "controller_sha256": "f1d200bc5c0c85a86e20dcb8be6e36879a1600ceecdef19a4836af843c4cf5b9"
+  },
+  "runs": {
+    "native01": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 0,
+      "elapsed_seconds": 1.653,
+      "receipt_sha256": "2d1f0cac033a05b47e1022ab9acf24418563c323e1eb8b12ac6d40be88324085",
+      "xml_sha256": "42e951dc9ec979c1a318c244e43f69c1d86dbb14a0087ee3780af6b9f7472973",
+      "log_sha256": "b95e4e51fd1cfa4a550a76609c3e801b4ba174f20d8181bcafe1359a2ff44970",
+      "remaining_candidate_pids": [],
+      "inputs_unchanged": true,
+      "source_unchanged": true,
+      "source_hashes_at_execution": {
+        "native/qemu-raster-proof/README.md": "7f2a4bd71f9d76e661fe4e35d389ead447115f0e698247ed72c72b7c1dac615b",
+        "native/qemu-raster-proof/qemu-raster-proof.patch": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+        "native/qemu-raster-proof/source-manifest.json": "ba24ce591de639362d047c4c8fc143af200d2a37754e976bbf752e73d2009b56",
+        "tests/support/qemu_raster_proof_fixture.py": "14c298e247974e231a473b607a4a6597f58f4d889b5691776dbbd6759ec07e99",
+        "tests/test_qemu_raster_proof_native.py": "b9be90d0394fce3381864239aa2b16d66baa693f55056aa405cd9073d29a03f5",
+        "tests/test_qemu_raster_proof_source.py": "fa2aa5822e8ef7522ceeb02e0fc05a1f13bed6d2f28e4774744bc5bed428c7f7"
+      },
+      "qemu_sha256": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+      "fixture_owner_reaps": 1,
+      "frozen_test_sha256": "b9be90d0394fce3381864239aa2b16d66baa693f55056aa405cd9073d29a03f5",
+      "frozen_controller_sha256": "69488022166119597c00385ae4405fec226363c7e707872f82ba2a51d7a9984d"
+    },
+    "native02": {
+      "tests": 3,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 2,
+      "elapsed_seconds": 4.155,
+      "receipt_sha256": "c9f2d24e5fe0d244b7ee696d45d3508cf5b9210e4665a6fdc34dd952edd18623",
+      "xml_sha256": "c490210c67ac2a355e3ac4b97a72c60e2410a0b915f6e8d89c4dd435c0655725",
+      "log_sha256": "b0acaa1d6881be7588fbff41737f79b8fe0851fc3a5ade26b87032de19214426",
+      "remaining_candidate_pids": [],
+      "inputs_unchanged": true,
+      "source_unchanged": true,
+      "source_hashes_at_execution": {
+        "native/qemu-raster-proof/README.md": "7f2a4bd71f9d76e661fe4e35d389ead447115f0e698247ed72c72b7c1dac615b",
+        "native/qemu-raster-proof/qemu-raster-proof.patch": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+        "native/qemu-raster-proof/source-manifest.json": "ba24ce591de639362d047c4c8fc143af200d2a37754e976bbf752e73d2009b56",
+        "tests/support/qemu_raster_proof_fixture.py": "14c298e247974e231a473b607a4a6597f58f4d889b5691776dbbd6759ec07e99",
+        "tests/test_qemu_raster_proof_native.py": "dff6bc96d38cfe840e8731f30abb0aebdbb2a35f717ba82301834c6398b193fd",
+        "tests/test_qemu_raster_proof_source.py": "fa2aa5822e8ef7522ceeb02e0fc05a1f13bed6d2f28e4774744bc5bed428c7f7"
+      },
+      "qemu_sha256": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+      "fixture_owner_reaps": 3,
+      "frozen_test_sha256": "dff6bc96d38cfe840e8731f30abb0aebdbb2a35f717ba82301834c6398b193fd",
+      "frozen_controller_sha256": "69488022166119597c00385ae4405fec226363c7e707872f82ba2a51d7a9984d"
+    },
+    "native03": {
+      "tests": 4,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 3,
+      "elapsed_seconds": 8.257,
+      "receipt_sha256": "287254c6e3a9ce0d070c087bfc86af83853f1d3c1f350ede4346219ffea3b921",
+      "xml_sha256": "035b73f69524253e2397ac44cc435945bcfb624d1467dc33e4b5bbff711836cf",
+      "log_sha256": "bbff1f7054a95dfce087013bbf889c5812b32b415fc623677bcfcce0183ae5d0",
+      "remaining_candidate_pids": [],
+      "inputs_unchanged": true,
+      "source_unchanged": true,
+      "source_hashes_at_execution": {
+        "native/qemu-raster-proof/README.md": "7f2a4bd71f9d76e661fe4e35d389ead447115f0e698247ed72c72b7c1dac615b",
+        "native/qemu-raster-proof/qemu-raster-proof.patch": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+        "native/qemu-raster-proof/source-manifest.json": "ba24ce591de639362d047c4c8fc143af200d2a37754e976bbf752e73d2009b56",
+        "tests/support/qemu_raster_proof_fixture.py": "14c298e247974e231a473b607a4a6597f58f4d889b5691776dbbd6759ec07e99",
+        "tests/test_qemu_raster_proof_native.py": "4e7a0b894be94fdafb9e83342d73cbdc4cb217d073e781d004f9ee6b30aca930",
+        "tests/test_qemu_raster_proof_source.py": "fa2aa5822e8ef7522ceeb02e0fc05a1f13bed6d2f28e4774744bc5bed428c7f7"
+      },
+      "qemu_sha256": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+      "fixture_owner_reaps": 6,
+      "frozen_test_sha256": "4e7a0b894be94fdafb9e83342d73cbdc4cb217d073e781d004f9ee6b30aca930",
+      "frozen_controller_sha256": "69488022166119597c00385ae4405fec226363c7e707872f82ba2a51d7a9984d"
+    },
+    "native04": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 4,
+      "elapsed_seconds": 7.293,
+      "receipt_sha256": "96f7d5bd2ba8f1be0bd185fd25d285a716d193d50a6cf270c6402fca761e2f31",
+      "xml_sha256": "59cae9cc4ff5bcf57f3d55e886dfdbb339621cdc66975381758e8458f2c8c487",
+      "log_sha256": "6b653258dcb5632a76209411bb48529dfe425956f4ed3891f2c7277bd09b1863",
+      "remaining_candidate_pids": [],
+      "inputs_unchanged": true,
+      "source_unchanged": true,
+      "source_hashes_at_execution": {
+        "native/qemu-raster-proof/README.md": "7f2a4bd71f9d76e661fe4e35d389ead447115f0e698247ed72c72b7c1dac615b",
+        "native/qemu-raster-proof/qemu-raster-proof.patch": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+        "native/qemu-raster-proof/source-manifest.json": "ba24ce591de639362d047c4c8fc143af200d2a37754e976bbf752e73d2009b56",
+        "tests/support/qemu_raster_proof_fixture.py": "14c298e247974e231a473b607a4a6597f58f4d889b5691776dbbd6759ec07e99",
+        "tests/test_qemu_raster_proof_native.py": "612ef12f68ee6fde7b7fafff98592b9627d9ea8690b349090fa92666ec7b393f",
+        "tests/test_qemu_raster_proof_source.py": "fa2aa5822e8ef7522ceeb02e0fc05a1f13bed6d2f28e4774744bc5bed428c7f7"
+      },
+      "qemu_sha256": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+      "fixture_owner_reaps": 6,
+      "frozen_test_sha256": "612ef12f68ee6fde7b7fafff98592b9627d9ea8690b349090fa92666ec7b393f",
+      "frozen_controller_sha256": "69488022166119597c00385ae4405fec226363c7e707872f82ba2a51d7a9984d"
+    },
+    "adjacent01": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 9,
+      "elapsed_seconds": 9.023,
+      "receipt_sha256": "fe6bc858a4cf90a77f218201b302880f6a034d374ccbd73791a2165d8887f89d",
+      "xml_sha256": "e0e34bfa588057f79129544c812046ebea041926f79551440c9b5d220c3d2a01",
+      "log_sha256": "371b973336ce6c8a377e7af267cd5e553c18b64daddb8401ee0078341b70a5f9",
+      "remaining_candidate_pids": [],
+      "inputs_unchanged": true,
+      "source_unchanged": true,
+      "source_hashes_at_execution": {
+        "native/qemu-raster-proof/README.md": "7f2a4bd71f9d76e661fe4e35d389ead447115f0e698247ed72c72b7c1dac615b",
+        "native/qemu-raster-proof/qemu-raster-proof.patch": "2848e50b977cc0eb3c3973333bd8622a7783e42324216ee23fdc6daddb662850",
+        "native/qemu-raster-proof/source-manifest.json": "ba24ce591de639362d047c4c8fc143af200d2a37754e976bbf752e73d2009b56",
+        "tests/support/qemu_raster_proof_fixture.py": "14c298e247974e231a473b607a4a6597f58f4d889b5691776dbbd6759ec07e99",
+        "tests/test_qemu_raster_proof_native.py": "612ef12f68ee6fde7b7fafff98592b9627d9ea8690b349090fa92666ec7b393f",
+        "tests/test_qemu_raster_proof_source.py": "fa2aa5822e8ef7522ceeb02e0fc05a1f13bed6d2f28e4774744bc5bed428c7f7"
+      },
+      "qemu_sha256": "04447f094b05d8294b08dd0f1bd122a30b183df4b4d42575dfb79adf829b7d81",
+      "frozen_controller_sha256": "f9fe85fe770f6a14eb79df193b5eb18e554eebffa7ed8309e05410795cdc3100"
+    }
+  },
+  "default_off": {
+    "property": "VGA.x-fdisbull-raster-proof",
+    "native_refusal_case": "test_native_profile_opt_in_and_reset_refuse_old_proof",
+    "existing_retained_cases_passed": 9,
+    "public_python_launcher_change": false,
+    "completed_guest_frames_capability": false
+  },
+  "first_failures": [
+    {
+      "receipt": "build-01-missing-qapi-module-build-result.json",
+      "cause": "New QAPI module was generated but not listed in explicit qapi/meson.build module list, causing final link to fail.",
+      "correction": "Register fdisbull-raster in qapi_all_modules; no VM launched before a successful link.",
+      "receipt_sha256": "fb192a4f290d14f5fa18d9eed4549d62e3a9f6e53a3d1c61a5b9e5b952d3607b",
+      "log_sha256": "3859ac2994a297890005293c1c4cf63425ae29279da4b6bb0341b92fb9a2c411"
+    },
+    {
+      "receipt": "native01",
+      "cause": "Test assumed the first render after a forced full redraw would reuse the cache. Native full_update does not clear DIRTY_MEMORY_VGA; the next render truthfully redrew identical pixels while draining it.",
+      "correction": "Verify exactly one declared intermediate complete raster, then require valid-unchanged. Immediate unchanged after palette-only redraw remains required; no retry loop or C change."
+    },
+    {
+      "receipt": "native02",
+      "cause": "Hot-load authored launch omitted the existing checkpoint_tool option and refused before capture.",
+      "correction": "Enable the pinned candidate qemu-img only for that case; no native code change."
+    },
+    {
+      "receipt": "native03",
+      "cause": "Default production -no-reboot policy exited the emulator on system_reset, so QMP reported BrokenPipe.",
+      "correction": "Use established set-action reboot=reset negative-test setup, observe actual changed native epoch passively within two seconds, verify unchanged stopped virtual time, and require invalidated-clock/raster refusal. BrokenPipe is not accepted."
+    }
+  ],
+  "limits": [
+    "Native producer remains the existing caller-selected fixed-period synchronous renderer; this establishes no video-frame ordinal or cadence.",
+    "Native source profile covers only admitted legacy chain-4 320x200 indices expanded exactly to allocated 640x400 XRGB32, zero origin/bank, 320-byte pitch and no panning/visible split.",
+    "Authored native DAC evidence covers six-bit DAC; the eight-bit branch is source-implemented but not qualified by these native cases.",
+    "The empty-proof query and invalid-mode stale-surface cases are native-qualified; null/truncated/invalid helper buffers are compiled source probes. A native zero-bpp surface injection was not performed.",
+    "Reset is observed through the changed invalidated native epoch and refusal; no fresh post-reset rendering or guest execution occurs.",
+    "Source proof is process-local and cleared on load; historical retained display pixels remain independently exportable.",
+    "No capability, migration campaign, default backend, frame-1 scene, application drawing completion or CPU/render atomicity claim is promoted."
+  ],
+  "hosted_ci": false,
+  "qualification_change": "none",
+  "host_tools_and_inputs_sha256": {
+    "boot_image": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+    "nasm": "b0e9b463a6f800117de60c0a55507b7880dfa0d4dbf15f47e1350e23c54c0128",
+    "mcopy": "0fcd90361bb5077f1289342f6e7713f98269847dbda25d6f1657018f42c53e85",
+    "test_python": "889c603f0d17cb54060951bcf4c4f9b8c9ebd9e52b392c70209bbb9755d797d9",
+    "build_python": "889c603f0d17cb54060951bcf4c4f9b8c9ebd9e52b392c70209bbb9755d797d9",
+    "ninja": "e8e646527e23aa7a66d0f04b86b89f1bb2f25edcc1c5e402a0989e5364c8779b",
+    "c_compiler": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f"
+  },
+  "host_tool_versions": {
+    "c_compiler": "cc (Debian 14.2.0-19) 14.2.0",
+    "ninja": "1.12.1",
+    "test_python": "Python 3.13.5"
+  }
+}
