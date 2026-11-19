@@ -578,6 +578,9 @@ def validate_script(script, *, session=None):
     visit(script['steps'])
     if not expanded:
         raise ValueError('Script must contain at least one operation')
+    if (backend or actual) == 'qemu-dos':
+        from .qemu_spatial_policy import validate_policy_script
+        validate_policy_script(expanded, session=session)
     if (session is not None
             and getattr(session, 'metadata', {}).get('runtime_profile') == 'dos-exec-load-only-v1'
             and any(step['op'] in ('trace', 'trace-until') for step in expanded)

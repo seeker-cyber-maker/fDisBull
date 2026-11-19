@@ -39,6 +39,7 @@ from .qemu_dos_le_binding import QemuDOSLEBindingMixin
 from .qemu_macros import QemuMacroSessionMixin
 from .qemu_runtime_memory import QemuRuntimeMemoryMixin
 from .qemu_proofs import QemuProofMixin
+from .qemu_spatial_policy import QemuSpatialPolicyMixin, initial_policy
 
 
 def _sha(data):
@@ -165,7 +166,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -179,7 +180,7 @@ class QemuDOSProcessSession(QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSes
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
                  firmware=None, clock_profile='standard', audio_profile='off', retrace_profile='standard',
                  checkpoint_tool=None, _on_spawn=None, directory=None, file_mode=None, freedos_runtime=None,
-                 generation=None):
+                 generation=None, spatial_mode=None, fair_play=False):
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
 
@@ -192,6 +193,8 @@ class QemuDOSProcessSession(QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSes
         self._process = None
         self._owned_machine_restored = False
         self._published = False
+        self._spatial_mode, self._fair_play = initial_policy(spatial_mode, fair_play)
+        self._allow_assisted_travel = self._spatial_mode == 'assisted' and not self._fair_play
         self._dos_workspace_enabled = (boot_image is None or directory is not None
                                        or file_mode is not None or freedos_runtime is not None or generation is not None)
         workspace_launch = None
@@ -352,6 +355,8 @@ class QemuDOSProcessSession(QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSes
                 execution_event_search=True, input_macros=True,
                 runtime_memory_bindings=True,
                 bounded_model_proofs=True,
+                spatial_policy=True,
+                spatial_policy_scope='voluntary host permission only; no frame, action, assistance or memory authority',
                 runtime_memory_scope='witnessed ordinary physical RAM or observed unpaged linear RAM; no source/task/allocation lifetime inference',
                 trace_until='source-bound predicates; virtual-time ranges with the virtual profile; queued input unqualified',
                 desqview_observation=True,
@@ -997,7 +1002,7 @@ class QemuDOSProcessSession(QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSes
 
     @property
     def script_operations(self):
-        return super().script_operations | {'macro', 'proof-check', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+        return super().script_operations | {'macro', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
             'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',

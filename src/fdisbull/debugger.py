@@ -188,8 +188,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             raise ValueError('game_id requires a ScummVM backend')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
-        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] in ('PE','NE')):
-            raise ValueError('Spatial game policy currently requires native DOSBox')
+        native_dos_policy = backend == 'qemu-dos' and self.meta['format'] in ('COM', 'MZ')
+        if ((spatial_mode != 'assisted' or fair_play)
+                and not native_dos_policy
+                and (backend not in (None, 'dosbox') or self.meta['format'] in ('PE','NE'))):
+            raise ValueError('Spatial game policy requires DOSBox or a native QEMU DOS process')
         if self.meta['format']=='NE':
             if backend not in (None,'wine-qemu','wine-ne'):
                 raise ValueError('NE original programs require the Win16 Wine backend')
@@ -222,7 +225,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                         mcopy=dos_mcopy, startup_batch='FDAUTO.BAT' if dos_startup_batch is None else dos_startup_batch,
                         arguments='' if dos_arguments is None else dos_arguments,
                         directory=dos_directory, file_mode=dos_file_mode, freedos_runtime=freedos_runtime,
-                        generation=dos_generation, **options)
+                        generation=dos_generation, spatial_mode=spatial_mode, fair_play=fair_play, **options)
                 if any(value is not None for value in dos_process_options):
                     raise ValueError('DOS process options require a COM/MZ project; raw boot uses its own source disk')
                 from .qemu_dos import QemuDOSSession
