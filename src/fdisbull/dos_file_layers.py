@@ -19,7 +19,10 @@ CHUNK_KIND='workspace-file-chunk'
 GENERATION_KIND='workspace-generation'
 CHUNK_SIZE=65536
 MAX_ENTRIES=512
-MAX_BYTES=16*1024*1024
+# Logical file bytes share one cap through capture, generations and mutations.
+# Keep headroom for allocation rounding, directories and guest output in the
+# existing 32 MiB FAT workspace; its disk/checkpoint geometry stays unchanged.
+MAX_BYTES=24*1024*1024
 MAX_DEPTH=16
 _ALLOWED=set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&'()-@^_`{}~")
 _DEVICES={'CON','PRN','AUX','NUL',*(f'COM{i}' for i in range(1,10)),*(f'LPT{i}' for i in range(1,10))}

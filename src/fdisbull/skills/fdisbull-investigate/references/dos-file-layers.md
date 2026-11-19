@@ -186,8 +186,14 @@ retains the file and precise available effects on the exception. Do not replay
 an uncertain export. This caller-attested route does not itself grant guest-create proof or enable keep policies; the separate opt-in native route below supplies bounded evidence.
 
 Admission rejects symlinks and special entries rather than silently following
-them. Current host capture is bounded to 512 entries, 16 MiB total file bytes,
-and depth 16, subject also to FAT naming and capacity checks. The default D: FAT image is 32 MiB; the composite disk is bounded to 64 MiB. Unresolvable name mappings, unsupported paths, changes detected during
+them. Current host capture is bounded to 512 entries, 24 MiB total file bytes,
+and depth 16, subject also to FAT naming and capacity checks. The same file-byte
+cap applies to sealed generations, cold loading, refresh, writes and resizing;
+oversized capture refuses before VM startup, and oversized mutations refuse
+before publishing file chunks or a generation. The default D: FAT image stays
+32 MiB, leaving room for allocation rounding, directories and guest output;
+the composite disk remains bounded to 64 MiB. Older admitted generations keep
+their identities and geometry. Unresolvable name mappings, unsupported paths, changes detected during
 capture, and invalid generations are refused. Capture uses two stable no-follow
 passes; it is not an atomic host snapshot and cannot exclude undetected ABA
 changes by noncooperating writers. These bounds and the effective view do not imply live observation
