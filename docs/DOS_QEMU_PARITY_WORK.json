@@ -4,19 +4,22 @@
   "audit": {
     "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
     "date": "2026-11-18",
-    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy and witnessed movement adapters; scoped native/audio/game executions linked separately.",
-    "public_methods_present": 67,
-    "public_methods_absent": 16,
+    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy, witnessed movement, passive runtime scenes and stopped-surface screenshot hooks; scoped native/audio/game executions linked separately.",
+    "public_methods_present": 70,
+    "public_methods_absent": 13,
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "6473b808d48203fd255833e5e77b0b8249120269",
+    "integration_commit": "307f413c8178ee2764794bec7c4a1b370dd457c3",
     "timezone": "America/New_York",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
     "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
     "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion.",
     "movement": "Held-key physical movement with caller-witnessed runtime RAM and sample progress. Four paired/native cases and independent33case host gate passed; native evidence precedes pure duplicate-reference validation correction.",
-    "executed_image": "OS-observed main-image producer identity gates shared QEMU capture/restore;7final native,49independent host and166root integrated cases passed. Mac positive prototype separate."
+    "executed_image": "OS-observed main-image producer identity gates shared QEMU capture/restore; 7 final Linux native and 8 final installed Mac native cases passed. Independent49 and root166 host cases overlap broader author gates.",
+    "runtime_scenes": "Explicit passive scene-2 runtime-memory check/assert integrated; 55 independent and 618 integrated host cases, plus2 exact-source authored native cases pass. No frame/action/workflow qualification.",
+    "screenshot_hooks": "Stopped-surface passive/assert/layer hooks integrated; 37 independent and273 integrated host cases plus1 exact-source authored native case pass. A post-test receipt export failure was recovered read-only; fresh-frame/execution hooks remain open.",
+    "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open."
   },
   "coverage": {
     "rpc_methods": 35,
@@ -944,6 +947,56 @@
       ],
       "execution": "4 paired/native cases passed on frozen71bef and installed DOSBox reference; source pinned before pure partial-reference correction.",
       "scope": "Authored IRQ1 makes/breaks and BIOS ticks, held movement, two quiet ticks after release, first IRQ stop, caller-held lease preservation."
+    },
+    "runtime-scenes-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_scenes.py",
+        "tests/test_qemu_scenes_review.py"
+      ],
+      "execution": "55 independent passed;618 integrated passed with14 explicit native skips. Selections overlap.",
+      "scope": "Bounded declarative scene-2 admission, one stopped owner/epoch/deadline, first-failure and result/persistence contracts."
+    },
+    "runtime-scenes-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_scenes_native.py"
+      ],
+      "execution": "2 passed on exact d3f2857 source with corrected b077 producer; no skips.",
+      "scope": "Authored IRQ1 make/break observed without execution; full native restore retires RAM bindings and requires fresh witnesses."
+    },
+    "screenshot-hooks-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_screenshot_hooks.py",
+        "tests/test_qemu_screenshot_hooks_review.py"
+      ],
+      "execution": "37 independent passed;273 integrated passed with6 legacy native skips. Selections overlap.",
+      "scope": "Whole-plan admission, exact owner/deadline/cleanup, first failure and capture evidence preservation."
+    },
+    "screenshot-hooks-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_screenshot_hooks_native.py"
+      ],
+      "execution": "1 passed on exact307f413 source with corrected b077 producer; no skips. Post-test exporter failure retained and recovered read-only.",
+      "scope": "Authored stopped mode-13h capture, exact layer restoration, no execution, preserved caller input and owner reap."
     }
   },
   "work_groups": [
@@ -1195,12 +1248,12 @@
       ],
       "remaining_work": [
         "Implement legacy frame_probe and frame_rgba consumers, including codec/stride/pixel hash and exact guarded identity.",
-        "Establish a real completed-guest-frame/mode/revision boundary or a reviewed paired semantic disposition. A renderer publication/retrace edge is not a completed guest frame.",
+        "Establish a successful full source-raster renderer boundary with native guest-mode cadence, producing geometry and cache identity, or a reviewed paired semantic disposition. Fixed-period surface publication or a retrace edge alone does not prove this contract.",
         "Qualify frame step and key scheduling at that boundary, including partial drawing, palette/mode/origin changes, typematic behavior and restore without reinjection."
       ],
       "minimum_acceptance": [
-        "Observation bundle joins pixels, frame/mode/revision identity, clock and input ownership atomically; stale/mixed bundles refuse.",
-        "Delayed drawing distinguishes controller delivery, guest consumption and completed presentation using an independent guest oracle.",
+        "Bracket retained pixels, producing frame/mode identity, actual stopped session revision, native clock and input ownership under one owner. Refuse stale or mixed brackets; do not claim atomic image/CPU equivalence or application drawing completion.",
+        "Authored delayed and raster-sensitive drawing distinguish input delivery, guest consumption, renderer completion and application drawing. An accepted complete renderer snapshot may contain unfinished application drawing; scanline sampling differences need an explicit paired disposition.",
         "Python/JSON/scripts and cold histories preserve exact pixel/key identity and reject foreign epochs."
       ]
     },
@@ -1327,11 +1380,13 @@
         "debug-screenshot-hooks"
       ],
       "qualification": "unqualified",
-      "implementation": "legacy_route_absent_hook_and_capture_prerequisites_exist",
+      "implementation": "bounded_stopped_surface_passive_and_layer_hooks_integrated; fresh_frame_and_execution_hooks_pending",
       "source_paths": [
         "src/fdisbull/screenshot_hooks.py",
         "src/fdisbull/qemu_hooks.py",
-        "src/fdisbull/qemu_display.py"
+        "src/fdisbull/qemu_display.py",
+        "src/fdisbull/qemu_screenshot_hooks.py",
+        "src/fdisbull/qemu_surface.py"
       ],
       "depends_on": [
         "layers-and-controls",
@@ -1341,11 +1396,13 @@
         "layers-host",
         "layers-native",
         "renderer-frame-native",
-        "layers-legacy"
+        "layers-legacy",
+        "screenshot-hooks-host",
+        "screenshot-hooks-native"
       ],
       "remaining_work": [
-        "Implement the screenshot-hooks adapter with explicit source, control and capture identity, bounded execution and cleanup.",
-        "Add native and paired tests for preparation effects, failure rollback/recovery, incomplete renderer output and hook teardown."
+        "Extend explicit hooks only after fresh completed-renderer and bounded run/wait preparation contracts are proved; retain stopped-surface profile semantics.",
+        "Compare paired preparation/cleanup observables beyond authored passive layer suspension; preserve source/control/capture identity, first failures and teardown."
       ],
       "minimum_acceptance": [
         "Only a completed admitted preparation action can qualify the resulting coherent image; errors retain the original stop/evidence and restore or invalidate controls."
@@ -1511,12 +1568,14 @@
         "debug-workflow-observe"
       ],
       "qualification": "unqualified",
-      "implementation": "host_spatial_policy_integrated; scene_and_action_routes_pending",
+      "implementation": "host_spatial_policy_and_passive_runtime_memory_scene_observation_integrated; frame_and_action_routes_pending",
       "source_paths": [
         "src/fdisbull/scenes.py",
         "src/fdisbull/spatial.py",
         "src/fdisbull/text_projection.py",
-        "src/fdisbull/qemu_spatial_policy.py"
+        "src/fdisbull/qemu_spatial_policy.py",
+        "src/fdisbull/runtime_scenes.py",
+        "src/fdisbull/qemu_scenes.py"
       ],
       "depends_on": [
         "coherent-frames",
@@ -1530,10 +1589,12 @@
         "mapped-mouse-native",
         "histories-native",
         "spatial-policy-host",
-        "spatial-policy-native"
+        "spatial-policy-native",
+        "runtime-scenes-host",
+        "runtime-scenes-native"
       ],
       "remaining_work": [
-        "Add explicit native adapters after frame/input/source/control dependencies are qualified; importing the DOSBox mixins is insufficient.",
+        "Implement frame-backed scene, action, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; passive scene-2 RAM predicates retain a separate explicit profile.",
         "Create native source-bound scene scenarios with actual readiness, named input, text/spatial observation, progression and failure recovery; compare the same goals/observables under DOSBox."
       ],
       "minimum_acceptance": [
@@ -1868,6 +1929,8 @@
     "docs/evidence/qemu-final-doom-stereo-2026-11-18/verification.json",
     "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json",
     "docs/evidence/qemu-witnessed-movement-2026-11-18/verification.json",
-    "docs/evidence/qemu-executed-image-2026-11-18/verification.json"
+    "docs/evidence/qemu-executed-image-2026-11-18/verification.json",
+    "docs/evidence/qemu-runtime-scenes-2026-11-18/verification.json",
+    "docs/evidence/qemu-screenshot-hooks-2026-11-18/verification.json"
   ]
 }

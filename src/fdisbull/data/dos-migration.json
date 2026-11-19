@@ -361,13 +361,17 @@
         "tests/test_qemu_dos_irq_preemption_quantum_native.py",
         "tests/test_qemu_dos_irq1_preemption_native.py",
         "tests/test_qemu_dos_cascade_preemption_native.py",
-        "tests/test_qemu_dos_cascade_guards_native.py"
+        "tests/test_qemu_dos_cascade_guards_native.py",
+        "tests/test_qemu_screenshot_hooks.py",
+        "tests/test_qemu_screenshot_hooks_review.py",
+        "tests/test_qemu_screenshot_hooks_native.py"
       ],
       "scope_limits": [
         "Optional native QEMU extension supplies one stopped TCG vCPU with guarded RAM and fetch views. Runtime definitions pin physical backing within their run and epoch; aliases of one physical page share layer effects. Source definitions require the verified DOS module and observed protected/V86 ownership, including bounded remapped RAM with the native task-context extension.",
-        "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter, including bounded remapped protected/V86 ownership and explicitly bound cooperating-monitor task identity. Architectural CR3/TR alone does not identify a software task. Arbitrary protected-mode source mappings, mixed-device memory, runtime code promotion and screenshot hooks remain open.",
+        "Instruction bytes are selected during TCG translation. Active layers and hooks restore through the native DOS process checkpoint adapter, including bounded remapped protected/V86 ownership and explicitly bound cooperating-monitor task identity. Architectural CR3/TR alone does not identify a software task. Arbitrary protected-mode source mappings, mixed-device memory, runtime code promotion and general screenshot hooks remain open.",
         "Explicit task-private views support up to 16 cooperating task lifetimes and 16 physical pages per task. CPU RAM and fetch use the selected task view; ordinary debugger and device accesses retain base RAM. Retired lifetimes remain tombstones; private anchor/paging-structure pages and unsupported paging are rejected. Authored native same-page and shared-hook checkpoint witnesses passed; arbitrary schedulers and vendor compatibility remain unqualified.",
-        "The authored native cooperative scheduler witness passed same-site task-scoped hooks over private RAM/fetch views, including restored hit counts. This is bounded shared-allocation evidence, not arbitrary DOS multitasker parity."
+        "The authored native cooperative scheduler witness passed same-site task-scoped hooks over private RAM/fetch views, including restored hit counts. This is bounded shared-allocation evidence, not arbitrary DOS multitasker parity.",
+        "Stopped-surface screenshot hooks now admit bounded passive/assert/layer plans with require_fresh_frame=false and native restoration evidence. Run/wait hooks and fresh completed-renderer capture remain open."
       ]
     },
     {
@@ -438,7 +442,7 @@
         "layers-hooks"
       ],
       "gate": "Coherent observation bundles, named actions, exact input ownership, scripts/budgets, frame/domain/readiness guards, spatial/fair-play policy and actual scene progression.",
-      "status": "pending",
+      "status": "in_progress",
       "witness_tests": [
         "tests/test_capabilities.py",
         "tests/test_ida_dosbox.py",
@@ -450,10 +454,14 @@
         "tests/test_scene_readiness.py",
         "tests/test_scenes.py",
         "tests/test_spatial_modes.py",
-        "tests/test_spatial_native.py"
+        "tests/test_spatial_native.py",
+        "tests/test_qemu_scenes.py",
+        "tests/test_qemu_scenes_review.py",
+        "tests/test_qemu_scenes_native.py"
       ],
       "scope_limits": [
-        "Host algorithms can be reused after their input/frame/state/control dependencies are qualified. Registering a method or importing a mixin does not supply those dependencies."
+        "Host algorithms can be reused after their input/frame/state/control dependencies are qualified. Registering a method or importing a mixin does not supply those dependencies.",
+        "Explicit scene-2 runtime-memory check/assert is implemented and scoped native witnesses pass; observations are passive and complete only for declared predicates. Frame-backed scene-1, named actions, text and workflows remain open."
       ]
     },
     {
@@ -1269,8 +1277,8 @@
       "operation": "scene_assert",
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.scene_assert(): explicit scene-2 runtime-memory predicates, bounded stopped owner/epoch/clock bracket, compact/shared result persistence and restore-invalidated RAM witnesses. Frame-backed scene-1, actions, text and workflows remain refused.",
       "qualification": "unqualified"
     },
     {
@@ -1278,8 +1286,8 @@
       "operation": "scene_check",
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.scene_check(): explicit scene-2 runtime-memory predicates, bounded stopped owner/epoch/clock bracket, compact/shared result persistence and restore-invalidated RAM witnesses. Frame-backed scene-1, actions, text and workflows remain refused.",
       "qualification": "unqualified"
     },
     {
@@ -1323,8 +1331,8 @@
       "operation": "screenshot_hooks",
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.screenshot_hooks(): bounded literal passive/assert/layer pre/post plans for explicit require_fresh_frame=false stopped-surface capture; exact owner/epoch/deadline and layer restoration, no execution or input replay. Fresh-frame and run/wait preparation remain refused.",
       "qualification": "unqualified"
     },
     {
@@ -1893,6 +1901,6 @@
     "qualification_changed": false,
     "note": "Current source availability and executable remaining work are separate from historical inventory_base and runtime qualification. All 141 rows and seven campaigns remain open.",
     "timezone": "America/New_York",
-    "integration_commit": "ec3a6ec548a46b3dd2c4f5149446b823c6005891"
+    "integration_commit": "307f413c8178ee2764794bec7c4a1b370dd457c3"
   }
 }

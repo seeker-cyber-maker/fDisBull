@@ -1,0 +1,84 @@
+{
+  "format": "fdisbull-qemu-runtime-scenes-verification-1",
+  "source_commit": "d3f28573654173fb95353810749dbc49abe2b9d5",
+  "accepted_patch_sha256": "4c55e83f8902e8871636a218ac0198c6f2610773de21917a7e0d2a1ff949d2e6",
+  "native": {
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "pytest_elapsed_seconds": 3.27,
+    "runner_elapsed_seconds": 3.672,
+    "qemu_ELF_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+    "qemu_launcher_sha256": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c",
+    "qemu_img_ELF_sha256": "e31a8b11a9c4f986383fcc789a19f9ab4b2703965c9ff912cb224f3568f69162",
+    "firmware_manifest_sha256": "0ee2acf435531475c3c452c5a509813f938298383f8e7635cbfc519d4e43db4b",
+    "boot_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+    "source_clean": true,
+    "source_unchanged": true,
+    "native_inputs_unchanged": true,
+    "remaining_qualified_QEMU_processes": []
+  },
+  "author_host_gate": {
+    "passed": 513,
+    "failed": 0,
+    "skipped": 6
+  },
+  "independent_review": {
+    "passed": 55,
+    "failed": 0
+  },
+  "root_integrated_host_gate": {
+    "passed": 618,
+    "failed": 0,
+    "skipped": 14
+  },
+  "scope": "Explicit scene-2 runtime-memory predicates; unchanged stopped native CPU/virtual clock and caller input; real IRQ1 make/break and full native restore invalidation",
+  "not_qualified": [
+    "Existing frame-backed scene-1 contract",
+    "Completed guest frames",
+    "Scene action, navigation, text or workflow authority",
+    "DOS source/task/allocation lifetime"
+  ],
+  "campaign_qualification_change": "none",
+  "qualification": "unqualified",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "private_receipt_sha256": "18e188bd1b9355b93ca8f9297270ee601cefec6c1f64e919a105d2b0a1b46f06",
+  "host_receipts": {
+    "independent": {
+      "sha256": "d60f779c742592b2e0ec20365114038214c7b182e01adffb51a0f4097bcd0c10",
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 55
+    },
+    "integrated": {
+      "sha256": "f0979edba74e52cea665d5502d658bb9d7a06c5282c77c9680c10a699e773dc8",
+      "tests": 632,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 14,
+      "passed": 618
+    }
+  },
+  "scope_limits": [
+    "Explicit fdisbull-scene-2/runtime-memory version1 only; constants and witnessed ordinary-RAM predicates under one stopped owner/epoch/deadline.",
+    "Existing scene-1 pixels, frame/domain/geometry/actions, text, SceneHandle and workflow consumers remain fenced.",
+    "A complete result means declared runtime predicates were evaluated; it does not mean a renderer frame, application draw, UI readiness or task lifetime completed.",
+    "Native restore invalidates old runtime-memory bindings; observations require a new witness."
+  ],
+  "independent_findings": [
+    "Owner replacement between first clock read and lock acquisition now refuses before acquiring the replacement owner lock.",
+    "First failing read or evidence budget stops additional native reads; unavailable evidence stays incomplete.",
+    "The integrated gate initially exposed one stale no-scene-method assertion and an independently reproduced pre-existing bundled-skill list omission; exact expectations were corrected."
+  ],
+  "count_note": "Author, independent and integrated selections overlap; do not sum them as distinct cases.",
+  "observation_summary": {
+    "authored_irq1_make_break": true,
+    "stopped_observation_guest_execution": false,
+    "native_restore_fresh_witness_required": true,
+    "owned_processes_reaped": true
+  }
+}
