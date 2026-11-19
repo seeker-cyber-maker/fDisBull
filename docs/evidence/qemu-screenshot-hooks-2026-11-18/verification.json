@@ -87,5 +87,6 @@
   ],
   "native_result_note": "The single native pytest case passed with zero skips/errors/failures. A subsequent receipt exporter failed; the original controller returncode1 is retained. Evidence was recovered by read-only extraction without repeating native execution; child returncode was not persisted.",
   "count_note": "Author/independent/integrated host selections overlap; counts are not additive.",
-  "campaign_qualification_change": "none"
+  "campaign_qualification_change": "none",
+  "installed_mac_evidence": "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json"
 }

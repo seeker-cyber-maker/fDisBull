@@ -80,5 +80,6 @@
     "stopped_observation_guest_execution": false,
     "native_restore_fresh_witness_required": true,
     "owned_processes_reaped": true
-  }
+  },
+  "installed_mac_evidence": "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json"
 }

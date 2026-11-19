@@ -10,17 +10,18 @@
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "307f413c8178ee2764794bec7c4a1b370dd457c3",
+    "integration_commit": "fa7c1464d2df9a2c0d4be0060823e35d27be449d",
     "timezone": "America/New_York",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
     "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
     "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion.",
     "movement": "Held-key physical movement with caller-witnessed runtime RAM and sample progress. Four paired/native cases and independent33case host gate passed; native evidence precedes pure duplicate-reference validation correction.",
     "executed_image": "OS-observed main-image producer identity gates shared QEMU capture/restore; 7 final Linux native and 8 final installed Mac native cases passed. Independent49 and root166 host cases overlap broader author gates.",
-    "runtime_scenes": "Explicit passive scene-2 runtime-memory check/assert integrated; 55 independent and 618 integrated host cases, plus2 exact-source authored native cases pass. No frame/action/workflow qualification.",
-    "screenshot_hooks": "Stopped-surface passive/assert/layer hooks integrated; 37 independent and273 integrated host cases plus1 exact-source authored native case pass. A post-test receipt export failure was recovered read-only; fresh-frame/execution hooks remain open.",
+    "runtime_scenes": "Explicit passive scene-2 runtime-memory check/assert integrated; 55 independent and 618 integrated host cases, plus2 exact-source authored native cases pass. No frame/action/workflow qualification. Two identical authored native cases also passed in the privately installed Mac wheel at43bd549.",
+    "screenshot_hooks": "Stopped-surface passive/assert/layer hooks integrated; 37 independent and273 integrated host cases plus1 exact-source authored native case pass. A post-test receipt export failure was recovered read-only; fresh-frame/execution hooks remain open. The identical authored native case also passed in the privately installed Mac wheel at43bd549.",
     "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open.",
-    "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification."
+    "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification.",
+    "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification."
   },
   "coverage": {
     "rpc_methods": 35,
@@ -998,6 +999,30 @@
       ],
       "execution": "1 passed on exact307f413 source with corrected b077 producer; no skips. Post-test exporter failure retained and recovered read-only.",
       "scope": "Authored stopped mode-13h capture, exact layer restoration, no execution, preserved caller input and owner reap."
+    },
+    "raster-proof-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_raster_proof_source.py"
+      ],
+      "execution": "9_passed_by_author_and_independent_root",
+      "scope": "Compiled exact helper admission/full-source verification; no guest execution."
+    },
+    "raster-proof-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_raster_proof_native.py"
+      ],
+      "execution": "4_passed_on_exact_04447_producer",
+      "scope": "Explicit native raster-proof property required by test-only launch hook; full-source equality, stale invalidation, replacement owner and reset. Not guest-video cadence."
     }
   },
   "work_groups": [
@@ -1230,13 +1255,14 @@
         "video.screenshot"
       ],
       "qualification": "unqualified",
-      "implementation": "renderer_publications_and_owned_keys_implemented_legacy_frame_contract_incomplete",
+      "implementation": "opt_in_complete_source_raster_proof_and_retained_publications_implemented_legacy_frame_contract_incomplete",
       "source_paths": [
         "src/fdisbull/qemu_display.py",
         "src/fdisbull/qemu_vga_configuration.py",
         "src/fdisbull/qemu_dos_frames.py",
         "src/fdisbull/qemu_frame_keys.py",
-        "src/fdisbull/frame_coherence.py"
+        "src/fdisbull/frame_coherence.py",
+        "native/qemu-raster-proof/qemu-raster-proof.patch"
       ],
       "depends_on": [
         "clock-and-physical-input",
@@ -1245,11 +1271,13 @@
       "existing_test_sets": [
         "renderer-frame-host",
         "renderer-frame-native",
-        "renderer-frame-legacy"
+        "renderer-frame-legacy",
+        "raster-proof-host",
+        "raster-proof-native"
       ],
       "remaining_work": [
         "Implement legacy frame_probe and frame_rgba consumers, including codec/stride/pixel hash and exact guarded identity.",
-        "Establish a successful full source-raster renderer boundary with native guest-mode cadence, producing geometry and cache identity, or a reviewed paired semantic disposition. Fixed-period surface publication or a retrace edge alone does not prove this contract.",
+        "Produce the verified complete source-raster snapshots at native guest-mode cadence with guarded stream/configuration identity, and resolve raster sampling differences through paired evidence. The new opt-in source proof currently accompanies caller-timed synchronous renderer attempts only.",
         "Qualify frame step and key scheduling at that boundary, including partial drawing, palette/mode/origin changes, typematic behavior and restore without reinjection."
       ],
       "minimum_acceptance": [
@@ -1933,6 +1961,8 @@
     "docs/evidence/qemu-executed-image-2026-11-18/verification.json",
     "docs/evidence/qemu-runtime-scenes-2026-11-18/verification.json",
     "docs/evidence/qemu-screenshot-hooks-2026-11-18/verification.json",
-    "docs/evidence/qemu-desqview-installed-2026-11-18/verification.json"
+    "docs/evidence/qemu-desqview-installed-2026-11-18/verification.json",
+    "native/qemu-raster-proof/verification.json",
+    "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json"
   ]
 }

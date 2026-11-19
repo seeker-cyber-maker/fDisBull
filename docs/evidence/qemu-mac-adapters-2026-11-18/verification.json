@@ -1,0 +1,65 @@
+{
+  "format": "fdisbull-qemu-installed-mac-adapters-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "source_commit": "43bd549005c7e52fe9627b6ec33e4723b9c8aeb7",
+  "platform": "macOS arm64",
+  "package": {
+    "source_wheel_install_equal": true,
+    "core_payload_files": 723,
+    "tracked_source_files_unchanged": 5603,
+    "wheel_sha256": "a201e18da3ad62e90204d6addc4768dc9808663fc85cd68fa3a9ca433b2e1297",
+    "manifest_sha256": "0ac63cc3de09efff61fae06d64b123b903890d22b731846ceeae04b75609dec8",
+    "shared_activation": false
+  },
+  "native": {
+    "selected_qemu_MachO_sha256": "d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268",
+    "tests": [
+      "tests/test_qemu_scenes_native.py",
+      "tests/test_qemu_screenshot_hooks_native.py"
+    ],
+    "counts": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "elapsed_seconds": 4.010003416799009,
+    "outer_elapsed_seconds": 5.402239624876529,
+    "returncode": 0,
+    "outer_returncode": 0,
+    "dependency_files": 99,
+    "runtime_payload_unchanged": true,
+    "test_files_unchanged": true,
+    "dependencies_unchanged": true,
+    "unexpected_owned_members": [],
+    "remaining_owned_members": [],
+    "direct_supervisor_child_reaped": true
+  },
+  "controllers": {
+    "setup_sha256": "936519119749f0754d511220d7dfe88542153cb7987c057f9d0b0d869c86ae21",
+    "outer_sha256": "163afb68126fd5a32e7a4ee1331d423be0ab8e1728e860caa8ea085ed2d1631b",
+    "selection_sha256": "d9193d5dc79a744ab8009f210c7401cfe71eec70a22bdf2aa2781b14cfef8d75"
+  },
+  "retained_private_receipts_sha256": {
+    "package-43bd549-adapters-01.json": "0ac63cc3de09efff61fae06d64b123b903890d22b731846ceeae04b75609dec8",
+    "native-adapters-outer-01.json": "46f7502f30ec8563c81f9a4fe221a9caf8be139b87b4ceee98adb29df8aece60",
+    "native-adapters-01.json": "d6e532679b171fca033b63650b25c4fa1e5f452a9752d306b6347583bf1e399d",
+    "native-adapters-environment-01.json": "7e8743aa212cd2d0193960974a7c2980e83ebdf08e9b5d307479c361d6a7b8a8"
+  },
+  "scope": [
+    "Authored IRQ1 make/break changes witnessed RAM; scene checks/assertions do not execute the guest or alter held input.",
+    "Replacement-owner native restore invalidates stored scene memory bindings; a fresh witness is required.",
+    "Stopped-surface screenshot hooks temporarily suspend and restore an authored RAM layer while preserving native CPU/clock/input.",
+    "A first failed hook assertion prevents capture and later pre-steps; cleanup remains observable."
+  ],
+  "limits": [
+    "No frame-backed scene-1, action/navigation/text/workflow or full guest-frame qualification.",
+    "Fresh-renderer and execution screenshot hooks remain unavailable.",
+    "This private development wheel is not a release or shared runtime activation.",
+    "The Linux and Mac gates share the same authored test cases and are separate platform witnesses, not distinct scenario counts."
+  ],
+  "qualification": "unqualified",
+  "campaign_qualification_change": "none",
+  "hosted_ci": false
+}
