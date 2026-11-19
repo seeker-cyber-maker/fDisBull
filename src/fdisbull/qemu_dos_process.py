@@ -36,6 +36,13 @@ from .qemu_experiments import QemuExperimentMixin
 from .qemu_workspace import QemuDOSWorkspaceMixin as QemuWorkspaceMixin
 from .qemu_dos_source_admission import QemuDOSSourceAdmissionMixin
 from .qemu_dos_le_binding import QemuDOSLEBindingMixin
+from .qemu_macros import QemuMacroSessionMixin
+from .qemu_runtime_memory import QemuRuntimeMemoryMixin
+from .qemu_proofs import QemuProofMixin
+from .qemu_spatial_policy import QemuSpatialPolicyMixin, initial_policy
+from .qemu_movement import QemuMovementMixin
+from .qemu_scenes import QemuSceneObservationMixin
+from .qemu_screenshot_hooks import QemuScreenshotHookMixin
 
 
 def _sha(data):
@@ -162,7 +169,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -176,7 +183,7 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
                  firmware=None, clock_profile='standard', audio_profile='off', retrace_profile='standard',
                  checkpoint_tool=None, _on_spawn=None, directory=None, file_mode=None, freedos_runtime=None,
-                 generation=None):
+                 generation=None, spatial_mode=None, fair_play=False):
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
 
@@ -189,6 +196,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         self._process = None
         self._owned_machine_restored = False
         self._published = False
+        self._spatial_mode, self._fair_play = initial_policy(spatial_mode, fair_play)
+        self._allow_assisted_travel = self._spatial_mode == 'assisted' and not self._fair_play
         self._dos_workspace_enabled = (boot_image is None or directory is not None
                                        or file_mode is not None or freedos_runtime is not None or generation is not None)
         workspace_launch = None
@@ -346,7 +355,14 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 dos_driver_observation='validated device-header chain; successful device I/O unqualified',
                 source_trace='stopped boundaries in the initial verified real-mode DOS module',
                 source_trace_clock=vm.machine_configuration['clock_profile']['profile'] == 'virtual',
-                execution_event_search=True,
+                execution_event_search=True, input_macros=True,
+                screenshot_hooks='stopped-surface passive reads and guarded layers; require_fresh_frame=false only',
+                runtime_memory_bindings=True,
+                bounded_model_proofs=True,
+                spatial_policy=True,
+                witnessed_movement='held keyboard leases; runtime_memory scalars; sample progress; native virtual clock only',
+                spatial_policy_scope='voluntary host permission only; no frame, action, assistance or memory authority',
+                runtime_memory_scope='witnessed ordinary physical RAM or observed unpaged linear RAM; no source/task/allocation lifetime inference',
                 trace_until='source-bound predicates; virtual-time ranges with the virtual profile; queued input unqualified',
                 desqview_observation=True,
                 qemm_observation=profile['memory_manager']['configured'] == 'qemm',
@@ -396,6 +412,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
             self.capabilities['owned_machine_checkpoint_scope'] = (
                 'owned VM and private disk; original DOS source binding is retired on restore')
             self.capabilities['dos_protected_source_admission'] = True
+            self.capabilities['runtime_scene_observation'] = bool(self.capabilities.get('virtual_clock_budget'))
+            self.capabilities['runtime_scene_scope'] = 'explicit scene-2 witnessed RAM predicates only; no frame, action or source lifetime authority'
             self.capabilities['dos_protected_source_binding'] = 'owned stopped LE source revalidation; not task/allocation lifetime'
             self.capabilities['source_trace'] = 'initial real16 DOS module or explicitly bound protected32 embedded LE source'
             self.metadata = dict(backend=self.backend_id, context='machine',
@@ -670,6 +688,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
         from .qemu_input import require_released_machine_input
         if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
             raise ValueError('Restricted DOS process checkpoints are not enabled')
+        from .qemu_image import verify
+        verify(self.vm)
         if self.project.db.in_transaction:
             raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
         self._stopped()
@@ -835,6 +855,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
             if row is None or row['kind'] != 'state' or row['version'] != self.version['id'] or row['run'] != self.run_id:
                 raise ValueError('Process checkpoint must belong to this live session and version')
             data = bytes(row['data']); metadata = json.loads(row['metadata'])
+            from .qemu_image import ProducerMismatch, require_record, verify
+            require_record(metadata.get('runtime_inputs'))
             expected = dict(format='fdisbull-qemu-dos-entry-qcow2-v1', run=self.run_id,
                 source_sha256=self.metadata['source_sha256'], version_sha256=self.metadata['version_sha256'],
                 runtime_inputs=self.vm.inputs, machine_configuration=self.vm.machine_configuration,
@@ -850,8 +872,9 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                     image = Path(directory)/'state.qcow2'; image.write_bytes(data)
                     new = QemuMachine(**dict(self._checkpoint_launch, timeout_ms=remaining()), _checkpoint_image=image)
                 if new.inputs != owner.inputs or new.machine_configuration != owner.machine_configuration:
-                    raise DebuggerError('Fresh process checkpoint machine identity differs')
+                    raise ProducerMismatch('Fresh process checkpoint machine identity differs')
                 new.operation_deadline = deadline; new.qmp.operation_deadline = deadline
+                verify(new,deadline)
                 snapshot_job(new, 'load', tag=metadata['tag'], vmstate='disk0', devices=['disk0'], timeout_ms=remaining())
                 context = MachineContext(new); actual = context.registers()
                 for field in ('registers', 'instruction_pointer', 'cpu_mode', 'address_state'):
@@ -879,9 +902,13 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
                 self._event('load-state', result); remaining()
                 self._set_deadline(None)
                 return result
-            except BaseException:
-                if new is not None: new.close()
-                self.close()
+            except BaseException as error:
+                if new is not None:
+                    try:new.close()
+                    except BaseException as cleanup:error.new_machine_cleanup_error=type(cleanup).__name__
+                if not isinstance(error,ProducerMismatch):
+                    try:self.close()
+                    except BaseException as cleanup:error.machine_cleanup_error=type(cleanup).__name__
                 raise
         finally:
             owner.lock.release()
@@ -991,7 +1018,8 @@ class QemuDOSProcessSession(QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, 
 
     @property
     def script_operations(self):
-        return super().script_operations | {'save-machine-state', 'load-machine-state',
+        return super().script_operations | {'screenshot-hooks', 'scene-check', 'scene-assert', 'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+            'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',
             'trace-until', 'rewind-start', 'rewind-status', 'rewind-record', 'rewind',

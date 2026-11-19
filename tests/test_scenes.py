@@ -358,6 +358,12 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/media-modules.md",
         "references/file-formats.md",
         "references/binary-claim-verification.md",
+        "references/execution-event-search.md",
+        "references/dos-file-layers.md",
+        "references/chip8-qemu.md",
+        "references/dos-qemu-migration.md",
+        "references/dos-drivers-and-qemm.md",
+        "references/desqview-and-memory-search.md",
     }
     local_links = {
         target

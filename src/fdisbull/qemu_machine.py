@@ -34,7 +34,8 @@ from .qemu_mapped_mouse import MAPPED_MOUSE_COMMANDS, validate_mapped_mouse_para
 from .qemu_layers import LAYER_COMMANDS, QemuLayerSessionMixin
 from .qemu_hooks import QemuHookSessionMixin
 from .qemu_surface import QemuSurfaceMixin
-from .qemu_audio import QemuAudioMixin, machine_audio_configuration, machine_audio_arguments, admit_audio
+from .qemu_audio import (QemuAudioMixin, machine_audio_configuration, machine_audio_arguments,
+                         admit_audio, AUDIO_FORMAT_COMMAND)
 from .qemu_mixer import QemuMixerMixin, MIXER_COMMAND
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
                            validate_display_probe_parameters)
@@ -125,6 +126,8 @@ class QemuMachine:
                  clock_profile='standard', audio_profile='off', retrace_profile='standard',
                  checkpoint_tool=None, _checkpoint_image=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
+        self._qemu_image_proof=None;self._admission_guest=None
+        self._admission_guest_pidfd=None
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
         self.lock=threading.RLock()
@@ -171,11 +174,14 @@ class QemuMachine:
                 if not os.access(paths['checkpoint_tool'],os.X_OK):raise ValueError('Checkpoint tool must be executable')
             paths.update({name:Path(path).expanduser().resolve(strict=True) for name,path in [('kernel',kernel),('initramfs',initramfs),('boot_image',boot_image)] if path is not None})
             if any(not p.is_file() for p in paths.values()) or not os.access(paths['qemu'],os.X_OK):raise ValueError('Expected regular QEMU and machine input files')
+            from . import qemu_image
+            qemu_image.require_platform()
+            launcher_sha256=qemu_image.launcher_hash(paths['qemu'],deadline)
             # Cold executable startup can be slow under native/translated CI.
             version=subprocess.check_output([str(paths['qemu']),'--version'],text=True,stderr=subprocess.STDOUT,timeout=min(30,remaining())).splitlines()[0]
             match=re.search(r'QEMU emulator version (\d+)\.(\d+)',version)
             if not match or tuple(map(int,match.groups()))<(9,1):raise DebuggerError('Machine debugging requires QEMU >= 9.1')
-            self.inputs={name:dict(path=str(path),sha256=file_hash(path)) for name,path in paths.items()}
+            self.inputs={name:dict(path=str(path),sha256=launcher_sha256 if name=='qemu' else file_hash(path)) for name,path in paths.items()}
             self.inputs['qemu']['version']=version
             if firmware is not None:self.inputs['firmware']=firmware_identity(firmware)
             self.machine_configuration=dict(cpu=cpu_model,memory_mib=memory_mib,cpus=cpus,network='none',accelerator='tcg',
@@ -269,6 +275,8 @@ class QemuMachine:
             else:
                 self.qmp=QemuControl(root/'qmp.sock',self.process,deadline)
             self.qmp.operation_deadline=deadline
+            self._qemu_image_proof=qemu_image.admit(self,deadline)
+            self.inputs['qemu_image']=dict(self._qemu_image_proof.identity)
             self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=max(1,int(remaining()*1000))))
             if checkpoint_tool is not None and clock_profile == 'virtual':
                 from .qemu_instrumented_checkpoint import require_commands
@@ -287,7 +295,13 @@ class QemuMachine:
             self.context=MachineContext(self)
         except BaseException as error:
             log=root/'qemu.log';diagnostic=log.read_text(errors='replace')[-4096:] if log.exists() else ''
-            self.close()
+            from .qemu_image import admission_quit
+            try:admission_quit(self)
+            except BaseException as cleanup:error.guest_cleanup_error=type(cleanup).__name__
+            if self.process is not None and self._admission_guest is None:
+                error.guest_cleanup_unqualified=True
+            try:self.close()
+            except BaseException as cleanup:error.machine_cleanup_error=type(cleanup).__name__
             if isinstance(error,Exception):raise DebuggerError(str(error)+'\n'+diagnostic) from error
             raise
 
@@ -321,28 +335,51 @@ class QemuMachine:
         return self.gdb
 
     def close(self):
-        try:
-            context=getattr(self,'context',None)
-            invalidate=getattr(context,'_input_on_close',None)
-            if invalidate is not None:invalidate()
-            if self.gdb is not None:self.gdb.close();self.gdb=None
-            if self.qmp is not None:self.qmp.close();self.qmp=None
-            for channel in self._channels:channel.close()
-            self._channels.clear()
-            if self.process is not None:
-                for stream in (self.process.stdin,self.process.stdout):
-                    if stream is not None:stream.close()
-            if self.process is not None and self.process.poll() is None:
-                self.process.terminate()
-                try:self.process.wait(timeout=3)
-                except subprocess.TimeoutExpired:self.process.kill();self.process.wait(timeout=3)
-            if self.temporary is not None:self.temporary.cleanup();self.temporary=None
-        finally:
-            observer=self.close_observer
-            self.close_observer=None
-            if observer is not None:
-                try:observer()
-                except Exception as error:self.close_observer_error=type(error).__name__
+        # Every independent resource gets a cleanup attempt. A failed input or
+        # transport callback must never skip termination/wait of the known owner.
+        failures=[]
+        def cleanup(action):
+            try:action()
+            except BaseException as error:failures.append(error)
+        context=getattr(self,'context',None)
+        invalidate=getattr(context,'_input_on_close',None)
+        if invalidate is not None:cleanup(invalidate)
+        for name in ('gdb','qmp'):
+            channel=getattr(self,name,None)
+            setattr(self,name,None)
+            if channel is not None:cleanup(channel.close)
+        for channel in getattr(self,'_channels',()):cleanup(channel.close)
+        self._channels=[]
+        process=getattr(self,'process',None)
+        if process is not None:
+            for stream in (process.stdin,process.stdout):
+                if stream is not None:cleanup(stream.close)
+            try:running=process.poll() is None
+            except BaseException as error:failures.append(error);running=True
+            if running:
+                cleanup(process.terminate)
+                try:process.wait(timeout=3)
+                except BaseException as error:
+                    if not isinstance(error,subprocess.TimeoutExpired):failures.append(error)
+                    cleanup(process.kill)
+                    cleanup(lambda:process.wait(timeout=3))
+        temporary=getattr(self,'temporary',None)
+        self.temporary=None
+        if temporary is not None:cleanup(temporary.cleanup)
+        proof=getattr(self,'_qemu_image_proof',None)
+        self._qemu_image_proof=None
+        if proof is not None:cleanup(proof.close)
+        handle=getattr(self,'_admission_guest_pidfd',None)
+        self._admission_guest_pidfd=None
+        if handle is not None:cleanup(lambda:os.close(handle))
+        observer=getattr(self,'close_observer',None)
+        self.close_observer=None
+        if observer is not None:
+            try:observer()
+            except Exception as error:self.close_observer_error=type(error).__name__
+        if failures:
+            failures[0].machine_cleanup_errors=[type(error).__name__ for error in failures]
+            raise failures[0]
 
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
@@ -698,6 +735,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl'),
+            audio_stereo_capture=(virtual and AUDIO_FORMAT_COMMAND in getattr(vm,'qmp_commands',())
+                and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='sb16-opl'),
             mixer_gain_readback=(virtual and MIXER_COMMAND in getattr(vm,'qmp_commands',())
                 and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl')),
             renderer_capture=virtual and DISPLAY_COMMANDS <= getattr(vm,'qmp_commands',frozenset()),
@@ -875,7 +914,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         observed='guest-reported-active' if active is True else 'guest-reported-inactive' if active is False else 'unknown'
         identity=dict(run=self.run_id,boot_image_sha256=profile['boot_image']['sha256'],
                       profile_sha256=profile['profile_sha256'],
-                      emulator_sha256=self.vm.inputs['qemu']['sha256'])
+                      emulator_sha256=self.vm.inputs['qemu_image']['sha256'],
+                      launcher_sha256=self.vm.inputs['qemu']['sha256'])
         observation=dict(observed=observed,captured_at=stamp(),report_sha256=report['sha256'],
                          complete=report['probe_status']['complete'],probe_status=report['probe_status'],
                          active=active,version=report['qemm']['version'],
@@ -1456,6 +1496,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         from .qemu_input import require_released_machine_input
         if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
             raise ValueError('Restricted native machine checkpoints are not enabled')
+        from .qemu_image import verify
+        verify(self.vm)
         if self.project.meta['format'] != 'raw' or hasattr(self, '_process'):
             raise ValueError('Source-bound DOS processes are not eligible for machine checkpoints')
         if self.vm.machine_configuration.get('clock_profile', {}).get('profile') != 'standard':
@@ -1630,6 +1672,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         if row is None or row['kind']!='state' or row['version']!=self.version['id']:
             raise ValueError('State must belong to the selected project version')
         metadata=json.loads(row['metadata']);data=bytes(row['data'])
+        from .qemu_image import ProducerMismatch, require_record, verify
+        require_record(metadata.get('runtime_inputs'))
         if hashlib.sha256(data).hexdigest()!=row['sha256']:
             raise ValueError('Stored checkpoint hash mismatch')
         expected=dict(format='fdisbull-qemu-raw-qcow2-v1',source_sha256=self.metadata['source_sha256'],
@@ -1641,14 +1685,15 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         remaining()
         old=self.vm;new=None
         try:
+            with tempfile.TemporaryDirectory(prefix='fdisbull-checkpoint-') as directory:
+                image=Path(directory)/'state.qcow2';image.write_bytes(data)
+                launch=dict(self._checkpoint_launch,timeout_ms=remaining())
+                new=QemuMachine(**launch,_checkpoint_image=image)
+            remaining()
+            if new.inputs != old.inputs or new.machine_configuration != old.machine_configuration:
+                raise ProducerMismatch('Fresh checkpoint machine differs from saved identity')
+            verify(new,deadline)
             with self._checkpoint_tracking_controls(points,deadline,repair=False):
-                with tempfile.TemporaryDirectory(prefix='fdisbull-checkpoint-') as directory:
-                    image=Path(directory)/'state.qcow2';image.write_bytes(data)
-                    launch=dict(self._checkpoint_launch,timeout_ms=remaining())
-                    new=QemuMachine(**launch,_checkpoint_image=image)
-                remaining()
-                if new.inputs != old.inputs or new.machine_configuration != old.machine_configuration:
-                    raise DebuggerError('Fresh checkpoint machine differs from saved identity')
                 new.operation_deadline=deadline
                 new.qmp.operation_deadline=deadline
                 if new.gdb is not None:new.gdb.operation_deadline=deadline
@@ -1691,8 +1736,9 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
             if new is not None:
                 try:new.close()
                 except BaseException as cleanup_error:error.new_machine_cleanup_error=type(cleanup_error).__name__
-            try:self.close()
-            except BaseException as cleanup_error:error.machine_cleanup_error=type(cleanup_error).__name__
+            if not isinstance(error,ProducerMismatch):
+                try:self.close()
+                except BaseException as cleanup_error:error.machine_cleanup_error=type(cleanup_error).__name__
             raise
 
     def save_anchor_stone(self,name='anchor-stone.qcow2',*,max_bytes=None):

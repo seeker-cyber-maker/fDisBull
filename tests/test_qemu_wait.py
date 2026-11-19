@@ -550,3 +550,32 @@ def test_plan_larger_than_one_native_slice_refuses_without_splitting(typing):
     with pytest.raises(ValueError, match='total virtual budget'):
         o.session.wait(**dict(options(), guest_ms=3_600_000, slice_ms=50))
     assert o.vm._physical_input == original and o.wire.calls == calls and not o.vm.closed
+
+
+def test_immediate_input_not_dispatched_stops_wait_without_retry(waiting):
+    o = waiting
+    session = o.context
+    o.vm.qmp_commands |= {'input-send-event'}
+    session.capabilities['physical_input'] = True
+    native_execute = o.remote.execute
+    def execute(command, timeout_ms, *, after_send=None):
+        # Model a native clock stop racing QMP run-state admission. The wire
+        # positively reports paused, so the owned input queue remains unsent.
+        if after_send is not None:
+            after_send(o.remote.operation_deadline)
+        return native_execute(command, timeout_ms)
+    o.remote.execute = execute
+    session.memory = lambda address, length=2, space='physical': dict(
+        context='machine', address=hex(int(address, 0) if isinstance(address, str) else address),
+        space=space, length=length, hex=len(o.executions).to_bytes(length, 'little').hex())
+    token = session.keyboard_key_down('a')['lease']
+    before = deepcopy(session.input_state())
+    result = session.wait(**dict(options(), until={'observation': 'counter', 'equals': '0200'}))
+    assert len(o.executions) == 1
+    assert result['outcome'] == 'input_interrupted' and not result['complete'] and not result['matched']
+    assert result['stop'] == result['runs'][0]
+    assert result['input_interrupted']['delivery'] == 'not_dispatched'
+    after = session.input_state()
+    assert after['pending'] == before['pending'] and after['leases'] == before['leases']
+    assert token in after['leases'] and after['valid'] and not o.vm.closed
+    assert not any(name == 'input-send-event' for name, _ in o.wire.calls)

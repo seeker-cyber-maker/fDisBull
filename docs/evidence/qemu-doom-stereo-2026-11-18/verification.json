@@ -1,0 +1,478 @@
+{
+  "format": "fdisbull-original-doom-stereo-comparison-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "scope": "Original Ultimate Doom E1M1; same attached EXE/WAD/private config on installed DOSBox-X baseline and new QEMU. Bounded independent outcomes, not whole-game or waveform equivalence.",
+  "game_inputs": {
+    "BASE.CFG": {
+      "bytes": 819,
+      "sha256": "20fe7f9f202fb0fc3aca7dfc0031a12e6cc8c6d5ded1abfcd08a4a56bafa8a8c"
+    },
+    "DOOM.EXE": {
+      "bytes": 715493,
+      "sha256": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4"
+    },
+    "DOOM.WAD": {
+      "bytes": 12408292,
+      "sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+    }
+  },
+  "configuration": {
+    "private_derivative_only": true,
+    "original_preserved": true,
+    "only_change": {
+      "snd_musicdevice": {
+        "from": 3,
+        "to": 2
+      }
+    }
+  },
+  "dosbox_baseline": {
+    "installed_release": "0.34.1",
+    "runtime_native_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+    "native_version": "2026.10.01 Commit f1c4414",
+    "verified": {
+      "native_audio_recording": true,
+      "native_display": true,
+      "native_hot_machine_save_load": true,
+      "normal_selected_guest_exit": true,
+      "physical_keyboard_game_consumption": true,
+      "protected_mode_game_boot": true
+    },
+    "physical_input": {
+      "ammo_before": 50,
+      "ammo_after": 49,
+      "key": "ctrl",
+      "hold_ms": 300
+    },
+    "hot_restore_register_matches": {
+      "address_context": true,
+      "cpu_mode": true,
+      "flags": true,
+      "general": true,
+      "instruction_pointer": true,
+      "segments": true
+    },
+    "normal_guest_exit": {
+      "guest_exit": {
+        "parent_psp": "0x0701",
+        "psp": "0x0814",
+        "requested_exit_code": 0,
+        "resident": false,
+        "source": "DOS_Terminate",
+        "stage": "after-process-cleanup"
+      },
+      "kind": "guest_exit"
+    },
+    "audio": {
+      "bytes": 6883052,
+      "channels": 2,
+      "channels_metrics": [
+        {
+          "channel": "left",
+          "dc_full_scale": 0.0005862151701777316,
+          "frames": 1720752,
+          "maximum": 22290,
+          "minimum": -24702,
+          "negative_rail_frames": 0,
+          "positive_rail_frames": 0,
+          "rms_full_scale": 0.05819064154008485
+        },
+        {
+          "channel": "right",
+          "dc_full_scale": 0.000575696261381107,
+          "frames": 1720752,
+          "maximum": 21557,
+          "minimum": -23996,
+          "negative_rail_frames": 0,
+          "positive_rail_frames": 0,
+          "rms_full_scale": 0.0573263731618383
+        }
+      ],
+      "distinct_stereo_frames": 335124,
+      "finalized": true,
+      "frames": 1720752,
+      "nonconstant": true,
+      "output_seconds": 35.849,
+      "payload_bytes": 6883008,
+      "pcm_sha256": "b8b958e48fe9c8a01a5af4cef349797a0bc8cff4563c17be2eaf2c0dfa933e07",
+      "rate": 48000,
+      "sample_width": 2,
+      "scope": "Whole raw recording includes startup, physical input, native state restore and quit; no audio writer/frontier continuity or cross-engine equality claim",
+      "sha256": "25c5550e9292c2f9005afaf34a403525e9008fb80866ea61d745b76bfd0951f5"
+    },
+    "cleanup": {
+      "native_reaped": true,
+      "native_returncode": 0
+    },
+    "unqualified": [
+      "LE source-bound debugging",
+      "relative mouse consumption",
+      "cold/separate-host restore",
+      "active WAV writer checkpoint continuity",
+      "audio waveform parity",
+      "Final Doom",
+      "full campaign or performance parity"
+    ]
+  },
+  "qemu": {
+    "source_head": "cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce",
+    "source_checkout_clean": true,
+    "native": {
+      "bytes": 29465568,
+      "sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40"
+    },
+    "native_patch_sha256": "028f4b32a3f6544d3ed2501c44e2c9a8f1bb0358d2658396ba7dbd5dc06a2e48",
+    "arguments": "-warp 1 1 -skill 2 -nomonsters -config D:\\BASE.CFG",
+    "blaster": "A220 I7 D1 H5 T6",
+    "boot": {
+      "bytes": 1474560,
+      "sha256": "356a7fd2ac6c37fe1e858faa4113445bfea0b6657810772033e469ba61e359f7"
+    },
+    "boot_parent_sha256": "b8773f06b87ca0b72139c611b5c2641473f54e84ab52e8f6e8031a570a06cfa1",
+    "freedos_packages": {
+      "freecom.zip": {
+        "bytes": 2038253,
+        "sha256": "3a7cfa03cce242031926cd67b69e1fd030d1c27127885d927629945f3137b6f0"
+      },
+      "kernel.zip": {
+        "bytes": 772692,
+        "sha256": "43ed55fec6e795bb24e658302c7fae9eec9eb8dfeaba15734317b3f8302706d6"
+      }
+    },
+    "capture_format": {
+      "bytes_per_frame": 4,
+      "channels": 2,
+      "rate": 32000,
+      "sample_format": "s16"
+    },
+    "audio": {
+      "A": {
+        "audio_frames": 34814,
+        "chunks": 112,
+        "differing_lane_frames": 9042,
+        "icount": 487642933,
+        "pcm_bytes": 139256,
+        "pcm_sha256": "62cc490c6cf993a22d60a89f2b4971824ce8c6ef78b73d07e18f03e82eaffb08",
+        "statistics": [
+          {
+            "dc": 0.07224156613146382,
+            "frames": 34814,
+            "max": 28471,
+            "min": -22282,
+            "rails": 0,
+            "rms": 0.1434996177054574
+          },
+          {
+            "dc": 0.07088277653178993,
+            "frames": 34814,
+            "max": 28461,
+            "min": -22538,
+            "rails": 0,
+            "rms": 0.1431189341596948
+          }
+        ],
+        "virtual_ns": 63394549300
+      },
+      "B": {
+        "audio_frames": 53821,
+        "chunks": 173,
+        "differing_lane_frames": 11196,
+        "icount": 492330433,
+        "pcm_bytes": 215284,
+        "pcm_sha256": "7919f204d4dbe7c72bd85cd76f6dd21e9cee8362c9d42ff2e5cf46126c94cd38",
+        "statistics": [
+          {
+            "dc": 0.07255207154687965,
+            "frames": 53821,
+            "max": 28471,
+            "min": -22282,
+            "rails": 0,
+            "rms": 0.13607350120360043
+          },
+          {
+            "dc": 0.07143877446568399,
+            "frames": 53821,
+            "max": 28461,
+            "min": -22538,
+            "rails": 0,
+            "rms": 0.13562192462635278
+          }
+        ],
+        "virtual_ns": 63994549300
+      },
+      "before-shot": {
+        "audio_frames": 12386,
+        "chunks": 40,
+        "differing_lane_frames": 0,
+        "icount": 482174183,
+        "pcm_bytes": 49544,
+        "pcm_sha256": "6cb2b32a96cd61b1654bd3bf8f2b334cae6ef4ee6d86528c3c346f2a06d23cec",
+        "statistics": [
+          {
+            "dc": 0.07042255644919163,
+            "frames": 12386,
+            "max": 13636,
+            "min": -4685,
+            "rails": 0,
+            "rms": 0.11846688677184283
+          },
+          {
+            "dc": 0.07042255644919163,
+            "frames": 12386,
+            "max": 13636,
+            "min": -4685,
+            "rails": 0,
+            "rms": 0.11846688677184283
+          }
+        ],
+        "virtual_ns": 62694549300
+      }
+    },
+    "checkpoint": {
+      "artifact": {
+        "bytes": 29334179,
+        "sha256": "c61fae20fc30b6729d377930dc3a6899d4acf0518076e1705e76964aa5a574a9"
+      },
+      "format": "fdisbull-qemu-owned-machine-qcow2-v1",
+      "future_hot_matches": {
+        "audio_frames": true,
+        "audio_state": true,
+        "chunks": true,
+        "cpu": true,
+        "differing_lane_frames": true,
+        "dropped_frames": true,
+        "icount": true,
+        "mixer": true,
+        "opl": true,
+        "pcm_bytes": true,
+        "pcm_bytes_exact": true,
+        "pcm_sha256": true,
+        "png_sha256": true,
+        "sample_format": true,
+        "sb": true,
+        "statistics": true,
+        "virtual_ns": true
+      },
+      "future_ns": 600000000,
+      "future_separate_python_cold_matches": {
+        "audio_frames": true,
+        "audio_state": true,
+        "chunks": true,
+        "cpu": true,
+        "differing_lane_frames": true,
+        "dropped_frames": true,
+        "icount": true,
+        "mixer": true,
+        "opl": true,
+        "pcm_bytes": true,
+        "pcm_bytes_exact": true,
+        "pcm_sha256": true,
+        "png_sha256": true,
+        "sample_format": true,
+        "sb": true,
+        "statistics": true,
+        "virtual_ns": true
+      },
+      "protected_source_rebound": false,
+      "selected_hot_matches": {
+        "audio_frames": true,
+        "audio_state": true,
+        "chunks": true,
+        "cpu": true,
+        "differing_lane_frames": true,
+        "dropped_frames": true,
+        "icount": true,
+        "mixer": true,
+        "opl": true,
+        "pcm_bytes": true,
+        "pcm_bytes_exact": true,
+        "pcm_sha256": true,
+        "png_sha256": true,
+        "sample_format": true,
+        "sb": true,
+        "statistics": true,
+        "virtual_ns": true
+      },
+      "selected_separate_python_cold_matches": {
+        "audio_frames": true,
+        "audio_state": true,
+        "chunks": true,
+        "cpu": true,
+        "differing_lane_frames": true,
+        "dropped_frames": true,
+        "icount": true,
+        "mixer": true,
+        "opl": true,
+        "pcm_bytes": true,
+        "pcm_bytes_exact": true,
+        "pcm_sha256": true,
+        "png_sha256": true,
+        "sample_format": true,
+        "sb": true,
+        "statistics": true,
+        "virtual_ns": true
+      },
+      "source_binding_restored": false
+    },
+    "physical_input": {
+      "ammo_after": 49,
+      "ammo_before": 50,
+      "hold_ms": 300,
+      "interpretation": "Observed original Doom E1M1 HUD, not inferred from accepted dispatch",
+      "key": "ctrl",
+      "observed_elapsed_ns_after_arm": 700000000
+    },
+    "inputs_unchanged": {
+      "boot_unchanged": true,
+      "game_inputs_unchanged": {
+        "BASE.CFG": true,
+        "DOOM.EXE": true,
+        "DOOM.WAD": true
+      },
+      "original_inputs_unchanged": {
+        "DOOM.EXE": true,
+        "DOOM.WAD": true
+      }
+    },
+    "native_owners": [
+      {
+        "pid": 26,
+        "returncode": 0
+      },
+      {
+        "pid": 77,
+        "returncode": 0
+      },
+      {
+        "pid": 106,
+        "returncode": 0
+      },
+      {
+        "pid": 139,
+        "returncode": 0
+      }
+    ],
+    "all_accepted_owners_reaped": true,
+    "earlier_attempts": [
+      {
+        "error": "QEMU pipe deadline expired",
+        "path": "qemu-linux-doom-20261119",
+        "postflight": {
+          "inspected_process_count": 3,
+          "matches": [],
+          "observed_utc": "2026-11-19T04:34:56.037613+00:00",
+          "pid_namespace": "pid:[4026532382]",
+          "scope": "Read-only current exec PID namespace only. Original failed constructor namespace is no longer available; no measured return code is inferred. No processes were killed."
+        },
+        "result": "timeout before helper readiness",
+        "returncode_measured": false
+      },
+      {
+        "error": "delta_ns must be an integer in 1..60000000000",
+        "owners": [
+          {
+            "pid": 25,
+            "returncode": 0
+          }
+        ],
+        "path": "qemu-linux-doom-20261119-02",
+        "result": "controller requested unsupported 90-second clock slice; request refused"
+      }
+    ]
+  },
+  "qemu_fresh_owner_exit": {
+    "source_head": "cfe53a7ffd2a1e5fdd8f094921867818b1dfdbce",
+    "native": {
+      "bytes": 29465568,
+      "sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40"
+    },
+    "arguments": "-warp 1 1 -skill 2 -nomonsters -config D:\\BASE.CFG",
+    "physical_route": [
+      {
+        "advance_ns": 600000000,
+        "hold_ms": 100,
+        "key": "f10",
+        "observed": "Doom quit confirmation asking Y to quit to DOS"
+      },
+      {
+        "advance_budget_ns": 4000000000,
+        "hold_ms": 100,
+        "key": "y",
+        "observed": "guest_exit before requested deadline"
+      }
+    ],
+    "fresh_original_owner": true,
+    "checkpoint_loaded": false,
+    "le_source_binding_requested": false,
+    "emulator_still_alive_at_guest_exit": true,
+    "all_owners_reaped": true,
+    "owners": [
+      {
+        "pid": 33,
+        "returncode": 0
+      }
+    ],
+    "inputs_unchanged": {
+      "boot_unchanged": true,
+      "game_inputs_unchanged": {
+        "BASE.CFG": true,
+        "DOOM.EXE": true,
+        "DOOM.WAD": true
+      },
+      "original_inputs_unchanged": {
+        "DOOM.EXE": true,
+        "DOOM.WAD": true
+      }
+    },
+    "guest_outcome": {
+      "outcome": "guest_exit",
+      "state": "exited"
+    },
+    "termination": {
+      "code": 0,
+      "type": "normal",
+      "resident": false,
+      "source": "authored DOS EXEC helper and DOS AH=4Dh return status",
+      "stage": "observed parent callback after DOS return",
+      "instruction_mechanism": "not inferred from DOS termination category"
+    }
+  },
+  "private_summary_sha256": {
+    "dosbox_baseline": "eeded54b36599a4e82c4f175237ffd8cc70f84db1cfe034780e9facb7aa60530",
+    "qemu_stereo": "5786276bfaffacf895e9a41cce7afa0606bfd66ef057bcc86ef090d63fef9e6f",
+    "qemu_exit": "5af4673af64b3e845b91aeea008dc29e790464a5437c139b563785ed037625b0"
+  },
+  "private_receipts_sha256": {
+    "dosbox_baseline": "d4c8a119d687e481daff902507e16b9dbe2e9ad31d685fae58398b6294ec31c4",
+    "qemu_stereo": "a6dd7d1cedcf90e4dda72c299e652e25239854cd7c204dd1abfe22e3735a1556",
+    "qemu_cold": "679d6b748b7b0765f2e0eaaeceaaa34beaa2d7e3e61adea4e1bb5396f6071c61",
+    "qemu_exit": "9d05488716aa37953e6830ed948b313cdf58b6a192c1f619901cdc653f044cc7"
+  },
+  "private_image_sha256": {
+    "A.png": "efd8f59d156ecdf696398928eb7e1400c9dcceb25235341174d64c7b1145b110",
+    "B.png": "9c2c4886d0024d90076cdbd234aaca536aa8c05964a9813097809af6e8ec244d",
+    "after-shot.png": "efd8f59d156ecdf696398928eb7e1400c9dcceb25235341174d64c7b1145b110",
+    "before-shot.png": "4f4cd14758cf0b91896080e990632e003088a009f79fb08b48701c866bb1fb0a",
+    "cold-future.png": "9c2c4886d0024d90076cdbd234aaca536aa8c05964a9813097809af6e8ec244d",
+    "cold-selected.png": "efd8f59d156ecdf696398928eb7e1400c9dcceb25235341174d64c7b1145b110",
+    "hot-future.png": "9c2c4886d0024d90076cdbd234aaca536aa8c05964a9813097809af6e8ec244d",
+    "hot-selected.png": "efd8f59d156ecdf696398928eb7e1400c9dcceb25235341174d64c7b1145b110",
+    "startup-60s.png": "de07857e1ce8be72d1e61e2947bcc03feb4b3a70cd4937d8284e37d948887840"
+  },
+  "root_visual_review": [
+    "Startup E1M1 HUD ammunition50;health100;armor0.",
+    "After physicalCtrl: firing animation and ammunition49."
+  ],
+  "limits": [
+    "Machine-state recovery; original MZ/LE source ownership is not restored or inferred. No LE source binding requested.",
+    "Raw PCM measurements are retained without centering or normalization. Nonzero DC remains observed; this does not qualify hardware fidelity or DOSBox-X amplitude equality.",
+    "Same EXE/WAD/config as the installed DOSBox-X baseline; no sample-aligned comparison or identical emulated timeline. DOSBox-X captured S16 stereo at48kHz, this QEMU route at32kHz.",
+    "One bounded E1M1 input and persistence witness, not a playthrough, arbitrary game compatibility, general replay, or full DOSBox-X replacement parity.",
+    "All game, machine-state, audio, screenshots and database bytes remain private. No native or Python source changed during this witness."
+  ],
+  "default_backend": "dosbox",
+  "migration_qualification_changed": false,
+  "hosted_ci": false,
+  "shared_installation_activated": false
+}

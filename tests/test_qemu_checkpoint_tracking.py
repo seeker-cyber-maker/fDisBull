@@ -65,6 +65,8 @@ class Machine:
         self.machine_configuration = dict(cpus=1, memory_mib=16,
             clock_profile=dict(profile='standard'))
         self.inputs = dict(authored='immutable input')
+        from support.qemu_image_fixture import attach_image
+        attach_image(self)
         self.qmp_commands = frozenset()
         self.cpu = dict(registers=dict(rip='0x123ff0'), instruction_pointer='0x123ff0',
             linear_pc='0x123ff0', cpu_mode='protected', address_state=dict(code_bits=32))
@@ -212,6 +214,26 @@ def install_cold_transport(o, monkeypatch):
     monkeypatch.setattr('fdisbull.qemu_machine.QemuMachine', launch)
     monkeypatch.setattr(MachineContext, 'registers', lambda self: deepcopy(self.vm.cpu))
     return created
+
+
+def test_changed_fresh_producer_preserves_old_tracking_controls_before_import(tracked,monkeypatch):
+    from fdisbull import qemu_machine
+    o=tracked;s=o.session;old=s.vm
+    saved=s.save_state()
+    created=install_cold_transport(o,monkeypatch)
+    original=qemu_machine.QemuMachine
+    def changed(**kwargs):
+        fresh=original(**kwargs)
+        fresh.inputs['qemu_image']['sha256']='8'*64
+        fresh._qemu_image_proof.identity=deepcopy(fresh.inputs['qemu_image'])
+        return fresh
+    monkeypatch.setattr(qemu_machine,'QemuMachine',changed)
+    before=(set(old.points),deepcopy(s.breakpoints),s._runtime_epoch)
+    with pytest.raises(ValueError,match='Fresh checkpoint machine differs'):
+        s.load_state(saved['artifact'])
+    assert s.vm is old and not s.closed and not old.closed and created[-1].closed
+    assert (old.points,s.breakpoints,s._runtime_epoch)==before
+    assert [op for op,_ in o.jobs]==['save']
 
 
 def test_public_cold_restore_retires_old_epoch_and_requalifies_fresh_snapshots(tracked, monkeypatch):

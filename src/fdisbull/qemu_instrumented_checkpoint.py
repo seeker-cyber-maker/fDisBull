@@ -69,7 +69,11 @@ def validate(vm, record):
             raise ValueError('Standard checkpoint unexpectedly carries instrumented state')
         return None
     require_commands(vm)
-    return _decode(record)
+    state = _decode(record)
+    if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
+        from .qemu_audio import audio_capture_format, require_audio_capture_format
+        require_audio_capture_format(vm, audio_capture_format(state['audio'].get('info')))
+    return state
 
 
 def _close_capture_failure(session, error):
@@ -161,7 +165,7 @@ def restore(vm, record):
     # Startup admissions describe the fresh, pre-load process. None of their
     # monotone frontiers can qualify the restored machine's earlier history.
     for key in ('_native_clock_epoch', '_native_clock_last_ns', '_clock_observation_state',
-                '_active_clock_budget', '_clock_sync', '_audio_last', '_audio_export',
+                '_active_clock_budget', '_clock_sync', '_audio_last', '_audio_export', '_audio_capture_format',
                 '_display_last', '_display_probe_samples', '_display_export', '_retrace_last',
                 '_vga_configuration_last', '_vga_publication_last'):
         vm.__dict__.pop(key, None)
@@ -189,8 +193,9 @@ def restore(vm, record):
         adopt_frame_keys(vm, current_keys, expected_held=key_state['held'])
     windows = {}
     if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
-        from .qemu_audio import _native_audio
+        from .qemu_audio import _native_audio, audio_capture_format
         vm._audio_token = result.get('audio-token') or None
+        vm._audio_capture_format = audio_capture_format(saved['audio']['info'])
         actual = _native_audio(vm, vm.qmp.call('x-fdisbull-query-audio'), clock, token=vm._audio_token)
         if actual['state'] != 'idle':
             if vm._audio_token == saved['audio']['info']['token']:

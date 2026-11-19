@@ -411,6 +411,28 @@ def validate_script(script, *, session=None):
                         value=params['slice_ms']
                         if not (isinstance(value,str) and value.startswith('$')):
                             bounded(value,'slice_ms',1,1000)
+                    if op in ('scene-check','scene-assert') and (backend or actual)=='qemu-dos':
+                        from .runtime_scenes import validate_parameters
+                        validate_parameters(**params,allow_references=True)
+                        if session is not None:
+                            from .qemu_scenes import preflight
+                            preflight(session,**params,allow_references=True)
+                    if session is not None:
+                        from .runtime_scenes import require_frame_scene
+                        frame_scenes=[]
+                        if op in ('scene-navigation','scene-click','scene-act','scene-wait','move'):
+                            frame_scenes.append(params.get('scene'))
+                        if op in ('scene-check','scene-assert') and (backend or actual)!='qemu-dos':
+                            frame_scenes.append(params.get('scene'))
+                        plan=params.get('plan') if op=='assisted-travel' else params.get('travel_plan') if op=='spatial-action' else None
+                        if isinstance(plan,dict):
+                            frame_scenes.extend(plan.get(key) for key in ('scene_revision','destination_scene'))
+                        map_revision=params.get('map_revision') if op=='spatial-action' else params.get('spatial_map') if op=='move' else None
+                        if isinstance(map_revision,str) and not map_revision.startswith('$'):
+                            frame_scenes.append(session.project.debug_spatial_map_info(map_revision,version=session.version['id'])['document']['source']['context'])
+                        for selected_scene in frame_scenes:
+                            if isinstance(selected_scene,str) and not selected_scene.startswith('$'):
+                                require_frame_scene(session.project.debug_scene_info(selected_scene,version=session.version['id']))
                     if op=='write-runtime-memory':
                         from .debug_state import byte_string
                         literal={}
@@ -423,6 +445,13 @@ def validate_script(script, *, session=None):
                         offset=params.get('offset',0)
                         if not (isinstance(offset,str) and offset.startswith('$')):
                             bounded(offset,'runtime view offset',0,65535)
+                    if op=='proof-check' and (backend or actual)=='qemu-dos':
+                        from .qemu_proofs import validate_proof_parameters
+                        validate_proof_parameters(**params, allow_references=True, session=session)
+                    if ((backend or actual)=='qemu-dos'
+                            and op in ('bind-runtime-memory','runtime-memory','write-runtime-memory')):
+                        from .qemu_runtime_memory import validate_script_parameters
+                        validate_script_parameters(op, params, session=session)
                     if op=='step':
                         for key,limits in (('count',(1,10000)),('timeout_ms',(1,600000))):
                             value=params.get(key)
@@ -464,6 +493,14 @@ def validate_script(script, *, session=None):
                             if not (isinstance(value,str) and value.startswith('$')):
                                 from .qemu_audio import validate_audio_capacity
                                 validate_audio_capacity(value)
+                        if op=='audio-start' and 'capture_format' in params:
+                            value=params['capture_format']
+                            if not (isinstance(value,str) and value.startswith('$')):
+                                from .qemu_audio import validate_audio_capture_format
+                                validate_audio_capture_format(value)
+                                if (value=='s16-stereo' and session is not None
+                                        and not getattr(session,'capabilities',{}).get('audio_stereo_capture')):
+                                    raise ValueError('Audio stereo capture requires the sb16-opl profile and optional native format extension')
                     if op in ('display-start','display-observe','display-stop','capture-display'):
                         if session is not None and not getattr(session,'capabilities',{}).get('renderer_capture'):
                             raise ValueError('Renderer operations require the native display extension and virtual clock')
@@ -506,9 +543,15 @@ def validate_script(script, *, session=None):
                                  if not (isinstance(value,str) and value.startswith('$'))}
                         validate_clock_sync_options(**literal)
                     if op=='move':
-                        from .movement import validate_movement, _call
-                        _call(params['start']);_call(params['stop'])
-                        validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
+                        if (backend or actual)=='qemu-dos':
+                            from .qemu_movement import validate_parameters, control_plans
+                            validate_parameters(**params, allow_references=True)
+                            if session is not None:
+                                control_plans(session,params['macro_set'],params['start'],params['stop'],allow_references=True)
+                        else:
+                            from .movement import validate_movement, _call
+                            _call(params['start']);_call(params['stop'])
+                            validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
                     if op=='keyboard.key-down':
                         from .keyboard_input import KEYS
                         if not isinstance(params['key'],str) or params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
@@ -563,6 +606,11 @@ def validate_script(script, *, session=None):
     visit(script['steps'])
     if not expanded:
         raise ValueError('Script must contain at least one operation')
+    if (backend or actual) == 'qemu-dos':
+        from .qemu_spatial_policy import validate_policy_script
+        validate_policy_script(expanded, session=session)
+        from .qemu_screenshot_hooks import validate_hook_script
+        validate_hook_script(expanded, session=session)
     if (session is not None
             and getattr(session, 'metadata', {}).get('runtime_profile') == 'dos-exec-load-only-v1'
             and any(step['op'] in ('trace', 'trace-until') for step in expanded)
@@ -635,9 +683,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             params={k:v for k,v in step.items() if k not in ('op','as','expect','timeout_ms')}
             session._macro_plan(**params)
         elif step['op']=='move':
-            for key in ('start','stop'):
-                call=step[key]
-                session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
+            if getattr(session,'metadata',{}).get('backend')=='qemu-dos':
+                from .qemu_movement import control_plans
+                control_plans(session,step['macro_set'],step['start'],step['stop'],allow_references=True)
+            else:
+                for key in ('start','stop'):
+                    call=step[key]
+                    session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
     restore_operations = {'load-state','load-machine-state','load-le-source-state','le-rewind',
                           'load-anchor-stone','rewind','delta-recover','timeline-rewind'}
     def frame_owned_keys():
@@ -726,7 +778,23 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             remaining = int((deadline-time.monotonic())*1000)
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
-            params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
+            unresolved = {k:v for k,v in step.items() if k not in ('op','as','expect')}
+            if step['op']=='move' and getattr(session,'metadata',{}).get('backend')=='qemu-dos':
+                # Only this already validated local lease namespace belongs to
+                # the movement start, even if an outer binding is named start.
+                from .qemu_movement import local_lease_reference
+                def stop_arguments(value):
+                    if local_lease_reference(value):return value
+                    if isinstance(value,dict):return {k:stop_arguments(v) for k,v in value.items()}
+                    if isinstance(value,list):return [stop_arguments(v) for v in value]
+                    return resolve(value)
+                stop_value=unresolved.pop('stop')
+                params=resolve(unresolved)
+                if isinstance(stop_value,dict):
+                    params['stop']={k:(stop_arguments(v) if k=='args' else resolve(v)) for k,v in stop_value.items()}
+                else:params['stop']=resolve(stop_value)
+            else:
+                params = resolve(unresolved)
             if step['op'] in ('load-machine-state','save-le-source-state','load-le-source-state',
                               'le-rewind-start','le-rewind-record','le-rewind'):
                 if 'timeout_ms' in params:
@@ -766,6 +834,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                              'trace','trace-until','step','engine-cycle','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
+                if (requested is None and step['op']=='proof-check'
+                        and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
+                    requested=1000
                 if requested is None:requested=min(1000,remaining) if step['op'] in ('display-probe','vga-configuration','mouse.move-mapped') else remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
             if (step['op']=='memory-rule-run'
@@ -791,6 +862,18 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
+                if (step['op']=='macro'
+                        and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
+                    # A returned native lease is owned by this outer route.
+                    # Preserve entry holds for observation-only macros, but do
+                    # not strand an inner macro's input if a later step fails.
+                    inner_steps=(result.get('execution') or {}).get('steps',[])
+                    before_input=(result.get('input_before') or {}).get('physical')
+                    after_input=(result.get('input_after') or {}).get('physical')
+                    if (any(item.get('op') in ('keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type')
+                            for item in inner_steps)
+                            or isinstance(before_input,dict) and isinstance(after_input,dict) and before_input!=after_input):
+                        keyboard_touched=True
                 if native_key_tracking:
                     record_frame_result(step['op'],result)
                 if track_restored_input and step['op'] in restore_operations:

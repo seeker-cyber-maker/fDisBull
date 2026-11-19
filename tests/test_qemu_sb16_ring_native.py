@@ -80,6 +80,7 @@ def _assert_selected(state):
     assert (device['voice-frequency'], device['voice-channels'], device['voice-bits'],
             device['voice-signed']) == (RATE, CHANNELS, 8, False)
     assert device['dma-length'] == RING_BYTES and 0 < device['dma-position'] < RING_BYTES
+    assert device['block-size'] == BLOCK_BYTES
     assert 0 < device['left-till-irq'] <= BLOCK_BYTES
 
 

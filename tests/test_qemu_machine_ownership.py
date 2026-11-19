@@ -58,6 +58,8 @@ def test_identity_probe_and_control_startup_share_one_machine_budget(
     monkeypatch.setattr(qemu_machine.subprocess, 'check_output', identity)
     monkeypatch.setattr(qemu_machine.subprocess, 'Popen', Process)
     monkeypatch.setattr(qemu_machine, 'QemuControl', Control)
+    from support.qemu_image_fixture import AuthoredImageProof
+    monkeypatch.setattr('fdisbull.qemu_image.admit',lambda vm,deadline:AuthoredImageProof(vm))
     machine = qemu_machine.QemuMachine.__new__(qemu_machine.QemuMachine)
     if identity_elapsed > .5:
         with pytest.raises(DebuggerError, match='startup deadline'):

@@ -1,0 +1,502 @@
+--- a/audio/audio.c
++++ b/audio/audio.c
+@@ -1430,6 +1430,7 @@
+ /* The opt-in mixed graph has one HW/capture path and named, independently
+  * checkpointed software voices. Neither the v1 nor v2 wire format changes. */
+ #define FDISBULL_OPL_CORE_MAGIC UINT64_C(0x4644424155443033)
++#define FDISBULL_OPL_STEREO_CORE_MAGIC UINT64_C(0x4644424155443034)
+ #define FDISBULL_OPL_ADLIB 0
+ #define FDISBULL_OPL_SB16 1
+ #define FDISBULL_OPL_VOICES 2
+@@ -1452,6 +1453,14 @@
+     uint64_t csw_total, csw_active, csw_empty, csw_mute;
+     int64_t csw_l, csw_r;
+ } FdisbullOplCore;
++
++/* Core4 adds capture destination geometry after the unchanged core3 header.
++ * The HW output and capture SW source remain the historical mono U8 graph;
++ * internal st_sample lanes reach this independently clipped stereo tap. */
++typedef struct FdisbullOplCaptureFormat {
++    uint64_t freq, channels, bits, is_signed, swap;
++    uint64_t bytes_per_frame, bytes_per_second;
++} FdisbullOplCaptureFormat;
+ 
+ typedef struct FdisbullOplGraph {
+     AudioState *state;
+@@ -1501,6 +1510,21 @@
+                info->bytes_per_second == 64000;
+     }
+     return fdisbull_sb16_pcm_valid(info);
++}
++
++static bool fdisbull_opl_stereo_info(const struct audio_pcm_info *info)
++{
++    return info->freq == 32000 && info->nchannels == 2 && info->bits == 16 &&
++           info->is_signed && !info->is_float &&
++           info->swap_endianness == (AUDIO_HOST_ENDIANNESS != 0) &&
++           info->bytes_per_frame == 4 && info->bytes_per_second == 128000;
++}
++
++static bool fdisbull_opl_capture_format_valid(const FdisbullOplCaptureFormat *f)
++{
++    return f->freq == 32000 && f->channels == 2 && f->bits == 16 &&
++           f->is_signed == 1 && f->swap == (AUDIO_HOST_ENDIANNESS != 0) &&
++           f->bytes_per_frame == 4 && f->bytes_per_second == 128000;
+ }
+ 
+ static bool fdisbull_opl_graph(FdisbullOplGraph *g, Error **errp)
+@@ -1614,7 +1638,8 @@
+         g->csw = QLIST_FIRST(&g->cap->hw.sw_head);
+         if (QLIST_NEXT(g->cap, entries) || g->cap->hw.s != g->state ||
+             !cb || QLIST_NEXT(cb, entries) || !cb->ops.capture || !cb->ops.notify ||
+-            !fdisbull_audio_info_supported(&g->cap->hw.info) ||
++            !(fdisbull_audio_info_supported(&g->cap->hw.info) ||
++              fdisbull_opl_stereo_info(&g->cap->hw.info)) ||
+             !fdisbull_audio_buffer_valid(&g->cap->hw.mix_buf) ||
+             g->cap->hw.pending_disable || g->cap->hw.poll_mode ||
+             g->cap->hw.buf_emul || g->cap->hw.size_emul ||
+@@ -1668,15 +1693,19 @@
+ {
+     FdisbullOplGraph g;
+     FdisbullOplCore h = { 0 };
++    FdisbullOplCaptureFormat capture_format = { 0 };
+     g_autofree uint8_t *blob = NULL;
+     uint8_t *p;
+     size_t len;
+     unsigned i;
++    bool stereo;
+ 
+     if (!fdisbull_opl_graph(&g, errp)) {
+         return NULL;
+     }
+-    h.magic = FDISBULL_OPL_CORE_MAGIC; h.version = 3;
++    stereo = g.cap && fdisbull_opl_stereo_info(&g.cap->hw.info);
++    h.magic = stereo ? FDISBULL_OPL_STEREO_CORE_MAGIC : FDISBULL_OPL_CORE_MAGIC;
++    h.version = stereo ? 4 : 3;
+     h.sample_size = sizeof(st_sample); h.byte_order = G_BYTE_ORDER;
+     h.first_voice = g.first_voice; h.has_capture = g.cap != NULL;
+     h.hw_size = g.hw->mix_buf.size; h.hw_pos = g.hw->mix_buf.pos;
+@@ -1685,6 +1714,17 @@
+     h.emul_size = g.hw->size_emul; h.emul_pos = g.hw->pos_emul;
+     h.emul_pending = g.hw->pending_emul;
+     len = sizeof(h) + h.hw_size * sizeof(st_sample) + h.emul_size;
++    if (stereo) {
++        const struct audio_pcm_info *info = &g.cap->hw.info;
++        capture_format.freq = info->freq;
++        capture_format.channels = info->nchannels;
++        capture_format.bits = info->bits;
++        capture_format.is_signed = info->is_signed;
++        capture_format.swap = info->swap_endianness;
++        capture_format.bytes_per_frame = info->bytes_per_frame;
++        capture_format.bytes_per_second = info->bytes_per_second;
++        len += sizeof(capture_format);
++    }
+     for (i = 0; i < 2; i++) {
+         fdisbull_opl_voice_export(g.voice[i], &h.voice[i]);
+         len += h.voice[i].size * sizeof(st_sample);
+@@ -1703,6 +1743,10 @@
+     }
+     blob = g_malloc0(len); p = blob;
+     memcpy(p, &h, sizeof(h)); p += sizeof(h);
++    if (stereo) {
++        memcpy(p, &capture_format, sizeof(capture_format));
++        p += sizeof(capture_format);
++    }
+     memcpy(p, g.hw->mix_buf.buffer, h.hw_size * sizeof(st_sample));
+     p += h.hw_size * sizeof(st_sample);
+     for (i = 0; i < 2; i++) {
+@@ -1758,6 +1802,7 @@
+ static bool fdisbull_opl_import(const char *base64, Error **errp)
+ {
+     FdisbullOplCore h;
++    FdisbullOplCaptureFormat capture_format;
+     FdisbullOplGraph g;
+     FdisbullRateState rates[2];
+     g_autofree guchar *blob = NULL;
+@@ -1765,9 +1810,9 @@
+     g_autofree uint8_t *emul = NULL;
+     const uint8_t *hw_data, *sw_data[2], *cap_data, *p;
+     gsize len;
+-    size_t expected;
++    size_t expected, header_size;
+     unsigned i;
+-    bool active;
++    bool active, stereo;
+ 
+     if (!base64 || !*base64 || strlen(base64) > FDISBULL_SB16_CORE_MAX) {
+         error_setg(errp, "Mixed OPL checkpoint encoding is missing or oversized");
+@@ -1780,8 +1825,22 @@
+         return false;
+     }
+     memcpy(&h, blob, sizeof(h));
++    stereo = h.magic == FDISBULL_OPL_STEREO_CORE_MAGIC && h.version == 4;
++    header_size = sizeof(h) + (stereo ? sizeof(capture_format) : 0);
++    if (stereo) {
++        if (len < header_size) {
++            error_setg(errp, "Stereo OPL capture geometry is truncated");
++            return false;
++        }
++        memcpy(&capture_format, blob + sizeof(h), sizeof(capture_format));
++        if (h.has_capture != 1 ||
++            !fdisbull_opl_capture_format_valid(&capture_format)) {
++            error_setg(errp, "Stereo OPL capture geometry is invalid");
++            return false;
++        }
++    }
+     active = h.voice[0].active || h.voice[1].active;
+-    if (h.magic != FDISBULL_OPL_CORE_MAGIC || h.version != 3 ||
++    if ((!stereo && (h.magic != FDISBULL_OPL_CORE_MAGIC || h.version != 3)) ||
+         h.sample_size != sizeof(st_sample) || h.byte_order != G_BYTE_ORDER ||
+         !h.hw_size || h.hw_size > FDISBULL_SB16_HW_MAX || h.hw_pos >= h.hw_size ||
+         h.first_voice > 1 || (h.first_voice == 1 && !h.voice[1].present) ||
+@@ -1808,7 +1867,7 @@
+         error_setg(errp, "Mixed OPL checkpoint retains an absent capture");
+         return false;
+     }
+-    expected = sizeof(h) + (h.hw_size + h.voice[0].size + h.voice[1].size +
++    expected = header_size + (h.hw_size + h.voice[0].size + h.voice[1].size +
+                             h.cap_size) * sizeof(st_sample) + h.emul_size;
+     if (len != expected || !fdisbull_opl_graph(&g, errp)) {
+         if (len != expected) {
+@@ -1817,7 +1876,9 @@
+         return false;
+     }
+     if (g.hw->mix_buf.size != h.hw_size || !!g.cap != h.has_capture ||
+-        (g.cap && g.cap->hw.mix_buf.size != h.cap_size)) {
++        (g.cap && (g.cap->hw.mix_buf.size != h.cap_size ||
++                   (stereo ? !fdisbull_opl_stereo_info(&g.cap->hw.info) :
++                             !fdisbull_audio_info_supported(&g.cap->hw.info))))) {
+         goto destination_error;
+     }
+     for (i = 0; i < 2; i++) {
+@@ -1830,7 +1891,7 @@
+             goto destination_error;
+         }
+     }
+-    p = blob + sizeof(h); hw_data = p; p += h.hw_size * sizeof(st_sample);
++    p = blob + header_size; hw_data = p; p += h.hw_size * sizeof(st_sample);
+     if (!fdisbull_opl_samples_valid(hw_data, h.hw_size)) {
+         goto sample_error;
+     }
+--- a/qapi/fdisbull-audio.json
++++ b/qapi/fdisbull-audio.json
+@@ -27,8 +27,8 @@
+ # @frames: Retained PCM frames.
+ # @dropped-frames: Callback frames refused after a capacity limit.
+ # @rate: PCM frames per second, 32000.
+-# @channels: Channel count, one.
+-# @format: Sample format, u8.
++# @channels: Channel count, one for u8 or two for s16.
++# @format: Sample format, u8 or little-endian s16.
+ # @enabled: Most recent capture enable notification.
+ # @chunks: Callback boundaries for the retained prefix.
+ #
+@@ -58,7 +58,7 @@
+ # @token: New owner token of 1..128 bytes.
+ # @max-frames: Retained frame capacity, 1..1920000.
+ #
+-# Register capture on the explicit fdisbull-pc audiodev. Does not run the VM.
++# Register mono U8 capture on the explicit checkpoint audiodev. Does not run the VM.
+ # A prior active window must be stopped before replacement.
+ #
+ # Returns: Empty active window receipt.
+@@ -69,6 +69,35 @@
+   'returns': 'FdisbullAudioInfo' }
+ 
+ ##
++# @FdisbullAudioCaptureFormat:
++#
++# @u8-mono: Historical 32000 Hz unsigned8 mono capture.
++# @s16-stereo: 32000 Hz signed16 little-endian left/right capture; SB16+OPL only.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullAudioCaptureFormat', 'data': [ 'u8-mono', 's16-stereo' ] }
++
++##
++# @x-fdisbull-start-audio-format:
++#
++# @token: New owner token of 1..128 bytes.
++# @max-frames: Retained frame capacity, 1..1920000, independent of frame width.
++# @capture-format: Explicit observer format, immutable for this token.
++#
++# Register a bounded capture without changing guest devices, output format,
++# gains, timers or execution. Stereo requires the exclusive SB16+OPL graph.
++# The historical start command retains its mono U8 behavior.
++#
++# Returns: Empty active window receipt with the requested PCM geometry.
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-start-audio-format',
++  'data': { 'token': 'str', 'max-frames': 'int',
++            'capture-format': 'FdisbullAudioCaptureFormat' },
++  'returns': 'FdisbullAudioInfo' }
++
++##
+ # @x-fdisbull-stop-audio:
+ #
+ # @token: Current owner token.
+@@ -85,7 +114,7 @@
+ # @x-fdisbull-export-audio:
+ #
+ # @token: Current owner token.
+-# @filename: New private output path for raw u8 mono PCM.
++# @filename: New private output path for the window's declared raw PCM format.
+ #
+ # Copy retained samples while stopped. No audio_run, flush or guest execution.
+ # Overflowed windows are refused. The file is created exclusively.
+--- a/system/fdisbull-audio.c
++++ b/system/fdisbull-audio.c
+@@ -36,12 +36,28 @@
+     uint64_t max_frames;
+     uint64_t frames;
+     uint64_t dropped;
++    FdisbullAudioCaptureFormat format;
+     unsigned nchunks;
+     uint8_t *pcm;
+     FdisbullAudioChunk chunks[MAX_CHUNKS];
+     CaptureVoiceOut *capture;
+     Error *migration_blocker;
+ } audio_window;
++
++static unsigned audio_frame_bytes(FdisbullAudioCaptureFormat format)
++{
++    return format == FDISBULL_AUDIO_CAPTURE_FORMAT_S16_STEREO ? 4 : 1;
++}
++
++static struct audsettings audio_settings(FdisbullAudioCaptureFormat format)
++{
++    bool stereo = format == FDISBULL_AUDIO_CAPTURE_FORMAT_S16_STEREO;
++    /* The capture wire format is little-endian on every host. */
++    return (struct audsettings) {
++        AUDIO_RATE, stereo ? 2 : 1,
++        stereo ? AUDIO_FORMAT_S16 : AUDIO_FORMAT_U8, 0
++    };
++}
+ 
+ 
+ static void audio_reset(void *opaque)
+@@ -136,8 +152,8 @@
+     info->frames = audio_window.frames;
+     info->dropped_frames = audio_window.dropped;
+     info->rate = AUDIO_RATE;
+-    info->channels = 1;
+-    info->format = g_strdup("u8");
++    info->channels = audio_frame_bytes(audio_window.format) == 4 ? 2 : 1;
++    info->format = g_strdup(info->channels == 2 ? "s16" : "u8");
+     info->enabled = audio_window.enabled;
+     for (i = 0; i < audio_window.nchunks; i++) {
+         FdisbullAudioChunk *chunk = g_new0(FdisbullAudioChunk, 1);
+@@ -155,14 +171,20 @@
+ 
+ static void audio_capture(void *opaque, const void *buf, int size)
+ {
+-    uint64_t keep;
++    uint64_t keep, frames;
++    unsigned frame_bytes = audio_frame_bytes(audio_window.format);
+     FdisbullAudioChunk *chunk;
+ 
+     assert(bql_locked());
+     if (audio_window.invalidated || size <= 0) {
+         return;
+     }
+-    keep = MIN((uint64_t)size, audio_window.max_frames - audio_window.frames);
++    if (size % frame_bytes) {
++        audio_window.invalidated = true;
++        return;
++    }
++    frames = size / frame_bytes;
++    keep = MIN(frames, audio_window.max_frames - audio_window.frames);
+     if (audio_window.nchunks == MAX_CHUNKS) {
+         keep = 0;
+     }
+@@ -171,15 +193,16 @@
+         chunk->first_frame = audio_window.frames;
+         chunk->frames = keep;
+         chunk->virtual_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+-        memcpy(audio_window.pcm + audio_window.frames, buf, keep);
++        memcpy(audio_window.pcm + audio_window.frames * frame_bytes,
++               buf, keep * frame_bytes);
+         audio_window.frames += keep;
+     }
+-    if ((uint64_t)size != keep) {
++    if (frames != keep) {
+         audio_window.overflow = true;
+-        if (UINT64_MAX - audio_window.dropped < (uint64_t)size - keep) {
++        if (UINT64_MAX - audio_window.dropped < frames - keep) {
+             audio_window.invalidated = true;
+         } else {
+-            audio_window.dropped += size - keep;
++            audio_window.dropped += frames - keep;
+         }
+     }
+ }
+@@ -194,16 +217,27 @@
+     return audio_guard(errp) ? audio_info() : NULL;
+ }
+ 
+-FdisbullAudioInfo *qmp_x_fdisbull_start_audio(const char *token,
+-                                            int64_t max_frames, Error **errp)
++static FdisbullAudioInfo *audio_start(const char *token, int64_t max_frames,
++                                    FdisbullAudioCaptureFormat format,
++                                    Error **errp)
+ {
+     AudioState *state;
+-    struct audsettings settings = { AUDIO_RATE, 1, AUDIO_FORMAT_U8, 0 };
++    struct audsettings settings = audio_settings(format);
+     struct audio_capture_ops ops = {
+         .notify = audio_notify, .capture = audio_capture,
+         .destroy = audio_destroy,
+     };
+ 
++    if (format != FDISBULL_AUDIO_CAPTURE_FORMAT_U8_MONO &&
++        format != FDISBULL_AUDIO_CAPTURE_FORMAT_S16_STEREO) {
++        error_setg(errp, "Unknown native audio capture format");
++        return NULL;
++    }
++    if (format == FDISBULL_AUDIO_CAPTURE_FORMAT_S16_STEREO &&
++        !audio_state_by_name("fdisbull-sb16-opl", NULL)) {
++        error_setg(errp, "Stereo capture requires the explicit SB16+OPL profile");
++        return NULL;
++    }
+     if (fdisbull_instrumented_checkpoint_busy() || !audio_guard(errp)) {
+         if (fdisbull_instrumented_checkpoint_busy()) {
+             error_setg(errp, "Instrumented checkpoint transaction is in progress");
+@@ -230,8 +264,9 @@
+     }
+     g_free(audio_window.pcm);
+     g_free(audio_window.token);
+-    audio_window.pcm = g_malloc(max_frames);
++    audio_window.pcm = g_malloc_n(max_frames, audio_frame_bytes(format));
+     audio_window.token = g_strdup(token);
++    audio_window.format = format;
+     audio_window.max_frames = max_frames;
+     audio_window.frames = audio_window.dropped = audio_window.nchunks = 0;
+     audio_window.overflow = audio_window.stopped = audio_window.enabled = false;
+@@ -245,6 +280,20 @@
+     return audio_info();
+ }
+ 
++FdisbullAudioInfo *qmp_x_fdisbull_start_audio(const char *token,
++                                            int64_t max_frames, Error **errp)
++{
++    return audio_start(token, max_frames,
++                       FDISBULL_AUDIO_CAPTURE_FORMAT_U8_MONO, errp);
++}
++
++FdisbullAudioInfo *qmp_x_fdisbull_start_audio_format(
++    const char *token, int64_t max_frames,
++    FdisbullAudioCaptureFormat capture_format, Error **errp)
++{
++    return audio_start(token, max_frames, capture_format, errp);
++}
++
+ FdisbullAudioInfo *qmp_x_fdisbull_stop_audio(const char *token, Error **errp)
+ {
+     if (fdisbull_instrumented_checkpoint_busy()) {
+@@ -267,6 +316,7 @@
+                                              const char *filename, Error **errp)
+ {
+     int fd;
++    size_t pcm_bytes;
+ 
+     if (!audio_guard(errp) || !audio_token(token, errp)) {
+         return NULL;
+@@ -280,8 +330,8 @@
+         error_setg_errno(errp, errno, "Cannot create private audio export");
+         return NULL;
+     }
+-    if (qemu_write_full(fd, audio_window.pcm, audio_window.frames) !=
+-        audio_window.frames) {
++    pcm_bytes = audio_window.frames * audio_frame_bytes(audio_window.format);
++    if (qemu_write_full(fd, audio_window.pcm, pcm_bytes) != pcm_bytes) {
+         int saved_errno = errno;
+         close(fd);
+         unlink(filename);
+@@ -308,7 +358,8 @@
+     if (!audio_window.pcm || !audio_window.frames) {
+         return g_strdup("");
+     }
+-    return g_base64_encode(audio_window.pcm, audio_window.frames);
++    return g_base64_encode(audio_window.pcm,
++                          audio_window.frames * audio_frame_bytes(audio_window.format));
+ }
+ 
+ static bool audio_checkpoint_decode(const FdisbullInstrumentedAudioState *state,
+@@ -319,24 +370,35 @@
+     FdisbullAudioChunkList *chunk;
+     uint64_t frames = 0;
+     unsigned nchunks = 0;
++    unsigned frame_bytes;
+ 
+     if (!state || !state->profile ||
+         (strcmp(state->profile, "off") && strcmp(state->profile, "pc-speaker") &&
+          strcmp(state->profile, "sb16") && strcmp(state->profile, "sb16-opl")) ||
+         !state->info || !state->core_base64 || strlen(state->core_base64) > 8 * 1024 * 1024 ||
+-        !state->pcm_base64 || strlen(state->pcm_base64) > 4 * MAX_FRAMES / 3 + 8 ||
++        !state->pcm_base64 || strlen(state->pcm_base64) > 16 * MAX_FRAMES / 3 + 8 ||
+         state->info->api_version != 1 || state->info->rate != AUDIO_RATE ||
+-        state->info->channels != 1 || strcmp(state->info->format, "u8") ||
++        !state->info->format || !state->info->state ||
++        !((state->info->channels == 1 && !strcmp(state->info->format, "u8")) ||
++          (state->info->channels == 2 && !strcmp(state->info->format, "s16") &&
++           !strcmp(state->profile, "sb16-opl") && state->info->token)) ||
+         state->info->max_frames > MAX_FRAMES || state->info->frames > state->info->max_frames ||
+         state->info->dropped_frames ||
+         (state->info->has_start_ns != (state->info->token != NULL))) {
+         error_setg(errp, "Invalid native audio checkpoint profile or metadata");
+         return false;
+     }
++    frame_bytes = state->info->channels == 2 ? 4 : 1;
++    if (strlen(state->pcm_base64) >
++        4 * ((state->info->max_frames * frame_bytes + 2) / 3)) {
++        error_setg(errp, "Native audio checkpoint PCM exceeds its frame capacity");
++        return false;
++    }
+     *pcm = g_base64_decode(state->pcm_base64, pcm_bytes);
+     canonical = g_base64_encode(*pcm, *pcm_bytes);
+     if (!canonical || strcmp(canonical, state->pcm_base64) ||
+-        *pcm_bytes != state->info->frames || *pcm_bytes > MAX_FRAMES) {
++        *pcm_bytes != state->info->frames * frame_bytes ||
++        *pcm_bytes > MAX_FRAMES * frame_bytes) {
+         error_setg(errp, "Native audio checkpoint PCM length or encoding differs");
+         return false;
+     }
+@@ -389,7 +451,8 @@
+     size_t pcm_bytes = 0;
+     FdisbullAudioChunkList *chunk;
+     AudioState *audio = NULL;
+-    struct audsettings settings = { AUDIO_RATE, 1, AUDIO_FORMAT_U8, 0 };
++    struct audsettings settings;
++    FdisbullAudioCaptureFormat format;
+     struct audio_capture_ops ops = {
+         .notify = audio_notify, .capture = audio_capture, .destroy = audio_destroy,
+     };
+@@ -402,6 +465,9 @@
+                                             state->info->virtual_ns, errp)) {
+         return false;
+     }
++    format = state->info->channels == 2 ? FDISBULL_AUDIO_CAPTURE_FORMAT_S16_STEREO :
++                                        FDISBULL_AUDIO_CAPTURE_FORMAT_U8_MONO;
++    settings = audio_settings(format);
+     opl_profile = !strcmp(state->profile, "sb16-opl");
+     sb16_profile = !strcmp(state->profile, "sb16") || opl_profile;
+     if (opl_profile != !!audio_state_by_name("fdisbull-sb16-opl", NULL) ||
+@@ -434,6 +500,7 @@
+     audio_window.invalidated = false;
+     audio_window.epoch = epoch;
+     audio_window.token = state->info->token ? g_uuid_string_random() : NULL;
++    audio_window.format = format;
+     audio_window.start_ns = state->info->has_start_ns ? state->info->start_ns : 0;
+     audio_window.stop_ns = state->info->has_stop_ns ? state->info->stop_ns : 0;
+     audio_window.max_frames = state->info->max_frames;
+@@ -444,7 +511,8 @@
+         audio_window.chunks[audio_window.nchunks++] = *chunk->value;
+     }
+     g_free(audio_window.pcm);
+-    audio_window.pcm = g_malloc(MAX(1, audio_window.max_frames));
++    audio_window.pcm = g_malloc_n(MAX(1, audio_window.max_frames),
++                                  audio_frame_bytes(format));
+     if (pcm_bytes) {
+         memcpy(audio_window.pcm, pcm, pcm_bytes);
+     }

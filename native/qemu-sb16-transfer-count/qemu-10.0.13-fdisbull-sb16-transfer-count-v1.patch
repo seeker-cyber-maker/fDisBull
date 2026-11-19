@@ -1,0 +1,19 @@
+--- a/hw/audio/sb16.c
++++ b/hw/audio/sb16.c
+@@ -345,15 +345,9 @@
+         s->time_const = -1;
+     }
+ 
++    /* Bx/Cx lengths count channel samples, including in stereo mode. */
+     s->block_size = dma_len + 1;
+     s->block_size <<= (s->fmt_bits == 16);
+-    if (!s->dma_auto) {
+-        /* It is clear that for DOOM and auto-init this value
+-           shouldn't take stereo into account, while Miles Sound Systems
+-           setsound.exe with single transfer mode wouldn't work without it
+-           wonders of SB16 yet again */
+-        s->block_size <<= s->fmt_stereo;
+-    }
+ 
+     ldebug ("freq %d, stereo %d, sign %d, bits %d, "
+             "dma %d, auto %d, fifo %d, high %d\n",

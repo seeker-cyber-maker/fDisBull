@@ -21,7 +21,7 @@ class Project(TextProjectionProjectMixin, ProgressiveSceneProjectMixin):
         with self.db: yield
     def debug_scene_info(self, name, *, version=None):
         if name not in ('scene1','scene2'): raise ValueError('private scene failure')
-        return {'id':name,'definition':{'objects':[{'id':'private-object'}]}}
+        return {'id':name,'definition':{'format':'fdisbull-scene-1','objects':[{'id':'private-object'}]}}
 
 
 class Scene:

@@ -188,8 +188,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             raise ValueError('game_id requires a ScummVM backend')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
-        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] in ('PE','NE')):
-            raise ValueError('Spatial game policy currently requires native DOSBox')
+        native_dos_policy = backend == 'qemu-dos' and self.meta['format'] in ('COM', 'MZ')
+        if ((spatial_mode != 'assisted' or fair_play)
+                and not native_dos_policy
+                and (backend not in (None, 'dosbox') or self.meta['format'] in ('PE','NE'))):
+            raise ValueError('Spatial game policy requires DOSBox or a native QEMU DOS process')
         if self.meta['format']=='NE':
             if backend not in (None,'wine-qemu','wine-ne'):
                 raise ValueError('NE original programs require the Win16 Wine backend')
@@ -222,7 +225,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                         mcopy=dos_mcopy, startup_batch='FDAUTO.BAT' if dos_startup_batch is None else dos_startup_batch,
                         arguments='' if dos_arguments is None else dos_arguments,
                         directory=dos_directory, file_mode=dos_file_mode, freedos_runtime=freedos_runtime,
-                        generation=dos_generation, **options)
+                        generation=dos_generation, spatial_mode=spatial_mode, fair_play=fair_play, **options)
                 if any(value is not None for value in dos_process_options):
                     raise ValueError('DOS process options require a COM/MZ project; raw boot uses its own source disk')
                 from .qemu_dos import QemuDOSSession
@@ -896,6 +899,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             bounded(max_bytes,'max_bytes',1,256*1024*1024)
         if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
             raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
+        runtime_preflight=getattr(self,'_checkpoint_runtime_preflight',None)
+        if runtime_preflight is not None:runtime_preflight()
         if not self.rpc.capabilities.get('save_states'):
             raise DebuggerError('DOSBox build lacks native state operations')
         _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))
@@ -959,6 +964,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
         metadata = checkpoint['metadata']; data = checkpoint['data']
         if hashlib.sha256(data).hexdigest()!=checkpoint['sha256']:
             raise ValueError('Stored state hash mismatch')
+        runtime_preflight=getattr(self,'_checkpoint_runtime_preflight',None)
+        if runtime_preflight is not None:runtime_preflight(metadata)
         for field in ('source_sha256','version_sha256','emulator_sha256','runtime_load_segment','runtime_profile','game_dir'):
             if metadata.get(field) != self.metadata.get(field):
                 raise ValueError('State compatibility mismatch: '+field)

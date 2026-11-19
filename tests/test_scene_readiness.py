@@ -27,7 +27,7 @@ def pix(rgb): return {'pixels':{'samples':[{'x':0,'y':0,'rgb':rgb}]}}
 
 def fixture():
     yes={'constant':True}
-    return {'width':2,'height':2,'video':{'width':2,'height':2,'source_bpp':8,'double_width':False,'double_height':False},
+    return {'format':'fdisbull-scene-1','width':2,'height':2,'video':{'width':2,'height':2,'source_bpp':8,'double_width':False,'double_height':False},
             'exclusive_group':'main','match':yes,'content':{'requested':yes,'displayed':pix([1,0,0]),'ready':yes},
             'objects':[{'id':'button','name':'button','aliases':[],'visible':yes,'ready':yes,'enabled':yes,
                         'outcome':{'constant':False},'area':{'rect':[0,0,1,1]},'point':[0,0]}], 'handlers':[]}

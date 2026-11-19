@@ -1,0 +1,73 @@
+{
+  "format": "fdisbull-qemu-installed-desqview-verification-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "qualification": "unqualified",
+  "scope": "Fresh private retained DESQview boot image: menu, two DOS windows, menu-mediated task switch and echo command through owned physical key actions.",
+  "host": "macOS",
+  "fdisbull_source": "6473b808d48203fd255833e5e77b0b8249120269",
+  "installed_payload_files": 720,
+  "installed_package_manifest_sha256": "d0691066e2d5d0bc78e8e1ddef54495a96b08623cbb14ca389906ae19509f574",
+  "native_producer_sha256": "d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268",
+  "observed_producer_format": "fdisbull-qemu-executed-image-1",
+  "private_image": {
+    "bytes": 33554432,
+    "sha256": "80b1c2c2df8442e10727a316260a06a2cad82c9be8497e15f14a3b2e2d9ad830"
+  },
+  "original_controller_sha256": "776c5446c6691997d8087a9c952a21d172816e0f8dd6cd69fa5da364751874d5",
+  "first_attempt": {
+    "result": "failed",
+    "receipt_sha256": "14c054bdf57f96f5d957ee405e801b41ffa79ba4d87d9bbde8dade0c573aa8b3",
+    "elapsed_seconds": 28.446688999887556,
+    "reason": "Controller required outcome=timeout. Last machine-run instead returned tracking-budget, timed_out=true, tracking_budget=deadline, internal_tracking_stops=2.",
+    "owner_reaped": true,
+    "inputs_unchanged": true
+  },
+  "accepted_controller": {
+    "sha256": "5e285c5a2db84953e01992a65d896ab55aeb1f9e9bdcc0ec757371f159ec2f79",
+    "bytes": 4310,
+    "outer_sha256": "4ce7c90eaac267d3560648d32b6c3d87dcde51c8f3ac701839ba1a1cb836aea0",
+    "change": "Admit plain timeout or the exact timed_out=true/internal-tracking deadline result; record every interval before classification. No extra native run, retry or delay. AST comparison proved all code outside advance unchanged, except original __file__ binding; all debug.run calls identical.",
+    "unexpected_stops": "Still fail; internal-event-count and guest/user stops are not accepted as elapsed intervals."
+  },
+  "accepted_attempt": {
+    "result": "passed",
+    "receipt_sha256": "beea2a540bef1187f1c7f56af58a0380e286d1ddfcc16e8bd713fdb0bafc9dff",
+    "case_receipt_sha256": "f1dfe3361d274b7cf3d014b005d748b5e6559d6a8809bd498667c6e0930999e2",
+    "run_stops_sha256": "c1faa4e7952509eeca32d7f48af96982d9146be03c557023b0fe4ae22c2464bc",
+    "controller_returncode": 0,
+    "elapsed_seconds": 43.63243287499063,
+    "requested_host_ms": 7800,
+    "run_calls": 46,
+    "outcomes": {
+      "timeout": 36,
+      "tracking-budget": 10
+    },
+    "tracking_budget_reasons": [
+      "deadline"
+    ],
+    "observations": [
+      "Open Window menu",
+      "First DOS window and prompt",
+      "DESQview menu from first window",
+      "Open Window with DOS (128K)",
+      "Second DOS window and prompt",
+      "Switch Windows menu with both entries",
+      "Return to first window; echo x1 produces x1 then C:\\DV> prompt"
+    ],
+    "source_image_unchanged": true,
+    "runtime_inputs_unchanged": true,
+    "installed_payload_unchanged": true,
+    "unexpected_owned_members": [],
+    "remaining_owned_members": [],
+    "private_output_bytes": 69525944,
+    "free_bytes_end": 46260658176
+  },
+  "limits": [
+    "Execution durations are host-time budgets; no guest-millisecond or cross-backend cycle equivalence is claimed.",
+    "Menu/visible-window behavior does not prove arbitrary QEMM, vendor task lifetime, protected memory ownership, timing, checkpoint recovery or general driver compatibility.",
+    "The private image, raw text/screens, project, external objects and emulator state are excluded from git and packages.",
+    "All 141 migration surfaces and seven campaigns remain unqualified. No CI dispatch, release, shared activation or default change."
+  ],
+  "verification_note": "Receipt/controller hashes were read back independently on the Mac. An initial copied run-stops hash was corrected against four printed SHA chunks and verified true; original receipts were not rewritten."
+}

@@ -92,11 +92,13 @@ class DOSQemuSession(DebugSession):
 
     def _disk_manifest(self):return self.rpc._bridge('dos.manifest')['files']
 
-    def load_state(self,artifact):
-        row=self.project.db.execute('SELECT metadata FROM debug_artifacts WHERE id=?',(artifact,)).fetchone()
-        if row is not None:
-            saved=json.loads(row[0])
-            for name,item in self.rpc.inputs.items():
-                if saved.get('runtime_inputs',{}).get(name,{}).get('sha256')!=item['sha256']:
-                    raise ValueError('State runtime compatibility mismatch: '+name)
-        return super().load_state(artifact)
+    def _checkpoint_runtime_preflight(self,metadata=None):
+        from .qemu_image import compatible, verify
+        verify(self.rpc.vm)
+        if metadata is not None:compatible(self.rpc.inputs,metadata.get('runtime_inputs'))
+
+    def _timeline_identity(self):
+        result=super()._timeline_identity()
+        result['runtime_inputs']={name:{key:value[key] for key in ('sha256','version') if key in value}
+                                 for name,value in self.rpc.inputs.items()}
+        return result

@@ -81,6 +81,8 @@ def _preflight(session):
     if (session.closed or session.vm.checkpoint_disk is None
             or session._checkpoint_launch['checkpoint_tool'] is None):
         raise ValueError('DOS process checkpoints are not enabled')
+    from .qemu_image import verify
+    verify(session.vm)
     if session.project.db.in_transaction:
         raise ValueError('Checkpoint requires a project outside a caller-owned transaction')
     if COMMAND not in session.vm.qmp_commands:
@@ -479,6 +481,8 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
         remaining()
         machine, bundle = _unarchive(data)
         remaining()
+        from .qemu_image import ProducerMismatch, require_record, verify
+        require_record(bundle.get('runtime', {}).get('inputs'))
         expected = dict(format=checkpoint_format(session), source_sha256=session.metadata['source_sha256'],
                         version_sha256=session.metadata['version_sha256'], version=session.version['id'],
                         runtime=_compatibility(session))
@@ -535,6 +539,12 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                                   _checkpoint_image=image)
             new.operation_deadline = deadline
             new.qmp.operation_deadline = deadline
+            from types import SimpleNamespace
+            fresh = SimpleNamespace(vm=new, guest_profile=session.guest_profile,
+                _workspace_launch_identity=getattr(session, '_workspace_launch_identity', None))
+            if _compatibility(fresh) != bundle['runtime']:
+                raise ProducerMismatch('Fresh process checkpoint machine producer identity differs')
+            verify(new,deadline)
             channel = new.serial(deadline)
             # Register the native scalar VMState on this fresh owner before
             # the incoming snapshot is parsed. No guest instruction executes.
@@ -640,10 +650,13 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
             remaining()
             session._set_deadline(previous_session_deadline)
             return result
-        except BaseException:
+        except BaseException as error:
             if new is not None:
-                new.close()
-            session.close()
+                try:new.close()
+                except BaseException as cleanup:error.new_machine_cleanup_error=type(cleanup).__name__
+            if not isinstance(error,ProducerMismatch):
+                try:session.close()
+                except BaseException as cleanup:error.machine_cleanup_error=type(cleanup).__name__
             raise
     except BaseException:
         channels = (owner.qmp, owner.gdb)

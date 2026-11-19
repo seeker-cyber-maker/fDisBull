@@ -1,15 +1,89 @@
 # DOSBox-X to native QEMU: capability inventory
 
-This inventory records the migration boundary at
-`089c1841c415eb2b5cdfa90d03b6291a07f73919`. It is a coverage ledger, not a
-claim that the native QEMU replacements have passed. Each slice needs its own
-native witnesses and DOSBox regression evidence before its status advances.
+This inventory preserves the migration boundary at
+`089c1841c415eb2b5cdfa90d03b6291a07f73919` and reconciles source availability
+against `1b3c11736fff947b5b34b6d7014cfe425bd6d074`, with the stereo and bounded
+macro, runtime-memory, bounded host-proof, spatial-policy and movement integrations through
+`ec3a6ec548a46b3dd2c4f5149446b823c6005891`.
+It is a coverage ledger, not a runtime parity claim. Each surface
+needs native acceptance, affected DOSBox regressions and a reviewed observable
+comparison before its qualification advances.
 
 **Keep `dosbox` and `dosbox-qemu` selectable while proving parity.** Unsupported
 operations must fail before mutation. An uncertain native result must not trigger
 an automatic retry on another backend. Changing the default and removing the
 retained runtime are separate gates. The removal gate stays closed while any
 required behavior is missing, unqualified, or has no recovery path.
+
+## Current remaining work
+
+The packaged [source inventory](../src/fdisbull/data/dos-migration.json) contains
+**141 required surfaces: 35 backend RPCs, 83 public routes and 23 extra
+surfaces**, plus **seven required compatibility campaigns**. Every qualification
+remains open. The original nine extra surfaces have been joined by fourteen
+explicit workspace/file-service surfaces; the old 127/134 totals are historical.
+
+The machine-readable [remaining work plan](DOS_QEMU_PARITY_WORK.json) assigns
+every identifier to exactly one of eighteen contract groups. It supplies
+existing pytest argument lists, explicit runtime inputs, missing adapters and
+primitives, and the minimum independent observations for each campaign. The
+listed test sets are reusable selections; only separately linked execution
+receipts establish results. A missing runtime, skipped native case or absent
+primitive remains an open gate.
+
+Source inspection finds all sixty-seven public routes currently marked partial on
+`QemuDOSProcessSession`; the sixteen routes marked pending are absent.
+Method presence establishes availability only. In particular:
+
+- Native checkpoint rewind, selected CPU/RAM undo, renderer timelines,
+  comparative trials, RAM/fetch layers, hooks and fourteen workspace services
+  already have bounded implementations and existing native tests. Their next
+  work is contract composition and qualification, not a fresh port.
+- Protected LE admission, stopped source binding, trace/event identity and
+  separate LE checkpoint/capture histories exist. They do not recreate the old
+  MZ allocation authority. The three [runtime RAM routes](QEMU_RUNTIME_MEMORY.md)
+  now supply explicit ordinary physical or observed unpaged linear witnesses
+  with their own owner/epoch and write guards.
+- Retained renderer probes, physical timed mouse buttons and declared relative
+  coordinate scaling are prerequisites for the missing completed-frame,
+  absolute/INT33 click and coherent frame consumer contracts. Keep those
+  distinctions visible through input routing, controls and recovery.
+- The independently reviewed [bounded macro adapter](QEMU_MACROS.md) now
+  composes admitted native input, run, wait and observation primitives while
+  preserving held-key ownership and incomplete stops. The [host proof adapter](QEMU_MODEL_PROOFS.md) now checks caller-supplied
+  finite-width models with run provenance and no guest effects. The
+  [witnessed movement adapter](QEMU_WITNESSED_MOVEMENT.md) now composes held keys,
+  explicit runtime RAM predicates and native virtual time. Richer movement,
+  scene/workflow and screenshot-hook contracts remain pending. Macro route
+  availability does not qualify their separate contracts. The
+  [integrated native evidence](evidence/qemu-macros-runtime-memory-2026-11-18/README.md)
+  covers two macro and two runtime-memory cases without native skips.
+- The [host spatial policy](QEMU_SPATIAL_POLICY.md) now preserves the shared
+  voluntary mode and irreversible fair-play latch through actual native owner
+  replacement. It does not add the still-missing spatial action/scene routes.
+- The [explicit stereo capture evidence](evidence/qemu-stereo-capture-2026-11-18/README.md)
+  records nine native cases on macOS and nine on Linux, including paired
+  asymmetric tones, hot/cold futures and malformed core4 refusal. General
+  audio fidelity and real-game composition remain separate obligations.
+- Original [Ultimate Doom](evidence/qemu-doom-stereo-2026-11-18/README.md),
+  [TNT and Plutonia](evidence/qemu-final-doom-stereo-2026-11-18/README.md)
+  now have paired installed-DOSBox/QEMU boot and firing observations, plus exact
+  QEMU hot/cold 600 ms machine/audio futures. Their frozen producer still has
+  the separately reproduced single-cycle stereo length bug. These bounded
+  game receipts do not qualify audio fidelity or the full real-game campaign.
+- The existing paired Tic-Tac-Toe file now covers full rounds, recovery/replay,
+  reset and guest exit. Original Five Dice and Snake add source-assisted
+  complete-game/RNG and keyboard/growth/clock/exit witnesses. Actual
+  QEMM/DESQview, protected real-game media/input,
+  Windows and clean installed fallback campaigns still require their declared
+  evidence. Authored task schedulers and parser tests cannot substitute for
+  vendor execution.
+
+Run the affected existing test groups first, implement each blocked primitive
+with an independent guest oracle, then run its compound consumers and the seven
+campaigns. Reuse a fresh receipt across surfaces only when its assertions cover
+each contract. Do not promote a row from a method count, a historical receipt or
+an aggregate passing-test total.
 
 ## What exists at the starting revision
 
@@ -189,10 +263,10 @@ insufficient: inherited methods can still reject the selected backend, and
 apparently similar operations can have different timing, state or address
 semantics.
 
-Together with the nine non-method surfaces, **all 127 default-switch
-qualification rows remain open**. The new QEMU-only routes below do not change
-that frozen DOSBox inventory or promote a compatibility campaign. DOSBox remains
-the default and both DOSBox selectors remain available.
+Together with the twenty-three extra surfaces, **all 141 default-switch
+qualification rows remain open**. New native prerequisites do not promote
+their legacy consumers or a compatibility campaign. DOSBox remains the default
+and both DOSBox selectors remain available.
 
 The ninth optional native extension adds `renderer_probe` through
 `display_probe(points, *, window=None, update_id=None, timeout_ms=1000)`, JSON
@@ -210,7 +284,7 @@ This adds a sparse renderer observation prerequisite. `video.probe` and
 `debug-frame-probe` remain pending: their legacy mode/frame/state identities are
 not supplied by a renderer update. Coordinate clicks, INT33 mapping, application
 readiness and completed guest frames remain separate. Full pixel hashes still
-come from `capture_display()`. All 127 promotion qualifications remain open.
+come from `capture_display()`. All 141 promotion qualifications remain open.
 
 The bounded [public DESQview raw-checkpoint witness](DOS_QEMU_HANDOFF.md#public-desqview-checkpoints-and-fresh-physical-qualification-2026-11-14) now composes an attached automatic observer with standard raw save/load. Save suspends only its verified native control while paused; restore replaces the owner/epoch and requires fresh snapshot/certificate authority. Two original-guest endpoint pairs and eleven preservation cases passed locally. User/hook breakpoints, active raw layers, pending lifecycle stops and unreleased input still refuse. The original selected RAM window was unchanged before restore, so this is saved-window preservation; changed-RAM recovery has separate authored witnesses. Broader parity and default-switch gates remain open.
 
@@ -256,9 +330,9 @@ that last check is not runtime qualification.
 | `input.keyboard.press`, `input.keyboard.type`, `input.keyboard.state` | Clock, media and input | State reports owned queue/leases and immediate or scheduled receipts. Optional virtual keyboard extensions arm one timed chord or 1..64 US-layout characters, retaining a delivered prefix and held leases on cancellation. Native BIOS/IRQ witnesses separately inspect selected consumption cases |
 | `input.keyboard.down`, `input.keyboard.up`, `input.keyboard.frame_edges` | Clock, media and input | Machine-owned make/break leases support immediate, explicit virtual-delay or generation-checked modeled-retrace scheduling; stale leases invalidate on close. A modeled callback phase does not qualify guest-frame edges, consumption or replay parity |
 | `input.mouse.move`, `input.mouse.click`, `input.mouse.button`, `input.mouse.state` | Clock, media and input | Relative PS/2 movement/button leases support immediate or scheduled dispatch. The button route also has an opt-in passive timed pair with separate syncs and explicit held-lease recovery. DOSBox INT33, pixel/range mapping, coordinate clicks and guest cursor state remain unqualified; IRQ12 packet evidence is a separate witness |
-| `frame.step` | Clock, media and input | Native frame boundary stop is required; instruction stepping or sleeping until a host refresh is not equivalent |
-| `state.save`, `state.load` | Checkpoints | Raw `MachineContext` advertises `save_states=False`; DOSBox `.sav` data cannot be interpreted as a QEMU VM checkpoint |
-| `layers.configure` | Layers and hooks | Raw `MachineContext` advertises `code_layers=False`; a RAM write or changed PC is not a fetch-only layer |
+| `frame.step` | Clock, media and input | `advance_frames` stops at native renderer publications; the completed-guest-frame step contract remains open |
+| `state.save`, `state.load` | Checkpoints | Restricted raw, source-bound COM/MZ, owned-machine and explicit LE checkpoint contracts exist, including fresh-process restoration. Their authority and disk policies differ; DOSBox `.sav` data cannot be interpreted as QEMU state |
+| `layers.configure` | Layers and hooks | Optional native guarded RAM/fetch layers and source/task-bound host adapters exist; qualification must preserve visibility, precedence, preimages, translation invalidation and cold control identity |
 
 The raw transport remains an owned, bounded channel. Its failure policy—close
 on uncertain dispatched I/O rather than replay—must survive the migration.
@@ -281,23 +355,23 @@ existing DOSBox capabilities. Backend selection, live ownership and
 `debug-stop` also require explicit integration checks even though launch/stop
 dispatch are outside this router dictionary.
 
-| Group | Public routes | Native transfer status at the baseline |
+| Group | Public routes | Inspected native availability; qualification remains open |
 | --- | --- | --- |
 | Core control and inspection | `debug-status`, `debug-registers`, `debug-breakpoint`, `debug-delete-breakpoint`, `debug-memory`, `debug-run`, `debug-contexts`, `debug-script` | Machine equivalents exist with different scope/signatures; the full legacy DOS script grammar and source mapping are pending |
 | Explicit direct-write refusals | `debug-write-memory`, `debug-write-registers` | Legacy DOS deliberately refuses these routes; preserve that contract while native machine writes remain explicitly guarded |
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Partial explicit QEMU virtual-clock route with guarded native RAM views, owned overlays and hook-aware stops; ten bounded authored native cases and a 1,159-test bounded regression passed; broader parity remains unqualified |
-| Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ source traces, register/PC/region predicates and saved event searches. Virtual profile adds stopped clock brackets and run/epoch-bound time ranges. Initial real-mode module only; no queued input or overlay rebinding |
+| Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ or explicitly bound embedded-LE source, register/PC/region predicates and saved event searches. Virtual profile adds stopped clock brackets and run/epoch-bound time ranges. LE code relation supplies no allocation/task authority; streaming and general action causality remain open |
 | Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes and opt-in native timed chords/text have partial support; legacy waits, coordinate clicks, guest layout and frame contracts remain open |
-| Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored-surface screenshot exists; coherent probes, boundaries and physical frame input are pending |
-| Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Pending native serializer, identity, disk and epoch contracts |
-| Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Pending fetch-view and hook adapter; screenshots with preparation hooks also depend on this slice |
-| Reproducible trials | `debug-save-experiment`, `debug-restore-experiment`, `debug-compare-experiment` | Pending native state/control qualification; incomplete or misaligned observations cannot prove equality |
-| Checkpoint rewind | `debug-rewind-start`, `debug-rewind-status`, `debug-rewind-record`, `debug-rewind` | Explicitly DOSBox-only at the baseline |
-| CPU/RAM deltas | `debug-delta-start`, `debug-delta-status`, `debug-delta-record`, `debug-delta-rewind`, `debug-delta-recover` | Pending native adapter; selected-state undo must retain its partial-restoration/frozen-state distinction |
-| Frame history | `debug-timeline-start`, `debug-timeline-status`, `debug-timeline-advance`, `debug-timeline-rewind`, `debug-timeline-stop`, `debug-timeline-pin`, `debug-timeline-image` | Pending full checkpoint/frame/input composition and restored key ownership |
+| Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored surfaces, renderer publication advancement and owned frame-key edges exist. Legacy frame-probe/raw RGBA and completed-guest-frame equivalence remain open |
+| Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Native serializers, admitted source/disk/control identity and fresh-process restore exist. Raw, COM/MZ, owned-machine and LE authority remain separate; broader device/workload qualification is open |
+| Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Bounded RAM/fetch/source layers, code views, hooks and experiment control receipts exist. The screenshot-hooks adapter remains absent; source/task/mapping and preparation/capture composition need qualification |
+| Reproducible trials | `debug-save-experiment`, `debug-restore-experiment`, `debug-compare-experiment` | Bounded full-checkpoint baseline/candidate trials and final recovery exist. Incomplete/misaligned observations cannot prove equality; file/media/workload composition remains open |
+| Checkpoint rewind | `debug-rewind-start`, `debug-rewind-status`, `debug-rewind-record`, `debug-rewind` | Native bounded checkpoint histories, branches and cold restore exist; separate stopped LE capture history does not broaden ordinary MZ authority |
+| CPU/RAM deltas | `debug-delta-start`, `debug-delta-status`, `debug-delta-record`, `debug-delta-rewind`, `debug-delta-recover` | Native selected projections, guarded inverse, frozen partial-state boundary and full recovery exist. Hidden CPU/device rollback and continued execution from a partial inverse are not claimed |
+| Frame history | `debug-timeline-start`, `debug-timeline-status`, `debug-timeline-advance`, `debug-timeline-rewind`, `debug-timeline-stop`, `debug-timeline-pin`, `debug-timeline-image` | Bounded checkpoint/PNG renderer DAGs, full or lossless delta retention, branches, pin reconstruction and fresh held-key ownership exist. Completed guest frames and broader file-aware composition remain open |
 | Scenes | `debug-scene-check`, `debug-scene-assert`, `debug-scene-click`, `debug-scene-act`, `debug-scene-wait`, `debug-scene-navigation` | Reusable host algorithms, pending native frame/input dependencies |
-| Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Reusable host algorithms, pending source/control/budget adapter and observed native effects |
+| Macros, movement and proofs | `debug-macro`, `debug-move`, `debug-proof-check` | Bounded macro route is implemented with native ownership and one total deadline. Bounded model proofs and witnessed held-key movement are implemented; richer postconditions remain pending |
 | Higher workflows and policy | `debug-workflow-observe`, `debug-workflow-act`, `debug-text-observe`, `debug-text-act`, `debug-assisted-travel`, `debug-spatial-policy`, `debug-spatial-action` | Pending coherent lower-level composition; preserve physical/assisted/story/fair-play distinctions |
 
 The QEMU-only scheduling routes are `debug-input-schedule` and
@@ -312,7 +386,8 @@ native surfaces, not new names in the 83-route legacy DOSBox qualification set.
 `mouse_button_click`, with script operation `mouse.button-click`; it adds no
 `GuestMouse` facade or legacy `DebugSession` stub. It does not replace the
 coordinate/frame behavior of `debug-click` or `debug-click-frame`, and it adds
-no row to the frozen 127-surface promotion inventory.
+no row to the legacy RPC/public-route set. The complete current inventory has
+141 required surfaces, including its explicit workspace additions.
 
 ### Surfaces a method count does not cover
 
@@ -357,7 +432,7 @@ configuration vector. See the [configuration contract](DOS_QEMU_MIGRATION.md#obs
 This separate QEMU observation adds no row to the frozen DOSBox promotion
 inventory. A publication stamp does not prove raster coherence, guest frame
 completion, BIOS mode identity, INT33 mapping or scene readiness. Native reset,
-overflow and restore invalidation do not supply checkpoint parity. All 127
+overflow and restore invalidation do not supply checkpoint parity. All 141
 promotion qualifications remain open and DOSBox remains the default.
 
 The eleventh optional [display-motion extension](../native/qemu-display-motion/README.md)
@@ -376,7 +451,7 @@ or verified driver calibration. Count values fit −127..127, with no rounding o
 splitting; packet acceptance still remains unknown. An authored guest separates
 packet receipt, application pointer commit and drawing, including a deliberately
 wrong scale. Actual pixel travel, pointer position, raster freshness and arbitrary
-INT33 behavior remain unqualified. This adds no promotion row; all 127 remain open.
+INT33 behavior remain unqualified. This adds no promotion row; all 141 remain open.
 See the [mapped motion contract](DOS_QEMU_MIGRATION.md#move-with-a-declared-image-to-relative-scale).
 
 ## Regression witnesses and promotion gates
@@ -390,7 +465,7 @@ automatically start hosted CI.
 | --- | --- |
 | Machine control, memory, capture, restart and source isolation | `tests/test_qemu_machine.py`, `tests/test_debugger.py`, `tests/test_debug_semantics.py` |
 | DOS entry and process lifecycle | `tests/test_dos_com.py`, `tests/test_dos_launch.py`, `tests/test_dos_guest_exit.py` |
-| Paired original COM game witness | `tests/test_qemu_dos_game_parity_native.py` (Tic-Tac-Toe startup and one physical key, matching loaded COM bytes) |
+| Paired original game witnesses | `tests/test_qemu_dos_game_parity_native.py` (Tic-Tac-Toe full round/recovery/replay/reset/exit), `tests/test_qemu_dos_workloads_native.py` (source-assisted original Five Dice and Snake); these assetless fixtures do not qualify mouse, protected-game or full-raster behavior |
 | Mode, mapping, QEMM/DESQview and searched RAM | `tests/test_dos_memory.py`, `tests/test_qemm_runtime.py`, `tests/test_desqview_runtime.py`, `tests/test_desqview_memory_native.py`, `tests/test_memory_search_runtime.py`, `tests/test_memory_rules.py` |
 | Traces and event predicates | `tests/test_execution_trace.py`, `tests/test_execution_event_native.py`, `tests/test_protected_mode_trace.py` |
 | Guest time, completed frames and input | `tests/test_debug_wait.py`, `tests/test_keyboard.py`, `tests/test_frame_capture_native.py`, `tests/test_frame_coherence.py`, `tests/test_screenshot_codecs.py`, `tests/test_protected_runtime_native.py` |

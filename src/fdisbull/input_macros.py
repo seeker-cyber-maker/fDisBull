@@ -59,12 +59,12 @@ def identifier(value):
     return value
 
 
-def _parameter(spec,value, *, symbolic=False):
+def _parameter(spec,value, *, symbolic=False,lease_pattern=r'[a-f0-9]{32}'):
     if not isinstance(spec,dict) or set(spec)-{'type','enum','default'}:raise ValueError('Invalid macro parameter')
     kind=spec.get('type','string' if 'enum' in spec else None)
     if kind not in ('string','integer','boolean','input-lease'):raise ValueError('Unsupported macro parameter type')
     if kind=='input-lease':
-        if not isinstance(value,str) or not (re.fullmatch(r'[a-f0-9]{32}',value) or symbolic and re.fullmatch(r'\$[A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)+',value)):
+        if not isinstance(value,str) or not (re.fullmatch(lease_pattern,value) or symbolic and re.fullmatch(r'\$[A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_][A-Za-z_0-9]*)+',value)):
             raise ValueError('Input lease must be an owned token or a typed result reference')
     elif (kind=='string' and (not isinstance(value,str) or len(value)>4096)) or (kind=='integer' and (type(value) is not int or not -(1<<63)<=value<(1<<63))) or (kind=='boolean' and type(value) is not bool):
         raise ValueError('Macro argument type mismatch')
@@ -131,8 +131,13 @@ def validate_macro_set(definition):
     return deepcopy(definition)
 
 
-def expand_macro(definition,name,args=None, *, allowed_authorities=('player-input',)):
+def expand_macro(definition,name,args=None, *, allowed_authorities=('player-input',),
+                 backend=None,result_paths=None):
     definition=validate_macro_set(definition)
+    # Defaults preserve the established DOSBox grammar. A native adapter supplies
+    # its own guaranteed result fields and validates the resulting backend route.
+    schema=_RESULT_PATHS if result_paths is None else result_paths
+    lease_pattern=r'[a-f0-9]{32}:[a-f0-9]{32}' if backend in ('qemu-machine','qemu-dos') else r'[a-f0-9]{32}'
     allowed=set(allowed_authorities)
     if not allowed<=AUTHORITIES:raise ValueError('Unknown allowed authority')
     steps=[];lineage=[];counter=0
@@ -146,7 +151,7 @@ def expand_macro(definition,name,args=None, *, allowed_authorities=('player-inpu
         bound={}
         for key,spec in parameters.items():
             if key not in args and 'default' not in spec:raise ValueError('Missing macro argument: '+key)
-            value=args.get(key,spec.get('default'));_parameter(spec,value,symbolic=True);bound[key]=deepcopy(value)
+            value=args.get(key,spec.get('default'));_parameter(spec,value,symbolic=True,lease_pattern=lease_pattern);bound[key]=deepcopy(value)
         prefix='m'+str(counter)+'a';counter+=1
         aliases={}
         alias_operations={}
@@ -166,7 +171,7 @@ def expand_macro(definition,name,args=None, *, allowed_authorities=('player-inpu
                         current=current[part]
                     return current
                 if first not in aliases:raise ValueError('Macro reference is not an earlier local binding: '+value)
-                known=_RESULT_PATHS.get(alias_operations[first],set())
+                known=schema.get(alias_operations[first],set())
                 if not rest or '.'.join(rest) not in known:
                     raise ValueError('Unknown or unverifiable result field: '+value)
                 return '$'+'.'.join([aliases[first],*rest])
@@ -191,11 +196,13 @@ def expand_macro(definition,name,args=None, *, allowed_authorities=('player-inpu
         return replace(macro.get('outputs',{}))
     outputs=expand(name,{} if args is None else args,[])
     from .debug_script import validate_script
-    script={'format':'fdisbull-script-1','steps':steps};validate_script(script)
+    script={'format':'fdisbull-script-1','steps':steps}
+    if backend is not None:script['backend']=backend
+    validate_script(script)
     for step in steps:
         if step['op']=='keyboard.key-up':
             lease=step['lease']
-            if not isinstance(lease,str) or not (re.fullmatch(r'[a-f0-9]{32}',lease) or re.fullmatch(r'\$[A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_0-9]+)+',lease)):
+            if not isinstance(lease,str) or not (re.fullmatch(lease_pattern,lease) or re.fullmatch(r'\$[A-Za-z_][A-Za-z_0-9]*(?:\.[A-Za-z_0-9]+)+',lease)):
                 raise ValueError('Invalid input lease reference')
         if step['op']=='run':
             for field,maximum in (('guest_ms',3600000),('timeout_ms',600000)):

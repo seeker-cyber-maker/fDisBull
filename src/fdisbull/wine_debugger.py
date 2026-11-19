@@ -76,7 +76,14 @@ class PEDebugSession(WindowsUIMixin,SceneSessionMixin,WineCpuDeltaSessionMixin,E
             selected_memory=(saved['metadata'].get('memory_mib',4096) if saved is not None else 4096) if memory_mib is None else memory_mib
             if saved is not None and selected_memory!=saved['metadata'].get('memory_mib',4096):
                 raise ValueError('Native state machine-memory configuration mismatch')
-            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native,memory_mib=selected_memory)
+            runtime_options={}
+            if saved is not None and isinstance(self.rpc_type,type) and issubclass(self.rpc_type,WineQemuRPC):
+                from .qemu_image import require_record
+                expected=saved['metadata'].get('runtime_inputs')
+                require_record(expected)
+                runtime_options['expected_runtime_inputs']=expected
+            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native,
+                                   memory_mib=selected_memory,**runtime_options)
             self._cpu_delta_bind_rpc(self.rpc)
             if saved is None:
                 launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,

@@ -25,17 +25,21 @@ def test_pe32_state_replacement_rebinds_actual_profile_and_persisted_capabilitie
 
     class StoppedRPC:
         """Replace only machine restoration; retain real host readback/mapping."""
-        def __init__(self, *paths, restore=None, memory_mib=4096):
+        def __init__(self, *paths, restore=None, memory_mib=4096, expected_runtime_inputs=None,
+                     _on_restore_admitted=None):
             self.inputs = deepcopy(inputs)
             # A fresh transport has no selected-process profile yet.
             self.capabilities = dict(architecture='x86-64', bits=64, keyboard=True)
             self.lock = threading.RLock()
-            self.vm = None
             self.process = SimpleNamespace(pid=2468)
+            self.vm = SimpleNamespace(inputs=self.inputs,process=self.process)
+            from support.qemu_image_fixture import attach_image
+            attach_image(self.vm)
             self.closed = False
             self.restore = restore
             self.memory_mib = memory_mib
             if restore is not None:
+                if _on_restore_admitted is not None:_on_restore_admitted()
                 replacements.append(self)
 
         def call(self, method, params=None, timeout_ms=30000):
@@ -59,6 +63,7 @@ def test_pe32_state_replacement_rebinds_actual_profile_and_persisted_capabilitie
         session.mode_id = 0
         session._frame = None
         session.rpc = original = StoppedRPC()
+        inputs['qemu_image'] = deepcopy(original.inputs['qemu_image'])
         original.capabilities.update(architecture='x86-32', bits=32)
         session.metadata = dict(runtime_profile='pe32-win32-debug-1', bits=32,
             memory_mib=8192, runtime_inputs=deepcopy(inputs), files=[],

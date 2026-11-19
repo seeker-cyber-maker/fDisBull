@@ -32,6 +32,8 @@ def _validate(project, doc, version):
         if c['id'] in ids or type(c['partial']) is not bool or not isinstance(c['objects'], list): raise ValueError('Invalid public context')
         ids.add(c['id'])
         scene = project.debug_scene_info(c['scene_revision'], version=version)
+        from .runtime_scenes import require_frame_scene
+        require_frame_scene(scene)
         if scene['id'] != c['scene_revision']: raise ValueError('Context must pin a scene revision')
         scene_ids = {o['id'] for o in scene['definition']['objects']}
         object_ids = set()

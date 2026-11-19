@@ -25,6 +25,8 @@ class SceneBundleMixin:
         v=self.version(version)['id'];items=[];snapshots={};payloads={};roots=set()
         for selected in scenes:
             info=self.debug_scene_info(selected,version=v)
+            from .runtime_scenes import require_frame_scene
+            require_frame_scene(info)
             if info['scene'] in roots:raise ValueError('Export at most one revision of each scene')
             roots.add(info['scene']);items.append(info)
             doc=info['definition']
@@ -97,6 +99,8 @@ class SceneBundleMixin:
             if self.db.execute('SELECT 1 FROM debug_scenes WHERE version=? AND name=?',(v,item['name'])).fetchone():
                 raise ValueError('Scene name already exists: '+item['name'])
             doc=item['definition']
+            from .runtime_scenes import require_frame_scene
+            require_frame_scene(item)
             if hashlib.sha256(encoded(doc)).hexdigest()!=item['sha256']:raise ValueError('Scene manifest hash mismatch')
             references.add(doc['reference'])
             references.update(a for obj in doc['objects'] for a in obj['evidence'])

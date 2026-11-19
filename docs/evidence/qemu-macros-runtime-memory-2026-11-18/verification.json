@@ -1,0 +1,120 @@
+{
+  "format": "fdisbull-qemu-macro-runtime-memory-evidence-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "source_commit": "86733c87d21340d5391da73990a2ef48527b81e2",
+  "native_sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40",
+  "native_counts": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "native_elapsed_seconds": 6.86,
+  "native_nodes": [
+    {
+      "classname": "tests.test_qemu_macros_native",
+      "name": "test_native_macro_public_input_wait_saved_script_and_cold_evidence",
+      "time": "1.255"
+    },
+    {
+      "classname": "tests.test_qemu_macros_native",
+      "name": "test_native_macro_partial_input_stops_once_and_retains_native_receipt",
+      "time": "0.715"
+    },
+    {
+      "classname": "tests.test_qemu_runtime_memory_native",
+      "name": "test_native_flat_le_ram_write_witness_consumption_and_cold_owner_restore",
+      "time": "1.142"
+    },
+    {
+      "classname": "tests.test_qemu_runtime_memory_native",
+      "name": "test_native_paged_linear_refuses_while_explicit_physical_witness_remains_available",
+      "time": "2.683"
+    }
+  ],
+  "source_unchanged": true,
+  "source_payload_sha256": "7392f39e16e59f5dea1a68e46a8d00bd26e1a1abd617020c355a85943126ee55",
+  "pinned_files": 1558,
+  "boot_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+  "boot_unchanged": true,
+  "remaining_native_pids_in_execution_namespace": [],
+  "source_files": {
+    "src/fdisbull/qemu_runtime_memory.py": "91f41bdf9816e29b9c51be8a908b3bdd43d1c2e29b972e7b3b72a9a94f7d37a5",
+    "src/fdisbull/qemu_dos_process.py": "7a50b777a728f28ecf79d0c52818623b8c348e0e68cf807a688e7ed210e4425b",
+    "src/fdisbull/qemu_dos_history.py": "7b50385cafda90d746d773881f7e4bb014c97c0b10815bc6f34acd774582b470",
+    "src/fdisbull/qemu_cpu_undo_guard.py": "2c20e1236e770388dd3fe7712b02af93c08fc288b2238cd7110c1a0842a1266f",
+    "src/fdisbull/debug_script.py": "6a592d105ad787dbbb19bb0458a2bd03f89dc2dc69fcef7e37826670ce45d186",
+    "tests/test_qemu_runtime_memory.py": "f996b33f446c048fea3bcf4f67480a9f6d1da744f56a03cc7f3d1bb3610ae8c0",
+    "tests/test_qemu_runtime_memory_native.py": "a46e7d8e678e42175eef109b6af85b02d4d59cde094351de996d31bb3a15081f",
+    "docs/QEMU_RUNTIME_MEMORY.md": "b63e4d78b5ceff676cc80a80cb1c1c7e5cd7f7f43381c4a03374afa105e1564c",
+    "src/fdisbull/qemu_macros.py": "8c48e8e0bc0b9274cc287ebc4ab33fea42fe829ffe90b2aad70aa5e68f3f0b1c",
+    "src/fdisbull/qemu_wait.py": "7cbe01949393816f0430aa2a1191bed3adeb3eeb5edcf3dd527dedfa79e2eaa1",
+    "tests/test_qemu_macros.py": "fe76289c9f9f6f146134d449f207372720d91eeacc3d0204741d3350cef1c9cb",
+    "tests/test_qemu_macros_native.py": "1859644b987fd21a27e15c48004daa2262adb1b7f7e807b74328fe30c8691765"
+  },
+  "private_receipts": {
+    "integrated_native": {
+      "basename": "receipt.json",
+      "sha256": "f10ae01cc09af266d465b38b1408af525cc28114bf1624a936cfdeb9e77f2cc7"
+    },
+    "independent_runtime_review": {
+      "basename": "review.json",
+      "sha256": "f346ffd6b7689fb6f3f3e1d293af0d96b4abe349984b28ceb963131e625cbd3b"
+    },
+    "macro_native_correction": {
+      "basename": "native-macro-summary.json",
+      "sha256": "82aa998b158a22ef4f262fc0e07f90e33663c1ac2c3f6a2b057dee8e9f780312"
+    }
+  },
+  "runtime_memory_review": {
+    "counts": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 69
+    },
+    "fixed_findings": [
+      "Later malformed runtime bind/read literals now reject whole script before prior writes; per-field result references do not suppress static validation",
+      "Direct QMP admission transport loss closes poisoned owner while preserving primary error",
+      "Outer verified-write deadline failure preserves TimeoutError and attached receipt even if owner cleanup raises"
+    ],
+    "remaining_blockers": [],
+    "source_files": {
+      "src/fdisbull/debug_script.py": "6a592d105ad787dbbb19bb0458a2bd03f89dc2dc69fcef7e37826670ce45d186",
+      "src/fdisbull/qemu_cpu_undo_guard.py": "2c20e1236e770388dd3fe7712b02af93c08fc288b2238cd7110c1a0842a1266f",
+      "src/fdisbull/qemu_dos_history.py": "7b50385cafda90d746d773881f7e4bb014c97c0b10815bc6f34acd774582b470",
+      "src/fdisbull/qemu_dos_process.py": "7a50b777a728f28ecf79d0c52818623b8c348e0e68cf807a688e7ed210e4425b",
+      "src/fdisbull/qemu_runtime_memory.py": "91f41bdf9816e29b9c51be8a908b3bdd43d1c2e29b972e7b3b72a9a94f7d37a5",
+      "tests/test_qemu_runtime_memory.py": "f996b33f446c048fea3bcf4f67480a9f6d1da744f56a03cc7f3d1bb3610ae8c0",
+      "tests/test_runtime_observations.py": "56b1dc8e6cda96d7c336d298784ec1547caaf8cf1222d9ecd6c0613a263f087c"
+    }
+  },
+  "overlapping_host_results": {
+    "macro": {
+      "passed": 105,
+      "skipped": 1
+    },
+    "runtime_adjacent": {
+      "passed": 234,
+      "skipped": 21
+    },
+    "runtime_independent": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 69
+    },
+    "counts_must_not_be_added": true,
+    "skips_are_optional_native_inputs_not_native_passes": true
+  },
+  "earlier_macro_native_failure": "Public response correctly spilled to fdisbull-output-ref-1; witness wrongly indexed it as the macro body. Corrected tests retrieve full response with output-select/output-export and prove no replay.",
+  "limits": [
+    "Macros compose admitted primitives, with actual ATTT effects; this is not scene/movement/completed-frame qualification.",
+    "RAM bindings cover ordinary physical or observed unpaged linear RAM. Paged linear, task-private, layered and device-memory contexts remain refused.",
+    "Fresh RAM witness after owned-machine restore does not restore DOS source/allocation authority."
+  ],
+  "hosted_ci": false,
+  "qualified_surfaces_added": 0,
+  "qualified_campaigns_added": 0
+}

@@ -1,0 +1,70 @@
+{
+  "format": "fdisbull-qemu-model-proofs-qualification-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "source_head": "55fdd2dbf797e99bb32f7e9d44295fe19b6b9e4b",
+  "patch_sha256": "6679db5a9befdfcc1096689f953099cecd64ff0c403d18a8da871f5a9a989375",
+  "source_files": {
+    "src/fdisbull/qemu_proofs.py": {
+      "before_sha256": null,
+      "after_sha256": "2b6a3c729dfb16d3b9c20cb988821483e1decb7aaeaa79ccdea0fbcfe511f7d5"
+    },
+    "src/fdisbull/proofs.py": {
+      "before_sha256": "edd73a34f2fd67c6dba3295d9159ddeeeab69aedeeb307a5c20fb2f32ee68bed",
+      "after_sha256": "e78525ec71220ab4086d23a023f081afb1ff67502584a70628887ae53c7093ef"
+    },
+    "src/fdisbull/qemu_dos_process.py": {
+      "before_sha256": "7a50b777a728f28ecf79d0c52818623b8c348e0e68cf807a688e7ed210e4425b",
+      "after_sha256": "fb563f2824c3178f820ee16063756758dac8893d0f1d6ed9674433f619495451"
+    },
+    "src/fdisbull/debug_script.py": {
+      "before_sha256": "6a592d105ad787dbbb19bb0458a2bd03f89dc2dc69fcef7e37826670ce45d186",
+      "after_sha256": "ae80023a420b9181f30d9ec9f04e363eb9ca03e293792f11280c730c2211540d"
+    },
+    "tests/test_qemu_proofs.py": {
+      "before_sha256": null,
+      "after_sha256": "b2d85ea98b7056d06d5b105ab5889f55c01189d2314dd31ce744fc5430f1fd72"
+    },
+    "docs/QEMU_MODEL_PROOFS.md": {
+      "before_sha256": null,
+      "after_sha256": "515d0ea05ec24acc998d85bf546d34d8c035ce8c2c7357b67af76d57caeb896a"
+    }
+  },
+  "scope": "Caller-supplied finite-width models with exact project/source/version/run provenance; host-only, no inference that model describes guest instructions or state.",
+  "results": {
+    "independent_root": {
+      "passed": 61,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.53,
+      "external_actual_earlier_write_regressions": 4,
+      "junit": {
+        "bytes": 8636,
+        "sha256": "f954d2001ec595985de3b93899942de98940f013a70e7288b79967edae5e1c09"
+      }
+    },
+    "adjacent_agent": {
+      "passed": 164,
+      "skipped": 20,
+      "skip_scope": "Native prerequisites deliberately absent in host-only selection.",
+      "counts_overlap": true
+    },
+    "concrete_validator_differential": {
+      "cases": 10000,
+      "accepted": 600,
+      "rejected": 9400,
+      "same_acceptance_exception_class_and_canonical_encoding": true
+    },
+    "solver": "Actual Z3 5.3.2 for paired equivalent/counterexample/vacuous; explicit controlled unknown/unavailable boundary cases."
+  },
+  "review": "Initial partial operator validation admitted four impossible known operand combinations before earlier script writes. Candidate operator families now reuse concrete type rules, reject an empty candidate set and propagate definite result types. Seven valid partial operand cases remain admitted.",
+  "native_launched": false,
+  "hosted_ci_dispatched": false,
+  "qualification_changed": false,
+  "limits": [
+    "Proof provenance does not independently validate authored model fidelity.",
+    "No guest register/RAM observation, lock, QMP/GDB control, input lease change, source rebind or history invalidation.",
+    "No native equivalence, completed-frame or migration campaign qualification."
+  ]
+}

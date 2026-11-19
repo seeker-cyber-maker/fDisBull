@@ -1,0 +1,152 @@
+{
+  "format": "fdisbull-sb16-transfer-count-qualification-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "integration_commit": "fd76b120b188aab98badeb030fb2094d1a5180fb",
+  "native_patch": {
+    "file": "qemu-10.0.13-fdisbull-sb16-transfer-count-v1.patch",
+    "sha256": "2739b4dfc1e10ddc8ad596cff30a7f253133f47b596b9665649acd0a604bef4d",
+    "modified_file_count": 1,
+    "files": [
+      {
+        "path": "hw/audio/sb16.c",
+        "before_sha256": "b46e9fca1131910a74b746942b50cfb4c4d7f78f2ae03eaa4deefe9e93dfab02",
+        "after_sha256": "ec165ad5080f6a8f184a0becfc5ab3f58de6c8757a40fba9fee4f840ceaf4d21"
+      }
+    ]
+  },
+  "builds": {
+    "linux": {
+      "native_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+      "qemu_img_sha256": "e31a8b11a9c4f986383fcc789a19f9ab4b2703965c9ff912cb224f3568f69162",
+      "receipt_sha256": "e081fdeae474b0474671fd57c15446707d326fb677a7d5fc913e55abb59edadb",
+      "original_source_unchanged": true
+    },
+    "macos": {
+      "native_sha256": "d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268",
+      "bytes": 24990920,
+      "receipt_sha256": "b8ba5524209b15061334e970fa3370801f105ced8da1abf5994a445ec8475d61",
+      "compile_files": 1,
+      "qualified_parent_preserved": true
+    }
+  },
+  "reference_dosbox_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+  "frozen_qemu_sha256": "71bef609647922544bfca23811caa0c08843a09d6b48c70293ab5ebd6cdb1a40",
+  "runs": {
+    "frozen-baseline": {
+      "source_head": "bdaa83dbab59304c9cffecc6752673ff4e2a28c4",
+      "counts": {
+        "errors": 0,
+        "failures": 4,
+        "skipped": 0,
+        "tests": 8
+      },
+      "elapsed_seconds": 9.228,
+      "receipt_sha256": "0a9724bd7b9bb719ee3bf6549b44edc81c591b399ad63b2f2604c096d38c0a1f",
+      "source_files_unchanged": true,
+      "boot_unchanged": true
+    },
+    "candidate-count": {
+      "source_head": "41e91a159cc178c61b7062504b2ec4a7051838a9",
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 8
+      },
+      "elapsed_seconds": 9.88,
+      "receipt_sha256": "fd139e94a5afa7c0a24d18108c08b1927c6a259e4f5d47287035201652c6c8b3",
+      "source_files_unchanged": true,
+      "boot_unchanged": true
+    },
+    "candidate-adjacent": {
+      "source_head": "41e91a159cc178c61b7062504b2ec4a7051838a9",
+      "counts": {
+        "errors": 0,
+        "failures": 2,
+        "skipped": 0,
+        "tests": 18
+      },
+      "elapsed_seconds": 71.312,
+      "receipt_sha256": "dfc2b8d4800c68e6341e3ca6b8c22a2b70682568e42d7aa01827dd50f524d686",
+      "source_files_unchanged": true,
+      "boot_unchanged": true
+    },
+    "corrected-tone-independent": {
+      "source_head": "63c9614b8db7f7f51947255b8fee005ecdff87ea",
+      "counts": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 2
+      },
+      "elapsed_seconds": 4.19,
+      "source_files_unchanged": true,
+      "boot_unchanged": true,
+      "receipt_sha256": "4d6631c330584d1e6bb742968a016fe8139cd356c4ebaf4cf1d626c06ef4b971"
+    },
+    "macos-count-and-adjacent": {
+      "source_head": "e1cfb13b2d3a7b8fefe4b88786c6d9fb5296417b",
+      "counts": {
+        "tests": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "elapsed_seconds": 101.09973041713238,
+      "receipt_sha256": "1ff9f39a31b16725c63debcfd4b554ee8d3979533993497aa5762cd6628e1a45",
+      "installed_prefix_files": 718,
+      "runtime_payload_unchanged": true,
+      "test_files_unchanged": true,
+      "dependencies_unchanged": true,
+      "remaining_owned_members": []
+    }
+  },
+  "count_results": {
+    "variants": 8,
+    "axes": [
+      "U8/S16",
+      "mono/stereo",
+      "FIFO off/on"
+    ],
+    "nonwrapping_dma": true,
+    "reference_passed": 8,
+    "frozen_passed": 4,
+    "frozen_stereo_failures": 4,
+    "candidate_passed": 8,
+    "requested_sample_units": 1024,
+    "dma_capacity_units": 4096,
+    "expected_remaining_count": 3071,
+    "frozen_stereo_remaining_count": 2047,
+    "s16_checkpoint_refusals_required": 4
+  },
+  "fixture_corrections": {
+    "single_cycle_u8": "DMA_BYTES-1 channel samples, no stereo halving",
+    "auto_init_ring": "256channel samples per IRQ, equal128stereo frames, explicit native block-size assertion",
+    "paired_tone_guest_unchanged_sha256": "c903924f5470d3e9c38a4406c5a3722af1197b52bcad2d2483b34c4c2c46d7db"
+  },
+  "analyzer_correction": {
+    "patch_sha256": "b5296fcb58611da8aad78814a978235f58049654c4280605040406aaf593e6ef",
+    "reason": "Unchanged guest programs2048stereo frames at32kHz,64ms. Old100ms floor incorrectly required an overlong transfer. Correct minimum follows requested duration and output rate.",
+    "independent_host_passed": 21,
+    "opl_minimum_ms_unchanged": 100,
+    "one_frame_short_rejected": true,
+    "64ms_swapped_and_duplicated_lanes_rejected": true,
+    "signal_checks_unchanged": true
+  },
+  "open_producer_identity_defect": {
+    "receipt_sha256": "e2a6ba91939f1f27e46aa0a3ba1067c9d516da2fdfda80f65629b632230481d2",
+    "wrapper_sha256": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c",
+    "observed": "Saved/current compatibility equal for distinct actualELFs behind byte-identical launchers when other inputs held fixed. Negative control failed prerequisite before load; both owners reaped.",
+    "load_attempted": false,
+    "status": "Resolved in separate executing-image host change6473b808; see linked evidence.",
+    "resolution_evidence": "docs/evidence/qemu-executed-image-2026-11-18/verification.json"
+  },
+  "limits": [
+    "S16 guest voice checkpoints remain refused; S16 output capture is a separate format.",
+    "Miles setsound.exe compatibility unqualified; frozen previous producer retained.",
+    "Actual Doom regression on corrected producer remains pending; macOS26case count/adjacent selection passed.",
+    "No ADC/ADPCM, general timing/audio fidelity or full DOSBox-X parity."
+  ],
+  "qualification_changed": false
+}

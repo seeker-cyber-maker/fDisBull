@@ -1,0 +1,1968 @@
+{
+  "format": "fdisbull-dos-parity-work-1",
+  "inventory": "src/fdisbull/data/dos-migration.json",
+  "audit": {
+    "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
+    "date": "2026-11-18",
+    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy, witnessed movement, passive runtime scenes and stopped-surface screenshot hooks; scoped native/audio/game executions linked separately.",
+    "public_methods_present": 70,
+    "public_methods_absent": 13,
+    "method_presence_is_not_qualification": true,
+    "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
+    "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
+    "integration_commit": "fa7c1464d2df9a2c0d4be0060823e35d27be449d",
+    "timezone": "America/New_York",
+    "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
+    "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
+    "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion.",
+    "movement": "Held-key physical movement with caller-witnessed runtime RAM and sample progress. Four paired/native cases and independent33case host gate passed; native evidence precedes pure duplicate-reference validation correction.",
+    "executed_image": "OS-observed main-image producer identity gates shared QEMU capture/restore; 7 final Linux native and 8 final installed Mac native cases passed. Independent49 and root166 host cases overlap broader author gates.",
+    "runtime_scenes": "Explicit passive scene-2 runtime-memory check/assert integrated; 55 independent and 618 integrated host cases, plus2 exact-source authored native cases pass. No frame/action/workflow qualification. Two identical authored native cases also passed in the privately installed Mac wheel at43bd549.",
+    "screenshot_hooks": "Stopped-surface passive/assert/layer hooks integrated; 37 independent and273 integrated host cases plus1 exact-source authored native case pass. A post-test receipt export failure was recovered read-only; fresh-frame/execution hooks remain open. The identical authored native case also passed in the privately installed Mac wheel at43bd549.",
+    "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open.",
+    "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification.",
+    "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification."
+  },
+  "coverage": {
+    "rpc_methods": 35,
+    "public_methods": 83,
+    "extra_surfaces": 23,
+    "total": 141,
+    "partition": "Every inventory identifier appears in exactly one work_group; dependencies and campaigns may reuse groups."
+  },
+  "policy": {
+    "default_backend": "dosbox",
+    "retained_fallback_backends": [
+      "dosbox",
+      "dosbox-qemu"
+    ],
+    "automatic_runtime_fallback": false,
+    "dosbox_retirement_allowed": false,
+    "all_inventory_rows_required_before_default_switch": true,
+    "qualified_surfaces_added": 0,
+    "qualified_campaigns_added": 0,
+    "test_references_are_not_results": true
+  },
+  "execution": {
+    "working_directory": "repository root",
+    "order": [
+      "Run inventory-and-public-host to establish route/schema coverage.",
+      "Run only affected existing host/native/paired test_sets on hash-pinned runtimes, with require flags and no unaccounted native skips.",
+      "Implement and independently test each remaining primitive/adapter before trying to qualify its blocked consumers.",
+      "Run the seven actual compatibility campaigns; reuse a fresh receipt across rows only when its assertions cover each row.",
+      "Review row-level evidence and declared semantic differences before any qualification field is changed; default/removal policy remains separate."
+    ],
+    "stop_conditions": [
+      "A missing input/extension, native skip, unsupported primitive or incomplete observation is an open gate, not a pass.",
+      "No sum of host/authored-test counts qualifies vendor or whole-game behavior.",
+      "Record runtime/test/source/input hashes and exact test nodes; use private paths for licensed payloads and bulky runtime evidence."
+    ],
+    "test_selection": "These test sets are reusable affected-contract selections, not a mandatory rerun of every file after each edit. To close all141rows, each minimum_acceptance obligation needs fresh direct evidence; unsupported primitives require new checks before their consumers can qualify."
+  },
+  "environment_profiles": {
+    "host": {
+      "inputs": [],
+      "require": {}
+    },
+    "native-dos": {
+      "inputs": [
+        "FDISBULL_QEMU_DOS",
+        "FDISBULL_QEMU_DOS_FIRMWARE",
+        "FDISBULL_QEMU_DOS_BOOT_IMAGE",
+        "FDISBULL_QEMU_DOS_MCOPY",
+        "FDISBULL_QEMU_IMG",
+        "NASM",
+        "FDISBULL_MACHINE_QEMU"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_DOS": "1",
+        "FDISBULL_REQUIRE_QEMU_DOS_OS": "1",
+        "FDISBULL_REQUIRE_MACHINE": "1"
+      }
+    },
+    "dosbox": {
+      "inputs": [
+        "FDISBULL_DOSBOX"
+      ],
+      "require": {},
+      "pytest_flag": "--require-native",
+      "note": "tests/conftest.py requires a real FDISBULL_DOSBOX executable for this flag; all required native cases must execute without unaccounted skips."
+    },
+    "paired-dos": {
+      "extends": [
+        "native-dos",
+        "dosbox"
+      ],
+      "inputs": [
+        "FDISBULL_FREEDOS_RUNTIME"
+      ]
+    },
+    "frame-dosbox": {
+      "extends": [
+        "dosbox"
+      ],
+      "inputs": [
+        "FDISBULL_FRAME_DOSBOX"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_FRAME_NATIVE": "1"
+      }
+    },
+    "native-layers": {
+      "extends": [
+        "native-dos"
+      ],
+      "inputs": [
+        "FDISBULL_QEMU_LAYERS",
+        "FDISBULL_QEMU_LAYERS_FIRMWARE"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_LAYERS": "1"
+      }
+    },
+    "native-clock": {
+      "extends": [
+        "native-layers"
+      ],
+      "inputs": [
+        "FDISBULL_QEMU_CLOCK"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_CLOCK": "1"
+      }
+    },
+    "native-workspace": {
+      "extends": [
+        "native-layers"
+      ],
+      "inputs": [
+        "FDISBULL_FREEDOS_RUNTIME",
+        "FDISBULL_QEMU_PROVENANCE",
+        "FDISBULL_QEMU_SAVE_OPERATIONS",
+        "FDISBULL_QEMU_SAVE_STOP"
+      ]
+    },
+    "native-audio": {
+      "extends": [
+        "native-clock"
+      ],
+      "inputs": [
+        "FDISBULL_QEMU_SB16",
+        "FDISBULL_QEMU_OPL",
+        "FDISBULL_QEMU_MIXER"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_SB16": "1",
+        "FDISBULL_REQUIRE_QEMU_OPL": "1",
+        "FDISBULL_REQUIRE_QEMU_MIXER": "1"
+      }
+    },
+    "paired-audio": {
+      "extends": [
+        "native-audio",
+        "dosbox"
+      ],
+      "inputs": [
+        "FDISBULL_DOSBOX_GAME_PARITY"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_PAIRED_TONE": "1"
+      }
+    },
+    "windows-pe32": {
+      "inputs": [
+        "FDISBULL_PE32_FIXTURE",
+        "FDISBULL_PE_QEMU",
+        "FDISBULL_PE_KERNEL",
+        "FDISBULL_PE_INITRAMFS"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_WINDOWS": "1"
+      }
+    },
+    "windows-win16": {
+      "inputs": [
+        "FDISBULL_NE_SNAKE_EXE",
+        "FDISBULL_NE_SNAKE_INITIAL",
+        "FDISBULL_NE_QEMU",
+        "FDISBULL_NE_KERNEL",
+        "FDISBULL_NE_INITRAMFS"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_NE_GUI": "1"
+      }
+    },
+    "dosbox-in-qemu": {
+      "inputs": [
+        "FDISBULL_MACHINE_QEMU",
+        "FDISBULL_DOS_KERNEL",
+        "FDISBULL_DOS_INITRAMFS"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_DOS_QEMU": "1"
+      }
+    }
+  },
+  "test_sets": {
+    "inventory-and-public-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_dos_migration.py",
+        "tests/test_debug_semantics.py",
+        "tests/test_qemu_dos.py",
+        "tests/test_qemu_operation_deadlines.py",
+        "tests/test_qemu_io_public.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "core-native": {
+      "environment_profile": "native-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_native.py",
+        "tests/test_qemu_dos_process_native.py",
+        "tests/test_qemu_dos_process_lifecycle.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_dos_process_image.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "core-paired": {
+      "environment_profile": "paired-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_qemu_dosbox_parity_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "source-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_process.py",
+        "tests/test_qemu_dos_source_admission.py",
+        "tests/test_qemu_dos_le_binding.py",
+        "tests/test_qemu_dos_le_identity.py",
+        "tests/test_qemu_memory_rules_public.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "protected-source-native": {
+      "environment_profile": "native-layers",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_modes_checkpoint_native.py",
+        "tests/test_qemu_remapped_tasks_checkpoint_native.py",
+        "tests/test_qemu_dos_le_trace_native.py",
+        "tests/test_qemu_dos_le_checkpoint_native.py",
+        "tests/test_qemu_memory_rule_views_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "trace-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_trace_contract.py",
+        "tests/test_qemu_trace_identity.py",
+        "tests/test_qemu_dos_trace_clock.py",
+        "tests/test_qemu_dos_le_trace.py",
+        "tests/test_qemu_dos_le_events.py",
+        "tests/test_source_clock_script_deadline.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "trace-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_trace_native.py",
+        "tests/test_qemu_trace_semantics_native.py",
+        "tests/test_qemu_dos_clock_trace_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "trace-legacy": {
+      "environment_profile": "dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_execution_trace.py",
+        "tests/test_execution_event_native.py",
+        "tests/test_protected_mode_trace.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "clock-input-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_io_deadlines.py",
+        "tests/test_qemu_clock_budget.py",
+        "tests/test_qemu_input_schedule.py",
+        "tests/test_qemu_keyboard_press_public.py",
+        "tests/test_qemu_keyboard_type_public.py",
+        "tests/test_qemu_mouse_click_public.py",
+        "tests/test_qemu_timing_public.py",
+        "tests/test_qemu_wait.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "clock-input-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_io_native.py",
+        "tests/test_qemu_clock_budget_native.py",
+        "tests/test_qemu_input_schedule_native.py",
+        "tests/test_qemu_keyboard_press_native.py",
+        "tests/test_qemu_keyboard_type_native.py",
+        "tests/test_qemu_mouse_click_native.py",
+        "tests/test_qemu_input_retrace_native.py",
+        "tests/test_qemu_timing_native.py",
+        "tests/test_qemu_wait_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "clock-input-legacy": {
+      "environment_profile": "dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_debug_wait.py",
+        "tests/test_keyboard.py",
+        "tests/test_protected_runtime_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "renderer-frame-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_display_probe_public.py",
+        "tests/test_qemu_vga_configuration_public.py",
+        "tests/test_qemu_frame_keys_public.py",
+        "tests/test_qemu_dos_frames_public.py",
+        "tests/test_qemu_frame_deadlines.py",
+        "tests/test_qemu_frame_hook_fence.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "renderer-frame-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_display_native.py",
+        "tests/test_qemu_display_probe_native.py",
+        "tests/test_qemu_vga_configuration_native.py",
+        "tests/test_qemu_frame_keys_native.py",
+        "tests/test_qemu_dos_frames_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "renderer-frame-legacy": {
+      "environment_profile": "frame-dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_frames.py",
+        "tests/test_screenshot_codecs.py",
+        "tests/test_frame_coherence.py",
+        "tests/test_frame_capture_native.py",
+        "tests/test_frame_timeline_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "mapped-mouse-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_mapped_mouse_native.py",
+        "tests/test_qemu_mouse_click_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "checkpoint-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_checkpoint.py",
+        "tests/test_qemu_checkpoint_controls_failures.py",
+        "tests/test_qemu_dos_checkpoint_payload.py",
+        "tests/test_qemu_owned_checkpoint_public.py",
+        "tests/test_qemu_dos_le_checkpoint_public.py",
+        "tests/test_qemu_frame_key_checkpoint.py",
+        "tests/test_qemu_input_checkpoint_guard.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "checkpoint-native": {
+      "environment_profile": "native-layers",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_checkpoint_native.py",
+        "tests/test_qemu_dos_checkpoint_native.py",
+        "tests/test_qemu_dos_checkpoint_sessions_native.py",
+        "tests/test_qemu_checkpoint_host_restart_native.py",
+        "tests/test_qemu_instrumented_checkpoint_native.py",
+        "tests/test_qemu_owned_checkpoint_native.py",
+        "tests/test_qemu_dos_le_checkpoint_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "checkpoint-legacy": {
+      "environment_profile": "dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_anchor_stone_cli.py",
+        "tests/test_rewind_native.py",
+        "tests/test_protected_runtime_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "layers-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_hooks.py",
+        "tests/test_qemu_trial_observations.py",
+        "tests/test_qemu_experiment_admission.py",
+        "tests/test_qemu_experiments_public.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "layers-native": {
+      "environment_profile": "native-layers",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_layers_native.py",
+        "tests/test_qemu_hooks_native.py",
+        "tests/test_qemu_dos_alias_task_layers_native.py",
+        "tests/test_qemu_dos_task_private_guards_native.py",
+        "tests/test_qemu_experiments_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "layers-legacy": {
+      "environment_profile": "dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_code_layers.py",
+        "tests/test_code_overlap_native.py",
+        "tests/test_runtime_code.py",
+        "tests/test_screenshot_hooks.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "histories-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_history_public.py",
+        "tests/test_qemu_dos_frames_public.py",
+        "tests/test_qemu_frame_deltas_public.py",
+        "tests/test_qemu_cpu_deltas_public.py",
+        "tests/test_qemu_cpu_undo_guard.py",
+        "tests/test_qemu_experiments_public.py",
+        "tests/test_qemu_dos_le_history.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "histories-native": {
+      "environment_profile": "native-layers",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_history_native.py",
+        "tests/test_qemu_dos_frames_native.py",
+        "tests/test_qemu_frame_deltas_native.py",
+        "tests/test_qemu_cpu_deltas_native.py",
+        "tests/test_qemu_experiments_native.py",
+        "tests/test_qemu_dos_le_checkpoint_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "histories-legacy": {
+      "environment_profile": "frame-dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_rewind_native.py",
+        "tests/test_cpu_deltas_native.py",
+        "tests/test_delta_policies.py",
+        "tests/test_debug_timeline_deltas.py",
+        "tests/test_frame_timeline_native.py",
+        "tests/test_debug_experiments.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "workspace-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_workspace.py",
+        "tests/test_qemu_workspace_edits.py",
+        "tests/test_qemu_workspace_output.py",
+        "tests/test_dos_workspace_export_atomic.py",
+        "tests/test_qemu_dos_provenance.py",
+        "tests/test_qemu_dos_save_admission.py",
+        "tests/test_qemu_save_stop_run.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "workspace-native": {
+      "environment_profile": "native-workspace",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_workspace_native.py",
+        "tests/test_qemu_workspace_refresh_native.py",
+        "tests/test_qemu_workspace_output_native.py",
+        "tests/test_qemu_dos_provenance_native.py",
+        "tests/test_qemu_dos_save_operations_native.py",
+        "tests/test_qemu_dos_save_stop_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "workflow-legacy": {
+      "environment_profile": "frame-dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_input_macros.py",
+        "tests/test_movement.py",
+        "tests/test_scene_domain_integration.py",
+        "tests/test_scene_readiness.py",
+        "tests/test_scenes.py",
+        "tests/test_progressive_scenes.py",
+        "tests/test_spatial_native.py",
+        "tests/test_player_live.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "consumers-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_capabilities.py",
+        "tests/test_ida_dosbox.py",
+        "tests/test_qemu_doctor.py",
+        "tests/test_distribution.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "window-legacy": {
+      "environment_profile": "dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_dosbox_window.py",
+        "tests/test_dosbox_window_native_contract.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "block-services-lab": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_udc_layers.py",
+        "tests/test_common_uil.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "vendor-observation-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemm_runtime.py",
+        "tests/test_desqview_runtime.py",
+        "tests/test_runtime_desqview_physical.py",
+        "tests/test_runtime_desqview_epoch.py",
+        "tests/test_runtime_desqview_containment.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "authored-task-native": {
+      "environment_profile": "native-layers",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_dos_scheduler_native.py",
+        "tests/test_qemu_dos_scheduler_guards_native.py",
+        "tests/test_qemu_dos_irq_preemption_native.py",
+        "tests/test_qemu_dos_irq_preemption_guards_native.py",
+        "tests/test_qemu_dos_irq1_preemption_native.py",
+        "tests/test_qemu_dos_cascade_preemption_native.py",
+        "tests/test_qemu_dos_cascade_guards_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "real-game-paired": {
+      "environment_profile": "paired-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_qemu_dos_game_parity_native.py",
+        "tests/test_qemu_dos_workloads_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "audio-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_audio.py",
+        "tests/test_qemu_audio_formats.py",
+        "tests/test_qemu_mixer.py",
+        "tests/test_qemu_paired_tone_fixture.py",
+        "tests/test_qemu_opl_capture_fixture.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "audio-native": {
+      "environment_profile": "native-audio",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_audio_native.py",
+        "tests/test_qemu_sb16_native.py",
+        "tests/test_qemu_sb16_initial_native.py",
+        "tests/test_qemu_sb16_draining_native.py",
+        "tests/test_qemu_sb16_ring_native.py",
+        "tests/test_qemu_opl_native.py",
+        "tests/test_qemu_opl_initial_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "audio-paired": {
+      "environment_profile": "paired-audio",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_qemu_paired_tone_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "windows-pe32": {
+      "environment_profile": "windows-pe32",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_windows_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "windows-win16": {
+      "environment_profile": "windows-win16",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_win16_native.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "core-legacy": {
+      "environment_profile": "dosbox",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--require-native",
+        "tests/test_debugger.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Legacy public session, source preservation and actual DOSBox behavior; mixed host/native file runs with the required native executable."
+    },
+    "fallback-dosbox-qemu": {
+      "environment_profile": "dosbox-in-qemu",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_dos_qemu.py"
+      ],
+      "execution": "not_run_by_this_reconciliation",
+      "scope": "Actual DOSBox-in-QEMU protocol/native-process and endpoint cases; this mixed file is not a host-only substitute for fallback boot."
+    },
+    "macro-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_macros.py",
+        "tests/test_qemu_wait.py",
+        "tests/test_input_macros.py"
+      ],
+      "execution": "Independent host selections passed during integration; exact receipts separate.",
+      "scope": "Macro expansion, primitive and input ownership, deadlines, stop preservation and legacy regression."
+    },
+    "macro-native": {
+      "environment_profile": "paired-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_macros_native.py"
+      ],
+      "execution": "Two cases passed independently; exact integrated macro+RAM selection passed four cases with zero skips.",
+      "scope": "Actual ATTT moves via public and saved-script macros, preflight/input preservation and cold persisted evidence."
+    },
+    "runtime-memory-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_runtime_memory.py",
+        "tests/test_runtime_observations.py"
+      ],
+      "execution": "Executed scoped cases; see qemu-macros-runtime-memory-2026-11-18 evidence.",
+      "scope": "Public/script RAM witnesses, restore invalidation, source separation and guarded write cleanup."
+    },
+    "runtime-memory-native": {
+      "environment_profile": "native-layers",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_runtime_memory_native.py"
+      ],
+      "execution": "Executed scoped cases; see qemu-macros-runtime-memory-2026-11-18 evidence.",
+      "scope": "Actual protected LE and paged V86 contexts, guarded edit, witness consumption, restored owner/stale handles and cold evidence."
+    },
+    "proof-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_proofs.py",
+        "tests/test_proofs.py"
+      ],
+      "execution": "61 cases passed in independent selection including four external regressions; see linked proof evidence.",
+      "scope": "Shared finite-width model results, persisted run identity, inherited deadlines, partial-literal validation and no native effects."
+    },
+    "spatial-policy-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_spatial_policy.py",
+        "tests/test_spatial_modes.py"
+      ],
+      "execution": "38new host cases plus2independent lock/race probes passed; adjacent203case run overlaps.",
+      "scope": "Voluntary policy route, launch routing, preflight/deadline, irreversible latch and event persistence."
+    },
+    "spatial-policy-native": {
+      "environment_profile": "native-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_spatial_policy_native.py"
+      ],
+      "execution": "2scoped Linux cases passed with frozen71bef producer.",
+      "scope": "Older native owned-machine and source-process restore cannot undo newer host fair-play restriction."
+    },
+    "movement-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_movement.py",
+        "tests/test_qemu_movement_review.py"
+      ],
+      "execution": "33 passed in final independent root gate; adjacent186 and prior32 overlap.",
+      "scope": "Literal/pre-effect admission, typed start/stop leases, native schedule composition, owner/epoch/stop preservation and late publication."
+    },
+    "movement-native": {
+      "environment_profile": "paired-dos",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_movement_native.py"
+      ],
+      "execution": "4 paired/native cases passed on frozen71bef and installed DOSBox reference; source pinned before pure partial-reference correction.",
+      "scope": "Authored IRQ1 makes/breaks and BIOS ticks, held movement, two quiet ticks after release, first IRQ stop, caller-held lease preservation."
+    },
+    "runtime-scenes-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_scenes.py",
+        "tests/test_qemu_scenes_review.py"
+      ],
+      "execution": "55 independent passed;618 integrated passed with14 explicit native skips. Selections overlap.",
+      "scope": "Bounded declarative scene-2 admission, one stopped owner/epoch/deadline, first-failure and result/persistence contracts."
+    },
+    "runtime-scenes-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_scenes_native.py"
+      ],
+      "execution": "2 passed on exact d3f2857 source with corrected b077 producer; no skips.",
+      "scope": "Authored IRQ1 make/break observed without execution; full native restore retires RAM bindings and requires fresh witnesses."
+    },
+    "screenshot-hooks-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_screenshot_hooks.py",
+        "tests/test_qemu_screenshot_hooks_review.py"
+      ],
+      "execution": "37 independent passed;273 integrated passed with6 legacy native skips. Selections overlap.",
+      "scope": "Whole-plan admission, exact owner/deadline/cleanup, first failure and capture evidence preservation."
+    },
+    "screenshot-hooks-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_screenshot_hooks_native.py"
+      ],
+      "execution": "1 passed on exact307f413 source with corrected b077 producer; no skips. Post-test exporter failure retained and recovered read-only.",
+      "scope": "Authored stopped mode-13h capture, exact layer restoration, no execution, preserved caller input and owner reap."
+    },
+    "raster-proof-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_raster_proof_source.py"
+      ],
+      "execution": "9_passed_by_author_and_independent_root",
+      "scope": "Compiled exact helper admission/full-source verification; no guest execution."
+    },
+    "raster-proof-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_qemu_raster_proof_native.py"
+      ],
+      "execution": "4_passed_on_exact_04447_producer",
+      "scope": "Explicit native raster-proof property required by test-only launch hook; full-source equality, stale invalidation, replacement owner and reset. Not guest-video cadence."
+    }
+  },
+  "work_groups": [
+    {
+      "id": "core-control",
+      "title": "Whole stopped-control, routing and failure contract",
+      "surface_ids": [
+        "agent.capabilities",
+        "breakpoints.create",
+        "breakpoints.delete",
+        "breakpoints.list",
+        "debug-breakpoint",
+        "debug-contexts",
+        "debug-delete-breakpoint",
+        "debug-memory",
+        "debug-registers",
+        "debug-run",
+        "debug-script",
+        "debug-status",
+        "debug-write-memory",
+        "debug-write-registers",
+        "execution.continue",
+        "execution.pause",
+        "execution.step",
+        "execution.wait",
+        "memory.read",
+        "memory.write",
+        "session.status",
+        "session.stop",
+        "state.get_registers",
+        "state.set_register",
+        "static-analysis-and-artifacts"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_with_contract_differences",
+      "source_paths": [
+        "src/fdisbull/qemu_machine.py",
+        "src/fdisbull/qemu_control.py",
+        "src/fdisbull/debugger.py",
+        "src/fdisbull/debug_script.py"
+      ],
+      "depends_on": [],
+      "existing_test_sets": [
+        "inventory-and-public-host",
+        "core-native",
+        "core-paired",
+        "core-legacy"
+      ],
+      "remaining_work": [
+        "Compare remaining legacy continue/pause/wait, breakpoint-list and reply-schema obligations; the existing paired COM covers registers, memory, one breakpoint/step and exit only.",
+        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation."
+      ],
+      "minimum_acceptance": [
+        "Same original COM/MZ bytes and immutable source/disk inputs; correct context, widths, stop cause and selected-process lifecycle.",
+        "Python, JSON and saved scripts agree on admitted operation and single execution; invalid input and unsupported operations refuse before effects.",
+        "Dispatch uncertainty/deadline/persistence failures close and reap the owner, preserve evidence, and never retry on another backend."
+      ]
+    },
+    {
+      "id": "source-and-protected-dos",
+      "title": "Source binding, ownership, protected DOS and lifecycle",
+      "surface_ids": [
+        "debug-desqview-observe",
+        "debug-memory-apply",
+        "debug-memory-rule-tick",
+        "debug-memory-snapshot",
+        "private-target-and-entry",
+        "process-and-resident-completion",
+        "protected-v86-memory",
+        "session.start"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_bounded_source_and_task_contracts",
+      "source_paths": [
+        "src/fdisbull/qemu_dos_process.py",
+        "src/fdisbull/qemu_dos_source_admission.py",
+        "src/fdisbull/qemu_dos_le_binding.py",
+        "src/fdisbull/qemu_dos_tasks.py",
+        "src/fdisbull/qemu_memory_rules.py"
+      ],
+      "depends_on": [
+        "core-control"
+      ],
+      "existing_test_sets": [
+        "source-host",
+        "core-native",
+        "protected-source-native",
+        "vendor-observation-host"
+      ],
+      "remaining_work": [
+        "Complete paired MZ relocation/PSP/MCB, nested EXEC, TSR, authored SYS and protected-source observations; distinguish admitted source bytes from process/allocation/task lifetime.",
+        "Run actual vendor QEMM/DESQview campaigns separately; FDBTASK1 and authored protected-mode witnesses cannot replace them."
+      ],
+      "minimum_acceptance": [
+        "Original entry/relocation/loader writes match independent source, CPU and DOS allocation evidence.",
+        "LE code relation is revalidated at stopped boundaries; owner, page, source, mode or generation change retires stale authority.",
+        "Child return, selected-process exit, TSR residency, debugger close and emulator death remain distinct; cold restore grants fresh authority only."
+      ]
+    },
+    {
+      "id": "runtime-memory-adapter",
+      "title": "Legacy runtime-memory binding/read/write adapter",
+      "surface_ids": [
+        "debug-bind-runtime-memory",
+        "debug-runtime-memory",
+        "debug-write-runtime-memory"
+      ],
+      "qualification": "unqualified",
+      "implementation": "bounded_physical_and_unpaged_linear_ram_witness_adapter_integrated",
+      "source_paths": [
+        "src/fdisbull/runtime_observations.py",
+        "src/fdisbull/qemu_dos_le_binding.py",
+        "src/fdisbull/qemu_dos_task_views.py",
+        "src/fdisbull/qemu_runtime_memory.py"
+      ],
+      "depends_on": [
+        "source-and-protected-dos"
+      ],
+      "existing_test_sets": [
+        "source-host",
+        "protected-source-native",
+        "runtime-memory-host",
+        "runtime-memory-native"
+      ],
+      "remaining_work": [
+        "Review paired observable equivalence for explicitly witnessed ordinary RAM across real workloads.",
+        "Broader task-private/paged/layered memory remains on separately qualified native APIs; no address-to-allocation authority is inferred."
+      ],
+      "minimum_acceptance": [
+        "A binding names exact source or runtime range, mapping and lifetime; mutation validates the preimage and refuses foreign/retired authority before writes.",
+        "Same authorized inputs have paired observable outcomes; historical bindings remain readable but cannot regain live mutation authority."
+      ]
+    },
+    {
+      "id": "trace-events",
+      "title": "Source and machine traces, events and clock joins",
+      "surface_ids": [
+        "debug-trace",
+        "debug-trace-until",
+        "trace.read",
+        "trace.start",
+        "trace.stop"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_bounded_traces_streaming_rpc_gap",
+      "source_paths": [
+        "src/fdisbull/qemu_dos_trace.py",
+        "src/fdisbull/qemu_dos_le_binding.py",
+        "src/fdisbull/execution_events.py"
+      ],
+      "depends_on": [
+        "source-and-protected-dos"
+      ],
+      "existing_test_sets": [
+        "trace-host",
+        "trace-native",
+        "trace-legacy",
+        "protected-source-native"
+      ],
+      "remaining_work": [
+        "Qualify paired event predicates and semantic differences for faults, partial REP, IRQ/timer policy, overlays and departure from admitted COM/MZ or explicit embedded-LE source.",
+        "Supply the persistent before-fetch trace/cursor contract required by trace.start/read/stop; a bounded stopped trace is not that streaming primitive."
+      ],
+      "minimum_acceptance": [
+        "Observed instruction bytes, canonical source identity, mode and epochs survive artifact reopening without manufacturing retirement or absence.",
+        "Unknown completion and unbound endpoints remain unknown; exact event/action and clock identities are validated before execution."
+      ]
+    },
+    {
+      "id": "clock-and-physical-input",
+      "title": "Clock, waits, physical input and stop precedence",
+      "surface_ids": [
+        "debug-keyboard-down",
+        "debug-keyboard-press",
+        "debug-keyboard-state",
+        "debug-keyboard-type",
+        "debug-keyboard-up",
+        "debug-memory-rule-run",
+        "debug-wait",
+        "execution.timing",
+        "input.keyboard.down",
+        "input.keyboard.press",
+        "input.keyboard.state",
+        "input.keyboard.type",
+        "input.keyboard.up",
+        "input.mouse.button",
+        "input.mouse.move",
+        "input.mouse.state"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_scoped_native_timers_and_input",
+      "source_paths": [
+        "src/fdisbull/qemu_clock.py",
+        "src/fdisbull/qemu_input.py",
+        "src/fdisbull/qemu_input_schedule.py",
+        "src/fdisbull/qemu_keyboard_press.py",
+        "src/fdisbull/qemu_keyboard_type.py",
+        "src/fdisbull/qemu_wait.py"
+      ],
+      "depends_on": [
+        "core-control"
+      ],
+      "existing_test_sets": [
+        "clock-input-host",
+        "clock-input-native",
+        "clock-input-legacy"
+      ],
+      "remaining_work": [
+        "Compare the full legacy guest_ms/fast_forward, input-state and consumption contracts; callback acceptance and owned leases alone do not establish guest state.",
+        "Add paired same-input timing/consumption cases for layout, repeats, cancellation, nested hooks and stop precedence where existing authored cases are narrower."
+      ],
+      "minimum_acceptance": [
+        "One shrinking host deadline and one declared guest clock; original earlier/coincident stop wins without replay.",
+        "Guest BIOS/IRQ or application state independently observes every required press/type/release; retained-prefix and held-lease recovery is correct.",
+        "Queue, arm, run, cancellation and persistence failure semantics agree through Python, JSON and saved scripts."
+      ]
+    },
+    {
+      "id": "coherent-frames",
+      "title": "Whole frame/coherence, raw pixels and frame-input contract",
+      "surface_ids": [
+        "debug-frame-advance",
+        "debug-frame-inputs",
+        "debug-frame-probe",
+        "debug-screenshot",
+        "frame.step",
+        "input.keyboard.frame_edges",
+        "python-frame-rgba",
+        "video.probe",
+        "video.screenshot"
+      ],
+      "qualification": "unqualified",
+      "implementation": "opt_in_complete_source_raster_proof_and_retained_publications_implemented_legacy_frame_contract_incomplete",
+      "source_paths": [
+        "src/fdisbull/qemu_display.py",
+        "src/fdisbull/qemu_vga_configuration.py",
+        "src/fdisbull/qemu_dos_frames.py",
+        "src/fdisbull/qemu_frame_keys.py",
+        "src/fdisbull/frame_coherence.py",
+        "native/qemu-raster-proof/qemu-raster-proof.patch"
+      ],
+      "depends_on": [
+        "clock-and-physical-input",
+        "checkpoint-contract"
+      ],
+      "existing_test_sets": [
+        "renderer-frame-host",
+        "renderer-frame-native",
+        "renderer-frame-legacy",
+        "raster-proof-host",
+        "raster-proof-native"
+      ],
+      "remaining_work": [
+        "Implement legacy frame_probe and frame_rgba consumers, including codec/stride/pixel hash and exact guarded identity.",
+        "Produce the verified complete source-raster snapshots at native guest-mode cadence with guarded stream/configuration identity, and resolve raster sampling differences through paired evidence. The new opt-in source proof currently accompanies caller-timed synchronous renderer attempts only.",
+        "Qualify frame step and key scheduling at that boundary, including partial drawing, palette/mode/origin changes, typematic behavior and restore without reinjection."
+      ],
+      "minimum_acceptance": [
+        "Bracket retained pixels, producing frame/mode identity, actual stopped session revision, native clock and input ownership under one owner. Refuse stale or mixed brackets; do not claim atomic image/CPU equivalence or application drawing completion.",
+        "Authored delayed and raster-sensitive drawing distinguish input delivery, guest consumption, renderer completion and application drawing. An accepted complete renderer snapshot may contain unfinished application drawing; scanline sampling differences need an explicit paired disposition.",
+        "Python/JSON/scripts and cold histories preserve exact pixel/key identity and reject foreign epochs."
+      ]
+    },
+    {
+      "id": "coordinate-mouse",
+      "title": "Absolute/frame-relative click and guest mouse consumption",
+      "surface_ids": [
+        "debug-click",
+        "debug-click-frame",
+        "input.mouse.click"
+      ],
+      "qualification": "unqualified",
+      "implementation": "legacy_routes_absent_physical_and_scaled_relative_prerequisites_exist",
+      "source_paths": [
+        "src/fdisbull/qemu_mapped_mouse.py",
+        "src/fdisbull/qemu_mouse_click.py",
+        "src/fdisbull/debugger.py"
+      ],
+      "depends_on": [
+        "coherent-frames",
+        "clock-and-physical-input"
+      ],
+      "existing_test_sets": [
+        "mapped-mouse-native",
+        "clock-input-legacy",
+        "renderer-frame-legacy"
+      ],
+      "remaining_work": [
+        "Implement debug-click/debug-click-frame and equivalent input.mouse.click using observed guest cursor/range and exact frame/mode guards.",
+        "Add an actual DOS mouse driver INT33 oracle for range, clipping, acceleration/scale, consumed motion/button edges and release; caller-declared relative scale is not absolute cursor state."
+      ],
+      "minimum_acceptance": [
+        "The same requested coordinate lands on the same qualified target on both backends; stale frame/mode and unsupported driver state fail before input.",
+        "Timed click failure preserves delivered prefix and reconciles held buttons without hidden replay."
+      ]
+    },
+    {
+      "id": "checkpoint-contract",
+      "title": "Native state, Anchor Stones, control and source recovery",
+      "surface_ids": [
+        "debug-load-anchor-stone",
+        "debug-load-state",
+        "debug-save-anchor-stone",
+        "debug-save-state",
+        "state.load",
+        "state.save"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_multiple_explicit_checkpoint_contracts",
+      "source_paths": [
+        "src/fdisbull/qemu_dos_checkpoint.py",
+        "src/fdisbull/qemu_owned_checkpoint.py",
+        "src/fdisbull/qemu_dos_le_checkpoint.py",
+        "src/fdisbull/qemu_instrumented_checkpoint.py"
+      ],
+      "depends_on": [
+        "core-control",
+        "source-and-protected-dos"
+      ],
+      "existing_test_sets": [
+        "checkpoint-host",
+        "checkpoint-native",
+        "checkpoint-legacy",
+        "protected-source-native"
+      ],
+      "remaining_work": [
+        "Complete paired acceptance/disposition for raw, source-bound COM/MZ, owned-machine and LE checkpoints; do not exchange their authority or backend state files.",
+        "Reconcile selected CPU/RAM/device/IRQ/timer/input/file/control continuation after hot and separate-Python cold restore, including actual game/device workloads."
+      ],
+      "minimum_acceptance": [
+        "CPU/RAM/disk plus admitted pending device state and future behavior agree after restore; handles/tokens/epochs are new.",
+        "Malformed archive/core/preimage/source/control identity rejects before authority publication; uncertain fresh destinations are closed.",
+        "Host files are restored only under explicit workspace policy, never inferred from a VM checkpoint."
+      ]
+    },
+    {
+      "id": "layers-and-controls",
+      "title": "RAM/fetch layers, hooks, code and selected controls",
+      "surface_ids": [
+        "debug-branch",
+        "debug-capture-code",
+        "debug-cave",
+        "debug-code",
+        "debug-controls",
+        "debug-delete-hook",
+        "debug-hook",
+        "debug-hooks",
+        "debug-layer-enable",
+        "debug-layer-patch",
+        "debug-layer-stack",
+        "layers.configure"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_bounded_ram_fetch_hooks_controls",
+      "source_paths": [
+        "src/fdisbull/qemu_layers.py",
+        "src/fdisbull/qemu_hooks.py",
+        "src/fdisbull/qemu_experiments.py",
+        "src/fdisbull/qemu_dos_task_views.py"
+      ],
+      "depends_on": [
+        "source-and-protected-dos",
+        "trace-events"
+      ],
+      "existing_test_sets": [
+        "layers-host",
+        "layers-native",
+        "layers-legacy",
+        "protected-source-native"
+      ],
+      "remaining_work": [
+        "Provide and qualify source-addressed LE layer/hook/trial authority where absent. Existing LE binding proves a stopped code relation and does not revive the old MZ source/allocation authority; explicit machine addresses remain a separate control contract.",
+        "Complete paired hook/layer ordering, guards, repeat/once, self-modification, active precedence and cold control rebinding."
+      ],
+      "minimum_acceptance": [
+        "Guest data, instruction fetch, debugger RAM and device views obey declared separate visibility; warmed translations and aliases cannot bypass guards.",
+        "Callbacks act only at an owned stopped boundary; partial actions and stale mappings never masquerade as full completion."
+      ]
+    },
+    {
+      "id": "screenshot-hooks",
+      "title": "Screenshot preparation hooks and coherent capture",
+      "surface_ids": [
+        "debug-screenshot-hooks"
+      ],
+      "qualification": "unqualified",
+      "implementation": "bounded_stopped_surface_passive_and_layer_hooks_integrated; fresh_frame_and_execution_hooks_pending",
+      "source_paths": [
+        "src/fdisbull/screenshot_hooks.py",
+        "src/fdisbull/qemu_hooks.py",
+        "src/fdisbull/qemu_display.py",
+        "src/fdisbull/qemu_screenshot_hooks.py",
+        "src/fdisbull/qemu_surface.py"
+      ],
+      "depends_on": [
+        "layers-and-controls",
+        "coherent-frames"
+      ],
+      "existing_test_sets": [
+        "layers-host",
+        "layers-native",
+        "renderer-frame-native",
+        "layers-legacy",
+        "screenshot-hooks-host",
+        "screenshot-hooks-native"
+      ],
+      "remaining_work": [
+        "Extend explicit hooks only after fresh completed-renderer and bounded run/wait preparation contracts are proved; retain stopped-surface profile semantics.",
+        "Compare paired preparation/cleanup observables beyond authored passive layer suspension; preserve source/control/capture identity, first failures and teardown."
+      ],
+      "minimum_acceptance": [
+        "Only a completed admitted preparation action can qualify the resulting coherent image; errors retain the original stop/evidence and restore or invalidate controls."
+      ]
+    },
+    {
+      "id": "histories-and-trials",
+      "title": "Rewind, selected undo, timelines and comparative trials",
+      "surface_ids": [
+        "debug-compare-experiment",
+        "debug-delta-record",
+        "debug-delta-recover",
+        "debug-delta-rewind",
+        "debug-delta-start",
+        "debug-delta-status",
+        "debug-restore-experiment",
+        "debug-rewind",
+        "debug-rewind-record",
+        "debug-rewind-start",
+        "debug-rewind-status",
+        "debug-save-experiment",
+        "debug-timeline-advance",
+        "debug-timeline-image",
+        "debug-timeline-pin",
+        "debug-timeline-rewind",
+        "debug-timeline-start",
+        "debug-timeline-status",
+        "debug-timeline-stop"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_bounded_history_contracts",
+      "source_paths": [
+        "src/fdisbull/qemu_dos_history.py",
+        "src/fdisbull/qemu_cpu_deltas.py",
+        "src/fdisbull/qemu_dos_frames.py",
+        "src/fdisbull/qemu_experiments.py",
+        "src/fdisbull/qemu_dos_le_history.py"
+      ],
+      "depends_on": [
+        "checkpoint-contract",
+        "layers-and-controls",
+        "clock-and-physical-input"
+      ],
+      "existing_test_sets": [
+        "histories-host",
+        "histories-native",
+        "histories-legacy"
+      ],
+      "remaining_work": [
+        "Run complete branches, rewind, selected undo/freeze/recovery, full/delta retention and baseline/candidate trials on matched source/control/input cases.",
+        "Complete directory/file-aware history composition and full frame equivalence; renderer DAGs and bounded stopped LE capture histories retain their narrower contracts."
+      ],
+      "minimum_acceptance": [
+        "Unrecorded mutations invalidate live cursors; selected inverse cannot execute until a full checkpoint recovers unselected state.",
+        "Cold restart reconstructs exact retained bytes and fresh identities; key ownership returns without reinjection; storage caps include retained/reconstructed payloads.",
+        "Each trial starts from the same full baseline and recovers it at the end; missing or misaligned observations cannot prove equality."
+      ]
+    },
+    {
+      "id": "workspace-files",
+      "title": "Checkpointed file services, proven saves and explicit export",
+      "surface_ids": [
+        "debug-workspace-edit",
+        "debug-workspace-export",
+        "debug-workspace-files",
+        "debug-workspace-keep",
+        "debug-workspace-keep-policy",
+        "debug-workspace-keep-policy-enabled",
+        "debug-workspace-provenance-capture",
+        "debug-workspace-provenance-start",
+        "debug-workspace-provenance-status",
+        "debug-workspace-provenance-stop",
+        "debug-workspace-read",
+        "debug-workspace-save-output",
+        "debug-workspace-seal",
+        "debug-workspace-status"
+      ],
+      "qualification": "unqualified",
+      "implementation": "implemented_native_only_workspace_contracts",
+      "source_paths": [
+        "src/fdisbull/qemu_workspace.py",
+        "src/fdisbull/qemu_dos_provenance.py",
+        "src/fdisbull/dos_save_operations.py",
+        "src/fdisbull/qemu_save_stop.py"
+      ],
+      "depends_on": [
+        "checkpoint-contract",
+        "source-and-protected-dos"
+      ],
+      "existing_test_sets": [
+        "workspace-host",
+        "workspace-native"
+      ],
+      "remaining_work": [
+        "Qualify the declared runtime/filesystem/version matrix beyond the bounded FreeDOS workspace fixtures and real game save/load paths.",
+        "Compose file state with histories/trials; keep caller-attested closed/flushed output distinct from proven guest-create/overwrite/rename operations."
+      ],
+      "minimum_acceptance": [
+        "Open handle offsets, dirty buffers, findnext cursor, subdirectories and staged generations survive cold restore without the original host tree.",
+        "Original host files remain unchanged until explicit exclusive export; partial export, disk-full, stale preimage and unsupported handle state are observable.",
+        "Proven create/overwrite/seek/truncate/rename and safe-stop keep policy retain exact operation authority and do not run inside suppressed script/trial/history contexts."
+      ]
+    },
+    {
+      "id": "macro-movement-proof",
+      "title": "Macros, movement and proof consumer adapters",
+      "surface_ids": [
+        "debug-macro",
+        "debug-move",
+        "debug-proof-check"
+      ],
+      "qualification": "unqualified",
+      "implementation": "bounded_macro_host_proof_and_witnessed_held_key_movement_adapters_integrated",
+      "source_paths": [
+        "src/fdisbull/input_macros.py",
+        "src/fdisbull/movement.py",
+        "src/fdisbull/qemu_input_schedule.py",
+        "src/fdisbull/qemu_macros.py",
+        "src/fdisbull/qemu_proofs.py",
+        "src/fdisbull/proofs.py",
+        "src/fdisbull/qemu_movement.py"
+      ],
+      "depends_on": [
+        "clock-and-physical-input",
+        "layers-and-controls"
+      ],
+      "existing_test_sets": [
+        "workflow-legacy",
+        "clock-input-native",
+        "histories-native",
+        "macro-host",
+        "macro-native",
+        "proof-host",
+        "movement-host",
+        "movement-native"
+      ],
+      "remaining_work": [
+        "Review paired macro observable equivalence beyond accepted public/script ATTT moves, partial-input stop and evidence-reopen witnesses.",
+        "Qualify richer movement controls, scene/map/frame progress, explicit physical-versus-assisted policies and actual-game postconditions beyond held-key witnessed RAM. Retain the host-only proof model-fidelity boundary.",
+        "Add public/script/native and paired scenarios for partial input, early stop, lost ownership and actual observed effects."
+      ],
+      "minimum_acceptance": [
+        "Actions use admitted native primitives once, reconcile holds, preserve original stop and evidence, and never claim an unmet postcondition.",
+        "Successful macro composition does not by itself qualify movement, proof, scenes or completed-frame semantics."
+      ]
+    },
+    {
+      "id": "scene-workflows",
+      "title": "Scene, spatial, text and higher workflow contracts",
+      "surface_ids": [
+        "debug-assisted-travel",
+        "debug-scene-act",
+        "debug-scene-assert",
+        "debug-scene-check",
+        "debug-scene-click",
+        "debug-scene-navigation",
+        "debug-scene-wait",
+        "debug-spatial-action",
+        "debug-spatial-policy",
+        "debug-text-act",
+        "debug-text-observe",
+        "debug-workflow-act",
+        "debug-workflow-observe"
+      ],
+      "qualification": "unqualified",
+      "implementation": "host_spatial_policy_and_passive_runtime_memory_scene_observation_integrated; frame_and_action_routes_pending",
+      "source_paths": [
+        "src/fdisbull/scenes.py",
+        "src/fdisbull/spatial.py",
+        "src/fdisbull/text_projection.py",
+        "src/fdisbull/qemu_spatial_policy.py",
+        "src/fdisbull/runtime_scenes.py",
+        "src/fdisbull/qemu_scenes.py"
+      ],
+      "depends_on": [
+        "coherent-frames",
+        "coordinate-mouse",
+        "runtime-memory-adapter",
+        "macro-movement-proof"
+      ],
+      "existing_test_sets": [
+        "workflow-legacy",
+        "renderer-frame-native",
+        "mapped-mouse-native",
+        "histories-native",
+        "spatial-policy-host",
+        "spatial-policy-native",
+        "runtime-scenes-host",
+        "runtime-scenes-native"
+      ],
+      "remaining_work": [
+        "Implement frame-backed scene, action, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; passive scene-2 RAM predicates retain a separate explicit profile.",
+        "Create native source-bound scene scenarios with actual readiness, named input, text/spatial observation, progression and failure recovery; compare the same goals/observables under DOSBox."
+      ],
+      "minimum_acceptance": [
+        "Exact domain/frame/state identity guards every observation and action; stale readiness and unsupported policies fail before effects.",
+        "Physical, assisted, story and fair-play claims remain explicit, with actual guest progression and release/recovery evidence."
+      ]
+    },
+    {
+      "id": "remote-consumers",
+      "title": "CLI/JSON, IDA, packaging and offline consumer path",
+      "surface_ids": [
+        "remote-tool-consumers"
+      ],
+      "qualification": "unqualified",
+      "implementation": "cli_json_doctor_present_ida_native_backend_missing",
+      "source_paths": [
+        "src/fdisbull/cli.py",
+        "src/fdisbull/ida_dosbox.py",
+        "src/fdisbull/capabilities.py"
+      ],
+      "depends_on": [
+        "core-control",
+        "source-and-protected-dos"
+      ],
+      "existing_test_sets": [
+        "consumers-host",
+        "core-native",
+        "fallback-dosbox-qemu"
+      ],
+      "remaining_work": [
+        "Add the native DOS backend to the IDA endpoint: current constructor/parser accept only dosbox and dosbox-qemu.",
+        "Exercise the packaged wheel/offline runtime in a clean process through serve/debug, IDA and capability/doctor discovery; retain explicit refusals and backend selection."
+      ],
+      "minimum_acceptance": [
+        "The installed artifact exposes the same admitted contracts as source; missing native extensions never launch another backend silently.",
+        "A real remote consumer completes a bounded inspect/action/reopen workflow with the intended native context and immutable source."
+      ]
+    },
+    {
+      "id": "native-display-window",
+      "title": "Explicit spectator window and host-input filtering",
+      "surface_ids": [
+        "native-display-window"
+      ],
+      "qualification": "unqualified",
+      "implementation": "native_dos_window_consumer_absent",
+      "source_paths": [
+        "src/fdisbull/ida_dosbox.py",
+        "src/fdisbull/qemu_machine.py"
+      ],
+      "depends_on": [
+        "remote-consumers",
+        "clock-and-physical-input"
+      ],
+      "existing_test_sets": [
+        "window-legacy",
+        "consumers-host"
+      ],
+      "remaining_work": [
+        "Implement explicit native spectator/dot-mode selection and host-input filtering; do not substitute headless capture for a requested visible window.",
+        "Add native window/lifecycle/input-isolation acceptance at the real UI boundary."
+      ],
+      "minimum_acceptance": [
+        "The requested window is observable, controls/cleanup remain owned, and ordinary host input cannot bypass the declared agent-input policy."
+      ]
+    },
+    {
+      "id": "planned-block-services",
+      "title": "Planned UDL/UIL block services disposition",
+      "surface_ids": [
+        "udl-uil-block-services"
+      ],
+      "qualification": "unqualified",
+      "implementation": "planned_addition_not_existing_legacy_capability",
+      "source_paths": [
+        "src/fdisbull/common_uil.py"
+      ],
+      "depends_on": [
+        "layers-and-controls",
+        "checkpoint-contract"
+      ],
+      "existing_test_sets": [
+        "block-services-lab"
+      ],
+      "remaining_work": [
+        "This existing required inventory row remains open. Either implement its declared production contract or obtain a separate explicit inventory disposition; lab tests cannot qualify it or remove it from the gate."
+      ],
+      "minimum_acceptance": [
+        "Region priority/mask/epoch, original/replacement effect authority, pending services, joins, cancellation, duplicate notification and restore identity are independently exercised."
+      ]
+    },
+    {
+      "id": "hardware-driver-campaigns",
+      "title": "Actual DOS hardware, vendor drivers and games",
+      "surface_ids": [
+        "hardware-and-driver-compatibility"
+      ],
+      "qualification": "unqualified",
+      "implementation": "bounded_authored_and_private_records_broader_campaigns_open",
+      "source_paths": [
+        "src/fdisbull/qemu_machine.py",
+        "src/fdisbull/qemm_runtime.py",
+        "src/fdisbull/desqview_runtime.py"
+      ],
+      "depends_on": [
+        "source-and-protected-dos",
+        "clock-and-physical-input",
+        "checkpoint-contract"
+      ],
+      "existing_test_sets": [
+        "vendor-observation-host",
+        "authored-task-native",
+        "real-game-paired",
+        "audio-native",
+        "audio-paired"
+      ],
+      "remaining_work": [
+        "Complete the seven explicit campaigns below on declared, hash-pinned real workloads and runtime/driver configurations.",
+        "Parser tests, DOSBox absence probes, FDBTASK1 scheduling, one game and historical private receipts do not establish arbitrary QEMM/DESQview/device compatibility."
+      ],
+      "minimum_acceptance": [
+        "Each declared BIOS/disk/graphics/sound/IRQ/EMS/XMS/A20/paging/driver case has independently observed guest outcomes and reproducible runtime provenance."
+      ]
+    }
+  ],
+  "supporting_work": [
+    {
+      "id": "explicit-stereo-and-audio-fidelity",
+      "campaigns": [
+        "real-game-comparison",
+        "cold-restore-and-epoch"
+      ],
+      "existing_test_sets": [
+        "audio-host",
+        "audio-native",
+        "audio-paired"
+      ],
+      "implemented": "Optional s16-stereo capture is scoped to virtual sb16-opl; u8-mono remains default and old-command compatible. Nine native cases passed on each of macOS and Linux, including asymmetric tones, initial graphs, malformed core4 and 600 ms hot/cold futures.",
+      "remaining": [
+        "Qualify remaining long/rolling/max-boundary capture and real-game compositions; preserve the tested old mono checkpoint path.",
+        "Complete executing-producer identity correction and exact old-state rejection; qualify corrected producer on macOS and actual games, then DC/rail behavior, mixer gain and bounded/long/rolling capture."
+      ],
+      "historical_record": "docs/evidence/qemu-mixer-tones-2026-11-16/verification.json",
+      "evidence": "docs/evidence/qemu-stereo-capture-2026-11-18/verification.json"
+    }
+  ],
+  "required_campaigns": [
+    {
+      "id": "native-dos-program-and-tsr",
+      "groups": [
+        "core-control",
+        "source-and-protected-dos",
+        "trace-events",
+        "layers-and-controls"
+      ],
+      "existing_test_sets": [
+        "core-native",
+        "core-paired",
+        "protected-source-native"
+      ],
+      "missing_checks": [
+        "Paired MZ/PSP/MCB/relocation, nested EXEC, TSR and authored SYS driver semantics beyond the existing paired COM controls/exit."
+      ],
+      "accept": [
+        "Original COM and MZ enter with independently verified bytes/registers, complete child/parent/TSR outcomes, source isolation and cleanup.",
+        "Same workload through Python, JSON and script routes observes equivalent admitted outcomes; unsupported context/address differences are declared."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    },
+    {
+      "id": "qemm-and-protected-v86",
+      "groups": [
+        "source-and-protected-dos",
+        "runtime-memory-adapter",
+        "checkpoint-contract"
+      ],
+      "existing_test_sets": [
+        "vendor-observation-host",
+        "protected-source-native",
+        "authored-task-native"
+      ],
+      "missing_checks": [
+        "A repository-reproducible native QEMM/EMM386 campaign with an authorized private image and selected driver configuration; current parser and authored protected/V86 tests do not load the vendor driver."
+      ],
+      "accept": [
+        "Observe actual EMS/XMS/A20 and protected/V86 page/segment behavior, guarded source/runtime memory and device I/O under each declared manager.",
+        "Cold recovery rejects stale allocation/task/page authority and preserves demonstrated future execution."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    },
+    {
+      "id": "desqview-task-switching",
+      "groups": [
+        "source-and-protected-dos",
+        "layers-and-controls",
+        "histories-and-trials"
+      ],
+      "existing_test_sets": [
+        "vendor-observation-host",
+        "authored-task-native",
+        "protected-source-native"
+      ],
+      "historical_records": [
+        "docs/evidence/qemu-desqview-continuity-integration-2026-11-14/verification.json"
+      ],
+      "missing_checks": [
+        "Turn the bounded private DESQview witness into a reproducible declared campaign: actual vendor tasks, switch/exit/reuse, observed memory ownership and I/O, cold recovery with fresh authority."
+      ],
+      "accept": [
+        "Real DESQview task transitions agree with guest-observed identity/lifetime; address/CR3 coincidence never transfers authority.",
+        "FDBTASK1 cooperation and native authored PIC scheduling remain separate supporting tests, not vendor equivalence."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    },
+    {
+      "id": "real-game-comparison",
+      "groups": [
+        "clock-and-physical-input",
+        "coherent-frames",
+        "coordinate-mouse",
+        "histories-and-trials",
+        "workspace-files",
+        "scene-workflows"
+      ],
+      "existing_test_sets": [
+        "real-game-paired",
+        "audio-paired"
+      ],
+      "historical_records": [
+        "docs/evidence/qemu-doom-ordinary-startup-2026-11-14/verification.json",
+        "docs/evidence/qemu-le-source-history-2026-11-15/verification.json",
+        "docs/evidence/qemu-dosbox-doom-audio-2026-11-16/verification.json"
+      ],
+      "missing_checks": [
+        "Reproduce a declared protected real-game route with ordinary startup, consumed keyboard/mouse, graphics/audio, gameplay, save/load, cold replay and guest exit.",
+        "Tic-Tac-Toe has paired full-round/replay/reset/exit tests; Five Dice and Snake add source-assisted complete-game/RNG and keyboard/growth/clock/exit. These assetless fixtures do not cover protected games, file assets, INT33 mouse coordinates or broad audio fidelity."
+      ],
+      "accept": [
+        "Use the same hash-pinned original program/assets and declared input route on both backends; compare application/state outcomes and independently justified media metrics.",
+        "No private RAM/register edits, muted devices, paused-only inspection or missing media may silently stand in for the requested ordinary workload."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    },
+    {
+      "id": "windows-shared-core-regression",
+      "groups": [
+        "remote-consumers",
+        "scene-workflows"
+      ],
+      "existing_test_sets": [
+        "windows-pe32",
+        "windows-win16"
+      ],
+      "missing_checks": [
+        "Run the existing PE32 and Win16 actual GUI/input/scene/spectator witnesses on their separately pinned runtimes after shared host changes."
+      ],
+      "accept": [
+        "Existing Windows original-process, keyboard/mouse, named scenes, dot mode, cleanup and exception contracts remain intact.",
+        "Missing private runtime/fixture inputs or skipped native cases remain missing evidence."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    },
+    {
+      "id": "cold-restore-and-epoch",
+      "groups": [
+        "checkpoint-contract",
+        "histories-and-trials",
+        "workspace-files",
+        "source-and-protected-dos"
+      ],
+      "existing_test_sets": [
+        "checkpoint-native",
+        "protected-source-native",
+        "histories-native",
+        "workspace-native",
+        "audio-native"
+      ],
+      "missing_checks": [
+        "Compose real workload CPU/RAM/device/media/input/file/control state with separate-Python restore and compare future continuation, not only restored metadata."
+      ],
+      "accept": [
+        "Fresh owner/token/capture epoch; stale bindings and keys refuse; no reinjected consumed input or changed source originals.",
+        "Full device state, timer/IRQ phase, PCM prefix/future, frame publication, open-file cursor and selected control state satisfy their declared contracts."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    },
+    {
+      "id": "dosbox-fallback-rehearsal",
+      "groups": [
+        "core-control",
+        "remote-consumers",
+        "native-display-window"
+      ],
+      "existing_test_sets": [
+        "core-paired",
+        "consumers-host",
+        "window-legacy",
+        "fallback-dosbox-qemu"
+      ],
+      "missing_checks": [
+        "Run explicit backend selection in a clean installed kit for dosbox, dosbox-qemu and qemu-dos using the same authorized target; include doctor/setup failure and normal cleanup.",
+        "Existing paired tests plus the required tests/test_dos_qemu.py lane exercise all three backend families, but a clean installed/offline package and explicit failure/fallback-selection rehearsal remain required."
+      ],
+      "accept": [
+        "Both retained selectors remain usable; no automatic retry/fallback after an uncertain action.",
+        "Each backend launches its own compatible state/runtime; DOSBox save files are never loaded as QEMU checkpoints.",
+        "Default stays dosbox until all 141 surfaces and seven campaigns have reviewed evidence; removal remains a separate review."
+      ],
+      "qualification": "unqualified",
+      "execution": "not_run_by_this_reconciliation"
+    }
+  ],
+  "evidence_required_per_qualified_surface": [
+    "surface identifier and exact required contract/disposition",
+    "implementation/source commit and runtime binary/firmware/driver hashes",
+    "same-input identity and independent observable oracle; declared semantic differences",
+    "exact native test/campaign nodes, result, no missing required skips, retained evidence identities",
+    "affected DOSBox regression and public/consumer routes",
+    "recovery/epoch/failure evidence where the surface owns state or effects"
+  ],
+  "evidence_added_by_this_reconciliation": [
+    "docs/evidence/qemu-stereo-capture-2026-11-18/verification.json",
+    "docs/evidence/qemu-macros-runtime-memory-2026-11-18/verification.json",
+    "docs/evidence/qemu-doom-stereo-2026-11-18/verification.json",
+    "docs/evidence/qemu-model-proofs-2026-11-18/verification.json",
+    "docs/evidence/qemu-final-doom-stereo-2026-11-18/verification.json",
+    "docs/evidence/qemu-sb16-transfer-count-2026-11-18/verification.json",
+    "docs/evidence/qemu-witnessed-movement-2026-11-18/verification.json",
+    "docs/evidence/qemu-executed-image-2026-11-18/verification.json",
+    "docs/evidence/qemu-runtime-scenes-2026-11-18/verification.json",
+    "docs/evidence/qemu-screenshot-hooks-2026-11-18/verification.json",
+    "docs/evidence/qemu-desqview-installed-2026-11-18/verification.json",
+    "native/qemu-raster-proof/verification.json",
+    "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json"
+  ]
+}

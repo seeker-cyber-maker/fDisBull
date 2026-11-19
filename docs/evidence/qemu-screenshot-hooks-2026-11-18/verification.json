@@ -1,0 +1,92 @@
+{
+  "adapter_source": "7d04179dd5dd88ec810efd3ea15792cf2db8a33c",
+  "assertions_verified": [
+    "CPU register snapshot unchanged",
+    "native virtual clock and instruction counter unchanged",
+    "no GDB execution during hooks",
+    "pending caller keyboard lease unchanged",
+    "exact native layer stack restored",
+    "first failed assertion prevented later pre-step and capture",
+    "raw capture stayed direct and had no hook metadata",
+    "owned QEMU process reaped"
+  ],
+  "counts": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "tests": 1
+  },
+  "exporter_failure": "Post-test exporter treated external object reference as bytes; recovered through verified TargetStore read.",
+  "failed_assertion_control": {
+    "capture_created": false,
+    "executed_pre_steps": 1,
+    "ok": false,
+    "post_ok": true,
+    "restore_ok": true
+  },
+  "format": "fdisbull-qemu-screenshot-hooks-verification-1",
+  "input_identities": {
+    "boot_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+    "launcher_sha256": "229351670eea7b27580128099369ac35df9bef42182c855f2510a9c260e9a34c"
+  },
+  "native_log_sha256": "a564a9c89571adfb9d8eed4fb5c6512d523ff8ba55f083b662b778276ae458b1",
+  "native_witness": "Authored mode-13h DOS COM with unrelated guarded RAM data word; no game data.",
+  "native_xml_sha256": "58576dc2ea26e5ed4337ec8b9eae0cf5afe5d5ca81755d537217695b00b4e646",
+  "observed_executing_image_format": "fdisbull-qemu-executed-image-1",
+  "observed_executing_image_sha256": "b077ea7bd853f977bff612904f96de1f252b5778c66bceb94cd21c15ae9705c2",
+  "original_controller_returncode": 1,
+  "pytest_elapsed_seconds": 2.057,
+  "receipt_export_recovered_without_native_rerun": true,
+  "remaining_exact_image_processes": 0,
+  "runtime_inputs_unchanged": true,
+  "source": "307f413c8178ee2764794bec7c4a1b370dd457c3",
+  "source_unchanged": true,
+  "successful_hook": {
+    "capture_sha256": "08f6980091dae729f35431ec11be33fbf2b939500f60cc73c7c0a2da5407fb54",
+    "completed_guest_frame": null,
+    "guest_frame_id": null,
+    "ok": true,
+    "post_ok": true,
+    "pre_ok": true,
+    "restore_ok": true
+  },
+  "qualification": "unqualified",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "private_receipt_sha256": "f40ffffdee364242c2dfc8df1d81d9fc8d1498fd6a64abbe3fe8eb1b757a06de",
+  "accepted_patch_sha256": "207ce086bcfeb0b95119174d945015effeaaf72031aad5f1f8915993ec0404eb",
+  "module_sha256": "1ee864f06509cf85e413aba06a161dbb66ee4c6de9b478c1dbe6e21b76af0482",
+  "host_receipts": {
+    "independent": {
+      "sha256": "d7321e43e950674f5f893048b7ab5d2e183c7e5058733182c2602c56567bcb70",
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 37
+    },
+    "integrated": {
+      "sha256": "cddfa5e40eb5913306b0e3725a5780033df02ff338d55cb1687cfde9ce6b98be",
+      "tests": 279,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 6,
+      "passed": 273
+    }
+  },
+  "scope_limits": [
+    "DOS stopped-surface captures only, with explicit require_fresh_frame=false.",
+    "Whole pre/post plan and cleanup destinations are admitted before effects; only literal passive observations, assertions and supported layer transitions.",
+    "One exact owner/lock/source map/capture epoch/deadline. No run, wait, input replay or release.",
+    "Nested hook evidence does not replace core screenshot/frame/clock identity. Fresh completed-renderer capture and general execution hooks remain unqualified."
+  ],
+  "independent_findings": [
+    "Closed owner now refuses before lock acquisition.",
+    "A final event that exhausts the deadline raises while retaining captured evidence and verified restoration.",
+    "Raw capture evidence survives later agent-grid derivation failure without duplicate artifact publication."
+  ],
+  "native_result_note": "The single native pytest case passed with zero skips/errors/failures. A subsequent receipt exporter failed; the original controller returncode1 is retained. Evidence was recovered by read-only extraction without repeating native execution; child returncode was not persisted.",
+  "count_note": "Author/independent/integrated host selections overlap; counts are not additive.",
+  "campaign_qualification_change": "none",
+  "installed_mac_evidence": "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json"
+}

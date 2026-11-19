@@ -9,7 +9,11 @@ bit-accurate or electrically timed hardware claim.
 """
 from __future__ import annotations
 
+import base64
+from contextlib import contextmanager
+from copy import deepcopy
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -18,9 +22,11 @@ import shutil
 import struct
 import subprocess
 import sys
+import wave
 
 import pytest
 
+from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.project import Project
 from support.dos_process_fixture import BASELINE_CONFIG, digest, prepare_dos_baseline
 from support.qemu_opl_fixture import OPL_BLOCK, PENDING_ADDRESS, note_frequency, opl_program
@@ -28,10 +34,22 @@ from support.qemu_sb16_ring_fixture import BLOCK_BYTES, BLOCKS, RING_BYTES, bloc
 from support.qemu_mixer_assertions import mixer_snapshot
 from test_qemu_clock_budget_native import budget_receipt, park
 from test_qemu_dos_process_native import assert_completion, com_address, read_bytes
-from test_qemu_sb16_native import _pcm
 
 
 OUTPUT_RATE = 32000
+MONO_FORMAT = dict(rate=OUTPUT_RATE, channels=1, sample_format='u8', bytes_per_frame=1)
+STEREO_FORMAT = dict(rate=OUTPUT_RATE, channels=2, sample_format='s16', bytes_per_frame=4)
+CORE3_MAGIC = 0x4644424155443033
+CORE4_MAGIC = 0x4644424155443034
+CORE_HEADER_BYTES = 496
+CORE4_GEOMETRY_BYTES = 56
+CORE4_REFUSALS = {
+    'truncated-geometry': 'Stereo OPL capture geometry is truncated',
+    'bad-rate': 'Stereo OPL capture geometry is invalid',
+    'bad-channels': 'Stereo OPL capture geometry is invalid',
+    'bad-bytes-per-frame': 'Stereo OPL capture geometry is invalid',
+    'core3-with-stereo-tap': 'Mixed OPL checkpoint differs from reconstructed voice geometry',
+}
 OPL_FIELDS = {
     'api-version', 'iobase', 'frequency', 'audiodev-id', 'checkpoint-enabled',
     'active', 'enabled', 'address', 'status', 'status-mask', 'mode', 'rhythm',
@@ -103,6 +121,58 @@ def _pitch(samples):
     return OUTPUT_RATE * (len(crossings) - 1) / (crossings[-1] - crossings[0])
 
 
+def _pcm_lanes(pcm, sample_format):
+    """Decode complete native frames; signed stereo is never byte-wise mono."""
+    assert sample_format in (MONO_FORMAT, STEREO_FORMAT)
+    assert len(pcm) % sample_format['bytes_per_frame'] == 0
+    if sample_format == MONO_FORMAT:
+        return [list(pcm)]
+    codes = struct.unpack('<' + 'h' * (len(pcm) // 2), pcm)
+    return [list(codes[::2]), list(codes[1::2])]
+
+
+def _pitches(pcm, sample_format):
+    return [_pitch(lane) for lane in _pcm_lanes(pcm, sample_format)]
+
+
+def _assert_keyoff(pcm, sample_format):
+    # The legacy one-U8-code silence bound is one256-code step at S16 scale.
+    centre, tolerance = (128, 1) if sample_format == MONO_FORMAT else (0, 256)
+    for lane in _pcm_lanes(pcm, sample_format):
+        assert len(lane) >= 2048
+        assert all(abs(value - centre) <= tolerance for value in lane[-2048:])
+
+
+def _audio_start(debug, max_frames, capture_format=None):
+    options = dict(max_frames=max_frames)
+    if capture_format is not None:
+        assert capture_format == 's16-stereo'
+        assert debug.capabilities.get('audio_stereo_capture') is True
+        assert debug.capabilities.get('mixer_gain_readback') is True
+        options['capture_format'] = capture_format
+    receipt = debug.audio_start(**options)
+    assert receipt['sample_format'] == (STEREO_FORMAT if capture_format else MONO_FORMAT)
+    return receipt
+
+
+def _pcm(project, debug, name):
+    artifact = debug.capture_audio(name)
+    metadata = artifact['metadata']
+    sample_format = metadata['sample_format']
+    assert sample_format in (MONO_FORMAT, STEREO_FORMAT)
+    row = project.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (artifact['artifact'],)).fetchone()
+    with wave.open(io.BytesIO(bytes(row['data'])), 'rb') as stream:
+        width = sample_format['bytes_per_frame'] // sample_format['channels']
+        assert stream.getparams()[:3] == (sample_format['channels'], width, OUTPUT_RATE)
+        assert stream.getnframes() == metadata['frames']
+        samples = stream.readframes(stream.getnframes())
+    assert len(samples) == metadata['frames'] * sample_format['bytes_per_frame']
+    info = debug.audio_observe()
+    assert info['sample_format'] == sample_format and info['frames'] == metadata['frames']
+    assert info['dropped_frames'] == 0 and info['state'] != 'overflow'
+    return samples, artifact, deepcopy(info['native']['chunks'])
+
+
 def _tap(debug, key):
     lease = debug.keyboard_key_down(key)['lease']
     debug.keyboard_key_up(lease)
@@ -133,6 +203,8 @@ def _sample(project, debug, offsets, label):
     # Querying a stopped armed timer must not emulate a guest port read.
     assert _opl(debug) == opl
     pcm, artifact, chunks = _pcm(project, debug, label + '.wav')
+    audio = artifact['metadata']
+    lanes = _pcm_lanes(pcm, audio['sample_format'])
     return dict(cpu=debug.registers(), report_hex=report.hex(), opl_report_hex=opl_report.hex(),
         opl_stage=number('opl_stage'), opl_registers_hex=registers.hex(),
         timer1_status=number('opl_timer1_status', 1), timer2_status=number('opl_timer2_status', 1),
@@ -142,6 +214,9 @@ def _sample(project, debug, offsets, label):
         irq_count=number('irq_count', 4), produced_bytes=number('produced_bytes', 4),
         buffer_physical=physical, opl=opl, sb=_sb(debug), clock=debug.clock_observe(),
         pcm_hex=pcm.hex(), pcm_sha256=hashlib.sha256(pcm).hexdigest(),
+        sample_format=audio['sample_format'], audio_frames=audio['frames'],
+        audio_state=audio['state'], dropped_frames=audio['dropped_frames'],
+        stereo_channels_differ=(lanes[0] != lanes[1] if len(lanes) == 2 else None),
         audio_artifact=artifact, chunks=chunks, mixer=mixer_snapshot(debug))
 
 
@@ -150,7 +225,8 @@ def _assert_exact(actual, expected):
                 'timer1_status', 'timer2_status', 'timer_reset_status', 'resume_status',
                 'resume_reset_status', 'ring_hex', 'generations', 'refill_active',
                 'irq_count', 'produced_bytes', 'buffer_physical', 'opl', 'sb',
-                'pcm_hex', 'pcm_sha256', 'chunks', 'mixer'):
+                'pcm_hex', 'pcm_sha256', 'sample_format', 'audio_frames',
+                'audio_state', 'dropped_frames', 'stereo_channels_differ', 'chunks', 'mixer'):
         assert actual[key] == expected[key], key
     assert actual['clock']['virtual_ns'] == expected['clock']['virtual_ns']
     assert actual['clock']['counter']['value'] == expected['clock']['counter']['value']
@@ -169,6 +245,11 @@ def _future(project, debug, offsets, captured, label):
     assert state['irq_count'] > captured['irq_count'] and state['ring_hex'] != captured['ring_hex']
     assert state['pcm_hex'].startswith(captured['pcm_hex'])
     assert len(state['pcm_hex']) > len(captured['pcm_hex'])
+    if captured['sample_format'] == STEREO_FORMAT:
+        tail = bytes.fromhex(state['pcm_hex'][len(captured['pcm_hex']):])
+        left, right = _pcm_lanes(tail, state['sample_format'])
+        assert min(left) < max(left) and min(right) < max(right)
+        assert left != right, 'Continued asymmetric SB16 output collapsed to duplicated mono'
     return state
 
 
@@ -189,6 +270,140 @@ def _load(project, debug, control, route, label):
     _assert_exact(state, control['captured'])
     assert state['audio_artifact']['metadata']['window'] != control['captured']['audio_artifact']['metadata']['window']
     return restored, state
+
+
+def _corrupt_core4(encoded, damage):
+    """Change one private core field while preserving unrelated wire bytes."""
+    assert damage in CORE4_REFUSALS
+    raw = bytearray(base64.b64decode(encoded, validate=True))
+    geometry_end = CORE_HEADER_BYTES + CORE4_GEOMETRY_BYTES
+    assert len(raw) >= geometry_end, 'Expected a complete active stereo core4'
+    order = '<' if int.from_bytes(raw[:8], 'little') == CORE4_MAGIC else '>'
+    assert struct.unpack_from(order + '2Q', raw) == (CORE4_MAGIC, 4)
+    assert struct.unpack_from(order + 'Q', raw, 40)[0] == 1, 'Expected a retained capture tap'
+    assert struct.unpack_from(order + '7Q', raw, CORE_HEADER_BYTES) == (
+        32000, 2, 16, 1, int(order == '>'), 4, 128000)
+    if damage == 'truncated-geometry':
+        raw = raw[:geometry_end - 1]
+    elif damage == 'core3-with-stereo-tap':
+        # Remove the new geometry extension as well as reverting both version
+        # fields. Length remains internally consistent with core3, so this
+        # reaches the destination-format guard with the stereo tap retained.
+        del raw[CORE_HEADER_BYTES:geometry_end]
+        struct.pack_into(order + '2Q', raw, 0, CORE3_MAGIC, 3)
+    else:
+        field, value = {'bad-rate': (0, 48000), 'bad-channels': (1, 1),
+                        'bad-bytes-per-frame': (5, 2)}[damage]
+        struct.pack_into(order + 'Q', raw, CORE_HEADER_BYTES + field * 8, value)
+    return base64.b64encode(raw).decode('ascii')
+
+
+def _corrupt_checkpoint_payload(data, metadata, damage, *, stale_state_hash=False):
+    """Rehash every outer envelope so the selected refusal is decisive."""
+    from fdisbull import qemu_dos_checkpoint as checkpoint
+    machine, bundle = checkpoint._unarchive(data)
+    record = bundle['instrumentation']
+    state = json.loads(record['state'])
+    audio = state['audio']
+    assert audio['profile'] == 'sb16-opl' and audio['active'] is True
+    assert (audio['info']['rate'], audio['info']['channels'], audio['info']['format']) == (32000, 2, 's16')
+    audio['core-base64'] = _corrupt_core4(audio['core-base64'], damage)
+    record['state'] = checkpoint._json(state).decode('utf-8')
+    if not stale_state_hash:
+        record['sha256'] = checkpoint._sha(record['state'].encode('utf-8'))
+    changed_metadata = deepcopy(metadata)
+    changed_metadata['instrumentation']['sha256'] = record['sha256']
+    changed_metadata['sidecar_sha256'] = checkpoint._sha(checkpoint._json(bundle))
+    return checkpoint._archive(machine, bundle), changed_metadata
+
+
+@contextmanager
+def _corrupt_artifact(project, debug, saved, damage, *, stale_state_hash=False):
+    row = project.db.execute('SELECT data, sha256, metadata FROM debug_artifacts WHERE id=?',
+                             (saved['artifact'],)).fetchone()
+    assert row['sha256'] == saved['sha256']
+    data, metadata = _corrupt_checkpoint_payload(bytes(row['data']), json.loads(row['metadata']),
+        damage, stale_state_hash=stale_state_hash)
+    suffix = '-stale-hash' if stale_state_hash else ''
+    bad = debug._artifact('corrupt-core4-' + damage + suffix + '.state', 'state', data, metadata)
+    try:
+        yield bad
+    finally:
+        # Keep at most one additional machine copy within the normal project
+        # artifact budget. The original saved checkpoint is never rewritten.
+        with project.transaction(True):
+            project.db.execute('DELETE FROM debug_artifacts WHERE id=?', (bad['artifact'],))
+
+
+@contextmanager
+def _new_destinations():
+    """Observe real destination construction without substituting VM behavior."""
+    from fdisbull import qemu_machine
+    constructor = qemu_machine.QemuMachine
+    created = []
+    def record(*args, **kwargs):
+        machine = constructor(*args, **kwargs)
+        created.append(machine)
+        return machine
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(qemu_machine, 'QemuMachine', record)
+        yield created
+
+
+def _stereo_preflight_refusal(project, debug, control):
+    saved = control['saved']
+    owner, process = debug.vm, debug.vm.process
+    epoch = debug.dos_process_info()['capture_epoch']
+    expected = 'Invalid instrumented checkpoint state or hash'
+    with (_corrupt_artifact(project, debug, saved, 'bad-rate', stale_state_hash=True) as bad,
+          _new_destinations() as created):
+        try:
+            with pytest.raises(ValueError, match='^' + re.escape(expected) + '$') as caught:
+                debug.load_state(bad['artifact'], timeout_ms=60000)
+            assert not created, 'Host preflight must refuse before destination construction'
+            assert debug.vm is owner and owner.process is process and process.poll() is None
+            assert not debug.closed and debug.dos_process_info()['capture_epoch'] == epoch
+            after = _sample(project, debug, control['offsets'], 'after-stale-hash-refusal')
+            _assert_exact(after, control['captured'])
+            assert after['audio_artifact']['metadata']['window'] == control['captured']['audio_artifact']['metadata']['window']
+            return dict(stage='host-preflight', refusal=str(caught.value), destination_count=0,
+                original_owner_live=True, original_state_unchanged=True)
+        finally:
+            for destination in created:
+                destination.close()
+
+
+def _stereo_native_refusals(project, runtime, directory, disk, control):
+    """Five bounded public restores; a native refusal closes both owners."""
+    results = []
+    for damage, expected in CORE4_REFUSALS.items():
+        with _launch(project, runtime, directory, disk) as debug:
+            owner, process = debug.vm, debug.vm.process
+            with (_corrupt_artifact(project, debug, control['saved'], damage) as bad,
+                  _new_destinations() as created):
+                try:
+                    prefix = 'QMP x-fdisbull-instrumented-checkpoint-import: '
+                    with pytest.raises(DebuggerError, match='^' + re.escape(prefix)) as caught:
+                        debug.load_state(bad['artifact'], timeout_ms=60000)
+                    refusal = json.loads(str(caught.value)[len(prefix):])
+                    assert refusal['class'] == 'GenericError' and refusal['desc'] == expected
+                    assert len(created) == 1, 'Exactly one real restore destination is required'
+                    destination = created[0]
+                    assert destination is not owner and destination.process is not process
+                    assert destination.process.poll() is not None
+                    assert destination.qmp is None and destination.gdb is None
+                    assert debug.closed and debug.vm is owner and process.poll() is not None
+                    # Native import can already have registered the stereo tap
+                    # and rebound clock state. Only closure is promised here.
+                    results.append(dict(damage=damage, stage='native-import', refusal=refusal,
+                        destination_count=1, destination_closed=True, original_owner_closed=True))
+                finally:
+                    for destination in created:
+                        destination.close()
+    row = project.db.execute('SELECT sha256 FROM debug_artifacts WHERE id=?',
+                             (control['saved']['artifact'],)).fetchone()
+    assert row['sha256'] == control['saved']['sha256']
+    return results
 
 
 def _quit(debug):
@@ -233,6 +448,14 @@ def _cold(path):
 
 
 def test_native_opl_pitch_gates_noise_timers_and_combined_checkpoint_hot_separate_process_cold(tmp_path):
+    _combined_checkpoint(tmp_path)
+
+
+def test_native_s16_stereo_opl_sb16_checkpoint_hot_separate_process_cold(tmp_path):
+    _combined_checkpoint(tmp_path, capture_format='s16-stereo')
+
+
+def _combined_checkpoint(tmp_path, *, capture_format=None):
     runtime = _runtime()
     boot = Path(runtime['FDISBULL_QEMU_DOS_BOOT_IMAGE'])
     boot_hash = digest(boot)
@@ -243,39 +466,44 @@ def test_native_opl_pitch_gates_noise_timers_and_combined_checkpoint_hot_separat
     source.write_bytes(code)
     database = tmp_path / 'opl.fdb'
     report = dict(format='fdisbull-authored-opl-native-1', success=False, hot=[],
+        capture_format=capture_format or 'legacy-default',
         oracle='Yamaha YM3812 FNUM/BLOCK pitch and guest keyoff/status, not bit-exact hardware PCM',
         hardware_frequency_relative_tolerance=0.015, timer_semantics='stock forced expiry on next port access',
         future_ns=600_000_000, full_future_cpu_required=True)
     control = dict(directory=str(tmp_path), database=str(database), disk=str(disk['image']),
-        disk_sha256=disk['prepared_sha256'], source_sha256=digest(source), offsets=offsets)
+        disk_sha256=disk['prepared_sha256'], source_sha256=digest(source), offsets=offsets,
+        capture_format=capture_format)
     try:
         with Project.create(database, source, image='com') as project:
             with _launch(project, runtime, tmp_path, disk) as debug:
                 symbols = _symbols(debug, offsets)
                 park(debug, symbols['opl_tone_loop'])
-                debug.audio_start(max_frames=100000)
+                _audio_start(debug, max_frames=100000, capture_format=capture_format)
                 budget_receipt(debug.clock_advance(300_000_000, timeout_ms=15000), 300_000_000)
                 first = _sample(project, debug, offsets, 'single-tone')
                 assert first['opl_stage'] == 1 and first['sb']['dma-active'] is False
                 assert first['timer1_status'] & 0xe0 == 0xc0
                 assert first['timer2_status'] & 0xe0 == 0xa0
                 assert first['timer_reset_status'] & 0xe0 == 0
-                fundamental = _pitch(bytes.fromhex(first['pcm_hex']))
-                assert abs(fundamental / note_frequency() - 1) < 0.015
+                fundamentals = _pitches(bytes.fromhex(first['pcm_hex']), first['sample_format'])
+                assert all(abs(value / note_frequency() - 1) < 0.015 for value in fundamentals)
+                fundamental = fundamentals[0]
                 _tap(debug, '2')
                 budget_receipt(debug.clock_advance(200_000_000, timeout_ms=15000), 200_000_000)
                 octave = _sample(project, debug, offsets, 'octave-tone')
                 assert octave['opl_stage'] == 2
-                doubled = _pitch(bytes.fromhex(octave['pcm_hex']))
-                assert abs(doubled / note_frequency(OPL_BLOCK + 1) - 1) < 0.015
-                assert abs(doubled / fundamental - 2) < 0.03
+                doubled_lanes = _pitches(bytes.fromhex(octave['pcm_hex']), octave['sample_format'])
+                assert all(abs(value / note_frequency(OPL_BLOCK + 1) - 1) < 0.015 for value in doubled_lanes)
+                assert all(abs(value / base - 2) < 0.03 for value, base in zip(doubled_lanes, fundamentals))
+                doubled = doubled_lanes[0]
                 _tap(debug, 'k')
                 budget_receipt(debug.clock_advance(150_000_000, timeout_ms=15000), 150_000_000)
                 released = _sample(project, debug, offsets, 'keyoff')
                 assert released['opl_stage'] == 3
-                assert all(abs(value - 128) <= 1 for value in bytes.fromhex(released['pcm_hex'])[-2048:])
+                _assert_keyoff(bytes.fromhex(released['pcm_hex']), released['sample_format'])
                 report.update(tone=first, octave=octave, keyoff=released,
                     observed_pitch_hz=fundamental, observed_octave_hz=doubled,
+                    observed_channel_pitches_hz=fundamentals, observed_channel_octaves_hz=doubled_lanes,
                     predicted_pitch_hz=note_frequency())
                 _tap(debug, 'c')
                 budget_receipt(debug.clock_advance(80_000_000, timeout_ms=15000), 80_000_000)
@@ -294,6 +522,10 @@ def test_native_opl_pitch_gates_noise_timers_and_combined_checkpoint_hot_separat
                 assert (captured['opl']['timer1-expiry-us'], captured['opl']['timer2-expiry-us']) == (160, 643)
                 assert captured['sb']['dma-active'] is True and captured['sb']['voice-channels'] == 2
                 assert captured['sb']['voice-frequency'] == 11025 and captured['sb']['dma-length'] == RING_BYTES
+                assert captured['sb']['block-size'] == BLOCK_BYTES
+                if capture_format == 's16-stereo':
+                    assert captured['sample_format'] == STEREO_FORMAT
+                    assert captured['stereo_channels_differ'] is True
                 saved = debug.save_state('opl-combined.state')
                 root = debug.rewind_start(max_steps=1, max_bytes=128 * 1024 * 1024, timeout_ms=60000)
                 root_manifest = project.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (root['history'],)).fetchone()
@@ -302,7 +534,11 @@ def test_native_opl_pitch_gates_noise_timers_and_combined_checkpoint_hot_separat
                     root_checkpoint=root_node['checkpoint'], captured=captured,
                     origin_run=debug.run_id, origin_epoch=debug.dos_process_info()['capture_epoch'])
                 _assert_exact(_sample(project, debug, offsets, 'after-both-captures'), captured)
+                if capture_format == 's16-stereo':
+                    report['core_host_refusal'] = _stereo_preflight_refusal(project, debug, control)
                 future = _future(project, debug, offsets, captured, 'original-future')
+                if capture_format == 's16-stereo':
+                    report['core_host_refusal']['continued_virtual_ns'] = 600_000_000
                 report.update(saved=saved, history_root=root, original_future=future)
                 control['future'] = future
                 for route in ('explicit', 'history-root'):
@@ -317,6 +553,9 @@ def test_native_opl_pitch_gates_noise_timers_and_combined_checkpoint_hot_separat
                 _quit(debug)
                 owner = debug.vm.process
             assert owner.poll() is not None
+            if capture_format == 's16-stereo':
+                report['core_native_refusals'] = _stereo_native_refusals(
+                    project, runtime, tmp_path, disk, control)
         control_path = tmp_path / 'cold-opl-control.json'
         control_path.write_text(json.dumps(control, indent=2, sort_keys=True) + '\n')
         child = subprocess.run([sys.executable, str(Path(__file__).resolve()), '--cold', str(control_path)],
