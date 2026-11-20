@@ -1,0 +1,90 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "b82342e48ab014d6a0526675492d9b0bbfe6844d8eb8848570e93b961bbc589c",
+  "patch": "qemu-video-frame.patch",
+  "patch_sha256": "01ab5ded06a8ab432b49fafa64ee133358a396aa7fec3bbd9f1bf43a36254723",
+  "scope": "Opt-in bounded chain-4 row-sampled source raster at declared native precise-model cadence; no frame control or DOSBox equivalence",
+  "files": [
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_sha256": "a279f17806b71d7fff1fac18b55e8251736af4f369a237bd88a57cbdcaa92159",
+      "patched_sha256": "ddf6b2a2b846ff9fbb9f99ce0935939a1f35a1b418cb504b946ee97ec7637b14"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_sha256": "3a7e6935fce93f2a04b4474cb7f72e9e3ffc0e7c1dc128ee4f2030ef6cb312cb",
+      "patched_sha256": "fd014c9976bef86bc8b053c2f42d6cd6826fd5d92bcd5f5c1db78ffe13d76193"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_sha256": "5f5ad4701d770c63d2e038247d8b9da73db7eaae359b0cbbf2101b16110170d6",
+      "patched_sha256": "6e4f8f7592e20aaa2deb5aa9e1ceda8a92fe4d47da026db48a94e9151cbaa9d2"
+    },
+    {
+      "path": "include/hw/display/fdisbull-video-frame.h",
+      "base_sha256": null,
+      "patched_sha256": "03c9aa15ef17b77863be37cba8fd84dd5303a5b684f008c8e2cbdee4a7465c1b"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_sha256": "a0c2741780f6fbf8f55503c670ef4a3452fd0d1e9a9633e8f6169a648088703c",
+      "patched_sha256": "76a2aabb3918e7d9eb19fe5cd80994d5571680d2c2ca91e7cda2f1db0764fff7"
+    },
+    {
+      "path": "include/system/fdisbull-video-frame.h",
+      "base_sha256": null,
+      "patched_sha256": "f0bc6c1ebe3ada2067670fe53b378b29664b462d55ebd3bcd489ea590715469f"
+    },
+    {
+      "path": "qapi/fdisbull-video-frame.json",
+      "base_sha256": null,
+      "patched_sha256": "c20c60f55130f5ab5b33cabd05a8fa9d18a2ce4dac8d8f1830b8e04df82924ae"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "cd057968f4f9536c295ebd01b62f5afc0988f417b3adf652383de31b103b58d0",
+      "patched_sha256": "c6f7fd29d50133cf70a7eeddc593c10c22c273da511fbc4ccad412ea52bd6398"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "ce2c2eaff77b3aadb076f2c228e24da884fe26c7c4fc82251814eaa7c7a5c42b",
+      "patched_sha256": "6357ec320ab6ee86d014f7678d04a6985e377afcac199017448abb8dffe4c73c"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_sha256": "c1f6b78cf7861b020514b3ac139b79af10c0d181a16c8a0d70b6bac79d68c6b0",
+      "patched_sha256": "706d6de7edacab7b1adf3bc5e2357b121a085d07b964d63ea12c7365fc3bdf9e"
+    },
+    {
+      "path": "system/fdisbull-video-frame.c",
+      "base_sha256": null,
+      "patched_sha256": "99b2bd84b178d79bbc8ee1637f2be2b7a0d20b2acc205fe38a7832d3a916ad76"
+    },
+    {
+      "path": "system/meson.build",
+      "base_sha256": "0f433a9b87a308620d25a3a7877fe8593af730eeda9a682700047a1983ad3cbc",
+      "patched_sha256": "bf77bce0ff59d38e4d1b87e12818e50cf66a6f8f812f243164f371f760f44cca"
+    }
+  ],
+  "qualification": {
+    "compiled_source_probe": {
+      "status": "passed",
+      "test_module": "tests/test_qemu_video_frame_source.py",
+      "cases": 39,
+      "command": "python -m pytest -q tests/test_qemu_video_frame_source.py",
+      "scope": "Exact pure header extracted from hashed patch; timing arithmetic and owned row bytes only. No QMP/timer/native integration.",
+      "patch_sha256_at_run": "dcb691b43f751d93f8bc547c4e9092a163d8071c5908731fa425c5716868c46a",
+      "helper_sha256": "03c9aa15ef17b77863be37cba8fd84dd5303a5b684f008c8e2cbdee4a7465c1b"
+    },
+    "build": "not-run",
+    "native": "not-run",
+    "paired_legacy": "not-run",
+    "full_schema_parse": {
+      "status": "passed",
+      "doc_required": true,
+      "scope": "Exact combined QAPI schema parsed by admitted QEMU10.0.13 scripts; no pragma exceptions or native build",
+      "patch_sha256_at_run": "01ab5ded06a8ab432b49fafa64ee133358a396aa7fec3bbd9f1bf43a36254723"
+    }
+  }
+}

@@ -1,0 +1,1159 @@
+diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -172,6 +172,29 @@
+     return g_steal_pointer(&result);
+ }
+ 
++bool pci_std_vga_fdisbull_video_frame_sample(
++    Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
++    struct FdisbullVideoFrameSource *source, Error **errp)
++{
++    VGACommonState *s;
++
++    assert(bql_locked());
++    if (!pci_std_vga_fdisbull_configuration_selected(obj) ||
++        !qdev_is_realized(DEVICE(obj))) {
++        error_setg(errp, "Video frame source requires realized precise primary VGA");
++        return false;
++    }
++    s = &PCI_VGA(obj)->vga;
++    if (!s->con || qemu_console_lookup_by_index(0) != s->con ||
++        qemu_console_get_head(s->con) != 0 ||
++        object_property_get_link(OBJECT(s->con), "device", NULL) != obj ||
++        !qemu_console_can_update_headless_sync(s->con)) {
++        error_setg(errp, "Video frame source lost its owned headless VGA console");
++        return false;
++    }
++    return vga_fdisbull_video_frame_sample(s, virtual_ns, row, rgb, source, errp);
++}
++
+ static const VMStateDescription vmstate_vga_pci = {
+     .name = "vga",
+     .version_id = 2,
+diff --git a/hw/display/vga.c b/hw/display/vga.c
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -41,6 +41,8 @@
+ #include "vga_int.h"
+ #include "vga_regs.h"
+ #include "fdisbull-raster.h"
++#include "hw/display/fdisbull-video-frame.h"
++#include "system/fdisbull-video-frame.h"
+ #include "ui/pixel_ops.h"
+ #include "ui/console.h"
+ #include "qemu/timer.h"
+@@ -341,6 +343,7 @@
+ 
+ static void vga_fdisbull_retrace_advance_generation(VGACommonState *s)
+ {
++    fdisbull_video_frame_invalidate(s->con, "timing-changed");
+     if (s->fdisbull_retrace_generation == UINT64_MAX) {
+         s->fdisbull_retrace_overflow = true;
+     } else {
+@@ -553,11 +556,13 @@
+         return;
+     }
+     if (s->fdisbull_configuration_generation == UINT64_MAX) {
++        fdisbull_video_frame_invalidate(s->con, "configuration-generation-overflow");
+         s->fdisbull_configuration_invalidated = true;
+         return;
+     }
+     s->fdisbull_configuration_generation++;
+     memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
++    fdisbull_video_frame_invalidate(s->con, "configuration-changed");
+ }
+ 
+ static uint8List *vga_fdisbull_configuration_bytes(const uint8_t *data,
+@@ -1975,6 +1980,72 @@
+     result->reason = g_strdup(reason);
+ }
+ 
++/* Fresh source description; never repair or borrow the renderer's params. */
++bool vga_fdisbull_video_frame_sample(
++    VGACommonState *s, int64_t virtual_ns, int row, uint8_t *rgb,
++    FdisbullVideoFrameSource *source, Error **errp)
++{
++    g_autoptr(FdisbullRetraceInfo) retrace = g_new0(FdisbullRetraceInfo, 1);
++    g_autoptr(FdisbullVgaConfigurationSnapshot) configuration =
++        g_new0(FdisbullVgaConfigurationSnapshot, 1);
++    VGADisplayParams params;
++    FdisbullChain4Geometry geometry;
++    int width, height, depth, shift_control, double_scan, multi_scan;
++    const char *reason;
++
++    assert(bql_locked());
++    if (!source || row < -1 || row >= (int)FDISBULL_VIDEO_HEIGHT ||
++        (row >= 0 && !rgb) || !s->vram_ptr) {
++        error_setg(errp, "Invalid bounded video source-row request");
++        return false;
++    }
++    if (!vga_fdisbull_configuration_query(s, configuration, errp) ||
++        !vga_fdisbull_retrace_query(s, virtual_ns, retrace, errp)) {
++        return false;
++    }
++    if (!retrace->phase_supported) {
++        error_setg(errp, "Video frame source requires admitted precise timing");
++        return false;
++    }
++    vga_get_params(s, &params);
++    vga_get_resolution(s, &width, &height);
++    depth = vga_get_bpp(s);
++    shift_control = (s->gr[VGA_GFX_MODE] >> 5) & 3;
++    double_scan = s->cr[VGA_CRTC_MAX_SCAN] >> 7;
++    multi_scan = (s->cr[VGA_CRTC_MODE] & 1) ?
++        (((s->cr[VGA_CRTC_MAX_SCAN] & 0x1f) + 1) << double_scan) - 1 :
++        double_scan;
++    geometry = vga_fdisbull_chain4_geometry(
++        s, width, height, depth, shift_control, multi_scan);
++    geometry.start_address = (uint64_t)params.start_addr * 4;
++    geometry.line_offset = params.line_offset;
++    geometry.line_compare = params.line_compare;
++    geometry.hpel = params.hpel & 7;
++    reason = fdisbull_chain4_admission(&geometry);
++    if (reason) {
++        error_setg(errp, "Video frame source is unsupported: %s", reason);
++        return false;
++    }
++    source->configuration_generation = configuration->configuration_generation;
++    source->timing_generation = retrace->timing_generation;
++    source->line_period_ns = retrace->timing->ticks_per_char *
++                             retrace->timing->htotal;
++    source->period_ns = retrace->phase->period_ns;
++    source->dac_8bit = s->dac_8bit;
++    if (!fdisbull_video_timing_valid(source->line_period_ns, source->period_ns)) {
++        error_setg(errp, "Video frame timing cannot cover 400 physical lines");
++        return false;
++    }
++    if (row >= 0 && !fdisbull_video_copy_row(
++            s->vram_ptr + (size_t)row * FDISBULL_VIDEO_WIDTH,
++            FDISBULL_VIDEO_WIDTH, s->palette, sizeof(s->palette), s->dac_8bit,
++            rgb, FDISBULL_VIDEO_ROW_BYTES)) {
++        error_setg(errp, "Video frame row source is incomplete");
++        return false;
++    }
++    return true;
++}
++
+ void vga_invalidate_scanlines(VGACommonState *s, int y1, int y2)
+ {
+     int y;
+@@ -2387,6 +2458,7 @@
+ void vga_common_reset(VGACommonState *s)
+ {
+     vga_fdisbull_raster_invalidate(s, "native-reset");
++    fdisbull_video_frame_invalidate(s->con, "native-reset");
+     if (s->fdisbull_retrace) {
+         s->fdisbull_retrace_initialized = false;
+         vga_fdisbull_retrace_advance_generation(s);
+@@ -2664,6 +2736,7 @@
+     VGACommonState *s = opaque;
+ 
+     vga_fdisbull_raster_invalidate(s, "native-load");
++    fdisbull_video_frame_invalidate(s->con, "native-load");
+ 
+     /* force refresh */
+     s->graphic_mode = -1;
+diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -226,6 +226,11 @@
+ struct FdisbullRasterProof *vga_fdisbull_raster_query(VGACommonState *s,
+                                                    Error **errp);
+ 
++struct FdisbullVideoFrameSource;
++bool vga_fdisbull_video_frame_sample(
++    VGACommonState *s, int64_t virtual_ns, int row, uint8_t *rgb,
++    struct FdisbullVideoFrameSource *source, Error **errp);
++
+ void vga_dirty_log_start(VGACommonState *s);
+ void vga_dirty_log_stop(VGACommonState *s);
+ 
+diff --git a/include/hw/display/fdisbull-video-frame.h b/include/hw/display/fdisbull-video-frame.h
+new file mode 100644
+--- /dev/null
++++ b/include/hw/display/fdisbull-video-frame.h
+@@ -0,0 +1,98 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* Pure, bounded source-row sampling and native-model deadline arithmetic. */
++#ifndef HW_DISPLAY_FDISBULL_VIDEO_FRAME_H
++#define HW_DISPLAY_FDISBULL_VIDEO_FRAME_H
++
++#include <stdbool.h>
++#include <stddef.h>
++#include <stdint.h>
++
++#define FDISBULL_VIDEO_WIDTH 320u
++#define FDISBULL_VIDEO_HEIGHT 200u
++#define FDISBULL_VIDEO_ROW_BYTES (FDISBULL_VIDEO_WIDTH * 3u)
++#define FDISBULL_VIDEO_RGB_BYTES (FDISBULL_VIDEO_ROW_BYTES * FDISBULL_VIDEO_HEIGHT)
++
++typedef struct FdisbullVideoFrameSource {
++    uint64_t configuration_generation;
++    uint64_t timing_generation;
++    int64_t line_period_ns;
++    int64_t period_ns;
++    bool dac_8bit;
++} FdisbullVideoFrameSource;
++
++static inline bool fdisbull_video_timing_valid(int64_t line, int64_t period)
++{
++    return line >= 4 && line <= INT64_MAX / 400 &&
++           period >= line * 400 && period % line == 0;
++}
++
++static inline bool fdisbull_video_next_start(int64_t now, int64_t period,
++                                            int64_t *start)
++{
++    int64_t remaining;
++
++    if (!start || now < 0 || period <= 0) {
++        return false;
++    }
++    remaining = period - now % period;
++    if (now > INT64_MAX - remaining) {
++        return false;
++    }
++    *start = now + remaining;
++    return true;
++}
++
++static inline bool fdisbull_video_row_deadline(int64_t start, int64_t line,
++                                              unsigned row, int64_t *deadline)
++{
++    int64_t offset;
++
++    if (!deadline || start < 0 || line < 4 || line > INT64_MAX / 400 ||
++        row >= FDISBULL_VIDEO_HEIGHT) {
++        return false;
++    }
++    offset = line / 4 + (int64_t)(2 * row) * line;
++    if (start > INT64_MAX - offset) {
++        return false;
++    }
++    *deadline = start + offset;
++    return true;
++}
++
++static inline bool fdisbull_video_row_timely(int64_t intended, int64_t actual,
++                                            int64_t line)
++{
++    return intended >= 0 && actual >= intended && line > 0 &&
++           actual - intended < line;
++}
++
++/* Explicit DOSBox-compatible DAC adapter, separate from QEMU c6_to_8. */
++static inline uint8_t fdisbull_video_dac(uint8_t value, bool dac_8bit)
++{
++    if (dac_8bit) {
++        return value;
++    }
++    value &= 63;
++    return (value << 2) | (value >> 4);
++}
++
++static inline bool fdisbull_video_copy_row(
++    const uint8_t *indices, size_t index_bytes, const uint8_t *palette,
++    size_t palette_bytes, bool dac_8bit, uint8_t *rgb, size_t rgb_bytes)
++{
++    unsigned x, channel;
++
++    if (!indices || !palette || !rgb || index_bytes != FDISBULL_VIDEO_WIDTH ||
++        palette_bytes != 256u * 3u || rgb_bytes != FDISBULL_VIDEO_ROW_BYTES) {
++        return false;
++    }
++    for (x = 0; x < FDISBULL_VIDEO_WIDTH; x++) {
++        for (channel = 0; channel < 3; channel++) {
++            rgb[x * 3 + channel] = fdisbull_video_dac(
++                palette[indices[x] * 3 + channel], dac_8bit);
++        }
++    }
++    return true;
++}
++
++#endif
+diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -40,6 +40,10 @@
+ struct FdisbullRasterProof;
+ struct FdisbullRasterProof *pci_std_vga_fdisbull_raster_query(
+     Object *obj, uint64_t epoch, int64_t virtual_ns, Error **errp);
++struct FdisbullVideoFrameSource;
++bool pci_std_vga_fdisbull_video_frame_sample(
++    Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
++    struct FdisbullVideoFrameSource *source, Error **errp);
+ bool pci_std_vga_fdisbull_checkpoint_restore(
+     Object *obj, const struct FdisbullRetraceInfo *retrace,
+     const struct FdisbullVgaConfigurationSnapshot *configuration,
+diff --git a/include/system/fdisbull-video-frame.h b/include/system/fdisbull-video-frame.h
+new file mode 100644
+--- /dev/null
++++ b/include/system/fdisbull-video-frame.h
+@@ -0,0 +1,10 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef SYSTEM_FDISBULL_VIDEO_FRAME_H
++#define SYSTEM_FDISBULL_VIDEO_FRAME_H
++
++struct QemuConsole;
++/* Effective native writes/reset/load invalidate both partial and live pixels. */
++void fdisbull_video_frame_invalidate(struct QemuConsole *console,
++                                    const char *reason);
++
++#endif
+diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
+new file mode 100644
+--- /dev/null
++++ b/qapi/fdisbull-video-frame.json
+@@ -0,0 +1,214 @@
++# Opt-in, owned source rows at a declared native precise-model cadence.
++# This stream is not the retained renderer-publication API or frame control.
++
++##
++# @FdisbullVideoFrameRow:
++#
++# @row: Source row index, 0 through 199, in increasing order.
++# @intended-ns: Original row deadline in QEMU_CLOCK_VIRTUAL nanoseconds.
++# @actual-ns: Actual sampling timestamp, no earlier than the deadline and
++#     strictly less than one physical line period after it.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFrameRow',
++  'data': { 'row': 'int', 'intended-ns': 'int', 'actual-ns': 'int' } }
++
++##
++# @FdisbullVideoFrame:
++#
++# @frame-id: Process-monotonic accepted complete-raster ordinal.
++# @stream-generation: Process-local explicit-start generation.
++# @epoch: Producing native clock epoch; never rebound to restored pixels.
++# @configuration-generation: Selected VGA configuration identity for all rows.
++# @timing-generation: Selected precise timing identity for all rows.
++# @width: Source width, 320 pixels.
++# @height: Source height, 200 rows.
++# @stride: Packed source stride, 960 bytes.
++# @pixel-format: RGB888 without padding or alpha.
++# @dac-conversion: replicate-6-to-8-v1; separate from the QEMU renderer adapter.
++# @dac-8bit: Eight-bit DAC channels are unchanged; otherwise six-bit channels
++#     are masked and expanded by bit replication.
++# @frame-start-ns: Phase-zero native boundary strictly after explicit start.
++# @period-ns: Whole native precise-model frame period.
++# @line-period-ns: Physical line period in that same native model.
++# @first-sample-ns: Actual row-zero sampling time.
++# @last-sample-ns: Actual row-199 sampling time.
++# @completed-ns: Accepted publication time, equal to last-sample-ns.
++# @pixel-sha256: SHA-256 of exactly 192000 retained packed RGB bytes.
++# @rows: Exactly 200 frozen source-row sampling receipts.
++#
++# This receipt owns one complete row-sampled raster. It does not claim
++# application drawing completion or equivalence with DOSBox's carried phase.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFrame',
++  'data': { 'frame-id': 'uint64', 'stream-generation': 'uint64',
++            'epoch': 'uint64', 'configuration-generation': 'uint64',
++            'timing-generation': 'uint64', 'width': 'int', 'height': 'int',
++            'stride': 'int', 'pixel-format': 'str', 'dac-conversion': 'str',
++            'dac-8bit': 'bool', 'frame-start-ns': 'int', 'period-ns': 'int',
++            'line-period-ns': 'int', 'first-sample-ns': 'int',
++            'last-sample-ns': 'int', 'completed-ns': 'int',
++            'pixel-sha256': 'str', 'rows': ['FdisbullVideoFrameRow'] } }
++
++##
++# @FdisbullVideoFrameInfo:
++#
++# @api-version: Private protocol version, 1.
++# @model: qemu-vga-chain4-scanline-v1.
++# @state: idle, observing, stopped, or invalidated.
++# @epoch: Current stopped native clock epoch; a retained frame has its own
++#     frozen producing epoch.
++# @virtual-ns: Current stopped QEMU_CLOCK_VIRTUAL timestamp.
++# @stream-generation: Explicit-start generation, zero before the first start.
++# @frame-sequence: Accepted raster count; not reset by start, stop, or load.
++# @aborted-frames: Discarded partial rasters that had sampled at least one row.
++# @in-progress: Whether the current partial raster has sampled rows.
++# @rows-sampled: Current partial row count, zero through 199.
++# @token: Caller ownership token, present after explicit start.
++# @device: Canonical selected VGA device path, present after explicit start.
++# @reason: First invalidation reason; present only for an invalidated stream.
++# @start-ns: Native stopped time of explicit start, present after start.
++# @stop-ns: Native stopped time of explicit stop, present only while stopped.
++# @next-deadline-ns: Original intended next-row deadline, present only while
++#     observing; a deferred callback does not replace it.
++# @frame: Frozen retained complete raster, absent before completion or after
++#     invalidation. Old renderer pixels cannot supply it.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFrameInfo',
++  'data': { 'api-version': 'int', 'model': 'str', 'state': 'str',
++            'epoch': 'uint64', 'virtual-ns': 'int',
++            'stream-generation': 'uint64', 'frame-sequence': 'uint64',
++            'aborted-frames': 'uint64', 'in-progress': 'bool',
++            'rows-sampled': 'int', '*token': 'str', '*device': 'str',
++            '*reason': 'str', '*start-ns': 'int', '*stop-ns': 'int',
++            '*next-deadline-ns': 'int', '*frame': 'FdisbullVideoFrame' } }
++
++##
++# @FdisbullVideoFramePoint:
++#
++# @x: Source column, zero through 319.
++# @y: Source row, zero through 199.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFramePoint',
++  'data': { 'x': 'int', 'y': 'int' } }
++
++##
++# @FdisbullVideoFramePixel:
++#
++# @x: Requested source column, preserved in request order.
++# @y: Requested source row, preserved in request order.
++# @r: Frozen red channel, zero through 255.
++# @g: Frozen green channel, zero through 255.
++# @b: Frozen blue channel, zero through 255.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFramePixel',
++  'data': { 'x': 'int', 'y': 'int', 'r': 'int', 'g': 'int', 'b': 'int' } }
++
++##
++# @FdisbullVideoFrameProbe:
++#
++# @info: Stopped stream receipt containing the exact requested retained frame.
++# @pixels: At most 256 ordered RGB samples; duplicates and an empty list are
++#     allowed. Pixels come only from the owned complete raster.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFrameProbe',
++  'data': { 'info': 'FdisbullVideoFrameInfo',
++            'pixels': ['FdisbullVideoFramePixel'] } }
++
++##
++# @x-fdisbull-start-video-frame:
++#
++# Explicitly opt into future source-row sampling. Requires the stopped native
++# clock, exact primary precise VGA and an inactive stream. Start schedules
++# the first strictly future native boundary but does not run the guest or
++# sample pixels. No separate launch property is added.
++#
++# @token: New caller ownership token, 1 through 128 bytes, different from the
++#     preceding stream's token.
++#
++# Returns: The observing stream receipt with no retained frame.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-start-video-frame', 'data': { 'token': 'str' },
++  'returns': 'FdisbullVideoFrameInfo' }
++
++##
++# @x-fdisbull-query-video-frame:
++#
++# Passively read the stopped stream. Requires the supported stopped native
++# clock and selected owner. Does not render, hash, sample, arm a timer, execute
++# the guest, or repair an empty or invalidated stream.
++#
++# Returns: Current stream metadata and any frozen retained complete frame.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-video-frame',
++  'returns': 'FdisbullVideoFrameInfo' }
++
++##
++# @x-fdisbull-stop-video-frame:
++#
++# Cancel future sampling while stopped. Discard a partial raster and retain
++# the last complete one for exact token and frame-ID reads. Repeated stop is
++# idempotent; an invalidated stream remains invalidated.
++#
++# @token: Exact current ownership token.
++#
++# Returns: Stream receipt after stopping.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-stop-video-frame', 'data': { 'token': 'str' },
++  'returns': 'FdisbullVideoFrameInfo' }
++
++##
++# @x-fdisbull-export-video-frame:
++#
++# Export one exact retained source raster while stopped. Does not render,
++# refresh, or execute. Exclusive creation refuses an existing path.
++#
++# @token: Exact current ownership token.
++# @frame-id: Exact retained accepted frame ordinal.
++# @filename: New private output path, 1 through 4096 bytes. The file is a
++#     P6 header followed by exactly 192000 RGB bytes, created with mode 0600.
++#
++# Returns: The same stopped stream and frozen frame receipt.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-export-video-frame',
++  'data': { 'token': 'str', 'frame-id': 'uint64', 'filename': 'str' },
++  'returns': 'FdisbullVideoFrameInfo' }
++
++##
++# @x-fdisbull-probe-video-frame:
++#
++# Read bounded ordered pixels from one retained complete source raster while
++# stopped. Does not create files, render, refresh, hash, or execute.
++#
++# @token: Exact current ownership token.
++# @frame-id: Exact retained accepted frame ordinal.
++# @points: At most 256 in-range source points. Duplicates and an empty list
++#     are allowed and request order is preserved.
++#
++# Returns: Current stopped metadata and ordered frozen RGB samples.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-probe-video-frame',
++  'data': { 'token': 'str', 'frame-id': 'uint64',
++            'points': ['FdisbullVideoFramePoint'] },
++  'returns': 'FdisbullVideoFrameProbe' }
+diff --git a/qapi/meson.build b/qapi/meson.build
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -66,6 +66,7 @@
+     'fdisbull-input',
+     'fdisbull-retrace',
+     'fdisbull-raster',
++    'fdisbull-video-frame',
+     'fdisbull-vga-configuration',
+     'fdisbull-layers',
+   'fdisbull-dos-checkpoint',
+diff --git a/qapi/qapi-schema.json b/qapi/qapi-schema.json
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -70,6 +70,7 @@
+ { 'include': 'fdisbull-retrace.json' }
+ { 'include': 'fdisbull-vga-configuration.json' }
+ { 'include': 'fdisbull-raster.json' }
++{ 'include': 'fdisbull-video-frame.json' }
+ { 'include': 'fdisbull-layers.json' }
+ { 'include': 'fdisbull-dos-checkpoint.json' }
+ { 'include': 'fdisbull-instrumented-checkpoint.json' }
+diff --git a/system/fdisbull-retrace-stub.c b/system/fdisbull-retrace-stub.c
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -46,3 +46,11 @@
+     error_setg(errp, "Raster proof requires standard PCI VGA support");
+     return NULL;
+ }
++
++bool pci_std_vga_fdisbull_video_frame_sample(
++    Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
++    struct FdisbullVideoFrameSource *source, Error **errp)
++{
++    error_setg(errp, "Video frame source requires standard PCI VGA support");
++    return false;
++}
+diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
+new file mode 100644
+--- /dev/null
++++ b/system/fdisbull-video-frame.c
+@@ -0,0 +1,584 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* Opt-in complete source rasters assembled from timed native VGA source rows. */
++#include "qemu/osdep.h"
++#include "exec/cpu-interrupt.h"
++#include "hw/core/cpu.h"
++#include "hw/display/fdisbull-video-frame.h"
++#include "hw/display/vga.h"
++#include "hw/qdev-core.h"
++#include "qapi/error.h"
++#include "qapi/clone-visitor.h"
++#include "qapi/qapi-commands-fdisbull-retrace.h"
++#include "qapi/qapi-commands-fdisbull-video-frame.h"
++#include "qapi/qapi-commands-run-state.h"
++#include "qapi/qapi-visit-fdisbull-video-frame.h"
++#include "qemu/main-loop.h"
++#include "qemu/timer.h"
++#include "system/fdisbull-display.h"
++#include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/fdisbull-video-frame.h"
++#include "system/runstate.h"
++#include "ui/console.h"
++
++#define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
++#define VIDEO_MAX_POINTS 256
++
++/* Never serialized. Counters survive stopped replacement streams and load. */
++static struct {
++    bool initialized;
++    bool observing;
++    bool stopped;
++    bool invalidated;
++    uint64_t epoch;
++    uint64_t generation;
++    uint64_t sequence;
++    uint64_t aborted;
++    char *token;
++    char *device_path;
++    char *reason;
++    Object *device;
++    QemuConsole *console;
++    QEMUTimer timer;
++    int64_t start_ns;
++    int64_t stop_ns;
++    int64_t frame_start_ns;
++    int64_t deadline_ns;
++    unsigned rows;
++    int64_t intended[FDISBULL_VIDEO_HEIGHT];
++    int64_t actual[FDISBULL_VIDEO_HEIGHT];
++    FdisbullVideoFrameSource source;
++    uint8_t *partial;
++    uint8_t *rgb;
++    FdisbullVideoFrame *frame;
++} video;
++
++typedef struct VideoVGASearch {
++    unsigned count;
++    Object *device;
++} VideoVGASearch;
++
++static int video_find_vga(Object *obj, void *opaque)
++{
++    VideoVGASearch *search = opaque;
++
++    if (!strcmp(object_get_typename(obj), "VGA") &&
++        qdev_is_realized(DEVICE(obj))) {
++        search->count++;
++        search->device = obj;
++    }
++    return 0;
++}
++
++/* Selection only: no ownership admission, timer, renderer or guest I/O. */
++static Object *video_device(QemuConsole **out, Error **errp)
++{
++    VideoVGASearch search = { 0 };
++    QemuConsole *con = qemu_console_lookup_by_index(0);
++
++    object_child_foreach_recursive(object_get_root(), video_find_vga, &search);
++    if (search.count != 1 || !con ||
++        !pci_std_vga_fdisbull_configuration_selected(search.device) ||
++        !qemu_console_can_update_headless_sync(con) ||
++        qemu_console_get_head(con) != 0 ||
++        object_property_get_link(OBJECT(con), "device", NULL) != search.device) {
++        error_setg(errp, "Video frame stream requires exact primary precise VGA "
++                   "on owned headless synchronous console zero/head zero");
++        return NULL;
++    }
++    *out = con;
++    return search.device;
++}
++
++static bool video_stopped(FdisbullClockInfo **out, Error **errp)
++{
++    FdisbullClockInfo *clock;
++    CPUState *cpu;
++
++    assert(bql_locked());
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Video frame query cannot overlap checkpoint transaction");
++        return false;
++    }
++    clock = qmp_x_fdisbull_query_clock(errp);
++    if (!clock) {
++        return false;
++    }
++    if (clock->api_version != 1 || !clock->budget_supported ||
++        clock->virtual_ns < 0 || clock->running || clock->pending_stop ||
++        (clock->status != RUN_STATE_PRELAUNCH &&
++         clock->status != RUN_STATE_PAUSED && clock->status != RUN_STATE_DEBUG) ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
++        clock->budget_state == FDISBULL_CLOCK_BUDGET_STATE_FIRED) {
++        qapi_free_FdisbullClockInfo(clock);
++        error_setg(errp, "Video frame stream requires a valid stopped native clock");
++        return false;
++    }
++    CPU_FOREACH(cpu) {
++        if (!cpu->stopped) {
++            qapi_free_FdisbullClockInfo(clock);
++            error_setg(errp, "Video frame stream requires one stopped vCPU");
++            return false;
++        }
++    }
++    *out = clock;
++    return true;
++}
++
++static bool video_drop_partial(void)
++{
++    bool ok = true;
++
++    if (video.rows) {
++        if (video.aborted == UINT64_MAX) {
++            ok = false;
++        } else {
++            video.aborted++;
++        }
++        video.rows = 0;
++    }
++    return ok;
++}
++
++void fdisbull_video_frame_invalidate(QemuConsole *console, const char *reason)
++{
++    if (!video.token || video.console != console || video.invalidated) {
++        return;
++    }
++    assert(bql_locked());
++    if (video.initialized) {
++        timer_del(&video.timer);
++    }
++    if (!video_drop_partial()) {
++        reason = "aborted-frame-counter-overflow";
++    }
++    video.observing = false;
++    video.stopped = false;
++    video.invalidated = true;
++    g_free(video.reason);
++    video.reason = g_strdup(reason);
++    g_clear_pointer(&video.frame, qapi_free_FdisbullVideoFrame);
++    /* Buffers stay allocated but are unreachable as published pixels. */
++}
++
++static bool video_source_equal(const FdisbullVideoFrameSource *a,
++                               const FdisbullVideoFrameSource *b)
++{
++    return a->configuration_generation == b->configuration_generation &&
++           a->timing_generation == b->timing_generation &&
++           a->line_period_ns == b->line_period_ns &&
++           a->period_ns == b->period_ns && a->dac_8bit == b->dac_8bit;
++}
++
++static FdisbullVideoFrameInfo *video_info(const FdisbullClockInfo *clock)
++{
++    FdisbullVideoFrameInfo *info = g_new0(FdisbullVideoFrameInfo, 1);
++
++    info->api_version = 1;
++    info->model = g_strdup(VIDEO_MODEL);
++    info->state = g_strdup(video.invalidated ? "invalidated" :
++                          video.observing ? "observing" :
++                          video.stopped ? "stopped" : "idle");
++    info->epoch = clock->epoch;
++    info->virtual_ns = clock->virtual_ns;
++    info->stream_generation = video.generation;
++    info->frame_sequence = video.sequence;
++    info->aborted_frames = video.aborted;
++    info->in_progress = video.rows != 0;
++    info->rows_sampled = video.rows;
++    info->token = g_strdup(video.token);
++    info->device = g_strdup(video.device_path);
++    info->reason = g_strdup(video.reason);
++    info->has_start_ns = video.token != NULL;
++    info->start_ns = video.start_ns;
++    info->has_stop_ns = video.stopped;
++    info->stop_ns = video.stop_ns;
++    info->has_next_deadline_ns = video.observing;
++    info->next_deadline_ns = video.deadline_ns;
++    info->frame = video.frame ? QAPI_CLONE(FdisbullVideoFrame, video.frame) : NULL;
++    return info;
++}
++
++/* Passive consistency check; a query never repairs or invalidates the stream. */
++static bool video_query_guard(FdisbullClockInfo **out, Error **errp)
++{
++    QemuConsole *con;
++    Object *device;
++    FdisbullVideoFrameSource source;
++
++    if (!video_stopped(out, errp)) {
++        return false;
++    }
++    device = video_device(&con, errp);
++    if (!device) {
++        return false;
++    }
++    if (video.token && !video.invalidated &&
++        (video.device != device || video.console != con ||
++         video.epoch != (*out)->epoch ||
++         !pci_std_vga_fdisbull_video_frame_sample(device, (*out)->virtual_ns,
++                                                -1, NULL, &source, errp) ||
++         !video_source_equal(&source, &video.source))) {
++        if (!errp || !*errp) {
++            error_setg(errp, "Video frame owner/source identity changed");
++        }
++        return false;
++    }
++    return true;
++}
++
++static void video_publish(int64_t actual_ns)
++{
++    FdisbullVideoFrame *frame = g_new0(FdisbullVideoFrame, 1);
++    FdisbullVideoFrameRowList **tail = &frame->rows;
++    uint8_t *swap = video.rgb;
++    unsigned row;
++
++    video.rgb = video.partial;
++    video.partial = swap;
++    video.sequence++;
++    frame->frame_id = video.sequence;
++    frame->stream_generation = video.generation;
++    frame->epoch = video.epoch;
++    frame->configuration_generation = video.source.configuration_generation;
++    frame->timing_generation = video.source.timing_generation;
++    frame->width = FDISBULL_VIDEO_WIDTH;
++    frame->height = FDISBULL_VIDEO_HEIGHT;
++    frame->stride = FDISBULL_VIDEO_ROW_BYTES;
++    frame->pixel_format = g_strdup("RGB888");
++    frame->dac_conversion = g_strdup("replicate-6-to-8-v1");
++    frame->dac_8bit = video.source.dac_8bit;
++    frame->frame_start_ns = video.frame_start_ns;
++    frame->period_ns = video.source.period_ns;
++    frame->line_period_ns = video.source.line_period_ns;
++    frame->first_sample_ns = video.actual[0];
++    frame->last_sample_ns = actual_ns;
++    frame->completed_ns = actual_ns;
++    frame->pixel_sha256 = g_compute_checksum_for_data(
++        G_CHECKSUM_SHA256, video.rgb, FDISBULL_VIDEO_RGB_BYTES);
++    for (row = 0; row < FDISBULL_VIDEO_HEIGHT; row++) {
++        FdisbullVideoFrameRowList *entry = g_new0(FdisbullVideoFrameRowList, 1);
++
++        entry->value = g_new0(FdisbullVideoFrameRow, 1);
++        entry->value->row = row;
++        entry->value->intended_ns = video.intended[row];
++        entry->value->actual_ns = video.actual[row];
++        *tail = entry;
++        tail = &entry->next;
++    }
++    g_clear_pointer(&video.frame, qapi_free_FdisbullVideoFrame);
++    video.frame = frame;
++    video.rows = 0;
++}
++
++static void video_defer_callback(int64_t now)
++{
++    if (now == INT64_MAX) {
++        fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
++    } else {
++        /* Avoid a due-timer spin. Keep the original intended deadline. */
++        timer_mod_ns(&video.timer, now + 1);
++    }
++}
++
++static void video_timer_cb(void *opaque)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(Error) error = NULL;
++    FdisbullVideoFrameSource source;
++    QemuConsole *con;
++    Object *device;
++    CPUState *cpu;
++    bool stopping = false;
++
++    assert(bql_locked());
++    if (!video.observing || video.invalidated) {
++        return;
++    }
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        /* An owned save is inert; VGA reset/load explicitly invalidates. */
++        video_defer_callback(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
++        return;
++    }
++    clock = qmp_x_fdisbull_query_clock(&error);
++    if (!clock || !clock->budget_supported || clock->api_version != 1 ||
++        clock->epoch != video.epoch || clock->virtual_ns < 0) {
++        fdisbull_video_frame_invalidate(video.console, "clock-invalidated");
++        return;
++    }
++    CPU_FOREACH(cpu) {
++        stopping |= cpu->stop || cpu->stopped ||
++                    (cpu->interrupt_request & CPU_INTERRUPT_DEBUG);
++    }
++    if (!clock->running || clock->pending_stop || stopping) {
++        video_defer_callback(clock->virtual_ns);
++        return;
++    }
++    device = video_device(&con, &error);
++    if (!device || device != video.device || con != video.console) {
++        fdisbull_video_frame_invalidate(video.console, "video-owner-lost");
++        return;
++    }
++    if (!fdisbull_video_row_timely(video.deadline_ns, clock->virtual_ns,
++                                  video.source.line_period_ns)) {
++        fdisbull_video_frame_invalidate(video.console, "row-deadline-missed");
++        return;
++    }
++    if (!pci_std_vga_fdisbull_video_frame_sample(
++            device, clock->virtual_ns, video.rows,
++            video.partial + video.rows * FDISBULL_VIDEO_ROW_BYTES,
++            &source, &error) || !video_source_equal(&source, &video.source)) {
++        fdisbull_video_frame_invalidate(video.console, "source-or-generation-changed");
++        return;
++    }
++    video.intended[video.rows] = video.deadline_ns;
++    video.actual[video.rows] = clock->virtual_ns;
++    video.rows++;
++    if (video.rows == FDISBULL_VIDEO_HEIGHT) {
++        if (video.sequence == UINT64_MAX) {
++            fdisbull_video_frame_invalidate(video.console, "frame-sequence-overflow");
++            return;
++        }
++        video_publish(clock->virtual_ns);
++        if (video.frame_start_ns > INT64_MAX - video.source.period_ns) {
++            fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
++            return;
++        }
++        video.frame_start_ns += video.source.period_ns;
++    }
++    if (!fdisbull_video_row_deadline(video.frame_start_ns,
++                                    video.source.line_period_ns, video.rows,
++                                    &video.deadline_ns)) {
++        fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
++        return;
++    }
++    timer_mod_ns(&video.timer, video.deadline_ns);
++}
++
++static void video_vm_state_change(void *opaque, bool running, RunState state)
++{
++    if (!fdisbull_instrumented_checkpoint_busy() && video.token && !running &&
++        state != RUN_STATE_PRELAUNCH &&
++        state != RUN_STATE_PAUSED && state != RUN_STATE_DEBUG) {
++        fdisbull_video_frame_invalidate(video.console, "unsupported-vm-state");
++    }
++}
++
++FdisbullVideoFrameInfo *qmp_x_fdisbull_start_video_frame(const char *token,
++                                                      Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(FdisbullRetraceInfo) retrace = NULL;
++    g_autofree uint8_t *partial = NULL;
++    g_autofree uint8_t *rgb = NULL;
++    g_autofree char *path = NULL;
++    FdisbullVideoFrameSource source;
++    QemuConsole *con;
++    Object *device;
++    int64_t start, deadline;
++
++    if (!video_stopped(&clock, errp)) {
++        return NULL;
++    }
++    if (!token[0] || strlen(token) > 128 ||
++        (video.token && !strcmp(token, video.token)) || video.observing ||
++        video.generation == UINT64_MAX || video.sequence == UINT64_MAX ||
++        fdisbull_display_frame_fence_blocks_control()) {
++        error_setg(errp, "Video frame start requires an inactive stream, new "
++                   "1..128 byte token and available counters/controllers");
++        return NULL;
++    }
++    device = video_device(&con, errp);
++    if (!device || !pci_std_vga_fdisbull_video_frame_sample(
++            device, clock->virtual_ns, -1, NULL, &source, errp)) {
++        return NULL;
++    }
++    if (!fdisbull_video_next_start(clock->virtual_ns, source.period_ns, &start) ||
++        !fdisbull_video_row_deadline(start, source.line_period_ns, 0, &deadline)) {
++        error_setg(errp, "Video frame start deadline overflows native clock");
++        return NULL;
++    }
++    path = object_get_canonical_path(device);
++    partial = g_try_malloc(FDISBULL_VIDEO_RGB_BYTES);
++    rgb = g_try_malloc(FDISBULL_VIDEO_RGB_BYTES);
++    if (!path || !partial || !rgb) {
++        error_setg(errp, "Video frame bounded storage or device path unavailable");
++        return NULL;
++    }
++    /* Explicit start admits the existing precise owner/migration blocker. */
++    retrace = qmp_x_fdisbull_query_retrace(errp);
++    if (!retrace || retrace->epoch != clock->epoch ||
++        strcmp(retrace->device, path) || !retrace->phase_supported ||
++        retrace->timing_generation != source.timing_generation) {
++        if (!errp || !*errp) {
++            error_setg(errp, "Video frame precise owner admission changed");
++        }
++        return NULL;
++    }
++    if (!video.initialized) {
++        video.initialized = true;
++        timer_init_ns(&video.timer, QEMU_CLOCK_VIRTUAL, video_timer_cb, NULL);
++        qemu_add_vm_change_state_handler(video_vm_state_change, NULL);
++    }
++    object_ref(device);
++    object_ref(OBJECT(con));
++    if (video.device) {
++        object_unref(video.device);
++        object_unref(OBJECT(video.console));
++    }
++    video.device = device;
++    video.console = con;
++    g_free(video.device_path);
++    video.device_path = g_steal_pointer(&path);
++    g_free(video.token);
++    video.token = g_strdup(token);
++    g_clear_pointer(&video.reason, g_free);
++    g_clear_pointer(&video.frame, qapi_free_FdisbullVideoFrame);
++    g_free(video.partial);
++    g_free(video.rgb);
++    video.partial = g_steal_pointer(&partial);
++    video.rgb = g_steal_pointer(&rgb);
++    video.source = source;
++    video.epoch = clock->epoch;
++    video.generation++;
++    video.rows = 0;
++    video.invalidated = false;
++    video.stopped = false;
++    video.observing = true;
++    video.start_ns = clock->virtual_ns;
++    video.stop_ns = 0;
++    video.frame_start_ns = start;
++    video.deadline_ns = deadline;
++    timer_mod_ns(&video.timer, deadline);
++    return video_info(clock);
++}
++
++FdisbullVideoFrameInfo *qmp_x_fdisbull_query_video_frame(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    return video_query_guard(&clock, errp) ? video_info(clock) : NULL;
++}
++
++static bool video_token(const char *token, Error **errp)
++{
++    if (!video.token || strcmp(video.token, token)) {
++        error_setg(errp, "Video frame token does not own the current stream");
++        return false;
++    }
++    return true;
++}
++
++FdisbullVideoFrameInfo *qmp_x_fdisbull_stop_video_frame(const char *token,
++                                                     Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    if (!video_query_guard(&clock, errp) || !video_token(token, errp)) {
++        return NULL;
++    }
++    if (video.observing) {
++        timer_del(&video.timer);
++        if (!video_drop_partial()) {
++            fdisbull_video_frame_invalidate(video.console, "aborted-frame-counter-overflow");
++            return video_info(clock);
++        }
++        video.observing = false;
++        video.stopped = true;
++        video.stop_ns = clock->virtual_ns;
++    }
++    return video_info(clock);
++}
++
++static bool video_frame_id(const char *token, uint64_t frame_id, Error **errp)
++{
++    if (!video_token(token, errp)) {
++        return false;
++    }
++    if (video.invalidated || !video.frame || !frame_id ||
++        video.frame->frame_id != frame_id) {
++        error_setg(errp, "Video frame ID does not name a retained complete raster");
++        return false;
++    }
++    return true;
++}
++
++FdisbullVideoFrameInfo *qmp_x_fdisbull_export_video_frame(
++    const char *token, uint64_t frame_id, const char *filename, Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    static const char header[] = "P6\n320 200\n255\n";
++    int fd, saved_errno;
++
++    if (!video_query_guard(&clock, errp) ||
++        !video_frame_id(token, frame_id, errp)) {
++        return NULL;
++    }
++    if (!filename[0] || strlen(filename) > 4096) {
++        error_setg(errp, "Video frame export requires a bounded nonempty path");
++        return NULL;
++    }
++    fd = open(filename, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
++    if (fd < 0) {
++        error_setg_errno(errp, errno, "Cannot create private video frame export");
++        return NULL;
++    }
++    if (qemu_write_full(fd, header, sizeof(header) - 1) != sizeof(header) - 1 ||
++        qemu_write_full(fd, video.rgb, FDISBULL_VIDEO_RGB_BYTES) !=
++        FDISBULL_VIDEO_RGB_BYTES) {
++        saved_errno = errno ? errno : EIO;
++        close(fd);
++        unlink(filename);
++        error_setg_errno(errp, saved_errno, "Cannot write private video frame export");
++        return NULL;
++    }
++    if (close(fd)) {
++        saved_errno = errno;
++        unlink(filename);
++        error_setg_errno(errp, saved_errno, "Cannot close private video frame export");
++        return NULL;
++    }
++    return video_info(clock);
++}
++
++FdisbullVideoFrameProbe *qmp_x_fdisbull_probe_video_frame(
++    const char *token, uint64_t frame_id, FdisbullVideoFramePointList *points,
++    Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    FdisbullVideoFramePointList *point;
++    FdisbullVideoFrameProbe *probe;
++    FdisbullVideoFramePixelList **tail;
++    unsigned count = 0;
++
++    if (!video_query_guard(&clock, errp) ||
++        !video_frame_id(token, frame_id, errp)) {
++        return NULL;
++    }
++    for (point = points; point; point = point->next) {
++        if (++count > VIDEO_MAX_POINTS || point->value->x < 0 ||
++            point->value->x >= FDISBULL_VIDEO_WIDTH || point->value->y < 0 ||
++            point->value->y >= FDISBULL_VIDEO_HEIGHT) {
++            error_setg(errp, "Video frame probe requires at most 256 in-range points");
++            return NULL;
++        }
++    }
++    probe = g_new0(FdisbullVideoFrameProbe, 1);
++    probe->info = video_info(clock);
++    tail = &probe->pixels;
++    for (point = points; point; point = point->next) {
++        FdisbullVideoFramePixelList *entry = g_new0(FdisbullVideoFramePixelList, 1);
++        FdisbullVideoFramePixel *pixel = g_new0(FdisbullVideoFramePixel, 1);
++        const uint8_t *rgb = video.rgb +
++            (point->value->y * FDISBULL_VIDEO_WIDTH + point->value->x) * 3;
++
++        pixel->x = point->value->x;
++        pixel->y = point->value->y;
++        pixel->r = rgb[0];
++        pixel->g = rgb[1];
++        pixel->b = rgb[2];
++        entry->value = pixel;
++        *tail = entry;
++        tail = &entry->next;
++    }
++    return probe;
++}
+diff --git a/system/meson.build b/system/meson.build
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -17,6 +17,7 @@
+   'fdisbull-clock.c',
+   'fdisbull-audio.c',
+   'fdisbull-display.c',
++  'fdisbull-video-frame.c',
+   'fdisbull-input.c',
+   'fdisbull-frame-keys.c',
+   'fdisbull-layers.c',
