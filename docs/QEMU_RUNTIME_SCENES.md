@@ -142,8 +142,10 @@ wholly undelivered owned batch, press, typing or physical click may be admitted
 if its remaining fixed span plus one requested poll tail fits strictly inside
 the total guest budget. That full interval becomes the first slice. Partial,
 uncertain, retrace or motion plans refuse before execution. An immediate scene
-match leaves the arm pending and unchanged. A native stop may cancel an input
-suffix; its actual delivery receipt and held leases are retained for explicit
+match leaves the arm token, pending edges, leases, delivery cursor and native
+receipt unchanged. Revalidation refreshes the retained receipt's host timestamp
+and observation sequence without advancing the guest clock. A native stop may
+cancel an input suffix; its actual delivery receipt and held leases are retained for explicit
 caller resolution. The wait does not replay, repair or release input, and a
 scene predicate alone does not prove guest consumption.
 

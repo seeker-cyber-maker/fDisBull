@@ -98,6 +98,13 @@ full-plan first interval. The false-predicate case requests 20 ms total with
 must equal the observed final-minus-initial clocks; native timer overshoot is
 retained, rather than rounded away or declared an exact requested duration.
 Immediate, stale-witness and rebound waits request no actual execution.
+The initial-match case compares the complete public and internal input state,
+process, native arm and stopped guest clock, with GDB execution forbidden.
+Only the revalidated schedule receipt's `clock.host_monotonic_ns` and
+`clock.sequence` may refresh: both remain integers and monotonic, and the
+sequence must advance. The invalid-script refusal still requires exact input
+state equality because it must fail before that observation. Passive
+`scene_check`/`scene_assert` tests retain their existing exact-state assertions.
 
 The gate owner must also apply an independently admitted whole-controller wall
 deadline, process/descendant ownership and storage/log caps. The per-operation

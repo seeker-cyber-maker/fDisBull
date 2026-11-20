@@ -21,6 +21,7 @@ from fdisbull.output_limits import OutputPolicy, output_policy_context
 from fdisbull.project import Project
 from fdisbull.scenes import SceneError
 from support.dos_process_fixture import com_exit, resident_com
+from support.qemu_scene_wait_assertions import initial_match_preserves_arm
 from test_qemu_clock_budget_native import clock_runtime, clock_disk
 from test_qemu_dos_process_native import com_address, process_record, launch_options
 from test_qemu_dos_le_checkpoint_native import _checkpoint_tool
@@ -176,11 +177,11 @@ def test_native_initial_match_preserves_fixed_arm_and_invalid_script(tmp_path, c
             dict(op='scene-wait', scene='released', timeout_ms=True)])
         with pytest.raises(ValueError, match='integer'):debug.script(invalid)
         assert not calls and not reads and not boundaries and debug.input_state() == inputs
-        result = passive(debug, lambda: debug.scene_wait(**wait_options('released')))
+        result = initial_match_preserves_arm(debug, lambda: debug.scene_wait(**wait_options('released')))
         assert result['complete'] and result['wait']['guest_elapsed_ns'] == 0
         assert len(result['wait']['polls']) == 1 and not result['wait']['runs']
         assert not result['wait']['input_plan']['first_slice_attempted']
-        assert not calls and not boundaries and debug.input_state() == inputs
+        assert not calls and not boundaries
         assert debug.runtime_memory(bound['id'], offset=8, length=7)['hex'] == '00010000000000'
 
 

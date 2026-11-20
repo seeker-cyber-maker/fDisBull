@@ -8,19 +8,26 @@ from functools import wraps
 import inspect
 import hashlib
 import json
+import threading
 import time
+from types import SimpleNamespace
 
 import pytest
 
 from fdisbull.cli import public_addresses, respond
 from fdisbull.debugger import DebugWorkspace
+from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.output_limits import OutputPolicy, output_policy_context
 from fdisbull.project import Project
+from fdisbull.qemu_clock import machine_clock_configuration
+from fdisbull.qemu_control import QemuControl
 from fdisbull.scenes import SceneError, SceneSessionMixin, encoded
+from support.qemu_scene_wait_assertions import initial_match_preserves_arm
 from test_qemu_dos_source_admission import owned
 from test_qemu_runtime_memory import ram, ADDRESS
 from test_qemu_movement import moving
 from test_qemu_scenes import save, definition
+from test_qemu_keyboard_press import ARM, PressWire
 
 
 @pytest.fixture
@@ -36,6 +43,35 @@ def scene_waiting(moving):
             o.ram[2] = 0
         return result
     o.session._clock_advance_with_hooks = transition
+    return o
+
+
+@pytest.fixture
+def armed_scene_wait(scene_waiting):
+    """Use real clock/press/schedule validation over the deterministic QMP wire.
+
+    RAM and GDB still use the authored stopped peer; no VM is launched. Unlike
+    arm_fixed, this seam exercises the production observation receipt refresh.
+    """
+    o, s = scene_waiting, scene_waiting.session
+    o.wire = PressWire(SimpleNamespace(now=time.monotonic()))
+    o.wire.receipt['virtual-ns'] = o.wire.input['virtual-ns'] = 0
+    qmp = QemuControl.__new__(QemuControl)
+    qmp.socket, qmp.buffer, qmp.sequence = o.wire, bytearray(), 0
+    qmp.lock, qmp.operation_deadline = threading.Lock(), None
+    call = qmp.call
+    def observed_call(command, arguments=None, **kwargs):
+        if command == 'human-monitor-command':
+            return o.peer.call(command, arguments, **kwargs)
+        return call(command, arguments, **kwargs)
+    qmp.call = observed_call
+    s.vm.qmp = qmp
+    s.vm.qmp_commands |= {ARM}
+    s.vm.machine_configuration['clock_profile'] = machine_clock_configuration('virtual', 1)
+    s.capabilities['virtual_keyboard_press'] = True
+    del s.clock_observe
+    o.ram[2] = 0
+    s.keyboard_press('a', hold_ms=20, gap_ms=20)
     return o
 
 
@@ -761,13 +797,59 @@ def test_fixed_arm_uses_one_full_first_slice_and_keeps_held_lease(scene_waiting)
     assert not result['wait']['input_plan']['release'] and len(o.deliveries) == 1
 
 
-def test_immediate_match_leaves_fixed_arm_completely_undispatched(scene_waiting):
-    o = scene_waiting
-    o.ram[2] = 0
-    arm_fixed(o)
-    before = deepcopy(o.session.input_state())
-    assert o.session.scene_wait(**options())['complete']
-    assert o.session.input_state() == before and not o.runs and not o.deliveries
+def test_immediate_match_leaves_fixed_arm_completely_undispatched(armed_scene_wait):
+    o = armed_scene_wait
+    calls = len(o.wire.calls)
+    result = initial_match_preserves_arm(o.session, lambda: o.session.scene_wait(**options()))
+    assert not o.runs and not o.deliveries and not o.writes and not o.closed
+    commands = [name for name, _ in o.wire.calls[calls:]]
+    assert commands.count('x-fdisbull-query-input') == 1
+    assert set(commands) == {'query-status', 'query-replay', 'x-fdisbull-query-clock',
+                             'x-fdisbull-query-input'}
+    assert o.project.debug_scene_observation(result['observation'])['result'] == result
+
+
+@pytest.mark.parametrize('fault', ['token', 'queue', 'cursor', 'native-clock'])
+def test_initial_match_revalidates_native_arm_before_reading_predicates(armed_scene_wait, fault):
+    o = armed_scene_wait
+    state = o.session._input_storage()
+    def changed(value):
+        if fault == 'token':value['token'] = 'unowned-token'
+        elif fault == 'queue':state['pending'][0]['sequence'] += 1
+        elif fault == 'cursor':
+            state['schedule']['applied_count'] = 1
+            state['pending'] = deepcopy(state['schedule']['records'][1:])
+        else:value['virtual-ns'] += 1
+        return value
+    o.wire.mutate = changed
+    reads = len(o.reads)
+    with pytest.raises(DebuggerError) as error:o.session.scene_wait(**options())
+    assert error.value.scene_wait_result['wait']['polls'] == []
+    assert len(o.reads) == reads and not o.runs and not o.deliveries and not o.writes
+    assert o.closed and not state['valid']
+
+
+@pytest.mark.parametrize('field', ['host_monotonic_ns', 'sequence'])
+@pytest.mark.parametrize('fault', ['boolean', 'regressed'])
+def test_initial_match_oracle_rejects_invalid_receipt_telemetry(armed_scene_wait, field, fault):
+    o, s = armed_scene_wait, armed_scene_wait.session
+    original = s.input_schedule_observe
+    before = s.input_state()['schedule']['clock'][field]
+    def invalid_telemetry():
+        result = original()  # Real native receipt validation and owned-state refresh.
+        value = True if fault == 'boolean' else before - 1
+        result['clock'][field] = value
+        s._input_storage()['schedule_receipt']['clock'][field] = value
+        return result
+    s.input_schedule_observe = invalid_telemetry
+    # Fault only the observation metadata after its real validation. The wait
+    # completes and persists; this tests the acceptance oracle, not a claimed
+    # production rejection of impossible host clock samples.
+    count = len(o.project.debug_scene_observations()['observations'])
+    with pytest.raises(AssertionError, match=field):
+        initial_match_preserves_arm(s, lambda: s.scene_wait(**options()))
+    assert len(o.project.debug_scene_observations()['observations']) == count + 1
+    assert not o.runs and not o.deliveries and not o.writes and not o.closed
 
 
 @pytest.mark.parametrize('fault', ['partial', 'uncertain', 'motion', 'insufficient-budget'])
