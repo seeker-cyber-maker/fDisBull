@@ -199,6 +199,19 @@ scope below; enabling the new path does not retroactively give them host-file
 rollback or new directory-sharing support. The linked plan records runtime packaging,
 memory buffering/durable storage, branching and required native acceptance.
 
+## Full DOS checkpoints in saved scripts
+
+The four existing `save-state`, `load-state`, `save-anchor-stone` and
+`load-anchor-stone` operations are admitted in saved scripts for the full native
+DOS process profile. They keep the existing checkpoint formats and exact Anchor
+Stone aliases. Whole-route literal admission, strict resolved artifact checks,
+one inherited deadline, verified replacement ownership and retained failed-script
+prefixes are covered by the host gate. A two-case/four-owner authored native gate
+is prepared and has not been executed. Raw/entry-only scripts and owned-machine
+or LE artifact substitution remain refused. See the
+[checkpoint script contract and gate](QEMU_CHECKPOINT_SCRIPT_GATE.md) for exact
+signatures, failure evidence, inputs and qualification limits.
+
 ## Native DOS checkpoint histories
 
 The first Histories slice is in progress. On a source-bound QEMU DOS process,

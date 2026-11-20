@@ -1836,9 +1836,11 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
                 'assert','status','write-memory','write-registers','hook','hooks','delete-hook'} | (
                     {'layer-stack','layer-enable','layer-patch','code','capture-code','branch','cave'}
                     if self.capabilities['code_layers'] else set())
-    def script(self,*args,**kwargs):
+    def script(self,script=None,*,script_id=None,timeout_ms=60000):
         from .debugger import DebugSession
-        return DebugSession.script(self,*args,**kwargs)
+        from .qemu_checkpoint_script import script_admission
+        with script_admission(self,timeout_ms):
+            return DebugSession.script(self,script,script_id=script_id,timeout_ms=timeout_ms)
     def status(self):return dict(super().status(),run=self.run_id,version=self.version['id'],mapping=self.metadata)
     def close(self):
         if self.closed:return

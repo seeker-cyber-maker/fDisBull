@@ -322,7 +322,9 @@
         "tests/test_qemu_dos_irq_preemption_quantum_native.py",
         "tests/test_qemu_dos_irq1_preemption_native.py",
         "tests/test_qemu_dos_cascade_preemption_native.py",
-        "tests/test_qemu_dos_cascade_guards_native.py"
+        "tests/test_qemu_dos_cascade_guards_native.py",
+        "tests/test_qemu_checkpoint_script.py",
+        "tests/test_qemu_checkpoint_script_native.py"
       ],
       "scope_limits": [
         "MachineContext advertises save_states=False. DOSBox native sav files are not QEMU VM states; exact backend/profile, disk effects, input, layers, epochs and cold-session restore require a new qualified adapter.",
@@ -331,7 +333,8 @@
         "Authored native cooperative scheduler cold restore passed in a separate Python process with a dormant protected INT61 frame, distinct CPU/x87 state and task-private RAM/fetch/hooks. Per-task x87 rounding of 1.5 to 1 and 2 and guest watchpoints with identical DR7 controls and different DR0 addresses survived switching and cold restore; an instrumented profile preserves virtual clock, precise retrace, VGA configuration and an audio observer with zero frames and zero drops, providing no PCM or audible playback evidence. General parity remains unqualified.",
         "Authored IRQ0 checkpoints passed before EOI with PIC in service and after EOI with the interrupted hardware frame dormant, including separate-process restore and quantum-three phase. A combined virtual-clock, precise-retrace, VGA configuration, x87 and audio-observer IRQ checkpoint witness passed across pre- and post-EOI cold restore; both audio windows contained zero frames and zero drops, providing no PCM or audible playback evidence.",
         "API 3 permits a consistent nested IRQ stack or partially acknowledged cascade (slave EOI completed, master cascade EOI pending) in the native task checkpoint. Authored nested and partial-EOI cold restores passed locally for IRQ8 and IRQ1 policy targets; IRQ1 retains a pending handoff until outer EOI. The guest stops after A resumes, without a DOS-cleanup claim; no general hardware IRQ or vendor qualification follows.",
-        "The restricted standard raw-machine profile admits only the exact live automatic DESQview lifecycle breakpoint during save/load. Saving suspends and restores its remote control while paused; user/hook breakpoints, active layers, pending lifecycle stops and unreleased input still refuse. Cold restore retires the old observer, replaces the owner and creates a fresh capture epoch; prior source bindings, snapshots and physical certificates are historical and require fresh stopped observation. This does not extend protected LE checkpoint binding, allocation lifetime or whole-task RAM authority. Native evidence is recorded separately in the handoff log; a test reference alone is not a qualification."
+        "The restricted standard raw-machine profile admits only the exact live automatic DESQview lifecycle breakpoint during save/load. Saving suspends and restores its remote control while paused; user/hook breakpoints, active layers, pending lifecycle stops and unreleased input still refuse. Cold restore retires the old observer, replaces the owner and creates a fresh capture epoch; prior source bindings, snapshots and physical certificates are historical and require fresh stopped observation. This does not extend protected LE checkpoint binding, allocation lifetime or whole-task RAM authority. Native evidence is recorded separately in the handoff log; a test reference alone is not a qualification.",
+        "Full native qemu-dos process checkpoints now expose save-state/load-state and exact Anchor Stone aliases through saved scripts, with strict literal/resolved admission, inherited lock/transport/publication deadlines, verified owner replacement and retained failed-script prefixes. The focused 72-case host suite and overlapping 573-case affected host selection passed. The two-case/four-owner authored COM native script gate is prepared, not run; raw/entry-v1 scripts, workspace/profile combinations, graphical continuation and broad checkpoint parity remain unqualified."
       ]
     },
     {
@@ -1403,7 +1406,7 @@
       "slice": "core",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "MachineDebugSession.script",
+      "native_route": "MachineDebugSession.script; full native DOS process save/load-state and exact Anchor Stone script aliases with bounded admission and retained failure evidence (host verified; finite native gate prepared)",
       "qualification": "unqualified"
     },
     {

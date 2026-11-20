@@ -1548,6 +1548,11 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(observed, dict)
                                and observed.get("format") == STEP_SEQUENCE_FORMAT)
         scene_wait_result = getattr(e, "scene_wait_result", None)
+        script_result = getattr(e, "script_result", None)
+        checkpoint_script_error = (isinstance(request, dict) and request.get("method") == "debug-script"
+                                   and getattr(e, "_qemu_checkpoint_script_error", False) is True
+                                   and isinstance(script_result, dict)
+                                   and script_result.get("format") == "fdisbull-script-result-1")
         scene_wait_error = (isinstance(request, dict) and request.get("method") == "debug-scene-wait"
                             and any(isinstance(item, dict)
                                     and item.get("format") == "fdisbull-scene-observation-2"
@@ -1555,7 +1560,7 @@ def respond(request, default_project=None, debugger=None):
                                     and item["wait"].get("format") == "fdisbull-scene-wait-1"
                                     for item in (observed, scene_wait_result)))
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or checkpoint_script_error):
             raise
         value = {
             "id": request_id,
@@ -1578,6 +1583,18 @@ def respond(request, default_project=None, debugger=None):
                 value["error"]["result"] = observed
             if scene_wait_result is not None and scene_wait_result is not observed:
                 value["error"]["scene_wait_result"] = scene_wait_result
+        if checkpoint_script_error:
+            if observed is not None:
+                value["error"]["result"] = observed
+            value["error"]["script_result"] = script_result
+            for field in ("script_publication_error", "script_cleanup_error"):
+                detail = getattr(e, field, None)
+                if isinstance(detail, dict):
+                    value["error"][field] = detail
+            for field in ("machine_cleanup_error", "new_machine_cleanup_error"):
+                detail = getattr(e, field, None)
+                if isinstance(detail, str):
+                    value["error"][field] = detail
     return (policy or OutputPolicy()).bound(value)
 
 
