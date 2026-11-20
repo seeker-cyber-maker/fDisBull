@@ -21,7 +21,7 @@ _OBJECT = {'id', 'name', 'aliases', 'context', 'visible', 'ready', 'enabled', 'o
 
 
 def is_runtime_scene(value):
-    return isinstance(value, dict) and value.get('format') == FORMAT
+    return isinstance(value, dict) and value.get('format') in (FORMAT, 'fdisbull-scene-3')
 
 
 def require_frame_scene(info):
@@ -38,6 +38,9 @@ def source_identity(project, version):
 
 def validate_definition(definition, *, identity=None, stored=False):
     """Finite concrete schema; stored binding names never create live bindings."""
+    from .runtime_scene_actions import is_action_scene, validate_definition as validate_action
+    if is_action_scene(definition):
+        return validate_action(definition, identity=identity, stored=stored)
     from .scenes import encoded, name, context, predicate
     if not isinstance(definition, dict) or set(definition) - _TOP:
         raise ValueError('Invalid passive runtime scene fields')
@@ -151,7 +154,9 @@ def save_scene(project, scene_name, definition, *, parent=None, version=None, au
     previous = project.db.execute('SELECT id FROM debug_scene_revisions WHERE scene=? ORDER BY rowid DESC LIMIT 1', (root_id,)).fetchone()
     if (previous['id'] if previous else None) != parent: raise ValueError('Scene parent must be the current revision')
     prior = project.debug_scene_info(parent, version=version)['definition'] if parent else None
-    if prior is not None and not is_runtime_scene(prior): raise ValueError('Scene revisions cannot change observation profile')
+    if prior is not None and any(prior.get(key) != doc.get(key)
+            for key in ('format', 'observation_profile', 'action_profile')):
+        raise ValueError('Scene revisions cannot change observation or action profile')
     old_names = {obj['name']: obj for obj in prior['objects']} if prior else {}
     old_ids = {obj['id']: obj for obj in prior['objects']} if prior else {}
     for obj in doc['objects']:
@@ -194,7 +199,7 @@ def validate_parameters(scene, *, object=None, compact=False, allow_references=F
 def select(project, scene, version, target=None):
     info = project.debug_scene_info(scene, version=version)
     if not is_runtime_scene(info['definition']):
-        raise ValueError('QEMU passive scene checks require explicit scene-2 runtime-memory profile')
+        raise ValueError('QEMU passive scene checks require an explicit scene-2 or scene-3 runtime-memory profile')
     selected = None
     if target is not None:
         found = [obj for obj in info['definition']['objects'] if target in (obj['id'], obj['name'], *obj['aliases'])]
@@ -323,7 +328,7 @@ def observation_result(session, info, selected):
         claim='Stopped caller-witnessed RAM predicates only; no pixel, frame, action or source/allocation lifetime authority.')
 
 
-def evaluate(session, info, selected, others, result, *, deadline, owner_guard):
+def evaluate(session, info, selected, others, result, *, deadline, owner_guard, outcome_only=False):
     """Use the shared conservative predicate evaluator and scalar captures."""
     from .scenes import _evaluate
     doc=info['definition']
@@ -333,7 +338,14 @@ def evaluate(session, info, selected, others, result, *, deadline, owner_guard):
         budget.check()
         return result
     try:
-        _evaluate_scene(doc,selected,others,result,check)
+        if outcome_only:
+            if selected is None:
+                raise ValueError('Outcome observation requires a selected runtime object')
+            outcome = check(selected['outcome'])
+            result.update(outcome=outcome, complete=outcome is not None,
+                          status='unavailable' if outcome is None else 'matched' if outcome else 'mismatch')
+        else:
+            _evaluate_scene(doc,selected,others,result,check)
         budget.check()
     except _EvaluationStopped:
         budget.finish_failure_evidence()

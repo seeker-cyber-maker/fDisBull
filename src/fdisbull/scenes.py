@@ -313,8 +313,8 @@ class SceneProjectMixin(SceneBundleMixin):
         if row is None:raise ValueError('Unknown scene revision for this byte version')
         doc=json.loads(row['document'])
         if hashlib.sha256(encoded(doc)).hexdigest()!=row['sha256']:raise ValueError('Scene manifest hash mismatch')
-        if doc.get('format')=='fdisbull-scene-2':
-            from .runtime_scenes import validate_stored
+        from .runtime_scenes import is_runtime_scene, validate_stored
+        if is_runtime_scene(doc):
             validate_stored(self,row,doc)
             return {k:row[k] for k in ('id','scene','version','name','parent','created','author','sha256')}|{'definition':doc}
         if doc.get('format')!='fdisbull-scene-1':raise ValueError('Unknown scene observation profile')
