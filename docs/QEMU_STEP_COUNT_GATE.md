@@ -1,11 +1,53 @@
-# Native counted-step qualification proposal
+# Finite native counted-step gate
+
+## Recorded native execution
+
+The historical corrected attempt 02 passed all five authored raw single-vCPU
+cases at host source `0ea542e1322cf84ae6e104f9748d0cfeae93a95b`. Its JUnit
+timestamp is `2026-11-20T00:47:13.095114+00:00`, or 2026-11-19 in
+America/New_York. It reports zero failures, errors or skips. Five fresh QEMU
+owners were reaped with return code zero, and ten complete native logs were
+retained. The separate exact-source integrated host gate passed 249 unique
+cases; overlapping earlier host selections are not additive.
+
+The three Python/JSON/saved-script cases observed PCs `0x7c32`, `0x7c33`,
+`0x7c2e`, with final RAM counter `0800` after the authored guest initialized
+seven. The first user breakpoint retained one ordinary prefix before terminal
+PC `0x7c33`; the first write watchpoint retained no ordinary prefix before
+terminal PC `0x7c32`. No later native step dispatch followed either terminal
+stop within its counted sequence. These are observed stops;
+`instruction_completed` remains null.
+
+| Preserved identity | Value |
+| --- | --- |
+| QEMU executable SHA-256 | `d4ed54ca5db6088692d29c2e94ceaa3bf654617d5963bb931ff798c6cdc0bb5b` |
+| Native producer build revision | `96bc0bc1a813f6784afd5834038163264499854a` |
+| Attempt 02 phase result SHA-256 | `ab0644b2193f0afb2012c74b5a3ec25e7623e03b484ff53f510d87ed36f28ac2` |
+| Attempt 02 JUnit SHA-256 | `814097f207888d665200657de531df471e2e3ad54ee807e6ff2f59393d617bb2` |
+| Private evidence archive | `QEMU-Counted-Step-Evidence-2026-11-20.zip` |
+| Archive SHA-256 | `22f14c32940cdb1fb08e41ad00bd6091f429abf89b8a8aabd64dcc6a735de667` |
+
+Attempt 01 remains failed: constructor admission rejected the harness's
+unprofiled-default expectation before any VM launched. The corrected controller
+admitted the public `qemu-dos` profile's actual CPU 486, 32 MiB and floppy-boot
+tuple. Product source, native test bodies, fixture/oracles and bounds were
+unchanged. The failed phase result remains
+`ada7e7df551e957e732e859f2e649e0df150197604bf64744705028889d48b4c`.
+
+This is historical evidence for the declared raw counted-stop slice, not a
+native run on a later host or producer. DOS process/lifecycle, protected source,
+DOSBox step-over/reply-schema equivalence, timing and all migration/default/
+retirement qualifications remain open.
+
+## Gate contract
 
 The opt-in module `tests/test_qemu_step_count_native.py` contains five cases.
 It requires `FDISBULL_REQUIRE_QEMU_STEP_COUNT=1`, first-failure mode (`-x`),
 serial execution, and a separately reviewed ownership plugin that installs
 `_fdisbull_step_count_owned_gate = "fdisbull-step-count-owned-gate-1"` on the
 pytest configuration. Setting the environment variable alone is insufficient.
-No native result is asserted by this proposal or by the host peer tests.
+The historical native result above is distinct from the host peer tests;
+the gate declaration alone does not establish another execution.
 
 | Case | Independent observable |
 | --- | --- |

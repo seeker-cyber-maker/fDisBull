@@ -25,7 +25,8 @@
     "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign.",
     "runtime_scene_wait": "Bounded scene-2 RAM wait implemented through Python, JSON and saved scripts. At c1e5e208 on 2026-11-20, the final host selection passed 85 cases and separately admitted native attempt 06 passed all 10 authored DOS cases with 11 VMs and 22 complete logs. Exact runtime/media identities and five earlier failed attempts are recorded in docs/QEMU_SCENE_WAIT_GATE.md. No scene-1, action/navigation or migration qualification.",
     "checkpoint_scripts": "Full native DOS saved-script checkpoint verbs and exact Anchor Stone aliases implemented. The final affected host selection passed 573 at 7690e534 (including 72 focused and four ledger checks). At 74866e9 on 2026-11-20, separately admitted native attempt 02 passed two cases with four reaped VMs/eight complete logs, exact CPU/RAM rewind and post-restore INC, cold persistence and complete public JSON/export equality. 11,275 files/six trees were unchanged. Attempt 01 failed a test-only cleanup assertion and remains preserved; the raw-storage reader correction was independently reviewed before attempt 02. See docs/QEMU_CHECKPOINT_SCRIPT_GATE.md. No broader checkpoint or retirement qualification.",
-    "runtime_scene_act": "Explicit scene-3 named physical keyboard actions implemented through Python, JSON and saved scripts. Final affected host selection passed 1,090 with 10 explicit optional native skips, including 62 focused action cases. Native attempt 02 passed two cases at 3cb9628178577689c22b8a8e12b21fd2d8dc9fa2 on 2026-11-20 with two reaped owners/four complete logs and 11,284 files/six trees unchanged. Attempt 01 failed controller bookkeeping after its first fixture passed; second fixture was unrun, and the failed attempt remains preserved. Native acceptance is limited to the authored IRQ1/RAM guest; see docs/QEMU_SCENE_ACT_GATE.md. No frame/pointer/navigation/actual-game or retirement qualification."
+    "runtime_scene_act": "Explicit scene-3 named physical keyboard actions implemented through Python, JSON and saved scripts. Final affected host selection passed 1,090 with 10 explicit optional native skips, including 62 focused action cases. Native attempt 02 passed two cases at 3cb9628178577689c22b8a8e12b21fd2d8dc9fa2 on 2026-11-20 with two reaped owners/four complete logs and 11,284 files/six trees unchanged. Attempt 01 failed controller bookkeeping after its first fixture passed; second fixture was unrun, and the failed attempt remains preserved. Native acceptance is limited to the authored IRQ1/RAM guest; see docs/QEMU_SCENE_ACT_GATE.md. No frame/pointer/navigation/actual-game or retirement qualification.",
+    "counted_step": "Historical native attempt 02 passed five authored raw single-vCPU cases at 0ea542e1322cf84ae6e104f9748d0cfeae93a95b on 2026-11-20 UTC (2026-11-19 America/New_York): Python/JSON/saved-script counted stops and first breakpoint/watchpoint preservation, five reaped owners and ten complete logs. The exact integrated host selection passed 249 cases. Attempt 01 failed constructor admission before any VM; it remains failed. See docs/QEMU_STEP_COUNT_GATE.md. This reconciliation runs no native test and does not qualify DOS process/lifecycle, step-over, retirement or the current head."
   },
   "coverage": {
     "rpc_methods": 37,
@@ -455,14 +456,13 @@
         "pytest",
         "-q",
         "--require-native",
-        "tests/test_frames.py",
         "tests/test_screenshot_codecs.py",
         "tests/test_frame_coherence.py",
         "tests/test_frame_capture_native.py",
         "tests/test_frame_timeline_native.py"
       ],
       "execution": "not_run_by_this_reconciliation",
-      "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+      "scope": "Legacy screenshot codecs, host frame/state brackets, actual changing-source raster capture and frame timelines. tests/test_frames.py covers stack/ABI analysis and is not framebuffer evidence. A pass covers only the selected assertions."
     },
     "mapped-mouse-native": {
       "environment_profile": "native-clock",
@@ -1210,7 +1210,7 @@
       ],
       "remaining_work": [
         "Compare remaining legacy continue/pause/wait, breakpoint-list and reply-schema obligations; the existing paired COM covers registers, memory, one breakpoint/step and exit only.",
-        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation. Counted native step-stop composition now has a bounded Python/JSON/script route, but its raw-vCPU native gate and separate DOS process/lifecycle obligations still require direct evidence; DOSBox step-over remains open.",
+        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation. Counted native step-stop composition has a bounded Python/JSON/script route and five historical authored raw-vCPU native passes at 0ea542e; see docs/QEMU_STEP_COUNT_GATE.md. Separate DOS process/lifecycle, paired DOSBox step-over and reply-schema obligations still require direct evidence; the raw counted-stop slice does not qualify them.",
         "Qualify or explicitly disposition diagnostic output cursors and stopped HELP/CPU/PIC replies, including the existing protected CPU/GDT source-matching consumer. QEMU internal monitor reads do not establish the complete public diagnostic contract."
       ],
       "minimum_acceptance": [
@@ -2118,6 +2118,7 @@
     "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json",
     "docs/QEMU_SCENE_WAIT_GATE.md",
     "docs/QEMU_CHECKPOINT_SCRIPT_GATE.md",
-    "docs/QEMU_SCENE_ACT_GATE.md"
+    "docs/QEMU_SCENE_ACT_GATE.md",
+    "docs/QEMU_STEP_COUNT_GATE.md"
   ]
 }
