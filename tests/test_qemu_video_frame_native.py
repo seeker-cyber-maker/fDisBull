@@ -161,7 +161,7 @@ def _assert_frame(info, schedule, expected):
         assert deadline <= sample['actual-ns'] < deadline + schedule['line_ns']
     assert frame['first-sample-ns'] == frame['rows'][0]['actual-ns']
     assert frame['last-sample-ns'] == frame['rows'][-1]['actual-ns']
-    assert frame['last-sample-ns'] <= frame['completed-ns'] <= info['virtual-ns']
+    assert frame['last-sample-ns'] == frame['completed-ns'] <= info['virtual-ns']
     return frame
 
 
