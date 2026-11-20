@@ -10,6 +10,12 @@ default DOS backend.
 at stopped boundaries and may advance the native virtual clock between them.
 Its executing contract is described below; check/assert remain passive.
 
+Check/assert also passively accept the separate
+[scene-3 named keyboard-action profile](QEMU_NAMED_KEYBOARD_ACTIONS.md), without
+arming its action. `scene_wait` remains scene-2 only. The scene-2 definition
+below continues to reject action fields; scene-3 requires its own explicit
+action profile and bounded declaration.
+
 ```json
 {
   "format": "fdisbull-scene-2",
@@ -28,7 +34,7 @@ Its executing contract is described below; check/assert remain passive.
 Save it with `Project.debug_save_scene`. Storage supplies the actual original
 source hash, selected byte-version ID/hash and stable object IDs. Each read
 revalidates the canonical manifest hash, its source identity, and object ownership.
-A revision chain cannot switch between scene-1 and scene-2. Existing scene-1
+A revision chain cannot switch scene format or observation/action profile. Existing scene-1
 storage defaults and its screenshot/evidence requirements are unchanged.
 
 Predicates support constants, `all`, `any`, `not`, runtime-memory byte/mask
@@ -79,7 +85,8 @@ Frame/action consumers reject this profile, including ordinary `SceneHandle`,
 click/act/navigation and the legacy frame-scene wait, movement scene contexts, assisted travel, spatial map
 contexts, workflow actions and text projections. Screenshot overlays, coordinate
 domain audits and scene-1 bundle import/export also refuse it. QEMU exposes no
-generic scene handle or action methods through this extension.
+generic scene handle through this extension. The separate scene-3
+`scene_act` route does not make passive scene-2 definitions actionable.
 
 Host contracts are exercised in `tests/test_qemu_scenes.py`; native optional
 witnesses in `tests/test_qemu_scenes_native.py` use the authored IRQ1/BIOS-tick COM

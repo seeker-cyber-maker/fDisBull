@@ -1,10 +1,12 @@
 # Finite native named keyboard-action gate
 
-**Prepared, not executed.** This gate starts from source
-`14aa3cf5deb5348a3cda39e1e899ae60c76a58e9` and requires the separately reviewed
-named-action implementation and exact final source/test pins. It defines two
-authored DOS cases and at most two native VM lifetimes. Source preparation and
-host checks do not establish a native pass.
+**Scoped native acceptance passed on 2026-11-20.** Separately admitted attempt
+02 passed both authored DOS cases at exact source
+`3cb9628178577689c22b8a8e12b21fd2d8dc9fa2`, with zero failures, errors or skips.
+Two actual VM owners were reaped with return code zero; four complete native
+logs were retained. Preflight and postflight matched all 11,284 pinned files
+and six complete input trees. The worker exited zero, its group was gone, and
+no owned or adopted process remained unresolved.
 
 The new explicit profile is `fdisbull-scene-3`, with
 `observation_profile: {"kind": "runtime-memory", "version": 1}` and
@@ -12,6 +14,68 @@ The new explicit profile is `fdisbull-scene-3`, with
 object declares one finite keyboard press. Existing passive scene-2 definitions
 do not gain action authority. This gate leaves frame-backed scenes, pointer
 actions, navigation, general game compatibility and DOSBox retirement open.
+
+## Recorded execution and limits of the result
+
+The successful saved-script case executed one arm and one native interval.
+The actual measured progress was 107,000,000 virtual ns. The independent guest
+RAM ledger contained exactly one make and one break (`1e 9e`), the held-key byte
+returned to zero, and position changed from zero to one. All four script steps
+passed. Full canonical action/script receipts, the complete public address
+projection, bounded-output export and cold stored evidence agreed without
+executing the action again.
+
+The second case refused false readiness without input or guest execution, then
+admitted one fresh action and stopped at the first IRQ breakpoint. It retained
+the actual make, owned hold and pending release, with no second execution or
+effect poll. The action's effect remained unknown; the caller's later stopped
+RAM inspection was separate evidence. Normal bounded context cleanup reaped
+the owner without injecting a release.
+
+| Recorded item | Identity or result |
+| --- | --- |
+| Native source | `3cb9628178577689c22b8a8e12b21fd2d8dc9fa2` |
+| Native fixture SHA-256 | `3522c1326b786db615256c50deb6755d552664e891597a89df16d96b1d2580ec` |
+| Unchanged movement-fixture SHA-256 | `ef842d0b1a65c0c6e09c7ba7b9ccaa2c91d736e6902115d6846d3af88cb6b117` |
+| Authored COM SHA-256 | `9edc079c05a93202be1fe5f85b945592936b285e3a652662f164a03535970483` |
+| Approved admission SHA-256 | `14985e07a69f297e7b4b0b44c32cf21007a5e136aa2e249fff3454f615bb40de` |
+| Phase result SHA-256 | `0082a38a23b82fe2175694f83330426838fef419d74309216a12aa2895317a7c` |
+| Pytest result | 2 passed in 2.54 s |
+| Outer recorded elapsed / execution | 4.787166158 s / 3.088491761 s |
+| Final output size | 14,380,001 logical / 14,655,488 allocated bytes |
+
+The final affected host selection passed 1,090 cases with zero failures/errors
+and ten explicit optional native skips. It includes the 62 focused action
+cases; those counts must not be added. Five skipped cases require raw-machine
+QEMU inputs and five require DOSBox. These skips did not occur in the separate
+two-case native gate. All 15 schema/executor files independently matched the
+author's committed bytes and the integration source. The host run has no
+dedicated pre-run source snapshot: the author attested no edits during that
+selection, and post-run bytes match the committed blobs. The native gate has
+the full preflight/postflight input freeze.
+
+### Preserved failed attempt
+
+Attempt 01 remains failed. Its first fixture passed, but controller bookkeeping
+then eagerly evaluated a fallback against pytest's cleared `item.funcargs`.
+The second fixture did not run. Its sole VM had already been reaped, and its
+input postflight matched. Attempt 02 changed only that controller lookup and
+the isolated output directory; product code, native fixture, QEMU, guest input,
+oracles and bounds remained unchanged. No in-run retry was performed.
+
+A later data audit corroborated attempt 01's first-case logical evidence. Its
+initial read-only SQLite connection created an empty WAL and a 32 KiB SHM;
+these are preserved and labeled post-native audit additions. That attempt has
+no original whole-database hash pin, so no original-to-current whole-file
+equality is claimed. Its stored logical evidence was compared with original
+controller-pinned artifacts. Attempt 02's cold controller reader uses immutable
+SQLite and pins the database and external values.
+
+This result qualifies only these authored assertions. It does not establish
+paired DOSBox equivalence, actual-game readiness, adversarial native failures,
+restore interactions, frame or pointer semantics, or any retirement campaign.
+The method inventory records `scene_act` as partial and keeps every migration
+qualification open.
 
 ## Cases and maximum owner count
 
@@ -167,7 +231,7 @@ firmware through `FDISBULL_QEMU_CLOCK_FIRMWARE` or
 are an open gate, not a passing skip. Preserve the multicall `mcopy` invocation
 name. Pin the compiler, pristine authored fixture and produced COM bytes.
 
-The candidate sealed QEMU producer has SHA-256
+The executed sealed QEMU producer has SHA-256
 `b82342e48ab014d6a0526675492d9b0bbfe6844d8eb8848570e93b961bbc589c`.
 Use the full FreeDOS input with SHA-256
 `552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc`, which

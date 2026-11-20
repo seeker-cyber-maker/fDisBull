@@ -130,10 +130,36 @@ named actions/navigation remain unsupported by it. The
 22 complete native logs and no skips. Its accepted scope is the exact authored
 DOS scene-2 RAM wait cases; the gate records runtime/media hashes and the five
 earlier failed attempts. The final host selection passed 85 cases at the same
-source. The work plan now records 71 present public source bindings out of 83;
-presence does not establish contract parity. The inventory denominator remains
+source. The inventory denominator remains
 143, all surface and seven campaign promotion obligations remain unqualified,
 and DOSBox remains the default and retained fallback.
+
+### Execute named keyboard actions over witnessed RAM
+
+The separate [scene-3 keyboard action profile](QEMU_NAMED_KEYBOARD_ACTIONS.md)
+adds `scene_act`, JSON `debug-scene-act` and saved-script `scene-act`. It checks
+fresh stopped readiness, admits one immutable finite physical press, and then
+observes the declared RAM postcondition under one original owner and deadline.
+Input acceptance, callback completion and observed effect remain separate
+facts. The first native stop wins over another effect poll; a partial press
+retains its actual hold and pending release for explicit recovery.
+
+The [two-case native gate](QEMU_SCENE_ACT_GATE.md) passed at
+`3cb9628178577689c22b8a8e12b21fd2d8dc9fa2` on 2026-11-20. It observed actual
+guest make/break bytes and a position change through a saved script, refusal
+without injection, and a first-breakpoint partial-input stop. Two VM owners
+were reaped; four complete logs and 11,284 unchanged input files/six trees were
+verified. The final affected host selection passed 1,090 cases with ten explicit
+optional native skips, including 62 focused action cases. The earlier failed
+controller attempt is retained in the gate history.
+
+The work plan now records 72 present public source bindings out of 83.
+`scene_act` is partial: this explicit keyboard/RAM profile does not supply
+frame-backed scenes, pointer actions, typing, popup handling or navigation.
+`scene_check`/`scene_assert` may passively observe scene-3; `scene_wait` remains
+scene-2 only. Source presence and these authored passes do not establish
+contract parity. All 143 surface obligations and seven campaigns remain open,
+with DOSBox retained as the default and fallback.
 
 ## FreeDOS and directory layers
 

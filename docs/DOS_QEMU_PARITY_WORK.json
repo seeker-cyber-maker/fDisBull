@@ -2,15 +2,15 @@
   "format": "fdisbull-dos-parity-work-1",
   "inventory": "src/fdisbull/data/dos-migration.json",
   "audit": {
-    "base_commit": "c1e5e208b117366e8b5c7d487acfd91b2ec98760",
+    "base_commit": "3cb9628178577689c22b8a8e12b21fd2d8dc9fa2",
     "date": "2026-11-20",
-    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy, witnessed movement, passive runtime scenes, bounded scene-2 RAM waits and stopped-surface screenshot hooks; scoped native/audio/game executions linked separately.",
-    "public_methods_present": 71,
-    "public_methods_absent": 12,
+    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy, witnessed movement, passive runtime scenes, bounded scene-2 RAM waits, stopped-surface screenshot hooks, checkpoint script aliases and bounded scene-3 named keyboard actions; scoped native/audio/game executions linked separately.",
+    "public_methods_present": 72,
+    "public_methods_absent": 11,
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "c1e5e208b117366e8b5c7d487acfd91b2ec98760",
+    "integration_commit": "3cb9628178577689c22b8a8e12b21fd2d8dc9fa2",
     "timezone": "America/New_York",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
     "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
@@ -24,7 +24,8 @@
     "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification.",
     "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign.",
     "runtime_scene_wait": "Bounded scene-2 RAM wait implemented through Python, JSON and saved scripts. At c1e5e208 on 2026-11-20, the final host selection passed 85 cases and separately admitted native attempt 06 passed all 10 authored DOS cases with 11 VMs and 22 complete logs. Exact runtime/media identities and five earlier failed attempts are recorded in docs/QEMU_SCENE_WAIT_GATE.md. No scene-1, action/navigation or migration qualification.",
-    "checkpoint_scripts": "Full native DOS saved-script checkpoint verbs and exact Anchor Stone aliases implemented. The final affected host selection passed 573 at 7690e534 (including 72 focused and four ledger checks). At 74866e9 on 2026-11-20, separately admitted native attempt 02 passed two cases with four reaped VMs/eight complete logs, exact CPU/RAM rewind and post-restore INC, cold persistence and complete public JSON/export equality. 11,275 files/six trees were unchanged. Attempt 01 failed a test-only cleanup assertion and remains preserved; the raw-storage reader correction was independently reviewed before attempt 02. See docs/QEMU_CHECKPOINT_SCRIPT_GATE.md. No broader checkpoint or retirement qualification."
+    "checkpoint_scripts": "Full native DOS saved-script checkpoint verbs and exact Anchor Stone aliases implemented. The final affected host selection passed 573 at 7690e534 (including 72 focused and four ledger checks). At 74866e9 on 2026-11-20, separately admitted native attempt 02 passed two cases with four reaped VMs/eight complete logs, exact CPU/RAM rewind and post-restore INC, cold persistence and complete public JSON/export equality. 11,275 files/six trees were unchanged. Attempt 01 failed a test-only cleanup assertion and remains preserved; the raw-storage reader correction was independently reviewed before attempt 02. See docs/QEMU_CHECKPOINT_SCRIPT_GATE.md. No broader checkpoint or retirement qualification.",
+    "runtime_scene_act": "Explicit scene-3 named physical keyboard actions implemented through Python, JSON and saved scripts. Final affected host selection passed 1,090 with 10 explicit optional native skips, including 62 focused action cases. Native attempt 02 passed two cases at 3cb9628178577689c22b8a8e12b21fd2d8dc9fa2 on 2026-11-20 with two reaped owners/four complete logs and 11,284 files/six trees unchanged. Attempt 01 failed controller bookkeeping after its first fixture passed; second fixture was unrun, and the failed attempt remains preserved. Native acceptance is limited to the authored IRQ1/RAM guest; see docs/QEMU_SCENE_ACT_GATE.md. No frame/pointer/navigation/actual-game or retirement qualification."
   },
   "coverage": {
     "rpc_methods": 37,
@@ -217,6 +218,19 @@
         "FDISBULL_REQUIRE_QEMU_DOS_OS": "1"
       },
       "scope": "Full native DOS process-checkpoint extension; sealed matching QEMU/qemu-img/firmware and full FreeDOS boot image. Standard clock/retrace, audio off, released input, no layers/hooks/task/file workspace; no NASM dependency. Root-owned bounded controller required for the recorded acceptance."
+    },
+    "native-scene-act": {
+      "inputs": [
+        "FDISBULL_QEMU_CLOCK",
+        "FDISBULL_QEMU_CLOCK_FIRMWARE",
+        "FDISBULL_QEMU_DOS_BOOT_IMAGE",
+        "FDISBULL_QEMU_DOS_MCOPY",
+        "NASM"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_CLOCK": "1"
+      },
+      "scope": "One stopped active COM process, QEMU_CLOCK_VIRTUAL, native keyboard schedule extension, sealed QEMU/firmware and full FreeDOS input; standard retrace, audio off, pipe transport. No layers/hooks/task view/file workspace or checkpoint tool. Root-owned bounded controller required for the recorded acceptance."
     }
   },
   "test_sets": {
@@ -1093,6 +1107,55 @@
       "scope": "Python saved-ID save-state/load-anchor-stone and JSON saved-ID save-anchor-stone/load-state; full canonical CPU/RAM rewind, ordinary post-restore INC canary, closed persistence and complete public projection/export without reexecution. No raw/entry-only, cross-session, workspace, protected/V86, layers/hooks, graphics/audio/device or campaign qualification.",
       "evidence": "docs/QEMU_CHECKPOINT_SCRIPT_GATE.md",
       "phase_result_sha256": "6a5860d81fa18e0dbf9ad8437d4a5042d9cf6933ea88f6bac4e7c3d364a1506d"
+    },
+    "runtime-scene-act-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-x",
+        "tests/test_qemu_scene_act.py",
+        "tests/test_runtime_scene_actions.py",
+        "tests/test_qemu_scenes.py",
+        "tests/test_qemu_scene_wait.py",
+        "tests/test_qemu_keyboard_press.py",
+        "tests/test_qemu_keyboard_type.py",
+        "tests/test_qemu_input.py",
+        "tests/test_qemu_input_schedule.py",
+        "tests/test_qemu_input_retrace.py",
+        "tests/test_qemu_mouse_click.py",
+        "tests/test_qemu_mapped_mouse.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_qemu_io_deadlines.py",
+        "tests/test_qemu_checkpoint_script.py",
+        "tests/test_qemu_checkpoint_tracking.py",
+        "tests/test_qemu_cpu_undo_guard.py",
+        "tests/test_output_cli.py",
+        "tests/test_output_limits.py",
+        "tests/test_scenes.py",
+        "tests/test_scene_domain_integration.py"
+      ],
+      "execution": "1,090 passed, zero failures/errors and 10 explicit optional native skips in the final affected selection at author ea7d152; all 15 schema/executor file bytes independently matched integration 3cb9628. The 62 focused action cases are included, not additive. No dedicated pre-run source snapshot exists; the author attested no edits during this final run, and post-run bytes match the committed blobs.",
+      "scope": "Strict scene-3 storage, whole-script admission, owner/epoch/manifest fences, input ownership, first-stop/error prefixes, deadlines, public serialization/persistence and affected passive/input/checkpoint behavior. Five raw-machine and five DOSBox integration cases were explicitly skipped; host counts do not establish native parity.",
+      "evidence": "docs/QEMU_SCENE_ACT_GATE.md"
+    },
+    "runtime-scene-act-native": {
+      "environment_profile": "native-scene-act",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-x",
+        "tests/test_qemu_scene_act_native.py::test_native_named_action_saved_script_consumption_and_effect",
+        "tests/test_qemu_scene_act_native.py::test_native_named_action_json_refusal_and_first_stop"
+      ],
+      "execution": "Attempt 02 passed two cases with zero failures/errors/skips at 3cb9628178577689c22b8a8e12b21fd2d8dc9fa2 on 2026-11-20. Two actual VM owners were reaped with return code zero; four complete native logs, two cold FDBs and 11,284 input files/six unchanged trees were verified. Recorded execution used the separately admitted ownership controller; this argv only names the selected cases. Attempt 01 remains a failed controller run, with its first fixture passed and second unrun.",
+      "scope": "Saved-ID JSON script executes exactly one press and observes independent guest make/break and RAM position effect; full canonical/public/export/cold storage equality. JSON false-readiness refuses without input/run; first IRQ breakpoint preserves one make, pending break and unknown unpolled effect. No adversarial native, restore, actual-game, paired-DOSBox, frame/pointer/navigation or campaign qualification.",
+      "evidence": "docs/QEMU_SCENE_ACT_GATE.md",
+      "phase_result_sha256": "0082a38a23b82fe2175694f83330426838fef419d74309216a12aa2895317a7c"
     }
   },
   "work_groups": [
@@ -1679,7 +1742,7 @@
         "debug-workflow-observe"
       ],
       "qualification": "unqualified",
-      "implementation": "host_spatial_policy_and_runtime_memory_scene_check_assert_wait_integrated; frame_and_action_routes_pending",
+      "implementation": "host_spatial_policy_and_runtime_memory_scene_check_assert_wait_integrated; bounded_scene_3_named_keyboard_action_partial; frame_pointer_navigation_text_workflow_routes_pending",
       "source_paths": [
         "src/fdisbull/scenes.py",
         "src/fdisbull/spatial.py",
@@ -1687,7 +1750,9 @@
         "src/fdisbull/qemu_spatial_policy.py",
         "src/fdisbull/runtime_scenes.py",
         "src/fdisbull/qemu_scenes.py",
-        "src/fdisbull/qemu_scene_wait.py"
+        "src/fdisbull/qemu_scene_wait.py",
+        "src/fdisbull/runtime_scene_actions.py",
+        "src/fdisbull/qemu_scene_act.py"
       ],
       "depends_on": [
         "coherent-frames",
@@ -1705,10 +1770,12 @@
         "runtime-scenes-host",
         "runtime-scenes-native",
         "runtime-scene-wait-host",
-        "runtime-scene-wait-native"
+        "runtime-scene-wait-native",
+        "runtime-scene-act-host",
+        "runtime-scene-act-native"
       ],
       "remaining_work": [
-        "Implement frame-backed scene, action, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; scene-2 RAM observations and bounded waits retain a separate explicit profile.",
+        "Implement frame-backed scene actions, pointer actions, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; scene-2 RAM observations/waits and scene-3 named keyboard actions retain separate explicit profiles.",
         "Create native source-bound scene scenarios with actual readiness, named input, text/spatial observation, progression and failure recovery; compare the same goals/observables under DOSBox."
       ],
       "minimum_acceptance": [
@@ -2049,6 +2116,8 @@
     "docs/evidence/qemu-desqview-installed-2026-11-18/verification.json",
     "native/qemu-raster-proof/verification.json",
     "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json",
-    "docs/QEMU_SCENE_WAIT_GATE.md"
+    "docs/QEMU_SCENE_WAIT_GATE.md",
+    "docs/QEMU_CHECKPOINT_SCRIPT_GATE.md",
+    "docs/QEMU_SCENE_ACT_GATE.md"
   ]
 }

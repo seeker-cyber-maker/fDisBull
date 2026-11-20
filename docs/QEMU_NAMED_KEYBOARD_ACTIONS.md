@@ -174,11 +174,14 @@ input or a successful timely response.
 
 ## Verification scope
 
-The [native acceptance gate](QEMU_SCENE_ACT_GATE.md) specifies two fresh authored
+The [native acceptance gate](QEMU_SCENE_ACT_GATE.md) passed both cases on
+2026-11-20 at `3cb9628178577689c22b8a8e12b21fd2d8dc9fa2`, using two fresh authored
 DOS owners: a successful single press with independent key-byte and position
 evidence, and false-readiness refusal followed by an exact partial-input stop.
-Its dated execution receipt distinguishes prepared requirements from tests
-actually run. Host checks cover malformed declarations, changed owners/epochs,
+Its dated receipt records exact inputs, cleanup, the earlier failed controller
+attempt and the limited acceptance scope. The final affected host selection
+passed 1,090 cases, including 62 focused action cases, with ten explicit optional
+native skips. Host checks cover malformed declarations, changed owners/epochs,
 input ownership, deadlines and public error/persistence behavior.
 
 This is a keyboard/RAM action profile. Frame-based actions, absolute clicks,

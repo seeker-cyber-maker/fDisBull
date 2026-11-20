@@ -467,12 +467,16 @@
         "tests/test_qemu_scenes_review.py",
         "tests/test_qemu_scenes_native.py",
         "tests/test_qemu_scene_wait.py",
-        "tests/test_qemu_scene_wait_native.py"
+        "tests/test_qemu_scene_wait_native.py",
+        "tests/test_runtime_scene_actions.py",
+        "tests/test_qemu_scene_act.py",
+        "tests/test_qemu_scene_act_native.py"
       ],
       "scope_limits": [
         "Host algorithms can be reused after their input/frame/state/control dependencies are qualified. Registering a method or importing a mixin does not supply those dependencies.",
-        "Explicit scene-2 runtime-memory check/assert is implemented and scoped native witnesses pass; observations are passive and complete only for declared predicates. Frame-backed scene-1, named actions, text and workflows remain open.",
-        "Scene-2 runtime-memory scene_wait adds bounded measured virtual-clock polling under one inherited deadline, original-owner/source/restore guards, fixed-input-arm admission and first-native-stop precedence. At c1e5e208 on 2026-11-20, 85 final host cases and all 10 exact authored DOS native cases passed; the latter used 11 owned VMs and 22 complete logs. This scoped RAM result leaves scene-1 behavior, actions/navigation and all retirement qualifications open; see docs/QEMU_SCENE_WAIT_GATE.md for runtime/media identities and earlier failed attempts."
+        "Explicit scene-2 runtime-memory check/assert is implemented and scoped native witnesses pass; observations are passive and complete only for declared predicates. Scene-3 shares passive observation and adds a separately admitted named keyboard action; frame-backed scene-1, pointer actions, text and workflows remain open.",
+        "Scene-2 runtime-memory scene_wait adds bounded measured virtual-clock polling under one inherited deadline, original-owner/source/restore guards, fixed-input-arm admission and first-native-stop precedence. At c1e5e208 on 2026-11-20, 85 final host cases and all 10 exact authored DOS native cases passed; the latter used 11 owned VMs and 22 complete logs. This scoped RAM result leaves scene-1 behavior, actions/navigation and all retirement qualifications open; see docs/QEMU_SCENE_WAIT_GATE.md for runtime/media identities and earlier failed attempts.",
+        "Explicit scene-3 named keyboard actions add fresh stopped readiness, one finite physical press, separate delivery/effect evidence and first-stop preservation through Python/JSON/saved scripts. Final affected host selection: 1,090 passed with 10 explicit optional native skips, including 62 focused action cases. Separately admitted native attempt 02 passed two authored DOS cases at 3cb9628 with two reaped owners and four complete logs; attempt 01 remains failed after a controller bookkeeping error. The authored guest proves one complete make/break with a RAM position effect, refusal without injection and an interrupted held make with pending release. No actual-game, frame, pointer, navigation, paired-DOSBox or retirement qualification; see docs/QEMU_SCENE_ACT_GATE.md."
       ]
     },
     {
@@ -1333,8 +1337,8 @@
       "operation": "scene_act",
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.scene_act(): explicit scene-3 runtime-memory readiness and one immutable named physical keyboard press under one owner/deadline; measured native virtual-clock destination polling, first-stop preservation, consumed invocation identity and canonical persistence through Python, JSON and saved scripts. Two exact authored DOS cases passed at 3cb9628 on 2026-11-20. Frame-backed scene-1, pointer actions, typing, popup handlers and navigation remain unsupported. See docs/QEMU_SCENE_ACT_GATE.md; retirement qualification remains open.",
       "qualification": "unqualified"
     },
     {
@@ -1343,7 +1347,7 @@
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.scene_assert(): explicit scene-2 runtime-memory predicates, bounded stopped owner/epoch/clock bracket, compact/shared result persistence and restore-invalidated RAM witnesses. Frame-backed scene-1, actions, text and workflows remain refused.",
+      "native_route": "QemuDOSProcessSession.scene_assert(): passive explicit scene-2/scene-3 runtime-memory predicates, bounded stopped owner/epoch/clock bracket, compact/shared result persistence and restore-invalidated RAM witnesses. These observations grant no action authority. Frame-backed scene-1, text and workflows remain refused.",
       "qualification": "unqualified"
     },
     {
@@ -1352,7 +1356,7 @@
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.scene_check(): explicit scene-2 runtime-memory predicates, bounded stopped owner/epoch/clock bracket, compact/shared result persistence and restore-invalidated RAM witnesses. Frame-backed scene-1, actions, text and workflows remain refused.",
+      "native_route": "QemuDOSProcessSession.scene_check(): passive explicit scene-2/scene-3 runtime-memory predicates, bounded stopped owner/epoch/clock bracket, compact/shared result persistence and restore-invalidated RAM witnesses. These observations grant no action authority. Frame-backed scene-1, text and workflows remain refused.",
       "qualification": "unqualified"
     },
     {
@@ -1379,7 +1383,7 @@
       "slice": "workflows",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.scene_wait(): explicit scene-2 runtime-memory predicates, bounded measured native virtual-clock polling, one inherited deadline, original-owner/source/restore guards, first-stop-before-predicate precedence, existing fixed-input-arm admission and complete observation persistence. Ten exact-source authored DOS cases passed on 2026-11-20 at c1e5e208; frame-backed scene-1, actions and navigation remain refused and retirement qualification remains open. See docs/QEMU_SCENE_WAIT_GATE.md.",
+      "native_route": "QemuDOSProcessSession.scene_wait(): explicit scene-2 runtime-memory predicates, bounded measured native virtual-clock polling, one inherited deadline, original-owner/source/restore guards, first-stop-before-predicate precedence, existing fixed-input-arm admission and complete observation persistence. Ten exact-source authored DOS cases passed on 2026-11-20 at c1e5e208; this wait continues to refuse scene-3, frame-backed scene-1, actions and navigation; retirement qualification remains open. See docs/QEMU_SCENE_WAIT_GATE.md.",
       "qualification": "unqualified"
     },
     {
@@ -1961,12 +1965,12 @@
   ],
   "source_reconciliation": {
     "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
-    "date": "2026-11-18",
+    "date": "2026-11-20",
     "work_plan": "docs/DOS_QEMU_PARITY_WORK.json",
     "qualification_changed": false,
     "note": "Current source availability and executable remaining work are separate from historical inventory_base and runtime qualification. All 143 rows and seven campaigns remain open.",
     "timezone": "America/New_York",
-    "integration_commit": "307f413c8178ee2764794bec7c4a1b370dd457c3",
+    "integration_commit": "3cb9628178577689c22b8a8e12b21fd2d8dc9fa2",
     "rpc_census": {
       "date": "2026-11-19",
       "source_base": "40342352985b73323eed141c93d6e7173dd0d40c",
