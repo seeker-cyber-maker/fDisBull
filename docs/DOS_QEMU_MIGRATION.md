@@ -125,10 +125,15 @@ existing ownership rules.
 Python, JSON `debug-scene-wait` and saved-script `scene-wait` share this narrow
 contract. Frame-backed scene-1, completed-frame probes, absolute clicks and
 named actions/navigation remain unsupported by it. The
-[ten-case native gate](QEMU_SCENE_WAIT_GATE.md) is separately admitted; host
-results and prepared native test source do not qualify the exact native tuple.
-The inventory denominator remains 143, all promotion obligations remain
-unqualified, and DOSBox remains the default and retained fallback.
+[ten-case native gate](QEMU_SCENE_WAIT_GATE.md) passed on 2026-11-20 at
+`c1e5e208b117366e8b5c7d487acfd91b2ec98760`, with eleven owned VM lifetimes,
+22 complete native logs and no skips. Its accepted scope is the exact authored
+DOS scene-2 RAM wait cases; the gate records runtime/media hashes and the five
+earlier failed attempts. The final host selection passed 85 cases at the same
+source. The work plan now records 71 present public source bindings out of 83;
+presence does not establish contract parity. The inventory denominator remains
+143, all surface and seven campaign promotion obligations remain unqualified,
+and DOSBox remains the default and retained fallback.
 
 ## FreeDOS and directory layers
 

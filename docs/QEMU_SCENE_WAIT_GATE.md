@@ -1,9 +1,57 @@
 # Finite native scene-wait gate
 
-This is a prepared acceptance plan for the explicit scene-2 runtime-memory
-`scene_wait` contract. Its source is `tests/test_qemu_scene_wait_native.py`.
-It does not record a native pass, qualify scene-1 behavior or authorize DOSBox
-retirement. Record actual results against the exact source/runtime tuple.
+The explicit scene-2 runtime-memory `scene_wait` gate passed on 2026-11-20 at
+the source/runtime tuple recorded below. Its source is
+`tests/test_qemu_scene_wait_native.py`. This authored DOS result leaves scene-1
+parity and DOSBox retirement unqualified.
+
+## Recorded native execution: 2026-11-20
+
+Separately admitted attempt 06 passed **all ten cases, with zero failures,
+errors or skips**, using eleven owned VM lifetimes and retaining all 22 native
+logs. The outer phase recorded success in 11.512 seconds. All owners were
+reaped, the worker process group was gone, and cleanup had no unresolved
+descendants. Postflight verified 11,270 input files and six trees unchanged,
+covering the exact source/tests, Python closure, private native dependencies,
+combined QEMU prefix/firmware and selected host/media inputs.
+
+| Tested identity | Commit or SHA-256 |
+| --- | --- |
+| Source and test commit | `c1e5e208b117366e8b5c7d487acfd91b2ec98760` |
+| Combined QEMU executable | `b82342e48ab014d6a0526675492d9b0bbfe6844d8eb8848570e93b961bbc589c` |
+| Matching qemu-img | `e32f68642711fc2e6de17e4e4f46d026356bdc5dc9fbc3a0fd71475bcaa72dbc` |
+| Full FreeDOS input image | `552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc` |
+| Accepted `phase-result.json` | `0cc58fd5216fd0c8ef005eee2c712d44246092011924333862aafc3d94837390` |
+
+The retained private evidence set is
+`scene-wait-evidence-20261120/native-attempt-06`; its phase receipt binds the
+admission, per-case owners/results, logs, test selection and postflight. Raw
+disks, checkpoints, FDBs and output objects remain outside the repository.
+The final host selection at the same source passed 85 cases without skips:
+80 scene-wait cases and five existing input/passive-scene checks. Earlier
+547-case and 86-case selections are separate, overlapping receipts.
+
+The three successful public routes each observed the authored IRQ1 make/break
+state after one 107 ms interval. The initial match used no interval. The false
+predicate exhausted its observed 20 ms budget in four intervals; this selected
+result does not promise arbitrary exact native cutoffs. The first breakpoint
+and watchpoint stopped before another predicate read. Full restore required a
+new RAM witness, and real DOS exit/TSR returned code 37 with their terminal
+evidence preserved. These are results for the declared authored DOS scene-2
+RAM predicates, not whole-game, frame, mouse/action or migration qualification.
+
+### Preserved earlier attempts
+
+Every earlier attempt stopped at its first failure and remains separate from
+the accepted attempt. None counts as a completed native gate pass.
+
+| Attempt | Observed failure and correction |
+| --- | --- |
+| 01 | No VM launched. The controller incorrectly required the full 15,000 ms constructor timeout after disk preparation had already consumed part of the startup deadline; admission now checks the positive remaining allowance. |
+| 02 | One VM failed to reach DOS READY; no scene wait ran. The selected minimal image lacked the configured `FREEDOS/BIN/COMMAND.COM`. The next admission used the preserved full FreeDOS image identified above. |
+| 03 | The Python wait case passed, then controller reconciliation missed the keyboard-press call because it patched the mixin after `MachineContext` had captured its guarded method. The observer target was corrected. |
+| 04 | The Python case passed and the JSON wait/export completed; the JSON oracle incorrectly compared canonical integer addresses with the existing public hexadecimal presentation. A test-only correction preserved full canonical/storage equality and checked the full public projection. |
+| 05 | Python, JSON and script cases passed. The initial-match check then incorrectly required a cached schedule receipt to remain identical after legitimate observation-timestamp/sequence refresh. The scoped test correction retains all ownership, native receipt, process and guest-clock invariants. Its later assertions had not run in this failed attempt. |
 
 ## Cases and maximum owner count
 
@@ -64,7 +112,7 @@ extensions or reuse a checkpoint from a different QEMU binary.
 | Variable | Required input |
 | --- | --- |
 | `FDISBULL_QEMU_CLOCK` | Fresh combined QEMU executable with native virtual clock, scheduled input, keyboard press and owned-machine checkpoint support |
-| `FDISBULL_QEMU_DOS_BOOT_IMAGE` | Preserved caller-owned FreeDOS boot image; fixture edits only a private copy |
+| `FDISBULL_QEMU_DOS_BOOT_IMAGE` | Preserved full FreeDOS boot image containing `FREEDOS/BIN/COMMAND.COM`; fixture edits only a private copy |
 | `FDISBULL_QEMU_DOS_MCOPY` | mcopy executable invocation; preserve its multicall name rather than resolving it to an mtools binary name |
 | `NASM` | Pinned assembler for the authored fixture |
 | `FDISBULL_QEMU_CLOCK_FIRMWARE` | Matching QEMU firmware directory; `FDISBULL_QEMU_DOS_FIRMWARE` is the existing fallback selector |
@@ -83,7 +131,9 @@ No caller game or BBS package is needed.
 
 ## Time, storage and failure bounds
 
-Each initial launch has a 15-second DOS startup budget. The first eight cases
+Each initial launch has a 15-second DOS startup budget, including disk
+preparation. The QEMU constructor receives only the positive remaining
+allowance, at most 15,000 ms. The first eight cases
 also use one 10-second setup run to the fixture's ready breakpoint. After setup, the test installs one
 inherited 30-second body deadline; the restore case uses 60 seconds shared
 across its original and replacement owners. Every scene wait independently

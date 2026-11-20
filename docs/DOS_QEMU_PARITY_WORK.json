@@ -2,16 +2,16 @@
   "format": "fdisbull-dos-parity-work-1",
   "inventory": "src/fdisbull/data/dos-migration.json",
   "audit": {
-    "base_commit": "1b3c11736fff947b5b34b6d7014cfe425bd6d074",
-    "date": "2026-11-18",
-    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy, witnessed movement, passive runtime scenes and stopped-surface screenshot hooks; scoped native/audio/game executions linked separately.",
-    "public_methods_present": 70,
-    "public_methods_absent": 13,
+    "base_commit": "c1e5e208b117366e8b5c7d487acfd91b2ec98760",
+    "date": "2026-11-20",
+    "scope": "Source reconciliation with stereo, macro, runtime-memory, bounded proof, spatial policy, witnessed movement, passive runtime scenes, bounded scene-2 RAM waits and stopped-surface screenshot hooks; scoped native/audio/game executions linked separately.",
+    "public_methods_present": 71,
+    "public_methods_absent": 12,
     "method_presence_is_not_qualification": true,
     "native_stereo": "Nine scoped native cases passed on each of macOS and Linux; see linked evidence. No general audio or migration qualification.",
     "macro": "Two authored native macro witnesses passed independently and in the exact integrated four-case gate.",
-    "integration_commit": "fa7c1464d2df9a2c0d4be0060823e35d27be449d",
-    "timezone": "America/New_York",
+    "integration_commit": "c1e5e208b117366e8b5c7d487acfd91b2ec98760",
+    "timezone": "Etc/UTC",
     "runtime_memory": "Three bounded public/script methods implemented; two authored native witnesses and independent admission/cleanup review passed.",
     "proofs": "Bounded host adapter and shared partial-literal validation; independent61cases pass, including4 earlier-write regressions. No native guest proof claim.",
     "spatial_policy": "Voluntary host policy and irreversible same-session latch integrated;40independent host and2native older-state restore cases passed. No action capability or campaign promotion.",
@@ -22,7 +22,8 @@
     "frame_contract": "Reviewed against installed DOSBox source-companion renderer and shared frame_coherence.py: accepted complete source-raster snapshots at guest-video cadence, with non-atomic identity brackets. Application-draw completion and atomic CPU/image equivalence are not the legacy promise. QEMU raster-sampling fidelity remains open.",
     "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification.",
     "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification.",
-    "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign."
+    "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign.",
+    "runtime_scene_wait": "Bounded scene-2 RAM wait implemented through Python, JSON and saved scripts. At c1e5e208 on 2026-11-20, the final host selection passed 85 cases and separately admitted native attempt 06 passed all 10 authored DOS cases with 11 VMs and 22 complete logs. Exact runtime/media identities and five earlier failed attempts are recorded in docs/QEMU_SCENE_WAIT_GATE.md. No scene-1, action/navigation or migration qualification."
   },
   "coverage": {
     "rpc_methods": 37,
@@ -979,6 +980,40 @@
       "execution": "2 passed on exact d3f2857 source with corrected b077 producer; no skips.",
       "scope": "Authored IRQ1 make/break observed without execution; full native restore retires RAM bindings and requires fresh witnesses."
     },
+    "runtime-scene-wait-host": {
+      "environment_profile": "host",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-x",
+        "tests/test_qemu_scene_wait.py",
+        "tests/test_qemu_input_schedule.py::test_arm_is_passive_and_cancel_disarms_before_forgetting_unsent_edges",
+        "tests/test_qemu_input_schedule.py::test_dispatch_applies_held_lease_once_and_never_replays_the_batch",
+        "tests/test_qemu_keyboard_press.py::test_existing_press_facade_arms_passively_on_virtual_profile",
+        "tests/test_qemu_scenes.py::test_public_check_assert_persists_profile_and_exact_stop_without_frame",
+        "tests/test_qemu_scenes.py::test_frozen_selected_undo_and_existing_key_lease_remain_unchanged"
+      ],
+      "execution": "85 passed without skips at c1e5e208b117366e8b5c7d487acfd91b2ec98760 on 2026-11-20: 80 scene-wait cases plus five existing input/passive checks. Earlier 547-case and 86-case selections are separate overlapping receipts.",
+      "scope": "One owner/epoch/deadline, whole-script preflight, first-stop preservation, bounded canonical evidence, public serialization and actual schedule-validator admission with deterministic native peers. Host checks do not qualify guest behavior.",
+      "evidence": "docs/QEMU_SCENE_WAIT_GATE.md"
+    },
+    "runtime-scene-wait-native": {
+      "environment_profile": "native-clock",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-x",
+        "tests/test_qemu_scene_wait_native.py"
+      ],
+      "execution": "Attempt 06 passed all 10 cases without skips at c1e5e208b117366e8b5c7d487acfd91b2ec98760 on 2026-11-20, using 11 owned VMs and retaining 22 complete native logs. Postflight verified 11,270 input files and six trees unchanged.",
+      "scope": "Exact authored DOS scene-2 RAM waits: Python/JSON/script, initial match without dispatch, measured timeout, first breakpoint/watchpoint, restore witness invalidation and real DOS exit/TSR. Layer-active terminal auto-close remains host coverage; no frame/scene-1/action/navigation or retirement qualification.",
+      "evidence": "docs/QEMU_SCENE_WAIT_GATE.md",
+      "phase_result_sha256": "0cc58fd5216fd0c8ef005eee2c712d44246092011924333862aafc3d94837390"
+    },
     "screenshot-hooks-host": {
       "environment_profile": "host",
       "argv": [
@@ -1607,14 +1642,15 @@
         "debug-workflow-observe"
       ],
       "qualification": "unqualified",
-      "implementation": "host_spatial_policy_and_passive_runtime_memory_scene_observation_integrated; frame_and_action_routes_pending",
+      "implementation": "host_spatial_policy_and_runtime_memory_scene_check_assert_wait_integrated; frame_and_action_routes_pending",
       "source_paths": [
         "src/fdisbull/scenes.py",
         "src/fdisbull/spatial.py",
         "src/fdisbull/text_projection.py",
         "src/fdisbull/qemu_spatial_policy.py",
         "src/fdisbull/runtime_scenes.py",
-        "src/fdisbull/qemu_scenes.py"
+        "src/fdisbull/qemu_scenes.py",
+        "src/fdisbull/qemu_scene_wait.py"
       ],
       "depends_on": [
         "coherent-frames",
@@ -1630,10 +1666,12 @@
         "spatial-policy-host",
         "spatial-policy-native",
         "runtime-scenes-host",
-        "runtime-scenes-native"
+        "runtime-scenes-native",
+        "runtime-scene-wait-host",
+        "runtime-scene-wait-native"
       ],
       "remaining_work": [
-        "Implement frame-backed scene, action, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; passive scene-2 RAM predicates retain a separate explicit profile.",
+        "Implement frame-backed scene, action, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; scene-2 RAM observations and bounded waits retain a separate explicit profile.",
         "Create native source-bound scene scenarios with actual readiness, named input, text/spatial observation, progression and failure recovery; compare the same goals/observables under DOSBox."
       ],
       "minimum_acceptance": [
@@ -1973,6 +2011,7 @@
     "docs/evidence/qemu-screenshot-hooks-2026-11-18/verification.json",
     "docs/evidence/qemu-desqview-installed-2026-11-18/verification.json",
     "native/qemu-raster-proof/verification.json",
-    "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json"
+    "docs/evidence/qemu-mac-adapters-2026-11-18/verification.json",
+    "docs/QEMU_SCENE_WAIT_GATE.md"
   ]
 }

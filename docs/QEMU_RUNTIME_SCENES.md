@@ -193,8 +193,13 @@ the operation. If native closure prevents clock-budget readback after a
 validated DOS return, the original native error and terminal result survive;
 that failure is not a normally completed, persisted terminal wait.
 
-Host contracts are in `tests/test_qemu_scene_wait.py`. The finite
-[native gate](QEMU_SCENE_WAIT_GATE.md) covers ten cases and at most eleven owned
-VM lifetimes. Its prepared source is not native qualification. This route leaves
-frame-probe, absolute clicks, scene-1, actions/navigation and the broader DOSBox
-replacement campaign open; the migration inventory remains partial/unqualified.
+Host contracts are in `tests/test_qemu_scene_wait.py`. On 2026-11-20 the finite
+[native gate](QEMU_SCENE_WAIT_GATE.md) passed all ten cases without skips at
+`c1e5e208b117366e8b5c7d487acfd91b2ec98760`, using eleven owned VM lifetimes
+and retaining all 22 native logs. The final host selection passed 85 cases at
+the same source. The gate records the exact QEMU/FreeDOS identities, accepted
+receipt and five earlier failed attempts. Its accepted scope is the authored
+DOS scene-2 RAM waits, including public routes, first stops, restore witness
+invalidation and real exit/TSR evidence. Frame-probe, absolute clicks, scene-1,
+actions/navigation and the broader DOSBox replacement campaign remain open;
+the migration row remains partial/unqualified and DOSBox remains the default.
