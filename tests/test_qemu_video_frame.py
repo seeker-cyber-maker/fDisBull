@@ -404,6 +404,23 @@ def test_exactly_four_hundred_physical_lines_is_an_admitted_extent(video):
     assert o.session.video_frame_observe()['completed_source_raster']
 
 
+@pytest.mark.parametrize('line', [1, 2, 3])
+def test_line_period_cannot_be_shorter_than_the_native_sampling_quantum(video, line):
+    o = video
+    o.session.video_frame_start()
+    o.wire.publish()
+    frame = o.wire.video['frame']
+    frame['line-period-ns'] = line
+    frame['period-ns'] = 12000
+    frame['frame-start-ns'] = 24000
+    for row in frame['rows']:
+        row['intended-ns'] = row['actual-ns'] = 24000 + 2 * line * row['row']
+    frame['first-sample-ns'] = frame['rows'][0]['actual-ns']
+    frame['last-sample-ns'] = frame['completed-ns'] = frame['rows'][-1]['actual-ns']
+    with pytest.raises(DebuggerError, match='timing or identity'):
+        o.session.video_frame_observe()
+
+
 def test_stream_start_on_phase_zero_cannot_own_the_already_started_period(video):
     o = video
     o.wire.receipt['virtual-ns'] = 32000

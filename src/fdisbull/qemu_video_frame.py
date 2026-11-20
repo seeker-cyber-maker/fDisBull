@@ -91,7 +91,7 @@ def _frame_valid(frame, native):
             return False
     start, period, line = (frame[key] for key in ('frame-start-ns', 'period-ns', 'line-period-ns'))
     rows = frame.get('rows')
-    if (start <= native['start-ns'] or start % period or period < 400 * line or period % line
+    if (line < 4 or start <= native['start-ns'] or start % period or period < 400 * line or period % line
             or type(rows) is not list or len(rows) != 200):
         return False
     for number, row in enumerate(rows):
