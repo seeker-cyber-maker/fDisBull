@@ -74,6 +74,10 @@ Stored object allowances default to 5000 ms: `guest_ms` is in 1..120000 and
 The fixed press span plus one polling tail must fit strictly inside the total
 guest allowance before any input is armed.
 
+`outcome_phase` is retained metadata (`state`, `interface`, `persistence` or
+`unspecified`), defaulting to `state`. Its name does not supply additional proof:
+the action establishes only the declared RAM postcondition it actually observes.
+
 The scene has the same bounded RAM predicate grammar as scene-2. Every predicate
 branch and action declaration is validated before storage. Definitions bind the
 original source hash, selected byte version/hash and persistent object identities.

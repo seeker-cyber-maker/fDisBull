@@ -293,7 +293,7 @@ def stored_script(project, saved, declaration, result):
         report=dict(id=report['id'], sha256=report['sha256'], size=len(report['data'])))
 
 
-def common_result(debug, scene, result):
+def common_result(debug, scene, result, action_call):
     assert result['format'] == 'fdisbull-scene-action-1'
     assert result['scene_revision'] == scene['id'] and result['manifest_sha256'] == scene['sha256']
     assert result['source_identity'] == scene['definition']['source_identity']
@@ -307,7 +307,11 @@ def common_result(debug, scene, result):
         assert plan[key] == result[key]
     assert plan['press'] == PRESS
     assert plan['action_sha256'] == hashlib.sha256(canonical_bytes(PRESS)).hexdigest()
-    assert plan['guest_ms'] == GUEST_MS and plan['timeout_ms'] == ACTION_MS
+    assert obj['guest_ms'] == GUEST_MS and obj['timeout_ms'] == ACTION_MS
+    resolved_timeout_ms = action_call['kwargs']['timeout_ms']
+    assert type(resolved_timeout_ms) is int and 0 < resolved_timeout_ms <= ACTION_MS
+    assert plan['guest_ms'] == GUEST_MS
+    assert plan['timeout_ms'] == min(obj['timeout_ms'], resolved_timeout_ms)
     assert plan['sha256'] == hashlib.sha256(canonical_bytes(
         {key: value for key, value in plan.items() if key != 'sha256'})).hexdigest()
     assert result['input']['device_queue_accepted'] is None
@@ -402,7 +406,7 @@ def test_native_named_action_saved_script_consumption_and_effect(tmp_path, clock
             assert len(script['steps']) == 4 and all(step['ok'] for step in script['steps'])
             assert script['steps'][0]['result'] == result
             assert_public_run_addresses(result, document['result']['steps'][0]['result'])
-            budget = common_result(debug, scene, result)
+            budget = common_result(debug, scene, result, observed.records['actions'][0])
             assert result['status'] == 'matched' and result['complete'] is True
             assert result['before']['status'] == 'matched'
             assert result['before']['initial_outcome'] is False
@@ -470,7 +474,7 @@ def test_native_named_action_json_refusal_and_first_stop(tmp_path, clock_runtime
             refused = refused_error['result']
             write_json(tmp_path, 'canonical-readiness-refusal.json', refused)
             assert refusal == dict(id='scene-act-not-ready', ok=False, error=refused_error)
-            common_result(debug, blocked, refused)
+            common_result(debug, blocked, refused, observed.records['actions'][0])
             assert not refused['complete'] and refused['before']['availability']['ready'] is False
             assert refused['input']['attempted'] is False and refused['input']['accepted'] is False
             assert refused['input']['arm'] is None and refused['input']['delivery'] is None
@@ -494,7 +498,7 @@ def test_native_named_action_json_refusal_and_first_stop(tmp_path, clock_runtime
             result = stopped_error['result']
             write_json(tmp_path, 'canonical-interrupted-action.json', result)
             assert interrupted == dict(id='scene-act-first-stop', ok=False, error=stopped_error)
-            budget = common_result(debug, scene, result)
+            budget = common_result(debug, scene, result, observed.records['actions'][1])
             assert result['attempt_id'] != refused['attempt_id']
             assert result['status'] == 'stopped' and result['complete'] is False
             assert result['before']['status'] == 'matched' and result['before']['initial_outcome'] is False

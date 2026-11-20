@@ -59,6 +59,11 @@ The action declaration is exactly
 The object also declares `guest_ms: 500`, `timeout_ms: 5000` and
 `outcome_phase: "state"` as immutable caps. Initial readiness requires position
 zero, no held key and no recorded edges.
+The saved script also declares exactly 5000 ms. Its actual resolved action call
+may tighten that cap to the remaining script time. Compare `plan.timeout_ms`
+with the minimum of the unchanged object cap and the observed call's positive
+integer timeout, which must remain at most 5000 ms. This comparison uses the
+already recorded real call and does not create a new deadline or execute again.
 The outcome requires the exact five-byte ledger `0101021e9e` at offset 10,
 held zero and position greater than zero. The typed position comparison uses
 the existing unsigned 16-bit RAM scalar grammar. Do not assume an exact number
