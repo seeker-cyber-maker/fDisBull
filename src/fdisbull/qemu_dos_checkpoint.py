@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import wraps
 import hashlib
 import io
 import json
@@ -19,6 +20,104 @@ from .qemu_cpu_undo_guard import full_load
 FORMAT = 'fdisbull-qemu-dos-process-qcow2-v2'
 WORKSPACE_FORMAT = 'fdisbull-qemu-dos-workspace-qcow2-v1'
 PROCESS_FORMATS = frozenset((FORMAT, WORKSPACE_FORMAT))
+
+
+def _checkpoint_remaining(session, maximum=30000):
+    owner = session.vm
+    values = [getattr(session, '_rpc_deadline', None), getattr(session, '_deadline', None),
+              getattr(owner, 'operation_deadline', None),
+              *(getattr(channel, 'operation_deadline', None) for channel in
+                (getattr(owner, 'qmp', None), getattr(owner, 'gdb', None)) if channel is not None)]
+    bounds = [value for value in values if value is not None]
+    if not bounds:
+        return maximum
+    remaining = int((min(bounds) - time.monotonic()) * 1000)
+    if remaining < 1:
+        raise TimeoutError('DOS checkpoint inherited deadline expired')
+    return min(maximum, remaining)
+
+
+def _retain_result(error, result):
+    if result is not None:
+        if getattr(error, 'result', None) is None:
+            error.result = result
+        elif error.result is not result:
+            error.checkpoint_result = result
+
+
+def _close_failed(session, error, owner=None):
+    owner = session.vm if owner is None else owner
+    try:
+        if session.vm is owner:
+            session.close()
+        else:
+            owner.close()
+    except BaseException as cleanup:
+        error.machine_cleanup_error = type(cleanup).__name__
+
+
+def process_save_operation(function):
+    """Carry a composed save's deadline without replacing the owned machine.
+
+    Direct calls with no parent retain their existing checkpoint contract.
+    A script/history parent must also bound lock admission and every native
+    transport, and must never leak its temporary limits into the next call.
+    """
+    @wraps(function)
+    def invoke(session, *args, **kwargs):
+        from .qemu_machine import machine_operation, _machine_operation_guard
+        incoming = getattr(session, '_rpc_deadline', None)
+        if incoming is None or COMMAND not in getattr(session.vm, 'qmp_commands', ()):
+            return machine_operation(function)(session, *args, **kwargs)
+        owner, lock = session.vm, session.vm.lock
+        bounds = [incoming, getattr(session, '_deadline', None), owner.operation_deadline,
+                  *(getattr(channel, 'operation_deadline', None)
+                    for channel in (owner.qmp, owner.gdb) if channel is not None)]
+        deadline = min(value for value in bounds if value is not None)
+        wait = min(10., deadline - time.monotonic())
+        if wait <= 0 or not lock.acquire(timeout=wait):
+            raise TimeoutError('DOS checkpoint deadline expired waiting for the machine')
+        previous_session = getattr(session, '_deadline', None)
+        previous_owner = owner.operation_deadline
+        channels = [(channel, getattr(channel, 'operation_deadline', None))
+                    for channel in (owner.qmp, owner.gdb) if channel is not None]
+        try:
+            if session.vm is not owner or owner.lock is not lock:
+                raise ValueError('Machine owner changed before checkpoint save admission')
+            deadline = min(value for value in [deadline, previous_session, previous_owner,
+                           *[old for _, old in channels]] if value is not None)
+            if time.monotonic() >= deadline:
+                raise TimeoutError('DOS checkpoint deadline expired before save admission')
+            session._set_deadline(deadline)
+            _machine_operation_guard(owner, function.__name__, args, kwargs)
+            result = function(session, *args, **kwargs)
+            if session.vm is not owner:
+                error = ValueError('Checkpoint save changed its machine owner')
+                _retain_result(error, result)
+                _close_failed(session, error, owner)
+                raise error
+            try:
+                _checkpoint_remaining(session)
+            except TimeoutError as error:
+                _retain_result(error, result)
+                _close_failed(session, error, owner)
+                raise
+            return result
+        except BaseException as error:
+            if any(channel is not None and hasattr(channel, 'socket') and channel.socket is None
+                   for channel, _ in channels):
+                _close_failed(session, error, owner)
+            raise
+        finally:
+            if session.vm is owner:
+                session._deadline = previous_session
+            owner.operation_deadline = previous_owner
+            for channel, previous in channels:
+                channel.operation_deadline = previous
+            if owner.gdb is not None and not any(owner.gdb is channel for channel, _ in channels):
+                owner.gdb.operation_deadline = previous_owner
+            lock.release()
+    return invoke
 
 
 def checkpoint_format(session):
@@ -318,6 +417,7 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
         task_views=task_views,native_scheduler=scheduler, dos_save_witness=save_witness)
     try:
         snapshot_job(session.vm, 'save', tag=tag, vmstate='disk0', devices=['disk0'],
+                     timeout_ms=_checkpoint_remaining(session),
                      instrumented=instrumentation is not None, export_token=export_token)
         if _serial_idle(session) != serial:
             raise DebuggerError('Native COM2 state changed while saving the checkpoint')
@@ -354,19 +454,24 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
                 retrace_profile=session._checkpoint_launch['retrace_profile'])
         return dict(name=name, kind='state', data=data, metadata=metadata,
                     sha256=_sha(data), size=len(data))
-    except BaseException:
-        session.close()
+    except BaseException as error:
+        _close_failed(session, error)
         raise
 
 
 def save_process_state(session, name, max_bytes):
     """Capture and persist a full process checkpoint (public behavior)."""
     checkpoint = capture_process_state(session, name=name, max_bytes=max_bytes)
+    result = None
     try:
-        return session._artifact(checkpoint['name'], checkpoint['kind'],
-                                 checkpoint['data'], checkpoint['metadata'])
-    except BaseException:
-        session.close()
+        _checkpoint_remaining(session)
+        result = session._artifact(checkpoint['name'], checkpoint['kind'],
+                                   checkpoint['data'], checkpoint['metadata'])
+        _checkpoint_remaining(session)
+        return result
+    except BaseException as error:
+        _retain_result(error, result)
+        _close_failed(session, error)
         raise
 
 
@@ -413,10 +518,11 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
         raise TimeoutError('DOS process restore lock timed out')
     previous_session_deadline = session._deadline
     previous_vm_deadline = owner.operation_deadline
-    previous_channels = [(channel, channel.operation_deadline) for channel in
-                         (owner.qmp, owner.gdb) if channel is not None]
+    previous_channels = [(name, channel, channel.operation_deadline) for name in ('qmp','gdb')
+                         if (channel := getattr(owner,name,None)) is not None]
+    previous_serial_deadline = getattr(getattr(session,'_channel',None),'operation_deadline',None)
     bounds = [deadline, previous_session_deadline, previous_vm_deadline,
-              *[bound for _, bound in previous_channels]]
+              *[bound for _, _, bound in previous_channels]]
     deadline = min(bound for bound in bounds if bound is not None)
     session._set_deadline(deadline)
     try:
@@ -531,6 +637,7 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
         remaining()
         new = None
+        verified_result = None
         try:
             with tempfile.TemporaryDirectory(prefix='fdisbull-process-checkpoint-') as directory:
                 image = Path(directory) / 'state.qcow2'
@@ -646,11 +753,24 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
             adopt_save_witness(session,save_witness,restored_save_witness)
             if save_witness is not None:
                 result['guest_create_observer_restored'] = True
+            verified_result = result
             session._event('load-state', result)
             remaining()
-            session._set_deadline(previous_session_deadline)
+            # Restore each independent parent's bound on the verified new
+            # owner. A broader session limit must not erase a tighter native
+            # channel limit, nor may this finished load leak its own deadline.
+            session._deadline = previous_session_deadline
+            new.operation_deadline = previous_vm_deadline
+            old_channel_bounds = {name:bound for name,_,bound in previous_channels}
+            for name in ('qmp','gdb'):
+                current = getattr(new,name,None)
+                if current is not None:
+                    current.operation_deadline = old_channel_bounds.get(name,previous_vm_deadline)
+            if hasattr(channel,'operation_deadline'):
+                channel.operation_deadline = previous_serial_deadline
             return result
         except BaseException as error:
+            _retain_result(error, verified_result)
             if new is not None:
                 try:new.close()
                 except BaseException as cleanup:error.new_machine_cleanup_error=type(cleanup).__name__
@@ -658,19 +778,19 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                 try:session.close()
                 except BaseException as cleanup:error.machine_cleanup_error=type(cleanup).__name__
             raise
-    except BaseException:
+    except BaseException as error:
         channels = (owner.qmp, owner.gdb)
         if any(channel is not None and hasattr(channel, 'socket') and channel.socket is None
                for channel in channels):
-            session.close()
+            _close_failed(session, error, owner)
         raise
     finally:
         owner.operation_deadline = previous_vm_deadline
-        for channel, bound in previous_channels:
+        for _, channel, bound in previous_channels:
             channel.operation_deadline = bound
         if session.vm is owner:
             session._deadline = previous_session_deadline
             current = owner.gdb
-            if current is not None and not any(current is channel for channel, _ in previous_channels):
+            if current is not None and not any(current is channel for _, channel, _ in previous_channels):
                 current.operation_deadline = previous_vm_deadline
         owner.lock.release()

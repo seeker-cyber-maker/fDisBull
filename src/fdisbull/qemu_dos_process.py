@@ -22,6 +22,7 @@ import uuid
 from .dos_launch import guest_name
 from .dosbox_rpc import DebuggerError
 from .qemu_dos import QemuDOSSession
+from .qemu_dos_checkpoint import process_save_operation
 from .qemu_machine import MachineContext, MachineDebugSession, QemuMachine, machine_operation
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
@@ -739,7 +740,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             raise ValueError('Process checkpoint entry vectors changed')
         return current
 
-    @machine_operation
+    @process_save_operation
     def save_state(self, name='dos-process-checkpoint.qcow2', *, max_bytes=None):
         if getattr(self, '_owned_machine_restored', False):
             raise ValueError('Owned-machine recovery retired the DOS source binding; use save_machine_state')
@@ -1020,6 +1021,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     @property
     def script_operations(self):
         return super().script_operations | {'screenshot-hooks', 'scene-check', 'scene-assert', 'scene-wait', 'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+            'save-state', 'load-state', 'save-anchor-stone', 'load-anchor-stone',
             'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',
             'le-rewind-record', 'le-rewind',

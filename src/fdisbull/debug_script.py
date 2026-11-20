@@ -172,8 +172,11 @@ def validate_script(script, *, session=None):
                         if session is not None:
                             from .qemu_memory_rules import admit_native_rule_run
                             admit_native_rule_run(session)
-                    if op in ('save-state','load-state') and (backend or actual) in ('qemu-machine','qemu-dos'):
-                        raise ValueError('Unsupported operation for native QEMU scripts: '+op)
+                    if op in ('save-state','load-state','save-anchor-stone','load-anchor-stone') and (backend or actual) in ('qemu-machine','qemu-dos'):
+                        if (backend or actual) != 'qemu-dos':
+                            raise ValueError('Unsupported operation for native QEMU scripts: '+op)
+                        from .qemu_checkpoint_script import validate_parameters
+                        validate_parameters(op,params,session=session)
                     if op in ('save-machine-state','load-machine-state'):
                         if (backend or actual) != 'qemu-dos':
                             raise ValueError('Owned-machine scripts require the qemu-dos backend')
@@ -761,7 +764,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     if time.monotonic() >= deadline:
         raise TimeoutError('Script host-time budget expired before route publication')
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
-    results = dict(bindings or {}); records = []; failure = None
+    results = dict(bindings or {}); records = []; failure = None; primary_failure = None
+    from .qemu_checkpoint_script import OPERATIONS as CHECKPOINT_OPERATIONS
+    checkpoint_script = (getattr(session,'metadata',{}).get('backend')=='qemu-dos'
+                         and any(step['op'] in CHECKPOINT_OPERATIONS for step in steps))
     owned_before=set(getattr(session,'_keyboard_leases',{}));keyboard_touched=False
 
     def resolve(value):
@@ -801,10 +807,15 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 else:params['stop']=resolve(stop_value)
             else:
                 params = resolve(unresolved)
+            if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS:
+                from .qemu_checkpoint_script import validate_parameters
+                validate_parameters(step['op'],params,session=session,references=False)
             if step['op'] in ('load-machine-state','save-le-source-state','load-le-source-state',
                               'le-rewind-start','le-rewind-record','le-rewind'):
                 if 'timeout_ms' in params:
                     bounded(params['timeout_ms'],'timeout_ms',1,600000)
+                params['timeout_ms']=min(params.get('timeout_ms',60000),remaining)
+            if checkpoint_script and step['op']=='load-state':
                 params['timeout_ms']=min(params.get('timeout_ms',60000),remaining)
             if native_key_tracking and step['op']=='frame-inputs':
                 params['timeout_ms']=min(params.get('timeout_ms',remaining),remaining)
@@ -876,7 +887,17 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     keyboard_touched=True
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
+                checkpoint_owner = session.vm if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS else None
                 result = getattr(session,OPERATIONS[step['op']])(**params)
+                if checkpoint_owner is not None and step['op'].startswith('load-'):
+                    replacement = session.vm
+                    if (getattr(replacement,'lock',None) is not checkpoint_owner.lock or not isinstance(result,dict)
+                            or result.get('capture_epoch') != getattr(session,'_runtime_epoch',None)
+                            or result.get('checkpoint_epoch') != getattr(session,'_checkpoint_epoch',None)):
+                        error = ValueError('Checkpoint script restore owner differs from its returned receipt')
+                        error.result = result
+                        raise error
+                    checkpoint_owner = replacement
                 if (step['op']=='macro'
                         and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
                     # A returned native lease is owned by this outer route.
@@ -897,6 +918,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                         in ('not_requested','not_dispatched','skipped_initial_match')):
                     keyboard_touched = prior_input_touched
             record['result'] = result
+            if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS and time.monotonic() >= deadline:
+                error = TimeoutError('Checkpoint step returned after the script deadline')
+                error.result = result
+                from .qemu_dos_checkpoint import _close_failed
+                checkpoint_owner._fdisbull_control_quarantine = 'late checkpoint script result'
+                _close_failed(session,error,checkpoint_owner)
+                raise error
             if native_frames and step['op'] in ('timeline-advance','frame-advance'):
                 if (not isinstance(result,dict) or result.get('outcome') != 'completed'
                         or result.get('completed_frames') != params.get('frames',1)):
@@ -940,9 +968,17 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 results[step['as']] = result
             record.update(ok=True,result=result)
         except Exception as error:
+            primary_failure = error
             failure = {'index':index,'op':step['op'],'type':type(error).__name__,'message':str(error)}
             record.update(ok=False,error=failure)
             if hasattr(error,'result'):record['result']=error.result
+            if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS and hasattr(error,'checkpoint_result'):
+                record['checkpoint_result']=error.checkpoint_result
+            if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS:
+                cleanup_errors={field:getattr(error,field) for field in
+                    ('machine_cleanup_error','new_machine_cleanup_error')
+                    if isinstance(getattr(error,field,None),str)}
+                if cleanup_errors:record['checkpoint_cleanup']=cleanup_errors
             if (step['op']=='scene-wait' and getattr(session,'metadata',{}).get('backend')=='qemu-dos'
                     and isinstance(getattr(error,'scene_wait_result',None),dict)
                     and error.scene_wait_result is not getattr(error,'result',None)):
@@ -974,13 +1010,40 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         # A failed route must not leave input depressed or execute through a stop.
         reason = ('Failed script frame input ownership is unknown after restore' if restore_ownership_unknown
                   else 'Failed script owned unreleased input')
-        session.close();cleanup={'closed':True,'reason':reason}
+        if checkpoint_script:
+            try:
+                session.close()
+                cleanup={'closed':True,'reason':reason}
+            except BaseException as error:
+                cleanup={'closed':getattr(session,'closed',False),'reason':reason,
+                         'error':{'type':type(error).__name__,'message':str(error)}}
+                if primary_failure is not None:
+                    primary_failure.script_cleanup_error=cleanup['error']
+                else:
+                    raise
+        else:
+            session.close();cleanup={'closed':True,'reason':reason}
     report = {'format':'fdisbull-script-result-1','script_artifact':source['artifact'],
               'script_sha256':hashlib.sha256(encoded).hexdigest(),'run':session.run_id,
               'ok':failure is None,'error':failure,'completed_steps':sum(r['ok'] for r in records),
               'requested_steps':len(steps),'host_elapsed_ms':round((time.monotonic()-started)*1000,3),
               'steps':records,'input_cleanup':cleanup}
-    evidence = session._artifact('route-result.json','script-result',json.dumps(report,indent=2).encode(),
-                                 {'ok':report['ok'],'completed_steps':report['completed_steps']})
+    try:
+        if checkpoint_script and time.monotonic() >= deadline:
+            raise primary_failure or TimeoutError('Checkpoint script deadline expired before report publication')
+        evidence = session._artifact('route-result.json','script-result',json.dumps(report,indent=2).encode(),
+                                     {'ok':report['ok'],'completed_steps':report['completed_steps']})
+        if checkpoint_script and time.monotonic() >= deadline:
+            report = {**report,'artifact':evidence['artifact']}
+            raise primary_failure or TimeoutError('Checkpoint script report publication exceeded its deadline')
+    except BaseException as error:
+        if checkpoint_script:
+            from .qemu_checkpoint_script import retain_script_failure
+            if primary_failure is not None and error is not primary_failure:
+                primary_failure.script_publication_error={'type':type(error).__name__,'message':str(error)}
+                retain_script_failure(primary_failure,report)
+                raise primary_failure from error
+            retain_script_failure(error,report)
+        raise
     if _bindings_out is not None:_bindings_out.update(results)
     return {**report,'artifact':evidence['artifact']}

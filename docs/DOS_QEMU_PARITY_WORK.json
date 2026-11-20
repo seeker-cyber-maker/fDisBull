@@ -462,7 +462,8 @@
         "tests/test_qemu_owned_checkpoint_public.py",
         "tests/test_qemu_dos_le_checkpoint_public.py",
         "tests/test_qemu_frame_key_checkpoint.py",
-        "tests/test_qemu_input_checkpoint_guard.py"
+        "tests/test_qemu_input_checkpoint_guard.py",
+        "tests/test_qemu_checkpoint_script.py"
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
@@ -1376,12 +1377,16 @@
         "state.save"
       ],
       "qualification": "unqualified",
-      "implementation": "implemented_multiple_explicit_checkpoint_contracts",
+      "implementation": "implemented_multiple_explicit_checkpoint_contracts_and_full_dos_saved_script_routes",
       "source_paths": [
         "src/fdisbull/qemu_dos_checkpoint.py",
         "src/fdisbull/qemu_owned_checkpoint.py",
         "src/fdisbull/qemu_dos_le_checkpoint.py",
-        "src/fdisbull/qemu_instrumented_checkpoint.py"
+        "src/fdisbull/qemu_instrumented_checkpoint.py",
+        "src/fdisbull/debug_script.py",
+        "src/fdisbull/qemu_checkpoint_script.py",
+        "src/fdisbull/qemu_dos_process.py",
+        "src/fdisbull/qemu_machine.py"
       ],
       "depends_on": [
         "core-control",
@@ -1395,7 +1400,8 @@
       ],
       "remaining_work": [
         "Complete paired acceptance/disposition for raw, source-bound COM/MZ, owned-machine and LE checkpoints; do not exchange their authority or backend state files.",
-        "Reconcile selected CPU/RAM/device/IRQ/timer/input/file/control continuation after hot and separate-Python cold restore, including actual game/device workloads."
+        "Reconcile selected CPU/RAM/device/IRQ/timer/input/file/control continuation after hot and separate-Python cold restore, including actual game/device workloads.",
+        "The full DOS saved-script profile has host coverage for save-state/load-state and exact Anchor Stone aliases, inherited deadlines and retained failures. Admit the prepared two-case/four-owner authored native gate before claiming native route qualification; raw/entry-v1 script profiles remain refused."
       ],
       "minimum_acceptance": [
         "CPU/RAM/disk plus admitted pending device state and future behavior agree after restore; handles/tokens/epochs are new.",
