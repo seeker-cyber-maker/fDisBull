@@ -124,6 +124,8 @@ class QemuPhysicalInputMixin:
         return bool(state and state['valid'] and (state.get('schedule') or {}).get('bound'))
 
     def _input_prepare(self, *, allow_schedule=False):
+        from .qemu_video_control import require_no_video_frame_fence
+        require_no_video_frame_fence(self.vm, 'physical input mutation')
         self._input_no_transaction()
         state = self._input_storage()
         if not state['valid'] or self.vm.qmp is None:

@@ -42,6 +42,8 @@ from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COM
 from .qemu_video_frame import (QemuVideoFrameMixin, VIDEO_FRAME_COMMANDS,
                                validate_video_frame_parameters, validate_video_frame_probe,
                                validate_video_frame_capture)
+from .qemu_video_control import (QemuVideoControlMixin, VIDEO_FRAME_CONTROL_COMMANDS,
+                                 validate_video_frame_advance, require_no_video_frame_fence)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
                            machine_retrace_arguments, admit_retrace)
 from .qemu_vga_configuration import (QemuVgaConfigurationMixin, VGA_CONFIGURATION_COMMANDS,
@@ -662,7 +664,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                         label+' arm exceeded its host deadline; input must not be replayed',vm=vm)
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
-                        'video_frame_probe', 'capture_video_frame'):
+                        'video_frame_probe', 'capture_video_frame', 'video_frame_advance'):
                     vm.close()
                 raise error
             return result
@@ -753,7 +755,7 @@ def machine_step_operation(function):
 
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
-                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoFrameMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuVideoFrameMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -791,6 +793,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         label='Video frame pixel probe',parameter_validator=validate_video_frame_probe)
     capture_video_frame=machine_trace_operation(QemuVideoFrameMixin.capture_video_frame,
         label='Video frame capture',parameter_validator=validate_video_frame_capture)
+    video_frame_advance=machine_trace_operation(QemuVideoControlMixin.video_frame_advance,
+        label='Video frame advance',parameter_validator=validate_video_frame_advance)
     retrace_observe=machine_trace_operation(QemuRetraceMixin.retrace_observe,label='Retrace observation')
     retrace_wait=machine_trace_operation(QemuRetraceMixin.retrace_wait,label='Retrace wait')
     clock_sync_start=machine_trace_operation(QemuClockSyncMixin.clock_sync_start,label='Host clock synchronization')
@@ -832,6 +836,9 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             completed_guest_frames=False,guest_time_control=False,
             video_frame_capture=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                 and VIDEO_FRAME_COMMANDS | VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
+            video_frame_control=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                and VIDEO_FRAME_COMMANDS | VIDEO_FRAME_CONTROL_COMMANDS | VIRTUAL_CLOCK_COMMANDS
+                <= getattr(vm,'qmp_commands',frozenset())),
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl'),
             audio_stereo_capture=(virtual and AUDIO_FORMAT_COMMAND in getattr(vm,'qmp_commands',())
                 and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='sb16-opl'),
@@ -1349,6 +1356,15 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             # stepping the prior pending instruction or an internal step-over.
             # Public timeout precedence is unchanged. PC-derived IDs alone
             # (for example after S02) do not prove a delayed native hook trap.
+            try:
+                source_frame_terminal = (result['outcome'] != 'exited'
+                    and (getattr(self.vm, '_active_video_frame_fence', None) is not None
+                         or getattr(self, '_video_frame_fence_context', None) is not None)
+                    and self._video_frame_control_terminal())
+            except BaseException as error:
+                if getattr(error, 'result', None) is None:
+                    error.result = result
+                raise
             arrived=(result['outcome']=='breakpoint' or
                      result['outcome']=='timeout' and
                      result['session']['stop_reason'].get('native_reply','')[:3] in ('T05','S05'))
@@ -1357,7 +1373,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             matched=set(result['breakpoints'])
             owned=matched&internal if arrived else set()
             if not owned:
-                if command=='c' and result['outcome']=='step':
+                if command=='c' and result['outcome']=='step' and not source_frame_terminal:
                     need_dispatch=True;continue
                 break
             # Bounded stop cleanup records this already-arrived event before
@@ -1391,7 +1407,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             if result['timed_out']:
                 result['session']['stop_reason']['automatic_tracking_budget']='deadline'
             user=matched-internal
-            if user or not hide:
+            if user or not hide or source_frame_terminal:
                 if user:
                     result['breakpoints']=sorted(user)
                     result['session']['stop_reason']['breakpoint_ids']=sorted(user)
@@ -1594,6 +1610,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
 
     def _checkpoint_preflight(self):
         from .qemu_input import require_released_machine_input
+        require_no_video_frame_fence(self.vm, 'machine checkpointing')
         if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
             raise ValueError('Restricted native machine checkpoints are not enabled')
         from .qemu_image import verify

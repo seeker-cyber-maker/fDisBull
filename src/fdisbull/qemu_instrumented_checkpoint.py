@@ -31,6 +31,8 @@ def require_commands(vm):
 
 
 def preflight(session):
+    from .qemu_video_control import require_no_video_frame_fence
+    require_no_video_frame_fence(session.vm, 'instrumented checkpointing')
     if session._input_schedule_bound():
         raise ValueError('Resolve the native input schedule before checkpointing')
     sync = getattr(session.vm, '_clock_sync', None)

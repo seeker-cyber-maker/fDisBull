@@ -10,6 +10,16 @@ from .dosbox_rpc import DebuggerError
 from .memory_search_runtime import _locked
 
 
+def _close_hook_owner(session):
+    # A source-frame operation captured its VM before lock admission. An
+    # uncertain callback must not close a replacement owner while unwinding.
+    frame = getattr(session, '_video_frame_fence_context', None)
+    if isinstance(frame, dict) and frame.get('vm') is not None:
+        frame['vm'].close()
+    else:
+        session.close()
+
+
 class QemuHookSessionMixin:
     """Bounded host actions; this is not an in-core TCG callback."""
 
@@ -217,7 +227,7 @@ class QemuHookSessionMixin:
                 if len(selected) > 1:
                     raise ValueError('Ambiguous task hook breakpoint')
             except BaseException as error:
-                self.close()
+                _close_hook_owner(self)
                 if getattr(error, 'result', None) is None:
                     error.result = result
                 raise
@@ -262,7 +272,7 @@ class QemuHookSessionMixin:
         except BaseException as error:
             try: self._event('hook-failed', evidence | {'error': str(error)})
             except BaseException: pass
-            try: self.close()
+            try: _close_hook_owner(self)
             except BaseException: pass
             if getattr(error, 'result', None) is None:
                 error.result = result
@@ -279,6 +289,7 @@ class QemuHookSessionMixin:
         others = [item for item in self._qemu_hooks.values() if item['breakpoint_id'] != old]
         self._delete_hook_breakpoint(old)
         self._hook_reindex(others)
+        stepped = None
         try:
             remaining = int((deadline - time.monotonic()) * 1000)
             if remaining < 1: raise TimeoutError('Hook deadline expired before step-over')
@@ -296,11 +307,18 @@ class QemuHookSessionMixin:
             frame_stop = getattr(self, '_frame_stop_after_step', None)
             if frame_stop is not None and frame_stop():
                 return stepped
+            source_stop = getattr(self, '_video_frame_control_terminal', None)
+            if source_stop is not None and source_stop():
+                return stepped
             if stepped.get('save_boundary_conflict'):
                 return stepped
             return stepped if stepped['outcome'] != 'step' else None
-        except BaseException:
-            self.close()
+        except BaseException as error:
+            if stepped is not None and getattr(error, 'result', None) is None:
+                error.result = stepped
+            try: _close_hook_owner(self)
+            except BaseException as cleanup:
+                error.hook_cleanup_error = type(cleanup).__name__
             raise
 
     def _run_with_hooks(self, *, timeout_ms, stop_on_hook):
@@ -320,7 +338,7 @@ class QemuHookSessionMixin:
                         current = observe_task(self, binding=control['task_identity'])
                         same_site = int(self.registers()['linear_pc'], 16) == control['runtime_address']
                     except BaseException:
-                        self.close()
+                        _close_hook_owner(self)
                         raise
                     if current.get('task_id') != previous_task and same_site:
                         pending_stop = dict(outcome='breakpoint' if control['access'] == 'x' else 'watchpoint',
@@ -341,7 +359,7 @@ class QemuHookSessionMixin:
         while True:
             remaining = int((deadline - time.monotonic()) * 1000)
             if remaining < 1:
-                if hits: self.close()
+                if hits: _close_hook_owner(self)
                 error = TimeoutError('Hook run deadline expired before native continuation')
                 if hits: error.result = hits[-1]['stop']
                 raise error
@@ -351,7 +369,7 @@ class QemuHookSessionMixin:
                 try:
                     result = self._execute('c', remaining)
                 except BaseException:
-                    if hits: self.close()
+                    if hits: _close_hook_owner(self)
                     raise
             evidence = self._dispatch_qemu_hook(result)
             if evidence is None:
@@ -369,7 +387,12 @@ class QemuHookSessionMixin:
             if control is None:
                 control = next((x for x in self._qemu_hooks.values()
                                 if x['breakpoint_id'] == evidence['breakpoint_id']), None)
-            if stop_on_hook or result.get('save_boundary_conflict'):
+            # A source raster can complete, or its stream can abort, at the
+            # same actual hook stop. Inspect it before another displaced step,
+            # including when the caller deliberately continues earlier hooks.
+            source_stop = getattr(self, '_video_frame_control_terminal', None)
+            source_terminal = source_stop is not None and source_stop()
+            if stop_on_hook or result.get('save_boundary_conflict') or source_terminal:
                 if control is not None:
                     self._qemu_hook_pending = control['hook']
                     self._qemu_hook_pending_task = evidence.get('task', {}).get('task_id')

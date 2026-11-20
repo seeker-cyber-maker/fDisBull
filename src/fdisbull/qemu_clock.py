@@ -300,6 +300,8 @@ class MachineClockMixin:
         # The owning context establishes an absolute deadline before lock
         # acquisition; a single native budget owns every continuation inside it.
         validate_clock_budget(delta_ns, timeout_ms)
+        from .qemu_video_control import require_no_video_frame_fence
+        require_no_video_frame_fence(self.vm, 'clock advancement')
         if self.project is not None and self.project.db.in_transaction:
             raise ValueError('Native clock execution requires a project outside a caller-owned transaction')
         vm = self.vm
