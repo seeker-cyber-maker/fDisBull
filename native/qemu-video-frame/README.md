@@ -104,6 +104,14 @@ loading that save still invalidates the stream rather than restoring it.
 
 ## Scope and verification
 
+The finite eight-case native source-row gate passed at integrated host commit
+`eb0e8753dc3df0aac8bdef929a9cc69884186bcd`, using QEMU SHA-256
+`253830eeedb2608da7b09a9527692332266488bd4abfef37a239c011e59dd592`.
+See [the recorded native gate](../../docs/QEMU_VIDEO_FRAME_GATE.md) for the
+independent oracles, preserved initial setup failure, exact producer/input
+identities, process ownership and remaining limitations. This does not qualify
+later producers, source-frame control or legacy sampling equivalence.
+
 The stream admits the same bounded chain-4 address interpretation as the earlier
 source proof: origin/bank zero, pitch 320, exact 320 × 200 source, no panning or
 visible split, legacy graphics and VBE disabled. Admission reads freshly derived
@@ -114,8 +122,10 @@ Storage is bounded to two 192,000-byte RGB buffers plus fixed 200-row timing
 arrays and one bounded frozen receipt. Probe output is bounded to 256 points;
 export is exactly the P6 header plus one 192,000-byte RGB raster. No new timer
 exists until explicit start. Source-only helper tests exercise exact extracted
-code; native integration, host consumer and paired legacy evidence are separate
-gates. Build and runtime evidence will be recorded explicitly when authorized.
+code; native integration, host consumers and paired legacy evidence are separate
+gates. The recorded eight-case gate establishes the declared native source-row
+behavior on its pinned profile; later consumers and legacy equivalence remain
+separate acceptance work.
 
 The initial source-only checks passed 39 tests from
 `tests/test_qemu_video_frame_source.py`. They compile the exact hash-checked
@@ -128,5 +138,5 @@ helper. These checks do not compile the complete native module.
 
 Sampling overhead is unmeasured. The initial implementation validates each row
 through the existing configuration/retrace snapshots, including their bounded
-QAPI allocations. Native execution must qualify both row deadlines and that
-cost before any performance or completed-frame capability is advertised.
+QAPI allocations. The authored native cases met the declared row deadlines;
+they are not a performance benchmark or a completed-guest-frame qualification.
