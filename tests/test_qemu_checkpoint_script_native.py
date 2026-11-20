@@ -299,7 +299,9 @@ def test_native_saved_process_checkpoint_script(tmp_path, case):
                 replacement_vm = debug.vm
                 assert replacement_vm is not initial_vm and debug.rpc is replacement_vm
                 assert replacement_vm.lock is original_lock
-                assert initial_vm.closed and initial_vm.process.poll() is not None
+                assert initial_vm.process.poll() == 0
+                assert initial_vm.qmp is None and initial_vm.gdb is None
+                assert initial_vm.temporary is None and initial_vm._qemu_image_proof is None
                 assert not debug.closed and replacement_vm.process.poll() is None
                 retained = _persistence(project, saved_route, route, canonical, results)
                 witness = dict(format='fdisbull-native-checkpoint-script-witness-1', case=case,

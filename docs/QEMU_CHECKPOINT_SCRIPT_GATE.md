@@ -181,7 +181,21 @@ source/test/producer/media/fixture pins, maximum four owners/eight QEMU and boot
 logs, and explicit output/storage bounds. This document is not permission to
 launch. Root owns native admission, execution and outcome reconciliation.
 
-Native status for this newly admitted script profile is **prepared, not run**.
+Native status for this newly admitted script profile is **not yet accepted**.
+Attempt 01 ran the first complete 19-step Python route successfully, including
+the CPU/RAM restoration and post-restore INC comparisons, but then failed on
+a test assertion using `initial_vm.closed`. The real `QemuMachine` exposes no
+such attribute. Its two actual VM owners were reaped with return code zero,
+all four logs were retained, the worker/group ended, and the 11,275-file/six-tree
+input postflight passed. The attempt remains failed; the JSON and cold
+persistence acceptance was not completed.
+
+The fixture correction checks actual old-owner cleanup: process return code
+zero, cleared QMP/GDB channels, removed temporary directory ownership and
+released executed-image proof. The live session's separate `closed` flag
+remains checked. Production behavior, deadlines and the two-case/four-owner
+matrix are unchanged. A separately frozen next attempt is required.
+
 The two cases do not qualify raw or entry-only scripts, file-workspace,
 protected/V86/task checkpoint combinations, graphical/device/audio continuation,
 general game compatibility, or DOSBox retirement.
