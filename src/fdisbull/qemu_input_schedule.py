@@ -73,9 +73,10 @@ def _retrace_input_remaining(owner):
 
 
 def _invalid(owner, message):
-    owner._input_invalidate(message)
-    owner.vm.close()
-    raise DebuggerError(message)
+    from .qemu_input import _close_input_failure
+    error = DebuggerError(message)
+    _close_input_failure(owner, error, message)
+    raise error
 
 
 def _timed_mode(schedule):
@@ -298,11 +299,14 @@ class QemuScheduledInputMixin:
         return result
 
     def _input_schedule_read(self, clock, *, owned_budget=None, after_stop=False):
+        vm = self.vm
         state = self._input_storage()
         schedule = state.get('schedule')
         received = None
         try:
-            received = self.vm.qmp.call('x-fdisbull-query-input')
+            received = vm.qmp.call('x-fdisbull-query-input')
+            if self.vm is not vm:
+                raise ValueError('Native input observation owner changed during its query')
             native = _native_schedule(self, received, clock, schedule,
                                       owned_budget=owned_budget, after_stop=after_stop)
             if schedule is not None:
@@ -329,8 +333,9 @@ class QemuScheduledInputMixin:
                         error.result[mode + '_plan'] = deepcopy(schedule[mode])
                     if motion is not None:
                         error.result['motion_plan'] = deepcopy(motion)
-            self._input_invalidate('Native input observation failed; schedule must not be replayed')
-            self.vm.close()
+            from .qemu_input import _close_input_failure
+            _close_input_failure(self, error,
+                'Native input observation failed; schedule must not be replayed', vm=vm)
             raise
 
     def _input_schedule_accept(self, native, clock):

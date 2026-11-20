@@ -129,6 +129,8 @@ def keyboard_press(owner, key, *, modifiers=(), hold_ms=40, gap_ms=40):
     """Validate and arm once without running the VM or releasing other holds."""
     from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
     from .qemu_input_schedule import INPUT_SCHEDULE_COMMANDS, _invalid, _native_schedule
+    from .qemu_input import _close_input_failure
+    vm = owner.vm
     validate_keyboard_press_parameters(key, modifiers=modifiers, hold_ms=hold_ms, gap_ms=gap_ms)
     owner._input_no_transaction()
     if (getattr(owner.vm, 'machine_configuration', {}).get('clock_profile', {}).get('profile') != 'virtual'
@@ -140,7 +142,11 @@ def keyboard_press(owner, key, *, modifiers=(), hold_ms=40, gap_ms=40):
         raise ValueError('Timed keyboard press requires an empty input queue and no owned held leases')
     _remaining(owner)
     clock = owner._input_schedule_context()
+    if owner.vm is not vm:
+        raise ValueError('Timed keyboard press owner changed during its clock context')
     prior = owner._input_schedule_read(clock)
+    if owner.vm is not vm:
+        raise ValueError('Timed keyboard press owner changed before native arm')
     if prior['state'] == 'armed':
         raise ValueError('Cancel the current native input schedule before a timed keyboard press')
     planned = _plan(key, modifiers, hold_ms, gap_ms)
@@ -161,9 +167,13 @@ def keyboard_press(owner, key, *, modifiers=(), hold_ms=40, gap_ms=40):
     _remaining(owner)
     received = result = None
     try:
-        received = owner.vm.qmp.call('x-fdisbull-arm-keyboard-press', {
+        if owner.vm is not vm:
+            raise ValueError('Timed keyboard press owner changed before native arm')
+        received = vm.qmp.call('x-fdisbull-arm-keyboard-press', {
             'token': schedule['token'], 'key': planned['qcode'], 'modifiers': planned['modifiers'],
             'hold-ms': hold_ms, 'gap-ms': gap_ms})
+        if owner.vm is not vm:
+            raise ValueError('Timed keyboard press owner changed during native arm')
         native = _native_schedule(owner, received, clock, schedule)
         if native['state'] != 'armed' or native['press']['dispatched-count']:
             _invalid(owner, 'Native keyboard press arm did not leave a passive undelivered chord')
@@ -181,6 +191,6 @@ def keyboard_press(owner, key, *, modifiers=(), hold_ms=40, gap_ms=40):
             error.result = (deepcopy(result) if result is not None else
                 dict(operation='keyboard_press', press_plan=deepcopy(planned),
                      native=deepcopy(received), validation_failed=True))
-        owner._input_invalidate('Native keyboard press arm outcome is uncertain; chord must not be replayed')
-        owner.vm.close()
+        _close_input_failure(owner, error,
+            'Native keyboard press arm outcome is uncertain; chord must not be replayed', vm=vm)
         raise

@@ -415,7 +415,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             self.capabilities['dos_protected_source_admission'] = True
             self.capabilities['runtime_scene_observation'] = bool(self.capabilities.get('virtual_clock_budget'))
             self.capabilities['runtime_scene_wait'] = bool(self.capabilities.get('virtual_clock_budget'))
-            self.capabilities['runtime_scene_scope'] = 'explicit scene-2 witnessed RAM predicates only; no frame, action or source lifetime authority'
+            self.capabilities['runtime_scene_act'] = bool(self.capabilities.get('virtual_clock_budget')
+                and self.capabilities.get('virtual_keyboard_press'))
+            self.capabilities['runtime_scene_scope'] = 'explicit scene-2/3 witnessed RAM observations; scene-3 named fixed keyboard presses; no frame or source lifetime authority'
             self.capabilities['dos_protected_source_binding'] = 'owned stopped LE source revalidation; not task/allocation lifetime'
             self.capabilities['source_trace'] = 'initial real16 DOS module or explicitly bound protected32 embedded LE source'
             self.metadata = dict(backend=self.backend_id, context='machine',
@@ -1020,7 +1022,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
 
     @property
     def script_operations(self):
-        return super().script_operations | {'screenshot-hooks', 'scene-check', 'scene-assert', 'scene-wait', 'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
+        return super().script_operations | {'screenshot-hooks', 'scene-check', 'scene-assert', 'scene-wait', 'scene-act', 'macro', 'move', 'proof-check', 'spatial-policy', 'bind-runtime-memory', 'runtime-memory', 'write-runtime-memory',
             'save-state', 'load-state', 'save-anchor-stone', 'load-anchor-stone',
             'save-machine-state', 'load-machine-state',
             'save-le-source-state', 'load-le-source-state', 'le-rewind-start', 'le-rewind-status',

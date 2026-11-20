@@ -30,7 +30,8 @@ def _identity(session):
             deepcopy(session._runtime_lifetime()))
 
 
-def _observe(session, scene, *, object=None, compact=False, asserting=False, _publish=True):
+def _observe(session, scene, *, object=None, compact=False, asserting=False, _publish=True,
+             _outcome_only=False):
     from .scenes import SceneError
     validate_parameters(scene, object=object, compact=compact)
     seed = _identity(session)
@@ -51,7 +52,8 @@ def _observe(session, scene, *, object=None, compact=False, asserting=False, _pu
             stable()
             before = session.clock_observe()
             stable()
-            result = evaluate(session, info, selected, others, result, deadline=deadline, owner_guard=stable)
+            result = evaluate(session, info, selected, others, result, deadline=deadline,
+                              owner_guard=stable, outcome_only=_outcome_only)
             after = None
             if not result.get('evaluation_stopped'):
                 stable()
@@ -99,3 +101,9 @@ class QemuSceneObservationMixin:
         from .qemu_scene_wait import wait
         return wait(self, scene, object=object, guest_ms=guest_ms, timeout_ms=timeout_ms,
                     slice_ms=slice_ms, compact=compact)
+
+    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None,
+                  slice_ms=100, compact=False, guest_ms=None):
+        from .qemu_scene_act import act
+        return act(self, scene, object, handle_popups=handle_popups, timeout_ms=timeout_ms,
+                   slice_ms=slice_ms, compact=compact, guest_ms=guest_ms)

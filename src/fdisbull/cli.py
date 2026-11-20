@@ -165,7 +165,7 @@ METHODS = {
     "debug-scene-check": "Check scene identity and optional object availability; run,scene,[object,compact]",
     "debug-scene-assert": "Assert current scene/object or save a diagnostic snapshot; run,scene,[object,compact]",
     "debug-scene-click": "Perform checked real input and verify its bounded outcome; run,scene,object,[handle_popups,timeout_ms,slice_ms,compact]",
-    "debug-scene-act": "Perform a named guest mouse/keyboard action and verify its outcome; run,scene,object,[handle_popups,timeout_ms,slice_ms,compact]",
+    "debug-scene-act": "Perform a named action and observe its declared outcome; run,scene,object,[handle_popups,timeout_ms,slice_ms,compact]; QEMU scene-3 also accepts guest_ms",
     "debug-scene-wait": "Wait on authored scene/object conditions with explicit budgets; run,scene,[object,guest_ms,timeout_ms,slice_ms,compact]",
     "capture-signature": "Capture a named closed stored function for cross-project reuse; address,name,[version,cs,author,max_instructions]",
     "import-signatures": "Atomically import an explicit signature catalog; catalog,[version]",
@@ -1548,6 +1548,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(observed, dict)
                                and observed.get("format") == STEP_SEQUENCE_FORMAT)
         scene_wait_result = getattr(e, "scene_wait_result", None)
+        scene_act_result = getattr(e, "scene_act_result", None)
         script_result = getattr(e, "script_result", None)
         checkpoint_script_error = (isinstance(request, dict) and request.get("method") == "debug-script"
                                    and getattr(e, "_qemu_checkpoint_script_error", False) is True
@@ -1559,8 +1560,16 @@ def respond(request, default_project=None, debugger=None):
                                     and isinstance(item.get("wait"), dict)
                                     and item["wait"].get("format") == "fdisbull-scene-wait-1"
                                     for item in (observed, scene_wait_result)))
+        scene_act_error = (isinstance(request, dict) and request.get("method") == "debug-scene-act"
+                           and any(isinstance(item, dict)
+                                   and item.get("format") == "fdisbull-scene-action-1"
+                                   for item in (observed, scene_act_result)))
+        action_script_error = (isinstance(request, dict) and request.get("method") == "debug-script"
+                               and getattr(e, "_qemu_scene_action_script_error", False) is True
+                               and isinstance(script_result, dict)
+                               and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or checkpoint_script_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error):
             raise
         value = {
             "id": request_id,
@@ -1575,7 +1584,7 @@ def respond(request, default_project=None, debugger=None):
             value["error"]["result"] = e.result
         if step_sequence_error:
             value["error"]["result"] = observed
-        if scene_wait_error:
+        if scene_wait_error or scene_act_error:
             # Keep a primary native stop separate from the wait's observed
             # prefix. The ordinary output policy bounds this failure envelope
             # exactly as successful replies; exporting it never reruns a wait.
@@ -1583,7 +1592,14 @@ def respond(request, default_project=None, debugger=None):
                 value["error"]["result"] = observed
             if scene_wait_result is not None and scene_wait_result is not observed:
                 value["error"]["scene_wait_result"] = scene_wait_result
-        if checkpoint_script_error:
+            if scene_act_result is not None and scene_act_result is not observed:
+                value["error"]["scene_act_result"] = scene_act_result
+        if scene_act_error:
+            for field in ("scene_act_cleanup_error", "scene_act_owner_cleanup_error", "scene_act_evidence_error"):
+                detail = getattr(e, field, None)
+                if isinstance(detail, str):
+                    value["error"][field] = detail
+        if checkpoint_script_error or action_script_error:
             if observed is not None:
                 value["error"]["result"] = observed
             value["error"]["script_result"] = script_result

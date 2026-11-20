@@ -60,6 +60,46 @@ def _not_running(error):
             and reply.get('desc') == 'VM not running')
 
 
+def _invalidate_input_state(state, reason):
+    state['valid'] = False
+    state['invalid_reason'] = reason
+    state['invalidated_edges'] += len(state['pending'])
+    state['invalidated_leases'] += len(state['leases'])
+    state['pending'].clear()
+    state['leases'].clear()
+    if state.get('schedule') is not None:
+        state['schedule'].get('lease_reservations', {}).clear()
+
+
+def _input_owner_closed(vm):
+    vm._physical_input_closed = True
+    state = getattr(vm, '_physical_input', None)
+    if state is not None and state['valid']:
+        _invalidate_input_state(state, 'VM closed; no physical release was injected')
+
+
+def _close_input_failure(owner, error, reason, *, vm=None):
+    """Keep failed cleanup quarantined without replacing the first error."""
+    vm = owner.vm if vm is None else vm
+    previous = getattr(vm, '_fdisbull_control_quarantine', None)
+    vm._fdisbull_control_quarantine = previous or reason
+    if owner.vm is vm:
+        try:
+            owner._input_invalidate(reason)
+        except BaseException as invalidation:
+            error.input_invalidation_error = type(invalidation).__name__
+    try:
+        vm.close()
+    except BaseException as cleanup:
+        error.input_cleanup_error = type(cleanup).__name__
+    else:
+        # Closed, invalid input remains passively inspectable as before. Only
+        # incomplete cleanup needs this low-level fence; composed actions keep
+        # their own separate uncertainty policy and any preexisting fence.
+        if previous is None and getattr(vm, '_fdisbull_control_quarantine', None) == reason:
+            del vm._fdisbull_control_quarantine
+
+
 class QemuPhysicalInputMixin:
     """Owned physical edges and finite native virtual-clock input plans."""
 
@@ -118,33 +158,22 @@ class QemuPhysicalInputMixin:
     def _input_persist(self, operation, receipt):
         if getattr(self, 'project', None) is None:
             return
+        vm = self.vm
         try:
             self._event(operation, receipt)
-        except BaseException:
+        except BaseException as error:
             # An input transition may already exist in Python or in QEMU.
             # Never return an apparently usable session without its evidence.
-            self._input_invalidate('Physical input evidence persistence failed')
-            self.vm.close()
+            _close_input_failure(self, error, 'Physical input evidence persistence failed', vm=vm)
             raise
 
     def _input_invalidate(self, reason):
-        state = self._input_storage()
-        state['valid'] = False
-        state['invalid_reason'] = reason
-        state['invalidated_edges'] += len(state['pending'])
-        state['invalidated_leases'] += len(state['leases'])
-        state['pending'].clear()
-        state['leases'].clear()
-        if state.get('schedule') is not None:
-            state['schedule'].get('lease_reservations', {}).clear()
+        _invalidate_input_state(self._input_storage(), reason)
 
     def _input_on_close(self):
         # Called by the VM owner before tearing down its transports. Closing a
         # machine invalidates leases; it never pretends to inject releases.
-        self.vm._physical_input_closed = True
-        state = getattr(self.vm, '_physical_input', None)
-        if state is not None and state['valid']:
-            self._input_invalidate('VM closed; no physical release was injected')
+        _input_owner_closed(self.vm)
 
     def _input_pending(self):
         state = getattr(self.vm, '_physical_input', None)

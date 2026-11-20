@@ -425,11 +425,16 @@ def validate_script(script, *, session=None):
                         validate_parameters(**params,allow_references=True)
                         if session is not None:
                             preflight(session,**params,allow_references=True)
+                    if op=='scene-act' and (backend or actual)=='qemu-dos':
+                        from .qemu_scene_act import validate_parameters, preflight
+                        validate_parameters(**params,allow_references=True)
+                        if session is not None:
+                            preflight(session,**params,allow_references=True)
                     if session is not None:
                         from .runtime_scenes import require_frame_scene
                         frame_scenes=[]
                         if (op in ('scene-navigation','scene-click','scene-act','scene-wait','move')
-                                and not (op=='scene-wait' and (backend or actual)=='qemu-dos')):
+                                and not (op in ('scene-wait','scene-act') and (backend or actual)=='qemu-dos')):
                             frame_scenes.append(params.get('scene'))
                         if op in ('scene-check','scene-assert') and (backend or actual)!='qemu-dos':
                             frame_scenes.append(params.get('scene'))
@@ -768,6 +773,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     from .qemu_checkpoint_script import OPERATIONS as CHECKPOINT_OPERATIONS
     checkpoint_script = (getattr(session,'metadata',{}).get('backend')=='qemu-dos'
                          and any(step['op'] in CHECKPOINT_OPERATIONS for step in steps))
+    action_script = (getattr(session,'metadata',{}).get('backend')=='qemu-dos'
+                     and any(step['op']=='scene-act' for step in steps))
+    action_owner = None
     owned_before=set(getattr(session,'_keyboard_leases',{}));keyboard_touched=False
 
     def resolve(value):
@@ -855,6 +863,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if (step['op']=='scene-wait' and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
                 from .qemu_scene_wait import validate_parameters
                 validate_parameters(**params)
+            if action_script and step['op']=='scene-act':
+                from .qemu_scene_act import preflight
+                # Resolved values are still declarations. Validate before a
+                # remaining-time clamp could make an invalid timeout valid.
+                preflight(session, **params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
                              'input-schedule-retrace','display-probe','vga-configuration','mouse.move-mapped',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
@@ -888,6 +901,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 if track_restored_input and step['op'] in restore_operations:
                     frame_restore_attempted = True
                 checkpoint_owner = session.vm if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS else None
+                if action_script and step['op']=='scene-act':
+                    # This operation owns its single attempted arm and failure
+                    # disposition. A readiness refusal never touches input; a
+                    # known first stop retains its holds without legacy cleanup.
+                    action_owner = session.vm
                 result = getattr(session,OPERATIONS[step['op']])(**params)
                 if checkpoint_owner is not None and step['op'].startswith('load-'):
                     replacement = session.vm
@@ -918,6 +936,12 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                         in ('not_requested','not_dispatched','skipped_initial_match')):
                     keyboard_touched = prior_input_touched
             record['result'] = result
+            if action_script and step['op']=='scene-act' and time.monotonic() >= deadline:
+                from .qemu_scene_act import _quarantine
+                error = TimeoutError('Scene action returned after the script deadline')
+                error.result = error.scene_act_result = result
+                _quarantine(session,action_owner,error)
+                raise error
             if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS and time.monotonic() >= deadline:
                 error = TimeoutError('Checkpoint step returned after the script deadline')
                 error.result = result
@@ -983,6 +1007,14 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     and isinstance(getattr(error,'scene_wait_result',None),dict)
                     and error.scene_wait_result is not getattr(error,'result',None)):
                 record['scene_wait_result']=error.scene_wait_result
+            if action_script and step['op']=='scene-act':
+                partial = getattr(error,'scene_act_result',None)
+                if isinstance(partial,dict) and partial is not getattr(error,'result',None):
+                    record['scene_act_result']=partial
+                cleanup_errors={field:getattr(error,field) for field in
+                    ('scene_act_cleanup_error','scene_act_owner_cleanup_error','scene_act_evidence_error')
+                    if isinstance(getattr(error,field,None),str)}
+                if cleanup_errors:record['scene_act_cleanup']=cleanup_errors
             if (step['op']=='trace-until' and isinstance(getattr(error,'result',None),dict)
                     and error.result.get('action',{}).get('dispatch')
                     in ('not_requested','not_dispatched','skipped_initial_match')):
@@ -1010,7 +1042,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         # A failed route must not leave input depressed or execute through a stop.
         reason = ('Failed script frame input ownership is unknown after restore' if restore_ownership_unknown
                   else 'Failed script owned unreleased input')
-        if checkpoint_script:
+        if checkpoint_script or action_script:
             try:
                 session.close()
                 cleanup={'closed':True,'reason':reason}
@@ -1029,21 +1061,42 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
               'requested_steps':len(steps),'host_elapsed_ms':round((time.monotonic()-started)*1000,3),
               'steps':records,'input_cleanup':cleanup}
     try:
-        if checkpoint_script and time.monotonic() >= deadline:
-            raise primary_failure or TimeoutError('Checkpoint script deadline expired before report publication')
+        if (checkpoint_script or action_script) and time.monotonic() >= deadline:
+            raise primary_failure or TimeoutError('Checkpoint script deadline expired before report publication'
+                if checkpoint_script else 'Scene action script deadline expired before report publication')
         evidence = session._artifact('route-result.json','script-result',json.dumps(report,indent=2).encode(),
                                      {'ok':report['ok'],'completed_steps':report['completed_steps']})
-        if checkpoint_script and time.monotonic() >= deadline:
+        if (checkpoint_script or action_script) and time.monotonic() >= deadline:
             report = {**report,'artifact':evidence['artifact']}
-            raise primary_failure or TimeoutError('Checkpoint script report publication exceeded its deadline')
+            raise primary_failure or TimeoutError('Checkpoint script report publication exceeded its deadline'
+                if checkpoint_script else 'Scene action script report publication exceeded its deadline')
     except BaseException as error:
-        if checkpoint_script:
+        if checkpoint_script and not action_script:
             from .qemu_checkpoint_script import retain_script_failure
             if primary_failure is not None and error is not primary_failure:
                 primary_failure.script_publication_error={'type':type(error).__name__,'message':str(error)}
                 retain_script_failure(primary_failure,report)
                 raise primary_failure from error
             retain_script_failure(error,report)
+        if action_script:
+            primary = primary_failure or error
+            if error is not primary:
+                primary.script_publication_error={'type':type(error).__name__,'message':str(error)}
+            primary.script_result=report
+            primary._qemu_scene_action_script_error=True
+            # Preserve the action's own first-stop/refusal disposition when
+            # the original error merely reaches its expired report boundary.
+            action_input_attempted = any(
+                record['op']=='scene-act' and any(
+                    isinstance(receipt,dict) and receipt.get('format')=='fdisbull-scene-action-1'
+                    and receipt.get('input',{}).get('attempted') is True
+                    for receipt in (record.get('result'),record.get('scene_act_result')))
+                for record in records)
+            if action_owner is not None and action_input_attempted and error is not primary_failure:
+                from .qemu_scene_act import _quarantine
+                _quarantine(session,action_owner,primary)
+            if primary is not error:
+                raise primary from error
         raise
     if _bindings_out is not None:_bindings_out.update(results)
     return {**report,'artifact':evidence['artifact']}

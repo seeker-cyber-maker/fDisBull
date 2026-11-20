@@ -344,8 +344,15 @@ class QemuMachine:
             try:action()
             except BaseException as error:failures.append(error)
         context=getattr(self,'context',None)
+        current_context=getattr(context,'vm',self) is self
         invalidate=getattr(context,'_input_on_close',None)
-        if invalidate is not None:cleanup(invalidate)
+        if current_context:
+            if invalidate is not None:cleanup(invalidate)
+        else:
+            # A callback can replace the session's owner before cleanup of a
+            # captured failed VM. Never invalidate the replacement's leases.
+            from .qemu_input import _input_owner_closed
+            cleanup(lambda:_input_owner_closed(self))
         for name in ('gdb','qmp'):
             channel=getattr(self,name,None)
             setattr(self,name,None)
@@ -376,7 +383,7 @@ class QemuMachine:
         if handle is not None:cleanup(lambda:os.close(handle))
         observer=getattr(self,'close_observer',None)
         self.close_observer=None
-        if observer is not None:
+        if observer is not None and (current_context or getattr(observer,'__self__',None) is not context):
             try:observer()
             except Exception as error:self.close_observer_error=type(error).__name__
         if failures:
@@ -645,8 +652,9 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 elif function.__name__ in ('input_schedule_retrace','keyboard_press','keyboard_type','mouse_button_click','mouse_move_mapped'):
                     # The passive arm may already be accepted and journaled.
                     # An expired return must not leave a usable live timer.
-                    self._input_invalidate(label+' arm exceeded its host deadline; input must not be replayed')
-                    vm.close()
+                    from .qemu_input import _close_input_failure
+                    _close_input_failure(self,error,
+                        label+' arm exceeded its host deadline; input must not be replayed',vm=vm)
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe'):
                     vm.close()
                 raise error

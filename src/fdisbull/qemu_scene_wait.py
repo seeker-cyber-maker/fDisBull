@@ -40,6 +40,11 @@ def preflight(session, scene, *, object=None, guest_ms=5000, timeout_ms=5000,
                         slice_ms=slice_ms, compact=compact, allow_references=allow_references)
     scene_preflight(session, scene, object=object, compact=compact, allow_references=allow_references)
     reference = lambda value: allow_references and isinstance(value, str) and value.startswith('$')
+    if not reference(scene):
+        info, _ = select(session.project, scene, session.version['id'],
+                         None if reference(object) else object)
+        if info['definition']['format'] != 'fdisbull-scene-2':
+            raise ValueError('QEMU scene waits require the explicit passive scene-2 profile')
     # Unknown reference values defer only their own constraints. One millisecond
     # is the smallest possible poll tail; actual resolved admission is repeated.
     validate_qemu_wait_session(session, guest_ms=None if reference(guest_ms) else guest_ms,
@@ -47,7 +52,7 @@ def preflight(session, scene, *, object=None, guest_ms=5000, timeout_ms=5000,
 
 
 @contextmanager
-def _scope(session, owner, seed, deadline, args, kwargs):
+def _scope(session, owner, seed, deadline, args, kwargs, *, operation='scene_wait'):
     from .qemu_machine import _machine_operation_guard
     from .qemu_scenes import _identity
     def bounds():
@@ -73,7 +78,7 @@ def _scope(session, owner, seed, deadline, args, kwargs):
         session._rpc_deadline = session._deadline = owner.operation_deadline = deadline
         for channel, _ in channels:
             channel.operation_deadline = deadline
-        _machine_operation_guard(owner, 'scene_wait', args, kwargs)
+        _machine_operation_guard(owner, operation, args, kwargs)
         yield deadline
     finally:
         if previous is not None:
