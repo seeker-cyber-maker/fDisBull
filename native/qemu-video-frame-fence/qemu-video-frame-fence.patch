@@ -1,0 +1,703 @@
+diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -14,7 +14,9 @@
+ #include "qapi/qapi-visit-fdisbull-video-frame.h"
+ #include "qemu/main-loop.h"
+ #include "qemu/timer.h"
++#include "system/cpus.h"
+ #include "system/fdisbull-display.h"
++#include "system/fdisbull-frame-keys.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/fdisbull-video-frame.h"
+ #include "system/runstate.h"
+@@ -22,6 +24,7 @@
+ 
+ #define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
+ #define VIDEO_MAX_POINTS 256
++#define VIDEO_FENCE_MODEL "qemu-video-frame-fence-v1"
+ 
+ /* Never serialized. Counters survive stopped replacement streams and load. */
+ static struct {
+@@ -52,6 +55,167 @@
+     FdisbullVideoFrame *frame;
+ } video;
+ 
++/* Source-probe fence state begins: these are the production state helpers. */
++typedef enum VideoFenceState {
++    VIDEO_FENCE_IDLE,
++    VIDEO_FENCE_ARMED,
++    VIDEO_FENCE_COMPLETED,
++    VIDEO_FENCE_ABORTED,
++    VIDEO_FENCE_CANCELLED,
++} VideoFenceState;
++
++static struct {
++    VideoFenceState state;
++    bool released;
++    bool retired;
++    bool stop_pending;
++    bool stop_consumed;
++    bool stopping;
++    bool has_stop_ns;
++    uint64_t generation;
++    uint64_t epoch;
++    uint64_t configuration_generation;
++    uint64_t timing_generation;
++    uint64_t baseline;
++    unsigned baseline_rows;
++    int64_t armed_ns;
++    int64_t stop_ns;
++    char *token;
++    char *stream_token;
++    char *reason;
++    FdisbullVideoFrame *frame;
++} video_fence;
++
++bool fdisbull_video_frame_fence_blocks_control(void)
++{
++    return video_fence.token && !video_fence.released;
++}
++
++bool fdisbull_video_frame_stop_pending(void)
++{
++    return video_fence.stop_pending;
++}
++
++static bool video_fence_is_next_frame(const FdisbullVideoFrame *frame)
++{
++    return frame && video_fence.state == VIDEO_FENCE_ARMED &&
++           !video_fence.released && video_fence.baseline != UINT64_MAX &&
++           frame->frame_id == video_fence.baseline + 1 &&
++           frame->stream_generation == video_fence.generation &&
++           frame->epoch == video_fence.epoch &&
++           frame->configuration_generation ==
++               video_fence.configuration_generation &&
++           frame->timing_generation == video_fence.timing_generation;
++}
++
++static void video_fence_record_stopped(int64_t now, bool owned)
++{
++    if (video_fence.retired ||
++        (video_fence.state != VIDEO_FENCE_COMPLETED &&
++         video_fence.state != VIDEO_FENCE_ABORTED)) {
++        return;
++    }
++    video_fence.stop_pending = false;
++    if (!video_fence.has_stop_ns) {
++        video_fence.has_stop_ns = true;
++        video_fence.stop_ns = now;
++        video_fence.stop_consumed = owned;
++    }
++}
++
++static bool video_fence_release(void)
++{
++    if (!video_fence.token || video_fence.stop_pending || video_fence.retired) {
++        return false;
++    }
++    if (video_fence.state == VIDEO_FENCE_ARMED) {
++        video_fence.state = VIDEO_FENCE_CANCELLED;
++    }
++    video_fence.released = true;
++    return true;
++}
++/* Source-probe fence state ends. */
++
++static void video_fence_retire(const char *reason)
++{
++    if (!video_fence.token || video_fence.retired) {
++        return;
++    }
++    if (video_fence.state == VIDEO_FENCE_ARMED) {
++        video_fence.state = VIDEO_FENCE_ABORTED;
++        video_fence.reason = g_strdup(reason);
++    }
++    video_fence.released = true;
++    video_fence.retired = true;
++    video_fence.stop_pending = false;
++    video_fence.stopping = false;
++    /* Historical frame/epoch/stop evidence is never rebound or manufactured. */
++}
++
++void fdisbull_video_frame_clock_retire(const char *reason)
++{
++    assert(bql_locked());
++    video_fence_retire(reason);
++    if (video.token) {
++        fdisbull_video_frame_invalidate(video.console, reason);
++    }
++}
++
++static void video_fence_request_stop(void)
++{
++    if (video_fence.retired || video_fence.released) {
++        return;
++    }
++    if (runstate_is_running()) {
++        video_fence.stop_pending = true;
++        cpu_stop_current();
++        qemu_notify_event();
++    } else {
++        video_fence_record_stopped(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL), false);
++    }
++}
++
++static void video_fence_abort(const char *reason)
++{
++    if (video_fence.state != VIDEO_FENCE_ARMED || video_fence.released) {
++        return;
++    }
++    video_fence.state = VIDEO_FENCE_ABORTED;
++    video_fence.reason = g_strdup(reason);
++    video_fence_request_stop();
++}
++
++bool fdisbull_video_frame_checkpoint_safe(Error **errp)
++{
++    assert(bql_locked());
++    if (fdisbull_video_frame_fence_blocks_control() ||
++        video_fence.stop_pending) {
++        error_setg(errp, "Release the source-video frame fence before checkpointing");
++        return false;
++    }
++    return true;
++}
++
++void fdisbull_video_frame_handle_stop_request(void)
++{
++    assert(bql_locked());
++    if (!video_fence.stop_pending) {
++        return;
++    }
++    if (runstate_is_running()) {
++        /* Stock debugger/reset/shutdown/VM-stop requests were handled first. */
++        video_fence.stopping = true;
++        vm_stop(RUN_STATE_PAUSED);
++        if (runstate_check(RUN_STATE_PAUSED)) {
++            video_fence_record_stopped(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
++                                       true);
++        }
++        video_fence.stopping = false;
++    } else {
++        video_fence_record_stopped(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL), false);
++    }
++}
++
+ typedef struct VideoVGASearch {
+     unsigned count;
+     Object *device;
+@@ -157,6 +321,7 @@
+     g_free(video.reason);
+     video.reason = g_strdup(reason);
+     g_clear_pointer(&video.frame, qapi_free_FdisbullVideoFrame);
++    video_fence_abort(reason);
+     /* Buffers stay allocated but are unreachable as published pixels. */
+ }
+ 
+@@ -268,6 +433,17 @@
+     g_clear_pointer(&video.frame, qapi_free_FdisbullVideoFrame);
+     video.frame = frame;
+     video.rows = 0;
++    if (video_fence.state == VIDEO_FENCE_ARMED) {
++        if (!video.token || strcmp(video.token, video_fence.stream_token) ||
++            !video_fence_is_next_frame(frame)) {
++            fdisbull_video_frame_invalidate(video.console,
++                                            "source-fence-publication-mismatch");
++            return;
++        }
++        video_fence.frame = QAPI_CLONE(FdisbullVideoFrame, frame);
++        video_fence.state = VIDEO_FENCE_COMPLETED;
++        video_fence_request_stop();
++    }
+ }
+ 
+ static void video_defer_callback(int64_t now)
+@@ -309,7 +485,8 @@
+         stopping |= cpu->stop || cpu->stopped ||
+                     (cpu->interrupt_request & CPU_INTERRUPT_DEBUG);
+     }
+-    if (!clock->running || clock->pending_stop || stopping) {
++    if (!clock->running || clock->pending_stop || stopping ||
++        fdisbull_video_frame_stop_pending()) {
+         video_defer_callback(clock->virtual_ns);
+         return;
+     }
+@@ -339,6 +516,9 @@
+             return;
+         }
+         video_publish(clock->virtual_ns);
++        if (video.invalidated) {
++            return;
++        }
+         if (video.frame_start_ns > INT64_MAX - video.source.period_ns) {
+             fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
+             return;
+@@ -356,6 +536,12 @@
+ 
+ static void video_vm_state_change(void *opaque, bool running, RunState state)
+ {
++    if (!fdisbull_instrumented_checkpoint_busy() && !running &&
++        video_fence.stop_pending) {
++        video_fence_record_stopped(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
++                                   video_fence.stopping &&
++                                   state == RUN_STATE_PAUSED);
++    }
+     if (!fdisbull_instrumented_checkpoint_busy() && video.token && !running &&
+         state != RUN_STATE_PRELAUNCH &&
+         state != RUN_STATE_PAUSED && state != RUN_STATE_DEBUG) {
+@@ -382,7 +568,8 @@
+     if (!token[0] || strlen(token) > 128 ||
+         (video.token && !strcmp(token, video.token)) || video.observing ||
+         video.generation == UINT64_MAX || video.sequence == UINT64_MAX ||
+-        fdisbull_display_frame_fence_blocks_control()) {
++        fdisbull_display_frame_fence_blocks_control() ||
++        fdisbull_video_frame_fence_blocks_control()) {
+         error_setg(errp, "Video frame start requires an inactive stream, new "
+                    "1..128 byte token and available counters/controllers");
+         return NULL;
+@@ -473,6 +660,10 @@
+ {
+     g_autoptr(FdisbullClockInfo) clock = NULL;
+ 
++    if (fdisbull_video_frame_fence_blocks_control()) {
++        error_setg(errp, "Release the source-video frame fence before stopping its stream");
++        return NULL;
++    }
+     if (!video_query_guard(&clock, errp) || !video_token(token, errp)) {
+         return NULL;
+     }
+@@ -582,3 +773,129 @@
+     }
+     return probe;
+ }
++
++static FdisbullVideoFrameFenceInfo *video_fence_info(void)
++{
++    static const char *const names[] = {
++        "idle", "armed", "completed", "aborted", "cancelled",
++    };
++    FdisbullVideoFrameFenceInfo *info =
++        g_new0(FdisbullVideoFrameFenceInfo, 1);
++
++    info->api_version = 1;
++    info->model = g_strdup(VIDEO_FENCE_MODEL);
++    info->token = g_strdup(video_fence.token);
++    info->stream_token = g_strdup(video_fence.stream_token);
++    info->stream_generation = video_fence.generation;
++    info->epoch = video_fence.epoch;
++    info->configuration_generation = video_fence.configuration_generation;
++    info->timing_generation = video_fence.timing_generation;
++    info->baseline_frame_sequence = video_fence.baseline;
++    info->baseline_rows_sampled = video_fence.baseline_rows;
++    info->armed_ns = video_fence.armed_ns;
++    info->state = g_strdup(names[video_fence.state]);
++    info->released = video_fence.released;
++    info->stop_pending = video_fence.stop_pending;
++    info->stop_consumed = video_fence.stop_consumed;
++    info->completed_frame = video_fence.frame ?
++        QAPI_CLONE(FdisbullVideoFrame, video_fence.frame) : NULL;
++    info->has_stop_ns = video_fence.has_stop_ns;
++    info->stop_ns = video_fence.stop_ns;
++    info->reason = g_strdup(video_fence.reason);
++    return info;
++}
++
++FdisbullVideoFrameFenceInfo *qmp_x_fdisbull_arm_video_frame(
++    const char *token, const char *stream_token,
++    uint64_t expected_stream_generation, uint64_t expected_frame_sequence,
++    uint64_t expected_epoch, Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    if (!video_query_guard(&clock, errp)) {
++        return NULL;
++    }
++    if (!video.observing || video.invalidated || !video.token ||
++        strcmp(stream_token, video.token) ||
++        expected_stream_generation != video.generation ||
++        expected_frame_sequence != video.sequence ||
++        expected_epoch != video.epoch || clock->epoch != video.epoch ||
++        video.sequence == UINT64_MAX) {
++        error_setg(errp, "Source-video fence requires its exact observing stream "
++                   "token, generation, frame sequence and clock epoch");
++        return NULL;
++    }
++    if (!token[0] || strlen(token) > 128 ||
++        (video_fence.token && !strcmp(token, video_fence.token)) ||
++        fdisbull_video_frame_fence_blocks_control() ||
++        video_fence.stop_pending ||
++        fdisbull_display_frame_fence_blocks_control()) {
++        error_setg(errp, "Source-video fence requires a new bounded token and "
++                   "released native frame controllers");
++        return NULL;
++    }
++    if (!fdisbull_input_checkpoint_safe(errp) ||
++        !fdisbull_frame_keys_checkpoint_safe(errp)) {
++        return NULL;
++    }
++
++    g_free(video_fence.token);
++    g_free(video_fence.stream_token);
++    g_clear_pointer(&video_fence.reason, g_free);
++    g_clear_pointer(&video_fence.frame, qapi_free_FdisbullVideoFrame);
++    video_fence.token = g_strdup(token);
++    video_fence.stream_token = g_strdup(stream_token);
++    video_fence.generation = video.generation;
++    video_fence.epoch = video.epoch;
++    video_fence.configuration_generation =
++        video.source.configuration_generation;
++    video_fence.timing_generation = video.source.timing_generation;
++    video_fence.baseline = video.sequence;
++    video_fence.baseline_rows = video.rows;
++    video_fence.armed_ns = clock->virtual_ns;
++    video_fence.state = VIDEO_FENCE_ARMED;
++    video_fence.released = false;
++    video_fence.retired = false;
++    video_fence.stop_pending = false;
++    video_fence.stop_consumed = false;
++    video_fence.stopping = false;
++    video_fence.has_stop_ns = false;
++    video_fence.stop_ns = 0;
++    return video_fence_info();
++}
++
++static bool video_fence_query_guard(const char *token, Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++
++    if (!video_stopped(&clock, errp)) {
++        return false;
++    }
++    if (!video_fence.token || video_fence.retired ||
++        strcmp(token, video_fence.token) ||
++        clock->epoch != video_fence.epoch) {
++        error_setg(errp, "Source-video fence requires its exact token and "
++                   "stopped producing clock epoch");
++        return false;
++    }
++    return true;
++}
++
++FdisbullVideoFrameFenceInfo *qmp_x_fdisbull_query_video_frame_fence(
++    const char *token, Error **errp)
++{
++    return video_fence_query_guard(token, errp) ? video_fence_info() : NULL;
++}
++
++FdisbullVideoFrameFenceInfo *qmp_x_fdisbull_cancel_video_frame_fence(
++    const char *token, Error **errp)
++{
++    if (!video_fence_query_guard(token, errp)) {
++        return NULL;
++    }
++    if (!video_fence_release()) {
++        error_setg(errp, "Source-video fence private stop has not settled");
++        return NULL;
++    }
++    return video_fence_info();
++}
+diff --git a/include/system/fdisbull-video-frame.h b/include/system/fdisbull-video-frame.h
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -1,10 +1,20 @@
+ /* SPDX-License-Identifier: GPL-2.0-or-later */
+ #ifndef SYSTEM_FDISBULL_VIDEO_FRAME_H
+ #define SYSTEM_FDISBULL_VIDEO_FRAME_H
++
++#include "qapi/error.h"
+ 
+ struct QemuConsole;
+ /* Effective native writes/reset/load invalidate both partial and live pixels. */
+ void fdisbull_video_frame_invalidate(struct QemuConsole *console,
+                                     const char *reason);
+ 
++/* Private source-frame control owner; none of this state is serialized. */
++bool fdisbull_video_frame_fence_blocks_control(void);
++bool fdisbull_video_frame_stop_pending(void);
++bool fdisbull_video_frame_checkpoint_safe(Error **errp);
++void fdisbull_video_frame_handle_stop_request(void);
++/* Authoritative clock loss/restore retires controls, without claiming a stop. */
++void fdisbull_video_frame_clock_retire(const char *reason);
++
+ #endif
+diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -212,3 +212,103 @@
+   'data': { 'token': 'str', 'frame-id': 'uint64',
+             'points': ['FdisbullVideoFramePoint'] },
+   'returns': 'FdisbullVideoFrameProbe' }
++
++##
++# @FdisbullVideoFrameFenceInfo:
++#
++# @api-version: Private fence protocol version, 1.
++# @model: qemu-video-frame-fence-v1.
++# @token: Fence ownership token, distinct from the preceding fence token.
++# @stream-token: Exact source-stream token bound by the arm.
++# @stream-generation: Explicit-start generation bound by the arm.
++# @epoch: Producing native clock epoch bound by the arm.
++# @configuration-generation: Source configuration identity bound by the arm.
++# @timing-generation: Source precise-timing identity bound by the arm.
++# @baseline-frame-sequence: Accepted source-raster count at arm time.
++# @baseline-rows-sampled: Already sampled rows at arm time, zero through 199.
++# @armed-ns: Stopped native timestamp at arm time.
++# @state: armed, completed, aborted, or cancelled. Completion and abort are
++#     retained when cancellation releases their control ownership.
++# @released: Explicit cancellation released this fence's control exclusion.
++# @stop-pending: A private safe-stop request has not yet reached a stopped VM.
++# @stop-consumed: The fence's main-loop handler itself stopped the running VM.
++# @completed-frame: Exact accepted baseline-plus-one source raster, present
++#     only for completed. It can exist even if a debugger stop won attribution.
++# @stop-ns: First known terminal stopped native time, when available. An abort
++#     that occurs while already stopped records that actual time too.
++# @reason: First source failure reason, present only for aborted.
++#
++# This process-local receipt does not claim DOSBox sampling-phase equivalence,
++# guest input consumption, or a whole raster sampled after arm time. Query is
++# legal in the same stopped PRELAUNCH, PAUSED, or DEBUG epoch.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFrameFenceInfo',
++  'data': { 'api-version': 'int', 'model': 'str', 'token': 'str',
++            'stream-token': 'str', 'stream-generation': 'uint64',
++            'epoch': 'uint64', 'configuration-generation': 'uint64',
++            'timing-generation': 'uint64',
++            'baseline-frame-sequence': 'uint64',
++            'baseline-rows-sampled': 'int', 'armed-ns': 'int',
++            'state': 'str', 'released': 'bool', 'stop-pending': 'bool',
++            'stop-consumed': 'bool', '*completed-frame': 'FdisbullVideoFrame',
++            '*stop-ns': 'int', '*reason': 'str' } }
++
++##
++# @x-fdisbull-arm-video-frame:
++#
++# Bind a stopped, observing source stream to the next accepted complete raster.
++# All expected identities are checked before publishing the arm. The arm does
++# not sample, change source phase, discard partial rows, or execute the guest.
++# Competing clock budgets, renderer/source fences, pending input schedules and
++# checkpoint transactions must be resolved first.
++#
++# @token: New fence token, 1 through 128 bytes.
++# @stream-token: Exact current source-stream token.
++# @expected-stream-generation: Exact current explicit-start generation.
++# @expected-frame-sequence: Exact current accepted-raster count.
++# @expected-epoch: Exact current stopped native clock epoch.
++#
++# Returns: An armed, unreleased receipt with no completion or stop fields.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-arm-video-frame',
++  'data': { 'token': 'str', 'stream-token': 'str',
++            'expected-stream-generation': 'uint64',
++            'expected-frame-sequence': 'uint64', 'expected-epoch': 'uint64' },
++  'returns': 'FdisbullVideoFrameFenceInfo' }
++
++##
++# @x-fdisbull-query-video-frame-fence:
++#
++# Passively read the exact fence while the native clock is stably stopped in
++# its producing epoch. An earlier DEBUG stop can leave the fence armed. A
++# completed source raster alone does not prove this fence caused the stop.
++#
++# @token: Exact current fence token.
++#
++# Returns: Frozen ownership and any terminal source-frame/stop evidence.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-video-frame-fence',
++  'data': { 'token': 'str' }, 'returns': 'FdisbullVideoFrameFenceInfo' }
++
++##
++# @x-fdisbull-cancel-video-frame-fence:
++#
++# Release an exact fence while stopped after any private stop request has
++# settled. Armed becomes cancelled. Completed or aborted keeps its terminal
++# evidence and state. Repeated cancellation is idempotent. No pixels, cadence,
++# guest input or execution state are changed.
++#
++# @token: Exact current fence token.
++#
++# Returns: A released receipt with no pending private stop.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-cancel-video-frame-fence',
++  'data': { 'token': 'str' }, 'returns': 'FdisbullVideoFrameFenceInfo' }
+diff --git a/system/runstate.c b/system/runstate.c
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -55,6 +55,7 @@
+ #include "system/fdisbull-clock.h"
+ #include "system/fdisbull-dos-save-stop.h"
+ #include "system/fdisbull-display.h"
++#include "system/fdisbull-video-frame.h"
+ #include "system/qtest.h"
+ #include "system/replay.h"
+ #include "system/reset.h"
+@@ -844,6 +845,8 @@
+     if (qemu_vmstop_requested(&r)) {
+         vm_stop(r);
+     }
++    /* Preserve every already queued stock stop before attributing our fence. */
++    fdisbull_video_frame_handle_stop_request();
+     return false;
+ }
+ 
+diff --git a/system/fdisbull-clock.c b/system/fdisbull-clock.c
+--- a/system/fdisbull-clock.c
++++ b/system/fdisbull-clock.c
+@@ -20,6 +20,7 @@
+ #include "system/fdisbull-clock.h"
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/fdisbull-video-frame.h"
+ #include "system/replay.h"
+ #include "system/runstate.h"
+ 
+@@ -94,7 +95,7 @@
+     if (fdisbull_instrumented_checkpoint_busy()) {
+         return true;
+     }
+-    if (clock_state.pending_stop) {
++    if (clock_state.pending_stop || fdisbull_video_frame_stop_pending()) {
+         return true;
+     }
+     /*
+@@ -128,6 +129,7 @@
+         return;
+     }
+     assert(bql_locked());
++    fdisbull_video_frame_clock_retire("native-clock-invalidated");
+     timer_del(&clock_state.timer);
+     clock_state.invalidated = true;
+     clock_state.state = FDISBULL_CLOCK_BUDGET_STATE_INVALIDATED;
+@@ -299,8 +301,9 @@
+                    "align=off,sleep=off, one vCPU and no replay/migration");
+         return NULL;
+     }
+-    if (fdisbull_display_frame_fence_blocks_control()) {
+-        error_setg(errp, "Cancel the display-frame fence before arming a clock budget");
++    if (fdisbull_display_frame_fence_blocks_control() ||
++        fdisbull_video_frame_fence_blocks_control()) {
++        error_setg(errp, "Release the native frame fence before arming a clock budget");
+         return NULL;
+     }
+     if (clock_state.state == FDISBULL_CLOCK_BUDGET_STATE_ARMED ||
+@@ -403,6 +406,7 @@
+             return 0;
+         }
+     }
++    fdisbull_video_frame_clock_retire("native-clock-restored");
+     timer_del(&clock_state.timer);
+     clock_state.invalidated = false;
+     clock_state.pending_stop = false;
+diff --git a/system/fdisbull-display.c b/system/fdisbull-display.c
+--- a/system/fdisbull-display.c
++++ b/system/fdisbull-display.c
+@@ -24,6 +24,7 @@
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/fdisbull-retrace.h"
++#include "system/fdisbull-video-frame.h"
+ #include "system/cpus.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+@@ -462,6 +463,7 @@
+         return NULL;
+     }
+     if (fdisbull_display_frame_fence_blocks_control() ||
++        fdisbull_video_frame_fence_blocks_control() ||
+         display_frame_fence.stop_pending) {
+         error_setg(errp, "A display-frame fence is already active or unconsumed");
+         return NULL;
+diff --git a/system/fdisbull-frame-keys.c b/system/fdisbull-frame-keys.c
+--- a/system/fdisbull-frame-keys.c
++++ b/system/fdisbull-frame-keys.c
+@@ -14,6 +14,7 @@
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-frame-keys.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/fdisbull-video-frame.h"
+ #include "system/runstate.h"
+ #include "ui/input.h"
+ 
+@@ -482,6 +483,10 @@
+     bool starting = !frame_keys.active;
+ 
+     assert(bql_locked());
++    if (fdisbull_video_frame_fence_blocks_control()) {
++        error_setg(errp, "Release the source-video frame fence before mutating frame keys");
++        return NULL;
++    }
+     if (!token || !*token || strlen(token) > 128 ||
+         !frame_keys_clock(&clock, errp) || !frame_keys_input_schedule_clear(errp)) {
+         if (!errp || !*errp) {
+@@ -573,6 +578,10 @@
+     KBDState *controller;
+ 
+     assert(bql_locked());
++    if (fdisbull_video_frame_fence_blocks_control()) {
++        error_setg(errp, "Release the source-video frame fence before detaching frame keys");
++        return NULL;
++    }
+     if (!frame_keys_clock(&clock, errp) || !frame_keys.active ||
+         !frame_keys.valid || !token || !frame_keys.token ||
+         strcmp(token, frame_keys.token) ||
+diff --git a/system/fdisbull-input.c b/system/fdisbull-input.c
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -23,6 +23,7 @@
+ #include "system/fdisbull-retrace.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/fdisbull-frame-keys.h"
++#include "system/fdisbull-video-frame.h"
+ #include "system/reset.h"
+ #include "system/runstate.h"
+ #include "ui/input.h"
+@@ -842,6 +843,10 @@
+     if (!input_guard(errp)) {
+         return false;
+     }
++    if (fdisbull_video_frame_fence_blocks_control()) {
++        error_setg(errp, "Release the source-video frame fence before scheduling input");
++        return false;
++    }
+     if (input_schedule.state == FDISBULL_INPUT_STATE_ARMED) {
+         error_setg(errp, "A scheduled input batch is already armed");
+         return false;
+diff --git a/system/fdisbull-instrumented-checkpoint.c b/system/fdisbull-instrumented-checkpoint.c
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -28,6 +28,7 @@
+ #include "system/fdisbull-instrumented-checkpoint.h"
+ #include "system/fdisbull-frame-keys.h"
+ #include "system/fdisbull-display.h"
++#include "system/fdisbull-video-frame.h"
+ #include "system/runstate.h"
+ 
+ static void checkpoint_qobject_unref(QObject *object)
+@@ -122,7 +123,8 @@
+         error_setg(errp, "Instrumented checkpoint transaction is in progress");
+         return NULL;
+     }
+-    if (!fdisbull_display_frame_checkpoint_safe(errp)) {
++    if (!fdisbull_display_frame_checkpoint_safe(errp) ||
++        !fdisbull_video_frame_checkpoint_safe(errp)) {
+         return NULL;
+     }
+     clock = qmp_x_fdisbull_query_clock(errp);
+@@ -294,7 +296,8 @@
+         error_setg(errp, "An instrumented checkpoint transaction is already active");
+         return false;
+     }
+-    if (!fdisbull_display_frame_checkpoint_safe(&local_err)) {
++    if (!fdisbull_display_frame_checkpoint_safe(&local_err) ||
++        !fdisbull_video_frame_checkpoint_safe(&local_err)) {
+         error_propagate(errp, local_err);
+         return false;
+     }

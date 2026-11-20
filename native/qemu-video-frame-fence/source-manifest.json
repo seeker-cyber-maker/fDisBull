@@ -1,0 +1,79 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "253830eeedb2608da7b09a9527692332266488bd4abfef37a239c011e59dd592",
+  "base_source_manifest_sha256": "0e3bc73a14a401730c176b4fd2240768e398b155987480867aa6e02bb5684664",
+  "prerequisite_patch": "../qemu-video-frame/qemu-video-frame.patch",
+  "prerequisite_patch_sha256": "01ab5ded06a8ab432b49fafa64ee133358a396aa7fec3bbd9f1bf43a36254723",
+  "patch": "qemu-video-frame-fence.patch",
+  "patch_sha256": "cbc65cf87a4356ae09a78dff7cbf99b9997453db854d7229e9715cf5df3fa8f5",
+  "scope": "One next accepted native v1 source raster with separate safe-stop attribution; no legacy phase equivalence or input consumption",
+  "files": [
+    {
+      "path": "system/fdisbull-video-frame.c",
+      "base_sha256": "99b2bd84b178d79bbc8ee1637f2be2b7a0d20b2acc205fe38a7832d3a916ad76",
+      "patched_sha256": "ac9de868c7ad36829a60dd64b5f82fd5c239f5cd939c0f4573c96cf844e7f510"
+    },
+    {
+      "path": "include/system/fdisbull-video-frame.h",
+      "base_sha256": "f0bc6c1ebe3ada2067670fe53b378b29664b462d55ebd3bcd489ea590715469f",
+      "patched_sha256": "5bcfe08f3ca60c766d54204361ac0b0c2830f600136b213c156a745ca7413a1d"
+    },
+    {
+      "path": "qapi/fdisbull-video-frame.json",
+      "base_sha256": "c20c60f55130f5ab5b33cabd05a8fa9d18a2ce4dac8d8f1830b8e04df82924ae",
+      "patched_sha256": "65f959e86d105dc6ee3c39b2e8528b80a4bc66cddd715e28b03b1a85540d5fd6"
+    },
+    {
+      "path": "system/runstate.c",
+      "base_sha256": "5ddff907e14352c465a42977a05909e96e6d1b5a18ff6763e2cbc8ab2a02f388",
+      "patched_sha256": "876457d92b5b87c587c3cf5807a0e06956fa7586a03a935ffb5697dabfdbcb48"
+    },
+    {
+      "path": "system/fdisbull-clock.c",
+      "base_sha256": "9fe6def372de904c8fabfd314c72260ae1b9b6dd596db122eeb4c25495e81398",
+      "patched_sha256": "ce890f0b52a750f81ef63f95aa25ac1af2c4847dbca63ecd24c6f3523a9b72a7"
+    },
+    {
+      "path": "system/fdisbull-display.c",
+      "base_sha256": "83e5c5c1ee1fc7ac3fef85c5822f13ede79a7b7ef38bdb215c3393a144bf1ff0",
+      "patched_sha256": "d727ca77df02ab504e58aa852167a446903b2b57083089e4e51a4f9ca7372928"
+    },
+    {
+      "path": "system/fdisbull-frame-keys.c",
+      "base_sha256": "b287912863c512a56953dac996d43a493b3e5d72242293c177406e1e769d0d83",
+      "patched_sha256": "36f98d9e59f9e49b8548f62a111eb8a73351a7c59a811054da841b628a59202c"
+    },
+    {
+      "path": "system/fdisbull-input.c",
+      "base_sha256": "4ea7a02a043c93293fc6655e1746dd1491eacf1b9ee98f31e75a6d47d1e158ed",
+      "patched_sha256": "6f8954298e131bbd97097a39a871eeac9b84686f2607ff21f0bfee412d430e86"
+    },
+    {
+      "path": "system/fdisbull-instrumented-checkpoint.c",
+      "base_sha256": "9fa799b610ac817742276fe77a0d8cfbf43627068a29feca2ed94164f411be7b",
+      "patched_sha256": "dcf5c4a0b1e83d8d7d65870ac805a9d8f7d8f9deaa753ab04ce74e1c35ae1274"
+    }
+  ],
+  "qualification": {
+    "compiled_source_probe": {
+      "status": "passed",
+      "test_module": "tests/test_qemu_video_frame_fence_source.py",
+      "cases": 34,
+      "command": "python -m pytest -q tests/test_qemu_video_frame_fence_source.py",
+      "patch_sha256_at_run": "cbc65cf87a4356ae09a78dff7cbf99b9997453db854d7229e9715cf5df3fa8f5",
+      "source_sha256": "ac9de868c7ad36829a60dd64b5f82fd5c239f5cd939c0f4573c96cf844e7f510",
+      "scope": "Exact hash-checked production fence state and stop helpers plus main-loop tail, with controlled external stubs; no QEMU build, device or VM execution"
+    },
+    "full_schema_parse": {
+      "status": "passed",
+      "doc_required": true,
+      "patch_sha256_at_run": "cbc65cf87a4356ae09a78dff7cbf99b9997453db854d7229e9715cf5df3fa8f5",
+      "schema_sha256": "65f959e86d105dc6ee3c39b2e8528b80a4bc66cddd715e28b03b1a85540d5fd6",
+      "scope": "Full combined QAPI schema parsed by admitted QEMU 10.0.13 scripts; no pragma exceptions, source generation or native build"
+    },
+    "build": "not-run",
+    "native": "not-run",
+    "paired_legacy": "not-run"
+  }
+}
