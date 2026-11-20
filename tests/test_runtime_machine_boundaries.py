@@ -197,6 +197,10 @@ def test_raw_cold_restore_retires_old_tracker_and_observes_fresh_epoch(tmp_path,
         owner.machine_configuration = dict(cpus=1, clock_profile=dict(profile='standard'))
         owner.checkpoint_disk = tmp_path / 'authored.qcow2'
         owner.operation_deadline = None
+        # This factory already replaces the VM. Keep the production image
+        # guard active using the shared explicit host-only proof contract.
+        from support.qemu_image_fixture import attach_image
+        attach_image(owner)
         owners.append(owner)
         return owner
 
