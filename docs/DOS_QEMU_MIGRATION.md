@@ -206,8 +206,10 @@ The four existing `save-state`, `load-state`, `save-anchor-stone` and
 DOS process profile. They keep the existing checkpoint formats and exact Anchor
 Stone aliases. Whole-route literal admission, strict resolved artifact checks,
 one inherited deadline, verified replacement ownership and retained failed-script
-prefixes are covered by the host gate. A two-case/four-owner authored native gate
-is prepared and has not been executed. Raw/entry-only scripts and owned-machine
+prefixes are covered by the host gate. At `74866e9` on 20 November 2026, the
+separately admitted native gate passed both authored cases with four VM owners,
+exact CPU/RAM rewind, an ordinary post-restore instruction and cold persistence
+checks through Python and JSON. Raw/entry-only scripts and owned-machine
 or LE artifact substitution remain refused. See the
 [checkpoint script contract and gate](QEMU_CHECKPOINT_SCRIPT_GATE.md) for exact
 signatures, failure evidence, inputs and qualification limits.

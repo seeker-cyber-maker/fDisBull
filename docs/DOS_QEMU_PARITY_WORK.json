@@ -23,7 +23,8 @@
     "private_desqview": "Fresh installed Mac witness passed: two DOS windows, menu task switch and echo output; all46 host-budget stops recorded, owner reaped and source/runtime/package unchanged. Historical-controller deadline mismatch retained separately; no general driver/campaign qualification.",
     "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification.",
     "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign.",
-    "runtime_scene_wait": "Bounded scene-2 RAM wait implemented through Python, JSON and saved scripts. At c1e5e208 on 2026-11-20, the final host selection passed 85 cases and separately admitted native attempt 06 passed all 10 authored DOS cases with 11 VMs and 22 complete logs. Exact runtime/media identities and five earlier failed attempts are recorded in docs/QEMU_SCENE_WAIT_GATE.md. No scene-1, action/navigation or migration qualification."
+    "runtime_scene_wait": "Bounded scene-2 RAM wait implemented through Python, JSON and saved scripts. At c1e5e208 on 2026-11-20, the final host selection passed 85 cases and separately admitted native attempt 06 passed all 10 authored DOS cases with 11 VMs and 22 complete logs. Exact runtime/media identities and five earlier failed attempts are recorded in docs/QEMU_SCENE_WAIT_GATE.md. No scene-1, action/navigation or migration qualification.",
+    "checkpoint_scripts": "Full native DOS saved-script checkpoint verbs and exact Anchor Stone aliases implemented. The final affected host selection passed 573 at 7690e534 (including 72 focused and four ledger checks). At 74866e9 on 2026-11-20, separately admitted native attempt 02 passed two cases with four reaped VMs/eight complete logs, exact CPU/RAM rewind and post-restore INC, cold persistence and complete public JSON/export equality. 11,275 files/six trees were unchanged. Attempt 01 failed a test-only cleanup assertion and remains preserved; the raw-storage reader correction was independently reviewed before attempt 02. See docs/QEMU_CHECKPOINT_SCRIPT_GATE.md. No broader checkpoint or retirement qualification."
   },
   "coverage": {
     "rpc_methods": 37,
@@ -203,6 +204,19 @@
       "require": {
         "FDISBULL_REQUIRE_DOS_QEMU": "1"
       }
+    },
+    "native-checkpoint-script": {
+      "inputs": [
+        "FDISBULL_QEMU_DOS",
+        "FDISBULL_QEMU_DOS_FIRMWARE",
+        "FDISBULL_QEMU_DOS_BOOT_IMAGE",
+        "FDISBULL_QEMU_DOS_MCOPY",
+        "FDISBULL_QEMU_IMG"
+      ],
+      "require": {
+        "FDISBULL_REQUIRE_QEMU_DOS_OS": "1"
+      },
+      "scope": "Full native DOS process-checkpoint extension; sealed matching QEMU/qemu-img/firmware and full FreeDOS boot image. Standard clock/retrace, audio off, released input, no layers/hooks/task/file workspace; no NASM dependency. Root-owned bounded controller required for the recorded acceptance."
     }
   },
   "test_sets": {
@@ -1063,6 +1077,22 @@
       ],
       "execution": "4_passed_on_exact_04447_producer",
       "scope": "Explicit native raster-proof property required by test-only launch hook; full-source equality, stale invalidation, replacement owner and reset. Not guest-video cadence."
+    },
+    "checkpoint-script-native": {
+      "environment_profile": "native-checkpoint-script",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-x",
+        "tests/test_qemu_checkpoint_script_native.py::test_native_saved_process_checkpoint_script[state_anchor]",
+        "tests/test_qemu_checkpoint_script_native.py::test_native_saved_process_checkpoint_script[anchor_state]"
+      ],
+      "execution": "Attempt 02 passed two cases without failures/errors/skips at 74866e9df663e27151db497959cf921a5eae54f3 on 2026-11-20. Four actual VM owners were reaped with return code zero; eight complete native logs, two cold FDBs and 11,275 input files/six unchanged trees were verified. Recorded execution used the separately admitted ownership controller; this argv only names the selected cases.",
+      "scope": "Python saved-ID save-state/load-anchor-stone and JSON saved-ID save-anchor-stone/load-state; full canonical CPU/RAM rewind, ordinary post-restore INC canary, closed persistence and complete public projection/export without reexecution. No raw/entry-only, cross-session, workspace, protected/V86, layers/hooks, graphics/audio/device or campaign qualification.",
+      "evidence": "docs/QEMU_CHECKPOINT_SCRIPT_GATE.md",
+      "phase_result_sha256": "6a5860d81fa18e0dbf9ad8437d4a5042d9cf6933ea88f6bac4e7c3d364a1506d"
     }
   },
   "work_groups": [
@@ -1396,12 +1426,13 @@
         "checkpoint-host",
         "checkpoint-native",
         "checkpoint-legacy",
-        "protected-source-native"
+        "protected-source-native",
+        "checkpoint-script-native"
       ],
       "remaining_work": [
         "Complete paired acceptance/disposition for raw, source-bound COM/MZ, owned-machine and LE checkpoints; do not exchange their authority or backend state files.",
         "Reconcile selected CPU/RAM/device/IRQ/timer/input/file/control continuation after hot and separate-Python cold restore, including actual game/device workloads.",
-        "The full DOS saved-script profile has host coverage for save-state/load-state and exact Anchor Stone aliases, inherited deadlines and retained failures. Admit the prepared two-case/four-owner authored native gate before claiming native route qualification; raw/entry-v1 script profiles remain refused."
+        "The full DOS saved-script profile passed the scoped two-case/four-owner native attempt 02 at 74866e9 after 573 affected host checks (including 72 focused). Exact alias pairs, CPU/RAM rewind, post-restore INC, cold persistence and public JSON/export are covered; raw/entry-v1 scripts remain refused. Complete separate workspace, protected/V86/task, cross-session and graphical/device/game continuation obligations before broader checkpoint qualification. Attempt 01 remains failed and preserved; see docs/QEMU_CHECKPOINT_SCRIPT_GATE.md."
       ],
       "minimum_acceptance": [
         "CPU/RAM/disk plus admitted pending device state and future behavior agree after restore; handles/tokens/epochs are new.",

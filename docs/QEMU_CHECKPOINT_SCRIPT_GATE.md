@@ -133,9 +133,9 @@ transactions, both alias pairs, gate contention, tighter prior limits,
 selected-freeze recovery, late checkpoint and report publication, native error
 receipt retention despite close/store failures, cold FDB reopen and complete
 canonical/public JSON equality. Error export is checked without any new native
-dispatch. Prepared native source is not counted as a passed native gate.
+dispatch. These host counts exclude the separately recorded native result below.
 
-## Prepared finite native acceptance
+## Finite native acceptance
 
 `tests/test_qemu_checkpoint_script_native.py` defines exactly two cases:
 
@@ -181,8 +181,41 @@ source/test/producer/media/fixture pins, maximum four owners/eight QEMU and boot
 logs, and explicit output/storage bounds. This document is not permission to
 launch. Root owns native admission, execution and outcome reconciliation.
 
-Native status for this newly admitted script profile is **not yet accepted**.
-Attempt 01 ran the first complete 19-step Python route successfully, including
+### Accepted attempt 02
+
+On 20 November 2026 (America/New_York), the separately frozen and root-owned
+attempt 02 passed **both cases, with zero failures, errors or skips**, at exact
+source `74866e9df663e27151db497959cf921a5eae54f3`. The host implementation and
+host-test source remained unchanged from the 573-pass author revision
+`7690e534e24bba03702a086824e387e7e5ce41d6`; the later test-only correction is
+described below. Subsequent outcome documentation is not the tested revision.
+
+| Observation | Accepted evidence |
+| --- | --- |
+| Saved routes | Both 19-step routes completed, exercising all four checkpoint verbs through Python and JSON saved IDs. |
+| Guest continuation | Exact complete CPU observations and RAM bytes rewound, then the ordinary post-restore INC reproduced the prior next-instruction state on the replacement owner. |
+| Native ownership | Four actual VM lifetimes; all reaped with return code zero; eight complete QEMU/boot logs retained. |
+| Persistence and delivery | Two cold Project reopens without another VM; independently decoded closed-FDB route, state, report and load event; complete public JSON projection and exported byte length/SHA verified without reexecution. |
+| Input integrity | 11,275 files and six source/runtime/input trees unchanged in postflight. |
+| Outer cleanup | Worker reaped, owned group gone, no adopted or unresolved children, no cleanup errors, selected executable scan empty. |
+| Duration and extent | Pytest reported 7.21 seconds; outer phase 9.973 seconds; final output 28,388,291 logical bytes and 28,573,696 allocated bytes within the declared bound. |
+
+The reserved phase receipt is 1,048,576 bytes, SHA-256
+`6a5860d81fa18e0dbf9ad8437d4a5042d9cf6933ea88f6bac4e7c3d364a1506d`.
+The approved admission SHA-256 is
+`d939114a2ed094f5d4b5c3332ea2a91b615af7eff0ab39a5597d3710e91e8f71`;
+the input manifest SHA-256 is
+`f0e6418873256819509cb05848b259408121696678a98d0cb7a6fbef232a30b9`.
+The actual QEMU executable SHA-256 is
+`b82342e48ab014d6a0526675492d9b0bbfe6844d8eb8848570e93b961bbc589c`,
+and qemu-img SHA-256 is
+`e32f68642711fc2e6de17e4e4f46d026356bdc5dc9fbc3a0fd71475bcaa72dbc`.
+The full FreeDOS input is the exact image identified above. Raw evidence stays
+in the private handoff, separate from source publication.
+
+### Preserved failed attempt and verification corrections
+
+Attempt 01 remains **failed**. It ran the first complete 19-step Python route successfully, including
 the CPU/RAM restoration and post-restore INC comparisons, but then failed on
 a test assertion using `initial_vm.closed`. The real `QemuMachine` exposes no
 such attribute. Its two actual VM owners were reaped with return code zero,
@@ -194,7 +227,20 @@ The fixture correction checks actual old-owner cleanup: process return code
 zero, cleared QMP/GDB channels, removed temporary directory ownership and
 released executed-image proof. The live session's separate `closed` flag
 remains checked. Production behavior, deadlines and the two-case/four-owner
-matrix are unchanged. A separately frozen next attempt is required.
+matrix are unchanged. Those corrected assertions completed in attempt 02.
+
+Before attempt 02, retained-data inspection also found that the standalone raw
+SQLite reconciler needed to resolve the FDB's external-object references. The
+product's Project connection already did so. The corrected independent reader
+keeps physical descriptor length/hash separate from logical payload length/hash,
+requires exact bounded bytes/text descriptors and paths, verifies each external
+object's size/SHA, and rechecks database/object pins after reading. The controller
+change was independently reviewed and checked against retained attempt 01 data
+before the separate admission. That readback does not promote attempt 01.
+
+Across the two separately admitted attempts, six VM lifetimes and twelve complete
+logs are preserved. The accepted result comprises only the four owners/eight logs
+in attempt 02; earlier failed evidence is not added to its passing count.
 
 The two cases do not qualify raw or entry-only scripts, file-workspace,
 protected/V86/task checkpoint combinations, graphical/device/audio continuation,
