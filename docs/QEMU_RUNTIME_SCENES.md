@@ -173,10 +173,19 @@ row. After attempted execution or loss of a control channel, cleanup quarantines
 and closes only the original owner. A bounded JSON output artifact is retrieved
 through the existing output-export path; retrieving it does not repeat the wait.
 
+Python and saved-script results retain the canonical address types stored in
+the observation. Successful JSON replies, including exported output artifacts,
+apply the existing public address presentation: integer address fields become
+hexadecimal strings, including DOS allocation bounds and driver header addresses
+inside retained runs. Verify the complete JSON result against that public
+projection of the canonical result; verify stored and reopened observations
+against the canonical result itself. No evidence fields are omitted.
+
 JSON failures retain the primary evidence as `error.result`. If a native error
 already owns that result, its separate observed prefix is retained as
 `error.scene_wait_result`; a script keeps the same two fields on the failed
-step. The primary type/message is unchanged. A spilled failure envelope has an
+step. These error receipts retain their canonical address types. The primary
+type/message is unchanged. A spilled failure envelope has an
 output artifact and `retry_safe: false`; retrieve its evidence without replaying
 the operation. If native closure prevents clock-budget readback after a
 validated DOS return, the original native error and terminal result survive;

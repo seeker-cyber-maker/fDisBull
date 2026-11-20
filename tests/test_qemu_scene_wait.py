@@ -4,6 +4,7 @@ Only the selected RAM transition and bounded native clock stop are supplied.
 These host tests do not qualify an actual QEMU/DOS workload.
 """
 from copy import copy, deepcopy
+from functools import wraps
 import inspect
 import hashlib
 import json
@@ -11,7 +12,7 @@ import time
 
 import pytest
 
-from fdisbull.cli import respond
+from fdisbull.cli import public_addresses, respond
 from fdisbull.debugger import DebugWorkspace
 from fdisbull.output_limits import OutputPolicy, output_policy_context
 from fdisbull.project import Project
@@ -109,8 +110,29 @@ def test_saved_script_wait_and_following_assertion_use_same_contract(scene_waiti
     assert len(o.runs) == 2
 
 
-def test_bounded_json_export_recovers_full_result_without_repeating_wait(scene_waiting, tmp_path):
+@pytest.mark.parametrize('process_addresses', [False, True],
+                         ids=['without-process-addresses', 'with-process-addresses'])
+def test_bounded_json_export_recovers_full_result_without_repeating_wait(scene_waiting, tmp_path, process_addresses):
     o, s = scene_waiting, scene_waiting.session
+    if process_addresses:
+        advance = s._clock_advance_with_hooks
+        def process_boundary(*args, **kwargs):
+            result = advance(*args, **kwargs)
+            result['process'] = dict(state='active',
+                allocation=dict(start=0x24000, end=0x26000, paragraphs=512),
+                drivers=dict(status='observed', headers=[
+                    dict(address=0xa000, attributes=0x8004, character=True, name='NUL'),
+                    dict(address=0xa100, attributes=0x8000, character=True, name='CON')]))
+            return result
+        s._clock_advance_with_hooks = process_boundary
+    observed_waits = []
+    original_wait = s.scene_wait
+    @wraps(original_wait)
+    def capture_wait(*args, **kwargs):
+        result = original_wait(*args, **kwargs)
+        observed_waits.append(deepcopy(result))
+        return result
+    s.scene_wait = capture_wait
     workspace = DebugWorkspace()
     workspace.sessions[s.run_id] = s
     try:
@@ -132,9 +154,27 @@ def test_bounded_json_export_recovers_full_result_without_repeating_wait(scene_w
             result = json.loads(raw)['result']
             assert result['status'] == 'matched' and result['wait']['guest_elapsed_ns'] == 20_000_000
             assert before == (len(o.runs), o.now, len(o.project.debug_scene_observations()['observations']))
-            assert o.project.debug_scene_observation(result['observation'])['result'] == result
+            assert len(observed_waits) == 1
+            canonical = observed_waits[0]
+            assert result == public_addresses(canonical)
+            assert canonical['wait']['runs'] == o.runs
+            if process_addresses:
+                for original, projected in zip(canonical['wait']['runs'], result['wait']['runs'], strict=True):
+                    allocation = original['process']['allocation']
+                    assert allocation == dict(start=0x24000, end=0x26000, paragraphs=512)
+                    assert projected['process']['allocation'] == dict(start='0x24000', end='0x26000', paragraphs=512)
+                    headers = original['process']['drivers']['headers']
+                    public_headers = projected['process']['drivers']['headers']
+                    assert [header['address'] for header in headers] == [0xa000, 0xa100]
+                    assert [header['address'] for header in public_headers] == ['0xa000', '0xa100']
+                    assert all(header['character'] is True for header in public_headers)
+            assert o.project.debug_scene_observation(canonical['observation'])['result'] == canonical
     finally:
         workspace.sessions.clear()
+        s.scene_wait = original_wait
+    with Project(o.project.path) as reopened:
+        historical = reopened.debug_scene_observation(canonical['observation'])
+        assert historical['result'] == canonical and historical['historical'] and not historical['live_state_verified']
 
 
 def test_json_terminal_error_retains_the_persisted_scene_result(scene_waiting):

@@ -16,7 +16,7 @@ is part of this gate.
 | Test suffix in `tests/test_qemu_scene_wait_native.py` | Maximum VM lifetimes | Required observable |
 | --- | ---: | --- |
 | `test_native_scene_wait_public_routes[python]` | 1 | Initially false predicate becomes true from actual IRQ1 make/break; measured time and stored result |
-| `test_native_scene_wait_public_routes[json]` | 1 | Same contract through public JSON; output artifact export does not execute another interval |
+| `test_native_scene_wait_public_routes[json]` | 1 | Complete public address projection of the canonical result; output artifact export does not execute another interval |
 | `test_native_scene_wait_public_routes[script]` | 1 | Saved `scene-wait` followed by assertion; exact retained result |
 | `test_native_initial_match_preserves_fixed_arm_and_invalid_script` | 1 | Invalid literal refuses before a prior RAM edit; immediate match leaves a fixed arm completely pending |
 | `test_native_false_scene_wait_measures_budget_timeout` | 1 | False observed RAM predicate exhausts 20 ms virtual budget; no additional interval and truthful overshoot |
@@ -34,6 +34,14 @@ peers qualify this lane. The input-ledger scene uses its own recognition group;
 an edge occurrence and a released key are independent facts. Stop cases use
 the same native source bytes and check the make counter separately only after
 asserting that the wait performed no post-stop read.
+
+The successful JSON case captures the canonical Python return once, checks
+the complete exported result against its public address projection, and
+explicitly verifies hexadecimal allocation bounds and driver header addresses.
+Stored and reopened observations must exactly equal the canonical result.
+Exported bytes retain their own size/hash checks, and export must not execute
+or observe another wait. Error-envelope and saved-script receipts retain their
+canonical address types; the two terminal cases keep exact result comparisons.
 
 The final two cases use existing `com_exit(37)` and
 `resident_com(exit_code=37)` bytes from `tests/support/dos_process_fixture.py`,

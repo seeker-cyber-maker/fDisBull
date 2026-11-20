@@ -7,6 +7,7 @@ See docs/QEMU_SCENE_WAIT_GATE.md for inputs, bounds and admission.
 """
 from contextlib import contextmanager
 from copy import deepcopy
+from functools import wraps
 import hashlib
 import json
 import struct
@@ -14,7 +15,7 @@ import time
 
 import pytest
 
-from fdisbull.cli import respond
+from fdisbull.cli import public_addresses, respond
 from fdisbull.debugger import DebugWorkspace
 from fdisbull.output_limits import OutputPolicy, output_policy_context
 from fdisbull.project import Project
@@ -87,7 +88,7 @@ def test_native_scene_wait_public_routes(tmp_path, clock_runtime, clock_disk, ro
         debug.keyboard_press('a', hold_ms=80, gap_ms=80)
         calls, reads, boundaries = instrument(debug)
         if route == 'python':
-            result = debug.scene_wait(**wait_options())
+            canonical = result = debug.scene_wait(**wait_options())
         elif route == 'script':
             script = project.debug_save_script('scene-wait.json', dict(
                 format='fdisbull-script-1', backend='qemu-dos', steps=[
@@ -95,8 +96,16 @@ def test_native_scene_wait_public_routes(tmp_path, clock_runtime, clock_disk, ro
                     dict(op='assert', value='$ready.status', equals='matched')]))
             scripted = debug.script(script_id=script['script_id'], timeout_ms=7000)
             assert scripted['ok'] and scripted['completed_steps'] == 2, scripted
-            result = scripted['steps'][0]['result']
+            canonical = result = scripted['steps'][0]['result']
         else:
+            observed_waits = []
+            original_wait = debug.scene_wait
+            @wraps(original_wait)
+            def capture_wait(*args, **kwargs):
+                result = original_wait(*args, **kwargs)
+                observed_waits.append(deepcopy(result))
+                return result
+            debug.scene_wait = capture_wait
             workspace = DebugWorkspace()
             workspace.sessions[debug.run_id] = debug
             try:
@@ -120,8 +129,23 @@ def test_native_scene_wait_public_routes(tmp_path, clock_runtime, clock_disk, ro
                     result = json.loads(raw)['result']
                     assert debug.clock_observe()['virtual_ns'] == before_clock
                     assert before == (len(calls), len(boundaries), len(project.debug_scene_observations()['observations']))
+                    assert len(observed_waits) == 1
+                    canonical = observed_waits[0]
+                    assert result == public_addresses(canonical)
+                    for original, projected in zip(canonical['wait']['runs'], result['wait']['runs'], strict=True):
+                        for field in ('start', 'end'):
+                            address = original['process']['allocation'][field]
+                            assert type(address) is int
+                            assert projected['process']['allocation'][field] == hex(address)
+                        headers = original['process']['drivers']['headers']
+                        public_headers = projected['process']['drivers']['headers']
+                        assert headers
+                        for header, public_header in zip(headers, public_headers, strict=True):
+                            assert type(header['address']) is int
+                            assert public_header['address'] == hex(header['address'])
             finally:
                 workspace.sessions.clear()
+                debug.scene_wait = original_wait
         assert result['status'] == 'matched' and result['complete'], result
         assert result['completion_scope'] == 'declared-runtime-predicates' and 'frame' not in result
         wait = result['wait']
@@ -132,13 +156,14 @@ def test_native_scene_wait_public_routes(tmp_path, clock_runtime, clock_disk, ro
         assert wait['polls'][0]['status'] == 'mismatch' and wait['polls'][-1]['status'] == 'matched'
         assert wait['input_plan']['first_slice_attempted'] and not wait['input_plan']['release']
         assert len(calls) == len(boundaries) == len(wait['runs'])
+        assert canonical['wait']['runs'] == [boundary['result'] for boundary in boundaries]
         ledger = debug.runtime_memory(bound['id'], offset=10, length=5)['hex']
         assert ledger == '0101021e9e' and not debug._input_pending()
         assert not debug.input_state()['leases']
-        assert project.debug_scene_observation(result['observation'])['result'] == result
+        assert project.debug_scene_observation(canonical['observation'])['result'] == canonical
     with Project(database) as reopened:
-        historical = reopened.debug_scene_observation(result['observation'])
-        assert historical['result'] == result and historical['historical'] and not historical['live_state_verified']
+        historical = reopened.debug_scene_observation(canonical['observation'])
+        assert historical['result'] == canonical and historical['historical'] and not historical['live_state_verified']
 
 
 def test_native_initial_match_preserves_fixed_arm_and_invalid_script(tmp_path, clock_runtime, clock_disk):
