@@ -39,6 +39,9 @@ from .qemu_audio import (QemuAudioMixin, machine_audio_configuration, machine_au
 from .qemu_mixer import QemuMixerMixin, MIXER_COMMAND
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
                            validate_display_probe_parameters)
+from .qemu_video_frame import (QemuVideoFrameMixin, VIDEO_FRAME_COMMANDS,
+                               validate_video_frame_parameters, validate_video_frame_probe,
+                               validate_video_frame_capture)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
                            machine_retrace_arguments, admit_retrace)
 from .qemu_vga_configuration import (QemuVgaConfigurationMixin, VGA_CONFIGURATION_COMMANDS,
@@ -629,6 +632,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         previous_channels=[]
         installed=False
         try:
+            if self.vm is not vm:
+                raise DebuggerError('Machine owner changed while waiting for operation admission')
             _machine_operation_guard(vm, function.__name__, args, kwargs)
             bound=min(value for value in limits() if value is not None)
             if time.monotonic()>=bound:
@@ -655,7 +660,9 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                     from .qemu_input import _close_input_failure
                     _close_input_failure(self,error,
                         label+' arm exceeded its host deadline; input must not be replayed',vm=vm)
-                elif function.__name__ in ('display_probe', 'vga_configuration_observe'):
+                elif function.__name__ in ('display_probe', 'vga_configuration_observe',
+                        'video_frame_start', 'video_frame_observe', 'video_frame_stop',
+                        'video_frame_probe', 'capture_video_frame'):
                     vm.close()
                 raise error
             return result
@@ -746,7 +753,7 @@ def machine_step_operation(function):
 
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
-                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoFrameMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -774,6 +781,16 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         parameter_validator=validate_vga_configuration_parameters)
     display_stop=machine_io_operation(QemuDisplayMixin.display_stop,close_on_timeout=True)
     capture_display=machine_io_operation(QemuDisplayMixin.capture_display)
+    video_frame_start=machine_trace_operation(QemuVideoFrameMixin.video_frame_start,
+        label='Video frame stream start',parameter_validator=validate_video_frame_parameters)
+    video_frame_observe=machine_trace_operation(QemuVideoFrameMixin.video_frame_observe,
+        label='Video frame observation',parameter_validator=validate_video_frame_parameters)
+    video_frame_stop=machine_trace_operation(QemuVideoFrameMixin.video_frame_stop,
+        label='Video frame stream stop',parameter_validator=validate_video_frame_parameters)
+    video_frame_probe=machine_trace_operation(QemuVideoFrameMixin.video_frame_probe,
+        label='Video frame pixel probe',parameter_validator=validate_video_frame_probe)
+    capture_video_frame=machine_trace_operation(QemuVideoFrameMixin.capture_video_frame,
+        label='Video frame capture',parameter_validator=validate_video_frame_capture)
     retrace_observe=machine_trace_operation(QemuRetraceMixin.retrace_observe,label='Retrace observation')
     retrace_wait=machine_trace_operation(QemuRetraceMixin.retrace_wait,label='Retrace wait')
     clock_sync_start=machine_trace_operation(QemuClockSyncMixin.clock_sync_start,label='Host clock synchronization')
@@ -813,6 +830,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             screenshot='screendump' in getattr(vm,'qmp_commands',()),
             surface_capture='screendump' in getattr(vm,'qmp_commands',()),
             completed_guest_frames=False,guest_time_control=False,
+            video_frame_capture=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                and VIDEO_FRAME_COMMANDS | VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
             audio_capture=getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile') in ('pc-speaker','sb16','sb16-opl'),
             audio_stereo_capture=(virtual and AUDIO_FORMAT_COMMAND in getattr(vm,'qmp_commands',())
                 and getattr(vm,'machine_configuration',{}).get('audio_profile',{}).get('profile')=='sb16-opl'),
