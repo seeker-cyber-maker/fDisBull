@@ -424,9 +424,13 @@ def test_native_source_fence_halted_cpu_has_no_late_warp(fence_witness):
         assert _byte(debug, symbols, 'halt_wakes') == 0
         assert _journal(debug, symbols) == b''
         before = debug.clock_observe()
-        delta = schedule['period_ns'] * 2
+        # Keep the clock fence strictly after the independently scheduled
+        # third final row; a tie legitimately lets that clock stop win first.
+        target = _later(schedule, 2)['rows'][-1] + schedule['line_ns'] // 2
+        delta = target - before['virtual_ns']
         budget_receipt(debug.clock_advance(delta, timeout_ms=5000), delta, before=before)
         after = debug.clock_observe()
+        assert after['virtual_ns'] == target
         assert after['counter']['value'] == before['counter']['value']
         assert _byte(debug, symbols, 'halt_wakes') == 0
         assert _query(debug)['frame-sequence'] == frame['frame-id'] + 2
