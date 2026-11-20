@@ -1539,7 +1539,7 @@ def respond(request, default_project=None, debugger=None):
             result = public_addresses(result)
         value = {"id": request_id, "ok": True, "result": result}
     except Exception as e:
-        # Counted native steps preserve their primary exception type. Return
+        # Counted native steps and scene waits preserve their primary exception type. Return
         # the bounded prefix on this route even for a callback RuntimeError;
         # unrelated exceptions keep the previous propagation behavior.
         from .qemu_steps import FORMAT as STEP_SEQUENCE_FORMAT
@@ -1547,8 +1547,15 @@ def respond(request, default_project=None, debugger=None):
         step_sequence_error = (isinstance(request, dict) and request.get("method") == "debug-step"
                                and isinstance(observed, dict)
                                and observed.get("format") == STEP_SEQUENCE_FORMAT)
+        scene_wait_result = getattr(e, "scene_wait_result", None)
+        scene_wait_error = (isinstance(request, dict) and request.get("method") == "debug-scene-wait"
+                            and any(isinstance(item, dict)
+                                    and item.get("format") == "fdisbull-scene-observation-2"
+                                    and isinstance(item.get("wait"), dict)
+                                    and item["wait"].get("format") == "fdisbull-scene-wait-1"
+                                    for item in (observed, scene_wait_result)))
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not step_sequence_error:
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error):
             raise
         value = {
             "id": request_id,
@@ -1563,6 +1570,14 @@ def respond(request, default_project=None, debugger=None):
             value["error"]["result"] = e.result
         if step_sequence_error:
             value["error"]["result"] = observed
+        if scene_wait_error:
+            # Keep a primary native stop separate from the wait's observed
+            # prefix. The ordinary output policy bounds this failure envelope
+            # exactly as successful replies; exporting it never reruns a wait.
+            if observed is not None:
+                value["error"]["result"] = observed
+            if scene_wait_result is not None and scene_wait_result is not observed:
+                value["error"]["scene_wait_result"] = scene_wait_result
     return (policy or OutputPolicy()).bound(value)
 
 

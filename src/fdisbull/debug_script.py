@@ -417,10 +417,16 @@ def validate_script(script, *, session=None):
                         if session is not None:
                             from .qemu_scenes import preflight
                             preflight(session,**params,allow_references=True)
+                    if op=='scene-wait' and (backend or actual)=='qemu-dos':
+                        from .qemu_scene_wait import validate_parameters, preflight
+                        validate_parameters(**params,allow_references=True)
+                        if session is not None:
+                            preflight(session,**params,allow_references=True)
                     if session is not None:
                         from .runtime_scenes import require_frame_scene
                         frame_scenes=[]
-                        if op in ('scene-navigation','scene-click','scene-act','scene-wait','move'):
+                        if (op in ('scene-navigation','scene-click','scene-act','scene-wait','move')
+                                and not (op=='scene-wait' and (backend or actual)=='qemu-dos')):
                             frame_scenes.append(params.get('scene'))
                         if op in ('scene-check','scene-assert') and (backend or actual)!='qemu-dos':
                             frame_scenes.append(params.get('scene'))
@@ -835,6 +841,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # invalid literal/reference must not become a valid allowance.
                 from .qemu_steps import validate_step_parameters
                 validate_step_parameters(**params)
+            if (step['op']=='scene-wait' and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
+                from .qemu_scene_wait import validate_parameters
+                validate_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
                              'input-schedule-retrace','display-probe','vga-configuration','mouse.move-mapped',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
@@ -934,6 +943,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             failure = {'index':index,'op':step['op'],'type':type(error).__name__,'message':str(error)}
             record.update(ok=False,error=failure)
             if hasattr(error,'result'):record['result']=error.result
+            if (step['op']=='scene-wait' and getattr(session,'metadata',{}).get('backend')=='qemu-dos'
+                    and isinstance(getattr(error,'scene_wait_result',None),dict)
+                    and error.scene_wait_result is not getattr(error,'result',None)):
+                record['scene_wait_result']=error.scene_wait_result
             if (step['op']=='trace-until' and isinstance(getattr(error,'result',None),dict)
                     and error.result.get('action',{}).get('dispatch')
                     in ('not_requested','not_dispatched','skipped_initial_match')):

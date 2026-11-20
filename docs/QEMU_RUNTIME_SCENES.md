@@ -1,10 +1,14 @@
-# Passive QEMU runtime scenes
+# QEMU runtime-memory scenes
 
 `QemuDOSProcessSession.scene_check(scene, *, object=None, compact=False)` and
 `scene_assert` accept an explicit `fdisbull-scene-2` runtime-memory observation
 profile. This is a separate passive contract. It does not qualify the existing
 frame-backed scene campaign, grant completed-frame identities, or change the
 default DOS backend.
+
+`scene_wait` also accepts this explicit profile. It observes the same predicates
+at stopped boundaries and may advance the native virtual clock between them.
+Its executing contract is described below; check/assert remain passive.
 
 ```json
 {
@@ -72,7 +76,7 @@ only its own unknown scalar value and is revalidated at actual dispatch. Whole
 scene references cannot prove unknown content during script admission.
 
 Frame/action consumers reject this profile, including ordinary `SceneHandle`,
-click/act/wait/navigation, movement scene contexts, assisted travel, spatial map
+click/act/navigation and the legacy frame-scene wait, movement scene contexts, assisted travel, spatial map
 contexts, workflow actions and text projections. Screenshot overlays, coordinate
 domain audits and scene-1 bundle import/export also refuse it. QEMU exposes no
 generic scene handle or action methods through this extension.
@@ -83,3 +87,103 @@ fixture to observe real make/break state and full native restore invalidation.
 Those native cases require the existing explicitly selected private QEMU runtime,
 FreeDOS boot image, firmware, mcopy, NASM and checkpoint tool. Authored tests are
 not evidence of execution until a pinned receipt records their run.
+
+## Wait for declared RAM predicates
+
+```python
+result = debug.scene_wait(
+    "ready-scene", object="actor", guest_ms=5000,
+    timeout_ms=5000, slice_ms=100, compact=False,
+)
+```
+
+The Python signature matches the existing scene wait. JSON uses
+`debug-scene-wait`; saved scripts use `scene-wait`. The QEMU route requires
+`runtime_scene_wait`, the native virtual-clock extension, one active owned DOS
+process, an explicit scene-2 runtime-memory manifest and current RAM witnesses.
+Frame-backed scene-1 remains refused. `guest_ms` is an integer in 1..120000,
+`timeout_ms` in 1..60000 and `slice_ms` in 1..1000; Boolean values are refused.
+Known invalid literals or profiles in a script are refused before earlier
+script effects. Resolved values are revalidated before timeout clamping.
+
+The first poll runs while the guest is stopped. If it matches, the wait returns
+without execution or input dispatch. Otherwise, only a complete mismatch permits
+the next bounded native clock interval. Every poll uses the existing conservative
+scene evaluator, including competing scene recognition and visible/ready/enabled
+requirements for a selected object. Ambiguous, unavailable or failed observations
+end the wait; missing evidence never becomes a false predicate to poll again.
+
+One absolute host deadline covers original-owner lock admission, manifest and
+source checks, input-plan observation, all polls and intervals, and persistence.
+It intersects the caller, session, native owner and control-channel bounds. The
+selected manifest, competing manifests, original owner/process/project, byte
+version and runtime/restore epoch stay pinned. Frozen selected CPU/RAM undo may
+still be inspected with check/assert and a fresh witness, but executing waits
+refuse it. Full restore requires a new explicit RAM binding.
+
+A genuine DOS exit/TSR advances the process capture epoch. Final publication
+accepts only that exact transition described by the returned process and
+termination receipts for the original PSP, including a recorded post-close
+descriptor when present. It keeps checkpoint, owner, source and selected
+projection identity checks. It does not infer a new live source or RAM witness.
+
+After every interval, the native stop takes precedence over another predicate
+read. A breakpoint, watchpoint, exception, hook, guest exit/TSR, host stop or
+interrupted input terminates with the exact original stop and no later poll,
+continuation or automatic input release. Hook registration does not authorize
+automatic continuation in this profile. A known pending stop ends without
+starting an interval. Only an ordinary native clock-budget stop permits another
+poll. Elapsed guest time is measured from observed `virtual_ns`; requested slice
+lengths are not elapsed-time evidence. A predicate first observed after the
+total guest budget has been exceeded cannot turn that timeout into success.
+
+Pending fixed input uses the generic QEMU wait's existing admission policy. A
+wholly undelivered owned batch, press, typing or physical click may be admitted
+if its remaining fixed span plus one requested poll tail fits strictly inside
+the total guest budget. That full interval becomes the first slice. Partial,
+uncertain, retrace or motion plans refuse before execution. An immediate scene
+match leaves the arm pending and unchanged. A native stop may cancel an input
+suffix; its actual delivery receipt and held leases are retained for explicit
+caller resolution. The wait does not replay, repair or release input, and a
+scene predicate alone does not prove guest consumption.
+
+The result remains `fdisbull-scene-observation-2` with
+`completion_scope: "declared-runtime-predicates"`. Its `wait` member uses
+`fdisbull-scene-wait-1` and retains the initial/final observed clock, measured
+nanoseconds and milliseconds, original polls and runs, input-plan admission,
+terminal outcome and exact stop when present. Success requires
+`status: "matched"` and `complete: true`. Terminal non-success raises
+`SceneError` with the persisted result; a timeout or debugger stop is incomplete.
+`clock_progress_complete: false` distinguishes an exact retained stop lacking
+full clock readback from measured elapsed time. Compact replies omit bulky
+polls while retaining the observation ID for the complete stored evidence.
+
+There are at most 1,000 polls and 8 MiB of canonical persisted JSON, including
+the final observation/stop duplication and metadata. `wait.evidence_bytes` is
+the exact stored JSON byte count. Each scene evaluation keeps its existing
+individual limits. A size crossing stops further work and publishes no wait
+row; the exception retains the already observed prefix, including the receipt
+that crossed the limit. That unpublished failure prefix can exceed the stored
+document ceiling. It is not truncated into a successful observation.
+
+Unexpected native, deadline or publication failures preserve the primary error
+and attach `scene_wait_result`. Any committed receipt is named separately as
+`retained_observation`, so a failed operation cannot relabel a saved successful
+row. After attempted execution or loss of a control channel, cleanup quarantines
+and closes only the original owner. A bounded JSON output artifact is retrieved
+through the existing output-export path; retrieving it does not repeat the wait.
+
+JSON failures retain the primary evidence as `error.result`. If a native error
+already owns that result, its separate observed prefix is retained as
+`error.scene_wait_result`; a script keeps the same two fields on the failed
+step. The primary type/message is unchanged. A spilled failure envelope has an
+output artifact and `retry_safe: false`; retrieve its evidence without replaying
+the operation. If native closure prevents clock-budget readback after a
+validated DOS return, the original native error and terminal result survive;
+that failure is not a normally completed, persisted terminal wait.
+
+Host contracts are in `tests/test_qemu_scene_wait.py`. The finite
+[native gate](QEMU_SCENE_WAIT_GATE.md) covers ten cases and at most eleven owned
+VM lifetimes. Its prepared source is not native qualification. This route leaves
+frame-probe, absolute clicks, scene-1, actions/navigation and the broader DOSBox
+replacement campaign open; the migration inventory remains partial/unqualified.

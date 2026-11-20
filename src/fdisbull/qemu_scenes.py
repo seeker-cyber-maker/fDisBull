@@ -30,7 +30,7 @@ def _identity(session):
             deepcopy(session._runtime_lifetime()))
 
 
-def _observe(session, scene, *, object=None, compact=False, asserting=False):
+def _observe(session, scene, *, object=None, compact=False, asserting=False, _publish=True):
     from .scenes import SceneError
     validate_parameters(scene, object=object, compact=compact)
     seed = _identity(session)
@@ -73,7 +73,8 @@ def _observe(session, scene, *, object=None, compact=False, asserting=False):
                 clock=dict(domain='QEMU_CLOCK_VIRTUAL', epoch=before['epoch'], virtual_ns=before['virtual_ns'],
                            before=before, after=after))
             result['capture_context_verified'] = after is not None
-            result = store(session, result)
+            if _publish:
+                result = store(session, result)
             stable()
             if compact: result = compact_result(result)
             if asserting and result['status'] != 'matched': raise SceneError(result)
@@ -93,3 +94,8 @@ class QemuSceneObservationMixin:
 
     def scene_assert(self, scene, *, object=None, compact=False):
         return _observe(self, scene, object=object, compact=compact, asserting=True)
+
+    def scene_wait(self, scene, *, object=None, guest_ms=5000, timeout_ms=5000, slice_ms=100, compact=False):
+        from .qemu_scene_wait import wait
+        return wait(self, scene, object=object, guest_ms=guest_ms, timeout_ms=timeout_ms,
+                    slice_ms=slice_ms, compact=compact)

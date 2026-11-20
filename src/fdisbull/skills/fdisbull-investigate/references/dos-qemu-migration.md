@@ -24,6 +24,30 @@ and persistent event searches cover the initial verified real-mode module.
 Explicit owned LE recipes add revalidated protected32 boundaries in a separate
 source namespace. Native qualification belongs to exact candidate receipts,
 not the contract or host checks alone.
+
+For caller-witnessed RAM state, explicit `fdisbull-scene-2` runtime-memory
+manifests support passive `scene_check`/`scene_assert` and bounded `scene_wait`.
+The wait has the shared signature
+`scene_wait(scene, *, object=None, guest_ms=5000, timeout_ms=5000, slice_ms=100, compact=False)`.
+It polls stopped state, advances native virtual time only after a complete
+mismatch, and preserves the first debugger/hook/exit or interrupted-input stop
+before another predicate read. Initial matches do not execute or dispatch an
+armed input plan. Unknown or ambiguous state ends incomplete. One inherited
+deadline covers polls, execution and storage; measured `virtual_ns` supplies
+elapsed guest time. Inspect the `wait` journal and exact terminal stop in the
+persisted observation, or the `SceneError.result` on terminal non-success.
+
+An owned wholly-undelivered fixed input plan uses the generic QEMU wait's
+coalesced first slice and must fit with its poll tail inside the guest budget.
+Partial/uncertain/retrace/motion plans refuse, and waits do not replay or release
+input. Restore invalidates old RAM witnesses. Scripts validate known literals
+before prior effects and revalidate resolved values before timeout clamping.
+The route bounds polls and full persisted evidence; retrieve a large output
+artifact without rerunning the operation. See `docs/QEMU_RUNTIME_SCENES.md` and
+the finite `docs/QEMU_SCENE_WAIT_GATE.md` in a source checkout. Frame-backed
+scene-1, completed-frame probes, absolute clicks and named actions/navigation
+remain open; the route is partial and does not qualify DOSBox retirement.
+
 Owned keyboard and relative PS/2 mouse input, optional native virtual-time batch
 scheduling, explicit instruction-count observation and stopped surface/CPU/clock
 captures are now available.

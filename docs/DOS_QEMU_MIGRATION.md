@@ -111,6 +111,25 @@ or legacy reply-schema parity. The five-case [native gate proposal](QEMU_STEP_CO
 must be admitted and run separately; host peer tests do not qualify a native
 tuple. All migration qualifications and default policy remain unchanged.
 
+### Observe and wait on explicit runtime-memory scenes
+
+The [runtime-scene profile](QEMU_RUNTIME_SCENES.md) supplies passive scene-2
+check/assert and an executing `scene_wait` over caller-witnessed RAM predicates.
+The wait polls stopped state under one inherited deadline, advances measured
+native virtual time only after a complete mismatch, and preserves the first
+breakpoint/watchpoint/exception/hook/exit or interrupted input before another
+predicate read. Initial matches do not dispatch input. Its fixed-input-arm
+admission, immutable observation receipts and restore invalidation retain the
+existing ownership rules.
+
+Python, JSON `debug-scene-wait` and saved-script `scene-wait` share this narrow
+contract. Frame-backed scene-1, completed-frame probes, absolute clicks and
+named actions/navigation remain unsupported by it. The
+[ten-case native gate](QEMU_SCENE_WAIT_GATE.md) is separately admitted; host
+results and prepared native test source do not qualify the exact native tuple.
+The inventory denominator remains 143, all promotion obligations remain
+unqualified, and DOSBox remains the default and retained fallback.
+
 ## FreeDOS and directory layers
 
 The optional checkpointed FreeDOS `C:` and private FAT workspace `D:` path,
