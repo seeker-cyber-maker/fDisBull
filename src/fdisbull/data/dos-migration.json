@@ -48,7 +48,9 @@
         "tests/test_qemu_operation_deadlines.py",
         "tests/test_qemu_dosbox_parity_native.py",
         "tests/test_dosbox_rpc_census.py",
-        "tests/test_runtime_source_matching.py"
+        "tests/test_runtime_source_matching.py",
+        "tests/test_qemu_step_count.py",
+        "tests/test_qemu_step_count_native.py"
       ],
       "scope_limits": [
         "Machine context is available; this does not establish DOS source-address mapping, legacy reply schema, guest process lifecycle or drop-in parity.",
@@ -605,7 +607,7 @@
       "slice": "core",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.step()",
+      "native_route": "MachineContext.step(count=1) retains the existing native stop reply; count 2..10000 composes observed step stops under one deadline through Python/JSON/scripts, retaining the prefix and first terminal stop. No retired-instruction count, DOSBox mode=over or legacy reply-schema parity is implied.",
       "qualification": "unqualified"
     },
     {

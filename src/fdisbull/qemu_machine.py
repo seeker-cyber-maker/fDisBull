@@ -44,6 +44,8 @@ from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_c
 from .qemu_vga_configuration import (QemuVgaConfigurationMixin, VGA_CONFIGURATION_COMMANDS,
                                     validate_vga_configuration_parameters)
 from .qemu_wait import QemuWaitMixin, validate_qemu_wait_parameters
+from .qemu_steps import (admit_step_sequence_input, step_sequence,
+                         validate_step_count, validate_step_parameters)
 
 
 def file_hash(path):
@@ -662,6 +664,75 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 current=getattr(vm,'gdb',None)
                 if current is not None and not any(current is channel for channel,_ in previous_channels):
                     current.operation_deadline=previous_vm
+            vm.lock.release()
+    return invoke
+
+
+def machine_step_operation(function):
+    """Keep one-step compatibility; opt-in sequences own one complete budget."""
+    single = machine_operation(function)
+
+    @wraps(function)
+    def invoke(self, *, count=1, timeout_ms=10000):
+        validate_step_count(count)
+        if count == 1:
+            return single(self, timeout_ms=timeout_ms)
+        validate_step_parameters(count=count, timeout_ms=timeout_ms)
+        from .operation_budget import request_deadline
+        bound = request_deadline(self, timeout_ms)
+        vm = self.vm
+        def limits():
+            return [bound, getattr(self, '_deadline', None), getattr(self, '_rpc_deadline', None),
+                    getattr(vm, 'operation_deadline', None),
+                    *[getattr(channel, 'operation_deadline', None) for channel in
+                      (getattr(vm, 'qmp', None), getattr(vm, 'gdb', None)) if channel is not None]]
+        bound = min(value for value in limits() if value is not None)
+        admit_step_sequence_input(self)
+        wait = min(10, bound-time.monotonic())
+        if wait <= 0:raise TimeoutError('Machine step sequence deadline expired before admission')
+        if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
+        previous_session = getattr(self, '_deadline', None)
+        previous_vm = getattr(vm, 'operation_deadline', None)
+        previous_channels = []
+        installed = False
+        try:
+            bound = min(value for value in limits() if value is not None)
+            if time.monotonic() >= bound:
+                raise TimeoutError('Machine step sequence deadline expired before dispatch')
+            for channel in (getattr(vm, 'qmp', None), getattr(vm, 'gdb', None)):
+                if channel is not None:
+                    previous_channels.append((channel, getattr(channel, 'operation_deadline', None)))
+                    channel.operation_deadline = bound
+            self._deadline = vm.operation_deadline = bound
+            installed = True
+            # Recheck under the lock, before a source/history guard can perform
+            # native I/O. Guard observations share the same channel deadline.
+            admit_step_sequence_input(self)
+            _machine_operation_guard(vm, function.__name__, (), dict(count=count, timeout_ms=timeout_ms))
+            if time.monotonic() >= bound:
+                raise TimeoutError('Machine step sequence deadline expired during admission')
+            result = function(self, count=count, timeout_ms=timeout_ms)
+            if time.monotonic() >= bound:
+                error = TimeoutError('Machine step sequence exceeded its host deadline')
+                error.result = result
+                raise error
+            return result
+        except BaseException as error:
+            channels = (getattr(vm, 'qmp', None), getattr(vm, 'gdb', None))
+            if (not getattr(vm, '_fdisbull_control_quarantine', None)
+                    and any(channel is not None and hasattr(channel, 'socket') and channel.socket is None
+                            for channel in channels)):
+                try:vm.close()
+                except BaseException as cleanup:error.machine_cleanup_error = type(cleanup).__name__
+            raise
+        finally:
+            if installed:
+                self._deadline = previous_session
+                vm.operation_deadline = previous_vm
+                for channel, previous in previous_channels:channel.operation_deadline = previous
+                current = getattr(vm, 'gdb', None)
+                if current is not None and not any(current is channel for channel, _ in previous_channels):
+                    current.operation_deadline = previous_vm
             vm.lock.release()
     return invoke
 
@@ -1334,8 +1405,10 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             raise
         return result
 
-    @machine_operation
-    def step(self,*,timeout_ms=10000):return self._execute('s',timeout_ms)
+    @machine_step_operation
+    def step(self,*,count=1,timeout_ms=10000):
+        if count == 1:return self._execute('s',timeout_ms)
+        return step_sequence(self,count,self._deadline)
     @machine_run_operation
     def run(self,*,timeout_ms=10000,stop_on_hook=False):
         if type(stop_on_hook) is not bool:raise ValueError('stop_on_hook must be boolean')

@@ -218,7 +218,8 @@
         "tests/test_qemu_operation_deadlines.py",
         "tests/test_qemu_io_public.py",
         "tests/test_dosbox_rpc_census.py",
-        "tests/test_runtime_source_matching.py"
+        "tests/test_runtime_source_matching.py",
+        "tests/test_qemu_step_count.py"
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
@@ -1068,7 +1069,8 @@
         "src/fdisbull/qemu_control.py",
         "src/fdisbull/debugger.py",
         "src/fdisbull/debug_script.py",
-        "src/fdisbull/runtime_source_matching.py"
+        "src/fdisbull/runtime_source_matching.py",
+        "src/fdisbull/qemu_steps.py"
       ],
       "depends_on": [],
       "existing_test_sets": [
@@ -1079,7 +1081,7 @@
       ],
       "remaining_work": [
         "Compare remaining legacy continue/pause/wait, breakpoint-list and reply-schema obligations; the existing paired COM covers registers, memory, one breakpoint/step and exit only.",
-        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation.",
+        "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation. Counted native step-stop composition now has a bounded Python/JSON/script route, but its raw-vCPU native gate and separate DOS process/lifecycle obligations still require direct evidence; DOSBox step-over remains open.",
         "Qualify or explicitly disposition diagnostic output cursors and stopped HELP/CPU/PIC replies, including the existing protected CPU/GDT source-matching consumer. QEMU internal monitor reads do not establish the complete public diagnostic contract."
       ],
       "minimum_acceptance": [

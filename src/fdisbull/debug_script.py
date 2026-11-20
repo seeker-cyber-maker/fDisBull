@@ -455,7 +455,7 @@ def validate_script(script, *, session=None):
                     if op=='step':
                         for key,limits in (('count',(1,10000)),('timeout_ms',(1,600000))):
                             value=params.get(key)
-                            if value is not None and not (isinstance(value,str) and value.startswith('$')):
+                            if key in params and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits)
                     if op=='clock-advance':
                         from .qemu_clock import MAX_CLOCK_BUDGET_NS
@@ -829,6 +829,12 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='vga-configuration':
                 from .qemu_vga_configuration import validate_vga_configuration_parameters
                 validate_vga_configuration_parameters(**params)
+            if (step['op']=='step'
+                    and getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')):
+                # Resolve and validate before the common timeout clamp; a large
+                # invalid literal/reference must not become a valid allowance.
+                from .qemu_steps import validate_step_parameters
+                validate_step_parameters(**params)
             if step['op'] in ('run','clock-advance','retrace-observe','retrace-wait',
                              'input-schedule-retrace','display-probe','vga-configuration','mouse.move-mapped',
                              'clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
@@ -906,7 +912,17 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 native_machine = getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos','qemu-chip8')
                 complete = (result.get('outcome')=='step' and result.get('timed_out') is False
                             if native_machine else result.get('completed'))
+                if (getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')
+                        and params.get('count',1)>1):
+                    from .qemu_steps import FORMAT
+                    complete = (complete and result.get('format') == FORMAT
+                                and result.get('complete') is True
+                                and result.get('requested_count') == params['count']
+                                and result.get('completed_count') == params['count'])
                 if not complete:
+                    if (getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')
+                            and params.get('count',1)>1):
+                        raise ValueError('Counted steps stopped before the requested native step boundaries')
                     raise ValueError('Step stopped before the requested instruction boundary')
             if step['op']=='engine-cycle' and result.get('outcome')!='cycle':
                 raise ValueError('Engine did not reach the requested cycle boundary')

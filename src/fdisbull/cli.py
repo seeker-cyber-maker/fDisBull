@@ -64,7 +64,7 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
-    "debug-step": "Step native or engine instructions with the selected backend contract; run,[count,timeout_ms]",
+    "debug-step": "Step with the selected backend contract; native QEMU counts observed step stops, not retired instructions; run,[count,timeout_ms]",
     "debug-spectator": "Read or enable the owned watch-only Windows dot-mode viewer; run,[enabled]",
     "debug-spectator-frame": "Capture one native paused Windows frame for the watch-only viewer; run",
     "debug-engine-state": "Read paused engine VM state with its own address context; run",
@@ -1538,16 +1538,18 @@ def respond(request, default_project=None, debugger=None):
         ):
             result = public_addresses(result)
         value = {"id": request_id, "ok": True, "result": result}
-    except (
-        ValueError,
-        TypeError,
-        KeyError,
-        OSError,
-        sqlite3.Error,
-        OverflowError,
-        AttributeError,
-        RecursionError,
-    ) as e:
+    except Exception as e:
+        # Counted native steps preserve their primary exception type. Return
+        # the bounded prefix on this route even for a callback RuntimeError;
+        # unrelated exceptions keep the previous propagation behavior.
+        from .qemu_steps import FORMAT as STEP_SEQUENCE_FORMAT
+        observed = getattr(e, "result", None)
+        step_sequence_error = (isinstance(request, dict) and request.get("method") == "debug-step"
+                               and isinstance(observed, dict)
+                               and observed.get("format") == STEP_SEQUENCE_FORMAT)
+        if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
+                              OverflowError, AttributeError, RecursionError)) and not step_sequence_error:
+            raise
         value = {
             "id": request_id,
             "ok": False,
@@ -1559,6 +1561,8 @@ def respond(request, default_project=None, debugger=None):
         from .execution_trace import ExecutionTraceError
         if isinstance(e, ExecutionTraceError):
             value["error"]["result"] = e.result
+        if step_sequence_error:
+            value["error"]["result"] = observed
     return (policy or OutputPolicy()).bound(value)
 
 

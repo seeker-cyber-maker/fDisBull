@@ -77,6 +77,40 @@ Selecting QEMU never silently launches DOSBox. After a failed or uncertain
 operation, the caller inspects the result and explicitly starts a separate
 fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
 
+### Compose native step stops
+
+Native machine and DOS sessions accept `step(count=1, timeout_ms=10000)`.
+The default one-step path retains its existing reply. A count from 2 through
+10,000 requests a bounded sequence of native single-step stops under one
+absolute host deadline, including lock admission, source/history guards,
+execution and observations. JSON `debug-step` and saved-script `step` accept
+the same count. Queued or bound scheduled input refuses before execution.
+
+For count greater than one, the result uses
+`format="fdisbull-machine-step-sequence-1"`. `steps` retains the fully observed
+ordinary-stop prefix; `completed_count` counts those stops, and
+`attempted_count` counts calls to the selected execution adapter. Neither is an
+instruction-retirement count. `terminal_stop` preserves the original first
+non-step or last known stop. `complete` requires the requested ordinary-stop
+count. A breakpoint, watchpoint, fault, process return, tracking budget or
+uncertain observation prevents another dispatch. Exceptions keep their primary
+type/message; failures after an execution attempt attach the sequence as
+`error.result`. The JSON route and
+script result retain that available evidence.
+
+A final outer `TimeoutError` can carry a fully observed prefix if receipt or
+publication time exhausted the deadline. Those counts describe observations;
+they do not extend the deadline or authorize another step.
+
+The existing per-step events remain recorded. A script additionally persists
+its sequence result and rejects an incomplete count before later operations.
+This opt-in composition is also available on an explicit outer machine
+context; selected Windows process and CHIP-8 step implementations are unchanged.
+It does not implement DOSBox `execution.step(mode="over")`, guest-time control
+or legacy reply-schema parity. The five-case [native gate proposal](QEMU_STEP_COUNT_GATE.md)
+must be admitted and run separately; host peer tests do not qualify a native
+tuple. All migration qualifications and default policy remain unchanged.
+
 ## FreeDOS and directory layers
 
 The optional checkpointed FreeDOS `C:` and private FAT workspace `D:` path,
