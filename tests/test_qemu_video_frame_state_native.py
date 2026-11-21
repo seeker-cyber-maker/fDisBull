@@ -383,8 +383,30 @@ def test_native_source_state_observation_tracks_stopped_mutation_and_refuses_nat
         with _deadline(debug, owner, started_at + WORK_SECONDS):
             info = process_record(debug)
             symbols = {name: com_address(info, offset) for name, offset in offsets.items()}
+            baseline_breakpoints = deepcopy(debug.breakpoints)
+            return_breakpoint = debug._return_breakpoint
+            ready = debug._ready
+            assert type(return_breakpoint) is str and return_breakpoint
+            assert ready['type'] == 'ready'
+            assert info['psp_segment'] == ready['child_psp']
+            assert info['parent_psp_segment'] == ready['helper_psp']
+            return_address = ready['helper_segment'] * 16 + ready['exit_wait_ip']
+            # The DOS constructor reserves this lifecycle control, although
+            # its shared machine-registry descriptor uses the tag 'user'.
+            assert baseline_breakpoints == {return_breakpoint: dict(
+                kind=1, access='x', length=1, owner='user', address=return_address)}
+            assert return_address != symbols['ready']
+            evidence['setup']['breakpoints'] = dict(baseline=baseline_breakpoints,
+                return_breakpoint=return_breakpoint, return_address=return_address,
+                helper_segment=ready['helper_segment'], exit_wait_ip=ready['exit_wait_ip'])
             parked = park(debug, symbols['ready'])  # Deletes its setup breakpoint before returning.
-            assert not debug.breakpoints
+            parking_breakpoint, = parked['session']['stop_reason']['breakpoint_ids']
+            assert parking_breakpoint not in baseline_breakpoints
+            assert parking_breakpoint not in debug.breakpoints
+            assert debug._return_breakpoint == return_breakpoint
+            assert debug.breakpoints == baseline_breakpoints
+            evidence['setup']['breakpoints'].update(parking_breakpoint=parking_breakpoint,
+                after_parking=deepcopy(debug.breakpoints))
             with _record_calls(debug, owner, monkeypatch, evidence) as calls:
                 request.config._fdisbull_source_state_post_setup(owner['vm'])
                 evidence['owner_start'] = _identity(debug, owner)
@@ -554,6 +576,9 @@ def test_native_source_state_observation_tracks_stopped_mutation_and_refuses_nat
                 assert sum(row['protocol'] == 'qmp' and row['command'] == 'x-fdisbull-start-video-frame'
                            for row in calls) == 1
                 assert sum(row['protocol'] == 'gdb.execute' for row in calls) == 1
+                assert debug._return_breakpoint == return_breakpoint
+                assert debug.breakpoints == baseline_breakpoints
+                evidence['setup']['breakpoints']['before_close'] = deepcopy(debug.breakpoints)
                 evidence['owner_end'] = _identity(debug, owner)
                 assert evidence['owner_start'] == evidence['owner_end']
         body_complete = True
