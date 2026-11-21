@@ -26,6 +26,11 @@ coordinates are byte values 0–255; booleans are refused. It does not infer scr
 geometry or clamp coordinates. `position.v` (opcode 38) is explicitly refused
 because its operands identify variables rather than literal coordinates.
 
+Use the distinct [variable-position override](VARIABLE_SCENE_EDITING.md) when
+deliberately replacing a witnessed variable binding with literal coordinates.
+That operation changes the opcode and future reads; this literal-only API keeps
+its original contract.
+
 Admission requires exact source hash, length, profile and logic identity; complete
 history since attachment with no recorded gap; a selected actor witness strictly
 after attachment and within the captured checkpoint; and agreement between the
@@ -138,7 +143,7 @@ python -m pytest -q packages/fdisbull-core/tests/test_agi_scene_edit.py \
 
 ## Product and native boundaries
 
-The shared package advances to `0.1.0.dev4`, pinned separately by fDisBull and
+The shared package advances to `0.1.0.dev5`, pinned separately by fDisBull and
 DotBox. DotBox can use a small edit/replay action while building its harness;
 fDisBull can retain the exact source proposal and observed outcome for later
 recovery work. Neither policy treats a requested placement as a proven effect.

@@ -229,6 +229,11 @@ edit to an observed instruction and exact source bytes. Its bounded demonstratio
 replays a separate candidate and reports whether the final placement matched,
 including a case where a later assignment overrides the edit.
 
+For variable-driven coordinates, the separate
+[variable-position override](VARIABLE_SCENE_EDITING.md) explicitly replaces one
+observed variable binding with literals. Its replay reports historical read
+values, aliased variables, later overwrites and downstream position propagation.
+
 For DotBox, scene-only observation can support a small source-linked actor model
 while the harness becomes usable; full disassembly can be enabled for the next
 specific question. For fDisBull, both channels can supply execution witnesses

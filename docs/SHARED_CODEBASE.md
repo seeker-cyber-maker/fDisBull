@@ -66,8 +66,8 @@ The shared package also owns bounded private-pipe JSON-RPC exchange in
 Product adapters retain launch profiles, public error types, request prefixes,
 EOF diagnostics, input ownership and process cleanup. The common exchange does
 not start a process or transfer control. Both applications pin shared development
-version `0.1.0.dev4`, which also carries the experimental AGI scene consumer
-and literal-position edit planner;
+version `0.1.0.dev5`, which also carries the experimental AGI scene consumer
+and position edit planners;
 earlier memory-only and transport-only wheels cannot satisfy that package.
 
 `fdisbull_core.agi_scene` is a deterministic snapshot/delta consumer for the
@@ -83,6 +83,13 @@ captured witness. It returns a detached source proposal; a separately owned
 candidate run establishes the actual resulting placement. A later unchanged
 assignment may override the edited instruction. See the
 [edit/replay contract](../native/qemu-agi/SCENE_EDITING.md).
+
+The explicit variable-position override replaces one witnessed `position.v`
+binding with literal coordinates while retaining its historical variable reads.
+Unchanged source assignments do not imply unchanged final variables or other
+actors: later `get.posn` can propagate the new position. The bounded
+[variable override contract](../native/qemu-agi/VARIABLE_SCENE_EDITING.md) keeps
+that consequence visible through separate candidate replay.
 
 The shared initializer's development version also changes its identity in the
 legacy DOSBox-in-QEMU Python guest. Prepared images containing the earlier
