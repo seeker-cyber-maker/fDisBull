@@ -36,33 +36,7 @@ org 100h
 %endmacro
     nop
     call setup
-    call sample_status
-.calibration_loop:
-    call sample_status
-    mov al,[previous_status]
-    test al,1
-    jnz .not_horizontal_rise
-    mov al,[current_status]
-    test al,8
-    jnz .not_horizontal_rise
-    test al,1
-    jz .not_horizontal_rise
-    mov ax,[calibration_count]
-    imul di,ax,6
-    add di,calibration
-    mov ax,[previous_before]
-    mov [di],ax
-    mov ax,[current_after]
-    mov [di+2],ax
-    mov ax,[vertical_edges]
-    mov [di+4],ax
-    inc word [calibration_count]
-    cmp word [calibration_count],512
-    je calibration_done
-.not_horizontal_rise:
-    cmp word [vertical_edges],4
-    jb .calibration_loop
-    mov byte [calibration_limited],1
+    call collect_calibration
 calibration_done:
     nop
 dispatch:
@@ -244,6 +218,102 @@ wait_offset:
     jae timing_fault
     cmp dx,bx
     jb .again
+    ret
+
+collect_calibration:
+    ; The seed consumes one complete sample but is never offered to record
+    ; selection or the four-retrace exit. EBX bit24 marks that seed only;
+    ; bits16..23 keep the exact validity byte and bit25 selects the fault exit.
+    mov ebp,[poll_count]
+    mov cx,[previous_before]
+    mov si,[current_before]
+    mov di,[current_after]
+    xor ebx,ebx
+    mov bl,[status_valid]
+    shl ebx,16
+    or ebx,1000000h
+    mov bh,[previous_status]
+    mov bl,[current_status]
+    mov dx,3dah
+.poll:
+    ; Refuse an over-budget attempt before rotating the last completed state.
+    inc ebp
+    cmp ebp,200000
+    ja .fault
+    mov cx,si
+    mov bh,bl
+    latch_pit2
+    mov si,ax
+    in al,dx
+    mov bl,al
+    xor al,bh
+    and al,bl
+    test al,9
+    jz .no_upper
+    latch_pit2
+    mov di,ax
+.no_upper:
+    test ebx,0ff0000h
+    jz .first
+    test bh,8
+    jnz .completed
+    test bl,8
+    jz .completed
+    ; Finish the actual upper latch before counting or rejecting this rise.
+    inc word [vertical_edges]
+    cmp word [vertical_edges],12
+    ja .fault
+    jmp .completed
+.first:
+    or ebx,10000h
+.completed:
+    test ebx,1000000h
+    jz .select
+    and ebx,0feffffffh
+    jmp .poll
+.select:
+    test bh,1
+    jnz .not_horizontal
+    test bl,8
+    jnz .not_horizontal
+    test bl,1
+    jz .not_horizontal
+    ; Only an eligible record borrows DX/DI. Keep the actual upper in DX
+    ; while DI addresses three words, then restore both before any next I/O.
+    mov dx,di
+    mov ax,[calibration_count]
+    imul di,ax,6
+    add di,calibration
+    mov [di],cx
+    mov [di+2],dx
+    mov ax,[vertical_edges]
+    mov [di+4],ax
+    mov di,dx
+    mov dx,3dah
+    inc word [calibration_count]
+    cmp word [calibration_count],512
+    je .commit
+.not_horizontal:
+    cmp word [vertical_edges],4
+    jb .poll
+    mov byte [calibration_limited],1
+    jmp .commit
+.fault:
+    or ebx,2000000h
+.commit:
+    ; These fields are fully committed before calibration_done or fault_stop.
+    ; Mid-loop memory is not a substitute for the live register observations.
+    mov [current_after],di
+    mov [previous_before],cx
+    mov [current_before],si
+    mov [previous_status],bh
+    mov [current_status],bl
+    mov [poll_count],ebp
+    mov eax,ebx
+    shr eax,16
+    mov [status_valid],al
+    test ebx,2000000h
+    jnz timing_fault
     ret
 
 sample_status:
