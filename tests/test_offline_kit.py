@@ -16,6 +16,8 @@ def wheel(path, name, version):
         if name == 'fdisbull-core':
             z.writestr('fdisbull_core/__init__.py', '')
             z.writestr('fdisbull_core/memory_search.py', '')
+            z.writestr('fdisbull_core/pipe_rpc.py', '')
+            z.writestr('fdisbull_core/agi_scene.py', '')
             z.writestr(f'{dist}-{version}.dist-info/WHEEL', 'Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n')
             z.writestr(f'{dist}-{version}.dist-info/RECORD', '')
         if name == 'fdisbull':
