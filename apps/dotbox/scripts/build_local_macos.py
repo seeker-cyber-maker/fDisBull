@@ -97,6 +97,8 @@ def _shared_wheel(value):
                 raise ValueError('Shared wheel is missing the scalar-search kernel')
             if 'fdisbull_core/pipe_rpc.py' not in names:
                 raise ValueError('Shared wheel is missing the pipe transport')
+            if 'fdisbull_core/agi_scene.py' not in names:
+                raise ValueError('Shared wheel is missing the AGI scene consumer')
     except (zipfile.BadZipFile, KeyError) as error:
         raise ValueError('Invalid shared core wheel') from error
     return {'path': str(path), 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(),

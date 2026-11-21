@@ -26,7 +26,7 @@ def inventory(tmp):
         add('artifacts/' + role, role)
     for role, name in [('wheel_core', 'fdisbull'), ('wheel_player', 'fdisbull-player'), ('wheel_shared', 'fdisbull-core'), ('wheel_z3', 'z3-solver'), ('payload', 'iced-x86'), ('payload', 'capstone'), ('payload', 'lief'), ('payload', 'pillow'), ('payload', 'unicorn'), ('payload', 'dnfile'), ('payload', 'dncil'), ('payload', 'pefile'), ('payload', 'tree-sitter'), ('payload', 'tree-sitter-c'), ('payload', 'pycparser'), ('payload', 'zstandard')]:
         wheel = tmp / (name + '.whl')
-        version = '0.1.0.dev1' if name == 'fdisbull-core' else '1.0'
+        version = '0.1.0.dev3' if name == 'fdisbull-core' else '1.0'
         dist_info = name.replace('-', '_') + '-' + version + '.dist-info'
         metadata = f'Name: {name}\nVersion: {version}\n'
         if name == 'fdisbull-core':
@@ -34,6 +34,7 @@ def inventory(tmp):
         members = {dist_info + '/METADATA': metadata.encode(), dist_info + '/RECORD': b''}
         if name == 'fdisbull-core':
             members.update({'fdisbull_core/__init__.py': b'data', 'fdisbull_core/memory_search.py': b'data',
+                            'fdisbull_core/pipe_rpc.py': b'data', 'fdisbull_core/agi_scene.py': b'data',
                             dist_info + '/WHEEL': b'Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n'})
         with zipfile.ZipFile(wheel, 'w') as z:
             for member, payload in members.items():
@@ -44,7 +45,7 @@ def inventory(tmp):
     objects = [{'path': x['destination'], 'needed': {}} for x in files if Path(x['source']).read_bytes().startswith(b'\x7fELF')]
     objects[0]['needed'] = {'libx.so': 'lib/libx.so'}
     add('receipts/closure.json', 'closure_receipt', json.dumps(dict(schema='fdisbull-elf-closure-v1', complete=True, objects=objects)).encode())
-    inv = dict(schema='fdisbull-chat-offline-inventory-v1', wheel_versions={name: ('0.1.0.dev1' if name == 'fdisbull-core' else '1.0') for name in kit.RUNTIME_WHEELS}, identities=dict(source_commit='a'*40, test_source_commit='b'*40, python='3.13.5', qemu='9.2.4', wine='11', version='1.0'), files=files)
+    inv = dict(schema='fdisbull-chat-offline-inventory-v1', wheel_versions={name: ('0.1.0.dev3' if name == 'fdisbull-core' else '1.0') for name in kit.RUNTIME_WHEELS}, identities=dict(source_commit='a'*40, test_source_commit='b'*40, python='3.13.5', qemu='9.2.4', wine='11', version='1.0'), files=files)
     p = tmp / 'inventory.json'
     p.write_text(json.dumps(inv))
     return p, inv

@@ -22,6 +22,16 @@
       ],
       "destination_path": "src/fdisbull_core/pipe_rpc.py",
       "extraction": "Common bounded wire exchange and select readiness; adapter hooks retain product error types, request prefixes, EOF diagnostics, launch policy and cleanup. Native source unchanged."
+    },
+    {
+      "module": "fdisbull_core.agi_scene",
+      "source_commit": "e83725d68cba4849f37199c6109dc23acf9a8391",
+      "contract_sources": [
+        "native/qemu-agi/overlay/target/agi/cpu.c",
+        "native/qemu-agi/overlay/target/agi/helper.c"
+      ],
+      "destination_path": "src/fdisbull_core/agi_scene.py",
+      "extraction": "Independently authored deterministic consumer of the published AGI observation protocol; no native implementation copied. Source/session identity, transactional deltas and explicit history gaps; no process or product dependency."
     }
   ]
 }

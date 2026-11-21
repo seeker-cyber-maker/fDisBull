@@ -219,6 +219,11 @@ separate check from timing, because logging itself changes execution cost.
 
 ## Product use
 
+The [shared scene consumer](SCENE_CONSUMER.md) projects current actors and
+source-linked deltas while retaining explicit history gaps. Its owned-QEMU
+adapter and bounded `scene_harness.py --binary ... --output ...` demonstration
+use the existing stopped interface without changing the native ABI.
+
 For DotBox, scene-only observation can support a small source-linked actor model
 while the harness becomes usable; full disassembly can be enabled for the next
 specific question. For fDisBull, both channels can supply execution witnesses
