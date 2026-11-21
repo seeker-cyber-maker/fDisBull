@@ -19,6 +19,13 @@ these CPU facts to the existing processor interface, and a scene planner joins
 them to committed state, observations and pending requests. The same decode seam
 is intended for later UIL emission; this increment does not emit UIL.
 
+The [scene-discovery consumer](SCENE_DISCOVERY.md) follows the CPU's static
+successors through complete LOGIC code and collects conditional picture,
+VIEW, actor, call and room-transfer sites. Structural decoding has a broader
+AGI 2.917 catalog and larger condition limits than execution. Variable inputs,
+branch outcomes and external effects remain explicit unknowns. Static candidates
+do not establish a current actor pose or an executed scene.
+
 An explicit `-M agi-test,view-catalog=/private/catalog.bin` selects the separate
 [VIEW binding profile](VIEW_BINDING_PROFILE.md). It executes bounded resource
 loads, animation setup, view/loop/cel selection and geometry changes against an

@@ -77,6 +77,8 @@ static void agi_if(const AgiDecodedInstruction *insn, TCGv_i32 next)
 
     for (i = 0; i < insn->condition_count; i++) {
         const AgiDecodedCondition *token = &insn->conditions[i];
+        const AgiDecodedOperand *operands =
+            &insn->condition_operands[token->operand_start];
         if (token->kind == AGI_CONDITION_NOT) {
             negate = true;
             continue;
@@ -92,14 +94,14 @@ static void agi_if(const AgiDecodedInstruction *insn, TCGv_i32 next)
             continue;
         }
         op = token->opcode;
-        a = token->operands[0].value;
+        a = operands[0].value;
         if (op == 7) {
             left = agi_load(agi_flag(a));
             tcg_gen_setcondi_i32(TCG_COND_NE, value, left, 0);
         } else {
-            b = token->operands[1].value;
+            b = operands[1].value;
             left = agi_load(agi_var(a));
-            right = token->operands[1].kind == AGI_OPERAND_VARIABLE ?
+            right = operands[1].kind == AGI_OPERAND_VARIABLE ?
                     agi_load(agi_var(b)) : tcg_constant_i32(b);
             tcg_gen_setcond_i32(op <= 2 ? TCG_COND_EQ :
                                op <= 4 ? TCG_COND_LTU : TCG_COND_GTU,
@@ -144,7 +146,7 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
     decoded = agi_decode(agi_translate_read, ctx, ctx->env->code_size, pc,
                           ctx->draw_intent ? AGI_DECODE_INTENT :
                           ctx->binding_profile ? AGI_DECODE_BINDING :
-                          AGI_DECODE_SCALAR, &insn);
+                          AGI_DECODE_SCALAR, AGI_DECODE_EXECUTION, &insn);
     op = insn.opcode;
     /* A disabled command faults as unsupported even if its operands are
      * truncated. Static inspection may still describe that known encoding.

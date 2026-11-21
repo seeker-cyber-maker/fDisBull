@@ -18,14 +18,14 @@
     "overlay/target/agi/catalog.c": "e02f5d81312d0c13aa3c7cd546335a8e2e08d2f759243e587f9bf27595106866",
     "overlay/target/agi/cpu-param.h": "cffd77d68921138da4934a43779c1ff64f130ca4060e3ef08d7e5f3d19a4c600",
     "overlay/target/agi/cpu-qom.h": "0aa8675fb41c03d81b487b9f98cde3b3172608fd64b6dccaec2bfe511e971272",
-    "overlay/target/agi/cpu.c": "a24e248122a8088ce155d3e86f7aa345e0cfe9a94df29de8a930d253ef78b82f",
+    "overlay/target/agi/cpu.c": "8da678a16637dbc05523400a2a8a90ce947a6f2514de49b68fd9d3262f7c9085",
     "overlay/target/agi/cpu.h": "682f6f40fc29878d7cd1fa3ddc530a93c8880edbbd48ec60b2b4f0f931e25cda",
-    "overlay/target/agi/decode.c": "fbd9be41bcc5f3ceef8c84b74fdce016f847fa28ba0c55f9ffbf7dceba0effcc",
-    "overlay/target/agi/decode.h": "11a2851743e6d12f80b7e54d448bb8ac0f8eab4f63583ecc37127ed60cda5767",
+    "overlay/target/agi/decode.c": "552a3a2b4d55d4d1bfe9a68cd9bb520d05eef7a6714474705db31c6fdeaa4893",
+    "overlay/target/agi/decode.h": "4783669a161b9ec294dc8da90a651d1fe5cf0d31b5bb27c5dc0876028c27e458",
     "overlay/target/agi/helper.c": "f9c55fe7ebf315e05dc48da3acf4427adc7c530f8332ac3fad7b191eb3b5b9a0",
     "overlay/target/agi/helper.h": "153f7cc3bd8172b40308c9d5d6694110984c22fdfd6a1e1934ab34c50d2f941c",
     "overlay/target/agi/meson.build": "0733a22a5479bb61f3ad1787c8c7a87d94f4291ca78a7fc2de528ca918109395",
-    "overlay/target/agi/translate.c": "d23fca0543ae4079441e0b858dcf5601a75f34d7c70b210173d5340869d5d85f"
+    "overlay/target/agi/translate.c": "8bf55fd22347f726185d54a281c15d037b1aaf911b34826bba47bcc11bc3322d"
   },
   "qualification": "This manifest identifies experimental source only. Build success, authored execution correctness, observation neutrality, generated-code shape and performance require separate receipts bound to the exact applied source and binary. It does not establish full AGI compatibility, cross-host support or QEMU/DOSBox parity.",
   "profiles": [
@@ -33,5 +33,5 @@
     "agi-2917-view-binding-pilot-1",
     "agi-2917-draw-intent-pilot-1"
   ],
-  "instruction_schema": "fdisbull-agi-native-instructions-1"
+  "instruction_schema": "fdisbull-agi-native-instructions-2"
 }
