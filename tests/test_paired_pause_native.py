@@ -36,7 +36,7 @@ PROFILE = ('dosbox machine=svga_s3', 'cpu core=normal', 'cpu cycles=fixed 157600
            'video enable 8-bit dac=false')
 WORK_SECONDS, CLEANUP_SECONDS = 50, 10
 PUBLIC_CALL_LIMIT, NATIVE_CALL_LIMIT = 512, 1024
-REPORT_LIMIT, LOG_LIMIT = 4 * 1024**2, 2 * 1024**2
+REPORT_LIMIT, LOG_LIMIT = 8 * 1024**2, 2 * 1024**2
 BDA_ADDRESS, BDA_LENGTH = 0x46C, 5
 HOST_CLOCK_FIELDS = frozenset({'sequence', 'host_monotonic_ns'})
 
@@ -82,7 +82,7 @@ def _ip(registers):
 
 
 def _write_json(path, value):
-    data = (json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + '\n').encode()
+    data = (json.dumps(value, separators=(',', ':'), sort_keys=True, allow_nan=False) + '\n').encode()
     assert len(data) <= REPORT_LIMIT, 'Strict pause evidence exceeded its byte budget'
     temporary = path.with_suffix(path.suffix + '.writing')
     temporary.write_bytes(data)

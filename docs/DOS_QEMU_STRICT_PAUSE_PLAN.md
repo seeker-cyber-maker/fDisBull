@@ -1,17 +1,20 @@
 # Strict paired ordinary-pause witness
 
-This is a source-only proposed native gate. It has not been imported, collected,
-tested or executed. Its base is `353df71e2281a4078ac5c3ff87f89cd3ccdbb17e`. It
-changes no production/native code and grants no execution admission.
+The original witness was proposed from `353df71e2281a4078ac5c3ff87f89cd3ccdbb17e`.
+This document now records a source-only receipt-retention revision prepared
+against `86a5fdb49d17452f9eda8af9380897f4a92ea7cc`. The revised source has not
+been imported, collected, tested or executed and grants no new execution admission.
 
-**Known source precondition:** at this base, a COM process retains its reserved
+**Historical source precondition:** at the original base, a COM process retains its reserved
 DOS parent-return breakpoint. Public `resume()` rejects any remaining machine
 breakpoint, while the public delete operation correctly reserves that control
 until process completion. Therefore the proposed QEMU half currently reaches
 an honest public refusal. The root has been notified; a separately reviewed
 host decision is needed before native admission. This fixture does not remove
 the return control, edit the breakpoint dictionary, call raw QMP continue, or
-substitute a raw machine session to bypass that restriction.
+substitute a raw machine session to bypass that restriction. The integrated
+86a5fdb host includes the separately reviewed public asynchronous-resume fix;
+its behavior still requires the strict observations below.
 
 ## Question and retained legacy evidence
 
@@ -52,8 +55,39 @@ Each owner receives one 50-second work deadline and at most 10 seconds cleanup.
 The separate controller must enforce a 120-second whole-case bound, including
 private setup, plus explicitly bounded preflight/postflight. The fixture caps
 each owner's public/RPC journal at 512 calls and QEMU's combined post-constructor
-QMP/GDB journal at 1,024 calls. Each JSON evidence file is at most 4 MiB, each
+QMP/GDB journal at 1,024 calls. Each JSON evidence file is at most 8 MiB, each
 complete native log at most 2 MiB, and the campaign output cap is 128 MiB.
+
+### Receipt-retention revision
+
+Strict pause attempt 02 failed during QEMU episode 5 because pretty-printed
+JSON exceeded the original 4 MiB per-file cap. Its last persisted QEMU journal
+is 4,164,213 bytes; the same parsed values encoded as compact JSON, including the
+trailing newline, occupy 2,460,420 bytes. The complete DOSBox journal shrinks
+from 247,456 to 150,288 bytes. Both conversions preserve every parsed value.
+
+The largest of the four complete observed QEMU episodes contributes 537,618
+compact bytes across its episode, public-call and native-call records. Using
+that measured contribution for eight episodes, with the retained initial
+metadata, projects 4,317,832 bytes for QEMU and 4,468,542 bytes for the paired
+aggregate before final cleanup or failure additions. These are sizing
+estimates, not observations of the missing episodes or a guaranteed maximum.
+Compact encoding alone therefore does not justify retaining the old 4 MiB cap.
+
+The fresh revision changes only JSON whitespace and the finite evidence-file
+limit to 8 MiB (8,388,608 bytes), including the final paired aggregate. It keeps
+sorted keys, strict non-NaN encoding, the trailing newline, the pre-write byte
+check, atomic replacement, every raw field, every duplicate observation and
+all error-retention behavior. It introduces no compression, interning,
+truncation, abbreviated replies or reconstruction format. Ordinary JSON
+parsing recovers the same complete value structure.
+
+The eight running intervals, four immediate brackets per stop, clocks, call
+limits, deadlines, qualification checks and 2 MiB native-log limit remain
+unchanged. The controller keeps the 128 MiB total output cap and additional
+256 MiB free-space reserve. Both earlier failed attempts remain failed and
+immutable. The revised source requires independent review, exact integrated
+host pins and a separate fresh native admission.
 
 The controller must pin the clean integrated host, this file, the existing boot
 preparation helper, current Python/interpreter dependencies, firmware, media,
@@ -89,8 +123,9 @@ full-triple palette updates and DAC6. `fast_forward=false` is explicitly set
 and checked. Full effective-profile verification remains false as in the prior
 receipt. QEMU selects its actual virtual-clock and precise-retrace profiles.
 
-All runtime files belong in one fresh private `/tmp` directory without Git
-ancestry. The authored COM and original/prepared boot identities must survive.
+All runtime files belong in the fresh private output directory selected and
+pinned by the separately admitted controller, without Git ancestry. The
+authored COM and original/prepared boot identities must survive.
 
 ## Exact episode and stop boundaries
 
