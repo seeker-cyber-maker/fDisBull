@@ -24,6 +24,16 @@ SYMBOL_NAMES = ('calibration_done', 'trial_ready', 'trial_done', 'fault_stop',
 ASSEMBLY = r'''
 bits 16
 org 100h
+%macro latch_pit2 0
+    ; Preserve every register except AX. Inline at witness endpoints to keep
+    ; PIT-helper CALL/RET out of the latch-to-device-observation paths.
+    mov al,80h
+    out 43h,al
+    in al,42h
+    mov ah,al
+    in al,42h
+    xchg al,ah
+%endmacro
     nop
     call setup
     call sample_status
@@ -96,19 +106,20 @@ trial_ready:
     cmp bx,0
     je bad_command
     call wait_offset
-    call pit_read
-    mov [b_before],ax
     mov dx,3c8h
     mov al,1
     out dx,al
     inc dx
+    latch_pit2
+    mov si,ax
     mov al,42
     out dx,al
     mov al,21
     out dx,al
     mov al,1
     out dx,al
-    call pit_read
+    latch_pit2
+    mov [b_before],si
     mov [b_after],ax
     mov bx,[delay_ticks]
     add bx,[width_ticks]
@@ -118,19 +129,20 @@ trial_ready:
     cmp word [width_ticks],0
     je bad_command
     call wait_offset
-    call pit_read
-    mov [c_before],ax
     mov dx,3c8h
     mov al,1
     out dx,al
     inc dx
+    latch_pit2
+    mov si,ax
     mov al,21
     out dx,al
     mov al,42
     out dx,al
     mov al,1
     out dx,al
-    call pit_read
+    latch_pit2
+    mov [c_before],si
     mov [c_after],ax
 .after_pulse:
     ; This marker is reached by an explicit continuation AFTER the host has
@@ -176,22 +188,34 @@ wait_offset:
 
 sample_status:
     call poll_budget
-    mov ax,[current_before]
-    mov [previous_before],ax
-    mov al,[current_status]
-    mov [previous_status],al
-    call pit_read
-    mov [current_before],ax
+    ; CX/BH retain the preceding observation; SI/BL retain this one. Neither
+    ; lower latch is replaced by a timestamp taken AFTER its status read.
+    mov cx,[current_before]
+    mov bh,[current_status]
     mov dx,3dah
+    latch_pit2
+    mov si,ax
     in al,dx
-    mov [current_status],al
-    call pit_read
+    mov bl,al
+    xor al,bh
+    and al,bl
+    test al,9
+    jz .no_upper
+    ; Only a bit-0 or bit-3 rise can be consumed by calibration/new_vsync.
+    ; The upper latch stays AFTER the first observed high status. A first
+    ; sample may also latch, but status_valid prevents a fake vertical edge.
+    latch_pit2
     mov [current_after],ax
+.no_upper:
+    mov [previous_before],cx
+    mov [current_before],si
+    mov [previous_status],bh
+    mov [current_status],bl
     cmp byte [status_valid],0
     je .first
-    test byte [previous_status],8
+    test bh,8
     jnz .done
-    test byte [current_status],8
+    test bl,8
     jz .done
     inc word [vertical_edges]
     cmp word [vertical_edges],12
@@ -211,12 +235,7 @@ poll_budget:
 pit_read:
     ; Channel2 is explicitly mode2/divisor65536 with gate high. This is not
     ; the BIOS channel0 mode3 counter, whose raw count is not a linear clock.
-    mov al,80h
-    out 43h,al
-    in al,42h
-    mov ah,al
-    in al,42h
-    xchg al,ah
+    latch_pit2
     ret
 
 palette_a:
