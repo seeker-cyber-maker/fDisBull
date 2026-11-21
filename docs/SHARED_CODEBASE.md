@@ -66,7 +66,8 @@ The shared package also owns bounded private-pipe JSON-RPC exchange in
 Product adapters retain launch profiles, public error types, request prefixes,
 EOF diagnostics, input ownership and process cleanup. The common exchange does
 not start a process or transfer control. Both applications pin shared development
-version `0.1.0.dev3`, which also carries the experimental AGI scene consumer;
+version `0.1.0.dev4`, which also carries the experimental AGI scene consumer
+and literal-position edit planner;
 earlier memory-only and transport-only wheels cannot satisfy that package.
 
 `fdisbull_core.agi_scene` is a deterministic snapshot/delta consumer for the
@@ -76,6 +77,12 @@ capture and refreshes current actors when observation coverage is incomplete.
 The history gap remains explicit; a fresh snapshot does not recreate missing
 source witnesses. This shared mechanism is not a new default DotBox or fDisBull
 runtime. See the [scene consumer contract](../native/qemu-agi/SCENE_CONSUMER.md).
+
+The same module can plan a literal position edit from exact code bytes and a
+captured witness. It returns a detached source proposal; a separately owned
+candidate run establishes the actual resulting placement. A later unchanged
+assignment may override the edited instruction. See the
+[edit/replay contract](../native/qemu-agi/SCENE_EDITING.md).
 
 The shared initializer's development version also changes its identity in the
 legacy DOSBox-in-QEMU Python guest. Prepared images containing the earlier

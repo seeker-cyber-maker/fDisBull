@@ -224,6 +224,11 @@ source-linked deltas while retaining explicit history gaps. Its owned-QEMU
 adapter and bounded `scene_harness.py --binary ... --output ...` demonstration
 use the existing stopped interface without changing the native ABI.
 
+The [literal placement planner](SCENE_EDITING.md) binds a proposed coordinate
+edit to an observed instruction and exact source bytes. Its bounded demonstration
+replays a separate candidate and reports whether the final placement matched,
+including a case where a later assignment overrides the edit.
+
 For DotBox, scene-only observation can support a small source-linked actor model
 while the harness becomes usable; full disassembly can be enabled for the next
 specific question. For fDisBull, both channels can supply execution witnesses

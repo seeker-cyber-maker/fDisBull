@@ -23,15 +23,15 @@ def _helper():
     return module
 
 
-def _core_wheel(directory, *, metadata_name='fdisbull-core', metadata_version='0.1.0.dev3',
+def _core_wheel(directory, *, metadata_name='fdisbull-core', metadata_version='0.1.0.dev4',
                 dependency=None, kernel=True, transport=True, scene=True):
     directory.mkdir(parents=True, exist_ok=True)
-    path = directory / 'fdisbull_core-0.1.0.dev3-py3-none-any.whl'
+    path = directory / 'fdisbull_core-0.1.0.dev4-py3-none-any.whl'
     metadata = f'Metadata-Version: 2.1\nName: {metadata_name}\nVersion: {metadata_version}\n'
     if dependency:
         metadata += 'Requires-Dist: ' + dependency + '\n'
     with zipfile.ZipFile(path, 'w') as archive:
-        archive.writestr('fdisbull_core-0.1.0.dev3.dist-info/METADATA', metadata)
+        archive.writestr('fdisbull_core-0.1.0.dev4.dist-info/METADATA', metadata)
         if kernel:
             archive.writestr('fdisbull_core/memory_search.py', '# authored wheel admission fixture\n')
         if transport:
@@ -101,7 +101,7 @@ def test_shared_wheel_is_bound_to_admitted_bytes(tmp_path):
     wheel = _core_wheel(tmp_path / 'inputs')
     identity = helper._shared_wheel(wheel)
     assert identity['distribution'] == 'fdisbull-core'
-    assert identity['version'] == '0.1.0.dev3'
+    assert identity['version'] == '0.1.0.dev4'
     assert identity['sha256'] == helper._sha256(wheel)
     work = tmp_path / 'work'
     work.mkdir()
@@ -112,7 +112,7 @@ def test_shared_wheel_is_bound_to_admitted_bytes(tmp_path):
 
 
 def test_invalid_shared_wheel_creates_no_build_output(tmp_path):
-    wheel = tmp_path / 'fdisbull_core-0.1.0.dev3-py3-none-any.whl'
+    wheel = tmp_path / 'fdisbull_core-0.1.0.dev4-py3-none-any.whl'
     wheel.write_bytes(b'not a ZIP wheel')
     work = tmp_path / 'new-build'
     with pytest.raises(SystemExit) as error:

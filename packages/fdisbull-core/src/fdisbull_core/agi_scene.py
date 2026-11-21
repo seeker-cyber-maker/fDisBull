@@ -320,3 +320,135 @@ class AGISceneConsumer:
         self._gap_count += 1
         self._last_gap = gap
         return _update("resynced", reason)
+
+
+def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y) -> dict:
+    """Plan one same-length literal position edit from a captured scene witness.
+
+    The caller supplies exact raw code and an already captured stopped view.
+    This function performs no I/O, captures no observations and mutates neither
+    input. It refuses missing or incomplete history and variable-position
+    instructions. A harmless stopped control change may leave the witness's
+    generation older than the checkpoint or leave SCENE disabled.
+
+    The result describes replacement operands, not an observed new position.
+    Editing this static instruction affects every execution of its PC. Later
+    assignments, including previously unchanged assignments with no SCENE
+    record, may overwrite the requested position. The caller must construct a
+    separate candidate from the expected bytes, verify its resulting source
+    hash, and observe a fresh bounded execution to assess the actual outcome.
+    Consistency checks do not authenticate caller-supplied observations.
+    """
+    if type(code) is not bytes or not 1 <= len(code) <= 65536:
+        raise SceneInputError("code must be immutable bytes of length 1..65536")
+    view = _object(captured_view, "captured_view")
+    if view.get("schema") != "fdisbull-agi-scene-view-1":
+        raise SceneInputError("unsupported scene view schema")
+    session_id = _session(view.get("session_id"))
+    source = _source(view.get("source"))
+    if source["size"] != len(code) or source["sha256"] != hashlib.sha256(code).hexdigest():
+        raise SceneInputError("raw code differs from the captured source identity")
+    actor = _uint(actor, "actor", 15)
+    x, y = _uint(x, "x", 255), _uint(y, "y", 255)
+
+    def checkpoint(value, name):
+        value = _object(value, name)
+        return {key: _uint(value.get(key), f"{name}.{key}") for key in
+                ("epoch", "control_generation", "retired", "eligible", "invocation")}
+
+    current = checkpoint(view.get("checkpoint"), "checkpoint")
+    coverage = _object(view.get("coverage"), "coverage")
+    if coverage.get("history_complete_since_attach") is not True \
+            or _uint(coverage.get("gap_count"), "coverage.gap_count") != 0 \
+            or "last_gap" not in coverage or coverage["last_gap"] is not None:
+        raise SceneInputError("literal position editing requires complete history without gaps")
+    if type(coverage.get("scene_enabled")) is not bool:
+        raise SceneInputError("coverage.scene_enabled must be a boolean")
+    start = checkpoint(coverage.get("history_start"), "coverage.history_start")
+    if start["epoch"] != current["epoch"] or any(
+            start[key] > current[key]
+            for key in ("control_generation", "retired", "eligible", "invocation")):
+        raise SceneInputError("captured history and checkpoint do not form a continuous interval")
+
+    guest = _object(view.get("guest"), "guest")
+    if not isinstance(guest.get("status"), str) or guest["status"] not in _STATUSES:
+        raise SceneInputError("scene edit planning requires a stopped guest")
+    _uint(guest.get("pc"), "guest.pc", source["size"])
+    fault = guest.get("fault")
+    if guest["status"] == "fault":
+        fault = _object(fault, "fault")
+        _uint(fault.get("code"), "fault.code", 7, 1)
+        _uint(fault.get("pc"), "fault.pc", source["size"])
+        _uint(fault.get("opcode"), "fault.opcode", 255)
+        if not isinstance(fault.get("name"), str) or not fault["name"]:
+            raise SceneInputError("fault must have a name")
+    elif fault is not None:
+        raise SceneInputError("a non-fault stop cannot carry a fault")
+
+    actors = view.get("actors")
+    if not isinstance(actors, list) or len(actors) != 16:
+        raise SceneInputError("expected 16 ordered actors")
+    for index, item in enumerate(actors):
+        item = _object(item, "actor")
+        if _uint(item.get("id"), "actor.id", 15) != index:
+            raise SceneInputError("actors must be ordered by unique id")
+        _position(item, "actor")
+    selected = actors[actor]
+    position = _position(selected, "selected actor")
+    witness = selected.get("witness")
+    if witness is None:
+        raise SceneInputError("selected actor has no captured position witness")
+    witness = _object(witness, "witness")
+    if witness.get("kind") != "position":
+        raise SceneInputError("expected a position-change witness")
+    opcode = _uint(witness.get("opcode"), "witness.opcode", 255)
+    if opcode == 38:
+        raise SceneInputError("position.v cannot be edited as literal coordinates")
+    if opcode != 37:
+        raise SceneInputError("literal position editing requires opcode 37")
+    if _uint(witness.get("actor"), "witness.actor", 15) != actor:
+        raise SceneInputError("position witness identifies a different actor")
+    _uint(witness.get("seq"), "witness.seq", current["eligible"], start["eligible"] + 1)
+    _uint(witness.get("retired"), "witness.retired", current["retired"], start["retired"] + 1)
+    # New work after a stopped attachment must enter a new native invocation.
+    if current["invocation"] <= start["invocation"]:
+        raise SceneInputError("position witness requires a post-attachment invocation")
+    if guest["status"] == "ready":
+        raise SceneInputError("a ready guest cannot carry a post-attachment position witness")
+    _uint(witness.get("control_generation"), "witness.control_generation",
+          current["control_generation"], start["control_generation"])
+    pc = _uint(witness.get("pc"), "witness.pc", source["size"] - 4)
+    if _uint(witness.get("next_pc"), "witness.next_pc", source["size"]) != pc + 4:
+        raise SceneInputError("literal position witness has an inconsistent next PC")
+    raw = witness.get("bytes")
+    if not isinstance(raw, list) or len(raw) != 4:
+        raise SceneInputError("literal position witness requires four instruction bytes")
+    expected = [_uint(value, "instruction byte", 255) for value in raw]
+    if expected[:2] != [37, actor] or code[pc:pc + 4] != bytes(expected):
+        raise SceneInputError("position witness bytes differ from the source instruction")
+    before = _position(witness.get("before"), "witness.before")
+    after = _position(witness.get("after"), "witness.after")
+    if before == after:
+        raise SceneInputError("position witness does not describe a change")
+    if any(state["x"] != state["prev_x"] or state["y"] != state["prev_y"]
+           for state in (before, after)):
+        raise SceneInputError("position witness violates the selected profile")
+    if (after["x"], after["y"]) != (expected[2], expected[3]) or after != position:
+        raise SceneInputError("position witness differs from literal operands or current actor")
+    try:
+        json.dumps(witness, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    except (TypeError, ValueError) as error:
+        raise SceneInputError("position witness must contain JSON values") from error
+
+    replacement = [37, actor, x, y]
+    candidate = code[:pc] + bytes(replacement) + code[pc + 4:]
+    return {
+        "schema": "fdisbull-agi-literal-position-edit-1",
+        "session_id": session_id, "checkpoint": current, "source": source,
+        "actor": actor, "witness": deepcopy(witness), "offset": pc, "length": 4,
+        "expected_bytes": expected, "replacement_bytes": replacement,
+        "requested_position": {"x": x, "y": y},
+        "candidate_source": {**source, "sha256": hashlib.sha256(candidate).hexdigest()},
+        "changed": replacement != expected, "write_performed": False,
+        "scope": "static_instruction",
+    }
