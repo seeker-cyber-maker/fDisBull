@@ -9,6 +9,7 @@ import time
 import xml.etree.ElementTree as ET
 
 from .dosbox_rpc import DebuggerError
+from .qemu_observation_authority import check_transport, memory_request, reply_limit, transport_operation
 
 
 class GDBRemote:
@@ -49,17 +50,32 @@ class GDBRemote:
         shared=getattr(self,'operation_deadline',None)
         return deadline if shared is None else min(deadline,shared)
 
+    def _command(self,command):
+        if type(command) is str:
+            if len(command)>self.limit:raise ValueError('GDB request exceeds budget')
+            return command.encode('ascii')
+        if type(command) not in (bytes,bytearray,memoryview):
+            raise ValueError('GDB command must be text or bounded bytes')
+        size=command.nbytes if type(command) is memoryview else len(command)
+        if size>self.limit:raise ValueError('GDB request exceeds budget')
+        return bytes(command)
+
     def _byte(self,deadline):
         remaining=deadline-time.monotonic()
         if remaining<=0:raise TimeoutError('GDB response deadline expired')
-        self.socket.settimeout(remaining)
         if self._cursor==len(self._buffer):
-            self._buffer=self.socket.recv(65536);self._cursor=0
+            channel=check_transport(self)
+            channel.settimeout(remaining)
+            check_transport(self)
+            self._buffer=channel.recv(65536);self._cursor=0
+            check_transport(self)
             if not self._buffer:raise DebuggerError('QEMU GDB channel closed')
         value=self._buffer[self._cursor];self._cursor+=1
         return value
 
     def _packet(self,deadline):
+        check_transport(self)
+        limit=reply_limit(self,self.limit)
         # execute() interrupts on a deadline, then continues reading the same
         # stop reply. Keep framing state across that timeout: a fragment such
         # as "$T05" must not turn its later checksum into a new packet prefix.
@@ -79,7 +95,7 @@ class GDBRemote:
                     state['payload']=False
                     break
                 raw.append(value)
-                if len(raw)>self.limit:raise DebuggerError('GDB packet exceeds budget')
+                if len(raw)>limit:raise DebuggerError('GDB packet exceeds budget')
             while len(state['checksum'])<2:
                 state['checksum'].append(self._byte(deadline))
             try:checksum=int(state['checksum'],16)
@@ -87,8 +103,10 @@ class GDBRemote:
             if sum(raw)%256!=checksum:raise DebuggerError('GDB checksum mismatch; request not replayed')
             self._packet_state=None
             try:
-                self.socket.settimeout(max(.001,deadline-time.monotonic()))
-                self.socket.sendall(b'+')
+                channel=check_transport(self)
+                channel.settimeout(max(.001,deadline-time.monotonic()))
+                check_transport(self)
+                channel.sendall(b'+')
             except (OSError,TimeoutError) as error:
                 # An uncertain write is not a receive deadline. Interrupting
                 # and reading again cannot safely identify a new stop reply.
@@ -104,7 +122,7 @@ class GDBRemote:
                         raise DebuggerError('Invalid GDB run-length encoding')
                     result.extend(result[-1:]*(raw[i]-29));i+=1
                 else:result.append(value)
-                if len(result)>self.limit:raise DebuggerError('Expanded GDB packet exceeds budget')
+                if len(result)>limit:raise DebuggerError('Expanded GDB packet exceeds budget')
             if result.startswith(b'O') and result!=b'OK':
                 try:message=bytes.fromhex(result[1:].decode('ascii'))
                 except ValueError as error:raise DebuggerError('Invalid GDB console response') from error
@@ -113,8 +131,8 @@ class GDBRemote:
             return bytes(result)
 
     def _send(self,command,deadline):
-        raw=command.encode('ascii') if isinstance(command,str) else command
-        if len(raw)>self.limit:raise ValueError('GDB request exceeds budget')
+        check_transport(self)
+        raw=self._command(command)
         encoded=bytearray()
         for value in raw:
             if value in b'$#}*':encoded.extend((ord('}'),value^0x20))
@@ -122,8 +140,10 @@ class GDBRemote:
         packet=b'$'+encoded+b'#'+f'{sum(encoded)%256:02x}'.encode()
         remaining=deadline-time.monotonic()
         if remaining<=0:raise TimeoutError('GDB operation deadline expired before dispatch')
-        self.socket.settimeout(remaining)
-        self.socket.sendall(packet)
+        channel=check_transport(self)
+        channel.settimeout(remaining)
+        check_transport(self)
+        channel.sendall(packet)
 
     @contextmanager
     def _locked(self,deadline):
@@ -135,15 +155,20 @@ class GDBRemote:
 
     def request(self,command,timeout_ms=10000):
         deadline=self._operation_end(timeout_ms)
-        with self._locked(deadline):
-            try:
-                self._send(command,deadline);reply=self._packet(deadline)
-                # Standard errors are Exx or E.errtext. A successful query
-                # may start with E, such as qqemu.sstepbits -> ENABLE=1,... .
-                if re.fullmatch(rb'E[0-9a-fA-F]{2}',reply) or reply.startswith(b'E.'):
-                    raise DebuggerError('QEMU GDB operation failed: '+reply.decode(errors='replace'))
-                return reply
-            except BaseException:self.close();raise
+        command=self._command(command)
+        with transport_operation(self,'gdb-request',command,None,deadline) as control:
+            deadline=control.deadline
+            with self._locked(deadline):
+                try:
+                    control.dispatch()
+                    self._send(command,deadline);reply=self._packet(deadline)
+                    control.reply=reply
+                    # Standard errors are Exx or E.errtext. A successful query
+                    # may start with E, such as qqemu.sstepbits -> ENABLE=1,... .
+                    if re.fullmatch(rb'E[0-9a-fA-F]{2}',reply) or reply.startswith(b'E.'):
+                        raise DebuggerError('QEMU GDB operation failed: '+reply.decode(errors='replace'))
+                    return reply
+                except BaseException:self.close();raise
 
     def execute(self,command,timeout_ms,*,after_send=None):
         """Execute once and retain its stop packet, including after live input.
@@ -156,20 +181,29 @@ class GDBRemote:
         if after_send is not None and (command != 'c' or not callable(after_send)):
             raise ValueError('A live control callback requires one GDB continue')
         deadline=self._operation_end(timeout_ms)
-        with self._locked(deadline):
-            try:
-                self._send(command,deadline)
-                if after_send is not None:after_send(deadline)
-                try:return self._packet(deadline),False
-                except (TimeoutError,socket.timeout):
-                    # Execution was dispatched once. Recovery may exceed the
-                    # operation budget only to interrupt and observe that same
-                    # stop reply; it cannot authorize another execution request.
-                    recovery_deadline=time.monotonic()+5
-                    self.socket.settimeout(5)
-                    self.socket.sendall(b'\x03')
-                    return self._packet(recovery_deadline),True
-            except BaseException:self.close();raise
+        command=self._command(command)
+        with transport_operation(self,'gdb-execute',command,None,deadline) as control:
+            deadline=control.deadline
+            with self._locked(deadline):
+                try:
+                    control.dispatch()
+                    self._send(command,deadline)
+                    if after_send is not None:after_send(deadline)
+                    try:
+                        reply=self._packet(deadline);control.reply=reply
+                        return reply,False
+                    except (TimeoutError,socket.timeout):
+                        # Execution was dispatched once. Recovery may exceed the
+                        # operation budget only to interrupt and observe that same
+                        # stop reply; it cannot authorize another execution request.
+                        recovery_deadline=time.monotonic()+5
+                        channel=check_transport(self)
+                        channel.settimeout(5)
+                        check_transport(self)
+                        channel.sendall(b'\x03')
+                        reply=self._packet(recovery_deadline);control.reply=reply
+                        return reply,True
+                except BaseException:self.close();raise
 
     def _xml(self,name,*,deadline=None):
         data=bytearray()
@@ -244,43 +278,55 @@ class GDBRemote:
         def exchange(command):
             remaining=int((deadline-time.monotonic())*1000)
             if remaining<=0:raise TimeoutError('GDB memory-transfer deadline expired')
-            return self.request(command,timeout_ms=remaining)
-        with self._locked(deadline):
-            original=exchange('qqemu.PhyMemMode')
-            if original not in (b'0',b'1'):raise DebuggerError('QEMU physical-memory mode unavailable')
-            mode=b'1' if space=='physical' else b'0'
-            try:
-                if original!=mode and exchange(b'Qqemu.PhyMemMode:'+mode)!=b'OK':raise DebuggerError('Could not select memory space')
-                if data is not None:
-                    for offset in range(0,length,write_size):
-                        part=data[offset:offset+write_size]
-                        if exchange(f'M{address+offset:x},{len(part):x}:{part.hex()}')!=b'OK':
-                            raise DebuggerError('Machine memory write rejected')
-                value=bytearray()
-                for offset in range(0,length,read_size):
-                    amount=min(read_size,length-offset)
-                    raw=exchange(f'm{address+offset:x},{amount:x}')
-                    part=bytes.fromhex(raw.decode('ascii'))
-                    if len(part)!=amount:raise DebuggerError('Incomplete machine memory read')
-                    value.extend(part)
-                return bytes(value)
-            except BaseException:
-                # A later write chunk or readback can fail after earlier bytes
-                # changed. Poison the channel so the machine owner closes the
-                # VM; neither a rollback nor a blind replay is safe here.
-                if data is not None:self.close()
-                raise
-            finally:
-                if self.socket is not None and original!=mode:
-                    # One bounded recovery exchange restores protocol mode; a
-                    # transfer timeout never grants every chunk a fresh budget.
-                    # An inherited deadline also bounds this recovery. If it
-                    # has expired, close instead of leaving a reusable channel
-                    # whose selected address space differs from the caller's.
-                    try:
-                        if self.request(b'Qqemu.PhyMemMode:'+original,timeout_ms=5000)!=b'OK':
-                            raise DebuggerError('Could not restore memory space')
-                    except BaseException:self.close();raise
+            with memory_request(self,command):
+                return self.request(command,timeout_ms=remaining)
+        with transport_operation(self,'gdb-memory','memory',(address,length,space,data is not None),deadline) as control:
+            deadline=control.deadline
+            with self._locked(deadline):
+                control.dispatch()
+                original=exchange('qqemu.PhyMemMode')
+                if original not in (b'0',b'1'):raise DebuggerError('QEMU physical-memory mode unavailable')
+                mode=b'1' if space=='physical' else b'0'
+                try:
+                    if original!=mode and exchange(b'Qqemu.PhyMemMode:'+mode)!=b'OK':raise DebuggerError('Could not select memory space')
+                    if data is not None:
+                        for offset in range(0,length,write_size):
+                            part=data[offset:offset+write_size]
+                            if exchange(f'M{address+offset:x},{len(part):x}:{part.hex()}')!=b'OK':
+                                raise DebuggerError('Machine memory write rejected')
+                    value=bytearray()
+                    for offset in range(0,length,read_size):
+                        amount=min(read_size,length-offset)
+                        raw=exchange(f'm{address+offset:x},{amount:x}')
+                        part=bytes.fromhex(raw.decode('ascii'))
+                        if len(part)!=amount:raise DebuggerError('Incomplete machine memory read')
+                        value.extend(part)
+                    control.reply=bytes(value)
+                    return bytes(value)
+                except BaseException:
+                    # A later write chunk or readback can fail after earlier bytes
+                    # changed. Poison the channel so the machine owner closes the
+                    # VM; neither a rollback nor a blind replay is safe here.
+                    if data is not None:self.close()
+                    raise
+                finally:
+                    if self.socket is not None and original!=mode:
+                        # One bounded recovery exchange restores protocol mode; a
+                        # transfer timeout never grants every chunk a fresh budget.
+                        # An inherited deadline also bounds this recovery. If it
+                        # has expired, close instead of leaving a reusable channel
+                        # whose selected address space differs from the caller's.
+                        try:
+                            with memory_request(self,b'Qqemu.PhyMemMode:'+original):
+                                restored=self.request(b'Qqemu.PhyMemMode:'+original,timeout_ms=5000)
+                            if restored!=b'OK':raise DebuggerError('Could not restore memory space')
+                        except BaseException:self.close();raise
 
     def close(self):
-        if self.socket is not None:self.socket.close();self.socket=None
+        authority=getattr(self,'_observation_authority',None)
+        if authority is not None:authority.invalidate('GDB channel closed')
+        channel=self.socket if authority is None else authority.original_channel(self)
+        if channel is not None:
+            try:channel.close()
+            finally:
+                if self.socket is channel:self.socket=None

@@ -42,6 +42,10 @@ from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COM
 from .qemu_video_frame import (QemuVideoFrameMixin, VIDEO_FRAME_COMMANDS,
                                validate_video_frame_parameters, validate_video_frame_probe,
                                validate_video_frame_capture)
+from .qemu_video_frame_state import (QemuVideoFrameStateMixin, VIDEO_FRAME_STATE_COMMANDS,
+                                    validate_video_frame_state_parameters,
+                                    frozen_video_frame_state_parameters)
+from .qemu_observation_authority import ObservationAuthority
 from .qemu_video_control import (QemuVideoControlMixin, VIDEO_FRAME_CONTROL_COMMANDS,
                                  validate_video_frame_advance, require_no_video_frame_fence)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
@@ -133,6 +137,83 @@ _MAX_INTERNAL_STOPS = 256
 _CONTROL_REPAIR_GRACE_MS = 1000
 
 
+def _close_observation_owner(vm, owner):
+    """Close the captured owner without borrowing replacements during failure.
+
+    A failed observation retains this snapshot for repeated cleanup calls.
+    The public VM object and even a protocol client's socket may have changed;
+    each cleanup target therefore comes from the admitted lifetime.
+    """
+    if owner.get('closed'):
+        return
+    owner['closed']=True
+    failures=[]
+    def cleanup(action):
+        try:action()
+        except BaseException as error:failures.append(error)
+    context=owner.get('context')
+    # This invalidates only the captured VM's host bookkeeping; no input is
+    # injected and no context callback can follow a replacement owner.
+    from .qemu_input import _input_owner_closed
+    cleanup(lambda:_input_owner_closed(vm))
+    for name in ('gdb','qmp'):
+        client=owner.get(name)
+        channel=owner.get(name+'_socket')
+        original_socket=(getattr(client,'socket',None) is channel)
+        if client is not None and original_socket:
+            cleanup(client.close)
+        elif channel is not None:
+            cleanup(channel.close)
+        # Closing a captured stream may itself invoke a callback. Recheck the
+        # current attribute immediately before clearing it.
+        current_socket=getattr(client,'socket',None)
+        if getattr(vm,name,None) is client and (current_socket is channel or current_socket is None):
+            setattr(vm,name,None)
+    channels=owner.get('channels',())
+    for channel in channels:cleanup(channel.close)
+    vm._channels=[channel for channel in getattr(vm,'_channels',())
+                  if not any(channel is captured for captured in channels)]
+    process=owner.get('process')
+    if process is not None:
+        for stream in (owner.get('stdin'),owner.get('stdout')):
+            if stream is not None:cleanup(stream.close)
+        try:running=process.poll() is None
+        except BaseException as error:failures.append(error);running=True
+        if running:
+            cleanup(process.terminate)
+            try:process.wait(timeout=3)
+            except BaseException as error:
+                if not isinstance(error,subprocess.TimeoutExpired):failures.append(error)
+                cleanup(process.kill)
+                cleanup(lambda:process.wait(timeout=3))
+    for attribute,key,method in (('temporary','temporary','cleanup'),
+                                ('_qemu_image_proof','qemu_image_proof','close')):
+        resource=owner.get(key)
+        if getattr(vm,attribute,None) is resource:setattr(vm,attribute,None)
+        if resource is not None:cleanup(getattr(resource,method))
+    handle=owner.get('admission_guest_pidfd')
+    if getattr(vm,'_admission_guest_pidfd',None)==handle:vm._admission_guest_pidfd=None
+    if handle is not None:cleanup(lambda:os.close(handle))
+    observer=owner.get('close_observer')
+    if getattr(vm,'close_observer',None) is observer:vm.close_observer=None
+    current_context=(getattr(context,'vm',vm) is vm
+        and getattr(vm,'process',None) is owner.get('process')
+        and getattr(context,'_process',None) is owner.get('context_process'))
+    for name in ('qmp','gdb'):
+        current=getattr(vm,name,None)
+        if current is not None and (current is not owner.get(name)
+                or (getattr(current,'socket',None) is not None
+                    and getattr(current,'socket',None) is not owner.get(name+'_socket'))):
+            current_context=False
+    if observer is not None and current_context:
+        try:observer()
+        except Exception as error:vm.close_observer_error=type(error).__name__
+    if failures:
+        owner['cleanup_errors']=[type(error).__name__ for error in failures]
+        failures[0].machine_cleanup_errors=owner['cleanup_errors']
+        raise failures[0]
+
+
 class QemuMachine:
     def __init__(self, executable, *, kernel=None, initramfs=None, boot_image=None,
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
@@ -145,6 +226,7 @@ class QemuMachine:
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
         self.lock=threading.RLock()
+        self.observation_authority=ObservationAuthority(self)
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-')
         root=Path(self.temporary.name);self.log_path=root/'boot.log';self.gdb_path=root/'gdb.sock';self.rpc_path=root/'rpc.sock'
         try:
@@ -288,6 +370,7 @@ class QemuMachine:
                 self.qmp=QemuControl(None,self.process,deadline,channel=channel)
             else:
                 self.qmp=QemuControl(root/'qmp.sock',self.process,deadline)
+            self.observation_authority.bind(qmp=self.qmp)
             self.qmp.operation_deadline=deadline
             self._qemu_image_proof=qemu_image.admit(self,deadline)
             self.inputs['qemu_image']=dict(self._qemu_image_proof.identity)
@@ -320,6 +403,8 @@ class QemuMachine:
             raise
 
     def serial(self,deadline):
+        authority=getattr(self,'observation_authority',None)
+        if authority is not None:authority.public_operation('serial')
         if self.transport=='pipe':
             if time.monotonic()>=deadline:raise TimeoutError('QEMU serial deadline expired')
             if self._serial_channel is None:
@@ -337,6 +422,8 @@ class QemuMachine:
 
     def debugger(self):
         if self.gdb is None:
+            authority=getattr(self,'observation_authority',None)
+            if authority is not None:authority.public_operation('debugger-reconnect')
             from .gdb_rpc import GDBRemote
             deadline=time.monotonic()+10
             if self.operation_deadline is not None:deadline=min(deadline,self.operation_deadline)
@@ -346,9 +433,15 @@ class QemuMachine:
                 self.gdb=GDBRemote(None,self.process,deadline,channel=channel)
             else:self.gdb=GDBRemote(self.gdb_path,self.process,deadline)
             self.gdb.operation_deadline=self.operation_deadline
+            if authority is not None:authority.bind(gdb=self.gdb)
         return self.gdb
 
     def close(self):
+        authority=getattr(self,'observation_authority',None)
+        if authority is not None:authority.invalidate('machine-close')
+        captured=getattr(authority,'_cleanup_owner',None)
+        if captured is not None:
+            return _close_observation_owner(self,captured)
         # Every independent resource gets a cleanup attempt. A failed input or
         # transport callback must never skip termination/wait of the known owner.
         failures=[]
@@ -405,6 +498,8 @@ class QemuMachine:
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
     """Keep legacy guards and parameter-aware history fences independent."""
+    authority=getattr(vm,'observation_authority',None)
+    if authority is not None:authority.public_operation(name)
     if name in ('step', 'run', 'resume', 'pause', 'trace', 'trace_until', 'execute_step_over'):
         require_no_step_over(vm, 'another execution operation')
     if name not in ('close','dos_process_info','tracking_status','dos_source_binding','dos_source_unbind') and getattr(vm,'_fdisbull_control_quarantine',None):
@@ -655,7 +750,7 @@ def machine_run_operation(function):
 
 
 def machine_trace_operation(function, *, label='Source trace', default_timeout_ms=None,
-                            parameter_validator=None):
+                            parameter_validator=None, parameter_freezer=None):
     """Bound traces and composed timing operations from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
@@ -673,6 +768,13 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         arguments.apply_defaults()
         if parameter_validator is not None:
             parameter_validator(**{key:value for key,value in arguments.arguments.items() if key!='self'})
+        if parameter_freezer is not None:
+            # Own declarative projections before lock admission. A caller may
+            # mutate its original container while this operation is waiting.
+            owned=parameter_freezer(**{key:value for key,value in arguments.arguments.items() if key!='self'})
+            arguments.arguments.update(owned)
+            args=arguments.args[1:]
+            kwargs=arguments.kwargs
         bound=request_deadline(self,arguments.arguments.get('timeout_ms',default_timeout_ms))
         vm=self.vm
         def limits():
@@ -682,7 +784,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         bound=min(value for value in limits() if value is not None)
         wait=min(10,bound-time.monotonic())
         if wait<=0:raise TimeoutError(label+' host deadline expired before admission')
-        if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
+        lock=vm.lock
+        if not lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
         previous_session=getattr(self,'_deadline',None)
         previous_vm=getattr(vm,'operation_deadline',None)
         previous_channels=[]
@@ -708,6 +811,12 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             _machine_async_guard(self)
             if time.monotonic()>=bound:
                 error=TimeoutError(label+' exceeded its host deadline')
+                if function.__name__=='video_frame_state_observe' and isinstance(result,dict):
+                    result=deepcopy(result)
+                    result['complete']=False
+                    result['stage']='outer-deadline'
+                    result.setdefault('issues',[]).append(dict(code='outer_deadline',
+                        stage='outer-deadline',message=str(error)))
                 error.result=result
                 if function.__name__.startswith('clock_sync_'):
                     # The final check can expire after the method's own check.
@@ -723,6 +832,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
                         'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance',
+                        'video_frame_state_observe',
                         'execute_step_over'):
                     vm.close()
                 elif function.__name__ in ('resume', 'pause', 'status'):
@@ -742,9 +852,9 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 vm.operation_deadline=previous_vm
                 for channel,previous in previous_channels:channel.operation_deadline=previous
                 current=getattr(vm,'gdb',None)
-                if current is not None and not any(current is channel for channel,_ in previous_channels):
+                if function.__name__!='video_frame_state_observe' and current is not None and not any(current is channel for channel,_ in previous_channels):
                     current.operation_deadline=previous_vm
-            vm.lock.release()
+            lock.release()
     return invoke
 
 
@@ -828,7 +938,7 @@ def machine_step_operation(function):
 
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
-                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuVideoFrameMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuVideoFrameMixin, QemuVideoFrameStateMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -866,6 +976,9 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         label='Video frame pixel probe',parameter_validator=validate_video_frame_probe)
     video_frame_rgba=machine_trace_operation(QemuVideoFrameMixin.video_frame_rgba,
         label='Video frame RGBA',parameter_validator=validate_video_frame_parameters)
+    video_frame_state_observe=machine_trace_operation(QemuVideoFrameStateMixin.video_frame_state_observe,
+        label='Source raster state observation',parameter_validator=validate_video_frame_state_parameters,
+        parameter_freezer=frozen_video_frame_state_parameters)
     capture_video_frame=machine_trace_operation(QemuVideoFrameMixin.capture_video_frame,
         label='Video frame capture',parameter_validator=validate_video_frame_capture)
     video_frame_advance=machine_trace_operation(QemuVideoControlMixin.video_frame_advance,
@@ -912,6 +1025,11 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             completed_guest_frames=False,guest_time_control=False,
             video_frame_capture=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                 and VIDEO_FRAME_COMMANDS | VIRTUAL_CLOCK_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
+            video_frame_state_observe=(virtual and getattr(vm,'machine_configuration',{}).get('cpus')==1
+                and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                and VIDEO_FRAME_STATE_COMMANDS <= getattr(vm,'qmp_commands',frozenset())
+                and isinstance(getattr(vm,'observation_authority',None),ObservationAuthority)),
+            video_frame_state_scope='selected stopped CPU/RAM and retained source raster; cooperative owner control; keyboard/scheduler only',
             video_frame_control=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                 and VIDEO_FRAME_COMMANDS | VIDEO_FRAME_CONTROL_COMMANDS | VIRTUAL_CLOCK_COMMANDS
                 <= getattr(vm,'qmp_commands',frozenset())),
@@ -2002,7 +2120,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
                 'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',
                 'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe',
-                'capture-video-frame','video-frame-advance',
+                'capture-video-frame','video-frame-advance','video-frame-state-observe',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-up','mouse.button-click','input-state','input-cancel-pending',

@@ -1,5 +1,23 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Current selected-state observation implementation (2026-11-21 UTC)
+
+The approved paired raster checkpoint is published on
+`codex/qemu-parity-20261120` at `6ff67fae3a6fb8ea80cea10e1aa39ef5b7b1456f`.
+The next production slice adds a separate passive source-raster/stopped-state
+observation: selected CPU and physical RAM, exact retained RGB verification,
+keyboard/scheduler witnesses and a scoped cooperative owner/control lease.
+The [public contract](DOS_QEMU_SOURCE_FRAMES.md#selected-stopped-state-observation)
+and [gate status](QEMU_SOURCE_STATE_OBSERVATION_GATE.md) keep native/external
+mutation identity, mouse/global input neutrality, application completion and
+legacy frame-state equivalence unqualified. Focused host qualification is
+pending at this source checkpoint; no native observer result is claimed.
+
+This slice changes production Python source. The unchanged-source statements
+in the earlier calibration/raster entries describe their historical revisions.
+All 143 surface, 18 workgroup and seven campaign promotion obligations remain
+open and DOSBox remains the default.
+
 ## Current calibration-register result (2026-11-21 UTC)
 
 Native07's paired authored gate completed with controller success and **one

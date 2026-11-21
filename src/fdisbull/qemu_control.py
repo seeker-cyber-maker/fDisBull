@@ -9,6 +9,7 @@ import threading
 import time
 
 from .dosbox_rpc import DebuggerError
+from .qemu_observation_authority import check_transport, transport_operation
 
 
 class QemuControl:
@@ -34,12 +35,16 @@ class QemuControl:
             self.close();raise
 
     def _read(self,deadline,max_reply_bytes=8*1024*1024):
+        check_transport(self)
         if time.monotonic()>=deadline:raise TimeoutError('QMP deadline expired')
         while b'\n' not in self.buffer:
             remaining=deadline-time.monotonic()
             if remaining<=0:raise TimeoutError('QMP deadline expired')
-            self.socket.settimeout(remaining)
-            chunk=self.socket.recv(65536)
+            channel=check_transport(self)
+            channel.settimeout(remaining)
+            check_transport(self)
+            chunk=channel.recv(65536)
+            check_transport(self)
             if not chunk:raise DebuggerError('QMP channel closed')
             self.buffer.extend(chunk)
             first_newline=self.buffer.find(b'\n')
@@ -57,34 +62,43 @@ class QemuControl:
         deadline=time.monotonic()+timeout_ms/1000
         shared=getattr(self,'operation_deadline',None)
         if shared is not None:deadline=min(deadline,shared)
-        remaining=deadline-time.monotonic()
-        if remaining<=0:raise TimeoutError('QMP operation deadline expired before dispatch')
-        if not self.lock.acquire(timeout=remaining):raise TimeoutError('QMP is busy')
-        dispatched=False;completed=False
-        try:
-            self.sequence+=1;request={'execute':method,'id':self.sequence}
-            if arguments is not None:request['arguments']=arguments
-            wire=json.dumps(request,separators=(',',':')).encode()+b'\n'
+        with transport_operation(self,'qmp',method,arguments,deadline) as control:
+            deadline=control.deadline;arguments=control.arguments
+            if control.max_reply_bytes is not None:max_reply_bytes=min(max_reply_bytes,control.max_reply_bytes)
             remaining=deadline-time.monotonic()
             if remaining<=0:raise TimeoutError('QMP operation deadline expired before dispatch')
-            self.socket.settimeout(remaining)
-            dispatched=True
-            self.socket.sendall(wire)
-            while True:
-                reply=self._read(deadline,max_reply_bytes)
-                if 'event' in reply:continue
-                if reply.get('id')!=self.sequence:raise DebuggerError('Wrong QMP reply identity')
-                if ('error' in reply)==('return' in reply):raise DebuggerError('Invalid QMP result envelope')
-                completed=True
-                if 'error' in reply:raise DebuggerError('QMP '+method+': '+json.dumps(reply['error']))
-                return reply['return']
-        except BaseException:
-            # A dispatched cont/stop/edit may already have taken effect. Close
-            # an uncertain channel, allowing its machine owner to terminate;
-            # never retry or consume a late response as another command's reply.
-            if dispatched and not completed:self.close()
-            raise
-        finally:self.lock.release()
+            if not self.lock.acquire(timeout=remaining):raise TimeoutError('QMP is busy')
+            dispatched=False;completed=False
+            try:
+                self.sequence+=1;request={'execute':method,'id':self.sequence}
+                if arguments is not None:request['arguments']=arguments
+                wire=json.dumps(request,separators=(',',':')).encode()+b'\n'
+                remaining=deadline-time.monotonic()
+                if remaining<=0:raise TimeoutError('QMP operation deadline expired before dispatch')
+                control.dispatch()
+                channel=check_transport(self)
+                channel.settimeout(remaining)
+                check_transport(self)
+                dispatched=True
+                channel.sendall(wire)
+                while True:
+                    reply=self._read(deadline,max_reply_bytes)
+                    if 'event' in reply:
+                        control.event(reply)
+                        continue
+                    if reply.get('id')!=self.sequence:raise DebuggerError('Wrong QMP reply identity')
+                    if ('error' in reply)==('return' in reply):raise DebuggerError('Invalid QMP result envelope')
+                    completed=True
+                    control.reply=reply
+                    if 'error' in reply:raise DebuggerError('QMP '+method+': '+json.dumps(reply['error']))
+                    return reply['return']
+            except BaseException:
+                # A dispatched cont/stop/edit may already have taken effect. Close
+                # an uncertain channel, allowing its machine owner to terminate;
+                # never retry or consume a late response as another command's reply.
+                if dispatched and not completed:self.close()
+                raise
+            finally:self.lock.release()
 
     def save(self,path,timeout_ms=240000):
         path=Path(path).resolve()
@@ -115,4 +129,10 @@ class QemuControl:
         return status
 
     def close(self):
-        if self.socket is not None:self.socket.close();self.socket=None
+        authority=getattr(self,'_observation_authority',None)
+        if authority is not None:authority.invalidate('QMP channel closed')
+        channel=self.socket if authority is None else authority.original_channel(self)
+        if channel is not None:
+            try:channel.close()
+            finally:
+                if self.socket is channel:self.socket=None

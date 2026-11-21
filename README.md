@@ -196,6 +196,10 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   directly and launches original COM/MZ programs with observed entry, exit and
   TSR identity. The [migration log](docs/DOS_QEMU_HANDOFF.md) tracks the remaining
   slices; DOSBox remains the default and a selectable fallback.
+  A separate [source-raster observation](docs/DOS_QEMU_SOURCE_FRAMES.md)
+  records retained pixels and selected stopped CPU/RAM under a cooperative
+  control lease. Its keyboard/scheduler scope leaves mouse neutrality and
+  atomic whole-machine or frame-state equivalence unqualified.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
   retaining explicit CPU-mode and address-space limits. Agent headless launches

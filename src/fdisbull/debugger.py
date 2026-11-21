@@ -1443,6 +1443,7 @@ class DebugWorkspace:
                         'debug-display-probe':'display_probe',
                         'debug-video-frame-start':'video_frame_start',
                         'debug-video-frame-observe':'video_frame_observe',
+                        'debug-video-frame-state-observe':'video_frame_state_observe',
                         'debug-video-frame-stop':'video_frame_stop',
                         'debug-video-frame-probe':'video_frame_probe',
                         'debug-capture-video-frame':'capture_video_frame',
@@ -1481,6 +1482,10 @@ class DebugWorkspace:
             backend = getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
             if backend not in ('qemu-machine','qemu-dos') or not getattr(selected,'capabilities',{}).get(capability):
                 raise ValueError('Source video frames require their native extension and explicit virtual/precise profiles')
+        if method == 'debug-video-frame-state-observe':
+            backend = getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
+            if backend not in ('qemu-machine','qemu-dos') or not getattr(selected,'capabilities',{}).get('video_frame_state_observe'):
+                raise ValueError('Source raster state observation requires its native input queries and owned control authority')
         if method in ('debug-save-machine-state','debug-load-machine-state'):
             if (getattr(selected,'metadata',{}).get('backend') != 'qemu-dos'
                     or not getattr(selected,'capabilities',{}).get('owned_machine_checkpoints')):

@@ -11,6 +11,7 @@ from functools import wraps
 from .debugger import bounded
 from .operation_budget import rpc_budget
 from .qemu_video_frame import VIDEO_FRAME_SCRIPT_OPERATIONS, validate_video_frame_script_parameters
+from .qemu_video_frame_state import validate_video_frame_state_parameters
 
 ENGINE_OPERATIONS = {
     'engine-state':'engine_state', 'engine-set':'write_engine_state',
@@ -25,6 +26,7 @@ ENGINE_OPERATIONS = {
 OPERATIONS = {
     **ENGINE_OPERATIONS,
     **VIDEO_FRAME_SCRIPT_OPERATIONS,
+    'video-frame-state-observe':'video_frame_state_observe',
     'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
@@ -549,6 +551,12 @@ def validate_script(script, *, session=None):
                         if session is not None and not getattr(session,'capabilities',{}).get(capability):
                             raise ValueError('Source video frames require their native extension and explicit virtual/precise profiles')
                         validate_video_frame_script_parameters(op, params, allow_references=True)
+                    if op == 'video-frame-state-observe':
+                        if (backend or actual) not in ('qemu-machine','qemu-dos'):
+                            raise ValueError('Source raster state observation requires an explicit native QEMU backend')
+                        if session is not None and not getattr(session,'capabilities',{}).get('video_frame_state_observe'):
+                            raise ValueError('Source raster state observation requires its native input queries and owned control authority')
+                        validate_video_frame_state_parameters(**params, allow_references=True)
                     if op=='vga-configuration':
                         if session is not None and not getattr(session,'capabilities',{}).get('vga_configuration'):
                             raise ValueError('VGA configuration requires its native extension and virtual/precise profiles')
@@ -653,6 +661,7 @@ def validate_script(script, *, session=None):
                  'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
         guarded.update(VIDEO_FRAME_SCRIPT_OPERATIONS)
+        guarded.add('video-frame-state-observe')
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
             pending=(any(step['op']=='run' for step in expanded)
@@ -870,6 +879,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 validate_video_frame_script_parameters(step['op'], params)
                 default = 5000 if step['op'] == 'video-frame-advance' else 1000
                 params['timeout_ms'] = min(params.get('timeout_ms', default), remaining)
+            if step['op'] == 'video-frame-state-observe':
+                validate_video_frame_state_parameters(**params)
+                params['timeout_ms'] = min(params.get('timeout_ms', 1000), remaining)
             if step['op']=='vga-configuration':
                 from .qemu_vga_configuration import validate_vga_configuration_parameters
                 validate_vga_configuration_parameters(**params)
@@ -1038,6 +1050,14 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                         record[field] = detail
                 cleanup = getattr(error,'video_frame_cleanup_error',None)
                 if isinstance(cleanup,str):record['video_frame_cleanup_error'] = cleanup
+            if step['op'] == 'video-frame-state-observe':
+                detail = getattr(error,'video_frame_state_evidence',None)
+                if isinstance(detail,dict) and detail is not getattr(error,'result',None):
+                    record['video_frame_state_evidence'] = detail
+                for field in ('video_frame_state_cleanup_error', 'video_frame_cleanup_error',
+                              'video_frame_file_cleanup_error', 'video_frame_state_evidence_error'):
+                    detail = getattr(error,field,None)
+                    if isinstance(detail,str):record[field] = detail
             if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS and hasattr(error,'checkpoint_result'):
                 record['checkpoint_result']=error.checkpoint_result
             if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS:

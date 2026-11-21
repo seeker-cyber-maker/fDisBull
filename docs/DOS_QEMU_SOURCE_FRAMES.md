@@ -103,9 +103,10 @@ repeating the operation.
 | `video_frame_probe` | `debug-video-frame-probe` | `video-frame-probe` | `fdisbull-video-frame-probe-1` dictionary |
 | `capture_video_frame` | `debug-capture-video-frame` | `capture-video-frame` | Screenshot artifact dictionary |
 | `video_frame_advance` | `debug-video-frame-advance` | `video-frame-advance` | `fdisbull-video-frame-advance-1` dictionary |
+| `video_frame_state_observe` | `debug-video-frame-state-observe` | `video-frame-state-observe` | `fdisbull-source-raster-state-observation-1` dictionary |
 
-JSON methods require the usual `project` and `run` selection. The first five
-operations default to a 1000 ms host deadline; advance defaults to 5000 ms.
+JSON methods require the usual `project` and `run` selection. Operations
+default to a 1000 ms host deadline; advance defaults to 5000 ms.
 Script steps retain the result dictionary in `steps[index]['result']` and
 intersect each operation's deadline with the route's remaining allowance.
 All visible literals, signatures, capabilities and transaction restrictions
@@ -121,9 +122,64 @@ retains this distinction for the caller to inspect.
 
 `video_frame_rgba` has no JSON method or script operation. Its byte-containing
 Python object is not implicitly serialized or stored as an artifact. The
-typed CPU/image observation authority and a legacy frame-coherence bridge
-remain separate work; these methods do not invent PIC ticks or a guest-state
-mutation revision.
+separate selected-state operation below does not bridge legacy frame coherence,
+invent PIC ticks or provide a native guest-state mutation revision.
+
+## Selected stopped-state observation
+
+`video_frame_state_observe(*, ram_ranges, stream=None, frame_id=None,
+timeout_ms=1000)` returns a distinct, bounded observation receipt. Inspect
+`video_frame_state_observe` in the session's capabilities before requesting it.
+Routability requires the managed single-vCPU virtual/precise profile and native
+source, clock, keyboard and input-schedule query extensions. The runtime must
+already have a healthy GDB client; this passive operation never reconnects one.
+
+```python
+receipt = debug.video_frame_state_observe(
+    ram_ranges=[{'address': 0x5000, 'length': 64}],
+    stream=seen['stream'], frame_id=seen['frame_id'],
+    timeout_ms=1000,
+)
+```
+
+The 1–16 declared ranges select physical RAM, with 1–4096 bytes per range and
+at most 16384 bytes altogether. Ranges must not overlap. Entire ranges must
+fall below 0xa0000 or in extended RAM from 0x100000 to the configured RAM limit
+capped at 0xc0000000. Firmware/device apertures and virtual addresses are not
+admitted. Caller selections are validated and copied before lock admission.
+
+The observer records selected-vCPU registers/address state and exact selected
+RAM bytes before and after an export of the retained 192,000-byte source RGB
+raster. It verifies the actual RGB hash, source identity, stopped clocks and
+input witnesses under one inherited deadline. It selects once and does not
+execute, refresh, retry, repair input or substitute a newer raster. It does not
+publish an image, hook or event.
+
+A VM-owned cooperative control lease guards supported machine, QMP and GDB
+operations. Covered mutation attempts invalidate the bracket before dispatch,
+including attempts whose exceptions a callback catches. Direct raw sockets,
+aliased descriptors, external controllers and unobserved native/device effects
+are outside this scope. Its control generation is a host admission identity,
+not a native or whole-machine state revision.
+
+The initial neutral-input profile requires empty valid host input bookkeeping,
+an initial idle native input schedule, inactive native frame-key ownership and
+a neutral selected keyboard/i8042 output boundary, including a native idle
+throttle of -1. It does not cancel prior schedules or detach an active owner.
+Mouse state, global input neutrality and guest input consumption remain unknown.
+
+`complete=true` means that the declared selected-observation checks succeeded.
+It does not establish that the raster depicts the selected CPU state or that
+an application completed its drawing. Receipts retain `atomic=false`,
+`application_frame_complete=null`, `frame_state_equivalence=null` and
+`legacy_phase_equivalence=null`; `completed_guest_frames` remains false.
+Selected RAM addresses remain JSON integers inside this typed receipt.
+
+Unsupported/pending-input refusal preserves a healthy owner. Contradictory
+evidence, poisoned transport, changed owner or an admitted deadline failure
+retains actual partial evidence and closes the original owner where required;
+it never borrows or closes a replacement. The [observation gate](QEMU_SOURCE_STATE_OBSERVATION_GATE.md)
+records the exact qualification status independently from earlier raster gates.
 
 ## Qualification checkpoint
 
