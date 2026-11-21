@@ -162,14 +162,74 @@ trial_done:
     jmp dispatch
 
 new_vsync:
-.low:
-    call sample_vsync_status
-    test byte [current_status],8
-    jnz .low
-.high:
-    call sample_vsync_status
-    test byte [current_status],8
-    jz .high
+    ; Hold the last completed observation until return or fault. Load BOTH
+    ; previous/current fields so a refused first poll cannot rotate them.
+    ; EBX bits16..23 retain status_valid; bit24 means a fresh low was seen;
+    ; bit25 selects the fault exit. BH/BL still hold complete status bytes.
+    mov ebp,[poll_count]
+    mov cx,[previous_before]
+    mov si,[current_before]
+    mov di,[current_after]
+    xor ebx,ebx
+    mov bl,[status_valid]
+    shl ebx,16
+    mov bh,[previous_status]
+    mov bl,[current_status]
+    mov dx,3dah
+.poll:
+    ; Admission precedes state rotation and every device observation.
+    inc ebp
+    cmp ebp,200000
+    ja .fault
+    mov cx,si
+    mov bh,bl
+    latch_pit2
+    mov si,ax
+    in al,dx
+    mov bl,al
+    xor al,bh
+    and al,bl
+    test al,8
+    jz .completed
+    latch_pit2
+    mov di,ax
+    test ebx,0ff0000h
+    jz .completed
+    ; A valid entry-low/first-high still counts while seeking a fresh low.
+    ; The actual upper is retained before the generation increment/cap.
+    inc word [vertical_edges]
+    cmp word [vertical_edges],12
+    ja .fault
+.completed:
+    test ebx,0ff0000h
+    jnz .valid
+    or ebx,10000h
+.valid:
+    test bl,8
+    jz .saw_low
+    test ebx,1000000h
+    jz .poll
+    jmp .commit
+.saw_low:
+    or ebx,1000000h
+    jmp .poll
+.fault:
+    or ebx,2000000h
+.commit:
+    ; Normal return and both finite faults expose the completed observation.
+    ; A poll fault retains the preceding sample; a retrace fault retains the
+    ; just-bracketed thirteenth rise. No pending fields are filled from time.
+    mov [current_after],di
+    mov [previous_before],cx
+    mov [current_before],si
+    mov [previous_status],bh
+    mov [current_status],bl
+    mov [poll_count],ebp
+    mov eax,ebx
+    shr eax,16
+    mov [status_valid],al
+    test ebx,2000000h
+    jnz timing_fault
     ret
 
 wait_offset:
@@ -184,43 +244,6 @@ wait_offset:
     jae timing_fault
     cmp dx,bx
     jb .again
-    ret
-
-sample_vsync_status:
-    ; The vertical waiter consumes only bit 3. Keep the generic sampler's
-    ; state/fault ordering, but do not latch unused bit-0 rises here.
-    call poll_budget
-    mov cx,[current_before]
-    mov bh,[current_status]
-    mov dx,3dah
-    latch_pit2
-    mov si,ax
-    in al,dx
-    mov bl,al
-    xor al,bh
-    and al,bl
-    test al,8
-    jz .no_upper
-    latch_pit2
-    mov [current_after],ax
-.no_upper:
-    mov [previous_before],cx
-    mov [current_before],si
-    mov [previous_status],bh
-    mov [current_status],bl
-    cmp byte [status_valid],0
-    je .first
-    test bh,8
-    jnz .done
-    test bl,8
-    jz .done
-    inc word [vertical_edges]
-    cmp word [vertical_edges],12
-    ja timing_fault
-.done:
-    ret
-.first:
-    mov byte [status_valid],1
     ret
 
 sample_status:

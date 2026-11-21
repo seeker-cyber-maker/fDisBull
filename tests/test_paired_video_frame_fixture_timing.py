@@ -35,15 +35,8 @@ def _status_source():
     return 'sample_status:\n' + ASSEMBLY.split('sample_status:\n', 1)[1].split('palette_a:\n', 1)[0]
 
 
-def _vertical_status_source():
-    sampler = 'sample_vsync_status:\n' + ASSEMBLY.split('sample_vsync_status:\n', 1)[1].split('sample_status:\n', 1)[0]
-    budget = 'poll_budget:\n' + ASSEMBLY.split('poll_budget:\n', 1)[1].split('pit_read:\n', 1)[0]
-    return sampler + budget
-
-
 def _vsync_source():
-    waiter = 'new_vsync:\n' + ASSEMBLY.split('new_vsync:\n', 1)[1].split('wait_offset:\n', 1)[0]
-    return waiter + _vertical_status_source()
+    return 'new_vsync:\n' + ASSEMBLY.split('new_vsync:\n', 1)[1].split('wait_offset:\n', 1)[0]
 
 
 def _dac_source(color):
@@ -57,7 +50,8 @@ def _dac_source(color):
 def _observe(source, memory, *, status=None, statuses=(), counts=()):
     """Check actual source dataflow; unknown operations require explicit review."""
     instructions, labels = _compile(source)
-    registers = {name: 0 for name in ('ax', 'bx', 'cx', 'dx', 'si', 'di')}
+    registers = {name: 0 for name in ('eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp')}
+    words = {name[1:]: name for name in registers}
     counts, trace, stack = deque(counts), [], []
     assert status is None or not statuses, 'Use one finite status input form'
     status_reads = deque((status,) if status is not None else statuses)
@@ -72,8 +66,10 @@ def _observe(source, memory, *, status=None, statuses=(), counts=()):
             return memory[value[1:-1]]
         if value in registers:
             return registers[value]
+        if value in words:
+            return registers[words[value]] & 65535
         if len(value) == 2 and value[0] in 'abcd' and value[1] in 'lh':
-            return (registers[value[0] + 'x'] >> (8 if value[1] == 'h' else 0)) & 255
+            return (registers['e' + value[0] + 'x'] >> (8 if value[1] == 'h' else 0)) & 255
         return int(value[:-1], 16) if value.endswith('h') else int(value)
 
     def write(destination, value):
@@ -82,10 +78,13 @@ def _observe(source, memory, *, status=None, statuses=(), counts=()):
             memory[destination[1:-1]] = value
             trace.append(('store', destination[1:-1], value))
         elif destination in registers:
-            registers[destination] = value & 65535
+            registers[destination] = value & 0xffffffff
+        elif destination in words:
+            parent = words[destination]
+            registers[parent] = (registers[parent] & 0xffff0000) | (value & 65535)
         else:
             assert len(destination) == 2 and destination[0] in 'abcd' and destination[1] in 'lh'
-            parent, shift = destination[0] + 'x', 8 if destination[1] == 'h' else 0
+            parent, shift = 'e' + destination[0] + 'x', 8 if destination[1] == 'h' else 0
             registers[parent] = (registers[parent] & ~(255 << shift)) | ((value & 255) << shift)
 
     for _ in range(512):
@@ -97,38 +96,44 @@ def _observe(source, memory, *, status=None, statuses=(), counts=()):
         parts = [part.strip() for part in arguments.split(',')]
         if operation == 'latch_pit2':
             count = counts.popleft()
-            registers['ax'] = count
+            write('ax', count)
             trace.append(('latch', count))
         elif operation == 'mov':
             write(parts[0], read(parts[1]))
-        elif operation in ('xor', 'and'):
-            value = read(parts[0]) ^ read(parts[1]) if operation == 'xor' else read(parts[0]) & read(parts[1])
+        elif operation in ('xor', 'and', 'or'):
+            left, right = read(parts[0]), read(parts[1])
+            value = {'xor': left ^ right, 'and': left & right, 'or': left | right}[operation]
             write(parts[0], value)
             zero = value == 0
+        elif operation in ('shl', 'shr'):
+            value, shift = read(parts[0]), read(parts[1])
+            assert parts[0] in registers and 0 < shift < 32
+            write(parts[0], value << shift if operation == 'shl' else value >> shift)
+            zero = read(parts[0]) == 0
         elif operation == 'test':
             zero = read(parts[0]) & read(parts[1]) == 0
         elif operation == 'cmp':
             zero, above = read(parts[0]) == read(parts[1]), read(parts[0]) > read(parts[1])
         elif operation == 'inc':
-            bits = 32 if arguments.startswith('dword ') else 16
+            bits = 32 if arguments.startswith('dword ') or arguments in registers else 16
             value = (read(arguments) + 1) & ((1 << bits) - 1)
             write(arguments, value)
             zero = value == 0
         elif operation == 'in':
-            assert parts == ['al', 'dx'] and registers['dx'] == 0x3da
+            assert parts == ['al', 'dx'] and read('dx') == 0x3da
             assert status_reads, 'The witness read an undeclared status sample'
             current_status = status_reads.popleft()
             write('al', current_status)
             trace.append(('status', current_status))
         elif operation == 'out':
             assert parts == ['dx', 'al']
-            trace.append(('out', registers['dx'], read('al')))
+            trace.append(('out', read('dx'), read('al')))
         elif operation == 'call':
-            assert arguments in ('poll_budget', 'sample_vsync_status')
+            assert arguments == 'poll_budget'
             stack.append(pc)
             pc = labels[arguments]
-        elif operation in ('je', 'jz', 'jnz', 'ja'):
-            take = {'je': zero, 'jz': zero, 'jnz': not zero, 'ja': above}[operation]
+        elif operation in ('je', 'jz', 'jnz', 'ja', 'jmp'):
+            take = {'je': zero, 'jz': zero, 'jnz': not zero, 'ja': above, 'jmp': True}[operation]
             if take:
                 if arguments == 'timing_fault':
                     memory['fault'] = 2
@@ -213,23 +218,26 @@ def test_initial_high_status_does_not_invent_a_vertical_generation():
     (8, 9, 1, False, 0),   # Bit 0 rises while the vertical bit stays high.
     (0, 8, 1, True, 1),
     (0, 9, 1, True, 1),    # Simultaneous rises still need one upper latch.
-    (1, 9, 1, True, 1),
+    (1, 9, 0xfe, True, 1), # Preserve the complete nonzero validity byte.
     (9, 8, 1, False, 0),
     (9, 1, 1, False, 0),
     (0, 8, 0, True, 0),    # A first high sample is not a witnessed generation.
     (0, 0x84, 1, False, 0),
 ])
-def test_vertical_sampler_latches_only_bit_three_rises(previous, current, valid, upper, vertical):
-    memory = _status_memory(previous, valid=valid)
+def test_vertical_waiter_single_sample_fault_snapshot_latches_only_bit_three(previous, current, valid, upper, vertical):
+    # The sole admitted sample cannot finish a fresh-low/first-high wait.
+    # Its next poll is refused, exposing the complete cached sample at fault.
+    memory = _status_memory(previous, valid=valid, polls=199999)
     counts = [59980, 59976] if upper else [59980]
-    trace = _observe(_vertical_status_source(), memory, status=current, counts=counts)
+    trace = _observe(_vsync_source(), memory, status=current, counts=counts)
     observations = [event for event in trace if event[0] in ('latch', 'status')]
     assert observations == [('latch', 59980), ('status', current)] + ([('latch', 59976)] if upper else [])
     assert memory['previous_before'] == 60000 and memory['current_before'] == 59980
     assert memory['previous_status'] == previous and memory['current_status'] == current
     assert memory['current_after'] == (59976 if upper else 59998)
-    assert memory['vertical_edges'] == 3 + vertical and memory['poll_count'] == 18
-    assert memory['status_valid'] == 1 and memory['fault'] == 0
+    assert memory['vertical_edges'] == 3 + vertical and memory['poll_count'] == 200001
+    assert memory['status_valid'] == (valid or 1) and memory['fault'] == 2
+    assert trace[-1] == ('fault', 2)
 
 
 def test_new_vsync_keeps_last_low_first_high_and_ignores_horizontal_rises():
@@ -246,14 +254,13 @@ def test_new_vsync_keeps_last_low_first_high_and_ignores_horizontal_rises():
     assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59900, 59880, 59876)
     assert (memory['previous_status'], memory['current_status']) == (1, 9)
     assert memory['vertical_edges'] == 4 and memory['poll_count'] == 23
-    assert [event[2] for event in trace if event[:2] == ('store', 'poll_count')] == list(range(18, 24))
-    final_lower = trace.index(('latch', 59880))
+    assert [event[2] for event in trace if event[:2] == ('store', 'poll_count')] == [23]
     final_upper = trace.index(('latch', 59876))
-    assert all(event[0] != 'store' for event in trace[final_lower:final_upper])
+    assert all(event[0] != 'store' for event in trace[:final_upper])
     assert memory['status_valid'] == 1 and memory['fault'] == 0
 
 
-@pytest.mark.parametrize('valid,expected_generation', [(0, 3), (1, 4)])
+@pytest.mark.parametrize('valid,expected_generation', [(0, 3), (1, 4), (0xfe, 4)])
 def test_new_vsync_first_high_waits_for_low_without_losing_observed_rises(valid, expected_generation):
     memory = _status_memory(0, valid=valid, generation=2)
     trace = _observe(_vsync_source(), memory, statuses=[8, 0, 9],
@@ -264,7 +271,7 @@ def test_new_vsync_first_high_waits_for_low_without_losing_observed_rises(valid,
     assert memory['vertical_edges'] == expected_generation
     assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59960, 59940, 59936)
     assert (memory['previous_status'], memory['current_status']) == (0, 9)
-    assert memory['poll_count'] == 20 and memory['status_valid'] == 1 and memory['fault'] == 0
+    assert memory['poll_count'] == 20 and memory['status_valid'] == (valid or 1) and memory['fault'] == 0
 
 
 def test_new_vsync_poll_cap_precedes_io_and_keeps_last_completed_sample():
@@ -273,11 +280,72 @@ def test_new_vsync_poll_cap_precedes_io_and_keeps_last_completed_sample():
     assert [event for event in trace if event[0] in ('latch', 'status')] == [
         ('latch', 59980), ('status', 8), ('latch', 59960), ('status', 0),
     ]
-    assert [event[2] for event in trace if event[:2] == ('store', 'poll_count')] == [199999, 200000, 200001]
+    assert [event[2] for event in trace if event[:2] == ('store', 'poll_count')] == [200001]
     assert trace[-1] == ('fault', 2)
     assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59980, 59960, 59998)
     assert (memory['previous_status'], memory['current_status']) == (8, 0)
     assert memory['vertical_edges'] == 3 and memory['fault'] == 2
+
+
+@pytest.mark.parametrize('valid', [0, 0xfe])
+def test_new_vsync_immediate_poll_fault_keeps_both_distinct_entry_states(valid):
+    memory = _status_memory(0, valid=valid, polls=200000)
+    memory['previous_status'] = 9
+    before = dict(memory)
+    trace = _observe(_vsync_source(), memory)
+    assert memory == dict(before, poll_count=200001, fault=2)
+    assert all(event[0] not in ('latch', 'status') for event in trace)
+    assert trace[-1] == ('fault', 2)
+
+
+@pytest.mark.parametrize('valid,expected_generation', [(0, 3), (1, 4)])
+def test_new_vsync_poll_fault_keeps_upper_from_an_earlier_completed_rise(valid, expected_generation):
+    memory = _status_memory(0, valid=valid, polls=199998)
+    trace = _observe(_vsync_source(), memory, statuses=[8, 0], counts=[59980, 59976, 59960])
+    assert [event for event in trace if event[0] in ('latch', 'status')] == [
+        ('latch', 59980), ('status', 8), ('latch', 59976),
+        ('latch', 59960), ('status', 0),
+    ]
+    assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59980, 59960, 59976)
+    assert (memory['previous_status'], memory['current_status']) == (8, 0)
+    assert memory['poll_count'] == 200001 and memory['vertical_edges'] == expected_generation
+    assert memory['status_valid'] == 1 and memory['fault'] == 2 and trace[-1] == ('fault', 2)
+
+
+@pytest.mark.parametrize('valid,statuses,counts,previous,current,expected_polls', [
+    (1, [8], [59980, 59976], 60000, 59980, 18),
+    (0, [8, 0, 9], [59980, 59976, 59960, 59940, 59936], 59960, 59940, 20),
+])
+def test_new_vsync_initial_high_validity_controls_the_thirteenth_rise_fault(valid, statuses, counts, previous, current, expected_polls):
+    memory = _status_memory(0, valid=valid, generation=12)
+    trace = _observe(_vsync_source(), memory, statuses=statuses, counts=counts)
+    assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (previous, current, counts[-1])
+    assert memory['current_status'] == statuses[-1] and memory['previous_status'] == 0
+    assert memory['vertical_edges'] == 13 and memory['poll_count'] == expected_polls
+    assert memory['status_valid'] == 1 and memory['fault'] == 2 and trace[-1] == ('fault', 2)
+    assert trace.index(('latch', counts[-1])) < trace.index(('store', 'vertical_edges', 13))
+
+
+@pytest.mark.parametrize('start,expected', [(65535, 65537), (199998, 200000)])
+def test_new_vsync_register_poll_count_keeps_word_carry_and_last_admitted_return(start, expected):
+    memory = _status_memory(0, polls=start)
+    _observe(_vsync_source(), memory, statuses=[0, 8], counts=[59980, 59960, 59956])
+    assert memory['poll_count'] == expected and memory['fault'] == 0
+
+
+def test_source_interpreter_keeps_upper_register_bits_across_byte_and_word_writes():
+    memory = {}
+    _observe('''mov ebx,12345678h
+mov bl,0abh
+mov bh,0cdh
+mov [after_bytes],ebx
+mov bx,1357h
+mov [after_word],ebx
+mov eax,ebx
+shr eax,16
+mov [upper_word],ax
+''', memory)
+    assert memory == {'after_bytes': 0x1234cdab, 'after_word': 0x12341357, 'upper_word': 0x1234}
 
 
 @pytest.mark.parametrize('generation,expected_fault', [(11, 0), (12, 2)])
