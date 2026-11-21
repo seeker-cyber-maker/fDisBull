@@ -1,0 +1,297 @@
+{
+  "schema": "dotbox-ownership-coordinator-verification-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "2a4d563ee35a5ccbf90f8339a31ad2fbb8082ea8",
+  "implemented": [
+    "Coordination-only receiver reuses existing authenticated PlayService transport and real OwnershipState with no backend",
+    "Strict instance-fenced status, turn and coordinator-close operations; game/native operations refused",
+    "Atomic request replacement/deletion discards retired reads without stopping the bounded observer; unsafe files remain rejected"
+  ],
+  "verification": {
+    "source_suite": {
+      "passed": 359,
+      "skipped": 0,
+      "seconds": 23.34
+    },
+    "installed_wheel_checks": {
+      "passed": 97,
+      "skipped": 0,
+      "deselected": 1,
+      "seconds": 18.94,
+      "exclusion": "One source-tree-only static import audit is covered by the full source suite; external installed-check tree contains no src directory",
+      "native_scope": "Includes real existing native executable/input checks; native source and executable were not rebuilt"
+    },
+    "observer": {
+      "passed": 41,
+      "skipped": 0,
+      "sha256": "1bbcd07ec4403d80a41c72a9b4cd8843fc034578d624efe76d62bd16d2207004"
+    },
+    "independent_review": "No concrete concerns in coordinator or observer race fix; root separately inspected diffs and reran integrated checks",
+    "package": {
+      "wheel_sha256": "ae24e8bda03cabdcf83ab61ce94d861b57bf30af19a95a799fa191f67715b75c",
+      "bytes": 54103,
+      "runtime_modules_exact": 21
+    },
+    "fdisbull_importable_in_clean_install": false,
+    "cloud_installed_checks": {
+      "passed": 54,
+      "skipped": 0,
+      "seconds": 10.15,
+      "python": "3.12.14",
+      "scope": "Isolated installed ordinary wheel, copied tests outside source; real sockets/CLI, synthetic ownership",
+      "wheel_sha256": "e43d7f3399ef9dc2f5537cf63f8ae5bfbb9c157e8adc869a5221b092629f01df",
+      "source_wheel_installed_modules_exact": 21,
+      "module_map_aggregate_sha256": "3b411777f129dbfa796eeb4aea321a758499dab2576b5c5bcdea4a480cc6a72e",
+      "fdisbull_importable": false,
+      "root_readback": "Received wheel bytes independently match source and all three recorded module maps; inspected actual command/test output and private copied test log"
+    }
+  },
+  "live_authenticated_local": {
+    "source_samples": 126,
+    "receiver_samples": 126,
+    "owners": {
+      "dot": 121,
+      "human": 5
+    },
+    "source_failures_blocked": 7,
+    "callbacks": [
+      {
+        "label": "initial",
+        "wait_ms": null
+      },
+      {
+        "label": "after-return",
+        "wait_ms": 1700.0878339167684
+      },
+      {
+        "label": "after-source-reopen",
+        "wait_ms": 1.358334207907319
+      }
+    ],
+    "old_lease_checks_denied": 121,
+    "source_receiver_exact_join": true,
+    "receiver": "Local Mac real CoordinationService and Client from ordinary installed wheel",
+    "callback_kind": "Three harmless data-only callbacks; no desktop input callback",
+    "observer_durations_ms": [
+      24000,
+      7000
+    ],
+    "final_owner": "dot",
+    "descriptors_credentials_removed": true
+  },
+  "cloud_startup": {
+    "restored": true,
+    "method": "Corrected misleading account display label; refreshed intended existing GitHub connection; started one authorized fresh task from same saved configuration",
+    "actual_private_checkout_and_exact_head_verified": true,
+    "python": "3.12.14",
+    "saved_environment_settings_or_github_grants_changed": false,
+    "old_failed_task_restored": false,
+    "stored_account_link_field": "Not exposed by catalog or offered setup update schema; hidden-field root cause remains unproved"
+  },
+  "cloud_transport": {
+    "handoff_live_qualified": true,
+    "receiver_location": "User-approved managed headless environment; not an emulator or desktop installation",
+    "route": "Existing reviewed primary pinned SSH stdin/stdout through managed VPN; no new public listener",
+    "network_diagnosis": "Current source allowlist and correlated TCP drop records identified the new runtime identity as unmatched",
+    "user_approved_access_change": "One verified runtime to one source host on TCP22 only",
+    "applied_readback": "Every previous packet rule retained; only approved rule added; compiled SSH identity policy equal",
+    "vps_fallback_or_public_access_added": false,
+    "credential_or_enrollment_changes": false,
+    "primary_probe": {
+      "exit": 0,
+      "stderr_empty": true,
+      "seconds": 0.832
+    },
+    "source_command_helper_sha256": "44897cb08d907280fa6d6e89d0dc11bffa9b9e6c9c851a457f24d68c7591a18f",
+    "desktop_input_callback_qualified": false
+  },
+  "limits": [
+    "Sampled English viewer UI coordinates cooperating callers; not a server ownership event subscription or atomic capture lock",
+    "Between-sample transitions and input already in flight remain outside the bridge guarantee",
+    "Live cloud proof uses harmless data callbacks; actual desktop input through run_turn_step remains unqualified",
+    "The approved headless receiver is not a whole-computer identity attestation or a visible desktop installation",
+    "First cloud run recovery labels triggered by startup failures were rejected for later-gap claims; strict second run is the later-gap evidence",
+    "First cloud source helper failures report JSON decoding errors; no broader source-host outage or exact failure-start timestamp is inferred",
+    "No new sound or gameplay feature; no new native build, release/global installation, portable-library or hosted CI qualification"
+  ],
+  "private_receipts": [
+    {
+      "name": "installed-checks-02.log",
+      "bytes": 194,
+      "sha256": "9b793eacebf5ca95065754f97259ec1b18924cacede3b5a5257a7fcaba4f14ef"
+    },
+    {
+      "name": "observer-02.log",
+      "bytes": 7949,
+      "sha256": "16ae7ac3c4a75c6f75baff5c637657e947581c9c5fb7f1a253415ec2e4588c1c"
+    },
+    {
+      "name": "candidate-identity-01.json",
+      "bytes": 2047,
+      "sha256": "2d9ef915faabf7846bc2addab36e6399262be569e2dd9fbfdecb98d448152623"
+    },
+    {
+      "name": "live-auth-03/receiver.jsonl",
+      "bytes": 123939,
+      "sha256": "2bf1289fb1ec3422f7ecb972aa7645445bdd52e84824ac19b93df85acce97a31"
+    },
+    {
+      "name": "live-auth-03/observer.jsonl",
+      "bytes": 60472,
+      "sha256": "f784133d168ae44408fc6da0520f7f879a40770eb8f2441613c0bbc1a6de1da5"
+    },
+    {
+      "name": "live-auth-03/actions.jsonl",
+      "bytes": 2622,
+      "sha256": "369d43eec3a28a23000786de27f2f100290bd82be33877ce3cdeb603a5727d06"
+    },
+    {
+      "name": "live-auth-03/summary.json",
+      "bytes": 810,
+      "sha256": "d4ac4b568ef9e97d59fa39389eb0f7f1dc03c2bf4e64fd4138a1cfbda0b0c7cd"
+    },
+    {
+      "name": "studio-denial-correlation.json",
+      "bytes": 487,
+      "sha256": "76fff605a2a00bc60b85d93126fffdf2d168350597f0ab7c06f3d6d3aa4eac5c"
+    },
+    {
+      "name": "grant-applied-receipt.json",
+      "bytes": 426,
+      "sha256": "7cc688c6cae96223b59c3c77accc0cf5a79c6cc51ed6ec5a9d3c5331bf0111cc"
+    },
+    {
+      "name": "cloud-live-01/artifacts/cloud-dotbox.whl",
+      "bytes": 54103,
+      "sha256": "e43d7f3399ef9dc2f5537cf63f8ae5bfbb9c157e8adc869a5221b092629f01df"
+    },
+    {
+      "name": "cloud-live-01/artifacts/installed-tests.log",
+      "bytes": 100,
+      "sha256": "ba7c5561b6fc675cf2031553a441d206173b3523d2c2f2291b7419a0434079f0"
+    },
+    {
+      "name": "cloud-live-01/artifacts/module-evidence.json",
+      "bytes": 6919,
+      "sha256": "28faeec6e28a7f67779c24f19dfc58c48be8d3ace7b4e8110def8cce01dbc03e"
+    },
+    {
+      "name": "cloud-live-01/artifacts/primary-probe-after-grant.json",
+      "bytes": 439,
+      "sha256": "d0b5183b68cca1ef8287a5766f4fde0766e06a5132ac7228749cf40d341d9504"
+    },
+    {
+      "name": "cloud-live-01/artifacts/cloud-receiver.jsonl",
+      "bytes": 65482,
+      "sha256": "412ffa4c5bfeb4d16fda00d07e48fced3e5402739ebaafcb4e7a87766dd4c571"
+    },
+    {
+      "name": "cloud-live-01/artifacts/cloud-stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cloud-live-01/observer.jsonl",
+      "bytes": 27839,
+      "sha256": "cedfffddef27917cb48a07ea32386daad16d2eb03c22071711469a554c0ba6f8"
+    },
+    {
+      "name": "cloud-live-01/actions.jsonl",
+      "bytes": 2621,
+      "sha256": "ef41ce33bbb5468cced1aa9ffbde623d01ee0ddd2f85c60d68cde38d830f685c"
+    },
+    {
+      "name": "cloud-live-01/root-verified-summary.json",
+      "bytes": 821,
+      "sha256": "40ba3aebb3db57c97ddab4b840917ea3356e58bdb8abb6482e5fc96c2ad87abc"
+    },
+    {
+      "name": "cloud-live-02/witness.py",
+      "bytes": 5375,
+      "sha256": "8fa6ed4c01d261e342b897a651d2708682fb256adec80c3ae583fb06dc5e752d"
+    },
+    {
+      "name": "cloud-live-02/artifacts/cloud-receiver.jsonl",
+      "bytes": 33762,
+      "sha256": "83dc8f39a5f553fbfaf78e564b3bab7c38615c8743c69ed71c2b19590287d2f2"
+    },
+    {
+      "name": "cloud-live-02/artifacts/process-result.json",
+      "bytes": 44,
+      "sha256": "468c8a5c386b2e5bd0b8e21577f8f59f83c3df868c48a651230ccc051ed0b79e"
+    },
+    {
+      "name": "cloud-live-02/artifacts/cloud-stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cloud-live-02/observer.jsonl",
+      "bytes": 12011,
+      "sha256": "7853dc96b1ea5175501e12195fb07107fdc1eb13ba708345fa10d647c99f735e"
+    },
+    {
+      "name": "cloud-live-02/root-verified-summary.json",
+      "bytes": 954,
+      "sha256": "d20b93545f73b327eb15a00eaaa2977a85fff8220b11493e32a0872ffcd315c0"
+    }
+  ],
+  "tested_runtime_commit": "713b52df513fdea0b7fbedea5d395e9527adff43",
+  "live_cloud_handoff": {
+    "source_samples": 58,
+    "accepted_receiver_samples": 56,
+    "accepted_owners": {
+      "dot": 51,
+      "human": 5
+    },
+    "all_accepted_samples_join_source": true,
+    "human_observation_block_and_automatic_return_verified": true,
+    "after_return_wait_ms": 4227.857932000006,
+    "old_lease_checks_denied": 52,
+    "failed_iteration_error_types": {
+      "JSONDecodeError": 25
+    },
+    "later_gap_recovery_qualified": false,
+    "recovery_label_limit": "after-source-reopen followed startup errors, before human handoff; not admitted as later interruption recovery",
+    "callback_kind": "harmless headless data only",
+    "cleanup_verified": true,
+    "runtime_modules_aggregate": "3b411777f129dbfa796eeb4aea321a758499dab2576b5c5bcdea4a480cc6a72e",
+    "observer_sha256": "1bbcd07ec4403d80a41c72a9b4cd8843fc034578d624efe76d62bd16d2207004",
+    "wait_measurement_limit": "Wait includes the human-controlled interval; not handoff detection latency"
+  },
+  "live_cloud_source_gap": {
+    "source_samples": 24,
+    "accepted_receiver_samples": 23,
+    "accepted_samples_match_source": true,
+    "source_phase_counts": {
+      "before-gap": 22,
+      "after-gap": 2
+    },
+    "accepted_phase_counts": {
+      "before-gap": 22,
+      "after-gap": 1
+    },
+    "direct_denial_on_failed_exchanges": 2,
+    "gap_old_callback_refused": true,
+    "gap_old_lease_valid_before_invalidation": true,
+    "recovery_uses_new_stream_and_lease": true,
+    "old_lease_stays_denied_after_recovery": true,
+    "phase_order_verified": true,
+    "harmless_data_callbacks": 2,
+    "source_failure_types": {
+      "JSONDecodeError": 2
+    },
+    "process_result": {
+      "exit": 0,
+      "elapsed_seconds": 22.583
+    },
+    "cleanup_verified": true,
+    "final_owner": "dot",
+    "observer_durations_ms": [
+      25000,
+      12000
+    ],
+    "deliberate_observer_gap_ms": 5000,
+    "limits": "Root flag is verified armed at control read, not proof of exact failure-start timestamp; no desktop action/atomic lock claim"
+  }
+}

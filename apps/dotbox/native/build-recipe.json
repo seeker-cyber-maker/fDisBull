@@ -1,0 +1,89 @@
+{
+  "format": "dotbox-native-source-1",
+  "upstream": {
+    "repository": "https://github.com/joncampbell123/dosbox-x.git",
+    "commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "tree": "68005f10ab25418b40621875ad8e7a4bd867335c"
+  },
+  "base_provenance": {
+    "repository": "https://github.com/seeker-cyber-maker/fDisBull",
+    "commit": "ce91c303f2fccd1db9b1e3917ecc8c98473bfdb9",
+    "path": "experimental/dosbox-x",
+    "patch_sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f"
+  },
+  "inputs": {
+    "dosbox-x/headless-agent.patch": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
+    "dosbox-x/source-manifest.json": "b1f1213f0e466f9494ade429a83a71b3f6a5e897d26e6d0508780c371c83ed94",
+    "dosbox-x/COPYING": "93c59ba0fd92fef7746f0e0809cb49a0c27ab21376da0ac6a583688401afd441",
+    "manifest.json": "c523c24ba4a463f6486aa86b0ac096323c99b7083b531b7a37fb3621b7728214",
+    "input-control.patch": "a88cba36f6af1b18cb06753ce703146977720a5a9aa5da55464248aa3079971e",
+    "dotbox_input_control.h": "93f36359698a332849dc3be9d7d066d21eab97733e6c3caa0be165d87414e838"
+  },
+  "result_files": {
+    "client/python/dosbox_agent/__init__.py": "ced16106cbfad218488ce93bb131d08186118c18e038fe64e56ba955dd93e2b0",
+    "client/python/dosbox_agent/client.py": "500397af9e50180892ff5b7a62f1950104a81004861f51f10136088a4710297c",
+    "client/python/tests/test_client.py": "fde518416c39b61053ee43085d28706407fd0e5d078c3dc5e52f8e0e6fb1ba0d",
+    "client/python/tests/test_pipe_transport.py": "071711bf1c5db4fd034a96657d9ddace69ba341ac8edd916315a9f874205d490",
+    "client/python/tests/test_unix_transport.py": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
+    "configure.ac": "86c58d9d4447eeaeb2981a7aa59fc289ffd4beb16291a2655f43436f74ffb637",
+    "include/agent/agent_bridge.h": "bf07375fd187bcf89c9f95c2da4dbd1220e767c765a2c11916a5e5b6979ecc68",
+    "include/agent/agent_protocol.h": "d9121fb309ff3ac3252325af65f0afef3a246c0f02706d6e2d5596e16f890008",
+    "include/agent/agent_server.h": "c7819e93fca18ba30abb09f1acd4b1269e96cb4a5c24f9166fd592b6e0b7a1d6",
+    "include/agent/debugger_adapter.h": "c9b905d45cd4a3dbfc9aaabd994cf7be4c81de79452626792de02c51db318c19",
+    "include/agent/dotbox_input_control.h": "93f36359698a332849dc3be9d7d066d21eab97733e6c3caa0be165d87414e838",
+    "include/agent/input_adapter.h": "82499b2d7b06e14175a4776d8ea0ba7698901e3531fe2e9eaecbab40723d4a2b",
+    "include/agent/video_adapter.h": "e0bee6af06e55fc115f1d3e885d04e2f19ff34b679b5a5d7b7ea2ac70b8340b1",
+    "include/debug.h": "f1195fba3571cef5778a5fdc283d834eeb21fcf5bd46e80beb0535b7e14f6cd6",
+    "include/paging.h": "f86c2aa924b79f577f07745644d40a83c14bdbd8da22335686618eb812ea6cfe",
+    "src/agent/Makefile.am": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6",
+    "src/agent/bridge/agent_bridge.cpp": "abe903d347878b9eb38e518f26d82df68c5fee2b8d93d9f49ec56629e256c93a",
+    "src/agent/debugger/debugger_adapter.cpp": "5eaffe031a616c4e99e27b05dd749144b240accc3724aeb306fe90dbcbeaf833",
+    "src/agent/protocol/agent_protocol.cpp": "7951de84c35c4b90e215cb0e7add79175a92bc04801fda618e7bb919c4f2b26f",
+    "src/agent/server/agent_server.cpp": "4db688d443474e23014b795b1cdfb8d98c81d68353fc9c1a6217b88a554d39d6",
+    "src/agent/transport/local_transport.cpp": "5bae459c9f040cedc55a2f64fe8849c247173f846132a3f88f8a147c227df6e3",
+    "src/agent/transport/unix_transport_probe.cpp": "14d9d72b787d0c37167a11954f1ef311a2f33644e2760aaa77d9f403ac828f3b",
+    "src/cpu/core_normal.cpp": "f3174279d84096bb48a959f52206211f1a529d4ef25a418f16e3e0f5befe0d43",
+    "src/debug/debug.cpp": "6378ba31f134bfd31638e7d9a2340f963f9c71f493b973b7069b55efa83bc93d",
+    "src/debug/debug_gui.cpp": "ab7bcb51a274a77d9cc1ec46ff1d269318726b6747df5fb83c58e81eea709f19",
+    "src/dos/dos_execute.cpp": "626fdb065ba5837cce4168d89ad1ad28a9506cc8f1f7ba1b6338c3323707fbda",
+    "src/dosbox.cpp": "98d1df7fea97739c6245c2b7e5780afbbf291be973c3da8de09a185431243c82",
+    "src/gui/render.cpp": "b97bd5aff7b22a075ba00400573da476771615f9db2fc66dd94e716c7aae8c2d",
+    "src/gui/sdlmain.cpp": "309527776b174259a04d55a17a8343889d5f906d1e24b78c0ebe5cb4e48a4500",
+    "src/hardware/keyboard.cpp": "2593495a02694838cfd0a820ca2f845892e4c0d300a1db1bf0082e08f933ed67",
+    "src/hardware/pic.cpp": "ec610efd66d3458841e3044499088a8a78fa669b5389b4adce61220b1e4632ca",
+    "src/hardware/vga.cpp": "2be70b5ecb765eda59f93c45d39a352a140cafa0668c17f1d67308d20ebdac81",
+    "src/hardware/vga_draw.cpp": "6c1cbe3db39828bc5c9d634aba494951f390c3ee41b3d742a8458635ad0ccb1d",
+    "src/ints/mouse.cpp": "e5c9fc067fc93d48c1f0e07349ecfbc388b0fa98049b88be2cce2d7cc7131164",
+    "src/misc/savestates.cpp": "7828e82d90fe8998633d8f1f5a42846c3f606883510fcb17755d8452db082338",
+    "tests/agent_headless/MOUSEVID.asm": "4b46ba4c63ecee0d10561fb3b688c0000f453df30e26d2e4db186f4dad1fa254",
+    "tests/agent_headless/verify_headless.py": "359a767b79343b7e3c8b75812446ac164d8ab74aa7e90eb066ec7f65b62dd20e",
+    "tools/headless_agent.py": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7"
+  },
+  "build": {
+    "commands": [
+      [
+        "./autogen.sh"
+      ],
+      [
+        "./configure",
+        "--enable-sdl2",
+        "--enable-debug=heavy",
+        "--enable-dosbox_agent",
+        "--enable-agent-zstd",
+        "--disable-avcodec",
+        "--disable-libslirp",
+        "--disable-libfluidsynth"
+      ],
+      [
+        "make",
+        "-j2"
+      ]
+    ],
+    "executable": "src/dosbox-x"
+  },
+  "qualification": {
+    "source_preparation": "Hash replay only; see docs/STANDALONE_NATIVE.md.",
+    "new_native_build": "Not performed by preparation.",
+    "dot_cloud_takeover": "Requires separate visible native acceptance on the actual Dot host."
+  }
+}

@@ -1,0 +1,1219 @@
+{
+  "schema": "dotbox-pseudo-oracle-live-qualification-1",
+  "date_utc": "2026-11-20",
+  "status": "bounded_normal_speed_use_demonstrated;hard_deadlines_unqualified",
+  "task_id": "e-8a00bc2b-9048-4214-93ee-2b437bb83265",
+  "tested_source": {
+    "local_commit": "21fa3f14d3e03f382cce4b35a0b7d6fbcf86a1c0",
+    "tree": "0612a996177570763021523caa4f699a531fc5d7",
+    "primary_commit": "fd48326a92c5a2726ccb9e5777901613c30d16cb",
+    "mirror_commit": "cc564d4bab9b484fc70e3393da9170dba8777dbe",
+    "branch": "codex/keen-platformer-20261119",
+    "python": "3.12.14",
+    "dotbox_version": "0.1.0.dev9",
+    "files": {
+      "src/dotbox/oracle.py": {
+        "sha256": "a745b444633cd57bc69e1333b5324a2395b7bb05e6afa959ee1fc923f674f51c",
+        "bytes": 17590
+      },
+      "src/dotbox/scenes.py": {
+        "sha256": "f75fc92c5c2414e3ad6763bc1153cc80a64d6d8b9c0bc2bf43f1a49dc4e3e76a",
+        "bytes": 19939
+      },
+      "scripts/experiments/keen_oracle.py": {
+        "sha256": "bd6ede84888a1662eaa71e4de16a5327e9698263e0192542dec79419149f51df",
+        "bytes": 17604
+      },
+      "scripts/experiments/keen_loop.py": {
+        "sha256": "943630b7d7cb291ed3b8dc5a5c167a82f9615abaffc348bffdfea6b430ec6917",
+        "bytes": 30520
+      }
+    },
+    "native_emulator_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "original_game_executable_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+    "released_game_source_revision": "15be5be4a3382d0a1d99e1202219a84b09b11273",
+    "production_changes_in_this_checkpoint": false
+  },
+  "study": {
+    "primary_abba": [
+      "11-baseline",
+      "12-oracle",
+      "13-oracle",
+      "14-baseline"
+    ],
+    "presentation_sensitivity": [
+      "15-oracle-frames"
+    ],
+    "first_encounter": [
+      "16-oracle-encounter"
+    ],
+    "fixed_followup_after_slow_encounter": [
+      "17-baseline-encounter",
+      "18-oracle-encounter"
+    ],
+    "separate_gc_instrumentation_diagnostic": [
+      "19-oracle-gc"
+    ],
+    "preserved_failed_preflight": "01-baseline",
+    "baseline": "Same admitted route, wrapper, binding and diagnostics; skips adapter/oracle/choice selection.",
+    "clock": "Native guest elapsed values in milliseconds; two game ticks per observed update; about 35 updates/second.",
+    "hook": "post_actor_pre_refresh",
+    "hot_window_bytes": 30710,
+    "execution": "One native owner; brief stops at coherent observation hooks; normal original game timing between stops; ordinary original input routes.",
+    "coordinates": "Original world coordinates; 16 units per game pixel; no display-size input to reasoning.",
+    "display": "Native PNG capture/decode and existing FrameStore publication every two updates, 351 original 320x200 frames in run15; no browser/network client or rendered HUD overlay. Last completed image is not phase synchronized with post-actor state.",
+    "hud_boundary": "Wall time from returned qualified frame.step hook receipt to HUD data ready; not instruction-level event time or UI display latency.",
+    "analyzer_limit": "Generic comparison_kind is based on display cadence, not study membership. Diagnostic19 is excluded from primary ABBA; baseline/baseline comparison is not oracle overhead.",
+    "deadline_definition": "0.95..1.05 is an average whole-controller speed diagnostic band, not a deadline guarantee. Do not substitute feedback-only ratio."
+  },
+  "completed_totals": {
+    "total_completed_runs": 9,
+    "total_advanced_updates": 4446,
+    "total_observations": 4455,
+    "aggregate_feedback_guest_ms": 126972
+  },
+  "runs": [
+    {
+      "run": "runs/11-baseline",
+      "mode": "baseline",
+      "scenario": "collect",
+      "advanced_updates": 700,
+      "observations": 701,
+      "guest_ms": 19991,
+      "host_ms": 19984.4138389999,
+      "guest_wall_ratio": 1.000329564882571,
+      "feedback_guest_ms": 19991,
+      "feedback_host_ms": 19976.824731002125,
+      "feedback_guest_wall_ratio": 1.000709585691858,
+      "complete_cycle_ms": {
+        "count": 700,
+        "max": 44.425432999560144,
+        "p50": 28.549453001687652,
+        "p95": 30.372166002052836,
+        "p99": 31.88478299853159,
+        "sum": 19967.11207799308
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 0,
+        "max": null,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "sum": 0
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": 39,
+      "bonus_objective_removed_same_observation": false,
+      "final_lives": 3,
+      "final_score": 100,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5010,
+          "sha256": "cf56545e2cda9bc1763e8e3b4f1450c6ad88d803b62f45b1729ed7108d326dc3"
+        },
+        "result": {
+          "bytes": 885618,
+          "sha256": "a7691543db46b5904bd3375704490ac4cd8ab3f65a60e00b3d2b1f19e98f585a"
+        },
+        "trial": {
+          "bytes": 15415055,
+          "sha256": "825f28a9ea6144cb0f66d12917037e16ed5e91bd78bc086e1d95c73da7ae76a1"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 701,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "delegate": {
+          "count": 701,
+          "max": 0.853372,
+          "p50": 0.016465,
+          "p95": 0.03995,
+          "p99": 0.087673,
+          "sum": 15.318574
+        },
+        "oracle": {
+          "count": 701,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "selector": {
+          "count": 701,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "total": {
+          "count": 701,
+          "max": 3.650736,
+          "p50": 0.312814,
+          "p95": 0.467958,
+          "p99": 0.762815,
+          "sum": 240.18980200000001
+        }
+      },
+      "state_array_sha256": "efda22183ee94353661fac70ab22560ed5b3f4c7a35f969dc64516c258215553",
+      "key_sequence_sha256": "8bb1a1cdfd7bad326dd11d53d85ed997a942d56480bd927232a617d71cbc0d10",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/12-oracle",
+      "mode": "oracle",
+      "scenario": "collect",
+      "advanced_updates": 700,
+      "observations": 701,
+      "guest_ms": 19991,
+      "host_ms": 20014.747286000784,
+      "guest_wall_ratio": 0.9988135105749052,
+      "feedback_guest_ms": 19991,
+      "feedback_host_ms": 20006.375331999152,
+      "feedback_guest_wall_ratio": 0.9992314783790665,
+      "complete_cycle_ms": {
+        "count": 700,
+        "max": 53.690245000325376,
+        "p50": 28.550491499117925,
+        "p95": 30.63447400199948,
+        "p99": 33.530009000969585,
+        "sum": 20000.144178968185
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 700,
+        "max": 38.986167000537534,
+        "p50": 5.038061498624074,
+        "p95": 6.39329200143402,
+        "p99": 9.013272001236146,
+        "sum": 3671.4461249592177
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": 39,
+      "bonus_objective_removed_same_observation": true,
+      "final_lives": 3,
+      "final_score": 100,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5003,
+          "sha256": "96f9f718ebb6fd6bfd73b93f71777a12de6e99a49799e2609294f4d9cf65fdc2"
+        },
+        "result": {
+          "bytes": 1192503,
+          "sha256": "7cdc8b2cf2716f6cb4bdfd4090749223aed7cfadb93711892c32940c804dc2f5"
+        },
+        "trial": {
+          "bytes": 15721737,
+          "sha256": "c1caba5b36b905244fd5108cac8c9236dbefd8126c1b2e7fbfb0d923ae692439"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 701,
+          "max": 4.997475,
+          "p50": 0.64045,
+          "p95": 1.02437,
+          "p99": 2.381586,
+          "sum": 513.540129
+        },
+        "delegate": {
+          "count": 701,
+          "max": 0.318973,
+          "p50": 0.017667,
+          "p95": 0.042364,
+          "p99": 0.078418,
+          "sum": 15.567839
+        },
+        "oracle": {
+          "count": 701,
+          "max": 34.005988,
+          "p50": 0.87149,
+          "p95": 1.420791,
+          "p99": 2.931007,
+          "sum": 714.463208
+        },
+        "selector": {
+          "count": 701,
+          "max": 0.188114,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.188114
+        },
+        "total": {
+          "count": 701,
+          "max": 35.715185,
+          "p50": 1.913737,
+          "p95": 3.009494,
+          "p99": 4.858896,
+          "sum": 1487.407698
+        }
+      },
+      "state_array_sha256": "efda22183ee94353661fac70ab22560ed5b3f4c7a35f969dc64516c258215553",
+      "key_sequence_sha256": "8bb1a1cdfd7bad326dd11d53d85ed997a942d56480bd927232a617d71cbc0d10",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/13-oracle",
+      "mode": "oracle",
+      "scenario": "collect",
+      "advanced_updates": 700,
+      "observations": 701,
+      "guest_ms": 19991,
+      "host_ms": 20012.895044998004,
+      "guest_wall_ratio": 0.9989059531392748,
+      "feedback_guest_ms": 19991,
+      "feedback_host_ms": 20004.93859799826,
+      "feedback_guest_wall_ratio": 0.999303242150433,
+      "complete_cycle_ms": {
+        "count": 700,
+        "max": 52.666882998892106,
+        "p50": 28.530562500236556,
+        "p95": 30.23476299858885,
+        "p99": 32.74231900286395,
+        "sum": 19996.319892004976
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 700,
+        "max": 36.927444999506406,
+        "p50": 4.922681000450439,
+        "p95": 6.426880002461985,
+        "p99": 8.456518002440134,
+        "sum": 3605.9610245474046
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": 39,
+      "bonus_objective_removed_same_observation": true,
+      "final_lives": 3,
+      "final_score": 100,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5005,
+          "sha256": "7adcbd2f50dd3b7ab317c6919ad8efcab6109dec0122ce9ad4739be587e4ba33"
+        },
+        "result": {
+          "bytes": 1192505,
+          "sha256": "6b0e377d571bd6974a4a5f4546d7af768e84ea943ee149a8577f4e74ae436ef0"
+        },
+        "trial": {
+          "bytes": 15721801,
+          "sha256": "6dab7904a1131711c21c185eb73c81b5e1d50b32c7f6a8fdf826c6f8bf1db195"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 701,
+          "max": 5.491843,
+          "p50": 0.630765,
+          "p95": 0.946924,
+          "p99": 2.099949,
+          "sum": 496.994205
+        },
+        "delegate": {
+          "count": 701,
+          "max": 3.250576,
+          "p50": 0.017296,
+          "p95": 0.041683,
+          "p99": 0.091509,
+          "sum": 18.982785
+        },
+        "oracle": {
+          "count": 701,
+          "max": 33.257709,
+          "p50": 0.841143,
+          "p95": 1.281761,
+          "p99": 2.940386,
+          "sum": 683.86785
+        },
+        "selector": {
+          "count": 701,
+          "max": 0.168425,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.168425
+        },
+        "total": {
+          "count": 701,
+          "max": 34.228869,
+          "p50": 1.849579,
+          "p95": 2.937438,
+          "p99": 5.072795,
+          "sum": 1439.692776
+        }
+      },
+      "state_array_sha256": "efda22183ee94353661fac70ab22560ed5b3f4c7a35f969dc64516c258215553",
+      "key_sequence_sha256": "8bb1a1cdfd7bad326dd11d53d85ed997a942d56480bd927232a617d71cbc0d10",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/14-baseline",
+      "mode": "baseline",
+      "scenario": "collect",
+      "advanced_updates": 700,
+      "observations": 701,
+      "guest_ms": 19991,
+      "host_ms": 20031.543900000543,
+      "guest_wall_ratio": 0.9979759972469949,
+      "feedback_guest_ms": 19991,
+      "feedback_host_ms": 20023.6246989989,
+      "feedback_guest_wall_ratio": 0.9983706896483866,
+      "complete_cycle_ms": {
+        "count": 700,
+        "max": 68.58487600038643,
+        "p50": 28.551685500133317,
+        "p95": 30.501246998028364,
+        "p99": 33.482415001344634,
+        "sum": 20016.329983973264
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 0,
+        "max": null,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "sum": 0
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": 39,
+      "bonus_objective_removed_same_observation": false,
+      "final_lives": 3,
+      "final_score": 100,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5011,
+          "sha256": "39145f8f4868034d0bec43ce15b4c850dff3027b60f4ab9ef9d319e87b907243"
+        },
+        "result": {
+          "bytes": 885634,
+          "sha256": "790a2a0c3e7ef62d53d47531801301138cdcd4189f48cd2f6c04c66937a07d7d"
+        },
+        "trial": {
+          "bytes": 15414952,
+          "sha256": "5f7699accb76329711d248c42eb650ed0b953cf42d6a6e8920ef9f93357990d1"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 701,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "delegate": {
+          "count": 701,
+          "max": 1.623388,
+          "p50": 0.016675,
+          "p95": 0.038207,
+          "p99": 0.095865,
+          "sum": 16.074839
+        },
+        "oracle": {
+          "count": 701,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "selector": {
+          "count": 701,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "total": {
+          "count": 701,
+          "max": 3.78537,
+          "p50": 0.309839,
+          "p95": 0.441108,
+          "p99": 0.692037,
+          "sum": 239.802743
+        }
+      },
+      "state_array_sha256": "efda22183ee94353661fac70ab22560ed5b3f4c7a35f969dc64516c258215553",
+      "key_sequence_sha256": "8bb1a1cdfd7bad326dd11d53d85ed997a942d56480bd927232a617d71cbc0d10",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/15-oracle-frames",
+      "mode": "oracle",
+      "scenario": "collect",
+      "advanced_updates": 700,
+      "observations": 701,
+      "guest_ms": 19991,
+      "host_ms": 20090.573227997083,
+      "guest_wall_ratio": 0.9950437836259284,
+      "feedback_guest_ms": 19991,
+      "feedback_host_ms": 20079.0907949995,
+      "feedback_guest_wall_ratio": 0.9956128095689751,
+      "complete_cycle_ms": {
+        "count": 700,
+        "max": 56.27250500037917,
+        "p50": 28.21264600061113,
+        "p95": 32.464163999975426,
+        "p99": 42.701196998677915,
+        "sum": 20071.04662596248
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 700,
+        "max": 35.848514001358126,
+        "p50": 6.889770501408748,
+        "p95": 8.826000999828466,
+        "p99": 13.827739001369991,
+        "sum": 4686.588555095342
+      },
+      "frame_every": 2,
+      "controller_screenshots": 351,
+      "first_bonus_collected_sequence": 39,
+      "bonus_objective_removed_same_observation": true,
+      "final_lives": 3,
+      "final_score": 100,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "frame-publication": {
+          "bytes": 487,
+          "sha256": "4bd28491767b4c0dacb1067c7aab7e0d997e8ab3f991b67433e90dfa72e5d776"
+        },
+        "manifest": {
+          "bytes": 5017,
+          "sha256": "5576a4c9a594f625ec49fa13337d50e6bef8d5c74a6537bf2b418dd4e281482f"
+        },
+        "result": {
+          "bytes": 1192539,
+          "sha256": "ff32d8ee39308493be9a5952ae6c081acbad3bba5dcfdd4af6d1e3b50192013a"
+        },
+        "trial": {
+          "bytes": 16031650,
+          "sha256": "a3f64d05869b34ece63b26c448a28b846942da3ec30c74348d2e04f381147614"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 701,
+          "max": 3.672426,
+          "p50": 0.655452,
+          "p95": 1.078052,
+          "p99": 1.67114,
+          "sum": 510.193332
+        },
+        "delegate": {
+          "count": 701,
+          "max": 1.175339,
+          "p50": 0.017045,
+          "p95": 0.043856,
+          "p99": 0.110668,
+          "sum": 16.997929
+        },
+        "oracle": {
+          "count": 701,
+          "max": 31.675723,
+          "p50": 0.867133,
+          "p95": 1.44603,
+          "p99": 3.026432,
+          "sum": 715.884038
+        },
+        "selector": {
+          "count": 701,
+          "max": 0.168385,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.168385
+        },
+        "total": {
+          "count": 701,
+          "max": 32.675907,
+          "p50": 1.930853,
+          "p95": 2.995735,
+          "p99": 5.307076,
+          "sum": 1506.781825
+        }
+      },
+      "state_array_sha256": "efda22183ee94353661fac70ab22560ed5b3f4c7a35f969dc64516c258215553",
+      "key_sequence_sha256": "8bb1a1cdfd7bad326dd11d53d85ed997a942d56480bd927232a617d71cbc0d10",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/16-oracle-encounter",
+      "mode": "oracle",
+      "scenario": "encounter",
+      "advanced_updates": 82,
+      "observations": 83,
+      "guest_ms": 2342,
+      "host_ms": 2472.90933000113,
+      "guest_wall_ratio": 0.9470626244104671,
+      "feedback_guest_ms": 2342,
+      "feedback_host_ms": 2464.452128002449,
+      "feedback_guest_wall_ratio": 0.9503126367880791,
+      "complete_cycle_ms": {
+        "count": 82,
+        "max": 115.78843199822586,
+        "p50": 28.57842549929046,
+        "p95": 30.787482002779143,
+        "p99": 115.78843199822586,
+        "sum": 2459.853228996508
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 82,
+        "max": 65.1593159982603,
+        "p50": 5.2617204993358655,
+        "p95": 6.857431997719004,
+        "p99": 65.1593159982603,
+        "sum": 538.9027538640499
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": null,
+      "bonus_objective_removed_same_observation": false,
+      "final_lives": 3,
+      "final_score": 0,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5026,
+          "sha256": "5eec5c908b95494356eb9a2b1c1c99a20e5a1fc0cb9ed9bdd005bcdbf49237c1"
+        },
+        "result": {
+          "bytes": 245260,
+          "sha256": "1105d4271c3da4642f094bcdb4fbb2b01722644b6f72a7678cdfa10b49de8ec3"
+        },
+        "trial": {
+          "bytes": 1994841,
+          "sha256": "2f9a7b8c011aa6cd382f806f6b5d76444b31eb2a5ceab21eeaf7647441435a3c"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 83,
+          "max": 2.216125,
+          "p50": 0.672158,
+          "p95": 0.963779,
+          "p99": 2.216125,
+          "sum": 61.650304
+        },
+        "delegate": {
+          "count": 83,
+          "max": 0.108444,
+          "p50": 0.038598,
+          "p95": 0.0921,
+          "p99": 0.108444,
+          "sum": 3.7916980000000002
+        },
+        "oracle": {
+          "count": 83,
+          "max": 3.396883,
+          "p50": 0.928165,
+          "p95": 1.296233,
+          "p99": 3.396883,
+          "sum": 82.797712
+        },
+        "selector": {
+          "count": 83,
+          "max": 0.261706,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.261706,
+          "sum": 0.433005
+        },
+        "total": {
+          "count": 83,
+          "max": 5.652407,
+          "p50": 2.04094,
+          "p95": 3.065762,
+          "p99": 5.652407,
+          "sum": 179.995143
+        }
+      },
+      "state_array_sha256": "de07d58147d1c1238418319cb66b12a285d9027b2387c48214da312b9f9c68ef",
+      "key_sequence_sha256": "c1aca7db254bdc22c80292e5234461bdc81e8df41fb0e1937cec150ee8bd75d9",
+      "average_speed_within_declared_0_95_to_1_05_band": false
+    },
+    {
+      "run": "runs/17-baseline-encounter",
+      "mode": "baseline",
+      "scenario": "encounter",
+      "advanced_updates": 82,
+      "observations": 83,
+      "guest_ms": 2342,
+      "host_ms": 2338.6327139996865,
+      "guest_wall_ratio": 1.001439852431789,
+      "feedback_guest_ms": 2342,
+      "feedback_host_ms": 2329.5513260018197,
+      "feedback_guest_wall_ratio": 1.0053438075646721,
+      "complete_cycle_ms": {
+        "count": 82,
+        "max": 33.819273001427064,
+        "p50": 28.627270001379657,
+        "p95": 30.718982001417316,
+        "p99": 33.819273001427064,
+        "sum": 2327.287766009249
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 0,
+        "max": null,
+        "p50": null,
+        "p95": null,
+        "p99": null,
+        "sum": 0
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": null,
+      "bonus_objective_removed_same_observation": false,
+      "final_lives": 3,
+      "final_score": 0,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5032,
+          "sha256": "8c98d4217be372cba6937c7b66cf071b8f859ebfbf5b6dd02a9d54415f4ed169"
+        },
+        "result": {
+          "bytes": 115267,
+          "sha256": "db49fe40906493479aa8fc505071560b74b47849844f814522217d40a2d4b0a4"
+        },
+        "trial": {
+          "bytes": 1864863,
+          "sha256": "f0e98b57759b8d6284b0848d07c505c462b59f8363af9959de85eeb704fa84f0"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 83,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "delegate": {
+          "count": 83,
+          "max": 0.147684,
+          "p50": 0.037868,
+          "p95": 0.096857,
+          "p99": 0.147684,
+          "sum": 3.671446
+        },
+        "oracle": {
+          "count": 83,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "selector": {
+          "count": 83,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.0
+        },
+        "total": {
+          "count": 83,
+          "max": 1.111744,
+          "p50": 0.358964,
+          "p95": 0.609243,
+          "p99": 1.111744,
+          "sum": 31.829261
+        }
+      },
+      "state_array_sha256": "de07d58147d1c1238418319cb66b12a285d9027b2387c48214da312b9f9c68ef",
+      "key_sequence_sha256": "c1aca7db254bdc22c80292e5234461bdc81e8df41fb0e1937cec150ee8bd75d9",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/18-oracle-encounter",
+      "mode": "oracle",
+      "scenario": "encounter",
+      "advanced_updates": 82,
+      "observations": 83,
+      "guest_ms": 2342,
+      "host_ms": 2339.1377209991333,
+      "guest_wall_ratio": 1.0012236470624074,
+      "feedback_guest_ms": 2342,
+      "feedback_host_ms": 2330.7078020006884,
+      "feedback_guest_wall_ratio": 1.0048449651172997,
+      "complete_cycle_ms": {
+        "count": 82,
+        "max": 31.100099000468617,
+        "p50": 28.36192850008956,
+        "p95": 30.03507600078592,
+        "p99": 31.100099000468617,
+        "sum": 2326.7615429904254
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 82,
+        "max": 6.755754998391126,
+        "p50": 5.119698500446361,
+        "p95": 6.23658099856948,
+        "p99": 6.755754998391126,
+        "sum": 422.57059997780635
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": null,
+      "bonus_objective_removed_same_observation": false,
+      "final_lives": 3,
+      "final_score": 0,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5027,
+          "sha256": "8e34f4f07d246a77c3e3b0b7ef25437a85602f4ef7b84c317aa45822f51c4d57"
+        },
+        "result": {
+          "bytes": 245252,
+          "sha256": "f49dad819b864a0e4492ce75e634c3a527127d9984bbf8cc5dc9077f174fcf88"
+        },
+        "trial": {
+          "bytes": 1994873,
+          "sha256": "b7604abbecbcc292d0d265ba7d0d91d50e027645efdb0b7db0e801f023158285"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 83,
+          "max": 1.666022,
+          "p50": 0.684627,
+          "p95": 0.998422,
+          "p99": 1.666022,
+          "sum": 60.630591
+        },
+        "delegate": {
+          "count": 83,
+          "max": 0.161455,
+          "p50": 0.038208,
+          "p95": 0.087392,
+          "p99": 0.161455,
+          "sum": 3.785149
+        },
+        "oracle": {
+          "count": 83,
+          "max": 2.378734,
+          "p50": 0.916327,
+          "p95": 1.290705,
+          "p99": 2.378734,
+          "sum": 79.872155
+        },
+        "selector": {
+          "count": 83,
+          "max": 0.293955,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.293955,
+          "sum": 0.47327700000000006
+        },
+        "total": {
+          "count": 83,
+          "max": 3.428615,
+          "p50": 2.083835,
+          "p95": 2.724304,
+          "p99": 3.428615,
+          "sum": 174.391348
+        }
+      },
+      "state_array_sha256": "de07d58147d1c1238418319cb66b12a285d9027b2387c48214da312b9f9c68ef",
+      "key_sequence_sha256": "c1aca7db254bdc22c80292e5234461bdc81e8df41fb0e1937cec150ee8bd75d9",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    },
+    {
+      "run": "runs/19-oracle-gc",
+      "mode": "oracle",
+      "scenario": "collect",
+      "advanced_updates": 700,
+      "observations": 701,
+      "guest_ms": 19991,
+      "host_ms": 20017.288752998866,
+      "guest_wall_ratio": 0.9986866976180814,
+      "feedback_guest_ms": 19991,
+      "feedback_host_ms": 20009.60547700015,
+      "feedback_guest_wall_ratio": 0.9990701727217193,
+      "complete_cycle_ms": {
+        "count": 700,
+        "max": 50.319066998781636,
+        "p50": 28.54515299986815,
+        "p95": 30.27293900231598,
+        "p99": 32.40866199848824,
+        "sum": 20002.960740952403
+      },
+      "hook_receipt_return_to_hud_ready_ms": {
+        "count": 700,
+        "max": 34.671423998595856,
+        "p50": 4.896454499526726,
+        "p95": 6.538528000251972,
+        "p99": 8.964290998437718,
+        "sum": 3600.2367539496
+      },
+      "frame_every": 0,
+      "controller_screenshots": 0,
+      "first_bonus_collected_sequence": 39,
+      "bonus_objective_removed_same_observation": true,
+      "final_lives": 3,
+      "final_score": 100,
+      "original_game_files_unchanged": true,
+      "safe_cleanup": true,
+      "checks_passed": true,
+      "identities": {
+        "manifest": {
+          "bytes": 5013,
+          "sha256": "0a396cb38488f7bbd00a9e9c4b7d4a6ab6429158b8ae45fcf816fc45a5123c12"
+        },
+        "result": {
+          "bytes": 1192510,
+          "sha256": "39c3f772aec9fca1823c30d554cb027621ed2c350ab8cf22ee780ae2ec994207"
+        },
+        "trial": {
+          "bytes": 15750196,
+          "sha256": "a3702af3675954718aea8a9476f5ecaf73248bb09549135d86e3a063b2c2eb1a"
+        }
+      },
+      "substage_ms": {
+        "adapter": {
+          "count": 701,
+          "max": 4.935179,
+          "p50": 0.64012,
+          "p95": 1.026715,
+          "p99": 1.904579,
+          "sum": 503.641854
+        },
+        "delegate": {
+          "count": 701,
+          "max": 0.346375,
+          "p50": 0.016896,
+          "p95": 0.041984,
+          "p99": 0.079591,
+          "sum": 15.197094
+        },
+        "oracle": {
+          "count": 701,
+          "max": 30.785251,
+          "p50": 0.849467,
+          "p95": 1.286529,
+          "p99": 2.583798,
+          "sum": 675.889547
+        },
+        "selector": {
+          "count": 701,
+          "max": 0.16497,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "sum": 0.16497
+        },
+        "total": {
+          "count": 701,
+          "max": 31.741481,
+          "p50": 1.883904,
+          "p95": 2.968646,
+          "p99": 4.596662,
+          "sum": 1444.834211
+        }
+      },
+      "state_array_sha256": "efda22183ee94353661fac70ab22560ed5b3f4c7a35f969dc64516c258215553",
+      "key_sequence_sha256": "8bb1a1cdfd7bad326dd11d53d85ed997a942d56480bd927232a617d71cbc0d10",
+      "average_speed_within_declared_0_95_to_1_05_band": true
+    }
+  ],
+  "primary_abba_aggregate": {
+    "baseline_whole_speed_ratio": 0.9991514,
+    "oracle_whole_speed_ratio": 0.9988597,
+    "baseline_cycle_p95_ms": 30.45,
+    "oracle_cycle_p95_ms": 30.367,
+    "baseline_callback_median_ms": 0.312,
+    "baseline_callback_p95_ms": 0.451,
+    "oracle_callback_median_ms": 1.879,
+    "oracle_callback_p95_ms": 2.964,
+    "interpretation": "Normal pacing absorbs added local work; nearly equal throughput does not imply zero oracle cost."
+  },
+  "functional_results": {
+    "all_collection_score_gain": 100,
+    "all_lives": 3,
+    "flower_inventory": 0,
+    "attack_resource_condition": false,
+    "throw_ready": false,
+    "six_collection_runs": "701 compact states and key decisions exactly equal; 700 hot-memory hashes equal. Absolute native guest timestamps not all equal.",
+    "encounter_followup": "17/18 compact states, keys and hot-memory hashes exactly equal.",
+    "original_encounter": "16 compact states and keys equal to17/18; hot-memory hashes differ.",
+    "encounter_responses": {
+      "16-oracle-encounter": {
+        "sequence": 63,
+        "same_observation_encounter_and_choice": true,
+        "hook_return_to_hud_ms": 6.857431997719004,
+        "hook_return_to_selection_done_ms": 7.134450997718886,
+        "hook_return_to_edge_start_ms": 8.098770998913096,
+        "hook_return_to_edge_ack_ms": 9.47421299861162,
+        "guest_ms_until_next_neutral_observation": 28,
+        "next_input_sequence": 64,
+        "next_input": {
+          "button0": 0,
+          "button1": 0,
+          "xaxis": 0,
+          "yaxis": 0,
+          "button0held": 0,
+          "button1held": 0
+        }
+      },
+      "18-oracle-encounter": {
+        "sequence": 63,
+        "same_observation_encounter_and_choice": true,
+        "hook_return_to_hud_ms": 5.0173449998058,
+        "hook_return_to_selection_done_ms": 5.205719999805979,
+        "hook_return_to_edge_start_ms": 7.076731999404728,
+        "hook_return_to_edge_ack_ms": 8.455199000309221,
+        "guest_ms_until_next_neutral_observation": 28,
+        "next_input_sequence": 64,
+        "next_input": {
+          "button0": 0,
+          "button1": 0,
+          "xaxis": 0,
+          "yaxis": 0,
+          "button0held": 0,
+          "button1held": 0
+        }
+      }
+    },
+    "encounter_physical_stop": {
+      "release_choice_sequence": 63,
+      "neutral_input_sequence": 64,
+      "neutral_input_residual_xmove_world_units": -24,
+      "first_subsequent_zero_horizontal_movement_sequence": 65,
+      "elapsed_guest_ms_from63": {
+        "16-oracle-encounter": 57,
+        "18-oracle-encounter": 56
+      },
+      "scope": "Observed sampled states; no exact instruction-level input-read or collision prediction claim."
+    },
+    "all_collection_bonus_sequence": 39,
+    "oracle_enabled_collection_hud_removal_sequence": 39,
+    "all_collection_first_grounded_standing_sequence": 67,
+    "all_collection_settling_confirmation_complete_sequence": 70
+  },
+  "failures_and_tails": {
+    "preflight": {
+      "run": "01-baseline",
+      "sequence": 168,
+      "reason": "Sustained-neutral test froze animation state; original idle look changed animation/collider top while physical and gameplay guards held.",
+      "correction": "Test-only V2 removes fixed animation-state equality, records transitions, preserves physical/gameplay/neutral guards. V1, failed run and independent review retained.",
+      "included_as_successful_performance_run": false
+    },
+    "slow_encounter": {
+      "run": "16-oracle-encounter",
+      "whole_speed_ratio": 0.9470626244104671,
+      "below_declared_band": true,
+      "worst_cycle_sequence": 10,
+      "cycle_ms": 115.78843199822586,
+      "preceding_callback_ms": 2.132007,
+      "frame_step_ms": 53.408,
+      "memory_read_ms": 38.774,
+      "decoder_ms": 12.247,
+      "second_slow_cycle_sequence": 81,
+      "second_slow_cycle_ms": 68.619,
+      "interpretation": "Timing localizes elapsed components but does not identify CPU versus scheduling cause; follow-up does not erase failure."
+    },
+    "gc": {
+      "trial_sha256": "a3702af3675954718aea8a9476f5ecaf73248bb09549135d86e3a063b2c2eb1a",
+      "gc_enabled": true,
+      "thresholds": [
+        700,
+        10,
+        10
+      ],
+      "interval_count": 89,
+      "generation_2_intervals": [
+        {
+          "generation": 2,
+          "start_monotonic_ns": 31014332488267,
+          "end_monotonic_ns": 31014362350248,
+          "wall_ms": 29.861981,
+          "collected": 0,
+          "uncollectable": 0
+        }
+      ],
+      "worst_oracle_call": {
+        "sequence": 673,
+        "oracle_wall_ms": 30.785251,
+        "callback_wall_ms": 31.741481,
+        "following_cycle_ms": 50.319066998781636
+      },
+      "overlapping_gc_intervals": [
+        {
+          "generation": 2,
+          "start_monotonic_ns": 31014332488267,
+          "end_monotonic_ns": 31014362350248,
+          "wall_ms": 29.861981,
+          "collected": 0,
+          "uncollectable": 0,
+          "overlap_oracle_wall_ms": 29.861981
+        }
+      ],
+      "measured_gc_overlap_ms": 29.861981,
+      "limits": "Wall timestamps only; CPU execution versus host preemption cannot be separated. This diagnostic preserves enabled state/thresholds but adds callback instrumentation. Earlier uninstrumented runs retain their original evidence; this does not prove their exact pause cause."
+    }
+  },
+  "verification": {
+    "targeted_command": "venv/bin/python -m pytest -q tests/test_keen_loop.py tests/test_oracle.py tests/test_keen_oracle.py",
+    "targeted_result": {
+      "command": "venv/bin/python -m pytest -q tests/test_keen_loop.py tests/test_oracle.py tests/test_keen_oracle.py",
+      "chunk_id": "feacee",
+      "wall_time_seconds": 0.438320641,
+      "exit_code": 0,
+      "original_token_count": 70,
+      "output": "........................................................................ [ 51%]\n....................................................................     [100%]\n140 passed in 0.22s\n943630b7d7cb291ed3b8dc5a5c167a82f9615abaffc348bffdfea6b430ec6917  scripts/experiments/keen_loop.py\n"
+    },
+    "analysis_command": "venv/bin/python analyze_trials.py --out root-analysis-final.json runs/11-baseline runs/12-oracle runs/13-oracle runs/14-baseline runs/15-oracle-frames runs/16-oracle-encounter runs/17-baseline-encounter runs/18-oracle-encounter runs/19-oracle-gc",
+    "analysis_exit_code": 0,
+    "all_functional_checks_passed": true,
+    "independent_output_byte_identical": true,
+    "all_completed_native_owners_clean_reap_returncode": 0,
+    "held_keys_after_cleanup": [],
+    "original_game_files_unchanged": true
+  },
+  "private_evidence": {
+    "files": {
+      "owner.py": {
+        "sha256": "d94e74e090d92230d194af46746dfd80722672fa0eddf8f6b8fb55b33c13223e",
+        "bytes": 33108
+      },
+      "owner_gc.py": {
+        "sha256": "c4e9129b1b8b38ddc65674773f520159fddba132afca2f5587bb4cbf3487fb90",
+        "bytes": 33897
+      },
+      "oracle_policy.py": {
+        "sha256": "734a339ed8293f6dc2b4ea69b646f861789c654f284140d6a4b47381e3fb98db",
+        "bytes": 19854
+      },
+      "oracle_policy_v2.py": {
+        "sha256": "04689c3170ab230d1442c135aeb0560b0c9048a338149937c3e1032cfebc6590",
+        "bytes": 20464
+      },
+      "analyze_trials.py": {
+        "sha256": "ada5cb6ef9d3d7b78bf3c94b54a819385962a7d4aebcb112c7fd983b3900b89a",
+        "bytes": 18523
+      },
+      "run_matrix.py": {
+        "sha256": "1a1a27f7317b15e21d9cc02138c5f72d03c3ccfa7c02b07563bf63d2ccb524ad",
+        "bytes": 2912
+      },
+      "run_matrix_v2.py": {
+        "sha256": "d0a6cec951c29c4c3e85d67255f9ff76ba67f2aa22dc8f7742df997334d7717e",
+        "bytes": 2924
+      },
+      "run_encounter_followup.py": {
+        "sha256": "99b3e18b0dfff6908841b9ee7a9bd8544388785877c56e863d8e9f24c891a349",
+        "bytes": 2947
+      },
+      "run_gc_diagnostic.py": {
+        "sha256": "a64860ff86ab3004e6afd5885166a29b0b0639b5825653f29d45914d4f647935",
+        "bytes": 2931
+      },
+      "prelaunch-freeze.json": {
+        "sha256": "456a6e4668c87d74ad24f481b74e2a8601d4568888a3e1152df4a4156d0791b4",
+        "bytes": 2986
+      },
+      "prelaunch-freeze-v2.json": {
+        "sha256": "940f874fe06a184130ac0ef7cfc7dcc0050f3573934aebe0123a19c2bb651abf",
+        "bytes": 3121
+      },
+      "prelaunch-encounter-followup.json": {
+        "sha256": "83e55d49d7a8e55841faa55c6881a7ae52f3e2b4911b4e36d65ec3730cc6fa31",
+        "bytes": 2737
+      },
+      "prelaunch-gc-diagnostic.json": {
+        "sha256": "b362b761f6d887c0c20eb8947f258d4f8d9b270ef8044b123fd0bf26c347c241",
+        "bytes": 2599
+      },
+      "root-analysis-final.json": {
+        "sha256": "c0ff9c4527832a56aac495e3d4cb174538511e7819d313bb0f0e7226596dbdbc",
+        "bytes": 98209
+      },
+      "independent-analysis-final.json": {
+        "sha256": "c0ff9c4527832a56aac495e3d4cb174538511e7819d313bb0f0e7226596dbdbc",
+        "bytes": 98209
+      },
+      "independent-final-review.json": {
+        "sha256": "ee572d8c7b64bf3e229832875de4b492a895ed927014483383b8dae68cd77f2d",
+        "bytes": 7135
+      },
+      "independent-failure-review.json": {
+        "sha256": "8fbc09b6044c29578b7a6f625393ba43b57ed994339eacfb1731689dfc376b3d",
+        "bytes": 3017
+      },
+      "independent-timing-interpretation-v2.json": {
+        "sha256": "d562f53b615db25a59a12fc9485ccb226b49f4abb3d50a6cb4c9af194aa17418",
+        "bytes": 7259
+      },
+      "root-gc-analysis.json": {
+        "sha256": "3b370b1a64b7b81b5967cde1bc93f64a6a527441d45e91c3cbdd08e98cd6096f",
+        "bytes": 23141
+      },
+      "verification-preflight.json": {
+        "sha256": "e8ddf430e2d5f1bab92393151063dbd09b80a741bf6455bf22ae35ea747e57d2",
+        "bytes": 526
+      },
+      "preparation-result.json": {
+        "sha256": "f7701b882e6de7dc0cbf2c839f9c38095ddc92806b1379ad44f44d851de0ea31",
+        "bytes": 728
+      }
+    },
+    "durable_archive_locator": "Agent BBS task completion report; raw game evidence is not published in Git."
+  },
+  "preparation": {
+    "utc": "2026-11-20T19:05:12.599970+00:00",
+    "preparation_start_utc": "2026-11-20T18:47:40.758685+00:00",
+    "preparation_budget_s": 1800,
+    "first_oracle_selection_sequence": 0,
+    "first_observed_movement_sequence": 1,
+    "first_observed_movement_monotonic_ns": 30518346853207,
+    "elapsed_to_first_oracle_effect_s": 450.313930032,
+    "elapsed_to_completed_test_analysis_s": 1051.841261421,
+    "earlier_activity": "Read-only discovery and worker dispatch preceded this monotonic clock; earliest recorded tool clock 2026-11-20 18:44:45 UTC. This is not cold-start qualification.",
+    "scope": "Warm test integration; failed preflight and baseline setup included after the recorded start. No cold-start or player startup claim."
+  },
+  "limits": [
+    "Bounded local collection and encounter release only.",
+    "Coherent stopped-hook loop, not uninterrupted simulation.",
+    "No browser/network or model-response latency qualification.",
+    "No rendered HUD overlay latency measurement.",
+    "No new attack/retreat route or general hazard/collision ETA qualification.",
+    "Average speed and percentile latency do not establish hard deadlines.",
+    "No production performance optimization was made."
+  ],
+  "next_optimization_target": "Investigate allocation and retained-history pressure across the callback/observation path, then RPC/decode latency tails; retest after a concrete change."
+}

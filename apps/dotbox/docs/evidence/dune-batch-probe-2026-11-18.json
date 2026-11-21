@@ -1,0 +1,1326 @@
+{
+  "schema": "dotbox-dune-batch-evidence-1",
+  "date": "2026-11-18",
+  "timezone": "America/New_York",
+  "scope": "Isolated original Cryo Dune English DOS RIP research batch; not a product release or original-Dot ownership qualification.",
+  "frozen_generic_baseline": {
+    "primary_commit": "c44b6ae47f4cfd604031059c1f968bb9384ed1c3",
+    "mirror_commit": "93a23777c43cdbced3362f9c00fbcdf77ac12266",
+    "tree": "231c8e94f1614faa31ff8230d5163ccd4b6a1c40"
+  },
+  "input": {
+    "archive": "Dune_DOS_EN_RIP-Version.zip",
+    "archive_bytes": 1780417,
+    "archive_sha256": "9f9f9137a1af68ab155fa65b5e309c40d89fd2c9120b3de0ccb66fc4a1861b52",
+    "files": 141,
+    "executable": "DUNEPRG.EXE",
+    "executable_bytes": 74757,
+    "executable_sha256": "32439602abe95e0ff778653ad58052bfed56a73e103b92f079455daa2ee886e7",
+    "arguments": [
+      "ENG",
+      "VGA",
+      "EMS",
+      "386"
+    ],
+    "format": "MZ",
+    "code_bits": 16,
+    "supplied_saves_used": false,
+    "startup": "Direct main executable; separate LOGO.EXE omitted; normal Escape key skipped intro.",
+    "prior_exposure": "Earlier assisted Dune CD opening trial, original manual guidance; this is a different exact edition, not blind."
+  },
+  "runtime": {
+    "backend": "fDisBull offline 0.34.1 Linux x86_64 DOSBox-X agent",
+    "backend_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+    "transport": "owned inherited pipes; raw native protocol",
+    "headless": true,
+    "code_segment": "0824",
+    "data_segment": "16F3",
+    "newer_dotbox_native_used": false
+  },
+  "full_observation": {
+    "completed": true,
+    "started_unix": 1795048596.0233269,
+    "ended_unix": 1795048614.1032367,
+    "host_elapsed_ms": 18079.902,
+    "first_logged_native_interaction_to_completion_seconds": 452.216407893,
+    "preparation_caveat": "That interval includes startup, inspection and script construction, and excludes some earlier extraction/preparation. It is not a controlled cold-bootstrap benchmark.",
+    "memory_witness_bytes": 655360,
+    "memory_range_inclusive": [
+      "00000",
+      "9FFFF"
+    ],
+    "baseline_conventional_ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+    "baseline_guest_ticks": 26056,
+    "settling_frames": 1,
+    "observation_frames": 120,
+    "max_probe_stops": 24,
+    "cooperative_host_guard_seconds": 12,
+    "rpc_timeout_default_seconds": 15,
+    "restore_rpc_timeout_seconds": 30,
+    "strict_host_deadline_qualified": false,
+    "private_source_sha256": "1c8e8986b9d26250b600ff6c9533c309450a0ee5b0c1b5b66fbdd1367c99def8",
+    "private_receipt_sha256": "c3f5c470ede750850c04a25237fb23b3f1ba0b43b8fafb9857aa555100f239e5",
+    "trials": [
+      {
+        "name": "idle",
+        "point": null,
+        "input": null,
+        "end": "no_hit_timeout",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1969.666,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [],
+        "after_conventional_ram_sha256": "ce4c12f6705441c34e2c34977ea64a6301e57b7baed00ddb95dacd81d6c0534a",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {}
+      },
+      {
+        "name": "see_dune_map",
+        "point": [
+          160,
+          163
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1972.607,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-8",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8680,
+            "callback": 52869
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "CE85",
+            "breakpoint_id": "bp-14",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "row_resolved",
+            "segment": "0824",
+            "offset": "CE8A",
+            "breakpoint_id": "bp-9",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_jump",
+            "segment": "0824",
+            "offset": "CE93",
+            "breakpoint_id": "bp-10",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_destination",
+            "segment": "0824",
+            "offset": "1BBF",
+            "breakpoint_id": "bp-15",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-12",
+            "kind": "breakpoint",
+            "completed_frames_before": 62,
+            "guest_ticks": 26963
+          }
+        ],
+        "after_conventional_ram_sha256": "05e75620265958ac8ceb84174d68869a2f001f4e02ced24e8328d04281502322",
+        "image_sha256": "5b9e03c96275b0befe83a220c090481a5495b844454653202f33396233cb5d78",
+        "disk_changes": {}
+      },
+      {
+        "name": "duke_leto",
+        "point": [
+          160,
+          171
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 2060.851,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-16",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8694,
+            "callback": 52864
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "CE80",
+            "breakpoint_id": "bp-22",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "row_resolved",
+            "segment": "0824",
+            "offset": "CE8A",
+            "breakpoint_id": "bp-17",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "row": 1,
+            "handler": 40412,
+            "menu_entry": 9630
+          },
+          {
+            "label": "row_jump",
+            "segment": "0824",
+            "offset": "CE93",
+            "breakpoint_id": "bp-18",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "row": 1,
+            "handler": 40412,
+            "menu_entry": 9630
+          },
+          {
+            "label": "row_destination",
+            "segment": "0824",
+            "offset": "9DDC",
+            "breakpoint_id": "bp-23",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-20",
+            "kind": "breakpoint",
+            "completed_frames_before": 79,
+            "guest_ticks": 27202
+          }
+        ],
+        "after_conventional_ram_sha256": "ae4a424e325a06d6f23b56ac8a5e2efd889d438b940a4852800b6f39a8680109",
+        "image_sha256": "16db62eefcf299927a3654b8dddca56f5b3dc14dab0c8ff5754aa14070b09b54",
+        "disk_changes": {}
+      },
+      {
+        "name": "empty_row",
+        "point": [
+          160,
+          179
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1992.846,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "generic_si_plus_2",
+            "segment": "0824",
+            "offset": "D2FE",
+            "breakpoint_id": "bp-27",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-28",
+            "kind": "breakpoint",
+            "completed_frames_before": 5,
+            "guest_ticks": 26151
+          }
+        ],
+        "after_conventional_ram_sha256": "545c5ad994d22fc4c8572668f63056d99f46f2e881848cfb3fbfddc56277ff5a",
+        "image_sha256": "04cec546d344f6e2a61daa27597620c05aabea71e743b879d56c2bf39ab27520",
+        "disk_changes": {}
+      },
+      {
+        "name": "north",
+        "point": [
+          274,
+          167
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1948.812,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-30",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8764,
+            "callback": 16761
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "4179",
+            "breakpoint_id": "bp-36",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-34",
+            "kind": "breakpoint",
+            "completed_frames_before": 15,
+            "guest_ticks": 26296
+          }
+        ],
+        "after_conventional_ram_sha256": "42d3e7c10c05951b8a56b378bb5ff767465254316149cf81dd5f50f57d00b4e2",
+        "image_sha256": "23cd97f32912cff08e47b38fe49da5efac5960a13f2dbda1be34f21dc4506e29",
+        "disk_changes": {}
+      },
+      {
+        "name": "east",
+        "point": [
+          289,
+          177
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1941.205,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-37",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8778,
+            "callback": 16766
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "417E",
+            "breakpoint_id": "bp-43",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-41",
+            "kind": "breakpoint",
+            "completed_frames_before": 56,
+            "guest_ticks": 26878
+          }
+        ],
+        "after_conventional_ram_sha256": "b2b18c5a0a4d2735af6f1248152792df57027133344475c596f6e0f04e7d2ab7",
+        "image_sha256": "0554ea2ea952a427d971a5338b1851a64755bbf2b09094c8063076f90f21b3d7",
+        "disk_changes": {}
+      },
+      {
+        "name": "south",
+        "point": [
+          274,
+          186
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1920.405,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-44",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8792,
+            "callback": 16771
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "4183",
+            "breakpoint_id": "bp-50",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-48",
+            "kind": "breakpoint",
+            "completed_frames_before": 76,
+            "guest_ticks": 27157
+          }
+        ],
+        "after_conventional_ram_sha256": "544cd67de577d7e7d299dd62b95d073074fdb274c00227f18a4202de91923361",
+        "image_sha256": "2e1c46e79498f4ae5e820b13c7007a5040e5098ab2e891cb8d475878e6af5348",
+        "disk_changes": {}
+      },
+      {
+        "name": "center",
+        "point": [
+          274,
+          177
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 1966.011,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-51",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8820,
+            "callback": 7222
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "1C36",
+            "breakpoint_id": "bp-57",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-55",
+            "kind": "breakpoint",
+            "completed_frames_before": 50,
+            "guest_ticks": 26787
+          }
+        ],
+        "after_conventional_ram_sha256": "dfa658aaca56a06070348de58daef387f7140f939c7faa64b8e90270a5475b0d",
+        "image_sha256": "d8e0231a1e53d5d75cdc143281db8ba224afca1a51124ad1312a3827764101fe",
+        "disk_changes": {}
+      },
+      {
+        "name": "see_dune_map_repeat",
+        "point": [
+          160,
+          163
+        ],
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "end": "observation_window_complete",
+        "completed_frames": 120,
+        "guest_elapsed_ms": 1712,
+        "host_elapsed_ms": 2075.63,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+          "ram_equal": true,
+          "settled_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-58",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "control_record_offset": 8680,
+            "callback": 52869
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "CE85",
+            "breakpoint_id": "bp-64",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "row_resolved",
+            "segment": "0824",
+            "offset": "CE8A",
+            "breakpoint_id": "bp-59",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_jump",
+            "segment": "0824",
+            "offset": "CE93",
+            "breakpoint_id": "bp-60",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072,
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_destination",
+            "segment": "0824",
+            "offset": "1BBF",
+            "breakpoint_id": "bp-65",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26072
+          },
+          {
+            "label": "generic_si_plus_6",
+            "segment": "0824",
+            "offset": "D33D",
+            "breakpoint_id": "bp-62",
+            "kind": "breakpoint",
+            "completed_frames_before": 62,
+            "guest_ticks": 26963
+          }
+        ],
+        "after_conventional_ram_sha256": "05e75620265958ac8ceb84174d68869a2f001f4e02ced24e8328d04281502322",
+        "image_sha256": "5b9e03c96275b0befe83a220c090481a5495b844454653202f33396233cb5d78",
+        "disk_changes": {}
+      }
+    ],
+    "final_restore": {
+      "registers_equal": true,
+      "ram_equal": true,
+      "ram_sha256": "2820d9e80bf8eafbc43f5524d31e6d5bf9ae4fec3a8f2b0c51b2edaa90be1240",
+      "canary_preserved": true,
+      "files_changed_by_restore": {}
+    },
+    "repeat": {
+      "trial_names": [
+        "see_dune_map",
+        "see_dune_map_repeat"
+      ],
+      "ordered_hits_equal": true,
+      "final_registers_equal": true,
+      "final_conventional_ram_equal": true,
+      "final_screenshot_equal": true
+    },
+    "independent_review": {
+      "owned_breakpoint_stops_verified": 32,
+      "all_once_ids_addresses_match": true,
+      "final_probe_inventory_empty": true,
+      "unexpected_stops": 0,
+      "pre_batch_errors_preserved": [
+        "One malformed console JSON line; rejected before any operation.",
+        "Initial memory.read address formatting rejected before batch."
+      ],
+      "driver_issues_not_triggered": [
+        "Stop matching by address alone.",
+        "Unexpected-stop branch would continue next trial.",
+        "Host guard cooperative rather than strict."
+      ]
+    }
+  },
+  "observed_outcomes": {
+    "see_dune_map": "Dune map panel",
+    "duke_leto": "Leto conversation with visible text and choices",
+    "north": "Bedroom/mirror view; control label denotes screen arrow, not an absolute world bearing",
+    "east": "Exterior/balcony view",
+    "south": "Leto dialogue intercepts attempted departure",
+    "center": "Local floorplan overlay",
+    "empty_row": "Generic input paths, no admitted menu-row dispatch observed; room remains visible",
+    "idle": "No armed probe hit before 120-frame timeout"
+  },
+  "limits": [
+    "Native full-state restore was used, but independent equality comparisons cover CPU registers and conventional RAM, not every device/EMS/VGA field.",
+    "No actual game savefile modification occurred during the measured trials/restores; disk preservation was tested with separately authored mounted canaries. A pre-checkpoint startup save difference is recorded separately.",
+    "First visits to armed sites and resolved entries; not all instruction/event occurrences.",
+    "A breakpoint observes entry before its instruction executes.",
+    "Generic D33D historical label generic_right does not mean right click.",
+    "No strategy-loop, delayed-order, complete-game, direct-invocation or Police Quest rewind qualification.",
+    "Cold preparation is separate from warm scripted execution."
+  ],
+  "dispatch_only": {
+    "completed": true,
+    "started_unix": 1795049415.3655329,
+    "ended_unix": 1795049418.5991344,
+    "host_elapsed_ms": 3233.486,
+    "prepare_host_ms": 417.68,
+    "prepare_plus_batch_ms": 3651.166,
+    "runner_path": "scripts/experiments/dune_probe_batch.py",
+    "runner_sha256": "cb6c5cb07c2e58e8ffd9ff1e18935743611dba140f2379a0cfcf76f39d43f7cb",
+    "private_receipt_sha256": "da301053e631cd96e213c6b83cf132723ae36cecb96ebbe21a4be9b30eddf983",
+    "python_transport": "dotbox.native_rpc.DOSBoxRPC",
+    "transport_source_sha256": "f24561fb5833c131036e7b1ea25cb97187066e9e400eeff1cf5b86438c9abda1",
+    "runtime_recovery": {
+      "reason": "Previous interactive PTY handle became unavailable before any further input was sent. A fresh one-shot owned native process restored the retained private checkpoint before preparing this batch.",
+      "registers_equal": true,
+      "conventional_ram_equal": true,
+      "native_process_reaped": true,
+      "source_game_directory": "Same isolated disposable game copy; no user player instance was used."
+    },
+    "recipe": {
+      "continuation": "owned one-shot hits only; dispatch stops before destination body",
+      "disk_rollback": false,
+      "dispatch_idle_frames": 30,
+      "dynamic_rules": [
+        "control_callback: observe DS:DI+12 near callback",
+        "row_jump: observe BX near destination"
+      ],
+      "input_reissued_after_hit": false,
+      "max_probe_stops": 24,
+      "mouse_hold_ms": 80,
+      "observation_frames": 120,
+      "rpc_timeout_ms": 15000,
+      "settling_frames": 1,
+      "state_rpc_timeout_ms": 30000,
+      "stop_timing": "before_instruction",
+      "timeout_note": "Frame exhaustion is an observation timeout; RPC exceptions abort with uncertain dispatch.",
+      "trial_cooperative_host_seconds": 12
+    },
+    "baseline_conventional_ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+    "baseline_guest_ticks": 26071,
+    "trials": [
+      {
+        "name": "idle",
+        "point": null,
+        "end": "no_hit_timeout",
+        "completed_frames": 30,
+        "frame_budget": 30,
+        "guest_elapsed_ms": 428,
+        "host_elapsed_ms": 675.687,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": null,
+        "hits": [],
+        "after_conventional_ram_sha256": "a2e82b26b2ae4590519fd3c1579611261f31cd93f1c20bdc5421c769d48df033",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "see_dune_map",
+        "point": [
+          160,
+          163
+        ],
+        "end": "row_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 292.951,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-7",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8680,
+            "callback": 52869
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "CE85",
+            "breakpoint_id": "bp-13",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          },
+          {
+            "label": "row_resolved",
+            "segment": "0824",
+            "offset": "CE8A",
+            "breakpoint_id": "bp-8",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_jump",
+            "segment": "0824",
+            "offset": "CE93",
+            "breakpoint_id": "bp-9",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_destination",
+            "segment": "0824",
+            "offset": "1BBF",
+            "breakpoint_id": "bp-14",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "a4b3b80d2a55bce16ad4e0daf5ddf62eb6fb71b287f486d300b649cddd832579",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "duke_leto",
+        "point": [
+          160,
+          171
+        ],
+        "end": "row_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 288.972,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-15",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8694,
+            "callback": 52864
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "CE80",
+            "breakpoint_id": "bp-21",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          },
+          {
+            "label": "row_resolved",
+            "segment": "0824",
+            "offset": "CE8A",
+            "breakpoint_id": "bp-16",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "row": 1,
+            "handler": 40412,
+            "menu_entry": 9630
+          },
+          {
+            "label": "row_jump",
+            "segment": "0824",
+            "offset": "CE93",
+            "breakpoint_id": "bp-17",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "row": 1,
+            "handler": 40412,
+            "menu_entry": 9630
+          },
+          {
+            "label": "row_destination",
+            "segment": "0824",
+            "offset": "9DDC",
+            "breakpoint_id": "bp-22",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "f693a0d39f3b1228daecf959fec4e1d79938196f8fe0a6308c09c57f773e1f54",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "empty_row",
+        "point": [
+          160,
+          179
+        ],
+        "end": "input_fallback_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 275.921,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "generic_si_plus_2",
+            "segment": "0824",
+            "offset": "D2FE",
+            "breakpoint_id": "bp-26",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "1b40cbfbc1c9dd9b428ffda13aa54db396e0b19daaef54253716d127269318c7",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "north",
+        "point": [
+          274,
+          167
+        ],
+        "end": "control_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 298.7,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-29",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8764,
+            "callback": 16761
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "4179",
+            "breakpoint_id": "bp-35",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "51e8225454da8877a140894e4945a4f17e2cb2da4609dccb3a0615daab6cfe09",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "east",
+        "point": [
+          289,
+          177
+        ],
+        "end": "control_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 282.417,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-36",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8778,
+            "callback": 16766
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "417E",
+            "breakpoint_id": "bp-42",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "74a3400a49f683f6191716206bd20577e61bb72c08f337d22a91f84fffaf5bd0",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "south",
+        "point": [
+          274,
+          186
+        ],
+        "end": "control_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 279.647,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-43",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8792,
+            "callback": 16771
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "4183",
+            "breakpoint_id": "bp-49",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "ff199812d189dbddd271afc65624794b32601d634d62e9198d6208c6cfee175a",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "center",
+        "point": [
+          274,
+          177
+        ],
+        "end": "control_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 291.357,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-50",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8820,
+            "callback": 7222
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "1C36",
+            "breakpoint_id": "bp-56",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "e93e391ab2c96775f7014b135beca72caabd84f46ced7bf4612dd85bbcb5173c",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      },
+      {
+        "name": "see_dune_map_repeat",
+        "point": [
+          160,
+          163
+        ],
+        "end": "row_destination_observed",
+        "completed_frames": 0,
+        "frame_budget": 120,
+        "guest_elapsed_ms": 1,
+        "host_elapsed_ms": 279.833,
+        "restore": {
+          "registers_equal": true,
+          "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+          "ram_equal": true,
+          "guest_ticks_equal": true,
+          "settled_ram_sha256": "ddf8331a6d47eb66e4d7fa55f3578f972b1bbb6f005769d34f03a82a3d6d2d50",
+          "files_changed_by_restore": {},
+          "canary_preserved": true
+        },
+        "input": {
+          "accepted": true,
+          "delivery": "queued"
+        },
+        "hits": [
+          {
+            "label": "control_callback",
+            "segment": "0824",
+            "offset": "D326",
+            "breakpoint_id": "bp-57",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "control_record_offset": 8680,
+            "callback": 52869
+          },
+          {
+            "label": "control_destination",
+            "segment": "0824",
+            "offset": "CE85",
+            "breakpoint_id": "bp-63",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          },
+          {
+            "label": "row_resolved",
+            "segment": "0824",
+            "offset": "CE8A",
+            "breakpoint_id": "bp-58",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_jump",
+            "segment": "0824",
+            "offset": "CE93",
+            "breakpoint_id": "bp-59",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction",
+            "row": 0,
+            "handler": 7103,
+            "menu_entry": 9626
+          },
+          {
+            "label": "row_destination",
+            "segment": "0824",
+            "offset": "1BBF",
+            "breakpoint_id": "bp-64",
+            "kind": "breakpoint",
+            "completed_frames_before": 0,
+            "guest_ticks": 26086,
+            "timing": "before_instruction"
+          }
+        ],
+        "after_conventional_ram_sha256": "a4b3b80d2a55bce16ad4e0daf5ddf62eb6fb71b287f486d300b649cddd832579",
+        "image_sha256": "da08a6feffd843c53c97ab5a5be843184f5fc86235a07df606fd1f1edb9e9908",
+        "disk_changes": {},
+        "cleanup_status": "clean"
+      }
+    ],
+    "final_restore": {
+      "registers_equal": true,
+      "ram_equal": true,
+      "ram_sha256": "82855d31dac15213433f6b4ce1cc5c183e4f1a59fe03763ab991d1b05584830e",
+      "guest_ticks_equal": true,
+      "canary_preserved": true,
+      "files_changed_by_restore": {}
+    },
+    "cleanup": {
+      "deleted": [],
+      "foreign_preserved": [],
+      "status": "clean"
+    },
+    "repeat": {
+      "trial_names": [
+        "see_dune_map",
+        "see_dune_map_repeat"
+      ],
+      "ordered_hits_equal": true,
+      "final_registers_equal": true,
+      "final_conventional_ram_equal": true,
+      "final_screenshot_equal": true
+    },
+    "limits": [
+      "Destination entry is observed before instruction execution; effects/screens are confirmed by the separate full pass.",
+      "The no-hit idle window is 30 completed frames; other rows retain a 120-frame fallback ceiling.",
+      "Short observation is measured on already prepared bindings and checkpoint, not a cold target discovery.",
+      "CPU/RAM/tick equality and neutral input were checked after restoring from early stops with pending clicks.",
+      "Current generation-fenced native backend and original-Dot player integration were not exercised."
+    ]
+  },
+  "disk_startup_boundary": {
+    "original_files": 141,
+    "changed_before_first_checkpoint": [
+      "DUNE21S0.SAV"
+    ],
+    "archive_save_bytes": 9569,
+    "archive_save_sha256": "68fd07a71330bfccd5e36e2623b654a3ee45e55d710374093dd82a17ab898580",
+    "baseline_and_final_save_bytes": 9565,
+    "baseline_and_final_save_sha256": "2384150a358390b52db8ba0b0dc5fc75f82e841533cebcc5ae749953ca34fdc9",
+    "exact_write_traced": false,
+    "changes_during_measured_trials_and_restores": [],
+    "authored_new_files": [
+      "DBPROBE.TXT",
+      "DB0A8590.TXT"
+    ],
+    "source_archive_sha256_final": "9f9f9137a1af68ab155fa65b5e309c40d89fd2c9120b3de0ccb66fc4a1861b52"
+  },
+  "source_verification": {
+    "command": "python -m pytest -q tests/test_dune_probe_batch.py tests/test_kit.py",
+    "passed": 37,
+    "skipped": 0,
+    "scope": "Authored peer failure/admission tests plus existing kit checks; actual native game evidence is recorded separately.",
+    "runner_sha256": "cb6c5cb07c2e58e8ffd9ff1e18935743611dba140f2379a0cfcf76f39d43f7cb",
+    "test_source_sha256": "9d0a8eea61a2339f875e0a1c602e6f14c3ddb603c240401a80fa9da5fd26e8bd",
+    "git_diff_check": "passed",
+    "independent_review": "Exact runner stop/ownership/cleanup/error handling and completed native receipt reviewed independently; no remaining blocker. Public trial values and visible outcomes checked against private captures. Synthetic-peer tests remain distinct from actual native evidence."
+  }
+}

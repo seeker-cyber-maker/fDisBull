@@ -1,0 +1,140 @@
+{
+  "schema": "dotbox-original-computer-network-controls-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "5287285e5661608507d71678bf6a712f6015442f",
+  "requested": "Resolve original Dot network access without switching environments; verify actual input, takeover and interruption recovery",
+  "outcome": {
+    "network_resolved": false,
+    "network_access_changed": false,
+    "settings_changed": false,
+    "network_probes_attempted": 0,
+    "desktop_input_calls_issued": 0,
+    "actual_input_verified": false,
+    "takeover_through_bridge_verified": false,
+    "interruption_recovery_with_desktop_input_verified": false
+  },
+  "original_dot_report": {
+    "origin": "Current original Dot chat response, read back in authorized side browser",
+    "environment_status_tool_offered": false,
+    "request_changes_tool_offered": false,
+    "equivalent_running_private_network_editor_found": false,
+    "startup_network_policy_file_present": false,
+    "runtime_context_reports_destination_excluded": true,
+    "effective_allowlist_independently_read": false,
+    "observations_current": null,
+    "network_enforcement_readiness": null,
+    "vpn_readiness": null,
+    "automatic_tailscale_access": null,
+    "access_proposal_submitted": false,
+    "environment_switched": false
+  },
+  "live_ui": {
+    "origin": "Coordinator observed current account settings and original Dot menu through supported browser UI",
+    "account_surface": "Pro",
+    "work_network_access_switch": "already on",
+    "work_network_access_label_scope": "ChatGPT Work internet access while running tasks",
+    "cloud_computer_settings_observed": [
+      "cookies",
+      "website approvals"
+    ],
+    "codex_cloud_settings": "Saved configuration list; no exact original-Dot runtime/configuration binding established",
+    "original_dot_menu": [
+      "Rename",
+      "Custom instructions",
+      "Pause",
+      "Reboot",
+      "Delete"
+    ],
+    "reboot_invoked": false,
+    "reboot_original_runtime_preservation_or_network_refresh_established": false,
+    "settings_changed": false,
+    "returned_to_original_dot_chat": true
+  },
+  "root_verified_static_source": {
+    "scope": "Retained shipped macOS app sources; not identity-bound to live served web build; no code executed or private RPC called",
+    "members": [
+      {
+        "member": "907538.0572f09d40.js",
+        "sha256": "eba5577e16a50a8106a64a05025fa23d0a589d8b4f775a6fe065ba7d916e6b1c",
+        "byte_ranges": [
+          [
+            3764300,
+            3764760
+          ],
+          [
+            3773073,
+            3773770
+          ]
+        ],
+        "finding": "Work account network preference maps to a boolean setting and account/user-guarded mutation; no destination/VPN fields in inspected setter."
+      },
+      {
+        "member": "368416.fe6242f5ba.js",
+        "sha256": "d04d3d7a455d36f0a8b4447dc97b10af603bcee5f024221505fd72c3ffef936d",
+        "byte_ranges": [
+          [
+            78480,
+            80200
+          ]
+        ],
+        "finding": "Separate instance editor derives conversation/runtime/account/user plus configuration identity from the bound thread; original Dot eligibility not established."
+      }
+    ]
+  },
+  "primary_references": [
+    {
+      "url": "https://learn.chatgpt.com/docs/enterprise/chatgpt-work-overview#network-access-and-external-destinations",
+      "supports": "Individual Work public internet preference, administrator constraints and execution refresh; no original-Dot private TCP grant established."
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/enterprise/agent-security#how-agent-security-applies-to-work-cloud",
+      "supports": "Separate Dot/Work execution configuration; shared cloud capabilities are distinct from managed environment settings."
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/dots/computers-and-apps",
+      "supports": "Original persistent Dot computer, connected computers and separately delegated cloud threads are distinct."
+    }
+  ],
+  "remaining_prerequisite": "A supported original-Dot destination/private-network grant or approved coordinator client reachable from its existing desktop executor. No available control was established for applying that grant in this checked context.",
+  "claim_limits": [
+    "No universal platform-impossibility claim",
+    "No inference of absent VPN from missing files or tools",
+    "Prior Studio attachment repair and headless data-only results remain separate evidence",
+    "No failed TCP/proxy request or enforcement diagnostic was produced by this controls check",
+    "Runtime source/native/skill unchanged; no runtime suites rerun for this documentation-only follow-up"
+  ],
+  "preserved": [
+    "Original computer selection",
+    "Existing saved configurations, account settings, grants and credentials",
+    "Three-second freshness and no-replay contracts",
+    "All prior code versions and evidence",
+    "Sound/gameplay deferral"
+  ],
+  "private_receipts": [
+    {
+      "name": "work-network-settings.ax.txt",
+      "bytes": 4673,
+      "sha256": "6fe62b962e2179ec3e500c28b6e7f063f7f6915f73d575f41ba5f7851c0b7a41"
+    },
+    {
+      "name": "work-network-settings.jpg",
+      "bytes": 75522,
+      "sha256": "d6dce84e546a4bfb22786453a0dcf8d87fc63c0df8a66f5dc41aacbdbbc3420b"
+    },
+    {
+      "name": "cloud-config-list.ax.txt",
+      "bytes": 4942,
+      "sha256": "a17b49cfd7b23aa05889e1b541a21f0d200700257634406b7156b67d00fedf66"
+    },
+    {
+      "name": "original-dot-controls.ax.txt",
+      "bytes": 46224,
+      "sha256": "801be23643a460a157d8e3cc378f04be4c77fba74f71a94134deb429351cfebe"
+    },
+    {
+      "name": "original-dot-controls.jpg",
+      "bytes": 142398,
+      "sha256": "cc7e9466964f010bea5557123db416e5ea3273b7b51a0f6dc6d81f7645604827"
+    }
+  ]
+}

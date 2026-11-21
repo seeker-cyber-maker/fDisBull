@@ -1,0 +1,66 @@
+{
+  "format": "dotbox-scene-1",
+  "source_sha256": "805c9573a2d2a3b95c7d40553ef643ba9e0576b41205431626dd9b4faef4aeba",
+  "edition": "authored_fixture_v1",
+  "scene_id": "barrel",
+  "observation_id": "authored_barrel_frame_1",
+  "title": "A room with a barrel",
+  "facts": [
+    {
+      "id": "barrel_present",
+      "subject": "barrel",
+      "predicate": "present",
+      "value": true,
+      "text": "There is a wooden barrel in the room.",
+      "audience": "player",
+      "observation_id": "authored_barrel_frame_1",
+      "evidence_ref": "fixture:barrel/frame_1",
+      "detail": "Dark hoops run around its sides."
+    },
+    {
+      "id": "hidden_contents",
+      "subject": "barrel",
+      "predicate": "contents",
+      "value": "a sealed pouch",
+      "text": "A sealed pouch is inside the barrel.",
+      "audience": "internal",
+      "observation_id": "authored_barrel_frame_1",
+      "evidence_ref": "fixture:barrel/frame_1"
+    }
+  ],
+  "choices": [
+    {
+      "id": "look_inside",
+      "label": "Look inside the barrel",
+      "requires": [
+        "barrel_present"
+      ],
+      "observation_id": "authored_barrel_frame_1",
+      "available": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "fixture:barrel/known_route/look_inside"
+      }
+    }
+  ],
+  "guide_sources": [
+    {
+      "id": "authored_barrel_guide",
+      "reference": "fixture:guide/authored_barrel_guide",
+      "edition": "authored_fixture_v1",
+      "origin_group": "authored_barrel_guide",
+      "locator": "opening scene"
+    }
+  ],
+  "guide_claims": [
+    {
+      "id": "pouch_expected",
+      "source_id": "authored_barrel_guide",
+      "subject": "barrel",
+      "predicate": "contents",
+      "value": "a sealed pouch",
+      "text": "The guide expects a pouch inside the barrel.",
+      "condition": "after the contents are inspected"
+    }
+  ]
+}

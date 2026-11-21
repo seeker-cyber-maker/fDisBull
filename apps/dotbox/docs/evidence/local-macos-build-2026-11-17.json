@@ -1,0 +1,117 @@
+{
+  "format": "dotbox-local-macos-build-helper-verification-1",
+  "date": "2026-11-17",
+  "version": "0.1.0.dev7",
+  "scope": "Local-build orchestration, strict native-test gate and installed instructions; actual Mac compilation and native execution remain unverified",
+  "file_sha256": {
+    "scripts/build_local_macos.py": "093b86b41798d8c5da87b173c06b870a833960f0789f6f6022bf344cea0a2a96",
+    "scripts/test_native.py": "93163abca8e0eafa8ab3612cf07c339f4b946a97c1f3f16983899b31d0ca0459",
+    "tests/test_local_macos_build.py": "5ea5a212019544d595cffd896204a21b3a8be864780cf19075cf312007c49a64",
+    "tests/test_native_runner.py": "17eb4405405576f238b74660c5fa006632c5ce8fb7f5d438ed2dccbe3a2c2548",
+    "docs/LOCAL_MACOS_BUILD.md": "3040273c25a35f37c895cec69fdbdda464eaca453c62a064260d0824cc5ad64c"
+  },
+  "entry_points": {
+    "build": "python3.12 scripts/build_local_macos.py --work-dir /absolute/new/build",
+    "test_existing": "python scripts/test_native.py --executable /absolute/native/src/dosbox-x --report-dir /absolute/new/report",
+    "installed_guide": "dotbox guide --topic macos"
+  },
+  "build_contract": {
+    "host": "Native arm64 macOS; full test in a logged-in desktop session",
+    "compiler_jobs": 2,
+    "native_source": "Existing pinned build recipe, unchanged in this slice",
+    "sdl": "Bundled pinned SDL2 2.32.10, staged privately",
+    "python": "Ordinary wheel, private venv, installed doctor outside checkout",
+    "existing_output": "Refused, including symlinks; existing parent required",
+    "global_dependencies": "Explicit prerequisites only; no automatic system installation",
+    "pip": "Preserve configured registry/proxy preferences; refuse destination/interpreter redirects; config probe output is private, unsuppressed and not logged",
+    "evidence": "Per-stage logs, source/config/wheel/executable identities, linked libraries and selected native result"
+  },
+  "native_gate": {
+    "modes": {
+      "all": 8,
+      "headless": 4,
+      "visible": 4
+    },
+    "default": "all",
+    "pytest_timeout_seconds": 300,
+    "requirements": [
+      "Exact selected JUnit identities/counts",
+      "No skipped/failed/errored cases",
+      "pytest exit zero",
+      "Stable executable SHA-256 before/after",
+      "Build helper binds result to the compiled executable path/hash"
+    ],
+    "source_receipt_is_binary_attestation": false,
+    "visible_modes_refuse_dummy_offscreen": true,
+    "qualification": "Source-checkout authored native fixtures; installed-wheel doctor has a separate scope"
+  },
+  "verification": {
+    "full_source_suite": {
+      "command": "DOTBOX_DOSBOX_BASE_SOURCE=<verified pinned base> python -m pytest -q -ra",
+      "passed": 802,
+      "skipped": 8,
+      "failed": 0,
+      "errors": 0,
+      "seconds": 36.55,
+      "skip_scope": "Exactly the eight native executable fixtures; no matching binary supplied",
+      "pinned_source_application_check": "Passed against supplied base, including repeat application",
+      "junit_sha256": "b871466e7a9efdd7990912b8b24d09dde58500987360275f05b2a728904e81a3"
+    },
+    "new_helper_and_runner_tests": {
+      "build_helper_passed": 38,
+      "strict_runner_passed": 28,
+      "scope": "Authored command/report tests, real lightweight child-process cleanup and read-only pip config probes; no emulator build or launch"
+    },
+    "ordinary_wheel_and_clean_offline_installation": {
+      "dotbox": "0.1.0.dev7",
+      "python": "3.12.14",
+      "source_imported": false,
+      "fdisbull_available": false,
+      "mcp_available": false,
+      "runtime_modules": 35,
+      "resources": 48,
+      "topics": 18,
+      "source_wheel_and_installation_match": true,
+      "offline_doctor_ready": true,
+      "native_runtime_qualified": false,
+      "guide_cli_and_export_match": true,
+      "wheel_bytes": 356751,
+      "wheel_sha256": "c3aa063de5f3d4e24e73cc8b3cde915b39dc3d456f989be6036bf714e38af2a2",
+      "catalog_sha256": "e741cec1551f7c5f6a86debf919950a809de9d7300bcb99d797af8cc691a36b8",
+      "scope": "Installed Python package and operational guide on Linux; no macOS build or native execution"
+    },
+    "actual_linux_preflight": {
+      "exit_code": 2,
+      "status": "refused_wrong_host",
+      "commands_launched": 0,
+      "failure_receipt_retained": true
+    },
+    "independent_review": {
+      "blocking_findings_remaining": 0,
+      "resolved": [
+        "Surviving child after cancelled process-group leader",
+        "Pip destination/interpreter overrides",
+        "Suppressed configuration output",
+        "Private configuration persisted by inherited pip logging"
+      ],
+      "final_helper_checks_passed": 38,
+      "scope": "Helper/gate correctness and claims; not Mac or native qualification"
+    }
+  },
+  "local_mac_execution": {
+    "status": "unverified",
+    "connection_established": false,
+    "reason": "Selected cloud SSH client failed before connecting; no Studio execution took place"
+  },
+  "not_performed": [
+    "macOS compile",
+    "Bundled SDL build",
+    "Complete DOSBox-X build",
+    "Eight native fixtures",
+    "Original-Dot desktop input qualification",
+    "Police Quest shower route",
+    "Complete memory-only rewind or briefing recovery",
+    "Application bundle/signing",
+    "Binary release or merge"
+  ]
+}

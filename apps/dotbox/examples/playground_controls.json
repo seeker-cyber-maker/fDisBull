@@ -1,0 +1,18 @@
+{
+  "format": "fdisbull-macro-set-1",
+  "name": "dotbox.playground",
+  "provenance": {
+    "fixture": "DotBox authored input playground",
+    "coverage": "Left/right controls; no autonomous discovery or scene recognition"
+  },
+  "macros": {
+    "move_left": {
+      "authority": "player-input",
+      "steps": [{"op": "keyboard.press", "key": "left", "hold_ms": 40, "gap_ms": 40}]
+    },
+    "move_right": {
+      "authority": "player-input",
+      "steps": [{"op": "keyboard.press", "key": "right", "hold_ms": 40, "gap_ms": 40}]
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "format": "dotbox-scene-1",
+  "source_sha256": "b3d0d439085ae783c8bc117acdaab015abb179cf22d8f20ddca38b8356530c24",
+  "edition": "authored_fixture_v1",
+  "scene_id": "mailbox",
+  "observation_id": "authored_mailbox_frame_1",
+  "title": "Beside a small mailbox",
+  "facts": [
+    {
+      "id": "mailbox_present",
+      "subject": "mailbox",
+      "predicate": "present",
+      "value": true,
+      "text": "There is a small mailbox here.",
+      "audience": "player",
+      "observation_id": "authored_mailbox_frame_1",
+      "evidence_ref": "fixture:mailbox/frame_1",
+      "detail": "It is mounted on a short post."
+    },
+    {
+      "id": "mailbox_closed",
+      "subject": "mailbox",
+      "predicate": "open",
+      "value": false,
+      "text": "The mailbox is closed.",
+      "audience": "player",
+      "observation_id": "authored_mailbox_frame_1",
+      "evidence_ref": "fixture:mailbox/frame_1"
+    }
+  ],
+  "choices": [
+    {
+      "id": "open_mailbox",
+      "label": "Open the mailbox",
+      "requires": [
+        "mailbox_present",
+        "mailbox_closed"
+      ],
+      "observation_id": "authored_mailbox_frame_1",
+      "available": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "fixture:mailbox/known_route/open_mailbox"
+      }
+    }
+  ],
+  "guide_sources": [
+    {
+      "id": "authored_mailbox_guide",
+      "reference": "fixture:guide/authored_mailbox_guide",
+      "edition": "authored_fixture_v1",
+      "origin_group": "authored_mailbox_guide",
+      "locator": "opening scene"
+    }
+  ],
+  "guide_claims": [
+    {
+      "id": "mailbox_expected",
+      "source_id": "authored_mailbox_guide",
+      "subject": "mailbox",
+      "predicate": "present",
+      "value": true,
+      "text": "The opening location contains a mailbox.",
+      "condition": ""
+    },
+    {
+      "id": "mailbox_contents",
+      "source_id": "authored_mailbox_guide",
+      "subject": "mailbox",
+      "predicate": "contents",
+      "value": "a folded notice",
+      "text": "A notice is expected inside the mailbox.",
+      "condition": "after opening and inspecting it"
+    }
+  ]
+}

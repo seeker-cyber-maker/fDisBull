@@ -1,0 +1,616 @@
+{
+  "browser_observation": {
+    "display": "Fit",
+    "environment": "Cloud Chrome; read-only original-game presenter",
+    "native_dimensions": [
+      320,
+      200
+    ],
+    "player_standing_on_floor": true,
+    "scope": "Visual confirmation after controller completed; read-only cached display, not browser gameplay input. Browser screenshot inspected only, not exported.",
+    "tab_marked_deliverable": true,
+    "visible_flowers": 0,
+    "visible_lives": 3,
+    "visible_score": 100
+  },
+  "coordinates": {
+    "gameplay_native_pixels": [
+      320,
+      200
+    ],
+    "level_tiles": [
+      136,
+      37
+    ],
+    "presentation_affects_world_coordinates": false,
+    "u16_plane_bytes": 10064,
+    "world_units_per_pixel": 16,
+    "world_units_per_tile": 256
+  },
+  "game_executable_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+  "implementation": {
+    "scripts/experiments/keen_loop.py": {
+      "bytes": 30520,
+      "sha256": "943630b7d7cb291ed3b8dc5a5c167a82f9615abaffc348bffdfea6b430ec6917"
+    },
+    "scripts/experiments/keen_world.py": {
+      "bytes": 10615,
+      "sha256": "abfd8136ee0c7d195c316c7af1f0b41ac027c7ce58bb565c98770d82c9b980ca"
+    },
+    "tests/test_keen_loop.py": {
+      "bytes": 25812,
+      "sha256": "9fcb89d9ed8923cf303326ff7ef11912b6b82a2d4ced24c5600902485f7e28b1"
+    },
+    "tests/test_keen_world.py": {
+      "bytes": 12270,
+      "sha256": "846ce0f6b94a58d5d47a457b7b73b467697b67b85c73ae16a46b8be175448834"
+    }
+  },
+  "independent_gameplay_review": {
+    "bytes": 20089,
+    "sha256": "2f67b95fa5d1932d145afc5b1a480378badb9bc74ce6d40e6418cb847eec4f15"
+  },
+  "installed_dotbox_version": "0.1.0.dev9",
+  "limitations": [
+    "Private route and source helpers do not constitute an installed general Keen provider.",
+    "One collection route, not a full level or general enemy/jump policy.",
+    "Endpoint terrain equality does not prove continuous immutability or detect intervening mutations.",
+    "Slots and pointers do not establish permanent actor identity; inert objects can later become active hazards.",
+    "Native screenshot and coherent RAM observation are separately identified; phase_synchronized is false.",
+    "Control is ordinary native keyboard input; browser gameplay input, audio and platform takeover are unqualified.",
+    "Sparse trial control completed; final lifecycle closure of its bounded lingering viewer is separate.",
+    "No package release, main-branch merge, emulator replacement or commercial asset publication."
+  ],
+  "native_executable_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+  "paired_equivalence": {
+    "all_70_hot_memory_hashes_equal": true,
+    "all_compact_states_exactly_equal": true,
+    "all_guest_ticks_frame_ids_revisions_equal": true,
+    "all_key_decisions_and_policy_results_equal": true,
+    "caveat": "Output directories and post-trial linger allowance also differ, outside the measured controller.",
+    "common_presentation_frame_hashes_equal": 18,
+    "compact_states_including_initial": 71,
+    "comparison_artifact": {
+      "bytes": 112141,
+      "sha256": "cd632dbd3202541185b7eed8684b8d3269fe0bf1b2d8950c0e122bf638900b46"
+    },
+    "distinct_identities": [
+      "run_id",
+      "timeline"
+    ],
+    "initial_and_final_decoded_full_object_snapshots_equal": true,
+    "normalization_applied": false,
+    "seed_comparison_artifact": {
+      "bytes": 2901,
+      "sha256": "35844c3afd872a53145014db1cb7232a941dd091b1d855c24b8310621827e69b"
+    },
+    "unclassified_differing_ds_offsets_outside_hot_window": [
+      "0x0096",
+      "0x0097",
+      "0x5CBC"
+    ],
+    "whole_ds_equivalence": false
+  },
+  "preparation": {
+    "elapsed_s_from_recorded_start": 797.421187206,
+    "preparation_budget_s": 600,
+    "scope": "Warm reuse measured from retained run_start; earlier preparation remains unknown",
+    "within_budget": false
+  },
+  "presentation_effect": {
+    "fewer_captures_percent": 74.64788732394366,
+    "less_measured_display_work_percent": 75.87168447378741,
+    "scope": "One short pair under the original normal clock; approximately35Hz control at both cadences, about35Hz versus8.75Hz capture during control. Viewer polling after trial excluded.",
+    "throughput_improvement_established": false
+  },
+  "preserved_failure": {
+    "correction": "Validated bootstrap modes accepted; pinned prompt hashes and320x200 admitted gameplay guards retained",
+    "lifecycle": {
+      "closed": true,
+      "process_reaped": true,
+      "returncode": 0
+    },
+    "name": "01-standing",
+    "reason": "Gameplay dimensions guard incorrectly rejected legitimate720x400 bootstrap text mode",
+    "result_artifact": {
+      "bytes": 1122,
+      "sha256": "6965f37448d866e4f13d61cc2e1eab664ceb80b0d4cb96e629b7b984c71a486c"
+    }
+  },
+  "publication_scope": "Authored code, tests, aggregate measurements and artifact/source hashes. Private runtime/session/browser locators, driver identities, raw RAM and images are excluded from this public receipt.",
+  "recorded_utc": "2026-11-20T13:36:08.287757+00:00",
+  "representation": {
+    "actor_definitions_fresh": {
+      "analysis_artifact": {
+        "bytes": 5691,
+        "name": "analysis-fresh-actors-final-02-04.json",
+        "sha256": "2e20af4867a619b2597a27c593288bfa187239b78f8cb9f40ce5d9ddbb9b2767"
+      },
+      "format": "dotbox-keen-world-stream-2",
+      "implementation_sha256": "abfd8136ee0c7d195c316c7af1f0b41ac027c7ce58bb565c98770d82c9b980ca",
+      "measurement": {
+        "comparison": "Complete canonical arrays; all stream headers, context/definition records, state records, commas and brackets included",
+        "json": "UTF-8; ensure_ascii=true; sorted keys; compact separators; finite numbers",
+        "scope": "Compact state values only; unchanged controller envelopes, native memory payloads, frames, RPC receipts and timing metrics are outside this byte comparison",
+        "selection": "One retained initial state, then every samples[*].state in file order"
+      },
+      "totals": {
+        "basis": "Sum of independently framed per-trial arrays",
+        "observations": 184,
+        "record_array_bytes": 936168,
+        "reduction_percent": 23.333792,
+        "saved_bytes": 284928,
+        "state_array_bytes": 1221096,
+        "trials": 3
+      },
+      "trials": [
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 136708,
+          "encoded_canonical_sha256": "6f99326b6fa3c4dee3cf6de5ac2b459da274a0ccf68c97efef5df2e9c60a5c98",
+          "name": "02-standing",
+          "observations": 42,
+          "original_bytes": 178002,
+          "original_canonical_sha256": "b07b230e3be72298def4f0acd515de5c7353b433d332ab8ee1007634a89f1974",
+          "reduction_percent": 23.198616,
+          "trial_sha256": "bddec96233d135366595aeff491869a7adbf1cd0c773139f0c25d73c25750f2a"
+        },
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 399730,
+          "encoded_canonical_sha256": "14fa2958c231198808887e73ee54b99dbc9930dc4890328f8b34850ed3b18b58",
+          "name": "03-collect-dense",
+          "observations": 71,
+          "original_bytes": 521547,
+          "original_canonical_sha256": "d90ca651b7846bd28e983d5d463750849de204765d47a489d2c4e8d0dcc4f79b",
+          "reduction_percent": 23.356859,
+          "trial_sha256": "13d16a3416777104056ed826025d4e4440d0a76a69b9f6183eed16beb1922867"
+        },
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 399730,
+          "encoded_canonical_sha256": "14fa2958c231198808887e73ee54b99dbc9930dc4890328f8b34850ed3b18b58",
+          "name": "04-collect-sparse",
+          "observations": 71,
+          "original_bytes": 521547,
+          "original_canonical_sha256": "d90ca651b7846bd28e983d5d463750849de204765d47a489d2c4e8d0dcc4f79b",
+          "reduction_percent": 23.356859,
+          "trial_sha256": "5a8bbc53b4bc551e0004938f667c325e6bb635a1c41a3217fa4c2dc650f3d18b"
+        }
+      ]
+    },
+    "actor_definitions_retained_smaller_schema": {
+      "analysis_artifact": {
+        "bytes": 5668,
+        "name": "analysis-retained-actors-final-01.json",
+        "sha256": "14629bf7d97bc4a21670fa28265e7017a08333b0648d27986277f1ae1de1d921"
+      },
+      "format": "dotbox-keen-world-stream-2",
+      "implementation_sha256": "abfd8136ee0c7d195c316c7af1f0b41ac027c7ce58bb565c98770d82c9b980ca",
+      "measurement": {
+        "comparison": "Complete canonical arrays; all stream headers, context/definition records, state records, commas and brackets included",
+        "json": "UTF-8; ensure_ascii=true; sorted keys; compact separators; finite numbers",
+        "scope": "Compact state values only; unchanged controller envelopes, native memory payloads, frames, RPC receipts and timing metrics are outside this byte comparison",
+        "selection": "One retained initial state, then every samples[*].state in file order"
+      },
+      "totals": {
+        "basis": "Sum of independently framed per-trial arrays",
+        "observations": 44,
+        "record_array_bytes": 39030,
+        "reduction_percent": 25.689698,
+        "saved_bytes": 13493,
+        "state_array_bytes": 52523,
+        "trials": 3
+      },
+      "trials": [
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 15784,
+          "encoded_canonical_sha256": "4a811cd5c5a609bd8bbbcf737610f50ef0f5ae927c38d81e870f6aed30668d25",
+          "name": "07-baseline-pre",
+          "observations": 18,
+          "original_bytes": 21501,
+          "original_canonical_sha256": "9d2f8c4a6e0adb3c4ec981a246ea7da5be8c27c29ca32b0836e574dfae95fe2c",
+          "reduction_percent": 26.589461,
+          "trial_sha256": "5ead123508f8f4cff17aa2037a3cfc249fa216a1facc50c217b154546910ed24"
+        },
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 12416,
+          "encoded_canonical_sha256": "c8c486b7fc278b9756d727dcbf523d6154fe8b9d35188af86073488cfbe1f6fe",
+          "name": "10-predict-post-left32",
+          "observations": 14,
+          "original_bytes": 16715,
+          "original_canonical_sha256": "fcc65701184f81a783976f51005e0424c01158d6c8f9de318897eb5570003b2e",
+          "reduction_percent": 25.719414,
+          "trial_sha256": "3b8e73b13034e0e83371ba0eb8d467322c8fa132794635d6843ae8b6c9d57925"
+        },
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 10830,
+          "encoded_canonical_sha256": "cbdce027476c0f5538e4b9a0377ae1e73e7f29dda12aa4692a72f0cff54967c9",
+          "name": "13-predict-post-right24",
+          "observations": 12,
+          "original_bytes": 14307,
+          "original_canonical_sha256": "a0b87641e37e0282017e7ac5b2d179ff1ed043caebd6d6ce01729c98fe66ea89",
+          "reduction_percent": 24.302789,
+          "trial_sha256": "c6b45cde3b75e48c64d74e3646e1fbbcf46172ced161ce8d1cf361be51f9abae"
+        }
+      ]
+    },
+    "controller_inputs_changed": false,
+    "encoding_performed_after_gameplay": true,
+    "player_only_fresh": {
+      "analysis_artifact": {
+        "bytes": 5670,
+        "name": "analysis-fresh-02-04.json",
+        "sha256": "5339c45e6562177a0849474c204b1d9a015fd4dd4baece8a39df4f4ba3d517dc"
+      },
+      "format": "dotbox-keen-world-stream-1",
+      "implementation_sha256": "24d49f676489bddfeea3543b071ca79e57aced8148029788fc929c7a34327d55",
+      "measurement": {
+        "comparison": "Complete canonical arrays; all stream headers, context/definition records, state records, commas and brackets included",
+        "json": "UTF-8; ensure_ascii=true; sorted keys; compact separators; finite numbers",
+        "scope": "Compact state values only; unchanged controller envelopes, native memory payloads, frames, RPC receipts and timing metrics are outside this byte comparison",
+        "selection": "One retained initial state, then every samples[*].state in file order"
+      },
+      "totals": {
+        "basis": "Sum of independently framed per-trial arrays",
+        "observations": 184,
+        "record_array_bytes": 1155954,
+        "reduction_percent": 5.334716,
+        "saved_bytes": 65142,
+        "state_array_bytes": 1221096,
+        "trials": 3
+      },
+      "trials": [
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 163044,
+          "encoded_canonical_sha256": "706aaf7029728c2b122d3e866da7c08b17baae075ddc81d327c7b173ced6d9aa",
+          "name": "02-standing",
+          "observations": 42,
+          "original_bytes": 178002,
+          "original_canonical_sha256": "b07b230e3be72298def4f0acd515de5c7353b433d332ab8ee1007634a89f1974",
+          "reduction_percent": 8.403276,
+          "trial_sha256": "bddec96233d135366595aeff491869a7adbf1cd0c773139f0c25d73c25750f2a"
+        },
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 496455,
+          "encoded_canonical_sha256": "5f33be3ccfabb3e0776a2723cafc66d7710847456756f501950a837631161a38",
+          "name": "03-collect-dense",
+          "observations": 71,
+          "original_bytes": 521547,
+          "original_canonical_sha256": "d90ca651b7846bd28e983d5d463750849de204765d47a489d2c4e8d0dcc4f79b",
+          "reduction_percent": 4.811072,
+          "trial_sha256": "13d16a3416777104056ed826025d4e4440d0a76a69b9f6183eed16beb1922867"
+        },
+        {
+          "canonical_round_trip_equal": true,
+          "encoded_bytes": 496455,
+          "encoded_canonical_sha256": "5f33be3ccfabb3e0776a2723cafc66d7710847456756f501950a837631161a38",
+          "name": "04-collect-sparse",
+          "observations": 71,
+          "original_bytes": 521547,
+          "original_canonical_sha256": "d90ca651b7846bd28e983d5d463750849de204765d47a489d2c4e8d0dcc4f79b",
+          "reduction_percent": 4.811072,
+          "trial_sha256": "5a8bbc53b4bc551e0004938f667c325e6bb635a1c41a3217fa4c2dc650f3d18b"
+        }
+      ]
+    },
+    "runtime_speedup_measured": false
+  },
+  "schema": "dotbox-keen-gameplay-receipt-1",
+  "scope": "Bounded original-input gameplay, optional presentation cadence and reversible world-state representation; experimental helpers",
+  "source_base_commit": "5df88d97c466bb8bd96c78721ce35a4122874cac",
+  "trials": [
+    {
+      "final_lives": 3,
+      "final_player": {
+        "hitnorth": 1,
+        "state": 4072,
+        "x": 33280,
+        "xspeed": 0,
+        "y": 7695,
+        "yspeed": 54
+      },
+      "final_score": 0,
+      "hook": "pre_input",
+      "lifecycle": {
+        "process_reaped": true,
+        "returncode": 0,
+        "state": "closed"
+      },
+      "metrics": {
+        "cycle_latency_ms": {
+          "max": 32.964013998935116,
+          "p50": 28.54517100058729,
+          "p95": 31.679810999776237
+        },
+        "cycles": 41,
+        "feedback_guest_ms": 1171,
+        "feedback_host_ms": 1150.145412000711,
+        "guest_accounting_complete": true,
+        "guest_host_ratio": 1.0082339834761571,
+        "host_ms": 1161.4367490001314,
+        "missed_paced_deadlines": 0,
+        "rpc_latency_ms": {
+          "max": 26.135572999919532,
+          "p50": 1.484506999986479,
+          "p95": 25.35891099978471
+        },
+        "total_guest_ms": 1171
+      },
+      "milestones": [],
+      "name": "02-standing",
+      "objective_success": true,
+      "observations_including_initial": 42,
+      "presentation": {
+        "attempted": 11,
+        "cadence": "initial_and_every_n_accepted_updates",
+        "captured": 11,
+        "decode_ms": 1.9733790031750686,
+        "enabled": true,
+        "errors": 0,
+        "frame_every": 4,
+        "phase_synchronized": false,
+        "published": 11,
+        "rpc_ms": 22.767080004996387,
+        "sink_ms": 1.8171520005125785,
+        "total_ms": 26.76276799684274
+      },
+      "rise_game_pixels": 60.9375,
+      "safe_trial_termination": true,
+      "stable_neutral_observations": 3,
+      "terrain_plane1_unchanged": true,
+      "tile_attributes_unchanged": true,
+      "timing": {
+        "final_fast_forward": false,
+        "original_fast_forward": false,
+        "pace_hz": null,
+        "selected_fast_forward": false
+      },
+      "trial_artifact": {
+        "bytes": 516087,
+        "sha256": "bddec96233d135366595aeff491869a7adbf1cd0c773139f0c25d73c25750f2a"
+      },
+      "trial_outcome": "policy_stop"
+    },
+    {
+      "final_lives": 3,
+      "final_player": {
+        "hitnorth": 1,
+        "state": 4072,
+        "x": 31936,
+        "xspeed": 0,
+        "y": 7695,
+        "yspeed": 51
+      },
+      "final_score": 100,
+      "hook": "post_actor_pre_refresh",
+      "lifecycle": {
+        "process_reaped": true,
+        "returncode": 0,
+        "state": "closed"
+      },
+      "metrics": {
+        "cycle_latency_ms": {
+          "max": 44.94761199930508,
+          "p50": 28.419238999049412,
+          "p95": 31.320910000431468
+        },
+        "cycles": 70,
+        "feedback_guest_ms": 1999,
+        "feedback_host_ms": 1984.6847110002273,
+        "guest_accounting_complete": true,
+        "guest_host_ratio": 1.00300789674871,
+        "host_ms": 1993.0052460003935,
+        "missed_paced_deadlines": 0,
+        "rpc_latency_ms": {
+          "max": 38.96442600125738,
+          "p50": 1.5734510016045533,
+          "p95": 22.81831000072998
+        },
+        "total_guest_ms": 1999
+      },
+      "milestones": [
+        {
+          "event": "direction_released",
+          "guest_ticks": 19945,
+          "score": 0,
+          "sequence": 27,
+          "x": 31960,
+          "y": 7695
+        },
+        {
+          "event": "jump_started",
+          "guest_ticks": 20059,
+          "score": 0,
+          "sequence": 31,
+          "x": 31936,
+          "y": 7695
+        },
+        {
+          "event": "jump_released",
+          "guest_ticks": 20173,
+          "score": 0,
+          "sequence": 35,
+          "x": 31936,
+          "y": 7375
+        },
+        {
+          "event": "collected",
+          "score": 100,
+          "sequence": 39
+        },
+        {
+          "event": "landed",
+          "guest_ticks": 21172,
+          "score": 100,
+          "sequence": 70,
+          "x": 31936,
+          "y": 7695
+        }
+      ],
+      "name": "03-collect-dense",
+      "objective_success": true,
+      "observations_including_initial": 71,
+      "presentation": {
+        "attempted": 71,
+        "cadence": "initial_and_every_n_accepted_updates",
+        "captured": 71,
+        "decode_ms": 14.13234400388319,
+        "enabled": true,
+        "errors": 0,
+        "frame_every": 1,
+        "phase_synchronized": false,
+        "published": 71,
+        "rpc_ms": 137.74261798971565,
+        "sink_ms": 9.922876013661153,
+        "total_ms": 163.11616099301318
+      },
+      "rise_game_pixels": 55.9375,
+      "safe_trial_termination": true,
+      "stable_neutral_observations": 3,
+      "terrain_plane1_unchanged": true,
+      "tile_attributes_unchanged": true,
+      "timing": {
+        "final_fast_forward": false,
+        "original_fast_forward": false,
+        "pace_hz": null,
+        "selected_fast_forward": false
+      },
+      "trial_artifact": {
+        "bytes": 1403335,
+        "sha256": "13d16a3416777104056ed826025d4e4440d0a76a69b9f6183eed16beb1922867"
+      },
+      "trial_outcome": "policy_stop"
+    },
+    {
+      "final_lives": 3,
+      "final_player": {
+        "hitnorth": 1,
+        "state": 4072,
+        "x": 31936,
+        "xspeed": 0,
+        "y": 7695,
+        "yspeed": 51
+      },
+      "final_score": 100,
+      "hook": "post_actor_pre_refresh",
+      "lifecycle": {
+        "process_reaped": false,
+        "returncode": null,
+        "state": "bounded_viewer_still_running_at_checkpoint"
+      },
+      "metrics": {
+        "cycle_latency_ms": {
+          "max": 46.51992599974619,
+          "p50": 28.42369400059397,
+          "p95": 31.951053000739194
+        },
+        "cycles": 70,
+        "feedback_guest_ms": 1999,
+        "feedback_host_ms": 1984.7552009996434,
+        "guest_accounting_complete": true,
+        "guest_host_ratio": 1.0027016786001723,
+        "host_ms": 1993.61389600017,
+        "missed_paced_deadlines": 0,
+        "rpc_latency_ms": {
+          "max": 40.48130599949218,
+          "p50": 1.3445949989545625,
+          "p95": 25.53477499895962
+        },
+        "total_guest_ms": 1999
+      },
+      "milestones": [
+        {
+          "event": "direction_released",
+          "guest_ticks": 19945,
+          "score": 0,
+          "sequence": 27,
+          "x": 31960,
+          "y": 7695
+        },
+        {
+          "event": "jump_started",
+          "guest_ticks": 20059,
+          "score": 0,
+          "sequence": 31,
+          "x": 31936,
+          "y": 7695
+        },
+        {
+          "event": "jump_released",
+          "guest_ticks": 20173,
+          "score": 0,
+          "sequence": 35,
+          "x": 31936,
+          "y": 7375
+        },
+        {
+          "event": "collected",
+          "score": 100,
+          "sequence": 39
+        },
+        {
+          "event": "landed",
+          "guest_ticks": 21172,
+          "score": 100,
+          "sequence": 70,
+          "x": 31936,
+          "y": 7695
+        }
+      ],
+      "name": "04-collect-sparse",
+      "objective_success": true,
+      "observations_including_initial": 71,
+      "presentation": {
+        "attempted": 18,
+        "cadence": "initial_and_every_n_accepted_updates",
+        "captured": 18,
+        "decode_ms": 3.1951039945852244,
+        "enabled": true,
+        "errors": 0,
+        "frame_every": 4,
+        "phase_synchronized": false,
+        "published": 18,
+        "rpc_ms": 32.9724420025741,
+        "sink_ms": 2.798675006488338,
+        "total_ms": 39.357181998639135
+      },
+      "rise_game_pixels": 55.9375,
+      "safe_trial_termination": true,
+      "stable_neutral_observations": 3,
+      "terrain_plane1_unchanged": true,
+      "tile_attributes_unchanged": true,
+      "timing": {
+        "final_fast_forward": false,
+        "original_fast_forward": false,
+        "pace_hz": null,
+        "selected_fast_forward": false
+      },
+      "trial_artifact": {
+        "bytes": 1356721,
+        "sha256": "5a8bbc53b4bc551e0004938f667c325e6bb635a1c41a3217fa4c2dc650f3d18b"
+      },
+      "trial_outcome": "policy_stop"
+    }
+  ],
+  "verification": {
+    "command": "python -m pytest -q tests/test_keen_loop.py tests/test_keen_waypoint.py tests/test_keen_world.py",
+    "exit_code": 0,
+    "file_sha256": {
+      "scripts/experiments/keen_loop.py": "943630b7d7cb291ed3b8dc5a5c167a82f9615abaffc348bffdfea6b430ec6917",
+      "scripts/experiments/keen_world.py": "abfd8136ee0c7d195c316c7af1f0b41ac027c7ce58bb565c98770d82c9b980ca",
+      "tests/test_keen_loop.py": "9fcb89d9ed8923cf303326ff7ef11912b6b82a2d4ced24c5600902485f7e28b1",
+      "tests/test_keen_world.py": "846ce0f6b94a58d5d47a457b7b73b467697b67b85c73ae16a46b8be175448834"
+    },
+    "git_diff_check_exit_code": 0,
+    "passed": 199,
+    "recorded_utc": "2026-11-20T13:36:00.692739+00:00",
+    "runtime": "installed DotBox0.1.0.dev9 venv Python3.12.14",
+    "scope": "58 loop,99 unchanged waypoint,42 world stream tests; final actor/depth changes included"
+  }
+}

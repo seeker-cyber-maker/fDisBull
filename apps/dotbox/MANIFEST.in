@@ -1,0 +1,7 @@
+include AGENTS.md README.md
+recursive-include native *.py *.json *.patch *.h *.md COPYING
+recursive-include scripts *.py *.mjs
+recursive-include docs *.md *.json
+recursive-include connectors *.md *.json
+recursive-include examples *.py *.json
+recursive-include skills *.md

@@ -1,0 +1,402 @@
+{
+  "schema": "dotbox-codex-viewer-verification-1",
+  "date": "2026-11-16",
+  "scope": "Installed macOS client static analysis, extracted-client offline replay, and separate actual web-viewer input/handoff check; no guest ownership bridge implemented",
+  "source_parent_commit": "7a3c1bba1b7957c3b65ccafebdbcc79023b60443",
+  "installed_artifact": {
+    "version": "26.1111.21308",
+    "build": "27194",
+    "asar_bytes": 784005710,
+    "asar_sha256": "64782f30d783c24eb483e92f9a2e884ada6d24dc105fc27659ba16e073da145c",
+    "asar_members": 20168,
+    "root_digest_reverified": true,
+    "selected_members": [
+      {
+        "member": "webview/assets/async/423400.5f97d1f55f.js",
+        "bytes": 62298,
+        "sha256": "677f26e365d928c58703a314ed87d1fc72e1dee67af7c39c6ecc1cec65ffc580"
+      },
+      {
+        "member": "webview/assets/async/393618.4045ff333c.js",
+        "bytes": 38941,
+        "sha256": "7a5ef190e957f351757f85862569fd0ece7c57a0fcb84d45e140e0a8b8925433"
+      },
+      {
+        "member": "webview/assets/async/146838.87652f10ab.js",
+        "bytes": 43539,
+        "sha256": "c172a3f404dd1285c2075cd6ca721a095196b88b62345044bd0735f2bb873adb"
+      },
+      {
+        "member": "webview/assets/async/299268.e102092e13.js",
+        "bytes": 60807,
+        "sha256": "e9389fe7ab1e0c238eb54fa4d4a90cc089da5a187e5619b561c1b0c0f12e8c92"
+      },
+      {
+        "member": "webview/assets/async/365874.be5a2ff75b.js",
+        "bytes": 45621,
+        "sha256": "856644242b8e75a8344b502f116f8f0d93df458bb2d1461cd53e73729e4e4c89"
+      },
+      {
+        "member": "webview/assets/async/398989.64d803a557.js",
+        "bytes": 15275,
+        "sha256": "e199eb2d40ae3b097ad0422d1230c407365975aedeb7d7c4d38ce44320f48780"
+      },
+      {
+        "member": ".vite/build/preload.js",
+        "bytes": 8853,
+        "sha256": "1ab4e9d411aac47d5c38daf91077563001596bf392bd38e24f01f8f7e7860527"
+      },
+      {
+        "member": ".vite/build/application-websocket-preload.js",
+        "bytes": 55745,
+        "sha256": "48525c3f640ce8c5a26d4f2d64fd7ea5b5c63770c68a24f13e8e6c0b9eddd7df"
+      },
+      {
+        "member": ".vite/build/early-bootstrap.js",
+        "bytes": 609218,
+        "sha256": "7a52617dc132e6c292042a2d04f84091c8e55fd004c57f0070928e4eeed03b09"
+      }
+    ],
+    "selected_core_js_integrity_matches": 3,
+    "modified": false
+  },
+  "static_analysis": {
+    "tool": "REA agents CLI 6.7.0",
+    "evidence_id": "ev_b38973a428c7de00a12b3b007ff8c1a67c3a6e9c04c5e040f268fdb8e06d0a40",
+    "rea_source_paths": [
+      "webview/assets/async/423400.5f97d1f55f.js",
+      "webview/assets/async/393618.4045ff333c.js"
+    ],
+    "integrity_policy": "record-and-continue",
+    "unselected_native_companions_with_integrity_mismatch": 7,
+    "interpretation": "Unselected native companion identity remains untrusted/unknown; no tampering cause established, no companion executed or modified",
+    "inventoried_files_outside_selected_graph": 11076,
+    "whole_app_negative_proof": false,
+    "findings": [
+      "Client identifies as NekoClient; empty-label RTCDataChannel carries JSON control and binary inputs; differs from upstream Neko WebSocket control transport",
+      "Shared control_host/control/host boolean has_host maps to controlowner human/dot, independently of local observe/control mode",
+      "Shared takeover requests require an open channel, carry request IDs and shared flag; matching peer/acknowledgement grants input mode; omitted acknowledgement request ID accepted for compatibility",
+      "Binary input requires mode control and open channel; mouse x/y are absolute video coordinates with letterbox scaling",
+      "Existing React callback reaches private owner state and controls UI; selected preload/consumer inspection did not establish a guest owner subscription",
+      "Peer replacement resets owner/mode; disconnect resets local mode without owner-null event; consumers must invalidate stale ownership on lifecycle changes"
+    ]
+  },
+  "offline_replay": {
+    "schema": "dotbox-viewer-offline-contract-replay-1",
+    "member_sha256": "677f26e365d928c58703a314ed87d1fc72e1dee67af7c39c6ecc1cec65ffc580",
+    "source_range": {
+      "start": 8903,
+      "end": 22964,
+      "encoding": "UTF-8 bytes",
+      "end_exclusive": true
+    },
+    "passed": 19,
+    "checks": [
+      {
+        "name": "shared owner human event, independent of local mode",
+        "passed": true
+      },
+      {
+        "name": "shared owner dot event",
+        "passed": true
+      },
+      {
+        "name": "missing host boolean does not manufacture owner",
+        "passed": true
+      },
+      {
+        "name": "ordinary nonshared client has no shared owner event",
+        "passed": true
+      },
+      {
+        "name": "observe mode refuses binary input",
+        "passed": true
+      },
+      {
+        "name": "takeover request is correlated and not a local grant",
+        "passed": true
+      },
+      {
+        "name": "closed channel refuses shared request",
+        "passed": true
+      },
+      {
+        "name": "wrong peer acknowledgement ignored",
+        "passed": true
+      },
+      {
+        "name": "stale and invalid supplied request identifiers ignored",
+        "passed": true
+      },
+      {
+        "name": "matching acknowledgement grants local mode",
+        "passed": true
+      },
+      {
+        "name": "omitted request id compatibility acknowledgement is accepted",
+        "passed": true
+      },
+      {
+        "name": "absolute mouse packet uses unchanged x and y, not accumulated deltas",
+        "passed": true
+      },
+      {
+        "name": "key down and up packet encoding",
+        "passed": true
+      },
+      {
+        "name": "closed channel refuses binary input even while mode control",
+        "passed": true
+      },
+      {
+        "name": "release sends request without inventing immediate mode acknowledgement",
+        "passed": true
+      },
+      {
+        "name": "late grant after cancellation is released, not adopted",
+        "passed": true
+      },
+      {
+        "name": "peer replacement clears owner and control mode",
+        "passed": true
+      },
+      {
+        "name": "disconnect clears local mode but does not emit an owner-null update",
+        "passed": true
+      },
+      {
+        "name": "letterboxed video point scales to absolute original video pixels",
+        "passed": true
+      }
+    ],
+    "forbidden_live_calls": 0,
+    "scope": "Exact extracted client class/helpers; fake keyboard, channel and DOM geometry; no live app, WebRTC, server, account or cloud execution.",
+    "script": "scripts/replay_viewer_contract.mjs",
+    "script_sha256": "6cef325ff88e82cac729bde985669c2706ddec4cf3c175c60a42131c822e2e34",
+    "result_sha256": "c71c43ac79e41dd125782c8522bd110d38b8c24033faaff53a79ae53b1a5090c",
+    "limits": [
+      "Packet assertions sample encoding and do not assert every field/range",
+      "Real connection, peer-failure and channel-close handler paths unexecuted; fake channel-ready-state gates only",
+      "Node vm is not a security boundary; exact caller-provided source digest is required"
+    ]
+  },
+  "live_web_viewer": {
+    "surface": "Existing Dot computer through user-supplied side-browser chat; permitted browser automation and existing Take over / Return control UI",
+    "actor": "Authorized automated viewer-side coordinator plus Dot using her own offered desktop tools; no person typed the viewer-side marker",
+    "computer_replaced": false,
+    "takeover_return_cycles_observed": 2,
+    "ui_owner_detectable": true,
+    "ui_takeover_return_triggered": true,
+    "keyboard_effect": {
+      "marker": "dotbox",
+      "method": "Remote address-bar click, Ctrl+A and individual desktop key events",
+      "visually_verified": true,
+      "enter_pressed": false
+    },
+    "pointer_effect": {
+      "method": "Remote Chromium new-tab-plus mouse click",
+      "result": "One empty second tab visibly created",
+      "visually_verified": true
+    },
+    "agent_after_return": {
+      "marker": "dotbox-agent-b-20261116",
+      "reported_tools": [
+        "cua_repl.js",
+        "cua.getApp",
+        "app.click",
+        "app.pressKey",
+        "app.typeCharacters"
+      ],
+      "reported_characters_sent": 23,
+      "exact_calls_independently_observed": false,
+      "resulting_marker_independently_observed_in_same_viewer": true,
+      "viewer_label_at_observation": "Dot has control"
+    },
+    "cleanup": {
+      "initial_single_escape_incomplete": true,
+      "correction": "Closed only newly created test tab; two Escapes restored original empty address bar",
+      "final_tabs": 1,
+      "final_address_bar": "empty new-tab placeholder",
+      "final_owner_label": "Dot has control",
+      "final_take_over_checked": false,
+      "final_state_visually_verified": true,
+      "completion_acknowledgement_sent": true
+    },
+    "events": [
+      {
+        "stage": "before_takeover",
+        "utc": "2026-11-16T15:53:27.532Z",
+        "label": "Dot has control",
+        "checked": false
+      },
+      {
+        "stage": "takeover_acknowledged_ui",
+        "utc": "2026-11-16T15:54:05.189Z",
+        "label": "You have control",
+        "checked": true
+      },
+      {
+        "stage": "remote_pointer_and_keyboard_observed",
+        "utc": "2026-11-16T15:55:11.141Z",
+        "marker": "dotbox",
+        "surface": "remote Chromium address bar",
+        "entered": false
+      },
+      {
+        "stage": "return_acknowledged_ui",
+        "utc": "2026-11-16T15:56:15.763Z",
+        "label": "Dot has control",
+        "checked": false
+      },
+      {
+        "stage": "agent_marker_independently_observed",
+        "utc": "2026-11-16T16:05:04.520Z",
+        "marker": "dotbox-agent-b-20261116",
+        "label": "Dot has control",
+        "checked": false
+      },
+      {
+        "stage": "remote_mouse_new_tab_observed",
+        "utc": "2026-11-16T16:05:22.430Z",
+        "effect": "one empty second Chromium tab created by pointer click",
+        "label": "You have control"
+      },
+      {
+        "stage": "final_return_and_cleanup_observed",
+        "utc": "2026-11-16T16:05:35.266Z",
+        "label": "Dot has control",
+        "checked": false,
+        "remoteTabs": 1,
+        "addressBar": "empty new-tab placeholder"
+      }
+    ],
+    "timing": "UTC observation/log points include model and coordination gaps; not request/grant latency measurements",
+    "dot_tool_owner_field_event": "Agent reports none exposed in offered tools; no supported guest subscription established",
+    "automatic_pause_resume_tested": false,
+    "concurrent_input_refusal_tested": false,
+    "exclusive_process_wide_lease_proven": false,
+    "unattended_switching_tested": false,
+    "web_build_bound_to_installed_artifact": false,
+    "native_app_input_tested": false,
+    "dotbox_cloud_install_tested": false
+  },
+  "runtime_regression_scope": {
+    "runtime_modules_unchanged_from_parent_and_prior_clean_install": 17,
+    "production_runtime_modified": false,
+    "prior_engine_report": "standalone-engine-2026-11-16.json",
+    "prior_engine_test_counts_not_rerun_or_attributed_to_new_live_check": true
+  },
+  "reuse_decision": "Reuse existing desktop keyboard/mouse and viewer buttons; browser-side explicit handoff is verified. Guest-only automatic turn switching still needs an authorized owner/mode/lifecycle bridge or server-supported equivalent.",
+  "deferred": [
+    "Sound",
+    "Gameplay and pathfinding",
+    "Guest ownership bridge",
+    "Clean native DotBox cloud deployment",
+    "Portable native-library bundling and Windows"
+  ],
+  "private_evidence": [
+    {
+      "name": "live-viewer-input.jpg",
+      "bytes": 34084,
+      "sha256": "808e4e431020fb566056473731146fa317aa3158f0481653ee435246c065ecc1",
+      "public": false
+    },
+    {
+      "name": "live-viewer-return.jpg",
+      "bytes": 32691,
+      "sha256": "f45a0cc76f779c0b42d79267d0e91631207484a8038ba604041d5889ad7e53fb",
+      "public": false
+    },
+    {
+      "name": "live-agent-after-return.jpg",
+      "bytes": 32948,
+      "sha256": "addb4310affb58f91d1535ff4a42e07797a602246cc002d477412565a0440dfd",
+      "public": false
+    },
+    {
+      "name": "live-mouse-new-tab.jpg",
+      "bytes": 34572,
+      "sha256": "b6d2ba1147f9ef7f6199ab6bbc63dc51ed5bccec8ff31ca0d3466e6cf1ef93e6",
+      "public": false
+    },
+    {
+      "name": "live-final-return-clean.jpg",
+      "bytes": 32395,
+      "sha256": "bbe3daa51ad7f5c1555764382399fd63b7d4644ec003612c7359095dddf4b8c7",
+      "public": false
+    },
+    {
+      "name": "live-final-return-state.txt",
+      "bytes": 1099,
+      "sha256": "2aa4fd1e5285e76edce261343590ad42184b33e2b8e21709629747dedb12960b",
+      "public": false
+    },
+    {
+      "name": "live-viewer-events.json",
+      "bytes": 1261,
+      "sha256": "4c1a1489e1375a503f0eb3e4cba40103a6243af856a38c883aa691bc69b62048",
+      "public": false
+    },
+    {
+      "name": "dot-after-return-response.txt",
+      "bytes": 5450,
+      "sha256": "2863e154cad8173794c813025c850b18c82931a9b364030b61a94a203f1ea966",
+      "public": false
+    },
+    {
+      "name": "dot-marker-ready.txt",
+      "bytes": 2004,
+      "sha256": "960240a53bb1c77623c16330ee9f249a84c1d9a0690f821147c26f536d2fc1b5",
+      "public": false
+    },
+    {
+      "name": "dot-test-acknowledged.txt",
+      "bytes": 3243,
+      "sha256": "09c18ac74a7ca3b53ecabc8c779183a752ff24515e0d5313eb3fa6683ad0bf60",
+      "public": false
+    },
+    {
+      "name": "dot-test-acknowledged.jpg",
+      "bytes": 105706,
+      "sha256": "99aad84781cbd139e1dd444405d027a602a424076f90861aab56147aabe28e04",
+      "public": false
+    },
+    {
+      "name": "rea-app-evidence-02.json",
+      "bytes": 212469715,
+      "sha256": "c323dba8f7ae8335808375d199f971bb0204ce25b449df3f36f7742375bd3902",
+      "public": false
+    },
+    {
+      "name": "selected-source-integrity.json",
+      "bytes": 867,
+      "sha256": "e754cab0237873345eb40e94259c40a32c5e6cc2bff4cbdca0a2533af0a716a6",
+      "public": false
+    },
+    {
+      "name": "react-control-trace.json",
+      "bytes": 7461,
+      "sha256": "50cac2ae07adc8dc772774ceb4164e2e43baa0c93d0b35279fb4c7553b8a0aed",
+      "public": false
+    },
+    {
+      "name": "preload-static-findings.json",
+      "bytes": 7430,
+      "sha256": "c082fc4e5e30ea60510bc1489326641e2db0607c54546c518bb655ad98725263",
+      "public": false
+    },
+    {
+      "name": "final-identity-check.json",
+      "bytes": 140,
+      "sha256": "6209f36e279c701cc6d023f7b3b15f88c23ca9d0ed4840b063b68beb55eae5cd",
+      "public": false
+    },
+    {
+      "name": "viewer-replay-final.json",
+      "bytes": 2407,
+      "sha256": "c71c43ac79e41dd125782c8522bd110d38b8c24033faaff53a79ae53b1a5090c",
+      "public": false
+    }
+  ],
+  "publication": "Authored analysis and replay script, member identities, sanitized outcomes and receipt hashes only; no app source bodies, screenshots, chats, credentials, private chat/environment/connection IDs, game assets or memory dumps"
+}

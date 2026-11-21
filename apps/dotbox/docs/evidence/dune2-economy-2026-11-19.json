@@ -1,0 +1,527 @@
+{
+  "building_economics": {
+    "accounting": "999 - 50 - 300 - 400 - 1 = 248",
+    "credits_after_buildings": 248,
+    "observed_initial_gameplay_credits": 999,
+    "one_credit_extra_debit": {
+      "exact_debit_instruction_traced": false,
+      "interpretation": "Maintenance, strongly supported by original deadline/debit code and before/after state."
+    },
+    "refinery": {
+      "footprint": [
+        3,
+        2
+      ],
+      "hitpoints": 450,
+      "maximum_hitpoints": 450,
+      "observed_house_storage": 1005,
+      "power_usage": 30
+    },
+    "refinery_cost": 400,
+    "slab_cost": 5,
+    "slabs_placed_for_tested_buildings": 10,
+    "windtrap": {
+      "footprint": [
+        2,
+        2
+      ],
+      "hitpoints": 200,
+      "maximum_hitpoints": 200,
+      "power_production": 100
+    },
+    "windtrap_cost": 300
+  },
+  "date": "2026-11-19",
+  "format": "dotbox-dune2-economy-evidence-1",
+  "game": {
+    "mission": "Atreides mission one",
+    "original_edition": "v1.0 as identified in the original game",
+    "original_executable_bytes": 365504,
+    "original_executable_sha256": "d49f45729babd298fd72d0f623cc3cfaa4c3d144ab38e53f24355f2208b4e5a0",
+    "platform": "DOS",
+    "resource_binding_limit": "The executable hash alone does not identify a complete resource set or current runtime mapping. Original resources and mapping evidence are retained privately.",
+    "title": "Dune II"
+  },
+  "harvester": {
+    "actions": [
+      {
+        "action_id": 5,
+        "name": "Harvest",
+        "requires_target": true
+      },
+      {
+        "action_id": 1,
+        "name": "Move",
+        "requires_target": true
+      },
+      {
+        "action_id": 6,
+        "name": "Return",
+        "requires_target": false
+      },
+      {
+        "action_id": 7,
+        "name": "Stop",
+        "requires_target": false
+      }
+    ],
+    "automatic_search": {
+      "explicit_target_requires_player_observation": true,
+      "hidden_candidate_coordinates_disclosed": false,
+      "original_helper_checks_player_visibility": false,
+      "player_search_radius_and_retry_cadence_qualified": false
+    },
+    "explicit_harvest_and_return_observed": true,
+    "explicit_partial_load": {
+      "cap_write_instruction_traced": false,
+      "cargo_before_return": 10,
+      "credits_before_return": 954,
+      "final_actual_and_displayed_credits": 1005,
+      "final_cargo": 0,
+      "gross_processed_value": 70,
+      "inferred_storage_clipping": 19,
+      "intermediate_actual_credits": 996,
+      "intermediate_cargo": 4,
+      "intermediate_displayed_credits": 977,
+      "net_balance_increase": 51,
+      "processed_stat_end": 777,
+      "processed_stat_start": 707,
+      "storage_cap": 1005
+    },
+    "first_full_cycle": {
+      "automatic_return_entry_unloading_redeployment_observed": true,
+      "cargo_end": 0,
+      "cargo_start": 100,
+      "credits_end": 955,
+      "credits_gained": 700,
+      "credits_start": 255,
+      "processed_stat_end": 707,
+      "processed_stat_start": 7
+    },
+    "raw_inTransport_flag": {
+      "alone_proves_physical_carrying": false,
+      "set_by_original_on_map_harvesting": true
+    },
+    "starter_cargo": 1,
+    "starter_credits_gained": 7
+  },
+  "implementation": {
+    "documentation_only": true,
+    "full_campaign_qualified": false,
+    "native_or_emulator_code_changed": false,
+    "original_dot_ownership_integration_qualified": false,
+    "public_action_admission_added": false,
+    "public_game_provider_installed": false,
+    "public_memory_reader_installed": false,
+    "visibility_correction_implemented": false
+  },
+  "limits": [
+    "Observed run covers Atreides mission one, not a full campaign.",
+    "Private input helpers and raw decoders are not a shipped public provider.",
+    "The later frozen accounting check is not a complete independent audit of every live input receipt.",
+    "Automatic player EMC search radius/retry cadence and complete script flow remain unresolved.",
+    "The proposed visibility correction remains unimplemented and unqualified.",
+    "Other houses, missions, broad combat and NPC behavior require separate evidence.",
+    "Source-derived rules do not grant current action admission or disclose hidden world state."
+  ],
+  "milestones": [
+    {
+      "id": "first_slab_complete",
+      "observed": {
+        "baseline_credits": 999,
+        "credits": 994,
+        "slab_cost_observed": 5
+      },
+      "private_capture_sha256": {
+        "frame": "82f8ce4458c625a7a1e75771869c13683cf50f4b41d6464e57199609c6e80cce",
+        "metadata": "886874e5e6cb1376b796f4d21c7cc74c460be4d8750abcc262d4e63bd2a3403a",
+        "ram": "5434a17c153087bf82a0862d4d003a0053a20f1554860d8461dea35ff205d048"
+      }
+    },
+    {
+      "id": "placement_refused_before_target_preview",
+      "observed": {
+        "intended_target_unchanged": true,
+        "placement_mode_retained": true,
+        "target_preview_now_valid": true
+      },
+      "private_capture_sha256": {
+        "frame": "05e055e9acce9c65020e62a025a0b3cf8fa7736083c51e5b60fb3c9e438cf0f2",
+        "metadata": "e131e74ed9655758f59b227518214101d89c7dfad4ff9bce3ea82ad4e58f532d",
+        "ram": "0e47e66a87b3b97333b4fcb99c94d097d9d979b043a179e006c0f6a5f817d7b1"
+      }
+    },
+    {
+      "id": "placement_accepted_after_preview",
+      "observed": {
+        "active_placement_cleared": true,
+        "intended_tile_became_owned_concrete": true
+      },
+      "private_capture_sha256": {
+        "frame": "57a5b23b3ff118e2f9b0c998fecf7218f440b954d8f2ecce03f4e85af3926b02",
+        "metadata": "8690d7e3d25939350ff6852e9220c5e019bbee1f9f4563551954d132b5f59ba5",
+        "ram": "92adfa91477af96d840d160d8f8ccc54f8a18e102e91664b0b1557bb575cb453"
+      }
+    },
+    {
+      "id": "windtrap_placed",
+      "observed": {
+        "full_hitpoints": true,
+        "power_production": 100,
+        "power_usage": 0,
+        "tutorial_visible": true
+      },
+      "private_capture_sha256": {
+        "frame": "b104a718957f23b851ca3ef5d19c9bec674bc5e483440572a11100fb3e82b7c1",
+        "metadata": "0e9a44393aea059a5c50a730f87cb236bc1ca3822a0064febdc0ef5b8f401844",
+        "ram": "065db87752e806cde6e0c28b835148e3575974e8f89dd2d010b342394bdf704f"
+      }
+    },
+    {
+      "id": "refinery_placed",
+      "observed": {
+        "full_hitpoints": true,
+        "power_production": 100,
+        "power_usage": 30,
+        "storage": 1005,
+        "tutorial_visible": true
+      },
+      "private_capture_sha256": {
+        "frame": "cc721617e9c7cb160daae9326cdf07d148cc014a422cb85317b3202d1c806a68",
+        "metadata": "1fa6bd5fff45791d2b244b1e0922ff701c55acd94ed16dd215eacd0a1b825a1a",
+        "ram": "88a632e70d83b3e6a8434ef61e392a73fb109da00e671d721df2f6c9991542d7"
+      }
+    },
+    {
+      "id": "full_field_load",
+      "observed": {
+        "cargo": 100,
+        "credits": 255,
+        "processed_statistic": 7
+      },
+      "private_capture_sha256": {
+        "frame": "7e4d141720d1761314e0630a2e4ce69e3066c552e614062feef7c8b45ad23965",
+        "metadata": "112bd4d83a5f61bb59677d7a175927e4ab31f11070d455878e77663859b06c0c",
+        "ram": "ca412fd986651093ab53fc7e95a526d7ea848859b6f9d4990942e74bb8f443aa"
+      }
+    },
+    {
+      "id": "full_load_unloaded_and_redeployed",
+      "observed": {
+        "cargo": 0,
+        "credits": 955,
+        "on_map": true,
+        "processed_statistic": 707
+      },
+      "private_capture_sha256": {
+        "frame": "c5be90d56433081381fa1939a9c1dcb721378853ac0a92a187faa18502610fea",
+        "metadata": "9e0b60c266ce57be9c0fbf1c0b2733b8cab79d5dbe11503fe7d541d033300146",
+        "ram": "920176c1040493d1fca80a00bd52eef44b81ea4448728bb00a030ba30df12bd4"
+      }
+    },
+    {
+      "id": "explicit_harvest_armed",
+      "observed": {
+        "active_action_id": 5,
+        "selection_mode": "target"
+      },
+      "private_capture_sha256": {
+        "frame": "3fe7cf88ec02324ceda221d561106736a74b8d131a8f10edd5ccd00c8c79df0d",
+        "metadata": "5dbacd6048ba27857bb7879dbdf428e83b048ee6b8ede5d8cd93d347b47cc3c2",
+        "ram": "828f7dae47c9ce18320bafdd3ea98f7e84205b9ebccf4e2c25ac835a62ec427f"
+      }
+    },
+    {
+      "id": "explicit_visible_field_selected",
+      "observed": {
+        "selection_mode": "unit",
+        "targeting_context_cleared": true
+      },
+      "private_capture_sha256": {
+        "frame": "78fbeb5bec1771636287295e5bf7c254fdb0a347f66f32b5a33fc7deeca557e2",
+        "metadata": "161a9e6e6ec6240eb21ec6e9b02019bfa19072e3bd6a8644479faac928bb6789",
+        "ram": "ec62df4e676c9b365daaa56b14b969ad9e9df41852da3fbdec52ef5b6fd5bb26"
+      }
+    },
+    {
+      "id": "explicit_return_issued",
+      "observed": {
+        "cargo": 10,
+        "observed_following_unit_action": "Move",
+        "requires_second_target": false
+      },
+      "private_capture_sha256": {
+        "frame": "bb51c8aac998f5ae24f136ce82df78ea890b627a44fff6206f69a8150d719c79",
+        "metadata": "01a7d4b0f4e828572de16adaf5d1f9213de8e6044a01bd6d0ce4e95b8609baca",
+        "ram": "641a3c46e2742ccc55bc74a42a9417cfb810eaa0e943f33f516497b87732f564"
+      }
+    },
+    {
+      "id": "partial_load_unloading",
+      "observed": {
+        "actual_credits": 996,
+        "cargo": 4,
+        "displayed_credits": 977,
+        "processed_statistic": 749
+      },
+      "private_capture_sha256": {
+        "frame": "3fb9fcd22abc0f11436efbf238650fdd2dadd1b441dbf2ecff9d237dd2250d32",
+        "metadata": "ece379614f67dba52be33c05d2b114a714ee01a87dde4895d53e1b152120a945",
+        "ram": "e09a24e87e14bfd587eb0231b54468815f05b9c09ea1d8e61e0c583a89f67b9c"
+      }
+    },
+    {
+      "id": "mission_one_success_modal",
+      "observed": {
+        "actual_and_displayed_credits": 1005,
+        "cargo": 0,
+        "processed_statistic": 777,
+        "visible_success_modal": true
+      },
+      "private_capture_sha256": {
+        "frame": "4c603ddd848bd81611e62487928a44ed306f69e044a759ea988eb421a9bd72dc",
+        "metadata": "9c77d47a684c390ac7e20da07a9302a462bfd64af9c1a4a49d04417f7cfcb04a",
+        "ram": "96753015a849835f0879293b6d845cef33c15fbe8c9b6b5d5191de8335e91848"
+      }
+    },
+    {
+      "id": "success_presentation_acknowledged",
+      "observed": {
+        "campaign_id": 0,
+        "result_presentation_opened": true
+      },
+      "private_capture_sha256": {
+        "frame": "8daa80f5e217387fc5899ca58a441df49817a1a0ea4f21211685fe233c2341fc",
+        "metadata": "942d72e1cbd6f719a04cb8f4e49e3c31d2f9106b77fb12103a7e85bc4b3f2b08",
+        "ram": "02d3dd85ca3490c2f98e790b7aa9e27e1d2fe372d9ce8a3ec657d73bb2cc0187"
+      }
+    },
+    {
+      "id": "proceed_to_results",
+      "observed": {
+        "campaign_id": 1,
+        "statistics_screen_opened": true
+      },
+      "private_capture_sha256": {
+        "frame": "3dc8e71c6a22794c9581d15a1c0bc559eb8af0c16dea19b758efc96b60045f02",
+        "metadata": "280463976172e08437aa202da9f2da2a11245e24a2b9c7b50607cae8185fc816",
+        "ram": "2fc4517086661fc3f2d6c94e63d9fb0195e71697ef91dee8a3936120c74fb5ba"
+      }
+    },
+    {
+      "id": "completed_mission_statistics",
+      "observed": {
+        "game_reported_time_minutes": 7,
+        "rank": "Desert Mongoose",
+        "score": 89,
+        "spice_enemy": 0,
+        "spice_player": 777,
+        "units_destroyed_enemy": 0,
+        "units_destroyed_player": 3
+      },
+      "private_capture_sha256": {
+        "frame": "f80834459ac97927fa77eaee2724a54276fa609d3cb3c80944f1c368fcd598fb",
+        "metadata": "0789bc7731913b5dfff1b876da19b3864052904a30591a7099c532e66a043a3f",
+        "ram": "4d9a10bf8a13a1d91357dc7f4e4574ed76ad9f094c05949574f13179536e0c5e"
+      }
+    },
+    {
+      "id": "local_hall_of_fame_entry",
+      "observed": {
+        "local_entry_completed": true
+      },
+      "private_capture_sha256": {
+        "frame": "db46e39be5c70da00cde0059653c71676b1fd51f64e5d35d49f44bf8d2a99f1c",
+        "metadata": "fba80c9e2f419515bce2dc08f894ca8ae268e666d25cd5d68d340fa834571d58",
+        "ram": "8035794b536849a6f6dbb03400124ec1c7e5882966d7579d64274af38cfd17e1"
+      }
+    },
+    {
+      "id": "campaign_next_region_selection",
+      "observed": {
+        "campaign_id": 1,
+        "next_mission_started": false,
+        "next_region_selected": false,
+        "next_region_selection_prompt_visible": true
+      },
+      "private_capture_sha256": {
+        "frame": "f6478bd99c75cb8646a7e24d304a21fcd8993aa8737e1864f6a5dbee64bd7740",
+        "metadata": "8ca9563b1330fb5d96033958561e581628bc04cd1b659ea2f8ab8a67a87dd027",
+        "ram": "9349700cab5c870f9e0a6110377df0fb26ac292e5b31a3c9444371e006212edc"
+      }
+    }
+  ],
+  "mission_result": {
+    "actual_credits": 1005,
+    "campaign_id_after_proceed": 1,
+    "campaign_id_at_success_modal": 0,
+    "cargo": 0,
+    "displayed_credits": 1005,
+    "final_frontier": "Campaign map awaiting a next-region choice.",
+    "full_campaign_completion_claimed": false,
+    "local_hall_of_fame_entry_completed": true,
+    "next_mission_started": false,
+    "next_region_selected": false,
+    "post_success_progression": "Confirmed through the campaign next-region selection prompt.",
+    "processed_spice_statistic": 777,
+    "quota": 1000,
+    "static_predicate_inputs_alone_prove_success": false,
+    "statistics": {
+      "aggregate_totals_assign_specific_kill_causality": false,
+      "game_reported_time_minutes": 7,
+      "game_time_is_harness_timing_benchmark": false,
+      "rank": "Desert Mongoose",
+      "score": 89,
+      "spice_harvested": {
+        "enemy": 0,
+        "player": 777
+      },
+      "units_destroyed": {
+        "enemy": 0,
+        "player": 3
+      }
+    },
+    "tick_rate_hz_qualified": false,
+    "visible_success_observed": true,
+    "witness": "Original first-mission success modal, separately inspected in retained frame."
+  },
+  "placement": {
+    "automatic_retry_supported": false,
+    "cached_message_proves_latest_outcome": false,
+    "concrete_revalidates_supplied_position": true,
+    "first_failed_call_arguments_traced": false,
+    "fresh_event_tile_used_by_placement_call": false,
+    "later_buildings_used_current_preview_before_single_click": true,
+    "later_separately_selected_click_succeeded_after_preview": true,
+    "refusal_retained": true,
+    "required_primitive_stages": [
+      "pointer move without button",
+      "bounded original-loop update",
+      "observe intended stored and rendered preview with current validity",
+      "one qualified target click",
+      "observe placement and any subsequent event"
+    ],
+    "stored_preview_position_used_by_original_click": true
+  },
+  "private_decoder": {
+    "action_admission": false,
+    "bindings_sha256": "ad409d595380dd5b011c4e579f27e435223605b115251d605978da95682492f5",
+    "reader_sha256": "be99e2f2e129eb86e104585ccae99548723bbcbc733e1dcd32b8f3f8ebad1bcf",
+    "scope": "Raw private observations; semantic readiness and visible mission results need separate witnesses.",
+    "visible_win_decoder_value": null
+  },
+  "private_report_provenance": [
+    {
+      "content_published": false,
+      "id": "original_economy_analysis",
+      "sha256": "e13af960ed6956d2a030a456acd2195b5290dd6365ef63faa8f67ce429030c34"
+    },
+    {
+      "content_published": false,
+      "id": "modal_pointer_lifetime",
+      "sha256": "639aad9e63d122253d7705dda13b9b7d88bf10cf554b98a63470a55ed3a58274"
+    },
+    {
+      "content_published": false,
+      "id": "placement_preview_ordering",
+      "sha256": "801fc7db0a1b068103ca1ed771c225f3d537fb8f79cf580506d4aafb7bfcb55e"
+    },
+    {
+      "content_published": false,
+      "id": "harvester_control_analysis",
+      "sha256": "14b48e50008f65ab09c54bd0acaa21145aa4c7814458338f1fc236b8b088b9ea"
+    },
+    {
+      "content_published": false,
+      "id": "harvester_code_receipt",
+      "sha256": "7b25cdcaab1a4dd1e2476db1b0eebab211b7cad68329f67e1664ca1ddf6e7cdb"
+    },
+    {
+      "content_published": false,
+      "id": "building_and_delivery_independent_review",
+      "sha256": "09f1e057d0493027945af90e3f9e1624e6ed9a1073da6fda302cc70f3dce7fe8"
+    },
+    {
+      "content_published": false,
+      "id": "building_and_delivery_review_receipt",
+      "sha256": "7bbd87981681bed2b6cf9b292dfc535244ae4cd4321f7062faa2e320e63839c9"
+    },
+    {
+      "content_published": false,
+      "id": "moving_unit_visibility_independent_review",
+      "sha256": "ebc4a7ab7d7fb9b6d697bdfe1c3176214d07dcee18a3263aef64d81ab23c9188"
+    }
+  ],
+  "publication": {
+    "authored_document": "docs/DUNE2_ECONOMY.md",
+    "disassembly_published": false,
+    "game_assets_published": false,
+    "game_files_published": false,
+    "hidden_terrain_coordinates_published": false,
+    "private_hashes_are_provenance_not_public_artifact_links": true,
+    "private_paths_or_session_ids_published": false,
+    "raw_memory_published": false,
+    "saves_published": false
+  },
+  "reference": {
+    "commit": "ebea79aeba025be2fe9004570e9255044aacc0be",
+    "confirmed_edition_differences": [
+      "Original structure-pool limit is 80; reference limit is 82.",
+      "Original non-player refining multiplier is fixed at 10; reference varies non-player yield.",
+      "Original and reference ground-unit rendering loops have different lower bounds."
+    ],
+    "data_edition_requested": "1.07",
+    "project": "OpenDUNE",
+    "role": "Semantic correlate; original edition bindings require original confirmation.",
+    "source_code_copied": false,
+    "url": "https://github.com/OpenDUNE/OpenDUNE/tree/ebea79aeba025be2fe9004570e9255044aacc0be"
+  },
+  "scope": "Authored operational knowledge from original-game UI play, frozen capture analysis and source correlation; no public Dune II provider integration.",
+  "verification": {
+    "independent_building_and_initial_delivery_review": {
+      "accepted": [
+        "Windtrap production, four-tile foundation, preview, placement and full HP",
+        "Refinery production, six-tile foundation, preview, placement and full HP",
+        "Power production/use and current storage",
+        "Automatic harvester allocation, arrival, starter-cargo conversion and deployment",
+        "Observed unit-slot reuse"
+      ],
+      "frozen_captures": 52,
+      "later_field_collection_and_victory_in_this_review": false,
+      "memory_chunk_receipts": 520,
+      "representative_frames_inspected": 16,
+      "request_response_pairs": 50
+    },
+    "later_frozen_accounting_check": {
+      "campaign_selection_frame_separately_inspected": true,
+      "captures": 10,
+      "complete_later_input_chain_independently_audited": false,
+      "completed_statistics_frame_separately_inspected": true,
+      "method": "Independent re-decoding with the frozen original reader; expected actual credits, cargo and processed-spice statistic checked at each milestone.",
+      "visible_success_frame_separately_inspected": true
+    },
+    "moving_unit_projection_review": {
+      "live_visibility_fix_tested": false,
+      "original_rendering_source_independently_checked": true,
+      "unchanged_reader_reproduced_omission": true
+    }
+  },
+  "world_adapter_findings": {
+    "private_projection_blind_spot": {
+      "affected_observations": "Visible moving own Trike and Harvester over nonzero sand-track overlays.",
+      "cause": "Private projection required unveiled terrain and overlay zero; nonzero overlays can be visible non-fog graphics.",
+      "corrected_provider_installed": false,
+      "projection_omission_proves_absence": false,
+      "proposed_correction": "Classify fog overlays explicitly while retaining phase, frame, occupancy, audience, lifetime and action gates."
+    },
+    "unit_slot_reuse": {
+      "earlier_unit_death_cause_or_attacker_assigned": false,
+      "observed_lifetimes": [
+        "opposing Soldier",
+        "explicitly unused slot",
+        "owned Harvester"
+      ],
+      "slot_index_is_permanent_identity": false
+    }
+  }
+}

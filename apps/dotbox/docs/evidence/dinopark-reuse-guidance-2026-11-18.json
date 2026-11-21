@@ -1,0 +1,175 @@
+{
+  "format": "dotbox-dinopark-reuse-guidance-verification-1",
+  "date": "2026-11-18",
+  "scope": "source_reuse_audit_and_packaged_documentation",
+  "primary_parent": "0d2f6d873d300db310993713f66c144e009a1fc5",
+  "mirror_parent": "0e0ecd5ff93743473a814b678ae4cee3ea4836aa",
+  "source_tests": {
+    "command": "python -m pytest -q tests/test_kit.py",
+    "passed": 23,
+    "seconds": 0.4
+  },
+  "wheel": {
+    "filename": "dotbox-0.1.0.dev7-py3-none-any.whl",
+    "sha256": "9f42e29fa08f1850a0a7cd1c00e52f13ba21e1ba8539bc18d65d7fd965df6adf",
+    "build": "setuptools.build_meta.build_wheel with existing primary build runtime; no dependency download",
+    "installation": "new isolated target; existing Python 3.12 test dependencies reused",
+    "imported_from_installed_target": true,
+    "runtime_modules_matching_source": 35
+  },
+  "resources": {
+    "count": 52,
+    "topics": 22,
+    "all_bytes_and_hashes_match_source": true,
+    "guide_functions_matching_source": [
+      "dinopark",
+      "world",
+      "dune",
+      "reversing",
+      "start"
+    ],
+    "guide_cli_matches_source": [
+      "dinopark",
+      "world",
+      "dune",
+      "reversing",
+      "start"
+    ],
+    "relative_source_links_checked": 73
+  },
+  "doctor": {
+    "offline_learning_ready": true,
+    "native_runtime_qualified": false
+  },
+  "source_audit": {
+    "package": "fdisbull",
+    "version": "0.34.1",
+    "source_commit": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+    "wheel_sha256": "2cabcc5956e40a3c205d90025b226e6c271b0b1c149050e6b5571b8c420fd0f6",
+    "wheel_record_matches": 15,
+    "pinned_git_blob_matches": 15,
+    "helper_provenance_matches": 3,
+    "files": [
+      {
+        "path": "src/fdisbull/dinopark_fence.py",
+        "size": 10882,
+        "sha256": "a5af2ed46b469272389008517764862ef46288b619a4c41fd446b2e1da0b5ed3",
+        "git_blob_sha": "8b22995828fefdac05d5cd65523adb2b7a947005"
+      },
+      {
+        "path": "src/fdisbull/dinopark_land.py",
+        "size": 11463,
+        "sha256": "a7766c8c053b4c25815f814ac913c87d2797d37703dc03c617838411900cfc24",
+        "git_blob_sha": "dddbce0cda5e2b4c335c71b5a73169b705ef923a"
+      },
+      {
+        "path": "src/fdisbull/dinopark_purchase.py",
+        "size": 15095,
+        "sha256": "48e3c34aebc46bf47464596280b72151218016e6a485e28f8d095d62a2529162",
+        "git_blob_sha": "47194d117d7e40336d5d2e50056644880c92c9d2"
+      },
+      {
+        "path": "src/fdisbull/dinopark_scenes.py",
+        "size": 147594,
+        "sha256": "1b79816a620dba9c3cf38840d312695457e4459b9beb822e9278d150d5e6e7a3",
+        "git_blob_sha": "d7affacd1dd49cb7602110622e52cfa178874e90"
+      },
+      {
+        "path": "src/fdisbull/dinopark_terminal.py",
+        "size": 13252,
+        "sha256": "7eb34578ef433858ed33b3840f11d8867179d03202aa886eaccbaab65bdc8d1d",
+        "git_blob_sha": "c74da9e665b878426ef7ccbf006e9868e0730a5a"
+      },
+      {
+        "path": "src/fdisbull/dinopark_z.py",
+        "size": 74874,
+        "sha256": "d5b450b8879b7fcacb8b027f85810274dd5bc301b7f4f3e87a7c5b7f679a5d4e",
+        "git_blob_sha": "1507d086395950791e51e12173ef40beb2dcc52c"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-catalogue.json",
+        "size": 40154,
+        "sha256": "bdac5e66cc37b9921559e8c40c73cb013e64dc266b3b21d6382d3313c9c42b61",
+        "git_blob_sha": "74591a4e3d15c5af841aa37f4417a095c787b72b"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-mart.json",
+        "size": 12855,
+        "sha256": "e5da3e3f68e6cacf1db788b4327eb127b2151a7d0c619d0fb85392985ac39378",
+        "git_blob_sha": "aa62497275dde0e2528e2e222979c4728a630ad3"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-newgame.json",
+        "size": 43877,
+        "sha256": "5b2acae80d3ddf6a83af9e76c1e4154f5466014be8dd310189fe8a197094c9a4",
+        "git_blob_sha": "c14c69c25a96900df659fce7b699f11ef46a0909"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-operating.json",
+        "size": 54094,
+        "sha256": "310a639a373323b6b7fb7c7d66c0d1762ee3f08391b68c9135dd421b25888fa1",
+        "git_blob_sha": "1fc2f7709bf59312ef06444521fe7588fd16eff4"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-save.json",
+        "size": 3448,
+        "sha256": "71537783f8aebee49a75c5edfb314fed938daed811aa8cbfec75a0dcfd8aa55f",
+        "git_blob_sha": "c78dac4ae63acb7147e230ddf7765419dcb8b1e4"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-shop.json",
+        "size": 31118,
+        "sha256": "56b840fdd0a4a21b7e4223cdd922459aac4e1bbb019f472f64bc4be209ad5046",
+        "git_blob_sha": "b280570f57dea673077bafc2f6d999862cdfb128"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-source-provenance.json",
+        "size": 7268,
+        "sha256": "e09cadfb5ecb7feb4241a515a216a96bc08a021ef90f06b699767caaa1e7ce21",
+        "git_blob_sha": "7c17b9d3c435e68e32ac5330bc62a7ce531e4eaf"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-street.json",
+        "size": 2086,
+        "sha256": "cce87b5c4da70adccb1364142106c4b8669768619a8f878edcb33a4b9e7e4c6a",
+        "git_blob_sha": "74d435f8078f7f7fa6993243169a34fbcdc9db7b"
+      },
+      {
+        "path": "src/fdisbull/data/dinopark-e55-terminal.json",
+        "size": 4480,
+        "sha256": "a0016c0900f265fa2d4f23ebe69cb2cad1d774f39c515c00a07d74842d9f2f11",
+        "git_blob_sha": "f5fed60e6a48a341e5755b2de3dfabbccdadd441"
+      }
+    ]
+  },
+  "research_read": {
+    "private_reports": [
+      "DinoPark-E55-Handoff.md",
+      "DinoPark-E55-Behavioral-Story-Report.md",
+      "DinoPark-E55-Game-Story-Map.md",
+      "DinoPark-E55-Progress.json"
+    ],
+    "report_date": "2026-10-28",
+    "public_pinned_documents": [
+      "docs/DINOPARK_Z.md",
+      "docs/agent-handoffs/2026-11-03-dinopark-interruption.md"
+    ],
+    "historical_test_counts_not_reexecuted": true,
+    "research_archive_executed": false
+  },
+  "independent_review": {
+    "scope": "source audit, guide and crosslinks; private E55 reports read by coordinator",
+    "budget_wording_corrected": true,
+    "recorded_questions_wording_corrected": true
+  },
+  "not_performed": [
+    "DinoPark or Dune game execution",
+    "fresh fDisBull provider tests or native qualification",
+    "private research packet import",
+    "fDisBull source import",
+    "WorldStore or runtime adapter implementation",
+    "new rewind operation",
+    "native build or release publication"
+  ],
+  "whitespace_check": "git diff --check passed"
+}

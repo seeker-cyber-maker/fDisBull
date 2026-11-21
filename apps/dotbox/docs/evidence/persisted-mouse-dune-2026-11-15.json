@@ -1,0 +1,181 @@
+{
+  "schema": "dotbox-persisted-mouse-dune-verification-1",
+  "date": "2026-11-15",
+  "implementation_commit": "ff0139fa90b1fcf0fd103e43c26fc399ed04eaa2",
+  "status": "implemented_and_bounded_local_retest_completed",
+  "verdict": "Persisted mouse actions verified locally; 180-second startup-readiness target missed. No seamless/cloud/whole-game qualification.",
+  "implementation": {
+    "format": "dotbox-control-set-1",
+    "coordinates": "Absolute original guest-frame x,y; no delta movement introduced. Expected width/height checked; runtime frame/mode IDs captured fresh per execution. Native replies use DOS-driver logical coordinates under the existing conversion.",
+    "persistence": "Immutable source/version/parent-bound records in the same Project DB; explicit revision selection; legacy keyboard formats and IDs preserved.",
+    "mouse_action_scope": "Exactly one click per named mouse action; keyboard-only sequences remain supported.",
+    "transaction": "One bounded serialized act request validates running agent ownership, pauses, captures a fresh frame, checks dimensions, sends a generation-guarded absolute click, verifies its pause boundary and issues one continue.",
+    "failure_semantics": "No replay or blind resume on uncertain partial effects, unexpected stop or ownership change.",
+    "deadline": "Four-second shared mouse RPC deadline; native execution RPCs depend on the single-controller contract, while click injection is generation guarded.",
+    "timing_semantics": "Coordination event timestamps expose request/acknowledgment brackets. Continue acknowledgment is asynchronous; resume_observed and transition_verified remain false until separately observed.",
+    "source_scope": "Required persistent-play runtime foundation and native ownership overlay included; unrelated lead AGI/overlay development remains separate."
+  },
+  "skill_changes": {
+    "before_effects": "Record run start, an explicit default 180-second budget/deadline and readiness condition before launch or input.",
+    "markers": "Record launches before process creation, frame/input/effect and readiness or budget-expired events; include model/dispatch/tool/authoring time. Keep setup and configured launch distinct without dropping the whole timeline.",
+    "interruption_policy": "Record failures, coordination and observation gaps; never infer zero or reconstruct absent starts from mtimes.",
+    "operation_guide": "Small documented CLI path for immutable absolute mouse controls avoids private action wrappers."
+  },
+  "validation": {
+    "full_suite": "185 passed, zero skips, 14.31 s after device reconnect. Includes prepared native executable and pinned overlay-source checks.",
+    "independent_code_review": "No actionable defect found; mocked adapter coverage limits retained.",
+    "source_after_reconnect": "Frozen source hashes match; Git fsck completed without errors; native/media hashes reverified.",
+    "skill_structure": "Validator passed; local Markdown reference targets checked.",
+    "wheel": "Tool wheel built, 13 entries; backend/harness bytes match frozen source; no native binary or game data. Not full offline/cloud qualification.",
+    "wheel_sha256": "15f927c77a44776bc61ff1b802addcd3227a50d4ba0e6207a578639567c94933"
+  },
+  "runtime": {
+    "model": "gpt-6.1-terra; fresh local context selected by coordinator",
+    "host": "Darwin arm64",
+    "source": "Frozen implementation commit above with prepared fDisBull core/backend",
+    "native_executable_sha256": "5a9a221d2fe43cdf8ffc72c474073cb5d520717f17914282ec37bc25957b46af",
+    "target": "User-supplied original Dune CD edition, new private game layout and project",
+    "iso_sha256": "6a1adf2ba8159c694b0e30854e4eab85531b5fcf0a411b98a72ca461c362aea2",
+    "archive_sha256": "c526c89f724f767d8cb789e9dfb1f28d82ada45cd506b80e785374a058121daf",
+    "exposure": "No prior Dune results, frames, controllers or coordinates supplied to the fresh agent. Supplied README.DOC installation information was consulted; generic pretraining/franchise knowledge cannot be excluded. No clean-room claim.",
+    "policy": "Ordinary game input; no hidden-state/source recovery or walkthrough. Serial single-owner run; no worker overlap or human takeover in this retest."
+  },
+  "completed_trial": {
+    "id": "run-03",
+    "io_failure": false,
+    "persisted_revisions": 5,
+    "persisted_acts_accepted": 5,
+    "observed_effects": 3,
+    "observed_transitions": [
+      "Opening room to character close-up: select_duke",
+      "Close-up to room: stop_talking",
+      "Room to map: see_map"
+    ],
+    "unverified_actions": [
+      "talk_to_duke",
+      "come_with_me"
+    ],
+    "unverified_reason": "Accepted inputs and cursor/menu changes do not establish conversation content or intended effects.",
+    "revision_growth": [
+      {
+        "revision": "4edc136bc5a4692ce5a65aaf3eb5ca8243abfb86d9a21225b6ae7d43490a57e6",
+        "action": "select_duke",
+        "effect_verified": true
+      },
+      {
+        "revision": "dece1a5883dfcbce3b83a13624b042e495d203fd09829d2fa383b9679f8c7724",
+        "action": "talk_to_duke",
+        "effect_verified": false
+      },
+      {
+        "revision": "09781b60a942a150dfda3f692f59cf53817d84048d2632dbb76774e040916c2d",
+        "action": "come_with_me",
+        "effect_verified": false
+      },
+      {
+        "revision": "f470012d1e5e48f91b00255b5fc16fb9a9fc1d24696a5ff1820c994b279f3384",
+        "action": "stop_talking",
+        "effect_verified": true
+      },
+      {
+        "revision": "1197236a90da7678408d845f4e4bf2df119ea3622afdfd845d6914a4013548fb",
+        "action": "see_map",
+        "effect_verified": true
+      }
+    ],
+    "readback": "New CLI clients list/read retained revisions; all five rows, hashes, bindings and parents validate across two derived read-only DB connections.",
+    "scope": "Real persisted DotBox controls, with no private mouse-action sidecars. Expected dimensions are checked; full scene recognition and game semantics are not inferred."
+  },
+  "startup_seconds": {
+    "dispatch_to_run_start": 38.33909575,
+    "dispatch_to_interactive_hall_frame_receipt": 203.834846834,
+    "dispatch_to_first_verified_mouse_effect_frame_receipt": 226.580388417,
+    "initial_launcher_request_to_hall_frame_receipt": 126.827666917,
+    "configured_game_request_to_hall_frame_receipt": 31.913944959,
+    "configured_game_request_to_first_mouse_effect_frame_receipt": 54.659486542,
+    "dispatch_to_final_close_ack": 333.808854542,
+    "exact_service_ready_latency": null,
+    "installer_internal_launch_latency": null,
+    "notes": "Coordinator origin precedes delegation. Captured frame-response times are observable bounds, not exact game transition instants. Initial setup, model/dispatch and observation delays are included in full elapsed totals; configured launch is separate."
+  },
+  "preparation_budget": {
+    "declared_before_launch_or_input": true,
+    "seconds": 180,
+    "start": "Agent run_start, 38.339 s after coordinator origin",
+    "readiness_target_met": false,
+    "buffer_usable_event": false,
+    "expiry_recorded_late_seconds": 8.166740709,
+    "first_act_request_before_deadline_seconds": 0.880163166,
+    "first_effect_frame_after_deadline_seconds": 8.241292667,
+    "assessment": "Action acceptance before deadline did not establish readiness. Budget miss was recorded and play continued with the saved working subset; no deadline reset. Exact usable-buffer time remains unestablished."
+  },
+  "interruptions": {
+    "metric": "Internal pause_requested to resume_acknowledged coordination bracket",
+    "count": 5,
+    "milliseconds": [
+      9.952666,
+      8.379458,
+      9.609875,
+      9.098292,
+      9.825333
+    ],
+    "total_milliseconds": 46.865624,
+    "maximum_milliseconds": 9.952666,
+    "exact_guest_paused_duration": null,
+    "complete_user_visible_interruption_total": null,
+    "limits": "Asynchronous acknowledgment is not exact guest resumption or a rigorous paused-time upper bound. Model inspection, scene authoring, sampled observations and gameplay waits are not a complete blocked-player timeline. Later advancing frame IDs establish subsequent guest advancement.",
+    "command_errors": [
+      "TARGET_EXITED after installer/launcher completed",
+      "Close request after already-removed first-session descriptor"
+    ],
+    "mouse_command_failures": 0,
+    "comparison": "Earlier manual/sidecar trial had different actions and measurement boundaries. These are observed coordination costs, not a controlled speedup claim."
+  },
+  "interrupted_trial_preserved": {
+    "id": "run-02",
+    "cause": "External devices disappeared during execution; no replay attempted.",
+    "raw_preservation": "85 durable files copied and hashed before derived SQLite analysis.",
+    "durable_accepted_act_packets": 4,
+    "stored_valid_revisions": 5,
+    "coordination_milliseconds": [
+      8.85075,
+      9.786792,
+      9.6425,
+      21.898084
+    ],
+    "coordination_total_milliseconds": 50.178126,
+    "final_action": "No durable fifth act packet or frame14+; acceptance/effect remain unverified.",
+    "source_originals": "Unchanged; interrupted raw data never reopened for mutation.",
+    "qualification": "Retained partial evidence; not counted as a completed trial or a storage-durability guarantee."
+  },
+  "independent_verification": {
+    "coordinator": "Original hall/close-up/return/map images inspected; manifest hashes, five action packets, absolute-coordinate definitions, source/media identity and timing aggregates checked. Six original game-file hashes match intake.",
+    "second_reviewer": "Raw event/packet timing recomputed; same owner/run/generation and fresh-frame IDs verified; derived database integrity/digests/definitions/bindings/parents checked without modifying raw data.",
+    "raw_manifest_sha256": "43e6d09cac282d0bb61140fd0a9fa500b3aea1c981df7ce4936c77653658faca",
+    "event_journal_sha256": "0ea614b1cca4f453d2ea46b1fbd0281bbff98227b8d2b9ef4b1c8e20b12890a3",
+    "private_agent_report_sha256": "6900b5b3fdec8763588d17fadb3cfbd07e78625e264f5d5d25f56dc9385cd6a5",
+    "run03_audit_sha256": "80e3f745a842b46c48e55019bbcd966c883b9ef6aec796d5a4c161706cb4076b",
+    "run02_audit_sha256": "9b7b8f768a419c2309a36cfe01ad239da10b3fa2bcdf7c9111607afb608cde53",
+    "coordinator_metrics_sha256": "dc2b6f8b53f360e8cdfce29fdcaac829ccec197e6e1da7b08512591a28ec3a65",
+    "source_hashes": {
+      "src/dotbox/harness.py": "1e3699220c16f545f4c7371c3c837bad244701377c24de1286a4f9add1352854",
+      "src/dotbox/backend.py": "20f44a61b13aac6bf9552c45c81b8882bfc8c06248609d2b84049acd1268060b",
+      "src/dotbox/cli.py": "c37d98e90b406b2b8d4d30949a25c5688fe77c7d36b10de748d8d0f6dd4de6a6",
+      "src/dotbox/service.py": "387890bcecbfc4d617f65cfd926676212886f151bfe350e413fd797720ddf7c8",
+      "skills/dotbox-play/SKILL.md": "5cb3ae35639ca9b2e11760c7f10276b0c6c3611123d7973da79f21942f4a9367",
+      "skills/dotbox-play/references/continuous-play.md": "68caa489a8291a9bb7512cb6ed0ddd40f5322071ce4799a05805795ee9b9b84a",
+      "skills/dotbox-play/references/runtime-controls.md": "a292627f7bffc54f0e0931bfdcda545063ea0041e34ffc5d113b7b3b4354cf25"
+    }
+  },
+  "cleanup": {
+    "final_close": "Acknowledged; both session descriptors absent. No process matching this trial remained at coordinator check.",
+    "process_exit_status": "Agent reports both owner command sessions exited 0; the command journal records the close-client result rather than independent owner exit status."
+  },
+  "remaining_limits": [
+    "180-second readiness target missed; no automatic timer forced an on-time expiry event.",
+    "No exact all-user-visible interruption total or exact guest-paused time.",
+    "No actual cloud, platform takeover, native Z-scene recognition, warm guest-state persistence, dialogue-content or later-mission qualification.",
+    "One bounded fresh-model trial is not a general model benchmark."
+  ],
+  "publication": "Only authored contracts, scoped measurements and hashes. Original games, frames, saves, databases, private endpoints and credentials remain outside Git."
+}

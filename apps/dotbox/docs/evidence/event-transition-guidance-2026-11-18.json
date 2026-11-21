@@ -1,0 +1,65 @@
+{
+  "format": "dotbox-event-transition-guidance-verification-1",
+  "date": "2026-11-18",
+  "scope": "generic_transition_design_and_packaged_guidance",
+  "primary_parent": "50d28377c3eec73fe69f40ffd593b58dfb2b3f8b",
+  "mirror_parent": "29da613867ebf06cae73b729c73d93123b9b6319",
+  "bbs_project": "dotbox",
+  "bbs_thread_id": "e-a784add1-d1b9-4879-9dff-5819a247eba9",
+  "source_tests": {
+    "command": "python -m pytest -q tests/test_kit.py",
+    "passed": 23,
+    "seconds": 0.39,
+    "skipped": 0
+  },
+  "wheel": {
+    "filename": "dotbox-0.1.0.dev7-py3-none-any.whl",
+    "sha256": "c64d2632681a5611962b86ddddccc324afe101c1e4bfa234df9955448b2d4453",
+    "build": "setuptools.build_meta.build_wheel using the existing primary runtime; no dependency download",
+    "installation": "fresh isolated target; existing Python 3.12 dependencies",
+    "imported_from_installed_target": true
+  },
+  "resources": {
+    "count": 55,
+    "runtime_modules_matching_source": 35,
+    "topic_functions_matching_source": 25,
+    "guide_cli_matches_source": [
+      "transitions",
+      "world",
+      "loops",
+      "reversing",
+      "learning",
+      "start",
+      "xcom"
+    ],
+    "all_resource_bytes_and_catalog_hashes_match_source": true
+  },
+  "doctor": {
+    "offline_learning_ready": true,
+    "native_runtime_qualified": false,
+    "layout": "installed"
+  },
+  "independent_review": {
+    "generic_transition_and_dependency_design": "passed",
+    "source_reuse_and_implementation_scope": "passed",
+    "applied_clarifications": [
+      "Separate invocation/admission conditions from outcome conditions",
+      "Name the exact XCOM scalar-comparison/conditional-arm/first-call-write-return pattern and distinguish applying a rule from automatically inducing it"
+    ]
+  },
+  "source_reuse": {
+    "xcom_note": "https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/82#note_4184930917",
+    "fdisbull_source": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+    "prior_identity_receipt": "bootstrap-event-loop-guidance-2026-11-18.json",
+    "xcom_menu_addon_archive_recovered": false
+  },
+  "not_performed": [
+    "New gameplay or native rebuild",
+    "Transition-family ledger or dependency scheduler implementation",
+    "Generic structural pattern induction/scanner implementation",
+    "Live capture or provider port",
+    "Release publication"
+  ],
+  "whitespace_check": "git diff --check passed",
+  "relative_file_links_checked": 116
+}

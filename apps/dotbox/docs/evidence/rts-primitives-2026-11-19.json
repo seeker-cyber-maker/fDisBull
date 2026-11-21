@@ -1,0 +1,72 @@
+{
+  "authored_public_cases": 101,
+  "board_update": {
+    "attempts": 2,
+    "code": "PILOT_CAPACITY",
+    "committed": false,
+    "status": "rejected"
+  },
+  "date": "2026-11-19",
+  "format": "dotbox-rts-primitives-verification-1",
+  "frozen_original_integration": {
+    "captures": 21,
+    "cross_restore_diff_refusals": 3,
+    "generated_choices": 0,
+    "new_native_calls": 0,
+    "raw_game_data_published": false,
+    "restore_branches": 4,
+    "retained_field_comparisons": 10,
+    "same_branch_diffs": 17,
+    "stale_or_cross_branch_store_refusals": 80,
+    "unknowns_preserved": [
+      "controller_faction",
+      "relation_to_player",
+      "commandable",
+      "incarnation_id",
+      "phase.input_ready",
+      "group capability",
+      "mission events"
+    ],
+    "visible_entity_observations": 120
+  },
+  "full_repository_suite": {
+    "failed": 0,
+    "passed": 1169,
+    "seconds": 39.13,
+    "skip_scope": "Native executable and native base-source fixtures were not configured in this offline run",
+    "skipped": 15
+  },
+  "independent_review": {
+    "cases": 113,
+    "failed": 0,
+    "private_additional_cases": 12,
+    "resolved_findings": [
+      "Malformed after-observation preserves scalar acceptance and latches uncertainty",
+      "Monotone exact observation head prevents same-revision conflicts and regressions",
+      "Complete request bound enforced before provider admission",
+      "Logical membership cannot use a snapshot older than the known controller head",
+      "Projector accounts for ASCII-escaped canonical byte budget and preserves exact binding metadata"
+    ],
+    "skipped": 0
+  },
+  "limits": {
+    "entities": 1024,
+    "events": 64,
+    "logical_groups": 32,
+    "request_canonical_bytes": 16384,
+    "scene_canonical_bytes": 49152,
+    "scene_facts": 32,
+    "world_canonical_bytes": 1048576
+  },
+  "live_provider_installed": false,
+  "native_group_selection_qualified": false,
+  "production_gesture_driver_installed": false,
+  "scope": "Public Python and offline CLI contracts; captured-data integration; no new live gameplay qualification",
+  "source_baseline": "26b20968797df67666667668d1367779d22de480",
+  "source_sha256": {
+    "src/dotbox/cli.py": "b144e06e807d248f3d78717d2dcabe812f23f05aaf85d901f5c1cc7bd630cff4",
+    "src/dotbox/rts.py": "2d75630334a0ceee203a5ab50a1edc87a0c40d39fc57841fa16be8d9f9d0b100",
+    "src/dotbox/rts_actions.py": "3333ab20ae12299a42eb4ad1877c73ac8ec5fffd000ed45e0693fd7c9212563d",
+    "src/dotbox/rts_world.py": "4268c89dc71321f52ef66529e2571fecfbb09a3f06b1b7cb53de3adc386ba5ff"
+  }
+}

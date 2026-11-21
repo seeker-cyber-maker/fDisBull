@@ -1,0 +1,688 @@
+{
+  "schema": "dotbox-dune2-refinery-camera-verification-1",
+  "date": "2026-11-19",
+  "status": "passed_for_recorded_original_controls_with_explicit_limits",
+  "tested_source": {
+    "primary_repository": "https://github.com/seeker-cyber-maker/DotBox",
+    "primary_commit": "7fece499aefdfd42fbfe54915b7a04436e292975",
+    "mirror_repository": "https://github.com/TiGa-RCE/DotBox",
+    "mirror_commit": "080e94066287bfd6bed77a852feceb23fdd5f29c",
+    "common_tree": "39fc7db7cbca3d9920aa6a020cf46a850e1416e3",
+    "runtime_changes_in_this_checkpoint": false
+  },
+  "game": {
+    "edition": "Original Dune II v1.0",
+    "executable_sha256": "d49f45729babd298fd72d0f623cc3cfaa4c3d144ab38e53f24355f2208b4e5a0",
+    "house": "Atreides",
+    "scenario_id": 1,
+    "campaign_id": 0,
+    "same_original_process_as_prior_sliced_save_load": true
+  },
+  "scope": {
+    "construction_and_repair_requests": [
+      31,
+      52
+    ],
+    "construction_and_repair_range_inclusive": true,
+    "camera_requests": [
+      57,
+      58,
+      59
+    ],
+    "camera_prior_baseline_request": 56,
+    "request_56_role": "Coherent camera/selection baseline only; not a new qualification of preceding Harvest commands or every intervening action.",
+    "excluded": "Requests 53–55 and all later activity after 59 are outside the gameplay claims in this checkpoint.",
+    "inputs": "Independently chosen ordinary controls and separately bounded observations; no unconditional input sequence.",
+    "previous_repair_save_load_receipt_unchanged": true,
+    "new_ordinary_load_or_victory_claimed": false
+  },
+  "independent_review": {
+    "construction_and_repair": {
+      "result": "pass_for_bounded_refinery_claims_with_explicit_limits",
+      "report_sha256": "6a9180352276c840c9241ae42d0899771b3d860f5c2b41a2d0ba5ce82ad1fb81",
+      "inventory_sha256": "bc8a842fd694d5f4eadfc2ba31d50e464b2c538354614bc97e9f569d4de13bf0",
+      "checks": {
+        "memory_chunks_verified": 220,
+        "resident_code_guard_matches": 242,
+        "native_step_receipts_matched": 28,
+        "native_input_receipts_matched": 19,
+        "captures_verified": 22
+      },
+      "last_completed_frame_age_guest_ms_range": [
+        1,
+        14
+      ]
+    },
+    "camera_and_baseline": {
+      "result": "pass_for_named_fields_and_one_observed_camera_context",
+      "checks": {
+        "captures_verified": 4,
+        "memory_chunks_verified": 40,
+        "resident_code_guard_matches": 80,
+        "native_step_receipts_matched": 12,
+        "native_input_receipts_matched": 2
+      },
+      "resident_guard_scope": "Nine world-binding and eleven economy-binding code windows per capture.",
+      "frames_visually_inspected": [
+        57,
+        58,
+        59
+      ],
+      "last_completed_frame_age_guest_ms_range": [
+        3,
+        8
+      ],
+      "named_fields_checked_against_retained_ram": [
+        "requested_and_rendered_camera",
+        "selected_unit_pointer_and_slot",
+        "unit_mode",
+        "Harvester_position",
+        "Harvester_cargo",
+        "Harvester_action",
+        "Harvester_flags",
+        "Harvester_record_hash"
+      ],
+      "whole_unit_record_unchanged_claimed": false
+    },
+    "instruction_simultaneous_frame_and_ram_claimed": false,
+    "reviewer_native_calls": 0,
+    "reviewer_external_writes": 0
+  },
+  "journal_prefixes": [
+    {
+      "run": "sliced",
+      "bytes": 2266321,
+      "sha256": "ea4c6752325e84f4b9b82b8288fffaa870a5f9e9e5e1d441c68c238ce975e9c7",
+      "lines": 7211,
+      "through_revision": 136,
+      "last_native_sequence": 3548,
+      "native_state_load_calls": 0,
+      "scope": "Exact reviewed byte prefix; later appended records excluded."
+    },
+    {
+      "run": "sliced",
+      "through_revision": 156,
+      "bytes": 2556414,
+      "lines": 8113,
+      "last_native_sequence": 3992,
+      "sha256": "7f22b58b2c31b4b462490164bd8e09b5be85099c5bd1826117d14e057501ef63",
+      "native_state_load_calls": 0,
+      "scope": "Exact reviewed byte prefix; later appended records excluded. Journal-prefix identity does not imply review of every intervening gameplay result."
+    }
+  ],
+  "construction": {
+    "catalogue_name": "Spice Refinery",
+    "original_structure_type_id": 12,
+    "catalogue_price": 400,
+    "catalogue_row_index_inferred_from_type_id": false,
+    "actual_credits_before": 685,
+    "after_build_choice": {
+      "request": 34,
+      "actual_credits": 675,
+      "producer_countdown": 19968,
+      "off_map_product_allocated": true
+    },
+    "separate_warning_acknowledgement_or_second_build_input_recorded": false,
+    "warning_scope": "The next retained capture already shows active production. No claim that an uncaptured transient frame was impossible or that warnings universally repeat or stay absent.",
+    "completed": {
+      "request": 42,
+      "actual_credits": 285,
+      "displayed_credit_memory_sample": 286,
+      "producer_countdown": 0,
+      "place_it_control_visible": true
+    },
+    "net_purchase_cost": 400
+  },
+  "independent_moves": {
+    "primitives": [
+      "select_entity",
+      "choose_action_Move",
+      "choose_target"
+    ],
+    "southern": {
+      "unit_slot": 30,
+      "before_tile": [
+        32,
+        28
+      ],
+      "observed_destination": [
+        30,
+        29
+      ],
+      "destination_before_command": {
+        "unveiled": false,
+        "overlay_id": 123,
+        "fog_class": "full_fog"
+      },
+      "cleared_future_refinery_footprint": true
+    },
+    "northern": {
+      "unit_slot": 26,
+      "before_tile": [
+        29,
+        23
+      ],
+      "observed_destination": [
+        34,
+        24
+      ],
+      "destination_before_command": {
+        "unveiled": true,
+        "overlay_id": 110,
+        "fog_class": "partial_fog"
+      },
+      "later_newly_rendered_spice_colored_terrain_request": 41
+    },
+    "limit": "Observed ordinary coordinate moves establish no pre-command current-visible terrain admission for those fogged destinations. Only later rendering supplies the observed terrain knowledge."
+  },
+  "bare_placement": {
+    "preview_request": 44,
+    "placement_request": 45,
+    "footprint_tiles": [
+      3,
+      2
+    ],
+    "top_left_tile": [
+      30,
+      27
+    ],
+    "packed_position": 1758,
+    "stored_and_rendered_preview_agree": true,
+    "signed_original_validity": -6,
+    "missing_concrete_cells": 6,
+    "six_preplacement_tile_samples": {
+      "unveiled": true,
+      "overlay_id": 0,
+      "unit_occupant": false,
+      "structure_occupant": false
+    },
+    "committed_structure_slot": 2,
+    "all_six_committed_occupancy_references_index_plus_one": 3,
+    "initial_hp": 225,
+    "nominal_hp": 450,
+    "house_storage": 1005,
+    "house_power_production": 52,
+    "house_power_usage": 30,
+    "phase_boundary": "The placement capture still shows the Refinery tutorial; requested/rendered selection also differ. Explicit response at request 46 returns to normal rendering. Committed placement does not make the tutorial capture input-ready."
+  },
+  "starter_cargo_conversion": {
+    "before": {
+      "request": 45,
+      "harvester_slot": 39,
+      "on_map": false,
+      "cargo": 1,
+      "actual_credits": 285,
+      "allied_processed_spice_stat": 0
+    },
+    "after": {
+      "request": 47,
+      "on_map": true,
+      "cargo": 0,
+      "actual_credits": 292,
+      "allied_processed_spice_stat": 7
+    },
+    "actual_credit_delta": 7,
+    "interpretation": "Conversion of the initial cargo, consistent with the original player refining multiplier seven. It is not a new field-harvest cycle.",
+    "tutorial_boundary": "Request 47 still shows the harvesting hint despite timer mask 3. Request 48 separately acknowledges it before repair is selected."
+  },
+  "storage_and_power": {
+    "house_storage_field": 1005,
+    "current_original_refinery_type_storage_field": 1005,
+    "selected_refinery_panel_max": 1000,
+    "panel_anchor_request": 49,
+    "house_power_before_refinery": 52,
+    "house_power_after_refinery": 52,
+    "house_usage_after_refinery": 30,
+    "previous_windtrap_50_versus_52_distinction_preserved": true,
+    "limit": "These are the current loaded-scenario field values and visible label. No universal capacity, health-based refresh schedule, or flattening of the prior Windtrap UI/house discrepancy is claimed."
+  },
+  "repair": {
+    "before": {
+      "request": 49,
+      "actual_credits": 292,
+      "hp": 225,
+      "nominal_hp": 450,
+      "repairing": false,
+      "on_hold": false
+    },
+    "on": {
+      "request": 50,
+      "actual_credits": 284,
+      "hp": 230,
+      "repairing": true,
+      "on_hold": true
+    },
+    "off": {
+      "request": 51,
+      "actual_credits": 284,
+      "hp": 230,
+      "repairing": false,
+      "on_hold": false
+    },
+    "stable": {
+      "request": 52,
+      "actual_credits": 284,
+      "hp": 230,
+      "repairing": false,
+      "on_hold": false,
+      "guest_ms_without_new_input": 2000,
+      "game_ticks_elapsed": 120,
+      "displayed_credit_memory_sample": 286,
+      "display_caught_up_claimed": false
+    },
+    "observed_paid_increment": {
+      "credit_cost": 8,
+      "hp_gain": 5
+    },
+    "original_arithmetic": {
+      "factor": 10,
+      "nominal_hp": 450,
+      "build_price": 400,
+      "fraction_floor_2560_over_450": 5,
+      "cost_floor_5_times_400_plus_128_over_256": 8
+    },
+    "full_repair_tested": false,
+    "insufficient_credit_branch_tested": false
+  },
+  "ledger": {
+    "opening_actual_credits": 685,
+    "refinery_purchase": -400,
+    "initial_cargo_conversion": 7,
+    "one_paid_repair_increment": -8,
+    "closing_actual_credits": 284,
+    "equation": "685 - 400 + 7 - 8 = 284",
+    "displayed_credit_field_and_frame_digits_are_not_ledger": true
+  },
+  "camera_context": {
+    "mode": "ordinary_unit_selection",
+    "selection_mode_id": 3,
+    "selected_harvester_slot": 39,
+    "active_target_unit": null,
+    "active_action_id": 65535,
+    "baseline_request": 56,
+    "hover": {
+      "request": 57,
+      "primitive": "move_camera",
+      "input": "pointer move with no click",
+      "guest_pixel": [
+        239,
+        100
+      ],
+      "observation_guest_ms": 1000,
+      "before_camera_top_left_tile": [
+        23,
+        21
+      ],
+      "after_requested_and_rendered_camera_top_left_tile": [
+        23,
+        21
+      ],
+      "observed_camera_change": false,
+      "limit": "One pointer location and one bounded interval only; other edges, controls and modes were not tested."
+    },
+    "right_click": {
+      "request": 58,
+      "primitive": "context_click",
+      "button": "right",
+      "guest_pixel": [
+        224,
+        112
+      ],
+      "observation_guest_ms": 1000,
+      "before_camera_top_left_tile": [
+        23,
+        21
+      ],
+      "after_requested_and_rendered_camera_top_left_tile": [
+        30,
+        20
+      ],
+      "selected_unit_retained": true,
+      "equal_named_unit_fields_across_click": {
+        "slot": 39,
+        "owner_house_id": 1,
+        "position_fixed_256": [
+          9856,
+          6016
+        ],
+        "cargo": 15,
+        "action_id": 5,
+        "action_name": "Harvest",
+        "linked_index_byte": 255
+      },
+      "changed_raw_flags": {
+        "before": 70019,
+        "after": 65923
+      },
+      "unit_record_digests_differ": true,
+      "whole_unit_state_unchanged_claimed": false
+    },
+    "continued_collection": {
+      "request": 59,
+      "guest_ms_without_new_input": 25000,
+      "bounded_step_slices": 5,
+      "max_slice_guest_ms": 5000,
+      "camera_top_left_tile": [
+        30,
+        20
+      ],
+      "selected_unit_slot": 39,
+      "cargo_before": 15,
+      "cargo_after": 32,
+      "position_after_fixed_256": [
+        9944,
+        6360
+      ],
+      "action_after_id": 5,
+      "actual_credits_before_and_after": 284,
+      "new_return_unload_or_victory_demonstrated": false
+    },
+    "rendered_banner_and_stopped_cargo": {
+      "requests_57_and_58": {
+        "rendered_banner_percent": 13,
+        "stopped_cargo_sample": 15
+      },
+      "request_59": {
+        "rendered_banner_percent": 31,
+        "stopped_cargo_sample": 32
+      },
+      "limit": "Rendered banner content and stopped-memory cargo are distinct samples; no general refresh or rounding rule is inferred."
+    },
+    "qualification": "One observed camera outcome in ordinary unit mode; not a universal right-click Move/Cancel binding. No target-selection, placement or modal context is qualified."
+  },
+  "source_authority": {
+    "original_repair_research_sha256": "f9d8fa95dfa64a25237ee96fa421a63de2a85679ee5898c4114c149be611446c",
+    "original_instruction_provenance_sha256": "1994880a9498cce1d76996ad4cbdbc471e09d22b6a5ecd90586aabeeaebd816e",
+    "original_economy_findings_sha256": "e13af960ed6956d2a030a456acd2195b5290dd6365ef63faa8f67ce429030c34",
+    "opendune_reference_commit": "ebea79aeba025be2fe9004570e9255044aacc0be",
+    "original_instructions_and_captures_are_authoritative": true,
+    "new_live_instruction_trace_added": false,
+    "reference_code_copied": false
+  },
+  "milestone_evidence": [
+    {
+      "run": "sliced",
+      "request": 31,
+      "role": "Construction Yard selected after prior ordinary load",
+      "state_revision": 91,
+      "response_sha256": "faab86ee1383196f4c58af6eb8af7b22b6c13fba6c2d12f1f861861d6982f266",
+      "summary_sha256": "012cb25cc99252520dc8de51e9a713c409338ec77f619250b2a1aa0b5bed6218",
+      "frame_sha256": "f37d16e4def69eeee6ed42c7c327299fed588f03c5934a9cd23a39d07d9aed62",
+      "ram_sha256": "20263a3e1aa28f01a409bc79052ebbb5f4f1cbe86431e1aa3a2340ea9acf4ef3"
+    },
+    {
+      "run": "sliced",
+      "request": 32,
+      "role": "Fresh construction catalogue",
+      "state_revision": 93,
+      "response_sha256": "b192bc48557427088a5ba23c51fa3136e6472ca1f66ddacdf49b41b77073a89c",
+      "summary_sha256": "c874edbcd9c6f74d3fa6924572975d64a60e8e472e6d0ea0785e070b7ad34964",
+      "frame_sha256": "a8629d29dc8167218b82ec270e8f5b2acd27081230a9388f4e253f964686460f",
+      "ram_sha256": "3cba941e6ab3cd1da0289851176e2bf3c4077610baa6dba570a7117a09b4df42"
+    },
+    {
+      "run": "sliced",
+      "request": 33,
+      "role": "Refinery catalogue selection and displayed price",
+      "state_revision": 95,
+      "response_sha256": "b38e1b7e885edc146e76429ad0717dc37721b3506f4c91c880fe5a6ae2b09cd5",
+      "summary_sha256": "e411b288605852e219a5f7450bb789e768f7bb9093172d2550fcb1265d659ead",
+      "frame_sha256": "e4f366d2225b0134202f1bee776e41bb931738b22f29cb67f29d580383425603",
+      "ram_sha256": "dbe6e4b8fd93e42e0376e81b77e5436cfc6122c434541e3b0b45b396ae977a4f"
+    },
+    {
+      "run": "sliced",
+      "request": 34,
+      "role": "Build This followed by active production",
+      "state_revision": 97,
+      "response_sha256": "d52561cc000111dde85284a8bdb80a9e9b0bc9b61c3e67670307ea4a3198dca0",
+      "summary_sha256": "f1f38a3781cbeaf441c5547d45490bd09b8edd89666bce7f0309d1f2e105a431",
+      "frame_sha256": "084364ea4449e8f4968b8c4461230b561ce2cb1177a70e2a22ae347b2da38153",
+      "ram_sha256": "ae59c874786b446f757b785cf2a1c4227f0957e055d36a1fed4e28e1d524dcd9"
+    },
+    {
+      "run": "sliced",
+      "request": 35,
+      "role": "Southern Trike selection",
+      "state_revision": 99,
+      "response_sha256": "f326f8590c51682c56c5befe54fe0bac2f388e2404c4fc4941dd149c58ae6f57",
+      "summary_sha256": "d37f99cd998d5d0c4e0760031dbff69ce8757ebb6370612fd1b7d9f2904ec2ac",
+      "frame_sha256": "78a9a16624bff5eb6d803c374e1e5379a0a69af94904eff9e103a4c1bc3d4421",
+      "ram_sha256": "d21f838f82a97675fb92c0898c40f087430c75dd95bf5b4ecbccbf260e23532a"
+    },
+    {
+      "run": "sliced",
+      "request": 36,
+      "role": "Southern Move action armed",
+      "state_revision": 101,
+      "response_sha256": "8cc93b1d505725101e7dd5d9bd1d6c6b5705a3826ae0a62e8ae1bb1dcaa16184",
+      "summary_sha256": "e2cb2467db40fd738fc3ca76b2dafe7c60a75d6c968c570f6c7ba199f76dda81",
+      "frame_sha256": "fd77035a9ca1695acc434939dc536044ccaf2b283574a75300290d1accaf0781",
+      "ram_sha256": "6298ce8615e4faea98675302ed9e2e8b8ca99d258cb6291ace626cd0ba25a05e"
+    },
+    {
+      "run": "sliced",
+      "request": 37,
+      "role": "Southern destination submitted separately",
+      "state_revision": 103,
+      "response_sha256": "7916a98c43d6cd1a7728dd911c76282bdf13a8d8c7d76c95bf9671cf9a8efcf5",
+      "summary_sha256": "312ddc1cb38f4559c428d185457bbb079c7b15b964d1f00c75a845398659e862",
+      "frame_sha256": "2f804b3c5b4f8e512190d2b7aa7e98306d7d9b284e1d7fa28db0f59d49f7def7",
+      "ram_sha256": "d1af14e8271e3aa926162f679f853c85fc43a139716f615f00927e15c0cd7f50"
+    },
+    {
+      "run": "sliced",
+      "request": 38,
+      "role": "Northern Trike selection",
+      "state_revision": 105,
+      "response_sha256": "24c0e5944a518ff83706a6aade5c284e5d2e894ddbf4cdfb28de821191397724",
+      "summary_sha256": "e75acdfab13ad5bc26e6036720d806f439e17c825fba6d811938b1a40e175d7d",
+      "frame_sha256": "b905267c64ce7cee2a3e22d129daa2152c259c5da5c00c3c9c0c5a27afb3489a",
+      "ram_sha256": "07e6ce087325ec5652d08ec013efb9dbbdc623ea5f290bcb2850f154594a84b7"
+    },
+    {
+      "run": "sliced",
+      "request": 39,
+      "role": "Northern Move action armed",
+      "state_revision": 107,
+      "response_sha256": "997aa0c8200571710fde859c496a8c11188f0336a1aecc3b3436600db367561c",
+      "summary_sha256": "a3e86ca13ca369428923bc216ff71bdd83cf72deb24840262cfa411f45302364",
+      "frame_sha256": "354ef46fa3fea7fc2fbd18a5c74bff329635f685c53d993424394f1549967bf5",
+      "ram_sha256": "7a06718b3ccc322a255b420a161afa8c166888c8f717a5f636e57c8f62c50ff2"
+    },
+    {
+      "run": "sliced",
+      "request": 40,
+      "role": "Northern destination submitted separately",
+      "state_revision": 109,
+      "response_sha256": "d4846dc8587a03493f7285be1534d9e473739fbb69e24b1d3636863f6efec4b3",
+      "summary_sha256": "b825e44a37f7ae48d678e4de2fd35b919401752cf3fb36b2ce7f398e6713da8f",
+      "frame_sha256": "1f3516608f34f2f8778c64a0a259c1d71ad0ef375ccb6e3cb2607de6e3ce0ca7",
+      "ram_sha256": "e1ea53c6648e0d6fbce9002fda0541524c194a5f5d630db7e3971badd77be055"
+    },
+    {
+      "run": "sliced",
+      "request": 41,
+      "role": "Scout arrival and newly rendered spice-colored terrain",
+      "state_revision": 114,
+      "response_sha256": "0a82d3786618d1d776657bc948a0eeed31b0924e88c331fbf22808606b8697bc",
+      "summary_sha256": "b07ad7eba5b8c5765198f818a32e08770eb9722c9cbe8bb5e624e4aea7229886",
+      "frame_sha256": "0e075fa7618d87dde32083c18e0d68f4ea599f0fdd8c85e4b68a65ee6849e4c3",
+      "ram_sha256": "1862941e7a5846cb640139dff7d2cc2ab96728ea4def9090b6caeb4521fd18e7"
+    },
+    {
+      "run": "sliced",
+      "request": 42,
+      "role": "Refinery production complete",
+      "state_revision": 116,
+      "response_sha256": "96d31a211472f553e15a6e22f89ea16033d7e50c5b67829e5c84f78b98b80dc3",
+      "summary_sha256": "65a467aaa21c32153f43d0329d92d1715f702243ea701f34872dfe82c02ba1e9",
+      "frame_sha256": "717587d9809b774c9b9ad6a559de0e74cdd760742f1f93e92ebcc3f46a7d6939",
+      "ram_sha256": "655c3d6132537f7efc46d23143034f05c90866385ac72f740aa14ffc17fadcf3"
+    },
+    {
+      "run": "sliced",
+      "request": 43,
+      "role": "Refinery placement armed",
+      "state_revision": 118,
+      "response_sha256": "e795ae61e5dbbae2ba3170b24085c4e6adc6f65dcf7dd3ee6cb8bf900cfd6f6e",
+      "summary_sha256": "2986db8730e764a0180e1f9c3b1abf44177a6f78e69863e016b571170a8e90c5",
+      "frame_sha256": "d8d95213e5e9ea37322b7a9b4c3770870d9590df38613cc4694819e2704197d9",
+      "ram_sha256": "920c30395e427080b9450836b31edc7fd6357fbccd191a6b2cf2dcb45c19bcef"
+    },
+    {
+      "run": "sliced",
+      "request": 44,
+      "role": "Separate matching placement preview",
+      "state_revision": 120,
+      "response_sha256": "c723f40b57b27eea892092010b4e986565f78b9445b7893f460da45756f4c797",
+      "summary_sha256": "c13e21720c28cde12d99099e4a537c76150a43c025cc4fc3729e5d8ff31bc402",
+      "frame_sha256": "6ae10e86478a2a767a54936357e0414f03d000944b53e9aafef54615b7927280",
+      "ram_sha256": "60db763b8967a09a616e628ffdb4f73b99862409a079984399d6e9f4232801b9"
+    },
+    {
+      "run": "sliced",
+      "request": 45,
+      "role": "Placement committed while tutorial remains visible",
+      "state_revision": 122,
+      "response_sha256": "3c631d8164ff654eb5f6abe2cb10b1a60553bad90481114be1eaf2f9dfea3f09",
+      "summary_sha256": "8afa362db3d7e9d50a540b89239c2d2b138618f804809c273e963e87dcd94d5a",
+      "frame_sha256": "440fe59008e140555d635ff2eaaf5db499b6aeae2562dcbb950667300baf88a4",
+      "ram_sha256": "adfcabe345307c0c94471c0a6a13c182300ad01ab5c21088a9e2ce7279260d01"
+    },
+    {
+      "run": "sliced",
+      "request": 46,
+      "role": "Explicit response returns to normal rendering",
+      "state_revision": 124,
+      "response_sha256": "bb65b2b1ac8a877ef9e50367b9143bba069f5a26e10e015922f7e7683d854a16",
+      "summary_sha256": "b23f4a6e2e4a8e8a3b2dee6dc81e1e73f73f851122c65cdbd0daad937d9b3202",
+      "frame_sha256": "bbf0f7d3758045f85bbcba685c37935f606f0b20a872620803eb048882d2bbc6",
+      "ram_sha256": "bd44f10b23a68353facef8a903eebe0c86eaee8bcdb610b2c2a9387a13c5b5fb"
+    },
+    {
+      "run": "sliced",
+      "request": 47,
+      "role": "Initial cargo converted; harvesting hint visible",
+      "state_revision": 127,
+      "response_sha256": "90690f55e75a69be509628f8e14459f9847a13e871844425ac673b7fcce95794",
+      "summary_sha256": "981cd51d0bdf9272d64c02798aeb7af7cdb211ecb499262cc56f2864cac9adef",
+      "frame_sha256": "dfac99720b958e87a0b63ee44a27396c2a972344ffe35762f1f87f79d127ec9c",
+      "ram_sha256": "76ddd9bf9b463acf7b4ec31997eddcb4512a9c61a6ac1e6406ecf0a26a99cc92"
+    },
+    {
+      "run": "sliced",
+      "request": 48,
+      "role": "Explicit harvesting-hint response",
+      "state_revision": 129,
+      "response_sha256": "4f7b608a30d0bade3d2fee06bf329ee8c655fdec83d841df86fecded6c2b17b9",
+      "summary_sha256": "4d6a848462f6de4833f3d780b89fc220ddd4a5f9b1131569b229d9d804089460",
+      "frame_sha256": "ce537c88f34c6529fcef1f369e631c9ece2470ec55ad4bc609d9577fa0981adf",
+      "ram_sha256": "6276570ccb84d271e003fe169e07a0681de45b830253fcfde72922139b3b4084"
+    },
+    {
+      "run": "sliced",
+      "request": 49,
+      "role": "Refinery selected with Repair off",
+      "state_revision": 131,
+      "response_sha256": "21a33dc5dad0e8f85e47bb30aa4626062423b4331c2b57b78d632e9f9135e4d2",
+      "summary_sha256": "ebb801e2182ed545c2c36736583b18d0f660aa09d5b5498a7e96a0701901e960",
+      "frame_sha256": "06bbd201cdbe10330e0eb82acd19e32bd9d6e16f27a9b1e38bcc55e62caa6ca1",
+      "ram_sha256": "0ac57110f6dfd9782284c4b5228b2c2c9978309b5147762c4b7645a9d93ab03c"
+    },
+    {
+      "run": "sliced",
+      "request": 50,
+      "role": "One paid repair increment",
+      "state_revision": 133,
+      "response_sha256": "f3ce370c7b40b9d2fa891969550ffbc2808024a6396a50205ecaeb8587f4a3f6",
+      "summary_sha256": "e14b3220dc8067787d862d15e5cded8fbf93a9b858c1ce95bff77167c435f41b",
+      "frame_sha256": "4f7ea463f533596eb97fe1825222fc6fed793fe83c729fd80c35f167cce0ba59",
+      "ram_sha256": "da3fc503c4158b69318254887564a5b2289b04b322a75c6f1d97f78216d13ff6"
+    },
+    {
+      "run": "sliced",
+      "request": 51,
+      "role": "Repair stopped",
+      "state_revision": 135,
+      "response_sha256": "c2cdd01303ad5b607d7aca7532faa2a0fb99784b8abe3599e64913ec5182e35a",
+      "summary_sha256": "6c9d8bf66ecca02aca20edc8af4e5815814e474fb67514ff5707ac23402b5f65",
+      "frame_sha256": "f0396aef4d9eb418ae4b0d02b894b1d465158f6217e971264fc31ddc0d7b483e",
+      "ram_sha256": "d853f3b5aadb07b890fdeff5492fb887420657f64074b3706af6ae10c706a015"
+    },
+    {
+      "run": "sliced",
+      "request": 52,
+      "role": "Repair remains stopped over two seconds",
+      "state_revision": 136,
+      "response_sha256": "f0645c39ae974480d822f2ad8b097b6b31f2d35c2e4d129da691795f9f905351",
+      "summary_sha256": "abbac8ab4c3b8f2375db972bdbda0a4a91f2f3cd59359fc7770b63ba9d202d9f",
+      "frame_sha256": "a97ffe84c804bb766985ee34fc1513b9430508dd61b2d520db858ca10a2d006a",
+      "ram_sha256": "b76124a96b70aedd19365236e4082b7544c576ff7b948768082d8f5d2ccba905"
+    },
+    {
+      "run": "sliced",
+      "request": 56,
+      "role": "Prior camera and selection baseline only",
+      "state_revision": 147,
+      "response_sha256": "d1340943d21031340649361b99e46084f791db7524680f3d8647a1541f78c0ae",
+      "summary_sha256": "1b2bb1d98bf5b00a22a2d290e9471fa44098bd5fab24e456c3e7a93dd284cd2f",
+      "frame_sha256": "c9011d9d71721fee5e93565be94f371f1de317b818ab9a2c22c0049b806a9e4f",
+      "ram_sha256": "ed365bf3e8f0f6924392e45b4023ea6c003a8c9a25f307c0770f66d38e52a58a"
+    },
+    {
+      "run": "sliced",
+      "request": 57,
+      "role": "One-second edge hover",
+      "state_revision": 149,
+      "response_sha256": "56f603202015bb1b4d20cf0e4045e52262672d059ec3583533ce19e01c7d2a8f",
+      "summary_sha256": "95b9acf12049c66bb3e7a8ccd68db27ce3ba4748ec34e62499793a3bada5885d",
+      "frame_sha256": "0e102685580a390177ca93a1dd5ba9cf97ae401863f4e337d409bf8faa1cf12a",
+      "ram_sha256": "691e5c0f2f84271e53fb9c1a6601c667e499bcad7ecef42df7243a58aa25a33d"
+    },
+    {
+      "run": "sliced",
+      "request": 58,
+      "role": "Ordinary unit-mode right-click camera outcome",
+      "state_revision": 151,
+      "response_sha256": "20675f465a6c52fcd71efd4359f9daccd0e68b09daacda2a7a335a2e1c7175a2",
+      "summary_sha256": "1b4c6d4e956fca6688e3f1a2c3592125bfe127afbdbdd7fa60f732e422ed0b3f",
+      "frame_sha256": "59087c3b6e3480bf14e84fcd97ebfad8744e9ed20b59fd618b6ecbe1b30add13",
+      "ram_sha256": "ea3f280becf35c85cefdef5950d736330b3e0bd4315d1de8d2c20e4355ccb853"
+    },
+    {
+      "run": "sliced",
+      "request": 59,
+      "role": "Later observation of continued field collection",
+      "state_revision": 156,
+      "response_sha256": "319f9ab064ddc746c771117ecebdb22565edc8b58618604ec6e9c3cc038e3972",
+      "summary_sha256": "6d31f2ad8fadd5ee74145540608e695653c54c4eb815a763549e8a4ac5f70551",
+      "frame_sha256": "b35c5ba464146185901a0cb4728696b588caa4b915636c11d755ead5698bec5d",
+      "ram_sha256": "ce1393b0bd38c692b447e963990ff82977ef3fb25f3bc49850e98e6e401212c7"
+    }
+  ],
+  "observation_limits": {
+    "projection_kind": "entity candidates",
+    "current_visibility_established": false,
+    "action_admission": false,
+    "public_dune2_provider_added": false,
+    "frame_and_stopped_ram_are_instruction_simultaneous": false,
+    "displayed_credit_fields_need_not_equal_exact_earlier_frame_digits": true,
+    "loaded_epoch_and_slot_lifetimes": "Prior ordinary-load boundary remains in effect; no cross-epoch or cross-process entity identity established. Slot 39 names only the observed unit within this retained interval.",
+    "tutorial_phase": "Enabled timers or committed object changes alone do not establish gameplay-input readiness."
+  },
+  "work_record": {
+    "board": "https://agent-bbs-native.tiga-rce.chatgpt.site",
+    "project": "dotbox",
+    "ticket": "e-18c835bb-80c7-411c-bdde-d71c6b5cf06e"
+  },
+  "limits": [
+    "No new mission victory, second mission, full campaign, other house, worm or ally qualification.",
+    "No full repair, insufficient-credit branch or mixed-foundation placement tested.",
+    "No new ordinary Save/Load or cross-process recovery result; prior same-process qualification is unchanged.",
+    "Initial cargo conversion and later cargo growth have separate evidence scopes. No new completed field-harvest, return and unload cycle is demonstrated here.",
+    "No universal edge-scroll or right-click semantics, warning repetition, capacity, production rate or UI refresh schedule.",
+    "No public runtime, native control route, current-visibility qualification or automatic action admission added.",
+    "No commercial files, screenshots, raw memory, saves, private runtime paths or disassembly included."
+  ]
+}

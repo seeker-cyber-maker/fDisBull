@@ -1,0 +1,63 @@
+{
+  "schema": "dotbox-dune2-observation-qualification-1",
+  "date": "2026-11-19",
+  "status": "private_offline_candidate_classification_passed",
+  "original_executable_sha256": "d49f45729babd298fd72d0f623cc3cfaa4c3d144ab38e53f24355f2208b4e5a0",
+  "reference_commit": "ebea79aeba025be2fe9004570e9255044aacc0be",
+  "private_evidence_archive_sha256": "b4c048515dfb35bcaec1dd3385d881062f2291d5beb99c37826364747b034009",
+  "candidate": {
+    "reader_sha256": "fc862ab49f8b4ae1a636a3e9c9fae29038091d2608e16ba9ff353d233e92d1d0",
+    "bindings_sha256": "67dfcf018fb32d9326185cac428a7098ba31906ced566c4de082b2ed8d16b61a",
+    "prior_reader_sha256": "8394b67973501454208dc2392e50647773ab57fd3f76768af6db3fe39aa34635",
+    "scope": "Own allocated ground-unit diagnostic candidates on verified sand tracks; no current visibility or action admission."
+  },
+  "regression": {
+    "oracle": "Two own ground-unit sprites independently inspected in the original coherent scouting capture",
+    "prior_exit_code": 1,
+    "candidate_exit_code": 0,
+    "exact_positive_additions": ["own Trike", "own Harvester"],
+    "removed_legacy_rows": 0,
+    "frame_sha256": "86cccd3c0a94d5aa549b0e99ea7e4d053ccf82042f10c4b7ecb1e148cefcbd28"
+  },
+  "verification": {
+    "checks_passed": 50,
+    "frozen_captures_replayed": 113,
+    "old_reader_saved_world_matches": 111,
+    "historical_refusals_without_saved_world": 2,
+    "captures_with_added_candidates": 3,
+    "result_or_map_captures_disabling_extension": 8,
+    "independent_additional_negative_checks": 4,
+    "independent_replay_passed": true,
+    "verification_script_sha256": "9ee74e1c60125a6ea617633c128288e7d5d0bffdb9e811b593f2dde0b673c382",
+    "verification_receipt_sha256": "ed211f3d79db5014f524684675750251c738d0355bd1c30c806df5ac822015fd",
+    "independent_review_sha256": "cd585029861e8e766cd089e1806d75e80cabdbe93440a738111786e608e726ef",
+    "native_calls": 0,
+    "game_inputs": 0,
+    "frozen_evidence_modified": false
+  },
+  "extension_guards": [
+    "Original renderer code and tactical icon-resource identity",
+    "Own-house allocated on-map ground unit in the original supported route",
+    "Unveiled qualified sand-track tile; conservative fog remains excluded",
+    "Exact current occupancy, narrow viewport bounds and matching cameras"
+  ],
+  "required_consumer_boundary": {
+    "list_name": "entity_candidates",
+    "visible_entities_alias_allowed": false,
+    "current_visibility_established": false,
+    "action_admission": false,
+    "retain_qualification_and_missing_gates": true
+  },
+  "unqualified": [
+    "Current tactical phase and frame-to-memory relationship",
+    "Durable allocation lifetime and continuity across pool reuse",
+    "Other-house, worm, aircraft and arbitrary non-fog overlay extension",
+    "Live Dune II public provider and command admission"
+  ],
+  "work_record": {
+    "board": "https://agent-bbs-native.tiga-rce.chatgpt.site",
+    "project": "dotbox",
+    "ticket": "e-18c835bb-80c7-411c-bdde-d71c6b5cf06e"
+  },
+  "publication_scope": "Authored facts and provenance only. Private candidate source, original bytes, RAM, images, disassembly and saves are excluded."
+}

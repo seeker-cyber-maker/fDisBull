@@ -1,0 +1,24 @@
+{
+  "format": "fdisbull-spatial-map-1",
+  "source": {
+    "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "context": "authored-study-map",
+    "room": "study",
+    "resource": "authored:no-game-resource"
+  },
+  "space": {"name": "authored-study-grid", "width": 12, "height": 7, "unit": "cell"},
+  "actor": {"width": 1, "height": 1, "anchor": [0, 0]},
+  "known": {"rect": [0, 0, 12, 7]},
+  "safe": {"rect": [0, 0, 12, 7]},
+  "layers": [
+    {"id": "table", "kind": "obstacle", "area": {"rect": [4, 2, 7, 5]}},
+    {"id": "doorway", "kind": "portal", "area": {"rect": [11, 2, 12, 5]}}
+  ],
+  "evidence": {
+    "authored": {
+      "kind": "authored-demonstration",
+      "game_bytes": false,
+      "scope": "Invented grid for scene_window_closed.json; no live movement or game geometry qualification."
+    }
+  }
+}

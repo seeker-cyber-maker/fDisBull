@@ -1,0 +1,112 @@
+{
+  "schema": "dotbox-standalone-engine-verification-1",
+  "date": "2026-11-16",
+  "package_version": "0.1.0.dev1",
+  "scope": "Independent DOSBox engine/framework cut; additional gameplay and audio deferred",
+  "starting_commit": "59dc4d7ae24e666358a96db9c4acc1789ded5cf8",
+  "host": {
+    "python": "3.13.13",
+    "system": "Darwin",
+    "machine": "arm64"
+  },
+  "runtime": {
+    "dependencies": [
+      "Pillow>=10,<13",
+      "Compatible DOSBox-X executable and platform libraries"
+    ],
+    "fdisbull_required": false,
+    "analysis_libraries_required": false,
+    "store": "Independent SQLite source identity and immutable authored controls; existing FDBs refused before writes",
+    "input": "Original guest-frame absolute x,y; original desktop keyboard/mouse path retained",
+    "attestation": "Original source SHA-256, entry registers and bounded file-backed COM/MZ samples; no whole-runtime memory identity claim"
+  },
+  "source_tests": {
+    "passed": 267,
+    "skipped": 0,
+    "seconds": 12.63,
+    "scope": "Full current suite, including native protocols, visible framework fixtures, store, controls, clean import boundary, deterministic failure cases and prepared-source application"
+  },
+  "clean_install": {
+    "method": "New isolated venv, ordinary wheel installed offline from wheelhouse, no editable install or source-tree PYTHONPATH; subprocess Python -I",
+    "installed_import": "dotbox loaded from venv site-packages",
+    "fdisbull_available": false,
+    "capstone_iced_lief_z3_available": false,
+    "runtime_dependencies_installed": [
+      "dotbox 0.1.0.dev1",
+      "Pillow 12.3.0"
+    ],
+    "verification_dependencies": "pytest and its small dependencies added after runtime installation",
+    "native_acceptance": {
+      "passed": 10,
+      "skipped": 0,
+      "seconds": 6.65,
+      "scope": [
+        "Original authored COM and relocated MZ startup",
+        "Native generation transfer and pending/held-input cleanup",
+        "Stale agent input and host-owner RPC rejection",
+        "Default desktop-harness input mode and direct-RPC refusal",
+        "Fresh frames and observed authored-fixture movement",
+        "Immutable controls across clients and service restart",
+        "Owned native process cleanup"
+      ]
+    }
+  },
+  "ownership": {
+    "default_mode": "Native host input accepts ordinary desktop keyboard/mouse for both Dot and user; direct agent key/type/click/act/play/pause RPCs refused",
+    "outer_platform_owner": "unknown",
+    "outer_takeover_integration_verified": false,
+    "manual_mode": "Explicit diagnostic native host/agent transfer; not Codex/WebRTC takeover",
+    "review_fix": "Independent review found automatic-resume stale stop/owner race; guarded reobservation added and exact reproduction verified",
+    "limit": "Native execution RPCs lack an atomic ownership parameter; sole-native-controller contract retained"
+  },
+  "native_delivery": {
+    "preparation": "Pinned public upstream fetch plus DotBox-owned base and ownership patches; no fDisBull source checkout needed",
+    "source_files_verified": 38,
+    "recipe_sha256": "c9a4de62b4af4307a60c16a57f351cf4e2ecbc4d9f1062e169ffa110ed0547da",
+    "executable_sha256": "5a9a221d2fe43cdf8ffc72c474073cb5d520717f17914282ec37bc25957b46af",
+    "native_compilation_performed": false,
+    "reuse": "Existing matching native executable copied into clean prefix; macOS platform/Homebrew shared libraries remain host prerequisites, not a portable native bundle",
+    "manifested_source_files_match_existing_tested_tree": true
+  },
+  "preservation": {
+    "lead_files_snapshotted": 119,
+    "lead_files_changed_by_task": 0,
+    "archive_sha256": "fce1e7993412a80d77b116fd18c0d6457444952442612e34143feef1ba8c7014",
+    "prior_draft_pr": "Preserved unchanged",
+    "transport_report": "Historical 14 November static WebRTC/input/control investigation preserved; no live Dot-to-harness API qualification"
+  },
+  "artifacts": {
+    "wheel_sha256": "9958340b56f6fd626bf3e6cf45d90c4e0ee6f1edb0c0f4cec15d4eebc3fc0427",
+    "wheel_source_modules_exact_match": true,
+    "source_modules_sha256": {
+      "src/dotbox/__init__.py": "4e1ee1f59ee6f5b29cc21ea1d5eab35bdc3a8bd5fdcbb6f45c5866020fb4b929",
+      "src/dotbox/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+      "src/dotbox/backend.py": "7f38d109567c7e5150f3e82eeffdbebf176dc2ffa4879050831e9abda89c723a",
+      "src/dotbox/cli.py": "bfa38726f4180a74aa667ed2175290ad4793409a98b0d68d574034018269cb16",
+      "src/dotbox/client.py": "6361a862a5ec0ba6dd281d7a118cb5bf1916da2c0b2a7cb938ff7e4b5c11f349",
+      "src/dotbox/dos_launch_profile.py": "48a9c86c81dd107a96672f63254efd2dc8c259bc774e0afdf867ce52c9dcc678",
+      "src/dotbox/harness.py": "31e1bedb0fdcccd03a76deca17408465a6a464fc1984943c69e02428a1a7b016",
+      "src/dotbox/input_macros.py": "28d31f2da45c0d9f28c3aab5cdbc2b5225f54a2eadf4a8cd48a37b83e4e82b82",
+      "src/dotbox/keyboard_input.py": "10ac610742502dbc3ea7e7d806f0dacc026e6e601f3f2e93ac93ffaf155bb88f",
+      "src/dotbox/local_auth.py": "992a6af3869df8ca647375a4b1fb0f543bc1c4061c5410f9de4cce2919e5d36d",
+      "src/dotbox/native_rpc.py": "f24561fb5833c131036e7b1ea25cb97187066e9e400eeff1cf5b86438c9abda1",
+      "src/dotbox/native_session.py": "8f1a35e539cf934d99af811abb5468a42a5a4934647e40fd9a190cb33158c9cc",
+      "src/dotbox/operation_budget.py": "292fb60fc41360329f32847d9e1267db0f2e3d0d9dc4078e180e1926e7496994",
+      "src/dotbox/runtime_probe.py": "5e6ae3021c3b003455d88c6cc98b6d8148e302cbd03a1e024663aae38d3bca99",
+      "src/dotbox/screenshot_codecs.py": "b611d232bcc5e12fca32321a031f6debd999f91f25a08bb285a549782490623d",
+      "src/dotbox/service.py": "0e9b013c338121e291588ae51e7b6da23054528083e07df99ae29b7f2a2494e3",
+      "src/dotbox/store.py": "96dfc45e13e2f97ff5b7657eb2c8a03d49d57f633fae17d760cf23fe79315ce4"
+    },
+    "source_modules_manifest_sha256": "7c6cc58c33c985f85be79fd58fb03ac0ed4bffe435a977f55ed25e40ae8b664b",
+    "full_suite_log_sha256": "69912c09d0e7b4c38626adc243c439d07d186a0163bd74f7fa010fc0c3af907d",
+    "clean_native_log_sha256": "0538c1762986f610b56bcfd00fae3576139ef8d0bf33aaff3461ce70864c5e76"
+  },
+  "limits": [
+    "Actual Dot cloud deployment and live WebRTC keyboard/mouse flow unverified",
+    "Supported outer ownership event/API not established; no replacement takeover UI implemented",
+    "Audio untested and deferred",
+    "No additional game, AGI, pathfinding, HUD or warm-save qualification",
+    "No Windows/native-portable bundle qualification, release publication or global install replacement"
+  ],
+  "publication": "Only authored source, native patches/notices, hashes and sanitized results; no commercial game assets, saves, frames, databases, tokens or private runtime endpoints"
+}

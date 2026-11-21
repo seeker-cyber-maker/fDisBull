@@ -1,0 +1,583 @@
+{
+  "format": "dotbox-dune-optimization-qualification-1",
+  "scope": "Recorded headless Linux x86-64 native build and supplied English DOS RIP edition; authored summaries and hashes only.",
+  "run_started_at_utc": "2026-11-19T04:51:38.752856+00:00",
+  "display_timezone": "America/New_York",
+  "source_baseline": {
+    "primary_commit": "d5d730d365e18dec818377158b3621b2697297c4",
+    "mirror_commit": "7cce96c98961fc51931f671437d5e511af4a4225",
+    "shared_tree": "a6cf0447b26d2b1b1d1d24624c4e7e38a50d69d5"
+  },
+  "source_sha256": {
+    "scripts/experiments/dune_progress.py": "6b3eff1772b2f2056187020d43334ec99068c7f0410a21dcc342e93bf10abd4a",
+    "scripts/experiments/dune_ui_reader.py": "01ebd404fd9edbf08480ec360da6c9307d8adfb6247be0dcf1df25305a25df06",
+    "native/input-control.patch": "a88cba36f6af1b18cb06753ce703146977720a5a9aa5da55464248aa3079971e",
+    "native/manifest.json": "c523c24ba4a463f6486aa86b0ac096323c99b7083b531b7a37fb3621b7728214",
+    "native/build-recipe.json": "05e61c82664a0f7485a4373d371a5b7203cc2d5a55bfd8fae0a3fb14d002294a",
+    "tests/test_dune_progress_native.py": "564d94272989932b60929d438478651a5c2479e0986b20f25f24413d7d1d2ef4",
+    "tests/test_dune_progress_sparse.py": "8271fdb2fe71282910991538700623867ca6a3d6d6922223b801c67472e0231d",
+    "tests/test_dune_progress_budget_context.py": "5e02e56afcb6805eda39809e6e8067dd97e1c78199a8300a046923190b3ae990",
+    "tests/test_native_bounded_wait.py": "d26f7aed7008f3a8440d4a0341349c171be57775c3551e3ed455704c0d305539"
+  },
+  "game": {
+    "executable": "DUNEPRG.EXE",
+    "size_bytes": 74757,
+    "sha256": "32439602abe95e0ff778653ad58052bfed56a73e103b92f079455daa2ee886e7",
+    "qualified_cs": "0824",
+    "qualified_ds": "16F3",
+    "mode": "real 16-bit, unpaged"
+  },
+  "native": {
+    "executable_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "rebuilt_source_binary_matches": true,
+    "schema": "dotbox-bounded-frame-step-1",
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "upstream_tree": "68005f10ab25418b40621875ad8e7a4bd867335c",
+    "overlay_sha256": "a88cba36f6af1b18cb06753ce703146977720a5a9aa5da55464248aa3079971e",
+    "recipe_sha256": "05e61c82664a0f7485a4373d371a5b7203cc2d5a55bfd8fae0a3fb14d002294a",
+    "source_file_count_verified": 38
+  },
+  "native_checks": {
+    "native_bounded": {
+      "cases": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "8e14cbcfe1ce0aaadc931a01f1ffb84a6e31dd9c471e27b188ceb271a4e711c2",
+      "test_names": [
+        "test_native_bounded_frames_and_legacy_single_frame",
+        "test_native_guest_limit_returns_stopped_without_waiting_for_frame",
+        "test_native_breakpoint_wins_at_same_guest_budget_boundary",
+        "test_native_halted_cpu_attributes_pending_breakpoint_at_frame_limit",
+        "test_native_foreign_breakpoint_preempts_multiframe_wait",
+        "test_native_invalid_bounds_do_not_run_guest"
+      ]
+    },
+    "existing_headless_gate": {
+      "cases": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "b373ad1f4bfdb9e21c3dd92b490ac84a2568a14b07bb76d7d84ceea3571dc4a8",
+      "test_names": [
+        "test_native_headless_refuses_host_owner_without_mutation",
+        "test_native_restore_rejects_stale_generation_and_fences_failed_load",
+        "test_native_restore_receipt_preserves_owner_and_advances_generation",
+        "test_original_mz_entry_and_relocation_with_standalone_runtime"
+      ]
+    },
+    "source_overlay": {
+      "cases": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "bd97289a10270983ce6291b6345fc5d51169259289e632ad0b4ddaafb68aeb9e",
+      "test_names": [
+        "test_recipe_is_bound_to_dotbox_owned_source_and_notices",
+        "test_preparation_exports_immutable_commit_and_repeats_without_mutation",
+        "test_preparation_rejects_damaged_inputs_before_output",
+        "test_preparation_preserves_conflicting_output_and_rejects_changed_source",
+        "test_preparation_rejects_wrong_upstream_without_publishing_partial_tree",
+        "test_ownership_handoffs_reject_stale_input_and_clean_once",
+        "test_restore_fence_preserves_owner_and_consumes_generation_before_effects",
+        "test_overlay_manifest_binds_patch_and_shared_policy",
+        "test_wrong_source_is_rejected_without_writes",
+        "test_pinned_overlay_applies_and_repeats_without_mutation"
+      ]
+    },
+    "negative_control": {
+      "check": {
+        "cases": 1,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "sha256": "aa4042eb212b79bae1f4d8a9504732e0ff36cca282cf0a3205a49be257b2c12c",
+        "test_names": [
+          "test_native_breakpoint_wins_at_same_guest_budget_boundary"
+        ]
+      },
+      "expected_failure": true,
+      "change": "Omitted only bounded-stop CBreakpoint::CheckBreakpoint call in a private build.",
+      "observed": "At the same measured guest-time boundary, armed execution breakpoint was mislabeled budget instead of breakpoint. Correct source restored and both binaries match."
+    }
+  },
+  "native_collision_scope": {
+    "guest_time": "Exact same-PC, same-guest-tick and zero-frame collision after machine restore; negative control proves sensitivity.",
+    "frame": "Ordinary foreign breakpoint preemption and direct pending execution breakpoint at a halted CPU one-frame boundary. No broad cross-restore renderer-phase identity claim.",
+    "data_access": "Reviewed source handles pending data-access breakpoint before the list emptiness check; no separate live collision fixture."
+  },
+  "discarded_native_fixture": "Same restored PC/tick could precede renderer completion (0 versus1 frames); removed misleading simultaneous-frame collision interpretation. Replaced with direct CLI;HLT test requiring 1 completed frame.",
+  "frozen_corpus": {
+    "captures": 41,
+    "baseline_reader_sha256": "f9c19c43636bd62fe691400a3a4293d9530fa97083f9823682044746d742f295",
+    "final_reader_sha256": "01ebd404fd9edbf08480ec360da6c9307d8adfb6247be0dcf1df25305a25df06",
+    "final_source_unchanged": true,
+    "menu_counts": {
+      "2598": 14,
+      "2608": 17,
+      "2758": 1,
+      "2770": 7,
+      "2794": 1,
+      "27C0": 1
+    },
+    "complete_and_compact_equal_all": true,
+    "sparse_bytes_per_capture": [
+      21918
+    ],
+    "sparse_calls_per_capture": [
+      4
+    ],
+    "total_sparse_bytes": 898638,
+    "total_sparse_calls": 164,
+    "full_snapshot_bytes": 655360,
+    "receipt_sha256": "76805a5da11ec753a9109b88059176bda08caf7a393ba89440cead511a60ab9a"
+  },
+  "paired_method": {
+    "same_checkpoint": true,
+    "same_native_binary": true,
+    "replicates_per_combination": 2,
+    "order": [
+      "qualified_00_frame_full",
+      "qualified_01_frame_sparse",
+      "qualified_02_native_full",
+      "qualified_03_native_sparse",
+      "qualified_04_native_sparse",
+      "qualified_05_native_full",
+      "qualified_06_frame_sparse",
+      "qualified_07_frame_full"
+    ],
+    "baseline_frame_full_uses_original_source": true,
+    "other_cases_use_final_qualified_source": true,
+    "long_action": "Enter chief conversation",
+    "short_action": "Advance one dialogue page",
+    "disk_canary_changed_after_checkpoint_creation": true,
+    "disk_inventory_before_restore_and_after_actions_equal_all": true,
+    "untimed_audit": {
+      "original_full_current_full_sparse_equal_all": true,
+      "full_memory_rpc_count_per_trial": 10,
+      "sparse_memory_rpc_count_per_trial": 4,
+      "excluded_from_action_metrics": true
+    },
+    "timing_interpretation": "Descriptive two-replicate host sample, not a general latency guarantee; earlier candidate entry timings included native near or above frame baseline."
+  },
+  "paired_summary": [
+    {
+      "strategy": "frame_full",
+      "replicates": 2,
+      "actions": {
+        "long": {
+          "host_ms_mean": 1459.6803824970266,
+          "host_ms_samples": [
+            1445.7495370006654,
+            1473.6112279933877
+          ],
+          "rpc_count": 227,
+          "memory_bytes_read": 1572879
+        },
+        "short": {
+          "host_ms_mean": 247.36049249622738,
+          "host_ms_samples": [
+            248.92543800524436,
+            245.7955469872104
+          ],
+          "rpc_count": 75,
+          "memory_bytes_read": 1572879
+        }
+      }
+    },
+    {
+      "strategy": "frame_sparse",
+      "replicates": 2,
+      "actions": {
+        "long": {
+          "host_ms_mean": 1270.7987534959102,
+          "host_ms_samples": [
+            1259.031897992827,
+            1282.5656089989934
+          ],
+          "rpc_count": 222,
+          "memory_bytes_read": 117315
+        },
+        "short": {
+          "host_ms_mean": 171.04550900694449,
+          "host_ms_samples": [
+            162.04591499990784,
+            180.04510301398113
+          ],
+          "rpc_count": 70,
+          "memory_bytes_read": 117315
+        }
+      }
+    },
+    {
+      "strategy": "native_full",
+      "replicates": 2,
+      "actions": {
+        "long": {
+          "host_ms_mean": 1320.057609504147,
+          "host_ms_samples": [
+            1304.5927200000733,
+            1335.5224990082206
+          ],
+          "rpc_count": 61,
+          "memory_bytes_read": 1572879
+        },
+        "short": {
+          "host_ms_mean": 218.6542074996396,
+          "host_ms_samples": [
+            213.45166099490598,
+            223.85675400437322
+          ],
+          "rpc_count": 61,
+          "memory_bytes_read": 1572879
+        }
+      }
+    },
+    {
+      "strategy": "native_sparse",
+      "replicates": 2,
+      "actions": {
+        "long": {
+          "host_ms_mean": 1259.4750079952064,
+          "host_ms_samples": [
+            1260.207454994088,
+            1258.7425609963248
+          ],
+          "rpc_count": 56,
+          "memory_bytes_read": 117315
+        },
+        "short": {
+          "host_ms_mean": 164.11360400525155,
+          "host_ms_samples": [
+            162.19294200709555,
+            166.03426600340754
+          ],
+          "rpc_count": 56,
+          "memory_bytes_read": 117315
+        }
+      }
+    }
+  ],
+  "paired_trials": [
+    {
+      "case": "qualified_00_frame_full",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1445.7495370006654,
+          "rpc_count": 227,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 248.92543800524436,
+          "rpc_count": 75,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_01_frame_sparse",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1259.031897992827,
+          "rpc_count": 222,
+          "memory_bytes_read": 117315,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 162.04591499990784,
+          "rpc_count": 70,
+          "memory_bytes_read": 117315,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_02_native_full",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1304.5927200000733,
+          "rpc_count": 61,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 213.45166099490598,
+          "rpc_count": 61,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_03_native_sparse",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1260.207454994088,
+          "rpc_count": 56,
+          "memory_bytes_read": 117315,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 162.19294200709555,
+          "rpc_count": 56,
+          "memory_bytes_read": 117315,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_04_native_sparse",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1258.7425609963248,
+          "rpc_count": 56,
+          "memory_bytes_read": 117315,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 166.03426600340754,
+          "rpc_count": 56,
+          "memory_bytes_read": 117315,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_05_native_full",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1335.5224990082206,
+          "rpc_count": 61,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 223.85675400437322,
+          "rpc_count": 61,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_06_frame_sparse",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1282.5656089989934,
+          "rpc_count": 222,
+          "memory_bytes_read": 117315,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 180.04510301398113,
+          "rpc_count": 70,
+          "memory_bytes_read": 117315,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    },
+    {
+      "case": "qualified_07_frame_full",
+      "disk_preserved": true,
+      "audit_equal": true,
+      "actions": {
+        "long": {
+          "outcome": "context_changed",
+          "host_ms": 1473.6112279933877,
+          "rpc_count": 227,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 85,
+          "guest_elapsed_ms": 1213,
+          "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+          "menu_admission_sha256": "6399193f9c67fb062287166ec54ab7b5fdc14789fe74a4770bf9cc7c0809312a",
+          "dialogue_witness_sha256": "56496a6cfcd0a566488e102826a5c3e335b4b0b93bfc7d37b89ee5893f101584"
+        },
+        "short": {
+          "outcome": "context_changed",
+          "host_ms": 245.7955469872104,
+          "rpc_count": 75,
+          "memory_bytes_read": 1572879,
+          "frames_completed": 9,
+          "guest_elapsed_ms": 128,
+          "frame_sha256": "4c4310049112675a972378f045536092b7498c45a337f1294611374c76cae3dc",
+          "menu_admission_sha256": "bf9b082abba3f2feb6d15961161c0eee2f4532226dc945088477d2ad7da03c71",
+          "dialogue_witness_sha256": "3b0ad6b3ce0846e7b65cf4998c878f4502be67e6d538e680cd43280a5544d397"
+        }
+      }
+    }
+  ],
+  "warm_recovery": {
+    "recovery_seconds": 49.409962445,
+    "initial_control_budget_s": 180,
+    "budget_met": true,
+    "disk_preserved": true
+  },
+  "recovery_method": "Initialize matching game graphics normally, then restore031 and verify changed original pixels and state after ordinary input. This is not a fix of the text-mode-to-graphics native restore defect.",
+  "owned_deadline_trial": {
+    "guest_limit_ms": 200,
+    "outcome": "timeout",
+    "total_clicks": 1,
+    "same_controller": true,
+    "input_free_reconcile_outcome": "input_boundary",
+    "observer_cleanup_revision_checked": true,
+    "temporary_drawing_overlay_context": true,
+    "automatic_input_replay": false
+  },
+  "continued_play": {
+    "site": "Carthag-Tuek",
+    "site_record_hex": "0250",
+    "inside": true,
+    "menu_hex": "2598",
+    "gurney_met": true,
+    "gurney_joined_party": "not selected or demonstrated",
+    "new_measured_spice_harvest": false,
+    "macro": {
+      "actions": 4,
+      "frames_completed": 100,
+      "guest_elapsed_ms": 1427,
+      "host_ms": 1610.8241809997708,
+      "rpc_count": 224,
+      "memory_bytes_read": 469260,
+      "model_calls": 0,
+      "outcome": "conversation_context_changed"
+    },
+    "final_frame_sha256": "af6f722df94d8fed69fd6a6fa396440de9604ae02ba1f237ce7d34d0f11af85a",
+    "full_machine_checkpoint_sha256": "d14439aaa272fc39767cb084ee5e0c7d51fb332fd62875c43cfbc29c388f6221",
+    "input_neutral_before_close": true,
+    "remaining_observers_before_close": 0,
+    "process_reaped": true,
+    "process_returncode": 0,
+    "prior_unavailable_process_closure": "unconfirmed"
+  },
+  "map_trial": {
+    "scope": "One root-owned ordinary-input qualification; general packaged map adapter remains open",
+    "dispatch_hook": "0824:D2FE",
+    "acceptance_hook": "0824:4D74",
+    "vector_pointer": "DS:2A5C -> 2176",
+    "selected_callback_hex": "4D4E",
+    "gate_hex": "04",
+    "mode": 1,
+    "menu_hex": "2794",
+    "viewport": [
+      81,
+      45,
+      241,
+      134
+    ],
+    "viewport_bounds": "lower inclusive, upper exclusive",
+    "target_pixel": [
+      169,
+      118
+    ],
+    "target_record_hex": "0250",
+    "nearest_manhattan_distance": 0,
+    "next_nearest_distance": 16,
+    "acceptance_threshold_exclusive": 9,
+    "accepted_DI_and_DS4258_equal_target": true,
+    "flight_ready_and_arrival_observed_separately": true,
+    "vector_gate_viewport_part_of_general_scene_dependency_digest": false
+  },
+  "preserved_failures": [
+    "Initial source snapshot directory layout failed evidence-path admission before control; qualified snapshot moved into scripts/experiments layout.",
+    "Earlier cleanup/reconciliation candidates rejected a native cleanup revision and a valid own-budget stop in drawing-overlay CS; fixes were covered by regression tests and final live trial.",
+    "Proposed restored renderer collision did not prove same frame phase; replaced by direct halted-CPU frame-boundary test."
+  ],
+  "limits": [
+    "Native guest/frame limits do not prove a host RPC timeout leaves target stopped. Failed/lost request remains uncertain, no replay.",
+    "Renderer snapshot may predate a zero-frame guest limit; frame_available is not freshness.",
+    "Retained upstream Git commit metadata differs but its immutable tree matches the pinned recipe. Both source patches were reapplied to a fresh export and all base/result identities verified.",
+    "Visible desktop/human takeover tests not exercised in this subtask.",
+    "Sparse equality covers these 41 captures and the paired live observations; arbitrary states and editions remain unqualified.",
+    "Menu readiness, selected dispatch, story effects and map arrival are separate claims.",
+    "No original-Dot outer desktop/takeover or new macOS bounded-path qualification.",
+    "No generic map adapter, full strategic simulation, production action transactions or broad cross-build checkpoint qualification.",
+    "Raw commercial files, screenshots, RAM, saves and machine checkpoints remain private.",
+    "Both repository histories remain independent; branch publication does not establish PR merge or release integration."
+  ]
+}

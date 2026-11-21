@@ -1,0 +1,107 @@
+{
+  "format": "dotbox-keen-dreams-setup-1",
+  "date": "2026-11-19",
+  "version": "0.1.0.dev8",
+  "source_basis": {
+    "primary_parent": "65307b1a54d6819acca8139210b8263219e71f72",
+    "mirror_parent": "82cf5a9eb2c078d2e598174e63ea194b6728ea56",
+    "common_parent_tree": "bc6a65719a6eee361c04c6fae1ed47104bebe17c",
+    "tested_files_sha256": {
+      "pyproject.toml": "ca6d4b07e49c415ded2d2b07e51017abda3d358afb227742e6a8606b0dcb77e0",
+      "src/dotbox/__init__.py": "c469c2fc47cfe41caaf304807eb30e291b9a7122843962dbebce709e510fadb3",
+      "src/dotbox/native_session.py": "7170593e13da43d7da8b3da34f150584faae3602051025d98493fb8e1499fc73",
+      "src/dotbox/inspection.py": "3a52f3f8319b300d050785b90990ce284213489aac755b39aa00157bce424a98",
+      "tests/test_native_session_wrapped_entry.py": "c5a6c6a37807401f711cda43ca3df404908a15d55d6c6aab0d8d7dd7efeba039"
+    }
+  },
+  "game": {
+    "archive_sha256": "ed59ee6a25e737952b8270b4c782ae2a60586901721615374b2d7617902f6293",
+    "executable_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+    "edition": "Supplied DOS archive; exact game release number not established",
+    "mz_header_cs": "FFF0",
+    "mz_header_ip": "0100",
+    "normalized_module_entry": 0,
+    "entry_file_offset": 144,
+    "game_bytes_in_repository": false
+  },
+  "defect": {
+    "baseline": "0.1.0.dev7 rejects the valid wrapped relative CS entry before native process launch",
+    "change": "Normalize relative MZ entry and 16-bit CS relocation, then require the observed unmasked physical entry to match the unwrapped allocation. Offline identity uses the same normalized entry.",
+    "preserved": "Existing actual A20, allocation, stack, ownership and source-byte checks"
+  },
+  "primary_loader_evidence": {
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "paths": [
+      "src/dos/dos_execute.cpp",
+      "include/mem.h"
+    ],
+    "contract": "EXE CS+load segment passes to RealMake(uint16_t,uint16_t), then Real2Phys adds segment*16 and offset without an A20 mask"
+  },
+  "verification": {
+    "pre_fix_authored_regressions": {
+      "failed": 7,
+      "passed": 5,
+      "exit_code": 1
+    },
+    "final_focused_suite": {
+      "command": "python -m pytest -q tests/test_native_session_wrapped_entry.py tests/test_standalone_native_runtime.py tests/test_inspection.py tests/test_backend.py tests/test_kit.py --tb=short",
+      "passed": 144,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "independent_review": "No blocking findings; source diff and authored regression cases reviewed against loader semantics",
+    "installed_doctor": {
+      "version": "0.1.0.dev8",
+      "resources_verified": 81,
+      "offline_learning_ready": true
+    },
+    "installed_record_hashes_verified": 131,
+    "installed_runtime_modules_matching_source": 39,
+    "fdisbull_import_available": false,
+    "pip_check": "passed",
+    "installed_identity_entry_file_offset": 144
+  },
+  "runtime": {
+    "platform": "Linux x86_64",
+    "python": "3.12.14",
+    "dependencies": {
+      "Pillow": "12.3.0",
+      "iced-x86": "1.22.0"
+    },
+    "native_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "wheel_sha256": "90e21d835887a17855b7b9e190ffda9448ceff63993e81806db9820d6a590b49",
+    "input_surface": "Isolated headless native diagnostic using installed dotbox.native_session.NativeSession; no desktop input or outer takeover qualification"
+  },
+  "observed": {
+    "no_input_boot": {
+      "captures": 3,
+      "host_elapsed_s": 10.277180218,
+      "original_startup_prompt_visible": true,
+      "closed_and_reaped": true,
+      "returncode": 0
+    },
+    "startup_enter": {
+      "input_events": 1,
+      "captures": 3,
+      "host_elapsed_s": 9.369178197,
+      "effect": "Original copyright prompt -> hardware/input/memory screen -> Ready - Press a Key",
+      "last_frame_sha256": "438e16f4b24400904fe180781b059653d22a4e5d5a3abfd7709f407a6e605292",
+      "closed_and_reaped": true,
+      "returncode": 0
+    }
+  },
+  "limits": [
+    "No level, movement, jumping, held-key chord, collision or combat qualification.",
+    "No live Keen scene provider, game memory schema or rewind qualification.",
+    "No visible desktop, audio or outer Take over / Return control integration check.",
+    "Configured boot timings exclude installation and are not cold-preparation measurements.",
+    "No packaged release, merge or campaign-completion claim.",
+    "The existing conservative wrapping-stack rejection is unchanged."
+  ],
+  "work_record": {
+    "board": "https://agent-bbs-native.tiga-rce.chatgpt.site",
+    "project": "dotbox",
+    "ticket": "e-c25d4cfd-65f3-4a84-a42e-46db749bdb4b"
+  }
+}

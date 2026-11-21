@@ -1,0 +1,841 @@
+{
+  "schema": "dotbox-reversing-inventory-1",
+  "date_utc": "2026-11-20",
+  "task_id": "e-fd2a30bd-6125-4451-ae7f-b221ff57bc24",
+  "scope": {
+    "audit": true,
+    "production_changed": false,
+    "dependencies_installed": false,
+    "native_guest_started": false,
+    "fresh_fdisbull_package_install": false,
+    "pure_fdisbull_kernel_executed": true,
+    "new_native_qualification": false,
+    "measured_end_to_end_preparation_speedup": false
+  },
+  "dotbox": {
+    "local_commit": "b494d4123a182d74b5440cd79eda8b79bb557a93",
+    "primary_commit": "7d4573ea0e8b0ef72faf73f26ebf74d25bc0a144",
+    "mirror_commit": "b5aca67c0e42dadd0caa6178f50895ca908cb2aa",
+    "tree": "1433870a1fce7be20c387115f0a59f477bda56a0",
+    "observed_main": "10fa86d8a91bb75e0ccf3da346bc9f72eab91d03",
+    "observed_rts_branch": "65307b1a54d6819acca8139210b8263219e71f72",
+    "main_comparison": {
+      "ahead": 62,
+      "behind": 0
+    },
+    "rts_tree_no_unique_file_missing_from_keen": true,
+    "installed": {
+      "python": "3.12.14",
+      "dotbox": "0.1.0.dev9",
+      "iced-x86": "1.22.0",
+      "Pillow": "12.3.0",
+      "absent_optional_or_nonrequired": [
+        "capstone",
+        "unicorn",
+        "angr",
+        "z3-solver",
+        "networkx",
+        "pyelftools",
+        "mcp",
+        "fdisbull"
+      ],
+      "source_runtime_modules": 40,
+      "installed_runtime_modules": 40,
+      "runtime_module_bytes_match": true,
+      "runtime_RECORD_entries": 39,
+      "runtime_missing_from_RECORD": [
+        "oracle.py"
+      ],
+      "resources_manifest_equal": true,
+      "verified_resources": 81,
+      "packaged_experiments": [
+        "dune_map.py",
+        "dune_probe_batch.py",
+        "dune_progress.py",
+        "dune_ui_reader.py"
+      ],
+      "unpackaged_experiments": [
+        "keen_actor.py",
+        "keen_loop.py",
+        "keen_oracle.py",
+        "keen_waypoint.py",
+        "keen_world.py",
+        "browser_preview.py"
+      ]
+    },
+    "source_files": {
+      "pyproject.toml": {
+        "sha256": "4316c73fe89f21be9338469cc3d53e7de60c883664a498949357d8f7e663ede9",
+        "bytes": 658
+      },
+      "src/dotbox/inspection.py": {
+        "sha256": "3a52f3f8319b300d050785b90990ce284213489aac755b39aa00157bce424a98",
+        "bytes": 17910
+      },
+      "src/dotbox/service.py": {
+        "sha256": "b3e955ad18b35008c5c273cae88494f737eb0c0d9e09a51be9dc7259b4379ff4",
+        "bytes": 22408
+      },
+      "src/dotbox/cli.py": {
+        "sha256": "ef7736321bcc9d8f20a4c9cfb62c4bb213b988469ef0cdab273580785064e261",
+        "bytes": 10871
+      },
+      "src/dotbox/connector.py": {
+        "sha256": "d7eb84645506ac34728c40a227821488b16b28a8aa197f2582e3d2d56383c652",
+        "bytes": 17252
+      },
+      "src/dotbox/native_rpc.py": {
+        "sha256": "3bef38cbec97a8a468b90b313fab7fa9e0e8ec6d74d52f11da4b6a8d5059729a",
+        "bytes": 15906
+      },
+      "src/dotbox/native_session.py": {
+        "sha256": "529141e2e955c44386b5e3ef3138ed30d6133c0adbd9c7f19fbc6502bb945f3c",
+        "bytes": 23177
+      },
+      "src/dotbox/agi.py": {
+        "sha256": "d842d91ab7ad334ce45d83077bd0b7b9316498e9b4cfee4c5512b67a575b8bf9",
+        "bytes": 8179
+      },
+      "src/dotbox/agi_layout.py": {
+        "sha256": "184c6a6f045ed58ddb167d2591e5e9a69dbf8dc147198513b263f0db701b43a0",
+        "bytes": 5368
+      },
+      "src/dotbox/agi_resources.py": {
+        "sha256": "27a9a08cf2381f160bea366989ff1c45b76b3a90f52043f8f218c00e717f14e6",
+        "bytes": 28749
+      },
+      "src/dotbox/agi_scenes.py": {
+        "sha256": "5a03f02147b6c28be5ad1b2aeccf4c6a4ffdc6a0ea7b0c0acba263295f3957b8",
+        "bytes": 33456
+      },
+      "src/dotbox/learning.py": {
+        "sha256": "13e62388e8efe2744a7eb300aaa9acb4f703d66da3adfc365840ab98072ea268",
+        "bytes": 15704
+      },
+      "src/dotbox/store.py": {
+        "sha256": "96dfc45e13e2f97ff5b7657eb2c8a03d49d57f633fae17d760cf23fe79315ce4",
+        "bytes": 5412
+      },
+      "src/dotbox/harness.py": {
+        "sha256": "31e1bedb0fdcccd03a76deca17408465a6a464fc1984943c69e02428a1a7b016",
+        "bytes": 13187
+      },
+      "src/dotbox/scene_state.py": {
+        "sha256": "d9f9c5a50cf5330bf61b83865249af8d3154015cf80288fbeabb1bdb4667e3ff",
+        "bytes": 11300
+      },
+      "src/dotbox/bounded_wait.py": {
+        "sha256": "aebe2e0b89f271ea9794dcfd2f3ddbdaef236bae14e9d2706923949d9bef99b7",
+        "bytes": 4682
+      },
+      "src/dotbox/operation_budget.py": {
+        "sha256": "292fb60fc41360329f32847d9e1267db0f2e3d0d9dc4078e180e1926e7496994",
+        "bytes": 3118
+      },
+      "src/dotbox/resources_manifest.json": {
+        "sha256": "36e9004ba270e447e574c7b07304a190a31b2b475e277d850caadf06621cdbd8",
+        "bytes": 4605
+      },
+      "scripts/experiments/dune_probe_batch.py": {
+        "sha256": "cb6c5cb07c2e58e8ffd9ff1e18935743611dba140f2379a0cfcf76f39d43f7cb",
+        "bytes": 28904
+      },
+      "scripts/experiments/dune_progress.py": {
+        "sha256": "6b3eff1772b2f2056187020d43334ec99068c7f0410a21dcc342e93bf10abd4a",
+        "bytes": 54725
+      },
+      "scripts/experiments/dune_ui_reader.py": {
+        "sha256": "01ebd404fd9edbf08480ec360da6c9307d8adfb6247be0dcf1df25305a25df06",
+        "bytes": 30494
+      },
+      "scripts/experiments/dune_map.py": {
+        "sha256": "050891678c92052d5466e8f4f5340152bf9597d3d39b3b048db1026638a11b95",
+        "bytes": 34763
+      },
+      "scripts/experiments/keen_loop.py": {
+        "sha256": "943630b7d7cb291ed3b8dc5a5c167a82f9615abaffc348bffdfea6b430ec6917",
+        "bytes": 30520
+      },
+      "scripts/experiments/keen_actor.py": {
+        "sha256": "3ed2a8d223ac41c1c6c396624f1dca3e2c54bc789d5c411a7df54ff6f6507c13",
+        "bytes": 8127
+      },
+      "scripts/experiments/keen_world.py": {
+        "sha256": "abfd8136ee0c7d195c316c7af1f0b41ac027c7ce58bb565c98770d82c9b980ca",
+        "bytes": 10615
+      },
+      "scripts/experiments/keen_oracle.py": {
+        "sha256": "bd6ede84888a1662eaa71e4de16a5327e9698263e0192542dec79419149f51df",
+        "bytes": 17604
+      },
+      "scripts/experiments/keen_waypoint.py": {
+        "sha256": "62ac20e9a8fe246838c5f1cb04635eae247b07d54507054686467797f5387063",
+        "bytes": 14162
+      },
+      "native/build-recipe.json": {
+        "sha256": "05e61c82664a0f7485a4373d371a5b7203cc2d5a55bfd8fae0a3fb14d002294a",
+        "bytes": 5766
+      },
+      "native/dosbox-x/headless-agent.patch": {
+        "sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
+        "bytes": 311275
+      },
+      "native/input-control.patch": {
+        "sha256": "a88cba36f6af1b18cb06753ce703146977720a5a9aa5da55464248aa3079971e",
+        "bytes": 44592
+      },
+      "docs/EXTRACTION.md": {
+        "sha256": "92f2dd09eabdbff469cc7619fe7a1d2c76003667d39c5e13d5ca3624cb5cff80",
+        "bytes": 7185
+      },
+      "docs/REVERSE_ENGINEERING.md": {
+        "sha256": "a50fd4d6b10ba3f957ffa4c4b9657c722d98cb82afebfd6fc8514e12cb2f3b5f",
+        "bytes": 14587
+      },
+      "docs/DUNE_BATCH_PROBE.md": {
+        "sha256": "2e1eebc36ded550d56e5f6eb695ea3942a8da2c1af7b3a447c260de2f5f0dbb8",
+        "bytes": 13691
+      }
+    },
+    "retained_native_capabilities": {
+      "sha256": "1b67507f8a8d2df5c5d9d6e736fcaf25f2961f72d5c932fbfb934ecb8cf06e23",
+      "freshly_negotiated": false,
+      "scope": "Retained actual previous live negotiation; source and offline checks freshly inspected this turn."
+    },
+    "checks": {
+      "command": "venv/bin/python -m pytest -q tests/test_inspection.py tests/test_agi.py tests/test_learning.py tests/test_dune_probe_batch.py",
+      "result": "133 passed in 0.73s",
+      "exit_code": 0,
+      "native_execution": false
+    }
+  },
+  "fdisbull": {
+    "project_id": 88349936,
+    "project": "brewster-jennings-group/fdisbull",
+    "observed_gitlab_release": {
+      "tag": "v0.34.1",
+      "commit": "011f1b8cb281edda208026aee9cdb238b800b2d7"
+    },
+    "observed_portal_package_source": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+    "observed_main": "829453ecae3fb0de236dbdd95be85a554efd1fb7",
+    "observed_qemu_branch": {
+      "branch": "codex/qemu-parity-20261120",
+      "commit": "95580d960ad5acaf3f3bb42b8a8c68fa7d880f82"
+    },
+    "limits": "Read-only source and CLI routing inspection; no package installation, native execution, code port or preparation-speed claim."
+  },
+  "fdisbull_sources": [
+    {
+      "source_path": "AGENTS.md",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 10996,
+      "sha256": "7d0650a27df5b82160812dc076d8bce8a2ec826faf631573be1370bb6091c228",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/AGENTS.md"
+    },
+    {
+      "source_path": "docs/API.md",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 56427,
+      "sha256": "9ddfb72aa177ab8f4d83b250c5b4e0ad12b42571b4893bee9e7ff2bc5ac88e4d",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/docs/API.md"
+    },
+    {
+      "source_path": "pyproject.toml",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 1490,
+      "sha256": "4c41e36f726cc10830034a552ea49211b753594dfc42f921ce9df9bc9921d22e",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/pyproject.toml"
+    },
+    {
+      "source_path": "src/fdisbull/__pycache__/memory_search.cpython-312.pyc",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 30841,
+      "sha256": "1d35f2cdd9a6fa81d335f5eb7204f5d557caa3245bcbedebb4da5ec308363ca7",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/__pycache__/memory_search.cpython-312.pyc"
+    },
+    {
+      "source_path": "src/fdisbull/advanced.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 41258,
+      "sha256": "72773951e00e94163f5b525a0101ee84783f39c261e29006bd8de09c8b516f33",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/advanced.py"
+    },
+    {
+      "source_path": "src/fdisbull/analysis.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 38693,
+      "sha256": "0ef5749ef9610cb11df37695e2452b7b73e353deaac74f5b532e5191a35731eb",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/analysis.py"
+    },
+    {
+      "source_path": "src/fdisbull/cfg.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 17824,
+      "sha256": "1ea8db382dfb976cf94e74807342abeb9bcb9e8703cd93d65d4cc83021889585",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/cfg.py"
+    },
+    {
+      "source_path": "src/fdisbull/cli.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 169614,
+      "sha256": "10a54ad7f649087de9166ba359232a527550b1e3bd300e1b75e5a801e9986c7a",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/cli.py"
+    },
+    {
+      "source_path": "src/fdisbull/code_blocks.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 10284,
+      "sha256": "9c0dfc527c116640e19c09bb2aadec9ca040b837224d403cb6064ab9485541a1",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/code_blocks.py"
+    },
+    {
+      "source_path": "src/fdisbull/code_layout.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 15208,
+      "sha256": "e777327085bf202b2cbd3f98b06fed905b35218c4abc73bf363e12a79a8d4d85",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/code_layout.py"
+    },
+    {
+      "source_path": "src/fdisbull/debug_experiments.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 24057,
+      "sha256": "82c0e0a98a7fb0e1832b724760f42e41d4ddc197a7a4b93430b2da53558aef14",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/debug_experiments.py"
+    },
+    {
+      "source_path": "src/fdisbull/debugger.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 78856,
+      "sha256": "8dc20d055598e991ca130c585ce33bb1dc9998d73ed44d9cc31973316deeb545",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/debugger.py"
+    },
+    {
+      "source_path": "src/fdisbull/event_search.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 24310,
+      "sha256": "94cb756b080dc494a315251f04b8128782872e5c7c0e516fe7e769546e94ae94",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/event_search.py"
+    },
+    {
+      "source_path": "src/fdisbull/execution_events.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 44874,
+      "sha256": "05b81b080299ed33c7df5af4ffacbd9b0b7886dcb5c13702893c4b2ea11180b9",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/execution_events.py"
+    },
+    {
+      "source_path": "src/fdisbull/execution_trace.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 27691,
+      "sha256": "935cb5482121da6cb58edd48b0a89b45acdb60f4a3a2d6f3bacb6af3c322cf2b",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/execution_trace.py"
+    },
+    {
+      "source_path": "src/fdisbull/facts.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 5549,
+      "sha256": "d5ad9f03eadb5f9f0a61fa83a60b8ebc20dd0b65c6412fc972441dc1588cc38b",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/facts.py"
+    },
+    {
+      "source_path": "src/fdisbull/flowdata.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 29878,
+      "sha256": "aec0ae83719ec225c658c1ff417df2fd531e31b6dd95aa660a931912d8645abd",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/flowdata.py"
+    },
+    {
+      "source_path": "src/fdisbull/format_registry.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 60094,
+      "sha256": "ee631be83ac90189cb3af285b45f7a16bc8291d3c4f148362dd81113cf0bb698",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/format_registry.py"
+    },
+    {
+      "source_path": "src/fdisbull/function_analysis.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 17161,
+      "sha256": "da61e91a801a661c1e85c42173bb520b7f7f2be77b636d67771398fea83af26e",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/function_analysis.py"
+    },
+    {
+      "source_path": "src/fdisbull/incremental.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 13123,
+      "sha256": "273b5768218eb140d314c85c4fe4d6da86c96576b1e1c48944a0f93afe03d288",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/incremental.py"
+    },
+    {
+      "source_path": "src/fdisbull/indirect.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 18271,
+      "sha256": "96fb59d032d4cbe17745a2d5fa00b2d2f67f5382faa36a538f89bfe31c049f2a",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/indirect.py"
+    },
+    {
+      "source_path": "src/fdisbull/inspection.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 33553,
+      "sha256": "baf4f0166dd282fb87d8a7ea5d0f301ff71d3a37fe1f1494e4493c1ddabd67c0",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/inspection.py"
+    },
+    {
+      "source_path": "src/fdisbull/memory.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 31453,
+      "sha256": "0f5d5dc421a5a1f680a51e3b25df7a0e759f22391c07d53e8fe3b5336f06ea37",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/memory.py"
+    },
+    {
+      "source_path": "src/fdisbull/memory_rules.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 22847,
+      "sha256": "675c003eaa7b8722370daab8ad923044fc03b4b98936f9d4a652bd29268b6022",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/memory_rules.py"
+    },
+    {
+      "source_path": "src/fdisbull/memory_search.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 26641,
+      "sha256": "836cef3fba6311af653ea322e2cf69c1c84cd0f170766be01abe658364eed1e7",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/memory_search.py"
+    },
+    {
+      "source_path": "src/fdisbull/memory_search_runtime.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 19575,
+      "sha256": "117dfe214f709dbdf72511fd742d8d8cb22ebbe55b97776b767a4bb2bedaa5a8",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/memory_search_runtime.py"
+    },
+    {
+      "source_path": "src/fdisbull/project.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 46545,
+      "sha256": "572b6b3591710ac767a1c22b2620552aba9559c8695b24041299e9180734c501",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/project.py"
+    },
+    {
+      "source_path": "src/fdisbull/proofs.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 12667,
+      "sha256": "edd73a34f2fd67c6dba3295d9159ddeeeab69aedeeb307a5c20fb2f32ee68bed",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/proofs.py"
+    },
+    {
+      "source_path": "src/fdisbull/runtime_code.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 19105,
+      "sha256": "d69635418333ee81814cf903d5a62f6b3c375ab2b1bdc6d3a84f5f87783f6fcf",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/runtime_code.py"
+    },
+    {
+      "source_path": "src/fdisbull/serializer_candidates.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 22793,
+      "sha256": "ee712a56b7446909789e7b43b36c57ed2e3eb078cc882bc021d860f856df13ab",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/serializer_candidates.py"
+    },
+    {
+      "source_path": "src/fdisbull/serializer_discovery.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 36480,
+      "sha256": "4ba77e359c4ab1119fed6d4dffd060beda9fe1da34f14588985304b3cf1744d0",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/serializer_discovery.py"
+    },
+    {
+      "source_path": "src/fdisbull/source_native.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 13240,
+      "sha256": "7dc05353f5ece8f033680ad0767017af7ce3f58290d181285ca36b2bc114673a",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/source_native.py"
+    },
+    {
+      "source_path": "src/fdisbull/typesystem.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 23581,
+      "sha256": "9279ee7bb5313c00f537fc7e2ab155261b1fd942b32fb8b3d1f4683eea1d8b7a",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/typesystem.py"
+    },
+    {
+      "source_path": "src/fdisbull/z_capture_watch.py",
+      "ref": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+      "bytes": 11136,
+      "sha256": "e1002ae90234a0b68c96a82454aa81420c58c1d43fb8226a37aa11980dbdfb9d",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd/src/fdisbull/z_capture_watch.py"
+    },
+    {
+      "source_path": "docs/DOSBOX_QEMU_CAPABILITY_INVENTORY.md",
+      "ref": "95580d960ad5acaf3f3bb42b8a8c68fa7d880f82",
+      "bytes": 48251,
+      "sha256": "38b881b4f5620d7428f6a136e01ea1a3c0d3c40e45b6bd585ac259d52fca6c12",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/95580d960ad5acaf3f3bb42b8a8c68fa7d880f82/docs/DOSBOX_QEMU_CAPABILITY_INVENTORY.md"
+    },
+    {
+      "source_path": "docs/DOS_QEMU_PARITY_WORK.json",
+      "ref": "95580d960ad5acaf3f3bb42b8a8c68fa7d880f82",
+      "bytes": 90717,
+      "sha256": "d6d45074de3bd28e9d2629fe88ee5fba0185d0af654cedcd211f91e32a23be5e",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/95580d960ad5acaf3f3bb42b8a8c68fa7d880f82/docs/DOS_QEMU_PARITY_WORK.json"
+    },
+    {
+      "source_path": "docs/QEMU_DEBUGGER_REUSE.md",
+      "ref": "95580d960ad5acaf3f3bb42b8a8c68fa7d880f82",
+      "bytes": 14647,
+      "sha256": "bb3d6b1ad4942a6feeedb968bce73afece3eb172c52c72d8d3722fc8eaf5ba8e",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/95580d960ad5acaf3f3bb42b8a8c68fa7d880f82/docs/QEMU_DEBUGGER_REUSE.md"
+    },
+    {
+      "source_path": "docs/QEMU_DOTBOX_TRANSFER_REVIEW_20261120.md",
+      "ref": "95580d960ad5acaf3f3bb42b8a8c68fa7d880f82",
+      "bytes": 7256,
+      "sha256": "3327a005c26bb79ceea1db2120bcb109c890fe3ce6bbf30d242ab1654dd54fd7",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/95580d960ad5acaf3f3bb42b8a8c68fa7d880f82/docs/QEMU_DOTBOX_TRANSFER_REVIEW_20261120.md"
+    },
+    {
+      "source_path": "docs/runtime-mappings.md",
+      "ref": "95580d960ad5acaf3f3bb42b8a8c68fa7d880f82",
+      "bytes": 12104,
+      "sha256": "a2717f9842bfc64efd565efe47e30bd36c0000a71cb2b1844dea1c1afe020757",
+      "source_url": "https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/95580d960ad5acaf3f3bb42b8a8c68fa7d880f82/docs/runtime-mappings.md"
+    }
+  ],
+  "demo": {
+    "kernel_commit": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+    "kernel": {
+      "bytes": 26641,
+      "sha256": "836cef3fba6311af653ea322e2cf69c1c84cd0f170766be01abe658364eed1e7"
+    },
+    "input_hashes": [
+      {
+        "bytes": 65536,
+        "sha256": "a064c9bb0bd38aab072a05742e7996942e6870882236d9b84c1746d5c1d9ceaf"
+      },
+      {
+        "bytes": 65536,
+        "sha256": "35c6bbbe343d0a3422806e7fe6099b7e0946eb3ad7d422302ca7d9b0bb3cb211"
+      }
+    ],
+    "input_admission": {
+      "bytes": 13464,
+      "sha256": "f1bcc64bd9dcd02fa59d865b9c2edc3ccfbe4481bb9123b32ac6f03c94ffc7de"
+    },
+    "independent_decoder": {
+      "bytes": 7471,
+      "sha256": "f68c129189ca3dd2caa0ab176349893da66151cf61b91ac7465470bf38b42299"
+    },
+    "selected_region_bytes": 65536,
+    "scalar_spec": {
+      "width": 4,
+      "stride": 1,
+      "signed": false,
+      "byteorder": "little"
+    },
+    "prior_knowledge": "Region and scalar width selected from previously qualified profile; score offset used for independent validation only, never search restriction or seeding. Not blind unknown-game discovery.",
+    "counts": {
+      "all_scalar_positions": 65533,
+      "changed": 274,
+      "delta_100": 2,
+      "initial_zero": 27640,
+      "zero_then_100": 2
+    },
+    "timings": [
+      {
+        "label": "start_unknown_u32",
+        "wall_ms": 0.101103
+      },
+      {
+        "label": "refine_changed_u32",
+        "wall_ms": 36.213829
+      },
+      {
+        "label": "refine_delta_100_u32",
+        "wall_ms": 38.509438
+      },
+      {
+        "label": "start_equal_zero_u32",
+        "wall_ms": 22.401649
+      },
+      {
+        "label": "refine_equal_100_u32",
+        "wall_ms": 16.311799
+      },
+      {
+        "label": "dotbox_existing_byte_diff",
+        "wall_ms": 4.84832
+      }
+    ],
+    "search_design": "changed and delta100 are parallel refinements of the unknown initial state; zero→100 is a separate exact-value chain.",
+    "known_score_candidate_survived": true,
+    "other_candidate_meaning": "unknown",
+    "existing_dotbox_diff": {
+      "changed_bytes": 104,
+      "returned_ranges": 69,
+      "truncated": false
+    },
+    "refusals": {
+      "context_changed": "memory search context changed; start a separate search for the new identity",
+      "payload_changed": "snapshot metadata or payload differs from its recorded identity"
+    },
+    "scope": "One offline two-snapshot transfer demonstration; unchanged fDisBull stdlib module loaded directly, no installation or live capture/write. Original timing includes no game or model time. Candidates are correlations, not semantic or writer proof. Timings are one-shot observations, not an end-to-end harness speedup benchmark.",
+    "command": "venv/bin/python memory_search_demo.py",
+    "exit_code": 0,
+    "independent_review": "Script/kernel semantics, retained results and file hashes checked read-only; no independent rerun."
+  },
+  "capability_classification": [
+    {
+      "layer": "installed_offline",
+      "included": [
+        "selected_COM_MZ_identity",
+        "ASCII_strings",
+        "masked_byte_search",
+        "linear_x86_16_32_disassembly",
+        "byte_diff",
+        "AGI_V2_census_and_local_value_propagation",
+        "learning_journal",
+        "observation_store",
+        "scene_choice_projection",
+        "oracle",
+        "route_RTS_geometry_actions"
+      ]
+    },
+    {
+      "layer": "native_source_and_retained_capabilities",
+      "included": [
+        "register_read_edit",
+        "memory_read_write",
+        "step_continue_pause_wait",
+        "execution_breakpoints",
+        "memory_change_breakpoints",
+        "real_mode_normal_core_byte_access_watches",
+        "CPU_trace",
+        "native_state_save_load",
+        "guest_clocks",
+        "bounded_frame_steps",
+        "image_pixel_capture"
+      ],
+      "freshly_exercised_this_audit": false
+    },
+    {
+      "layer": "packaged_experimental_resources",
+      "included": [
+        "dune_map.py",
+        "dune_probe_batch.py",
+        "dune_progress.py",
+        "dune_ui_reader.py"
+      ],
+      "normal_service_capture_workflow": false
+    },
+    {
+      "layer": "source_experiments_outside_resource_manifest",
+      "included": [
+        "keen_actor.py",
+        "keen_loop.py",
+        "keen_oracle.py",
+        "keen_waypoint.py",
+        "keen_world.py",
+        "browser_preview.py"
+      ]
+    },
+    {
+      "layer": "missing_or_unintegrated",
+      "items": [
+        "owned_general_capture_trial_API",
+        "portable_private_observer_profile_loader",
+        "scalar_memory_candidate_search",
+        "trace_repeat_contrast_query",
+        "native_CFG_xrefs_read_write_effect_index",
+        "typed_native_record_schema_runtime",
+        "persistent_investigation_dependency_index",
+        "generic_phase_input_calibration",
+        "qualified_player_rewind",
+        "qualified_general_original_entry_routes"
+      ]
+    }
+  ],
+  "priorities": [
+    {
+      "priority": "P0",
+      "work": "owned_capture_trial_runner",
+      "reuse": [
+        "DotBox dune_probe_batch lifecycle",
+        "DotBox KeenLoop coherent capture",
+        "fDisBull debug_experiments contracts"
+      ],
+      "relative_effort": "medium",
+      "benefit": "reduce repeated owner/probe/timeout/cleanup assembly"
+    },
+    {
+      "priority": "P0",
+      "work": "portable_private_profile_loader",
+      "relative_effort": "medium",
+      "benefit": "reuse observers/hooks/layouts and prior evidence without old-directory reconstruction"
+    },
+    {
+      "priority": "P0",
+      "work": "scalar_memory_search",
+      "reuse": [
+        "fDisBull memory_search.py"
+      ],
+      "relative_effort": "small kernel plus moderate integration",
+      "benefit": "narrow field candidates; demonstrated offline"
+    },
+    {
+      "priority": "P1",
+      "work": "event_repeat_contrast_queries",
+      "reuse": [
+        "fDisBull execution_events.py",
+        "event_search.py contracts"
+      ],
+      "relative_effort": "small kernel plus capture/storage adapters"
+    },
+    {
+      "priority": "P1",
+      "work": "native_relationship_index",
+      "reuse": [
+        "memory.py",
+        "facts.py",
+        "advanced.py",
+        "cfg.py",
+        "function_analysis.py",
+        "flowdata.py",
+        "indirect.py"
+      ],
+      "relative_effort": "medium to large normalization/storage integration"
+    },
+    {
+      "priority": "P1",
+      "work": "typed_dependency_reader_and_phase_calibration",
+      "reuse": [
+        "fDisBull typesystem.py contracts",
+        "DotBox Dune sparse reader",
+        "Keen phase experiments"
+      ],
+      "relative_effort": "medium"
+    },
+    {
+      "priority": "P2",
+      "work": "investigation_dependency_store_and_target_specific_readers",
+      "relative_effort": "target-dependent",
+      "defer": [
+        "wholesale_Project_import",
+        "general_decompilation",
+        "full_symbolic_execution",
+        "UDL_UIL_UDC",
+        "emulator_replacement"
+      ]
+    }
+  ],
+  "historical_workflow_evidence": [
+    {
+      "source": "docs/DUNE_BATCH_PROBE.md",
+      "dispatch_seconds": 3.233,
+      "baseline_seconds": 0.418,
+      "full_observation_seconds": 18.08,
+      "first_native_interaction_to_first_batch_seconds": 452.216,
+      "scope": "different clocks; includes setup/target investigation/driver construction; no per-tool attribution"
+    },
+    {
+      "source": "docs/KEEN_GAMEPLAY.md",
+      "warm_preparation_seconds": 797.421,
+      "budget_seconds": 600,
+      "scope": "retained miss includes other setup/correction work"
+    },
+    {
+      "source": "docs/KEEN_ACTOR_MODEL.md",
+      "warm_preparation_seconds": 881.622,
+      "budget_seconds": 1800
+    },
+    {
+      "source": "docs/ORACLE_REALTIME.md",
+      "warm_first_effect_seconds": 450.314,
+      "scope": "not a cold-start benchmark"
+    },
+    {
+      "source": "docs/DUNE_OPTIMIZATION.md",
+      "conversation_entry_RPCs": [
+        227,
+        56
+      ],
+      "memory_bytes_per_action": [
+        1572879,
+        117315
+      ],
+      "scope": "historical transport savings, not measured preparation-time savings"
+    },
+    {
+      "source": "private_Keen_owner_AST_comparison",
+      "identical_top_level_functions": 8,
+      "owner_count": 3,
+      "scope": "normalized AST comparison; main/compact decoder differ; not all logic mergeable"
+    }
+  ],
+  "benefit_validation": {
+    "separate_milestones": [
+      "first_useful_input",
+      "qualified_coherent_observer",
+      "first_admitted_semantic_action",
+      "saved_reusable_profile",
+      "fresh_process_profile_reuse"
+    ],
+    "measure": [
+      "wall_time",
+      "source_searches",
+      "raw_tool_requests",
+      "agent_decisions",
+      "new_glue",
+      "failed_qualification_attempts"
+    ],
+    "preserve": [
+      "same_initial_knowledge",
+      "source_mapping_state_admission",
+      "expected_effect",
+      "refusal_cases",
+      "failed_runs",
+      "cold_warm_exposure_distinction"
+    ]
+  },
+  "private_evidence": {
+    "dotbox-inventory.md": {
+      "sha256": "bf4b1aa8c52635c3697d9bfad035d05c3ae43b9021c62ce4f8d30016687bc9bd",
+      "bytes": 17310
+    },
+    "dotbox-inventory-evidence.json": {
+      "sha256": "f49fbd9204b4648d56a70aa399e9969ce457efc70349f61fab2f52f6dba74616",
+      "bytes": 6599
+    },
+    "fdisbull-inventory.md": {
+      "sha256": "bdfb431496713d5de9c22da2ac236f1dfc6eace3729aecd1226d429d2dbc65c7",
+      "bytes": 21493
+    },
+    "fdisbull-source-audit.json": {
+      "sha256": "d3fdee68fc3df0f2f17efe57f90c2d91c5e040dd93f727dc9fd46434babe576c",
+      "bytes": 20825
+    },
+    "workflow-friction.md": {
+      "sha256": "c4e14d0a8304c5a209487924bd182554738daa0ea85a46d3100d59da2d3838c2",
+      "bytes": 22686
+    },
+    "memory_search_demo.py": {
+      "sha256": "4cd42cceb6d943c5f34212d22d9436330f2331932c4a692bf94005eaf146b048",
+      "bytes": 6792
+    },
+    "memory-search-demo-private.json": {
+      "sha256": "ce322758be3aecebc6cb0707d28f209082eefacb3a017a3ecdc6e532398ce282",
+      "bytes": 93046
+    },
+    "qemu-transfer-review-readback.md": {
+      "sha256": "3327a005c26bb79ceea1db2120bcb109c890fe3ce6bbf30d242ab1654dd54fd7",
+      "bytes": 7256
+    },
+    "audit-start.json": {
+      "sha256": "0feb1cc315b8ebd5278d3ccfd0e8ca4e8f493ddde0d3e092c2a6fb3543a13c9f",
+      "bytes": 1282
+    }
+  },
+  "durable_evidence_locator": "Agent BBS task completion report; raw retained snapshots and detailed analysis stay private.",
+  "independent_reviews": {
+    "dotbox_and_demo": "Pass. Installed/native/service/packaging distinctions and demo semantics checked read-only. One-shot byte-diff timing wording corrected.",
+    "fdisbull": "Pass after correction: debug_experiments compares baseline/layer variants of the same stored script, not an existing arbitrary different-action coordinator.",
+    "workflow": "Pass after correction: private decoder is bound to exact executable/observed load layout, not an established edition number."
+  }
+}

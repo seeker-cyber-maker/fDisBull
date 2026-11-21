@@ -1,0 +1,310 @@
+{
+  "format": "dotbox-development-evidence-1",
+  "date": "2026-11-17",
+  "scope": "Packaged offline incremental learning and instruction forward-test; no live gameplay qualification",
+  "provenance": {
+    "repository": "https://github.com/seeker-cyber-maker/DotBox",
+    "independent_mirror": "https://github.com/TiGa-RCE/DotBox",
+    "branch": "codex/incremental-learning-kit-20261117",
+    "primary_parent": "999dc0ed788e6b20593166a4e9e40b2c2525004e",
+    "mirror_parent": "69c5289786b2752bffd669bdf605745432a7929c",
+    "matching_parent_tree": "40e73da810573ebe5c83db1d2c685d4a84c32424",
+    "package_version": "0.1.0.dev2",
+    "artifact_binding": "Exact runtime module and operational-resource hashes; the evidence receipt and development handoff were written after these builds and are not packaged operational resources"
+  },
+  "implemented": {
+    "inspection": [
+      "Explicit executable and resource identity",
+      "Bounded ASCII strings and masked patterns",
+      "16/32-bit iced-x86 instruction windows",
+      "Frozen byte-range differences",
+      "Selected-byte hashes, exact offsets, limits, truncation and caller-origin qualification"
+    ],
+    "inspection_limits": {
+      "window_bytes": 65536,
+      "results": 256,
+      "excerpt_bytes": 256,
+      "identity_file_bytes": 67108864,
+      "explicit_resources": 8,
+      "aggregate_identity_bytes": 134217728
+    },
+    "learning": [
+      "One source-bound private SQLite focus",
+      "Default 15-second and two-probe admission policy",
+      "Same-context deadline and count persistence",
+      "Explicit retirement and clock-identity checks",
+      "Immutable idempotent caller-reported candidate/observed/failed evidence",
+      "No game execution, automatic promotion or input authority"
+    ],
+    "package": [
+      "Five offline CLI entry points",
+      "Pinned required iced-x86==1.22.0 dependency",
+      "32 reviewed canonical operational resources and hash catalog",
+      "Guide, decoder/resource/clock doctor, private non-overwriting source-kit export",
+      "Direct wheel and sdist-rebuild staging"
+    ],
+    "method": [
+      "Known applicable action now; observe then save without replay",
+      "No formal scene or complete buffer prerequisite",
+      "One current question, immediate next interaction and fallback",
+      "No intentional wait for optional improvements when a working route exists",
+      "Single-agent default; workers optional",
+      "No pause during model reasoning or frozen-file investigation",
+      "Default outer desktop input distinguished from native diagnostic act"
+    ]
+  },
+  "verification": {
+    "environment": {
+      "python": "3.12.14",
+      "platform": "Linux x86_64",
+      "Pillow": "12.3.0",
+      "iced-x86": "1.22.0",
+      "pytest": "9.2.0",
+      "optional_mcp_source_only": "2.3.0",
+      "build_setuptools": "84.2.1"
+    },
+    "baseline": {
+      "parent_source_passed": 422,
+      "parent_native_skipped": 7,
+      "receipt": "async-turn-fence-2026-11-17.json"
+    },
+    "initial_failures": [
+      "Missing dotbox.inspection, dotbox.learning and dotbox.kit modules before implementation",
+      "Learning clock high-water regressions before fixes",
+      "Repeated evidence receipt changed after rewording the focus question",
+      "None focus IDs bypassed explicit mutation targets",
+      "Replaced parent path was not detected by descriptor-only inspection identity",
+      "Malformed resource catalog list escaped structured doctor failure"
+    ],
+    "focused_suites": {
+      "inspection": 36,
+      "learning": 27,
+      "kit": 17,
+      "total": 80
+    },
+    "source_suite": {
+      "command": "python -m pytest -q -ra",
+      "passed": 502,
+      "skipped": 7,
+      "seconds": 32.91,
+      "exit_code": 0
+    },
+    "builds": {
+      "direct": "python -m build --wheel",
+      "sdist": "python -m build --sdist",
+      "from_sdist": "python -m pip wheel --no-deps --no-cache-dir <sdist>",
+      "exit_code": 0
+    },
+    "artifacts": {
+      "runtime_modules": 25,
+      "resources": 32,
+      "direct_and_sdist_package_bytes_identical": true,
+      "module_hashes": {
+        "kit.py": "38ba98cb0faa8e5451341f38fadb05d71f5ada542a85c780b2acb94b30e21f97",
+        "native_rpc.py": "f24561fb5833c131036e7b1ea25cb97187066e9e400eeff1cf5b86438c9abda1",
+        "screenshot_codecs.py": "b611d232bcc5e12fca32321a031f6debd999f91f25a08bb285a549782490623d",
+        "ownership.py": "f9fef5ccca9ac67b484762f5ece0ffb80253c50421ac1c83e4545135cfd31a68",
+        "backend.py": "7f38d109567c7e5150f3e82eeffdbebf176dc2ffa4879050831e9abda89c723a",
+        "ownership_source.py": "02f10db377c1b885caa8c5dbf3ed46085b9ba0e2943a8686169c763bc745e5d2",
+        "dos_launch_profile.py": "48a9c86c81dd107a96672f63254efd2dc8c259bc774e0afdf867ce52c9dcc678",
+        "client.py": "89750d90f854de825ed2730fd2cd0325c6c3f94cc519c2150912cbdf364626fc",
+        "service.py": "b3e955ad18b35008c5c273cae88494f737eb0c0d9e09a51be9dc7259b4379ff4",
+        "keyboard_input.py": "10ac610742502dbc3ea7e7d806f0dacc026e6e601f3f2e93ac93ffaf155bb88f",
+        "learning.py": "13e62388e8efe2744a7eb300aaa9acb4f703d66da3adfc365840ab98072ea268",
+        "operation_budget.py": "292fb60fc41360329f32847d9e1267db0f2e3d0d9dc4078e180e1926e7496994",
+        "native_session.py": "8f1a35e539cf934d99af811abb5468a42a5a4934647e40fd9a190cb33158c9cc",
+        "input_macros.py": "28d31f2da45c0d9f28c3aab5cdbc2b5225f54a2eadf4a8cd48a37b83e4e82b82",
+        "runtime_probe.py": "5e6ae3021c3b003455d88c6cc98b6d8148e302cbd03a1e024663aae38d3bca99",
+        "local_auth.py": "992a6af3869df8ca647375a4b1fb0f543bc1c4061c5410f9de4cce2919e5d36d",
+        "coordination.py": "c80544ed85303525b0ab654114ea6e2ecdb1b4d8848feaf6ee1f481a748502c5",
+        "ownership_publisher.py": "58c12c8835bf8512652eef32ecf6ae1a06d2cfec14bc4cce040c568f9450f4bb",
+        "__init__.py": "574e51627c6d3d860ba50860b9229dd004a618f344ebaf83c9ed5b92e48a8ddd",
+        "inspection.py": "3897a9fd3d6207f5ea214da427a6619dee44f745a1580476f3428cca4cb11404",
+        "harness.py": "31e1bedb0fdcccd03a76deca17408465a6a464fc1984943c69e02428a1a7b016",
+        "store.py": "96dfc45e13e2f97ff5b7657eb2c8a03d49d57f633fae17d760cf23fe79315ce4",
+        "__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "connector.py": "d7eb84645506ac34728c40a227821488b16b28a8aa197f2582e3d2d56383c652",
+        "cli.py": "742bdc9b6b16ef88e54127809d51e01b516f404140e1ea17b626444b3037603e"
+      },
+      "module_map_sha256": "13064e6227c4acb8127397d7d4689feaafc0ce48cd9f6ed021f576117e42f1b3",
+      "catalog_sha256": "0fa695e5be1e28472dc559a0fba3b9f6bb80637bae1c85f35808def51bd7c5e3",
+      "direct_wheel_sha256": "d4ba687206fd0e512d3521cd5554cf25e788dff60c7dce80288b40bc7805b718",
+      "sdist_wheel_sha256": "aeda2d82a361496e40e8820fc01ec72d9db7f589b8e8978b65d64e871f6a3054",
+      "sdist_sha256": "79925dbf15289606d9bbf0755f2abb0d0e946e440e1fe57d49d20b7c9664999f"
+    },
+    "offline_install": {
+      "command": "python -m pip install --no-index --find-links <local-wheelhouse> dotbox==0.1.0.dev2 pytest",
+      "fresh_venv": true,
+      "dependency_wheels_previously_downloaded": true,
+      "network_needed_during_install": false,
+      "exit_code": 0
+    },
+    "installed_suite": {
+      "command": "python -I -m pytest -q -ra",
+      "outside_source_checkout": true,
+      "source_pythonpath": false,
+      "test_modules": [
+        "test_inspection.py",
+        "test_learning.py",
+        "test_kit.py",
+        "test_client_callbacks.py",
+        "test_client_callbacks_async.py",
+        "test_coordination.py",
+        "test_ownership.py"
+      ],
+      "passed": 181,
+      "skipped": 0,
+      "seconds": 15.74,
+      "exit_code": 0
+    },
+    "installed_authored_workflow": {
+      "python": "3.12.14",
+      "dotbox": "0.1.0.dev2",
+      "dependencies": {
+        "Pillow": "12.3.0",
+        "iced-x86": "1.22.0",
+        "pytest": "9.2.0"
+      },
+      "source_imported": false,
+      "fdisbull_available": false,
+      "mcp_available": false,
+      "matching_installed_modules": 25,
+      "doctor": {
+        "format": "dotbox-kit-doctor-1",
+        "version": "0.1.0.dev2",
+        "offline_learning_ready": true,
+        "native_runtime_qualified": false,
+        "scope": "Offline tools and resource integrity only; no native launch, input or network",
+        "resources": {
+          "layout": "installed",
+          "verified": 32,
+          "integrity": "content matches package catalog; not a publisher signature"
+        },
+        "inspection": {
+          "ok": true,
+          "decoder": {
+            "name": "iced-x86",
+            "version": "1.22.0"
+          },
+          "checks": {
+            "x86_16": true,
+            "x86_32": true,
+            "truncated_instruction_rejected": true
+          },
+          "scope": "Authored offline decode fixtures only; no native runtime or game qualification"
+        },
+        "learning": {
+          "clock_identity_available": true,
+          "store_opened": false,
+          "scope": "Journal prerequisites only; no player workspace inspected"
+        }
+      },
+      "commands": [
+        {
+          "operation": "guide",
+          "seconds": 0.0848,
+          "exit_code": 0
+        },
+        {
+          "operation": "inspect identity",
+          "seconds": 0.0999,
+          "exit_code": 0
+        },
+        {
+          "operation": "learn focus",
+          "seconds": 0.0815,
+          "exit_code": 0
+        },
+        {
+          "operation": "learn admit",
+          "seconds": 0.0871,
+          "exit_code": 0
+        },
+        {
+          "operation": "inspect disassemble",
+          "seconds": 0.1025,
+          "exit_code": 0
+        },
+        {
+          "operation": "learn record",
+          "seconds": 0.0577,
+          "exit_code": 0
+        },
+        {
+          "operation": "learn status",
+          "seconds": 0.0611,
+          "exit_code": 0
+        }
+      ],
+      "authored_scenario": {
+        "candidate_recorded": true,
+        "source_unchanged": true,
+        "same_context_cannot_reset_deadline": true,
+        "expired_focus_uses_fallback": true,
+        "route_change_retires_previous_focus": true
+      },
+      "scope": "Installed offline tools and authored evidence only; no game input, native capture, scene recognition or measured player latency"
+    },
+    "reviews": {
+      "independent_code_review": true,
+      "remaining_material_findings": 0,
+      "resolved": [
+        "Question-dependent result IDs",
+        "Missing explicit focus ID validation",
+        "Final pathname identity mismatch",
+        "Malformed catalog container handling"
+      ],
+      "skill_frontmatter_valid": true,
+      "skill_lines": 176,
+      "default_guide_words": 571
+    },
+    "instruction_forward_test": {
+      "fresh_context": true,
+      "scenarios": 7,
+      "decisions_consistent": 7,
+      "operations_executed": false,
+      "cases": [
+        "Usable menu without named scene or harness",
+        "Usable movement in unmapped new room",
+        "Expired research with working fallback",
+        "Expired research without fallback; no relabel renewal",
+        "Human inventory choice supersedes stale door recipe",
+        "Ambiguous click effect requires reobservation before retry",
+        "16-bit frozen-file inspection does not need native act or pause"
+      ],
+      "clarifications_after_review": [
+        "Joining an active run with missing timing data must keep earlier interval unknown and continue play",
+        "Identify useful visible context without requiring a formal scene name",
+        "Distinguish routine passive observation from a question-specific investigative probe"
+      ],
+      "scope": "Decision quality of written instructions only; no live timing, command execution or ownership qualification"
+    },
+    "native_skips": {
+      "count": 7,
+      "missing_inputs": [
+        "DOTBOX_DOSBOX_EXECUTABLE",
+        "DOTBOX_DOSBOX_BASE_SOURCE"
+      ],
+      "scope": "Unchanged native protocol, source overlay and guest acceptance gates"
+    }
+  },
+  "limitations": [
+    "No native game, original Dot desktop, tunnel, ownership publisher or external account setting was operated.",
+    "The native executable and platform libraries are still separate; this is not the final player distribution.",
+    "Default Linux clock identity was tested; the implemented macOS branch was not executed.",
+    "The journal limits probe admissions, not reasoning duration or already running tools, and grants no input permission.",
+    "Source, context, fallback applicability and observed-result labels in the journal are caller assertions.",
+    "Frozen bytes and caller-supplied origins do not prove live mappings, reachability, causality or game progression.",
+    "Existing controls do not automatically enforce resource identity or scene applicability.",
+    "General bounded live capture, edition-specific engine readers and real player-flow latency remain future qualified slices.",
+    "Short local command durations omit model reasoning, dispatch, capture and game effects.",
+    "Historical/development hyperlinks in exported shared documents may require the full source repository; operational topics and native preparation inputs are included.",
+    "No merge, release, automatic repository synchronization or personal skill installation was performed."
+  ],
+  "next": [
+    "Implement and qualify bounded owned capture with resume before reasoning",
+    "Add one near-term edition-specific reader or applicability predicate",
+    "Qualify complete platform payload and original-Dot input path",
+    "Measure cold start, warm reuse, transition delays and fallback behavior in actual player flow"
+  ]
+}

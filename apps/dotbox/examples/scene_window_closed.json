@@ -1,0 +1,113 @@
+{
+  "format": "dotbox-scene-1",
+  "source_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "edition": "authored-window-1",
+  "scene_id": "study",
+  "observation_id": "window-frame-1",
+  "title": "The study",
+  "state_context": {
+    "provider_id": "authored-provider",
+    "session_id": "demonstration",
+    "branch_id": "first-play",
+    "revision": 1,
+    "context_token": "authored-closed-token"
+  },
+  "facts": [
+    {
+      "id": "window_open",
+      "subject": "window",
+      "predicate": "open",
+      "value": false,
+      "text": "A closed window overlooks the courtyard.",
+      "audience": "player",
+      "observation_id": "window-frame-1",
+      "evidence_ref": "authored:closed-window"
+    },
+    {
+      "id": "door_open",
+      "subject": "door",
+      "predicate": "open",
+      "value": false,
+      "text": "A closed door leads out of the study.",
+      "audience": "player",
+      "observation_id": "window-frame-1",
+      "evidence_ref": "authored:closed-door"
+    },
+    {
+      "id": "door_locked",
+      "subject": "door",
+      "predicate": "locked",
+      "value": null,
+      "text": "You have not checked the door's lock.",
+      "audience": "player",
+      "observation_id": "window-frame-1",
+      "evidence_ref": "authored:unknown-lock"
+    }
+  ],
+  "choices": [
+    {
+      "id": "open_window",
+      "label": "Open the window",
+      "requires": [
+        "window_open"
+      ],
+      "observation_id": "window-frame-1",
+      "available": true,
+      "enabled": true,
+      "ready": true,
+      "suggestion": "prefer",
+      "route": {
+        "kind": "ordinary",
+        "reference": "authored:window-open-control"
+      }
+    },
+    {
+      "id": "close_window",
+      "label": "Close the window",
+      "requires": [
+        "window_open"
+      ],
+      "observation_id": "window-frame-1",
+      "available": true,
+      "enabled": false,
+      "ready": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "authored:window-close-control"
+      }
+    },
+    {
+      "id": "try_door",
+      "label": "Try the door",
+      "requires": [
+        "door_open"
+      ],
+      "observation_id": "window-frame-1",
+      "available": true,
+      "enabled": true,
+      "ready": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "authored:door-attempt-control"
+      }
+    },
+    {
+      "id": "lick_window",
+      "label": "Lick the window",
+      "requires": [
+        "window_open"
+      ],
+      "observation_id": "window-frame-1",
+      "available": true,
+      "enabled": true,
+      "ready": true,
+      "suggestion": "on_request",
+      "route": {
+        "kind": "ordinary",
+        "reference": "authored:window-lick-control"
+      }
+    }
+  ],
+  "guide_sources": [],
+  "guide_claims": []
+}

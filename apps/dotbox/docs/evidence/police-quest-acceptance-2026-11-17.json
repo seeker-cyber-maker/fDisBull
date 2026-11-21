@@ -1,0 +1,135 @@
+{
+  "format": "dotbox-police-quest-acceptance-specification-1",
+  "date": "2026-11-17",
+  "scope": "User-selected live acceptance specification and read-only static investigation; no runtime/native implementation change",
+  "game": {
+    "title": "Police Quest I EGA",
+    "edition": "2.0G",
+    "interpreter_profile": "2.917",
+    "separate_uninspected_target": "SCI/VGA 2.000 at the GOG installation root",
+    "identity_evidence": "Version text in LOGIC 0; interpreter version string in AGIDATA.OVL; selected resource hashes",
+    "file_sha256": {
+      "AGI": "29ddd3f3b91d65b6eade156608d7915e3c8b7f47701cb226ff119b717f3e8bd7",
+      "AGIDATA.OVL": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383",
+      "LOGDIR": "bb8a07fb13a6af30ab587110ee4dfec66fb11f850776be8fdf5d3d55cedda0ec",
+      "PICDIR": "3546dc1692780cc3c9df232c7634be18997720f2931f9dc9a014b695124f4f4f",
+      "VIEWDIR": "e80e7b40535eeaad4b03141613a404329b7bbfd2fef0e9fd08a0a9da3ac457ce",
+      "SNDDIR": "ab6325c099a5d8bfcfd19ec561a33b83885b45ac39cb906a69c32e241805bb48",
+      "VOL.0": "04449e1da52628290906eee1fe81c0cbfdae7a6fb146dfda652c1a7dd6304e52",
+      "VOL.1": "08927df46a0cf3d4d53e0c83c48a446ea5d81c9c46f6ad63c069a35d179b3ec8",
+      "VOL.2": "dbac3081ccf1f414cf0e8f5ad58ba6d788b7de8c0830ee317b093f8d4c8f3e90",
+      "WORDS.TOK": "a95eed1c9b2fcafb5ba63f2424adf05a3a1f7c349089fc22b09277ae020a13c2",
+      "OBJECT": "ed0e6e31fe8f714dcc10243f0b5cdff5f707375ee4b1d55f4b311da3b9803d47"
+    }
+  },
+  "live_acceptance": {
+    "controls": {
+      "status": "unverified",
+      "goal": "Ordinary clothing change in locker close-up, close locker, walk to usable shower approach and observe arrival",
+      "optional_extension": "Turn water on/off in a separate interaction"
+    },
+    "recovery": {
+      "status": "unverified",
+      "goal": "Miss first briefing by late lobby entry, restore predeadline machine state, preserve a newer closed disk file, then attend and complete briefing"
+    }
+  },
+  "static_findings": {
+    "room_binding": {
+      "locker_and_showers": 5,
+      "locker_closeup": 47,
+      "logic_39": "Called helper, not a shower destination"
+    },
+    "controls_candidate": "Ordinary clothing value 4; room5 shower proximity flag232 and unsuitable-clothing flag233; observation addresses/path still unqualified",
+    "first_briefing": "Room4 selects LOGIC44 with v98=0 and flag119 clear; LOGIC45 is a later branch",
+    "late_arrival": "LOGIC44@16: v12>=5, previous room6, briefing incomplete; latch room-local flag239",
+    "late_failure": "LOGIC44@147-164: sampled second change, v120>5 and flag239 cause lateness outcome and flag140; main logic transitions to terminal progression",
+    "start_countdown": "LOGIC44@112-126: random v140=60..180 on lobby arrival, v140=3 on non-lobby return including newspaper116; decrement signals at1, not0",
+    "sampling": "LOGIC0@1024-1123: observed seconds changes increment v120; recent key activity can inhibit v140 decrement without resetting clock minutes",
+    "reset_boundary": "LOGIC100 clears room counters/local flags, with no clock reset in inspected opening path",
+    "success_candidate": "LOGIC44@957-959 sets briefing complete flag119 and progression variable31=1",
+    "namespace": "Variables and flags with the same numeric ID are distinct; room-local flags require the matching room context"
+  },
+  "source_checks": {
+    "retained_census_source_files_matched": 9,
+    "retained_census_logic_payloads_matched": 118,
+    "read_only_site_check": {
+      "profile": "2.917",
+      "game": "Police Quest I EGA 2.0G",
+      "static_only": true,
+      "verified_source_files": 9,
+      "decoded_logics": 118,
+      "verified_operations": 34,
+      "verified_conditions": 16,
+      "direct_clock_write_sites": [],
+      "opening_indirect_writes": [
+        [
+          100,
+          98,
+          "lindirectn",
+          [
+            152,
+            0
+          ]
+        ]
+      ],
+      "input_hashes_and_mtimes_unchanged": true,
+      "live_clock_input_restore_qualified": false
+    },
+    "coordinator_reran_check": true,
+    "private_verifier_sha256": "7c6f294e2c624432df9a833508390a3ec1ffde1290c4629d56febfd390e8bf06",
+    "private_game_material_published": false
+  },
+  "primary_references": {
+    "original_manual": "https://www.sierragamers.com/wp-content/uploads/2019/12/Police_Quest_1_Manual.pdf",
+    "manual_scope": "Printed pages20-21 corroborate newspaper, assigned position and first briefing sequence; no timer specification inferred",
+    "scummvm_commit": "502dc222115f801702996b386f3e416e7346c1e3",
+    "scummvm_files": [
+      "engines/agi/agi.h",
+      "engines/agi/global.cpp",
+      "engines/agi/text.cpp",
+      "engines/agi/op_cmd.cpp"
+    ],
+    "scummvm_scope": "Official reimplementation confirms variable names and exposes timer/pause distinctions; not evidence that original DOS runtime matches",
+    "corroborating_walkthrough": "https://sierrahelp.com/Walkthroughs/PQ1AGIWalkthrough.html"
+  },
+  "independent_review": {
+    "blocking_findings": 0,
+    "scope": "Edition/phase, timer mechanisms, variable/flag namespaces, room/helper distinction, controls endpoint, failure/recovery pass criteria and qualification claims"
+  },
+  "verification": {
+    "source_kit_suite": {
+      "command": "python -m pytest -q tests/test_kit.py",
+      "passed": 23,
+      "seconds": 0.43
+    },
+    "ordinary_wheel_and_clean_offline_installation": {
+      "dotbox": "0.1.0.dev6",
+      "python": "3.12.14",
+      "source_imported": false,
+      "fdisbull_available": false,
+      "mcp_available": false,
+      "runtime_modules": 35,
+      "resources": 47,
+      "topics": 17,
+      "source_wheel_and_installation_match": true,
+      "offline_doctor_ready": true,
+      "native_runtime_qualified": false,
+      "guide_cli_and_export_match": true,
+      "wheel_bytes": 352132,
+      "wheel_sha256": "973a064fa6848a7e602134269f05f17a6230ac436b814f43a5a3947151e9a6a9",
+      "catalog_sha256": "8ed01c35cfb824a334e4cf9a35ea084b1b6f3ff6121d7b26f39ba62a9e601405",
+      "scope": "Installed operational resources only; no game input, timing, native load or live acceptance"
+    },
+    "native_patch_changed": false,
+    "python_runtime_changed": false
+  },
+  "not_performed": [
+    "Original-game launch",
+    "Controls/shower trial",
+    "Live AGI clock and pause measurement",
+    "Native checkpoint restore",
+    "Successful briefing after memory revert",
+    "Original-Dot input qualification",
+    "Merge or release"
+  ]
+}

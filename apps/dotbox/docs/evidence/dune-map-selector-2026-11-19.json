@@ -1,0 +1,692 @@
+{
+  "schema": "dotbox-dune-map-selector-qualification-1",
+  "qualification_date_utc": "2026-11-19",
+  "scope": "Exact measured DOS Dune image, headless Linux native runtime, ordinary travel-map selector. Sanitized authored findings and measurements; no commercial bytes, RAM, images, saves, or private paths.",
+  "source_baseline_commit": "2c0fcb7cd1d169b055107e66a9653df079c54d92",
+  "source": {
+    "dune_progress.py": {
+      "sha256": "6b3eff1772b2f2056187020d43334ec99068c7f0410a21dcc342e93bf10abd4a",
+      "bytes": 54725
+    },
+    "dune_ui_reader.py": {
+      "sha256": "01ebd404fd9edbf08480ec360da6c9307d8adfb6247be0dcf1df25305a25df06",
+      "bytes": 30494
+    },
+    "dune_map.py": {
+      "sha256": "050891678c92052d5466e8f4f5340152bf9597d3d39b3b048db1026638a11b95",
+      "bytes": 34763
+    }
+  },
+  "game_image": {
+    "sha256": "32439602abe95e0ff778653ad58052bfed56a73e103b92f079455daa2ee886e7",
+    "bytes": 74757,
+    "cs": "0824",
+    "ds": "16F3",
+    "cpu_context": "real-mode 16-bit, unpaged"
+  },
+  "native_binary_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+  "profile": {
+    "menu": "2794",
+    "mode": 1,
+    "gate": 4,
+    "callback_vector_pointer": "2176",
+    "callback_vector_words": [
+      "4D9F",
+      "4D4E",
+      "133D",
+      "133D",
+      "133D",
+      "4D9F",
+      "4D9F"
+    ],
+    "pending_4235": 0,
+    "dispatch_hook": "0824:D2FE",
+    "acceptance_hook": "0824:4D74",
+    "forbidden_rectangle_hook": "0824:D326",
+    "starting_site_record": "0250",
+    "starting_map_checkpoint_sha256": "4da6f5fc028a844e7a0f052379f4b0f3d1fc9f4baa3aa6612f33fcc2b2601515"
+  },
+  "authored_tests": {
+    "result": {
+      "tests": 124,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "source_unchanged": true,
+    "test_sources": {
+      "tests/test_dune_map.py": {
+        "sha256": "4668b9cfce26fe82dca2c6b7b699d28b7f97801a548de55192701ce6055ead36",
+        "size": 29575
+      },
+      "tests/dune_map_fixtures.py": {
+        "sha256": "03fd5e4f787b257a078e97049976311275c711898888df920695281784ee2b1b",
+        "size": 10644
+      }
+    },
+    "coverage": [
+      "Native capability requirement and read-only preparation from a current ready token",
+      "Fresh and stale vector/callback/gate/viewport/mode/current-site/pending/menu/point/label bindings",
+      "Missing/ineligible/duplicate/tied points, asymmetric viewport and rectangle edges, wrong-mode pointer/type bounds",
+      "D2FE SI/DX/BX and full routine identity; forbidden D326; target DI and selected record at4D74",
+      "Destination acceptance, subsequent fresh input readiness, and unknown arrival are distinct",
+      "Single-use and cross-selector tokens, returned-copy mutation, accurate probe/click revision behavior",
+      "Foreign or unowned stops/probes and another operation owned observer preservation",
+      "No resume before acceptance; input-free reconciliation after a known accepted budget stop; no replay",
+      "No native RPC after uncertain click/execution/preparation; accepted evidence retained after later failure",
+      "Shared frame/guest/stop bounds and cooperative host admission deadline across phases",
+      "Parsed label changes decline while unused sparse prefetch and normal hover/cursor changes stay admissible",
+      "Accepted target followed by host deadline immediately after readiness observer creation preserves the exact owned stop through arm and cleanup revisions, then reconciles input-free",
+      "Fresh preparation requires all seven observed callback-vector words; independent initial mutations of each of the other six slots decline before input/execution"
+    ],
+    "receipt_sha256": "57023f63b71b6992ed7435c76dde46c1ea7bc1933c4f018817ea38ec93980e6f"
+  },
+  "independent_review": {
+    "status": "cleared",
+    "fixed_findings": [
+      "Preserve observers and deadlines owned by a prior operation",
+      "Fence queued click acknowledgement revision and stopped provenance",
+      "Preserve accepted owned-stop provenance across host-deadline edges while arming readiness",
+      "Require complete initial callback vector, including idle and held-input slots"
+    ],
+    "source_sha256": "050891678c92052d5466e8f4f5340152bf9597d3d39b3b048db1026638a11b95"
+  },
+  "warm_recovery": {
+    "seconds": 34.946731874,
+    "control_budget_seconds": 180,
+    "budget_met": true,
+    "disk_preserved": true,
+    "scope": "Clock started before isolated game copy and runtime launch; earlier analysis and coordination excluded. Ordinary graphics initialization, checkpoint load, fresh input readiness and changed-pixel Gurney interaction."
+  },
+  "live_trials": [
+    {
+      "case": "final_01_harg_sparse",
+      "raw_receipt_sha256": "946a8ba477e316187d63b274bd12335235a87d2e70806aaed34aa0a31064891c",
+      "reader": "sparse",
+      "target_record": 620,
+      "target_pixel": [
+        153,
+        60
+      ],
+      "outcome": "context_changed",
+      "clicks": 1,
+      "matched_map_dispatch": true,
+      "hits": [
+        {
+          "site": "0824:D2FE",
+          "guest_ticks": 98882
+        },
+        {
+          "site": "0824:4D74",
+          "guest_ticks": 98886
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103742
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103791
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103853
+        }
+      ],
+      "destination_accepted": true,
+      "acceptance": {
+        "site": "0824:4D74",
+        "target_record": 620,
+        "selected_record": 620,
+        "register_record": 620,
+        "state_revision": 96,
+        "guest_ticks": 98886
+      },
+      "input_ready": true,
+      "selector_arrival": "unknown",
+      "selector_story_commit": "unknown",
+      "bounds": {
+        "max_frames": 600,
+        "max_stops": 12,
+        "host_admission_ms": 15000,
+        "native_guest_ms": 10000,
+        "hold_ms": 40,
+        "stable_frames": 2,
+        "observer_bookkeeping_may_finish_after_host_deadline": true
+      },
+      "selection_frames": 348,
+      "selection_guest_ms": 4972,
+      "preparation_metrics": {
+        "host_ms": 55.927,
+        "rpc_by_method": {
+          "session.status": 4,
+          "state.get_registers": 1,
+          "breakpoints.list": 1,
+          "execution.timing": 1,
+          "memory.read": 22,
+          "input.keyboard.state": 1,
+          "input.mouse.state": 1,
+          "video.screenshot": 1
+        },
+        "rpc_total": 32,
+        "memory_bytes_read": 22798,
+        "model_calls_by_controller": 0
+      },
+      "selection_metrics": {
+        "host_ms": 5173.154,
+        "rpc_by_method": {
+          "session.status": 29,
+          "state.get_registers": 4,
+          "breakpoints.list": 7,
+          "execution.timing": 2,
+          "memory.read": 82,
+          "breakpoints.create": 6,
+          "frame.step": 9,
+          "input.keyboard.state": 8,
+          "input.mouse.state": 8,
+          "video.screenshot": 2,
+          "input.mouse.click": 1,
+          "breakpoints.delete": 1
+        },
+        "rpc_total": 159,
+        "memory_bytes_read": 193404,
+        "model_calls_by_controller": 0
+      },
+      "prepare_and_select": {
+        "wall_ms": 5247.225,
+        "rpc_total": 191,
+        "memory_bytes_read": 216202,
+        "scope": "From already-ready map through preparation and selection; excludes initial restoration/readiness and separate travel shortcut."
+      },
+      "flight": {
+        "png_sha256": "063f37db20a77e09470cab37210304749f88ff2a99c8ec7b865b683328957a2e",
+        "captured_ticks": 103846,
+        "mode": 0
+      },
+      "separate_arrival": {
+        "action": "SKIP TO DESTINATION",
+        "current_record": 620,
+        "name_candidate": "Carthag-Harg",
+        "location_key": {
+          "word_0004": 769,
+          "word_0006": 3712
+        },
+        "mode": 0,
+        "menu": 9624,
+        "site_location_context": true,
+        "input_neutral": true,
+        "remaining_observers": 0,
+        "png_sha256": "d2caae7eb22b4f376545a557cbca2c1364df537d94b0ca0155eb8d1ea243e624",
+        "captured_ticks": 104574
+      },
+      "restore_preserved_current_disk": true,
+      "closed_post_checkpoint_canary_preserved": true,
+      "disk_unchanged_through_this_trial": true
+    },
+    {
+      "case": "final_02_harg_full",
+      "raw_receipt_sha256": "d771c66b138a2be9ca1e46af8866f4c846b3df2c98784ef6650d4373a8b27e49",
+      "reader": "full",
+      "target_record": 620,
+      "target_pixel": [
+        153,
+        60
+      ],
+      "outcome": "context_changed",
+      "clicks": 1,
+      "matched_map_dispatch": true,
+      "hits": [
+        {
+          "site": "0824:D2FE",
+          "guest_ticks": 98882
+        },
+        {
+          "site": "0824:4D74",
+          "guest_ticks": 98886
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103742
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103791
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103853
+        }
+      ],
+      "destination_accepted": true,
+      "acceptance": {
+        "site": "0824:4D74",
+        "target_record": 620,
+        "selected_record": 620,
+        "register_record": 620,
+        "state_revision": 130,
+        "guest_ticks": 98886
+      },
+      "input_ready": true,
+      "selector_arrival": "unknown",
+      "selector_story_commit": "unknown",
+      "bounds": {
+        "max_frames": 600,
+        "max_stops": 12,
+        "host_admission_ms": 15000,
+        "native_guest_ms": 10000,
+        "hold_ms": 40,
+        "stable_frames": 2,
+        "observer_bookkeeping_may_finish_after_host_deadline": true
+      },
+      "selection_frames": 348,
+      "selection_guest_ms": 4972,
+      "preparation_metrics": {
+        "host_ms": 69.342,
+        "rpc_by_method": {
+          "session.status": 4,
+          "state.get_registers": 1,
+          "breakpoints.list": 1,
+          "execution.timing": 1,
+          "memory.read": 28,
+          "input.keyboard.state": 1,
+          "input.mouse.state": 1,
+          "video.screenshot": 1
+        },
+        "rpc_total": 38,
+        "memory_bytes_read": 656240,
+        "model_calls_by_controller": 0
+      },
+      "selection_metrics": {
+        "host_ms": 5245.886,
+        "rpc_by_method": {
+          "session.status": 29,
+          "state.get_registers": 4,
+          "breakpoints.list": 7,
+          "execution.timing": 2,
+          "memory.read": 100,
+          "breakpoints.create": 6,
+          "frame.step": 9,
+          "input.keyboard.state": 8,
+          "input.mouse.state": 8,
+          "video.screenshot": 2,
+          "input.mouse.click": 1,
+          "breakpoints.delete": 1
+        },
+        "rpc_total": 177,
+        "memory_bytes_read": 3017296,
+        "model_calls_by_controller": 0
+      },
+      "prepare_and_select": {
+        "wall_ms": 5327.236,
+        "rpc_total": 215,
+        "memory_bytes_read": 3673536,
+        "scope": "From already-ready map through preparation and selection; excludes initial restoration/readiness and separate travel shortcut."
+      },
+      "flight": {
+        "png_sha256": "063f37db20a77e09470cab37210304749f88ff2a99c8ec7b865b683328957a2e",
+        "captured_ticks": 103846,
+        "mode": 0
+      },
+      "separate_arrival": {
+        "action": "SKIP TO DESTINATION",
+        "current_record": 620,
+        "name_candidate": "Carthag-Harg",
+        "location_key": {
+          "word_0004": 769,
+          "word_0006": 3712
+        },
+        "mode": 0,
+        "menu": 9624,
+        "site_location_context": true,
+        "input_neutral": true,
+        "remaining_observers": 0,
+        "png_sha256": "d2caae7eb22b4f376545a557cbca2c1364df537d94b0ca0155eb8d1ea243e624",
+        "captured_ticks": 104574
+      },
+      "restore_preserved_current_disk": true,
+      "closed_post_checkpoint_canary_preserved": true,
+      "disk_unchanged_through_this_trial": true
+    },
+    {
+      "case": "final_03_timin_sparse",
+      "raw_receipt_sha256": "cf256b6e23fc62459888bc37014d6b6e651523bf89694b6f1fb0c194cfa46c17",
+      "reader": "sparse",
+      "target_record": 564,
+      "target_pixel": [
+        159,
+        75
+      ],
+      "outcome": "context_changed",
+      "clicks": 1,
+      "matched_map_dispatch": true,
+      "hits": [
+        {
+          "site": "0824:D2FE",
+          "guest_ticks": 98882
+        },
+        {
+          "site": "0824:4D74",
+          "guest_ticks": 98886
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103745
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103798
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103843
+        }
+      ],
+      "destination_accepted": true,
+      "acceptance": {
+        "site": "0824:4D74",
+        "target_record": 564,
+        "selected_record": 564,
+        "register_record": 564,
+        "state_revision": 164,
+        "guest_ticks": 98886
+      },
+      "input_ready": true,
+      "selector_arrival": "unknown",
+      "selector_story_commit": "unknown",
+      "bounds": {
+        "max_frames": 600,
+        "max_stops": 12,
+        "host_admission_ms": 15000,
+        "native_guest_ms": 10000,
+        "hold_ms": 40,
+        "stable_frames": 2,
+        "observer_bookkeeping_may_finish_after_host_deadline": true
+      },
+      "selection_frames": 347,
+      "selection_guest_ms": 4962,
+      "preparation_metrics": {
+        "host_ms": 42.312,
+        "rpc_by_method": {
+          "session.status": 4,
+          "state.get_registers": 1,
+          "breakpoints.list": 1,
+          "execution.timing": 1,
+          "memory.read": 22,
+          "input.keyboard.state": 1,
+          "input.mouse.state": 1,
+          "video.screenshot": 1
+        },
+        "rpc_total": 32,
+        "memory_bytes_read": 22798,
+        "model_calls_by_controller": 0
+      },
+      "selection_metrics": {
+        "host_ms": 5088.988,
+        "rpc_by_method": {
+          "session.status": 29,
+          "state.get_registers": 4,
+          "breakpoints.list": 7,
+          "execution.timing": 2,
+          "memory.read": 82,
+          "breakpoints.create": 6,
+          "frame.step": 9,
+          "input.keyboard.state": 8,
+          "input.mouse.state": 8,
+          "video.screenshot": 2,
+          "input.mouse.click": 1,
+          "breakpoints.delete": 1
+        },
+        "rpc_total": 159,
+        "memory_bytes_read": 193404,
+        "model_calls_by_controller": 0
+      },
+      "prepare_and_select": {
+        "wall_ms": 5142.519,
+        "rpc_total": 191,
+        "memory_bytes_read": 216202,
+        "scope": "From already-ready map through preparation and selection; excludes initial restoration/readiness and separate travel shortcut."
+      },
+      "flight": {
+        "png_sha256": "c4019e97d2e907625911fed23263ffdb3824a790f6b73ae1cb1036f927887c34",
+        "captured_ticks": 103832,
+        "mode": 0
+      },
+      "separate_arrival": {
+        "action": "SKIP TO DESTINATION",
+        "current_record": 564,
+        "name_candidate": "Carthag-Timin",
+        "location_key": {
+          "word_0004": 257,
+          "word_0006": 3200
+        },
+        "mode": 0,
+        "menu": 9624,
+        "site_location_context": true,
+        "input_neutral": true,
+        "remaining_observers": 0,
+        "png_sha256": "1a9475170ece6857af8369dff5d2016c25d5084ee4d1eed4bc2a465a0791937b",
+        "captured_ticks": 104531
+      },
+      "restore_preserved_current_disk": true,
+      "closed_post_checkpoint_canary_preserved": true,
+      "disk_unchanged_through_this_trial": true
+    },
+    {
+      "case": "final_04_timin_full",
+      "raw_receipt_sha256": "e0c5762823dba231962d2b384450d2aea2fea9795828675f0e8aea2a9208601c",
+      "reader": "full",
+      "target_record": 564,
+      "target_pixel": [
+        159,
+        75
+      ],
+      "outcome": "context_changed",
+      "clicks": 1,
+      "matched_map_dispatch": true,
+      "hits": [
+        {
+          "site": "0824:D2FE",
+          "guest_ticks": 98882
+        },
+        {
+          "site": "0824:4D74",
+          "guest_ticks": 98886
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103745
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103798
+        },
+        {
+          "site": "0824:D214",
+          "guest_ticks": 103843
+        }
+      ],
+      "destination_accepted": true,
+      "acceptance": {
+        "site": "0824:4D74",
+        "target_record": 564,
+        "selected_record": 564,
+        "register_record": 564,
+        "state_revision": 198,
+        "guest_ticks": 98886
+      },
+      "input_ready": true,
+      "selector_arrival": "unknown",
+      "selector_story_commit": "unknown",
+      "bounds": {
+        "max_frames": 600,
+        "max_stops": 12,
+        "host_admission_ms": 15000,
+        "native_guest_ms": 10000,
+        "hold_ms": 40,
+        "stable_frames": 2,
+        "observer_bookkeeping_may_finish_after_host_deadline": true
+      },
+      "selection_frames": 347,
+      "selection_guest_ms": 4962,
+      "preparation_metrics": {
+        "host_ms": 69.118,
+        "rpc_by_method": {
+          "session.status": 4,
+          "state.get_registers": 1,
+          "breakpoints.list": 1,
+          "execution.timing": 1,
+          "memory.read": 28,
+          "input.keyboard.state": 1,
+          "input.mouse.state": 1,
+          "video.screenshot": 1
+        },
+        "rpc_total": 38,
+        "memory_bytes_read": 656240,
+        "model_calls_by_controller": 0
+      },
+      "selection_metrics": {
+        "host_ms": 5191.593,
+        "rpc_by_method": {
+          "session.status": 29,
+          "state.get_registers": 4,
+          "breakpoints.list": 7,
+          "execution.timing": 2,
+          "memory.read": 100,
+          "breakpoints.create": 6,
+          "frame.step": 9,
+          "input.keyboard.state": 8,
+          "input.mouse.state": 8,
+          "video.screenshot": 2,
+          "input.mouse.click": 1,
+          "breakpoints.delete": 1
+        },
+        "rpc_total": 177,
+        "memory_bytes_read": 3017296,
+        "model_calls_by_controller": 0
+      },
+      "prepare_and_select": {
+        "wall_ms": 5268.718,
+        "rpc_total": 215,
+        "memory_bytes_read": 3673536,
+        "scope": "From already-ready map through preparation and selection; excludes initial restoration/readiness and separate travel shortcut."
+      },
+      "flight": {
+        "png_sha256": "c4019e97d2e907625911fed23263ffdb3824a790f6b73ae1cb1036f927887c34",
+        "captured_ticks": 103832,
+        "mode": 0
+      },
+      "separate_arrival": {
+        "action": "SKIP TO DESTINATION",
+        "current_record": 564,
+        "name_candidate": "Carthag-Timin",
+        "location_key": {
+          "word_0004": 257,
+          "word_0006": 3200
+        },
+        "mode": 0,
+        "menu": 9624,
+        "site_location_context": true,
+        "input_neutral": true,
+        "remaining_observers": 0,
+        "png_sha256": "1a9475170ece6857af8369dff5d2016c25d5084ee4d1eed4bc2a465a0791937b",
+        "captured_ticks": 104531
+      },
+      "restore_preserved_current_disk": true,
+      "closed_post_checkpoint_canary_preserved": true,
+      "disk_unchanged_through_this_trial": true
+    }
+  ],
+  "reader_comparisons": [
+    {
+      "sparse_case": "final_01_harg_sparse",
+      "full_case": "final_02_harg_full",
+      "exact_matches": {
+        "target_record": true,
+        "target_pixel": true,
+        "clicks": true,
+        "matched_map_dispatch": true,
+        "destination_accepted": true,
+        "input_ready": true,
+        "selector_arrival": true,
+        "selection_frames": true,
+        "selection_guest_ms": true,
+        "flight": true,
+        "separate_arrival": true
+      },
+      "sparse_memory_reduction_percent": 94.115,
+      "timing_scope": "One trial per reader per destination. Descriptive timings only; no statistical speedup claim."
+    },
+    {
+      "sparse_case": "final_03_timin_sparse",
+      "full_case": "final_04_timin_full",
+      "exact_matches": {
+        "target_record": true,
+        "target_pixel": true,
+        "clicks": true,
+        "matched_map_dispatch": true,
+        "destination_accepted": true,
+        "input_ready": true,
+        "selector_arrival": true,
+        "selection_frames": true,
+        "selection_guest_ms": true,
+        "flight": true,
+        "separate_arrival": true
+      },
+      "sparse_memory_reduction_percent": 94.115,
+      "timing_scope": "One trial per reader per destination. Descriptive timings only; no statistical speedup claim."
+    }
+  ],
+  "live_refusals": [
+    {
+      "case": "stale revision after acknowledged state.save",
+      "outcome": "declined",
+      "input_attempted": false,
+      "rpc_by_method": {
+        "session.status": 1
+      },
+      "consumed_token_retry_rpc_by_method": {},
+      "raw_receipt_sha256": "744f0d78300b124feacd9fa31181c2c60d40df2719086ca88d1e9540e1abac4b"
+    },
+    {
+      "case": "one-millisecond native guest budget",
+      "outcome": "timeout",
+      "destination_accepted": false,
+      "input_ready": false,
+      "arrival": "unknown",
+      "clicks": 1,
+      "guest_elapsed_ms": 1,
+      "continuation_allowed": false,
+      "input_free_reconciliation_refused": true,
+      "reconciliation_rpc_by_method": {},
+      "raw_receipt_sha256": "46992e3cb571e6666b9ff5a036600b814610c4186ef3f806cb0d4bb0f0f1b25c"
+    }
+  ],
+  "final_frontier": {
+    "checkpoint_sha256": "ac8ba8e615dd20a46da9293b12751073a6fc35eedaee07b49869f3340dc85bf2",
+    "checkpoint_bytes": 716795,
+    "current_site_record": "0234",
+    "site_name": "Carthag-Timin",
+    "location_key": {
+      "word_0004": 257,
+      "word_0006": 3200
+    },
+    "menu": "2598",
+    "mode": 0,
+    "input_neutral": true,
+    "remaining_observers": 0,
+    "restored_successfully": true,
+    "restore_preserved_current_disk": true,
+    "process_reaped": true,
+    "process_returncode": 0,
+    "gurney_come_with_me_selected": false
+  },
+  "evidence_limits": [
+    "Four success trials comprise one sparse and one full read per destination from the same travel-map checkpoint.",
+    "Destination acceptance, fresh flight input readiness, and ordinary arrival after a separate original travel action are distinct claims.",
+    "The selector itself always reports arrival and story commit unknown.",
+    "Host time is an admission limit; an in-flight RPC and acknowledged-observer status bookkeeping can finish afterward. No new input or execution is admitted by that exception.",
+    "Memory rewind preserves the currently mounted disk; later legitimate game writes are not a restore failure.",
+    "Unchanged native qualification is carried forward by identity; no macOS, outer desktop takeover, arbitrary edition, strategic-map mode, or general playthrough claim.",
+    "The earlier f7c2659a trial is retained privately as pre-tightening history and excluded from these final-source results."
+  ]
+}

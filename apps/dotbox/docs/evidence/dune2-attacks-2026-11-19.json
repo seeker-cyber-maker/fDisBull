@@ -1,0 +1,603 @@
+{
+  "schema": "dotbox-authored-dune2-attacks-evidence-1",
+  "date": "2026-11-19",
+  "scope": "Original mission-two reactive defense; dangerous authored worm control with tentative visible pre-harm cue; retained failed responses and learned bounded25-second evacuation with all own assets intact; private diagnostic workflow",
+  "original_exe_sha256": "d49f45729babd298fd72d0f623cc3cfaa4c3d144ab38e53f24355f2208b4e5a0",
+  "native_executable_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+  "opendune_reference_commit": "ebea79aeba025be2fe9004570e9255044aacc0be",
+  "ordinary_m2_save_sha256": "b7f26127914504933a4deda8f6f273c31aa28096b115b622745bc6727d7b8fcf",
+  "enemy_encounter": {
+    "process_epoch": "dune2-attack-baseline-deac78711fff4e8ea2950f4a8fb525f2",
+    "final_observation": "baseline-defense-guarded",
+    "final_revision": 82,
+    "reviewed_captures": 37,
+    "own_status_replay_samples": 36,
+    "first_quad_harm_interval_guest_ms": {
+      "after": 62205,
+      "by": 67205
+    },
+    "explicit_root_recognition_guest_ms": 69505,
+    "quad_initial_hp": 130,
+    "quad_before_retreat_hp": 109,
+    "quad_final_hp": 74,
+    "quad_final_action": "Guard",
+    "quad_final_tile": [
+      31,
+      38
+    ],
+    "quad_last_hp_decrease_observed_guest_ms": 93105,
+    "final_guest_ms": 110805,
+    "subsequent_sampled_stable_span_guest_ms": 17700,
+    "selected_raider_hp_before_after": [
+      80,
+      66
+    ],
+    "own_units_remaining_allocated": 7,
+    "other_own_units_hp_unchanged": true,
+    "construction_yard_hp": 400,
+    "own_slot_release_observed": false,
+    "enemy_defeated": false,
+    "permanent_safety_established": false,
+    "pre_harm_warning_established": false,
+    "source_text_signal_at_sampled_fences": false,
+    "resource_identity_checks": {
+      "original_resources": 21,
+      "all_unchanged": true,
+      "m2_unchanged": true
+    },
+    "report_json_sha256": "4059c52db3dfe7f820962dfa99d02117d11c580bf1c76bf513cdeeee989b4457",
+    "report_md_sha256": "36d4445347e391ff9b8a799d8853774e89bd015118761ebe1ccdc385d720a2e5",
+    "own_observer_replay_sha256": "337d399351acd6c587ab7e7d8ad0b57d438f38268078e78451099e4d0a4f8cf4",
+    "separate_combat_audit_sha256": "b9013465721e39a6766fb5e67feec1c2232533f0ded6214bccebec08541d8344"
+  },
+  "private_observer": {
+    "sha256": "766f60ce877cedc7588870a57c1a76f201f2cb84839bdd9de449bae1a6cb83b9",
+    "focused_tests": 15,
+    "independently_passed": true,
+    "automatic_inputs": false,
+    "delivered_warning_established": false,
+    "pre_harm_warning_established": false,
+    "current_visibility_established": false,
+    "action_admission": false,
+    "requires_new_enrollment_after_load_or_restart": true
+  },
+  "worm_trial": {
+    "status": "controlled_swallow_and_independently_verified_learned_bounded_loss_free_response",
+    "authored_fixture_sha256": "f42515a693e0a181739f2cadbecc3a37747d0b4e7cec7b7c2ec0245d8892c68b",
+    "added_scenario_rows": 1,
+    "owner": "Fremen",
+    "original_resources_and_m2_unchanged": true,
+    "control": {
+      "boundary_id": "worm-control3-after-restart-1",
+      "enrollment_guest_ms": 25207,
+      "enrollment_revision": 49,
+      "paired_samples_verified": 156,
+      "guest_ms": 7800,
+      "completed_frames": 547,
+      "reserved_frames": 1248,
+      "host_elapsed_seconds": 686.868035,
+      "first_recognized_candidate": {
+        "observation": "000090_worm_c3",
+        "stopped_guest_ms": 29707,
+        "revision": 139,
+        "original_confidence": "new surface disturbance; environmental hazard possible; identity uncertain",
+        "all_own_intact": true,
+        "screenshot_only": true
+      },
+      "first_release_interval_guest_ms": {
+        "after": 32957,
+        "by": 33007
+      },
+      "first_release_revision": 205,
+      "released_unit_slot": 28,
+      "released_unit_type": "Trike",
+      "residual_hp": 100,
+      "remaining_own_units_intact": 6,
+      "yard_hp": 400,
+      "candidate_to_release_interval_guest_ms": {
+        "greater_than": 3250,
+        "at_most": 3300
+      },
+      "source_text_samples": 157,
+      "source_text_signals": 0,
+      "first_release_frame_age_ms": 2,
+      "first_release_png_equals_prior": true,
+      "postloss_followup_guest_ms": 250,
+      "postloss_effect": "mouth-like effect replacing prior Trike sprite",
+      "source_attributed_worm_swallow": true,
+      "posthoc_cue_attribution": "renderer gate, matching pixel onset and unchanged fog; no per-pixel draw receipt",
+      "confirmed_worm_classification_at_recognition": false,
+      "own_report_json_sha256": "4e9f7d56bdbc2b769b6c484fffea00b9d808bbe9b7378be6234e4c8fae6088c3",
+      "own_report_md_sha256": "2688b61f75a9d11f5a9ec1ca4ae49e603e869fc8a6ce27ec216dc435be71c342",
+      "causal_report_json_sha256": "1688eab467ccc194a6416a3d14371900ece37c815232fb709b6af507a3e307fe",
+      "causal_report_md_sha256": "ef8f85f7863353ab092cf63a7af6a2d5adef21ba1c4ebcdcaee38261a5e2179f"
+    },
+    "response_attempt3": {
+      "status": "terminal_caller_precondition_error_before_Move",
+      "fresh_enrollment_guest_ms": 42357,
+      "fresh_enrollment_revision": 243,
+      "candidate_cue_guest_ms": 47357,
+      "candidate_cue_revision": 343,
+      "all_own_intact_at_candidate": true,
+      "selected_trike_guest_ms": 47657,
+      "move_request": "0071_response_trike_move",
+      "move_input_sent": false,
+      "error": "selected_unit_index supplied in require_controls; helper reads economy_controls where this key is absent",
+      "native_exit_code": 0,
+      "evacuation_established": false
+    },
+    "corrected_batch_helper_sha256": "0562e29ecdb4854733b0cb6f07e7a416d0fa21add9a00627ce1c97f45edef252",
+    "actual_runner_filename_contract_tests": 4,
+    "corrected_live_batch_completed": true,
+    "response_trial_completed": true,
+    "pre_harm_tentative_hazard_cue_observed": true,
+    "automatic_early_warning_provider_qualified": false,
+    "control_process_epoch": "dune2-worm-natural-recovery3-bf99356d9b724c8cba0a3a2d624b8069",
+    "latest_completed_response_attempt": 5,
+    "bounded_loss_free_response_observed": true,
+    "same_initial_state_replay_established": false,
+    "response_attempt4": {
+      "status": "partial_incomplete_evacuation_with_unmoved_own_unit_loss",
+      "boundary_id": "worm-response4-after-restart-1",
+      "enrollment_guest_ms": 25206,
+      "enrollment_revision": 49,
+      "completed_responses": 118,
+      "original_watch_audits_matched": 100,
+      "ordinary_click_actions": 6,
+      "post_order_no_input_samples": 12,
+      "candidate_cue": {
+        "observation": "000100_worm_r4",
+        "stopped_guest_ms": 30206,
+        "revision": 149,
+        "receipt_utc": "2026-11-19T20:46:44.232584+00:00",
+        "screenshot_only": true,
+        "identity_at_receipt": "uncertain_learned_surface_hazard_cue",
+        "all_own_intact": true
+      },
+      "initial_sand_exposed_slots_posthoc_source_audit": [
+        25,
+        28,
+        29
+      ],
+      "commanded_slots": [
+        28,
+        25
+      ],
+      "trike28": {
+        "destination_tile": [
+          30,
+          41
+        ],
+        "arrival_first_observed_guest_ms": 34506,
+        "arrival_first_observed_revision": 166,
+        "arrived": true,
+        "returned_to_guard": true,
+        "hp_at_cutoff": 100,
+        "terrain_at_cutoff": "entirely_rock_original_source_classification"
+      },
+      "soldier25": {
+        "tile_at_cutoff": [
+          29,
+          43
+        ],
+        "destination_tile": [
+          30,
+          43
+        ],
+        "still_moving": true,
+        "destination_arrival_established": false,
+        "hp_at_cutoff": 20,
+        "terrain_at_cutoff": "mostly_rock_original_source_classification"
+      },
+      "soldier29": {
+        "selection_or_move_input_sent": false,
+        "unchanged_tile": [
+          29,
+          40
+        ],
+        "terrain": "plain_sand",
+        "released": true,
+        "first_release_interval_guest_ms": {
+          "after": 37506,
+          "by": 38006
+        },
+        "residual_hp": 20,
+        "source_attributed_worm_swallow": true
+      },
+      "final_observation": {
+        "label": "w4-travel-12",
+        "guest_ms": 38006,
+        "revision": 173,
+        "frame_guest_ms": 37999,
+        "frame_age_ms": 7,
+        "remaining_own_units_intact": 6,
+        "yard_hp": 400,
+        "image_receipt": "mouth-like effect over prior upper figure; both moved contacts still visible"
+      },
+      "accounting": {
+        "guest_ms": 12800,
+        "completed_frames": 897,
+        "reserved_frames": 1460,
+        "planned_elapsed_guest_ms": 20300,
+        "actual_elapsed_guest_ms": 12800,
+        "shortfall_to_goal_guest_ms": 7500,
+        "budgets_reset_after_input": false,
+        "stopped_on_own_status_event": true,
+        "post_loss_response4_input_sent": false
+      },
+      "source_text_samples": 119,
+      "source_text_signals": 0,
+      "all_units_evacuated": false,
+      "loss_free_response": false,
+      "planned_survival_goal_completed": false,
+      "prevention_success_established": false,
+      "universal_rock_immunity_established": false,
+      "continuous_unpaused_performance_established": false,
+      "own_report_json_sha256": "25ff9a4ded07c88e2a8354653e5f4fea02844ce1cc305d75aa57fdfd8dcf72e1",
+      "own_report_md_sha256": "dcc2aebe8a5dfe13a7af5df6b5dcf72c7c31dd9accda471c1b2fb504f301455f",
+      "causal_report_json_sha256": "b786f8e70c054f8ae72ea30e75375e6280f0b1172a8a8c7190ce33fc1a91628d",
+      "qualification": "Completed response4 boundary only; later Restart/trials are outside this record. Own release is independently timed; source causal explanation remains separate from original uncertain image recognition.",
+      "post_click_advance_guest_ms_each": 300,
+      "process_epoch": "dune2-worm-natural-recovery4-4cbe8f4c20c3413b838f618e2a70741a"
+    },
+    "response_attempt5": {
+      "status": "declared25_second_goal_completed_with_all_own_intact",
+      "boundary_id": "worm-response5-after-restart-2",
+      "process_epoch": "dune2-worm-natural-recovery4-4cbe8f4c20c3413b838f618e2a70741a",
+      "enrollment_guest_ms": 47106,
+      "enrollment_revision": 210,
+      "completed_responses": 150,
+      "ordinary_click_actions": 9,
+      "watch_samples": 100,
+      "watch_sample_guest_ms": 50,
+      "commanded_slots_in_order": [
+        28,
+        29,
+        25
+      ],
+      "post_click_guest_ms_total": 1500,
+      "adaptive_no_input_transition_samples": 4,
+      "adaptive_transition_guest_ms_each": 100,
+      "cue_to_all_orders_guest_ms": 1900,
+      "candidate_cue": {
+        "observation": "000100_worm_r5",
+        "stopped_guest_ms": 52106,
+        "revision": 310,
+        "receipt_utc": "2026-11-19T21:02:43.356321+00:00",
+        "screenshot_only": true,
+        "identity_at_receipt": "uncertain_learned_surface_hazard_cue",
+        "all_own_intact": true
+      },
+      "first_sampled_arrival_guard_and_target_clear": {
+        "28": {
+          "capture": "w5-travel-08",
+          "guest_ms": 58006,
+          "elapsed_ms": 10900,
+          "revision": 340,
+          "post_arrival_ms_to_final": 14100,
+          "hp": 100,
+          "tile": [
+            30,
+            41
+          ]
+        },
+        "29": {
+          "capture": "w5-travel-10",
+          "guest_ms": 59006,
+          "elapsed_ms": 11900,
+          "revision": 342,
+          "post_arrival_ms_to_final": 13100,
+          "hp": 20,
+          "tile": [
+            30,
+            40
+          ]
+        },
+        "25": {
+          "capture": "w5-travel-19",
+          "guest_ms": 63506,
+          "elapsed_ms": 16400,
+          "revision": 351,
+          "post_arrival_ms_to_final": 8600,
+          "hp": 20,
+          "tile": [
+            30,
+            43
+          ]
+        }
+      },
+      "all_three_arrived_by_guest_ms": 63506,
+      "common_post_arrival_holding_guest_ms": 8600,
+      "post_order_no_input_samples": 37,
+      "post_order_sample_schedule_guest_ms": {
+        "500": 36,
+        "100": 1
+      },
+      "max_endpoint_image_review_gap_during_travel_guest_ms": 5000,
+      "final_observation": {
+        "label": "w5-travel-37",
+        "guest_ms": 72106,
+        "revision": 369,
+        "frame_guest_ms": 72099,
+        "frame_age_ms": 7,
+        "all_own_units_intact": 7,
+        "yard_hp": 400,
+        "all_commanded_units_at_destinations_in_guard_with_cleared_targets": true,
+        "image_receipt": "Three moved contacts remain visible on speckled ground; no apparent disappearance, engulfment or damage change."
+      },
+      "own_status_events": [],
+      "final_own_units": [
+        {
+          "pool_index": 24,
+          "type_name": "Trike",
+          "tile": [
+            32,
+            44
+          ],
+          "position_fixed_256": [
+            8320,
+            11392
+          ],
+          "hitpoints": 100,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        },
+        {
+          "pool_index": 25,
+          "type_name": "Soldier",
+          "tile": [
+            30,
+            43
+          ],
+          "position_fixed_256": [
+            7808,
+            11136
+          ],
+          "hitpoints": 20,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        },
+        {
+          "pool_index": 26,
+          "type_name": "Soldier",
+          "tile": [
+            35,
+            43
+          ],
+          "position_fixed_256": [
+            9088,
+            11136
+          ],
+          "hitpoints": 20,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        },
+        {
+          "pool_index": 27,
+          "type_name": "Trike",
+          "tile": [
+            35,
+            41
+          ],
+          "position_fixed_256": [
+            9088,
+            10624
+          ],
+          "hitpoints": 100,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        },
+        {
+          "pool_index": 28,
+          "type_name": "Trike",
+          "tile": [
+            30,
+            41
+          ],
+          "position_fixed_256": [
+            7808,
+            10624
+          ],
+          "hitpoints": 100,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        },
+        {
+          "pool_index": 29,
+          "type_name": "Soldier",
+          "tile": [
+            30,
+            40
+          ],
+          "position_fixed_256": [
+            7808,
+            10368
+          ],
+          "hitpoints": 20,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        },
+        {
+          "pool_index": 30,
+          "type_name": "Quad",
+          "tile": [
+            31,
+            39
+          ],
+          "position_fixed_256": [
+            8064,
+            10112
+          ],
+          "hitpoints": 130,
+          "on_map": true,
+          "action_name": "Guard",
+          "target_move_encoded": 0
+        }
+      ],
+      "accounting": {
+        "actual_guest_ms": 25000,
+        "completed_frames": 1752,
+        "reserved_guest_ms": 25000,
+        "reserved_frames": 2536,
+        "goal_elapsed_guest_ms": 25000,
+        "goal_completed": true,
+        "cue_to_final_guest_ms": 20000,
+        "final_capture_host_elapsed_seconds": 905.847207752,
+        "original_host_limit_seconds": 1800,
+        "original_guest_limit_ms": 30000,
+        "original_frame_limit": 4800,
+        "budgets_reset_after_input": false,
+        "stopped_at_declared_goal": true
+      },
+      "whole_roster_intact_at_every_sample": true,
+      "sampled_loss_free_response": true,
+      "universal_rock_immunity_established": false,
+      "continuous_unpaused_performance_established": false,
+      "automatic_warning_provider_qualified": false,
+      "mixed_own_audit_json_sha256": "56b21fb5ebc78d23946c5817f927f2568d5e273b9d0c4e78c9f32f9ba12e42f9",
+      "completed_paths_sha256": "09d68e55315654f26274f4f69318b1d4f6e37b77692ebebacb15ef3af3c45836",
+      "frozen_visual_ledger_sha256": "2ac80ab80d62262439ed407fe501493a32f619f474139011eb40f2f08184f5c1",
+      "travel_monitor_sha256": "63bd1251b505b00eca3f610632f517b984fb55fab78cb55d8df6a9766d880f44",
+      "travel_monitor_independent_review_sha256": "15b161c02605400532f08389fb4694dca6cb6e68a087d53a17703c8f19973699",
+      "normal_close": {
+        "native_process_reaped": true,
+        "native_process_returncode": 0,
+        "launcher_exit_code": 0,
+        "queue_halted": false,
+        "remaining_queued_requests": 0,
+        "close_receipt_sha256": "06b940b9fb28eb18ca036dde20cf77f162da10be06eb3542af3f97ba2315a16d",
+        "independent_own_report_checked_closure_and_launcher_witness": true
+      },
+      "original21_resources_unchanged": true,
+      "ordinary_m2_source_and_copy_unchanged": true,
+      "qualification": "Learned response after earlier control and missed-unit failure, through separately selected original Restart. Same authored fixture, not bit-identical emulated initial state. Screenshot recognition and source/own audits remain separate. No public provider admission, native restore or campaign victory claim.",
+      "independent_own_review_passed": true,
+      "own_report_json_sha256": "9d6fb4436f784e0bee7fde66b61e39d3daea5f6a12ad7a4e4ab1e1ef94618969",
+      "own_report_md_sha256": "6e190e5866fa937d9f6d6e0f4ed2a51eacee8b14e418f0904bfd6b8dd3fae2d0",
+      "own_artifact_manifest_sha256": "ab2d0790438c77e3edf2579e7deeca939c3a4b1d744bceac86194efa9943a875",
+      "independent_retained_input_pins": 857,
+      "original_watch_audits_matched": 100,
+      "source_text_samples": 151,
+      "source_text_counter0_all_samples": true,
+      "source_text_signal_samples": 0,
+      "independent_source_review_passed": true,
+      "causal_report_json_sha256": "620542859ece57e4b50dca660e3d35519aed0fec0c6942788e495189149c9f23",
+      "causal_report_md_sha256": "6d8179a879fb413fa0a0f157443addd8cd9cc8436c325160e5ecdf96e39dd852",
+      "source_artifact_manifest_sha256": "5820854016ae250c64a8bbaf14c24862ca00fc026c6cb742ba454b4990d4293f",
+      "source_own_crosscheck_sha256": "f77cf2e8352b1f3f3550e04096f6f8f7e73e0d0f470a4ef33c0032abdcd01576",
+      "posthoc_original_source_audit": {
+        "captures": 151,
+        "original_code_data_windows": 12,
+        "window_matches": 1812,
+        "target_transitions": [
+          {
+            "observation": "w5-entry-s019",
+            "guest_ms": 47106,
+            "targets_attack_move_encoded": [
+              0,
+              0
+            ]
+          },
+          {
+            "observation": "000062_worm_r5",
+            "guest_ms": 50206,
+            "targets_attack_move_encoded": [
+              16412,
+              16412
+            ]
+          },
+          {
+            "observation": "w5-travel-06",
+            "guest_ms": 57006,
+            "targets_attack_move_encoded": [
+              16409,
+              16409
+            ]
+          },
+          {
+            "observation": "w5-travel-11",
+            "guest_ms": 59506,
+            "targets_attack_move_encoded": [
+              0,
+              16409
+            ]
+          }
+        ],
+        "remaining_swallow_count_all_samples": 5,
+        "sampled_swallow_signature_found": false,
+        "terminal_worm": {
+          "alive_used_allocated": true,
+          "hp": 1000,
+          "attack_target_encoded": 0,
+          "movement_target_encoded": 16409,
+          "movement_target_own_slot": 25,
+          "disabled": false,
+          "both_targets_cleared": false
+        },
+        "targeted_soldier29_in_sampled_response": false,
+        "final_own_terrain": {
+          "28": "entirely_rock_isSand0",
+          "29": "mostly_rock_isSand0",
+          "25": "entirely_rock_isSand0"
+        },
+        "enemy_world_frozen": false,
+        "additional_observed_enemy_owned_records": [
+          "Carryall",
+          "Harvester"
+        ],
+        "qualification": "Post-trial original-source audit only. Retained movement target does not establish later harmlessness; terrain predicate is not universal immunity or current-visibility admission."
+      }
+    }
+  },
+  "source_research": {
+    "original_trigger_report_md_sha256": "46c0b0f75d4bcb8779fe2e6c5672212ec70cfc0734ae672d78fa55b8e733958d",
+    "render_script_addendum_md_sha256": "5c6d06c1796138c8e8ebc2ee7a8fd6ade25977e8766fe346cb0c5c38626359a8",
+    "warning_alliance_check_precedes_worm_branch": true,
+    "swallow_release_can_retain_positive_hp": true,
+    "hidden_coordinates_are_not_detector_inputs": true,
+    "startup_delay_correction_md_sha256": "ab07244675fed39461bf1784acf96f640a9a610ac20449883e40a7278058fa1a",
+    "observed_area_guard_startup_delay": true
+  },
+  "limits": [
+    "Guest is paused during model evaluation; no continuous real-time performance claim.",
+    "Source UI state and private projections do not establish delivered warnings or current visibility.",
+    "Own-status events are sampled and unattributed; same-signature reuse between samples can be missed.",
+    "Enemy withdrawal is bounded survival, not defeat of the enemy force or permanent safety.",
+    "No new campaign victory or native saved-state restoration is claimed.",
+    "The control warning was tentative at recognition; source attribution occurred later and cannot backdate or upgrade that observation.",
+    "Response attempt3 failed before Move and attempt4 lost an unmoved Soldier; both remain historical failures.",
+    "Response5 establishes sampled full-roster survival through a fixed25-second goal on a learned authored fixture; it does not establish permanent safety, universal rock immunity or unseen-scenario detector performance.",
+    "Original Restart creates separate enrollments; the control and response trials do not start from bit-identical emulated state."
+  ],
+  "prior_fixture_checkpoint": {
+    "status": "constructed_hidden_start_verified_batch_interface_failure_before_advance",
+    "authored_fixture_sha256": "f42515a693e0a181739f2cadbecc3a37747d0b4e7cec7b7c2ec0245d8892c68b",
+    "added_scenario_rows": 1,
+    "owner": "Fremen",
+    "original_resources_and_m2_unchanged": true,
+    "loose_override_verified_via_original_restart": true,
+    "briefing_observed": true,
+    "hidden_start_visual_warning": false,
+    "initial_own_units_full_hp": 7,
+    "worm_harm_observed": false,
+    "pre_harm_detection_established": false,
+    "response_trial_completed": false,
+    "first_batch_request_executed": false,
+    "batch_failure": "Generated name lacked the original runner's required numeric prefix; terminal closure before execution; pending reservation retained",
+    "prior_static_compatibility_review_withdrawn": true,
+    "initial_tactical_observation": "w2-entry-s019",
+    "initial_tactical_revision": 165,
+    "initial_tactical_guest_ms": 25814,
+    "initial_tactical_frame_sha256": "166266b6a86dfac8c509d41749f4d3d2d868f5915cc424d34e51d8f62cfa2555",
+    "corrected_batch_helper_sha256": "0562e29ecdb4854733b0cb6f07e7a416d0fa21add9a00627ce1c97f45edef252",
+    "actual_runner_filename_contract_tests": 4,
+    "filename_contract_tests_independently_passed": true,
+    "corrected_live_batch_completed": false
+  }
+}

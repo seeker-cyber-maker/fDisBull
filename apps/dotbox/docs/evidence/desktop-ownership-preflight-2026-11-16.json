@@ -1,0 +1,130 @@
+{
+  "schema": "dotbox-desktop-ownership-preflight-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "b884c16182e9cb0b9c6ab4ee9ca9b6f414d83405",
+  "requested": "Verify real keyboard and mouse on the original Dot computer under ownership coordination, takeover/return and interruption recovery",
+  "qualification": "BLOCKED before desktop input; no new actual-input success claimed",
+  "actual_desktop_input_calls_issued": 0,
+  "same_original_desktop_required": true,
+  "observations": {
+    "origin": "Reported by the existing Dot chat through supported tools; coordinator read back the current chat in the existing side browser",
+    "original_cua": "Read-only inventory still identified the original Chromium window and original new-tab browser context",
+    "headless_receiver": "Retained managed runtime and primary SSH route available; its independent empty desktop is not the original Dot computer and was not substituted",
+    "cua_data_client": "The original Dot tool documentation did not expose general filesystem/network client use or an owned-coordinator client; no import or endpoint probe was attempted there",
+    "cross_runtime_nonce_match": "A private nonce was created by the ordinary shell; CUA filesystem access was not attempted, so match is untested",
+    "attachment_catalog": "The retained headless receiver was not in the checked original-context attachment list",
+    "source_computer_attachment": {
+      "tool": "environment_management.attach",
+      "strict_match": true,
+      "result": "isError=true; Client specified an invalid argument",
+      "reason": "managed network requirements require sandbox enforcement",
+      "successful_command_execution": false
+    },
+    "restoration": "Dot reported status=attached for its original cloud environment after the failed source-computer selection",
+    "preview_and_execution_routes": "The checked headless tools offered no private preview/port-forward or direct cross-thread command selector; open_in_codex only opens an existing URL/tab",
+    "effective_policy": "No effective attachment-profile or requirement-source diagnostic was exposed in the checked tools; resolver cause and a supported repair remain unknown"
+  },
+  "fixed_callback_bug": {
+    "trigger": "Passing an async callback or returning an awaitable to synchronous Client.run_turn_step",
+    "before": "Returns the awaitable as successful result after checks; its later execution is outside those checks",
+    "after": "Raises TurnInterrupted for awaitables, never returns them as success; closes only an unstarted native coroutine without executing its body; other awaitables remain caller-owned",
+    "limits": "A callback may already have effects before returning an awaitable; rejection does not cancel or roll back those effects",
+    "root_reproduction": "Immutable baseline client code and new installed client compared through the same real authenticated coordinator/socket; baseline accepted, candidate rejected, coroutine body never ran; no desktop input"
+  },
+  "verification": {
+    "source_suite": {
+      "passed": 369,
+      "skipped": 0,
+      "seconds": 25.67
+    },
+    "local_installed_checks": {
+      "passed": 107,
+      "skipped": 0,
+      "deselected": 1,
+      "seconds": 21.61,
+      "exclusion": "Source-tree-only static import audit covered by full source suite; absent from external installed-test tree",
+      "native_scope": "Existing real native checks reuse the prepared executable; no native rebuild"
+    },
+    "cloud_installed_checks": {
+      "passed": 64,
+      "skipped": 0,
+      "seconds": 12.38,
+      "python": "3.12.14",
+      "scope": "Real authenticated sockets and callback contract regressions; synthetic ownership; not desktop input or live E2E"
+    },
+    "runtime_modules": 21,
+    "source_wheel_local_cloud_installed_modules_exact": true,
+    "module_map_aggregate_sha256": "526bf08ed5dee61ff8afb6903663be5de783271eb1d4ce06cc9255579714218b",
+    "wheel_sha256": "0eb44ffbce1a8e16dcfe4f1770b6874ae60c5e7eb21c822bd25b9403fd0d59d6",
+    "fdisbull_importable_in_clean_installs": false,
+    "observer": "Unchanged from previously qualified 41-case observer; no new observer or live input result implied"
+  },
+  "next_required_gate": "A supported ownership RPC client reachable from the original desktop executor, or an existing enforced command attachment; then same-lease checks around awaited real desktop actions",
+  "constraints_preserved": [
+    "No enforcement bypass, credential movement, new grants/enrollment or public relay",
+    "No substitute desktop, emulator, sound or gameplay",
+    "Earlier data-only and outer viewer-input evidence remain separately scoped; no automatic upgrade to actual-input-through-bridge proof"
+  ],
+  "diagnostic_references": [
+    {
+      "url": "https://github.com/openai/codex/issues/60460",
+      "scope": "Independent public reports of the same attachment error; corroboration, not proof of this connection cause or a verified fix"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/agent-approvals-security",
+      "scope": "General command permission/network controls; not a verified repair for this attachment resolver"
+    }
+  ],
+  "private_receipts": [
+    {
+      "name": "source-suite-01.log",
+      "bytes": 501,
+      "sha256": "cc141547743e506b4d036f7852460625929bb3eea88326ca8e30f9d705a60b9d"
+    },
+    {
+      "name": "installed-checks-01.log",
+      "bytes": 195,
+      "sha256": "b1c6dcfc4ad927e7f33ea954fa398f15992f6b340bf24397ca658f61d3ee0046"
+    },
+    {
+      "name": "candidate-identity-01.json",
+      "bytes": 2106,
+      "sha256": "e97d7e4ec2c9cf5fd4040d04c97ec1894fa42cffb842a8cbe80d75e58b48e2ba"
+    },
+    {
+      "name": "local-install-readback.json",
+      "bytes": 285,
+      "sha256": "a5b79498b641f0d29878e225743424c333e4c2b0bd1c179ecc5b96b11251a525"
+    },
+    {
+      "name": "root-awaitable-reproduction.json",
+      "bytes": 347,
+      "sha256": "363902e27d77080d62818e91bc26b3353a301ccedbf41f0e27b831d0aaab5e41"
+    },
+    {
+      "name": "cloud-package-01/module-evidence.json",
+      "bytes": 4601,
+      "sha256": "a0f6a89f4895cf5df1182847aa8b15eae9208ed01f1e9cbc7b6cfaa8cf2118b5"
+    },
+    {
+      "name": "cloud-package-01/installed-tests.log",
+      "bytes": 100,
+      "sha256": "107d450ce061c27b6d128937ebf51884d98cc2ad91b4295243231b3cf0f1c09d"
+    },
+    {
+      "name": "cloud-package-01/qualification-summary.json",
+      "bytes": 1967,
+      "sha256": "388f349617c882aeb1e34803234163afb815797b89608afbbf7fc491d934e8c3"
+    },
+    {
+      "name": "dot-preflight-final.ax.txt",
+      "bytes": 42027,
+      "sha256": "feb270b713540a335bd307cfe3f1d637dd258f931bb5bb639c786b3fe086b60a"
+    },
+    {
+      "name": "dot-preflight-final.jpg",
+      "bytes": 113956,
+      "sha256": "0d546040a5bd1277ef48f42fa298d007f7562904f43c0e61ddef1cb72d153a2b"
+    }
+  ]
+}
