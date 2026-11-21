@@ -144,9 +144,12 @@ backend's complete source raster proves the application finished drawing.
 The source stream is not serialized into checkpoints; a historical image may
 remain an artifact after restore, but it cannot become a live frame again.
 
-The next control gate must prove exactly-next-raster stop ownership, earlier
+The subsequent [source-frame control gate](QEMU_VIDEO_FRAME_FENCE_GATE.md)
+passed its twelve-case authored matrix with thirteen reaped VM owners. That
+separate gate addresses exactly-next-raster stop ownership, earlier
 breakpoint/hook/tracker stops, partial-row preservation, source failure,
-input acknowledgement versus consumption, controller exclusions and cleanup.
+input acknowledgement versus consumption, controller exclusions and cleanup,
+and records the remaining native coincidence/lifecycle/phase witnesses.
 Legacy probe/RGBA/status/coherence/history and JSON/script adapters remain
 separate consumers. In particular, legacy 4,096-point probes cannot silently
 inherit the native source command's 256-point cap, and QEMU nanoseconds cannot

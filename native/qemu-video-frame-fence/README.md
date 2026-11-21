@@ -109,7 +109,10 @@ extracted production functions and the actual main-loop stop tail with
 controlled external stubs; it does not execute QEMU. The full combined QAPI
 schema also passed the admitted parser with documentation required.
 
-No full fence native build, VM execution, stop-packet, device/controller
-integration, or paired legacy evidence is claimed by these checks. Those gates
-remain separate and pending in the manifest. The verified prerequisite source
-stream does not by itself qualify this control increment.
+Those helper checks do not themselves claim a native build or device/runtime
+integration. The subsequent [twelve-case native gate](../../docs/QEMU_VIDEO_FRAME_FENCE_GATE.md)
+passed on a fresh producer, with thirteen VM lifetimes and all owners reaped.
+It records the exact tested host/source/binaries, retained failed attempt,
+real stop/input/controller witnesses and remaining limits. The source manifest
+retains the earlier source-probe checkpoint; the linked gate is the later
+runtime disposition. Paired legacy phase evidence remains pending.
