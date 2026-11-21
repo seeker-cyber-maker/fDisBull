@@ -2,40 +2,56 @@
 
 ## Current native stopped-control checkpoint (2026-11-21)
 
-The replacement for Native Verification Handoff recovered the retained Linux
-source/build/controller and the later Metadata05 work that was not in the last
-handoff. The corrected producer and static dependency closure passed. Freeze02
-then passed in 42.640 seconds, and a separately reviewed check-only phase passed
-in 16.290 seconds, with the original limits and full input checks retained.
-Freeze01 remains a preserved failed preparation attempt.
+The fresh Native02 stopped-control witness **passed** at exact source
+`03102d0aae38480aa6deb4a082ba2659c9552c4d`, tree
+`8d5bcbdb13ada02265b5a908cc7e79e678987697`: one test, zero failures, errors or
+skips. The original QEMU owner produced one raster and verified export, then
+completed observations at native generations 0 and 1. During observation three,
+the actual acknowledged `00 -> 5a -> 00` writes advanced generation from 1 to 3
+while both selected RAM reads remained `0000`. The required
+`native-control-after` refusal was observed, and the captured original process
+and both channels were disposed before its public error returned. See the
+[complete Native02 gate record](QEMU_STOPPED_CONTROL_GATE.md#native-attempt02-complete-same-byteaba-witness-2026-11-21).
 
-The first new native stopped-control attempt ran at exact source
-`0cacf582e5c5679ea4a842b2f27dc55887e5fc69` and **failed**: one test, one failure,
-zero errors/skips. One original QEMU owner produced one raster and verified
-export. Its first two observations completed at native generations 0 and 1,
-demonstrating the intervening acknowledged same-byte write while selected bytes
-remained equal. The raw ABA writes/readbacks also completed during observation
-three, but a QMP event caused an `input-after` refusal before the final native
-generation query. Generation 3 and the intended `native-control-after` refusal
-were not observed. The exact event payload was omitted by the witness's
-unexpected-failure retention path and cannot be reconstructed from the saved
-logs. See the [complete gate record](QEMU_STOPPED_CONTROL_GATE.md#native-attempt01-unexpected-event-refusal-2026-11-21).
+This closes the narrow native same-byte/ABA witness. The complete controller
+passed in 21.951 seconds, its owned worker in 5.102 seconds and pytest in
+2.942 seconds. All six native generation queries, 12 raw packets, three writes,
+six selected RAM reads and the original physical-memory mode were independently
+reconciled. The worker/group and original QEMU owner were reaped, no adopted or
+selected native processes remained, and preflight/postflight matched all
+5,969 files and six trees. Original time, storage and operation limits remain.
 
-The complete attempt took 19.614 seconds, with clean final original-owner reap,
-no remaining owned/adopted or selected native processes, and identical preflight/postflight checks
-over 5,968 files and six trees. These cleanup and intermediate observations do
-not promote the failed gate. The entire failed output, controller, sealed plans
-and prior Metadata05 state are saved with hashes. Studio's active checkout and
-all nine pre-existing dirty files were preserved and backed up separately.
+Controller02 adds bounded failure-evidence retention before expected-refusal
+classification. It saves attached authority events, stage, original captured
+owner/channel disposition and secondary errors without changing the production
+observer, event guard, producer or accepted refusal. Ten focused host-only
+regression cases passed. Two earlier regression harness attempts each had two
+failures caused by inspecting pytest context-manager state after its mismatch;
+those receipts are preserved, and the corrected tests capture and rethrow the
+original exception inside the same matcher. No controller or acceptance change
+was made between those runs. Fresh metadata Freeze and separate Check-only
+passed in 43.327 and 12.293 seconds before the single native attempt.
 
-Next: retain bounded attached failure evidence on every observation exception,
-before deciding whether its refusal matches the expected native counter change.
-Capture the event, stage and original owner/channel disposition, keeping the
-event guard and exact acceptance criteria unchanged. Review and freeze a fresh
-attempt against its actual source/controller; do not reuse the exhausted native
-output or automatically retry. No production correction is justified until the
-event is identified. The native gate and all 143 surface, 18 workgroup and seven
-campaign promotion obligations remain open. DOSBox remains the default.
+Native01 remains a preserved failed attempt at source `0cacf582...`. Its QMP
+event invalidated observation three at `input-after`, before the final native
+generation query. The old unexpected-failure path omitted the event payload;
+its exact identity remains unknown. No QMP event invalidated the Native02
+observations. The new pass does not reinterpret the old failure or establish a
+production event correction. Earlier failed build/freeze and recovery work remain retained too.
+
+The complete Native02 controller, plans, reviews, regression history and native
+output are saved as a verified 70-file archive, SHA-256
+`c9ce6cc7a3cd84678beb047db0ed1ed07cd7265a5326c5e9ea15c3cdd5f0e8e0`.
+The `fdb-qemu-parity` board checkpoint supplies its recovery catalog. Studio's
+active checkout and nine pre-existing dirty files remain preserved separately.
+
+Next: qualify `native_schedule_not_initial` with an actual armed and then
+cancelled native input schedule while Python input bookkeeping stays empty.
+The host refusal exists, but the earlier native source-state witness established
+keyboard ownership refusal only. Use a separate fresh node/controller with
+current producer/fixture pins. Legacy `frame_probe`/`frame_rgba`, application
+frame completion, and all 143 surface, 18 workgroup and seven campaign promotion
+obligations remain open. DOSBox remains the default.
 
 ## Current selected-state observation checkpoint (2026-11-21 UTC)
 
