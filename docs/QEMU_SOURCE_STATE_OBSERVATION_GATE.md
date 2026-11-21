@@ -12,6 +12,11 @@ The separately accepted host gate below establishes the selected host protocol
 and public API contract. The earlier native07 paired raster gate stays pinned to
 its own source and fixture; it is distinct from this observation-API witness.
 
+The optional [native stopped-control extension](QEMU_STOPPED_CONTROL_GATE.md)
+has its own arm, cached-raster and mutation-admission contract. Its new producer
+and raw-peer witness require separate qualification; the results below do not
+qualify that extension.
+
 ## Exact host qualification
 
 The finite host gate passed **335 tests, zero failures, errors or skips** on

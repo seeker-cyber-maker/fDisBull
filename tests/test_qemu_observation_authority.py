@@ -357,7 +357,8 @@ def test_missing_gdb_and_unbound_replacement_channel_do_not_reconnect(owned):
     assert not o.qwire.requests and not o.gwire.requests
 
 
-@pytest.mark.parametrize('command', [10**12, object(), ['g'], 'g' * (GDBRemote.limit + 1)])
+@pytest.mark.parametrize('command', [10**12, object(), ['g'], 'g' * (GDBRemote.limit + 1)],
+                         ids=['integer', 'object', 'list', 'oversized-string'])
 def test_malformed_gdb_command_is_bounded_before_dispatch(owned, command):
     o = owned
     with pytest.raises(ValueError):

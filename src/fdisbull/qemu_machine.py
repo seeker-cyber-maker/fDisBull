@@ -46,6 +46,9 @@ from .qemu_video_frame_state import (QemuVideoFrameStateMixin, VIDEO_FRAME_STATE
                                     validate_video_frame_state_parameters,
                                     frozen_video_frame_state_parameters)
 from .qemu_observation_authority import ObservationAuthority
+from .qemu_stopped_control import (QemuStoppedControlMixin, STOPPED_CONTROL_COMMANDS,
+                                   validate_stopped_control_parameters,
+                                   preflight_stopped_control_binding)
 from .qemu_video_control import (QemuVideoControlMixin, VIDEO_FRAME_CONTROL_COMMANDS,
                                  validate_video_frame_advance, require_no_video_frame_fence)
 from .qemu_retrace import (QemuRetraceMixin, RETRACE_COMMANDS, machine_retrace_configuration,
@@ -777,6 +780,18 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             kwargs=arguments.kwargs
         bound=request_deadline(self,arguments.arguments.get('timeout_ms',default_timeout_ms))
         vm=self.vm
+        native_token=(arguments.arguments.get('native_control_token')
+                      if function.__name__=='video_frame_state_observe' else None)
+        if native_token is not None:
+            preflight_stopped_control_binding(self,native_token)
+        def native_cleanup(error):
+            binding=getattr(self,'_native_stopped_control_binding',None)
+            if binding is None or (native_token is None and function.__name__!='stopped_control_arm'):
+                return False
+            try:binding.close_original()
+            except BaseException as cleanup:
+                error.native_stopped_control_cleanup_error=type(cleanup).__name__
+            return True
         def limits():
             return [bound,getattr(self,'_deadline',None),getattr(vm,'operation_deadline',None),
                     *[getattr(channel,'operation_deadline',None) for channel in
@@ -791,10 +806,14 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         previous_channels=[]
         installed=False
         try:
+            if native_token is not None:
+                preflight_stopped_control_binding(self,native_token)
             if self.vm is not vm:
                 raise DebuggerError('Machine owner changed while waiting for operation admission')
             _machine_operation_guard(vm, function.__name__, args, kwargs)
             _machine_async_guard(self)
+            if native_token is not None:
+                preflight_stopped_control_binding(self,native_token)
             if self.vm is not vm:
                 raise DebuggerError('Machine owner changed during operation admission')
             bound=min(value for value in limits() if value is not None)
@@ -811,12 +830,14 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             _machine_async_guard(self)
             if time.monotonic()>=bound:
                 error=TimeoutError(label+' exceeded its host deadline')
-                if function.__name__=='video_frame_state_observe' and isinstance(result,dict):
+                if function.__name__ in ('video_frame_state_observe','stopped_control_arm') and isinstance(result,dict):
                     result=deepcopy(result)
                     result['complete']=False
                     result['stage']='outer-deadline'
                     result.setdefault('issues',[]).append(dict(code='outer_deadline',
                         stage='outer-deadline',message=str(error)))
+                    if result.get('native_control') is not None:
+                        result['native_control']['complete']=False
                 error.result=result
                 if function.__name__.startswith('clock_sync_'):
                     # The final check can expire after the method's own check.
@@ -832,19 +853,25 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
                         'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance',
-                        'video_frame_state_observe',
+                        'video_frame_state_observe', 'stopped_control_arm',
                         'execute_step_over'):
-                    vm.close()
+                    if not native_cleanup(error):vm.close()
                 elif function.__name__ in ('resume', 'pause', 'status'):
                     expire = getattr(self, '_async_control_outer_expired', None)
                     if expire is not None:
                         expire(vm, result, error)
                 raise error
             return result
-        except BaseException:
+        except BaseException as error:
+            if (native_token is not None and not installed
+                    and getattr(error,'native_stopped_control_binding_failure',False) is not True):
+                # Admission callbacks can fail after replacing the owner.
+                # Keep the captured binding ahead of any replacement cleanup.
+                preflight_stopped_control_binding(self,native_token)
             channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
             if not getattr(vm,'_fdisbull_control_quarantine',None) and any(channel is not None and hasattr(channel,'socket') and channel.socket is None
-                   for channel in channels):vm.close()
+                   for channel in channels):
+                if not native_cleanup(error):vm.close()
             raise
         finally:
             if installed:
@@ -852,7 +879,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 vm.operation_deadline=previous_vm
                 for channel,previous in previous_channels:channel.operation_deadline=previous
                 current=getattr(vm,'gdb',None)
-                if function.__name__!='video_frame_state_observe' and current is not None and not any(current is channel for channel,_ in previous_channels):
+                if function.__name__ not in ('video_frame_state_observe','stopped_control_arm') and current is not None and not any(current is channel for channel,_ in previous_channels):
                     current.operation_deadline=previous_vm
             lock.release()
     return invoke
@@ -979,6 +1006,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     video_frame_state_observe=machine_trace_operation(QemuVideoFrameStateMixin.video_frame_state_observe,
         label='Source raster state observation',parameter_validator=validate_video_frame_state_parameters,
         parameter_freezer=frozen_video_frame_state_parameters)
+    stopped_control_arm=machine_trace_operation(QemuStoppedControlMixin.stopped_control_arm,
+        label='Native stopped-control arm',parameter_validator=validate_stopped_control_parameters)
     capture_video_frame=machine_trace_operation(QemuVideoFrameMixin.capture_video_frame,
         label='Video frame capture',parameter_validator=validate_video_frame_capture)
     video_frame_advance=machine_trace_operation(QemuVideoControlMixin.video_frame_advance,
@@ -1030,6 +1059,13 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 and VIDEO_FRAME_STATE_COMMANDS <= getattr(vm,'qmp_commands',frozenset())
                 and isinstance(getattr(vm,'observation_authority',None),ObservationAuthority)),
             video_frame_state_scope='selected stopped CPU/RAM and retained source raster; cooperative owner control; keyboard/scheduler only',
+            native_stopped_control=(virtual and getattr(vm,'machine_configuration',{}).get('cpus')==1
+                and getattr(vm,'machine_configuration',{}).get('accelerator')=='tcg'
+                and getattr(vm,'machine_configuration',{}).get('network')=='none'
+                and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
+                and VIDEO_FRAME_STATE_COMMANDS | STOPPED_CONTROL_COMMANDS <= getattr(vm,'qmp_commands',frozenset())
+                and isinstance(getattr(vm,'observation_authority',None),ObservationAuthority)),
+            native_stopped_control_scope='stopped-native-control-admission-v1; explicit one-shot arm and cached source raster',
             video_frame_control=(virtual and getattr(vm,'machine_configuration',{}).get('retrace_profile',{}).get('profile')=='precise'
                 and VIDEO_FRAME_COMMANDS | VIDEO_FRAME_CONTROL_COMMANDS | VIRTUAL_CLOCK_COMMANDS
                 <= getattr(vm,'qmp_commands',frozenset())),
@@ -2120,7 +2156,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
                 'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',
                 'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe',
-                'capture-video-frame','video-frame-advance','video-frame-state-observe',
+                'capture-video-frame','video-frame-advance','video-frame-state-observe','stopped-control-arm',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-up','mouse.button-click','input-state','input-cancel-pending',

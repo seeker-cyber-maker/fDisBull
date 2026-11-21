@@ -83,10 +83,11 @@ def _ranges(vm, values):
 
 
 class ObservationLease:
-    def __init__(self, authority, context, deadline, ram_ranges):
+    def __init__(self, authority, context, deadline, ram_ranges, native_control_token=None):
         self.authority, self.context = authority, context
         self.vm, self.deadline = authority.vm, deadline
         self.ram_ranges = _ranges(self.vm, ram_ranges)
+        self.native_control_token = native_control_token
         self.generation = authority.control_generation
         self.identities = (self.vm.lock, self.vm.process, self.vm.qmp, self.vm.gdb,
                            self.vm.qmp.socket, self.vm.gdb.socket,
@@ -296,7 +297,9 @@ class ObservationAuthority:
             raise DebuggerError('Observation protocol owner or channel changed')
 
     @contextmanager
-    def observe(self, context, *, deadline, ram_ranges=()):
+    def observe(self, context, *, deadline, ram_ranges=(), native_control_token=None):
+        from .qemu_stopped_control import validate_native_control_token
+        validate_native_control_token(native_control_token)
         if type(deadline) not in (int, float) or not math.isfinite(deadline):
             raise ValueError('Observation requires a finite absolute deadline')
         limits = [deadline]
@@ -328,7 +331,7 @@ class ObservationAuthority:
                 raise DebuggerError('Observation requires its original owner and existing live QMP/GDB channels')
             self._current_client(self._qmp, 'qmp')
             self._current_client(self._gdb, 'gdb-request')
-            lease = ObservationLease(self, context, deadline, ram_ranges)
+            lease = ObservationLease(self, context, deadline, ram_ranges, native_control_token)
             self._active = lease
             self._cleanup_owner = lease.cleanup_owner
             try:
@@ -368,6 +371,11 @@ class ObservationAuthority:
                 return False
             if operation in _QMP_QUERIES:
                 return arguments is None or type(arguments) is dict and not arguments
+            if operation == 'x-fdisbull-query-stopped-control':
+                return (lease is not None and lease.native_control_token is not None
+                        and type(arguments) is dict and set(arguments) == {'token'}
+                        and type(arguments['token']) is str
+                        and arguments['token'] == lease.native_control_token)
             if operation == 'human-monitor-command':
                 return (type(arguments) is dict and set(arguments) == {'command-line'}
                         and type(arguments['command-line']) is str

@@ -14,6 +14,8 @@ from .qemu_clock import MachineClockMixin, VIRTUAL_CLOCK_COMMANDS
 from .qemu_frame_keys import validate_frame_key_state
 from .qemu_video_frame import (QemuVideoFrameMixin, VIDEO_FRAME_COMMANDS,
                                validate_video_frame_parameters)
+from .qemu_stopped_control import (QUERY as STOPPED_CONTROL_QUERY, bound_stopped_control,
+                                  control_record, validate_native_control_token)
 
 
 FORMAT = 'fdisbull-source-raster-state-observation-1'
@@ -48,10 +50,12 @@ def _ordinary_range(address, length, end=0xc0000000):
 
 
 def validate_video_frame_state_parameters(*, ram_ranges, stream=None, frame_id=None,
-                                         timeout_ms=1000, allow_references=False):
+                                         timeout_ms=1000, native_control_token=None,
+                                         allow_references=False):
     """Validate every visible literal before script execution or lock admission."""
     validate_video_frame_parameters(stream=stream, frame_id=frame_id,
         timeout_ms=timeout_ms, allow_references=allow_references)
+    validate_native_control_token(native_control_token, allow_references=allow_references)
     if _reference(ram_ranges, allow_references):
         return
     if type(ram_ranges) is not list or not 1 <= len(ram_ranges) <= MAX_RAM_RANGES:
@@ -84,10 +88,10 @@ def validate_video_frame_state_parameters(*, ram_ranges, stream=None, frame_id=N
 
 
 def frozen_video_frame_state_parameters(*, ram_ranges, stream=None, frame_id=None,
-                                       timeout_ms=1000):
+                                       timeout_ms=1000, native_control_token=None):
     """Own bounded caller data before waiting for the shared machine lock."""
     validate_video_frame_state_parameters(ram_ranges=ram_ranges, stream=stream,
-                                         frame_id=frame_id, timeout_ms=timeout_ms)
+        frame_id=frame_id, timeout_ms=timeout_ms, native_control_token=native_control_token)
     ranges = []
     for item in list.__getitem__(ram_ranges, slice(0, MAX_RAM_RANGES + 1)):
         if type(item) is not dict or len(item) != 2:
@@ -97,7 +101,8 @@ def frozen_video_frame_state_parameters(*, ram_ranges, stream=None, frame_id=Non
                                length=dict.__getitem__(item, 'length')))
         except KeyError as error:
             raise ValueError('Source-state RAM range changed during parameter admission') from error
-    result = dict(ram_ranges=ranges, stream=stream, frame_id=frame_id, timeout_ms=timeout_ms)
+    result = dict(ram_ranges=ranges, stream=stream, frame_id=frame_id, timeout_ms=timeout_ms,
+                  native_control_token=native_control_token)
     validate_video_frame_state_parameters(**result)
     return result
 
@@ -276,8 +281,10 @@ class _CapturedSource(QemuVideoFrameMixin, MachineClockMixin):
         return value
 
 
-def _attach_failure(vm, error, record, lease):
+def _attach_failure(vm, error, record, lease, binding=None):
     record['complete'] = False
+    if record.get('native_control') is not None:
+        record['native_control']['complete'] = False
     record['error'] = dict(type=type(error).__name__, message=str(error))
     record['issues'].append(dict(code=getattr(error, 'code', 'observation_failed'),
                                  stage=record['stage'], message=str(error)))
@@ -292,7 +299,10 @@ def _attach_failure(vm, error, record, lease):
                                      if isinstance(native, bytes) else native)
     if not isinstance(error, VideoFrameStateRefusal):
         try:
-            vm.close()
+            if binding is None:
+                vm.close()
+            else:
+                binding.close_original()
         except BaseException as cleanup:
             error.video_frame_state_cleanup_error = type(cleanup).__name__
     try:
@@ -307,7 +317,7 @@ def _attach_failure(vm, error, record, lease):
             'frame_state_equivalence', 'legacy_phase_equivalence')}
         evidence['omitted_fields'] = []
         for key in ('authority', 'clocks', 'state_before', 'state_after',
-                    'source', 'input', 'status_before', 'transport_reply'):
+                    'source', 'input', 'status_before', 'transport_reply', 'native_control'):
             if key not in record:
                 continue
             try:
@@ -321,12 +331,14 @@ def _attach_failure(vm, error, record, lease):
 
 
 class QemuVideoFrameStateMixin:
-    def video_frame_state_observe(self, *, ram_ranges, stream=None, frame_id=None, timeout_ms=1000):
+    def video_frame_state_observe(self, *, ram_ranges, stream=None, frame_id=None,
+                                  timeout_ms=1000, native_control_token=None):
         """Observe a bounded selected projection around one exact source raster."""
         options = frozen_video_frame_state_parameters(ram_ranges=ram_ranges, stream=stream,
-                                                       frame_id=frame_id, timeout_ms=timeout_ms)
+            frame_id=frame_id, timeout_ms=timeout_ms, native_control_token=native_control_token)
         ranges = options['ram_ranges']
         vm, lease = self.vm, None
+        binding, native_started = None, False
         record = dict(format=FORMAT, context='machine', run=self.run_id,
             complete=False, stage='admission', issues=[], atomic=False,
             native_mutation_revision=None, application_frame_complete=None,
@@ -338,10 +350,27 @@ class QemuVideoFrameStateMixin:
                        all_devices_neutral=None, guest_consumed=None),
             state_before={}, state_after={}, authority=None)
         try:
+            if native_control_token is not None:
+                record['native_control'] = control_record()
+                binding = bound_stopped_control(self, native_control_token)
+                binding.cached_rgb()
+                record['scope'] = ('Selected stopped CPU/RAM and retained cached source raster; '
+                    'cooperative owner bracket plus explicit native stopped-control admission; '
+                    'device/AIO mutation and whole-machine equality are unobserved')
             qmp, remote, authority = _admit(self, vm, ranges)
-            with authority.observe(self, deadline=vm.operation_deadline, ram_ranges=ranges) as lease:
+            with authority.observe(self, deadline=vm.operation_deadline, ram_ranges=ranges,
+                                   native_control_token=native_control_token) as lease:
                 record['authority'] = lease.receipt()
                 source = _CapturedSource(self, vm, lease)
+                if binding is not None:
+                    binding.check(self)
+                    record['stage'] = 'native-control-before'
+                    native_started = True
+                    raw = qmp.call(STOPPED_CONTROL_QUERY, {'token': native_control_token},
+                                   max_reply_bytes=_REPLY_BYTES)
+                    record['native_control']['before'] = _copy(raw, limit=_REPLY_BYTES)
+                    lease.check()
+                    binding.validate(raw)
                 record['stage'] = 'clock-before'
                 lease.check()
                 status = qmp.call('query-status', max_reply_bytes=_REPLY_BYTES)
@@ -366,10 +395,16 @@ class QemuVideoFrameStateMixin:
                     _refuse('no_completed_source_raster', 'No completed source raster is retained; source-state observation does not advance')
                 if stream is not None and (stream != prior['token'] or frame_id != prior['frame']['frame-id']):
                     _refuse('source_identity_not_retained', 'Requested source raster is not the exact retained identity')
-                record['stage'] = 'source-export'
-                lease.authorize_export(prior['token'], prior['frame']['frame-id'], directory=vm.temporary.name)
-                pixels, exported = source._video_frame_selected_rgb(vm, before, prior)
-                record['source'].update(exported=_copy(exported), rgb_verified=True,
+                if binding is None:
+                    record['stage'] = 'source-export'
+                    lease.authorize_export(prior['token'], prior['frame']['frame-id'], directory=vm.temporary.name)
+                    pixels, exported = source._video_frame_selected_rgb(vm, before, prior)
+                    record['source']['exported'] = _copy(exported)
+                else:
+                    record['stage'] = 'source-cache'
+                    pixels = binding.cached_rgb(prior)
+                    record['source']['rgb_origin'] = 'previously-verified-immutable-export'
+                record['source'].update(rgb_verified=True,
                     stream=prior['token'], frame_id=prior['frame']['frame-id'],
                     pixel_sha256=hashlib.sha256(pixels).hexdigest(), rgb_bytes=len(pixels))
                 lease.check()
@@ -382,6 +417,17 @@ class QemuVideoFrameStateMixin:
                 record['source']['after'] = source._video_frame_read(vm, before)
                 record['stage'] = 'clock-after'
                 record['clocks']['after'] = source._video_frame_stable(vm, before)
+                if binding is not None:
+                    record['stage'] = 'native-control-after'
+                    lease.check()
+                    binding.check(self)
+                    raw = qmp.call(STOPPED_CONTROL_QUERY, {'token': native_control_token},
+                                   max_reply_bytes=_REPLY_BYTES)
+                    record['native_control']['after'] = _copy(raw, limit=_REPLY_BYTES)
+                    lease.check()
+                    binding.validate(raw)
+                    if record['native_control']['before'] != record['native_control']['after']:
+                        raise DebuggerError('Native stopped-control identity changed across the source raster bracket')
                 record['stage'] = 'compare'
                 lease.check()
                 if record['state_before'] != record['state_after']:
@@ -395,11 +441,20 @@ class QemuVideoFrameStateMixin:
                 if any(before.get(key) != record['clocks']['after'].get(key) for key in clock_fields):
                     raise DebuggerError('Stopped native clock/profile state changed across the source raster bracket')
                 record['authority'] = lease.receipt()
+                if binding is not None:
+                    record['native_control']['complete'] = True
                 record.update(complete=True, stage='complete')
                 result = _copy(record)
                 lease.check()
             result['authority'] = _copy(lease.receipt())
+            if binding is not None:
+                binding.last_generation = result['native_control']['after']['generation']
             return result
         except BaseException as error:
-            _attach_failure(vm, error, record, lease)
+            if native_started and isinstance(error, VideoFrameStateRefusal):
+                uncertain = DebuggerError('Native stopped-control bracket lost its precondition: ' + str(error))
+                uncertain.code = error.code
+                _attach_failure(vm, uncertain, record, lease, binding)
+                raise uncertain from error
+            _attach_failure(vm, error, record, lease, binding)
             raise

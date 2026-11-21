@@ -207,7 +207,8 @@ METHODS = {
     "debug-capture-display": "Save a retained renderer publication without refresh; run,[name,after_update] (guest frame completion unknown)",
     "debug-video-frame-start": "Start the explicit native VGA source-row stream without execution; run,[timeout_ms] (requires video_frame_capture and virtual/precise profiles)",
     "debug-video-frame-observe": "Observe the current owned source stream without execution; run,[timeout_ms] (source raster completion is separate from application drawing)",
-    "debug-video-frame-state-observe": "Observe one retained source raster and a stopped selected CPU/physical-RAM bracket under owned control; run,ram_ranges,[stream,frame_id,timeout_ms] (requires video_frame_state_observe; keyboard-only input witness, non-atomic)",
+    "debug-video-frame-state-observe": "Observe one retained source raster and a stopped selected CPU/physical-RAM bracket under owned control; run,ram_ranges,[stream,frame_id,timeout_ms,native_control_token] (requires video_frame_state_observe; optional token requires native_stopped_control; keyboard-only input witness, non-atomic)",
+    "debug-stopped-control-arm": "Arm one process-bound native stopped-control scope after a verified retained raster export; run,[timeout_ms] (requires native_stopped_control; explicit one-shot arm, non-atomic)",
     "debug-video-frame-stop": "Stop source-row observation and retain its last complete raster; run,[timeout_ms]",
     "debug-video-frame-probe": "Read 0..4096 ordered RGB source pixels in bounded native chunks without execution; run,points,[stream,frame_id,timeout_ms]",
     "debug-capture-video-frame": "Save the retained complete source raster as PNG without execution; run,[name,stream,frame_id,max_bytes,timeout_ms]",
@@ -1574,6 +1575,11 @@ def respond(request, default_project=None, debugger=None):
             and any(isinstance(item,dict)
                     and item.get("format") == "fdisbull-source-raster-state-observation-1"
                     for item in (observed, getattr(e,"video_frame_state_evidence",None))))
+        native_stopped_control_error = (isinstance(request,dict)
+            and request.get("method") == "debug-stopped-control-arm"
+            and any(isinstance(item,dict)
+                    and item.get("format") == "fdisbull-qemu-stopped-control-1"
+                    for item in (observed, getattr(e,"native_stopped_control_evidence",None))))
         checkpoint_script_error = (isinstance(request, dict) and request.get("method") == "debug-script"
                                    and getattr(e, "_qemu_checkpoint_script_error", False) is True
                                    and isinstance(script_result, dict)
@@ -1593,7 +1599,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(script_result, dict)
                                and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error):
             raise
         value = {
             "id": request_id,
@@ -1626,9 +1632,18 @@ def respond(request, default_project=None, debugger=None):
             if isinstance(detail,dict) and detail is not observed:
                 value["error"]["video_frame_state_evidence"] = detail
             for field in ("video_frame_state_cleanup_error", "video_frame_cleanup_error",
-                          "video_frame_file_cleanup_error", "video_frame_state_evidence_error"):
+                          "video_frame_file_cleanup_error", "video_frame_state_evidence_error",
+                          "native_stopped_control_cleanup_error"):
                 detail = getattr(e,field,None)
                 if isinstance(detail,str):value["error"][field] = detail
+        if native_stopped_control_error:
+            if observed is not None:
+                value["error"]["result"] = observed
+            detail = getattr(e,"native_stopped_control_evidence",None)
+            if isinstance(detail,dict) and detail is not observed:
+                value["error"]["native_stopped_control_evidence"] = detail
+            detail = getattr(e,"native_stopped_control_cleanup_error",None)
+            if isinstance(detail,str):value["error"]["native_stopped_control_cleanup_error"] = detail
         if scene_wait_error or scene_act_error:
             # Keep a primary native stop separate from the wait's observed
             # prefix. The ordinary output policy bounds this failure envelope
