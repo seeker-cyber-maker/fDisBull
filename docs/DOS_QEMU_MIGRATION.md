@@ -85,7 +85,8 @@ fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
 
 ### Compose native step stops
 
-Native machine and DOS sessions accept `step(count=1, timeout_ms=10000)`.
+Native machine and DOS sessions accept
+`step(count=1, timeout_ms=10000, mode='into')`.
 The default one-step path retains its existing reply. A count from 2 through
 10,000 requests a bounded sequence of native single-step stops under one
 absolute host deadline, including lock admission, source/history guards,
@@ -112,8 +113,12 @@ The existing per-step events remain recorded. A script additionally persists
 its sequence result and rejects an incomplete count before later operations.
 This opt-in composition is also available on an explicit outer machine
 context; selected Windows process and CHIP-8 step implementations are unchanged.
-It does not implement DOSBox `execution.step(mode="over")`, guest-time control
-or legacy reply-schema parity. The five-case [native gate proposal](QEMU_STEP_COUNT_GATE.md)
+This counted `into` route does not establish guest-time control or legacy
+reply-schema parity. Explicit `mode='over', count=1` now supplies a separate
+[bounded real-mode CALL fallthrough contract](QEMU_CALL_STEP_OVER_GATE.md).
+Its canonical successful CALL outcome remains a native breakpoint; scripts
+use its explicit `step_over_completed` field. The five-case
+[native counted-step gate proposal](QEMU_STEP_COUNT_GATE.md)
 must be admitted and run separately; host peer tests do not qualify a native
 tuple. All migration qualifications and default policy remain unchanged.
 

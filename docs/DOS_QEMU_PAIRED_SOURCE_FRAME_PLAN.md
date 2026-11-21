@@ -1,9 +1,24 @@
 # Paired mode-13h source-frame qualification plan
 
-This is an authored, source-only proposed qualification. It has not been
-assembled, imported, collected, tested, or run. It changes no emulator model or
-production API. Execution requires a separate reviewed controller and explicit
-root admission against the final integrated source and artifact hashes.
+This is an authored proposed native qualification. Its ten pure device-journal
+oracle tests have passed; the guest fixture and native case have not been
+assembled or executed. It changes no emulator model or production API. Native
+execution requires a separate reviewed controller and explicit root admission
+against the final integrated source and artifact hashes.
+
+## Pure oracle verification
+
+At integrated commit `9b6ba9a36beb1ce588a5c6b8d4d92a0981145757`, all ten tests
+in `tests/test_paired_video_frame_oracle.py` passed with zero failures, errors or
+skips: 0.20 seconds pytest, 0.404275 seconds outer worker. All 5,679 tracked
+source hashes remained unchanged and the worker/group was reaped with no
+adopted children. The test imports only the pure rational PIT/VGA oracle;
+neither assembler nor emulator was launched.
+
+Evidence is retained in `frame-parity-20261120/host-paired-oracle-01`; receipt
+SHA-256 `2644a251eff2ff9ef77146fda43785afa0bd14baf044d614b3b804eea6a5433a`.
+This verifies the authored arithmetic and ambiguity rules. Both actual backend
+phase/complete-image outcomes remain pending.
 
 ## Decision being tested
 
@@ -178,7 +193,7 @@ earlier image as if simultaneous.
 2. Check the pure oracle against the hand-calculated tests: PIT wrap; missed and
    ambiguous edge counts; vertical-origin discontinuity; row100 at11530 versus
    11570 ticks; color replication; overlap refusal; fixed pulse parameters.
-   These tests are authored, not yet run.
+   These ten pure tests passed in the host gate above.
 3. Verify no actual frame, renderer query, screen pixel or native row deadline
    enters `horizontal_interval`, `pulse_parameters` or `phase_predictions`.
    Both phase arrays must be determined solely from the logged guest state.
