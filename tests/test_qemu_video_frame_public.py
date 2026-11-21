@@ -3,6 +3,8 @@
 Transport peers test host routing/validation only; no native executable is
 imported or launched. Raw RGBA is deliberately absent from JSON and scripts.
 """
+from copy import deepcopy
+from functools import wraps
 import json
 
 import pytest
@@ -63,6 +65,21 @@ def test_source_script_grammar_has_six_explicit_routes_without_legacy_capabiliti
 def test_six_json_routes_preserve_actual_source_envelopes_and_4096_ordered_samples(control, monkeypatch):
     o = enable_control(control)
     monkeypatch.setattr('time.monotonic_ns', lambda: 100_000_000_000)
+    delegated = {}
+
+    def recorder(name):
+        original = getattr(o.session, name)
+
+        @wraps(original)
+        def invoke(*args, **kwargs):
+            value = original(*args, **kwargs)
+            delegated[name] = deepcopy(value)
+            return value
+
+        return invoke
+
+    for name in ('video_frame_observe', 'video_frame_probe'):
+        monkeypatch.setattr(o.session, name, recorder(name))
     workspace = DebugWorkspace()
     workspace.sessions[o.session.run_id] = o.session
     points = [[7, 9]] + [[0, 0]] * 4094 + [[7, 9]]
@@ -74,10 +91,13 @@ def test_six_json_routes_preserve_actual_source_envelopes_and_4096_ordered_sampl
             assert advance['format'] == 'fdisbull-video-frame-advance-1' and advance['advance_completed']
             assert advance['native_result'] == o.actual and advance['outcome'] == 'stopped'
             observed = request(workspace, o, 'debug-video-frame-observe')['result']
-            assert observed == o.session.video_frame_observe()
+            assert observed == delegated['video_frame_observe']
             identity = dict(stream=observed['stream'], frame_id=observed['frame_id'])
             probe = request(workspace, o, 'debug-video-frame-probe', points=points, **identity)['result']
-            assert probe == o.session.video_frame_probe(points, **identity)
+            assert probe == delegated['video_frame_probe']
+            assert probe['clock']['sequence'] > observed['clock']['sequence']
+            for field in ('run', 'epoch', 'clock_profile', 'counter', 'virtual_ns', 'virtual_clock'):
+                assert probe['clock'][field] == observed['clock'][field]
             assert probe['samples'] == [dict(x=x, y=y, rgb=[4, 85, 170]) for x, y in points]
             capture = request(workspace, o, 'debug-capture-video-frame', name='source.png', **identity)['result']
             assert capture['metadata']['frame'] == observed['frame'] and capture['artifact']
