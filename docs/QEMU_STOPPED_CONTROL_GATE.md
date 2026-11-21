@@ -164,8 +164,9 @@ original GDB channel. After one verified export and arm, it must demonstrate:
    generation. Equal final selected bytes must still produce a native `+2`
    mismatch, an incomplete observation and original-owner disposal.
 
-The raw peer may not clear or replace transport buffers, bypass authority
-guards, create a second connection or replay uncertain writes. Its controller
+The raw peer may use the captured channel below Python protocol admission. It
+may not clear or replace transport buffers, remove, replace or disable authority
+guards, create a second connection, or replay uncertain writes. Its controller
 must independently decode the bounded wire transcript, preserve the original
 physical-memory mode, reconcile native calls and process identity, verify
 loaded-image/input pins and complete owned cleanup within the admitted budget.

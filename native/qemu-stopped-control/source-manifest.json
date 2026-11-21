@@ -10,13 +10,23 @@
   "prerequisite_patch": "../qemu-video-frame-fence/qemu-video-frame-fence.patch",
   "prerequisite_patch_sha256": "cbc65cf87a4356ae09a78dff7cbf99b9997453db854d7229e9715cf5df3fa8f5",
   "patch": "qemu-stopped-control.patch",
-  "patch_sha256": "557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e",
+  "patch_sha256": "816c97b819dee26c26cb6f3311c1bab653bbe71fca23401d78f5f9707037adbc",
   "scope": "stopped-native-control-admission-v1; explicit one-shot stopped control scope; not whole-machine mutation revision, atomic state, raster/application completion or legacy parity",
   "recovery": {
     "new_candidate": true,
-    "exact_recovered_core_sha256": "c6435173b04430098a4d1447975ac7b45c043433916fccb25d8311994b06e898",
     "base_source_inventory_sha256": "46e046de250c1b204a6de0825ae4e643213ea30c724000b3998738a3737560fc",
-    "base_acceptance_receipt_sha256": "68b9bcbc6fdedf99933a810093a4a02ec17878685d2b53aa5d1c878b1daee472"
+    "base_acceptance_receipt_sha256": "68b9bcbc6fdedf99933a810093a4a02ec17878685d2b53aa5d1c878b1daee472",
+    "historical_exact_recovered_core_sha256": "c6435173b04430098a4d1447975ac7b45c043433916fccb25d8311994b06e898",
+    "current_core_sha256": "fb4670c788f330e1689f470634af5a33032435f33ee1f93e09299a07cab143a4",
+    "header_integration_correction": {
+      "reason": "Actual libcommon compile requires the defining declaration for the existing target-generic CPU synchronization API.",
+      "change": "Add #include \"system/hw_accel.h\"; no executable body or control semantics change.",
+      "prior_patch_sha256": "557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e",
+      "prior_manifest_sha256": "5561081ef3a7939c4349e97a47e28efa5a3bd6a1ee06dfd8e35ab62ac30d9ab6",
+      "prior_core_sha256": "c6435173b04430098a4d1447975ac7b45c043433916fccb25d8311994b06e898",
+      "code_below_include_directives_sha256": "f5a2bb783195be80dea8241572599d0a7f99cac6f4e01f9a1b6f3138442b9c65",
+      "real_header_compilation": "passed-syntax-only"
+    }
   },
   "files": [
     {
@@ -82,8 +92,8 @@
     {
       "path": "system/fdisbull-stopped-control.c",
       "base_sha256": null,
-      "patched_sha256": "c6435173b04430098a4d1447975ac7b45c043433916fccb25d8311994b06e898",
-      "patched_bytes": 21405
+      "patched_sha256": "fb4670c788f330e1689f470634af5a33032435f33ee1f93e09299a07cab143a4",
+      "patched_bytes": 21434
     },
     {
       "path": "system/meson.build",
@@ -99,9 +109,9 @@
     }
   ],
   "qualification": {
-    "source_review": "author and root reviewed; full build/native integration remain pending",
+    "source_review": "Header-only integration correction passed one syntax-only check against the actual libcommon compiler context and real generated headers; complete build/link and native integration remain pending.",
     "compiled_source_probe": {
-      "status": "passed",
+      "status": "passed-on-prior-patch",
       "test_module": "tests/test_qemu_stopped_control_source.py",
       "scope": "Exact hash-checked native C with controlled external stubs; user-mode preprocessing and non-system hook linking; no full QEMU build or native runtime",
       "tests": 107,
@@ -112,15 +122,48 @@
       "result_sha256": "100444b7702fe1e0d29a2dc68e67cf757586be3c882bd0f0ef8368d5d3f3f3be",
       "tested_manifest_sha256": "6421e649a2f2d3ae784248b922d788e89bd961f8f18f7613c8473dcfd6c47b30",
       "test_module_sha256": "6ba4967321ada662503833a0d8e4d221b88b9f41fd341751d82a9c10ba4eb67e",
-      "patch_sha256": "557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e"
+      "patch_sha256": "557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e",
+      "current_candidate_relation": "Executable body is byte-identical after include removal; the historical stub probe is not evidence for actual QEMU header integration."
     },
     "full_schema_parse": {
-      "status": "not-run",
-      "doc_required": true
+      "status": "passed",
+      "doc_required": true,
+      "parses": 1,
+      "entities": 1672,
+      "documents": 1196,
+      "source_inputs": 66,
+      "source_inputs_unchanged": true,
+      "result_sha256": "ef6f1b7591415ea3742a3924e0b188c6b8a0bc861987081e7cb18b7f4c86f48f",
+      "tested_source_inventory_sha256": "340a0fc9bc5b96d13ffedfdba0061280136f118e98ac16ded8980c745b76b507",
+      "current_candidate_relation": "The correction changes only a C include; all 59 parsed JSON files and 7 parser modules are unchanged."
     },
-    "build": "failed-configure-before-compilation: isolated CPython3.13 lacks ensurepip; fresh build environment correction pending",
+    "build": "Prior build01 failed during configure; prior build02 configured and generated QAPI, then failed compiling libcommon at undeclared cpu_synchronize_state. The corrected core passed a separate real-header syntax-only check. A complete corrected build/link remains pending.",
     "native": "not-run",
     "paired_legacy": "not-run",
-    "build_failure_result_sha256": "cd4658a224b30c587584b7ef3fff66b4aaf21faaa2e0fe61f0243fa1db3375a6"
+    "build_failure_result_sha256": "cd4658a224b30c587584b7ef3fff66b4aaf21faaa2e0fe61f0243fa1db3375a6",
+    "build02_failure_result_sha256": "aad723b21c12c232580b4e55b9066e56c8b2f70dc72e7b32cc66c35f618a2540",
+    "real_header_compile": {
+      "status": "passed-syntax-only",
+      "required_context": "Exact actual build02 libcommon compile command and generated headers, without stubs or per-target macros; object/dependency output options removed and -fsyntax-only -Werror=implicit-function-declaration added.",
+      "compiler_invocations": 1,
+      "compiler_exit_code": 0,
+      "compiler_log_bytes": 0,
+      "result_sha256": "2033916c79b225a8fdaa09178d573ccd8ce3ec695db7ce6b1a87f7732057dc25",
+      "tested_manifest_sha256": "f38a5b881efecdf8094855c497d335233029ae363a96a736213d259ea5d754f5",
+      "patch_sha256": "816c97b819dee26c26cb6f3311c1bab653bbe71fca23401d78f5f9707037adbc",
+      "core_sha256": "fb4670c788f330e1689f470634af5a33032435f33ee1f93e09299a07cab143a4",
+      "unchanged_files": 5711,
+      "unchanged_links": 1130,
+      "unchanged_generated_headers": 422,
+      "build_metadata_sha256": "d0bc766abca2cb3409ec2c7219142c44e9eec82e0efd8529129f110995145290",
+      "elapsed_seconds": 2.3666112720002275,
+      "compiler_elapsed_seconds": 0.34336736499972176,
+      "leader_reaped": true,
+      "group_gone": true,
+      "cleanup_errors": [],
+      "producer_execution": false,
+      "object_or_dependency_output": false,
+      "retries": 0
+    }
   }
 }

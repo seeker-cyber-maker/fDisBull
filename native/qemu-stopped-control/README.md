@@ -85,9 +85,10 @@ receipt and owned RGB bytes and refuse replacement or incomplete evidence.
 
 ## Recovery and qualification
 
-This is a new candidate reconstructed after a workspace rollback. The recovered
-native core, public header and QAPI definition match the prior candidate's
-recorded bytes exactly. Surrounding integration is reconstructed against the
+This is a new candidate reconstructed after a workspace rollback. Initial recovery
+reproduced the prior native core, public header and QAPI definition exactly. The
+current core adds the required declaration header described below and therefore
+has a new recorded hash. Surrounding integration is reconstructed against the
 hash-checked QEMU 10.0.13 plus 35-patch prerequisite source. Its new manifest must
 bind every changed file's actual before/after SHA-256 and the complete new patch.
 The historical whole-patch identity is not carried forward as evidence.
@@ -127,7 +128,7 @@ its process group gone. Its result SHA-256 is
 `100444b7702fe1e0d29a2dc68e67cf757586be3c882bd0f0ef8368d5d3f3f3be`.
 These probes used patch
 `557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e`
-and the manifest before this qualification-only update
+and the manifest before the earlier qualification update
 (`6421e649a2f2d3ae784248b922d788e89bd961f8f18f7613c8473dcfd6c47b30`).
 
 The first full build attempt verified the copied source and all 13 patch
@@ -136,10 +137,47 @@ The private CPython 3.13 runtime lacks `ensurepip`, and QEMU's nested-venv setup
 could not initialize its build environment. The failure receipt is preserved
 (`cd4658a224b30c587584b7ef3fff66b4aaf21faaa2e0fe61f0243fa1db3375a6`),
 the candidate source remained unchanged, and the owned worker and process group
-were fully disposed. A separate isolated build-only Python runtime is the next
-environment correction; it does not alter the qualified host runtime. No
-successful QEMU build, full combined schema parse or new native execution is
-claimed.
+were fully disposed. Build02 used a separate isolated build-only Python runtime
+to correct that environment issue without altering the qualified host runtime. No
+successful QEMU build or new native execution is claimed. The separate full
+combined schema gate subsequently passed once: 1,672 entities and 1,196 documents,
+with all 66 schema/parser inputs unchanged (result
+`ef6f1b7591415ea3742a3924e0b188c6b8a0bc861987081e7cb18b7f4c86f48f`).
+
+Build02 completed configure and QAPI generation, then its actual target-generic
+`libcommon` compile exposed the missing `cpu_synchronize_state` declaration.
+The current correction adds only `#include "system/hw_accel.h"`, which declares
+the existing function that synchronizes the selected CPU in `system/cpus.c`.
+The executable body is unchanged. The historical exact recovered core hash and
+prior 107-case probe result remain prior-candidate evidence; these stub probes
+remove include directives and did not test the real header chain. Build02 remains
+a failed attempt, with result SHA-256
+`aad723b21c12c232580b4e55b9066e56c8b2f70dc72e7b32cc66c35f618a2540`.
+Its candidate source and build-only runtime remained unchanged, and its owned
+worker and process group were fully disposed.
+
+The corrected core subsequently passed one bounded syntax check with the
+captured actual `libcommon` flags and real generated headers. The check removed
+object/dependency output options and used `-fsyntax-only` with
+`-Werror=implicit-function-declaration`. GCC exited zero with an empty log;
+5,711 source/header/tool files, 1,130 links and 422 generated headers matched
+before and after, and the build metadata fingerprint was unchanged. The complete
+check took 2.367 seconds, including a 0.343-second owned compiler invocation;
+the leader was reaped and its group was gone without cleanup errors. Its result
+SHA-256 is
+`2033916c79b225a8fdaa09178d573ccd8ce3ec695db7ce6b1a87f7732057dc25`.
+The tested manifest was
+`f38a5b881efecdf8094855c497d335233029ae363a96a736213d259ea5d754f5`;
+this qualification update preserves that tested identity. No QEMU executable was
+launched and no object or dependency output was produced. A successful complete
+build/link and native witness remain separate pending gates.
+
+The bootstrap memory admission does not use a `TARGET_I386` conditional. Its
+x86 QOM type test and generic `SysemuCPUOps.get_paging_enabled` callback compile
+in target-generic `libcommon`; the x86 CPU class supplies the CR0.PG predicate.
+The actual generic compile context poisons target macros through
+`exec/poison.h`, so substituting target headers or a per-target conditional
+would be inappropriate.
 
 The authored `tests/test_qemu_stopped_control_source.py` reconstructs the exact
 hash-checked native C, replaces only includes with controlled external stubs,

@@ -2814,7 +2814,7 @@ diff --git a/system/fdisbull-stopped-control.c b/system/fdisbull-stopped-control
 new file mode 100644
 --- /dev/null
 +++ b/system/fdisbull-stopped-control.c
-@@ -0,0 +1,681 @@
+@@ -0,0 +1,682 @@
 +/*
 + * One-shot stopped native-control admission for fDisBull.
 + * SPDX-License-Identifier: GPL-2.0-or-later
@@ -2845,6 +2845,7 @@ new file mode 100644
 +#include "system/fdisbull-instrumented-checkpoint.h"
 +#include "system/fdisbull-stopped-control.h"
 +#include "system/fdisbull-video-frame.h"
++#include "system/hw_accel.h"
 +#include "system/replay.h"
 +#include "system/runstate.h"
 +
