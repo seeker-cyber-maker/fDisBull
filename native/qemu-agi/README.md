@@ -234,6 +234,13 @@ For variable-driven coordinates, the separate
 observed variable binding with literals. Its replay reports historical read
 values, aliased variables, later overwrites and downstream position propagation.
 
+The [independent reconstruction trial](SCENE_RECONSTRUCTION.md) tests whether
+helpers can rebuild supported actor placements and recover executed source from
+the output. Three fresh-context helpers received different evidence bundles;
+their literal placement scaffolds were checked in separate native executions.
+The trial distinguishes current snapshot facts, incomplete history, no-op
+assignments and the missing information needed for faithful rendering.
+
 For DotBox, scene-only observation can support a small source-linked actor model
 while the harness becomes usable; full disassembly can be enabled for the next
 specific question. For fDisBull, both channels can supply execution witnesses
