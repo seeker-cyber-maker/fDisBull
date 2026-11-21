@@ -3,8 +3,9 @@
 Checkpoint: November 20, 2026, America/New_York.
 
 The QEMU machine and DOS adapters now accept `step(mode='over', count=1)`.
-The implementation and its focused host gate are complete. The authored native
-comparison is source-only pending its separately reviewed owner controller.
+The implementation, focused host gate and eight-case authored native comparison
+have passed their bounded checks. The native result applies to the exact
+producer, host, guest and dependency identities recorded below.
 DOSBox remains the default and fallback; this gate does not authorize retirement.
 
 ## Supported behavior
@@ -72,14 +73,14 @@ findings were resolved before this gate. Root preserved both the existing
 These are host protocol witnesses. Their supplied stop packets do not establish
 native CALL execution, guest instruction retirement or DOSBox schema equivalence.
 
-## Authored native gate, pending
+## Verified authored native gate
 
 `tests/test_qemu_step_over_native.py` uses the exact previously observed DOSBox
 control bytes `31c0e8030090ebfe40c3`. The independent instruction oracle expects
 XOR to reach IP0102, CALL/INC/RET to return at IP0105 with AX1 and restored
 CS/SS/SP, return slot `0501`, then one step to IP0106.
 
-Eight selected nodes propose nine strictly serial owners: one DOSBox and eight
+Eight selected nodes exercised nine strictly serial owners: one DOSBox and eight
 QEMU. They cover the paired return, Python/JSON/script routes, user breakpoint,
 coincident fallthrough alias, hook, stack-write watchpoint, interrupted-script
 mutation suppression and an actual pending CALL-entry hook. Each real native
@@ -100,5 +101,42 @@ The native-oracle source review is
 `af178e5f96193bef1ebca3379f414a2c4386c781d1be56f8d86048d132e5b276`.
 That earlier review refers to the preserved pre-correction test
 `fd6e8b09a20b3d8def1db7972acdadec19fce3ce21388f7ef9a25213b9a70146`.
-Exact producer, media, dependency, source and lifecycle closure still must be
-frozen and reviewed before execution. No native result is claimed here.
+The corrected oracle was frozen and independently reviewed before the single
+native attempt. All eight cases passed; no retry or producer rebuild was needed.
+
+| Evidence | Observed result |
+| --- | --- |
+| Exact tested host | `ea69e47afbcf93b3a3b7f3ee48f3d89c498bd899` |
+| QEMU SHA-256 | `b42b624f452e19c1560f1af45712fc93f6859ac753bab73a1495c49188cca0af` |
+| DOSBox SHA-256 | `bfdacbed027ae16f48256abc5d0309cc8984569a2946dabea2f4d43907d43e71` |
+| Original FreeDOS disk SHA-256 | `552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc` |
+| Result | **8 passed; zero failures, errors or skips** |
+| Duration | 28.47 seconds pytest; 37.866595 seconds controller through postflight |
+| Ownership | One DOSBox and eight QEMU lifetimes, strictly serial; every native owner exited zero and was reaped |
+| Input integrity | 11,756 pinned files and nine trees matched before and after at the tested host |
+| Output | 29,598,773 logical bytes; 29,966,336 allocated bytes under the 512 MiB cap |
+| Plan SHA-256 | `3bd19573ba676ce42d83e0a62b72aa36ee4b5234d8af0c7e4db15bd840517d82` |
+| Root review SHA-256 | `2f0c1b9c6c5786adbaffb91184690f1cc3f683c637b93332b5cc59ace4e1669e` |
+| Phase receipt SHA-256 | `8482de456386d15c17a8529f947e6b700b355e2b83858c19002bec462e481f46` |
+
+The retained controller is `frame-parity-20261120/controller-step-over-01`.
+Raw receipts, original native logs, JUnit and command/reply journals are under
+`/tmp/fdisbull-step-over-native-20261121-attempt-01`. Independent review checked
+all eight case receipts, nine owner identities, 2,343 paired native journal
+attempts/results and all retained artifact pins; no native error event or
+remaining selected process was found. The original source remains unchanged
+from `c77c68c569e948de56ca3ba9474ed237fb3cdd59` apart from the test and documentation.
+
+This run used a newly reviewed 205-file potential ELF dependency closure.
+SQLite and zlib differ from the historical DOSBox reference: four old path
+pins resolve to those two current libraries. The new plan records their exact
+replacement hashes and preserves the original manifests unchanged. Historical
+passes are not transferred to the new dependency tuple. The requested DOSBox
+profile is retained in the launch arguments; effective profile equivalence is
+not independently established by this CALL witness.
+
+The accepted scope is the ten-byte real-mode guest and the eight named routes
+and stop conditions above. Native tracker alias collisions, ordinary NEXT-over,
+timeout/exit, modified return identity and unsupported modes remain outside this
+slice. The result does not qualify DOSBox retirement, general instruction
+retirement, raster-phase equivalence, strict pause or atomic CPU/image state.
