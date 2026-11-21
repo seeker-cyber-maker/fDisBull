@@ -202,6 +202,7 @@ play, to prepare and qualify the actual native payload.
 | Bounded AGI V2 census and walking-route proposals | Included, offline only | Included with separately qualified live adapters |
 | Playbook and operational recipes | Included and hash checked | Included |
 | Required decoder | Declared pinned installation dependency | Its compatible wheel/library included offline |
+| Shared scalar-memory-search kernel | `fdisbull-core` dependency; frozen-buffer API and CLI | Small shared wheel included offline; no full fDisBull application required |
 | Native patches, preparation scripts and notices | Included | Matching source/notices retained |
 | Prepared DOSBox-X binary and host libraries | Separate runtime input | Included for the measured target platform |
 | Compatible Python and dependency wheelhouse | Supplied by installation environment | Included or verified as already present |

@@ -1,0 +1,9 @@
+{
+  "schema": "fdisbull-core-extraction-1",
+  "source_repository": "https://github.com/seeker-cyber-maker/fDisBull",
+  "source_commit": "829453ecae3fb0de236dbdd95be85a554efd1fb7",
+  "source_path": "src/fdisbull/memory_search.py",
+  "destination_path": "src/fdisbull_core/memory_search.py",
+  "source_sha256": "836cef3fba6311af653ea322e2cf69c1c84cd0f170766be01abe658364eed1e7",
+  "extraction": "byte-for-byte; public API and serialized formats retained"
+}

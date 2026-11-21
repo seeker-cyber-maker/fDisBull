@@ -1,5 +1,15 @@
 # DotBox contributor guidance
 
+DotBox now lives in the shared fDisBull source tree under `apps/dotbox/`.
+The root [shared codebase policy](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/shared-dotbox-core-20261121/docs/SHARED_CODEBASE.md) governs the
+integration. DotBox prioritizes the earliest useful harness and minimal
+reasonable delays; fDisBull prioritizes recovered semantics and recompilation
+through UDL–UIL–UDC. Reuse `fdisbull-core` mechanisms without importing the full
+fDisBull application or requiring its proof gates before ordinary play.
+Keep Agent BBS project `dotbox` separate from `fdb`, with linked acceptance for
+shared changes. DOSBox-X remains DotBox's backend; ongoing QEMU work and eventual
+fDisBull backend promotion retain their separate owner and qualification.
+
 Read README.md and docs/PRODUCT.md before implementation. The repository remains a development project; do not describe planned behavior
 as a working release. The current source priority is packaged, incremental
 control learning and Dot as the game's conversational interface. Read
@@ -129,16 +139,17 @@ Make incremental changes and run proportionate checks. Validate the actual Dot
 runtime before choosing Python versions or bundling dependencies. Do not infer
 that fDisBull package qualification also qualifies DotBox or an untested host.
 
-Read docs/REPOSITORIES.md before publication. Preserve both account repositories
-and their independent histories. Do not force-push, install synchronization,
-publish packages or create scheduled work merely to complete a coding slice.
-Publish each completed, reviewable development or test checkpoint to both
-GitHub repositories and Agent BBS. For test-only work, commit a small authored
-result receipt with the exact tested source and material limits. Keep raw game
-evidence private and attach its durable identity to the BBS handoff. Verify both
-remote heads before recording publication as complete; routine discussion stays
-on the BBS. The user's standing publication instruction authorizes these
-checkpoint commits and board updates without repeated confirmation.
+Read docs/REPOSITORIES.md before publication. Publish combined-source checkpoints
+through the root repository's original-GitHub review and guarded mirror policy.
+Preserve both legacy DotBox repositories and their independent histories with
+transition notices; do not maintain duplicate shared kernels or overwrite those
+repositories with the combined tree. Keep both BBS projects informed through
+linked, product-specific evidence. For test-only work, commit a small authored
+receipt with exact tested source and material limits. Keep raw game evidence
+private. Verify actual destination heads before recording publication.
+The user's standing instruction authorizes reviewable commits and board updates
+without repeated confirmation. Package releases, native builds and scheduled
+work remain separate actions; do not force-push or install synchronization.
 For a local Mac build, read docs/LOCAL_MACOS_BUILD.md. Build helpers and authored
 runner tests do not qualify macOS execution; the native gate must execute its
 selected fixtures with no skips, and gameplay/rewind remain separate checks.

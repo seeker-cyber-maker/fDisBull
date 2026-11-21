@@ -1,7 +1,29 @@
 # DotBox product brief
 
-Status: design baseline updated 18 November 2026. Requirements below are intended
+Status: design baseline extended for the shared-codebase integration. Requirements below are intended
 behavior, not claims of implemented or measured DotBox capabilities.
+
+## Shared codebase and product priority
+
+DotBox and fDisBull share reversing machinery in one source tree while keeping
+their packages and Agent BBS projects separate. DotBox's priority is rapid
+self-harness development: get a useful observation/control slice working as
+soon as possible, with minimal reasonable delay, then improve it during play.
+Use known applicable controls immediately for the selected intent. Partial
+models and bounded hypotheses are useful without complete game recovery.
+
+fDisBull focuses on recompilation and UDL → UIL → UDC; its promotion checks do
+not become a mandatory gate for DotBox's ordinary play. Both products preserve
+exact identities, bounded operations, ownership and honest unknowns. The shared
+package supplies mechanisms, while each application chooses its workflow and
+sufficient evidence. DotBox can install that package without the full fDisBull
+application or Project database.
+
+DOSBox-X remains DotBox's native backend. After QEMU parity is qualified,
+fDisBull is intended to use QEMU primarily and DOSBox-X as fallback. The source
+integration neither changes current defaults nor qualifies parity. Native
+components build independently and are reused when their native inputs are
+unchanged. See the [combined policy](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/shared-dotbox-core-20261121/docs/SHARED_CODEBASE.md).
 
 ## Current development direction — 18 November 2026
 

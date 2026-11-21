@@ -16,6 +16,10 @@ ROOT_FILES = (
     "pyproject.toml",
     "MANIFEST.in",
     "player/pyproject.toml",
+    "packages/fdisbull-core/pyproject.toml",
+    "packages/fdisbull-core/MANIFEST.in",
+    "packages/fdisbull-core/README.md",
+    "packages/fdisbull-core/PROVENANCE.json",
     ".gitlab-ci.yml",
 )
 DOC_EXAMPLE_FILES = (
@@ -33,6 +37,8 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("packages/fdisbull-core/src/fdisbull_core", "*.py"),
+    ("packages/fdisbull-core/tests", "*.py"),
     ("src/fdisbull/native_runtime", "*.c"),
     ("src/fdisbull/native_runtime", "*.h"),
     ("src/fdisbull/native_runtime", "*.m"),

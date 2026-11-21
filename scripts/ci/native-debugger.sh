@@ -40,7 +40,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang rustc libx11-dev autoconf automake pkg-config nasm llvm ffmpeg libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev libzstd-dev
 bash scripts/ci/install-node.sh
-python -m pip install ".[test]" build
+python -m pip install ./packages/fdisbull-core ".[test]" build
 export NATIVE_EVIDENCE="native-evidence/$FDISBULL_PROFILE"
 export FDISBULL_FRAME_EVIDENCE="$CI_PROJECT_DIR/$NATIVE_EVIDENCE/frame-capture"
 mkdir -p .native "$NATIVE_EVIDENCE"

@@ -28,6 +28,8 @@ def test_doctor_distinguishes_offline_readiness_from_native_qualification():
     assert report["resources"]["verified"] > 15
     assert report["inspection"]["ok"] is True
     assert report["inspection"]["decoder"]["version"] == "1.22.0"
+    assert report["memory_search"]["ok"] is True
+    assert report["memory_search"]["kernel"]["distribution"] == "fdisbull-core"
     assert report["learning"]["clock_identity_available"] is True
     assert report["learning"]["store_opened"] is False
     assert report["scenes"]["ok"] is True
@@ -38,11 +40,11 @@ def test_doctor_distinguishes_offline_readiness_from_native_qualification():
     assert report["navigation"]["checks"]["portal_boundary"] is True
 
 
-@pytest.mark.parametrize("component", ["agi", "navigation"])
+@pytest.mark.parametrize("component", ["agi", "navigation", "memory_search"])
 def test_doctor_requires_each_packaged_offline_tool(monkeypatch, component):
-    from dotbox import agi, kit, navigation
+    from dotbox import agi, kit, memory_search, navigation
 
-    module = {"agi": agi, "navigation": navigation}[component]
+    module = {"agi": agi, "navigation": navigation, "memory_search": memory_search}[component]
     monkeypatch.setattr(module, "self_check", lambda: {"ok": False, "error": "authored failure"})
     report = kit.doctor()
     assert report["offline_learning_ready"] is False

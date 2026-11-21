@@ -10,6 +10,12 @@ import pytest
 
 
 REQUIRED_SOURCE_FILES = (
+    "packages/fdisbull-core/pyproject.toml",
+    "packages/fdisbull-core/MANIFEST.in",
+    "packages/fdisbull-core/README.md",
+    "packages/fdisbull-core/PROVENANCE.json",
+    "packages/fdisbull-core/src/fdisbull_core/__init__.py",
+    "packages/fdisbull-core/src/fdisbull_core/memory_search.py",
     ".gitlab-ci.yml",
     ".github/workflows/ovh-bootstrap.yml",
     ".github/workflows/ci.yml",
@@ -1449,6 +1455,7 @@ def test_selected_delivery_inventory_detects_omission_and_changed_bytes(tmp_path
     source = {
         "src/fdisbull/__init__.py": b"core",
         "player/fdisbull_player/__init__.py": b"player",
+        "packages/fdisbull-core/src/fdisbull_core/__init__.py": b"shared",
     }
     delivery = SELECTED_DELIVERY_FILES + tuple(sorted(SCUMMVM_EVIDENCE_FILES))
     for name in delivery:

@@ -10,12 +10,13 @@ prepare_retained_runtime() {
   apt-get update
   apt-get install -y --no-install-recommends ca-certificates curl xz-utils git build-essential clang libx11-dev libglib2.0-0 libpixman-1-0 libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libgl1 libpng16-16 zlib1g libfreetype6 libzstd1 gcc-mingw-w64-i686-win32 binutils-mingw-w64-i686
   bash scripts/ci/install-node.sh
-  python -m pip install ".[test]" build
+  python -m pip install ./packages/fdisbull-core ".[test]" build
   shopt -s nullglob
   core_wheels=(dist/fdisbull-*.whl)
-  [[ ${#core_wheels[@]} -eq 1 ]]
+  shared_wheels=(dist/fdisbull_core-*.whl)
+  [[ ${#core_wheels[@]} -eq 1 && ${#shared_wheels[@]} -eq 1 ]]
   mkdir -p .native/pe/packages native-evidence/pe native-evidence/unified
-  cp "${core_wheels[0]}" .native/pe/packages/
+  cp "${core_wheels[0]}" "${shared_wheels[0]}" .native/pe/packages/
   python scripts/check_dist.py .native/pe/packages/*.whl
   python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
   python - <<'PY_RETAINED'
@@ -63,12 +64,13 @@ assert receipt['source_commit']==os.environ['CI_COMMIT_SHA']
 assert receipt['backend_sha256']==hashlib.sha256(Path(os.environ['FDISBULL_DOSBOX']).read_bytes()).hexdigest()
 PY
 
-python -m pip install ".[test]" build
+python -m pip install ./packages/fdisbull-core ".[test]" build
 shopt -s nullglob
 core_wheels=(dist/fdisbull-*.whl)
-[[ ${#core_wheels[@]} -eq 1 ]]
+shared_wheels=(dist/fdisbull_core-*.whl)
+[[ ${#core_wheels[@]} -eq 1 && ${#shared_wheels[@]} -eq 1 ]]
 mkdir -p .native/pe/packages
-cp "${core_wheels[0]}" .native/pe/packages/
+cp "${core_wheels[0]}" "${shared_wheels[0]}" .native/pe/packages/
 python scripts/check_dist.py .native/pe/packages/*.whl
 python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
 
@@ -131,7 +133,9 @@ python - <<'PY'
 import hashlib, json, os
 from pathlib import Path
 import fdisbull
+import fdisbull_core
 assert 'site-packages' in fdisbull.__file__, fdisbull.__file__
+assert 'site-packages' in fdisbull_core.__file__, fdisbull_core.__file__
 def identity(path):
     path=Path(path)
     with path.open('rb') as stream:
@@ -139,10 +143,12 @@ def identity(path):
     return {'path':str(path),'sha256':digest,'size':path.stat().st_size}
 receipt={'source_commit':os.environ['CI_COMMIT_SHA'],
          'version':fdisbull.__version__,'installed_module':fdisbull.__file__,
+         'shared_version':fdisbull_core.__version__,'shared_installed_module':fdisbull_core.__file__,
          'inputs':{key:identity(os.environ[key]) for key in (
              'FDISBULL_PE_QEMU','FDISBULL_PE_KERNEL','FDISBULL_PE_INITRAMFS','FDISBULL_PE_FIXTURE',
              'FDISBULL_DOSBOX','FDISBULL_DOS_INITRAMFS')},
-         'wheel':identity(next(Path('.native/pe/packages').glob('*.whl')))}
+         'wheel':identity(next(Path('.native/pe/packages').glob('fdisbull-*.whl'))),
+         'shared_wheel':identity(next(Path('.native/pe/packages').glob('fdisbull_core-*.whl')))}
 if Path('native-evidence/pe/retained-base-preparation.json').exists():
     receipt['retained_base']=identity('native-evidence/pe/retained-base-preparation.json')
     receipt['authored_pe32_fixture']={'source':identity('src/fdisbull/wine_guest/selftest32.c'),

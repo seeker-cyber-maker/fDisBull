@@ -103,6 +103,8 @@ def doctor():
                                "integrity": "content matches package catalog; not a publisher signature"}
         from .inspection import self_check
         report["inspection"] = self_check()
+        from .memory_search import self_check as memory_search_check
+        report["memory_search"] = memory_search_check()
         from .learning import clock_identity
         clock_identity()
         report["learning"] = {"clock_identity_available": True, "store_opened": False,
@@ -133,7 +135,7 @@ def doctor():
         report["agi"] = agi_check()
         report["navigation"] = navigation_check()
         report["offline_learning_ready"] = all(
-            report[name]["ok"] for name in ("inspection", "scenes", "agi", "navigation")
+            report[name]["ok"] for name in ("inspection", "memory_search", "scenes", "agi", "navigation")
         )
     except (ValueError, OSError, ImportError, KeyError, TypeError, SubprocessError) as error:
         report["error"] = str(error)

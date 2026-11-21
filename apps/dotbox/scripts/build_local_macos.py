@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Build and test a private native arm64 DotBox development copy on macOS."""
 from datetime import datetime, timezone
+from email.parser import BytesParser
 import argparse
 import ast
 import hashlib
+from io import BytesIO
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -12,6 +14,8 @@ import shutil
 import signal
 import subprocess
 import sys
+import tomllib
+import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +41,15 @@ def _save(work, result):
     temporary.replace(work / 'result.json')
 
 
+def _repository_root():
+    """Find the containing worktree without assuming the product is its root."""
+    product = ROOT.resolve(strict=True)
+    for parent in (product, *product.parents):
+        if (parent / '.git').exists():
+            return parent
+    return product  # Source archives still keep build output outside the product.
+
+
 def _work_directory(value):
     path = Path(value).expanduser()
     if not path.is_absolute():
@@ -44,9 +57,62 @@ def _work_directory(value):
     if path.exists() or path.is_symlink():
         raise ValueError('--work-dir must not exist; previous output is never replaced')
     path = path.parent.resolve(strict=True) / path.name
-    if path.is_relative_to(ROOT):
-        raise ValueError('--work-dir must be outside the DotBox checkout')
+    if path.is_relative_to(_repository_root()):
+        raise ValueError('--work-dir must be outside the containing repository or DotBox source directory')
     return path
+
+
+def _shared_wheel(value):
+    """Admit an explicit standalone core wheel, without importing its code."""
+    path = Path(value).expanduser().resolve(strict=True)
+    if not path.is_file():
+        raise ValueError('--shared-wheel must be a regular wheel file')
+    with path.open('rb') as source:
+        payload = source.read(8 * 1024 * 1024 + 1)
+    if len(payload) > 8 * 1024 * 1024:
+        raise ValueError('Shared core wheel exceeds its 8 MiB input budget')
+    requirements = tomllib.loads((ROOT / 'pyproject.toml').read_text())['project']['dependencies']
+    pins = [item.removeprefix('fdisbull-core==') for item in requirements
+            if item.startswith('fdisbull-core==')]
+    if len(pins) != 1:
+        raise ValueError('DotBox must declare one exact fdisbull-core version')
+    expected = pins[0]
+    if path.name != f'fdisbull_core-{expected}-py3-none-any.whl':
+        raise ValueError('--shared-wheel must name the pinned universal fdisbull-core wheel')
+    try:
+        with zipfile.ZipFile(BytesIO(payload)) as archive:
+            names = archive.namelist()
+            metadata_path = f'fdisbull_core-{expected}.dist-info/METADATA'
+            if len(names) != len(set(names)) or metadata_path not in names:
+                raise ValueError('Shared wheel has duplicate entries or missing metadata')
+            info = archive.getinfo(metadata_path)
+            if info.file_size > 65536:
+                raise ValueError('Shared wheel metadata exceeds 64 KiB')
+            metadata = BytesParser().parsebytes(archive.read(info))
+            if (metadata.get('Name') != 'fdisbull-core' or metadata.get('Version') != expected
+                    or metadata.get_all('Requires-Dist')):
+                raise ValueError('Expected the pinned standalone fdisbull-core wheel with no runtime dependencies')
+            if 'fdisbull_core/memory_search.py' not in names:
+                raise ValueError('Shared wheel is missing the scalar-search kernel')
+    except (zipfile.BadZipFile, KeyError) as error:
+        raise ValueError('Invalid shared core wheel') from error
+    return {'path': str(path), 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(),
+            'distribution': 'fdisbull-core', 'version': expected}
+
+
+def _stage_shared_wheel(work, identity):
+    """Keep pip bound to the exact bytes admitted before the build started."""
+    source = Path(identity['path'])
+    with source.open('rb') as stream:
+        payload = stream.read(identity['bytes'] + 1)
+    if len(payload) != identity['bytes'] or hashlib.sha256(payload).hexdigest() != identity['sha256']:
+        raise ValueError('Shared core wheel changed after admission')
+    directory = work / 'shared-wheel'
+    directory.mkdir(mode=0o700)
+    target = directory / source.name
+    with target.open('xb') as stream:
+        stream.write(payload)
+    return target
 
 
 def _stop(process):
@@ -166,6 +232,7 @@ def _stage_package(destination):
     names = {'pyproject.toml', 'setup.py', 'MANIFEST.in', 'README.md', 'AGENTS.md', *manifest['files']}
     names.update(str(path.relative_to(ROOT)) for path in (ROOT / 'src/dotbox').rglob('*')
                  if path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc')
+    identities = {}
     for name in sorted(names):
         relative = PurePosixPath(name)
         if relative.is_absolute() or '..' in relative.parts or '\\' in name:
@@ -176,6 +243,10 @@ def _stage_package(destination):
         target = destination / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
+        identities[name] = {'bytes': target.stat().st_size, 'sha256': _sha256(target)}
+    encoded = json.dumps(identities, sort_keys=True, separators=(',', ':')).encode()
+    return {'files': len(identities), 'sha256': hashlib.sha256(encoded).hexdigest(),
+            'scope': 'Path, size and SHA-256 of the staged product package inputs'}
 
 
 def _check_pip_destination(python, work, environment):
@@ -233,7 +304,7 @@ def _check_pip_destination(python, work, environment):
     return sorted(name for name, _ in effective.values())
 
 
-def _build(work, result, mode, upstream):
+def _build(work, result, mode, upstream, shared_wheel):
     environment = os.environ.copy()
 
     def run(stage, command, *, cwd=work, timeout=None, env=None):
@@ -245,11 +316,24 @@ def _build(work, result, mode, upstream):
         'PATH', 'CC', 'CXX', 'OBJC', 'OBJCXX', 'CFLAGS', 'CXXFLAGS', 'CPPFLAGS', 'LDFLAGS',
         'LIBS', 'PKG_CONFIG_PATH', 'SDKROOT', 'MACOSX_DEPLOYMENT_TARGET', 'MAKEFLAGS',
         'SDL_VIDEODRIVER', 'SDL_AUDIODRIVER')}
+    repository = _repository_root()
+    product_path = ROOT.resolve().relative_to(repository).as_posix()
+    tree = 'HEAD^{tree}' if product_path == '.' else 'HEAD:' + product_path
     result['checkout'] = {
-        'path': str(ROOT),
-        'commit': run('checkout-commit', ['git', '-C', ROOT, 'rev-parse', 'HEAD'], timeout=30).read_text().strip(),
-        'dirty': bool(run('checkout-status', ['git', '-C', ROOT, 'status', '--porcelain'], timeout=30).read_text().strip()),
+        'path': str(repository),
+        'commit': run('checkout-commit', ['git', '-C', repository, 'rev-parse', 'HEAD'], timeout=30).read_text().strip(),
+        'dirty': bool(run('checkout-status', ['git', '-C', repository, 'status', '--porcelain'], timeout=30).read_text().strip()),
+        'product': {
+            'path': str(ROOT), 'relative_path': product_path,
+            'committed_tree': run('product-tree', ['git', '-C', repository, 'rev-parse', tree], timeout=30).read_text().strip(),
+            'dirty': bool(run('product-status', ['git', '-C', repository, 'status', '--porcelain', '--', product_path],
+                              timeout=30).read_text().strip()),
+        },
     }
+    result['stage'] = 'stage-shared-wheel'
+    _save(work, result)
+    core_wheel = _stage_shared_wheel(work, shared_wheel)
+    result['shared_core'] = dict(shared_wheel, staged_path=str(core_wheel))
     run('create-venv', [sys.executable, '-m', 'venv', work / 'venv'])
     python = work / 'venv/bin/python'
     result['stage'] = 'pip-destination-check'
@@ -258,9 +342,9 @@ def _build(work, result, mode, upstream):
                                        'checked': True, 'private_config_output_retained': False}
     pip = [python, '-I', '-m', 'pip', '--python', python]
     result['stage'] = 'stage-package'
-    _stage_package(work / 'package-source')
+    result['checkout']['product']['package_inputs'] = _stage_package(work / 'package-source')
     run('build-wheels', pip + ['wheel', '--only-binary=iced-x86,Pillow', '--wheel-dir', work / 'wheels',
-                               str(work / 'package-source') + '[test]'])
+                               core_wheel, str(work / 'package-source') + '[test]'])
     wheels = list((work / 'wheels').glob('dotbox-*.whl'))
     if len(wheels) != 1:
         raise ValueError('Expected one newly built DotBox wheel')
@@ -339,9 +423,12 @@ def main(argv=None):
     parser.add_argument('--work-dir', required=True, help='new absolute directory outside the checkout')
     parser.add_argument('--mode', choices=('all', 'headless', 'visible'), default='all')
     parser.add_argument('--upstream', help='local DOSBox-X Git object store for offline source preparation')
+    parser.add_argument('--shared-wheel', required=True,
+                        help='explicit pinned fdisbull_core universal wheel; no full fDisBull installation required')
     args = parser.parse_args(argv)
     try:
         work = _work_directory(args.work_dir)
+        shared_wheel = _shared_wheel(args.shared_wheel)
         upstream = Path(args.upstream).expanduser().resolve(strict=True) if args.upstream else None
         if upstream is not None and not upstream.is_dir():
             raise ValueError('--upstream must be a local Git repository directory')
@@ -357,7 +444,7 @@ def main(argv=None):
                        'python_executable': sys.executable, 'free_bytes_at_start': shutil.disk_usage(work).free}}
     exit_code = 0
     try:
-        _build(work, result, args.mode, upstream)
+        _build(work, result, args.mode, upstream, shared_wheel)
     except (OSError, ValueError, KeyError, TypeError, RuntimeError,
             subprocess.TimeoutExpired, KeyboardInterrupt) as error:
         result['status'] = 'interrupted' if isinstance(error, KeyboardInterrupt) else 'failed'

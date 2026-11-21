@@ -5,6 +5,7 @@ This does not build, install, download, or qualify any of its inputs.
 """
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -20,11 +21,11 @@ from email.policy import default
 REQUIRED_ROLES = {
     'python', 'loader', 'dosbox', 'qemu', 'firmware', 'kernel',
     'wine_initramfs', 'dos_initramfs', 'source_companion', 'license',
-    'wheel_core', 'wheel_player', 'wheel_z3', 'closure_receipt',
+    'wheel_core', 'wheel_player', 'wheel_shared', 'wheel_z3', 'closure_receipt',
     'python_receipt', 'dosbox_receipt', 'qemu_receipt', 'wine_receipt',
     'pe_fixture', 'verifier',
 }
-RUNTIME_WHEELS = {'fdisbull', 'fdisbull-player', 'iced-x86', 'capstone', 'lief', 'pillow', 'z3-solver', 'unicorn', 'dnfile', 'dncil', 'pefile', 'tree-sitter', 'tree-sitter-c', 'pycparser', 'zstandard'}
+RUNTIME_WHEELS = {'fdisbull', 'fdisbull-player', 'fdisbull-core', 'iced-x86', 'capstone', 'lief', 'pillow', 'z3-solver', 'unicorn', 'dnfile', 'dncil', 'pefile', 'tree-sitter', 'tree-sitter-c', 'pycparser', 'zstandard'}
 ELF_ROLES = {'python', 'loader', 'dosbox', 'qemu'}
 SINGLE_ROLES = REQUIRED_ROLES - {'firmware', 'license'}
 FORBIDDEN = {'.fdb', '.sav', '.state', '.png', '.jpg', '.jpeg', '.gif', '.bmp'}
@@ -131,7 +132,7 @@ def load_inventory(path):
         raise ValueError('python must be at python/bin/python3.13')
     if not any(p.startswith('python/lib/python3.13/') and '/site-packages/fdisbull/' in p for p in paths):
         raise ValueError('prepared Python lacks fdisbull package')
-    for package in ('fdisbull_player', 'z3'):
+    for package in ('fdisbull_player', 'fdisbull_core', 'z3'):
         if not any(p.startswith('python/lib/python3.13/site-packages/' + package + '/') for p in paths):
             raise ValueError(f'prepared Python lacks {package}')
     if not any(p.startswith('python/lib/python3.13/encodings/') for p in paths):
@@ -140,10 +141,10 @@ def load_inventory(path):
         raise ValueError('prepared Python lacks bundled skills')
     if not any(p.startswith('lib/') for p in paths):
         raise ValueError('private ELF libraries missing')
-    for role in ('wheel_core', 'wheel_player', 'wheel_z3'):
+    for role in ('wheel_core', 'wheel_player', 'wheel_shared', 'wheel_z3'):
         if not roles[role][0].startswith('wheels/') or not roles[role][0].endswith('.whl'):
             raise ValueError(f'{role} must be a wheel in wheels/')
-    for role, expected in [('wheel_core', 'fdisbull'), ('wheel_player', 'fdisbull-player'), ('wheel_z3', 'z3-solver')]:
+    for role, expected in [('wheel_core', 'fdisbull'), ('wheel_player', 'fdisbull-player'), ('wheel_shared', 'fdisbull-core'), ('wheel_z3', 'z3-solver')]:
         item = next(x for x in entries if x.get('role') == role)
         with zipfile.ZipFile(item['source']) as wheel:
             metadata = [n for n in wheel.namelist() if n.endswith('.dist-info/METADATA') and n.count('/') == 1]
@@ -152,10 +153,15 @@ def load_inventory(path):
             msg = BytesParser(policy=default).parsebytes(wheel.read(metadata[0]))
             if re.sub(r'[-_.]+', '-', msg.get('Name', '')).lower() != expected:
                 raise ValueError(f'wrong wheel distribution: {role}')
-            if role != 'wheel_z3' and msg.get('Version') != identities['version']:
+            if role in ('wheel_core', 'wheel_player') and msg.get('Version') != identities['version']:
                 raise ValueError(f'wheel version mismatch: {role}')
             if not any(n.endswith('.dist-info/RECORD') and n.count('/') == 1 for n in wheel.namelist()):
                 raise ValueError(f'wheel missing RECORD: {role}')
+        if role == 'wheel_shared':
+            spec = importlib.util.spec_from_file_location('shared_dist_guard', Path(__file__).with_name('check_dist.py'))
+            guard = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(guard)
+            guard.check_archive(Path(item['source']))
     pins = inventory.get('wheel_versions')
     if not isinstance(pins, dict) or set(pins) != RUNTIME_WHEELS or not all(isinstance(v, str) and v for v in pins.values()):
         raise ValueError('wheel_versions must pin the complete runtime distribution set')

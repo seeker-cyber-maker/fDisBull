@@ -9,7 +9,9 @@ failures or errors. The installed offline-kit doctor also passed. The run used
 Darwin 27.2.0 arm64 and Python 3.12.16 and completed in 4 minutes 22 seconds.
 See the [sanitized native-build receipt](https://github.com/seeker-cyber-maker/DotBox/blob/codex/local-macos-build-20261117/docs/evidence/local-macos-native-2026-11-17.json)
 for the exact source and executable identities. Helper orchestration tests
-remain separate evidence from this executed native gate.
+remain separate evidence from this executed native gate. That historical run
+predates the shared-core packaging changes described here; it does not qualify
+the revised helper on macOS.
 
 Use a native arm64 Terminal in a logged-in desktop session for the full test.
 The initial output is a developer executable plus an isolated Python environment,
@@ -18,18 +20,18 @@ files are not needed for the eight authored native fixtures.
 
 ## 1. Get the implementation checkout and prerequisites
 
-Use the `codex/local-macos-build-20261117` branch, which includes the earlier
-DotBox implementation. At this continuation, `main` is not that implementation.
-Choose an unused checkout directory so existing work is preserved:
+Use the reviewed shared-source checkout containing this helper. DotBox remains
+an independent product under `apps/dotbox`; run the following commands from that
+product directory:
 
 ```sh
-git clone --branch codex/local-macos-build-20261117 \
-  https://github.com/seeker-cyber-maker/DotBox.git ~/DotBox-local
-cd ~/DotBox-local
+cd /absolute/path/to/fDisBull/apps/dotbox
 ```
 
-The independent `TiGa-RCE/DotBox` repository carries the same source on its own
-history. Use either repository, not both for one build.
+Obtain the matching `fdisbull_core-0.1.0.dev1-py3-none-any.whl` from the reviewed
+Python packaging checkpoint. This small standard-library package is an explicit
+input to the helper. No installed full fDisBull application is required, and
+the helper does not infer a shared source directory outside DotBox.
 
 Xcode Command Line Tools must already work. `xcode-select -p` checks the selected
 installation; if it is absent, run `xcode-select --install`, finish
@@ -44,7 +46,7 @@ and return to Terminal. Use native Apple Silicon Homebrew at
 The helper does not install Homebrew, change the global Xcode selection, invoke
 `sudo` or install system packages. It reports missing prerequisites before starting work.
 The source needs C++14; the selected Apple Clang toolchain provides that language
-mode. NASM, fDisBull, FFmpeg, FluidSynth and libslirp are not prerequisites for
+mode. NASM, the full fDisBull application, FFmpeg, FluidSynth and libslirp are not prerequisites for
 this selected build and DotBox fixture set.
 
 The helper reads the selected SDK with `xcrun --show-sdk-path` and sets
@@ -65,14 +67,15 @@ its include and library locations explicitly.
 
 ## 2. Run one build-and-test command
 
-Choose a **new absolute output directory outside the checkout**, on a volume
+Choose a **new absolute output directory outside the entire repository**, on a volume
 with room for the upstream source, compiler output, virtual environment and
 logs. Keep prior attempts if they are useful for diagnosis. The helper refuses
 an existing destination and does not delete it or resume it implicitly.
 
 ```sh
 /opt/homebrew/bin/python3.12 scripts/build_local_macos.py \
-  --work-dir "$HOME/dotbox-build-01"
+  --work-dir "$HOME/dotbox-build-01" \
+  --shared-wheel /absolute/path/to/fdisbull_core-0.1.0.dev1-py3-none-any.whl
 ```
 
 The default mode is `all`. It installs the Python package into an isolated
@@ -82,6 +85,13 @@ records the executable and linked libraries, then invokes the strict eight-test
 native gate. Progress and per-stage logs identify where a failure occurred.
 Nothing is installed into the system application directories.
 
+The helper checks the supplied shared wheel against DotBox's exact dependency
+pin, copies the admitted bytes into the new private work directory, and passes
+that wheel directly to pip. A changed input is refused. The receipt records its
+hash, the containing repository commit and dirtiness, the product's committed
+tree and dirtiness, and a separate identity for the staged product package
+inputs. Unrelated repository changes do not become product changes.
+
 Source preparation normally fetches the pinned public DOSBox-X commit. Python
 installation also needs package downloads unless suitable packages are already
 available to pip. For a local upstream Git object store, add:
@@ -89,6 +99,7 @@ available to pip. For a local upstream Git object store, add:
 ```sh
 /opt/homebrew/bin/python3.12 scripts/build_local_macos.py \
   --work-dir "$HOME/dotbox-build-02" \
+  --shared-wheel /absolute/path/to/fdisbull_core-0.1.0.dev1-py3-none-any.whl \
   --upstream /absolute/path/to/dosbox-x-git-repository
 ```
 
@@ -110,6 +121,7 @@ overall outcome and stage. The native report contains its own `result.json`,
 | `native/src/dosbox-x` | Compiled developer executable |
 | `venv/bin/dotbox` | Installed DotBox command |
 | `wheels/` | DotBox wheel and resolved Python dependencies |
+| `shared-wheel/` | Exact admitted shared-core input wheel |
 | `doctor.json` | Installed offline-kit check |
 | `result.json` and `logs/` | Build outcome, identities and stage diagnostics |
 | `native-tests/result.json` | Selected native acceptance result |

@@ -12,7 +12,12 @@ spec.loader.exec_module(kit)
 def wheel(path, name, version):
     with zipfile.ZipFile(path, 'w') as z:
         dist = name.replace('-', '_')
-        z.writestr(f'{dist}-{version}.dist-info/METADATA', f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n')
+        z.writestr(f'{dist}-{version}.dist-info/METADATA', f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n' + ('Requires-Python: >=3.12\n' if name == 'fdisbull-core' else ''))
+        if name == 'fdisbull-core':
+            z.writestr('fdisbull_core/__init__.py', '')
+            z.writestr('fdisbull_core/memory_search.py', '')
+            z.writestr(f'{dist}-{version}.dist-info/WHEEL', 'Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n')
+            z.writestr(f'{dist}-{version}.dist-info/RECORD', '')
         if name == 'fdisbull':
             guard_spec = importlib.util.spec_from_file_location('distribution_guard', Path(__file__).resolve().parents[1] / 'scripts/check_dist.py')
             guard = importlib.util.module_from_spec(guard_spec); guard_spec.loader.exec_module(guard)
@@ -76,6 +81,13 @@ def test_missing_player_rejected_before_packaging(tmp_path):
         kit.build(Namespace(source_commit='a'*40,python_tag='cp313',wheelhouse=str(tmp_path)))
 
 
+def test_missing_shared_core_rejected_before_packaging(tmp_path):
+    from argparse import Namespace
+    wheelhouse(tmp_path, omit='fdisbull-core')
+    with pytest.raises(ValueError, match='fdisbull-core'):
+        kit.build(Namespace(source_commit='a'*40, python_tag='cp313', wheelhouse=str(tmp_path)))
+
+
 def test_mismatched_player_version_rejected_before_packaging(tmp_path):
     from argparse import Namespace
     wheelhouse(tmp_path,player_version='0.19.0')
@@ -122,6 +134,9 @@ def test_kit_naming_and_install_manifest_follow_project_version(tmp_path):
         requirements=tar.extractfile(prefix+'requirements.txt').read().decode()
     assert manifest_data['wheels']['fdisbull']['version']==kit.VERSION
     assert manifest_data['wheels']['fdisbull-player']['version']==kit.VERSION
+    assert manifest_data['wheels']['fdisbull-core']['version']==kit.SHARED_VERSION
+    assert f'fdisbull-core=={kit.SHARED_VERSION}' in requirements
+    assert f'm.version("fdisbull-core") == "{kit.SHARED_VERSION}"' in installer
     assert f'fdisbull-player=={kit.VERSION}' in requirements
     assert f'm.version("fdisbull-player") == "{kit.VERSION}"' in installer
     assert manifest_data['python'] == '3.13'

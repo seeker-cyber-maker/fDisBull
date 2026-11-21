@@ -133,7 +133,7 @@ def prepare(config, stage, resolver=ldd_dependencies):
             if name not in pins or name in seen or msg.get('Version') != pins[name]:
                 raise ValueError(f'unexpected, duplicate, or wrong wheel version: {name}')
             seen.add(name)
-            role = {'fdisbull': 'wheel_core', 'fdisbull-player': 'wheel_player', 'z3-solver': 'wheel_z3'}.get(name, 'payload')
+            role = {'fdisbull': 'wheel_core', 'fdisbull-player': 'wheel_player', 'fdisbull-core': 'wheel_shared', 'z3-solver': 'wheel_z3'}.get(name, 'payload')
             add(wheel, 'wheels/' + wheel.name, role)
             for member in z.infolist():
                 if member.is_dir() or member.filename.endswith('.dist-info/RECORD'):

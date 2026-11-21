@@ -1,46 +1,57 @@
 # Repositories and publication
 
-DotBox uses two independent public repositories with matching source history:
+## Combined development source
 
-- Primary: https://github.com/seeker-cyber-maker/DotBox
-- Mirror: https://github.com/TiGa-RCE/DotBox
+DotBox development is being integrated into
+https://github.com/seeker-cyber-maker/fDisBull under `apps/dotbox/`.
+The first review branch is `codex/shared-dotbox-core-20261121`, based on fDisBull
+main. Reusable reversing components live in `packages/fdisbull-core/`.
+The [shared codebase policy](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/shared-dotbox-core-20261121/docs/SHARED_CODEBASE.md) defines product
+boundaries, input commits and coordination with active QEMU migration.
 
-They are independent repositories rather than a fork relationship. Either can
-retain the source if the other account becomes unavailable. GitHub permissions
-and Codex installation access remain account-specific.
+Follow the root repository's `AGENTS.md` for publication: original GitHub is the
+preferred source/review platform; a guarded service preserves the local Git hub
+and GitLab peers. Publish a reviewable branch and draft GitHub PR, preserve
+other agents' branches/review targets, and verify actual destination heads.
+Do not dispatch CI or rebuild native components simply because application
+source changed. Manual GitLab pushes require its existing `ci.skip` policy.
 
-In the original local checkout, `origin` names the primary and `mirror` names
-the second repository. Publish an inspected commit to both without forcing:
+The user's standing instruction authorizes reviewable source checkpoints and
+BBS updates. A review branch is not a merged main branch, package release or
+qualified installation. Keep those outcomes explicit.
 
-```sh
-git push origin main
-git push mirror main
-```
+## Preserved DotBox repositories
 
-Authenticate each operation as an account with access to that destination.
-Never put tokens in remote URLs or repository files. If either push fails,
-report the divergence and reconcile the actual heads before continuing.
-Do not use `git push --mirror` or overwrite unrelated history.
+- Original primary: https://github.com/seeker-cyber-maker/DotBox
+- Independent mirror: https://github.com/TiGa-RCE/DotBox
 
-No automatic synchronization service or scheduled workflow is installed by
-this bootstrap. Future publication needs to update both repositories explicitly.
-The user requires every completed, reviewable development or test checkpoint
-to be committed to both repositories and recorded on Agent BBS. Use the current
-work branch and preserve each repository's own parent history. A test-only
-checkpoint can contain an authored result receipt with the exact tested source,
-command, outcome and limitations. Keep commercial data, raw captures and private
-runtime material outside Git; retain their durable evidence identities on the
-board. Verify both published heads and trees before calling the checkpoint
-complete. Keep routine progress and discussion on the BBS rather than adding
-repository comments. This standing instruction authorizes checkpoint publication;
-it does not authorize merging, releasing packages or changing unrelated branches.
-The release portal is the planned binary-package delivery venue; source mirroring
-and package publication are separate operations.
+Preserve both repositories and their own parent histories. They retain the
+pre-consolidation source and a transition notice pointing to the combined
+development branch. Do not overwrite them with the entire fDisBull tree,
+force refs, delete history, archive them automatically or maintain a second
+copy of extracted shared kernels. Account permissions remain independent.
+An urgent legacy fix, if needed, is explicitly scoped and cross-linked rather
+than silently diverging from the combined implementation.
 
-The standalone Python service contains the extracted runtime subset and does
-not require fDisBull at runtime. Native source preparation is owned by DotBox;
-its pinned base and ownership overlay retain their upstream provenance.
-The native ownership overlay contains modified
-DOSBox-X source under GPL-2.0-or-later, as recorded in `native/README.md`.
-Preserve the upstream notices and corresponding source when distributing an
-emulator binary. This source contribution includes no native binary or game data.
+This transition supersedes the old requirement to duplicate every continuing
+DotBox implementation checkpoint into both standalone repositories. The new
+canonical shared change is recorded on both affected BBS projects; legacy
+repository notices preserve the route to it. No new automatic synchronization
+service or scheduled workflow is installed.
+
+## Product and evidence boundaries
+
+Agent BBS projects `dotbox` and `fdb` remain separate, with their own goals,
+roles, histories and acceptance. Shared changes have one implementation owner
+and linked product tasks referencing the same exact source and evidence.
+Routine discussion stays on BBS. A test-only checkpoint may contain an
+authored receipt with the exact tested source, command, outcome and limits.
+Keep private game data and raw captures outside Git.
+
+DotBox installs with the small shared package, without the full fDisBull
+application. Native source preparation remains separately owned and versioned.
+The pinned DOSBox-X base and ownership overlay retain upstream provenance.
+The overlay contains modified DOSBox-X source under GPL-2.0-or-later, as recorded
+in `native/README.md`; preserve notices and corresponding source when
+distributing an emulator binary. This checkpoint publishes no native binary
+or game data. The release portal remains the planned binary delivery venue.

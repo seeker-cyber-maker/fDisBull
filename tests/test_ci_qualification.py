@@ -35,11 +35,15 @@ def qualified(tmp_path):
                    'test_results': [gate.identity(tmp_path, name) for name in gate.JUNIT[profile]],
                    'artifacts': [gate.identity(tmp_path, artifact.name)], 'backend_identity': {'source_commit': SHA}}
         if profile == 'unified':
-            receipt['artifacts'] = [gate.identity(tmp_path, 'dist/fdisbull-test.whl')]
+            receipt['artifacts'] = [gate.identity(tmp_path, 'dist/' + name)
+                                    for name in ('fdisbull-test.whl', 'fdisbull_core-test.whl')]
+            for key, item in zip(('wheel', 'shared_wheel'), receipt['artifacts']):
+                receipt['backend_identity'][key] = {'sha256': item['sha256'], 'size': item['size']}
         if profile == 'ordinary':
             receipt['artifacts'] = []
             packages = {}
-            for kind, name in [('core', 'fdisbull-test.whl'), ('player', 'player.whl'), ('sdist', 'source.tar.gz'), ('tool', 'tool.zip')]:
+            for kind, name in [('core', 'fdisbull-test.whl'), ('shared', 'fdisbull_core-test.whl'),
+                               ('player', 'player.whl'), ('sdist', 'source.tar.gz'), ('tool', 'tool.zip')]:
                 dest = tmp_path / 'dist' / name
                 dest.parent.mkdir(exist_ok=True)
                 dest.write_bytes(kind.encode())
@@ -57,6 +61,37 @@ def test_complete_same_pipeline_and_source_qualifies_without_authorizing_release
     assert result['status'] == 'legacy-dos-only'
     assert set(result['required_jobs']) == set(gate.JOBS.values())
     assert result['release_authorized'] is False
+
+
+@pytest.mark.parametrize('change', ['missing', 'substituted', 'duplicated', 'backend-identity'])
+def test_native_qualification_requires_the_exact_shared_wheel(qualified, change):
+    path = qualified / 'artifacts/receipts/native-unified.json'
+    receipt = json.loads(path.read_text())
+    if change == 'missing':
+        receipt['artifacts'].pop(1)
+    elif change == 'substituted':
+        alternate = qualified / '.native/pe/packages/fdisbull_core-test.whl'
+        alternate.parent.mkdir(parents=True)
+        alternate.write_bytes(b'different shared kernel')
+        observed = gate.identity(qualified, alternate.relative_to(qualified).as_posix())
+        receipt['artifacts'][1] = observed
+        receipt['backend_identity']['shared_wheel'] = {'sha256': observed['sha256'], 'size': observed['size']}
+    elif change == 'duplicated':
+        receipt['artifacts'].append(receipt['artifacts'][1])
+    else:
+        receipt['backend_identity']['shared_wheel']['sha256'] = '0' * 64
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='shared'):
+        gate.validate(qualified, SHA, '123', legacy_dos_only=True)
+
+
+def test_ordinary_inventory_cannot_omit_the_shared_wheel(qualified):
+    path = qualified / 'artifacts/receipts/package-payloads.json'
+    receipt = json.loads(path.read_text())
+    del receipt['artifacts']['shared']
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='artifact kind'):
+        gate.validate(qualified, SHA, '123', legacy_dos_only=True)
 
 
 @pytest.mark.parametrize('field,value', [('status', 'manual'), ('status', 'skipped'), ('status', 'failed'),
@@ -155,11 +190,12 @@ def local_qualified(qualified, monkeypatch):
         path.write_bytes(('input-' + key).encode())
         monkeypatch.setenv(key, str(path))
         identity['inputs'][key] = {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(), 'size': path.stat().st_size}
-    wheel = qualified / 'dist/fdisbull-test.whl'
-    installed_wheel = qualified / '.native/pe/packages/fdisbull-test.whl'
-    installed_wheel.parent.mkdir(parents=True, exist_ok=True)
-    installed_wheel.write_bytes(wheel.read_bytes())
-    identity['wheel'] = {'sha256': hashlib.sha256(wheel.read_bytes()).hexdigest(), 'size': wheel.stat().st_size}
+    for key, name in (('wheel', 'fdisbull-test.whl'), ('shared_wheel', 'fdisbull_core-test.whl')):
+        wheel = qualified / 'dist' / name
+        installed_wheel = qualified / '.native/pe/packages' / name
+        installed_wheel.parent.mkdir(parents=True, exist_ok=True)
+        installed_wheel.write_bytes(wheel.read_bytes())
+        identity[key] = {'sha256': hashlib.sha256(wheel.read_bytes()).hexdigest(), 'size': wheel.stat().st_size}
     pe = qualified / 'native-evidence/pe'
     (pe / 'backend-identity.json').write_text(json.dumps(identity))
     bios = qualified / '.native/pe/qemu-9.2.4/pc-bios'
@@ -185,7 +221,7 @@ def local_qualified(qualified, monkeypatch):
     receipt.update(backend_identity=identity, prepared_manifest=gate.identity(qualified, 'native-evidence/pe/prepared-inputs.json'),
                    runtime_inputs=list(prepared['inputs'].values()), firmware=prepared['firmware'],
                    resource_receipts=list(prepared['resource_receipts'].values()),
-                   artifacts=[prepared['tested_wheel'], *prepared['inputs'].values()])
+                   artifacts=[prepared['tested_wheel'], prepared['tested_shared_wheel'], *prepared['inputs'].values()])
     path.write_text(json.dumps(receipt))
     acceptance_process = json.loads((qualified / 'artifacts/receipts/local-process-unified.json').read_text())
     preparation_process = dict(acceptance_process, local_job_id=build_job, job_name='native-unified-prepare')
@@ -495,7 +531,7 @@ def chat_qualified(local_qualified):
     root = local_qualified
     packages = json.loads((root / 'artifacts/receipts/package-payloads.json').read_text())['artifacts']
     manifest = {'identities':{'source_commit':SHA,'test_source_commit':SHA},
-                'wheel_artifacts':[{'name':packages[k]['name'],'sha256':packages[k]['sha256'],'size':packages[k]['size_bytes']} for k in ('core','player')]}
+                'wheel_artifacts':[{'name':packages[k]['name'],'sha256':packages[k]['sha256'],'size':packages[k]['size_bytes']} for k in ('core','shared','player')]}
     data=json.dumps(manifest).encode()
     archive=root/'.native/chat/output/fdisbull-chat-offline.zip';archive.parent.mkdir(parents=True)
     with zipfile.ZipFile(archive,'w') as z:z.writestr('fdisbull-chat-offline/MANIFEST.json',data)
@@ -534,6 +570,14 @@ def test_chat_consumer_required_for_final_qualification(local_qualified):
 def test_chat_consumer_qualifies_when_all_receipts_match(chat_qualified):
     result=gate.validate(chat_qualified,SHA,local_run_id=LOCAL_RUN)
     assert result['status']=='qualified' and result['chat_consumer']['archive']['size'] > 0
+
+
+@pytest.mark.parametrize('field,value', [('name', 'fdisbull_core-other.whl'), ('sha256', '0' * 64), ('size_bytes', 999)])
+def test_chat_consumer_binds_shared_wheel_to_ordinary_package(chat_qualified, field, value):
+    packages = json.loads((chat_qualified / 'artifacts/receipts/package-payloads.json').read_text())['artifacts']
+    packages['shared'][field] = value
+    with pytest.raises(ValueError, match='Chat wheel differs from ordinary package: shared'):
+        gate.verify_chat_consumer(chat_qualified, SHA, LOCAL_RUN, set(), packages, 'local-linux', None)
 
 
 @pytest.mark.parametrize('field,value', [('network_interfaces',['lo','eth0']),('loader_closure','host'),

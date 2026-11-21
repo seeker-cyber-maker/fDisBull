@@ -11,12 +11,14 @@ gate = module_from_spec(spec)
 spec.loader.exec_module(gate)
 
 
-def test_tracks_new_resource_and_checks_all_four_artifacts(tmp_path):
+def test_tracks_new_resource_and_checks_all_five_artifacts(tmp_path):
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     source = {
         "src/fdisbull/__init__.py": b"core",
         "src/fdisbull/data/new-resource.swift": b"helper",
         "player/fdisbull_player/__init__.py": b"player",
+        "packages/fdisbull-core/src/fdisbull_core/__init__.py": b"shared",
+        "packages/fdisbull-core/src/fdisbull_core/memory_search.py": b"kernel",
         "tests/new-support.mjs": b"test",
         "scripts/new-support.c": b"support",
     }
@@ -29,12 +31,13 @@ def test_tracks_new_resource_and_checks_all_four_artifacts(tmp_path):
     artifacts = {
         "core": {"fdisbull/" + n[len(gate.CORE):]: b for n, b in source.items() if n.startswith(gate.CORE)},
         "player": {"fdisbull_player/" + n[len(gate.PLAYER):]: b for n, b in source.items() if n.startswith(gate.PLAYER)},
+        "shared": {"fdisbull_core/" + n[len(gate.SHARED):]: b for n, b in source.items() if n.startswith(gate.SHARED)},
         "sdist": {"fdisbull-1/" + n: b for n, b in source.items()},
         "tool": {"fdisbull-1/" + n: b for n, b in source.items()},
     }
     for kind, contents in artifacts.items():
         gate.check_payload(source, contents, kind)
-        victim = next(n for n in contents if "new-resource.swift" in n) if kind != "player" else next(iter(contents))
+        victim = next(n for n in contents if "new-resource.swift" in n) if kind not in ("player", "shared") else next(iter(contents))
         damaged = dict(contents)
         del damaged[victim]
         with pytest.raises(ValueError, match="missing="):
@@ -86,7 +89,8 @@ def test_receipt_binds_commit_and_artifact_bytes(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(["git", "init", "-q", str(repo)], check=True)
-    files = {"src/fdisbull/__init__.py": b"core", "player/fdisbull_player/__init__.py": b"player"}
+    files = {"src/fdisbull/__init__.py": b"core", "player/fdisbull_player/__init__.py": b"player",
+             "packages/fdisbull-core/src/fdisbull_core/__init__.py": b"shared"}
     for name, content in files.items():
         path = repo / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -96,6 +100,7 @@ def test_receipt_binds_commit_and_artifact_bytes(tmp_path):
     artifacts = {
         "core": {"fdisbull/__init__.py": b"core"},
         "player": {"fdisbull_player/__init__.py": b"player"},
+        "shared": {"fdisbull_core/__init__.py": b"shared"},
         "sdist": {"fdisbull-1/" + n: b for n, b in files.items()},
         "tool": {"fdisbull-1/" + n: b for n, b in files.items()},
     }
@@ -111,7 +116,7 @@ def test_receipt_binds_commit_and_artifact_bytes(tmp_path):
     receipt = json.loads(output.read_text())
     assert receipt["source_commit"] == subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
     assert receipt["tracked_worktree_dirty"] is False
-    assert receipt["inventory_counts"] == {"core": 1, "player": 1, "source_total": 2}
+    assert receipt["inventory_counts"] == {"core": 1, "player": 1, "shared": 1, "source_total": 3}
     assert receipt["artifacts"]["core"]["sha256"] == hashlib.sha256((tmp_path / "core.zip").read_bytes()).hexdigest()
     (repo / "src/fdisbull/__init__.py").write_bytes(b"changed")
     output.unlink()

@@ -7,6 +7,7 @@ import signal
 import subprocess
 import sys
 import time
+import zipfile
 
 import pytest
 
@@ -22,18 +23,32 @@ def _helper():
     return module
 
 
+def _core_wheel(directory, *, metadata_name='fdisbull-core', metadata_version='0.1.0.dev1',
+                dependency=None, kernel=True):
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / 'fdisbull_core-0.1.0.dev1-py3-none-any.whl'
+    metadata = f'Metadata-Version: 2.1\nName: {metadata_name}\nVersion: {metadata_version}\n'
+    if dependency:
+        metadata += 'Requires-Dist: ' + dependency + '\n'
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('fdisbull_core-0.1.0.dev1.dist-info/METADATA', metadata)
+        if kernel:
+            archive.writestr('fdisbull_core/memory_search.py', '# authored wheel admission fixture\n')
+    return path
+
+
 def test_help_does_not_require_build_dependencies():
     result = subprocess.run([sys.executable, '-S', str(SCRIPT), '--help'],
                             capture_output=True, text=True)
     assert result.returncode == 0
-    assert '--work-dir' in result.stdout and '--mode' in result.stdout
+    assert '--work-dir' in result.stdout and '--mode' in result.stdout and '--shared-wheel' in result.stdout
 
 
 def test_existing_work_is_never_replaced(tmp_path):
     keep = tmp_path / 'keep.txt'
     keep.write_text('retain prior work')
     with pytest.raises(SystemExit) as error:
-        _helper().main(['--work-dir', str(tmp_path)])
+        _helper().main(['--work-dir', str(tmp_path), '--shared-wheel', str(tmp_path / 'unused.whl')])
     assert error.value.code == 2
     assert list(tmp_path.iterdir()) == [keep]
     assert keep.read_text() == 'retain prior work'
@@ -52,12 +67,62 @@ def test_work_must_be_absolute_outside_checkout_including_symlink_parents(tmp_pa
     assert list(checkout.iterdir()) == []
 
 
+def test_monorepo_output_guard_also_excludes_other_products(tmp_path, monkeypatch):
+    repository = tmp_path / 'repository'
+    product = repository / 'apps/dotbox'
+    product.mkdir(parents=True)
+    (repository / '.git').write_text('gitdir: /authored/worktree-control\n')
+    helper = _helper()
+    monkeypatch.setattr(helper, 'ROOT', product)
+    assert helper._repository_root() == repository
+    for path in (repository / 'build', repository / 'apps/other-build', product / 'build'):
+        with pytest.raises(ValueError, match='outside'):
+            helper._work_directory(str(path))
+    assert helper._work_directory(str(tmp_path / 'outside')) == tmp_path / 'outside'
+
+
+@pytest.mark.parametrize('alteration', [
+    {'metadata_name': 'fdisbull'}, {'metadata_version': '0.2.0'},
+    {'dependency': 'fdisbull>=1'}, {'kernel': False},
+])
+def test_shared_wheel_requires_the_exact_standalone_core(tmp_path, alteration):
+    helper = _helper()
+    wheel = _core_wheel(tmp_path, **alteration)
+    with pytest.raises(ValueError):
+        helper._shared_wheel(wheel)
+
+
+def test_shared_wheel_is_bound_to_admitted_bytes(tmp_path):
+    helper = _helper()
+    wheel = _core_wheel(tmp_path / 'inputs')
+    identity = helper._shared_wheel(wheel)
+    assert identity['distribution'] == 'fdisbull-core'
+    assert identity['version'] == '0.1.0.dev1'
+    assert identity['sha256'] == helper._sha256(wheel)
+    work = tmp_path / 'work'
+    work.mkdir()
+    wheel.write_bytes(b'changed after admission')
+    with pytest.raises(ValueError, match='changed after admission'):
+        helper._stage_shared_wheel(work, identity)
+    assert not list(work.iterdir())
+
+
+def test_invalid_shared_wheel_creates_no_build_output(tmp_path):
+    wheel = tmp_path / 'fdisbull_core-0.1.0.dev1-py3-none-any.whl'
+    wheel.write_bytes(b'not a ZIP wheel')
+    work = tmp_path / 'new-build'
+    with pytest.raises(SystemExit) as error:
+        _helper().main(['--work-dir', str(work), '--shared-wheel', str(wheel)])
+    assert error.value.code == 2 and not work.exists()
+
+
 def test_non_macos_has_failure_receipt_and_runs_no_commands(tmp_path, monkeypatch):
     helper = _helper()
     monkeypatch.setattr(helper.platform, 'system', lambda: 'Linux')
     monkeypatch.setattr(helper, '_run', lambda *args, **kwargs: pytest.fail('must not launch a command'))
     work = tmp_path / 'new-build'
-    assert helper.main(['--work-dir', str(work)]) == 2
+    wheel = _core_wheel(tmp_path / 'inputs')
+    assert helper.main(['--work-dir', str(work), '--shared-wheel', str(wheel)]) == 2
     report = json.loads((work / 'result.json').read_text())
     assert report['status'] == 'failed' and report['stage'] == 'preflight'
     assert report['native_build_performed'] is False
@@ -155,7 +220,10 @@ def _mock_commands(helper, monkeypatch, *, doctor_layout='installed', accept=Tru
     commands = []
     monkeypatch.setattr(helper, '_preflight', lambda *args: {'mocked_mac_preflight': True})
     monkeypatch.setattr(helper, '_check_pip_destination', lambda *args: [])
-    monkeypatch.setattr(helper, '_stage_package', lambda destination: destination.mkdir())
+    def stage_package(destination):
+        destination.mkdir()
+        return {'files': 1, 'sha256': 'a' * 64, 'scope': 'Authored staged inputs'}
+    monkeypatch.setattr(helper, '_stage_package', stage_package)
 
     def run(work, result, stage, command, *, cwd, environment, timeout=None):
         result['stage'] = stage
@@ -164,6 +232,14 @@ def _mock_commands(helper, monkeypatch, *, doctor_layout='installed', accept=Tru
         log = work / 'logs' / (stage + '.log')
         log.write_text('authored process output\n')
         result['steps'].append({'stage': stage, 'command': command, 'log': str(log)})
+        if stage == 'checkout-status':
+            log.write_text(' M unrelated-qemu-work.py\n')
+        elif stage == 'product-status':
+            log.write_text('')
+        elif stage == 'checkout-commit':
+            log.write_text('c' * 40 + '\n')
+        elif stage == 'product-tree':
+            log.write_text('d' * 40 + '\n')
         if stage == failed_stage:
             raise RuntimeError('authored failed command at ' + stage)
         if stage == 'build-wheels':
@@ -202,8 +278,10 @@ def test_mocked_command_plan_builds_private_wheel_pinned_sdl_and_exact_recipe(tm
     work = tmp_path / 'new-build'
     upstream = tmp_path / 'upstream'
     upstream.mkdir()
+    wheel = _core_wheel(tmp_path / 'inputs')
     monkeypatch.setenv('SDL_VIDEODRIVER', 'dummy')
-    assert helper.main(['--work-dir', str(work), '--mode', 'headless', '--upstream', str(upstream)]) == 0
+    assert helper.main(['--work-dir', str(work), '--mode', 'headless', '--upstream', str(upstream),
+                        '--shared-wheel', str(wheel)]) == 0
     planned = {stage: command for stage, command, *_ in commands}
     recipe = json.loads((ROOT / 'native/build-recipe.json').read_text())
     assert [planned[name] for name in ('autogen-native', 'configure-native', 'build-native')] == recipe['build']['commands']
@@ -213,6 +291,7 @@ def test_mocked_command_plan_builds_private_wheel_pinned_sdl_and_exact_recipe(tm
     assert '--disable-video-x11' in planned['configure-sdl2']
     assert '--only-binary=iced-x86,Pillow' in planned['build-wheels']
     assert str(work / 'package-source') + '[test]' in planned['build-wheels']
+    assert str(work / 'shared-wheel' / wheel.name) in planned['build-wheels']
     assert '--no-index' in planned['install-wheel']
     assert '--no-user' in planned['install-wheel']
     for stage in ('build-wheels', 'install-wheel', 'installed-packages'):
@@ -230,6 +309,15 @@ def test_mocked_command_plan_builds_private_wheel_pinned_sdl_and_exact_recipe(tm
     assert report['native_tests']['runtime'].startswith('source checkout')
     assert report['source_receipt']['binary_attestation'] is False
     assert len(report['wheel']['sha256']) == 64
+    assert report['shared_core']['sha256'] == helper._sha256(wheel)
+    assert Path(report['shared_core']['staged_path']).read_bytes() == wheel.read_bytes()
+    assert report['checkout']['path'] == str(helper._repository_root())
+    assert report['checkout']['dirty'] is True
+    assert report['checkout']['product']['dirty'] is False
+    assert report['checkout']['product']['committed_tree'] == 'd' * 40
+    assert report['checkout']['product']['package_inputs']['sha256'] == 'a' * 64
+    product = helper.ROOT.resolve().relative_to(helper._repository_root()).as_posix()
+    assert planned['product-status'][-2:] == ['--', product]
 
 
 @pytest.mark.parametrize('problem', ['source_doctor', 'compile_failure', 'gate_rejection', 'binary_mismatch'])
@@ -241,7 +329,8 @@ def test_mocked_failures_retain_stage_without_claiming_success(tmp_path, monkeyp
                               wrong_binary=problem == 'binary_mismatch',
                               failed_stage='build-native' if problem == 'compile_failure' else None)
     work = tmp_path / problem
-    assert helper.main(['--work-dir', str(work)]) == 1
+    wheel = _core_wheel(tmp_path / 'inputs')
+    assert helper.main(['--work-dir', str(work), '--shared-wheel', str(wheel)]) == 1
     report = json.loads((work / 'result.json').read_text())
     assert report['status'] == 'failed'
     expected_stage = {'source_doctor': 'installed-doctor', 'compile_failure': 'build-native',
@@ -256,7 +345,7 @@ def test_mocked_failures_retain_stage_without_claiming_success(tmp_path, monkeyp
 def test_package_snapshot_contains_declared_resources_without_build_outputs(tmp_path):
     helper = _helper()
     destination = tmp_path / 'package-source'
-    helper._stage_package(destination)
+    identity = helper._stage_package(destination)
     manifest = json.loads((ROOT / 'src/dotbox/resources_manifest.json').read_text())
     for name in manifest['files']:
         assert (destination / name).read_bytes() == (ROOT / name).read_bytes()
@@ -264,6 +353,8 @@ def test_package_snapshot_contains_declared_resources_without_build_outputs(tmp_
     assert not (destination / '.git').exists()
     assert not (destination / 'build').exists()
     assert not list(destination.rglob('*.pyc'))
+    assert identity['files'] == len([path for path in destination.rglob('*') if path.is_file()])
+    assert len(identity['sha256']) == 64
 
 
 def test_failed_real_subprocess_retains_log_and_status_without_building(tmp_path):

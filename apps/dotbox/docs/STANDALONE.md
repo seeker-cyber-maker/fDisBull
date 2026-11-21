@@ -3,9 +3,11 @@
 The [verification report](evidence/standalone-engine-2026-11-16.json) records the
 clean installation and bounded native checks.
 
-DotBox owns its Python runtime and SQLite control store. No fDisBull package or
-source checkout is required. Python 3.12+, Pillow and pinned iced-x86 1.22.0 are the declared Python
-requirements; a compatible native DOSBox-X executable and its platform libraries
+DotBox owns its Python runtime and SQLite control store. No full fDisBull
+application or source checkout is required. Python 3.12+, Pillow, pinned
+iced-x86 1.22.0 and the small `fdisbull-core==0.1.0.dev1` distribution are the
+declared Python requirements. The shared core supplies the offline scalar
+[memory search](MEMORY_SEARCH.md). A compatible native DOSBox-X executable and its platform libraries
 are required to run a guest. See [native preparation](STANDALONE_NATIVE.md).
 For a developer build on the Mac Studio, see the
 [local macOS build and test procedure](LOCAL_MACOS_BUILD.md).
@@ -24,12 +26,15 @@ resources and helpers. Exporting source does not prepare a native executable.
 
 ```sh
 python3 -m venv /private/dotbox/venv
-/private/dotbox/venv/bin/python -m pip install /path/to/dotbox.whl
+/private/dotbox/venv/bin/python -m pip install \
+  /path/to/fdisbull_core-0.1.0.dev1-py3-none-any.whl /path/to/dotbox.whl
 /private/dotbox/venv/bin/dotbox --help
 ```
 
 A clean installation must use an ordinary wheel, with no source-tree PYTHONPATH,
-editable install or fDisBull environment. Verification records distinguish Python
+editable install or full fDisBull environment. Include the shared-core wheel
+in an offline wheelhouse with the other declared dependencies. Installing or
+updating these Python packages does not rebuild DOSBox-X. Verification records distinguish Python
 installation, native execution and actual Codex cloud integration.
 
 ## Display size and coordinates

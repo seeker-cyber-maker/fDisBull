@@ -2,7 +2,7 @@
 """Build or reuse a hash-locked Linux x86-64 dependency bundle.
 
 The bundle contains third-party wheels only.  It deliberately excludes the
-fdisbull and fdisbull-player wheels, so a bundle stays reusable across tool
+fdisbull, fdisbull-player and fdisbull-core wheels, so a bundle stays reusable across tool
 releases while the dependency constraints remain unchanged.
 """
 
@@ -34,6 +34,7 @@ TARGET = {
 }
 WHEEL_SUFFIX = ".whl"
 SHA_SUFFIXES = (".tar.gz", ".tgz")
+PROJECT_DISTRIBUTIONS = {"fdisbull", "fdisbull-player", "fdisbull-core"}
 
 
 def normalize(name: str) -> str:
@@ -82,7 +83,8 @@ def load_requirements(project_root: Path, extras: tuple[str, ...]) -> list[str]:
         requirements.extend(definitions[extra])
     if not requirements:
         raise ValueError("project declares no dependencies")
-    canonical = sorted({canonical_requirement(item) for item in requirements})
+    canonical = sorted({canonical_requirement(item) for item in requirements
+                        if requirement_name(item) not in PROJECT_DISTRIBUTIONS})
     if len({requirement_name(item) for item in canonical}) != len(canonical):
         raise ValueError("dependency name is declared more than once")
     return canonical
@@ -167,7 +169,7 @@ def inspect_wheel(path: Path) -> dict:
         raise ValueError(f"wheel metadata is incomplete: {path.name}")
     if normalize(filename_parts[0]) != name or filename_parts[1] != version:
         raise ValueError(f"wheel filename and metadata disagree: {path.name}")
-    if name in {"fdisbull", "fdisbull-player"}:
+    if name in PROJECT_DISTRIBUTIONS:
         raise ValueError(
             f"dependency bundle must not contain application wheel: {path.name}"
         )
@@ -240,7 +242,7 @@ def _readme(
         f"Target: Python {target['python']} ({target['python_tag']}), {target['platform']}\n"
         f"Optional groups: {', '.join(extras) if extras else 'none'}\n\n"
         "This bundle contains third-party wheels only. It does not contain the\n"
-        "fdisbull or fdisbull-player wheels. Run ./install.sh /absolute/new-venv\n"
+        "fdisbull, fdisbull-player or fdisbull-core wheels. Run ./install.sh /absolute/new-venv\n"
         "on a compatible Linux x86_64 machine, then install the application wheels\n"
         "with pip --no-index --find-links <directory containing app wheels>.\n\n"
         "Declared constraints:\n"

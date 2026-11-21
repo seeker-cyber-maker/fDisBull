@@ -53,6 +53,7 @@ def parser():
         ("agi", "Inspect bounded AGI V2 logic and state references offline."),
         ("route", "Plan and check state-bound walking routes without executing input."),
         ("rts", "Inspect RTS worlds and prepare independent action primitives without input."),
+        ("memory-search", "Narrow scalar candidates in frozen memory buffers without a live guest."),
     ):
         commands.add_parser(name, help=help_text).add_argument("arguments", nargs=argparse.REMAINDER)
     probe = commands.add_parser("probe", help="Print a noninvasive runtime inventory.")
@@ -121,6 +122,9 @@ def main(argv=None):
     if argv and argv[0] == "inspect":
         from .inspection import main as inspect_main
         return inspect_main(argv[1:])
+    if argv and argv[0] == "memory-search":
+        from .memory_search import main as memory_search_main
+        return memory_search_main(argv[1:])
     if argv and argv[0] == "learn":
         from .learning import main as learn_main
         return learn_main(argv[1:])

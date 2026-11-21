@@ -34,12 +34,15 @@ def prepared(tmp_path, monkeypatch):
         p.write_bytes(('input-' + key).encode())
         monkeypatch.setenv(key, str(p))
         identity['inputs'][key] = {'sha256': hashlib.sha256(p.read_bytes()).hexdigest(), 'size': p.stat().st_size}
-    wheel_name = 'fdisbull-0.30.0-py3-none-any.whl'
-    for parent in ('dist', '.native/pe/packages'):
-        wheel = tmp_path / parent / wheel_name
-        wheel.parent.mkdir(parents=True, exist_ok=True)
-        wheel.write_bytes(b'wheel-original')
-    identity['wheel'] = {'sha256': hashlib.sha256(b'wheel-original').hexdigest(), 'size': len(b'wheel-original')}
+    for key, wheel_name, data in (
+        ('wheel', 'fdisbull-0.30.0-py3-none-any.whl', b'wheel-original'),
+        ('shared_wheel', 'fdisbull_core-0.1.0.dev1-py3-none-any.whl', b'shared-wheel-original'),
+    ):
+        for parent in ('dist', '.native/pe/packages'):
+            wheel = tmp_path / parent / wheel_name
+            wheel.parent.mkdir(parents=True, exist_ok=True)
+            wheel.write_bytes(data)
+        identity[key] = {'sha256': hashlib.sha256(data).hexdigest(), 'size': len(data)}
     pe = tmp_path / 'native-evidence/pe'
     pe.mkdir(parents=True)
     (pe / 'backend-identity.json').write_text(json.dumps(identity))
@@ -69,6 +72,53 @@ def test_prepared_runtime_host_and_guest_checks(prepared):
     value = module.verify(root, SHA, RUN, JOB, source_root=root)
     assert len(value['inputs']) == 6 and len(value['firmware']) == 171
     assert value['build_job_id'] == JOB
+    assert value['tested_shared_wheel']['path'].endswith('/fdisbull_core-0.1.0.dev1-py3-none-any.whl')
+
+
+@pytest.mark.parametrize('directory', ['dist', '.native/pe/packages'])
+def test_prepared_runtime_binds_the_actual_shared_wheel(prepared, directory):
+    module, root = prepared
+    next((root / directory).glob('fdisbull_core-*.whl')).write_bytes(b'substituted')
+    with pytest.raises(ValueError, match='shared'):
+        module.verify(root, SHA, RUN, JOB, source_root=root)
+
+
+@pytest.mark.parametrize('directory', ['dist', '.native/pe/packages'])
+@pytest.mark.parametrize('change', ['missing', 'extra'])
+def test_prepared_runtime_requires_one_shared_wheel(prepared, directory, change):
+    module, root = prepared
+    if change == 'missing':
+        next((root / directory).glob('fdisbull_core-*.whl')).unlink()
+    else:
+        (root / directory / 'fdisbull_core-extra.whl').write_bytes(b'extra')
+    with pytest.raises(ValueError, match='exactly one prepared and ordinary shared wheel'):
+        module.verify(root, SHA, RUN, JOB, source_root=root)
+
+
+def test_prepared_runtime_rejects_shared_wheel_changed_in_both_locations(prepared):
+    module, root = prepared
+    for directory in ('dist', '.native/pe/packages'):
+        next((root / directory).glob('fdisbull_core-*.whl')).write_bytes(b'substituted')
+    with pytest.raises(ValueError, match='backend identity shared wheel mismatch'):
+        module.verify(root, SHA, RUN, JOB, source_root=root)
+
+
+@pytest.mark.parametrize('change', ['backend-identity', 'manifest'])
+def test_prepared_runtime_requires_retained_shared_wheel_identity(prepared, change):
+    module, root = prepared
+    manifest_path = root / module.MANIFEST
+    manifest = json.loads(manifest_path.read_text())
+    if change == 'backend-identity':
+        identity_path = root / module.IDENTITY
+        identity = json.loads(identity_path.read_text())
+        del identity['shared_wheel']
+        identity_path.write_text(json.dumps(identity))
+        manifest['backend_identity'] = module.item(identity_path, root)
+    else:
+        del manifest['tested_shared_wheel']
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match='shared wheel identity|identity shared wheel'):
+        module.verify(root, SHA, RUN, JOB, source_root=root)
 
 
 @pytest.mark.parametrize('change', ['source', 'run', 'job', 'input', 'firmware', 'resource', 'resource32', 'receipt', 'extra', 'wheel', 'ordinary-wheel', 'extra-wheel'])

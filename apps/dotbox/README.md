@@ -3,6 +3,23 @@
 Play DOS games with Dot using an independent DOSBox-X session framework.
 The original graphical game remains authoritative.
 
+DotBox is the rapid self-harness product in the [combined source tree](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/shared-dotbox-core-20261121/docs/SHARED_CODEBASE.md).
+It shares deterministic reversing machinery with fDisBull while keeping its own
+package, gameplay workflow and Agent BBS project. The first shared component is
+scalar memory search over frozen buffers; the full fDisBull application and its
+UDL–UIL–UDC pipeline are not installation prerequisites. DOSBox-X remains
+DotBox's backend, with native rebuilds tied to changed native inputs.
+
+From the combined repository root, in a dedicated Python 3.12+ environment:
+
+```sh
+python -m pip install ./packages/fdisbull-core ./apps/dotbox
+```
+
+For a built-wheel installation, supply the matching `fdisbull-core` development
+wheel explicitly. See [standalone installation](docs/STANDALONE.md) and
+[repository transition](docs/REPOSITORIES.md).
+
 Dot's planned [internal game model](docs/WORLD_MODEL.md) retains entities,
 relationships, rules, evidence and her own useful abstractions. Z-scenes are
 bounded views of that knowledge plus current observations. The proposed model
