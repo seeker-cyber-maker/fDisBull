@@ -1,8 +1,8 @@
 """Independent packed AGI processor descriptions and bounded behavior batches.
 
 One authored source holds the complete 29-command description union and static
-malformed cases. Seven owned children cover both description profiles, one
-coherent program across all masks, and four isolated execution boundaries.
+malformed cases. Nine owned children cover both description profiles, one
+coherent program across all masks, and six isolated execution boundaries.
 No compiler, discovery, original resource or per-opcode process loop is used.
 """
 from contextlib import contextmanager
@@ -25,16 +25,17 @@ from processor_scene import derive_scene_plan
 from visual_binding_harness import QemuAGIViewBinding
 from fdisbull.processor import Location, decode_instruction
 
-SCHEMA = "fdisbull-agi-native-instructions-1"
-DECODER = {"identity": "fdisbull.qemu.agi", "version": "1", "address_unit": "byte"}
+SCHEMA = "fdisbull-agi-native-instructions-2"
+DECODER = {"identity": "fdisbull.qemu.agi", "version": "2", "address_unit": "byte",
+           "encoding": "agi-2.917", "decode_policy": "structural-1"}
 PROFILES = {"scalar": "agi-2917-scalar-position-pilot-1",
             "binding": "agi-2917-view-binding-pilot-1",
             "intent": "agi-2917-draw-intent-pilot-1"}
 SCALAR_OPS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 37, 38, 39, 254, 255}
 CATALOG = (b"FDBAGIV1" + bytes((5, 0, 1, 0, 10, 1))
            + sha256(b"authored-processor-view-10").digest() + bytes((1, 2, 3)))
-LIMITS = {"children": 8, "expected_children": 7, "run_calls": 12,
-          "expected_run_calls": 10, "wall_seconds": 120, "qmp_seconds": 5,
+LIMITS = {"children": 10, "expected_children": 9, "run_calls": 14,
+          "expected_run_calls": 12, "wall_seconds": 120, "qmp_seconds": 5,
           "retirements_per_run": 128}
 
 
@@ -151,11 +152,11 @@ def packed_corpus():
     for index in range(70):
         add(f"return-pad-{index}", (0,), "return", "control.return", "control")
     for name, raw, number, fault in [
-        ("unknown", (165,), 1, "unsupported_opcode"),
+        ("unknown", (174,), 1, "unsupported_opcode"),
         ("empty-or", (255, 252, 252, 255, 0, 0), 5, "unsupported_condition"),
         ("repeated-not", (255, 253, 253, 7, 0, 255, 0, 0), 5, "unsupported_condition"),
-        ("unknown-predicate", (255, 8, 0, 255, 0, 0), 5, "unsupported_condition"),
-        ("nine-predicates", [255, *([7, 0] * 9), 255, 0, 0], 7, "condition_limit"),
+        ("unknown-predicate", (255, 19, 0, 255, 0, 0), 5, "unsupported_condition"),
+        ("sixty-five-predicates", [255, *([7, 0] * 65), 255, 0, 0], 7, "condition_limit"),
         ("truncated-position", (37, 0, 7), 2, "truncated_instruction"),
     ]:
         labels[name] = len(code)
@@ -238,6 +239,14 @@ FAULT_CASES = (
      "fault": {"pc": 0, "opcode": 255, "code": 4, "name": "invalid_branch_target"}},
     {"name": "invalid-if-false-edge-not-taken", "code": bytes((255, 1, 0, 0, 255, 255, 255, 0)),
      "profile": "scalar", "static_error": None, "fault": None},
+    {"name": "structural-nine-predicates-execution-limit",
+     "code": bytes((255, *([7, 0] * 9), 255, 0, 0, 0)), "profile": "scalar",
+     "static_error": None,
+     "fault": {"pc": 0, "opcode": 255, "code": 7, "name": "condition_limit"}},
+    {"name": "structural-predicate-before-truncation-execution-precedence",
+     "code": bytes((255, 8)), "profile": "scalar",
+     "static_error": {"pc": 0, "opcode": 255, "code": 2, "name": "truncated_instruction"},
+     "fault": {"pc": 0, "opcode": 255, "code": 5, "name": "unsupported_condition"}},
 )
 
 
@@ -316,21 +325,30 @@ def test_processor_adapter_host_only_static_fact_batch():
             validate_decode_page(changed, code=STATIC_CODE, source=original[0]["source"])
     shape_cases = []
     oversized = page_fixture([rows[0]], limit=1)
-    oversized["instructions"][0].update(size=65, bytes=list(STATIC_CODE[:65]))
-    oversized["next_pc"] = 65
+    oversized["instructions"][0].update(size=1025, bytes=list(STATIC_CODE[:1025]))
+    oversized["next_pc"] = 1025
     shape_cases.append(oversized)
     excess_operands = page_fixture([rows[0]], limit=1)
-    excess_operands["instructions"][0]["operands"] *= 4
+    excess_operands["instructions"][0]["operands"] *= 8
     shape_cases.append(excess_operands)
     condition = next(row for row in rows if row["pc"] == STATIC_LABELS["ordered-if"])
     excess_predicate_operands = page_fixture([condition], start=condition["pc"], limit=1)
-    excess_predicate_operands["instructions"][0]["conditions"][1]["operands"].append(immediate("right", 0))
+    excess_predicate_operands["instructions"][0]["conditions"][1]["operands"].extend(
+        [immediate("right", 0)] * 255)
     shape_cases.append(excess_predicate_operands)
     eight = next(row for row in rows if row["pc"] == STATIC_LABELS["eight-predicates"])
-    excess_predicates = page_fixture([eight], start=eight["pc"], limit=1)
-    excess_predicates["instructions"][0]["conditions"].append({
-        "kind": "predicate", "pc": eight["pc"] + 17, "opcode": 255,
-        "mnemonic": "isset", "operands": [flag(0)]})
+    overflow_pc = STATIC_LABELS["sixty-five-predicates"]
+    overflow_size = 1 + 2 * 65 + 3
+    overflow_end = overflow_pc + overflow_size
+    overflow = deepcopy(eight)
+    overflow.update(pc=overflow_pc, size=overflow_size,
+        bytes=list(STATIC_CODE[overflow_pc:overflow_end]), execution_support="unsupported_profile",
+        conditions=[{"kind": "predicate", "pc": overflow_pc + 1 + 2 * i,
+                     "opcode": 7, "mnemonic": "isset", "operands": [flag(0)]}
+                    for i in range(65)],
+        successors=[{"kind": kind, "pc": overflow_end, "in_range": overflow_end < len(STATIC_CODE)}
+                    for kind in ("true", "false")])
+    excess_predicates = page_fixture([overflow], start=overflow_pc, limit=1)
     shape_cases.append(excess_predicates)
     full_page_fault = deepcopy(pages[0])
     full_page_fault["stop"] = "decode_fault"
@@ -476,11 +494,15 @@ def test_isolated_branch_and_disabled_profile_precedence_batch(native_batch, rec
             if case["code"][0] == 35:
                 assert page["instructions"][0]["execution_support"] == "unsupported_profile"
                 assert page["instructions"][0]["operands"] == [literal("actor", "actor", 255)]
-            if case["code"][0] == 255:
+            if case["name"].startswith("invalid-if-false-edge"):
                 row = page["instructions"][0]
                 assert row["operands"] == [displacement(65535)]
                 assert row["successors"] == [{"kind": "true", "pc": 7, "in_range": True},
                                                {"kind": "false", "pc": 65542, "in_range": False}]
+            if case["name"] == "structural-nine-predicates-execution-limit":
+                row = page["instructions"][0]
+                assert row["execution_support"] == "unsupported_profile"
+                assert len([token for token in row["conditions"] if token["kind"] == "predicate"]) == 9
             vm.configure(mask=3, capacity=16)
             state = run(vm)
             assert state["guest"]["fault"] == case["fault"], case["name"]

@@ -23,7 +23,7 @@ static const char *const fault_names[] = {
     "none", "unsupported_opcode", "truncated_instruction", "invalid_actor",
     "invalid_branch_target", "unsupported_condition", "fetch_out_of_bounds",
     "condition_limit", "missing_view", "view_not_loaded", "view_unbound",
-    "invalid_loop", "invalid_cel", "empty_view_loop"
+    "invalid_loop", "invalid_cel", "empty_view_loop", "contextual_layout"
 };
 static const char *const event_names[] = {
     "retire", "position", "actor", "view_load"
@@ -239,7 +239,9 @@ static void agi_json_instruction(GString *s, const AgiDecodedInstruction *insn)
         if (token->kind == AGI_CONDITION_PREDICATE) {
             g_string_append_printf(s, ",\"opcode\":%u,\"mnemonic\":\"%s\","
                                    "\"operands\":", token->opcode, token->mnemonic);
-            agi_json_operands(s, token->operands, token->operand_count);
+            agi_json_operands(s,
+                              &insn->condition_operands[token->operand_start],
+                              token->operand_count);
         }
         g_string_append_c(s, '}');
     }
@@ -277,15 +279,18 @@ static char *agi_get_decode(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
-    s = g_string_new("{\"schema\":\"fdisbull-agi-native-instructions-1\","
+    s = g_string_new("{\"schema\":\"fdisbull-agi-native-instructions-2\","
                      "\"decoder\":{\"identity\":\"fdisbull.qemu.agi\","
-                     "\"version\":\"1\",\"address_unit\":\"byte\"},\"source\":");
+                     "\"version\":\"2\",\"address_unit\":\"byte\","
+                     "\"encoding\":\"agi-2.917\","
+                     "\"decode_policy\":\"structural-1\"},\"source\":");
     agi_json_source(s, cpu);
     g_string_append_printf(s, ",\"evidence\":\"static_decode\",\"traversal\":\"linear\","
                            "\"start_pc\":%u,\"limit\":%u,\"instructions\":[",
                            pc, cpu->decode_limit);
     while (pc < env->code_size && count < cpu->decode_limit) {
-        if (!agi_decode(agi_inspect_read, cpu, env->code_size, pc, profile, &insn)) {
+        if (!agi_decode(agi_inspect_read, cpu, env->code_size, pc, profile,
+                        AGI_DECODE_STRUCTURAL, &insn)) {
             fault = true;
             break;
         }
