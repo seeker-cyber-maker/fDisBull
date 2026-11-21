@@ -37,10 +37,25 @@ and historical read values, makes the changed binding explicit, and leaves fresh
 replay to establish placement and downstream effects. See the
 [variable override contract](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/agi-variable-position-overrides-20261121/native/qemu-agi/VARIABLE_SCENE_EDITING.md).
 
+`fdisbull_core.agi_view.decode_view_cel(payload, *, loop, cel)` decodes one
+effective cel from an uncompressed DOS AGI 2.917 EGA VIEW payload. It returns
+row-major indexed pixels, dimensions, transparency, effective mirroring and
+payload-relative source boundaries with the resource SHA-256. Transparent
+trailing pixels are retained when a row is mirrored. The bounded reader checks
+referenced directories, cel headers and RLE streams, permits exact shared
+pointers and rejects overlapping structures. It uses only the standard library.
+
+This independently authored decoder follows the
+[pinned ScummVM VIEW format and mirroring reference](https://github.com/scummvm/scummvm/blob/f7403b6efaae2f033e8abea80b3fb6bee5303369/engines/agi/view.cpp).
+Its source pixels describe a static resource. Current actor visibility,
+placement, priority composition, screen palette and rendering state require
+separate runtime evidence. Alternate platform layouts, early loop-header
+mirroring and AGI256 are outside the explicit profile.
+
 Build independently with `python -m build packages/fdisbull-core` from the shared
 repository, or `python -m build` from this directory. Install this package before
 installing either product from source; both products pin its version explicitly.
 Run its authored-byte checks with `python -m pytest packages/fdisbull-core/tests`.
-`PROVENANCE.json` identifies the unchanged initial kernel and the transport
-extraction and the independently authored scene consumer/planner. Applications pin
-`0.1.0.dev5`, which includes all three modules.
+`PROVENANCE.json` identifies the unchanged initial kernel, the transport
+extraction, the independently authored scene consumer/planners and the VIEW cel
+decoder. Applications pin `0.1.0.dev6`, which includes all four modules.

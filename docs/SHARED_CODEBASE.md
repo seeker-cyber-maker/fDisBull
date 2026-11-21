@@ -66,8 +66,8 @@ The shared package also owns bounded private-pipe JSON-RPC exchange in
 Product adapters retain launch profiles, public error types, request prefixes,
 EOF diagnostics, input ownership and process cleanup. The common exchange does
 not start a process or transfer control. Both applications pin shared development
-version `0.1.0.dev5`, which also carries the experimental AGI scene consumer
-and position edit planners;
+version `0.1.0.dev6`, which also carries the experimental AGI scene consumer,
+position edit planners and bounded VIEW cel decoder;
 earlier memory-only and transport-only wheels cannot satisfy that package.
 
 `fdisbull_core.agi_scene` is a deterministic snapshot/delta consumer for the
@@ -90,6 +90,15 @@ Unchanged source assignments do not imply unchanged final variables or other
 actors: later `get.posn` can propagate the new position. The bounded
 [variable override contract](../native/qemu-agi/VARIABLE_SCENE_EDITING.md) keeps
 that consequence visible through separate candidate replay.
+
+`fdisbull_core.agi_view` supplies a pure, standard-library-only decoder for
+uncompressed DOS AGI 2.917 EGA VIEW cels. The independently authored Python code
+uses the [pinned primary ScummVM reference](https://github.com/scummvm/scummvm/blob/f7403b6efaae2f033e8abea80b3fb6bee5303369/engines/agi/view.cpp)
+for the resource format and effective-loop mirroring. It retains indexed source
+pixels, transparency, effective orientation and exact resource boundaries and
+identity. These static resources remain separate from observed actor state:
+visibility, placement, priority composition and screen palette require runtime
+evidence. The decoder does not launch a game or select either product's backend.
 
 The shared initializer's development version also changes its identity in the
 legacy DOSBox-in-QEMU Python guest. Prepared images containing the earlier

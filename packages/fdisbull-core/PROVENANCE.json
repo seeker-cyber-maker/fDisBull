@@ -32,6 +32,19 @@
       ],
       "destination_path": "src/fdisbull_core/agi_scene.py",
       "extraction": "Independently authored deterministic consumer of the published AGI observation protocol; no native implementation copied. Source/session identity, transactional deltas and explicit history gaps; no process or product dependency. Independently authored literal-position editing and explicit variable-to-literal override planners bind exact raw source to captured witnesses and return detached proposals without writes or execution; variable read values derive from the position witness under the selected profile."
+    },
+    {
+      "module": "fdisbull_core.agi_view",
+      "reference_sources": [
+        {
+          "url": "https://github.com/scummvm/scummvm/blob/f7403b6efaae2f033e8abea80b3fb6bee5303369/engines/agi/view.cpp",
+          "commit": "f7403b6efaae2f033e8abea80b3fb6bee5303369",
+          "path": "engines/agi/view.cpp",
+          "blob_sha": "53e94b0166eb96cb624d77fe5cb26d129b06aa25"
+        }
+      ],
+      "destination_path": "src/fdisbull_core/agi_view.py",
+      "extraction": "Independently authored standard-library-only Python decoder using the pinned primary ScummVM source as a format and effective-loop mirroring reference; no upstream implementation copied. Bounded DOS AGI 2.917 EGA VIEW cel pixels retain transparency, mirroring and exact source identity. Static resource decoding establishes neither actor visibility or placement nor runtime scene composition."
     }
   ]
 }

@@ -976,7 +976,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
 }
 
 
-SHARED_MODULES = {"__init__.py", "memory_search.py", "pipe_rpc.py", "agi_scene.py"}
+SHARED_MODULES = {"__init__.py", "memory_search.py", "pipe_rpc.py", "agi_scene.py", "agi_view.py"}
 SHARED_SOURCE_FILES = {"pyproject.toml", "MANIFEST.in", "README.md", "PROVENANCE.json"} | {
     "src/fdisbull_core/" + name for name in SHARED_MODULES
 }
