@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from fractions import Fraction
+from math import ceil, floor
 import struct
 
 
@@ -127,17 +128,21 @@ def horizontal_interval(records, coarse):
         position, previous = current[-1]
         left, right = previous['edge'], record['edge']
         delta = Interval(right.lo - left.hi, right.hi - left.lo)
-        choices = [] if previous['generation'] != record['generation'] else [
-            n for n in range(1, 9)
-            if delta.hi >= n * coarse.lo and delta.lo <= n * coarse.hi]
-        if len(choices) != 1:
+        generation_changed = previous['generation'] != record['generation']
+        bounds = None
+        if not generation_changed:
+            # Closed overlap with n * coarse is equivalent to these bounds.
+            # Keep every positive integer candidate without enumerating them.
+            bounds = {'min': max(1, ceil(delta.lo / coarse.hi)),
+                      'max': floor(delta.hi / coarse.lo)}
+        if bounds is None or bounds['min'] != bounds['max']:
             gaps.append({'after_record': sum(len(segment) for segment in segments) + len(current) - 1,
-                         'possible_line_counts': choices, 'delta': delta.json(),
-                         'vertical_generation_changed': previous['generation'] != record['generation']})
+                         'possible_line_count_bounds': bounds, 'delta': delta.json(),
+                         'vertical_generation_changed': generation_changed})
             segments.append(current)
             current = [(0, record)]
         else:
-            current.append((position + choices[0], record))
+            current.append((position + bounds['min'], record))
     if current:
         segments.append(current)
     admitted = []
@@ -162,6 +167,7 @@ def horizontal_interval(records, coarse):
         raise TimingUnqualified('No uniquely counted horizontal span of at least 128 lines')
     interval = Interval(lower, upper)
     return interval, {'horizontal': interval.json(), 'coarse': coarse.json(),
+                      'line_count_rule': 'complete-positive-integer-bounds-1',
                       'admitted_segments': admitted, 'excluded_gaps': gaps,
                       'vertical_period_division_used': False}
 

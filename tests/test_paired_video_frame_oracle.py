@@ -4,12 +4,15 @@ These tests do not launch an emulator or assemble the fixture. They are authored
 for a later separately admitted source test run; authoring is not execution.
 """
 from fractions import Fraction
+import json
+import struct
 
 import pytest
 
 from support.paired_video_frame_oracle import (
     HEIGHT, Interval, TimingUnqualified, horizontal_interval, phase_predictions,
-    predict_rows, pulse_parameters, rgb_for_rows, unwrap_counts, vga_geometry,
+    parse_calibration, predict_rows, pulse_parameters, rgb_for_rows, unwrap_counts,
+    vga_geometry,
 )
 
 
@@ -42,6 +45,102 @@ def test_horizontal_oracle_counts_missed_edges_without_equating_them_to_lines():
     assert receipt['vertical_period_division_used'] is False
 
 
+def test_complete_counts_above_eight_keep_the_128_line_gate():
+    positions = list(range(0, 133, 11))
+    records = [{'generation': 0, 'edge': Interval(line * 40 - 1, line * 40 + 1)}
+               for line in positions]
+    with pytest.raises(TimingUnqualified, match='at least 128 lines'):
+        horizontal_interval(records[:-1], Interval(39, 41))  # Only 121 lines.
+    interval, receipt = horizontal_interval(records, Interval(39, 41))
+    assert interval == Interval(40 - Fraction(1, 66), 40 + Fraction(1, 66))
+    assert receipt['admitted_segments'] == [{
+        'records': 13, 'physical_lines': 132, 'long_pair_constraints': 1,
+        'line_positions': positions,
+    }]
+    assert receipt['excluded_gaps'] == []
+
+
+def test_unique_fractional_count_has_no_arbitrary_upper_cutoff():
+    records = [{'generation': 0, 'edge': Interval(time, time)}
+               for time in (Fraction(0), Fraction(257, 3))]
+    interval, receipt = horizontal_interval(records, Interval(Fraction(1, 3), Fraction(1, 3)))
+    assert interval == Interval(Fraction(1, 3), Fraction(1, 3))
+    assert receipt['admitted_segments'][0]['line_positions'] == [0, 257]
+
+
+def test_eight_only_cutoff_cannot_hide_nine_line_ambiguity_in_a_long_span():
+    # Adjacent deltas are [8.2, 8.6], compatible with both 8 and 9 lines.
+    # Keeping only 8 previously formed a 128-line fit at the coarse upper edge.
+    records = [{'generation': 0,
+                'edge': Interval(index * Fraction(42, 5) - Fraction(1, 10),
+                                 index * Fraction(42, 5) + Fraction(1, 10))}
+               for index in range(17)]
+    with pytest.raises(TimingUnqualified, match='uniquely counted'):
+        horizontal_interval(records, Interval(Fraction(19, 20), Fraction(21, 20)))
+
+
+@pytest.mark.parametrize(('coarse', 'delta', 'expected'), [
+    ((Fraction(19, 20), Fraction(21, 20)), (Fraction(83, 10), Fraction(87, 10)),
+     {'min': 8, 'max': 9}),
+    ((Fraction(19, 20), Fraction(21, 20)), (Fraction(21, 2), Fraction(21, 2)),
+     {'min': 10, 'max': 11}),
+    ((Fraction(19, 20), Fraction(21, 20)), (Fraction(209, 20), Fraction(209, 20)),
+     {'min': 10, 'max': 11}),
+    ((Fraction(1, 3), Fraction(1, 3)), (Fraction(3), Fraction(10, 3)),
+     {'min': 9, 'max': 10}),
+    ((Fraction(1, 3), Fraction(1, 3)),
+     (3 + Fraction(1, 10**30), Fraction(10, 3) - Fraction(1, 10**30)),
+     {'min': 10, 'max': 9}),
+    ((Fraction(1, 3), Fraction(1, 3)), (Fraction(-1, 3), Fraction(0)),
+     {'min': 1, 'max': 0}),
+    ((Fraction(1, 3), Fraction(1, 3)), (Fraction(-1, 3), Fraction(1)),
+     {'min': 1, 'max': 3}),
+])
+def test_excluded_gap_bounds_preserve_closed_fractional_and_empty_ranges(coarse, delta, expected):
+    # An independently exact 128-line prefix makes the excluded gap observable
+    # in a successful receipt; that gap must not contribute to the fit.
+    period = sum(coarse) / 2
+    records = [{'generation': 0, 'edge': Interval(line * period, line * period)}
+               for line in range(129)]
+    records.append({'generation': 0,
+                    'edge': Interval(128 * period + delta[0], 128 * period + delta[1])})
+    interval, receipt = horizontal_interval(records, Interval(*coarse))
+    assert interval == Interval(period, period)
+    assert receipt['line_count_rule'] == 'complete-positive-integer-bounds-1'
+    gap, = receipt['excluded_gaps']
+    assert gap['after_record'] == 128
+    assert gap['possible_line_count_bounds'] == expected
+    assert gap['vertical_generation_changed'] is False
+    assert gap['delta'] == Interval(*delta).json()
+
+
+def test_half_wrap_safe_large_ambiguity_uses_bounded_receipt_fields():
+    counters = [(60000 - line * 40, 60000 - line * 40, 0) for line in range(129)]
+    for _ in range(2):
+        previous_upper = counters[-1][1]
+        counters.append(((previous_upper - 32767) & 0xffff,
+                         (previous_upper - 65534) & 0xffff, 0))
+    records = parse_calibration(b''.join(struct.pack('<HHH', *row) for row in counters),
+                                len(counters))
+    _, receipt = horizontal_interval(records, Interval(39, 41))
+    assert len(receipt['excluded_gaps']) == 2
+    gap = receipt['excluded_gaps'][-1]
+    assert gap['delta'] == Interval(32765, 98303).json()
+    assert gap['possible_line_count_bounds'] == {'min': 800, 'max': 2520}
+    assert 'possible_line_counts' not in gap
+    assert len(json.dumps(gap, sort_keys=True).encode('utf-8')) < 300
+
+
+def test_complete_counts_still_intersect_every_long_pair():
+    # Every adjacent gap uniquely counts 11 lines, but the two 132-line spans
+    # constrain H near 40 and 41 respectively. Neither span may be discarded.
+    times = [line * 40 for line in range(0, 133, 11)]
+    times.extend(132 * 40 + line * 41 for line in range(11, 133, 11))
+    records = [{'generation': 0, 'edge': Interval(time - 1, time + 1)} for time in times]
+    with pytest.raises(TimingUnqualified, match='Empty device-time interval'):
+        horizontal_interval(records, Interval(39, 41))
+
+
 def test_ambiguous_edge_count_is_not_turned_into_an_expected_phase():
     records = [{'generation': 0, 'edge': Interval(line * 40, line * 40 + 1)} for line in range(200)]
     with pytest.raises(TimingUnqualified, match='uniquely counted'):
@@ -57,7 +156,9 @@ def test_vertical_origin_jump_breaks_the_fit_instead_of_changing_horizontal_time
     interval, receipt = horizontal_interval(records, Interval(39, 41))
     assert interval.lo <= 40 <= interval.hi
     assert len(receipt['admitted_segments']) == 2
-    assert any(gap['vertical_generation_changed'] for gap in receipt['excluded_gaps'])
+    gap, = receipt['excluded_gaps']
+    assert gap['vertical_generation_changed'] is True
+    assert gap['possible_line_count_bounds'] is None
 
 
 def _manual_windows():

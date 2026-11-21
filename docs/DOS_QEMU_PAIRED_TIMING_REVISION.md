@@ -11,7 +11,10 @@ pulse-phase parity or `completed_guest_frames` qualification.
 
 The fixture is [paired_video_frame_fixture.py](../tests/support/paired_video_frame_fixture.py).
 The independent [timing oracle](../tests/support/paired_video_frame_oracle.py)
-and [native test](../tests/test_paired_video_frame_native.py) are unchanged.
+and [native test](../tests/test_paired_video_frame_native.py) were unchanged for
+the timing-witness revision and attempt03. The separate integer-count proposal
+below changes the oracle and its host tests; the guest fixture and native test
+remain unchanged.
 The previous result is recorded in the
 [paired source-frame plan](DOS_QEMU_PAIRED_SOURCE_FRAME_PLAN.md#first-native-attempt).
 
@@ -200,7 +203,7 @@ therefore coexist with worse edge coverage. Source-derived VGA window estimates
 are corroboration only, since the fixture did not journal CR04/CR05. No pixel
 feedback was used to select timing data or tune the oracle.
 
-### Next source review, not implemented
+### Historical mathematical review, before implementation
 
 A possible completeness correction is to consider every compatible positive
 integer line count using exact interval bounds:
@@ -211,9 +214,57 @@ by the old cutoff. Bounds-only evaluation avoids unbounded candidate lists.
 The existing half-wrap rule bounds adjacent expanded differences at 98,303 ticks;
 512 records still bound adjacent decisions and long-pair intersections.
 
-This mathematics was reviewed only. No revised oracle, H estimate, pulse schedule
-or retrospective pass was produced. Any implementation needs new source review
-and host evidence before a fresh native admission. Generation breaks, endpoint
+During the attempt03 diagnosis, this mathematics was reviewed only. No revised
+oracle, H estimate, pulse schedule or retrospective pass was produced then.
+Any implementation needs new source review and host evidence before a fresh
+native admission. Generation breaks, endpoint
 brackets, quantization, 128-line minimum, all long-pair constraints, H/8, fixed phase
 models, counterfactuals and execution/output limits must remain. The successful
 [return/pause gates](QEMU_PAUSE_AND_RETURN_GATES.md) qualify separate contracts.
+
+## Complete integer-count source proposal (2026-11-21)
+
+The oracle now has a staged source correction for the candidate-count cutoff.
+It has not been imported or tested, and no native attempt has been admitted for
+this revision. The preceding diagnosis describes the unchanged oracle used by
+attempt03; that failed result and every earlier raw receipt remain unchanged.
+
+For same-generation adjacent edges, closed overlap of the observed difference
+`delta` with `n * coarse` is equivalent to the complete positive-integer bounds
+`n_min = max(1, ceil(delta.lo / coarse.hi))` and
+`n_max = floor(delta.hi / coarse.lo)`. The arithmetic stays exact in `Fraction`.
+Equal endpoints admit one physical count; lower greater than upper means no
+count, and lower less than upper means ambiguity. Both nonunique cases break
+the segment. A vertical-generation change always breaks it without inferring
+a count. Each decision uses the original coarse band, never a fit already
+tightened by another pair. No list of candidate integers is materialized.
+
+New successful horizontal receipts identify
+`line_count_rule="complete-positive-integer-bounds-1"`. Within `excluded_gaps`,
+`possible_line_count_bounds` replaces the former enumerated
+`possible_line_counts` field. It is `{"min": n_min, "max": n_max}` for a
+same-generation gap, including an empty range with `min > max`, and `null` for
+a generation change where counting was not attempted. The existing delta,
+record index and generation-change flag remain. The native collector retains
+this receipt without interpreting the old list field; no existing caller in
+the repository consumes that field. Historical receipts keep their original
+schema and are not rewritten.
+
+The 512-record limit and half-wrap rule remain in the parser. Three adjacent
+counter steps, each at most 32,767 ticks, bound an adjacent expanded difference
+above by 98,303 ticks. Candidate bounds therefore stay finite for a positive
+coarse interval, while their representation has two integer fields independent
+of the number of candidates. There are still at most 511 adjacent decisions
+and 130,816 long-pair intersections. The 128-line minimum, every long-pair
+constraint, endpoint quantization, geometry/coarse band, pulse formulas,
+same-frame reference, H/8 and both phase/counterfactual models are unchanged.
+
+Focused host regressions are authored for unique counts above eight, a false
+eight-line uniqueness caused by omitting nine, closed fractional endpoints and
+sub-float distinctions, empty/negative-lower ranges, generation breaks, bounded
+diagnostics from half-wrap-safe raw counters, and inconsistent long spans.
+Their execution remains pending under a separately reviewed finite host gate.
+Any future native run still needs its own clean source identity and fresh
+admission. This source correction neither selects a count from captured pixels
+nor guarantees that QEMU calibration or the separate DOSBox pulse ambiguity
+will qualify.
