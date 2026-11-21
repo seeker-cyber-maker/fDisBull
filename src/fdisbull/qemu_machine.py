@@ -664,7 +664,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                         label+' arm exceeded its host deadline; input must not be replayed',vm=vm)
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
-                        'video_frame_probe', 'capture_video_frame', 'video_frame_advance'):
+                        'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance'):
                     vm.close()
                 raise error
             return result
@@ -791,6 +791,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         label='Video frame stream stop',parameter_validator=validate_video_frame_parameters)
     video_frame_probe=machine_trace_operation(QemuVideoFrameMixin.video_frame_probe,
         label='Video frame pixel probe',parameter_validator=validate_video_frame_probe)
+    video_frame_rgba=machine_trace_operation(QemuVideoFrameMixin.video_frame_rgba,
+        label='Video frame RGBA',parameter_validator=validate_video_frame_parameters)
     capture_video_frame=machine_trace_operation(QemuVideoFrameMixin.capture_video_frame,
         label='Video frame capture',parameter_validator=validate_video_frame_capture)
     video_frame_advance=machine_trace_operation(QemuVideoControlMixin.video_frame_advance,
@@ -1873,6 +1875,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
                 'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',
+                'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe',
+                'capture-video-frame','video-frame-advance',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
                 'mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-up','mouse.button-click','input-state','input-cancel-pending',

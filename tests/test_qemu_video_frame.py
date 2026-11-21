@@ -245,7 +245,7 @@ def test_explicit_stale_guard_has_no_probe_or_export_side_effect(video):
     lambda s: s.video_frame_probe([[320, 0]]),
     lambda s: s.video_frame_probe([[0, 200]]),
     lambda s: s.video_frame_probe([[True, 0]]),
-    lambda s: s.video_frame_probe([[0, 0]] * 257),
+    lambda s: s.video_frame_probe([[0, 0]] * 4097),
     lambda s: s.video_frame_probe([], stream='unpaired'),
     lambda s: s.capture_video_frame('../escape.png'),
     lambda s: s.capture_video_frame(max_bytes=True),

@@ -10,6 +10,7 @@ from functools import wraps
 
 from .debugger import bounded
 from .operation_budget import rpc_budget
+from .qemu_video_frame import VIDEO_FRAME_SCRIPT_OPERATIONS, validate_video_frame_script_parameters
 
 ENGINE_OPERATIONS = {
     'engine-state':'engine_state', 'engine-set':'write_engine_state',
@@ -23,6 +24,7 @@ ENGINE_OPERATIONS = {
 
 OPERATIONS = {
     **ENGINE_OPERATIONS,
+    **VIDEO_FRAME_SCRIPT_OPERATIONS,
     'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
@@ -535,6 +537,13 @@ def validate_script(script, *, session=None):
                             raise ValueError('Renderer probe requires its native extension and virtual clock')
                         from .qemu_display import validate_display_probe_parameters
                         validate_display_probe_parameters(**params, allow_references=True)
+                    if op in VIDEO_FRAME_SCRIPT_OPERATIONS:
+                        if (backend or actual) not in ('qemu-machine','qemu-dos'):
+                            raise ValueError('Source video frames require an explicit native QEMU backend')
+                        capability = 'video_frame_control' if op == 'video-frame-advance' else 'video_frame_capture'
+                        if session is not None and not getattr(session,'capabilities',{}).get(capability):
+                            raise ValueError('Source video frames require their native extension and explicit virtual/precise profiles')
+                        validate_video_frame_script_parameters(op, params, allow_references=True)
                     if op=='vga-configuration':
                         if session is not None and not getattr(session,'capabilities',{}).get('vga_configuration'):
                             raise ValueError('VGA configuration requires its native extension and virtual/precise profiles')
@@ -638,6 +647,7 @@ def validate_script(script, *, session=None):
                  'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                  'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
+        guarded.update(VIDEO_FRAME_SCRIPT_OPERATIONS)
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
             pending=(any(step['op']=='run' for step in expanded)
@@ -851,6 +861,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='display-probe':
                 from .qemu_display import validate_display_probe_parameters
                 validate_display_probe_parameters(**params)
+            if step['op'] in VIDEO_FRAME_SCRIPT_OPERATIONS:
+                validate_video_frame_script_parameters(step['op'], params)
+                default = 5000 if step['op'] == 'video-frame-advance' else 1000
+                params['timeout_ms'] = min(params.get('timeout_ms', default), remaining)
             if step['op']=='vga-configuration':
                 from .qemu_vga_configuration import validate_vga_configuration_parameters
                 validate_vga_configuration_parameters(**params)
@@ -936,6 +950,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                         in ('not_requested','not_dispatched','skipped_initial_match')):
                     keyboard_touched = prior_input_touched
             record['result'] = result
+            if step['op'] == 'video-frame-advance':
+                if (not isinstance(result,dict) or result.get('format') != 'fdisbull-video-frame-advance-1'
+                        or result.get('advance_completed') is not True):
+                    raise ValueError('Source frame advance stopped before its owned completion stop')
             if action_script and step['op']=='scene-act' and time.monotonic() >= deadline:
                 from .qemu_scene_act import _quarantine
                 error = TimeoutError('Scene action returned after the script deadline')
@@ -996,6 +1014,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             failure = {'index':index,'op':step['op'],'type':type(error).__name__,'message':str(error)}
             record.update(ok=False,error=failure)
             if hasattr(error,'result'):record['result']=error.result
+            if step['op'] in VIDEO_FRAME_SCRIPT_OPERATIONS:
+                for field in ('video_frame_evidence','video_frame_advance_evidence'):
+                    detail = getattr(error,field,None)
+                    if isinstance(detail,dict) and detail is not getattr(error,'result',None):
+                        record[field] = detail
+                cleanup = getattr(error,'video_frame_cleanup_error',None)
+                if isinstance(cleanup,str):record['video_frame_cleanup_error'] = cleanup
             if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS and hasattr(error,'checkpoint_result'):
                 record['checkpoint_result']=error.checkpoint_result
             if checkpoint_script and step['op'] in CHECKPOINT_OPERATIONS:

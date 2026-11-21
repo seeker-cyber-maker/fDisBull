@@ -35,6 +35,12 @@ Completed guest frames, broader sound devices and legacy timing parity remain
 open gates. See [native timing synchronization](DOS_QEMU_TIMING.md) for the
 mapping, stop policy and exact limits.
 
+The explicit [completed VGA source-raster APIs](DOS_QEMU_SOURCE_FRAMES.md)
+provide ordered probes of up to 4096 pixels, direct Python RGBA observations,
+PNG artifacts and bounded next-raster control under their own native source
+identity. Their JSON/script routes preserve that separate contract; they do
+not establish legacy frame-phase or CPU/image coherence equivalence.
+
 The standard profile supports restricted raw-machine checkpoints and
 process checkpoints for original COM/MZ programs. The optional native layers
 extension supplies guarded RAM and instruction-fetch views. The default-switch

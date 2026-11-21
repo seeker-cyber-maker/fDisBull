@@ -205,6 +205,12 @@ METHODS = {
     "debug-vga-configuration": "Observe current VGA configuration and its retained publication stamp without rendering; run,[timeout_ms] (requires vga_configuration)",
     "debug-display-stop": "Stop renderer observation without refreshing or advancing the machine; run",
     "debug-capture-display": "Save a retained renderer publication without refresh; run,[name,after_update] (guest frame completion unknown)",
+    "debug-video-frame-start": "Start the explicit native VGA source-row stream without execution; run,[timeout_ms] (requires video_frame_capture and virtual/precise profiles)",
+    "debug-video-frame-observe": "Observe the current owned source stream without execution; run,[timeout_ms] (source raster completion is separate from application drawing)",
+    "debug-video-frame-stop": "Stop source-row observation and retain its last complete raster; run,[timeout_ms]",
+    "debug-video-frame-probe": "Read 0..4096 ordered RGB source pixels in bounded native chunks without execution; run,points,[stream,frame_id,timeout_ms]",
+    "debug-capture-video-frame": "Save the retained complete source raster as PNG without execution; run,[name,stream,frame_id,max_bytes,timeout_ms]",
+    "debug-video-frame-advance": "Continue toward exactly the next accepted source raster in an existing stream; run,[timeout_ms,stop_on_hook] (requires video_frame_control; preserves earlier stops)",
     "debug-retrace-observe": "Observe stopped native precise VGA retrace phase and timing generation; run,[timeout_ms] (guest frame completion unknown)",
     "debug-retrace-wait": "Continue once toward the next precise VGA retrace edge and verify its timing generation; run,[edge,timeout_ms] (preserves earlier stops)",
     "debug-clock-sync-start": "Start an owned 1:1 virtual/host monotonic clock mapping without execution; run,[tolerance_ns,max_lag_ns,max_wait_ns,timeout_ms]",
@@ -1550,6 +1556,13 @@ def respond(request, default_project=None, debugger=None):
         scene_wait_result = getattr(e, "scene_wait_result", None)
         scene_act_result = getattr(e, "scene_act_result", None)
         script_result = getattr(e, "script_result", None)
+        video_frame_error = (isinstance(request,dict) and request.get("method") in (
+            "debug-video-frame-start", "debug-video-frame-observe", "debug-video-frame-stop",
+            "debug-video-frame-probe", "debug-capture-video-frame", "debug-video-frame-advance")
+            and any(isinstance(item,dict) and item.get("format") in (
+                "fdisbull-video-frame-error-1", "fdisbull-video-frame-advance-1")
+                for item in (observed, getattr(e,"video_frame_evidence",None),
+                             getattr(e,"video_frame_advance_evidence",None))))
         checkpoint_script_error = (isinstance(request, dict) and request.get("method") == "debug-script"
                                    and getattr(e, "_qemu_checkpoint_script_error", False) is True
                                    and isinstance(script_result, dict)
@@ -1569,7 +1582,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(script_result, dict)
                                and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error):
             raise
         value = {
             "id": request_id,
@@ -1584,6 +1597,17 @@ def respond(request, default_project=None, debugger=None):
             value["error"]["result"] = e.result
         if step_sequence_error:
             value["error"]["result"] = observed
+        if video_frame_error:
+            if observed is not None:
+                value["error"]["result"] = observed
+            for field in ("video_frame_evidence", "video_frame_advance_evidence"):
+                detail = getattr(e,field,None)
+                if isinstance(detail,dict) and detail is not observed:
+                    value["error"][field] = detail
+            for field in ("video_frame_cleanup_error", "video_frame_file_cleanup_error"):
+                detail = getattr(e,field,None)
+                if isinstance(detail,str):
+                    value["error"][field] = detail
         if scene_wait_error or scene_act_error:
             # Keep a primary native stop separate from the wait's observed
             # prefix. The ordinary output policy bounds this failure envelope

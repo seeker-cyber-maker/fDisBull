@@ -1441,6 +1441,12 @@ class DebugWorkspace:
                         'debug-display-start':'display_start','debug-display-observe':'display_observe',
                         'debug-display-stop':'display_stop','debug-capture-display':'capture_display',
                         'debug-display-probe':'display_probe',
+                        'debug-video-frame-start':'video_frame_start',
+                        'debug-video-frame-observe':'video_frame_observe',
+                        'debug-video-frame-stop':'video_frame_stop',
+                        'debug-video-frame-probe':'video_frame_probe',
+                        'debug-capture-video-frame':'capture_video_frame',
+                        'debug-video-frame-advance':'video_frame_advance',
                         'debug-vga-configuration':'vga_configuration_observe',
                         'debug-retrace-observe':'retrace_observe',
                         'debug-retrace-wait':'retrace_wait',
@@ -1469,6 +1475,12 @@ class DebugWorkspace:
             del self.sessions[run]
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
+        if method in ('debug-video-frame-start','debug-video-frame-observe','debug-video-frame-stop',
+                      'debug-video-frame-probe','debug-capture-video-frame','debug-video-frame-advance'):
+            capability = 'video_frame_control' if method == 'debug-video-frame-advance' else 'video_frame_capture'
+            backend = getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
+            if backend not in ('qemu-machine','qemu-dos') or not getattr(selected,'capabilities',{}).get(capability):
+                raise ValueError('Source video frames require their native extension and explicit virtual/precise profiles')
         if method in ('debug-save-machine-state','debug-load-machine-state'):
             if (getattr(selected,'metadata',{}).get('backend') != 'qemu-dos'
                     or not getattr(selected,'capabilities',{}).get('owned_machine_checkpoints')):
