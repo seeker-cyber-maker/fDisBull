@@ -37,6 +37,17 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("native/qemu-agi", "*.py"),
+    ("native/qemu-agi", "*.c"),
+    ("native/qemu-agi", "*.h"),
+    ("native/qemu-agi", "*.md"),
+    ("native/qemu-agi", "*.txt"),
+    ("native/qemu-agi", "*.json"),
+    ("native/qemu-agi", "*.patch"),
+    ("native/qemu-agi", "*.xml"),
+    ("native/qemu-agi", "*.mak"),
+    ("native/qemu-agi", "*.build"),
+    ("native/qemu-agi", "Kconfig"),
     ("packages/fdisbull-core/src/fdisbull_core", "*.py"),
     ("packages/fdisbull-core/tests", "*.py"),
     ("src/fdisbull/native_runtime", "*.c"),
