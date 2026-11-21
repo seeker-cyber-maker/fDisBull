@@ -6,6 +6,7 @@
 #define AGI_CPU_H
 #include "cpu-qom.h"
 #include "exec/cpu-defs.h"
+#include "qapi/error.h"
 
 #define CPU_RESOLVING_TYPE TYPE_AGI_CPU
 #define AGI_CODE_MAX 65536
@@ -13,9 +14,14 @@
 #define AGI_EVENT_MAX 65536
 #define AGI_INSN_MAX 64
 #define AGI_PROFILE "agi-2917-scalar-position-pilot-1"
+#define AGI_BINDING_PROFILE "agi-2917-view-binding-pilot-1"
+#define AGI_CATALOG_MAX_BYTES 65536
+#define AGI_CATALOG_MAX_LOOPS 1024
+#define AGI_CATALOG_MAX_CELS 4096
 #define AGI_OBS_DISASM 1
 #define AGI_OBS_SCENE 2
 #define AGI_OBS_MASK 3
+#define AGI_TB_BINDING 4
 #define MMU_USER_IDX 0
 
 typedef enum AgiStatus {
@@ -30,22 +36,60 @@ typedef enum AgiFault {
     AGI_FAULT_BRANCH,
     AGI_FAULT_CONDITION,
     AGI_FAULT_FETCH,
-    AGI_FAULT_CONDITION_LIMIT
+    AGI_FAULT_CONDITION_LIMIT,
+    AGI_FAULT_MISSING_VIEW,
+    AGI_FAULT_VIEW_NOT_LOADED,
+    AGI_FAULT_VIEW_UNBOUND,
+    AGI_FAULT_LOOP,
+    AGI_FAULT_CEL,
+    AGI_FAULT_EMPTY_LOOP
 } AgiFault;
 
 typedef struct AgiActor {
     uint32_t x, y, prev_x, prev_y;
+    uint32_t view_bound, view, loop, cel, width, height;
+    uint32_t animated, update, cycling, ignore_horizon, update_pos;
+    uint32_t view_replaced, motion, cycle, direction;
 } AgiActor;
+
+typedef struct AgiCatalogCel {
+    uint32_t width, height;
+} AgiCatalogCel;
+
+typedef struct AgiCatalogLoop {
+    uint32_t first_cel, cel_count;
+} AgiCatalogLoop;
+
+typedef struct AgiCatalogView {
+    bool present;
+    uint32_t first_loop, loop_count;
+    char source_sha256[65];
+} AgiCatalogView;
+
+typedef struct AgiViewCatalog {
+    uint32_t size, horizon, view_count, loop_count, cel_count;
+    char sha256[65];
+    AgiCatalogView views[256];
+    AgiCatalogLoop loops[AGI_CATALOG_MAX_LOOPS];
+    AgiCatalogCel cels[AGI_CATALOG_MAX_CELS];
+} AgiViewCatalog;
+
+enum { AGI_EVENT_RETIRE, AGI_EVENT_POSITION, AGI_EVENT_ACTOR, AGI_EVENT_VIEW_LOAD };
 
 typedef struct AgiEvent {
     uint64_t seq, retired, control_generation;
     uint32_t kind, pc, opcode, length, next_pc, actor;
+    uint32_t resolved_value, resolved_x, resolved_y, before_loaded, after_loaded;
     AgiActor before, after;
 } AgiEvent;
 
 typedef struct CPUArchState {
     uint32_t v[256], f[256];
     AgiActor actors[AGI_ACTORS];
+    uint32_t binding_profile, horizon, loaded_views[256];
+    /* Diagnostic scratch is neither architectural state nor a guest register. */
+    AgiActor observed_actor;
+    uint32_t observed_loaded;
     uint32_t pc, code_size, status;
     uint32_t fault_code, fault_pc, fault_opcode;
     uint32_t obs_mask, obs_capacity, obs_count;
@@ -63,6 +107,7 @@ struct ArchCPU {
     uint8_t code[AGI_CODE_MAX + 1];
     char source_sha256[65];
     AgiEvent *events;
+    AgiViewCatalog *catalog;
 };
 
 struct AgiCPUClass {
@@ -77,13 +122,15 @@ void agi_cpu_translate_code(CPUState *cs, TranslationBlock *tb,
 void agi_finish_clock(CPUArchState *env);
 void agi_clear_observation(CPUArchState *env);
 void agi_restart(CPUArchState *env);
+bool agi_load_view_catalog(AgiCPU *cpu, const char *filename, Error **errp);
 
 static inline void cpu_get_tb_cpu_state(CPUArchState *env, vaddr *pc,
                                         uint64_t *cs_base, uint32_t *pflags)
 {
     *pc = env->pc;
     *cs_base = 0;
-    *pflags = env->obs_mask & AGI_OBS_MASK;
+    *pflags = (env->obs_mask & AGI_OBS_MASK) |
+              (env->binding_profile ? AGI_TB_BINDING : 0);
 }
 
 #include "exec/cpu-all.h"

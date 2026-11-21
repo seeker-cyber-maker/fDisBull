@@ -31,12 +31,28 @@ def decode_view_cel(payload: bytes, *, loop: int, cel: int) -> dict:
     complete row, including that transparent remainder. Invalid inputs raise
     ValueError; neither input bytes nor external state are changed.
     """
-    if type(payload) is not bytes or not 5 <= len(payload) <= _MAX_PAYLOAD:
-        raise ValueError("Expected a 5..65535-byte uncompressed VIEW payload")
     if type(loop) is not int or not 0 <= loop <= 255:
         raise ValueError("loop must be an integer in 0..255")
     if type(cel) is not int or not 0 <= cel <= 255:
         raise ValueError("cel must be an integer in 0..255")
+    return _read_view(payload, loop, cel)
+
+
+def describe_view(payload: bytes) -> dict:
+    """Validate a complete VIEW and return its effective cel geometry/topology.
+
+    This uses the same bounded directory/RLE validation as ``decode_view_cel``
+    and allocates no pixel arrays. Empty loops remain explicit. Every effective
+    loop/cel reference retains its source offset and mirroring metadata; exact
+    shared pointers are described independently without decoding them twice.
+    The resource digest binds this metadata to the complete input payload.
+    """
+    return _read_view(payload, None, None)
+
+
+def _read_view(payload, loop, cel):
+    if type(payload) is not bytes or not 5 <= len(payload) <= _MAX_PAYLOAD:
+        raise ValueError("Expected a 5..65535-byte uncompressed VIEW payload")
 
     def word(offset):
         if not 0 <= offset <= len(payload) - 2:
@@ -47,7 +63,7 @@ def decode_view_cel(payload: bytes, *, loop: int, cel: int) -> dict:
     header_end = 5 + 2 * loop_count
     if not loop_count or header_end > len(payload):
         raise ValueError("Invalid VIEW loop directory")
-    if loop >= loop_count:
+    if loop is not None and loop >= loop_count:
         raise ValueError("Requested loop is absent")
 
     spans = {(0, header_end, "VIEW header")}
@@ -75,12 +91,14 @@ def decode_view_cel(payload: bytes, *, loop: int, cel: int) -> dict:
             raise ValueError("VIEW cel-reference budget exceeded")
         loops.append((start, count, end))
         spans.add((start, end, "loop directory"))
-    if cel >= loops[loop][1]:
+    if loop is not None and cel >= loops[loop][1]:
         raise ValueError("Requested cel is absent")
 
     headers = {}
+    cel_offsets = []
     selected = None
     for index, (start, count, end) in enumerate(loops):
+        offsets = []
         for number in range(count):
             offset = start + word(start + 1 + 2 * number)
             if offset < end or offset + 3 > len(payload):
@@ -89,9 +107,11 @@ def decode_view_cel(payload: bytes, *, loop: int, cel: int) -> dict:
             if not 1 <= width <= _MAX_WIDTH or not 1 <= height <= _MAX_HEIGHT:
                 raise ValueError("Invalid VIEW cel dimensions")
             headers[offset] = (width, height, flags)
+            offsets.append(offset)
             spans.add((offset, offset + 3, "cel header"))
             if index == loop and number == cel:
                 selected = offset
+        cel_offsets.append(offsets)
 
     ordered = sorted(spans)
     previous_end = 0
@@ -105,6 +125,7 @@ def decode_view_cel(payload: bytes, *, loop: int, cel: int) -> dict:
 
     selected_pixels = None
     selected_end = None
+    data_ends = {}
     for offset, (width, height, flags) in sorted(headers.items()):
         cursor = offset + 3
         limit = limits[offset]
@@ -127,6 +148,27 @@ def decode_view_cel(payload: bytes, *, loop: int, cel: int) -> dict:
                 drawn += length
         if offset == selected:
             selected_pixels, selected_end = pixels, cursor
+        data_ends[offset] = cursor
+
+    if loop is None:
+        topology = []
+        for index, offsets in enumerate(cel_offsets):
+            cels = []
+            for number, offset in enumerate(offsets):
+                width, height, flags = headers[offset]
+                mirror_enabled = bool(flags & 128)
+                original_loop = (flags >> 4) & 7 if mirror_enabled else None
+                cels.append({"cel": number, "width": width, "height": height,
+                             "transparent_color": flags & 15,
+                             "mirror_enabled": mirror_enabled,
+                             "stored_original_loop": original_loop,
+                             "mirrored": mirror_enabled and original_loop != index,
+                             "cel_offset": offset, "data_offset": offset + 3,
+                             "data_end": data_ends[offset]})
+            topology.append({"loop": index, "cels": cels})
+        return {"source_sha256": sha256(payload).hexdigest(),
+                "payload_bytes": len(payload), "cel_references": references,
+                "loops": topology}
 
     width, height, flags = headers[selected]
     mirror_enabled = bool(flags & 128)

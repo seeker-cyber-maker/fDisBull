@@ -66,8 +66,8 @@ The shared package also owns bounded private-pipe JSON-RPC exchange in
 Product adapters retain launch profiles, public error types, request prefixes,
 EOF diagnostics, input ownership and process cleanup. The common exchange does
 not start a process or transfer control. Both applications pin shared development
-version `0.1.0.dev6`, which also carries the experimental AGI scene consumer,
-position edit planners and bounded VIEW cel decoder;
+version `0.1.0.dev7`, which also carries the experimental AGI scene consumer,
+position edit planners, bounded VIEW cel decoder and validated VIEW topology;
 earlier memory-only and transport-only wheels cannot satisfy that package.
 
 `fdisbull_core.agi_scene` is a deterministic snapshot/delta consumer for the

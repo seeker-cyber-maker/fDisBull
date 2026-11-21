@@ -11,6 +11,14 @@ tests and benchmark use authored raw bytecode; a full AGI game engine, resource
 loader, renderer, scene editor and original-format resource writer are separate
 work.
 
+An explicit `-M agi-test,view-catalog=/private/catalog.bin` selects the separate
+[VIEW binding profile](VIEW_BINDING_PROFILE.md). It executes bounded resource
+loads, animation setup, view/loop/cel selection and geometry changes against an
+immutable catalog. Its richer snapshot/event schemas preserve the existing
+scalar-position default and consumer. The [private reconstruction packet](VIEW_BINDING_PACKET.md)
+connects native pose state to source-bound PQ1/KQ1 development fragments and
+decoded assets, with unsupported draw/presentation boundaries explicit.
+
 ## Observation control
 
 `agi-observation-mask` is a host-owned two-bit control register. It is separate
@@ -20,7 +28,7 @@ from the 256 AGI variables and 256 AGI flags.
 | --- | --- | --- |
 | `0` | Off, the default | None; generated TCG has no observation-helper calls |
 | `1` | `DISASM` | Completed instructions, original code location/bytes, actual successor |
-| `2` | `SCENE` | Committed actor-position changes with before/after state and their instruction location |
+| `2` | `SCENE` | Committed actor changes with before/after state and their instruction location; the binding profile also records VIEW load membership |
 | `3` | Both | The same two channels, with completion before scene change |
 
 The mask is part of the target's translation-block identity. Translation emits
