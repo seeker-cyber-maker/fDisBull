@@ -1,8 +1,9 @@
 # Strict paired ordinary-pause witness
 
 The original witness was proposed from `353df71e2281a4078ac5c3ff87f89cd3ccdbb17e`.
-This document now records a source-only receipt-retention revision prepared
-against `86a5fdb49d17452f9eda8af9380897f4a92ea7cc`. The revised source has not
+This document now records a source-only public-observation capture revision
+prepared from the strict witness at `f69a946110fce16bdd3f5d00daf7ad561b374783`.
+The revised source has not
 been imported, collected, tested or executed and grants no new execution admission.
 
 **Historical source precondition:** at the original base, a COM process retains its reserved
@@ -74,7 +75,7 @@ aggregate before final cleanup or failure additions. These are sizing
 estimates, not observations of the missing episodes or a guaranteed maximum.
 Compact encoding alone therefore does not justify retaining the old 4 MiB cap.
 
-The fresh revision changes only JSON whitespace and the finite evidence-file
+The receipt-retention revision changed only JSON whitespace and the finite evidence-file
 limit to 8 MiB (8,388,608 bytes), including the final paired aggregate. It keeps
 sorted keys, strict non-NaN encoding, the trailing newline, the pre-write byte
 check, atomic replacement, every raw field, every duplicate observation and
@@ -88,6 +89,37 @@ unchanged. The controller keeps the 128 MiB total output cap and additional
 256 MiB free-space reserve. Both earlier failed attempts remain failed and
 immutable. The revised source requires independent review, exact integrated
 host pins and a separate fresh native admission.
+
+### Public-observation capture revision
+
+Strict pause attempt 03 retained the full compact paired aggregate of
+4,467,660 bytes within the 8 MiB cap. Both eight-episode bodies completed, but
+the independent final checker failed with
+`QEMU public control results differ from actual dispatch replies`. The attempt
+remains failed; completed bodies do not qualify the whole gate.
+
+The public-call journal already deep-copies each immediate dispatch reply.
+`_Qemu.call` returned the original result, and the episode/control/block records
+kept its nested `mapping.process` reference. Session cleanup subsequently
+changed that shared object. All eight stored resume results, eight first-stop
+results and 32 stopped-status blocks then differed from their original public
+replies in the same six process fields. The drift consists of capture epoch,
+`machine_closed`, source live flag/ranges/status and process state; it is
+confined to `mapping.process`. Every other block field remains equal.
+
+The proposed correction is one line: `_Qemu.call` returns a `deepcopy` of the
+result from its existing journal call. This captures every public result at
+return, including each block status, while leaving the journal's own copy and
+every native wrapper untouched. Exact equality checks remain unchanged; no
+field is ignored, repaired or normalized. No additional guest operation is
+introduced, and future capture or oracle failures still fail the attempt.
+
+Compact JSON, the fixed 8 MiB evidence-file limit, 128 MiB total output cap,
+256 MiB reserve, eight waits, four brackets, clock rules, deadlines and all
+other bounds remain as reviewed. Original attempts 01, 02 and 03 and their
+source/controllers/raw receipts remain immutable failures. The new controller
+must retain a pending host identity until root integrates and reviews the
+complete proposed source. Separate fresh admission is still required.
 
 The controller must pin the clean integrated host, this file, the existing boot
 preparation helper, current Python/interpreter dependencies, firmware, media,

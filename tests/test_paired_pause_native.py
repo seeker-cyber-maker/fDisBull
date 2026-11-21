@@ -294,7 +294,7 @@ class _Qemu:
     def call(self, method, arguments=None):
         assert self.debug.vm is self.vm and self.vm.qmp is self.qmp and self.vm.gdb is self.remote
         assert self.vm.process.poll() is None
-        return self.journal.call('public.' + method, arguments, lambda: getattr(self.debug, method)(**(arguments or {})))
+        return deepcopy(self.journal.call('public.' + method, arguments, lambda: getattr(self.debug, method)(**(arguments or {}))))
 
     @contextmanager
     def native_trace(self):
