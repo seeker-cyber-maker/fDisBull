@@ -1,5 +1,42 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Current native stopped-control checkpoint (2026-11-21)
+
+The replacement for Native Verification Handoff recovered the retained Linux
+source/build/controller and the later Metadata05 work that was not in the last
+handoff. The corrected producer and static dependency closure passed. Freeze02
+then passed in 42.640 seconds, and a separately reviewed check-only phase passed
+in 16.290 seconds, with the original limits and full input checks retained.
+Freeze01 remains a preserved failed preparation attempt.
+
+The first new native stopped-control attempt ran at exact source
+`0cacf582e5c5679ea4a842b2f27dc55887e5fc69` and **failed**: one test, one failure,
+zero errors/skips. One original QEMU owner produced one raster and verified
+export. Its first two observations completed at native generations 0 and 1,
+demonstrating the intervening acknowledged same-byte write while selected bytes
+remained equal. The raw ABA writes/readbacks also completed during observation
+three, but a QMP event caused an `input-after` refusal before the final native
+generation query. Generation 3 and the intended `native-control-after` refusal
+were not observed. The exact event payload was omitted by the witness's
+unexpected-failure retention path and cannot be reconstructed from the saved
+logs. See the [complete gate record](QEMU_STOPPED_CONTROL_GATE.md#native-attempt01-unexpected-event-refusal-2026-11-21).
+
+The complete attempt took 19.614 seconds, with clean final original-owner reap,
+no remaining owned/adopted or selected native processes, and identical preflight/postflight checks
+over 5,968 files and six trees. These cleanup and intermediate observations do
+not promote the failed gate. The entire failed output, controller, sealed plans
+and prior Metadata05 state are saved with hashes. Studio's active checkout and
+all nine pre-existing dirty files were preserved and backed up separately.
+
+Next: retain bounded attached failure evidence on every observation exception,
+before deciding whether its refusal matches the expected native counter change.
+Capture the event, stage and original owner/channel disposition, keeping the
+event guard and exact acceptance criteria unchanged. Review and freeze a fresh
+attempt against its actual source/controller; do not reuse the exhausted native
+output or automatically retry. No production correction is justified until the
+event is identified. The native gate and all 143 surface, 18 workgroup and seven
+campaign promotion obligations remain open. DOSBox remains the default.
+
 ## Current selected-state observation checkpoint (2026-11-21 UTC)
 
 The separate passive source-raster/stopped-state operation combines selected CPU
