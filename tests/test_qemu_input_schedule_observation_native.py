@@ -47,9 +47,13 @@ QUERY_VIDEO = 'x-fdisbull-query-video-frame'
 EXPORT = 'x-fdisbull-export-video-frame'
 REFUSAL_COMMANDS = ['query-status', 'query-status', 'query-replay',
                     'x-fdisbull-query-clock', QUERY_INPUT]
-HEALTH_COMMANDS = ['query-status', QUERY_INPUT, QUERY_KEYS,
-                   'x-fdisbull-query-clock', 'query-replay',
-                   'human-monitor-command', QUERY_VIDEO]
+HEALTH_COMMANDS = {
+    'armed': ['query-status', QUERY_INPUT, 'x-fdisbull-query-clock',
+              'query-replay', 'human-monitor-command', QUERY_VIDEO],
+    'cancelled': ['query-status', QUERY_INPUT, QUERY_KEYS,
+                  'x-fdisbull-query-clock', 'query-replay',
+                  'human-monitor-command', QUERY_VIDEO],
+}
 
 
 def _inputs(request):
@@ -113,7 +117,8 @@ def test_native_input_schedule_refuses_armed_and_cancelled_source_state_observat
             exports=1, native_schedule_arms=1, native_schedule_cancels=1,
             scheduled_events=1, dispatched_events=0, guest_write_bytes=0,
             native_control_arms=0, raw_packets=0, health_blocks=2,
-            health_qmp_reads_per_block=7, health_register_reads_per_block=1,
+            health_qmp_reads_by_state={'armed': 6, 'cancelled': 7},
+            health_register_reads_per_block=1,
             health_ram_bytes_per_block=2),
         unknown=dict(atomic=False, native_mutation_revision=None,
             whole_machine_revision=None, completed_guest_frames=False,
@@ -271,11 +276,18 @@ def test_native_input_schedule_refuses_armed_and_cancelled_source_state_observat
 
                 def health(expected_schedule):
                     healthy_owner()
+                    state = expected_schedule['state']
+                    assert state in ('armed', 'cancelled')
+                    # The retained producer refuses frame-key queries while a
+                    # schedule is armed. Do not invent a current keyboard
+                    # receipt from the baseline; query it after cancellation.
+                    keyboard_read = ('unavailable_active_schedule' if state == 'armed'
+                                     else 'observed')
                     begin = len(calls)
                     with owner['lock']:
                         status = qmp.call('query-status')
                         input_state = qmp.call(QUERY_INPUT)
-                        keyboard = qmp.call(QUERY_KEYS)
+                        keyboard = qmp.call(QUERY_KEYS) if state == 'cancelled' else None
                         clock = qmp.call('x-fdisbull-query-clock')
                         counter = qmp.call('query-replay')
                         registers = remote.registers()
@@ -283,6 +295,7 @@ def test_native_input_schedule_refuses_armed_and_cancelled_source_state_observat
                         monitor = qmp.call('human-monitor-command', {'command-line': 'info registers'})
                         source = qmp.call(QUERY_VIDEO)
                     evidence['health'].append(dict(schedule=input_state, keyboard=keyboard,
+                        keyboard_read=keyboard_read,
                         status=status, clock=clock, counter=counter, registers=registers,
                         ram=dict(address=address, length=2, space='physical', data_hex=ram.hex(),
                                  sha256=_sha(ram)), monitor=monitor, source=source,
@@ -290,8 +303,12 @@ def test_native_input_schedule_refuses_armed_and_cancelled_source_state_observat
                         owner=_identity(debug, owner)))
                     assert status == first['status_before'] and status['running'] is False
                     assert input_state == expected_schedule and 'dispatch-ns' not in input_state
-                    assert keyboard == first['input']['before']['keyboard']
-                    _keyboard_neutral(keyboard)
+                    if state == 'armed':
+                        assert keyboard is None and keyboard_read == 'unavailable_active_schedule'
+                    else:
+                        assert keyboard_read == 'observed'
+                        assert keyboard == first['input']['before']['keyboard']
+                        _keyboard_neutral(keyboard)
                     assert clock == first['clocks']['before']['virtual_clock']['native']
                     assert counter == first['clocks']['before']['counter']['native']
                     assert registers == first['state_before']['registers']
@@ -299,7 +316,7 @@ def test_native_input_schedule_refuses_armed_and_cancelled_source_state_observat
                     assert monitor == first['state_before']['monitor']
                     assert source == native
                     rows = calls[begin:]
-                    assert [row['command'] for row in rows if row['protocol'] == 'qmp'] == HEALTH_COMMANDS
+                    assert [row['command'] for row in rows if row['protocol'] == 'qmp'] == HEALTH_COMMANDS[state]
                     assert all(row['protocol'] in ('qmp', 'gdb.request') for row in rows)
                     gdb_rows = [row for row in rows if row['protocol'] == 'gdb.request']
                     assert gdb_rows[1]['command'] == 'qqemu.PhyMemMode'
