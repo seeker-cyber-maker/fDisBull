@@ -1,5 +1,19 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+Latest register-waiter continuation (2026-11-21 UTC): source `0ff9383` passed
+48 focused host cases and fresh assembly05 with a full independent emitted
+review. Native06 then observed both fixed QEMU phase-0 pulses, rejecting the
+counterfactual and final-palette image; native callback lateness was 6–126 ns,
+below the unchanged H/8 limit. All four quiet rasters passed. The full paired
+gate still failed because both DOSBox pulses are timing-unqualified: row100
+phase1 overlaps C by `159843/229792` PIT ticks on pulse3 and B by `703/688` on
+pulse4. The [register witness result](DOS_QEMU_PAIRED_VSYNC_REGISTER_PROPOSAL.md)
+records the exact source, fixture, receipts and limits. All 11,768 file pins and
+nine trees were unchanged; both serial owners exited zero and were reaped.
+No native07 is admitted. Production `src` remains byte-identical to `86a5fdb`;
+all 143 surface, 18 workgroup and seven campaign promotion obligations remain
+open, with DOSBox default. The earlier checkpoints below remain historical.
+
 Latest raster continuation (2026-11-21 UTC): the complete integer-count
 correction passed 22 focused oracle cases and lets QEMU calibrate beyond the
 old eight-line cutoff. Native04 reached both pulses and observed one QEMU phase,

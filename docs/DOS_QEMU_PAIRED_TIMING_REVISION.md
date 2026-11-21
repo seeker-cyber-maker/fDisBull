@@ -316,3 +316,33 @@ were reaped; no cleanup error was recorded. No producer rebuild, extra frame,
 automatic retry, image-derived timing choice or relaxed acceptance rule was used.
 The complete-count correction remains useful calibration coverage, while the
 bit-3 change alone has not established a phase pass. Full parity remains open.
+
+### Native attempt06: register waiter qualifies both QEMU pulse trials
+
+The [register-state waiter](DOS_QEMU_PAIRED_VSYNC_REGISTER_PROPOSAL.md) was
+integrated at `0ff9383caaa374558ca3fc15e2b4ed3d826423ac`. It passed all 48 focused
+host cases, a fresh finite assembly05 and a complete independent emitted review
+of the 4,146-byte COM. It preserves the full observation and finite-fault state
+at return while removing per-poll memory bookkeeping from the vertical loop.
+The generic calibration sampler, pulse schedule, whole-write brackets, H/8 and
+both phase families are unchanged.
+
+Native06 completed once in 40.894148974 seconds. Both QEMU pulses now have
+unambiguous timing predictions and full RGB matching the fixed source phase 0;
+the counterfactual phase and final-palette-only image are rejected. Each pulse's
+200-row native receipt has callback lateness between 6 and 126 ns, strictly
+below the declared H/8 limit of 3,962.5 ns. All four quiet captures still pass.
+
+The overall paired gate nevertheless failed. Both DOSBox pulses remain
+unqualified at row 100 phase 1: pulse3's upper interval endpoint overlaps C by
+`159843/229792` PIT ticks, and pulse4's lower endpoint overlaps B by `703/688`.
+H/8 contributes to the former overlap but cannot remove the latter. The fixed
+allowance is retained; DOSBox per-row callback times remain unobserved.
+
+The phase receipt is
+`9223a1da9379b9acfbf5b9295de490ed288a1707633953a2f62a19839a01523e`.
+All 11,768 file pins and nine trees matched before and after. Both serial
+emulator owners exited zero and were reaped; the worker returned one for the
+final phase assertion, with no timeout or cleanup error. This is an observed
+QEMU improvement in this authored experiment, not a causal claim about every
+bracket or a promotion of full parity. No later native attempt is admitted.

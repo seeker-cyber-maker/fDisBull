@@ -1,5 +1,16 @@
 # Paired mode-13h source-frame qualification plan
 
+Current result: the separately reviewed [register-state timing witness](DOS_QEMU_PAIRED_VSYNC_REGISTER_PROPOSAL.md)
+at `0ff9383caaa374558ca3fc15e2b4ed3d826423ac` passed 48 focused host cases and
+fresh assembly/emitted review. Native attempt06 qualified both QEMU pulse
+trials at fixed phase 0 and retained four exact quiet rasters, but the paired
+gate failed because both DOSBox pulses remain timing-unqualified. The
+[timing revision history](DOS_QEMU_PAIRED_TIMING_REVISION.md) records attempts03–06
+and the complete positive-integer count correction. No failed attempt is
+reinterpreted, and no native07 or default change is admitted.
+
+## Historical initial qualification
+
 This is an authored native qualification with separate functional and phase
 results. Its ten pure device-journal oracle tests passed, the fixture was
 assembled, and one finite native attempt has run. Both backends passed the
