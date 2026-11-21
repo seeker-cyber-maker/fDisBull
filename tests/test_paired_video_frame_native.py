@@ -43,9 +43,10 @@ WORK_SECONDS, CLEANUP_SECONDS = 45, 10
 OUTPUT_LIMIT = 128 * 1024**2
 LOG_LIMIT = 2 * 1024**2
 POINTS = [[0, y] for y in range(HEIGHT)] + [[319, 0], [319, 199]]
-PROFILE = ('cpu core=normal', 'cpu cycles=fixed 157600',
+PROFILE = ('dosbox machine=svga_s3', 'cpu core=normal', 'cpu cycles=fixed 157600',
            'render frameskip=0', 'render doublescan=false', 'render scaler=none',
            'video scanline render on demand=false',
+           'video vga palette update on full load=true', 'video enable 8-bit dac=false',
            'video skip render if nothing changed=false', 'vsync vsyncmode=off')
 
 
@@ -96,6 +97,7 @@ def paired_video_runtime(tmp_path):
     selected = {
         'qemu': os.environ.get('FDISBULL_PAIRED_VIDEO_QEMU'),
         'dosbox': os.environ.get('FDISBULL_PAIRED_VIDEO_DOSBOX'),
+        'dosbox_lib': os.environ.get('FDISBULL_PAIRED_VIDEO_DOSBOX_LIB'),
         'boot': os.environ.get('FDISBULL_QEMU_DOS_BOOT_IMAGE'),
         'mcopy': os.environ.get('FDISBULL_QEMU_DOS_MCOPY'),
         'firmware': os.environ.get('FDISBULL_QEMU_DOS_FIRMWARE'),
@@ -110,8 +112,9 @@ def paired_video_runtime(tmp_path):
     _private_output(tmp_path.resolve())
     runtime = {name: Path(value).expanduser().absolute() for name, value in selected.items()}
     for name, path in runtime.items():
-        assert path.is_dir() if name == 'firmware' else path.is_file(), (name, path)
-        if name not in ('boot', 'firmware'):
+        directory = name in ('firmware', 'dosbox_lib')
+        assert path.is_dir() if directory else path.is_file(), (name, path)
+        if name != 'boot' and not directory:
             assert os.access(path, os.X_OK)
     for name, expected in (('qemu', QEMU_SHA256), ('dosbox', DOSBOX_SHA256), ('qemu_img', QEMU_IMG_SHA256)):
         assert digest(runtime[name]) == expected, 'Wrong pinned producer: ' + name
@@ -120,10 +123,16 @@ def paired_video_runtime(tmp_path):
         runtime['mcopy'], config=b'SWITCHES=/F\r\n' + BASELINE_CONFIG)
     wrapper = tmp_path / 'paired-video-dosbox-profile'
     arguments = [part for setting in PROFILE for part in ('-set', setting)]
+    # The controller pins this complete private library closure. Only this
+    # DOSBox exec receives it; neither the test host nor QEMU inherits it.
     # Write plain Python literals, preserving the inherited pipe descriptors.
     wrapper.write_text('#!' + sys.executable + '\nimport os, sys\n'
         + f'executable = {str(runtime["dosbox"])!r}\n'
-        + f'os.execv(executable, [executable, *sys.argv[1:], *{arguments!r}])\n')
+        + "environment = {key: os.environ[key] for key in ('PATH', 'LANG', 'LC_ALL', 'TZ', "
+          "'TMPDIR', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME') if key in os.environ}\n"
+        + f'environment.update(LD_LIBRARY_PATH={str(runtime["dosbox_lib"])!r}, '
+          "SDL_AUDIODRIVER='dummy', SDL_VIDEODRIVER='dummy')\n"
+        + f'os.execve(executable, [executable, *sys.argv[1:], *{arguments!r}], environment)\n')
     wrapper.chmod(0o700)
     runtime['wrapper'] = wrapper
     return runtime
