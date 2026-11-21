@@ -1,24 +1,45 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
-## Current selected-state observation implementation (2026-11-21 UTC)
+## Current selected-state observation checkpoint (2026-11-21 UTC)
 
-The approved paired raster checkpoint is published on
-`codex/qemu-parity-20261120` at `6ff67fae3a6fb8ea80cea10e1aa39ef5b7b1456f`.
-The next production slice adds a separate passive source-raster/stopped-state
-observation: selected CPU and physical RAM, exact retained RGB verification,
-keyboard/scheduler witnesses and a scoped cooperative owner/control lease.
-The [public contract](DOS_QEMU_SOURCE_FRAMES.md#selected-stopped-state-observation)
-and [gate status](QEMU_SOURCE_STATE_OBSERVATION_GATE.md) keep native/external
-mutation identity, mouse/global input neutrality, application completion and
-legacy frame-state equivalence unqualified. The focused host selection passed
-335 cases with zero failures, errors or skips on `c96a7fd`, retaining 5,699
-unchanged tracked inputs, original-owner cleanup and the earlier classified
-failed attempt. No native observer result is claimed.
+The separate passive source-raster/stopped-state operation combines selected CPU
+and physical RAM, exact retained RGB verification, native keyboard/scheduler
+witnesses and a cooperative owner/control lease. Its [public contract](DOS_QEMU_SOURCE_FRAMES.md#selected-stopped-state-observation)
+and [exact gate record](QEMU_SOURCE_STATE_OBSERVATION_GATE.md) keep host and native
+qualification separate from legacy completed-frame parity.
 
-This slice changes production Python source. The unchanged-source statements
-in the earlier calibration/raster entries describe their historical revisions.
-All 143 surface, 18 workgroup and seven campaign promotion obligations remain
-open and DOSBox remains the default.
+The host selection passed **335 cases, zero failures, errors or skips** on
+`c96a7fd20eb11633b006c88ebd6cc258ec57aa77`, retaining 5,699 unchanged tracked
+inputs and verified original-owner cleanup. Its output sample was 141,184,842
+bytes; final retained files totalled 141,932,037 bytes after the input inventory
+and receipt were written. The earlier host failure remains preserved.
+
+Native03 completed its full controller with **one passed test, zero failures,
+errors or skips** at unchanged source `c73a9bf73c3a01af140a4fd2e6fad70000f60f82`.
+One original QEMU owner carried one stream/raster, three complete observations,
+an actual stopped byte write and a refusal reaching the native keyboard query.
+The 300 native/20 video calls, 11,651 matching file pins, original-owner reap and
+in-attempt postflight are retained in the gate record. Pytest took 2.13 seconds,
+the worker 3.29781263199402 seconds, and the complete controller
+41.797629174005124 seconds. Final output was 5,036,101 logical / 5,066,752 allocated
+bytes plus the separate 4,194,304-byte open-log reservation, below the 64 MiB cap.
+The retained COM, baseline and producer were reused without assembly or rebuild.
+
+Native01 failed a test-only lifecycle-breakpoint assertion before any observer
+call. Native02's case and native-evidence reconciliation passed, but its full
+controller failed its original postflight deadline; a later read-only diagnostic
+does not promote it. Native03 retained the same 180-second aggregate and case
+limits, with 75 seconds for its worker and 35 for postflight. Both failed attempts
+remain failed; their raw receipts and the test-only correction are preserved.
+
+Native/external mutation identity and whole-machine equality remain unqualified.
+The control generation is cooperative admission evidence, not a native revision.
+`atomic=false`; application completion, frame-state/legacy-phase equivalence,
+mouse/global input neutrality and guest input consumption retain their declared
+unknowns. `completed_guest_frames` remains false. All 143 surface, 18 workgroup
+and seven campaign promotion obligations remain open, and DOSBox remains the
+default. Earlier calibration/raster entries retain their historical source-specific
+scope and unchanged-source statements.
 
 ## Current calibration-register result (2026-11-21 UTC)
 
