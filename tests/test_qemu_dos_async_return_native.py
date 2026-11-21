@@ -149,7 +149,7 @@ def _trace(debug, journal):
         value = journal.call('public.' + method, arguments,
                              lambda: getattr(debug, method)(**(arguments or {})))
         current()
-        return value
+        return deepcopy(value)
 
     def qmp_call(method, arguments=None, timeout_ms=30000, **kwargs):
         current()
