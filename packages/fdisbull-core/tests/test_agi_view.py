@@ -3,7 +3,7 @@ from hashlib import sha256
 
 import pytest
 
-from fdisbull_core.agi_view import decode_view_cel
+from fdisbull_core.agi_view import decode_view_cel, describe_view
 
 
 def single_cel(width=5, height=2, flags=15, rows=b"\x12\x21\0\x33\0"):
@@ -221,3 +221,45 @@ def test_maximum_geometry_and_payload_length():
     assert len(result["pixels"]) == 26880
     assert result["pixels"] == bytes([2]) * 26880
     assert result["data_end"] == 2029
+
+
+def test_metadata_preserves_effective_aliases_and_matches_decoding():
+    payload = bytes([0, 0, 2, 0, 0, 9, 0, 9, 0,
+                     1, 3, 0, 5, 2, 0x8f, 0x12, 0x21, 0, 0x33, 0])
+    result = describe_view(payload)
+    assert result["source_sha256"] == sha256(payload).hexdigest()
+    assert result["payload_bytes"] == 20 and result["cel_references"] == 2
+    assert [row["loop"] for row in result["loops"]] == [0, 1]
+    for row in result["loops"]:
+        decoded = decode_view_cel(payload, loop=row["loop"], cel=0)
+        metadata = row["cels"][0]
+        assert metadata == {key: value for key, value in decoded.items()
+                            if key not in ("source_sha256", "loop", "pixels")}
+    assert result["loops"][0]["cels"][0]["mirrored"] is False
+    assert result["loops"][1]["cels"][0]["mirrored"] is True
+
+
+def test_metadata_retains_empty_loops_and_all_empty_topology():
+    payload = bytes.fromhex("000002000009000a000001030002010f1200")
+    result = describe_view(payload)
+    assert result["loops"][0] == {"loop": 0, "cels": []}
+    assert result["loops"][1]["cels"][0]["width"] == 2
+    assert describe_view(bytes.fromhex("0000010000070000"))["loops"] == [
+        {"loop": 0, "cels": []}]
+
+
+def test_metadata_rejects_malformed_unselected_stream_and_reference_exhaustion():
+    payload = bytes([0, 0, 1, 0, 0, 7, 0, 2, 5, 0, 9, 0,
+                     1, 1, 15, 0x11,
+                     1, 1, 15, 0x21, 0])
+    with pytest.raises(ValueError, match="row"):
+        describe_view(payload)
+    with pytest.raises(ValueError, match="budget"):
+        describe_view(many_aliases(5))
+    assert describe_view(many_aliases(4))["cel_references"] == 1020
+
+
+def test_metadata_is_detached_between_calls():
+    first = describe_view(single_cel())
+    first["loops"][0]["cels"][0]["width"] = 99
+    assert describe_view(single_cel())["loops"][0]["cels"][0]["width"] == 5

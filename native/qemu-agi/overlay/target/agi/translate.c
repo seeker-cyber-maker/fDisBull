@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: GPL-2.0-or-later
- * Direct TCG lowering for the bounded AGI 2.917 scalar/position profile.
+ * TCG lowering for the bounded AGI 2.917 scalar and optional binding profiles.
  */
 #include "qemu/osdep.h"
 #include "tcg/tcg.h"
@@ -18,6 +18,7 @@ typedef struct DisasContext {
     DisasContextBase base;
     CPUArchState *env;
     uint32_t obs_mask;
+    bool binding_profile;
 } DisasContext;
 
 static void agi_init_context(DisasContextBase *db, CPUState *cs)
@@ -25,6 +26,7 @@ static void agi_init_context(DisasContextBase *db, CPUState *cs)
     DisasContext *ctx = container_of(db, DisasContext, base);
     ctx->env = cpu_env(cs);
     ctx->obs_mask = db->tb->flags & AGI_OBS_MASK;
+    ctx->binding_profile = db->tb->flags & AGI_TB_BINDING;
 }
 
 static void agi_tb_start(DisasContextBase *db, CPUState *cs) { }
@@ -178,7 +180,7 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
     uint32_t actor = UINT32_MAX;
     int64_t target;
     size_t offset;
-    bool position = false;
+    bool scene_effect = false;
     TCGv_i32 x, y, value, prior, part;
     TCGv_i32 before = tcg_constant_i32(0);
     TCGv_i32 next = tcg_temp_new_i32();
@@ -202,6 +204,12 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
         length = 3;
     } else if (op >= 37 && op <= 39) {
         length = 4;
+    } else if (ctx->binding_profile && (op == 30 || op == 31 || op == 33)) {
+        length = 2;
+    } else if (ctx->binding_profile &&
+               (op == 41 || op == 42 || op == 43 || op == 44 ||
+                op == 47 || op == 48)) {
+        length = 3;
     } else {
         agi_emit_fault(pc, op, AGI_FAULT_OPCODE);
         goto fault;
@@ -261,6 +269,24 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
         tcg_gen_xori_i32(value, value, 1);
         tcg_gen_st_i32(value, tcg_env, agi_flag(a));
         break;
+    case 30:
+    case 31:
+    case 33:
+    case 41:
+    case 42:
+    case 43:
+    case 44:
+    case 47:
+    case 48:
+        scene_effect = true;
+        if (op != 30 && op != 31) {
+            actor = a;
+        }
+        gen_helper_agi_binding(tcg_env, tcg_constant_i32(pc),
+                               tcg_constant_i32(op | (length << 8) |
+                                                (ctx->obs_mask << 16)),
+                               tcg_constant_i32(a), tcg_constant_i32(b));
+        break;
     case 37:
     case 38:
     case 39:
@@ -276,9 +302,19 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
             tcg_gen_st_i32(y, tcg_env, agi_var(c));
             break;
         }
-        position = true;
+        scene_effect = true;
         actor = a;
-        if (ctx->obs_mask & AGI_OBS_SCENE) {
+        if (ctx->binding_profile && (ctx->obs_mask & AGI_OBS_SCENE)) {
+            size_t field;
+            /* No extra observer helper or snapshot work in the mask-0 TB.
+             * Every actor member is a uint32_t and is initialized at reset.
+             */
+            for (field = 0; field < sizeof(AgiActor); field += sizeof(uint32_t)) {
+                prior = agi_load(offset + field);
+                tcg_gen_st_i32(prior, tcg_env,
+                               offsetof(CPUArchState, observed_actor) + field);
+            }
+        } else if (ctx->obs_mask & AGI_OBS_SCENE) {
             prior = agi_load(offset + offsetof(AgiActor, x));
             part = agi_load(offset + offsetof(AgiActor, y));
             before = tcg_temp_new_i32();
@@ -312,7 +348,7 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
 complete:
     tcg_gen_st_i32(next, tcg_env, offsetof(CPUArchState, pc));
     if ((ctx->obs_mask & AGI_OBS_DISASM) ||
-        ((ctx->obs_mask & AGI_OBS_SCENE) && position)) {
+        ((ctx->obs_mask & AGI_OBS_SCENE) && scene_effect)) {
         uint32_t meta = op | (length << 8) | (ctx->obs_mask << 16);
         gen_helper_agi_observe(tcg_env, tcg_constant_i32(pc),
                                tcg_constant_i32(meta), tcg_constant_i32(actor), before);

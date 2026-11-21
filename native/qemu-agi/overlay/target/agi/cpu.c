@@ -22,7 +22,11 @@ static const char *const status_names[] = {
 static const char *const fault_names[] = {
     "none", "unsupported_opcode", "truncated_instruction", "invalid_actor",
     "invalid_branch_target", "unsupported_condition", "fetch_out_of_bounds",
-    "condition_limit"
+    "condition_limit", "missing_view", "view_not_loaded", "view_unbound",
+    "invalid_loop", "invalid_cel", "empty_view_loop"
+};
+static const char *const event_names[] = {
+    "retire", "position", "actor", "view_load"
 };
 
 void agi_clear_observation(CPUArchState *env)
@@ -37,9 +41,15 @@ void agi_clear_observation(CPUArchState *env)
 
 void agi_restart(CPUArchState *env)
 {
+    AgiCPU *cpu = AGI_CPU(env_cpu(env));
     memset(env->v, 0, sizeof(env->v));
     memset(env->f, 0, sizeof(env->f));
     memset(env->actors, 0, sizeof(env->actors));
+    memset(env->loaded_views, 0, sizeof(env->loaded_views));
+    memset(&env->observed_actor, 0, sizeof(env->observed_actor));
+    env->observed_loaded = 0;
+    env->binding_profile = cpu->catalog != NULL;
+    env->horizon = cpu->catalog ? cpu->catalog->horizon : 0;
     env->pc = 0;
     env->status = AGI_READY;
     env->fault_code = env->fault_pc = env->fault_opcode = 0;
@@ -142,14 +152,44 @@ static void agi_set_clear(Object *obj, bool value, Error **errp)
 static void agi_json_source(GString *s, AgiCPU *cpu)
 {
     g_string_append_printf(s, "{\"sha256\":\"%s\",\"size\":%u,"
-                           "\"logic_id\":0,\"profile\":\"%s\"}",
-                           cpu->source_sha256, cpu->env.code_size, AGI_PROFILE);
+                           "\"logic_id\":0,\"profile\":\"%s\"",
+                           cpu->source_sha256, cpu->env.code_size,
+                           cpu->env.binding_profile ? AGI_BINDING_PROFILE : AGI_PROFILE);
+    if (cpu->env.binding_profile) {
+        g_string_append_printf(s, ",\"catalog_sha256\":\"%s\"", cpu->catalog->sha256);
+    }
+    g_string_append_c(s, '}');
 }
 
-static void agi_json_actor(GString *s, const AgiActor *a)
+static void agi_json_actor_fields(GString *s, const AgiActor *a, bool binding)
 {
-    g_string_append_printf(s, "{\"x\":%u,\"y\":%u,\"prev_x\":%u,"
-                           "\"prev_y\":%u}", a->x, a->y, a->prev_x, a->prev_y);
+    g_string_append_printf(s, "\"x\":%u,\"y\":%u,\"prev_x\":%u,"
+                           "\"prev_y\":%u", a->x, a->y, a->prev_x, a->prev_y);
+    if (binding) {
+        /* The admitted commands only assign these two enums their reset value. */
+        g_assert(a->motion == 0 && a->cycle == 0);
+        g_string_append_printf(s, ",\"view_bound\":%s,\"view\":%u,"
+                               "\"loop\":%u,\"cel\":%u,\"width\":%u,\"height\":%u,"
+                               "\"animated\":%s,\"update\":%s,\"cycling\":%s,"
+                               "\"ignore_horizon\":%s,\"update_pos\":%s,"
+                               "\"view_replaced\":%s,\"motion\":\"normal\","
+                               "\"cycle\":\"normal\",\"direction\":%u",
+                               a->view_bound ? "true" : "false", a->view,
+                               a->loop, a->cel, a->width, a->height,
+                               a->animated ? "true" : "false",
+                               a->update ? "true" : "false",
+                               a->cycling ? "true" : "false",
+                               a->ignore_horizon ? "true" : "false",
+                               a->update_pos ? "true" : "false",
+                               a->view_replaced ? "true" : "false", a->direction);
+    }
+}
+
+static void agi_json_actor(GString *s, const AgiActor *a, bool binding)
+{
+    g_string_append_c(s, '{');
+    agi_json_actor_fields(s, a, binding);
+    g_string_append_c(s, '}');
 }
 
 static char *agi_get_state(Object *obj, Error **errp)
@@ -161,8 +201,18 @@ static char *agi_get_state(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
-    s = g_string_new("{\"schema\":\"fdisbull-agi-native-state-1\",\"source\":");
+    s = g_string_new(env->binding_profile ?
+                     "{\"schema\":\"fdisbull-agi-binding-state-1\",\"source\":" :
+                     "{\"schema\":\"fdisbull-agi-native-state-1\",\"source\":");
     agi_json_source(s, cpu);
+    if (env->binding_profile) {
+        const AgiViewCatalog *catalog = cpu->catalog;
+        g_string_append_printf(s, ",\"catalog\":{\"sha256\":\"%s\",\"size\":%u,"
+                               "\"view_count\":%u,\"loop_count\":%u,"
+                               "\"cel_count\":%u,\"horizon\":%u}",
+                               catalog->sha256, catalog->size, catalog->view_count,
+                               catalog->loop_count, catalog->cel_count, catalog->horizon);
+    }
     g_string_append_printf(s, ",\"guest\":{\"pc\":%u,\"variables\":[", env->pc);
     for (i = 0; i < 256; i++) {
         g_string_append_printf(s, "%s%u", i ? "," : "", env->v[i]);
@@ -173,12 +223,23 @@ static char *agi_get_state(Object *obj, Error **errp)
     }
     g_string_append(s, "],\"actors\":[");
     for (i = 0; i < AGI_ACTORS; i++) {
-        const AgiActor *a = &env->actors[i];
-        g_string_append_printf(s, "%s{\"id\":%u,\"x\":%u,\"y\":%u,"
-                               "\"prev_x\":%u,\"prev_y\":%u}",
-                               i ? "," : "", i, a->x, a->y, a->prev_x, a->prev_y);
+        g_string_append_printf(s, "%s{\"id\":%u,", i ? "," : "", i);
+        agi_json_actor_fields(s, &env->actors[i], env->binding_profile);
+        g_string_append_c(s, '}');
     }
-    g_string_append_printf(s, "],\"status\":\"%s\",\"fault\":",
+    g_string_append_c(s, ']');
+    if (env->binding_profile) {
+        bool first = true;
+        g_string_append_printf(s, ",\"horizon\":%u,\"loaded_views\":[", env->horizon);
+        for (i = 0; i < 256; i++) {
+            if (env->loaded_views[i]) {
+                g_string_append_printf(s, "%s%u", first ? "" : ",", i);
+                first = false;
+            }
+        }
+        g_string_append_c(s, ']');
+    }
+    g_string_append_printf(s, ",\"status\":\"%s\",\"fault\":",
                            status_names[env->status]);
     if (env->fault_code) {
         g_string_append_printf(s, "{\"code\":%u,\"name\":\"%s\","
@@ -222,7 +283,9 @@ static char *agi_get_events(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
-    s = g_string_new("{\"schema\":\"fdisbull-agi-native-events-1\",\"source\":");
+    s = g_string_new(env->binding_profile ?
+                     "{\"schema\":\"fdisbull-agi-binding-events-1\",\"source\":" :
+                     "{\"schema\":\"fdisbull-agi-native-events-1\",\"source\":");
     agi_json_source(s, cpu);
     g_string_append_printf(s, ",\"epoch\":%" PRIu64 ",\"events\":[", env->trace_epoch);
     for (i = 0; i < env->obs_count; i++) {
@@ -230,18 +293,40 @@ static char *agi_get_events(Object *obj, Error **errp)
         g_string_append_printf(s, "%s{\"seq\":%" PRIu64 ",\"kind\":\"%s\","
                                "\"control_generation\":%" PRIu64
                                ",\"pc\":%u,\"opcode\":%u,\"bytes\":[",
-                               i ? "," : "", e->seq, e->kind ? "position" : "retire",
+                               i ? "," : "", e->seq, event_names[e->kind],
                                e->control_generation, e->pc, e->opcode);
         for (j = 0; j < e->length; j++) {
             g_string_append_printf(s, "%s%u", j ? "," : "", cpu->code[e->pc + j]);
         }
         g_string_append_printf(s, "],\"next_pc\":%u,\"retired\":%" PRIu64,
                                e->next_pc, e->retired);
-        if (e->kind) {
+        if (e->kind == AGI_EVENT_VIEW_LOAD) {
+            g_string_append_printf(s, ",\"view\":%u,\"before\":%s,\"after\":%s",
+                                   e->actor, e->before_loaded ? "true" : "false",
+                                   e->after_loaded ? "true" : "false");
+        } else if (e->kind == AGI_EVENT_POSITION || e->kind == AGI_EVENT_ACTOR) {
             g_string_append_printf(s, ",\"actor\":%u,\"before\":", e->actor);
-            agi_json_actor(s, &e->before);
+            agi_json_actor(s, &e->before, e->kind == AGI_EVENT_ACTOR);
             g_string_append(s, ",\"after\":");
-            agi_json_actor(s, &e->after);
+            agi_json_actor(s, &e->after, e->kind == AGI_EVENT_ACTOR);
+        } else if (env->binding_profile) {
+            switch (e->opcode) {
+            case 30:
+            case 31:
+            case 41:
+            case 42:
+            case 43:
+            case 44:
+            case 47:
+            case 48:
+                g_string_append_printf(s, ",\"resolved_value\":%u", e->resolved_value);
+                break;
+            case 37:
+            case 38:
+                g_string_append_printf(s, ",\"resolved_position\":{\"x\":%u,\"y\":%u}",
+                                       e->resolved_x, e->resolved_y);
+                break;
+            }
         }
         g_string_append_c(s, '}');
     }
@@ -362,7 +447,11 @@ static void agi_instance_init(Object *obj)
     object_property_add_str(obj, "agi-events-json", agi_get_events, NULL);
 }
 
-static void agi_instance_finalize(Object *obj) { g_free(AGI_CPU(obj)->events); }
+static void agi_instance_finalize(Object *obj)
+{
+    g_free(AGI_CPU(obj)->events);
+    g_free(AGI_CPU(obj)->catalog);
+}
 
 static const struct SysemuCPUOps agi_sysemu_ops = {
     .has_work = agi_has_work,

@@ -5,6 +5,7 @@
 #include "qemu/osdep.h"
 #include "qemu/cutils.h"
 #include "qemu/error-report.h"
+#include "qapi/error.h"
 #include "hw/boards.h"
 #include "hw/loader.h"
 #include "exec/address-spaces.h"
@@ -13,7 +14,28 @@
 
 #define TYPE_AGI_TEST_MACHINE MACHINE_TYPE_NAME("agi-test")
 OBJECT_DECLARE_SIMPLE_TYPE(AgiTestMachineState, AGI_TEST_MACHINE)
-struct AgiTestMachineState { MachineState parent_obj; };
+struct AgiTestMachineState {
+    MachineState parent_obj;
+    char *view_catalog;
+    bool initialized;
+};
+
+static char *agi_get_catalog(Object *obj, Error **errp)
+{
+    AgiTestMachineState *machine = AGI_TEST_MACHINE(obj);
+    return g_strdup(machine->view_catalog ? machine->view_catalog : "");
+}
+
+static void agi_set_catalog(Object *obj, const char *value, Error **errp)
+{
+    AgiTestMachineState *machine = AGI_TEST_MACHINE(obj);
+    if (machine->initialized || !value[0] || strlen(value) > 4096) {
+        error_setg(errp, "AGI_VIEW_CATALOG: nonempty startup-only path required");
+        return;
+    }
+    g_free(machine->view_catalog);
+    machine->view_catalog = g_strdup(value);
+}
 
 static ram_addr_t agi_fixup_ram_size(ram_addr_t size)
 {
@@ -23,10 +45,14 @@ static ram_addr_t agi_fixup_ram_size(ram_addr_t size)
 static void agi_test_init(MachineState *machine)
 {
     MachineClass *mc = MACHINE_GET_CLASS(machine);
+    AgiTestMachineState *ms = AGI_TEST_MACHINE(machine);
     AgiCPU *cpu;
     FILE *fp;
     size_t size;
     g_autofree char *digest = NULL;
+    Error *error = NULL;
+
+    ms->initialized = true;
 
     if (!machine->kernel_filename || machine->ram_size != AGI_CODE_MAX) {
         error_report("agi-test requires -kernel raw code and fixed 64 KiB RAM");
@@ -34,6 +60,10 @@ static void agi_test_init(MachineState *machine)
     }
     memory_region_add_subregion(get_system_memory(), 0, machine->ram);
     cpu = AGI_CPU(cpu_create(mc->default_cpu_type));
+    if (ms->view_catalog && !agi_load_view_catalog(cpu, ms->view_catalog, &error)) {
+        error_report_err(error);
+        exit(1);
+    }
     fp = fopen(machine->kernel_filename, "rb");
     if (!fp) {
         error_report("cannot open AGI raw code: %s", strerror(errno));
@@ -65,6 +95,14 @@ static void agi_test_class_init(ObjectClass *oc, void *data)
     mc->no_cdrom = true;
     mc->no_floppy = true;
     mc->no_parallel = true;
+    object_class_property_add_str(oc, "view-catalog", agi_get_catalog, agi_set_catalog);
+    object_class_property_set_description(oc, "view-catalog",
+        "Immutable bounded FDBAGIV1 catalog; selects the view-binding profile");
+}
+
+static void agi_test_finalize(Object *obj)
+{
+    g_free(AGI_TEST_MACHINE(obj)->view_catalog);
 }
 
 static const TypeInfo agi_test_type = {
@@ -72,6 +110,7 @@ static const TypeInfo agi_test_type = {
     .parent = TYPE_MACHINE,
     .instance_size = sizeof(AgiTestMachineState),
     .class_init = agi_test_class_init,
+    .instance_finalize = agi_test_finalize,
 };
 
 static void agi_test_register_types(void)

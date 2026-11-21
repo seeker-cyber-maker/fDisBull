@@ -58,4 +58,13 @@ installing either product from source; both products pin its version explicitly.
 Run its authored-byte checks with `python -m pytest packages/fdisbull-core/tests`.
 `PROVENANCE.json` identifies the unchanged initial kernel, the transport
 extraction, the independently authored scene consumer/planners and the VIEW cel
-decoder. Applications pin `0.1.0.dev6`, which includes all four modules.
+decoder. Applications pin `0.1.0.dev7`, which includes all four modules and the
+validated VIEW topology reader described below.
+
+`fdisbull_core.agi_view.describe_view(payload)` validates the same complete
+directories and RLE streams, then returns every effective loop/cel reference,
+dimensions, source boundaries and mirroring metadata without allocating pixel
+arrays. It retains empty loops and exact aliases and binds the result to the
+complete payload SHA-256. This supplies geometry for the separately selected
+experimental QEMU VIEW binding profile; catalog availability does not imply
+that a guest resource load or actor draw occurred.
