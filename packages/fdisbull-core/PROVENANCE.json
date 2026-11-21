@@ -31,7 +31,7 @@
         "native/qemu-agi/overlay/target/agi/helper.c"
       ],
       "destination_path": "src/fdisbull_core/agi_scene.py",
-      "extraction": "Independently authored deterministic consumer of the published AGI observation protocol; no native implementation copied. Source/session identity, transactional deltas and explicit history gaps; no process or product dependency."
+      "extraction": "Independently authored deterministic consumer of the published AGI observation protocol; no native implementation copied. Source/session identity, transactional deltas and explicit history gaps; no process or product dependency. The independently authored literal-position planner binds exact raw source to a captured witness and returns a detached edit proposal without writes or execution."
     }
   ]
 }

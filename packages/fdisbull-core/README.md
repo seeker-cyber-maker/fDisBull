@@ -25,10 +25,16 @@ the optional native experiment adapter owns capture and explicit controls.
 See the [consumer contract](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/agi-scene-consumer-20261121/native/qemu-agi/SCENE_CONSUMER.md)
 in the shared source repository.
 
+Its pure `plan_literal_position_edit` API binds a captured literal-position
+witness to exact source bytes and returns a detached coordinate-edit proposal.
+It performs no writes or execution. A fresh candidate replay must establish the
+actual outcome because later assignments may override the edited instruction.
+See the [edit/replay contract](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/agi-scene-position-edits-20261121/native/qemu-agi/SCENE_EDITING.md).
+
 Build independently with `python -m build packages/fdisbull-core` from the shared
 repository, or `python -m build` from this directory. Install this package before
 installing either product from source; both products pin its version explicitly.
 Run its authored-byte checks with `python -m pytest packages/fdisbull-core/tests`.
 `PROVENANCE.json` identifies the unchanged initial kernel and the transport
-extraction and the independently authored scene consumer. Applications pin
-`0.1.0.dev3`, which includes all three modules.
+extraction and the independently authored scene consumer/planner. Applications pin
+`0.1.0.dev4`, which includes all three modules.
