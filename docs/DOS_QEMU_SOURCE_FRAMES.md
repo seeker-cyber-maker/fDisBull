@@ -215,8 +215,11 @@ to the unchanged 205 earlier members. Actual worker and native executable
 mappings still must belong to that closure. The host, test, emulator, guest and
 execution limits were unchanged; the rejected attempt is not promoted.
 
-This is one authored mode-13 source-consumer witness. The independent paired
-DOSBox raster/timing comparison, immediate post-pause stability and typed
+This is one authored mode-13 source-consumer witness. A subsequent
+[paired native attempt](DOS_QEMU_PAIRED_SOURCE_FRAME_PLAN.md#first-native-attempt)
+observed matching quiet completed rasters on DOSBox and QEMU, while all four
+pulse trials remained timing-unqualified and the overall phase gate failed.
+Dynamic phase qualification, immediate post-pause stability and typed
 CPU/image coherence remain open. `legacy_phase_equivalence`,
 `application_frame_complete` and `frame_state_equivalence` remain unknown.
 No retirement inventory row or default-backend decision changes with this gate.
