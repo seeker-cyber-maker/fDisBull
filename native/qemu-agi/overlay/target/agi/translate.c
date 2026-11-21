@@ -19,6 +19,7 @@ typedef struct DisasContext {
     CPUArchState *env;
     uint32_t obs_mask;
     bool binding_profile;
+    bool draw_intent;
 } DisasContext;
 
 static void agi_init_context(DisasContextBase *db, CPUState *cs)
@@ -27,6 +28,7 @@ static void agi_init_context(DisasContextBase *db, CPUState *cs)
     ctx->env = cpu_env(cs);
     ctx->obs_mask = db->tb->flags & AGI_OBS_MASK;
     ctx->binding_profile = db->tb->flags & AGI_TB_BINDING;
+    ctx->draw_intent = db->tb->flags & AGI_TB_DRAW_INTENT;
 }
 
 static void agi_tb_start(DisasContextBase *db, CPUState *cs) { }
@@ -206,6 +208,8 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
         length = 4;
     } else if (ctx->binding_profile && (op == 30 || op == 31 || op == 33)) {
         length = 2;
+    } else if (ctx->draw_intent && (op == 35 || op == 70 || op == 71)) {
+        length = 2;
     } else if (ctx->binding_profile &&
                (op == 41 || op == 42 || op == 43 || op == 44 ||
                 op == 47 || op == 48)) {
@@ -278,6 +282,8 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
     case 44:
     case 47:
     case 48:
+    case 70:
+    case 71:
         scene_effect = true;
         if (op != 30 && op != 31) {
             actor = a;
@@ -287,6 +293,11 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
                                                 (ctx->obs_mask << 16)),
                                tcg_constant_i32(a), tcg_constant_i32(b));
         break;
+    case 35:
+        gen_helper_agi_draw(tcg_env, tcg_constant_i32(pc), tcg_constant_i32(a));
+        db->pc_next = pc + length;
+        db->is_jmp = DISAS_NORETURN;
+        return;
     case 37:
     case 38:
     case 39:

@@ -28,9 +28,10 @@ not change backend defaults. See [the shared codebase policy](docs/SHARED_CODEBA
 for package boundaries, active QEMU coordination and migration scope.
 
 The [experimental AGI QEMU target](native/qemu-agi/README.md) explores optional
-disassembly and scene observations on an authored scalar/actor-position subset.
-It is a separate developer experiment with bounded native tests and timing;
-it does not yet run a full AGI engine or provide a scene editor.
+disassembly and scene observations, including bounded actor-pose and cycling
+state. Its explicit draw-intent profile exposes a pending request for scene
+previews. It remains a separate developer experiment; a full AGI engine,
+completed drawing and a scene editor are subsequent work.
 
 ## Built to minimize token usage and survive long investigations
 

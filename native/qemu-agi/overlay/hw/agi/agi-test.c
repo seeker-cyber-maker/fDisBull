@@ -17,6 +17,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(AgiTestMachineState, AGI_TEST_MACHINE)
 struct AgiTestMachineState {
     MachineState parent_obj;
     char *view_catalog;
+    bool draw_intent;
     bool initialized;
 };
 
@@ -35,6 +36,21 @@ static void agi_set_catalog(Object *obj, const char *value, Error **errp)
     }
     g_free(machine->view_catalog);
     machine->view_catalog = g_strdup(value);
+}
+
+static bool agi_get_draw_intent(Object *obj, Error **errp)
+{
+    return AGI_TEST_MACHINE(obj)->draw_intent;
+}
+
+static void agi_set_draw_intent(Object *obj, bool value, Error **errp)
+{
+    AgiTestMachineState *machine = AGI_TEST_MACHINE(obj);
+    if (machine->initialized) {
+        error_setg(errp, "AGI_DRAW_INTENT: startup-only selection required");
+        return;
+    }
+    machine->draw_intent = value;
 }
 
 static ram_addr_t agi_fixup_ram_size(ram_addr_t size)
@@ -58,12 +74,18 @@ static void agi_test_init(MachineState *machine)
         error_report("agi-test requires -kernel raw code and fixed 64 KiB RAM");
         exit(1);
     }
+    if (ms->draw_intent && !ms->view_catalog) {
+        error_report("AGI_DRAW_INTENT: draw-intent requires view-catalog");
+        exit(1);
+    }
     memory_region_add_subregion(get_system_memory(), 0, machine->ram);
     cpu = AGI_CPU(cpu_create(mc->default_cpu_type));
     if (ms->view_catalog && !agi_load_view_catalog(cpu, ms->view_catalog, &error)) {
         error_report_err(error);
         exit(1);
     }
+    cpu->draw_intent = ms->draw_intent;
+    cpu->env.draw_intent = ms->draw_intent;
     fp = fopen(machine->kernel_filename, "rb");
     if (!fp) {
         error_report("cannot open AGI raw code: %s", strerror(errno));
@@ -98,6 +120,10 @@ static void agi_test_class_init(ObjectClass *oc, void *data)
     object_class_property_add_str(oc, "view-catalog", agi_get_catalog, agi_set_catalog);
     object_class_property_set_description(oc, "view-catalog",
         "Immutable bounded FDBAGIV1 catalog; selects the view-binding profile");
+    object_class_property_add_bool(oc, "draw-intent",
+                                  agi_get_draw_intent, agi_set_draw_intent);
+    object_class_property_set_description(oc, "draw-intent",
+        "Startup-only draw-intent profile; requires an immutable VIEW catalog");
 }
 
 static void agi_test_finalize(Object *obj)
