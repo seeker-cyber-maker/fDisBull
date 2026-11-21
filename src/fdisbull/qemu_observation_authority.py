@@ -504,7 +504,9 @@ def check_transport(client):
     authority = getattr(client, '_observation_authority', None)
     if authority is not None:
         return authority.check_protocol(client)
-    return client.socket
+    # Unbound protocol parsers may already hold a complete buffered reply.
+    # A channel is required only if the parser actually performs I/O.
+    return getattr(client, 'socket', None)
 
 
 def reply_limit(client, limit):
