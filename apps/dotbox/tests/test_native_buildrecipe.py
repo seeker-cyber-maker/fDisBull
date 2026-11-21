@@ -73,11 +73,12 @@ def test_recipe_is_bound_to_dotbox_owned_source_and_notices():
     assert '--enable-dosbox_agent' in recipe['build']['commands'][1]
     assert '--enable-debug=heavy' in recipe['build']['commands'][1]
     assert '--enable-sdl2' in recipe['build']['commands'][1]
-    assert 'GNU GENERAL PUBLIC LICENSE' in (NATIVE / 'dosbox-x/COPYING').read_text()
+    path = _preparer()._input_path
+    assert 'GNU GENERAL PUBLIC LICENSE' in path(NATIVE, 'dosbox-x/COPYING').read_text()
     patch_paths = {line.removeprefix('+++ b/') for line in
-                   (NATIVE / 'dosbox-x/headless-agent.patch').read_text().splitlines()
+                   path(NATIVE, 'dosbox-x/headless-agent.patch').read_text().splitlines()
                    if line.startswith('+++ b/')}
-    base = json.loads((NATIVE / 'dosbox-x/source-manifest.json').read_text())
+    base = json.loads(path(NATIVE, 'dosbox-x/source-manifest.json').read_text())
     assert patch_paths == {entry['path'] for entry in base['source_files']}
 
 
@@ -96,6 +97,61 @@ def test_preparation_exports_immutable_commit_and_repeats_without_mutation(tmp_p
     assert app.prepare_source(output, upstream=repository, resource_root=resources)['status'] == 'already_prepared'
     assert app.verify_source(output, resource_root=resources)['status'] == 'verified'
     assert before == {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before}
+
+
+def _combined_recipe(tmp_path):
+    repository, resources = _tiny_recipe(tmp_path)
+    combined = tmp_path / 'combined'
+    native = combined / 'apps/dotbox/native'
+    native.parent.mkdir(parents=True)
+    resources.rename(native)
+    (combined / 'pyproject.toml').write_text('[project]\nname = "fdisbull"\n')
+    base = combined / 'experimental/dosbox-x'
+    base.mkdir(parents=True)
+    for name in ('headless-agent.patch', 'source-manifest.json'):
+        (native / 'dosbox-x' / name).rename(base / name)
+    return repository, native, base
+
+
+def test_combined_source_preparation_uses_canonical_base_without_copying_it(tmp_path):
+    repository, native, base = _combined_recipe(tmp_path)
+    output = tmp_path / 'prepared'
+    result = _preparer().prepare_source(output, upstream=repository, resource_root=native)
+    assert result['status'] == 'prepared'
+    assert (output / 'src/control.cpp').read_bytes() == b'cooperative\n'
+    assert not (native / 'dosbox-x/headless-agent.patch').exists()
+    assert (base / 'headless-agent.patch').is_file()
+
+
+@pytest.mark.parametrize('alteration', ['changed', 'missing', 'symlink', 'unrecognized_repository'])
+def test_combined_source_refuses_invalid_base_before_creating_output(tmp_path, alteration):
+    repository, native, base = _combined_recipe(tmp_path)
+    patch = base / 'headless-agent.patch'
+    if alteration == 'changed':
+        patch.write_bytes(patch.read_bytes() + b'\nchanged')
+    elif alteration == 'missing':
+        patch.unlink()
+    elif alteration == 'symlink':
+        target = tmp_path / 'redirected.patch'
+        patch.rename(target)
+        patch.symlink_to(target)
+    else:
+        (base.parents[1] / 'pyproject.toml').write_text('[project]\nname = "another-product"\n')
+    output = tmp_path / 'refused'
+    with pytest.raises(ValueError):
+        _preparer().prepare_source(output, upstream=repository, resource_root=native)
+    assert not output.exists()
+    assert not list(tmp_path.glob('.refused-*'))
+
+
+def test_invalid_bundled_base_is_not_replaced_by_valid_canonical_input(tmp_path):
+    repository, native, base = _combined_recipe(tmp_path)
+    (native / 'dosbox-x/headless-agent.patch').write_bytes(b'damaged local input')
+    output = tmp_path / 'refused'
+    with pytest.raises(ValueError, match='hash mismatch'):
+        _preparer().prepare_source(output, upstream=repository, resource_root=native)
+    assert not output.exists()
+    assert (base / 'headless-agent.patch').is_file()
 
 
 def test_preparation_rejects_damaged_inputs_before_output(tmp_path):

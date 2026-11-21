@@ -389,11 +389,12 @@ def _catalog():
                 "json:debug-scene-wait",
                 "json:debug-keyboard-press",
                 "json:debug-frame-probe",
+                "cli:debug --spectator",
                 "cli:debug --dot-mode",
             ],
             ["windows_ui.py", "scenes.py", "scene_values.py", "wine_guest/agent.c"],
             ["lief", "iced-x86", "capstone", "Pillow", "windows-backend"],
-            "Guest input, source-bound frames and host-time scene waits. Dot-mode reads retained frames without input forwarding. Device/title qualification is separate.",
+            "Guest input, source-bound frames and host-time scene waits. Spectator mode reads retained frames without input forwarding. Device/title qualification is separate.",
             maturity="experimental",
         ),
         _entry(

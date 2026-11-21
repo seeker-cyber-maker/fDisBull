@@ -109,6 +109,7 @@
     "native/input-control.patch",
     "native/manifest.json",
     "native/prepare_source.py",
+    "native/source_inputs.py",
     "scripts/prepare_native.py",
     "scripts/experiments/dune_probe_batch.py",
     "scripts/experiments/dune_ui_reader.py",

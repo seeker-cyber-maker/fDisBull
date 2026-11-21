@@ -1,11 +1,14 @@
 # DOSBox-X native source notices
 
-This directory retains the complete stable agent patch and its source manifest
-from [fDisBull](https://github.com/seeker-cyber-maker/fDisBull), commit
+The complete stable agent patch and its source manifest originate in
+[fDisBull](https://github.com/seeker-cyber-maker/fDisBull), commit
 `ce91c303f2fccd1db9b1e3917ecc8c98473bfdb9`, path `experimental/dosbox-x`.
-The files `headless-agent.patch`, `source-manifest.json` and `COPYING` are copied
-without modification from that commit. They are build inputs owned by this
-DotBox source delivery; preparation does not contact or import fDisBull.
+The files `headless-agent.patch`, `source-manifest.json` and `COPYING` retain
+their exact bytes from that commit. The combined checkout maintains them once
+under `experimental/dosbox-x`; DotBox resolves those pinned inputs through
+`native/source_inputs.py`. DotBox wheels, source distributions and exported kits
+materialize ordinary copies in this directory, so those deliveries prepare
+native source without another checkout or an fDisBull application import.
 
 The patch applies to [DOSBox-X](https://github.com/joncampbell123/dosbox-x),
 commit `029bd65c5dcc7cdc7f2e14e35278620d9707d969`. Its source files retain the

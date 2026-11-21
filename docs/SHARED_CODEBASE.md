@@ -2,7 +2,7 @@
 
 This policy implements the user's direction to share reversing machinery while
 keeping fDisBull and DotBox, their operating priorities and their Agent BBS
-projects separate. This first development checkpoint is not a release or a
+projects separate. This development integration is not a release or a
 QEMU parity decision.
 
 ## Product responsibilities
@@ -56,10 +56,31 @@ requirement to install the complete application.
 Search candidates are locations satisfying a supplied comparison. Their game
 meaning, liveness and suitability for control still need evidence. This slice
 adds no live capture, live writes, automatic field naming or general harness
-generator. Runtime capture, persistence, live admission, decoder wrappers and
-native transport are not extracted here. Move another component when both
+generator. Runtime capture, persistence, live admission and decoder wrappers
+remain application responsibilities. Move another component when both
 consumers benefit and explicit adapters preserve its contract. Do not keep a
 second maintained copy after moving a kernel.
+
+The shared package also owns bounded private-pipe JSON-RPC exchange in
+`fdisbull_core.pipe_rpc`. Both DOSBox clients use that framing/deadline kernel.
+Product adapters retain launch profiles, public error types, request prefixes,
+EOF diagnostics, input ownership and process cleanup. The common exchange does
+not start a process or transfer control. Both applications pin shared development
+version `0.1.0.dev2`; the earlier memory-only wheel cannot satisfy this slice.
+
+## Spectator presentation
+
+fDisBull's preferred CLI spelling is `--spectator`; `--dot-mode` and `--window`
+remain aliases for the existing `window` option. Python arguments, JSON methods,
+metadata and artifact identities remain compatible. The native DOSBox view is
+passive and belongs to the existing debugger-owned session. Supported Windows
+backends retain their stopped-frame HTTP spectator. Opening a viewer does not
+launch DotBox, enable host input, or change a backend's support/default policy.
+
+DotBox retains its own visible play service and cooperative input policy.
+Sharing transport does not route fDisBull through `dotbox serve` or merge their
+project stores. A common native binary remains a separate qualification from
+sharing the byte-identical base source.
 
 ## Independent builds and installations
 
@@ -92,11 +113,25 @@ and consumes an explicit shared wheel; it is not a generic no-Git sdist installe
 
 ## Native lifecycle and backend direction
 
+The stable DOSBox-X base patch, manifest and GPL text are maintained once under
+`experimental/dosbox-x/`. DotBox's source resolver verifies those exact inputs
+against its existing native recipe. Its wheel, sdist, exported kit and Mac source
+staging materialize ordinary copies at the original product resource paths;
+those deliveries need no sibling checkout. The cooperative-input overlay remains
+DotBox-specific. Moving the base source does not change native bytes or qualify
+a new native binary.
+
 DOSBox-X and QEMU remain separately built components. Rebuild for changed native
 source, patches, dependencies, configuration, toolchain or platform. An unrelated
 Python or documentation commit does not invalidate a native artifact. Reuse its
 recorded identity when those inputs are unchanged; client/contract checks may
 still be needed. Preserve separate per-backend manifests and qualification.
+
+The legacy DOSBox-in-QEMU Python guest now includes the shared transport module
+and package initializer in all resource identities. Its prepared initramfs must
+be regenerated for these changed Python resources; an older image correctly
+fails identity validation. This does not rebuild DOSBox-X or modify the separate
+native DOS QEMU parity implementation.
 
 Backend protocols may share concepts while retaining different address spaces,
 clocks, input delivery and checkpoint formats. A producer advertises only its

@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import runpy
 from subprocess import SubprocessError
 import sys
 import tomllib
@@ -53,10 +54,11 @@ def _inventory():
                 tomllib.loads(project.read_text()).get("project", {}).get("name") != "dotbox" or
                 source_root / "src/dotbox/kit.py" != Path(__file__).resolve()):
             raise ValueError("Installed DotBox resources are missing; reinstall the complete wheel")
-        root, layout = source_root, "source"
+        source_inputs = runpy.run_path(str(source_root / "native/source_inputs.py"))
+        root, layout = source_inputs["SourceResources"](source_root), "source"
         catalog = {"format": "dotbox-resource-catalog-1", "files": {}}
         for name in manifest["files"]:
-            path = root / name
+            path = root.joinpath(name)
             if not path.is_file() or any(part.is_symlink() for part in (path, *path.parents)):
                 raise ValueError("Missing or symlinked source resource: " + name)
             if path.stat().st_size > MAX_RESOURCE_BYTES:

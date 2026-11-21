@@ -1,8 +1,11 @@
 # Standalone DOSBox-X source and build
 
-DotBox includes the source patches, recipe, hashes and license notices needed to
-prepare its ownership-enabled DOSBox-X. No fDisBull checkout or Python package
-is needed. Preparation requires Python 3.12 or later, Git, and either network
+DotBox distributions and exported kits include the source patches, recipe,
+hashes and license notices needed to prepare its ownership-enabled DOSBox-X.
+Those deliveries need no other checkout or fDisBull application. In the combined
+source checkout, the base files are maintained once under
+`experimental/dosbox-x` and resolved by `native/source_inputs.py` against the
+same pinned recipe hashes. Preparation requires Python 3.12 or later, Git, and either network
 access to the pinned public DOSBox-X commit or a local Git repository containing
 that commit. Preparation does not compile or install a binary.
 
@@ -38,11 +41,19 @@ build products, host libraries or a binary's behavior.
 ## Source identity
 
 [`native/build-recipe.json`](../native/build-recipe.json) is the DotBox recipe.
-It retains the complete base patch to preserve its independently recorded
-identity rather than reconstructing a reduced patch with different provenance.
-Only the native patch, its manifest and GPL text are copied from fDisBull;
+It retains the complete base patch identity rather than reconstructing a
+reduced patch with different provenance. The canonical base patch, manifest
+and GPL text are staged into each distribution and exported kit;
 fDisBull's application, disassembler, package, other emulator profiles and game
 data are not native preparation dependencies.
+
+Direct wheel builds and source-distribution builds use the same resolver. A
+source distribution contains every native input at its usual product-relative
+path and builds outside the combined checkout. Exported kit helpers use only
+the Python standard library and local packaged inputs. The resolver refuses a
+damaged local file instead of hiding it with a canonical fallback. This source
+organization change preserves the build recipe, base/overlay bytes and prepared
+native identity; it does not require a new native binary by itself.
 
 | Input | Pin |
 | --- | --- |
@@ -96,7 +107,9 @@ Keep build output outside Git. Before distributing a binary, retain its hash,
 host/architecture, toolchain/configuration and linked-library identities, the
 full corresponding prepared source, and required notices. See
 [`native/dosbox-x/NOTICES.md`](../native/dosbox-x/NOTICES.md) and
-[`native/dosbox-x/COPYING`](../native/dosbox-x/COPYING).
+the included `native/dosbox-x/COPYING` (the
+[canonical license text](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/shared-dotbox-core-20261121/experimental/dosbox-x/COPYING)
+in the combined checkout).
 
 ## Qualification boundaries
 

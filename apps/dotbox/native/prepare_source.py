@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
+import runpy
 import subprocess
 import tarfile
 import tempfile
@@ -13,6 +14,7 @@ import tempfile
 
 HERE = Path(__file__).resolve().parent
 RECEIPT = '.dotbox-source.json'
+_input_path = runpy.run_path(str(HERE / 'source_inputs.py'))['native_input_path']
 
 
 def _digest(path: Path) -> str:
@@ -29,9 +31,9 @@ def _path(root: Path, name: str) -> Path:
     return path
 
 
-def _verify(root: Path, files: dict[str, str]) -> None:
+def _verify(root: Path, files: dict[str, str], *, resource_inputs: bool = False) -> None:
     for name, expected in files.items():
-        path = _path(root, name)
+        path = _input_path(root, name) if resource_inputs else _path(root, name)
         if not path.is_file() or _digest(path) != expected:
             raise ValueError('Native source hash mismatch: ' + name)
 
@@ -41,8 +43,8 @@ def load_recipe(resource_root: Path = HERE) -> dict:
     recipe = json.loads((resource_root / 'build-recipe.json').read_text())
     if recipe['format'] != 'dotbox-native-source-1':
         raise ValueError('Unsupported native source recipe')
-    _verify(resource_root, recipe['inputs'])
-    base = json.loads((resource_root / 'dosbox-x/source-manifest.json').read_text())
+    _verify(resource_root, recipe['inputs'], resource_inputs=True)
+    base = json.loads(_input_path(resource_root, 'dosbox-x/source-manifest.json').read_text())
     overlay = json.loads((resource_root / 'manifest.json').read_text())
     if not (base['baseline_commit'] == overlay['upstream_commit'] == recipe['upstream']['commit']):
         raise ValueError('Native source baseline identities disagree')
@@ -121,10 +123,10 @@ def prepare_source(destination: Path, *, upstream: Path | None = None,
         source.mkdir()
         with tarfile.open(archive) as payload:
             payload.extractall(source, filter='data')
-        base = json.loads((resource_root / 'dosbox-x/source-manifest.json').read_text())
+        base = json.loads(_input_path(resource_root, 'dosbox-x/source-manifest.json').read_text())
         overlay = json.loads((resource_root / 'manifest.json').read_text())
         for name in ('dosbox-x/headless-agent.patch', 'input-control.patch'):
-            patch = str((resource_root / name).resolve(strict=True))
+            patch = str(_input_path(resource_root, name).resolve(strict=True))
             _git('apply', '--check', patch, cwd=source)
             _git('apply', patch, cwd=source)
             if name == 'dosbox-x/headless-agent.patch':

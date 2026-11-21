@@ -303,7 +303,8 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   watchpoints, bounded fast-forward, short instruction traces, guest keyboard
   and mouse delivery, stored screenshots, and selected-PSP `guest_exit` versus
   `guest_tsr` termination tracking. Headless operation is the default;
-  `--dot-mode` opens a watch-only window on compatible builds. A separate
+  `--spectator` opens a watch-only window on compatible builds (`--dot-mode`
+  and `--window` remain aliases). A separate
   Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
@@ -320,7 +321,8 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped
   watches, memory, traces and shared keyboard/frame/scene actions. Windows
-  `--dot-mode` supplies a read-only spectator without capturing host input.
+  `--spectator` supplies a read-only spectator without capturing host input;
+  the existing `--dot-mode` and `--window` aliases remain available.
   PE32 uses its actual 32-bit CPU context. Win16 requires observed selector
   mappings and restricts register edits; its native checkpoints, code layers
   and delta rewind remain unavailable.

@@ -59,6 +59,8 @@ def test_export_has_verified_native_recipe_guides_notices_and_helpers(tmp_path):
     catalog = json.loads((destination / "catalog.json").read_text())
     for name in ("skills/dotbox-play/SKILL.md", "native/build-recipe.json",
                  "native/dosbox-x/COPYING", "native/dosbox-x/NOTICES.md",
+                 "native/dosbox-x/headless-agent.patch", "native/dosbox-x/source-manifest.json",
+                 "native/source_inputs.py",
                  "scripts/prepare_native.py", "docs/AGENT_START.md",
                  "docs/ENGINE_AWARE_PREPARATION.md", "docs/NAVIGATION.md",
                  "docs/RECOVERY_AND_SAVES.md", "docs/EXTRACTION.md",
@@ -75,6 +77,14 @@ def test_export_has_verified_native_recipe_guides_notices_and_helpers(tmp_path):
                          cwd=tmp_path, capture_output=True, text=True)
     assert run.returncode == 0, run.stderr
     assert "upstream" in run.stdout
+    # The exported recipe remains usable without the application or checkout.
+    code = ("import runpy, sys; module = runpy.run_path(sys.argv[1]); "
+            "recipe = module['load_recipe'](); print(len(recipe['result_files']))")
+    checked = subprocess.run([sys.executable, '-I', '-S', '-c', code,
+                              str(destination / 'native/prepare_source.py')],
+                             cwd=tmp_path, capture_output=True, text=True)
+    assert checked.returncode == 0, checked.stderr
+    assert checked.stdout.strip() == '38'
 
 
 def test_export_preserves_existing_destination(tmp_path):

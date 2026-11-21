@@ -23,17 +23,19 @@ def _helper():
     return module
 
 
-def _core_wheel(directory, *, metadata_name='fdisbull-core', metadata_version='0.1.0.dev1',
-                dependency=None, kernel=True):
+def _core_wheel(directory, *, metadata_name='fdisbull-core', metadata_version='0.1.0.dev2',
+                dependency=None, kernel=True, transport=True):
     directory.mkdir(parents=True, exist_ok=True)
-    path = directory / 'fdisbull_core-0.1.0.dev1-py3-none-any.whl'
+    path = directory / 'fdisbull_core-0.1.0.dev2-py3-none-any.whl'
     metadata = f'Metadata-Version: 2.1\nName: {metadata_name}\nVersion: {metadata_version}\n'
     if dependency:
         metadata += 'Requires-Dist: ' + dependency + '\n'
     with zipfile.ZipFile(path, 'w') as archive:
-        archive.writestr('fdisbull_core-0.1.0.dev1.dist-info/METADATA', metadata)
+        archive.writestr('fdisbull_core-0.1.0.dev2.dist-info/METADATA', metadata)
         if kernel:
             archive.writestr('fdisbull_core/memory_search.py', '# authored wheel admission fixture\n')
+        if transport:
+            archive.writestr('fdisbull_core/pipe_rpc.py', '# authored transport admission fixture\n')
     return path
 
 
@@ -83,7 +85,7 @@ def test_monorepo_output_guard_also_excludes_other_products(tmp_path, monkeypatc
 
 @pytest.mark.parametrize('alteration', [
     {'metadata_name': 'fdisbull'}, {'metadata_version': '0.2.0'},
-    {'dependency': 'fdisbull>=1'}, {'kernel': False},
+    {'dependency': 'fdisbull>=1'}, {'kernel': False}, {'transport': False},
 ])
 def test_shared_wheel_requires_the_exact_standalone_core(tmp_path, alteration):
     helper = _helper()
@@ -97,7 +99,7 @@ def test_shared_wheel_is_bound_to_admitted_bytes(tmp_path):
     wheel = _core_wheel(tmp_path / 'inputs')
     identity = helper._shared_wheel(wheel)
     assert identity['distribution'] == 'fdisbull-core'
-    assert identity['version'] == '0.1.0.dev1'
+    assert identity['version'] == '0.1.0.dev2'
     assert identity['sha256'] == helper._sha256(wheel)
     work = tmp_path / 'work'
     work.mkdir()
@@ -108,7 +110,7 @@ def test_shared_wheel_is_bound_to_admitted_bytes(tmp_path):
 
 
 def test_invalid_shared_wheel_creates_no_build_output(tmp_path):
-    wheel = tmp_path / 'fdisbull_core-0.1.0.dev1-py3-none-any.whl'
+    wheel = tmp_path / 'fdisbull_core-0.1.0.dev2-py3-none-any.whl'
     wheel.write_bytes(b'not a ZIP wheel')
     work = tmp_path / 'new-build'
     with pytest.raises(SystemExit) as error:
@@ -347,8 +349,14 @@ def test_package_snapshot_contains_declared_resources_without_build_outputs(tmp_
     destination = tmp_path / 'package-source'
     identity = helper._stage_package(destination)
     manifest = json.loads((ROOT / 'src/dotbox/resources_manifest.json').read_text())
+    canonical = ROOT.parents[1] / 'experimental/dosbox-x'
+    shared = {f'native/dosbox-x/{name}' for name in
+              ('headless-agent.patch', 'source-manifest.json', 'COPYING')}
     for name in manifest['files']:
-        assert (destination / name).read_bytes() == (ROOT / name).read_bytes()
+        source = ROOT / name
+        if name in shared and not source.is_file():
+            source = canonical / Path(name).name
+        assert (destination / name).read_bytes() == source.read_bytes()
     assert (destination / 'src/dotbox/cli.py').is_file()
     assert not (destination / '.git').exists()
     assert not (destination / 'build').exists()

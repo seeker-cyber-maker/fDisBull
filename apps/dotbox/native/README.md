@@ -9,8 +9,11 @@ The exact upstream commit, prepared fDisBull stable-patch identity, touched base
 file hashes, overlay hash and expected result hashes are in `manifest.json`.
 This overlay targets `experimental/dosbox-x`, not the separate layers profile.
 
-The complete base patch, source manifest and license text are included under
-`dosbox-x/`. Prepare both native patches without an fDisBull checkout:
+The combined checkout maintains the base patch, source manifest and license
+text once in `experimental/dosbox-x`. The resolver checks their existing recipe
+hashes before use. DotBox wheels, source distributions and exported kits carry
+complete ordinary files under `native/dosbox-x/`; those deliveries require no
+other checkout. Prepare both native patches with:
 
 ```sh
 python scripts/prepare_native.py /path/to/new/dosbox-x

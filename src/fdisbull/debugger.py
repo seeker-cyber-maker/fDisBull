@@ -136,7 +136,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if type(window) is not bool:
             raise ValueError('window must be boolean')
         if window and backend not in (None,'dosbox','wine-qemu'):
-            raise ValueError('dot-mode requires native DOSBox or a Windows spectator backend')
+            raise ValueError('Spectator mode requires native DOSBox or a Windows spectator backend')
         if backend=='qemu-machine':
             if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
                 raise ValueError('Raw boot launch uses its project image without guest-controller options')

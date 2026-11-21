@@ -16,6 +16,7 @@ REQUIRED_SOURCE_FILES = (
     "packages/fdisbull-core/PROVENANCE.json",
     "packages/fdisbull-core/src/fdisbull_core/__init__.py",
     "packages/fdisbull-core/src/fdisbull_core/memory_search.py",
+    "packages/fdisbull-core/src/fdisbull_core/pipe_rpc.py",
     ".gitlab-ci.yml",
     ".github/workflows/ovh-bootstrap.yml",
     ".github/workflows/ci.yml",

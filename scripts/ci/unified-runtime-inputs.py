@@ -21,7 +21,9 @@ RESOURCES = {
              'opt/fdisbull/selftest32.c': 'src/fdisbull/wine_guest/selftest32.c'},
     'dos': {'init': 'src/fdisbull/dos_guest/init.sh', 'opt/fdisbull/dos_broker.py': 'src/fdisbull/dos_guest/broker.py',
             'opt/fdisbull/remote/__init__.py': 'src/fdisbull/dos_guest/__init__.py',
-            'opt/fdisbull/remote/dosbox_rpc.py': 'src/fdisbull/dosbox_rpc.py'}}
+            'opt/fdisbull/remote/dosbox_rpc.py': 'src/fdisbull/dosbox_rpc.py',
+            'opt/fdisbull/fdisbull_core/__init__.py': 'packages/fdisbull-core/src/fdisbull_core/__init__.py',
+            'opt/fdisbull/fdisbull_core/pipe_rpc.py': 'packages/fdisbull-core/src/fdisbull_core/pipe_rpc.py'}}
 INPUT_PATHS = {'FDISBULL_PE_QEMU': '.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
                'FDISBULL_PE_KERNEL': '.native/pe/linux-amd64',
                'FDISBULL_PE_INITRAMFS': '.native/pe/runtime.cpio.gz',

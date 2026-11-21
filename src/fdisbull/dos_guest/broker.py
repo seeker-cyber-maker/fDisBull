@@ -12,7 +12,8 @@ from remote.dosbox_rpc import DOSBoxRPC, DebuggerError
 
 LIMIT=96*1024*1024
 NATIVE='/opt/fdisbull/dosbox-x'
-RESOURCES=('init','opt/fdisbull/dos_broker.py','opt/fdisbull/remote/__init__.py','opt/fdisbull/remote/dosbox_rpc.py')
+RESOURCES=('init','opt/fdisbull/dos_broker.py','opt/fdisbull/remote/__init__.py','opt/fdisbull/remote/dosbox_rpc.py',
+           'opt/fdisbull/fdisbull_core/__init__.py','opt/fdisbull/fdisbull_core/pipe_rpc.py')
 client=None;target=None
 
 

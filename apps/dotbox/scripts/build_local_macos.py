@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import platform
+import runpy
 import shutil
 import signal
 import subprocess
@@ -94,6 +95,8 @@ def _shared_wheel(value):
                 raise ValueError('Expected the pinned standalone fdisbull-core wheel with no runtime dependencies')
             if 'fdisbull_core/memory_search.py' not in names:
                 raise ValueError('Shared wheel is missing the scalar-search kernel')
+            if 'fdisbull_core/pipe_rpc.py' not in names:
+                raise ValueError('Shared wheel is missing the pipe transport')
     except (zipfile.BadZipFile, KeyError) as error:
         raise ValueError('Invalid shared core wheel') from error
     return {'path': str(path), 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(),
@@ -228,6 +231,7 @@ def _preflight(mode, environment, run):
 
 def _stage_package(destination):
     """Copy only Python sources and declared resources; pip must not build in the checkout."""
+    resource_path = runpy.run_path(str(ROOT / 'native/source_inputs.py'))['resource_path']
     manifest = json.loads((ROOT / 'src/dotbox/resources_manifest.json').read_text())
     names = {'pyproject.toml', 'setup.py', 'MANIFEST.in', 'README.md', 'AGENTS.md', *manifest['files']}
     names.update(str(path.relative_to(ROOT)) for path in (ROOT / 'src/dotbox').rglob('*')
@@ -237,7 +241,7 @@ def _stage_package(destination):
         relative = PurePosixPath(name)
         if relative.is_absolute() or '..' in relative.parts or '\\' in name:
             raise ValueError('Invalid package resource path: ' + name)
-        source = ROOT / name
+        source = resource_path(ROOT, name)
         if any(path.is_symlink() for path in (source, *source.parents) if path != ROOT.parent):
             raise ValueError('Refusing symlinked package input: ' + name)
         target = destination / name

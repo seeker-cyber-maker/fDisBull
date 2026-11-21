@@ -1,4 +1,5 @@
 """Standalone native boundary contracts; authored pipe peers are not DOSBox QA."""
+import ast
 import base64
 from copy import deepcopy
 import hashlib
@@ -446,5 +447,14 @@ def test_standalone_runtime_has_no_fdisbull_imports():
     directory = Path(__file__).resolve().parents[1] / 'src' / 'dotbox'
     for name in ('native_rpc.py', 'native_session.py', 'dos_launch_profile.py',
                  'operation_budget.py', 'screenshot_codecs.py'):
-        code = (directory / name).read_text()
-        assert 'from fdisbull' not in code and 'import fdisbull' not in code
+        code = ast.parse((directory / name).read_text())
+        for node in ast.walk(code):
+            if isinstance(node, ast.Import):
+                modules = [item.name for item in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0:
+                modules = [node.module or '']
+            else:
+                continue
+            # The shared core is an explicit dependency; the fDisBull product
+            # and its analysis stack must remain unnecessary for this runtime.
+            assert all(module.split('.')[0] != 'fdisbull' for module in modules), name

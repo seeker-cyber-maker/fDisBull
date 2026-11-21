@@ -3,13 +3,16 @@
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
+import runpy
 import shutil
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.sdist import sdist
 
 
 ROOT = Path(__file__).resolve().parent
+resource_path = runpy.run_path(str(ROOT / 'native/source_inputs.py'))['resource_path']
 
 
 def resource_names():
@@ -38,7 +41,7 @@ class BuildWithResources(build_py):
         destination.mkdir(parents=True)
         catalog = {"format": "dotbox-resource-catalog-1", "files": {}}
         for name in resource_names():
-            source = ROOT / name
+            source = resource_path(ROOT, name)
             if (not source.is_file() or
                     any(path.is_symlink() for path in (source, *source.parents) if path != ROOT.parent)):
                 raise ValueError("Missing or symlinked DotBox resource: " + name)
@@ -55,4 +58,29 @@ class BuildWithResources(build_py):
         return outputs + [str(directory / name) for name in (*resource_names(), "catalog.json")]
 
 
-setup(cmdclass={"build_py": BuildWithResources})
+class SourceWithResources(sdist):
+    def make_release_tree(self, base_dir, files):
+        super().make_release_tree(base_dir, files)
+        if self.dry_run:
+            return
+        destination = Path(base_dir)
+        staged = []
+        for name in resource_names():
+            source = resource_path(ROOT, name)
+            target = destination / name
+            if not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+                staged.append(name)
+        if staged:
+            egg_info = Path(self.get_finalized_command('egg_info').egg_info)
+            if egg_info.is_absolute():
+                egg_info = egg_info.relative_to(ROOT)
+            inventory = destination / egg_info / 'SOURCES.txt'
+            names = set(inventory.read_text().splitlines()) | set(staged)
+            # The release tree may contain hardlinks to checkout metadata.
+            inventory.unlink()
+            inventory.write_text('\n'.join(sorted(names)) + '\n')
+
+
+setup(cmdclass={"build_py": BuildWithResources, "sdist": SourceWithResources})
