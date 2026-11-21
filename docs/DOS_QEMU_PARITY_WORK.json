@@ -1394,14 +1394,17 @@
         "video.screenshot"
       ],
       "qualification": "unqualified",
-      "implementation": "opt_in_complete_source_raster_proof_and_retained_publications_implemented_legacy_frame_contract_incomplete",
+      "implementation": "implemented_scoped_retained_source_frame_adapter_wider_legacy_contract_incomplete",
       "source_paths": [
         "src/fdisbull/qemu_display.py",
         "src/fdisbull/qemu_vga_configuration.py",
         "src/fdisbull/qemu_dos_frames.py",
         "src/fdisbull/qemu_frame_keys.py",
         "src/fdisbull/frame_coherence.py",
-        "native/qemu-raster-proof/qemu-raster-proof.patch"
+        "native/qemu-raster-proof/qemu-raster-proof.patch",
+        "src/fdisbull/qemu_frame_contract.py",
+        "src/fdisbull/qemu_session_revision.py",
+        "src/fdisbull/qemu_video_frame.py"
       ],
       "depends_on": [
         "clock-and-physical-input",
@@ -1415,8 +1418,8 @@
         "raster-proof-native"
       ],
       "remaining_work": [
-        "Implement legacy frame_probe and frame_rgba consumers, including codec/stride/pixel hash and exact guarded identity.",
-        "Produce the verified complete source-raster snapshots at native guest-mode cadence with guarded stream/configuration identity, and resolve raster sampling differences through paired evidence. The new opt-in source proof currently accompanies caller-timed synchronous renderer attempts only.",
+        "The retained 320x200 chain-4 adapter implements frame_probe/frame_rgba, real host codecs, explicit source/clock identity, cooperative session revision and generic coherence; see docs/QEMU_FRAME_CONTRACT.md. Its separately owned native witness is pending. Qualify wider modes/lifecycles and downstream source-depth signature differences; host codec tests do not establish native or cross-backend parity.",
+        "The native guest-cadence source stream and next-raster fence are implemented and have authored native evidence. Preserve the prior paired Native07 quiet-raster agreement and pulse sampling-phase discriminator; resolve those documented phase differences for legacy consumer acceptance rather than treating the producer as caller-timed synchronous capture only.",
         "Qualify frame step and key scheduling at that boundary, including partial drawing, palette/mode/origin changes, typematic behavior and restore without reinjection."
       ],
       "minimum_acceptance": [
@@ -2120,6 +2123,7 @@
     "docs/QEMU_CHECKPOINT_SCRIPT_GATE.md",
     "docs/QEMU_SCENE_ACT_GATE.md",
     "docs/QEMU_STEP_COUNT_GATE.md",
-    "docs/evidence/qemu-input-schedule-observation-2026-11-21/verification.json"
+    "docs/evidence/qemu-input-schedule-observation-2026-11-21/verification.json",
+    "docs/QEMU_FRAME_CONTRACT.md"
   ]
 }
