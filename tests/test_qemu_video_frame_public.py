@@ -244,8 +244,15 @@ def test_script_probe_keeps_one_outer_deadline_across_all_native_chunks(video):
     report = execute_script(o.session, script(dict(op='video-frame-probe', points=[[7, 9]] * 4096,
                                                   timeout_ms=1000)), timeout_ms=50)
     assert report['ok'] is False and report['error']['type'] == 'TimeoutError'
-    assert o.clock.now == pytest.approx(100.050) and o.vm.closed
-    assert len([1 for command, _ in o.wire.calls if command == 'x-fdisbull-probe-video-frame']) == 2
+    # Script admission floors the remaining allowance to whole milliseconds.
+    # Binary floating point can conservatively turn 50 ms into 49 ms; neither
+    # chunk may refresh that inherited allowance or exceed the original end.
+    budgets = [budget for (command, _), budget in zip(o.wire.calls, o.wire.budgets, strict=True)
+               if command == 'x-fdisbull-probe-video-frame']
+    assert len(budgets) == 2 and .049 - 1e-9 <= budgets[0] <= .050 + 1e-9
+    assert budgets[1] == pytest.approx(budgets[0] - .030)
+    assert o.clock.now == pytest.approx(100 + budgets[0])
+    assert 100.049 - 1e-9 <= o.clock.now <= 100.050 + 1e-9 and o.vm.closed
     assert len(report['steps'][0]['result']['probe_chunks']) == 1
 
 
