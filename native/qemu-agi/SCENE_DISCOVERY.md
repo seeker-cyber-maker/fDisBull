@@ -170,10 +170,13 @@ The graph preserves these distinctions; saved fragment observations remain
 evidence about their own recorded setup, not execution of the containing
 LOGIC or its surrounding branches.
 
-Rendering still needs the selected picture/VIEW asset bytes, a chosen path or
-runtime state, actor flags and priorities, and a composition policy. These are
-explicit scene inputs. The existing Sarien-derived preview kernel can consume
-qualified inputs; a static command listing alone is not a pixel bundle.
+The [conditional scene-binding adapter](SCENE_BINDINGS.md) consumes these
+records with explicit path choices, variable values at individual use sites,
+and declared values for missing actor fields. It stops at unknown effects or
+calls and keeps the requested pose separate from effective guest state.
+Fully bound selected layers can use exact picture/VIEW assets and the existing
+Sarien compositor. Position repair additionally needs actor flags, peers and
+other scene policy; the conditional adapter does not infer those inputs.
 
 The native semantic operation names, typed inputs, source addresses and effect
 boundaries provide the intended seam for later direct UIL emission. This
