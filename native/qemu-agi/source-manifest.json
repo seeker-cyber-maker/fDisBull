@@ -7,22 +7,31 @@
   "machine": "agi-test",
   "binary": "qemu-system-agi",
   "source_files": {
+    "apply_overlay.py": "3ba19344cb25c75514d818c11c1f06119dfe980d0260f0c9e1b648c266b29468",
     "overlay/configs/devices/agi-softmmu/default.mak": "1ced48446613b4155e344b2cdbaafaf4ee4df9d32bb6dc9ccd735bdb9568fb4b",
     "overlay/configs/targets/agi-softmmu.mak": "a69a61b6241f3173498a58d28dd50e09c9cc579ef57ff63313f8c2d2dd750293",
     "overlay/gdb-xml/agi-core.xml": "525f2fd468101e7d3f0755ed422d277179695a67e79064fed01c0fdc22499432",
     "overlay/hw/agi/Kconfig": "aed7404131bb4bf940645e8021c0fc75808d5be5c8f30f28da702b735c6236cc",
-    "overlay/hw/agi/agi-test.c": "3bf9670b0e06d3bacb9842cc2b6d756f0fe7f6447bfe32f2714c3c4ff523f031",
+    "overlay/hw/agi/agi-test.c": "9dcf2ef7fb7c7f8ff685e037ebce1c47598f048f295f701cd449063bfafd732a",
     "overlay/hw/agi/meson.build": "ead9cd2c78dd31c946cf80e37e3a0235c3846163f08c6c0a128e602d8706dd64",
     "overlay/target/agi/Kconfig": "daf1169391ac99e0746ffd7d09fa2cb1cd1a243d8c1f144f2dfacf0973af0555",
+    "overlay/target/agi/catalog.c": "e02f5d81312d0c13aa3c7cd546335a8e2e08d2f759243e587f9bf27595106866",
     "overlay/target/agi/cpu-param.h": "cffd77d68921138da4934a43779c1ff64f130ca4060e3ef08d7e5f3d19a4c600",
     "overlay/target/agi/cpu-qom.h": "0aa8675fb41c03d81b487b9f98cde3b3172608fd64b6dccaec2bfe511e971272",
-    "overlay/target/agi/cpu.c": "a22d3e8cccfc3b61f64dad3bd85dc24d6fc8ea3402c3d061a153dec1b1157076",
-    "overlay/target/agi/cpu.h": "5591ba4e4e8d7205b93f667222ed974a8694824f0a434e55ea0fb8344f836ced",
-    "overlay/target/agi/helper.c": "0d7a8a87fb1a0e686b273a0433212a5a6e4d2ffc59f45a1cfaf169f4866cacd8",
-    "overlay/target/agi/helper.h": "6a99497d5fdf46d1e60ad0775068bc596c894db14d0dcb89277fff8ec2dbb70d",
-    "overlay/target/agi/meson.build": "2975e1bdf03bdb6a30d43f8b66666b01e89d80e5b6525e5d88e581e15b98e176",
-    "overlay/target/agi/translate.c": "2e38d3a85213041391780296623352d5c2d34f65261f4e037913b8c2ef89c042",
-    "apply_overlay.py": "3ba19344cb25c75514d818c11c1f06119dfe980d0260f0c9e1b648c266b29468"
+    "overlay/target/agi/cpu.c": "a24e248122a8088ce155d3e86f7aa345e0cfe9a94df29de8a930d253ef78b82f",
+    "overlay/target/agi/cpu.h": "682f6f40fc29878d7cd1fa3ddc530a93c8880edbbd48ec60b2b4f0f931e25cda",
+    "overlay/target/agi/decode.c": "fbd9be41bcc5f3ceef8c84b74fdce016f847fa28ba0c55f9ffbf7dceba0effcc",
+    "overlay/target/agi/decode.h": "11a2851743e6d12f80b7e54d448bb8ac0f8eab4f63583ecc37127ed60cda5767",
+    "overlay/target/agi/helper.c": "f9c55fe7ebf315e05dc48da3acf4427adc7c530f8332ac3fad7b191eb3b5b9a0",
+    "overlay/target/agi/helper.h": "153f7cc3bd8172b40308c9d5d6694110984c22fdfd6a1e1934ab34c50d2f941c",
+    "overlay/target/agi/meson.build": "0733a22a5479bb61f3ad1787c8c7a87d94f4291ca78a7fc2de528ca918109395",
+    "overlay/target/agi/translate.c": "d23fca0543ae4079441e0b858dcf5601a75f34d7c70b210173d5340869d5d85f"
   },
-  "qualification": "This manifest identifies experimental source only. Build success, authored execution correctness, observation neutrality, generated-code shape and performance require separate receipts bound to the exact applied source and binary. It does not establish full AGI compatibility, cross-host support or QEMU/DOSBox parity."
+  "qualification": "This manifest identifies experimental source only. Build success, authored execution correctness, observation neutrality, generated-code shape and performance require separate receipts bound to the exact applied source and binary. It does not establish full AGI compatibility, cross-host support or QEMU/DOSBox parity.",
+  "profiles": [
+    "agi-2917-scalar-position-pilot-1",
+    "agi-2917-view-binding-pilot-1",
+    "agi-2917-draw-intent-pilot-1"
+  ],
+  "instruction_schema": "fdisbull-agi-native-instructions-1"
 }

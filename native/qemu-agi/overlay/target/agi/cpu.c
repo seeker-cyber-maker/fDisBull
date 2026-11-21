@@ -122,6 +122,41 @@ static void agi_set_uint(Object *obj, Visitor *v, const char *name,
     /* obs_mask participates in the TB key: cached variants remain valid. */
 }
 
+static void agi_get_decode_uint(Object *obj, Visitor *v, const char *name,
+                                void *opaque, Error **errp)
+{
+    AgiCPU *cpu = AGI_CPU(obj);
+    uint64_t value;
+    if (!agi_require_stopped(obj, errp)) {
+        return;
+    }
+    value = (uintptr_t)opaque == 0 ? cpu->decode_pc : cpu->decode_limit;
+    visit_type_uint64(v, name, &value, errp);
+}
+
+static void agi_set_decode_uint(Object *obj, Visitor *v, const char *name,
+                                void *opaque, Error **errp)
+{
+    AgiCPU *cpu = AGI_CPU(obj);
+    uint64_t value;
+    unsigned field = (uintptr_t)opaque;
+    if (!visit_type_uint64(v, name, &value, errp) ||
+        !agi_require_stopped(obj, errp)) {
+        return;
+    }
+    if ((field == 0 && value > cpu->env.code_size) ||
+        (field == 1 && (value == 0 || value > 64))) {
+        error_setg(errp, "AGI_DECODE_PRECONDITION: invalid value for %s", name);
+        return;
+    }
+    if (field == 0) {
+        cpu->decode_pc = value;
+    } else {
+        cpu->decode_limit = value;
+    }
+    /* A host query never changes execution or observation bookkeeping. */
+}
+
 static void agi_set_restart(Object *obj, bool value, Error **errp)
 {
     CPUArchState *env = &AGI_CPU(obj)->env;
@@ -163,6 +198,116 @@ static void agi_json_source(GString *s, AgiCPU *cpu)
         g_string_append_printf(s, ",\"catalog_sha256\":\"%s\"", cpu->catalog->sha256);
     }
     g_string_append_c(s, '}');
+}
+
+static void agi_json_operands(GString *s, const AgiDecodedOperand *operands,
+                              uint32_t count)
+{
+    uint32_t i;
+    g_string_append_c(s, '[');
+    for (i = 0; i < count; i++) {
+        const AgiDecodedOperand *operand = &operands[i];
+        bool index = operand->kind == AGI_OPERAND_VARIABLE ||
+                     operand->kind == AGI_OPERAND_FLAG;
+        g_string_append_printf(s, "%s{\"role\":\"%s\",\"kind\":\"%s\","
+                               "\"width\":%u,\"access\":\"%s\",\"%s\":%" PRId32 "}",
+                               i ? "," : "", operand->role,
+                               agi_operand_kind_name(operand->kind), operand->width,
+                               agi_operand_access_name(operand->access),
+                               index ? "index" : "value", operand->value);
+    }
+    g_string_append_c(s, ']');
+}
+
+static void agi_json_instruction(GString *s, const AgiDecodedInstruction *insn)
+{
+    uint32_t i;
+    g_string_append_printf(s, "{\"pc\":%u,\"opcode\":%u,\"size\":%u,\"bytes\":[",
+                           insn->pc, insn->opcode, insn->size);
+    for (i = 0; i < insn->size; i++) {
+        g_string_append_printf(s, "%s%u", i ? "," : "", insn->bytes[i]);
+    }
+    g_string_append_printf(s, "],\"mnemonic\":\"%s\",\"operation\":\"%s\","
+                           "\"operands\":", insn->mnemonic, insn->operation);
+    agi_json_operands(s, insn->operands, insn->operand_count);
+    g_string_append(s, ",\"conditions\":[");
+    for (i = 0; i < insn->condition_count; i++) {
+        const AgiDecodedCondition *token = &insn->conditions[i];
+        g_string_append_printf(s, "%s{\"kind\":\"%s\",\"pc\":%u",
+                               i ? "," : "", agi_condition_kind_name(token->kind),
+                               token->pc);
+        if (token->kind == AGI_CONDITION_PREDICATE) {
+            g_string_append_printf(s, ",\"opcode\":%u,\"mnemonic\":\"%s\","
+                                   "\"operands\":", token->opcode, token->mnemonic);
+            agi_json_operands(s, token->operands, token->operand_count);
+        }
+        g_string_append_c(s, '}');
+    }
+    g_string_append(s, "],\"successors\":[");
+    for (i = 0; i < insn->successor_count; i++) {
+        const AgiDecodedSuccessor *edge = &insn->successors[i];
+        g_string_append_printf(s, "%s{\"kind\":\"%s\",\"pc\":%" PRId64
+                               ",\"in_range\":%s}", i ? "," : "",
+                               agi_successor_kind_name(edge->kind), edge->pc,
+                               edge->in_range ? "true" : "false");
+    }
+    g_string_append_printf(s, "],\"effect_class\":\"%s\",\"execution_support\":\"%s\"}",
+                           agi_effect_class_name(insn->effect_class),
+                           agi_execution_support_name(insn->execution_support));
+}
+
+static uint8_t agi_inspect_read(void *opaque, uint32_t pc)
+{
+    const AgiCPU *cpu = opaque;
+    return cpu->code[pc];
+}
+
+static char *agi_get_decode(Object *obj, Error **errp)
+{
+    AgiCPU *cpu = AGI_CPU(obj);
+    const CPUArchState *env = &cpu->env;
+    AgiDecodedInstruction insn;
+    AgiDecodeProfile profile = env->draw_intent ? AGI_DECODE_INTENT :
+                               env->binding_profile ? AGI_DECODE_BINDING :
+                               AGI_DECODE_SCALAR;
+    uint32_t pc = cpu->decode_pc, count = 0;
+    bool fault = false;
+    GString *s;
+
+    if (!agi_require_stopped(obj, errp)) {
+        return NULL;
+    }
+    s = g_string_new("{\"schema\":\"fdisbull-agi-native-instructions-1\","
+                     "\"decoder\":{\"identity\":\"fdisbull.qemu.agi\","
+                     "\"version\":\"1\",\"address_unit\":\"byte\"},\"source\":");
+    agi_json_source(s, cpu);
+    g_string_append_printf(s, ",\"evidence\":\"static_decode\",\"traversal\":\"linear\","
+                           "\"start_pc\":%u,\"limit\":%u,\"instructions\":[",
+                           pc, cpu->decode_limit);
+    while (pc < env->code_size && count < cpu->decode_limit) {
+        if (!agi_decode(agi_inspect_read, cpu, env->code_size, pc, profile, &insn)) {
+            fault = true;
+            break;
+        }
+        if (count) {
+            g_string_append_c(s, ',');
+        }
+        agi_json_instruction(s, &insn);
+        pc += insn.size;
+        count++;
+    }
+    g_string_append_printf(s, "],\"next_pc\":%u,\"stop\":\"%s\",\"error\":",
+                           pc, fault ? "decode_fault" :
+                           pc == env->code_size ? "end" : "limit");
+    if (fault) {
+        g_string_append_printf(s, "{\"pc\":%u,\"opcode\":%u,\"code\":%u,\"name\":\"%s\"}",
+                               insn.pc, insn.opcode, (unsigned)insn.fault,
+                               fault_names[insn.fault]);
+    } else {
+        g_string_append(s, "null");
+    }
+    g_string_append_c(s, '}');
+    return g_string_free(s, false);
 }
 
 static void agi_json_actor_fields(GString *s, const AgiActor *a, bool binding)
@@ -466,6 +611,8 @@ static void agi_instance_init(Object *obj)
     cpu->events = g_new0(AgiEvent, AGI_EVENT_MAX);
     cpu->env.obs_capacity = 4096;
     cpu->env.step_budget = 1000000;
+    cpu->decode_pc = 0;
+    cpu->decode_limit = 64;
     object_property_add(obj, "agi-observation-mask", "uint64", agi_get_uint,
                          agi_set_uint, NULL, (void *)(uintptr_t)0);
     object_property_add(obj, "agi-observation-capacity", "uint64", agi_get_uint,
@@ -476,6 +623,11 @@ static void agi_instance_init(Object *obj)
     object_property_add_bool(obj, "agi-observation-clear", NULL, agi_set_clear);
     object_property_add_str(obj, "agi-state-json", agi_get_state, NULL);
     object_property_add_str(obj, "agi-events-json", agi_get_events, NULL);
+    object_property_add(obj, "agi-decode-pc", "uint64", agi_get_decode_uint,
+                         agi_set_decode_uint, NULL, (void *)(uintptr_t)0);
+    object_property_add(obj, "agi-decode-limit", "uint64", agi_get_decode_uint,
+                         agi_set_decode_uint, NULL, (void *)(uintptr_t)1);
+    object_property_add_str(obj, "agi-decode-json", agi_get_decode, NULL);
 }
 
 static void agi_instance_finalize(Object *obj)

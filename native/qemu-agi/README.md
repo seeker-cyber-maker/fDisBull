@@ -1,4 +1,4 @@
-# Optional AGI observations in QEMU
+# AGI processor and optional observations in QEMU
 
 This experimental target runs a bounded AGI scalar/position instruction subset
 through QEMU TCG and selectively records information for a disassembler or scene
@@ -10,6 +10,14 @@ without charging every instruction for unused channels. Its native execution
 tests and benchmark use authored raw bytecode; a full AGI game engine, resource
 loader, renderer, scene editor and original-format resource writer are separate
 work.
+
+The [native processor-record interface](PROCESSOR_RECORDS.md) makes one bounded
+decoder the authority for both TCG execution and structured static disassembly.
+Stopped queries return typed operands, ordered conditions, static successors and
+scene-effect roles in pages of at most 64 instructions. A thin adapter connects
+these CPU facts to the existing processor interface, and a scene planner joins
+them to committed state, observations and pending requests. The same decode seam
+is intended for later UIL emission; this increment does not emit UIL.
 
 An explicit `-M agi-test,view-catalog=/private/catalog.bin` selects the separate
 [VIEW binding profile](VIEW_BINDING_PROFILE.md). It executes bounded resource
@@ -157,6 +165,9 @@ state operations require a stopped VM.
 | `agi-observation-clear` | Write `true` to clear observations and advance the trace epoch without changing guest state |
 | `agi-state-json` | Read source identity, authoritative guest state, observation counters and last-run timing |
 | `agi-events-json` | Read the retained records without consuming them |
+| `agi-decode-pc` | Select the starting byte PC for a static listing; does not move guest PC |
+| `agi-decode-limit` | Select a static page size from 1 through 64 instructions |
+| `agi-decode-json` | Read CPU-decoded instruction facts without executing or retiring instructions |
 
 Capacity may grow while retaining the existing prefix. Shrinking below the
 number of retained records is rejected; clear the observations first if needed.

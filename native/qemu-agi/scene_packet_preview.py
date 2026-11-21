@@ -67,13 +67,16 @@ def _endpoint(packet, state, code):
     return kind
 
 
-def preview_packet(kernel, packet_directory, *, bands, actor_policy, max_attempts=4096):
+def preview_packet(kernel, packet_directory, *, bands, actor_policy, max_attempts=4096,
+                   scene_plan=None, draw_order=None):
     """Verify and consume one packet using explicit missing-state assumptions.
 
     actor_policy maps every actor ID to {flags, priority}. Flags specify only
     fields absent from the native profile; animation and horizon flags come
     from native state. Priority bands and prior drawn/peer/terrain flags are
-    caller assumptions. The packet's external preview order is retained.
+    caller assumptions. The legacy call retains the packet's external order.
+    A CPU-derived scene_plan instead requires an explicit draw_order containing
+    its bound actor inventory; legacy selection/endpoint labels are diagnostic.
     """
     directory = Path(packet_directory).expanduser().resolve(strict=True)
     raw_packet = _read(directory, 'packet.json', 2 * 1024**2)
@@ -95,10 +98,23 @@ def preview_packet(kernel, packet_directory, *, bands, actor_policy, max_attempt
     initial = packet['entry']['initial_snapshot']
     validate_intent_reset(initial, code=code, catalog=catalog)
     validate_intent(state, code=code, catalog=catalog)
-    endpoint = _endpoint(packet, state, code)
-    journal = validate_intent_journal(initial, state, packet['native']['observations'],
-        prepared={'prelude': prelude, 'code': code, 'sites': packet['sites'],
-                  'spec': {'endpoint': endpoint}})
+    if scene_plan is None:
+        if draw_order is not None:
+            raise SceneInputError('An explicit draw order requires a CPU-derived scene plan')
+        endpoint = _endpoint(packet, state, code)
+        journal = validate_intent_journal(initial, state, packet['native']['observations'],
+            prepared={'prelude': prelude, 'code': code, 'sites': packet['sites'],
+                      'spec': {'endpoint': endpoint}})
+    else:
+        from processor_scene_trial import plan_packet
+        if type(scene_plan) is not dict or 'instruction_pages' not in scene_plan:
+            raise SceneInputError('Missing CPU-derived scene plan')
+        derived = plan_packet(directory, scene_plan['instruction_pages'])
+        if json.dumps(derived, sort_keys=True) != json.dumps(scene_plan, sort_keys=True):
+            raise SceneInputError('Scene plan differs from exact native packet evidence')
+        endpoint, journal = derived['endpoint']['kind'], derived['journal_validation']
+        if endpoint not in ('authored_return', 'return', 'pending_draw'):
+            raise SceneInputError('Derived preview requires a native return or pending draw endpoint')
     guest = state['guest']
     native_before = deepcopy(guest)
     if type(actor_policy) is not dict or any(type(key) is not int for key in actor_policy) \
@@ -128,11 +144,15 @@ def preview_packet(kernel, packet_directory, *, bands, actor_policy, max_attempt
             assets[name] = data
             identities[name] = {'bytes': len(data), 'sha256': sha256(data).hexdigest()}
         return assets[name]
-    order = packet['render_contract']['draw_order']
+    order = packet['render_contract']['draw_order'] if scene_plan is None else draw_order
     if type(order) is not list or not order or len(order) > 16 \
             or any(type(number) is not int or not 0 <= number < 16 for number in order) \
-            or len(order) != len(set(order)) or order != packet['selected_actors']:
+            or len(order) != len(set(order)):
+        raise SceneInputError('Preview requires an explicit unique actor order')
+    if scene_plan is None and order != packet['selected_actors']:
         raise SceneInputError('Packet preview order differs from the selected actor list')
+    if scene_plan is not None and set(order) != set(scene_plan['actor_ids']):
+        raise SceneInputError('Explicit preview order differs from the CPU-derived bound actor inventory')
     layers = []
     for number in order:
         actor = guest['actors'][number]
@@ -163,4 +183,9 @@ def preview_packet(kernel, packet_directory, *, bands, actor_policy, max_attempt
                 'selection_basis': 'explicit_seeded_preview_not_native_draw_completion'},
         input_assets=identities, journal_validation=journal,
         pending_effect=deepcopy(guest['pending_effect']))
+    if scene_plan is not None:
+        result['policy']['selection_basis'] = 'cpu_derived_bound_actors_with_explicit_draw_order'
+        result['processor_scene_plan_sha256'] = sha256(
+            json.dumps(scene_plan, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        result['legacy_contradictions'] = deepcopy(scene_plan['legacy_contradictions'])
     return result

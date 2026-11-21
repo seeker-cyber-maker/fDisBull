@@ -57,20 +57,16 @@ static void agi_emit_fault(uint32_t pc, uint32_t opcode, uint32_t fault)
                          tcg_constant_i32(opcode), tcg_constant_i32(fault));
 }
 
-static bool agi_extent(DisasContext *ctx, uint32_t pc, uint32_t length)
+static uint8_t agi_translate_read(void *opaque, uint32_t pc)
 {
-    return pc < ctx->env->code_size && length <= ctx->env->code_size - pc;
+    DisasContext *ctx = opaque;
+    return translator_ldub(ctx->env, &ctx->base, pc);
 }
 
-/* Pure predicates only. FC delimits an OR group, FD negates the next test.
- * Groups are not nested; all top-level terms are ANDed, in bytecode order.
- */
-static bool agi_if(DisasContext *ctx, uint32_t pc, uint32_t *length,
-                   TCGv_i32 next)
+/* Lower the canonical, already validated predicate tokens in bytecode order. */
+static void agi_if(const AgiDecodedInstruction *insn, TCGv_i32 next)
 {
-    DisasContextBase *db = &ctx->base;
-    uint32_t at = pc + 1, tests = 0, group_tests = 0, op, a, b, width, skip;
-    uint32_t fault = AGI_FAULT_TRUNCATED;
+    uint32_t i, op, a, b;
     bool in_or = false, negate = false;
     TCGv_i32 all = tcg_temp_new_i32();
     TCGv_i32 group = tcg_temp_new_i32();
@@ -79,64 +75,32 @@ static bool agi_if(DisasContext *ctx, uint32_t pc, uint32_t *length,
     tcg_gen_movi_i32(all, 1);
     tcg_gen_movi_i32(group, 0);
 
-    for (;;) {
-        if (at - pc >= AGI_INSN_MAX - 2) {
-            fault = AGI_FAULT_CONDITION_LIMIT;
-            goto invalid;
-        }
-        if (!agi_extent(ctx, at, 1)) {
-            goto invalid;
-        }
-        op = translator_ldub(ctx->env, db, at++);
-        if (op == 0xff) {
-            if (in_or || negate) {
-                fault = AGI_FAULT_CONDITION;
-                goto invalid;
-            }
-            break;
-        }
-        if (op == 0xfd) {
-            if (negate) {
-                fault = AGI_FAULT_CONDITION;
-                goto invalid;
-            }
+    for (i = 0; i < insn->condition_count; i++) {
+        const AgiDecodedCondition *token = &insn->conditions[i];
+        if (token->kind == AGI_CONDITION_NOT) {
             negate = true;
             continue;
         }
-        if (op == 0xfc) {
-            if (negate || (in_or && group_tests == 0)) {
-                fault = AGI_FAULT_CONDITION;
-                goto invalid;
-            }
-            if (in_or) {
-                tcg_gen_and_i32(all, all, group);
-            } else {
-                group_tests = 0;
-                tcg_gen_movi_i32(group, 0);
-            }
-            in_or = !in_or;
+        if (token->kind == AGI_CONDITION_OR_BEGIN) {
+            tcg_gen_movi_i32(group, 0);
+            in_or = true;
             continue;
         }
-        if (op < 1 || op > 7) {
-            fault = AGI_FAULT_CONDITION;
-            goto invalid;
+        if (token->kind == AGI_CONDITION_OR_END) {
+            tcg_gen_and_i32(all, all, group);
+            in_or = false;
+            continue;
         }
-        if (++tests > 8) {
-            fault = AGI_FAULT_CONDITION_LIMIT;
-            goto invalid;
-        }
-        width = op == 7 ? 1 : 2;
-        if (!agi_extent(ctx, at, width)) {
-            goto invalid;
-        }
-        a = translator_ldub(ctx->env, db, at++);
+        op = token->opcode;
+        a = token->operands[0].value;
         if (op == 7) {
             left = agi_load(agi_flag(a));
             tcg_gen_setcondi_i32(TCG_COND_NE, value, left, 0);
         } else {
-            b = translator_ldub(ctx->env, db, at++);
+            b = token->operands[1].value;
             left = agi_load(agi_var(a));
-            right = (op & 1) ? tcg_constant_i32(b) : agi_load(agi_var(b));
+            right = token->operands[1].kind == AGI_OPERAND_VARIABLE ?
+                    agi_load(agi_var(b)) : tcg_constant_i32(b);
             tcg_gen_setcond_i32(op <= 2 ? TCG_COND_EQ :
                                op <= 4 ? TCG_COND_LTU : TCG_COND_GTU,
                                value, left, right);
@@ -147,89 +111,65 @@ static bool agi_if(DisasContext *ctx, uint32_t pc, uint32_t *length,
         }
         if (in_or) {
             tcg_gen_or_i32(group, group, value);
-            group_tests++;
         } else {
             tcg_gen_and_i32(all, all, value);
         }
     }
-    if (!agi_extent(ctx, at, 2)) {
-        goto invalid;
-    }
-    skip = translator_ldub(ctx->env, db, at) |
-           (translator_ldub(ctx->env, db, at + 1) << 8);
-    at += 2;
-    *length = at - pc;
-    if ((uint64_t)at + skip >= ctx->env->code_size) {
+    if (!insn->successors[1].in_range) {
         TCGLabel *taken = gen_new_label();
         tcg_gen_brcondi_i32(TCG_COND_NE, all, 0, taken);
-        agi_emit_fault(pc, 0xff, AGI_FAULT_BRANCH);
+        agi_emit_fault(insn->pc, 0xff, AGI_FAULT_BRANCH);
         gen_set_label(taken);
-        tcg_gen_movi_i32(next, at);
+        tcg_gen_movi_i32(next, insn->successors[0].pc);
     } else {
         tcg_gen_movcond_i32(TCG_COND_NE, next, all, tcg_constant_i32(0),
-                           tcg_constant_i32(at), tcg_constant_i32(at + skip));
+                           tcg_constant_i32(insn->successors[0].pc),
+                           tcg_constant_i32(insn->successors[1].pc));
     }
-    return true;
-invalid:
-    agi_emit_fault(pc, 0xff, fault);
-    return false;
 }
 
 static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
 {
     DisasContext *ctx = container_of(db, DisasContext, base);
+    AgiDecodedInstruction insn;
     uint32_t pc = db->pc_next, op = 0, length = 1, a = 0, b = 0, c = 0;
     uint32_t actor = UINT32_MAX;
     int64_t target;
     size_t offset;
-    bool scene_effect = false;
+    bool scene_effect = false, decoded;
     TCGv_i32 x, y, value, prior, part;
     TCGv_i32 before = tcg_constant_i32(0);
     TCGv_i32 next = tcg_temp_new_i32();
 
-    if (!agi_extent(ctx, pc, 1)) {
-        agi_emit_fault(pc, 0, AGI_FAULT_FETCH);
-        goto fault;
-    }
-    op = translator_ldub(ctx->env, db, pc);
-    if (op == 0xff) {
-        if (!agi_if(ctx, pc, &length, next)) {
-            goto fault;
-        }
-        goto complete;
-    }
-    if (op == 0) {
-        length = 1;
-    } else if (op == 1 || op == 2 || (op >= 12 && op <= 14)) {
-        length = 2;
-    } else if ((op >= 3 && op <= 8) || op == 0xfe) {
-        length = 3;
-    } else if (op >= 37 && op <= 39) {
-        length = 4;
-    } else if (ctx->binding_profile && (op == 30 || op == 31 || op == 33)) {
-        length = 2;
-    } else if (ctx->draw_intent && (op == 35 || op == 70 || op == 71)) {
-        length = 2;
-    } else if (ctx->binding_profile &&
-               (op == 41 || op == 42 || op == 43 || op == 44 ||
-                op == 47 || op == 48)) {
-        length = 3;
-    } else {
+    decoded = agi_decode(agi_translate_read, ctx, ctx->env->code_size, pc,
+                          ctx->draw_intent ? AGI_DECODE_INTENT :
+                          ctx->binding_profile ? AGI_DECODE_BINDING :
+                          AGI_DECODE_SCALAR, &insn);
+    op = insn.opcode;
+    /* A disabled command faults as unsupported even if its operands are
+     * truncated. Static inspection may still describe that known encoding.
+     */
+    if (insn.execution_support == AGI_EXEC_UNSUPPORTED_PROFILE) {
         agi_emit_fault(pc, op, AGI_FAULT_OPCODE);
         goto fault;
     }
-    if (!agi_extent(ctx, pc, length)) {
-        agi_emit_fault(pc, op, AGI_FAULT_TRUNCATED);
+    if (!decoded) {
+        agi_emit_fault(pc, op, insn.fault);
         goto fault;
     }
-    if (length >= 2) {
-        a = translator_ldub(ctx->env, db, pc + 1);
+    length = insn.size;
+    if (op == 0xff) {
+        agi_if(&insn, next);
+        goto complete;
     }
-    if (length >= 3) {
-        b = translator_ldub(ctx->env, db, pc + 2);
+    if (insn.operand_count >= 1) {
+        a = insn.operands[0].value;
     }
-    if (length >= 4) {
-        c = translator_ldub(ctx->env, db, pc + 3);
+    if (insn.operand_count >= 2) {
+        b = insn.operands[1].value;
+    }
+    if (insn.operand_count >= 3) {
+        c = insn.operands[2].value;
     }
     tcg_gen_movi_i32(next, pc + length);
     switch (op) {
@@ -346,8 +286,8 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
         tcg_gen_st_i32(y, tcg_env, offset + offsetof(AgiActor, prev_y));
         break;
     case 0xfe:
-        target = (int64_t)pc + 3 + (int16_t)(a | (b << 8));
-        if (target < 0 || target >= ctx->env->code_size) {
+        target = insn.successors[0].pc;
+        if (!insn.successors[0].in_range) {
             agi_emit_fault(pc, op, AGI_FAULT_BRANCH);
             goto fault;
         }
