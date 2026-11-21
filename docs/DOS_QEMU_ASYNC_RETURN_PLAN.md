@@ -252,15 +252,17 @@ same preflight and postflight checks.
 The earlier source proposal contained the historical 209-member graph. Root
 subsequently reviewed its extension after the retained DOSBox/libudev failure;
 that history does not authorize any new producer or reinterpret prior failures.
-The current source revision's runtime metadata is incomplete and unadmitted
-until root integrates it at a new clean host. It must preserve the exact inherited
-212-member graph and all optional search/preload checks during that completion.
+During preparation, this revision's runtime metadata remained incomplete and
+unadmitted. Root then integrated the exact reviewed test/document at clean
+`c978253ae88c1496f895df8ecb68fe0ca2bf53d9`, completed the unchanged 212-member
+graph and optional search/preload checks, froze the plan, passed check-only
+verification, and separately admitted attempt 02. Its accepted result is recorded
+above; the earlier pending status is preparation history.
 
-Root must first integrate the test and this document byte-identically, record a
-clean exact host commit, review the source and runtime graph, and admit a fresh
-plan after the finite metadata and check-only phases. The unadmitted source
-proposal has no automatic next phase. A native failure exhausts its attempt;
-any correction requires a new reviewed attempt with retained earlier evidence.
+Any subsequent native attempt still requires its own exact clean host, reviewed
+source/runtime graph, fresh plan, finite check-only verification and separate
+root admission. There is no automatic next phase. A native failure exhausts its
+attempt; corrections require a new reviewed attempt with earlier evidence retained.
 
 Before the transport-binding correction, the staged/controller source bytes and
 hashes were preserved in async-return-source-01/pre-independence-01.
@@ -274,7 +276,7 @@ The accepted pass establishes one native child return after one public asynchron
 resume on this exact retained QEMU, boot image and authored five-byte program.
 The returned process evidence, source invalidation, private control retirement
 and passive persistence agree for that one original owner.
-It would not establish strict-pause stability, arbitrary DOS process behavior,
-indefinite liveness, GDB stop-packet availability, hosted CI, image parity, or
-game behavior. Until the separate admitted run completes, all such runtime
-observations remain pending.
+This return gate does not establish arbitrary DOS process behavior, indefinite
+liveness, GDB stop-packet availability, hosted CI, image parity or game behavior.
+Strict-pause stability has its own separately accepted paired gate, with the
+finite scope recorded in the linked checkpoint; it is not inferred from this return.
