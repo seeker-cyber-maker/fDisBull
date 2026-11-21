@@ -87,8 +87,18 @@ command/reply is retained. Hook no-ops preserve the observed full raw register;
 the ten bytes establish only the low AX word.
 
 The reviewed test SHA-256 is
-`fd6e8b09a20b3d8def1db7972acdadec19fce3ce21388f7ef9a25213b9a70146`.
+`10952351e15bfebc6f693416f869d1a72b9ccc93707a547e5eeba2f54f13ea28`.
+The pending repeat-hook witness was corrected before native execution: hook
+displacement legitimately replaces its backing breakpoint and consumes exactly
+one public identifier. The oracle predicts that replacement from the original
+counter and requires the original breakpoint fields, logical hook and all
+unrelated aliases to remain intact. The CALL's private return control still
+consumes no public identifier. Register, stack and execution-order assertions
+are unchanged.
+
 The native-oracle source review is
 `af178e5f96193bef1ebca3379f414a2c4386c781d1be56f8d86048d132e5b276`.
+That earlier review refers to the preserved pre-correction test
+`fd6e8b09a20b3d8def1db7972acdadec19fce3ce21388f7ef9a25213b9a70146`.
 Exact producer, media, dependency, source and lifecycle closure still must be
 frozen and reviewed before execution. No native result is claimed here.
