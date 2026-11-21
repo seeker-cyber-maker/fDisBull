@@ -26,6 +26,14 @@ AGI 2.917 catalog and larger condition limits than execution. Variable inputs,
 branch outcomes and external effects remain explicit unknowns. Static candidates
 do not establish a current actor pose or an executed scene.
 
+The [conditional scene-binding adapter](SCENE_BINDINGS.md) selects an explicit
+path through those native records and binds variable operands at their source
+use sites. It preserves requested actor fields, missing inputs and hard stops
+at unknown effects or calls. Selected, fully bound layers can be composed with
+the existing picture/VIEW readers and Sarien kernel as a detached design
+preview. Caller choices and omitted actors remain visible; these previews do
+not establish original room state or completed native drawing.
+
 An explicit `-M agi-test,view-catalog=/private/catalog.bin` selects the separate
 [VIEW binding profile](VIEW_BINDING_PROFILE.md). It executes bounded resource
 loads, animation setup, view/loop/cel selection and geometry changes against an
