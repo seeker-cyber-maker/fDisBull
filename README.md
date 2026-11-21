@@ -27,6 +27,11 @@ DOSBox-X remains for DotBox and fDisBull fallback. The current integration does
 not change backend defaults. See [the shared codebase policy](docs/SHARED_CODEBASE.md)
 for package boundaries, active QEMU coordination and migration scope.
 
+The [experimental AGI QEMU target](native/qemu-agi/README.md) explores optional
+disassembly and scene observations on an authored scalar/actor-position subset.
+It is a separate developer experiment with bounded native tests and timing;
+it does not yet run a full AGI engine or provide a scene editor.
+
 ## Built to minimize token usage and survive long investigations
 
 Reverse-engineering fails in LLM context windows when tools dump megabytes of

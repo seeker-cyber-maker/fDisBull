@@ -15,6 +15,7 @@ include tests/macos_capture_fixture.swift
 recursive-include src/fdisbull/skills *.md
 recursive-include skills/dos-target-media-rip *.md *.py
 recursive-include tests *.py
+recursive-include native/qemu-agi *.py *.md *.txt *.json *.patch *.c *.h *.xml *.mak *.build Kconfig
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/fixtures/frame_capture.S

@@ -1,0 +1,3 @@
+TARGET_ARCH=agi
+TARGET_XML_FILES=gdb-xml/agi-core.xml
+TARGET_LONG_BITS=32
