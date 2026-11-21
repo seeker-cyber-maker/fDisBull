@@ -156,6 +156,67 @@ as a completed test run.
 
 The underlying [native capture](QEMU_VIDEO_FRAME_GATE.md) and
 [native frame-control](QEMU_VIDEO_FRAME_FENCE_GATE.md) gates passed separately.
-The broadened 4,096-point/RGBA/JSON/script consumers still require their own
-finite native witness on that producer. Host transport tests do not establish
-guest scanout cadence, legacy phase identity, or whole-debugger parity.
+The broadened 4,096-point/RGBA/JSON/script consumers also passed the finite
+native witness below. These separate results do not establish legacy phase
+identity, application draw completion, atomic CPU/image state or whole-debugger
+parity.
+
+## Native consumer witness
+
+The single authored mode-13 witness passed at clean host
+`df4fd4e9fce3d6cccbc3ee57dc3428f986ad3900`, using the retained QEMU executable
+`b42b624f452e19c1560f1af45712fc93f6859ac753bab73a1495c49188cca0af`.
+The native test source SHA-256 is
+`959a49208efeec362bcb0fb749fb72d738ddc3618983d002bcee746978695d8a`.
+It observes actual native requests and replies; expected pixels and row timing
+come from the unchanged authored VGA guest.
+
+One QEMU lifetime carries three sequential source streams and two accepted
+rasters. Each complete stream probes 4,096 ordered points through sixteen
+256-point native chunks, preserving duplicates and independently expected RGB.
+The witness checks direct immutable RGBA bytes, PNG bytes and their separate
+hashes, all six JSON and saved-script routes, an empty probe, bounded probe
+cache, unchanged paused guest state and stale-identity refusals. A genuine
+earlier breakpoint interrupts the third stream, preserves its native stop,
+and suppresses the later script write and capture. Exactly three post-setup
+native `c` dispatches occur; no guest-write call follows the interrupted step.
+
+| Evidence | Observed result |
+| --- | --- |
+| Test result | **1 passed; zero failures, errors or skips** |
+| Duration | 2.48 seconds pytest; 18.556041 seconds for the complete controller attempt |
+| Lifecycle | One QEMU owner exited zero and was reaped; no overlap, adopted child or selected process remained |
+| Native journal | 544 paired attempts/results; 89 source-video calls; 32 native probe chunks across two complete streams |
+| Input integrity | 11,626 pinned files and six trees matched before and after at the exact tested host |
+| Output | 16,555,401 logical bytes; 16,642,048 allocated bytes under the 256 MiB cap |
+| Expected RGB SHA-256 | `0023064781bf3284f863230adaf987cc366a426e5385d52865235ded35de32be` |
+| Expected RGBA SHA-256 | `d1a938e24e3a776515c4758c71c9d433913def8ad1d3d91d998292a92b742828` |
+| Plan SHA-256 | `046fd30e98f319414f60a1f5573a8c066dacc04fd612d7384322e43aec79361d` |
+| Root review SHA-256 | `b86a1b1bb082f2cc650a5bbc3cb4e752163e01dd27ab972fabeaa751c4f60059` |
+| Phase receipt SHA-256 | `b0082f6754f926b8d6908ce250fb321e4ad4f3d241670c57e0a9c6c8ce8d87d0` |
+| Native consumer JSON SHA-256 | `bce37458057d5077c67372910fafd64bf1d2b26a72b426eedb7a884fb3bd2dbf` |
+
+The retained controller is `frame-parity-20261120/controller-consumers-02`.
+Raw evidence is under `/tmp/fdisbull-source-consumers-native-20261121-attempt-02`.
+The complete attempt includes preflight, imports, fixture preparation, guest
+execution, cleanup and postflight inside 180 seconds. Case work has 60 seconds
+and cleanup 10 seconds; storage admission requires the full 256 MiB cap plus
+another 256 MiB of free space. The pytest `record_property`/xunit2 compatibility
+warning is retained; JUnit case identity/count, the worker and the independent
+native receipt are reconciled separately.
+
+Attempt 01 is preserved as a **failed controller result**, although its test
+assertions passed. Final Python-worker mapping validation found an unpinned
+Pillow FriBidi runtime load. Static review also found FreeType's optional system
+HarfBuzz lookup. Attempt 02 pins the two exact loading images, three literal
+library names, resolved aliases, five absent search paths and the full recursive
+dependency graph. The graph adds exactly FriBidi, system HarfBuzz and Graphite2
+to the unchanged 205 earlier members. Actual worker and native executable
+mappings still must belong to that closure. The host, test, emulator, guest and
+execution limits were unchanged; the rejected attempt is not promoted.
+
+This is one authored mode-13 source-consumer witness. The independent paired
+DOSBox raster/timing comparison, immediate post-pause stability and typed
+CPU/image coherence remain open. `legacy_phase_equivalence`,
+`application_frame_complete` and `frame_state_equivalence` remain unknown.
+No retirement inventory row or default-backend decision changes with this gate.

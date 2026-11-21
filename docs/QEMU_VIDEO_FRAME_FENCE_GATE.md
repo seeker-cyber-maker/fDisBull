@@ -126,6 +126,8 @@ The whole output tree remained outside Git and symlink ancestry.
 Native simultaneous completed-raster/debugger-stop precedence, pending-stop
 reset retirement, nullable genuine-exit envelopes, actual DESQview discovery
 and paired DOSBox phase observations still need their own witnesses. Broader
-probe/RGBA/JSON/script consumers, stopped state coherence and legacy API
-adapters are separate increments. The 143-row inventory and seven campaigns
+probe/RGBA/JSON/script consumers subsequently passed their separate
+[one-owner native witness](DOS_QEMU_SOURCE_FRAMES.md#native-consumer-witness).
+Stopped state coherence and legacy API adapters remain separate increments.
+The 143-row inventory and seven campaigns
 are not promoted by this bounded gate.

@@ -3,9 +3,10 @@
 Checkpoint: November 20, 2026, America/New_York.
 
 The QEMU machine and DOS adapters now accept `step(mode='over', count=1)`.
-The implementation, focused host gate and eight-case authored native comparison
-have passed their bounded checks. The native result applies to the exact
-producer, host, guest and dependency identities recorded below.
+The implementation and focused host gate are complete, and the eight-case
+authored native comparison records eight behavioral passes. Its Python-worker
+dependency metadata qualification remains limited, as explained below. Native
+producer identities and the declared input pins retain their recorded scope.
 DOSBox remains the default and fallback; this gate does not authorize retirement.
 
 ## Supported behavior
@@ -73,7 +74,7 @@ findings were resolved before this gate. Root preserved both the existing
 These are host protocol witnesses. Their supplied stop packets do not establish
 native CALL execution, guest instruction retirement or DOSBox schema equivalence.
 
-## Verified authored native gate
+## Native behavioral result; metadata qualification limited
 
 `tests/test_qemu_step_over_native.py` uses the exact previously observed DOSBox
 control bytes `31c0e8030090ebfe40c3`. The independent instruction oracle expects
@@ -111,6 +112,7 @@ native attempt. All eight cases passed; no retry or producer rebuild was needed.
 | DOSBox SHA-256 | `bfdacbed027ae16f48256abc5d0309cc8984569a2946dabea2f4d43907d43e71` |
 | Original FreeDOS disk SHA-256 | `552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc` |
 | Result | **8 passed; zero failures, errors or skips** |
+| Metadata qualification | **Limited:** Python-worker optional-loader mappings were not recorded |
 | Duration | 28.47 seconds pytest; 37.866595 seconds controller through postflight |
 | Ownership | One DOSBox and eight QEMU lifetimes, strictly serial; every native owner exited zero and was reaped |
 | Input integrity | 11,756 pinned files and nine trees matched before and after at the tested host |
@@ -127,7 +129,14 @@ attempts/results and all retained artifact pins; no native error event or
 remaining selected process was found. The original source remains unchanged
 from `c77c68c569e948de56ca3ba9474ed237fb3cdd59` apart from the test and documentation.
 
-This run used a newly reviewed 205-file potential ELF dependency closure.
+This run used a reviewed 205-file static potential dependency set plus observed
+native-owner mappings. It did not record Python-worker executable mappings.
+The later source-consumer investigation identified optional Pillow runtime
+loader targets outside that set. Its expanded manifest cannot retrospectively
+prove which library bytes the CALL worker mapped. The eight behavioral passes,
+nine native-owner results and declared pre/post pin equality remain evidence;
+complete Python-worker optional-loader qualification remains open.
+
 SQLite and zlib differ from the historical DOSBox reference: four old path
 pins resolve to those two current libraries. The new plan records their exact
 replacement hashes and preserves the original manifests unchanged. Historical
