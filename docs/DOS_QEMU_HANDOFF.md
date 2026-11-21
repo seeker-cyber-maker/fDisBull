@@ -10,8 +10,10 @@ keyboard/scheduler witnesses and a scoped cooperative owner/control lease.
 The [public contract](DOS_QEMU_SOURCE_FRAMES.md#selected-stopped-state-observation)
 and [gate status](QEMU_SOURCE_STATE_OBSERVATION_GATE.md) keep native/external
 mutation identity, mouse/global input neutrality, application completion and
-legacy frame-state equivalence unqualified. Focused host qualification is
-pending at this source checkpoint; no native observer result is claimed.
+legacy frame-state equivalence unqualified. The focused host selection passed
+335 cases with zero failures, errors or skips on `c96a7fd`, retaining 5,699
+unchanged tracked inputs, original-owner cleanup and the earlier classified
+failed attempt. No native observer result is claimed.
 
 This slice changes production Python source. The unchanged-source statements
 in the earlier calibration/raster entries describe their historical revisions.
