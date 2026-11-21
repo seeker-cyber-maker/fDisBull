@@ -605,8 +605,6 @@ def test_native_source_fence_controller_orders_refuse_without_dispatch(fence_wit
             ('x-fdisbull-apply-frame-key-edges', {'token': uuid.uuid4().hex,
                 'expected-generation': keys['generation'], 'edges': [{'key': 'a', 'pressed': True}]}),
             ('x-fdisbull-instrumented-checkpoint-export', None),
-            ('x-fdisbull-instrumented-snapshot-load', {'job-id': uuid.uuid4().hex,
-                'tag': 'authored-missing-snapshot', 'vmstate': 'disk0', 'devices': ['disk0']}),
         ))
         for command, arguments in attempts:
             with pytest.raises(DebuggerError, match='fence') as refused:
@@ -618,6 +616,41 @@ def test_native_source_fence_controller_orders_refuse_without_dispatch(fence_wit
             assert debug.vm.qmp.call('x-fdisbull-query-input') == pending
             assert debug.registers() == registers and _journal(debug, symbols) == b''
             _clock_equal(clock, debug.clock_observe())
+        # Snapshot-load creates a manual-dismiss asynchronous job. Its guarded
+        # worker must refuse before vm_stop/load_snapshot; the command's empty
+        # acknowledgement is not the load outcome. Job IDs must start with a
+        # letter, unlike arbitrary source ownership tokens.
+        job_id = 'fence-load-' + uuid.uuid4().hex
+        job_deadline = time.monotonic() + 2
+
+        def job_call(command, arguments=None):
+            remaining = int((job_deadline - time.monotonic()) * 1000)
+            assert remaining > 0, 'Snapshot refusal job exceeded its shared deadline'
+            return debug.vm.qmp.call(command, arguments, timeout_ms=min(1000, remaining))
+
+        assert job_call('query-jobs') == []
+        accepted_job = job_call('x-fdisbull-instrumented-snapshot-load', {
+            'job-id': job_id, 'tag': 'authored-missing-snapshot',
+            'vmstate': 'disk0', 'devices': ['disk0']})
+        assert accepted_job == {}
+        job_observations = []
+        for _ in range(14):
+            jobs = job_call('query-jobs')
+            job_observations.append(deepcopy(jobs))
+            assert len(jobs) == 1 and jobs[0]['id'] == job_id
+            assert jobs[0]['type'] == 'snapshot-load'
+            if jobs[0]['status'] == 'concluded':
+                break
+        concluded = job_observations[-1][0]
+        assert concluded['status'] == 'concluded'
+        assert isinstance(concluded.get('error'), str) and 'fence' in concluded['error']
+        dismissed_job = job_call('job-dismiss', {'id': job_id})
+        assert dismissed_job == {} and job_call('query-jobs') == []
+        assert _fence(debug, arm['token']) == arm and _query(debug) == source
+        assert debug.vm.qmp.call('x-fdisbull-query-frame-keys') == keys
+        assert debug.vm.qmp.call('x-fdisbull-query-input') == pending
+        assert debug.registers() == registers and _journal(debug, symbols) == b''
+        _clock_equal(clock, debug.clock_observe())
         _release(debug, arm)
         reverse = []
         for name, command, arguments, query, cancel in controllers:
@@ -636,8 +669,10 @@ def test_native_source_fence_controller_orders_refuse_without_dispatch(fence_wit
             assert debug.registers() == registers and _journal(debug, symbols) == b''
             _clock_equal(clock, debug.clock_observe())
         _save(project, 'controller-orders', forward_refusals=refusals, reverse=reverse,
+              snapshot_job=dict(id=job_id, acknowledgement=accepted_job,
+                                observations=job_observations, dismissal=dismissed_job),
               source=source, clock=clock, keys=keys, registers=registers,
-              scope='native guards, no checkpoint payload or scheduled edge dispatched')
+              scope='native guards, including an asynchronously refused/dismissed job; no checkpoint payload or scheduled edge dispatched')
 
 
 def test_native_source_fence_stopped_edges_are_not_irq_consumption(fence_witness):
