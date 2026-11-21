@@ -35,6 +35,17 @@ def _status_source():
     return 'sample_status:\n' + ASSEMBLY.split('sample_status:\n', 1)[1].split('palette_a:\n', 1)[0]
 
 
+def _vertical_status_source():
+    sampler = 'sample_vsync_status:\n' + ASSEMBLY.split('sample_vsync_status:\n', 1)[1].split('sample_status:\n', 1)[0]
+    budget = 'poll_budget:\n' + ASSEMBLY.split('poll_budget:\n', 1)[1].split('pit_read:\n', 1)[0]
+    return sampler + budget
+
+
+def _vsync_source():
+    waiter = 'new_vsync:\n' + ASSEMBLY.split('new_vsync:\n', 1)[1].split('wait_offset:\n', 1)[0]
+    return waiter + _vertical_status_source()
+
+
 def _dac_source(color):
     end_marker = f'    mov [{color}_after],ax\n'
     end = ASSEMBLY.index(end_marker) + len(end_marker)
@@ -43,11 +54,13 @@ def _dac_source(color):
     return ASSEMBLY[start:end]
 
 
-def _observe(source, memory, *, status=None, counts=()):
+def _observe(source, memory, *, status=None, statuses=(), counts=()):
     """Check actual source dataflow; unknown operations require explicit review."""
     instructions, labels = _compile(source)
     registers = {name: 0 for name in ('ax', 'bx', 'cx', 'dx', 'si', 'di')}
     counts, trace, stack = deque(counts), [], []
+    assert status is None or not statuses, 'Use one finite status input form'
+    status_reads = deque((status,) if status is not None else statuses)
     pc, zero, above = 0, False, False
 
     def operand(value):
@@ -75,7 +88,7 @@ def _observe(source, memory, *, status=None, counts=()):
             parent, shift = destination[0] + 'x', 8 if destination[1] == 'h' else 0
             registers[parent] = (registers[parent] & ~(255 << shift)) | ((value & 255) << shift)
 
-    for _ in range(128):
+    for _ in range(512):
         if pc == len(instructions):
             break
         scope, line = instructions[pc]
@@ -103,14 +116,15 @@ def _observe(source, memory, *, status=None, counts=()):
             zero = value == 0
         elif operation == 'in':
             assert parts == ['al', 'dx'] and registers['dx'] == 0x3da
-            assert status is not None
-            write('al', status)
-            trace.append(('status', status))
+            assert status_reads, 'The witness read an undeclared status sample'
+            current_status = status_reads.popleft()
+            write('al', current_status)
+            trace.append(('status', current_status))
         elif operation == 'out':
             assert parts == ['dx', 'al']
             trace.append(('out', registers['dx'], read('al')))
         elif operation == 'call':
-            assert arguments == 'poll_budget'
+            assert arguments in ('poll_budget', 'sample_vsync_status')
             stack.append(pc)
             pc = labels[arguments]
         elif operation in ('je', 'jz', 'jnz', 'ja'):
@@ -130,6 +144,7 @@ def _observe(source, memory, *, status=None, counts=()):
     else:
         raise AssertionError('Witness source did not finish within its static check bound')
     assert not counts, 'The source did not consume the declared latch events'
+    assert not status_reads, 'The source did not consume the declared status events'
     return trace
 
 
@@ -191,6 +206,94 @@ def test_initial_high_status_does_not_invent_a_vertical_generation():
     assert memory['status_valid'] == 1 and memory['vertical_edges'] == 0
     _observe(_status_source(), memory, status=9, counts=[59960])
     assert memory['vertical_edges'] == 0
+
+
+@pytest.mark.parametrize('previous,current,valid,upper,vertical', [
+    (0, 1, 1, False, 0),   # Bit 0 rises while the vertical bit stays low.
+    (8, 9, 1, False, 0),   # Bit 0 rises while the vertical bit stays high.
+    (0, 8, 1, True, 1),
+    (0, 9, 1, True, 1),    # Simultaneous rises still need one upper latch.
+    (1, 9, 1, True, 1),
+    (9, 8, 1, False, 0),
+    (9, 1, 1, False, 0),
+    (0, 8, 0, True, 0),    # A first high sample is not a witnessed generation.
+    (0, 0x84, 1, False, 0),
+])
+def test_vertical_sampler_latches_only_bit_three_rises(previous, current, valid, upper, vertical):
+    memory = _status_memory(previous, valid=valid)
+    counts = [59980, 59976] if upper else [59980]
+    trace = _observe(_vertical_status_source(), memory, status=current, counts=counts)
+    observations = [event for event in trace if event[0] in ('latch', 'status')]
+    assert observations == [('latch', 59980), ('status', current)] + ([('latch', 59976)] if upper else [])
+    assert memory['previous_before'] == 60000 and memory['current_before'] == 59980
+    assert memory['previous_status'] == previous and memory['current_status'] == current
+    assert memory['current_after'] == (59976 if upper else 59998)
+    assert memory['vertical_edges'] == 3 + vertical and memory['poll_count'] == 18
+    assert memory['status_valid'] == 1 and memory['fault'] == 0
+
+
+def test_new_vsync_keeps_last_low_first_high_and_ignores_horizontal_rises():
+    memory = _status_memory(9)
+    trace = _observe(_vsync_source(), memory, statuses=[9, 8, 0, 1, 1, 9],
+                     counts=[59980, 59960, 59940, 59920, 59900, 59880, 59876])
+    observations = [event for event in trace if event[0] in ('latch', 'status')]
+    assert observations == [
+        ('latch', 59980), ('status', 9), ('latch', 59960), ('status', 8),
+        ('latch', 59940), ('status', 0), ('latch', 59920), ('status', 1),
+        ('latch', 59900), ('status', 1), ('latch', 59880), ('status', 9),
+        ('latch', 59876),
+    ]
+    assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59900, 59880, 59876)
+    assert (memory['previous_status'], memory['current_status']) == (1, 9)
+    assert memory['vertical_edges'] == 4 and memory['poll_count'] == 23
+    assert [event[2] for event in trace if event[:2] == ('store', 'poll_count')] == list(range(18, 24))
+    final_lower = trace.index(('latch', 59880))
+    final_upper = trace.index(('latch', 59876))
+    assert all(event[0] != 'store' for event in trace[final_lower:final_upper])
+    assert memory['status_valid'] == 1 and memory['fault'] == 0
+
+
+@pytest.mark.parametrize('valid,expected_generation', [(0, 3), (1, 4)])
+def test_new_vsync_first_high_waits_for_low_without_losing_observed_rises(valid, expected_generation):
+    memory = _status_memory(0, valid=valid, generation=2)
+    trace = _observe(_vsync_source(), memory, statuses=[8, 0, 9],
+                     counts=[59980, 59976, 59960, 59940, 59936])
+    assert [event for event in trace if event[0] == 'status'] == [('status', 8), ('status', 0), ('status', 9)]
+    assert [event[1] for event in trace if event[0] == 'latch'] == [59980, 59976, 59960, 59940, 59936]
+    assert [event[2] for event in trace if event[:2] == ('store', 'vertical_edges')] == list(range(3, expected_generation + 1))
+    assert memory['vertical_edges'] == expected_generation
+    assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59960, 59940, 59936)
+    assert (memory['previous_status'], memory['current_status']) == (0, 9)
+    assert memory['poll_count'] == 20 and memory['status_valid'] == 1 and memory['fault'] == 0
+
+
+def test_new_vsync_poll_cap_precedes_io_and_keeps_last_completed_sample():
+    memory = _status_memory(8, polls=199998)
+    trace = _observe(_vsync_source(), memory, statuses=[8, 0], counts=[59980, 59960])
+    assert [event for event in trace if event[0] in ('latch', 'status')] == [
+        ('latch', 59980), ('status', 8), ('latch', 59960), ('status', 0),
+    ]
+    assert [event[2] for event in trace if event[:2] == ('store', 'poll_count')] == [199999, 200000, 200001]
+    assert trace[-1] == ('fault', 2)
+    assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59980, 59960, 59998)
+    assert (memory['previous_status'], memory['current_status']) == (8, 0)
+    assert memory['vertical_edges'] == 3 and memory['fault'] == 2
+
+
+@pytest.mark.parametrize('generation,expected_fault', [(11, 0), (12, 2)])
+def test_new_vsync_keeps_twelfth_rise_and_faults_on_thirteenth_after_bracketing(generation, expected_fault):
+    memory = _status_memory(0, generation=generation)
+    trace = _observe(_vsync_source(), memory, statuses=[0, 8], counts=[59980, 59960, 59956])
+    assert [event for event in trace if event[0] in ('latch', 'status')] == [
+        ('latch', 59980), ('status', 0), ('latch', 59960), ('status', 8), ('latch', 59956),
+    ]
+    assert (memory['previous_before'], memory['current_before'], memory['current_after']) == (59980, 59960, 59956)
+    assert (memory['previous_status'], memory['current_status']) == (0, 8)
+    assert memory['vertical_edges'] == generation + 1 and memory['poll_count'] == 19
+    assert memory['fault'] == expected_fault
+    if expected_fault:
+        assert trace[-1] == ('fault', 2)
+        assert trace.index(('latch', 59956)) < trace.index(('store', 'vertical_edges', 13))
 
 
 def test_existing_poll_and_retrace_bounds_still_stop_measurement():

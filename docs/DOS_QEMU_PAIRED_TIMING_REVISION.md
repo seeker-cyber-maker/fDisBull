@@ -222,12 +222,14 @@ brackets, quantization, 128-line minimum, all long-pair constraints, H/8, fixed 
 models, counterfactuals and execution/output limits must remain. The successful
 [return/pause gates](QEMU_PAUSE_AND_RETURN_GATES.md) qualify separate contracts.
 
-## Complete integer-count source proposal (2026-11-21)
+## Complete integer-count revision (2026-11-21)
 
-The oracle now has a staged source correction for the candidate-count cutoff.
-It has not been imported or tested, and no native attempt has been admitted for
-this revision. The preceding diagnosis describes the unchanged oracle used by
-attempt03; that failed result and every earlier raw receipt remain unchanged.
+The oracle now implements the source correction for the candidate-count cutoff.
+All 22 focused host cases passed at `72a4975`. Fresh assembly03 emitted the same
+3,959-byte guest COM as assembly02. A separately reviewed native attempt04 then
+ran both producers with this exact source identity. The preceding diagnosis
+describes attempt03; that failed result and every earlier raw receipt remain
+unchanged.
 
 For same-generation adjacent edges, closed overlap of the observed difference
 `delta` with `n * coarse` is equivalent to the complete positive-integer bounds
@@ -263,8 +265,34 @@ Focused host regressions are authored for unique counts above eight, a false
 eight-line uniqueness caused by omitting nine, closed fractional endpoints and
 sub-float distinctions, empty/negative-lower ranges, generation breaks, bounded
 diagnostics from half-wrap-safe raw counters, and inconsistent long spans.
-Their execution remains pending under a separately reviewed finite host gate.
-Any future native run still needs its own clean source identity and fresh
-admission. This source correction neither selects a count from captured pixels
-nor guarantees that QEMU calibration or the separate DOSBox pulse ambiguity
-will qualify.
+These cases passed under a separately reviewed finite host gate. Every native
+run still needs its own clean source identity and fresh admission. This source
+correction does not select a count from captured pixels or relax the separate
+pulse-phase gate.
+
+
+### Native attempt04: complete counts reach the pulse gate
+
+Attempt04 completed at `72a4975224a4eee5cf912becfeacd94d1d1c3139` in
+37.277624148 seconds. Its phase receipt SHA-256 is
+`96977333152afaf477d551f0f148bb88e9e8f917725c14f2916954cf75a2d16b`.
+All 11,766 file pins and nine input trees were unchanged. Both serial owners
+exited zero and were reaped, with no owner or adopted-child cleanup errors.
+The worker returned one because the separate phase assertion failed.
+
+| Observation | Attempt04 result |
+| --- | --- |
+| Four quiet rasters | Full authored RGB equal within and across both backends |
+| DOSBox calibration | 399-line span; H in `[4851/128, 7473/197]` PIT ticks |
+| QEMU calibration | Spans of 160, 416, 416 and 427 lines; H in `[15725/416, 16161/427]` PIT ticks |
+| QEMU first pulse | Source phase 0 observed; counterfactual and final-palette-only predictions rejected |
+| QEMU second pulse | Unqualified: row 101 phase 0 intersects the complete C-write bracket |
+| Both DOSBox pulses | Unqualified: counterfactual row 99 phase 0 intersects the complete B-write bracket |
+
+Each producer ran exactly two quiet and two pulse captures. No alignment frame,
+extra retrace or automatic retry was added. The complete count rule resolves the
+old artificial cutoff; it does not establish full raster phase parity. The
+[vertical witness revision](DOS_QEMU_PAIRED_VSYNC_WITNESS_PROPOSAL.md) proposes
+removing unused bit-0 upper latches while the guest waits only for bit 3. The
+pulse schedule, whole-write brackets, H/8 allowance and both phase families stay
+fixed. Further native evidence requires a new clean source identity and gate.

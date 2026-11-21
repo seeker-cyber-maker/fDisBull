@@ -163,11 +163,11 @@ trial_done:
 
 new_vsync:
 .low:
-    call sample_status
+    call sample_vsync_status
     test byte [current_status],8
     jnz .low
 .high:
-    call sample_status
+    call sample_vsync_status
     test byte [current_status],8
     jz .high
     ret
@@ -184,6 +184,43 @@ wait_offset:
     jae timing_fault
     cmp dx,bx
     jb .again
+    ret
+
+sample_vsync_status:
+    ; The vertical waiter consumes only bit 3. Keep the generic sampler's
+    ; state/fault ordering, but do not latch unused bit-0 rises here.
+    call poll_budget
+    mov cx,[current_before]
+    mov bh,[current_status]
+    mov dx,3dah
+    latch_pit2
+    mov si,ax
+    in al,dx
+    mov bl,al
+    xor al,bh
+    and al,bl
+    test al,8
+    jz .no_upper
+    latch_pit2
+    mov [current_after],ax
+.no_upper:
+    mov [previous_before],cx
+    mov [current_before],si
+    mov [previous_status],bh
+    mov [current_status],bl
+    cmp byte [status_valid],0
+    je .first
+    test bh,8
+    jnz .done
+    test bl,8
+    jz .done
+    inc word [vertical_edges]
+    cmp word [vertical_edges],12
+    ja timing_fault
+.done:
+    ret
+.first:
+    mov byte [status_valid],1
     ret
 
 sample_status:
