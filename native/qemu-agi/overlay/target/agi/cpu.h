@@ -5,14 +5,13 @@
 #ifndef AGI_CPU_H
 #define AGI_CPU_H
 #include "cpu-qom.h"
+#include "decode.h"
 #include "exec/cpu-defs.h"
 #include "qapi/error.h"
 
 #define CPU_RESOLVING_TYPE TYPE_AGI_CPU
-#define AGI_CODE_MAX 65536
 #define AGI_ACTORS 16
 #define AGI_EVENT_MAX 65536
-#define AGI_INSN_MAX 64
 #define AGI_PROFILE "agi-2917-scalar-position-pilot-1"
 #define AGI_BINDING_PROFILE "agi-2917-view-binding-pilot-1"
 #define AGI_INTENT_PROFILE "agi-2917-draw-intent-pilot-1"
@@ -30,23 +29,6 @@ typedef enum AgiStatus {
     AGI_READY, AGI_RUNNING, AGI_BUDGET, AGI_RETURN, AGI_FAULT, AGI_EXTERNAL,
     AGI_EFFECT
 } AgiStatus;
-
-typedef enum AgiFault {
-    AGI_FAULT_NONE,
-    AGI_FAULT_OPCODE,
-    AGI_FAULT_TRUNCATED,
-    AGI_FAULT_ACTOR,
-    AGI_FAULT_BRANCH,
-    AGI_FAULT_CONDITION,
-    AGI_FAULT_FETCH,
-    AGI_FAULT_CONDITION_LIMIT,
-    AGI_FAULT_MISSING_VIEW,
-    AGI_FAULT_VIEW_NOT_LOADED,
-    AGI_FAULT_VIEW_UNBOUND,
-    AGI_FAULT_LOOP,
-    AGI_FAULT_CEL,
-    AGI_FAULT_EMPTY_LOOP
-} AgiFault;
 
 typedef struct AgiActor {
     uint32_t x, y, prev_x, prev_y;
@@ -115,6 +97,8 @@ struct ArchCPU {
     AgiViewCatalog *catalog;
     /* Immutable machine selection, restored to env at every guest restart. */
     bool draw_intent;
+    /* Host-only static query selectors; restarting the guest preserves them. */
+    uint32_t decode_pc, decode_limit;
 };
 
 struct AgiCPUClass {
