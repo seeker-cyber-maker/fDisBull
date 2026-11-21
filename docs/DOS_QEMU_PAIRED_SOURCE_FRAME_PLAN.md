@@ -54,6 +54,7 @@ download, rebuild, original game, saved emulator state or GUI route.
 
 The runtime environment requires `FDISBULL_REQUIRE_PAIRED_VIDEO_FRAME=1`,
 `FDISBULL_PAIRED_VIDEO_QEMU`, `FDISBULL_PAIRED_VIDEO_DOSBOX`,
+`FDISBULL_PAIRED_VIDEO_DOSBOX_LIB`,
 `FDISBULL_QEMU_DOS_BOOT_IMAGE`, `FDISBULL_QEMU_DOS_MCOPY`,
 `FDISBULL_QEMU_DOS_FIRMWARE`, `FDISBULL_QEMU_IMG` and `NASM`. These variables do
 not themselves constitute admission. Missing required inputs fail the explicit
@@ -63,6 +64,11 @@ DOSBox uses normal CPU, fixed 157600 cycles, frameskip0, doublescan=false,
 scaler=none, scanline-render-on-demand=false, skip-unchanged=false and vsync=off.
 QEMU uses its existing virtual clock and precise retrace profiles. The test
 records the actual profile; it never tunes it after viewing an image.
+The admitted private DOSBox library directory is passed only to that producer's
+`execve` environment. The wrapper uses the current admitted Python interpreter,
+preserves the inherited RPC descriptors, and explicitly fixes the VGA profile
+and DAC6/full-triple palette settings. Host Python and QEMU do not inherit the
+DOSBox library path.
 
 ## Finite ownership and output plan
 
