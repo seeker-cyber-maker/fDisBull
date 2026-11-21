@@ -1,6 +1,16 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
-Latest local gate: [persisted LE source checkpoints and capture history](evidence/qemu-le-source-history-2026-11-15/README.md).
+Latest local gates: [native asynchronous DOS return and strict paired pause](QEMU_PAUSE_AND_RETURN_GATES.md),
+qualified on 2026-11-20 America/New_York (2026-11-21 UTC). One authored child
+returned exit42 after one resume/status poll at `c978253`; eight pause episodes
+per backend, with four immediate stopped brackets each, passed at `77c716b`.
+Production `86a5fdb` passed 401 affected host cases; 33 timing/oracle host cases
+also passed. Prior failed attempts retain their original dispositions and raw evidence.
+The [revised paired raster attempt](DOS_QEMU_PAIRED_TIMING_REVISION.md) retained
+four exact quiet rasters but remains phase-unqualified. All 143 surface,
+18 workgroup and seven campaign promotion obligations remain open; DOSBox stays default.
+
+Earlier local gate: [persisted LE source checkpoints and capture history](evidence/qemu-le-source-history-2026-11-15/README.md).
 Original Doom passes an explicit source checkpoint and a two-node physical A/B
 capture history through hot and separate-Python-host cold restore, with fresh
 LE proof and exact saved CPU/source-site/PNG. Task/allocation lifetime and overall

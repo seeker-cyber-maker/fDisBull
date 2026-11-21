@@ -2,12 +2,16 @@
 
 ## Status and purpose
 
-This is source-only snapshot-retention revision 02, prepared against
-`f69a946110fce16bdd3f5d00daf7ad561b374783`. It is not an execution receipt or
-permission to start QEMU. The revised test remains staged outside the main
-checkout until root integrates the reviewed source at a new clean commit.
-Production behavior remains the separately reviewed
-`86a5fdb49d17452f9eda8af9380897f4a92ea7cc` implementation.
+**Native attempt 02 passed** at `c978253ae88c1496f895df8ecb68fe0ca2bf53d9`:
+one original QEMU owner, one public resume and one status poll, normal exit42,
+complete original-transport reconciliation and stable persistence, zero failures
+or skips, and clean owner cleanup. The [gate checkpoint](QEMU_PAUSE_AND_RETURN_GATES.md)
+records exact results and qualifications. Attempt 01 remains failed.
+
+This document retains the reviewed snapshot-retention revision and admission
+contract. Production behavior is the separately reviewed
+`86a5fdb49d17452f9eda8af9380897f4a92ea7cc` implementation. Its later documentation
+updates do not change the test or producer bytes of accepted attempt 02.
 
 The question is whether the public asynchronous `resume` route can observe the
 selected DOS child's actual return without injecting a GDB stop packet, issuing
@@ -264,12 +268,12 @@ The controller's correction-provenance.json records the independent review
 finding and the exact pre-correction identities. Those source snapshots are
 historical, unadmitted inputs, not native evidence.
 
-## Scope of a future pass
+## Scope of accepted attempt 02
 
-A pass would establish one native child return after one public asynchronous
+The accepted pass establishes one native child return after one public asynchronous
 resume on this exact retained QEMU, boot image and authored five-byte program.
-It would show that the returned process evidence, source invalidation, private
-control retirement and passive persistence agree for that one original owner.
+The returned process evidence, source invalidation, private control retirement
+and passive persistence agree for that one original owner.
 It would not establish strict-pause stability, arbitrary DOS process behavior,
 indefinite liveness, GDB stop-packet availability, hosted CI, image parity, or
 game behavior. Until the separate admitted run completes, all such runtime

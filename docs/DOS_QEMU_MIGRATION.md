@@ -83,6 +83,23 @@ Selecting QEMU never silently launches DOSBox. After a failed or uncertain
 operation, the caller inspects the result and explicitly starts a separate
 fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
 
+### Resume an active DOS child and observe its return
+
+Public asynchronous resume now preserves only the exact launch-bound private
+parent-return control. Pending execution stays attached to the original owner;
+actual stopped observations reconcile nonce-bound DOS memory/UART reports,
+registers and source lifetime before another continue. The native trigger remains
+unknown when QMP supplies no GDB stop packet. User controls and unsupported
+active hooks/input still refuse; uncertain dispatch does not operate on a replacement.
+
+The [native return and paired pause gates](QEMU_PAUSE_AND_RETURN_GATES.md) passed
+separately on 2026-11-20 America/New_York (2026-11-21 UTC). The return gate observed
+normal exit42 after one public resume and one status poll. The pause gate observed
+eight episodes with four immediate stopped brackets per episode on each retained
+backend, without settling or tolerance. Their exact hosts, producer identities,
+limits and preserved failed attempts are recorded there. These narrow authored
+witnesses do not qualify arbitrary programs, raster phase, or whole migration.
+
 ### Compose native step stops
 
 Native machine and DOS sessions accept

@@ -1,10 +1,16 @@
 # Strict paired ordinary-pause witness
 
+**Native attempt 04 passed** at `77c716beda9d62e178f74b6ff04bad51d3e9244c`:
+both original owners completed eight episodes with four immediate brackets per
+stop, exact stopped equality and resumed progress, with zero failures/skips and
+clean cleanup. The [gate checkpoint](QEMU_PAUSE_AND_RETURN_GATES.md) records the
+exact source/runtime identities, receipts and finite qualification. Attempts 01,
+02 and 03 remain immutable failures.
+
 The original witness was proposed from `353df71e2281a4078ac5c3ff87f89cd3ccdbb17e`.
-This document now records a source-only public-observation capture revision
-prepared from the strict witness at `f69a946110fce16bdd3f5d00daf7ad561b374783`.
-The revised source has not
-been imported, collected, tested or executed and grants no new execution admission.
+The preparation history below describes the reviewed receipt-retention and
+public-observation snapshot corrections. Each new execution still needs its own
+exact frozen inputs, root review and separate finite admission.
 
 **Historical source precondition:** at the original base, a COM process retains its reserved
 DOS parent-return breakpoint. Public `resume()` rejects any remaining machine

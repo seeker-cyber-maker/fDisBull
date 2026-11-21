@@ -1,10 +1,13 @@
 # Paired raster timing witness revision
 
 This source revision reduces observer work inside the authored guest's timing
-measurements. It has **not yet been assembled or executed**. Its source tests
-are authored for separate admission; their presence does not establish a pass.
-The first paired native attempt remains failed and phase-unqualified, with its
-independently verified quiet-raster facts and original evidence unchanged.
+measurements. Its bounded host selection passed 33 cases, and assembly02 produced
+the reviewed 3,959-byte COM. The second actual paired native execution,
+controller attempt03, **remains failed and phase-unqualified**. Four quiet rasters
+matched exactly; DOSBox's second pulse was ambiguous and QEMU calibration could
+not establish a 128-line span. Original attempts and raw evidence remain unchanged.
+See the recorded results below; completed source rasters do not establish paired
+pulse-phase parity or `completed_guest_frames` qualification.
 
 The fixture is [paired_video_frame_fixture.py](../tests/support/paired_video_frame_fixture.py).
 The independent [timing oracle](../tests/support/paired_video_frame_oracle.py)
@@ -155,3 +158,62 @@ Any native admission then uses new output paths and preserves attempt 01 in
 full. Acceptance still requires both complete phase predictions, correct raw
 RGB, the stricter QEMU timing check, and the original ownership/log/input
 integrity conditions.
+
+## Recorded host, assembly and native results (2026-11-20)
+
+At `86a5fdb49d17452f9eda8af9380897f4a92ea7cc`, the separate bounded host selection
+passed 33 cases: ten unchanged oracle cases and 23 witness source/dataflow cases.
+Assembly02 used the retained NASM once and produced 3,959 bytes, SHA-256
+`f36dc2638353868da45dc924aee17cfd3ef098dbe0cbceccf0a673f4e75180bc`.
+Its complete instruction listing, footer addresses, extents and register lifetimes
+were independently reviewed. No emulator producer was rebuilt.
+
+Controller attempt02 was frozen metadata only and never admitted. Fresh attempt03
+used the reviewed 212-member potential loader closure and ran both original owners.
+Both exited zero and were reaped; all 11,757 pinned inputs and nine trees remained
+unchanged. The whole native phase failed after 56.414883888 seconds, receipt
+`a8f3268066fbc3c040bcb8562e4a38784fcb6c6a4f34919b18694cdfe49f3155`.
+The 1,665,160-byte native witness has SHA-256
+`5b228cb28ce00e734533becd078588b75fc11344a7ca591b348d602359d318e0`.
+
+| Observation | Recorded outcome |
+| --- | --- |
+| Two quiet frames on each backend | All four matched the authored 192,000-byte RGB oracle and public source APIs |
+| Quiet RGB SHA-256 | `141a920ca2ecdd0d6fd7684eca3918d7d9ce66f74573266a15656dd107295939` |
+| DOSBox first pulse | Declared source phase 1 matched, counterfactual/final-palette-only models rejected |
+| DOSBox second pulse | Unqualified: row 100 phase 1 intersects a whole-DAC-write uncertainty interval |
+| QEMU calibration | No uniquely counted horizontal span of at least 128 lines |
+| QEMU pulse observations | None attempted after calibration refusal |
+
+QEMU retained 205 edges and 9,856 polls, reaching the fixed fourth-retrace bound
+with `calibration_limited=1` and `fault=0`. Its 204 adjacent gaps contain 151
+unique seven-line choices, 50 same-generation gaps compatible with eleven lines
+outside the oracle's fixed candidate set 1..8, and three vertical boundaries.
+Those exclusions leave a maximum admitted span of 21 lines. This is consistent
+with the unchanged oracle, not an image mismatch or a PIT unwrap error. DOSBox
+retained a qualifying 397-line segment; its pulse ambiguity is a separate limit.
+
+PIT and VGA status use the same QEMU virtual clock. With fixed `icount shift=7`,
+removing guest observer instructions changes sampling phase. The revised stable-low
+loop's 43 instructions correspond to 5,504 ns; narrower local edge brackets can
+therefore coexist with worse edge coverage. Source-derived VGA window estimates
+are corroboration only, since the fixture did not journal CR04/CR05. No pixel
+feedback was used to select timing data or tune the oracle.
+
+### Next source review, not implemented
+
+A possible completeness correction is to consider every compatible positive
+integer line count using exact interval bounds:
+`n_min = max(1, ceil(delta.lo / coarse.hi))`,
+`n_max = floor(delta.hi / coarse.lo)`. A unique count requires equal endpoints.
+This can admit a unique count above eight and can also expose ambiguity hidden
+by the old cutoff. Bounds-only evaluation avoids unbounded candidate lists.
+The existing half-wrap rule bounds adjacent expanded differences at 98,303 ticks;
+512 records still bound adjacent decisions and long-pair intersections.
+
+This mathematics was reviewed only. No revised oracle, H estimate, pulse schedule
+or retrospective pass was produced. Any implementation needs new source review
+and host evidence before a fresh native admission. Generation breaks, endpoint
+brackets, quantization, 128-line minimum, all long-pair constraints, H/8, fixed phase
+models, counterfactuals and execution/output limits must remain. The successful
+[return/pause gates](QEMU_PAUSE_AND_RETURN_GATES.md) qualify separate contracts.
