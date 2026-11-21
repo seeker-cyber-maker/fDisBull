@@ -17,6 +17,12 @@ has its own arm, cached-raster and mutation-admission contract. Its new producer
 and raw-peer witness require separate qualification; the results below do not
 qualify that extension.
 
+The separate [native input-schedule witness](QEMU_INPUT_SCHEDULE_OBSERVATION_GATE.md)
+passed its complete controller on `c3bc62302340e879b21e9cd5862c82036045d5f5`.
+It verifies both armed and cancelled `input-before` refusals with unchanged
+genuine host bookkeeping and reusable original-owner health checks. Its
+state-specific keyboard read boundary and earlier failed attempts remain explicit.
+
 ## Exact host qualification
 
 The finite host gate passed **335 tests, zero failures, errors or skips** on

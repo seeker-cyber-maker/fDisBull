@@ -2119,6 +2119,7 @@
     "docs/QEMU_SCENE_WAIT_GATE.md",
     "docs/QEMU_CHECKPOINT_SCRIPT_GATE.md",
     "docs/QEMU_SCENE_ACT_GATE.md",
-    "docs/QEMU_STEP_COUNT_GATE.md"
+    "docs/QEMU_STEP_COUNT_GATE.md",
+    "docs/evidence/qemu-input-schedule-observation-2026-11-21/verification.json"
   ]
 }

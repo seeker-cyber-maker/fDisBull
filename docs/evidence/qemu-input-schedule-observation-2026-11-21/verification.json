@@ -1,0 +1,159 @@
+{
+  "format": "fdisbull-input-schedule-observation-verification-1",
+  "source": {
+    "host_head": "c3bc62302340e879b21e9cd5862c82036045d5f5",
+    "host_tree": "e9e0f61d60129ca19b985ebab0b58ebf2f53d46d",
+    "test_sha256": "77f2bc18c05e2e29120ca1998a8f8656bca6215642bcf55e3dfd6ae988e25850"
+  },
+  "node": "tests/test_qemu_input_schedule_observation_native.py::test_native_input_schedule_refuses_armed_and_cancelled_source_state_observation",
+  "result": {
+    "passed": true,
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "junit_seconds": 2.696,
+    "worker_seconds": 4.84619186800046,
+    "controller_seconds": 19.297043204998772
+  },
+  "producer_sha256": "cec82b2b2e8c76ba749bbd4f518d226e831b439d35b2480241ae46541e329c81",
+  "inputs": {
+    "files": 5970,
+    "trees": 6,
+    "unchanged": true
+  },
+  "protocol": {
+    "baseline_exports": 1,
+    "bootstrap_calls": 114,
+    "dispatched_events": 0,
+    "guest_write_bytes": 0,
+    "input_schedule_arms": 1,
+    "input_schedule_cancels": 1,
+    "native_calls": 252,
+    "native_control_operations": 0,
+    "native_video_calls": 16,
+    "post_arm_gdb_requests": 10,
+    "post_arm_qmp_calls": 25,
+    "post_setup_counts": {
+      "completed_source_rasters": 1,
+      "execution_calls": 1,
+      "input_schedule_arms": 1,
+      "input_schedule_cancels": 1,
+      "observation_calls": 3,
+      "observation_refusals": 2,
+      "observation_successes": 1,
+      "source_exports": 1,
+      "source_fence_arms": 1,
+      "source_fence_releases": 1,
+      "source_streams": 1
+    },
+    "post_setup_ordinary_calls": 138,
+    "raw_packets": 0,
+    "refusal_qmp_reads": 10,
+    "refused_observations": 2,
+    "health": [
+      {
+        "after_observation": 2,
+        "gdb_requests": 5,
+        "keyboard_read": "unavailable_active_schedule",
+        "original_physical_mode": "0",
+        "qmp_reads": 6
+      },
+      {
+        "after_observation": 3,
+        "gdb_requests": 5,
+        "keyboard_read": "observed",
+        "original_physical_mode": "0",
+        "qmp_reads": 7
+      }
+    ]
+  },
+  "limits": {
+    "cleanup_seconds": 10,
+    "completed_rasters": 1,
+    "dispatched_events": 0,
+    "exports": 1,
+    "guest_write_bytes": 0,
+    "health_blocks": 2,
+    "health_qmp_reads_by_state": {
+      "armed": 6,
+      "cancelled": 7
+    },
+    "health_ram_bytes_per_block": 2,
+    "health_register_reads_per_block": 1,
+    "max_native_calls": 2048,
+    "max_video_calls": 32,
+    "native_control_arms": 0,
+    "native_schedule_arms": 1,
+    "native_schedule_cancels": 1,
+    "owners": 1,
+    "post_setup_continues": 1,
+    "private_output_bytes": 67108864,
+    "raw_packets": 0,
+    "receipt_bytes": 2097152,
+    "refused_observations": 2,
+    "scheduled_events": 1,
+    "streams": 1,
+    "successful_observations": 1,
+    "supervisor_seconds": 180,
+    "work_seconds": 60
+  },
+  "owner": {
+    "reaped": true,
+    "returncode": 0,
+    "cleanup_errors": [],
+    "live_after_each_refusal": true
+  },
+  "resources": {
+    "allocated": 4726784,
+    "logical": 4694716,
+    "open_log_reservation": 4194304,
+    "vanished": 0
+  },
+  "unknown": {
+    "all_devices_neutral": null,
+    "application_frame_complete": null,
+    "atomic": false,
+    "completed_guest_frames": false,
+    "guest_input_consumed": null,
+    "independent_controllers_covered": false,
+    "legacy_phase_equivalence": null,
+    "native_mutation_revision": null,
+    "raw_handles_covered": false,
+    "whole_machine_revision": null
+  },
+  "broad_parity_qualified": false,
+  "dosbox_remains_default": true,
+  "artifacts": {
+    "phase": {
+      "bytes": 1048576,
+      "sha256": "7f10b20d3ff3593062b82517027ba422df90f4a4e668d7e5b7ba2ab980e8b30a",
+      "relative_path": "phase-result.json"
+    },
+    "worker": {
+      "bytes": 1048576,
+      "sha256": "6083fe4475281b4770bd30162d394288f19bf888cf80a6c12f8aad5b2718b5f4",
+      "relative_path": "worker-result.json"
+    },
+    "owner": {
+      "bytes": 1048576,
+      "sha256": "7c3beda61f69343d1702dd04dda5b3cb7ddd198452224e6b306dfb8149c75127",
+      "relative_path": "cases/01/owner.json"
+    },
+    "journal": {
+      "bytes": 455719,
+      "sha256": "2cb89ac350cd51398ea8802986d3216c83417371bef70fbfa67313e4cf1f2dd8",
+      "relative_path": "cases/01/native-calls.jsonl"
+    },
+    "native_receipt": {
+      "bytes": 382014,
+      "sha256": "231ea7e3916a6edec681171389a5bcb227568a00e8798cfe2a0cd869f3dc6988",
+      "relative_path": "pytest/test_native_input_schedule_ref0/native-input-schedule-observation.json"
+    },
+    "junit": {
+      "bytes": 714,
+      "sha256": "cfc506999b63152293396623bf0bbb26ef8c4902c37c3bd37fe3f858ca706f88",
+      "relative_path": "result.xml"
+    }
+  }
+}
