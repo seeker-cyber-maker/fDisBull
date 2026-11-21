@@ -302,6 +302,8 @@ class MachineClockMixin:
         validate_clock_budget(delta_ns, timeout_ms)
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'clock advancement')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'clock advancement')
         if self.project is not None and self.project.db.in_transaction:
             raise ValueError('Native clock execution requires a project outside a caller-owned transaction')
         vm = self.vm

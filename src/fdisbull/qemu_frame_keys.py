@@ -145,6 +145,8 @@ class QemuFrameKeysMixin:
     def _frame_keys_before_physical_input(self):
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'frame-key detachment')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'frame-key detachment')
         if (self.vm.machine_configuration.get('clock_profile',{}).get('profile') != 'virtual'
                 or not FRAME_KEY_COMMANDS <= self.vm.qmp_commands):
             return
@@ -183,6 +185,8 @@ class QemuFrameKeysMixin:
     def _frame_keys_prepare(self, edges, native=None):
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'frame-key mutation')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'frame-key mutation')
         if self.vm.machine_configuration.get('clock_profile',{}).get('profile') != 'virtual':
             raise ValueError('Frame key ownership requires an explicit virtual clock')
         require_released_machine_input(self.vm)

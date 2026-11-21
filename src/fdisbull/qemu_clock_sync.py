@@ -247,6 +247,8 @@ class QemuClockSyncMixin:
                          max_wait_ns=250_000_000, timeout_ms=1000):
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'host clock synchronization')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'host clock synchronization')
         options = validate_clock_sync_options(tolerance_ns=tolerance_ns,
             max_lag_ns=max_lag_ns, max_wait_ns=max_wait_ns, timeout_ms=timeout_ms)
         _require_project(self)

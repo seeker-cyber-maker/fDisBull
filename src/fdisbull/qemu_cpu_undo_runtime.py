@@ -140,6 +140,8 @@ def normalize_ranges(session, ranges):
 def _admission(session):
     from .qemu_video_control import require_no_video_frame_fence
     require_no_video_frame_fence(session.vm, 'CPU undo')
+    from .qemu_step_over import require_no_step_over
+    require_no_step_over(session.vm, 'CPU undo')
     if session.closed or session.vm is None or session.vm.qmp is None:
         raise ValueError('QEMU CPU undo requires an open machine owner')
     if getattr(session.project.db, 'in_transaction', False):

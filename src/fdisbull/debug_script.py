@@ -473,6 +473,11 @@ def validate_script(script, *, session=None):
                             value=params.get(key)
                             if key in params and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits)
+                        if (backend or actual) in ('qemu-machine','qemu-dos'):
+                            from .qemu_step_over import validate_step_mode
+                            mode, count = params.get('mode','into'), params.get('count',1)
+                            if not (isinstance(mode,str) and mode.startswith('$')):
+                                validate_step_mode(mode,1 if isinstance(count,str) and count.startswith('$') else count)
                     if op=='clock-advance':
                         from .qemu_clock import MAX_CLOCK_BUDGET_NS
                         for key,limits in (('delta_ns',(1,MAX_CLOCK_BUDGET_NS)),
@@ -873,7 +878,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 # Resolve and validate before the common timeout clamp; a large
                 # invalid literal/reference must not become a valid allowance.
                 from .qemu_steps import validate_step_parameters
-                validate_step_parameters(**params)
+                from .qemu_step_over import validate_step_mode
+                validate_step_mode(params.get('mode','into'),params.get('count',1))
+                validate_step_parameters(**{key:value for key,value in params.items() if key!='mode'})
             if (step['op']=='scene-wait' and getattr(session,'metadata',{}).get('backend')=='qemu-dos'):
                 from .qemu_scene_wait import validate_parameters
                 validate_parameters(**params)
@@ -991,6 +998,16 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 native_machine = getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos','qemu-chip8')
                 complete = (result.get('outcome')=='step' and result.get('timed_out') is False
                             if native_machine else result.get('completed'))
+                if (getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')
+                        and params.get('mode','into')=='over'):
+                    from .qemu_step_over import FORMAT as STEP_OVER_FORMAT
+                    complete = (result.get('format') == STEP_OVER_FORMAT
+                                and result.get('step_over_completed') is True
+                                and result.get('timed_out') is False)
+                    if not complete:
+                        error = ValueError('CALL step-over stopped without its required completion evidence')
+                        error.result = result
+                        raise error
                 if (getattr(session,'metadata',{}).get('backend') in ('qemu-machine','qemu-dos')
                         and params.get('count',1)>1):
                     from .qemu_steps import FORMAT

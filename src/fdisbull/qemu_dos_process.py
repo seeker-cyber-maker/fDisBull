@@ -663,6 +663,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                               registers_stage='parent helper after DOS return; not target final registers',
                               causing_instruction=None, instruction_completed=None)
         try:
+            from .qemu_step_over import observe_step_over_guest_return
+            observe_step_over_guest_return(self, result)
             MachineContext.delete_breakpoint(self, self._return_breakpoint)
             self._return_breakpoint = None
             self._persist_process()
@@ -924,17 +926,19 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
 
     def _close_failed_execution(self, error, reason, *, result=None):
         """Retain an arrived stop and primary failure through terminal cleanup."""
+        from .qemu_step_over import step_over_vm
+        vm = step_over_vm(self)
         if getattr(error, 'result', None) is None and result is not None:
             error.result = result
-        if not getattr(self.vm, '_fdisbull_control_quarantine', None):
-            self.vm._fdisbull_control_quarantine = reason
+        if not getattr(vm, '_fdisbull_control_quarantine', None):
+            vm._fdisbull_control_quarantine = reason
         from .qemu_machine import _tracking
         try:
             _tracking(self, 'close', reason)
         except BaseException as retirement_error:
             error.dos_process_tracking_retirement_error = type(retirement_error).__name__
         try:
-            self.vm.close()
+            vm.close()
         except BaseException as cleanup_error:
             error.dos_process_cleanup_error = type(cleanup_error).__name__
 
@@ -942,6 +946,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
         # A rejected queued-input/transaction request has not executed the
         # guest. Preserve its live process and queue for an explicit run or
         # cancellation; only failures after dispatch enter terminal cleanup.
+        from .qemu_step_over import step_over_vm, guard_step_over_owner
+        vm = step_over_vm(self)
+        guard_step_over_owner(self)
         self._execution_preflight(command, timeout_ms)
         if not self._launching:
             self._checkpoint_entry_clean = False
@@ -955,6 +962,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             if save_stop_before is not None:
                 from .qemu_save_stop import after_execute
                 result=after_execute(self,result,save_stop_before)
+            guard_step_over_owner(self, check_deadline=False, allow_exited=result['outcome']=='exited')
         except BaseException as error:
             # Native execution can finish before its event is persisted. A
             # logging failure must not preserve an unobserved live process.
@@ -963,7 +971,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             raise
         if not self._launching and result['outcome'] == 'exited':
             try:
-                self.vm.close()
+                vm.close()
             except BaseException as error:
                 self._close_failed_execution(error, 'failed DOS native-exit cleanup', result=result)
                 raise
@@ -975,9 +983,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                     self._close_failed_execution(error, 'DOS return requires a disabled native scheduler', result=result)
                     raise error
                 previous_deadline = self._deadline
-                previous_vm = self.vm.operation_deadline
+                previous_vm = vm.operation_deadline
                 previous_channels = [(channel, channel.operation_deadline)
-                                     for channel in (self.vm.qmp, self.vm.gdb) if channel is not None]
+                                     for channel in (vm.qmp, vm.gdb) if channel is not None]
                 deadlines = [time.monotonic()+5, previous_deadline, previous_vm,
                              *[bound for _, bound in previous_channels]]
                 self._set_deadline(min(bound for bound in deadlines if bound is not None))
@@ -989,8 +997,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                     self._close_failed_execution(error, 'failed DOS process return observation', result=result)
                     raise
                 finally:
-                    self._set_deadline(previous_deadline)
-                    self.vm.operation_deadline = previous_vm
+                    self._deadline = previous_deadline
+                    vm.operation_deadline = previous_vm
                     for channel, bound in previous_channels:
                         channel.operation_deadline = bound
         if not self._launching:

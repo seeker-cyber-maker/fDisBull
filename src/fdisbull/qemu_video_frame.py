@@ -356,6 +356,8 @@ class QemuVideoFrameMixin:
     def video_frame_start(self, *, timeout_ms=1000):
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'source-stream start')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'source-stream start')
         vm = self.vm
         before = self._video_frame_context()
         prior = self._video_frame_read(vm, before)
@@ -381,6 +383,8 @@ class QemuVideoFrameMixin:
     def video_frame_stop(self, *, timeout_ms=1000):
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'source-stream stop')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'source-stream stop')
         vm = self.vm
         before = self._video_frame_context()
         prior = self._video_frame_read(vm, before)

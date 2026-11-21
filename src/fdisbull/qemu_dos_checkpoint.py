@@ -177,6 +177,8 @@ def _compatibility(session):
 def _preflight(session):
     from .qemu_video_control import require_no_video_frame_fence
     require_no_video_frame_fence(session.vm, 'DOS checkpointing')
+    from .qemu_step_over import require_no_step_over
+    require_no_step_over(session.vm, 'DOS checkpointing')
     from .qemu_input import require_released_machine_input
     from .qemu_instrumented_checkpoint import preflight
     if (session.closed or session.vm.checkpoint_disk is None

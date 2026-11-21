@@ -280,6 +280,8 @@ class QemuDOSFramesMixin:
     def _frame_execute(self, publication, token):
         from .qemu_video_control import require_no_video_frame_fence
         require_no_video_frame_fence(self.vm, 'renderer-frame advance')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(self.vm, 'renderer-frame advance')
         native = publication['native']
         display_token, baseline = native['token'], native['updates']
         self.vm._active_frame_fence = token

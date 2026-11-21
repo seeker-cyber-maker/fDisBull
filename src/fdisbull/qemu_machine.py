@@ -51,6 +51,9 @@ from .qemu_vga_configuration import (QemuVgaConfigurationMixin, VGA_CONFIGURATIO
 from .qemu_wait import QemuWaitMixin, validate_qemu_wait_parameters
 from .qemu_steps import (admit_step_sequence_input, step_sequence,
                          validate_step_count, validate_step_parameters)
+from .qemu_step_over import (execute_step_over, validate_step_mode,
+                             admit_step_over, require_no_step_over,
+                             guard_step_over_owner, step_over_vm, step_over_stopped)
 
 
 def file_hash(path):
@@ -72,10 +75,14 @@ def firmware_identity(directory):
 
 def _tracking(session, operation, reason):
     from .debugger import _tracking_callback
+    guard_step_over_owner(session, check_deadline=False, allow_exited=operation=='close')
     source = getattr(session, '_le_source_lifecycle', None)
     if source is not None:
         source(operation, reason)
-    return _tracking_callback(session, operation, reason)
+        guard_step_over_owner(session, check_deadline=False, allow_exited=operation=='close')
+    result = _tracking_callback(session, operation, reason)
+    guard_step_over_owner(session, check_deadline=False, allow_exited=operation=='close')
+    return result
 
 
 def _before_machine_execution(session, reason):
@@ -398,6 +405,8 @@ class QemuMachine:
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
     """Keep legacy guards and parameter-aware history fences independent."""
+    if name in ('step', 'run', 'resume', 'pause', 'trace', 'trace_until', 'execute_step_over'):
+        require_no_step_over(vm, 'another execution operation')
     if name not in ('close','dos_process_info','tracking_status','dos_source_binding','dos_source_unbind') and getattr(vm,'_fdisbull_control_quarantine',None):
         raise DebuggerError('Machine controls are quarantined after '+vm._fdisbull_control_quarantine)
     source = getattr(getattr(vm, 'context', None), '_le_source_operation_guard', None)
@@ -411,23 +420,41 @@ def _machine_operation_guard(vm, name, args=(), kwargs=None):
         history(name, args, kwargs or {})
 
 
+def _machine_registers(vm, remote, *, qmp=None):
+    """Observe one explicitly captured VM/transport pair without changing it."""
+    qmp = vm.qmp if qmp is None else qmp
+    values = remote.registers()
+    text = qmp.call('human-monitor-command', {'command-line': 'info registers'})
+    from .dos_memory import machine_address_state
+    observed = machine_address_state(values, text)
+    observed['address_state']['machine_vcpus'] = getattr(vm, 'machine_configuration', {}).get('cpus')
+    return dict(context='machine', architecture=remote.architecture, registers=values, **observed,
+                address_context='selected QEMU vCPU; virtual memory uses its page tables')
+
+
 def machine_operation(function,*,script_budget=False):
     @wraps(function)
     def invoke(self,*args,**kwargs):
+        vm=step_over_vm(self)
+        guard_step_over_owner(self)
         limit=getattr(self,'_rpc_deadline',None) if script_budget else None
         wait=10 if limit is None else min(10,limit-time.monotonic())
         if wait<=0:raise TimeoutError('Native machine I/O script deadline expired before admission')
-        if not self.vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
+        if not vm.lock.acquire(timeout=wait):raise TimeoutError('Machine context is busy')
         try:
-            _machine_operation_guard(self.vm, function.__name__, args, kwargs)
-            return function(self,*args,**kwargs)
+            guard_step_over_owner(self)
+            _machine_operation_guard(vm, function.__name__, args, kwargs)
+            guard_step_over_owner(self)
+            result=function(self,*args,**kwargs)
+            guard_step_over_owner(self)
+            return result
         except BaseException:
-            gdb_failed=self.vm.gdb is not None and self.vm.gdb.socket is None
-            qmp=getattr(self.vm,'qmp',None)
+            gdb_failed=vm.gdb is not None and vm.gdb.socket is None
+            qmp=getattr(vm,'qmp',None)
             qmp_failed=qmp is not None and hasattr(qmp,'socket') and qmp.socket is None
-            if not getattr(self.vm,'_fdisbull_control_quarantine',None) and (gdb_failed or qmp_failed):self.vm.close()
+            if not getattr(vm,'_fdisbull_control_quarantine',None) and (gdb_failed or qmp_failed):vm.close()
             raise
-        finally:self.vm.lock.release()
+        finally:vm.lock.release()
     return invoke
 
 
@@ -637,6 +664,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             if self.vm is not vm:
                 raise DebuggerError('Machine owner changed while waiting for operation admission')
             _machine_operation_guard(vm, function.__name__, args, kwargs)
+            if self.vm is not vm:
+                raise DebuggerError('Machine owner changed during operation admission')
             bound=min(value for value in limits() if value is not None)
             if time.monotonic()>=bound:
                 raise TimeoutError(label+' host deadline expired before dispatch')
@@ -664,7 +693,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                         label+' arm exceeded its host deadline; input must not be replayed',vm=vm)
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
-                        'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance'):
+                        'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance',
+                        'execute_step_over'):
                     vm.close()
                 raise error
             return result
@@ -688,10 +718,16 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
 def machine_step_operation(function):
     """Keep one-step compatibility; opt-in sequences own one complete budget."""
     single = machine_operation(function)
+    over = machine_trace_operation(execute_step_over, label='CALL step-over')
 
     @wraps(function)
-    def invoke(self, *, count=1, timeout_ms=10000):
+    def invoke(self, *, count=1, timeout_ms=10000, mode='into'):
         validate_step_count(count)
+        validate_step_mode(mode, count)
+        if mode == 'over':
+            validate_step_parameters(count=count, timeout_ms=timeout_ms)
+            admit_step_over(self)
+            return over(self, timeout_ms=timeout_ms)
         if count == 1:
             return single(self, timeout_ms=timeout_ms)
         validate_step_parameters(count=count, timeout_ms=timeout_ms)
@@ -830,6 +866,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         virtual=getattr(vm,'machine_configuration',{}).get('clock_profile',{}).get('profile')=='virtual'
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,
+            call_step_over=True,call_step_over_scope='real16-direct-near-call-v1; mode=over,count=1',
             code_layers=(isinstance(self,QemuLayerSessionMixin)
                          and getattr(vm,'machine_configuration',{}).get('cpus')==1
                          and LAYER_COMMANDS <= getattr(vm,'qmp_commands',frozenset())),
@@ -929,6 +966,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         return self.status()
 
     def _stopped(self):
+        if getattr(self, '_step_over_context', None) is not None:
+            return step_over_stopped(self)
         if getattr(self.vm,'_fdisbull_control_quarantine',None):
             raise DebuggerError('Machine controls are quarantined after '+self.vm._fdisbull_control_quarantine)
         if self.vm.qmp.call('query-status')['running']:
@@ -938,13 +977,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
 
     @machine_operation
     def registers(self):
-        remote=self._stopped();values=remote.registers()
-        text=self.vm.qmp.call('human-monitor-command',{'command-line':'info registers'})
-        from .dos_memory import machine_address_state
-        observed=machine_address_state(values,text)
-        observed['address_state']['machine_vcpus']=getattr(self.vm,'machine_configuration',{}).get('cpus')
-        return dict(context='machine',architecture=remote.architecture,registers=values,**observed,
-                    address_context='selected QEMU vCPU; virtual memory uses its page tables')
+        remote = self._stopped()
+        return _machine_registers(self.vm, remote)
 
     @machine_operation
     def memory_translation(self,address,*,length=None):
@@ -1087,24 +1121,32 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             for name,value in edits.items():remote.set_register(name,value)
             after=remote.registers()
             if any(int(after[name],16)!=value for name,value in edits.items()):raise DebuggerError('Machine register readback differs')
-        except BaseException:self.vm.close();raise
+        except BaseException:step_over_vm(self).close();raise
         result=self.registers()
         _tracking(self,'after_stop','machine-write-registers')
         return result
 
     @machine_operation
     def breakpoint(self,address,*,access='x',length=1):
+        owner='automatic-runtime-tracking' if getattr(self,'_automatic_tracking_callback_active',False) else 'user'
+        return self._create_machine_breakpoint(address, access=access, length=length, owner=owner)
+
+    def _create_machine_breakpoint(self, address, *, access, length, owner, identifier=None):
+        """Install one host-owned alias; the caller already holds its VM lock."""
         value=int(address,0) if isinstance(address,str) else address
         if access not in ('x','r','w','rw') or type(length) is not int or not 1<=length<=65536 or type(value) is not int or not 0<=value<2**64:
             raise ValueError('Invalid machine breakpoint')
         if access=='x' and length!=1:raise ValueError('Machine execution breakpoint length must be one')
+        if identifier is not None and (type(identifier) is not str or not identifier or identifier in self.breakpoints):
+            raise ValueError('Invalid or duplicate private machine breakpoint identity')
         remote=self._stopped();kind={'x':1,'w':2,'r':3,'rw':4}[access]
-        owner='automatic-runtime-tracking' if getattr(self,'_automatic_tracking_callback_active',False) else 'user'
         aliases=[r for r in self.breakpoints.values() if (r['kind'],r['address'],r['length'])==(kind,value,length)]
         if len(self.breakpoints)>=256 or any(r.get('owner','user')==owner for r in aliases):
             raise ValueError('Duplicate machine breakpoint or breakpoint budget exceeded')
         if not aliases and remote.request(f'Z{kind},{value:x},{length:x}')!=b'OK':raise DebuggerError('Machine breakpoint rejected')
-        identifier='machine-bp-'+str(self.next_bp);self.next_bp+=1
+        guard_step_over_owner(self)
+        if identifier is None:
+            identifier='machine-bp-'+str(self.next_bp);self.next_bp+=1
         self.breakpoints[identifier]=dict(address=value,kind=kind,length=length,access=access,owner=owner)
         return dict(context='machine',breakpoint_id=identifier,address=hex(value),access=access,length=length,
                     address_space='selected-vCPU virtual address',guest_code_modified=False,mechanism='QEMU TCG breakpoint/watchpoint')
@@ -1117,6 +1159,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         aliases=[r for key,r in self.breakpoints.items() if key!=breakpoint_id and
                  (r['kind'],r['address'],r['length'])==(record['kind'],record['address'],record['length'])]
         if not aliases and remote.request(f'z{record["kind"]},{record["address"]:x},{record["length"]:x}')!=b'OK':raise DebuggerError('Machine breakpoint removal failed')
+        guard_step_over_owner(self)
         del self.breakpoints[breakpoint_id]
         return dict(deleted=True,context='machine')
 
@@ -1137,20 +1180,23 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         if getattr(self, '_layer_exec', None) or getattr(self, '_dos_task_monitor', None):self._layer_before_execution()
 
     def _execute_once(self,command,timeout_ms,*,_internal_owned_step=False):
+        vm=step_over_vm(self)
+        guard_step_over_owner(self)
         self._execution_preflight(command,timeout_ms,_internal_owned_step=_internal_owned_step)
         remote=self._stopped();delivery=None
+        guard_step_over_owner(self)
         scheduled=self._input_schedule_bound()
         if scheduled:
             try:reply,timed_out=remote.execute(command,timeout_ms)
-            except BaseException:self.vm.close();raise
+            except BaseException:vm.close();raise
         elif not _internal_owned_step and self._input_pending():
             def dispatch(deadline):
                 nonlocal delivery
                 delivery=self._input_after_continue(deadline)
             reply,timed_out=remote.execute(command,timeout_ms,after_send=dispatch)
         else:reply,timed_out=remote.execute(command,timeout_ms)
-        if reply[:1] not in (b'T',b'S',b'W',b'X'):self.vm.close();raise DebuggerError('Invalid machine stop reply')
-        self.vm.machine_stopped=True;native=reply.decode('ascii')
+        if reply[:1] not in (b'T',b'S',b'W',b'X'):vm.close();raise DebuggerError('Invalid machine stop reply')
+        vm.machine_stopped=True;native=reply.decode('ascii')
         # Preserve the original stop even if register observation or native
         # input reconciliation fails. Classification becomes richer only when
         # the corresponding reads complete successfully.
@@ -1158,6 +1204,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
                     address=None,breakpoint_ids=[],native_reply=native,classification_complete=False)),registers=None)
         try:
+            guard_step_over_owner(self, check_deadline=False, allow_exited=kind=='exited')
             regs=self.registers() if reply[:1] in (b'T',b'S') else None
             pc=int(regs['linear_pc'],16) if regs and regs['linear_pc'] else None
             watch=re.search(r'(?:^|;)(watch|rwatch|awatch):([0-9a-fA-F]+)',native)
@@ -1193,7 +1240,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 result['input_schedule_motion_before']=deepcopy(error.input_schedule_motion_before)
             if getattr(error,'result',None) is None:error.result=result
             if scheduled or delivery is not None:
-                self.vm.close()
+                vm.close()
             raise
         result['breakpoints']=list(result['session']['stop_reason']['breakpoint_ids'])
         return result
@@ -1207,9 +1254,12 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         return result
 
     def _native_execute(self,remote,command,deadline,*,_internal_owned_step=False):
+        vm=step_over_vm(self)
+        guard_step_over_owner(self)
         remaining=int((deadline-time.monotonic())*1000)
         if remaining<1:raise _TrackingDeadline('Machine execution deadline reached before dispatch')
         _before_machine_execution(self,'machine-gdb-'+('step' if command=='s' else 'run'))
+        guard_step_over_owner(self)
         remaining=int((deadline-time.monotonic())*1000)
         if remaining<1:raise _TrackingDeadline('Machine execution deadline reached during tracking invalidation')
         try:
@@ -1224,7 +1274,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             try:_before_machine_execution(self,'machine-restore-unobserved-stop')
             except BaseException as retirement_error:
                 error.tracking_retirement_error=type(retirement_error).__name__
-                self.vm.close()
+                vm.close()
             raise
 
     def _step_over_internal(self,remote,identifiers,deadline):
@@ -1232,10 +1282,12 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         # Ordinary edges remain owned in Python until the outer public c;
         # this one displaced instruction must never inject them via after_send.
         self._execution_input_preflight('s',_internal_owned_step=True)
+        vm=step_over_vm(self)
         suspended=[];attempted=False;result=None;failure=None
         def remaining():
+            guard_step_over_owner(self)
             bounds=[deadline,getattr(self,'_deadline',None),getattr(self,'_rpc_deadline',None),
-                    getattr(self.vm,'operation_deadline',None),getattr(remote,'operation_deadline',None)]
+                    getattr(vm,'operation_deadline',None),getattr(remote,'operation_deadline',None)]
             amount=int((min(v for v in bounds if v is not None)-time.monotonic())*1000)
             if amount<1:raise _TrackingDeadline('Internal breakpoint control deadline expired')
             return amount
@@ -1258,7 +1310,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                        and observed.get('session',{}).get('state')=='stopped'
                        and observed.get('registers') is not None
                        and re.match(r'^[TS][0-9a-fA-F]{2}',reason.get('native_reply',''))
-                       and getattr(self.vm,'machine_stopped',False))
+                       and getattr(vm,'machine_stopped',False))
         repair_error=None;repair_deadline=None;restored=[]
         prior_remote_deadline=getattr(remote,'operation_deadline',None)
         had_remote_deadline=hasattr(remote,'operation_deadline')
@@ -1269,7 +1321,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 if repair_deadline is None:
                     try:timeout=remaining()
                     except _TrackingDeadline:
-                        if not known_stop:raise
+                        if not known_stop or getattr(self, '_step_over_context', None) is not None:raise
                         # Repair only the controls removed from this known
                         # stopped interval. One grace covers every Z reply;
                         # it never permits another guest instruction or a
@@ -1308,12 +1360,12 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 if observed is not None:error.result=observed
             if repair_error is not None:error.tracking_control_repair_error=type(repair_error).__name__
             if attempted:
-                self.vm._fdisbull_control_quarantine='uncertain internal breakpoint controls'
+                vm._fdisbull_control_quarantine='uncertain internal breakpoint controls'
                 self._automatic_internal_pending=None
                 try:_tracking(self,'close','machine-breakpoint-control-failed')
                 except BaseException as retirement_error:
                     error.tracking_retirement_error=type(retirement_error).__name__
-                try:self.vm.close()
+                try:vm.close()
                 except BaseException as cleanup_error:
                     error.machine_cleanup_error=type(cleanup_error).__name__
             raise error
@@ -1321,12 +1373,14 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
 
     @_source_execution_operation
     def _execute(self,command,timeout_ms):
+        vm=step_over_vm(self)
+        guard_step_over_owner(self)
         if type(timeout_ms) is not int or not 1<=timeout_ms<=600000:
             raise ValueError('Machine timeout must be1..600000ms')
         self._execution_input_preflight(command)
         remote=self._stopped()
         bounds=[time.monotonic()+timeout_ms/1000,getattr(self,'_deadline',None),
-                getattr(self,'_rpc_deadline',None),getattr(self.vm,'operation_deadline',None),
+                getattr(self,'_rpc_deadline',None),getattr(vm,'operation_deadline',None),
                 getattr(remote,'operation_deadline',None)]
         deadline=min(v for v in bounds if v is not None)
         count=0;result=None
@@ -1393,11 +1447,11 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
                 error.result=result
                 self._automatic_runtime_stop=result
                 self._automatic_internal_pending=None
-                self.vm._fdisbull_control_quarantine='failed internal stop publication'
+                vm._fdisbull_control_quarantine='failed internal stop publication'
                 try:_tracking(self,'close','machine-internal-stop-publication-failed')
                 except BaseException as retirement_error:
                     error.tracking_retirement_error=type(retirement_error).__name__
-                try:self.vm.close()
+                try:vm.close()
                 except BaseException as cleanup_error:
                     error.machine_cleanup_error=type(cleanup_error).__name__
                 raise
@@ -1434,24 +1488,25 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             if result['outcome']=='exited':_tracking(self,'close','native-machine-exit')
             else:_tracking(self,'after_stop','machine-'+result['outcome'])
             if self.project:self._event('machine-'+('step' if command=='s' else 'run'),result)
+            guard_step_over_owner(self, check_deadline=False, allow_exited=result['outcome']=='exited')
         except BaseException as error:
             # The native interval already ended. Preserve that observation if
             # tracking or journal publication fails, and retire its uncertain
             # lifetime before closing the owner; never execute it again.
             if getattr(error,'result',None) is None:error.result=result
             self._automatic_internal_pending=None
-            self.vm._fdisbull_control_quarantine='failed native stop publication'
+            vm._fdisbull_control_quarantine='failed native stop publication'
             try:_tracking(self,'close','machine-post-stop-publication-failed')
             except BaseException as retirement_error:
                 error.tracking_retirement_error=type(retirement_error).__name__
-            try:self.vm.close()
+            try:vm.close()
             except BaseException as cleanup_error:
                 error.machine_cleanup_error=type(cleanup_error).__name__
             raise
         return result
 
     @machine_step_operation
-    def step(self,*,count=1,timeout_ms=10000):
+    def step(self,*,count=1,timeout_ms=10000,mode='into'):
         if count == 1:return self._execute('s',timeout_ms)
         return step_sequence(self,count,self._deadline)
     @machine_run_operation
@@ -1613,6 +1668,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
     def _checkpoint_preflight(self):
         from .qemu_input import require_released_machine_input
         require_no_video_frame_fence(self.vm, 'machine checkpointing')
+        require_no_step_over(self.vm, 'machine checkpointing')
         if self.closed or self.vm.checkpoint_disk is None or self._checkpoint_launch['checkpoint_tool'] is None:
             raise ValueError('Restricted native machine checkpoints are not enabled')
         from .qemu_image import verify

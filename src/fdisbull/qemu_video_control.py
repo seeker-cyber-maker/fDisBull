@@ -229,6 +229,8 @@ class QemuVideoControlMixin:
         from .qemu_input import require_released_machine_input
         vm = self.vm
         require_no_video_frame_fence(vm, 'another source-frame advance')
+        from .qemu_step_over import require_no_step_over
+        require_no_step_over(vm, 'another source-frame advance')
         if not VIDEO_FRAME_CONTROL_COMMANDS <= getattr(vm, 'qmp_commands', frozenset()):
             raise ValueError('Video frame advance requires the native source-frame fence')
         if getattr(self, '_video_frame_fence_context', None) is not None:

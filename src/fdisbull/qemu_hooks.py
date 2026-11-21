@@ -11,9 +11,10 @@ from .memory_search_runtime import _locked
 
 
 def _close_hook_owner(session):
-    # A source-frame operation captured its VM before lock admission. An
+    # A composed operation captured its VM before native observation. An
     # uncertain callback must not close a replacement owner while unwinding.
-    frame = getattr(session, '_video_frame_fence_context', None)
+    frame = (getattr(session, '_step_over_context', None)
+             or getattr(session, '_video_frame_fence_context', None))
     if isinstance(frame, dict) and frame.get('vm') is not None:
         frame['vm'].close()
     else:
@@ -266,6 +267,8 @@ class QemuHookSessionMixin:
                         raise DebuggerError('Hook redirect readback mismatch')
                 evidence['actions'].append({'op': action['op'], 'result': change})
             self._event('hook-hit', evidence)
+            from .qemu_step_over import guard_step_over_owner
+            guard_step_over_owner(self)
             evidence['breakpoint_id'] = ids[0]
             if observed is not None:
                 evidence['task'] = observed
