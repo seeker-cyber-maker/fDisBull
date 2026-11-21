@@ -409,6 +409,9 @@ def _machine_operation_guard(vm, name, args=(), kwargs=None):
         require_no_step_over(vm, 'another execution operation')
     if name not in ('close','dos_process_info','tracking_status','dos_source_binding','dos_source_unbind') and getattr(vm,'_fdisbull_control_quarantine',None):
         raise DebuggerError('Machine controls are quarantined after '+vm._fdisbull_control_quarantine)
+    asynchronous = getattr(getattr(vm, 'context', None), '_dos_async_operation_guard', None)
+    if asynchronous is not None:
+        asynchronous(name, args, kwargs or {})
     source = getattr(getattr(vm, 'context', None), '_le_source_operation_guard', None)
     if source is not None:
         source(name, args, kwargs or {})
@@ -418,6 +421,17 @@ def _machine_operation_guard(vm, name, args=(), kwargs=None):
     history = getattr(vm, 'history_operation_guard', None)
     if history is not None:
         history(name, args, kwargs or {})
+
+
+def _machine_async_guard(session, name=None, args=(), kwargs=None):
+    """Check a retained process owner before selecting any replacement VM.
+
+    A named check also admits the nested operation; an unnamed check only
+    verifies its original owner, leaving deadline cleanup to the outer call.
+    """
+    guard = getattr(session, '_dos_async_operation_guard', None)
+    if guard is not None:
+        guard(name, args, kwargs or {})
 
 
 def _machine_registers(vm, remote, *, qmp=None):
@@ -435,6 +449,7 @@ def _machine_registers(vm, remote, *, qmp=None):
 def machine_operation(function,*,script_budget=False):
     @wraps(function)
     def invoke(self,*args,**kwargs):
+        _machine_async_guard(self, function.__name__, args, kwargs)
         vm=step_over_vm(self)
         guard_step_over_owner(self)
         limit=getattr(self,'_rpc_deadline',None) if script_budget else None
@@ -445,7 +460,9 @@ def machine_operation(function,*,script_budget=False):
             guard_step_over_owner(self)
             _machine_operation_guard(vm, function.__name__, args, kwargs)
             guard_step_over_owner(self)
+            _machine_async_guard(self)
             result=function(self,*args,**kwargs)
+            _machine_async_guard(self)
             guard_step_over_owner(self)
             return result
         except BaseException:
@@ -506,6 +523,7 @@ def machine_clock_operation(function):
     """
     @wraps(function)
     def invoke(self,delta_ns,*,timeout_ms=1000):
+        _machine_async_guard(self, function.__name__, (delta_ns,), {'timeout_ms': timeout_ms})
         validate_clock_budget(delta_ns,timeout_ms)
         from .operation_budget import request_deadline
         bound=request_deadline(self,timeout_ms)
@@ -521,6 +539,7 @@ def machine_clock_operation(function):
         previous_channels=[]
         try:
             _machine_operation_guard(vm, function.__name__, (delta_ns,), {'timeout_ms': timeout_ms})
+            _machine_async_guard(self)
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
                 if channel is not None:
                     previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
@@ -531,6 +550,7 @@ def machine_clock_operation(function):
             vm.operation_deadline=bound
             for channel,_ in previous_channels:channel.operation_deadline=bound
             result=function(self,delta_ns,timeout_ms=timeout_ms)
+            _machine_async_guard(self)
             if time.monotonic()>=bound:
                 vm.close()
                 error=TimeoutError('Native clock execution exceeded its host deadline')
@@ -561,6 +581,8 @@ def machine_run_operation(function):
     """
     @wraps(function)
     def invoke(self, *, timeout_ms=10000, stop_on_hook=False):
+        _machine_async_guard(self, function.__name__, (),
+                             {'timeout_ms': timeout_ms, 'stop_on_hook': stop_on_hook})
         from .operation_budget import request_deadline
         bound=request_deadline(self,timeout_ms)
         vm=self.vm
@@ -577,12 +599,15 @@ def machine_run_operation(function):
         try:
             _machine_operation_guard(vm, function.__name__, (),
                                      {'timeout_ms': timeout_ms, 'stop_on_hook': stop_on_hook})
+            _machine_async_guard(self)
             # Read ownership under the lock: another caller may have armed a
             # schedule while this request waited for admission.
             from .qemu_save_stop import safe_stop_enabled
             save_stop = safe_stop_enabled(self)
             if not self._input_schedule_bound() and not getattr(self, '_qemu_hooks', None) and not save_stop:
-                return function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
+                result=function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
+                _machine_async_guard(self)
+                return result
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
                 if channel is not None:
                     previous_channels.append((channel,getattr(channel,'operation_deadline',None)))
@@ -606,6 +631,7 @@ def machine_run_operation(function):
                     raise
             else:
                 result=function(self,timeout_ms=timeout_ms,stop_on_hook=stop_on_hook)
+            _machine_async_guard(self)
             if time.monotonic()>=bound:
                 vm.close()
                 error=TimeoutError('Scheduled or hooked native run exceeded its host deadline')
@@ -641,6 +667,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
 
     @wraps(function)
     def invoke(self,*args,**kwargs):
+        _machine_async_guard(self, function.__name__, args, kwargs)
         from .operation_budget import request_deadline
         arguments=signature.bind(self,*args,**kwargs)
         arguments.apply_defaults()
@@ -664,6 +691,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             if self.vm is not vm:
                 raise DebuggerError('Machine owner changed while waiting for operation admission')
             _machine_operation_guard(vm, function.__name__, args, kwargs)
+            _machine_async_guard(self)
             if self.vm is not vm:
                 raise DebuggerError('Machine owner changed during operation admission')
             bound=min(value for value in limits() if value is not None)
@@ -677,6 +705,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             vm.operation_deadline=bound
             installed=True
             result=function(self,*args,**kwargs)
+            _machine_async_guard(self)
             if time.monotonic()>=bound:
                 error=TimeoutError(label+' exceeded its host deadline')
                 error.result=result
@@ -696,6 +725,10 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                         'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance',
                         'execute_step_over'):
                     vm.close()
+                elif function.__name__ in ('resume', 'pause', 'status'):
+                    expire = getattr(self, '_async_control_outer_expired', None)
+                    if expire is not None:
+                        expire(vm, result, error)
                 raise error
             return result
         except BaseException:
@@ -722,6 +755,8 @@ def machine_step_operation(function):
 
     @wraps(function)
     def invoke(self, *, count=1, timeout_ms=10000, mode='into'):
+        _machine_async_guard(self, function.__name__, (),
+                             {'count': count, 'timeout_ms': timeout_ms, 'mode': mode})
         validate_step_count(count)
         validate_step_mode(mode, count)
         if mode == 'over':
@@ -762,9 +797,11 @@ def machine_step_operation(function):
             # native I/O. Guard observations share the same channel deadline.
             admit_step_sequence_input(self)
             _machine_operation_guard(vm, function.__name__, (), dict(count=count, timeout_ms=timeout_ms))
+            _machine_async_guard(self)
             if time.monotonic() >= bound:
                 raise TimeoutError('Machine step sequence deadline expired during admission')
             result = function(self, count=count, timeout_ms=timeout_ms)
+            _machine_async_guard(self)
             if time.monotonic() >= bound:
                 error = TimeoutError('Machine step sequence exceeded its host deadline')
                 error.result = result
@@ -948,21 +985,54 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         _tracking(self,'after_stop','machine-pause')
         return self.status()
 
+    def _resume_breakpoint_exemptions(self):
+        """Ordinary machine contexts admit no asynchronous breakpoint owner."""
+        return frozenset()
+
+    def _resume_dispatch_started(self):
+        """A process context may retain its owner before uncertain dispatch."""
+
     @machine_operation
     def resume(self):
+        vm, qmp = self.vm, self.vm.qmp
+        def current():
+            if self.vm is not vm or vm.qmp is not qmp:
+                raise DebuggerError('Machine owner changed during asynchronous resume')
+        def controls():
+            if (getattr(self, '_automatic_internal_pending', None) is not None
+                    or getattr(self, '_qemu_hook_pending', None) is not None):
+                raise ValueError('Resolve the pending native stop with bounded execution before resume')
+            exemptions = self._resume_breakpoint_exemptions()
+            current()
+            if set(self.breakpoints) - exemptions or getattr(self, '_qemu_hooks', None):
+                raise ValueError('Remove machine breakpoints before resuming guest services; use bounded machine run while they are active')
+            return exemptions
         if self._input_pending():raise ValueError('Queued physical input requires a bounded run, not resume')
+        if (getattr(self, '_automatic_internal_pending', None) is not None
+                or getattr(self, '_qemu_hook_pending', None) is not None):
+            raise ValueError('Resolve the pending native stop with bounded execution before resume')
         # Asynchronous execution cannot retain passive lifecycle coverage.
         # Retire only the tracker-owned controls before the existing user guard.
         _before_machine_execution(self,'machine-resume')
-        if self.breakpoints:raise ValueError('Remove machine breakpoints before resuming guest services; use bounded machine run while they are active')
+        current()
+        exemptions = controls()
         if getattr(self, '_layer_exec', None) or getattr(self, '_dos_task_monitor', None):self._layer_before_execution()
+        current()
+        if controls() != exemptions:
+            raise DebuggerError('Private asynchronous controls changed during resume admission')
         # FIFOs do not produce a new GDB connection event when a client opens
         # them again. Keep the completed protocol session alive across QMP
-        # continue/stop; there is no outstanding GDB execution request here.
-        if self.vm.gdb is not None and getattr(self.vm,'transport','unix')!='pipe':
-            self.vm.gdb.close();self.vm.gdb=None
+        # continue/stop. A verified process return breakpoint also requires its
+        # existing native GDB connection, on either transport.
+        if not exemptions and vm.gdb is not None and getattr(vm,'transport','unix')!='pipe':
+            vm.gdb.close();vm.gdb=None
+        current()
+        self._resume_dispatch_started()
+        current()
         self._automatic_internal_pending=None
-        self.vm.qmp.call('cont');self.vm.machine_stopped=False
+        qmp.call('cont')
+        current()
+        vm.machine_stopped=False
         return self.status()
 
     def _stopped(self):

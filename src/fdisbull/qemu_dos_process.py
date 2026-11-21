@@ -23,7 +23,8 @@ from .dos_launch import guest_name
 from .dosbox_rpc import DebuggerError
 from .qemu_dos import QemuDOSSession
 from .qemu_dos_checkpoint import process_save_operation
-from .qemu_machine import MachineContext, MachineDebugSession, QemuMachine, machine_operation
+from .qemu_machine import (MachineContext, MachineDebugSession, QemuMachine,
+                           machine_operation, machine_trace_operation)
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
 from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COMMANDS
@@ -52,6 +53,11 @@ def _sha(data):
 
 def _word(data, offset):
     return struct.unpack_from('<H', data, offset)[0]
+
+
+def _async_process_operation(function):
+    return machine_trace_operation(function, label='DOS asynchronous control',
+                                   default_timeout_ms=30000)
 
 
 def relocated_source(source, dos, image_format, report):
@@ -472,6 +478,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
 
     def _on_machine_closed(self):
         """Invalidate ownership even when an inherited control fails closed."""
+        self._dos_async_pending = None
         if self._process is None or self._process.get('machine_closed'):
             return
         self._advance_epoch()
@@ -499,12 +506,19 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     def _read(self, address, length):
         if type(address) is not int or type(length) is not int or not 0 <= address < address+length <= 0x100000:
             raise DebuggerError('DOS process observation requires an unwrapped real-mode range')
+        asynchronous = getattr(self, '_dos_async_pending', None)
+        if asynchronous is not None:
+            self._async_owner_current(asynchronous)
         remote = self.vm.debugger()
         parts = []
         for offset in range(0, length, 65536):
+            if asynchronous is not None:
+                self._async_owner_current(asynchronous)
             timeout = self._remaining() if self._deadline is not None else 5000
             parts.append(remote.memory(address+offset, min(65536, length-offset),
                                        space='virtual', timeout_ms=timeout))
+            if asynchronous is not None:
+                self._async_owner_current(asynchronous)
         return b''.join(parts)
 
     def _helper_module(self):
@@ -516,12 +530,17 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
 
     def _receive_report(self, deadline):
         from .dos_process_helper import REPORT_SIZE
+        asynchronous = getattr(self, '_dos_async_pending', None)
         while len(self._serial_buffer) < REPORT_SIZE:
+            if asynchronous is not None:
+                self._async_owner_current(asynchronous)
             remaining = deadline-time.monotonic()
             if remaining <= 0:
                 raise TimeoutError('DOS helper report deadline expired')
             self._channel.settimeout(remaining)
             part = self._channel.recv(REPORT_SIZE-len(self._serial_buffer))
+            if asynchronous is not None:
+                self._async_owner_current(asynchronous)
             if not part:
                 raise DebuggerError('DOS helper control channel closed')
             self._serial_buffer.extend(part)
@@ -919,10 +938,225 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
         finally:
             owner.lock.release()
 
-    def resume(self):
-        result = MachineDebugSession.resume(self)
+    def _async_owner_current(self, context, *, check_deadline=True):
+        """Every composed observation stays on the captured process owner."""
+        vm = context['vm']
+        if (self.vm is not vm or vm.qmp is not context['qmp']
+                or vm.gdb is not context['remote']
+                or self.project is not context['project'] or self.run_id != context['run']
+                or self._process is not context['process']
+                or self._channel is not context['serial']
+                or self._ready != context['ready'] or self._ready_bytes != context['ready_bytes']
+                or self._nonce != context['nonce'] or self._helper != context['helper']):
+            raise DebuggerError('DOS asynchronous process owner or helper identity changed')
+        if vm.process is not None and vm.process.poll() is not None:
+            raise DebuggerError('DOS asynchronous machine exited before stop observation')
+        if any(channel is None or (hasattr(channel, 'socket') and channel.socket is None)
+               for channel in (context['qmp'], context['remote'])):
+            raise DebuggerError('DOS asynchronous owner lost its original native channel')
+        bounds = [getattr(self, '_deadline', None), getattr(self, '_rpc_deadline', None),
+                  getattr(vm, 'operation_deadline', None),
+                  *[getattr(channel, 'operation_deadline', None)
+                    for channel in (context['qmp'], context['remote']) if channel is not None]]
+        if check_deadline and any(bound is not None and time.monotonic() >= bound for bound in bounds):
+            raise TimeoutError('DOS asynchronous operation deadline expired')
+
+    def _dos_async_operation_guard(self, name, args, kwargs):
+        context = getattr(self, '_dos_async_pending', None)
+        if context is None:
+            return
+        self._async_owner_current(context, check_deadline=name is not None)
+        if name is None or not context['dispatched']:
+            return
+        if context.get('enriching'):
+            if name in ('registers', 'memory', 'memory_snapshot', 'memory_translation', 'tracking_status'):
+                return
+            if getattr(self, '_automatic_tracking_callback_active', False):
+                if name == 'breakpoint':
+                    return
+                if (name == 'delete_breakpoint' and len(args) == 1 and not kwargs
+                        and self.breakpoints.get(args[0], {}).get('owner') == 'automatic-runtime-tracking'):
+                    return
+            raise ValueError('DOS asynchronous stop enrichment permits only passive reads and tracker-owned controls')
+        if name in ('status', 'pause', 'resume', 'close', 'dos_process_info', 'tracking_status'):
+            return
+        if context.get('reconciling') and (name == 'hooks' or (
+                name == 'delete_breakpoint' and args == (context['breakpoint'],) and not kwargs)):
+            return
+        raise ValueError('Pause or observe the pending DOS asynchronous run before other controls')
+
+    def _async_control_outer_expired(self, vm, result, error):
+        context = getattr(self, '_dos_async_pending', None)
+        if context is not None and context['dispatched'] and context['vm'] is vm:
+            self._close_async_failure(error, context, 'DOS asynchronous control exceeded its deadline', result=result)
+            self._dos_async_pending = None
+
+    def _stopped(self):
+        context = getattr(self, '_dos_async_pending', None)
+        if context is None:
+            return MachineContext._stopped(self)
+        self._async_owner_current(context)
+        state = context['qmp'].call('query-status')
+        self._async_owner_current(context)
+        if type(state.get('running')) is not bool:
+            raise DebuggerError('DOS asynchronous control lacks native running state')
+        if state['running']:
+            raise ValueError('Pause the machine context before inspecting or changing CPU state')
+        context['vm'].machine_stopped = True
+        return context['remote']
+
+    def _resume_breakpoint_exemptions(self):
+        context = getattr(self, '_dos_async_pending', None)
+        if context is None:
+            if self._return_breakpoint is not None or self._process['state'] == 'active':
+                raise ValueError('DOS resume requires its verified private return control')
+            return frozenset()
+        self._async_owner_current(context)
+        ready = self._helper_module().parse_report(self._ready_bytes, self._nonce)
+        identifier = self._return_breakpoint
+        expected = dict(kind=1, access='x', length=1, owner='user',
+                        address=ready['helper_segment']*16+ready['exit_wait_ip'])
+        if (ready['type'] != 'ready' or ready != self._ready
+                or self._process['state'] != 'active'
+                or self._process['psp_segment'] != ready['child_psp']
+                or self._process['parent_psp_segment'] != ready['helper_psp']
+                or identifier != context['breakpoint']
+                or self.breakpoints.get(identifier) != expected):
+            raise ValueError('DOS resume private return control differs from the verified launch')
+        self._stopped()
+        offset = ready['exit_wait_ip'] - 0x100
+        expected_code = self._helper[offset:offset+4]
+        if len(expected_code) != 4 or self._read(expected['address'], 4) != expected_code:
+            raise ValueError('DOS resume helper return code differs from its staged identity')
+        return frozenset((identifier,))
+
+    def _resume_dispatch_started(self):
+        context = getattr(self, '_dos_async_pending', None)
+        if context is not None:
+            self._async_owner_current(context)
+            context['dispatched'] = True
+        self._dos_async_stop = None
         self._checkpoint_entry_clean = False
+
+    @_async_process_operation
+    def resume(self):
+        previous = getattr(self, '_dos_async_pending', None)
+        if previous is not None:
+            observed = self.status()
+            if observed['state'] == 'running':
+                raise ValueError('Pause or observe the pending DOS asynchronous run before resume')
+            # Preserve an already arrived stop. This invocation did not send a
+            # second continue or step past the process's parent-return control.
+            return observed
+        if self._process['state'] != 'active':
+            return MachineDebugSession.resume(self)
+        owner = self.vm
+        context = dict(vm=owner, qmp=owner.qmp, remote=owner.gdb,
+            project=self.project, run=self.run_id, process=self._process,
+            serial=self._channel, ready=deepcopy(self._ready), ready_bytes=self._ready_bytes,
+            nonce=self._nonce, helper=self._helper, breakpoint=self._return_breakpoint,
+            dispatched=False)
+        if context['remote'] is None:
+            raise ValueError('DOS resume requires its retained private GDB control')
+        self._dos_async_pending = context
+        try:
+            self._stopped()
+            return MachineDebugSession.resume(self)
+        except BaseException as error:
+            if context['dispatched'] or self.vm is not owner:
+                self._close_async_failure(error, context, 'failed DOS asynchronous resume')
+            self._dos_async_pending = None
+            raise
+
+    def _close_async_failure(self, error, context, reason, *, result=None):
+        """Never close a replacement owner after a failed original operation."""
+        if getattr(error, 'result', None) is None and result is not None:
+            error.result = result
+        if context.get('cleanup_attempted'):
+            return
+        context['cleanup_attempted'] = True
+        owner = context['vm']
+        if not getattr(owner, '_fdisbull_control_quarantine', None):
+            owner._fdisbull_control_quarantine = reason
+        if self.vm is owner:
+            from .qemu_machine import _tracking
+            try:
+                _tracking(self, 'close', reason)
+            except BaseException as retirement:
+                error.dos_process_tracking_retirement_error = type(retirement).__name__
+        try:
+            owner.close()
+        except BaseException as cleanup:
+            error.dos_process_cleanup_error = type(cleanup).__name__
+
+    def _observe_async_stop(self, result, context):
+        from .qemu_machine import _machine_registers, _tracking
+        from .debug_semantics import normalize_stop
+        self._async_owner_current(context)
+        context['vm'].machine_stopped = True
+        registers = _machine_registers(context['vm'], context['remote'], qmp=context['qmp'])
+        self._async_owner_current(context)
+        expected_pc = context['ready']['helper_segment']*16+context['ready']['exit_wait_ip']
+        if registers['cpu_mode'] == 'real' and registers['linear_pc'] == hex(expected_pc):
+            # QMP continue does not promise a GDB stop packet. Preserve the
+            # actual native state and unknown trigger, then qualify DOS return
+            # separately using the complete nonce-bound memory/serial reports.
+            reason = dict(kind='stopped', address=hex(expected_pc), breakpoint_ids=[],
+                          native_reply=None, classification_complete=False,
+                          native_state=deepcopy(result['native_state']))
+            stop = dict(context='machine', outcome='stopped', timed_out=False,
+                        session=dict(state='stopped', stop_reason=reason), registers=registers,
+                        breakpoints=[], stop=normalize_stop('qemu-machine', reason, outcome='stopped'))
+            result['process_stop'] = stop
+            self._resume_breakpoint_exemptions()
+            if (getattr(self, '_dos_scheduler', None) or {}).get('enabled'):
+                raise DebuggerError('Disable the native scheduler before returning to DOS')
+            context['reconciling'] = True
+            try:
+                returned = self._observe_return(stop)
+            finally:
+                context['reconciling'] = False
+            self._dos_async_stop = deepcopy(returned)
+            result['process_stop'] = returned
+            if returned['session']['state'] == 'closed':
+                result['state'] = 'closed'
+                self._dos_async_pending = None
+                return result
+            self._async_owner_current(context)
+        context['enriching'] = True
+        try:
+            _tracking(self, 'after_stop', 'DOS asynchronous stop')
+            self._async_owner_current(context)
+            tracker = getattr(self, '_automatic_runtime_tracker', None)
+            if tracker is not None:
+                result['automatic_runtime_tracking'] = tracker.status()
+            else:
+                result.pop('automatic_runtime_tracking', None)
+            self._async_owner_current(context)
+        finally:
+            context['enriching'] = False
+        self._dos_async_pending = None
         return result
+
+    @_async_process_operation
+    def pause(self):
+        context = getattr(self, '_dos_async_pending', None)
+        if context is None:
+            return MachineDebugSession.pause(self)
+        result = None
+        try:
+            result = self.status()
+            if result['state'] != 'running':
+                return result
+            self._async_owner_current(context)
+            context['qmp'].call('stop')
+            self._async_owner_current(context)
+            context['vm'].machine_stopped = True
+            return self.status()
+        except BaseException as error:
+            self._close_async_failure(error, context, 'failed DOS asynchronous pause', result=result)
+            self._dos_async_pending = None
+            raise
 
     def _close_failed_execution(self, error, reason, *, result=None):
         """Retain an arrived stop and primary failure through terminal cleanup."""
@@ -947,6 +1181,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
         # guest. Preserve its live process and queue for an explicit run or
         # cancellation; only failures after dispatch enter terminal cleanup.
         from .qemu_step_over import step_over_vm, guard_step_over_owner
+        if getattr(self, '_dos_async_pending', None) is not None:
+            raise ValueError('Pause or observe the pending DOS asynchronous run before bounded execution')
         vm = step_over_vm(self)
         guard_step_over_owner(self)
         self._execution_preflight(command, timeout_ms)
@@ -1018,15 +1254,38 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
         if getattr(self.vm,'_fdisbull_control_quarantine',None):
             # An ended owner's diagnostic must not repeat failed native cleanup.
             return deepcopy(self._process)
+        if getattr(self, '_dos_async_pending', None) is not None:
+            self.status()
         process = self.vm.process
         if process is not None and process.poll() is not None:
             self.vm.close()
         return deepcopy(self._process)
 
+    @_async_process_operation
     def status(self):
-        result = MachineDebugSession.status(self)
-        result['process'] = deepcopy(self._process)
-        return result
+        context = getattr(self, '_dos_async_pending', None)
+        result = None
+        try:
+            if context is not None:
+                self._async_owner_current(context)
+            result = MachineDebugSession.status(self)
+            if context is not None:
+                self._async_owner_current(context)
+                if type(result['native_state'].get('running')) is not bool:
+                    raise DebuggerError('DOS asynchronous control lacks native running state')
+                if context['dispatched'] and not result['native_state']['running']:
+                    result = self._observe_async_stop(result, context)
+            result['process'] = deepcopy(self._process)
+            stopped = getattr(self, '_dos_async_stop', None)
+            if (stopped is not None
+                    and stopped['process']['capture_epoch'] == self._process['capture_epoch']):
+                result['process_stop'] = deepcopy(stopped)
+            return result
+        except BaseException as error:
+            if context is not None and context['dispatched']:
+                self._close_async_failure(error, context, 'failed DOS asynchronous stop observation', result=result)
+                self._dos_async_pending = None
+            raise
 
     @property
     def script_operations(self):
@@ -1043,6 +1302,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     def close(self):
         if self.closed:
             return
+        context = getattr(self, '_dos_async_pending', None)
+        if context is not None and context.get('enriching'):
+            self._dos_async_operation_guard('close', (), {})
         try:
             if self._process is not None and getattr(self, 'project', None) is not None:
                 if not self._process.get('machine_closed'):
