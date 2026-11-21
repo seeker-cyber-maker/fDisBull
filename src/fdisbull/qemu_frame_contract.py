@@ -41,11 +41,14 @@ def configure_frame_contract(session):
         requires_retained_source_raster=True, stopped_only=True,
         native_transport='RGB888/P6', completed_guest_frames=False)
     session.capabilities.update(frame_contract=available, frame_probe=available,
-        frame_rgba=available, frame_contract_profile=FRAME_PROFILE, video=video)
+        frame_rgba=available, frame_contract_profile=FRAME_PROFILE, video=video,
+        frame_step=available and bool(session.capabilities.get('video_frame_control')),
+        frame_step_profile=FRAME_PROFILE, frame_step_requires_observing_stream=True)
     # Existing frame consumers discover codecs through rpc.capabilities.
     # QEMU's machine object is the DOS session's RPC owner, not a DOSBox agent.
     capabilities = dict(getattr(session.vm, 'capabilities', {}))
     capabilities['video'] = deepcopy(video)
+    capabilities['frame_step'] = session.capabilities['frame_step']
     session.vm.capabilities = capabilities
 
 
@@ -210,4 +213,6 @@ class QemuFrameContractMixin:
             return self.frame_probe(**params)
         if method == 'video.screenshot' and set(params) <= {'encoding', 'timeout_ms'}:
             return self._frame_screenshot(**params)
+        if method == 'frame.step' and set(params) <= {'timeout_ms'}:
+            return self.frame_step(**params)
         raise ValueError('Unsupported QEMU frame RPC method or parameters: ' + str(method))

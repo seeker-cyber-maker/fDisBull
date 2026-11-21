@@ -59,8 +59,8 @@ steps can take effect; resolved points validate again before dispatch. Use
 `debug-capture-video-frame` / script `capture-video-frame` for an artifact.
 The byte-containing `RGBAFrame` remains a Python interface.
 
-A small local `call()` facade supports `session.status`, `video.probe`, and
-`video.screenshot`. The last returns the encoded screenshot payload expected
+A small local `call()` facade supports `session.status`, `video.probe`,
+`video.screenshot`, and the separately gated `frame.step` below. The screenshot route returns the encoded payload expected
 by the shared screenshot decoders. It does not forward arbitrary DOSBox RPCs
 to QEMU. An optional supplied `session_id` must match the current owner.
 
@@ -70,6 +70,85 @@ native configuration invalidates it; explicit restart and subsequent execution
 are required. Completed or cancelled input schedules do not prevent frame
 reads. The adapter does not call the separate selected-state observer and does
 not require initial neutral keyboard/scheduler state.
+
+## Advance the existing source stream
+
+Inspect `capabilities['frame_step']` before using source-backed legacy frame
+controls. It requires the retained-frame contract and the native source-frame
+fence. It does not require a checkpoint tool or renderer timeline. The source
+stream must be explicitly started and still observing; its first complete
+raster need not exist yet.
+
+```python
+assert debug.capabilities['frame_step']
+debug.video_frame_start()
+step = debug.call('frame.step', {'timeout_ms': 5000})
+if step['completed']:
+    assert step['stop_reason']['kind'] == 'frame'
+    assert debug.frame_probe([])['frame_identity'] == step['frame_identity']
+else:
+    actual_stop = step['native_advance']['native_result']
+
+batch = debug.advance_frames(frames=2, timeout_ms=10000)
+if batch['outcome'] != 'completed':
+    actual_stop = batch['stop']
+    completed_prefix = batch['frames']
+```
+
+`frame_step(*, timeout_ms=5000)` invokes the existing `video_frame_advance`
+controller once, with stop-on-hook enabled. A successful result has
+`format='fdisbull-qemu-frame-step-1'`, `completed=True`, a stopped state, and a
+frame stop reason. `native_advance` retains the complete original controller
+result, including its actual debugger result, arm, observed and released fence,
+row witnesses, source identities, and clock brackets. The adapter adds no
+second event or image artifact to the controller's existing intent/result
+events.
+
+Raster acceptance and stop attribution remain separate. A competing breakpoint
+can leave an accepted raster while `completed=False`; that breakpoint's actual
+stop reason remains visible. If the attempt accepted no raster, its projected
+`frame_id`, `mode_id`, and `frame_identity` are `None`, even when an older image
+remains cached in the full source evidence. A proven exit of the original,
+reaped owner has no fabricated post-exit frame, clock, or protocol query.
+
+Successful step identity agrees with subsequent passive probe/RGBA reads. Its
+session revision is sampled after the effectful execution. `captured_ticks`
+remains the accepted raster time; `guest_ticks` is the actual stopped virtual
+time in milliseconds, with `guest_ticks_clock='QEMU_CLOCK_VIRTUAL_milliseconds'`.
+Neither is relabeled as DOSBox PIC ticks.
+
+Arming preserves partial source rows and their original deadlines.
+`baseline_rows_sampled` reports the pre-arm count; a next accepted raster may
+contain rows sampled before an input edge or step request. An owned safe stop
+does not establish application drawing completion or atomic image/CPU state.
+The paired Native07 evidence still distinguishes DOSBox phase 1 from QEMU phase
+0 for its authored dynamic raster; this adapter does not change either phase.
+
+`advance_frames(frames=1, timeout_ms=10000)` on a machine context accepts 1..128
+frames under one outer deadline and original VM/channel lifetime. DOS process
+sessions retain their existing 60000 ms default; an explicit `timeout_ms`
+always intersects tighter session, script, machine, and channel deadlines.
+Each completed entry contains the full single-step result. The first earlier
+stop returns `outcome='interrupted'`, the successful `completed_frames` prefix,
+the actual `stop`, and `interrupted_frame`; it never continues to make up the
+requested count. Failure evidence retains the successful prefix and any nested
+controller evidence, without replay. An owner replacement is not executed or
+closed as though it were the original machine.
+
+JSON `debug-frame-advance` and script `frame-advance` select this source unit
+when `frame_step` is advertised. Literal and capability preflight occurs before
+earlier script effects; resolved parameters validate before timeout clamping.
+An interrupted script retains the result and stops before the next step. An
+absent, stopped, or invalidated source stream does not trigger renderer fallback,
+stream repair, or implicit restart.
+
+The separately exposed `timeline_*` APIs keep their renderer-publication and
+checkpoint-storage semantics. Older QEMU DOS profiles without `frame_step`
+retain their existing renderer `advance_frames` behavior when that capability
+is available. Source frame advancement does not add source-raster checkpoint
+serialization, typematic repeat, or the raw legacy frame-edge RPC; existing
+`frame_inputs` and its JSON/script routes retain their owned native semantics.
+See [remaining native frame-control work](QEMU_FRAME_CONTROL_GAPS.md).
 
 ## Identity, generation, and clocks
 

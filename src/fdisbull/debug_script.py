@@ -332,6 +332,11 @@ def validate_script(script, *, session=None):
                         from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy, validate_storage
                         native_frames = (backend or actual) in ('qemu-dos','qemu-chip8')
                         chip8_frames = (backend or actual) == 'qemu-chip8'
+                        source_step = (op == 'frame-advance' and (backend or actual) in ('qemu-machine','qemu-dos')
+                            and session is not None and bool(getattr(session,'capabilities',{}).get('frame_step')))
+                        if (session is not None and op == 'frame-advance'
+                                and (backend or actual) == 'qemu-machine' and not source_step):
+                            raise ValueError('Source frame advancement requires the frame_step capability')
                         if chip8_frames:
                             from .chip8_keys import validate_edges, validate_schedule
                             if op == 'timeline-rewind' and params.get('policy') not in (None, {}):
@@ -349,7 +354,7 @@ def validate_script(script, *, session=None):
                                     raise ValueError('Native frame key input requires its ownership extension')
                             if session is not None and op in ('frame-advance','timeline-start',
                                     'timeline-advance','timeline-rewind','timeline-pin'):
-                                if not getattr(session,'capabilities',{}).get('frame_timeline'):
+                                if not source_step and not getattr(session,'capabilities',{}).get('frame_timeline'):
                                     raise ValueError('Native frame histories require the renderer-frame fence and full checkpoints')
                                 if session.project.db.in_transaction:
                                     raise ValueError('Native frame histories require a project outside a caller-owned transaction')
@@ -679,6 +684,7 @@ def validate_script(script, *, session=None):
         guarded.update(VIDEO_FRAME_SCRIPT_OPERATIONS)
         guarded.add('video-frame-state-observe')
         guarded.add('stopped-control-arm')
+        guarded.add('frame-advance')
         project=getattr(session,'project',None)
         if project is not None and project.db.in_transaction:
             pending=(any(step['op']=='run' for step in expanded)
@@ -728,9 +734,12 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
                         'timeline-rewind','timeline-pin','timeline-image'}
     native_frames = getattr(session,'metadata',{}).get('backend') in ('qemu-dos','qemu-chip8')
-    capabilities = (getattr(session,'capabilities',{}) if native_frames else
+    source_steps = ((getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend'))
+        in ('qemu-machine','qemu-dos') and bool(getattr(session,'capabilities',{}).get('frame_step')))
+    capabilities = (getattr(session,'capabilities',{}) if native_frames or source_steps else
                     getattr(getattr(session,'rpc',None),'capabilities',{}))
-    if any(step['op'] in frame_operations and not (native_frames and step['op']=='frame-inputs') for step in steps):
+    if any(step['op'] in frame_operations and not (native_frames and step['op']=='frame-inputs')
+            and not (source_steps and step['op']=='frame-advance') for step in steps):
         if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
             raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
@@ -897,6 +906,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 from .qemu_video_frame import validate_video_frame_probe
                 validate_video_frame_probe(**params)
                 params['timeout_ms'] = min(params.get('timeout_ms', 1000), remaining)
+            if step['op'] == 'frame-advance' and source_steps:
+                from .qemu_frame_step import validate_source_frame_advance
+                validate_source_frame_advance(**params)
+                params['timeout_ms'] = min(params.get('timeout_ms', 10000), remaining)
             if step['op'] in VIDEO_FRAME_SCRIPT_OPERATIONS:
                 validate_video_frame_script_parameters(step['op'], params)
                 default = 5000 if step['op'] == 'video-frame-advance' else 1000
@@ -1011,7 +1024,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                 checkpoint_owner._fdisbull_control_quarantine = 'late checkpoint script result'
                 _close_failed(session,error,checkpoint_owner)
                 raise error
-            if native_frames and step['op'] in ('timeline-advance','frame-advance'):
+            if ((native_frames and step['op'] in ('timeline-advance','frame-advance'))
+                    or source_steps and step['op']=='frame-advance'):
                 if (not isinstance(result,dict) or result.get('outcome') != 'completed'
                         or result.get('completed_frames') != params.get('frames',1)):
                     raise ValueError('Frame advancement stopped before completing the requested native frame boundaries')

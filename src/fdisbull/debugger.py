@@ -1481,6 +1481,15 @@ class DebugWorkspace:
             backend = getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
             if backend in ('qemu-machine','qemu-dos') and not getattr(selected,'capabilities',{}).get('frame_contract'):
                 raise ValueError('Frame probe requires the owned QEMU source-raster contract')
+        if method == 'debug-frame-advance':
+            backend = getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
+            if backend in ('qemu-machine','qemu-dos'):
+                capabilities = getattr(selected,'capabilities',{})
+                if capabilities.get('frame_step'):
+                    from .qemu_frame_step import validate_source_frame_advance
+                    validate_source_frame_advance(**params)
+                elif backend != 'qemu-dos' or not capabilities.get('frame_timeline'):
+                    raise ValueError('Frame advancement requires an owned source step or renderer timeline capability')
         if method in ('debug-video-frame-start','debug-video-frame-observe','debug-video-frame-stop',
                       'debug-video-frame-probe','debug-capture-video-frame','debug-video-frame-advance'):
             capability = 'video_frame_control' if method == 'debug-video-frame-advance' else 'video_frame_capture'

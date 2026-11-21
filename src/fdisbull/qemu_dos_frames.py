@@ -16,6 +16,7 @@ import uuid
 from .qemu_dos_history import (FORMAT, MAX_NODES, MAX_STATE, QemuDOSHistoryMixin, _history_operation,
                                _positive_int, _sha)
 from .dosbox_rpc import DebuggerError
+from .qemu_frame_step import source_frame_advance_route
 
 FRAME_COMMANDS = frozenset({'x-fdisbull-arm-display-frame',
     'x-fdisbull-query-display-frame', 'x-fdisbull-cancel-display-frame'})
@@ -557,6 +558,7 @@ class QemuDOSFramesMixin:
         self._qemu_history_live = None
         return dict(result,stopped=True,target_executed=False,input_state_changed=False)
 
+    @source_frame_advance_route
     @_history_operation
     def advance_frames(self, frames=1, timeout_ms=60000):
         _positive_int(frames,'frames',1,MAX_NODES)

@@ -49,6 +49,8 @@ from .qemu_observation_authority import ObservationAuthority
 from .qemu_session_revision import session_revision
 from .qemu_frame_contract import (QemuFrameContractMixin, configure_frame_contract,
                                    validate_frame_rgba_parameters)
+from .qemu_frame_step import (QemuFrameStepMixin, validate_frame_step,
+                              validate_source_frame_advance)
 from .qemu_stopped_control import (QemuStoppedControlMixin, STOPPED_CONTROL_COMMANDS,
                                    validate_stopped_control_parameters,
                                    preflight_stopped_control_binding)
@@ -864,7 +866,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
                         'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance',
-                        'frame_probe', 'frame_rgba', '_frame_screenshot',
+                        'frame_probe', 'frame_rgba', '_frame_screenshot', 'frame_step', 'advance_frames',
                         'video_frame_state_observe', 'stopped_control_arm',
                         'execute_step_over'):
                     if not native_cleanup(error):vm.close()
@@ -977,7 +979,7 @@ def machine_step_operation(function):
 
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
-                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuFrameContractMixin, QemuVideoFrameMixin, QemuVideoFrameStateMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuFrameStepMixin, QemuFrameContractMixin, QemuVideoFrameMixin, QemuVideoFrameStateMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -1024,6 +1026,13 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     _frame_screenshot=machine_trace_operation(QemuFrameContractMixin._frame_screenshot,
         label='Retained frame codec',parameter_validator=validate_frame_rgba_parameters,
         required_capability='frame_contract')
+    frame_step=machine_trace_operation(QemuFrameStepMixin.frame_step,
+        label='Source frame step',parameter_validator=validate_frame_step,
+        required_capability='frame_step')
+    advance_frames=machine_trace_operation(QemuFrameStepMixin.advance_frames,
+        label='Source frame advance',parameter_validator=validate_source_frame_advance,
+        required_capability='frame_step')
+    _advance_source_frames=advance_frames
     video_frame_state_observe=machine_trace_operation(QemuVideoFrameStateMixin.video_frame_state_observe,
         label='Source raster state observation',parameter_validator=validate_video_frame_state_parameters,
         parameter_freezer=frozen_video_frame_state_parameters)
@@ -2182,7 +2191,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
                 'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',
-                'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe','frame-probe',
+                'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe','frame-probe','frame-advance',
                 'capture-video-frame','video-frame-advance','video-frame-state-observe','stopped-control-arm',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',
