@@ -1,5 +1,18 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+Latest raster continuation (2026-11-21 UTC): the complete integer-count
+correction passed 22 focused oracle cases and lets QEMU calibrate beyond the
+old eight-line cutoff. Native04 reached both pulses and observed one QEMU phase,
+but failed the full gate. The bit-3 vertical witness passed 38 focused timing
+cases and a fresh full emitted review; native05 still refused all four pulse
+trials. Both runs retained four exact quiet rasters each, clean input checks and
+reaped owners. See the [count and timing evidence](DOS_QEMU_PAIRED_TIMING_REVISION.md)
+and [vertical witness result](DOS_QEMU_PAIRED_VSYNC_WITNESS_PROPOSAL.md). Production
+source remains byte-identical to the 401-case and accepted return/pause revision
+`86a5fdb`. The earlier evidence below remains historical; no failed attempt was
+reinterpreted. All 143 surface, 18 workgroup and seven campaign promotion
+obligations remain open; DOSBox remains default.
+
 Latest local gates: [native asynchronous DOS return and strict paired pause](QEMU_PAUSE_AND_RETURN_GATES.md),
 qualified on 2026-11-20 America/New_York (2026-11-21 UTC). One authored child
 returned exit42 after one resume/status poll at `c978253`; eight pause episodes

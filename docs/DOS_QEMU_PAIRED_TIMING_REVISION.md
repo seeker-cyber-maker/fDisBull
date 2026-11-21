@@ -296,3 +296,23 @@ old artificial cutoff; it does not establish full raster phase parity. The
 removing unused bit-0 upper latches while the guest waits only for bit 3. The
 pulse schedule, whole-write brackets, H/8 allowance and both phase families stay
 fixed. Further native evidence requires a new clean source identity and gate.
+
+
+### Native attempt05: vertical-only upper latches remain insufficient
+
+The [vertical witness revision](DOS_QEMU_PAIRED_VSYNC_WITNESS_PROPOSAL.md)
+was integrated at `611a62e`, passed 38 focused timing cases, and produced a
+fresh independently reviewed 4,066-byte COM. A separately admitted native05
+completed both original four-frame sequences. QEMU again calibrated successfully,
+this time over spans of 429, 416 and 416 lines. All four quiet captures matched
+the authored full RGB image and one another. Both pulse trials on each backend
+remained unqualified because a possible sampling interval intersects a complete
+DAC write: DOSBox row 100 phase 1 and QEMU row 101 phase 0.
+
+The phase receipt is
+`c459afddbc16b3e09375a016756de1f69ca28d1aef804653b5352ba298c9bb6a`.
+All 11,763 pinned files and nine trees were unchanged. Owners exited zero and
+were reaped; no cleanup error was recorded. No producer rebuild, extra frame,
+automatic retry, image-derived timing choice or relaxed acceptance rule was used.
+The complete-count correction remains useful calibration coverage, while the
+bit-3 change alone has not established a phase pass. Full parity remains open.

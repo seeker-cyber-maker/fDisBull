@@ -1,6 +1,6 @@
 # Bit 3 vertical-sync witness revision
 
-Status: integrated source revision after raster attempt04. The frozen outside-main proposal remains unchanged. New host checks, assembly/listing review and separately admitted native evidence are pending; this document does not claim a measured improvement.
+Status: implemented and separately tested at `611a62e0367f2a8c8bdf86662faa784b67fba00f`. All 38 focused timing cases and fresh assembly04 passed. Full independent emitted review accepted the new 4,066-byte COM. Native attempt05 then ran both backends and refused every pulse-phase trial. Quiet completed-source/API facts still passed. The frozen outside-main proposal and earlier attempts remain unchanged; this revision does not establish a timing improvement.
 
 ## Why this change is proposed
 
@@ -62,10 +62,52 @@ New cases assert observable event sequences and journal state for:
 - The poll limit with no I/O after the refused admission and the last completed sample preserved in memory.
 - A permitted twelfth vertical rise and a fault on the thirteenth, after its real endpoints and journal state have been retained.
 
-The existing generic transition table, first-sample behavior, PIT byte order/register contract, full DAC triples and finite-cap cases remain present. These checks are authored only; no result is claimed.
+The existing generic transition table, first-sample behavior, PIT byte order/register contract, full DAC triples and finite-cap cases remain present. All 38 cases passed under the finite host gate, with 5,690 tracked inputs unchanged and no failures, errors or skips.
 
 ## Limits and next decision
 
 This source change can remove irrelevant bit0 upper-latch work. It cannot establish the width or placement of a future vertical bracket, prevent all polling alias, or guarantee that the sample and full DAC write are actually separated. Changed instruction count and layout can change polling phase under fixed icount. No old trial is repaired by this proposal, and no pixel-selected delay or phase is introduced.
 
 Raster attempt04 now provides the integer-count evidence: QEMU calibrated a 427-line span and reached both pulses, but the full phase gate still refused. QEMU pulse4 has a row101 phase0 overlap with the C write; both DOSBox pulses have a counterfactual row99 phase0 overlap with the B write. These are independent timing-journal refusals, not grounds to change the fixed phase families. Root owns the new host checks, assembly/listing review and separately bounded native admission after independent source review. A future actual interval that still intersects a complete DAC write remains unqualified. DOSBox H/8 remains a declared assumption because individual row callback timestamps are not observed.
+
+
+## Executed attempt05 and its limits
+
+The exact native host was `611a62e0367f2a8c8bdf86662faa784b67fba00f`. The
+4,066-byte fixture SHA-256 is
+`1bfff2784c9caade03b13101fb0de0041afd2f37d010b941897671ebf83cc6fd`.
+Fresh assembly04 passed in 0.113762950 seconds. Independent static review
+reconciled all COM bytes, 50 direct control transfers, 99 relocated words, nine
+PIT macro expansions and the complete footer/journal layout against the listing.
+No old COM identity was substituted.
+
+Native attempt05 completed in 32.807969456 seconds. Phase receipt SHA-256:
+`c459afddbc16b3e09375a016756de1f69ca28d1aef804653b5352ba298c9bb6a`.
+Preflight and postflight agree on 11,763 files and nine input trees. Both serial
+emulator owners exited zero and were reaped; the worker returned one because
+the independent phase gate failed. There were no owner or adopted-child cleanup
+errors. The retained ownership record includes its normal final process-group
+cleanup signal; absence of cleanup errors does not mean no signal was sent.
+
+| Observation | Attempt05 result |
+| --- | --- |
+| Four quiet captures | Full authored RGB and cross-backend equality passed |
+| DOSBox calibration | Spans of 154 and 356 lines; H in `[12203/322, 12595/332]` PIT ticks |
+| QEMU calibration | Spans of 429, 416 and 416 lines; H in `[7976/211, 2990/79]` PIT ticks |
+| Both DOSBox pulses | Unqualified: row 100 phase 1 intersects a complete DAC-write interval |
+| Both QEMU pulses | Unqualified: row 101 phase 0 intersects a complete DAC-write interval |
+
+Each owner executed exactly two quiet and two fixed pulse captures. Delay and
+width were 9014/37 PIT ticks for DOSBox and 8992/37 for QEMU, derived from
+calibration before images and reused as declared. The phase gate is failed,
+including the apparently unchanged pulse images. A pixel match cannot replace
+a timing witness that separates the complete write from the possible sample.
+
+This evidence establishes that removing unused bit-0 upper latches alone did
+not qualify the experiment. It does not isolate the effect of that change on
+every bracket: guest loading/layout and observed polling phase can differ.
+Vertical polling and propagated H-fit uncertainty both remain relevant. A
+future register-state waiter would need explicit review of poll exhaustion,
+initial valid and invalid high observations, returned last-low/first-high
+endpoints and the twelfth/thirteenth-rise fault order. No such source is admitted
+by this document, and attempt05 is not retried.
