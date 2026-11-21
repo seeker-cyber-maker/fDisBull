@@ -100,6 +100,11 @@ void helper_agi_binding(CPUArchState *env, uint32_t pc, uint32_t meta,
         helper_agi_fault(env, pc, op, AGI_FAULT_ACTOR);
     }
     candidate = env->actors[a];
+    if (op == 70 || op == 71) {
+        g_assert(env->draw_intent);
+        candidate.cycling = op == 71;
+        goto commit;
+    }
     if (op == 33) {
         if (!candidate.animated) {
             candidate.animated = candidate.update = candidate.cycling = 1;
@@ -159,6 +164,54 @@ commit:
         env->observed_actor = env->actors[a];
     }
     env->actors[a] = candidate;
+}
+
+/* Reaching draw is architectural intent, not completion of engine effects.
+ * Validate its existing pose without changing coordinates, even off canvas.
+ * The complete stopped actor/catalog snapshot supplies the pending inputs.
+ */
+void helper_agi_draw(CPUArchState *env, uint32_t pc, uint32_t actor)
+{
+    AgiCPU *cpu = AGI_CPU(env_cpu(env));
+    const AgiViewCatalog *catalog = cpu->catalog;
+    const AgiActor *a;
+    const AgiCatalogView *view;
+    const AgiCatalogLoop *loop;
+    const AgiCatalogCel *cel;
+
+    g_assert(catalog && env->binding_profile && env->draw_intent);
+    if (actor >= AGI_ACTORS) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_ACTOR);
+    }
+    a = &env->actors[actor];
+    if (!a->view_bound) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_VIEW_UNBOUND);
+    }
+    view = &catalog->views[a->view];
+    if (!view->present) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_MISSING_VIEW);
+    }
+    if (!env->loaded_views[a->view]) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_VIEW_NOT_LOADED);
+    }
+    if (a->loop >= view->loop_count) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_LOOP);
+    }
+    loop = &catalog->loops[view->first_loop + a->loop];
+    if (!loop->cel_count) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_EMPTY_LOOP);
+    }
+    if (a->cel >= loop->cel_count) {
+        helper_agi_fault(env, pc, 35, AGI_FAULT_CEL);
+    }
+    cel = &catalog->cels[loop->first_cel + a->cel];
+    /* Every admitted binding updates these cached dimensions atomically. */
+    g_assert(a->width == cel->width && a->height == cel->height);
+    env->pending_kind = AGI_PENDING_DRAW;
+    env->pending_pc = pc;
+    env->pending_actor = actor;
+    env->pc = pc;
+    agi_stop(env, AGI_EFFECT);
 }
 
 static void agi_append(CPUArchState *env, unsigned channel, uint32_t pc,

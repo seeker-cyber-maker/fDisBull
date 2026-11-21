@@ -43,6 +43,11 @@ class QemuAGIViewBinding(QemuAGI):
     with a different profile or source identity fails instead of falling back.
     """
 
+    profile = VIEW_BINDING_PROFILE
+    state_schema = STATE_SCHEMA
+    events_schema = EVENTS_SCHEMA
+    machine_properties = ()
+
     def __init__(self, binary, code, catalog, *, timeout=10.0, extra_args=(),
                  evidence_dir=None, transport="stdio"):
         if type(catalog) is not bytes or not 1 <= len(catalog) <= 65536:
@@ -61,7 +66,8 @@ class QemuAGIViewBinding(QemuAGI):
             # machine selection. The returned schema/profile is checked below.
             super().__init__(
                 binary, code, timeout=timeout,
-                extra_args=("-M", f"agi-test,view-catalog={self.catalog_path}", *extra_args),
+                extra_args=("-M", ",".join(("agi-test", f"view-catalog={self.catalog_path}",
+                                           *self.machine_properties)), *extra_args),
                 evidence_dir=evidence_dir, transport=transport,
             )
             self.code_size = len(code)
@@ -77,12 +83,12 @@ class QemuAGIViewBinding(QemuAGI):
     @property
     def expected_source(self):
         return {"sha256": self.source_sha256, "size": self.code_size,
-                "logic_id": 0, "profile": VIEW_BINDING_PROFILE,
+                "logic_id": 0, "profile": self.profile,
                 "catalog_sha256": self.catalog_sha256}
 
     def state(self):
         state = super().state()
-        if state.get("schema") != STATE_SCHEMA or state.get("source") != self.expected_source:
+        if state.get("schema") != self.state_schema or state.get("source") != self.expected_source:
             raise HarnessError("AGI binding state profile or source identity differs")
         catalog = state.get("catalog")
         if not isinstance(catalog, dict) or catalog.get("sha256") != self.catalog_sha256 \
@@ -92,7 +98,7 @@ class QemuAGIViewBinding(QemuAGI):
 
     def events(self):
         events = self._json_property("agi-events-json")
-        if not isinstance(events, dict) or events.get("schema") != EVENTS_SCHEMA \
+        if not isinstance(events, dict) or events.get("schema") != self.events_schema \
                 or events.get("source") != self.expected_source \
                 or not isinstance(events.get("events"), list):
             raise HarnessError("Unsupported AGI binding events or source identity")
@@ -107,7 +113,7 @@ class QemuAGIViewBinding(QemuAGI):
                 (self.failure_evidence / "view-catalog.bin").write_bytes(self.catalog_bytes)
                 (self.failure_evidence / "view-catalog.json").write_text(json.dumps({
                     "sha256": self.catalog_sha256, "bytes": self.catalog_size,
-                    "profile": VIEW_BINDING_PROFILE,
+                    "profile": self.profile,
                 }, indent=2) + "\n", encoding="utf-8")
         finally:
             if self._catalog_temporary is not None:

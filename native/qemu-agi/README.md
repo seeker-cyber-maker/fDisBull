@@ -19,6 +19,13 @@ scalar-position default and consumer. The [private reconstruction packet](VIEW_B
 connects native pose state to source-bound PQ1/KQ1 development fragments and
 decoded assets, with unsupported draw/presentation boundaries explicit.
 
+Adding the startup property `draw-intent=on` selects the separate
+[cycle and deferred-draw profile](DRAW_INTENT_PROFILE.md). It executes
+`stop.cycling`/`start.cycling` and stops at a typed, uncommitted draw request.
+Its [detached packet](DRAW_INTENT_PACKET.md) distinguishes committed actor
+state, the requested preview layer and unresolved rendering/presentation.
+Existing scalar and binding profiles keep their prior behavior and schemas.
+
 ## Observation control
 
 `agi-observation-mask` is a host-owned two-bit control register. It is separate

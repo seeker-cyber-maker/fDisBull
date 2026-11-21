@@ -17,7 +17,7 @@
 #include "cpu.h"
 
 static const char *const status_names[] = {
-    "ready", "running", "budget", "return", "fault", "external"
+    "ready", "running", "budget", "return", "fault", "external", "effect"
 };
 static const char *const fault_names[] = {
     "none", "unsupported_opcode", "truncated_instruction", "invalid_actor",
@@ -49,6 +49,9 @@ void agi_restart(CPUArchState *env)
     memset(&env->observed_actor, 0, sizeof(env->observed_actor));
     env->observed_loaded = 0;
     env->binding_profile = cpu->catalog != NULL;
+    env->draw_intent = cpu->draw_intent;
+    env->pending_kind = AGI_PENDING_NONE;
+    env->pending_pc = env->pending_actor = 0;
     env->horizon = cpu->catalog ? cpu->catalog->horizon : 0;
     env->pc = 0;
     env->status = AGI_READY;
@@ -154,6 +157,7 @@ static void agi_json_source(GString *s, AgiCPU *cpu)
     g_string_append_printf(s, "{\"sha256\":\"%s\",\"size\":%u,"
                            "\"logic_id\":0,\"profile\":\"%s\"",
                            cpu->source_sha256, cpu->env.code_size,
+                           cpu->env.draw_intent ? AGI_INTENT_PROFILE :
                            cpu->env.binding_profile ? AGI_BINDING_PROFILE : AGI_PROFILE);
     if (cpu->env.binding_profile) {
         g_string_append_printf(s, ",\"catalog_sha256\":\"%s\"", cpu->catalog->sha256);
@@ -201,7 +205,9 @@ static char *agi_get_state(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
-    s = g_string_new(env->binding_profile ?
+    s = g_string_new(env->draw_intent ?
+                     "{\"schema\":\"fdisbull-agi-intent-state-1\",\"source\":" :
+                     env->binding_profile ?
                      "{\"schema\":\"fdisbull-agi-binding-state-1\",\"source\":" :
                      "{\"schema\":\"fdisbull-agi-native-state-1\",\"source\":");
     agi_json_source(s, cpu);
@@ -238,6 +244,21 @@ static char *agi_get_state(Object *obj, Error **errp)
             }
         }
         g_string_append_c(s, ']');
+    }
+    if (env->draw_intent) {
+        g_string_append(s, ",\"pending_effect\":");
+        if (env->status == AGI_EFFECT) {
+            g_assert(env->pending_kind == AGI_PENDING_DRAW);
+            g_string_append_printf(s, "{\"kind\":\"draw\","
+                                   "\"reason\":\"draw_requires_host\",\"pc\":%u,"
+                                   "\"opcode\":35,\"bytes\":[35,%u],\"actor\":%u,"
+                                   "\"retired\":false,\"committed\":false,"
+                                   "\"completion_available\":false}",
+                                   env->pending_pc, env->pending_actor,
+                                   env->pending_actor);
+        } else {
+            g_string_append(s, "null");
+        }
     }
     g_string_append_printf(s, ",\"status\":\"%s\",\"fault\":",
                            status_names[env->status]);
@@ -283,7 +304,9 @@ static char *agi_get_events(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
-    s = g_string_new(env->binding_profile ?
+    s = g_string_new(env->draw_intent ?
+                     "{\"schema\":\"fdisbull-agi-intent-events-1\",\"source\":" :
+                     env->binding_profile ?
                      "{\"schema\":\"fdisbull-agi-binding-events-1\",\"source\":" :
                      "{\"schema\":\"fdisbull-agi-native-events-1\",\"source\":");
     agi_json_source(s, cpu);
@@ -372,6 +395,14 @@ static bool agi_tlb_fill(CPUState *cs, vaddr addr, int size,
 static void agi_exec_enter(CPUState *cs)
 {
     CPUArchState *env = cpu_env(cs);
+    if (env->status == AGI_EFFECT) {
+        /* No completion API exists in this profile. A repeated cont leaves
+         * guest state, observation state and prior run counters unchanged.
+         */
+        vm_stop(RUN_STATE_PAUSED);
+        cs->exception_index = EXCP_INTERRUPT;
+        return;
+    }
     if (env->status == AGI_RETURN || env->status == AGI_FAULT) {
         env->run_retired = env->elapsed_ns = 0;
         env->invocation++;

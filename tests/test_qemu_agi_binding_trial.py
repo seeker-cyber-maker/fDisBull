@@ -141,6 +141,15 @@ def test_journal_reconstructs_all_actors_and_loaded_membership():
         "all_actors_and_loaded_views_match": True}
 
 
+@pytest.mark.parametrize("field", ["seq", "retired", "pc", "opcode", "next_pc", "control_generation", "bytes"])
+def test_journal_rejects_boolean_aliases_for_source_integers(field):
+    initial, state, events, inputs = journal_fixture()
+    event = events["events"][0]
+    event[field] = [30, False] if field == "bytes" else bool(event[field])
+    with pytest.raises(HarnessError):
+        validate_journal(initial, state, events, **inputs)
+
+
 @pytest.mark.parametrize("damage", ["empty", "missing_middle", "disconnected", "wrong_bytes",
                                     "wrong_generation", "wrong_count", "missing_retire",
                                     "wrong_channels", "wrong_final_actor", "wrong_epoch"])

@@ -15,6 +15,7 @@
 #define AGI_INSN_MAX 64
 #define AGI_PROFILE "agi-2917-scalar-position-pilot-1"
 #define AGI_BINDING_PROFILE "agi-2917-view-binding-pilot-1"
+#define AGI_INTENT_PROFILE "agi-2917-draw-intent-pilot-1"
 #define AGI_CATALOG_MAX_BYTES 65536
 #define AGI_CATALOG_MAX_LOOPS 1024
 #define AGI_CATALOG_MAX_CELS 4096
@@ -22,10 +23,12 @@
 #define AGI_OBS_SCENE 2
 #define AGI_OBS_MASK 3
 #define AGI_TB_BINDING 4
+#define AGI_TB_DRAW_INTENT 8
 #define MMU_USER_IDX 0
 
 typedef enum AgiStatus {
-    AGI_READY, AGI_RUNNING, AGI_BUDGET, AGI_RETURN, AGI_FAULT, AGI_EXTERNAL
+    AGI_READY, AGI_RUNNING, AGI_BUDGET, AGI_RETURN, AGI_FAULT, AGI_EXTERNAL,
+    AGI_EFFECT
 } AgiStatus;
 
 typedef enum AgiFault {
@@ -75,6 +78,7 @@ typedef struct AgiViewCatalog {
 } AgiViewCatalog;
 
 enum { AGI_EVENT_RETIRE, AGI_EVENT_POSITION, AGI_EVENT_ACTOR, AGI_EVENT_VIEW_LOAD };
+enum { AGI_PENDING_NONE, AGI_PENDING_DRAW };
 
 typedef struct AgiEvent {
     uint64_t seq, retired, control_generation;
@@ -87,6 +91,7 @@ typedef struct CPUArchState {
     uint32_t v[256], f[256];
     AgiActor actors[AGI_ACTORS];
     uint32_t binding_profile, horizon, loaded_views[256];
+    uint32_t draw_intent, pending_kind, pending_pc, pending_actor;
     /* Diagnostic scratch is neither architectural state nor a guest register. */
     AgiActor observed_actor;
     uint32_t observed_loaded;
@@ -108,6 +113,8 @@ struct ArchCPU {
     char source_sha256[65];
     AgiEvent *events;
     AgiViewCatalog *catalog;
+    /* Immutable machine selection, restored to env at every guest restart. */
+    bool draw_intent;
 };
 
 struct AgiCPUClass {
@@ -130,7 +137,8 @@ static inline void cpu_get_tb_cpu_state(CPUArchState *env, vaddr *pc,
     *pc = env->pc;
     *cs_base = 0;
     *pflags = (env->obs_mask & AGI_OBS_MASK) |
-              (env->binding_profile ? AGI_TB_BINDING : 0);
+              (env->binding_profile ? AGI_TB_BINDING : 0) |
+              (env->draw_intent ? AGI_TB_DRAW_INTENT : 0);
 }
 
 #include "exec/cpu-all.h"

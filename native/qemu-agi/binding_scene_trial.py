@@ -117,11 +117,18 @@ def validate_binding(state, *, code, catalog):
     This is a capture validator, not a delta-history reconstruction API. The
     old position consumer deliberately does not accept this richer profile.
     """
+    return _validate_binding_state(state, code=code, catalog=catalog,
+        profile=PROFILE, schema="fdisbull-agi-binding-state-1",
+        statuses=("ready", "budget", "return", "fault", "external"))
+
+
+def _validate_binding_state(state, *, code, catalog, profile, schema, statuses):
+    """Shared structural check; public consumers select an exact contract."""
     metadata = decode_catalog(catalog)
     expected_source = {"sha256": sha256(code).hexdigest(), "size": len(code),
-                       "logic_id": 0, "profile": PROFILE,
+                       "logic_id": 0, "profile": profile,
                        "catalog_sha256": metadata["sha256"]}
-    if type(state) is not dict or state.get("schema") != "fdisbull-agi-binding-state-1" \
+    if type(state) is not dict or state.get("schema") != schema \
             or state.get("source") != expected_source:
         raise HarnessError("Binding snapshot source/profile/catalog identity differs")
     expected_catalog = {"sha256": metadata["sha256"], "size": len(catalog),
@@ -133,7 +140,7 @@ def validate_binding(state, *, code, catalog):
         raise HarnessError("Binding catalog summary differs")
     guest = state.get("guest")
     if type(guest) is not dict or guest.get("horizon") != metadata["horizon"] \
-            or guest.get("status") not in ("ready", "budget", "return", "fault", "external"):
+            or guest.get("status") not in statuses:
         raise HarnessError("Binding snapshot is not a stopped guest")
     for name, maximum in (("variables", 255), ("flags", 1)):
         values = guest.get(name)
@@ -177,22 +184,35 @@ def validate_journal(initial, state, events, *, code, sites, prelude):
     from the initial snapshot. This validates observation continuity without
     substituting a Python AGI interpreter for the native execution.
     """
+    expected = [{"fragment_pc": pc, "bytes": list(prelude[pc:pc + 2]), "opcode": 30}
+                for pc in range(0, len(prelude), 2)] + sites[:-1]
+    return _validate_journal(initial, state, events, code=code, expected=expected,
+        schema="fdisbull-agi-binding-events-1", actor_ops=(33, 37, 38, 41, 42, 43, 44, 47, 48))
+
+
+def _validate_journal(initial, state, events, *, code, expected, schema, actor_ops):
+    """Validate one complete retirement/transition chain for exact source sites."""
     observation = state["observation"]
+    if any(type(observation.get(name)) is not int or observation[name] < 0
+           for name in ("mask", "count", "eligible", "dropped", "control_generation", "epoch")):
+        raise HarnessError("Observation counters require nonnegative integers")
     rows = events.get("events") if type(events) is dict else None
-    if type(rows) is not list or events.get("schema") != "fdisbull-agi-binding-events-1" \
+    if type(rows) is not list or events.get("schema") != schema \
             or events.get("source") != state["source"] \
             or events.get("epoch") != observation["epoch"] or observation["mask"] != 3 \
             or observation["dropped"] != 0 or observation["count"] != len(rows) \
             or observation["eligible"] != len(rows):
         raise HarnessError("Trial requires a complete matching observation journal")
-    expected = [{"fragment_pc": pc, "bytes": list(prelude[pc:pc + 2]), "opcode": 30}
-                for pc in range(0, len(prelude), 2)] + sites[:-1]
     actors = deepcopy(initial["guest"]["actors"])
     loaded = set(initial["guest"]["loaded_views"])
     retired, scene_count, previous_kind = 0, 0, None
     current = None
     for sequence, event in enumerate(rows, 1):
-        if type(event) is not dict or event.get("seq") != sequence \
+        if type(event) is not dict or any(type(event.get(name)) is not int or event[name] < 0
+                for name in ("seq", "control_generation", "retired", "pc", "opcode", "next_pc")) \
+                or type(event.get("bytes")) is not list \
+                or any(type(value) is not int or not 0 <= value <= 255 for value in event["bytes"]) \
+                or event.get("seq") != sequence \
                 or event.get("control_generation") != observation["control_generation"]:
             raise HarnessError("Observation sequence/control generation has a gap")
         kind = event.get("kind")
@@ -213,7 +233,7 @@ def validate_journal(initial, state, events, *, code, sites, prelude):
         if kind == "actor":
             number = event.get("actor")
             if type(number) is not int or not 0 <= number < 16 \
-                    or current["opcode"] not in (33, 37, 38, 41, 42, 43, 44, 47, 48) \
+                    or current["opcode"] not in actor_ops \
                     or current["bytes"][1] != number:
                 raise HarnessError("Invalid actor SCENE source")
             before = {key: value for key, value in actors[number].items() if key != "id"}
@@ -238,10 +258,30 @@ def validate_journal(initial, state, events, *, code, sites, prelude):
         raise HarnessError("Journal does not reconstruct the complete final binding state")
     channels = observation["per_channel"]
     for name, count in (("disasm", retired), ("scene", scene_count)):
-        if channels.get(name) != {"eligible": count, "stored": count, "dropped": 0}:
+        channel = channels.get(name)
+        if type(channel) is not dict or any(type(value) is not int for value in channel.values()) \
+                or channel != {"eligible": count, "stored": count, "dropped": 0}:
             raise HarnessError("Observation channel accounting differs from journal")
     return {"retired_sites": retired, "scene_transitions": scene_count,
             "journal_records": len(rows), "all_actors_and_loaded_views_match": True}
+
+
+def _write_packet_inputs(helper, prepared, contracts):
+    """Write bounded exact inputs shared by the distinct packet contracts."""
+    helper.mkdir()
+    assets, documents = {}, {}
+    for name, data in prepared["assets"].items():
+        (helper / name).write_bytes(data)
+        assets[name] = {"file": name, "bytes": len(data), "sha256": sha256(data).hexdigest()}
+    (helper / "catalog.bin").write_bytes(prepared["catalog"])
+    for name, source_name in contracts:
+        data = Path(__file__).with_name(source_name).read_bytes()
+        if len(data) > 65536:
+            raise ValueError("Packet contract document exceeds 64 KiB")
+        data.decode("utf-8")
+        (helper / name).write_bytes(data)
+        documents[name] = {"file": name, "bytes": len(data), "sha256": sha256(data).hexdigest()}
+    return assets, documents
 
 
 def collect(binary, game_dir, output, spec, *, timeout=10.0):
@@ -290,21 +330,9 @@ def collect(binary, game_dir, output, spec, *, timeout=10.0):
             raise HarnessError("Game inputs changed during collection")
         stage = "packet_write"
         helper = output / "helper"
-        helper.mkdir()
-        asset_rows = {}
-        for name, data in prepared["assets"].items():
-            (helper / name).write_bytes(data)
-            asset_rows[name] = {"file": name, "bytes": len(data), "sha256": sha256(data).hexdigest()}
-        (helper / "catalog.bin").write_bytes(catalog)
-        documents = {}
-        for name, source_name in (("README.md", "VIEW_BINDING_PACKET.md"),
-                                  ("VIEW_BINDING_PROFILE.md", "VIEW_BINDING_PROFILE.md")):
-            data = Path(__file__).with_name(source_name).read_bytes()
-            if len(data) > 65536:
-                raise ValueError("Packet contract document exceeds 64 KiB")
-            data.decode("utf-8")
-            (helper / name).write_bytes(data)
-            documents[name] = {"file": name, "bytes": len(data), "sha256": sha256(data).hexdigest()}
+        asset_rows, documents = _write_packet_inputs(helper, prepared,
+            (("README.md", "VIEW_BINDING_PACKET.md"),
+             ("VIEW_BINDING_PROFILE.md", "VIEW_BINDING_PROFILE.md")))
         packet = {"schema": "fdisbull-agi-binding-scene-packet-1", "id": spec["id"],
                   "qualification": "native_pose_binding_in_explicit_reset_fragment",
                   "source_manifest": prepared["source_manifest"], "logic": prepared["logic"],
