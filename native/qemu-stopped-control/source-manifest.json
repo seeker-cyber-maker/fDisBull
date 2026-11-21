@@ -1,0 +1,126 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "upstream_archive": {
+    "url": "https://download.qemu.org/qemu-10.0.13.tar.xz",
+    "bytes": 141718608,
+    "sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa"
+  },
+  "base_source_manifest_sha256": "acca0da4f85c69e131e8e28e4ca1cda736023fe5cfe8c0e1371c8a511d543999",
+  "prerequisite_patch": "../qemu-video-frame-fence/qemu-video-frame-fence.patch",
+  "prerequisite_patch_sha256": "cbc65cf87a4356ae09a78dff7cbf99b9997453db854d7229e9715cf5df3fa8f5",
+  "patch": "qemu-stopped-control.patch",
+  "patch_sha256": "557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e",
+  "scope": "stopped-native-control-admission-v1; explicit one-shot stopped control scope; not whole-machine mutation revision, atomic state, raster/application completion or legacy parity",
+  "recovery": {
+    "new_candidate": true,
+    "exact_recovered_core_sha256": "c6435173b04430098a4d1447975ac7b45c043433916fccb25d8311994b06e898",
+    "base_source_inventory_sha256": "46e046de250c1b204a6de0825ae4e643213ea30c724000b3998738a3737560fc",
+    "base_acceptance_receipt_sha256": "68b9bcbc6fdedf99933a810093a4a02ec17878685d2b53aa5d1c878b1daee472"
+  },
+  "files": [
+    {
+      "path": "gdbstub/gdbstub.c",
+      "base_sha256": "282661c5b412d81537c83b4297585cb9ad8e7fcace3eeafc63ef672eb8ff58b0",
+      "patched_sha256": "aed7cb5d5e6630acb7caacad71657db4fac733912d70a81b39f0271545748793",
+      "patched_bytes": 69757
+    },
+    {
+      "path": "gdbstub/system.c",
+      "base_sha256": "3997e12e4c1a180a57df020f700be2e4bb94ae9c8bd375dbf3b5ed19dfc0c9cd",
+      "patched_sha256": "f99e6b5dc50b1053957866ea1d884cc5727cab489010cdacddb573bb2b65fbda",
+      "patched_bytes": 16998
+    },
+    {
+      "path": "include/system/fdisbull-stopped-control.h",
+      "base_sha256": null,
+      "patched_sha256": "1d1f65f73fa96179d1c912065d0a95694d7666abc5c4779c6f8db88621cdc885",
+      "patched_bytes": 1159
+    },
+    {
+      "path": "monitor/hmp.c",
+      "base_sha256": "3eb416c822bdcb5bcaf0fba36af9e965024998f2edbf553ff504d63cf0ec5576",
+      "patched_sha256": "2a9a32fc36aecc2b50379f450a345e897c129ef008fa405a28539c048db90928",
+      "patched_bytes": 41772
+    },
+    {
+      "path": "monitor/qmp.c",
+      "base_sha256": "463ad93e703d520aa150dae02afb015072707bfed11b783c2e8681ff9147567c",
+      "patched_sha256": "2d66dcd7ca9fc62218cf9886813f21919dc2ec7a623453970cc492e097aefe17",
+      "patched_bytes": 18499
+    },
+    {
+      "path": "qapi/fdisbull-stopped-control.json",
+      "base_sha256": null,
+      "patched_sha256": "c27457da4374ba15c95e34d7aa0f45dd2b38ca55221490af3d2e1b3001466ffa",
+      "patched_bytes": 2759
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_sha256": "c6f7fd29d50133cf70a7eeddc593c10c22c273da511fbc4ccad412ea52bd6398",
+      "patched_sha256": "9f035b69aa760d661938b3de2e6e86997702a5f425d313ef3618a6e538d7965f",
+      "patched_bytes": 3784
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_sha256": "6357ec320ab6ee86d014f7678d04a6985e377afcac199017448abb8dffe4c73c",
+      "patched_sha256": "dae36f47a27178a073fa86cecc806be7170aced75f5e94b627a1beaf95953da1",
+      "patched_bytes": 2867
+    },
+    {
+      "path": "stubs/fdisbull-stopped-control.c",
+      "base_sha256": null,
+      "patched_sha256": "1911bda19129505d75c832c1b06344b0b97484fe11b68e699becc7822333c45c",
+      "patched_bytes": 603
+    },
+    {
+      "path": "stubs/meson.build",
+      "base_sha256": "3ac0768c619005edee6b2d42b3d073d37195369d25f38213b3b15f07f3b7b069",
+      "patched_sha256": "6700d405df1918723ddae1ef6ec22e71656ea93440c5490408caeedc4275e3e1",
+      "patched_bytes": 3016
+    },
+    {
+      "path": "system/fdisbull-stopped-control.c",
+      "base_sha256": null,
+      "patched_sha256": "c6435173b04430098a4d1447975ac7b45c043433916fccb25d8311994b06e898",
+      "patched_bytes": 21405
+    },
+    {
+      "path": "system/meson.build",
+      "base_sha256": "bf77bce0ff59d38e4d1b87e12818e50cf66a6f8f812f243164f371f760f44cca",
+      "patched_sha256": "50c293906cc820405331b68e5b48338af0d098dcc685fd4e6aa1f641c233b652",
+      "patched_bytes": 1289
+    },
+    {
+      "path": "system/runstate.c",
+      "base_sha256": "876457d92b5b87c587c3cf5807a0e06956fa7586a03a935ffb5697dabfdbcb48",
+      "patched_sha256": "e4858269d588546ac238a8c221fbee5c3373b54457d009c9131eae3b2439ab87",
+      "patched_bytes": 29382
+    }
+  ],
+  "qualification": {
+    "source_review": "author and root reviewed; full build/native integration remain pending",
+    "compiled_source_probe": {
+      "status": "passed",
+      "test_module": "tests/test_qemu_stopped_control_source.py",
+      "scope": "Exact hash-checked native C with controlled external stubs; user-mode preprocessing and non-system hook linking; no full QEMU build or native runtime",
+      "tests": 107,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "unchanged_inputs": 1707,
+      "result_sha256": "100444b7702fe1e0d29a2dc68e67cf757586be3c882bd0f0ef8368d5d3f3f3be",
+      "tested_manifest_sha256": "6421e649a2f2d3ae784248b922d788e89bd961f8f18f7613c8473dcfd6c47b30",
+      "test_module_sha256": "6ba4967321ada662503833a0d8e4d221b88b9f41fd341751d82a9c10ba4eb67e",
+      "patch_sha256": "557da58631c3e0d4ad8a34f395441c3f2094c159ed2d2ddf769a089e89b1a01e"
+    },
+    "full_schema_parse": {
+      "status": "not-run",
+      "doc_required": true
+    },
+    "build": "failed-configure-before-compilation: isolated CPython3.13 lacks ensurepip; fresh build environment correction pending",
+    "native": "not-run",
+    "paired_legacy": "not-run",
+    "build_failure_result_sha256": "cd4658a224b30c587584b7ef3fff66b4aaf21faaa2e0fe61f0243fa1db3375a6"
+  }
+}
