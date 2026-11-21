@@ -1,5 +1,23 @@
 # Paired raster timing witness revision
 
+## Current native07 result
+
+The [dedicated calibration register collector](DOS_QEMU_PAIRED_CALIBRATION_REGISTER_PROPOSAL.md)
+at `2cb275edd852f73ee1440f9ee48e5f6bb71ed0ad` passed 87 focused host cases and
+fresh assembly06. Native07's controller and one authored paired test passed:
+both DOSBox source-phase-1 pulses and both QEMU source-phase-0 pulses are
+observed, with counterphase and final-palette rejection. The exact result is
+[appended below](#native-attempt07-calibration-registers-complete-the-authored-phase-gate).
+These fixed phases differ; no general phase equivalence, application-frame
+completion or full parity claim follows. Earlier failed attempts remain failed.
+
+The independent retained-data audit accepted this finite result with no
+discrepancy. Audit JSON SHA-256:
+`1427c8db3f1e1e494adb45b271bc1cbc2b7ab4c1eeaaeb1558030f726fa966c0`.
+The result does not admit another native attempt or broader parity promotion.
+
+## Historical initial timing revision and subsequent attempts
+
 This source revision reduces observer work inside the authored guest's timing
 measurements. Its bounded host selection passed 33 cases, and assembly02 produced
 the reviewed 3,959-byte COM. The second actual paired native execution,
@@ -346,3 +364,60 @@ emulator owners exited zero and were reaped; the worker returned one for the
 final phase assertion, with no timeout or cleanup error. This is an observed
 QEMU improvement in this authored experiment, not a causal claim about every
 bracket or a promotion of full parity. No later native attempt is admitted.
+
+
+### Native attempt07: calibration registers complete the authored phase gate
+
+Source `2cb275edd852f73ee1440f9ee48e5f6bb71ed0ad` integrates the dedicated
+calibration collector without changing the register vertical waiter, complete
+DAC triples, absolute schedule, oracle or native test. All 87 focused host cases
+passed. Fresh assembly06 produced the independently reviewed 4,358-byte COM,
+SHA-256 `c2ddebd5affa489302f22c9139d354be1cb31b38d5edbe58b5e491c90ed3cb1d`.
+
+| Device-journal observation | DOSBox | QEMU |
+| --- | --- | --- |
+| H interval, PIT ticks | `[13606/359, 13164/347]` | `[1550/41, 15667/414]` |
+| Calibration records / polls / vertical rises | 512 / 4,059 / 1 | 410 / 12,362 / 4 |
+| Admitted spans, physical lines | 146, 364 | 364, 431, 426, 424 |
+| Pulse delay / width, PIT ticks | 9,015 / 37 | 8,992 / 37 |
+| Both pulse source phases observed | 1 | 0 |
+| Minimum all-row phase-0 clearance, PIT ticks | `624/347` | `12307/1656` |
+| Minimum all-row phase-1 clearance, PIT ticks | `646/347` | `3637/552` |
+
+The delay still equals
+`floor((Vtotal - VsyncStart + 200.75) * midpoint(H))`, relative to the previous
+vertical-sync upper latch, and width still equals `floor(midpoint(H))`.
+The changed numerical delays are outputs of that unchanged predeclared formula
+and each backend's independent calibration, chosen before images. The 512-record
+cap, four-retrace exit, complete positive-integer inference, 128-line minimum,
+all long pairs, endpoint quantization, H/8 and both phase families remain fixed.
+
+Both pulse trials on each backend now reject the counterphase and
+final-palette-only prediction. All four quiet RGB arrays match the authored
+oracle. QEMU's 200-row native callbacks on each pulse have lateness 0–120 ns,
+strictly below H/8 = 3,962.5 ns. DOSBox's individual callback times remain
+unobserved; its effective per-setting runtime profile is still unverified.
+Positive interval clearances qualify these fixed predictions; they do not
+establish general timing equivalence or causal isolation of this one code change.
+
+The complete attempt took 40.97446353000123 seconds: controller success and one
+passed JUnit case with zero failures, errors or skips. The retained xunit2
+warning concerns `record_property` compatibility. DOSBox owner 38 and QEMU owner
+52 ran serially, exited zero and were reaped. The external journals contain
+1,121 paired calls: 155 DOSBox and 966 QEMU. All 11,775 file pins and nine trees
+matched before and after.
+
+Phase receipt SHA-256:
+`0396de542532b62430252d3f131d59eb847845f92e8cc2cb5e66629f85df73e0`.
+Paired native receipt SHA-256:
+`d0114685dc162d3625483e1555c9b75a0078eef8f9c8a09422d2c9a9da999e11`.
+The [source-frame result table](DOS_QEMU_PAIRED_SOURCE_FRAME_PLAN.md#current-native07-result-2026-11-21-utc)
+records the unchanged quiet and backend-specific pulse hashes.
+
+The independent raw-control audit accepted this result without discrepancy;
+its exact identity is recorded above. Earlier failed attempts are preserved without promotion. Application
+frame completion and frame/input state equivalence stay unknown;
+`completed_guest_frames`, all 143 surface, 18 workgroup and seven campaign
+promotion obligations remain open. DOSBox stays default. The next reviewable
+[coherent-frame obligation](DOS_QEMU_PARITY_WORK.json) is explicit observation
+and mutation authority; this result admits no native08 or new implementation.

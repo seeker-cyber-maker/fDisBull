@@ -1,5 +1,40 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Current calibration-register result (2026-11-21 UTC)
+
+Native07's paired authored gate completed with controller success and **one
+passed test, zero failures, errors or skips** at source
+`2cb275edd852f73ee1440f9ee48e5f6bb71ed0ad`. The dedicated calibration collector
+passed 87 focused host cases and fresh assembly06 of the independently reviewed
+4,358-byte COM. Both pulse trials on each backend now match their fixed source
+phase: DOSBox phase 1 and QEMU phase 0. Both counterphases and final-palette-only
+predictions are rejected, and all four quiet rasters still match. The phases
+are different; this does not claim identical dynamic images across backends.
+
+The attempt took 40.97446353000123 seconds, retained 11,775 unchanged file pins
+and nine trees, and closed/reaped both serial owners with exit zero. QEMU's
+native row callback lateness was 0–120 ns, below the unchanged H/8 bound of
+3,962.5 ns. The [calibration result](DOS_QEMU_PAIRED_CALIBRATION_REGISTER_PROPOSAL.md#native-attempt07-result)
+and [timing result](DOS_QEMU_PAIRED_TIMING_REVISION.md#native-attempt07-calibration-registers-complete-the-authored-phase-gate)
+retain the exact intervals, formulas and receipts.
+
+This is one authored mode-13 profile, not causal isolation of the collector or
+general phase equivalence. DOSBox individual row times and effective per-setting
+runtime profile remain unverified. Application drawing completion, frame/input
+state equivalence and `completed_guest_frames` remain unknown/unqualified.
+Production `src` remains byte-identical to `86a5fdb`; all 143 surface,
+18 workgroup and seven campaign promotion obligations remain open, with DOSBox
+default. The next [coherent-frame obligation](DOS_QEMU_PARITY_WORK.json) is a
+truthful source-raster/stopped-state observation bracket with mutation identity,
+clock and input ownership; no implementation or native08 is admitted here.
+
+The independent retained-data audit accepted this finite result with no
+discrepancy. Audit JSON SHA-256:
+`1427c8db3f1e1e494adb45b271bc1cbc2b7ab4c1eeaaeb1558030f726fa966c0`.
+The result does not admit another native attempt or broader parity promotion.
+
+## Historical checkpoints
+
 Latest register-waiter continuation (2026-11-21 UTC): source `0ff9383` passed
 48 focused host cases and fresh assembly05 with a full independent emitted
 review. Native06 then observed both fixed QEMU phase-0 pulses, rejecting the

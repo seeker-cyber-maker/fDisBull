@@ -1,5 +1,22 @@
 # Calibration polling with observation state in registers
 
+## Current result and historical proposal
+
+The source-only design below was integrated at
+`2cb275edd852f73ee1440f9ee48e5f6bb71ed0ad`. It subsequently passed all 87 focused
+host cases, fresh assembly06 and the emitted-instruction review. Native07's
+controller reports success and one passed paired test: both DOSBox phase-1 and
+both QEMU phase-0 pulse trials are observed. The [result below](#native-attempt07-result)
+keeps the numerical calibration, unchanged acceptance rules and remaining scope
+explicit. The original proposal and failed native06 evidence remain historical.
+
+The independent retained-data audit accepted this finite result with no
+discrepancy. Audit JSON SHA-256:
+`1427c8db3f1e1e494adb45b271bc1cbc2b7ab4c1eeaaeb1558030f726fa966c0`.
+The result does not admit another native attempt or broader parity promotion.
+
+## Historical source-only proposal, before integration
+
 Status: **source-only proposal; no new execution or phase qualification**.
 The published baseline is `ea222ede008ef78359c46f4df9bc8b46abedf56c`.
 Its fixture and timing checks have the same bytes as the previously exercised
@@ -175,3 +192,58 @@ same-frame reference, schedule formulas, record ABI and native bounds remain.
 Independent source review, root integration, finite host checks, fresh assembly
 and emitted review are separate pending gates. Any later native admission is
 also separate; no prior failed evidence is promoted.
+
+
+## Native attempt07 result
+
+The integrated fixture SHA-256 is
+`1774766ef45b483a403589d314668f4312ad822395c8bddb1787a858b964fe51`.
+The host gate at that commit executed all 87 declared cases with no failures,
+errors or skips; receipt SHA-256:
+`b942903f2ea8faa2cd3a6c16a52226dcb0e899dba3696bdb16e1e5e111b4f770`.
+Fresh assembly06 and emitted review checked the actual 4,358-byte COM,
+SHA-256 `c2ddebd5affa489302f22c9139d354be1cb31b38d5edbe58b5e491c90ed3cb1d`,
+including the collector branches, restored append registers, committed exit
+state, journal and footer layout. The earlier source-only paragraph describes
+what was pending when the proposal was prepared, not the current gate status.
+
+The native07 controller completed in 40.97446353000123 seconds, with one passed
+JUnit case and zero failures, errors or skips; the `record_property`/xunit2
+warning is retained. All 11,775 pinned files and nine trees were unchanged.
+DOSBox owner 38 and QEMU owner 52 ran serially, exited zero and were reaped;
+1,121 paired journal calls comprise 155 DOSBox and 966 QEMU calls.
+
+DOSBox retained 512 calibration records from 4,059 polls and one vertical rise,
+with admitted spans 146 and 364 and H in `[13606/359, 13164/347]` PIT ticks.
+QEMU retained 410 records from 12,362 polls and four rises, with spans 364,
+431, 426 and 424 and H in `[1550/41, 15667/414]`. The unchanged pulse formula
+produced delays 9,015/8,992 and width 37 for DOSBox/QEMU; images were not an
+input to that selection. The [timing result](DOS_QEMU_PAIRED_TIMING_REVISION.md#native-attempt07-calibration-registers-complete-the-authored-phase-gate)
+records all-row clearances for both unchanged phase families.
+
+All four quiet rasters pass. Both DOSBox pulses match fixed source phase 1 and
+both QEMU pulses match fixed source phase 0, rejecting their counterphase and
+final-palette-only images. QEMU native callback lateness is 0–120 ns, below the
+unchanged H/8 = 3,962.5 ns. The backend phases and pulse RGB hashes differ;
+there is no exact dynamic-image-equivalence claim. Source phase models, full
+DAC brackets, quantization, H/8, coarse band, 128-line minimum, all long pairs,
+same-frame reference, schedule formulas and native bounds remain unchanged.
+
+Phase receipt SHA-256:
+`0396de542532b62430252d3f131d59eb847845f92e8cc2cb5e66629f85df73e0`.
+Paired native receipt SHA-256:
+`d0114685dc162d3625483e1555c9b75a0078eef8f9c8a09422d2c9a9da999e11`.
+The full independent raw-control audit accepted this result without discrepancy.
+Its exact JSON identity is recorded above and binds all original native evidence.
+
+This is a successful fixed authored witness, not causal isolation of the
+collector or general phase qualification. DOSBox per-row times and effective
+per-setting runtime configuration remain unverified. Application drawing
+completion, atomic CPU/image correspondence and frame/input state equivalence
+remain unknown. Earlier failed evidence remains failed. Production source is
+unchanged from `86a5fdb`; all 143 surface, 18 workgroup and seven campaign
+promotion obligations remain open, with DOSBox default and no native08 admitted.
+The next [coherent-frame obligation](DOS_QEMU_PARITY_WORK.json) is a typed
+source-raster/stopped-state observation with actual mutation authority, clock
+and independently observed input ownership; legacy aliases cannot manufacture
+those facts.

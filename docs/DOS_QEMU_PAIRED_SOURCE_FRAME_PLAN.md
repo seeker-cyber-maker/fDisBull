@@ -1,5 +1,51 @@
 # Paired mode-13h source-frame qualification plan
 
+## Current native07 result (2026-11-21 UTC)
+
+The [calibration register collector](DOS_QEMU_PAIRED_CALIBRATION_REGISTER_PROPOSAL.md)
+was integrated at `2cb275edd852f73ee1440f9ee48e5f6bb71ed0ad`, passed 87 focused
+host cases, and produced the reviewed 4,358-byte assembly06 COM. Native07 reports
+controller success and **one passed test, zero failures, errors or skips**;
+the existing `record_property`/xunit2 warning is retained. The complete attempt
+lasted 40.97446353000123 seconds. Both serial emulator owners exited zero and
+were reaped; 11,775 file pins and nine trees were unchanged.
+
+All four quiet rasters match the full authored RGB oracle. Both pulse trials
+on each backend have unambiguous predictions for both fixed phase families;
+DOSBox matches source phase 1 and QEMU matches source phase 0. Each rejects its
+counterphase and the final-palette-only image. The observed phases differ, so
+`backend_source_phase_equal=false` and
+`exact_dynamic_image_equivalence_claim=false` remain explicit. QEMU callback
+lateness is 0–120 ns, below H/8 = 3,962.5 ns. No sampling model, pulse formula,
+quantization rule, H/8 allowance or refusal criterion changed for this result.
+
+| Native07 identity | SHA-256 |
+| --- | --- |
+| Assembly06 COM, 4,358 bytes | `c2ddebd5affa489302f22c9139d354be1cb31b38d5edbe58b5e491c90ed3cb1d` |
+| Phase receipt | `0396de542532b62430252d3f131d59eb847845f92e8cc2cb5e66629f85df73e0` |
+| Paired native receipt | `d0114685dc162d3625483e1555c9b75a0078eef8f9c8a09422d2c9a9da999e11` |
+| Quiet RGB, both backends | `141a920ca2ecdd0d6fd7684eca3918d7d9ce66f74573266a15656dd107295939` |
+| DOSBox pulse RGB, both trials | `ea3c07508b70c79784eeffab0106e1345771f9dc35c218cd3584ffefde7b5d23` |
+| QEMU pulse RGB, both trials | `6ac6ee1c5e63281ab20344aa0ed251a2d10288ffa2c5248c242c21d74e90c2fa` |
+
+See the [exact calibration and clearance result](DOS_QEMU_PAIRED_TIMING_REVISION.md#native-attempt07-calibration-registers-complete-the-authored-phase-gate).
+This single authored pass does not causally isolate the collector or establish
+general phase equivalence, application drawing completion, atomic CPU/image
+identity or full frame/input state equivalence. DOSBox row callback times and
+per-setting effective runtime profile remain unverified. All earlier failed
+attempts retain their dispositions. No inventory row, backend default or
+native08 admission changes. The next narrow obligation is the
+[coherent-frame observation authority](DOS_QEMU_PARITY_WORK.json), including
+an actual stopped mutation identity and independently observed input ownership;
+a clock-read sequence cannot substitute for that authority.
+
+The independent retained-data audit accepted this finite result with no
+discrepancy. Audit JSON SHA-256:
+`1427c8db3f1e1e494adb45b271bc1cbc2b7ab4c1eeaaeb1558030f726fa966c0`.
+The result does not admit another native attempt or broader parity promotion.
+
+## Historical register-waiter result
+
 Current result: the separately reviewed [register-state timing witness](DOS_QEMU_PAIRED_VSYNC_REGISTER_PROPOSAL.md)
 at `0ff9383caaa374558ca3fc15e2b4ed3d826423ac` passed 48 focused host cases and
 fresh assembly/emitted review. Native attempt06 qualified both QEMU pulse
