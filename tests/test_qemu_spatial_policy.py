@@ -32,6 +32,21 @@ def no_native(o):
     assert not o.peer.monitor_reads and not o.closed
 
 
+def test_spatial_setter_changes_session_revision_but_policy_reads_are_passive(owned):
+    from fdisbull.qemu_session_revision import session_revision
+    s = owned.session
+    authority = session_revision(s.vm)
+    before = authority.snapshot()
+    s.spatial_policy()
+    assert authority.snapshot() == before
+    s.spatial_policy('story')
+    changed = authority.snapshot()
+    assert changed['state_revision'] > before['state_revision']
+    s.spatial_policy()
+    assert authority.snapshot() == changed
+    no_native(owned)
+
+
 @pytest.mark.parametrize('options', [{}, {'mode': 'physical'}, {'mode': 'assisted'},
     {'mode': 'story'}, {'mode': 'physical', 'fair_play': True}])
 def test_public_policy_matches_existing_dosbox_result_and_event(owned, options):
@@ -65,7 +80,18 @@ def test_policy_does_not_grant_missing_consumers_or_touch_frozen_source_input(ow
     s.vm.operation_guard = s.vm.history_operation_guard = forbidden
     assert s.spatial_policy('assisted')['assisted_travel'] is True
     assert all(not hasattr(s, operation) for operation in (
-        'assisted_travel', 'spatial_action', 'scene_act', 'click', 'frame_probe'))
+        'assisted_travel', 'spatial_action', 'click'))
+    # These methods have implementations, but host policy cannot grant the
+    # native profile/producer capabilities absent from this stopped fixture.
+    assert callable(s.frame_probe) and callable(s.scene_act)
+    assert not getattr(s, 'capabilities', {}).get('frame_contract')
+    assert not getattr(s, 'capabilities', {}).get('runtime_scene_act')
+    with pytest.raises(ValueError, match='frame_contract capability'):
+        s.frame_probe([])
+    workspace = DebugWorkspace()
+    workspace.sessions[s.run_id] = s
+    with pytest.raises(ValueError, match='owned QEMU source-raster contract'):
+        workspace.invoke('debug-frame-probe', owned.project.path, dict(run=s.run_id, points=[]))
     # Passive scene-2 RAM checks do not grant frame-backed action authority.
     assert callable(s.scene_check)
     assert (s._qemu_cpu_delta_history, s._dos_history, s.vm._physical_input, s._process) == before
@@ -100,9 +126,10 @@ def test_owned_native_loader_replaces_owner_without_rewinding_session_policy(che
     assert s.spatial_policy('story')['spatial_mode'] == 'story'
     saved = s.save_machine_state()
     s.spatial_policy('physical', fair_play=True)
-    owner, epoch = s.vm, s._runtime_epoch
+    owner, epoch, session_id = s.vm, s._runtime_epoch, s.session_id
     restored = s.load_machine_state(saved['artifact'])
     assert restored['machine_state_restored'] and s.vm is not owner and owner.closed
+    assert s.session_id != session_id
     assert s._runtime_epoch != epoch and fields(s) == ('physical', True, False)
     with pytest.raises(ValueError, match='Fair play'): s.spatial_policy('assisted')
     assert s.spatial_policy()['fair_play'] is True

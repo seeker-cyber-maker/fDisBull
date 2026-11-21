@@ -293,7 +293,7 @@ def _read_rgb(path):
 
 
 class QemuVideoFrameMixin:
-    def _video_frame_context(self):
+    def _video_frame_context(self, *, cpu_context=True):
         from .qemu_clock import VIRTUAL_CLOCK_COMMANDS
         if self.project is None or self.project.db.in_transaction:
             raise ValueError('Video frames require a project outside a caller-owned transaction')
@@ -302,7 +302,8 @@ class QemuVideoFrameMixin:
                 or configuration.get('retrace_profile', {}).get('profile') != 'precise'
                 or not VIDEO_FRAME_COMMANDS | VIRTUAL_CLOCK_COMMANDS <= self.vm.qmp_commands):
             raise ValueError('Video frames require the native scanline extension and explicit virtual/precise profiles')
-        self._stopped()
+        if cpu_context:
+            self._stopped()
         return self._clock_snapshot()
 
     def _video_frame_read(self, vm, clock):
@@ -424,6 +425,16 @@ class QemuVideoFrameMixin:
         vm = self.vm
         before = self._video_frame_context()
         prior = self._video_frame_select(vm, before, stream, frame_id)
+        result, raw, chunks = self._video_frame_selected_probe(vm, before, prior, points)
+        try:
+            self._video_frame_publish(vm, 'machine-video-frame-probe', result)
+            return result
+        except BaseException as error:
+            _failed(vm, error, 'probe', clock=before, native=raw, result=result, probe_chunks=chunks)
+            raise
+
+    def _video_frame_selected_probe(self, vm, before, prior, points):
+        """Probe one validated selection without publishing a public event."""
         raw = result = None
         chunks = []
         try:
@@ -465,12 +476,11 @@ class QemuVideoFrameMixin:
             self._video_frame_stable(vm, before)
             result = self._video_frame_result(prior, before)
             result.update(format='fdisbull-video-frame-probe-1', samples=samples)
-            self._video_frame_publish(vm, 'machine-video-frame-probe', result)
             # The 4096-coordinate consistency map is temporary. Keep the prior
             # sparse-cache bound, and do not erase it for a metadata-only read.
             if observed:
                 vm._video_frame_probe_samples = dict(list(observed.items())[-_NATIVE_PROBE_POINTS:])
-            return result
+            return result, raw, chunks
         except BaseException as error:
             _failed(vm, error, 'probe', clock=before, native=raw, result=result,
                     probe_chunks=chunks)
@@ -521,10 +531,14 @@ class QemuVideoFrameMixin:
 
     def video_frame_rgba(self, *, stream=None, frame_id=None, timeout_ms=1000):
         """Return immutable RGBA bytes; never encode PNG or publish an artifact."""
-        from .screenshot_codecs import RGBAFrame
         vm = self.vm
         before = self._video_frame_context()
         prior = self._video_frame_select(vm, before, stream, frame_id)
+        return self._video_frame_selected_rgba(vm, before, prior)
+
+    def _video_frame_selected_rgba(self, vm, before, prior):
+        """Decode one selected native RGB export without an event or artifact."""
+        from .screenshot_codecs import RGBAFrame
         pixels, native = self._video_frame_selected_rgb(vm, before, prior)
         metadata = None
         try:
@@ -555,7 +569,10 @@ class QemuVideoFrameMixin:
                             max_bytes=None, timeout_ms=1000):
         from PIL import Image
         vm = self.vm
-        before = self._video_frame_context()
+        identity = None
+        if self.capabilities.get('frame_contract'):
+            vm, identity = self._frame_contract_begin()
+        before = self._video_frame_context(cpu_context=identity is None)
         prior = self._video_frame_select(vm, before, stream, frame_id)
         pixels, native = self._video_frame_selected_rgb(vm, before, prior)
         metadata = artifact = None
@@ -576,13 +593,22 @@ class QemuVideoFrameMixin:
         metadata = self._video_frame_result(native, before)
         metadata.update(source='qemu_completed_source_raster', pixel_sha256=native['frame']['pixel-sha256'],
                         stopped=True, clocks=dict(before=before, after=after), sha256=hashlib.sha256(data).hexdigest())
+        if identity is not None:
+            from .qemu_frame_contract import frame_contract_metadata
+            metadata.update(frame_contract_metadata(self, native, before, identity[-1]))
+            metadata['codec_origin'] = 'host-adapter'
+        stage = 'frame-contract-validation'
         try:
             _remaining(vm)
+            if identity is not None:
+                self._frame_contract_check(vm, identity)
             stage = 'artifact-publication'
             artifact = self._artifact(name, 'screenshot', data, metadata)
             stage = 'event-publication'
             self._video_frame_publish(vm, 'machine-capture-video-frame', dict(artifact=artifact['artifact'],
                         stream=native['token'], frame_id=native['frame']['frame-id'], sha256=metadata['sha256']))
+            if identity is not None:
+                self._frame_contract_check(vm, identity)
             return artifact
         except BaseException as error:
             _failed(vm, error, stage, clock=before, native=native, result=metadata, artifact=artifact)

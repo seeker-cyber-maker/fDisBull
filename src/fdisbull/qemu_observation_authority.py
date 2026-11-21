@@ -221,9 +221,16 @@ class _Admission:
             authority._active.check()
         elif not self.passive and not self.dispatched:
             authority.invalidate('potential effect: ' + self.protocol + ' ' + str(self.operation)[:96])
+        if not self.dispatched:
+            from .qemu_session_revision import passive_dispatch, session_revision
+            if not passive_dispatch(authority.vm, self, authority._stack):
+                session_revision(authority.vm).effect()
         self.dispatched = True
 
     def event(self, value):
+        if self.authority is not None:
+            from .qemu_session_revision import session_revision
+            session_revision(self.authority.vm).effect()
         if self.authority is not None and self.authority._active is not None:
             lease = self.authority._active
             lease.events.append(deepcopy(value))
@@ -232,7 +239,9 @@ class _Admission:
 
 class ObservationAuthority:
     def __init__(self, vm):
+        from .qemu_session_revision import session_revision
         self.vm = vm
+        session_revision(vm)
         self.lifetime = uuid.uuid4().hex
         self.control_generation = 0
         self._qmp = self._gdb = None
@@ -273,6 +282,8 @@ class ObservationAuthority:
                 if (getattr(self, '_' + name) is not client
                         or getattr(self, '_' + name + '_socket') is not channel):
                     self.invalidate('transport binding: ' + name)
+                    from .qemu_session_revision import session_revision
+                    session_revision(self.vm).effect()
                     setattr(self, '_' + name, client)
                     setattr(self, '_' + name + '_socket', channel)
                 if client is not None:

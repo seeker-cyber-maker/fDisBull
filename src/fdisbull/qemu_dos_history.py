@@ -28,6 +28,7 @@ MAX_STATE = 128 * 1024 * 1024
 # Every other operation invalidates the live edge before it can be dispatched.
 _READ_ONLY = frozenset({
     'rewind_status', 'status', 'registers', 'memory', 'memory_snapshot',
+    'frame_probe', 'frame_rgba', '_frame_screenshot',
     'bind_runtime_memory', 'runtime_memory', 'scene_check', 'scene_assert',
     'memory_translation', 'dos_process_info', 'dos_source_admit', 'dos_source_bind', 'dos_source_binding', 'dos_source_unbind', '_le_source_refresh', 'tracking_status', 'dos_task_observe',
     'dos_task_context', 'dos_task_scheduler_observe', 'dos_task_memory',
@@ -94,6 +95,8 @@ def _history_operation(function):
             detail_guard = getattr(vm, 'history_operation_guard', None)
             if detail_guard is not None:
                 detail_guard(function.__name__, args, kwargs)
+            from .qemu_session_revision import session_revision
+            session_revision(vm).public_operation(function.__name__, args, kwargs)
             self._rpc_deadline = deadline
             self._deadline = deadline
             vm.operation_deadline = deadline

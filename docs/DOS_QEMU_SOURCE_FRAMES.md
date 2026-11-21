@@ -10,9 +10,11 @@ The stream samples source rows on its declared native schedule and converts
 six-bit DAC components using `(value << 2) | (value >> 4)`. A completed source
 raster can contain changes made during its sampling interval. Completion does
 not establish application drawing completion, input consumption, DOSBox sampling
-phase equivalence or atomic correspondence with the current CPU state. Existing
-renderer publications, legacy `frame_probe`, frame timelines and scene/pointer
-contracts retain their separate capabilities.
+phase equivalence or atomic correspondence with the current CPU state. The
+[retained-frame compatibility adapter](QEMU_FRAME_CONTRACT.md) supplies
+`frame_probe` / `frame_rgba` with explicit QEMU source identity, host codecs,
+and a stable cooperating session-control revision. Renderer publications,
+frame timelines and scene/pointer contracts retain their separate capabilities.
 
 ## Select and inspect a completed source raster
 

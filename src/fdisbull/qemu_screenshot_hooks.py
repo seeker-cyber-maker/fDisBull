@@ -263,6 +263,9 @@ class QemuScreenshotHookMixin:
             if configuration is not None:
                 validate_native_configuration(configuration, session=self)
             _check(self, identity, deadline, {})
+            if configuration is not None:
+                from .qemu_session_revision import session_revision
+                session_revision(self.vm).effect()
             result = self.project.debug_screenshot_hooks(configuration, version=self.version['id'])
             try:
                 _check(self, identity, deadline, {})

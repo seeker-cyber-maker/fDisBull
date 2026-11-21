@@ -1477,6 +1477,10 @@ class DebugWorkspace:
             del self.sessions[run]
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
         selected=session.context(context) if context is not None else session
+        if method == 'debug-frame-probe':
+            backend = getattr(session,'backend_name',None) or getattr(session,'metadata',{}).get('backend')
+            if backend in ('qemu-machine','qemu-dos') and not getattr(selected,'capabilities',{}).get('frame_contract'):
+                raise ValueError('Frame probe requires the owned QEMU source-raster contract')
         if method in ('debug-video-frame-start','debug-video-frame-observe','debug-video-frame-stop',
                       'debug-video-frame-probe','debug-capture-video-frame','debug-video-frame-advance'):
             capability = 'video_frame_control' if method == 'debug-video-frame-advance' else 'video_frame_capture'

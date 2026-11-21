@@ -9,6 +9,49 @@ from .native_controller import NativeControlError
 _MAX_RECORD_BYTES = 1024 * 1024
 _MAX_ATTEMPT_BYTES = 4 * 1024 * 1024
 _SHA = re.compile(r'^[0-9a-f]{64}$')
+_QEMU_FRAME_FIELDS = ('source', 'frame_profile', 'frame_identity', 'state_revision_scope',
+    'source_bpp', 'width', 'height', 'double_width', 'double_height',
+    'captured_ns', 'captured_ticks', 'captured_ticks_clock')
+
+
+def _source_issue(metadata):
+    """Validate the declared source contract, never its native authenticity."""
+    source = metadata.get('source')
+    if source == 'last_completed_guest_frame':
+        return ('frame source/profile conflict' if metadata.get('frame_profile') ==
+                'qemu-vga-chain4-scanline-v1' else None)
+    if source != 'qemu_completed_source_raster':
+        return 'frame source is missing or invalid'
+    if (metadata.get('frame_profile') != 'qemu-vga-chain4-scanline-v1'
+            or metadata.get('state_revision_scope') != 'cooperative-session-control-v1'
+            or metadata.get('source_bpp') != 24 or type(metadata.get('source_bpp')) is not int
+            or metadata.get('width') != 320 or type(metadata.get('width')) is not int
+            or metadata.get('height') != 200 or type(metadata.get('height')) is not int
+            or metadata.get('double_width') is not False or metadata.get('double_height') is not False
+            or metadata.get('captured_ticks_clock') != 'QEMU_CLOCK_VIRTUAL_milliseconds'
+            or type(metadata.get('captured_ns')) is not int or metadata['captured_ns'] < 0
+            or type(metadata.get('captured_ticks')) is not int
+            or metadata.get('captured_ticks') != metadata['captured_ns'] // 1_000_000):
+        return 'QEMU frame profile, layout or clock is invalid'
+    identity = metadata.get('frame_identity')
+    required = {'owner_lifetime', 'native_epoch', 'clock_epoch', 'stream', 'stream_generation',
+                'configuration_generation', 'timing_generation', 'frame_id',
+                'runtime_epoch', 'checkpoint_epoch'}
+    if type(identity) is not dict or set(identity) != required:
+        return 'QEMU frame identity is missing or invalid'
+    if (identity['owner_lifetime'] != metadata.get('session_id')
+            or identity['frame_id'] != metadata.get('frame_id')
+            or any(type(identity[k]) is not int or not 1 <= identity[k] < 1 << 64
+                   for k in ('native_epoch', 'stream_generation', 'configuration_generation',
+                             'timing_generation', 'frame_id'))
+            or any(type(identity[k]) is not str or not identity[k]
+                   for k in ('owner_lifetime', 'clock_epoch', 'stream'))
+            or identity['runtime_epoch'] is not None and
+                (type(identity['runtime_epoch']) is not str or not identity['runtime_epoch'])
+            or identity['checkpoint_epoch'] is not None and
+                (type(identity['checkpoint_epoch']) is not int or identity['checkpoint_epoch'] < 0)):
+        return 'QEMU frame identity disagrees with its declared session or raster'
+    return None
 
 
 def _json_copy(value):
@@ -50,6 +93,8 @@ def _status_issue(status):
     for key in ('state_revision', 'frame_id', 'mode_id'):
         if type(status.get(key)) is not int or status[key] < 0:
             return key+' is missing or invalid'
+    if 'source' in status:
+        return _source_issue(status)
     return None
 
 
@@ -60,8 +105,11 @@ def _frame_issue(frame):
     if type(frame.get('sha256')) is not str or _SHA.fullmatch(frame['sha256']) is None:
         return 'frame hash is missing or invalid'
     metadata = frame.get('metadata')
-    if type(metadata) is not dict or metadata.get('source') != 'last_completed_guest_frame':
+    if type(metadata) is not dict:
         return 'frame source is missing or invalid'
+    issue = _source_issue(metadata)
+    if issue:
+        return issue
     if type(metadata.get('session_id')) is not str or not metadata['session_id']:
         return 'frame session is missing'
     for key in ('state_revision', 'frame_id', 'mode_id', 'captured_ticks'):
@@ -99,7 +147,8 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
     if not isinstance(getattr(controller, 'journal', None), list) or not isinstance(getattr(controller, 'frame_captures', None), list):
         raise ValueError('Controller must expose journal and frame_captures lists')
     session = getattr(controller, 'session', None)
-    if status_reader is None and (not callable(getattr(session, 'call', None)) or
+    if status_reader is None and (not (callable(getattr(session, 'status', None))
+                                      or callable(getattr(session, 'call', None))) or
                                   not callable(getattr(session, 'frame_probe', None))):
         raise ValueError('Default status adapter requires session.status and frame_probe')
     actual_session = getattr(getattr(controller, 'session', None), 'session_id', None)
@@ -165,9 +214,13 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
         bracket = {'kind': 'frame-status-probe', 'complete': False, 'issues': []}
         controller.journal.append(bracket)
         record['status_brackets'].append(bracket)
-        before = take_into(bracket, 'session_before', lambda: session.call('session.status'))
+        if callable(getattr(session, 'call', None)):
+            read_status = lambda: session.call('session.status')
+        else:
+            read_status = session.status
+        before = take_into(bracket, 'session_before', read_status)
         probe = take_into(bracket, 'frame_probe', lambda: session.frame_probe([]))
-        after = take_into(bracket, 'session_after', lambda: session.call('session.status'))
+        after = take_into(bracket, 'session_after', read_status)
         for name, value in (('session_before', before), ('session_after', after)):
             if type(value) is not dict or value.get('state') != 'stopped':
                 bracket['issues'].append(name+' is not known stopped')
@@ -179,6 +232,10 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
                     for k in ('state_revision', 'frame_id', 'mode_id', 'captured_ticks'))):
             bracket['issues'].append('frame probe lacks valid identity or metadata')
         if not bracket['issues']:
+            if 'source' in probe:
+                issue = _source_issue(probe)
+                if issue:
+                    bracket['issues'].append(issue)
             for key in ('session_id', 'state_revision'):
                 if before[key] != probe[key] or before[key] != after[key]:
                     bracket['issues'].append(key+' differs within status probe')
@@ -188,7 +245,9 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
         bracket['complete'] = True
         return {'state': 'stopped', 'session_id': before['session_id'],
                 'state_revision': before['state_revision'], 'frame_id': probe['frame_id'],
-                'mode_id': probe['mode_id'], 'captured_ticks': probe['captured_ticks']}
+                'mode_id': probe['mode_id'], 'captured_ticks': probe['captured_ticks'],
+                **({key: deepcopy(probe[key]) for key in _QEMU_FRAME_FIELDS if key in probe}
+                   if probe.get('source') == 'qemu_completed_source_raster' else {})}
 
     try:
         if ownership_issue is not None:
@@ -213,6 +272,15 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
                     record['baseline_frame_id'] = status['frame_id']
             elif status['session_id'] != record['session_id'] or status['mode_id'] != record['mode_id']:
                 record['issues'].append('session or mode changed during freshness wait'); return record
+            if len(record['status_polls']) > 1:
+                previous = record['status_polls'][-2]
+                if status.get('source') == 'qemu_completed_source_raster' or previous.get('source') == 'qemu_completed_source_raster':
+                    generation = lambda value: {key: item for key, item in value.get('frame_identity', {}).items()
+                                                if key != 'frame_id'}
+                    if (previous.get('source') != status.get('source')
+                            or previous.get('frame_profile') != status.get('frame_profile')
+                            or generation(previous) != generation(status)):
+                        record['issues'].append('source generation changed during freshness wait'); return record
             if len(record['status_polls']) > 1 and status['frame_id'] < record['status_polls'][-2]['frame_id']:
                 record['issues'].append('frame id regressed during freshness wait'); return record
             if not require_fresh or status['frame_id'] > record['baseline_frame_id']:
@@ -242,6 +310,10 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
             for key in ('session_id', 'state_revision', 'frame_id', 'mode_id'):
                 if final[key] != status[key]:
                     identity_matches = False; record['issues'].append('status '+key+' changed')
+            if status.get('source') == 'qemu_completed_source_raster' or final.get('source') == 'qemu_completed_source_raster':
+                for key in _QEMU_FRAME_FIELDS:
+                    if final.get(key) != status.get(key):
+                        identity_matches = False; record['issues'].append('status '+key+' changed')
         issue = _frame_issue(frame)
         if issue: record['issues'].append(issue)
         else:
@@ -249,6 +321,10 @@ def capture_frame_state(controller, capture_frame, *, status_reader=None, state_
             for key in ('session_id', 'state_revision', 'frame_id', 'mode_id'):
                 if metadata[key] != status[key]:
                     identity_matches = False; record['issues'].append('frame '+key+' differs from bracket')
+            if metadata.get('source') == 'qemu_completed_source_raster' or status.get('source') == 'qemu_completed_source_raster':
+                for key in _QEMU_FRAME_FIELDS:
+                    if metadata.get(key) != status.get(key):
+                        identity_matches = False; record['issues'].append('frame '+key+' differs from bracket')
         if require_fresh and identity_matches and not _status_issue(final) and not _frame_issue(frame):
             record['freshness'] = 'confirmed'
         if before is None or after is None:

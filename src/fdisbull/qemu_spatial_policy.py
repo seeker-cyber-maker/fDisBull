@@ -125,6 +125,9 @@ class QemuSpatialPolicyMixin:
             # Reuse the complete existing mode/latch/event contract. The latch
             # remains set even if evidence publication or the return deadline
             # fails; a failure cannot silently weaken an accepted restriction.
+            if mode is not None or fair_play is not None:
+                from .qemu_session_revision import session_revision
+                session_revision(self.vm).effect()
             result = SpatialSessionMixin.spatial_policy(self, mode, fair_play=fair_play)
             if time.monotonic() >= deadline:
                 error = TimeoutError('Spatial policy exceeded its host deadline')

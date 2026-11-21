@@ -72,6 +72,17 @@ def test_default_sdk_status_adapter_brackets_probe_without_guest_execution():
     assert out['status_brackets'][0]['frame_probe']['captured_ticks']==123
 
 
+def test_dosbox_default_keeps_raw_rpc_status_when_sdk_status_also_exists():
+    c = Fake(); c.session = SDKSession()
+    def enriched_status():
+        pytest.fail('The existing DOSBox raw status evidence must remain unchanged')
+    c.session.status = enriched_status
+    result = capture_frame_state(c, frame)
+    assert result['complete']
+    assert result['status_brackets'][0]['session_before'] == c.session.before
+    assert c.session.calls == ['status', 'frame_probe', 'status'] * 2
+
+
 def test_default_adapter_fresh_poll_uses_bounded_owner_progress():
     c=Fake();c.session=SDKSession()
     def advance(ms):

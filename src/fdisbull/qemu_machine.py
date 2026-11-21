@@ -46,6 +46,9 @@ from .qemu_video_frame_state import (QemuVideoFrameStateMixin, VIDEO_FRAME_STATE
                                     validate_video_frame_state_parameters,
                                     frozen_video_frame_state_parameters)
 from .qemu_observation_authority import ObservationAuthority
+from .qemu_session_revision import session_revision
+from .qemu_frame_contract import (QemuFrameContractMixin, configure_frame_contract,
+                                   validate_frame_rgba_parameters)
 from .qemu_stopped_control import (QemuStoppedControlMixin, STOPPED_CONTROL_COMMANDS,
                                    validate_stopped_control_parameters,
                                    preflight_stopped_control_binding)
@@ -408,6 +411,7 @@ class QemuMachine:
     def serial(self,deadline):
         authority=getattr(self,'observation_authority',None)
         if authority is not None:authority.public_operation('serial')
+        session_revision(self).effect()
         if self.transport=='pipe':
             if time.monotonic()>=deadline:raise TimeoutError('QEMU serial deadline expired')
             if self._serial_channel is None:
@@ -427,6 +431,7 @@ class QemuMachine:
         if self.gdb is None:
             authority=getattr(self,'observation_authority',None)
             if authority is not None:authority.public_operation('debugger-reconnect')
+            session_revision(self).effect()
             from .gdb_rpc import GDBRemote
             deadline=time.monotonic()+10
             if self.operation_deadline is not None:deadline=min(deadline,self.operation_deadline)
@@ -442,6 +447,7 @@ class QemuMachine:
     def close(self):
         authority=getattr(self,'observation_authority',None)
         if authority is not None:authority.invalidate('machine-close')
+        session_revision(self).effect()
         captured=getattr(authority,'_cleanup_owner',None)
         if captured is not None:
             return _close_observation_owner(self,captured)
@@ -519,6 +525,7 @@ def _machine_operation_guard(vm, name, args=(), kwargs=None):
     history = getattr(vm, 'history_operation_guard', None)
     if history is not None:
         history(name, args, kwargs or {})
+    session_revision(vm).public_operation(name, args, kwargs)
 
 
 def _machine_async_guard(session, name=None, args=(), kwargs=None):
@@ -753,7 +760,8 @@ def machine_run_operation(function):
 
 
 def machine_trace_operation(function, *, label='Source trace', default_timeout_ms=None,
-                            parameter_validator=None, parameter_freezer=None):
+                            parameter_validator=None, parameter_freezer=None,
+                            required_capability=None):
     """Bound traces and composed timing operations from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
@@ -765,6 +773,9 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
 
     @wraps(function)
     def invoke(self,*args,**kwargs):
+        if (required_capability is not None
+                and not getattr(self, 'capabilities', {}).get(required_capability)):
+            raise ValueError(label+' requires the '+required_capability+' capability')
         _machine_async_guard(self, function.__name__, args, kwargs)
         from .operation_budget import request_deadline
         arguments=signature.bind(self,*args,**kwargs)
@@ -853,6 +864,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 elif function.__name__ in ('display_probe', 'vga_configuration_observe',
                         'video_frame_start', 'video_frame_observe', 'video_frame_stop',
                         'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'video_frame_advance',
+                        'frame_probe', 'frame_rgba', '_frame_screenshot',
                         'video_frame_state_observe', 'stopped_control_arm',
                         'execute_step_over'):
                     if not native_cleanup(error):vm.close()
@@ -965,7 +977,7 @@ def machine_step_operation(function):
 
 
 class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
-                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuVideoFrameMixin, QemuVideoFrameStateMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
+                     QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuFrameContractMixin, QemuVideoFrameMixin, QemuVideoFrameStateMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
     context_id='machine'
@@ -1003,6 +1015,15 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         label='Video frame pixel probe',parameter_validator=validate_video_frame_probe)
     video_frame_rgba=machine_trace_operation(QemuVideoFrameMixin.video_frame_rgba,
         label='Video frame RGBA',parameter_validator=validate_video_frame_parameters)
+    frame_probe=machine_trace_operation(QemuFrameContractMixin.frame_probe,
+        label='Retained frame pixel probe',parameter_validator=validate_video_frame_probe,
+        required_capability='frame_contract')
+    frame_rgba=machine_trace_operation(QemuFrameContractMixin.frame_rgba,
+        label='Retained frame RGBA',parameter_validator=validate_frame_rgba_parameters,
+        required_capability='frame_contract')
+    _frame_screenshot=machine_trace_operation(QemuFrameContractMixin._frame_screenshot,
+        label='Retained frame codec',parameter_validator=validate_frame_rgba_parameters,
+        required_capability='frame_contract')
     video_frame_state_observe=machine_trace_operation(QemuVideoFrameStateMixin.video_frame_state_observe,
         label='Source raster state observation',parameter_validator=validate_video_frame_state_parameters,
         parameter_freezer=frozen_video_frame_state_parameters)
@@ -1042,6 +1063,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
 
     def __init__(self,vm):
         self.vm=vm;self.breakpoints={};self.next_bp=1;self.project=None;self.run_id=None
+        session_revision(vm)
         virtual=getattr(vm,'machine_configuration',{}).get('clock_profile',{}).get('profile')=='virtual'
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,
@@ -1113,16 +1135,21 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
             breakpoint_hooks=isinstance(self, QemuHookSessionMixin),
             qemm_observation=False,
             stop_scope='all machine vCPUs',threads='machine vCPUs; not operating-system threads')
+        configure_frame_contract(self)
 
     def bind(self,project,run_id):
         self.project=project;self.run_id=run_id;return self
+
+    @property
+    def session_id(self):
+        return session_revision(self.vm).session_id
 
     @machine_operation
     def status(self):
         from .debug_semantics import contract
         state=self.vm.qmp.call('query-status')
         result=dict(context='machine',state='running' if state['running'] else 'stopped',native_state=state,capabilities=self.capabilities,
-                    semantics=contract('qemu-machine'))
+                    semantics=contract('qemu-machine'),**session_revision(self.vm).snapshot())
         tracker=getattr(self,'_automatic_runtime_tracker',None)
         if tracker is not None:result['automatic_runtime_tracking']=tracker.status()
         return result
@@ -2155,7 +2182,7 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
                 'clock-observe','clock-advance','capture-surface','keyboard.key-down','keyboard.key-up','keyboard.state','keyboard.press','keyboard.type',
                 'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                 'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration',
-                'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe',
+                'video-frame-start','video-frame-observe','video-frame-stop','video-frame-probe','frame-probe',
                 'capture-video-frame','video-frame-advance','video-frame-state-observe','stopped-control-arm',
                 'retrace-observe',
                 'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop',

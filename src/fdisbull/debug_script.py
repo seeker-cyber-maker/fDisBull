@@ -546,6 +546,11 @@ def validate_script(script, *, session=None):
                             raise ValueError('Renderer probe requires its native extension and virtual clock')
                         from .qemu_display import validate_display_probe_parameters
                         validate_display_probe_parameters(**params, allow_references=True)
+                    if op == 'frame-probe' and (backend or actual) in ('qemu-machine','qemu-dos'):
+                        if session is not None and not getattr(session,'capabilities',{}).get('frame_contract'):
+                            raise ValueError('Frame probe requires the owned QEMU source-raster contract')
+                        from .qemu_video_frame import validate_video_frame_probe
+                        validate_video_frame_probe(**params, allow_references=True)
                     if op in VIDEO_FRAME_SCRIPT_OPERATIONS:
                         if (backend or actual) not in ('qemu-machine','qemu-dos'):
                             raise ValueError('Source video frames require an explicit native QEMU backend')
@@ -667,7 +672,7 @@ def validate_script(script, *, session=None):
         guarded={'keyboard.key-down','keyboard.key-up','keyboard.press','keyboard.type','mouse.move-relative','mouse.move-mapped','mouse.button-down','mouse.button-click',
                  'mouse.button-up','input-cancel-pending','input-schedule','input-schedule-observe',
                  'input-schedule-retrace',
-                 'clock-observe','clock-advance','wait','memory-rule-run','capture-surface','screenshot',
+                 'clock-observe','clock-advance','wait','memory-rule-run','capture-surface','screenshot','frame-probe',
                  'audio-start','audio-observe','audio-stop','capture-audio','mixer-observe',
                  'display-start','display-observe','display-stop','capture-display','display-probe','vga-configuration','retrace-observe',
                  'retrace-wait','clock-sync-start','clock-sync-observe','clock-sync-step','clock-sync-stop'}
@@ -887,6 +892,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op']=='display-probe':
                 from .qemu_display import validate_display_probe_parameters
                 validate_display_probe_parameters(**params)
+            if step['op'] == 'frame-probe' and (getattr(session,'backend_name',None)
+                    or getattr(session,'metadata',{}).get('backend')) in ('qemu-machine','qemu-dos'):
+                from .qemu_video_frame import validate_video_frame_probe
+                validate_video_frame_probe(**params)
+                params['timeout_ms'] = min(params.get('timeout_ms', 1000), remaining)
             if step['op'] in VIDEO_FRAME_SCRIPT_OPERATIONS:
                 validate_video_frame_script_parameters(step['op'], params)
                 default = 5000 if step['op'] == 'video-frame-advance' else 1000

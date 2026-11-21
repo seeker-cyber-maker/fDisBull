@@ -73,6 +73,20 @@ def start(frames):
     return frames.timeline_start(max_frames=5,max_bytes=65536,max_state_bytes=8192,max_image_bytes=1024)
 
 
+def test_timeline_stop_changes_session_revision_but_status_is_passive(frames):
+    from fdisbull.qemu_session_revision import session_revision
+    start(frames)
+    authority = session_revision(frames.vm)
+    before = authority.snapshot()
+    frames.timeline_status()
+    assert authority.snapshot() == before
+    calls = list(frames.vm.qmp.calls)
+    result = frames.timeline_stop()
+    assert result['stopped'] and not result['target_executed']
+    assert authority.snapshot()['state_revision'] > before['state_revision']
+    assert frames.vm.qmp.calls == calls
+
+
 def test_completed_publications_make_persistent_points_and_stored_image(frames):
     root = start(frames)
     assert root['unit'] == 'completed synchronous renderer update' and root['completed_guest_frame'] is None

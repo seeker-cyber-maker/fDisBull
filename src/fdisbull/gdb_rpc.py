@@ -327,6 +327,9 @@ class GDBRemote:
         if authority is not None:authority.invalidate('GDB channel closed')
         channel=self.socket if authority is None else authority.original_channel(self)
         if channel is not None:
+            if authority is not None:
+                from .qemu_session_revision import session_revision
+                session_revision(authority.vm).effect()
             try:channel.close()
             finally:
                 if self.socket is channel:self.socket=None

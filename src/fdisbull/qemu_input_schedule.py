@@ -339,6 +339,7 @@ class QemuScheduledInputMixin:
             raise
 
     def _input_schedule_accept(self, native, clock):
+        from .qemu_session_revision import session_revision
         state = self._input_storage()
         schedule = state['schedule']
         if schedule['bound']:
@@ -350,6 +351,8 @@ class QemuScheduledInputMixin:
                 if count < schedule['applied_count']:
                     _invalid(self, 'Owned timed mouse applied prefix regressed' if mode == 'click'
                              else 'Owned timed keyboard applied prefix regressed')
+                if count != schedule['applied_count'] or native['state'] == 'dispatched':
+                    session_revision(self.vm).effect()
                 records = schedule['records'][schedule['applied_count']:count]
                 if mode == 'typing':
                     self._input_mark_text_prefix_dispatched(state, schedule, records, 'native_dispatched')
@@ -361,6 +364,7 @@ class QemuScheduledInputMixin:
                 if native['state'] == 'dispatched':
                     schedule['bound'] = False
             elif native['state'] == 'dispatched':
+                session_revision(self.vm).effect()
                 self._input_mark_dispatched(state, schedule['records'], 'native_dispatched')
                 schedule['bound'] = False
         schedule['native'] = deepcopy(native)

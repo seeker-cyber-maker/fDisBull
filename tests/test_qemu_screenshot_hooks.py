@@ -66,6 +66,21 @@ def policy(**updates):
     return dict(require_fresh_frame=False, **updates)
 
 
+def test_hook_setter_changes_session_revision_but_policy_reads_are_passive(capture_owner):
+    from fdisbull.qemu_session_revision import session_revision
+    o = capture_owner
+    authority = session_revision(o.session.vm)
+    before = authority.snapshot()
+    o.session.screenshot_hooks()
+    assert authority.snapshot() == before
+    o.session.screenshot_hooks(policy())
+    changed = authority.snapshot()
+    assert changed['state_revision'] > before['state_revision']
+    o.session.screenshot_hooks()
+    assert authority.snapshot() == changed
+    assert o.session.effects == [] and o.session.reads == []
+
+
 def route(steps):
     return dict(format='fdisbull-script-1', backend='qemu-dos', steps=steps)
 
