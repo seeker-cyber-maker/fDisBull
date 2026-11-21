@@ -281,10 +281,24 @@ def test_native_call_over_displaces_an_actual_pending_call_hook(tmp_path, parity
         before = debug.registers()
         assert _ip(before) == 0x102 and _word(before, 'rax', 'eax', 'ax') == 0
         aliases, next_identifier = deepcopy(debug.breakpoints), debug.next_bp
+        pending_hooks = debug.hooks()['hooks']
+        assert len(pending_hooks) == 1 and pending_hooks[0]['hook'] == point['hook']
+        assert pending_hooks[0]['hits'] == 1
+        # Displacing this repeat hook removes and rearms its public breakpoint.
+        # Predict exactly that one new ID; the CALL's private control still
+        # consumes none, and every unrelated alias must remain unchanged.
+        rearmed_identifier = 'machine-bp-' + str(next_identifier)
+        expected_aliases = deepcopy(aliases)
+        hook_alias = expected_aliases.pop(point['breakpoint_id'])
+        assert rearmed_identifier not in expected_aliases
+        expected_aliases[rearmed_identifier] = hook_alias
+        expected_hook = dict(pending_hooks[0], breakpoint_id=rearmed_identifier)
         with dispatches(debug, directory) as calls:
             result = debug.step(mode='over', timeout_ms=5000)
-            retain(directory, 'pending-call-hook.json', dict(initial_hit=hit, over=result))
-            accepted(debug, result, before, aliases, next_identifier, calls)
+            rearmed_hooks = debug.hooks()['hooks']
+            retain(directory, 'pending-call-hook.json', dict(initial_hit=hit, over=result,
+                hooks_before=pending_hooks, hooks_after=rearmed_hooks))
+            assert rearmed_hooks == [expected_hook]
+            accepted(debug, result, before, expected_aliases, next_identifier + 1, calls)
             assert [row['command'] for row in calls] == ['s', 'c']
-            assert debug.hooks()['hooks'][0]['hook'] == point['hook']
         debug.delete_hook(point['hook'])
