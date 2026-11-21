@@ -26,6 +26,13 @@ Its [detached packet](DRAW_INTENT_PACKET.md) distinguishes committed actor
 state, the requested preview layer and unresolved rendering/presentation.
 Existing scalar and binding profiles keep their prior behavior and schemas.
 
+The optional [Sarien-derived scene kernel](SARIEN_SCENE.md) reuses position,
+collision, control-line and priority-composition logic as one bounded host
+component. It can consume these packets with explicit scene assumptions while
+preserving the native pending draw. Routine verification uses
+[behavior batches](BEHAVIOR_BATCH.md) and the existing qualified QEMU binary
+when its native inputs are unchanged.
+
 ## Observation control
 
 `agi-observation-mask` is a host-owned two-bit control register. It is separate
