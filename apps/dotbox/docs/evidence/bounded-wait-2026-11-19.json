@@ -1,0 +1,196 @@
+{
+  "schema": "dotbox-bounded-wait-verification-1",
+  "date": "2026-11-19",
+  "status": "offline_contract_and_single_live_observation_passed",
+  "source": {
+    "local_base_commit": "558b457cebfbf45c6715cacbf4e353bc191cc935",
+    "base_tree": "ad3e43ecb91fd6bfa6d2996e8880ec9a4f67f133",
+    "helper": "src/dotbox/bounded_wait.py",
+    "helper_sha256": "aebe2e0b89f271ea9794dcfd2f3ddbdaef236bae14e9d2706923949d9bef99b7",
+    "tests": "tests/test_bounded_wait.py",
+    "tests_sha256": "6e2649c9ed2409b7e892cae49d4940e73efc06eeac4bf298875bd4f486ab5ed0"
+  },
+  "observed_original_failure": {
+    "target": "Original Dune II v1.0, one bounded production observation",
+    "original_executable_sha256": "d49f45729babd298fd72d0f623cc3cfaa4c3d144ab38e53f24355f2208b4e5a0",
+    "native_executable_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "max_frames": 1900,
+    "max_guest_ms": 25000,
+    "native_operation_timeout_ms": 15000,
+    "enclosing_request_max_host_ms": 30000,
+    "result": "OPERATION_TIMEOUT",
+    "partial_guest_outcome": "unknown",
+    "native_requests_after_halt": 0,
+    "process_reaped": true,
+    "process_return_code": 0,
+    "input_replayed": false,
+    "journal_sha256": "5c04c7f296b3ae54ae0fb4b5080410b2589003570421a981cbff47e64e57b319",
+    "failure_receipt_sha256": "daaea046342ebb56e7f3bdbb61d42ec6e12c6a83ebaeace4e8b15970d6bffe53",
+    "closure_receipt_sha256": "213c9e11d1ebf4118835c6c4359bb7782daaa2103516c1f9bf75b1a8a4cadcc5"
+  },
+  "implemented_contract": {
+    "entry_point": "dotbox.bounded_wait.bounded_wait",
+    "callback": "Already-fenced synchronous step(max_frames=..., max_guest_ms=...)",
+    "maximum_slice_guest_ms": 5000,
+    "maximum_aggregate_frames": 10000,
+    "maximum_aggregate_guest_ms": 30000,
+    "aggregate_schema": "dotbox-bounded-wait-1",
+    "preserves_raw_receipts": true,
+    "renews_host_deadline": false,
+    "retries_after_error": false,
+    "caller_responsibilities": [
+      "Current native capability, ownership and stopped-context fencing",
+      "One original outer host deadline across all slices",
+      "Receipt provenance, clock continuity and rendering validity",
+      "Partial journal evidence and terminal failure handling"
+    ]
+  },
+  "offline_verification": {
+    "python": "3.12.14",
+    "pytest": "9.2.0",
+    "environment": "DOTBOX_DOSBOX_EXECUTABLE unset; PYTHONDONTWRITEBYTECODE=1; isolated temporary directories",
+    "focused": {
+      "command": "python -m pytest tests/test_bounded_wait.py -p no:cacheprovider -q",
+      "passed": 41,
+      "duration_seconds": 0.09,
+      "exit_code": 0
+    },
+    "integrated": {
+      "command": "python -m pytest tests/test_bounded_wait.py tests/test_rts_world.py tests/test_rts_actions.py tests/test_rts_cli.py tests/test_scene_state.py tests/test_kit.py -p no:cacheprovider -q",
+      "passed": 199,
+      "duration_seconds": 1.64,
+      "exit_code": 0
+    },
+    "focused_cases_included_in_integrated_count": true,
+    "native_calls": 0,
+    "independent_review": "pass_for_callback_only_aggregate_wait_contract"
+  },
+  "live_sliced_observation": {
+    "status": "passed_single_observation",
+    "target": "Original Dune II v1.0, one Windtrap production observation in a fresh isolated process",
+    "qualified_scope": "The five native receipts and explicit aggregate preserved this observation's frame and guest-time ceilings; this does not qualify a general Dune II provider.",
+    "limits": {
+      "max_frames": 1900,
+      "max_guest_ms": 25000,
+      "slice_guest_ms": 5000
+    },
+    "completed_slices": 5,
+    "total_frames_completed": 1753,
+    "total_guest_elapsed_ms": 25000,
+    "stop_cause": "guest_time_limit",
+    "state_revision_before": 45,
+    "state_revision_after": 50,
+    "guest_ticks_before": 75708,
+    "guest_ticks_after": 100708,
+    "input_mutations": 0,
+    "native_save_or_restore_calls": 0,
+    "steps": [
+      {
+        "native_sequence": 1012,
+        "requested_max_frames": 1900,
+        "requested_max_guest_ms": 5000,
+        "frames_completed": 351,
+        "guest_elapsed_ms": 5000,
+        "native_operation_timeout_ms": 15000,
+        "state_revision": 46
+      },
+      {
+        "native_sequence": 1021,
+        "requested_max_frames": 1549,
+        "requested_max_guest_ms": 5000,
+        "frames_completed": 350,
+        "guest_elapsed_ms": 5000,
+        "native_operation_timeout_ms": 15000,
+        "state_revision": 47
+      },
+      {
+        "native_sequence": 1030,
+        "requested_max_frames": 1199,
+        "requested_max_guest_ms": 5000,
+        "frames_completed": 351,
+        "guest_elapsed_ms": 5000,
+        "native_operation_timeout_ms": 15000,
+        "state_revision": 48
+      },
+      {
+        "native_sequence": 1039,
+        "requested_max_frames": 848,
+        "requested_max_guest_ms": 5000,
+        "frames_completed": 350,
+        "guest_elapsed_ms": 5000,
+        "native_operation_timeout_ms": 15000,
+        "state_revision": 49
+      },
+      {
+        "native_sequence": 1048,
+        "requested_max_frames": 498,
+        "requested_max_guest_ms": 5000,
+        "frames_completed": 351,
+        "guest_elapsed_ms": 5000,
+        "native_operation_timeout_ms": 15000,
+        "state_revision": 50
+      }
+    ],
+    "enclosing_request_max_host_ms": 30000,
+    "outer_host_deadline_renewed": false,
+    "deadline_evidence": "The reviewed caller sets one deadline before script dispatch; every native call uses the remaining time and the helper has no deadline mutation.",
+    "request_sha256": "6885e0ef17a5ec361dd79cd360ebe7b90553570bc07cd7fb05efc513831707ed",
+    "receipt_sha256": "bfc2eed0870d3202bf39d25e47c26258af59fc8e74058fc0fe967d71800f23f5",
+    "before_summary_sha256": "511f84c40b9c203c79f482cc01fa3a866776cacb16b1fdfeab7816cebac9ca5d",
+    "after_summary_sha256": "68b0f4469a734530fb9ec8887f2950c4c49c5c2559363b5ca38223eeed93b271",
+    "caller_sha256": "87ce44e953a7914c1987719ec3d382e8e8ecfc50df88e778dd4f868d7ef5bc43",
+    "action_script_sha256": "62d747a3c44c0ddc15e2023ebe54539d79857dca891b49ab1ffa364978d1d835",
+    "journal_segment": {
+      "first_record_1based": 2030,
+      "last_record_1based": 2183,
+      "records": 154,
+      "native_request_response_pairs": 76,
+      "sha256": "ce09a69bcd574420d155e52f87aa36dbecabeae020363d0c85945961691b3b00",
+      "byte_scope": "Exact JSONL records from the observation script_start through the last native response before the next independent script_start, including newlines.",
+      "raw_receipts_match_aggregate": true,
+      "logged_interval_seconds": 15.021344577,
+      "timing_scope": "Script-start journal timestamp through final native-response timestamp; excludes later response serialization and is not an end-to-end readiness benchmark."
+    },
+    "diagnostic_effects": {
+      "scope": "Private original-state reader before and after this observation; no generic current-visibility claim.",
+      "production_button_case": {
+        "before": "hold",
+        "after": "place"
+      },
+      "player_house_credits": {
+        "before": 974,
+        "after": 699
+      },
+      "production_countdown": {
+        "before": 11264,
+        "after": 0
+      },
+      "game_ticks": {
+        "before": 305,
+        "after": 1805
+      },
+      "placement_or_mission_result_claimed": false
+    }
+  },
+  "work_record": {
+    "board": "https://agent-bbs-native.tiga-rce.chatgpt.site",
+    "project": "dotbox",
+    "ticket": "e-18c835bb-80c7-411c-bdde-d71c6b5cf06e"
+  },
+  "limits": [
+    "The authored deadline model does not measure native host performance.",
+    "The live evidence establishes one successful sliced production observation; it is not a general host-time or startup-readiness guarantee.",
+    "The separate prepared-opening readiness attempt missed its 180-second profile.",
+    "The helper does not establish native ownership, current visibility or a public Dune II provider.",
+    "A callback failure can follow partial guest progress and is not permission to replay.",
+    "Commercial assets, raw game captures, screenshots, saves and private runtime paths remain excluded."
+  ],
+  "separate_opening_readiness": {
+    "scope": "Prepared opening and root-inspected independent baseline in the same fresh run; separate from the 25-second observation.",
+    "opening_host_seconds": 36.964139558,
+    "root_observed_readiness_seconds": 285.051091492,
+    "profile_budget_seconds": 180,
+    "within_profile_budget": false,
+    "receipt_sha256": "655cf26f2b060afc9c7b245e7e98aaceab230f0d76eef3004d34919eac5891e0"
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "schema": "dotbox-keen-actor-model-checkpoint-1",
+  "date": "2026-11-20",
+  "scope": "Authored experimental source-informed actor helper and one original-input validation trace; not an installed general provider or whole-engine model",
+  "source": {
+    "released_source_revision": "15be5be4a3382d0a1d99e1202219a84b09b11273",
+    "game_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+    "native_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "decoder_sha256": "f68c129189ca3dd2caa0ab176349893da66151cf61b91ac7465470bf38b42299",
+    "installed_dotbox_version": "0.1.0.dev9",
+    "binding": "Selected state-family and reaction-code hashes checked freshly; whole released-source binary equivalence not established"
+  },
+  "public_code": {
+    "scripts/experiments/keen_actor.py": {
+      "sha256": "3ed2a8d223ac41c1c6c396624f1dca3e2c54bc789d5c411a7df54ff6f6507c13",
+      "bytes": 8127
+    },
+    "tests/test_keen_actor.py": {
+      "sha256": "835fc714fc111934092411b53e7846cce72f40815be2a7e657cd3e332ae93b3a",
+      "bytes": 7955
+    }
+  },
+  "private_evidence": {
+    "pretrace-freeze.json": {
+      "sha256": "dd4aba20dfbb352d3644c16da269c2ab487289b612395eeca808dd0494a3f8f4",
+      "bytes": 1248
+    },
+    "validator-freeze.json": {
+      "sha256": "e2871d7e661c2fcf56a522aaf34fb211a6c11e03f549c4fc0597f126152c3af1",
+      "bytes": 1121
+    },
+    "carrot-profile.json": {
+      "sha256": "907aa874640d5db7ab73db002ba944094fe5418c2d9a67e4b714256063d301e7",
+      "bytes": 337
+    },
+    "actor-observations-01.json": {
+      "sha256": "440210ee93f3740b358c8d89bd41c02e8787c43ca29318672510b23a13b81844",
+      "bytes": 5152767
+    },
+    "carrot-validation-01.json": {
+      "sha256": "c797c4f70b10554f19784fb1c0d26d9e4a636b74bc5a6f2859ab0b19d5ab67e7",
+      "bytes": 643696
+    },
+    "owner-result-review.json": {
+      "sha256": "f23674a02c4628c836c4f5fe291d66149883f161f014520fb857a26376e65556",
+      "bytes": 23145
+    },
+    "verification.json": {
+      "sha256": "09770c1fa3bbdbcd4b86b9821d3398a1b6fea03e317e9fb32dc375cd2217c980",
+      "bytes": 941
+    },
+    "preparation-result.json": {
+      "sha256": "462379b4e226c8f123d543ffbf6eb9bf6eb979616f6f974dab10ad40d408422f",
+      "bytes": 474
+    }
+  },
+  "run": {
+    "identity": "be4855e789ec40c48fe7a6fc72bb3440",
+    "phase": "post_actor_pre_refresh",
+    "gameplay_updates": 82,
+    "observations_including_initial": 83,
+    "active_actor_observations": 20,
+    "activation_update": 63,
+    "last_update": 82,
+    "ordinary_controller_keys": [
+      "left"
+    ],
+    "player_travel_px": 181.5,
+    "neutral_stable_transitions": 18,
+    "minimum_enemy_rectangle_separation_px": 79.5,
+    "actor_observed_x_delta_px": 64,
+    "actor_observed_y_delta_px": -16,
+    "lives": 3,
+    "score": 0,
+    "inventory_unchanged": true,
+    "objective_success": true,
+    "normal_clock": true,
+    "controller_screenshot_calls": 0,
+    "outside_controller_native_captures": 9,
+    "map_endpoint_hashes_match": true,
+    "original_game_files_unchanged": true,
+    "closure": {
+      "closed": true,
+      "guest_stop_complete": true,
+      "process_reaped": true,
+      "process_returncode": 0
+    }
+  },
+  "validation": {
+    "model_frozen_before_run": true,
+    "comparator_written_after_run_completion_notice": true,
+    "comparator_frozen_before_reading_fresh_artifact": true,
+    "online_prediction_control_test": false,
+    "counts_all_five_carrots": {
+      "candidate_pairs": 410,
+      "predictions_made": 19,
+      "comparable_pairs": 19,
+      "state_matches": 19,
+      "counter_matches": 19,
+      "state_counter_matches": 19,
+      "state_counter_mismatches": 0,
+      "xdelta_matches": 19,
+      "xdelta_mismatches": 0,
+      "ydelta_matches_proposed": 15,
+      "ydelta_differs_from_proposed": 4
+    },
+    "exclusions_all_five_carrots": {
+      "activation_edge": 1,
+      "inactive_preceding_actor": 390
+    },
+    "selected_carrot_pairs": {
+      "candidate_pairs": 82,
+      "predictions": 19,
+      "comparable_pairs": 19,
+      "state_counter_matches": 19,
+      "excluded_inactive_preceding_actor": 62,
+      "excluded_activation_edge": 1
+    },
+    "predictions_excluded_after_generation": 0,
+    "walking_states_covered": 4,
+    "distinct_boundary_edges_covered": 4,
+    "matching_occurrences_per_edge": 2,
+    "observed_direction": "right",
+    "ticks_per_update": 2,
+    "horizontal_agreement_is_diagnostic_only": true,
+    "final_position_model": false,
+    "reaction_callback_entry_validated": false
+  },
+  "timing": {
+    "scope": "Feedback only; bootstrap and private final rendering excluded",
+    "controller_host_ms": 2339.90298199933,
+    "controller_guest_ms": 2342,
+    "cycle_latency_ms": {
+      "p50": 28.52399300172692,
+      "p95": 30.59058299913886,
+      "max": 34.531399000115925
+    },
+    "memory_read_rpc": {
+      "count": 83,
+      "total_ms": 184.58460198962712,
+      "mean_ms": 2.223910867344905,
+      "p50_ms": 2.138126001227647,
+      "p95_ms": 3.031819000170799,
+      "max_ms": 4.045944002427859
+    },
+    "memory_window_bytes": 30710,
+    "decoder_time_separately_measured": false,
+    "post_bootstrap_accounting": {
+      "limit_ms": 6000,
+      "admission_guest_ms": 8,
+      "controller_limit_ms": 5952,
+      "controller_guest_ms": 2342,
+      "final_renderer_guest_ms": 18,
+      "total_guest_ms": 2368,
+      "accounting_complete": true
+    },
+    "no_causal_throughput_speedup_claim": true,
+    "memory_read_percentile_method": "Nearest rank, sorted index ceil(n*q)-1; same as KeenLoop latency summaries"
+  },
+  "tests": {
+    "command": "python -m pytest -q tests/test_keen_actor.py tests/test_keen_loop.py tests/test_keen_waypoint.py tests/test_keen_world.py",
+    "passed": 286,
+    "new_actor_cases": 87,
+    "exit_code": 0,
+    "source_review": "pass",
+    "independent_owner_result_review": "pass",
+    "interpreter": "Qualified installed DotBox venv, Python3.12.14; exact absolute invocation retained privately"
+  },
+  "preparation": {
+    "schema": "keen-actor-preparation-1",
+    "preparation_scope": "Warm reuse; publish approved checkpoint and derive one source-grounded actor behavior predictor",
+    "earlier_preparation_unknown": "Initial read-only tool discovery and worker dispatch preceded this timestamp",
+    "bound_seconds": 1800,
+    "first_useful_active_trace_complete_seconds": 881.621976732,
+    "within_recorded_bound": true,
+    "model_frozen_before_launch": true,
+    "cold_start_qualification": false
+  },
+  "limits": [
+    "One short active-carrot route; all other carrots remained inactive.",
+    "Source-rule predictions were compared retrospectively; control still used current observed state.",
+    "State/counter prediction is before clipping; actual y differs on four transitions.",
+    "No original-game reaction-callback, reversal, leap, landing, gravity or deactivation qualification.",
+    "Two ticks and rightward walking only in live evidence; authored tests cover more cases separately.",
+    "State definitions below the hot window come from the admitted seed, not fresh reads every update.",
+    "Terrain endpoint equality does not establish continuous immutability.",
+    "Display, world coordinates and control remain independent; no new resolution-specific algorithm.",
+    "Original game files, raw RAM, disassembly, exact runtime profiles and images remain outside public Git."
+  ]
+}

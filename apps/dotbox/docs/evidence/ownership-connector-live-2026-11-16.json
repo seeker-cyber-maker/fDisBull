@@ -1,0 +1,189 @@
+{
+  "schema": "dotbox-ownership-connector-live-verification-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "69abb3cb568388aaf766932d7ad39383b6f8e346",
+  "qualification": "Read-only private connection and sampled live Take over/Return control observation verified; desktop input remains unqualified",
+  "connection": {
+    "transport": "Existing OpenAI Secure MCP Tunnel",
+    "host": "Owned Studio loopback coordinator and MCP server",
+    "public_dotbox_endpoint": false,
+    "new_network_grants": false,
+    "oauth_provider_added": false,
+    "intended_organization_verified": true,
+    "associated_organizations": 1,
+    "workspace_ids_in_returned_metadata": 0,
+    "private_custom_plugin_connected": true,
+    "tool_surface": [
+      "dotbox_ownership_status"
+    ],
+    "input_arguments": {},
+    "output_fields": 9,
+    "external_tool_auth_scheme": "noauth within authenticated tunnel access",
+    "local_http_bearer_scope_and_audience_required": true,
+    "runtime_key_permissions": [
+      "Tunnels Read",
+      "Tunnels Use"
+    ],
+    "runtime_key_private_file_mode": "0600",
+    "key_or_private_identifiers_published": false,
+    "runtime_key_expiry_display": "2026-12-16"
+  },
+  "runtime": {
+    "tunnel_client_version": "0.0.21+714f2d67844b660af25754f1d19b0360b346b13b",
+    "installation": "Official OpenAI Homebrew formula",
+    "doctor_exit_code": 0,
+    "readyz_http_status": 200,
+    "readyz_body": "ready",
+    "control_plane_status": "ok",
+    "control_plane_state": "polling",
+    "poll_channels": [
+      "main"
+    ],
+    "arbitrary_http_targets": false,
+    "health_admin_loopback_only": true,
+    "supervision": "Owned foreground sessions, with full private profile file",
+    "native_alias_supervision": false,
+    "login_startup_service": false,
+    "profile_writer_boundary": "Inspected 0.0.21 runtimes connect overwrites full profiles, so exact-file foreground run preserves required authentication/discovery/channel configuration"
+  },
+  "live": {
+    "actor": "Existing original Dot chat with newly attached private plugin",
+    "viewer": "Same selected existing computer panel, bound by full URL hash retained privately",
+    "coordinator_instance_unchanged_across_probes": true,
+    "live_reads": [
+      {
+        "phase": "opening",
+        "owner": "dot",
+        "viewer_mode": "observe",
+        "fresh": true,
+        "exact_receiver_epoch_sequence_and_viewer_evidence_join": true
+      },
+      {
+        "phase": "takeover",
+        "owner": "human",
+        "viewer_mode": "control",
+        "fresh": true,
+        "exact_receiver_epoch_sequence_and_viewer_evidence_join": true
+      },
+      {
+        "phase": "return",
+        "owner": "dot",
+        "viewer_mode": "observe",
+        "fresh": true,
+        "exact_receiver_epoch_sequence_and_viewer_evidence_join": true
+      }
+    ],
+    "foreground_observations": 285,
+    "foreground_phase_counts": {
+      "opening": 97,
+      "takeover": 94,
+      "return": 94
+    },
+    "acknowledged_exact_source_joins": 285,
+    "unacknowledged_foreground_observations": 0,
+    "matching_full_viewer_url_bindings": 285,
+    "raw_ax_sha256_recorded_per_source_observation": true,
+    "returned_control_to_dot": true,
+    "detection_latency_measured": false,
+    "same_lease_or_atomic_capture_proof": false,
+    "publishing_windows": "Three bounded foreground CUA calls; source gaps invalidate evidence and reopen streams rather than extend a lease",
+    "root_environment_switch_actions_issued": 0,
+    "keyboard_mouse_actions_inside_dot_computer": 0
+  },
+  "stopped_source": {
+    "publisher_stopped_cleanly": true,
+    "dot_read": {
+      "owner": "unknown",
+      "fresh": false,
+      "expires_in_ms": 0
+    },
+    "independent_real_connector_read_matches_all_nine_fields": true,
+    "last_good_fallback": false,
+    "connection_sessions_left_running": true,
+    "current_status_expected": "Unknown while observation source is stopped"
+  },
+  "excluded_attempt": {
+    "method": "Unawaited background CUA observer",
+    "samples": 902,
+    "actual_ax_observations": 0,
+    "reported_state": "unknown",
+    "admitted_as_live_proof": false,
+    "resolution": "Awaited bounded observer inside active CUA calls; failed-attempt evidence preserved separately"
+  },
+  "implementation": {
+    "private_tunnel_launch_mode": true,
+    "backend_read_scope_unchanged": true,
+    "private_local_header_file_exclusive_creation": true,
+    "shutdown_cleanup": "Retained original fd and atomic private capture; restore foreign replacements exclusively or preserve them in quarantine",
+    "cleanup_boundary": "Does not isolate malicious processes sharing the same OS identity",
+    "new_gameplay_or_audio": false
+  },
+  "verification": {
+    "source_suite": {
+      "passed": 407,
+      "skipped": 0,
+      "seconds": 34.93,
+      "connector_cases": 38,
+      "native": "Prepared executable and pinned source reused; no native rebuild"
+    },
+    "isolated_installed_suite": {
+      "passed": 180,
+      "skipped": 0,
+      "deselected": 1,
+      "seconds": 26.85,
+      "exclusion": "Source-only static import audit covered by full source suite"
+    },
+    "base_import_without_mcp_or_fdisbull": true,
+    "exact_runtime_modules_source_wheel_install": 22,
+    "runtime_module_map_sha256": "735debaa8d66a08c27bae66296f1256a39dd081c998f5ac8f18c701ae6d93b3c",
+    "wheel_sha256": "6b8db5722b344d4e742f4ff7b8bc2cfa9ff86037fde345599eab9bcc657cea0e",
+    "hosted_ci_dispatched": false,
+    "release_or_global_dotbox_installation": false
+  },
+  "limits": [
+    "Sampled UI observations, never input permission, turn lease or atomic ownership lock",
+    "Fresh results require bounded foreground observer calls; no persistent unattended sampler delivered",
+    "No desktop keyboard/mouse through an awaited ownership fence, game or audio qualification",
+    "Existing local coordinator credential still has broader turn/shutdown rights; fixed remote tool is not process-compromise isolation",
+    "Runtime key expires on 16 December 2026; owned foreground processes are not login/startup persistence",
+    "Existing original-Dot shell/TCP restrictions were not changed or bypassed"
+  ],
+  "references": [
+    "https://developers.openai.com/api/docs/guides/secure-mcp-tunnels",
+    "https://github.com/openai/tunnel-client/blob/v0.0.21/docs/permissions.md",
+    "https://github.com/openai/tunnel-client/blob/714f2d67844b660af25754f1d19b0360b346b13b/pkg/codexplugin/manager.go#L416",
+    "https://github.com/openai/tunnel-client/blob/714f2d67844b660af25754f1d19b0360b346b13b/pkg/codexplugin/session/session.go#L319"
+  ],
+  "private_receipts": [
+    {
+      "name": "source-suite-private-tunnel-01.log",
+      "bytes": 501,
+      "sha256": "7ebc1329bac621a30a8ac14af3bd92f81fee7681b49d1d4ad0fd5cda61754926"
+    },
+    {
+      "name": "installed-suite-private-tunnel-01.log",
+      "bytes": 275,
+      "sha256": "d32eb8043cbdeefe6c06ae63c7788b339690a50312982fece6b292280bbf3b08"
+    },
+    {
+      "name": "private-tunnel/live-observer-foreground.jsonl",
+      "bytes": 153776,
+      "sha256": "d2e6241688eff63816e2f6ebb8d4ec7387e23346e379846f09d0b8f622c90db6"
+    },
+    {
+      "name": "private-tunnel/live-publisher-02.jsonl",
+      "bytes": 276935,
+      "sha256": "3d9dace2c37f6cefce72867df8eb22f6b1b250d35dfcafd8cb58f8476bc746b6"
+    },
+    {
+      "name": "private-tunnel/dot-tool-readbacks.jsonl",
+      "bytes": 952,
+      "sha256": "67f6d9935333947fc2f874c55bf867b672c210d487edf4b6ea40e457548af230"
+    },
+    {
+      "name": "private-tunnel/all-live-evidence-result.json",
+      "bytes": 330,
+      "sha256": "c48d6a3609b8237d32aea973f1b1d96ac8721980fc8a36ea8b67431edfe720b6"
+    }
+  ]
+}

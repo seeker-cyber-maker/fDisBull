@@ -1,0 +1,182 @@
+{
+  "schema": "dotbox-dune-skill-evaluation-1",
+  "date": "2026-11-15",
+  "status": "completed_bounded_local_trial",
+  "verdict": "partial",
+  "scope": "User redirected the requested cloud test to a local Terra model evaluation; viewer output was deprioritized. Actual original Dune ran locally. This is not cloud or platform-takeover qualification.",
+  "summary": "The model used near-term controls to navigate four opening views and grew callable input-backed actions. A directed frozen-frame worker phase overlapped with effective play. Sixteen measured coordination windows and missing initial timing prevent a seamless-play or complete cold-start claim.",
+  "skill": {
+    "frozen_commit": "1c6f470b5edaf29f255a1fad046870d8d54fa33a",
+    "entrypoint_sha256": "4f9b004341cfd315b5034d9eabab5e4ed51f72aae6d7e47e1694eae60c46741b",
+    "model": "gpt-6.1-terra",
+    "delegation": "Fresh local subagent; model selection controlled by coordinator, not introspected by game controller.",
+    "assistance": [
+      "User supplied Dune suitability/later-mission hint; prior generic franchise knowledge cannot be excluded.",
+      "Coordinator supplied frozen skill, media and existing runtime references, clarified timing/claim boundaries, and requested the parallel phase.",
+      "No walkthrough, online solution, target source or hidden-state analysis reported."
+    ],
+    "claim": "One bounded assisted usability trial; no clean-room or general model-performance claim."
+  },
+  "target": {
+    "edition": "User-supplied Dune CD ISO; ISO9660 volume DUNE_CD",
+    "archive_sha256": "c526c89f724f767d8cb789e9dfb1f28d82ada45cd506b80e785374a058121daf",
+    "iso_sha256": "6a1adf2ba8159c694b0e30854e4eab85531b5fcf0a411b98a72ca461c362aea2",
+    "program_sha256": "935b68dd6bd5333a6fb16c47ca265f77255369734571a131e1b71aa6bcd755f7",
+    "resource_sha256": "60060efa7fb0bd49447dcc7327549a554808aa0e9f11ccbc4866a30895960623",
+    "setup": "Read-only host mount was denied; a private extracted layout ran the original installer/configuration and configured game. CD-capable launcher support was not added.",
+    "preservation": "Coordinator rehashed unchanged original archive/ISO and all six copied original files after the trial. No game bytes are included in this report."
+  },
+  "runtime": {
+    "host": "Local Darwin arm64",
+    "python_reported": "3.13.14",
+    "dotbox_source_base": "10fa86d8a91bb75e0ccf3da346bc9f72eab91d03",
+    "dotbox_implementation": "Uncommitted development tree; runtime implementation is not part of this skill PR.",
+    "native_executable_sha256": "5a9a221d2fe43cdf8ffc72c474073cb5d520717f17914282ec37bc25957b46af",
+    "native_server_source_sha256": "13237927a391e2f819e01a1e11c376234ec90a24d87127d49c46b721d2ee7b35",
+    "ownership": "One live mutation owner with explicit development agent ownership; platform takeover remained unknown.",
+    "session_continuity": "All 101 audited second-session command receipts retain the same service/run/native-session tuple. Installer setup used a separate first owner session.",
+    "cleanup": "Close acknowledged, private session descriptor absent, and coordinator found no process matching the native executable path afterward."
+  },
+  "observed_progress": {
+    "distinct_views": 4,
+    "views": [
+      "opening hall",
+      "character close-up with dialogue UI",
+      "exterior terrace",
+      "another interior"
+    ],
+    "verified_transitions": [
+      "hall to character close-up",
+      "close-up to hall",
+      "hall to terrace",
+      "terrace to hall",
+      "hall to another interior"
+    ],
+    "limits": "Dialogue selections animated or highlighted the UI, but spoken content and story/quest effects remain unknown. Later desert missions were not investigated."
+  },
+  "harness_growth": {
+    "native_keyboard_revision": "f43a02da5caa56ffd6c24572a9c9d73ee5e9dc9db3f9dde3ab83f9cbd42bbe41",
+    "native_macro_sets_saved": 1,
+    "native_keyboard_scope": "Four fixed keyboard controls saved and used in configuration; retained into the configured second owner. This is not preserved game progress.",
+    "callable_private_sidecars": [
+      {
+        "revision": "scene-v3",
+        "action": "stop_talking",
+        "effect_frame": "frame29.png"
+      },
+      {
+        "revision": "scene-v4",
+        "action": "select_duke",
+        "effect_frame": "frame32.png"
+      },
+      {
+        "revision": "scene-v5",
+        "action": "hall_right",
+        "effect_frame": "frame51.png"
+      }
+    ],
+    "notes_only": "scene-v2 is descriptive and is not counted as a callable addition.",
+    "qualification": "Private procedural wrappers, not DotBox-persisted native Z scenes. They check frame dimensions and lease IDs; entry applicability depends on model observation rather than enforced scene recognition. Four fast scripted calls reused a recently inspected matching scene without separately viewing the exact newly paused frame.",
+    "preservation": "Prior revisions and raw attempts retained privately."
+  },
+  "timings_seconds": {
+    "configured_launch_to_first_interactive_hall_frame_request": 42.957183625,
+    "configured_launch_to_hall_frame_receipt_completion": 43.006611542,
+    "configured_launch_to_first_verified_game_effect_frame_receipt": 90.846483833,
+    "configured_launch_to_first_sidecar_effect_frame_receipt": 172.510020917,
+    "coordinator_origin_to_hall_frame_receipt": 182.849377292,
+    "coordinator_origin_to_close_ack": 596.902895292,
+    "initial_cold_launch": null,
+    "complete_initial_buffer": null,
+    "candidate_total_authoring": null,
+    "notes": [
+      "Configured launch includes intro, agent observation and dispatch delays; receipt completion is not the exact guest-effect instant.",
+      "Initial launch/service-ready/frame01 and preceding deliberation were not instrumented. File mtimes were not used to invent those timings.",
+      "The coordinator origin was recorded after delegation. Earlier dispatch time is uninstrumented.",
+      "No precise upfront opening-recon budget was declared; compliance with that skill instruction is not established.",
+      "Candidate markers bracket file-writing blocks and exclude preceding model deliberation."
+    ]
+  },
+  "interruptions": {
+    "measured_coordination_windows": 16,
+    "total_seconds": 88.348256914,
+    "maximum_seconds": 9.297211917,
+    "definition": "Pause request through continue-command response; wall-time coordination proxy, not a measured exact guest-paused duration or rigorous upper bound. Native continue acknowledgment is asynchronous.",
+    "fast_scripted_windows_seconds": [
+      0.403611584,
+      0.409727125,
+      0.365345583,
+      0.495604291
+    ],
+    "fast_window_note": "Individual observed action contexts differ; these timings are not a controlled speedup benchmark.",
+    "full_user_visible_interruption_count": null,
+    "other_gaps": "Frame observations were sampled. Other game pacing, deliberation, audio gaps and intermediate states were not exhaustively observed. No zero-other-interruptions claim.",
+    "command_failures": [
+      {
+        "count": 1,
+        "kind": "running click STALE_FRAME",
+        "effect": "Refused before injection; model learned pause/fresh-frame/click/resume."
+      },
+      {
+        "count": 1,
+        "kind": "installer TARGET_EXITED",
+        "effect": "Post-installer frame request after normal target exit."
+      },
+      {
+        "count": 1,
+        "kind": "missing old session descriptor",
+        "effect": "Status request after initial owner exit."
+      }
+    ],
+    "setup_pacing_observed_seconds": 31.685377375,
+    "setup_pacing_note": "Installer CD test observation interval including sampling gaps; not opening gameplay."
+  },
+  "concurrent_phase": {
+    "mode": "Coordinator-requested frozen-frame worker demonstration; earlier work was serial.",
+    "candidate_interval_seconds": 11.365079291,
+    "candidate_start_utc": "2026-11-15T06:43:37.418991+00:00",
+    "candidate_ready_utc": "2026-11-15T06:43:48.784050+00:00",
+    "verified_overlap": "Existing select_duke input, continue response and character-close-up observation47 all complete within the candidate interval.",
+    "input_coordination_window_during_overlap_seconds": 0.409727125,
+    "publication": "Candidate reviewed and incorporated into scene-v5 between actions.",
+    "post_publication_test": "Named hall_right executed from hall; coordinator inspected terrace frame51.",
+    "isolation": "Worker received a frozen frame and observed input recipe; no live guest/project access.",
+    "claim": "Effective play occurred while a candidate was pending; uninterrupted or spontaneously autonomous background growth is not established.",
+    "worker_work": "A separately contacted child agent confirmed it viewed the frozen hall frame and packaged an already supplied observed recipe. This phase does not demonstrate independent control discovery or substantial new worker reasoning."
+  },
+  "skill_feedback": {
+    "useful": [
+      "Current/next priorities kept work in the opening route.",
+      "Working input fallbacks enabled progress while actions were retained.",
+      "Accepted input was distinguished from observed effects.",
+      "One live mutation owner and separate worker candidate were preserved."
+    ],
+    "gaps": [
+      "Operator had to discover runtime commands and the mouse frame race.",
+      "Keyboard-only persistence required authored private mouse sidecars.",
+      "Upfront recon budget and complete cold-start markers were missed.",
+      "Native Z-scene persistence and automatic entry recognition are not implemented by this contribution."
+    ],
+    "next_iteration": "Provide a small runtime-specific operational entry and an explicit first timing/budget record, then repeat a fully instrumented cold trial. Keep this frozen run unchanged."
+  },
+  "independent_verification": {
+    "coordinator": "Inspected original before/after frames, verified all 22 bounded-manifest artifacts, six original game-file digests, source media, frozen skill hash and native executable digest. Independently recomputed timing aggregates and overlap.",
+    "second_reviewer": "Recomputed from 126 journal records, 118 command receipts and two worker markers; verified same-run tuple across 101 game-session receipts and exact native source binding.",
+    "agent_report_sha256": "913920b91b25d338c3c8c073a183f62c53d0b116d7690cad8a574562554f4c80",
+    "bounded_manifest_sha256": "1de1f79de2c0e3f39bd5d9c772a3a7eaeece06c0239693ccb74824fd605e0e5a",
+    "event_journal_sha256": "8f464c4c18eb81e90751280c17753ea49f2ff3adff7877da4c3feba957c9e10d",
+    "worker_journal_sha256": "804cb283656262938e7c5586612e52017ca06667c18c6c593cad1f8497518a8b",
+    "timing_audit_sha256": "c2259d408f54606a658d8a406551a3b517caffdc62a4d8817dae6da05b27ecba",
+    "coordinator_metrics_sha256": "ce42e3a4ccc9dc970cfd368e40e9ed22ffa7085244b0dd8eaf6c165f237e4b6b"
+  },
+  "excluded": [
+    "Actual Dot cloud runtime",
+    "WebRTC/virtual-screen presentation",
+    "Built-in human takeover integration",
+    "Native Z-scene persistence qualification",
+    "Whole-game/story recovery or completion",
+    "Warm game-state persistence",
+    "Release/package qualification"
+  ],
+  "publication": "Only authored methodology, measurements, hashes and scoped findings. Raw game images, files, saves, private project and command/session artifacts remain private."
+}

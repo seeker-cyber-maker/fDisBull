@@ -1,0 +1,726 @@
+{
+  "schema": "dotbox-keen-input-timing-qualification-1",
+  "date": "2026-11-20",
+  "status": "qualified_finite_research_slice",
+  "tested_base_commit": "2adf54cfd95408e2c5a8f1448918b5d62d83bde9",
+  "package": {
+    "version": "0.1.0.dev8",
+    "wheel_sha256": "90e21d835887a17855b7b9e190ffda9448ceff63993e81806db9820d6a590b49",
+    "native_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "game_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae"
+  },
+  "tested_source_sha256": {
+    "scripts/experiments/keen_loop.py": "cf82d45c5bdec8c135968ccfa0436ed7724b1f833bc68b67c754619f09c41c60",
+    "scripts/experiments/keen_waypoint.py": "62ac20e9a8fe246838c5f1cb04635eae247b07d54507054686467797f5387063",
+    "tests/test_keen_loop.py": "36f4fc69ffa4157c677a1f03938636f480bdec00a7c0ed84d53b6958ff9a72f4",
+    "tests/test_keen_waypoint.py": "f80d3c2f29b21dfb549b0d6ddc28fd37c61f0c68325588df381d06bb4d6692a8"
+  },
+  "source_reference": "https://github.com/keendreams/keen/tree/15be5be4a3382d0a1d99e1202219a84b09b11273",
+  "qualification": {
+    "fresh_isolated_guests": 15,
+    "validated_guests": 15,
+    "main_updates": 388,
+    "main_observations_including_initials": 403,
+    "after_input_return_observations": 29,
+    "raw_rpc_receipts": 3544,
+    "all_main_samples_tics": 2,
+    "all_original_files_preserved": true,
+    "all_processes_reaped_returncode_zero": true,
+    "owner": "one root controller; reviewers used frozen evidence",
+    "actions": "ordinary keyboard input; no memory writes, cheats or restores",
+    "budgets": {
+      "preparation_seconds": 180,
+      "prelaunch_host_deadline_seconds": 120,
+      "post_admission_guest_ms_including_display_reserve": 3000,
+      "scope": "bootstrap and first-hook admission separate; terminal close has its bounded reaping allowance"
+    }
+  },
+  "hooks": {
+    "pre_input": {
+      "segmented": "0B7A:1277",
+      "linear": "0xCA17",
+      "guard_bytes": 17,
+      "guard_sha256": "165382c4b4235aeb67b0a061ae4f3c1ef36c96c032a5a93eb7df250fc93fa95a",
+      "old_input_updates_after_edge": 1
+    },
+    "post_actor_pre_refresh": {
+      "segmented": "0B7A:13F2",
+      "linear": "0xCB92",
+      "guard_bytes": 23,
+      "guard_sha256": "f6e7436d6cbe770f28e0bd86be41f7f6c2972f8899f119d89e342a8ac81c3c9f",
+      "old_input_updates_after_edge": 0
+    },
+    "after_input_return": {
+      "segmented": "0B7A:1288",
+      "linear": "0xCA28",
+      "guard_bytes": 16,
+      "guard_sha256": "1f0b12e31723dfaa131163818189cd4458ac318ce69635b906470f36d388077b"
+    }
+  },
+  "trace_guest_latency_ms": {
+    "pre_input": {
+      "press": {
+        "read_return": 29,
+        "main_input_feedback": 57,
+        "read_return_absolute_guest_tick": 19187
+      },
+      "release": {
+        "read_return": 28,
+        "main_input_feedback": 57,
+        "read_return_absolute_guest_tick": 19472
+      }
+    },
+    "post_actor_pre_refresh": {
+      "press": {
+        "read_return": 28,
+        "main_input_feedback": 29,
+        "read_return_absolute_guest_tick": 19187
+      },
+      "release": {
+        "read_return": 27,
+        "main_input_feedback": 28,
+        "read_return_absolute_guest_tick": 19472
+      }
+    }
+  },
+  "trace_interpretation": {
+    "input_return_ticks_equal_across_runs": {
+      "press": 19187,
+      "release": 19472
+    },
+    "first_stable_after_release_guest_ms": {
+      "pre_input": 85,
+      "post_actor_pre_refresh": 57
+    },
+    "conclusion": "Post-actor phase exposes the same input and movement about one update earlier; no earlier input-read completion is demonstrated",
+    "delay_semantics": "Zero old-input actor updates does not mean zero millisecond keyboard latency",
+    "instrumentation": "two owned alternating hooks; distinct-PC zero-ms stops are valid; no throughput claim"
+  },
+  "predictive_policy": {
+    "world_units_per_pixel": 16,
+    "walking_units_per_game_tick": 24,
+    "game_ticks_per_update": 2,
+    "consumed_release_residual": "direction * 24 * min(2, 6 - walk_ticcount)",
+    "selection": "Compare current-walk endpoints from release now and hold one more update; choose closest, release on tie, latch neutral",
+    "admitted_distance_px": {
+      "left": [
+        24,
+        52
+      ],
+      "right": [
+        24,
+        32
+      ]
+    },
+    "stable_samples_required": 3,
+    "live_predictive_cases": 7,
+    "maximum_observed_absolute_error_px": 2,
+    "independent_next_update_input_and_horizontal_state_matches": 98,
+    "pre_trial_plan_sha256": "27bc4e5cb728c7dcc26cf7d061c15d68d24f4e12e21b8256e8d8cd255e8b9fae",
+    "pre_trial_predictions": {
+      "baseline_pre_left32_settled_x": 32656,
+      "baseline_post_left32_settled_x": 32680,
+      "predict_post_left24_settled_x": 32872,
+      "predict_post_left32_settled_x": 32800,
+      "predict_post_left40_settled_x": 32656,
+      "predict_post_left52_settled_x": 32440,
+      "predict_post_right24_settled_x": 33688,
+      "predict_post_right32_settled_x": 33760,
+      "predict_pre_left32_settled_x": 32800
+    },
+    "terrain_scope": "fresh static floor and body corridor check; continuous in-place map mutation tracking unqualified"
+  },
+  "tests": {
+    "command": "python -m pytest -q tests/test_keen_waypoint.py tests/test_keen_loop.py",
+    "installed_python": "3.12.14",
+    "passed": 130,
+    "new_waypoint_cases": 99,
+    "existing_loop_cases": 31,
+    "independent_waypoint_rerun_passed": 99
+  },
+  "material_timing_outlier": {
+    "run": "10-predict-post-left32",
+    "cycle_ms": 73.05208299999322,
+    "frame_step_ms": 54.462738999973226,
+    "memory_read_ms": 15.45176700005868,
+    "missed_paced_deadlines": 3,
+    "host_cause": "not established",
+    "scope": "occurred during stop confirmation; endpoint remained correct; excludes hard real-time claim"
+  },
+  "trials": [
+    {
+      "run": "01-trace-pre",
+      "category": "trace",
+      "phase": "pre_input",
+      "native_run_id": "553b7b5d8744434592d7501d30d59a09",
+      "validated": true,
+      "main_updates": 15,
+      "initial_x": 33280,
+      "initial_ticcount": 1,
+      "final_x": 32728,
+      "travel_px": 34.5,
+      "target_x": null,
+      "coordinate_error_px": null,
+      "directional_overshoot_px": null,
+      "required_tolerance_px": null,
+      "stable_transitions": 3,
+      "input_delay_updates": null,
+      "driver_sha256": "8dd60137b5f0503ad11356d7a84655939287759b56497a236d1152d49b7c45c0",
+      "guest_ms": 428,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "ad74b428ba4407d5eca674202f3c706883bcc694cd08dd8a6fccbcfa02cadc07",
+        "trial.json": "294a661780f78bf7d81d1ca566a2d23e63d06a22ef652bcffbfcb7daf62f2241",
+        "raw-rpc.json": "75787c521756dc969cf8e4e1fa3c2436b9d4634bce7fcb1049f203974bd64ab4",
+        "result.json": "58a2add90fee2f52eb6e7afe4bea7e2e33de486085e8780931f54d66acb83978"
+      },
+      "timing_scope": "Instrumented two-hook diagnostic; throughput not compared"
+    },
+    {
+      "run": "02-trace-post",
+      "category": "trace",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "2a7afe46ed894414a3316ef490894eca",
+      "validated": true,
+      "main_updates": 14,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32728,
+      "travel_px": 34.5,
+      "target_x": null,
+      "coordinate_error_px": null,
+      "directional_overshoot_px": null,
+      "required_tolerance_px": null,
+      "stable_transitions": 3,
+      "input_delay_updates": null,
+      "driver_sha256": "8dd60137b5f0503ad11356d7a84655939287759b56497a236d1152d49b7c45c0",
+      "guest_ms": 400,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "24748bd4d618d597ff420bdeeb0439d14be68e989291a4adbf4a318f4864dba3",
+        "trial.json": "8407f87de3bf83c138e081767f8e7b5a391859a0a5762f6d97fd88a0e96fd1a2",
+        "raw-rpc.json": "037ab839e687cc4fce399d3bd00efa8e7344051b1a96fc4c3f0c6130eaa234bb",
+        "result.json": "27ff79a3a341d6e8a5a5bdc19982585ca3ad71a0f32d35edddb657fdd29c21a6"
+      },
+      "timing_scope": "Instrumented two-hook diagnostic; throughput not compared"
+    },
+    {
+      "run": "03-fixed-pre",
+      "category": "fixed",
+      "phase": "pre_input",
+      "native_run_id": "c39e25a0e48149679af964089237caf8",
+      "validated": true,
+      "main_updates": 15,
+      "initial_x": 33280,
+      "initial_ticcount": 1,
+      "final_x": 32728,
+      "travel_px": 34.5,
+      "target_x": null,
+      "coordinate_error_px": null,
+      "directional_overshoot_px": null,
+      "required_tolerance_px": null,
+      "stable_transitions": 3,
+      "input_delay_updates": null,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 428,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "e996c7b8a00039cd5d856e3fd19f7dcf6236e42524394185dd97c67c8de2a843",
+        "trial.json": "63afda4f04239bb68f35b4389558a22a947f5a1c8010e04120b04bdeb8564cfd",
+        "raw-rpc.json": "de286584524a7fcf45a7996f69c02840cbfb345b39d91fb13b962dc8174bc804",
+        "result.json": "cb32818224f5764a92db64e4e166d17bc8c42439e71a267ca05b1991941e16fd"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 439.8043210001106,
+        "guest_host_ratio": 0.9731600613353055,
+        "cycle_processing_ms": {
+          "p50": 17.72082299999056,
+          "p95": 23.606134999909045,
+          "max": 23.606134999909045
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "04-fixed-post",
+      "category": "fixed",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "548462e3b0f141aeb8d67bd2da4e92d3",
+      "validated": true,
+      "main_updates": 14,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32728,
+      "travel_px": 34.5,
+      "target_x": null,
+      "coordinate_error_px": null,
+      "directional_overshoot_px": null,
+      "required_tolerance_px": null,
+      "stable_transitions": 3,
+      "input_delay_updates": null,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 400,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "9564cfebad5e70b58beb0e131249b6e40759090e9d17527102142ddbd91925e7",
+        "trial.json": "6d10b10c3eab598e6465a4512eabd3da25df34f5a1c7e8db383ae738c83ad5c9",
+        "raw-rpc.json": "04105302d76e28ad9b82af0db7a8e6b75a52c8807cd2209ebdcc1b437452c47c",
+        "result.json": "349366d02c9b7f650741cfe83061128cbbbcfcd0c2de7f9f98789b5a8a63db5b"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 411.8910650001908,
+        "guest_host_ratio": 0.9711305585126366,
+        "cycle_processing_ms": {
+          "p50": 19.433812999977818,
+          "p95": 22.15119900006357,
+          "max": 22.15119900006357
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "05-neutral-pre",
+      "category": "neutral",
+      "phase": "pre_input",
+      "native_run_id": "08c56d26d4954fb096628391f6674b86",
+      "validated": true,
+      "main_updates": 100,
+      "initial_x": 33280,
+      "initial_ticcount": 1,
+      "final_x": 33280,
+      "travel_px": 0.0,
+      "target_x": 33280,
+      "coordinate_error_px": 0.0,
+      "directional_overshoot_px": -0.0,
+      "required_tolerance_px": 3,
+      "stable_transitions": 57,
+      "input_delay_updates": null,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 2856,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "98fe28df05340488566c26186b20e749a4651c1f5c0e316c537f338dfb3c714c",
+        "trial.json": "6cabb6c5bb0866109ce83ff37c8b00c44ae65c071aa1d404d47fae018fddcce7",
+        "raw-rpc.json": "d56e7f20621b7a22b77f066a97be48f4c31b4046af4f2949876476ca38ad0d49",
+        "result.json": "34789888a57694206e9c1e54a9c799659cfff8d39916d7c76408cb775e5cd074"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 2868.0132139998022,
+        "guest_host_ratio": 0.9958113114886774,
+        "cycle_processing_ms": {
+          "p50": 18.470001999958185,
+          "p95": 23.746047999793518,
+          "max": 49.40076000002591
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 4
+      }
+    },
+    {
+      "run": "06-neutral-post",
+      "category": "neutral",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "4398e5e731bb4c5aa62b93d6c1052bbd",
+      "validated": true,
+      "main_updates": 100,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 33280,
+      "travel_px": 0.0,
+      "target_x": 33280,
+      "coordinate_error_px": 0.0,
+      "directional_overshoot_px": -0.0,
+      "required_tolerance_px": 3,
+      "stable_transitions": 58,
+      "input_delay_updates": null,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 2856,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "3456eac5e63e3880b4f34607eafa30c28efd8fbb87b0f5657b0a3ee082437b43",
+        "trial.json": "e0f7bacf071a884fb188acb3712c61d3c5e18760f15c2a4ec19617e080e569b9",
+        "raw-rpc.json": "1107bea28d8c6ee282eca802124c4ccc60bc188a96001eec9c869c7e2a6eed05",
+        "result.json": "2a5fe69a78f28afcd3eb5fe314cec5c071062a8615b4a64818ed5eddc1063a2f"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 2867.2861739999007,
+        "guest_host_ratio": 0.9960638131965194,
+        "cycle_processing_ms": {
+          "p50": 18.382539999947767,
+          "p95": 20.103612000184512,
+          "max": 33.614753000165365
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 1
+      }
+    },
+    {
+      "run": "07-baseline-pre",
+      "category": "baseline",
+      "phase": "pre_input",
+      "native_run_id": "86f1d7ebf7d14e829e0112bc52dde191",
+      "validated": true,
+      "main_updates": 17,
+      "initial_x": 33280,
+      "initial_ticcount": 1,
+      "final_x": 32656,
+      "travel_px": 39.0,
+      "target_x": 32768,
+      "coordinate_error_px": -7.0,
+      "directional_overshoot_px": 7.0,
+      "required_tolerance_px": 3,
+      "stable_transitions": 3,
+      "input_delay_updates": null,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 486,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "e21129f4fd23bf3d3166139cab5af35511e72eeec1e68d5094e9d3756b7ce586",
+        "trial.json": "5ead123508f8f4cff17aa2037a3cfc249fa216a1facc50c217b154546910ed24",
+        "raw-rpc.json": "6d4935e65fbfad7fcca2d81bfde5b49a083d46a380ed9f85c0b900f81aa326cf",
+        "result.json": "6bb9555bc452132fef42e1d4620f7b21f07821817ff041f2bc9a90d13ab304e5"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 499.27666400003545,
+        "guest_host_ratio": 0.9734082023909002,
+        "cycle_processing_ms": {
+          "p50": 19.467439000209197,
+          "p95": 23.168630000100165,
+          "max": 23.168630000100165
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "08-baseline-post",
+      "category": "baseline",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "f2badedd9fb342549cb089bba6d7b526",
+      "validated": true,
+      "main_updates": 15,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32680,
+      "travel_px": 37.5,
+      "target_x": 32768,
+      "coordinate_error_px": -5.5,
+      "directional_overshoot_px": 5.5,
+      "required_tolerance_px": 3,
+      "stable_transitions": 3,
+      "input_delay_updates": null,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 428,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "dfdbf0c6967c0de6b1581f014fc73c08c71d4afe4f2c0f80f52208ee0b51fff4",
+        "trial.json": "ca4a1fb00c06fc93cdfc8f3be021742d8684f368cbad3a43714b2506682b78df",
+        "raw-rpc.json": "05d197a3d3166cb94d0dd53abb98e310abb0c0b8a3b8b3e295a16af06667e4a2",
+        "result.json": "74e6d478e08799d26ae661bde5c949034a5fc5d8fa38ffc120290f2357bd4d65"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 441.8173770000067,
+        "guest_host_ratio": 0.9687260444715228,
+        "cycle_processing_ms": {
+          "p50": 16.66483399981189,
+          "p95": 24.220404000061535,
+          "max": 24.220404000061535
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "09-predict-post-left24",
+      "category": "predictive",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "bbb1dccb9a6a437fa5d1f9ed5e48024f",
+      "validated": true,
+      "main_updates": 11,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32872,
+      "travel_px": 25.5,
+      "target_x": 32896,
+      "coordinate_error_px": -1.5,
+      "directional_overshoot_px": 1.5,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 0,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 314,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "e12a2aebda4564aa43df51c6fe3a1f7501905fa991d4eab85a6bc5cb56d5e622",
+        "trial.json": "ed3153dce9995bdf8e6775f81b360a5affae76aa9f7539804fedcdf308784f9c",
+        "raw-rpc.json": "f21854fda6255cc70c75beba0d183c5149475b67bed77ffc9bdc854c1398349c",
+        "result.json": "808ba9c18ffa03899d775265a5cab6e16108d5a81d5345621fe33bbb78959d6c"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 326.93573800020204,
+        "guest_host_ratio": 0.9604333925702732,
+        "cycle_processing_ms": {
+          "p50": 23.93686699997488,
+          "p95": 25.762509000060163,
+          "max": 25.762509000060163
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "10-predict-post-left32",
+      "category": "predictive",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "191325784df84408afeaa343e3137d24",
+      "validated": true,
+      "main_updates": 13,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32800,
+      "travel_px": 30.0,
+      "target_x": 32768,
+      "coordinate_error_px": 2.0,
+      "directional_overshoot_px": -2.0,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 0,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 371,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "b36c9fdb7bb782fb9aeb2d9b75002ed9296a5f60e4b1655911c84ca8339c4739",
+        "trial.json": "3b8e73b13034e0e83371ba0eb8d467322c8fa132794635d6843ae8b6c9d57925",
+        "raw-rpc.json": "5f222d7a50ed7a103dcb88980ac0c6645efd040444434090a47794624a22cd08",
+        "result.json": "5bb7a30bb48bd9fa0dd842d36f306a8213795faf057a114e6414ec365282e16f"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 427.19706299999416,
+        "guest_host_ratio": 0.8684516634890935,
+        "cycle_processing_ms": {
+          "p50": 18.19689100011601,
+          "p95": 73.05208299999322,
+          "max": 73.05208299999322
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 3
+      }
+    },
+    {
+      "run": "11-predict-post-left40",
+      "category": "predictive",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "9b6bbd27653d4db5863b53fe44ee8eb4",
+      "validated": true,
+      "main_updates": 16,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32656,
+      "travel_px": 39.0,
+      "target_x": 32640,
+      "coordinate_error_px": 1.0,
+      "directional_overshoot_px": -1.0,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 0,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 457,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "77c5a7430b30c1d0cfdc57f0b2272fd61cdbf75e8d98c9148ddbbe2a7d3ee49b",
+        "trial.json": "52e444e7221365a70696c5b71eac70315c0eaae1c54ad0e42e5c5fe7182f579d",
+        "raw-rpc.json": "59c8184f05ce8f8fa84efc9191d6517f3c5c9ccf43afa9be77e39238b4ee0c26",
+        "result.json": "bdbfa02a3097b526235d8ba29f1ab894c2e2c546488bc654c824ddb3863856ae"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 469.88663000001907,
+        "guest_host_ratio": 0.9725750230432848,
+        "cycle_processing_ms": {
+          "p50": 16.914056999894456,
+          "p95": 22.303790000023582,
+          "max": 22.303790000023582
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "12-predict-post-left52",
+      "category": "predictive",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "3787b7b785fb445ca7bb13bb765392bd",
+      "validated": true,
+      "main_updates": 20,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 32440,
+      "travel_px": 52.5,
+      "target_x": 32448,
+      "coordinate_error_px": -0.5,
+      "directional_overshoot_px": 0.5,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 0,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 571,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "32ac1b9bb2028b6b6a00748ff242ad6185091a4f892b7a7c964d639ee6d29fbb",
+        "trial.json": "cfd654855248dea90ad0dd10e8a27c588e579bbddd59cd368b4caf73da0a6290",
+        "raw-rpc.json": "d2ffbcd4cef1ea5e4b7092d01a844249c1abfbe2bb180ce3a934f13ef122299a",
+        "result.json": "94e7db116c64db4d03fb5eff11a06b7efd8ce8568ad699c736bf0f0d796368e8"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 583.6983350000082,
+        "guest_host_ratio": 0.9782450381668332,
+        "cycle_processing_ms": {
+          "p50": 17.604312999992544,
+          "p95": 18.80117800010339,
+          "max": 19.34524299986151
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "13-predict-post-right24",
+      "category": "predictive",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "a30df05027e540aaa66ade2267b617ab",
+      "validated": true,
+      "main_updates": 11,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 33688,
+      "travel_px": 25.5,
+      "target_x": 33664,
+      "coordinate_error_px": 1.5,
+      "directional_overshoot_px": 1.5,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 0,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 314,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "50b91300e3f4cd27b360e79dbe1a52e56cdf51ad172a0434f58531fffeb35fb3",
+        "trial.json": "c6b45cde3b75e48c64d74e3646e1fbbcf46172ced161ce8d1cf361be51f9abae",
+        "raw-rpc.json": "31275f161958f89995777dd90859d68f5d27349ade83750fdef6a6f32492a476",
+        "result.json": "0d2e88215f3433d2092769475a1ccc35b1a4e8c216b59560239268d0084debe6"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 327.0519850000255,
+        "guest_host_ratio": 0.9600920171757267,
+        "cycle_processing_ms": {
+          "p50": 16.664639000055104,
+          "p95": 18.199556000126904,
+          "max": 18.199556000126904
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "14-predict-post-right32",
+      "category": "predictive",
+      "phase": "post_actor_pre_refresh",
+      "native_run_id": "490052cf47f34130b0df3f9e7d59786f",
+      "validated": true,
+      "main_updates": 13,
+      "initial_x": 33280,
+      "initial_ticcount": 3,
+      "final_x": 33760,
+      "travel_px": 30.0,
+      "target_x": 33792,
+      "coordinate_error_px": -2.0,
+      "directional_overshoot_px": -2.0,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 0,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 371,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "10c27a40c91c8940bcfde8aac3341f31d41382ac42ab22935eb55b5e7795fe90",
+        "trial.json": "a4950206b65dca77b60ae1bec8202d54da407c4d921236a624979704dcb26715",
+        "raw-rpc.json": "c3a28f743d050b479a16e7e11d5b6cc5f925971055d21807cd32e0fde14ca83c",
+        "result.json": "00c74ca20eddd9910059eec9117eebc0dbd2353c2fe0cc741efea9e1e6df7166"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 383.7027490001219,
+        "guest_host_ratio": 0.9668942976477922,
+        "cycle_processing_ms": {
+          "p50": 18.198191999999835,
+          "p95": 21.165632999782247,
+          "max": 21.165632999782247
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    },
+    {
+      "run": "15-predict-pre-left32",
+      "category": "predictive",
+      "phase": "pre_input",
+      "native_run_id": "0cbfaa88720b41adafc6f399afb913a2",
+      "validated": true,
+      "main_updates": 14,
+      "initial_x": 33280,
+      "initial_ticcount": 1,
+      "final_x": 32800,
+      "travel_px": 30.0,
+      "target_x": 32768,
+      "coordinate_error_px": 2.0,
+      "directional_overshoot_px": -2.0,
+      "required_tolerance_px": 2.0,
+      "stable_transitions": 3,
+      "input_delay_updates": 1,
+      "driver_sha256": "4bc92c6922ffb3ee7730a7d9c2a11b725b33308b43c5b241840cd8b0d835a1f7",
+      "guest_ms": 400,
+      "closed_and_reaped_returncode_zero": true,
+      "original_files_unchanged": true,
+      "private_artifact_sha256": {
+        "manifest.json": "75f74221d7da2f2edc66b004c6dc1a5e00051e7a1e7bee45522c379317daea55",
+        "trial.json": "40704b55dcf1b4f5daf079390dbe1b264037ad4431ed5d7e120a2e25c7176981",
+        "raw-rpc.json": "a3374078cb63d234de0aced8c9cecab130852678400e3d7fd85b8881d5e57942",
+        "result.json": "a77cd226eb25997ee9014dd40e8496af2aa137315101a5a56ee6e51f147fe679"
+      },
+      "timing": {
+        "host_ms_including_admission_cleanup": 413.4106139999858,
+        "guest_host_ratio": 0.9675610312221296,
+        "cycle_processing_ms": {
+          "p50": 17.20914699990317,
+          "p95": 19.81457099986983,
+          "max": 19.81457099986983
+        },
+        "pace_hz": 35.0,
+        "missed_paced_deadlines": 0
+      }
+    }
+  ],
+  "private_summary_sha256": "93ceff2be95505f594ce7b74005cc8e1c0162a3c62aba27559ee01e0574bb0c4",
+  "limitations": [
+    "One executable/load layout, one clear flat corridor, short trials, source-informed rather than blind",
+    "Same 32-pixel left leg is a reference; six post-phase cases were predeclared before controller runs",
+    "Measurements are not general bounds on input latency, endpoint precision, or host scheduling",
+    "Current stopped-only memory protocol pauses the guest between bounded advances",
+    "No enemy avoidance, jump planner, moving hazards, slopes, poles, scene transitions, recovery/rebinding or human handoff qualified here",
+    "Commercial files, raw memory, screenshots and target disassembly are private; this receipt is authored metadata"
+  ]
+}

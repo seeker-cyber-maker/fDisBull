@@ -77,14 +77,14 @@ fdisbull debug /private/win32.fdb --backend wine-qemu \
   --executable /opt/homebrew/bin/qemu-system-x86_64 \
   --game-dir /private/program --version 1 \
   --kernel /private/linux-amd64 --initramfs /private/matching-fdisbull-wine11.cpio.gz \
-  --memory-mib 8192 --boot-timeout-ms 600000 --dot-mode
+  --memory-mib 8192 --boot-timeout-ms 600000 --spectator
 
 # Original Windows NE; logical segment addresses are preserved.
 fdisbull debug /private/win16.fdb --backend wine-ne \
   --executable /opt/homebrew/bin/qemu-system-x86_64 \
   --game-dir /private/program --version 1 \
   --kernel /private/linux-amd64 --initramfs /private/matching-fdisbull-wine11.cpio.gz \
-  --memory-mib 8192 --boot-timeout-ms 600000 --dot-mode
+  --memory-mib 8192 --boot-timeout-ms 600000 --spectator
 ```
 
 Supply an explicit `files` allowlist for required assets, including the target
@@ -179,10 +179,17 @@ also checks the declaration against the owned session and rejects malformed
 later operations before an earlier mutation. Omitting `backend` preserves the
 legacy DOS storage grammar; live sessions still validate their own methods.
 
-## Dot-mode is a read-only spectator
+<a id="dot-mode-is-a-read-only-spectator"></a>
 
-`--dot-mode` / `dot_mode=True` starts an owned loopback HTTP viewer and returns
+## Read-only spectator mode
+
+`--spectator` starts an owned loopback HTTP viewer and returns
 its capability URL through launch/status metadata and `debug-spectator`.
+`--dot-mode` and `--window` remain CLI aliases. Python `dot_mode=True` /
+`window=True`, `debug.dot_mode()` and the `mode="dot-mode"` metadata value
+remain unchanged. This observes the same debugger-owned session; it does not
+start DotBox or enable cooperative takeover.
+
 Open that URL in Dot's little computer or an ordinary browser able to reach the
 controller's loopback listener. `debug-spectator` can enable/disable or inspect
 it later. `debug-spectator-frame` captures one paused frame explicitly.

@@ -1,0 +1,112 @@
+{
+  "schema": "dotbox-controller-prior-art-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "9ac06e32c9a7d14151c4c9b46490647a1f8fc6cd",
+  "scope": "Review user-supplied controller demonstration and inspect a previously unestablished route from the original Dot cloud executor; no gameplay or sound work",
+  "video": {
+    "url": "https://youtu.be/f2cLBiSWRyY",
+    "channel": "Questionable Commands",
+    "upload_date": "20261031",
+    "duration_seconds": 2748,
+    "caption_type": "automatic",
+    "caption_cues": 984,
+    "complete_caption_timing_coverage": true,
+    "artifact_hashes_verified": true,
+    "reviewed_relevant_material": "Tool building, skill preparation, play-time helper and verdict in captions; linked source inspected separately",
+    "visual_or_audio_verification": false,
+    "media_downloaded": false,
+    "source_instruction_authority": false
+  },
+  "video_lessons": [
+    {
+      "at_seconds": 1346,
+      "finding": "Separate controller tooling from game strategy."
+    },
+    {
+      "at_seconds": 1950,
+      "finding": "Blinking information can require several frames; this does not mandate bursts for every action."
+    },
+    {
+      "at_seconds": 2418,
+      "finding": "A cursor helper is reportedly added during use; improvement is not measured."
+    },
+    {
+      "at_seconds": 2472,
+      "finding": "The verdict retains slow operation, inaccurate placement and a corrected interpretation of the stopping condition."
+    }
+  ],
+  "linked_source": {
+    "repository": "dev-dull/questionable_commands",
+    "commit": "48e8acd442d26c6d282a55875c21d57d8e71efef",
+    "directory": "cc/30102026-0x002-AI_plays_snes",
+    "root_verified_files": [
+      {
+        "path": "bin/step",
+        "git_blob_sha": "6cd5e6d25e1c1f7a9a131a33d77f18345e4fbf69",
+        "read_scope": "complete",
+        "finding": "Lines37-44 invoke the local controller, wait and exec local capture. Single-frame default with optional burst differs from the TOOLS.md burst description."
+      },
+      {
+        "path": "lib/snespad.py",
+        "git_blob_sha": "8834e5cbfd14a0d356cc3bd1a0b585d9508cd819",
+        "read_scope": "lines112-191",
+        "finding": "Local flock serializes process writers; press releases in finally. These regions supply no human ownership, freshness or lease protocol."
+      },
+      {
+        "path": "TOOLS.md",
+        "git_blob_sha": "5d91584b2a666aeb0645d72a624b28c0dba78bc6",
+        "read_scope": "complete",
+        "finding": "Documents local action/capture CLIs and temporal observations. Documentation alone is not runtime verification."
+      }
+    ],
+    "third_party_code_executed": false,
+    "third_party_code_imported": false,
+    "whole_repository_absence_claim": false
+  },
+  "original_cloud_inventory": {
+    "origin": "Original Dot chat tool-result report, read back by coordinator in the authorized side browser",
+    "environment_switched": false,
+    "ssh_command_present": true,
+    "tailscale_command_present": false,
+    "operations_runbook_present_at_checked_path": false,
+    "reviewed_ssh_helper_present_at_checked_path": false,
+    "network_absence_inferred_from_missing_files": false
+  },
+  "original_cloud_route_probe": {
+    "requested_scope": "One bounded normal-shell HTTP CONNECT to the established managed proxy for the Studio SSH22 destination, without authentication or fallback",
+    "outcome": "Dot declined under its stated shell network policy; no attempt made",
+    "classification": "Model-reported policy refusal; not an observed TCP/proxy rejection",
+    "effective_allowlist_independently_read": false,
+    "connection_attempted": false,
+    "http_status": null,
+    "ssh_banner": null,
+    "ssh_authentication_attempted": false,
+    "remote_command_executed": false
+  },
+  "actual_desktop_input_calls_issued": 0,
+  "ownership_handoff_or_interruption_retested": false,
+  "remaining_acceptance_gate": "Supported coordinator access in the original desktop executor without changing environment; unchanged unexpired lease around completed actual input and independently observed effect",
+  "unchanged_boundaries": [
+    "Retain existing viewer and keyboard/mouse capture",
+    "No new network grant, enrollment, credential, public relay or policy bypass",
+    "No alternate desktop, runtime creation, installation, gameplay, sound or CI dispatch",
+    "Runtime source, native engine, skill and previous evidence unchanged; no runtime suite rerun for this documentation-only follow-up"
+  ],
+  "private_receipts": [
+    {
+      "name": "caption-evidence.json",
+      "bytes": 2042,
+      "sha256": "bed02de4194dbf7d164a7cdfa222f0f40e7d17ec86b76051e5344feb382e8b58"
+    },
+    {
+      "name": "original-route-check.ax.txt",
+      "bytes": 50040,
+      "sha256": "60b37406a4655a2855720708a6d6dd37119bfcd5a84f3eabedece69ac7af524b"
+    },
+    {
+      "name": "original-route-check.jpg",
+      "bytes": 133934,
+      "sha256": "b85db8fc722d3aa0849a8e27d997527570513df50cd6e669f4479c3edde505ba"
+    }
+  ]
+}

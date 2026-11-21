@@ -1,0 +1,473 @@
+{
+  "schema": "dotbox-keen-realtime-evidence-1",
+  "date_local": "2026-11-19",
+  "timezone": "America/New_York",
+  "source_exe_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+  "game_files": [
+    {
+      "name": "audio.kdr",
+      "unchanged": true,
+      "sha256": "b21ccdbb07428ada4e967e6148f7b470b2924f0b2b9a80871873f2ba73d4fc02"
+    },
+    {
+      "name": "config.kdr",
+      "unchanged": true,
+      "sha256": "3b5b6784e7bcbbdf3468cf38bf7dc7860d11bb0dc24e4791b066789c6096142c"
+    },
+    {
+      "name": "curdir.dat",
+      "unchanged": true,
+      "sha256": "26b74e578211523362dd9ea0a74a7ffe00386f6c626cefff728c9f59b8467ca8"
+    },
+    {
+      "name": "egagraph.kdr",
+      "unchanged": true,
+      "sha256": "b37744937f21aa071328b71ee56dd582e035c3eae46440f161dc4ac1afa5ad83"
+    },
+    {
+      "name": "gamemaps.kdr",
+      "unchanged": true,
+      "sha256": "484097b90c631f112605d619e158eddcfd595344f5b4b2e1f74634dbba94ba8e"
+    },
+    {
+      "name": "kdreams.exe",
+      "unchanged": true,
+      "sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae"
+    },
+    {
+      "name": "kdreams.PIF",
+      "unchanged": true,
+      "sha256": "d00f5e3fb956b10b11485010cc4f909df024ba7793a76bb846d6fa77d17713de"
+    }
+  ],
+  "loop_source_sha256": "cf82d45c5bdec8c135968ccfa0436ed7724b1f833bc68b67c754619f09c41c60",
+  "loop_tests_sha256": "36f4fc69ffa4157c677a1f03938636f480bdec00a7c0ed84d53b6958ff9a72f4",
+  "decoder_sha256": "f68c129189ca3dd2caa0ab176349893da66151cf61b91ac7465470bf38b42299",
+  "trials": [
+    {
+      "run": "10-final-benchmark",
+      "mode": "normal",
+      "outcome": "cycle_limit",
+      "metrics": {
+        "cycles": 100,
+        "feedback_guest_ms": 2856,
+        "total_guest_ms": 2856,
+        "host_ms": 2862.615805999667,
+        "guest_accounting_complete": true,
+        "feedback_host_ms": 2852.669876003347,
+        "guest_host_ratio": 0.9976888948961292,
+        "cycle_latency_ms": {
+          "p50": 28.088469996873755,
+          "p95": 34.411948996421415,
+          "max": 45.16380299901357
+        },
+        "rpc_latency_ms": {
+          "p50": 2.1270440047373995,
+          "p95": 24.788578004518058,
+          "max": 37.310667998099234
+        },
+        "missed_paced_deadlines": 0
+      },
+      "cleanup": {
+        "status": "neutral",
+        "game_consumption_verified": false
+      },
+      "goal": null,
+      "range": {
+        "x_start": 33280,
+        "x_end": 33280,
+        "y_end": 7695,
+        "y_min": 7695
+      },
+      "rpc_method_latency_ms": {
+        "session.status": {
+          "count": 102,
+          "p50": 0.22725199960405007,
+          "p95": 0.5897099981666543,
+          "max": 1.330345003225375
+        },
+        "input.control": {
+          "count": 102,
+          "p50": 0.9305214989581145,
+          "p95": 1.9899390026694164,
+          "max": 9.203936999256257
+        },
+        "input.keyboard.state": {
+          "count": 1,
+          "p50": 1.4958450046833605,
+          "p95": 1.4958450046833605,
+          "max": 1.4958450046833605
+        },
+        "execution.timing": {
+          "count": 1,
+          "p50": 1.708166004391387,
+          "p95": 1.708166004391387,
+          "max": 1.708166004391387
+        },
+        "memory.read": {
+          "count": 101,
+          "p50": 2.7153880000696518,
+          "p95": 4.64780000038445,
+          "max": 10.721933998866007
+        },
+        "frame.step": {
+          "count": 100,
+          "p50": 23.100670499843545,
+          "p95": 26.581928999803495,
+          "max": 37.310667998099234
+        }
+      }
+    },
+    {
+      "run": "10-final-benchmark",
+      "mode": "fast-unpaced",
+      "outcome": "cycle_limit",
+      "metrics": {
+        "cycles": 100,
+        "feedback_guest_ms": 2856,
+        "total_guest_ms": 2856,
+        "host_ms": 2484.8323440019158,
+        "guest_accounting_complete": true,
+        "feedback_host_ms": 2472.1522370018647,
+        "guest_host_ratio": 1.1493733196503328,
+        "cycle_latency_ms": {
+          "p50": 23.093839001376182,
+          "p95": 36.827447001996916,
+          "max": 49.02035800478188
+        },
+        "rpc_latency_ms": {
+          "p50": 2.0284860001993366,
+          "p95": 20.42491500469623,
+          "max": 39.24280799401458
+        },
+        "missed_paced_deadlines": 0
+      },
+      "cleanup": {
+        "status": "neutral",
+        "game_consumption_verified": false
+      },
+      "goal": null,
+      "range": {
+        "x_start": 33280,
+        "x_end": 33280,
+        "y_end": 7695,
+        "y_min": 7695
+      },
+      "rpc_method_latency_ms": {
+        "session.status": {
+          "count": 102,
+          "p50": 0.21969199588056654,
+          "p95": 0.790706995758228,
+          "max": 4.509742000664119
+        },
+        "input.control": {
+          "count": 102,
+          "p50": 0.9804959991015494,
+          "p95": 2.0284860001993366,
+          "max": 5.498425001860596
+        },
+        "input.keyboard.state": {
+          "count": 1,
+          "p50": 1.6223250058828853,
+          "p95": 1.6223250058828853,
+          "max": 1.6223250058828853
+        },
+        "execution.timing": {
+          "count": 3,
+          "p50": 1.3979759969515726,
+          "p95": 1.6021280025597662,
+          "max": 1.6021280025597662
+        },
+        "memory.read": {
+          "count": 101,
+          "p50": 2.642018996994011,
+          "p95": 4.3907090002903715,
+          "max": 13.178453998989426
+        },
+        "frame.step": {
+          "count": 100,
+          "p50": 18.34607249838882,
+          "p95": 27.317334999679588,
+          "max": 39.24280799401458
+        }
+      }
+    },
+    {
+      "run": "10-final-benchmark",
+      "mode": "fast-paced",
+      "outcome": "cycle_limit",
+      "metrics": {
+        "cycles": 100,
+        "feedback_guest_ms": 2856,
+        "total_guest_ms": 2856,
+        "host_ms": 2868.959735998942,
+        "guest_accounting_complete": true,
+        "feedback_host_ms": 2857.2389199980535,
+        "guest_host_ratio": 0.9954827752246479,
+        "cycle_latency_ms": {
+          "p50": 22.51295099995332,
+          "p95": 32.836167003551964,
+          "max": 54.68137699790532
+        },
+        "rpc_latency_ms": {
+          "p50": 1.969067998288665,
+          "p95": 22.008636995451525,
+          "max": 50.33167899819091
+        },
+        "missed_paced_deadlines": 27
+      },
+      "cleanup": {
+        "status": "neutral",
+        "game_consumption_verified": false
+      },
+      "goal": null,
+      "range": {
+        "x_start": 33280,
+        "x_end": 33280,
+        "y_end": 7695,
+        "y_min": 7695
+      },
+      "rpc_method_latency_ms": {
+        "session.status": {
+          "count": 102,
+          "p50": 0.20114549988647923,
+          "p95": 0.5140869980095886,
+          "max": 1.2925560004077852
+        },
+        "input.control": {
+          "count": 102,
+          "p50": 1.0897650026890915,
+          "p95": 2.220298003521748,
+          "max": 3.8950359958107583
+        },
+        "input.keyboard.state": {
+          "count": 1,
+          "p50": 1.4797539988649078,
+          "p95": 1.4797539988649078,
+          "max": 1.4797539988649078
+        },
+        "execution.timing": {
+          "count": 3,
+          "p50": 1.5425900055561215,
+          "p95": 1.5943109974614345,
+          "max": 1.5943109974614345
+        },
+        "memory.read": {
+          "count": 101,
+          "p50": 2.274900005431846,
+          "p95": 2.914803997555282,
+          "max": 5.137821004609577
+        },
+        "frame.step": {
+          "count": 100,
+          "p50": 17.723557000863366,
+          "p95": 26.933232002193108,
+          "max": 50.33167899819091
+        }
+      }
+    },
+    {
+      "run": "09-feedback",
+      "mode": "walk-left",
+      "outcome": "policy_stop",
+      "metrics": {
+        "cycles": 15,
+        "feedback_guest_ms": 428,
+        "total_guest_ms": 428,
+        "host_ms": 492.4529580021044,
+        "guest_accounting_complete": true,
+        "feedback_host_ms": 480.63479099801043,
+        "guest_host_ratio": 0.8691185483714182,
+        "cycle_latency_ms": {
+          "p50": 23.71747999859508,
+          "p95": 127.97882599988952,
+          "max": 127.97882599988952
+        },
+        "rpc_latency_ms": {
+          "p50": 1.5957129944581538,
+          "p95": 20.359191999887116,
+          "max": 123.01975899754325
+        },
+        "missed_paced_deadlines": 11
+      },
+      "cleanup": {
+        "status": "neutral",
+        "game_consumption_verified": false
+      },
+      "goal": {
+        "kind": "walk_to_x",
+        "start_x": 33280,
+        "target_x": 32768
+      },
+      "range": {
+        "x_start": 33280,
+        "x_end": 32656,
+        "y_end": 7695,
+        "y_min": 7695
+      },
+      "rpc_method_latency_ms": {
+        "session.status": {
+          "count": 18,
+          "p50": 0.15499399887630716,
+          "p95": 0.3150949996779673,
+          "max": 0.3150949996779673
+        },
+        "input.control": {
+          "count": 18,
+          "p50": 1.156780002929736,
+          "p95": 1.9371310045244172,
+          "max": 1.9371310045244172
+        },
+        "input.keyboard.state": {
+          "count": 1,
+          "p50": 1.919296002597548,
+          "p95": 1.919296002597548,
+          "max": 1.919296002597548
+        },
+        "execution.timing": {
+          "count": 3,
+          "p50": 1.5139089955482632,
+          "p95": 1.7223409959115088,
+          "max": 1.7223409959115088
+        },
+        "memory.read": {
+          "count": 16,
+          "p50": 2.3572070022055414,
+          "p95": 4.321751999668777,
+          "max": 4.321751999668777
+        },
+        "input.keyboard.frame_edges": {
+          "count": 2,
+          "p50": 1.4092179990257137,
+          "p95": 1.4294970023911446,
+          "max": 1.4294970023911446
+        },
+        "frame.step": {
+          "count": 15,
+          "p50": 18.608894002682064,
+          "p95": 123.01975899754325,
+          "max": 123.01975899754325
+        }
+      }
+    },
+    {
+      "run": "09-feedback",
+      "mode": "short-jump",
+      "outcome": "policy_stop",
+      "metrics": {
+        "cycles": 40,
+        "feedback_guest_ms": 1143,
+        "total_guest_ms": 1143,
+        "host_ms": 1156.6965099991648,
+        "guest_accounting_complete": true,
+        "feedback_host_ms": 1143.977902996994,
+        "guest_host_ratio": 0.9881589424012572,
+        "cycle_latency_ms": {
+          "p50": 23.58781499788165,
+          "p95": 33.837837996543385,
+          "max": 53.509985002165195
+        },
+        "rpc_latency_ms": {
+          "p50": 1.6482030041515827,
+          "p95": 22.745240006770473,
+          "max": 47.905402003380004
+        },
+        "missed_paced_deadlines": 17
+      },
+      "cleanup": {
+        "status": "neutral",
+        "game_consumption_verified": false
+      },
+      "goal": {
+        "kind": "short_jump",
+        "start_x": 32656,
+        "start_y": 7695
+      },
+      "range": {
+        "x_start": 32656,
+        "x_end": 32656,
+        "y_end": 7695,
+        "y_min": 6720
+      },
+      "rpc_method_latency_ms": {
+        "session.status": {
+          "count": 43,
+          "p50": 0.14376900071511045,
+          "p95": 0.5370209983084351,
+          "max": 0.6984540013945661
+        },
+        "input.control": {
+          "count": 43,
+          "p50": 1.020698000502307,
+          "p95": 1.8855439993785694,
+          "max": 2.1318920043995604
+        },
+        "input.keyboard.state": {
+          "count": 1,
+          "p50": 1.079257002857048,
+          "p95": 1.079257002857048,
+          "max": 1.079257002857048
+        },
+        "execution.timing": {
+          "count": 3,
+          "p50": 1.3651159970322624,
+          "p95": 1.9962909937021323,
+          "max": 1.9962909937021323
+        },
+        "memory.read": {
+          "count": 41,
+          "p50": 2.401181001914665,
+          "p95": 4.187048994936049,
+          "max": 7.475610000255983
+        },
+        "input.keyboard.frame_edges": {
+          "count": 2,
+          "p50": 1.5831655000511091,
+          "p95": 1.7678709991741925,
+          "max": 1.7678709991741925
+        },
+        "frame.step": {
+          "count": 40,
+          "p50": 18.599960498249857,
+          "p95": 27.71919799852185,
+          "max": 47.905402003380004
+        }
+      }
+    }
+  ],
+  "all_guest_processes_closed": true,
+  "scope": "Bounded source-informed original-game research; exact executable/load layout, not production provider or hard real-time claim",
+  "installed_version": "0.1.0.dev8",
+  "native_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+  "tests": {
+    "focused": 31,
+    "independent_review": "passed",
+    "prior_native_fix_tests": 144,
+    "prior_tests_are_separate_checkpoint": true
+  },
+  "source_references": {
+    "original": "https://github.com/keendreams/keen/tree/15be5be4a3382d0a1d99e1202219a84b09b11273",
+    "later": "https://github.com/keendreams/keen/tree/4348b4719be87a0b873f5f4f77b4de82ddf7050c"
+  },
+  "hook": {
+    "segment": "0B7A",
+    "offset": "1277",
+    "selected_code_sha256": "165382c4b4235aeb67b0a061ae4f3c1ef36c96c032a5a93eb7df250fc93fa95a",
+    "position": "before gravity and input in PlayLoop",
+    "game_tics_per_observed_update": 2
+  },
+  "hot_read": {
+    "data_segment": "2A5C",
+    "offset": "7030",
+    "length": 30710,
+    "state_prefix_seed": "at qualified hook in final neutral and feedback trials"
+  },
+  "limitations": [
+    "Short quiet first-level trials; wall-clock tail jitter remains",
+    "Waypoint threshold overshot by7pixels",
+    "No complete enemy/map-mutation/predictive-physics qualification",
+    "Exact edition and whole source-to-binary equivalence not asserted",
+    "Cooperative headless diagnostic; no production desktop integration",
+    "All commercial assets and raw runtime evidence excluded from Git"
+  ]
+}

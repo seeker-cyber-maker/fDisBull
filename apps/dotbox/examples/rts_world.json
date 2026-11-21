@@ -1,0 +1,58 @@
+{
+  "format": "dotbox-rts-world-1",
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "edition": "authored RTS example; no commercial game bindings",
+  "observation_id": "example-7",
+  "state_context": {
+    "provider_id": "authored-provider", "session_id": "authored-session",
+    "branch_id": "authored-branch", "revision": 7, "context_token": "authored-context-7"
+  },
+  "player_faction": "blue",
+  "map": {"space": "tile", "bounds": [0, 0, 64, 64]},
+  "camera": {
+    "world_bounds": [0, 0, 15, 10], "screen_bounds": [0, 40, 240, 200],
+    "frame_size": [320, 200], "frame_id": 70, "mode_id": 1,
+    "evidence_ref": "authored/frame/7"
+  },
+  "phase": {"name": "gameplay", "input_ready": true, "evidence_ref": "authored/phase/7"},
+  "entities": [
+    {
+      "id": "scout", "kind": "unit", "label": "Scout",
+      "identity_scope": "incarnation", "incarnation_id": "scout-life-1", "observation_id": "example-7",
+      "visibility": "visible", "audience": "player", "owner_faction": "blue",
+      "controller_faction": "blue", "relation_to_player": "self", "commandable": true,
+      "position": [8, 9], "evidence_ref": "authored/entities/7"
+    },
+    {
+      "id": "tank", "kind": "unit", "label": "Tank",
+      "identity_scope": "incarnation", "incarnation_id": "tank-life-1", "observation_id": "example-7",
+      "visibility": "visible", "audience": "player", "owner_faction": "blue",
+      "controller_faction": "blue", "relation_to_player": "self", "commandable": true,
+      "position": [9, 9], "evidence_ref": "authored/entities/7"
+    },
+    {
+      "id": "worm", "kind": "hazard", "label": "Sand creature",
+      "identity_scope": "observation", "incarnation_id": null, "observation_id": "example-7",
+      "visibility": "visible", "audience": "player", "owner_faction": "desert",
+      "controller_faction": null, "relation_to_player": "unknown", "commandable": false,
+      "position": [11, 7], "evidence_ref": "authored/entities/7"
+    },
+    {
+      "id": "ally", "kind": "unit", "label": "Allied patrol",
+      "identity_scope": "incarnation", "incarnation_id": "ally-life-1", "observation_id": "example-7",
+      "visibility": "visible", "audience": "player", "owner_faction": "gold",
+      "controller_faction": "gold", "relation_to_player": "ally", "commandable": false,
+      "position": [10, 8], "evidence_ref": "authored/entities/7"
+    }
+  ],
+  "selection": {"entity_ids": ["scout"], "pending_action": null, "evidence_ref": "authored/selection/7"},
+  "groups": [
+    {"id": "patrol", "label": "Patrol", "kind": "logical", "entity_ids": ["scout", "tank"],
+     "observation_id": "example-7", "audience": "player", "evidence_ref": "authored/group/7"}
+  ],
+  "events": [
+    {"id": "objective", "kind": "objective", "text": "Reach the marked area.", "audience": "player",
+     "blocking": false, "observation_id": "example-7", "evidence_ref": "authored/event/7"}
+  ],
+  "evidence_ref": "authored/world/7"
+}

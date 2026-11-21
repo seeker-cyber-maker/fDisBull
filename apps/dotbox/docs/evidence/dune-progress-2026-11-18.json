@@ -1,0 +1,573 @@
+{
+  "archive_sha256": "9f9f9137a1af68ab155fa65b5e309c40d89fd2c9120b3de0ccb66fc4a1861b52",
+  "baseline_source_commit": "b24eba463ffa8cd46e1491743dc568ed1951c7f7",
+  "controlled_actions": [
+    {
+      "controller_identity_provenance": "Separately recorded source digest in root tool history and author freeze; these earlier raw receipts predate the embedded implementation-hash field",
+      "controller_source_sha256": "68daeb3e45d5c1d30385491949ba01d3b405f4faa35c2878d1b009c466121e90",
+      "frame_sha256": "2da5c98542a420503c2d789c8ca1afe1f9c05dfee2bd409c3299bc00b746b1a4",
+      "frames_completed": 7,
+      "guest_elapsed_ms": 100,
+      "metrics": {
+        "host_ms": 271.82393499970203,
+        "memory_bytes_read": 1572879,
+        "model_calls_by_controller": 0,
+        "model_turns_outside_controller": null,
+        "rpc_by_method": {
+          "breakpoints.create": 3,
+          "breakpoints.list": 3,
+          "execution.timing": 1,
+          "frame.step": 10,
+          "input.keyboard.state": 10,
+          "input.mouse.click": 1,
+          "input.mouse.state": 10,
+          "memory.read": 27,
+          "session.status": 13,
+          "state.get_registers": 2,
+          "video.screenshot": 1
+        },
+        "selection_requests": 1
+      },
+      "outcome": "input_boundary",
+      "private_receipt": "027_controlled_troop_information_controller_result.json",
+      "readiness": {
+        "fresh_frame_after_input_loop": true,
+        "fresh_frame_since_dispatch": true,
+        "input_loop_observed": true,
+        "input_retired": true,
+        "matched_control_dispatch": true,
+        "stable_control_frames": 2
+      },
+      "receipt_sha256": "a6eae9ca4c70d71dc868c4bc38145d9514c454ede54c5d1958ec24565ac9dc0d",
+      "rpc_calls": 81,
+      "story_commit": "unknown"
+    },
+    {
+      "controller_identity_provenance": "Separately recorded source digest in root tool history and author freeze; these earlier raw receipts predate the embedded implementation-hash field",
+      "controller_source_sha256": "68daeb3e45d5c1d30385491949ba01d3b405f4faa35c2878d1b009c466121e90",
+      "frame_sha256": "8275f2407ce9adb71816f656ffe7776ffdaf5954aa26516295ae1a7b31152213",
+      "frames_completed": 100,
+      "guest_elapsed_ms": 1427,
+      "metrics": {
+        "host_ms": 1544.075181001972,
+        "memory_bytes_read": 1572879,
+        "model_calls_by_controller": 0,
+        "model_turns_outside_controller": null,
+        "rpc_by_method": {
+          "breakpoints.create": 3,
+          "breakpoints.list": 3,
+          "execution.timing": 1,
+          "frame.step": 103,
+          "input.keyboard.state": 5,
+          "input.mouse.click": 1,
+          "input.mouse.state": 5,
+          "memory.read": 27,
+          "session.status": 106,
+          "state.get_registers": 2,
+          "video.screenshot": 1
+        },
+        "selection_requests": 1
+      },
+      "outcome": "context_changed",
+      "private_receipt": "028_close_troop_orders_controller_result.json",
+      "readiness": {
+        "fresh_frame_after_input_loop": true,
+        "fresh_frame_since_dispatch": true,
+        "input_loop_observed": true,
+        "input_retired": true,
+        "matched_control_dispatch": true,
+        "stable_control_frames": 2
+      },
+      "receipt_sha256": "6218b5b6b0d1fb83cae0c37340925922b2565a013fb6ed34582a06148fe4d4cd",
+      "rpc_calls": 257,
+      "story_commit": "unknown"
+    },
+    {
+      "controller_identity_provenance": "Separately recorded source digest in root tool history and author freeze; these earlier raw receipts predate the embedded implementation-hash field",
+      "controller_source_sha256": "68daeb3e45d5c1d30385491949ba01d3b405f4faa35c2878d1b009c466121e90",
+      "frame_sha256": "c208e9c7e76c3025de3ecd289344d361c230507fe0d8b8e290c52c77dacb3162",
+      "frames_completed": 85,
+      "guest_elapsed_ms": 1213,
+      "metrics": {
+        "host_ms": 1303.4942690064781,
+        "memory_bytes_read": 1572879,
+        "model_calls_by_controller": 0,
+        "model_turns_outside_controller": null,
+        "rpc_by_method": {
+          "breakpoints.create": 3,
+          "breakpoints.list": 3,
+          "execution.timing": 1,
+          "frame.step": 88,
+          "input.keyboard.state": 5,
+          "input.mouse.click": 1,
+          "input.mouse.state": 5,
+          "memory.read": 27,
+          "session.status": 91,
+          "state.get_registers": 2,
+          "video.screenshot": 1
+        },
+        "selection_requests": 1
+      },
+      "outcome": "context_changed",
+      "private_receipt": "029_fremen_chief_dialogue_controller_result.json",
+      "readiness": {
+        "fresh_frame_after_input_loop": true,
+        "fresh_frame_since_dispatch": true,
+        "input_loop_observed": true,
+        "input_retired": true,
+        "matched_control_dispatch": true,
+        "stable_control_frames": 2
+      },
+      "receipt_sha256": "935f07bb1fc4253f244b9dcb3b9ea08ca67ab61ed99821c1eb1031b86b34a1ff",
+      "rpc_calls": 227,
+      "story_commit": "unknown"
+    }
+  ],
+  "conversation_batch": {
+    "actions": 5,
+    "bounds": {
+      "host_admission_ms": 15000,
+      "max_actions": 6,
+      "max_frames": 720
+    },
+    "final_frame_sha256": "05224bc1d7d4c92e8d2fe49f4df4a73dd3afc5dee02ba1e6448784fc9f21eeec",
+    "frames_completed": 115,
+    "guest_elapsed_ms": 1641,
+    "initial_readiness_metrics": {
+      "host_ms": 90.78532400599215,
+      "memory_bytes_read": 851973,
+      "model_calls_by_controller": 0,
+      "model_turns_outside_controller": null,
+      "rpc_by_method": {
+        "breakpoints.create": 2,
+        "breakpoints.list": 3,
+        "execution.timing": 2,
+        "frame.step": 4,
+        "input.keyboard.state": 4,
+        "input.mouse.state": 4,
+        "memory.read": 14,
+        "session.status": 7,
+        "state.get_registers": 2,
+        "video.screenshot": 1
+      },
+      "selection_requests": 0
+    },
+    "macro_selection_requests": 1,
+    "metrics": {
+      "host_ms": 2119.043981001596,
+      "macro_requests": 1,
+      "memory_bytes_read": 7864395,
+      "model_calls_by_controller": 0,
+      "model_turns_outside_controller": null,
+      "rpc_by_method": {
+        "breakpoints.create": 15,
+        "breakpoints.list": 15,
+        "execution.timing": 5,
+        "frame.step": 130,
+        "input.keyboard.state": 25,
+        "input.mouse.click": 5,
+        "input.mouse.state": 25,
+        "memory.read": 135,
+        "session.status": 145,
+        "state.get_registers": 10,
+        "video.screenshot": 5
+      }
+    },
+    "model_decisions_between_actions": 0,
+    "new_information_pages": 4,
+    "outcome": "conversation_context_changed",
+    "page_topics": [
+      "troop statistics",
+      "game-reported production estimate",
+      "poor local spice",
+      "nearby Harkonnens"
+    ],
+    "private_receipt": "030_dialogue_batch_result.json",
+    "production_estimate_kg_per_hour": 2,
+    "production_estimate_source": "Game dialogue only; no independent economic-loop measurement",
+    "receipt_sha256": "357f34676158490d9d049f1c104d84b01e7fcdad99ad8274965fc75f789e6a96",
+    "rpc_calls": 515,
+    "source_sha256": {
+      "controller_sha256": "7137a6a325e46ad0c0b2b22c7f9939c1c82d0450083bec2233c16a677e6b9142",
+      "reader_sha256": "f9c19c43636bd62fe691400a3a4293d9530fa97083f9823682044746d742f295"
+    },
+    "stop_evidence": "Fifth ordinary TALK TO ME returned from conversation menu2608 to ordinary menu2598 at same site; sixth input not sent"
+  },
+  "display_timezone": "America/New_York",
+  "executable_sha256": "32439602abe95e0ff778653ad58052bfed56a73e103b92f079455daa2ee886e7",
+  "failures_retained": [
+    {
+      "attempts": [
+        "001_leto",
+        "002_observe"
+      ],
+      "case": "fresh-text-mode graphics restore",
+      "result": "RAM/dialogue advanced but screenshot stayed old; graphics-primed workaround005 passed; native repair not implemented"
+    },
+    {
+      "case": "palace command during ornithopter takeoff",
+      "receipt": "015_controlled_ornithopter_controller_result.json",
+      "result": "120-frame no-dispatch timeout; input not replayed; readiness contract added"
+    },
+    {
+      "case": "new controller at previous controller boundary",
+      "result": "Correct refusal after one status read; root matched prior successful029 receipt and retired one neutral frame before final controller initialization"
+    }
+  ],
+  "final_checkpoint": {
+    "filename": "031_carthag_harg_mining_after_dialogue.sav",
+    "input_neutral": true,
+    "owned_probes_remaining": 0,
+    "sha256": "27507fd3f21365c1cfabc637f19ceba873bf579d1a585a6b630aef19870d0da9"
+  },
+  "final_source_sha256": {
+    "controller_sha256": "7137a6a325e46ad0c0b2b22c7f9939c1c82d0450083bec2233c16a677e6b9142",
+    "reader_sha256": "f9c19c43636bd62fe691400a3a4293d9530fa97083f9823682044746d742f295"
+  },
+  "limits": [
+    "No complete Dune strategic-loop qualification",
+    "Gurney not yet met",
+    "No actual harvested-spice delta measured",
+    "No current DotBox-native build or original-Dot ownership/takeover qualification",
+    "No macOS execution",
+    "No native restore fix",
+    "Timing comparisons use different actions, not controlled A/B speedup",
+    "Cooperative host budgets between synchronous calls, not hard per-RPC deadlines"
+  ],
+  "manual_baseline": {
+    "actions": [
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 89,
+          "execution.wait": 86,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1823,
+        "host_ms": 1031.889,
+        "name": "007_leto_more",
+        "rpc_calls": 200
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 71,
+          "execution.wait": 68,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1803,
+        "host_ms": 789.091,
+        "name": "008_leto_stop",
+        "rpc_calls": 164
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 75,
+          "execution.wait": 72,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1820,
+        "host_ms": 842.763,
+        "name": "009_leave_throne",
+        "rpc_calls": 172
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 80,
+          "execution.wait": 77,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1824,
+        "host_ms": 904.842,
+        "name": "010_cross_hall",
+        "rpc_calls": 182
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 79,
+          "execution.wait": 76,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1804,
+        "host_ms": 863.253,
+        "name": "011_cross_corridor",
+        "rpc_calls": 180
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 76,
+          "execution.wait": 73,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1812,
+        "host_ms": 856.7,
+        "name": "012_palace_exit",
+        "rpc_calls": 174
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 76,
+          "execution.wait": 73,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1807,
+        "host_ms": 840.9,
+        "name": "013_take_ornithopter",
+        "rpc_calls": 174
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 73,
+          "execution.wait": 70,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1825,
+        "host_ms": 829.076,
+        "name": "014_map_select_northeast",
+        "rpc_calls": 168
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 282,
+          "execution.wait": 279,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 8002,
+        "host_ms": 2970.286,
+        "name": "018_skip_to_destination",
+        "rpc_calls": 586
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 76,
+          "execution.wait": 73,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1805,
+        "host_ms": 838.59,
+        "name": "019_enter_sietch",
+        "rpc_calls": 174
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 81,
+          "execution.wait": 78,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1808,
+        "host_ms": 905.592,
+        "name": "020_fremen_contact",
+        "rpc_calls": 184
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 72,
+          "execution.wait": 69,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1805,
+        "host_ms": 786.718,
+        "name": "021_recruit_fremen",
+        "rpc_calls": 166
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 76,
+          "execution.wait": 73,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1809,
+        "host_ms": 830.603,
+        "name": "022_troop_orders",
+        "rpc_calls": 174
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 74,
+          "execution.wait": 71,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1816,
+        "host_ms": 802.175,
+        "name": "023_select_troop_orders",
+        "rpc_calls": 170
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 74,
+          "execution.wait": 71,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1820,
+        "host_ms": 808.04,
+        "name": "024_occupation_menu",
+        "rpc_calls": 170
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 75,
+          "execution.wait": 72,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1819,
+        "host_ms": 810.149,
+        "name": "025_assign_spice",
+        "rpc_calls": 172
+      },
+      {
+        "by_method": {
+          "execution.continue": 1,
+          "execution.pause": 1,
+          "execution.timing": 75,
+          "execution.wait": 72,
+          "input.mouse.click": 1,
+          "memory.read": 20,
+          "video.screenshot": 2
+        },
+        "guest_ms": 1808,
+        "host_ms": 827.138,
+        "name": "026_troop_information",
+        "rpc_calls": 172
+      }
+    ],
+    "requests": 17,
+    "scope": "17 measured private fixed-wait helper invocations; not every startup or diagnostic action. RPC counts reconstructed from exact call-ledger windows.",
+    "short_action_count": 16,
+    "short_action_host_ms_median": 834.5965,
+    "short_action_rpc_median": 173.0,
+    "short_action_rpc_range": [
+      164,
+      200
+    ]
+  },
+  "measurement_date": "2026-11-18",
+  "milestones": [
+    {
+      "event": "opening_objective_received",
+      "receipt": "007_leto_more_report.json"
+    },
+    {
+      "event": "palace_exit_reached",
+      "receipt": "012_palace_exit_report.json"
+    },
+    {
+      "current_site": "0100",
+      "event": "Carthag-Harg_selected_not_yet_arrived",
+      "receipt": "014_map_select_northeast_report.json",
+      "selected_site": "026C"
+    },
+    {
+      "current_site": "026C",
+      "event": "Carthag-Harg_arrival",
+      "location": "0301/0E80",
+      "receipt": "018_skip_to_destination_report.json"
+    },
+    {
+      "current_site": "026C",
+      "event": "sietch_entered",
+      "location": "0302/0E80",
+      "receipt": "019_enter_sietch_report.json"
+    },
+    {
+      "event": "troop_recruited",
+      "evidence": "Work request replaced by troop-orders command and affirmative visible response",
+      "receipt": "021_recruit_fremen_report.json"
+    },
+    {
+      "event": "spice_occupation_selected",
+      "receipt": "025_assign_spice_report.json"
+    },
+    {
+      "event": "mining_activity_reported",
+      "frame_sha256": "38799d56276dca9a9f13b1279419287f714a9c5c86ca027f5a5fceebff40abdb",
+      "qualification": "Visible game report of assigned activity, not a measurement of harvested amount",
+      "receipt": "026_troop_information_report.json"
+    }
+  ],
+  "native_sha256": "d9236f1178855524a74516eb37cbb636431f9bdec599d9d675e6d69ea6309251",
+  "preparation": {
+    "excluded": "Initial interpretation/delegation/source reads before run_start; later publication/packaging. This is not a cold-start latency claim.",
+    "first_visible_ready_seconds": 419.777418666,
+    "gameplay_and_tool_validation_seconds": 1607.20668118,
+    "initial_budget_missed": true,
+    "initial_budget_seconds": 180,
+    "recorded_start_utc": "2026-11-19T01:26:54.044071+00:00",
+    "research_job_budget_seconds": 2700
+  },
+  "schema": "dotbox-dune-progress-evidence-1",
+  "scope": "Isolated warm continuation, target-specific reader/controller development and actual-live validation; original inputs only",
+  "synthetic_verification": {
+    "controller_reader_batch_tests_passed": 72,
+    "critical_regressions": [
+      "dispatch binding changes",
+      "wait cannot execute rejected callback",
+      "dialogue/site/context change ends macro",
+      "no input replay after uncertain/partial attempt"
+    ],
+    "failed": 0,
+    "independent_extra_macro_cases_passed": 4
+  },
+  "transport": "DotBox dotbox.native_rpc.DOSBoxRPC; retained fDisBull0.34.1 Linux native"
+}

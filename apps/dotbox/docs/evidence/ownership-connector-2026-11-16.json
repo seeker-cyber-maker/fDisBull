@@ -1,0 +1,94 @@
+{
+  "schema": "dotbox-ownership-connector-verification-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "55e6e3108670c2dcac5b69a3e6b4573cc9d997a8",
+  "qualification": "Local authenticated read-only MCP ownership; no Dot connection or desktop input",
+  "implementation": {
+    "tool": "dotbox_ownership_status",
+    "scope": "dotbox.ownership.read",
+    "sdk": "mcp==2.3.0",
+    "optional_dependency": true,
+    "coordinator_reused": true,
+    "native_rebuilt": false,
+    "cached_success": false,
+    "input_authorization": false
+  },
+  "verification": {
+    "source_suite": {
+      "passed": 388,
+      "skipped": 0,
+      "seconds": 31.06,
+      "includes_connector_cases": 19,
+      "native": "Existing prepared executable and pinned base source reused"
+    },
+    "isolated_installed_suite": {
+      "passed": 161,
+      "skipped": 0,
+      "deselected": 1,
+      "seconds": 24.18,
+      "exclusion": "Source-only static import audit is covered by the full source suite"
+    },
+    "base_package_without_optional_mcp": {
+      "all_runtime_modules_imported": true,
+      "cli_and_connector_help": true,
+      "mcp_available": false,
+      "fdisbull_available": false
+    },
+    "runtime_modules_exact_source_wheel_installed": 22,
+    "runtime_module_map_sha256": "7e9da348105923715c21d57ad8a21d4657f7aa6f3ff76f65f4d2ae18bc0c7abd",
+    "wheel_sha256": "d0f43446954eb0bee2b2dc6bc4d7b64e39c71dd046ea96c1dfc2f0c0fc6c04a5",
+    "native_executable_sha256": "5a9a221d2fe43cdf8ffc72c474073cb5d520717f17914282ec37bc25957b46af",
+    "sdist_includes_connector_spec_permissions_guide": true,
+    "real_local_mcp_http": [
+      "Official SDK automatic and legacy clients see exactly one tool and nine projected fields",
+      "Dot and human observations, deterministic expiry and receiver loss",
+      "No last-good fallback or rebinding after receiver replacement",
+      "Game, old unmarked and publisher descriptors rejected before socket connection",
+      "Missing, bad, expired and wrong-audience tokens denied; wrong scope denied",
+      "Untrusted Host and Origin denied before ownership read",
+      "Extra arguments and unknown operations rejected without turn or shutdown effects",
+      "In-memory transport denied ownership data without HTTP authentication",
+      "Full coordinator round-trip deducted; malformed identity, epoch and freshness/source rejected",
+      "Launcher actually serves HTTP; separate token is not printed and is removed on interruption"
+    ],
+    "independent_review": "Read-only source and permission-boundary review, with root review and test readback; no additional actionable finding"
+  },
+  "connection_review": {
+    "proposal": "connectors/ownership/permissions.review.json",
+    "status": "prepared_pending_review",
+    "deployed": false,
+    "oauth_provider_selected": false,
+    "public_endpoint_selected": false,
+    "chatgpt_connection_created": false,
+    "remote_input_or_turn_capability": false
+  },
+  "limits": [
+    "Synthetic ownership publisher; no actual live viewer or original-Dot connection tested",
+    "Status is a sampled snapshot, not a turn lease or input permission; later MCP transit delay is not deducted",
+    "Local connector process holds the broader normal coordinator credential; fixed remote tool is not process-compromise isolation",
+    "OAuth issuer, endpoint, client and single-owner binding need selection, review and enforcement before activation",
+    "Sound and gameplay remain deferred; hosted CI, cloud installation and release not performed"
+  ],
+  "private_receipts": [
+    {
+      "name": "source-suite-01.log",
+      "bytes": 501,
+      "sha256": "686a3a41ba2e2992ae315a7235ba4710d7717e74d54424e5c65bffe2689265c0"
+    },
+    {
+      "name": "installed-suite-01.log",
+      "bytes": 275,
+      "sha256": "8397b1f280c6a61b4a29ff5760879be40b6568bc829f2a900d93845eda7dd087"
+    },
+    {
+      "name": "source-identity.json",
+      "bytes": 2306,
+      "sha256": "2a0cdd58c39f7843569caf129cfe642fb89470af49febcf239273c3c6066addd"
+    },
+    {
+      "name": "fresh-source-before-verified.log",
+      "bytes": 2356,
+      "sha256": "4ddd0a16edb587711bb4769560099d8e1b0f9b5d2825f21f730480dbc3e7054c"
+    }
+  ]
+}

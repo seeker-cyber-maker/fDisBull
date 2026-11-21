@@ -1,4 +1,4 @@
-"""Public Windows launch, script and dot-mode dispatch boundaries."""
+"""Public Windows launch, script and spectator dispatch boundaries."""
 from pathlib import Path
 import base64
 
@@ -33,10 +33,11 @@ def test_windows_factory_routes_spectator_and_memory_without_starting_another_ba
             assert len(seen)==before
 
 
-def test_dot_mode_and_steps_are_public_cli_and_live_json_methods(tmp_path):
+@pytest.mark.parametrize('flag', ['--spectator', '--dot-mode', '--window'])
+def test_spectator_and_steps_are_public_cli_and_live_json_methods(tmp_path, flag):
     options=parser().parse_args(['debug','project.fdb','--executable','qemu','--game-dir','game',
                                 '--backend','wine-ne','--kernel','k','--initramfs','r',
-                                '--dot-mode','--memory-mib','8192'])
+                                flag,'--memory-mib','8192'])
     assert options.window is True and options.memory_mib==8192
     assert {'debug-step','debug-spectator','debug-spectator-frame'}<=METHODS.keys()
     class Session:

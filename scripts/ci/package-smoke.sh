@@ -10,8 +10,15 @@ package_dir="${FDISBULL_CI_PACKAGES:-$CI_PROJECT_DIR/dist}"
 receipt_dir="${FDISBULL_CI_RECEIPTS:-$CI_PROJECT_DIR/artifacts/receipts}"
 mkdir -p "$receipt_dir"
 smoke_root=$(mktemp -d "$CI_BUILDS_DIR/fdisbull-package-smoke.XXXXXX")
+# The shared wheel must work without either product or inherited dependencies.
+"$ci_python" -m venv "$smoke_root/shared"
+"$smoke_root/shared/bin/python" -m pip install --no-index --no-deps "$package_dir"/fdisbull_core-*.whl
+(
+  cd "$smoke_root"
+  env -u PYTHONPATH shared/bin/python -I -c "import importlib.util; from fdisbull_core import memory_search; assert 'site-packages' in memory_search.__file__; assert importlib.util.find_spec('fdisbull') is None; assert importlib.util.find_spec('dotbox') is None"
+)
 "$ci_python" -m venv --system-site-packages "$smoke_root/core"
-"$smoke_root/core/bin/python" -m pip install --no-index --no-deps --force-reinstall "$package_dir"/fdisbull-*.whl
+"$smoke_root/core/bin/python" -m pip install --no-index --no-deps --force-reinstall "$package_dir"/fdisbull_core-*.whl "$package_dir"/fdisbull-*.whl
 "$ci_python" scripts/check_agent_skill.py --python "$smoke_root/core/bin/python" --output "$smoke_root/agent-skill.json"
 cp "$smoke_root/agent-skill.json" "$receipt_dir/agent-skill.json"
 "$ci_python" scripts/check_agent_skill.py --python "$smoke_root/core/bin/python" --skill write-gamefaqs-guide --output "$smoke_root/guide-skill.json"
@@ -21,8 +28,9 @@ cp "$smoke_root/guide-skill.json" "$receipt_dir/guide-skill.json"
 (
   cd "$smoke_root"
   env -u PYTHONPATH core/bin/python -I -c "import fdisbull; assert 'site-packages' in fdisbull.__file__"
+  env -u PYTHONPATH core/bin/python -I -c "from fdisbull import memory_search as old; from fdisbull_core import memory_search as shared; assert old.start_search is shared.start_search; assert 'site-packages' in shared.__file__"
   env -u PYTHONPATH core/bin/python -I -m fdisbull --help
-  env -u PYTHONPATH player/bin/python -I -c "import importlib.util; import fdisbull_player; assert importlib.util.find_spec('fdisbull') is None"
+  env -u PYTHONPATH player/bin/python -I -c "import importlib.util; import fdisbull_player; assert importlib.util.find_spec('fdisbull') is None; assert importlib.util.find_spec('fdisbull_core') is None"
   env -u PYTHONPATH player/bin/python -I -m fdisbull_player --help
 )
 
@@ -38,6 +46,11 @@ with zipfile.ZipFile(next(packages.glob('fdisbull-*-tool.zip'))) as archive:
 PY
 for source_kind in sdist tool; do
   "$ci_python" -m venv --system-site-packages "$smoke_root/$source_kind-env"
+  "$smoke_root/$source_kind-env/bin/python" -m pip install --force-reinstall --no-index --no-build-isolation --no-deps "$smoke_root/$source_kind"/fdisbull-*/packages/fdisbull-core
   "$smoke_root/$source_kind-env/bin/python" -m pip install --force-reinstall --no-index --no-build-isolation --no-deps "$smoke_root/$source_kind"/fdisbull-*
-  (cd "$smoke_root" && env -u PYTHONPATH "$source_kind-env/bin/python" -I -m fdisbull --help)
+  (
+    cd "$smoke_root"
+    env -u PYTHONPATH "$source_kind-env/bin/python" -I -c "from fdisbull import memory_search as old; from fdisbull_core import memory_search as shared; assert old.start_search is shared.start_search; assert 'site-packages' in shared.__file__"
+    env -u PYTHONPATH "$source_kind-env/bin/python" -I -m fdisbull --help
+  )
 done

@@ -1,0 +1,259 @@
+{
+  "schema": "dotbox-display-scaling-evidence-1",
+  "date": "2026-11-20",
+  "status": "passed_for_the_qualified_finite_trial",
+  "scope": "Keen Dreams, existing Linux native core, one qualified flat-floor keyboard-controller trial at each presentation; outer Context Kitty Lemmings session was not attached.",
+  "change": {
+    "version": "0.1.0.dev9",
+    "api": "NativeSession(..., window=True, window_scale=N)",
+    "cli": "dotbox serve ... --window-scale N",
+    "accepted_integer_scales": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "explicit_native_argument": [
+      "-set",
+      "render scaler=normalNx"
+    ],
+    "omitted_option_preserves_default_argv": true,
+    "fixed_integer_scaling": true,
+    "automatic_arbitrary_viewport_fit": false,
+    "no_changes_to": [
+      "game physics",
+      "map and actor decoding",
+      "camera state",
+      "native capture dimensions",
+      "controller loop",
+      "waypoint policy",
+      "native renderer source",
+      "original game files"
+    ]
+  },
+  "tested_identity": {
+    "source_commits": {
+      "dev8": "4cf0b8bcba69ea674e10326371159bd27e0b6960",
+      "dev9": "85178feaa232d3141e4a1cfb60d6c324b95760f9"
+    },
+    "native_core_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "game_executable_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+    "controller_sha256": "cf82d45c5bdec8c135968ccfa0436ed7724b1f833bc68b67c754619f09c41c60",
+    "policy_sha256": "62ac20e9a8fe246838c5f1cb04635eae247b07d54507054686467797f5387063",
+    "decoder_sha256": "f68c129189ca3dd2caa0ab176349893da66151cf61b91ac7465470bf38b42299",
+    "wheel": {
+      "name": "dotbox-0.1.0.dev9-py3-none-any.whl",
+      "bytes": 640677,
+      "sha256": "b00e46e98fefe1bdffc56a6d3a11789d60d68b331f54a515103786f80034dc38"
+    }
+  },
+  "measurement_method": {
+    "desktop_pixels": [
+      1364,
+      1024
+    ],
+    "client_geometry": "attached CUA Sky window inventory",
+    "game_image": "root visual inspection of desktop and bound-window screenshots at guarded presentation pauses",
+    "canonical_frame": "native RPC PNG source before host scaling",
+    "pauses": "stopped guest ticks, revision and hot memory preserved; start/finish pauses excluded from controller timing",
+    "desktop_jpegs_retained_in_archive": false,
+    "desktop_jpeg_limit": "CUA temporary paths could not be copied; native PNGs, measured geometry and observation receipts are retained."
+  },
+  "runs": [
+    {
+      "trial": "01-small",
+      "tested_source_commit": "4cf0b8bcba69ea674e10326371159bd27e0b6960",
+      "installed_version": "0.1.0.dev8",
+      "window_scale_requested": null,
+      "measured_client_pixels": [
+        640,
+        400
+      ],
+      "observed_game_image_pixels": [
+        640,
+        400
+      ],
+      "canonical_frame_pixels": [
+        320,
+        200
+      ],
+      "game_image_fills_client": true,
+      "guest_ms": 371,
+      "controller_host_ms": 381.646221,
+      "max_cycle_ms": 13.352512,
+      "missed_paced_deadlines": 0,
+      "final_frame_id": 1367,
+      "final_mode_id": 5,
+      "result_sha256": "c5b421a20f6dc625324e6d4827f5e15bdf6f714ed4e68b91e73ec4b8c6e03c23",
+      "trial_sha256": "f19031c19b8eebc4500543672e56924bc35aa98280e95b6bb0ece82a5c74631a",
+      "closed_reaped_returncode": 0
+    },
+    {
+      "trial": "02-large",
+      "tested_source_commit": "4cf0b8bcba69ea674e10326371159bd27e0b6960",
+      "installed_version": "0.1.0.dev8",
+      "window_scale_requested": null,
+      "measured_client_pixels": [
+        1364,
+        1000
+      ],
+      "observed_game_image_pixels": [
+        640,
+        400
+      ],
+      "canonical_frame_pixels": [
+        320,
+        200
+      ],
+      "game_image_fills_client": false,
+      "guest_ms": 371,
+      "controller_host_ms": 382.649357,
+      "max_cycle_ms": 35.33834,
+      "missed_paced_deadlines": 1,
+      "final_frame_id": 1366,
+      "final_mode_id": 6,
+      "result_sha256": "208505a74f83c05fb5c0ec245c034531f5f05c039a9ff6d3eb7f35016b7e44dc",
+      "trial_sha256": "7c1a0e6cc3f2859272847bdb625be634b1af37eda8476aed39ac7433429f6409",
+      "closed_reaped_returncode": 0
+    },
+    {
+      "trial": "03-scale3",
+      "tested_source_commit": "85178feaa232d3141e4a1cfb60d6c324b95760f9",
+      "installed_version": "0.1.0.dev9",
+      "window_scale_requested": 3,
+      "measured_client_pixels": [
+        960,
+        600
+      ],
+      "observed_game_image_pixels": [
+        960,
+        600
+      ],
+      "canonical_frame_pixels": [
+        320,
+        200
+      ],
+      "game_image_fills_client": true,
+      "guest_ms": 371,
+      "controller_host_ms": 381.850506,
+      "max_cycle_ms": 21.22047,
+      "missed_paced_deadlines": 0,
+      "final_frame_id": 1367,
+      "final_mode_id": 5,
+      "result_sha256": "a849c9c7c754bf0957e0da3baf34a082ea02afe2b1b34d0a1eb9657d0d255e7d",
+      "trial_sha256": "ce478c6763bfc6b358b455823f57cd5ceb4f4b4b7f4a0f41e8691e5a487cf306",
+      "closed_reaped_returncode": 0
+    },
+    {
+      "trial": "04-scale4",
+      "tested_source_commit": "85178feaa232d3141e4a1cfb60d6c324b95760f9",
+      "installed_version": "0.1.0.dev9",
+      "window_scale_requested": 4,
+      "measured_client_pixels": [
+        1280,
+        800
+      ],
+      "observed_game_image_pixels": [
+        1280,
+        800
+      ],
+      "canonical_frame_pixels": [
+        320,
+        200
+      ],
+      "game_image_fills_client": true,
+      "guest_ms": 371,
+      "controller_host_ms": 381.602314,
+      "max_cycle_ms": 31.15118,
+      "missed_paced_deadlines": 2,
+      "final_frame_id": 1367,
+      "final_mode_id": 5,
+      "result_sha256": "4057395a94381ec1bab2f0dd71faac18894366ea40aab4651838aa9fb47654e0",
+      "trial_sha256": "2059a640dc13e33a917e2737173bc6ac952388e9e2f41bb68a2ee7e9c75f071d",
+      "closed_reaped_returncode": 0
+    }
+  ],
+  "comparison": {
+    "runs": 4,
+    "updates_per_run": 13,
+    "observations_per_run_including_initial": 14,
+    "complete_observations": 56,
+    "raw_rpc_receipts": 760,
+    "raw_memory_reads": 104,
+    "stopped_register_records": 52,
+    "frozen_code_snapshots": 40,
+    "policy_decisions_per_run": 9,
+    "keyboard_edges_per_run": 2,
+    "unique_bound_timely_presentation_handshakes": 8,
+    "corresponding_complete_states_exact_equal": true,
+    "corresponding_hot_memory_bytes_exact_equal": true,
+    "corresponding_register_records_exact_equal": true,
+    "policy_decisions_exact_equal": true,
+    "guest_relative_input_timing_exact_equal": true,
+    "canonical_frame_pixels": [
+      320,
+      200
+    ],
+    "admission_and_final_pngs_byte_identical_across_runs": true,
+    "admission_png_sha256": "6d1dbb70ab54cbdd46b94ad3fcf224aa6324570208e56a49a1a2be082bbfd632",
+    "final_png_sha256": "5d6cd50a895de8cf5750cb0e1d47106c4eaf4757200c594d6bd3d6e6bc094686",
+    "state_trace_canonical_sha256": "fcc65701184f81a783976f51005e0424c01158d6c8f9de318897eb5570003b2e",
+    "world_x": {
+      "initial": 33280,
+      "requested_target": 32768,
+      "settled": 32800,
+      "requested_distance_game_pixels": 32,
+      "traveled_game_pixels": 30,
+      "shortfall_game_pixels": 2,
+      "existing_admitted_tolerance_game_pixels": 2
+    },
+    "renderer_identity_note": "Maximized run changed mode_id 5 to 6 and completed one fewer renderer frame, with identical canonical pixels and guest trajectory. Frame/mode identities remain freshness bindings, not coordinate scale.",
+    "all_completed_objective_and_neutral_cleanup": true,
+    "all_closed_reaped_returncode_zero": true,
+    "all_seven_original_game_files_unchanged": true
+  },
+  "automated_verification": {
+    "command": "python -m pytest -q tests/test_standalone_native_runtime.py tests/test_native_session_wrapped_entry.py tests/test_backend.py tests/test_cli.py --tb=short",
+    "passed": 142,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "seconds": 0.61,
+    "python": "3.12.14",
+    "pytest": "9.2.0",
+    "pillow": "12.3.0",
+    "earlier_focused_passed": 117,
+    "counts_overlap": true,
+    "coverage": "Actual child argv; unchanged default kwargs; explicit API/backend/CLI propagation; invalid scale and headless refusal; fresh native mouse frame binding; screenshot no-resampling; unchanged waypoint policy."
+  },
+  "installation_verification": {
+    "ordinary_wheel_installed": true,
+    "editable_install": false,
+    "source_tree_pythonpath": false,
+    "hashed_wheel_payloads_match_installed": 126,
+    "python_modules_match_source": 39,
+    "installed_offline_doctor_exit_code": 0,
+    "native_core_rebuilt": false
+  },
+  "private_evidence": {
+    "archive_name": "DotBox-Display-Scaling-Evidence-20261120.zip",
+    "archive_bytes": 2785678,
+    "archive_sha256": "3a45dc46b4117c7a4d382a5a7ae652ab5a64c187a0601be760e90a7316fcc06c",
+    "archive_payload_count": 156,
+    "comparison_file": "comparison-all.json",
+    "comparison_sha256": "c8ee3eadf6d814e8f9f1d12f2730ba46a6c56322815b9184cc1e2fab743f784d",
+    "comparison_script": "compare_all.py",
+    "comparison_script_sha256": "4159d57c3480f0b0a822949834fa47a1907a72d464fee324c8e3d372bd6a9a55",
+    "includes": "Native PNGs, raw RPC and memory observations, private runner/decoder snapshots, pause receipts, geometry receipts, test and installation receipts.",
+    "excludes": "Original game files, native binary, wheel, public source copies and unavailable CUA JPEGs.",
+    "durable_identity_location": "Agent BBS result report and checkpoint"
+  },
+  "limits": [
+    "One finite route and 13 updates per case; no full-game, hazard-avoidance or general navigation qualification.",
+    "Measured 2x default, 3x and 4x; accepted 5x option not visually qualified.",
+    "Baseline/default runs used dev8; scaled runs used dev9. Runtime delta is presentation-only and recorded.",
+    "No live Lemmings pointer targeting, browser device-pixel-ratio sweep, arbitrary fitting or original Dot takeover integration qualification.",
+    "Host timing and missed paced deadlines differ. Four short trials do not establish hard real-time bounds or statistical performance equivalence.",
+    "Native frame/mode freshness must be rebound after renderer reset even when native dimensions stay the same."
+  ]
+}

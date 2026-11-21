@@ -70,7 +70,7 @@ AGENT_SKILLS = {
 
 METHODS = {
     "debug-step": "Step native or engine instructions with the selected backend contract; run,[count,timeout_ms]",
-    "debug-spectator": "Read or enable the owned watch-only Windows dot-mode viewer; run,[enabled]",
+    "debug-spectator": "Read or enable the owned watch-only Windows spectator viewer; run,[enabled]",
     "debug-spectator-frame": "Capture one native paused Windows frame for the watch-only viewer; run",
     "debug-engine-state": "Read paused engine VM state with its own address context; run",
     "debug-write-engine-state": "Apply a checked engine state edit; run,kind,index,value,[expected,width,signed,endian]",
@@ -2372,11 +2372,12 @@ def parser():
         "--state", help="PE64 native checkpoint artifact to restore without cold launch"
     )
     c.add_argument(
+        "--spectator",
         "--dot-mode",
         "--window",
         dest="window",
         action="store_true",
-        help="Request dot-mode: a watch-only DOSBox window or Windows spectator viewer; host input stays outside the guest",
+        help="Show a watch-only DOSBox window or Windows spectator viewer; host input stays outside the guest",
     )
     c.add_argument("--spatial-mode", choices=["physical", "assisted", "story"])
     c.add_argument(
@@ -2425,11 +2426,12 @@ def parser():
             c.add_argument("--kernel")
             c.add_argument("--initramfs")
             c.add_argument(
+                "--spectator",
                 "--dot-mode",
                 "--window",
                 dest="window",
                 action="store_true",
-                help="Request dot-mode: a watch-only native DOSBox window",
+                help="Show a watch-only native DOSBox window",
             )
         elif name == "debug-export":
             c.add_argument("artifact")

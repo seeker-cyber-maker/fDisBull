@@ -1,22 +1,23 @@
 """Local JSON-lines transport for an explicitly supplied DOSBox agent build."""
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
-import select
 import subprocess
 import sys
 import tempfile
 import threading
-import time
+
+from fdisbull_core.pipe_rpc import PipeRPC
 
 
 class DebuggerError(ValueError):
     """A debugger operation failed; uncertain requests are never replayed."""
 
 
-class DOSBoxRPC:
+class DOSBoxRPC(PipeRPC):
+    rpc_error_type = DebuggerError
+    request_prefix = 'fdisbull'
     limit = 8 * 1024 * 1024
 
     def __init__(self, executable, game_dir, *, window=False, on_spawn=None):
@@ -94,72 +95,6 @@ class DOSBoxRPC:
             except Exception:
                 pass  # Preserve the original startup error while attempting cleanup.
             raise
-
-    def call(self, method, params=None, timeout_ms=15000):
-        deadline = time.monotonic() + timeout_ms / 1000
-        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
-            raise DebuggerError('Timed out waiting for RPC channel ownership')
-        try:
-            if self.reader is None or self.writer is None:
-                raise DebuggerError('Debugger channel is closed')
-            self.sequence += 1
-            request_id = f'fdisbull-{self.sequence}'
-            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
-                              allow_nan=False,separators=(',',':')).encode() + b'\n'
-            if len(data) > self.limit:
-                raise DebuggerError('RPC request exceeds message budget')
-            sent = 0
-            while sent < len(data):
-                self._ready(self.writer, True, deadline)
-                try:
-                    written = os.write(self.writer, data[sent:sent+4096])
-                except (BlockingIOError,InterruptedError):
-                    continue
-                if not written:
-                    raise OSError('RPC write made no progress')
-                sent += written
-            response = bytearray()
-            while b'\n' not in response:
-                self._ready(self.reader, False, deadline)
-                try:
-                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
-                except (BlockingIOError,InterruptedError):
-                    continue
-                if not chunk:
-                    raise OSError('Emulator closed the RPC channel')
-                response.extend(chunk)
-                if len(response) > self.limit:
-                    raise OSError('RPC response exceeds message budget')
-            if response.find(b'\n') != len(response)-1:
-                raise OSError('Unsolicited data after RPC response')
-            result = json.loads(response)
-            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
-                raise OSError('Invalid RPC response identity')
-        except BaseException:
-            self._close_pipes()
-            raise
-        finally:
-            self.lock.release()
-        if 'error' in result:
-            error = result['error']
-            raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
-        if not isinstance(result.get('result'),dict):
-            self._close_pipes()
-            raise DebuggerError('RPC result must be an object')
-        return result['result']
-
-    @staticmethod
-    def _ready(fd, writing, deadline):
-        while True:
-            remaining = deadline-time.monotonic()
-            if remaining <= 0:
-                raise TimeoutError('RPC deadline expired; channel closed without replay')
-            try:
-                readable,writable,_ = select.select([] if writing else [fd], [fd] if writing else [], [], remaining)
-                if readable or writable:
-                    return
-            except InterruptedError:
-                continue
 
     def _close_pipes(self):
         failure = None

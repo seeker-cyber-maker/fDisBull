@@ -1,0 +1,27 @@
+{
+  "schema": "fdisbull-core-extraction-1",
+  "source_repository": "https://github.com/seeker-cyber-maker/fDisBull",
+  "source_commit": "829453ecae3fb0de236dbdd95be85a554efd1fb7",
+  "source_path": "src/fdisbull/memory_search.py",
+  "destination_path": "src/fdisbull_core/memory_search.py",
+  "source_sha256": "836cef3fba6311af653ea322e2cf69c1c84cd0f170766be01abe658364eed1e7",
+  "extraction": "byte-for-byte; public API and serialized formats retained",
+  "additional_components": [
+    {
+      "module": "fdisbull_core.pipe_rpc",
+      "source_commit": "64fe84f253978a699c5d95f012961c5b694e2580",
+      "sources": [
+        {
+          "path": "src/fdisbull/dosbox_rpc.py",
+          "sha256": "b6112a55b710ca10de454f499e1c74a8dd6d684d9a71ddc8c36f31bd83f8c17e"
+        },
+        {
+          "path": "apps/dotbox/src/dotbox/native_rpc.py",
+          "sha256": "3bef38cbec97a8a468b90b313fab7fa9e0e8ec6d74d52f11da4b6a8d5059729a"
+        }
+      ],
+      "destination_path": "src/fdisbull_core/pipe_rpc.py",
+      "extraction": "Common bounded wire exchange and select readiness; adapter hooks retain product error types, request prefixes, EOF diagnostics, launch policy and cleanup. Native source unchanged."
+    }
+  ]
+}

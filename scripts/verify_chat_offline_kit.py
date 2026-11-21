@@ -264,7 +264,7 @@ def confined(root, manifest):
     for item in sys.path:
         if not item or not Path(item).resolve().is_relative_to(root):
             raise ValueError('Python search path escaped kit')
-    modules = ['fdisbull', 'fdisbull_player', 'z3', 'lief', 'PIL', 'capstone', 'iced_x86']
+    modules = ['fdisbull', 'fdisbull_player', 'fdisbull_core', 'z3', 'lief', 'PIL', 'capstone', 'iced_x86']
     optional = {'unicorn':'unicorn', 'dnfile':'dnfile', 'dncil':'dncil', 'pefile':'pefile', 'tree-sitter':'tree_sitter', 'tree-sitter-c':'tree_sitter_c', 'pycparser':'pycparser'}
     modules.extend(module for distribution, module in optional.items() if distribution in manifest.get('wheel_versions', {}))
     for name in modules:

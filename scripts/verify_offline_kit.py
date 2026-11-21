@@ -16,14 +16,17 @@ from fdisbull.proofs import check_equivalence
 def verify(kit):
     kit=Path(kit).resolve()
     import fdisbull
+    import fdisbull_core
     import z3
     manifest=json.loads((kit/'manifest.json').read_text())
     expected=manifest['wheels']['fdisbull']['version']
     if manifest['wheels']['fdisbull-player']['version'] != expected:raise ValueError('Kit package versions differ')
     if importlib.metadata.version('fdisbull') != expected or importlib.metadata.version('fdisbull-player') != expected:raise ValueError('Wrong installed fDisBull or player')
+    if importlib.metadata.version('fdisbull-core') != manifest['wheels']['fdisbull-core']['version']:raise ValueError('Wrong installed shared core')
     import fdisbull_player
     if 'site-packages' not in str(Path(fdisbull_player.__file__)):raise ValueError('Expected installed player, not source injection')
     if 'site-packages' not in str(Path(fdisbull.__file__)):raise ValueError('Expected installed package, not source injection')
+    if 'site-packages' not in str(Path(fdisbull_core.__file__)):raise ValueError('Expected installed shared core, not source injection')
     spec={'format':'fdisbull-proof-1','scope':'authored 8-bit offline installation acceptance','variables':{'x':8},'assumptions':[],
           'left':{'op':'add','args':[{'var':'x'},{'const':1,'width':8}]},'right':{'var':'x'}}
     counterexample=check_equivalence(spec)
@@ -63,7 +66,7 @@ def verify(kit):
             if session.memory('1000:0100',length=1)['hex']!='00':raise ValueError('Native restore failed')
             session.keyboard.press('b');session.run(guest_ms=250,timeout_ms=5000,fast_forward=True)
             if session.memory('1000:0100',length=1)['hex']!='62':raise ValueError('Post-restore keyboard failed')
-            output={'package_version':importlib.metadata.version('fdisbull'),'player_version':importlib.metadata.version('fdisbull-player'),'solver_version':z3.get_version_string(),
+            output={'package_version':importlib.metadata.version('fdisbull'),'player_version':importlib.metadata.version('fdisbull-player'),'shared_core_version':importlib.metadata.version('fdisbull-core'),'solver_version':z3.get_version_string(),
                     'python_version':platform.python_version(),'platform':platform.system(),'machine':platform.machine(),
                     'counterexample':counterexample['status'],'equivalence':equivalence['status'],
                     'keyboard':True,'memory':True,'native_restore':True,'player_live_resume':True,

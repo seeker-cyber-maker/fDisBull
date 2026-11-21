@@ -101,11 +101,12 @@ def test_window_does_not_silently_use_invisible_sdl_driver(transport, tmp_path, 
     assert not report.exists()
 
 
-def test_cli_option_is_opt_in_and_forwarded(monkeypatch):
+@pytest.mark.parametrize('flag', ['--spectator', '--dot-mode', '--window'])
+def test_cli_option_is_opt_in_and_forwarded(monkeypatch, flag):
     assert not parser().parse_args(['debug', 'project', '--executable', 'agent', '--game-dir', 'game']).window
     observed = {}
     monkeypatch.setattr('fdisbull.cli.serve', lambda project, options: observed.update(project=project, options=options))
-    main(['debug', 'project', '--executable', 'agent', '--game-dir', 'game', '--window'])
+    main(['debug', 'project', '--executable', 'agent', '--game-dir', 'game', flag])
     assert observed['project'] == 'project'
     assert observed['options']['window'] is True
 
@@ -266,10 +267,34 @@ time.sleep(30)
     assert error.value.errno != 9  # EBADF from a double-close must not mask the actual failure.
     assert spawned and spawned[0].poll() is not None
 
-def test_dot_mode_cli_alias_preserves_window_contract():
-    from fdisbull.cli import parser
-    for command in ('debug',):
-        base=[command,'example.fdb','--executable','dosbox','--game-dir','.']
-        dot=vars(parser().parse_args(base+['--dot-mode']))
-        old=vars(parser().parse_args(base+['--window']))
-        assert dot==old and dot['window'] is True
+@pytest.mark.parametrize('command,positionals', [
+    ('debug', ['example.fdb']),
+    ('debug-fork-state', ['example.fdb', 'saved-state']),
+])
+def test_spectator_cli_aliases_preserve_window_contract(command, positionals):
+    base=[command,*positionals,'--executable','dosbox','--game-dir','.']
+    assert parser().parse_args(base).window is False
+    options=[vars(parser().parse_args(base+[flag]))
+             for flag in ('--spectator','--dot-mode','--window')]
+    assert options[0]==options[1]==options[2] and options[0]['window'] is True
+
+
+@pytest.mark.parametrize('flag', [None, '--spectator', '--dot-mode', '--window'])
+def test_dos_endpoint_cli_aliases_reach_owned_endpoint(monkeypatch, capsys, flag):
+    from fdisbull import ida_dosbox
+    observed = {}
+    class Endpoint:
+        address = ('127.0.0.1', 12345)
+        error = None
+        thread = type('Thread', (), {'join': lambda self: None})()
+        def __init__(self, project, executable, game_dir, **options):
+            observed.update(project=project, executable=executable, game_dir=game_dir, **options)
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+    monkeypatch.setattr(ida_dosbox, 'Endpoint', Endpoint)
+    base=['fdisbull.ida_dosbox','project','--executable','agent','--game-dir','game']
+    monkeypatch.setattr(sys, 'argv', base+([] if flag is None else [flag]))
+    ida_dosbox.main()
+    assert observed['project']=='project' and observed['executable']=='agent' and observed['game_dir']=='game'
+    assert observed['window'] is (flag is not None) and observed['backend']=='dosbox'
+    assert json.loads(capsys.readouterr().out)['port']==12345

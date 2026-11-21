@@ -3,14 +3,19 @@ import argparse
 import json
 from pathlib import Path
 
+from fdisbull_core import pipe_rpc
+
 from .wine_runtime import prepare as prepare_base
 
 
 def resources():
     root=Path(__file__).parent
+    shared=Path(pipe_rpc.__file__).parent
     return {'init':root/'dos_guest/init.sh','opt/fdisbull/dos_broker.py':root/'dos_guest/broker.py',
             'opt/fdisbull/remote/__init__.py':root/'dos_guest/__init__.py',
-            'opt/fdisbull/remote/dosbox_rpc.py':root/'dosbox_rpc.py'}
+            'opt/fdisbull/remote/dosbox_rpc.py':root/'dosbox_rpc.py',
+            'opt/fdisbull/fdisbull_core/__init__.py':shared/'__init__.py',
+            'opt/fdisbull/fdisbull_core/pipe_rpc.py':shared/'pipe_rpc.py'}
 
 
 def prepare(base,output,dosbox):

@@ -13,12 +13,13 @@ if [ "${FDISBULL_UNIFIED_PREPARED:-}" = 1 ]; then
   ! grep -q 'not found' native-evidence/pe/acceptance-qemu-libraries.txt
   ldd "$FDISBULL_DOSBOX" | tee native-evidence/pe/acceptance-dos-libraries.txt
   ! grep -q 'not found' native-evidence/pe/acceptance-dos-libraries.txt
-  python -m pip install ".[test]"
+  python -m pip install ./packages/fdisbull-core ".[test]"
   shopt -s nullglob
-  core_wheels=(dist/fdisbull-*.whl)
-  [[ ${#core_wheels[@]} -eq 1 ]]
-  python scripts/check_dist.py .native/pe/packages/*.whl
-  python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
+  core_wheels=(.native/pe/packages/fdisbull-*.whl)
+  shared_wheels=(.native/pe/packages/fdisbull_core-*.whl)
+  [[ ${#core_wheels[@]} -eq 1 && ${#shared_wheels[@]} -eq 1 ]]
+  python scripts/check_dist.py "${core_wheels[0]}" "${shared_wheels[0]}"
+  python -m pip install --force-reinstall --no-deps "${core_wheels[0]}" "${shared_wheels[0]}"
 fi
 
 windows_tests=()

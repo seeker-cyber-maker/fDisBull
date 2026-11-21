@@ -1,0 +1,118 @@
+{
+  "schema": "dotbox-studio-connection-repair-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "db9daa07d3898b91635b23b5e2634f115a15f145",
+  "qualification": {
+    "connected_studio_attachment": "Verified in three strict attachments under the retained candidate",
+    "independent_studio_command_challenge": "Exact SHA-256 match; exit 0",
+    "actual_keyboard_mouse_through_bridge": "UNVERIFIED; no desktop input issued"
+  },
+  "configuration_change": {
+    "surface": "Connected Studio user config.toml default",
+    "before": {
+      "sandbox_mode": "danger-full-access"
+    },
+    "after": {
+      "sandbox_mode": "workspace-write"
+    },
+    "only_parsed_change": "sandbox_mode",
+    "all_unrelated_parsed_settings_preserved": true,
+    "approval_policy": "never",
+    "network_proxy_enabled": true,
+    "managed_requirements_edited": false,
+    "candidate_retained": true,
+    "prior_configuration_preserved_privately": true,
+    "app_restart_or_install": false,
+    "effective_attachment_profile_exposed": false,
+    "scope": "Changes this connected Mac user default, not a per-chat or per-host selector; observed success is not a universal repair"
+  },
+  "evidence_origin": {
+    "attachment_command_and_cua_fields": "Reported by original Dot chat using supported tools; coordinator read back the current side-browser response",
+    "file_challenge": "Coordinator generated private random bytes on Studio and independently compared returned digest; contents and expected digest withheld from Dot"
+  },
+  "attachment_checks": [
+    {
+      "strict_match": true,
+      "status": "attached",
+      "command_exit_code": 0,
+      "command_result": [
+        "DOTBOX_STUDIO_ATTACH_READY",
+        "BRIDGE_PATH_EXISTS"
+      ],
+      "global_cua_inventory": "Mac applications; original cloud desktop not identified",
+      "original_cloud_restored": "status=attached reported"
+    },
+    {
+      "strict_match": true,
+      "status": "attached",
+      "retained_handle_test": {
+        "before": "Original cloud Chromium AX identity established",
+        "after": "Previously bound variable returned original is not defined",
+        "classification": "CUA reinitialized and original handle state was unavailable; not proof of routing of a surviving handle"
+      },
+      "studio_command_issued": false,
+      "original_cloud_restored": "status=attached reported"
+    },
+    {
+      "strict_match": true,
+      "status": "attached",
+      "private_file_challenge": {
+        "algorithm": "SHA-256",
+        "command_exit_code": 0,
+        "dot_reported_digest": "03f4ddb5fb741c43a4da254eda8ddbce8732ce19caec8cbb5dca74306b4ade06",
+        "coordinator_computed_digest": "03f4ddb5fb741c43a4da254eda8ddbce8732ce19caec8cbb5dca74306b4ade06",
+        "exact_match": true,
+        "contents_or_expected_digest_sent_to_dot": false
+      },
+      "original_cloud_restored": "status=attached reported",
+      "final_inventory": "Original Chromium window and one new-tab context present reported"
+    }
+  ],
+  "actual_desktop_input_calls_issued": 0,
+  "live_ownership_publisher_started_in_followup": false,
+  "timing": "Attachment tool did not return UTC timestamps; no attach latency or interruption duration claimed",
+  "remaining_gate": "A supported ownership-coordinator client in the original desktop executor, or a supported independent command binding that preserves that desktop and the same unexpired lease around its awaited input",
+  "claim_limits": [
+    "Restored attachment and challenge read do not verify an actual desktop input action",
+    "No denied-write or denied-network sandbox enforcement probe was performed",
+    "Local default consumption and full effective requirement provenance were not exposed",
+    "Earlier viewer-only input and data-only coordination evidence remain separately scoped",
+    "No new source, native, cloud or observer suite was run for this documentation-only follow-up; earlier runtime qualification remains historical"
+  ],
+  "constraints_preserved": [
+    "No network enforcement disabled, new grant, credential movement, enrollment or public listener",
+    "No substitute desktop, sound, gameplay, emulator, installation or CI dispatch",
+    "Old receipts and runtime modules unchanged"
+  ],
+  "references": [
+    {
+      "url": "https://github.com/openai/codex/blob/56e43660f8c8743a43117da53add23c0608e6a8e/codex-rs/config/src/permission_config.rs#L37",
+      "scope": "Primary source for permission selector precedence and legacy mode conversion; not this attachment effective-profile trace"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference#key-remote_sandbox_config",
+      "scope": "Host-specific managed requirements constrain modes; not a per-host user default"
+    },
+    {
+      "url": "https://github.com/openai/codex/issues/60460",
+      "scope": "Independent reports corroborate original error, not a universal root cause or fix"
+    }
+  ],
+  "private_receipts": [
+    {
+      "name": "verified-repair.json",
+      "bytes": 2348,
+      "sha256": "357586c8c0982cf355605b756ae580c5e19076c74c5ca03fa3baed4750d31d4e"
+    },
+    {
+      "name": "dot-final.ax.txt",
+      "bytes": 54937,
+      "sha256": "1c65313ba69f59ebf1afec5b65ab760df1a73e8f151a03a3e0699f99c8a3b068"
+    },
+    {
+      "name": "dot-final.jpg",
+      "bytes": 114035,
+      "sha256": "0bb69b148b44bdb1da45f34c896e2251c220a7cb1dfb45ffa4c14a07b47c607d"
+    }
+  ]
+}

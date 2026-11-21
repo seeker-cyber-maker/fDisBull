@@ -1,0 +1,896 @@
+{
+  "format": "dotbox-oracle-examples-1",
+  "scope": "Authored examples only; route references are not executable controls and source identity is a fixture.",
+  "examples": [
+    {
+      "id": "anvil",
+      "scene": {
+        "format": "dotbox-scene-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "scene_id": "demo",
+        "observation_id": "demo-observation-1",
+        "title": "Falling anvil",
+        "facts": [
+          {
+            "id": "falling",
+            "subject": "falling",
+            "predicate": "value",
+            "value": true,
+            "text": "An anvil is falling.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "frame",
+            "subject": "frame",
+            "predicate": "value",
+            "value": 40,
+            "text": "Simulation frame: 40.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "anvil_x",
+            "subject": "anvil_x",
+            "predicate": "value",
+            "value": 10,
+            "text": "Anvil x: 10.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "anvil_bottom",
+            "subject": "anvil_bottom",
+            "predicate": "value",
+            "value": 76,
+            "text": "Anvil bottom: 76.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "anvil_vx",
+            "subject": "anvil_vx",
+            "predicate": "value",
+            "value": 3,
+            "text": "Horizontal speed: 3 units per simulation frame.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "anvil_vy",
+            "subject": "anvil_vy",
+            "predicate": "value",
+            "value": 4,
+            "text": "Downward speed: 4 units per simulation frame.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "ground_y",
+            "subject": "ground_y",
+            "predicate": "value",
+            "value": 100,
+            "text": "The landing surface is at y=100.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          }
+        ],
+        "choices": [
+          {
+            "id": "move_left",
+            "label": "Move left",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:move_left"
+            }
+          },
+          {
+            "id": "move_right",
+            "label": "Move right",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:move_right"
+            }
+          },
+          {
+            "id": "wait",
+            "label": "Wait",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "on_request",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:wait"
+            }
+          }
+        ],
+        "guide_sources": [],
+        "guide_claims": [],
+        "state_context": {
+          "provider_id": "authored-demo-provider",
+          "session_id": "oracle-demo",
+          "branch_id": "authored-only",
+          "revision": 1,
+          "context_token": "fixture-only-not-live"
+        }
+      },
+      "rules": {
+        "format": "dotbox-oracle-rules-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "qualification": "Authored deterministic examples; no original-game physics or live route qualification.",
+        "situations": [
+          {
+            "id": "anvil",
+            "kind": "hazard",
+            "text": "An anvil is falling toward the walkway.",
+            "priority": 100,
+            "when": [
+              {
+                "fact_id": "falling",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "fact_ids": [
+              "falling"
+            ],
+            "forecast": {
+              "kind": "linear_impact",
+              "model_id": "linear-point-downward-v1",
+              "qualification": "Authored constant-velocity point-contact fixture; surface extends under the predicted x; not Keen physics.",
+              "clock_fact": "frame",
+              "clock_unit": "frames",
+              "x_fact": "anvil_x",
+              "y_fact": "anvil_bottom",
+              "vx_fact": "anvil_vx",
+              "vy_fact": "anvil_vy",
+              "surface_y_fact": "ground_y",
+              "horizon": 120
+            }
+          }
+        ],
+        "actions": [
+          {
+            "choice_id": "move_left",
+            "when": [],
+            "situation_ids": [
+              "anvil"
+            ],
+            "priority": 100,
+            "reason": "A currently admitted movement option is relevant to the falling object; escape success is not asserted."
+          },
+          {
+            "choice_id": "move_right",
+            "when": [],
+            "situation_ids": [
+              "anvil"
+            ],
+            "priority": 100,
+            "reason": "A currently admitted movement option is relevant to the falling object; escape success is not asserted."
+          }
+        ]
+      }
+    },
+    {
+      "id": "enemy_ammo_2",
+      "scene": {
+        "format": "dotbox-scene-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "scene_id": "demo",
+        "observation_id": "demo-observation-1",
+        "title": "Approaching enemy",
+        "facts": [
+          {
+            "id": "enemy_closing",
+            "subject": "enemy_closing",
+            "predicate": "value",
+            "value": true,
+            "text": "An enemy is approaching.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "ammo",
+            "subject": "ammo",
+            "predicate": "value",
+            "value": 2,
+            "text": "Ammunition remaining: 2.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "in_range",
+            "subject": "in_range",
+            "predicate": "value",
+            "value": true,
+            "text": "The target is within the authored weapon range.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "cooldown",
+            "subject": "cooldown",
+            "predicate": "value",
+            "value": 0,
+            "text": "The weapon is ready.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          }
+        ],
+        "choices": [
+          {
+            "id": "attack",
+            "label": "Attack (uses one round)",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:attack"
+            }
+          },
+          {
+            "id": "retreat",
+            "label": "Retreat",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:retreat"
+            }
+          },
+          {
+            "id": "inspect",
+            "label": "Inspect surroundings",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "on_request",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:inspect"
+            }
+          }
+        ],
+        "guide_sources": [],
+        "guide_claims": [],
+        "state_context": {
+          "provider_id": "authored-demo-provider",
+          "session_id": "oracle-demo",
+          "branch_id": "authored-only",
+          "revision": 1,
+          "context_token": "fixture-only-not-live"
+        }
+      },
+      "rules": {
+        "format": "dotbox-oracle-rules-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "qualification": "Authored deterministic examples; no original-game physics or live route qualification.",
+        "situations": [
+          {
+            "id": "enemy",
+            "kind": "encounter",
+            "text": "Enemy approaching; choose a response.",
+            "priority": 80,
+            "when": [
+              {
+                "fact_id": "enemy_closing",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "fact_ids": [
+              "ammo",
+              "enemy_closing"
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "choice_id": "attack",
+            "when": [
+              {
+                "fact_id": "ammo",
+                "op": "ge",
+                "value": 1
+              },
+              {
+                "fact_id": "in_range",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "fact_id": "cooldown",
+                "op": "eq",
+                "value": 0
+              }
+            ],
+            "situation_ids": [
+              "enemy"
+            ],
+            "priority": 80,
+            "reason": "Current ammunition, range and cooldown meet the declared requirements."
+          },
+          {
+            "choice_id": "retreat",
+            "when": [],
+            "situation_ids": [
+              "enemy"
+            ],
+            "priority": 70,
+            "reason": "The authored provider has admitted this retreat route."
+          }
+        ]
+      }
+    },
+    {
+      "id": "enemy_ammo_0",
+      "scene": {
+        "format": "dotbox-scene-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "scene_id": "demo",
+        "observation_id": "demo-observation-1",
+        "title": "Approaching enemy",
+        "facts": [
+          {
+            "id": "enemy_closing",
+            "subject": "enemy_closing",
+            "predicate": "value",
+            "value": true,
+            "text": "An enemy is approaching.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "ammo",
+            "subject": "ammo",
+            "predicate": "value",
+            "value": 0,
+            "text": "Ammunition remaining: 0.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "in_range",
+            "subject": "in_range",
+            "predicate": "value",
+            "value": true,
+            "text": "The target is within the authored weapon range.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "cooldown",
+            "subject": "cooldown",
+            "predicate": "value",
+            "value": 0,
+            "text": "The weapon is ready.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          }
+        ],
+        "choices": [
+          {
+            "id": "attack",
+            "label": "Attack (uses one round)",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:attack"
+            }
+          },
+          {
+            "id": "retreat",
+            "label": "Retreat",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:retreat"
+            }
+          },
+          {
+            "id": "inspect",
+            "label": "Inspect surroundings",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "on_request",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:inspect"
+            }
+          }
+        ],
+        "guide_sources": [],
+        "guide_claims": [],
+        "state_context": {
+          "provider_id": "authored-demo-provider",
+          "session_id": "oracle-demo",
+          "branch_id": "authored-only",
+          "revision": 1,
+          "context_token": "fixture-only-not-live"
+        }
+      },
+      "rules": {
+        "format": "dotbox-oracle-rules-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "qualification": "Authored deterministic examples; no original-game physics or live route qualification.",
+        "situations": [
+          {
+            "id": "enemy",
+            "kind": "encounter",
+            "text": "Enemy approaching; choose a response.",
+            "priority": 80,
+            "when": [
+              {
+                "fact_id": "enemy_closing",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "fact_ids": [
+              "ammo",
+              "enemy_closing"
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "choice_id": "attack",
+            "when": [
+              {
+                "fact_id": "ammo",
+                "op": "ge",
+                "value": 1
+              },
+              {
+                "fact_id": "in_range",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "fact_id": "cooldown",
+                "op": "eq",
+                "value": 0
+              }
+            ],
+            "situation_ids": [
+              "enemy"
+            ],
+            "priority": 80,
+            "reason": "Current ammunition, range and cooldown meet the declared requirements."
+          },
+          {
+            "choice_id": "retreat",
+            "when": [],
+            "situation_ids": [
+              "enemy"
+            ],
+            "priority": 70,
+            "reason": "The authored provider has admitted this retreat route."
+          }
+        ]
+      }
+    },
+    {
+      "id": "cherry",
+      "scene": {
+        "format": "dotbox-scene-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "scene_id": "demo",
+        "observation_id": "demo-observation-1",
+        "title": "Optional cherry",
+        "facts": [
+          {
+            "id": "cherry_present",
+            "subject": "cherry_present",
+            "predicate": "value",
+            "value": true,
+            "text": "A cherry is at (120,48).",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "cherry_x",
+            "subject": "cherry_x",
+            "predicate": "value",
+            "value": 120,
+            "text": "Cherry x: 120.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "cherry_y",
+            "subject": "cherry_y",
+            "predicate": "value",
+            "value": 48,
+            "text": "Cherry y: 48.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          },
+          {
+            "id": "star_reward",
+            "subject": "star_reward",
+            "predicate": "value",
+            "value": 3,
+            "text": "The cherry is worth three stars.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          }
+        ],
+        "choices": [
+          {
+            "id": "continue",
+            "label": "Continue toward the main objective",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:continue"
+            }
+          },
+          {
+            "id": "collect_cherry",
+            "label": "Collect the cherry (+3 stars)",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:collect_cherry"
+            }
+          },
+          {
+            "id": "inspect",
+            "label": "Inspect surroundings",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "on_request",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:inspect"
+            }
+          }
+        ],
+        "guide_sources": [],
+        "guide_claims": [],
+        "state_context": {
+          "provider_id": "authored-demo-provider",
+          "session_id": "oracle-demo",
+          "branch_id": "authored-only",
+          "revision": 1,
+          "context_token": "fixture-only-not-live"
+        }
+      },
+      "rules": {
+        "format": "dotbox-oracle-rules-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "qualification": "Authored deterministic examples; no original-game physics or live route qualification.",
+        "situations": [
+          {
+            "id": "cherry",
+            "kind": "objective",
+            "text": "Optional objective: collect the cherry for three stars.",
+            "priority": 20,
+            "when": [
+              {
+                "fact_id": "cherry_present",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "fact_ids": [
+              "cherry_present",
+              "cherry_x",
+              "cherry_y",
+              "star_reward"
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "choice_id": "continue",
+            "when": [],
+            "situation_ids": [],
+            "priority": 60,
+            "reason": "Continue the selected main objective."
+          },
+          {
+            "choice_id": "collect_cherry",
+            "when": [
+              {
+                "fact_id": "cherry_present",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "situation_ids": [
+              "cherry"
+            ],
+            "priority": 20,
+            "reason": "A current optional collectible and its reward are observed."
+          }
+        ]
+      }
+    },
+    {
+      "id": "mailbox_closed",
+      "scene": {
+        "format": "dotbox-scene-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "scene_id": "demo",
+        "observation_id": "demo-observation-1",
+        "title": "Mailbox",
+        "facts": [
+          {
+            "id": "mailbox_closed",
+            "subject": "mailbox_closed",
+            "predicate": "value",
+            "value": true,
+            "text": "The mailbox is closed.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          }
+        ],
+        "choices": [
+          {
+            "id": "open_mailbox",
+            "label": "Open the mailbox",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:open_mailbox"
+            }
+          },
+          {
+            "id": "move_north",
+            "label": "Move north",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:move_north"
+            }
+          }
+        ],
+        "guide_sources": [],
+        "guide_claims": [],
+        "state_context": {
+          "provider_id": "authored-demo-provider",
+          "session_id": "oracle-demo",
+          "branch_id": "authored-only",
+          "revision": 1,
+          "context_token": "fixture-only-not-live"
+        }
+      },
+      "rules": {
+        "format": "dotbox-oracle-rules-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "qualification": "Authored deterministic examples; no original-game physics or live route qualification.",
+        "situations": [
+          {
+            "id": "mailbox",
+            "kind": "context",
+            "text": "A closed mailbox is here.",
+            "priority": 40,
+            "when": [
+              {
+                "fact_id": "mailbox_closed",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "fact_ids": [
+              "mailbox_closed"
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "choice_id": "open_mailbox",
+            "when": [
+              {
+                "fact_id": "mailbox_closed",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "situation_ids": [
+              "mailbox"
+            ],
+            "priority": 40,
+            "reason": "The observed mailbox is closed and the provider supplied an opening route."
+          }
+        ]
+      }
+    },
+    {
+      "id": "mailbox_open",
+      "scene": {
+        "format": "dotbox-scene-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "scene_id": "demo",
+        "observation_id": "demo-observation-1",
+        "title": "Mailbox",
+        "facts": [
+          {
+            "id": "mailbox_closed",
+            "subject": "mailbox_closed",
+            "predicate": "value",
+            "value": false,
+            "text": "The mailbox is open.",
+            "audience": "player",
+            "observation_id": "demo-observation-1",
+            "evidence_ref": "authored-example-only"
+          }
+        ],
+        "choices": [
+          {
+            "id": "open_mailbox",
+            "label": "Open the mailbox",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:open_mailbox"
+            }
+          },
+          {
+            "id": "move_north",
+            "label": "Move north",
+            "requires": [],
+            "observation_id": "demo-observation-1",
+            "available": true,
+            "enabled": true,
+            "ready": true,
+            "suggestion": "normal",
+            "route": {
+              "kind": "ordinary",
+              "reference": "authored-demo-only:move_north"
+            }
+          }
+        ],
+        "guide_sources": [],
+        "guide_claims": [],
+        "state_context": {
+          "provider_id": "authored-demo-provider",
+          "session_id": "oracle-demo",
+          "branch_id": "authored-only",
+          "revision": 1,
+          "context_token": "fixture-only-not-live"
+        }
+      },
+      "rules": {
+        "format": "dotbox-oracle-rules-1",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "edition": "authored-oracle-demo-1",
+        "qualification": "Authored deterministic examples; no original-game physics or live route qualification.",
+        "situations": [
+          {
+            "id": "mailbox",
+            "kind": "context",
+            "text": "A closed mailbox is here.",
+            "priority": 40,
+            "when": [
+              {
+                "fact_id": "mailbox_closed",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "fact_ids": [
+              "mailbox_closed"
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "choice_id": "open_mailbox",
+            "when": [
+              {
+                "fact_id": "mailbox_closed",
+                "op": "eq",
+                "value": true
+              }
+            ],
+            "situation_ids": [
+              "mailbox"
+            ],
+            "priority": 40,
+            "reason": "The observed mailbox is closed and the provider supplied an opening route."
+          }
+        ]
+      }
+    }
+  ]
+}

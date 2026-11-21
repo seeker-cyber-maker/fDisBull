@@ -64,10 +64,18 @@ def test_requirements_are_canonical_and_proof_included():
     assert "lief==1.0.0" in requirements
     assert "pillow>=10.4,<13" in requirements
     assert "z3-solver==5.3.2.0" in requirements
+    assert "fdisbull-core" not in {deps.requirement_name(item) for item in requirements}
     assert deps.canonical_requirement(" Pillow >= 10.4, < 13 ") == "pillow>=10.4,<13"
     assert deps.fingerprint(requirements, ("proof",)) == deps.fingerprint(
         list(reversed(requirements)), ("proof",)
     )
+
+
+def test_reusable_third_party_bundle_refuses_shared_product_wheel(tmp_path):
+    path = tmp_path / "fdisbull_core-0.1.0.dev1-py3-none-any.whl"
+    make_wheel(path, "fdisbull-core", "0.1.0.dev1")
+    with pytest.raises(ValueError, match="application wheel"):
+        deps.inspect_wheel(path)
 
 
 def test_bundle_is_reproducible_and_extractable(tmp_path):

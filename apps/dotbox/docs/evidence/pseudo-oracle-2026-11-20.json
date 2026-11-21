@@ -1,0 +1,221 @@
+{
+  "schema": "dotbox-pseudo-oracle-checkpoint-1",
+  "date": "2026-11-20",
+  "scope": "Installed deterministic scene evaluator, public HUD projection, authored examples and retained original-game replay; no new live guest trial",
+  "source": {
+    "base_local_commit": "be7b9478da64229a3a3bdb3ecb6aa029eac1fc58",
+    "game_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+    "released_source_revision": "15be5be4a3382d0a1d99e1202219a84b09b11273",
+    "installed_dotbox_version": "0.1.0.dev9",
+    "python": "3.12.14"
+  },
+  "public_files": {
+    "src/dotbox/oracle.py": {
+      "sha256": "a745b444633cd57bc69e1333b5324a2395b7bb05e6afa959ee1fc923f674f51c",
+      "bytes": 17590
+    },
+    "scripts/experiments/keen_oracle.py": {
+      "sha256": "bd6ede84888a1662eaa71e4de16a5327e9698263e0192542dec79419149f51df",
+      "bytes": 17604
+    },
+    "tests/test_oracle.py": {
+      "sha256": "fda81ba60e01d6cbf53724fbb477c2a283a16b388ea8e1f48110619dcb99f779",
+      "bytes": 24660
+    },
+    "tests/test_keen_oracle.py": {
+      "sha256": "304d4f4ee858e9031a490aea568a78233727310462eb6205790c297b70869168",
+      "bytes": 8715
+    },
+    "examples/oracle_cases.json": {
+      "sha256": "893c884986a5c31cfc9f6572e3dfa6847efdb0643cecd7baa02a44103e0259c5",
+      "bytes": 27900
+    }
+  },
+  "validation": {
+    "command": "venv/bin/python -m pytest -q tests/test_oracle.py tests/test_keen_oracle.py tests/test_scenes.py tests/test_scene_state.py tests/test_scene_policy.py tests/test_scene_cli_state.py tests/test_keen_actor.py tests/test_keen_world.py tests/test_keen_waypoint.py tests/test_keen_loop.py",
+    "exit_code": 0,
+    "passed": 478,
+    "pytest_seconds": 0.94,
+    "new_core_cases": 65,
+    "new_adapter_cases": 17,
+    "authored_installed_examples": 6,
+    "installed_import": "python -I from /tmp, site-packages/dotbox/oracle.py",
+    "installed_sha256": "a745b444633cd57bc69e1333b5324a2395b7bb05e6afa959ee1fc923f674f51c",
+    "unchanged_scene_module_sha256": "f75fc92c5c2414e3ad6763bc1153cc80a64d6d8b9c0bc2bf43f1a49dc4e3e76a",
+    "existing_select_choice": "All six fixture shortlists select nonexecuted ordinary intents through the existing selector",
+    "existing_scene_store": "Observed facts unchanged; forecasts stay outside the scene packet; binding/stale/conflict cases pass"
+  },
+  "authored_cases": {
+    "anvil": {
+      "eta": 6,
+      "clock_unit": "simulation frames",
+      "contact_point": [
+        28,
+        100
+      ],
+      "deadline": 46,
+      "model": "constant-velocity point crossing a fixed horizontal surface, with unchanged motion",
+      "choices": [
+        "move_left",
+        "move_right"
+      ]
+    },
+    "enemy_ammo_2": [
+      "attack",
+      "retreat"
+    ],
+    "enemy_ammo_0": [
+      "retreat"
+    ],
+    "cherry": [
+      "continue",
+      "collect_cherry"
+    ],
+    "mailbox_closed": [
+      "open_mailbox",
+      "move_north"
+    ],
+    "mailbox_open": [
+      "move_north"
+    ]
+  },
+  "retained_game_replay": {
+    "bonus_actor_removed_sequence": 59,
+    "bonus_objective_removed_sequence": 39,
+    "carrot_active_observations": 20,
+    "carrot_closing_observations": 8,
+    "final_carrot_gap_game_pixels": 79.5,
+    "final_carrot_gap_world": 1272,
+    "initial_collect_routes_admitted": 2,
+    "live_executions": 0,
+    "observations": 154,
+    "zero_ammo_attack_conditions_false": 154,
+    "carrot_observations": 83,
+    "collection_observations": 71,
+    "source_reconciled": "83 carrot compact states reconciled with separately extracted actor observations",
+    "visibility": "Explicit permitted slots are historical analysis disclosure, not native visibility evidence",
+    "routes": "Only historical retained initial collection routes have constructor and hashed-terrain readiness; throw always unready; no retreat invented",
+    "clock_exclusions": "Optional previous-state comparisons withheld at collection observations40/41 (+3/+1 sampled game-clock increments despite tics2)",
+    "input_immutability": true,
+    "observed_facts_preserved": true,
+    "deterministic_repeat": true,
+    "independent_root_replay_byte_identical": true
+  },
+  "private_evidence": {
+    "retained-replay.json": {
+      "sha256": "9a86f774e4ffc52d4d1a94a73b1cc2150501bd83dce48f1d8389f29d3284ed0d",
+      "bytes": 673598
+    },
+    "replay_keen_oracle.py": {
+      "sha256": "16933b5b76baeb0d1a137cc294663dbe40c7aa49275f128ea3bc4b99c4beba7a",
+      "bytes": 14598
+    },
+    "installed-hud-demo-replay.json": {
+      "sha256": "0662678ae2adaa9f2011e65cfac00cb943cc06d61577ed2acad0d500a4bbc7b3",
+      "bytes": 66611
+    },
+    "install-hud-receipt.json": {
+      "sha256": "c87d80fdcc873931110525ee54bc3c4b5d3384ea6f260eab6fa8edc80531a83d",
+      "bytes": 723
+    },
+    "integration-test-run.json": {
+      "sha256": "3f2254a99caf2f8fe35995f607ba104c1bac0d876a59d3f642489333cb284b5b",
+      "bytes": 1014
+    },
+    "oracle-latency.json": {
+      "sha256": "fd8637e2b708c853f7e852b110d279be984d91d12fd18e645803847fd640acca",
+      "bytes": 77685
+    },
+    "measure_oracle_latency.py": {
+      "sha256": "00e2e4e23dad95670a85c5f6e1056061f250a1eb4f3370effb50f41565be91a3",
+      "bytes": 7264
+    },
+    "preparation-result.json": {
+      "sha256": "68c8d7a96f659bbe469fe3ab85a7f28c32a8683b1f3a36f2a6d70d4e6a7cfd17",
+      "bytes": 459
+    }
+  },
+  "limits": [
+    "Binding checks do not independently authenticate a live process or refresh a retained observation",
+    "No new guest execution, native physics, general contact ETA or safe retreat qualification",
+    "No GUI overlay, event scheduler or automatic local-policy delegation added",
+    "No hard real-time or display-resolution performance claim",
+    "Provider controls current input ownership, readiness and execution; forecasts do not become observed facts",
+    "Anvil/cherry/stars/mailbox examples are authored fixtures, not Keen observations"
+  ],
+  "local_evaluator_latency": {
+    "scope": "Warm local installed evaluator microbenchmark on fixed supplied inputs; no hard real-time or end-to-end throughput qualification.",
+    "method": {
+      "samples_per_case": 1000,
+      "warmups_per_input": 25,
+      "warmed_inputs": 22,
+      "fixed_expected_bindings": true,
+      "isolated_installed_import": true,
+      "excludes": [
+        "observation capture and decoding",
+        "Keen adapter projection",
+        "RPC and network transport",
+        "input dispatch and live control",
+        "rendering",
+        "language-model latency",
+        "application scheduling and hard realtime qualification"
+      ]
+    },
+    "measurements": [
+      {
+        "choice_count": 3,
+        "fact_count": 7,
+        "id": "authored:anvil",
+        "input_bytes_canonical": 3789,
+        "inputs_sha256": "36afc6f28a08dc3a92808e92db43fd1ca4a19025b5d0da480895f0a4e31556e9",
+        "process_cpu_time_ns": {
+          "count": 1000,
+          "max": 4071075,
+          "p50": 411630.5,
+          "p95": 709372
+        },
+        "rules_sha256": "1e8065f1e7c9ceae7a079ed5b52e303aa4e3df99e4ccfd3ac249e6fa3faae7f9",
+        "scene_sha256": "b4e9d18884c2c7092f1922ad41a804ba932bf72de7d819c56c53806e221176e3",
+        "situation_rule_count": 1,
+        "wall_time_ns": {
+          "count": 1000,
+          "max": 4067673,
+          "p50": 410261.0,
+          "p95": 707561
+        }
+      },
+      {
+        "choice_count": 2,
+        "fact_count": 14,
+        "id": "retained:carrot:82",
+        "input_bytes_canonical": 7680,
+        "inputs_sha256": "2ca0a1d94e5c16adf567714bed5bea6d28e6ae7a571aecd229e568d99147bca4",
+        "process_cpu_time_ns": {
+          "count": 1000,
+          "max": 2430666,
+          "p50": 643910.0,
+          "p95": 917351
+        },
+        "rules_sha256": "d25e8cd296a4807253524dc120e25a1b02a5ec338923a1083b6233debab89c63",
+        "scene_sha256": "9565a0a59185e273c327623b3ed90d014ad13b352d11c4733bacb55c9fe3ff69",
+        "situation_rule_count": 4,
+        "wall_time_ns": {
+          "count": 1000,
+          "max": 2428246,
+          "p50": 642858.0,
+          "p95": 915786
+        }
+      }
+    ]
+  },
+  "preparation": {
+    "utc": "2026-11-20T17:48:08.567843+00:00",
+    "elapsed_to_root_verified_slice_s": 1132.896327156,
+    "research_bound_s": 1800,
+    "within_bound": true,
+    "scope": "Warm reuse through installed HUD and independently repeated 154-state replay, not cold preparation or player startup. Publication and evidence retention follow.",
+    "earlier_preparation": "Initial tool discovery and parallel read-only worker dispatch preceded clock",
+    "guest_executions": 0
+  },
+  "independent_review": "Separate core/test and adapter evidence/clock reviews reported no material blocker."
+}

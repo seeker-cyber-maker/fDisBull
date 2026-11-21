@@ -5,11 +5,12 @@ mkdir -p .native/offline/packages .native/offline/wheels .native/offline/lib "$N
 shopt -s nullglob
 core_wheels=(dist/fdisbull-*.whl)
 player_wheels=(dist/fdisbull_player-*.whl)
-[[ ${#core_wheels[@]} -eq 1 && ${#player_wheels[@]} -eq 1 ]]
+shared_wheels=(dist/fdisbull_core-*.whl)
+[[ ${#core_wheels[@]} -eq 1 && ${#player_wheels[@]} -eq 1 && ${#shared_wheels[@]} -eq 1 ]]
 cp "${core_wheels[0]}" .native/offline/packages/
-cp "${core_wheels[0]}" "${player_wheels[0]}" .native/offline/wheels/
+cp "${core_wheels[0]}" "${player_wheels[0]}" "${shared_wheels[0]}" .native/offline/wheels/
 kit_wheel=".native/offline/packages/$(basename "${core_wheels[0]}")"
-python -m pip download --only-binary=:all: --dest .native/offline/wheels "$kit_wheel[proof]"
+python -m pip download --only-binary=:all: --find-links dist --dest .native/offline/wheels "$kit_wheel[proof]"
 kit_sdl=$(ldd "$FDISBULL_DOSBOX" | awk '/libSDL2_net/{print $3; exit}')
 test -f "$kit_sdl"
 cp -L "$kit_sdl" .native/offline/lib/libSDL2_net-2.0.so.0
@@ -29,13 +30,13 @@ mkdir .native/offline/unpacked
 kit_version=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
 tar -xzf ".native/offline/output/fdisbull-${kit_version}-linux-x86_64-offline.tar.gz" -C .native/offline/unpacked
 kit_root="$CI_PROJECT_DIR/.native/offline/unpacked/fdisbull-${kit_version}-linux-x86_64-offline"
-python - "$kit_root/manifest.json" "${core_wheels[0]}" "${player_wheels[0]}" <<'PYCODE'
+python - "$kit_root/manifest.json" "${core_wheels[0]}" "${player_wheels[0]}" "${shared_wheels[0]}" <<'PYCODE'
 import hashlib, json, os, sys
 from pathlib import Path
 manifest = json.loads(Path(sys.argv[1]).read_text())
 if manifest['source_commit'] != os.environ['CI_COMMIT_SHA']:
     raise SystemExit('offline kit source commit mismatch')
-for name, path in zip(('fdisbull', 'fdisbull-player'), map(Path, sys.argv[2:])):
+for name, path in zip(('fdisbull', 'fdisbull-player', 'fdisbull-core'), map(Path, sys.argv[2:])):
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if manifest['wheels'][name]['sha256'] != digest:
         raise SystemExit(f'offline kit wheel mismatch: {name}')

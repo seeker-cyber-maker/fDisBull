@@ -1,0 +1,4 @@
+include README.md PROVENANCE.json pyproject.toml MANIFEST.in
+recursive-include src/fdisbull_core *.py
+recursive-include tests *.py
+global-exclude __pycache__ *.py[cod]

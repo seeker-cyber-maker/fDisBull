@@ -1,0 +1,248 @@
+{
+  "format": "dotbox-local-linux-native-verification-1",
+  "date": "2026-11-17",
+  "date_timezone": "America/New_York",
+  "version": "0.1.0.dev7",
+  "scope": "Fresh native build and eight authored native fixtures on the cloud Linux computer. Commercial-game controls, memory-only rewind and original-Dot desktop integration have separate acceptance evidence.",
+  "evidence_collection": {
+    "method": "Read-only audit of completed build reports, stage logs, raw JUnit, package archives and executable/source hashes",
+    "raw_reports": "Retained privately in the local Linux build workspace; hashes below identify the inspected files",
+    "sanitized_receipt_is_binary_attestation": false,
+    "previous_macos_result_reused": false
+  },
+  "host": {
+    "system": "Linux",
+    "release": "6.18.57",
+    "architecture": "x86_64",
+    "python": "3.12.14",
+    "desktop": "Visible native gate passed in the cloud desktop session"
+  },
+  "source_at_build": {
+    "local_commit": "dee1213f1701917fd523911c3a477645c5bd2054",
+    "tree": "1911d22aceeb546712e90f7bcc2894f4389c8315",
+    "identity_basis": "Local source commit and tree recorded by the completed build report; this audit did not rerun Git identity commands",
+    "relationship": "This identifies the Linux build input, not a later documentation/publication commit and not the earlier Mac Studio build",
+    "coordinator_git_identity_rechecked": true
+  },
+  "source_preparation": {
+    "method": "Copy retained exact base source and apply the pinned DotBox overlay",
+    "upstream": {
+      "repository": "https://github.com/joncampbell123/dosbox-x.git",
+      "commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+      "tree": "68005f10ab25418b40621875ad8e7a4bd867335c"
+    },
+    "recipe_sha256": "b3704656798db7efc5508d22fc948b97d8647dac7c425165110ea395ba01cd7a",
+    "result_files_verified": 38,
+    "result_file_hashes_rechecked_after_build": true,
+    "preparation_receipt_sha256": "ffe6d82efcccd16fcad2257683488c22c9abc77bf2d20e7687fd6dba6e67478d",
+    "scope": "Verification of the 38 recipe-declared changed/new native source files; the preparation receipt itself records no compilation and is not a binary attestation"
+  },
+  "dependencies": {
+    "repository": "https://deb.debian.org/debian",
+    "suite": "trixie",
+    "package_architecture": "amd64",
+    "provisioning": "Official Debian package archives extracted into a user-owned private prefix; no package maintainer scripts or system package installation",
+    "archive_hashes_rechecked": 15,
+    "archive_hash_check_basis": "Each retained .deb SHA-256 matches the recorded Debian package metadata",
+    "sdl": "Dynamically linked Debian SDL2 2.32.4; the bundled SDL2 was not compiled for this Linux run",
+    "autotools_relocation": "Private executable names, process environment, relocated autom4te configuration and pkg-config sysroot",
+    "host_libraries_still_required": true,
+    "packages": {
+      "autoconf": {
+        "version": "2.72-3.1",
+        "sha256": "0de76b647b0afb6c7934999aaefeb463656c147672464a367df1019969e77af3"
+      },
+      "automake": {
+        "version": "1:1.17-4",
+        "sha256": "8d4b172d4ff8070789c54b48a95585b53e4c65faeb07a2ae52da16cb364df635"
+      },
+      "autotools-dev": {
+        "version": "20240727.1",
+        "sha256": "d07d476c1fcd713ed04695f25ac290c3ae2317e6fd974ad6b2168e3be1c795c3"
+      },
+      "libncurses-dev": {
+        "version": "6.5+20250216-2",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d"
+      },
+      "libncurses6": {
+        "version": "6.5+20250216-2",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9"
+      },
+      "libncursesw6": {
+        "version": "6.5+20250216-2",
+        "sha256": "47baa2e11579583654583a066b69bd5a5d2f22423081f707ed6c0c3ba6d538b7"
+      },
+      "libpng-dev": {
+        "version": "1.6.48-1+deb13u5",
+        "sha256": "9027d5ace59ce266124c87054302805f49f9cb1ec4a6c8264a64596c7916fbff"
+      },
+      "libpng16-16t64": {
+        "version": "1.6.48-1+deb13u5",
+        "sha256": "2465b4e9fa85cff54dc10a6da3e64074d8d9292c86e4a8f989b809d6b158e97e"
+      },
+      "libsdl2-2.0-0": {
+        "version": "2.32.4+dfsg-1",
+        "sha256": "c61af1033d79fa6a393c49fac987165876de8ff27ebbd6a36cf19f5fc84d7a7a"
+      },
+      "libsdl2-dev": {
+        "version": "2.32.4+dfsg-1",
+        "sha256": "277dc6373473df2079ed44ac8661575b97b39fa263bfa424b0324c1501d21413"
+      },
+      "libtinfo6": {
+        "version": "6.5+20250216-2",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10"
+      },
+      "libx11-6": {
+        "version": "2:1.8.12-1",
+        "sha256": "b5a3fd3bf8c8fd0364bfb9bea00dcba7fc301229bd02dded084632d31f5b0fb3"
+      },
+      "libx11-dev": {
+        "version": "2:1.8.12-1",
+        "sha256": "530de60c9c6dadd997ae7d74eca2a41b25e849373a5ad5dcdb619aa05713d6e0"
+      },
+      "m4": {
+        "version": "1.4.19-8",
+        "sha256": "221b3e224708c1da2a1a88b6824380593579b2254ae7d914afa14cbd5d343334"
+      },
+      "x11proto-dev": {
+        "version": "2024.1-1",
+        "sha256": "6a6764500eb8171d3cd6d793c09902974f8ea87bd20c68d9eac5f1eeaf3fc407"
+      }
+    }
+  },
+  "initial_failure": {
+    "stage": "compile",
+    "exit_code": 2,
+    "diagnostic": "fatal error: X11/Xlib.h: No such file or directory",
+    "include_origin": "SDL2/SDL_syswm.h",
+    "resolution": "Required official X11 development headers and matching runtime files were staged in the private dependency prefix; make -j2 then resumed successfully",
+    "failed_log_preserved": true
+  },
+  "successful_build": {
+    "status": "succeeded",
+    "stage": "complete",
+    "started_utc": "2026-11-18T04:14:18+00:00",
+    "finished_utc": "2026-11-18T04:22:01+00:00",
+    "wall_elapsed_seconds": 463,
+    "timing_scope": "From autogen through the completed retry, including the initial failed compile and intervening dependency staging; earlier dependency preparation is excluded",
+    "compiler_jobs": 2,
+    "commands": [
+      [
+        "./autogen.sh"
+      ],
+      [
+        "./configure",
+        "--enable-sdl2",
+        "--enable-debug=heavy",
+        "--enable-dosbox_agent",
+        "--enable-agent-zstd",
+        "--disable-avcodec",
+        "--disable-libslirp",
+        "--disable-libfluidsynth"
+      ],
+      [
+        "make",
+        "-j2"
+      ],
+      [
+        "make",
+        "-j2"
+      ]
+    ],
+    "step_results": [
+      {
+        "name": "autogen",
+        "exit_code": 0,
+        "elapsed_seconds": 1.773
+      },
+      {
+        "name": "configure",
+        "exit_code": 0,
+        "elapsed_seconds": 6.898
+      },
+      {
+        "name": "compile",
+        "exit_code": 2,
+        "elapsed_seconds": 129.087
+      },
+      {
+        "name": "compile-after-x11-headers",
+        "exit_code": 0,
+        "elapsed_seconds": 197.316
+      }
+    ],
+    "requested_compiler_flags": {
+      "CFLAGS": "-O2 -g0",
+      "CXXFLAGS": "-O2 -g0"
+    },
+    "native_build_performed": true,
+    "executable_architectures": [
+      "x86_64"
+    ],
+    "executable_format": "ELF 64-bit LSB PIE executable, dynamically linked, not stripped",
+    "executable_bytes": 20812912,
+    "executable_sha256": "c12db47a54ebfb9d0abc077d5d60715d5ba247ed85d1217cf7e2a974f087acfa",
+    "executable_sha256_rechecked_after_gate": true,
+    "linked_library_report_retained": true,
+    "private_dependency_rpath": true
+  },
+  "native_gate": {
+    "accepted": true,
+    "mode": "all",
+    "started_utc": "2026-11-18T04:23:53+00:00",
+    "finished_utc": "2026-11-18T04:23:57+00:00",
+    "case_count": 8,
+    "headless_cases": 4,
+    "visible_cases": 4,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "pytest_exit_code": 0,
+    "pytest_reported_seconds": 3.59,
+    "timed_out": false,
+    "interrupted": false,
+    "launch_error": null,
+    "gui_status": "visible_native_tests_passed",
+    "executable_stable": true,
+    "raw_junit_reparsed": true,
+    "selected_tests_match_current_runner": true,
+    "selected_tests": [
+      "tests/test_native_overlay.py::test_native_headless_refuses_host_owner_without_mutation",
+      "tests/test_native_overlay.py::test_native_restore_rejects_stale_generation_and_fences_failed_load",
+      "tests/test_native_overlay.py::test_native_restore_receipt_preserves_owner_and_advances_generation",
+      "tests/test_playable_native.py::test_original_mz_entry_and_relocation_with_standalone_runtime",
+      "tests/test_native_overlay.py::test_native_visible_owner_transfers_reset_and_reject_stale_inputs",
+      "tests/test_harness_native.py::test_controls_learned_during_human_play_survive_service_restart",
+      "tests/test_playable_native.py::test_real_game_survives_clients_and_native_ownership_changes",
+      "tests/test_playable_native.py::test_default_native_desktop_path_blocks_direct_agent_input"
+    ],
+    "scope": "Authored COM/MZ programs, native ownership and input fences, restore admission and service/control persistence",
+    "fixture_provenance": "Test names containing real_game refer to authored fixture programs, not a commercial-game route"
+  },
+  "retained_artifact_sha256": {
+    "result.json": "9675f051470c8313b15d712c21f4cc7d14e34f470a474ba22aa8511b86367e78",
+    "source-preparation.json": "ffe6d82efcccd16fcad2257683488c22c9abc77bf2d20e7687fd6dba6e67478d",
+    "build-environment.json": "e64d53ee298aee0c11e63ffa3a51e4959782c7c77b3e63b73c0d389a612e7bad",
+    "debian-packages.json": "d74282a679b170b913694e89d4c3b00fda349750ed748a39f847a55bef27e9fc",
+    "linked-libraries.txt": "e652f34a7cd0e3fc063b6b58a7514b0d3cea14a6862ea01a1b5a83e1396885a5",
+    "logs/autogen.log": "bb0bc5320a255c8bc49dcad5367b2a9069e09a8f504fdd4284718775c7dabf39",
+    "logs/configure.log": "57ea03634cf850e1ceb40747158c98431ccbb49bbdd98c2e1a890694f75a5da1",
+    "logs/compile.log": "f7facbd3f7271faadb8c5d1f8aaf07819b099d132a351ff2c7e35a0790df5cfd",
+    "logs/compile-after-x11-headers.log": "f8582cc906cca2055584a5f667c216b79fe9ddec827bef9bc68e90616767fb53",
+    "native-tests/result.json": "588d37cbd0453e78327545fd1526b5c93332e93055dece772d8d75c34fd448fe",
+    "native-tests/junit.xml": "f1c07ef529aadd671efbc05e1736e627cf4943f81bcb9d48fa21212ca177d210",
+    "native-tests/pytest.log": "fcfd797ec700aaaaa2b4dce91a3ae7d182d2d9bade40f59e59c48e9ab6b0b6b7",
+    "native/src/dosbox-x": "c12db47a54ebfb9d0abc077d5d60715d5ba247ed85d1217cf7e2a974f087acfa"
+  },
+  "not_established_by_this_receipt": [
+    "Police Quest locker-room-to-shower controls or any other commercial-game route",
+    "Late-briefing memory rewind and successful attendance",
+    "Complete player-facing memory-only recovery",
+    "Original-Dot desktop takeover/input synchronization",
+    "Fresh Linux installed-wheel offline-doctor acceptance",
+    "A rerun of the complete Python source test suite",
+    "Qualification of the Mac Studio or any other host",
+    "Portable offline binary distribution or reproducible binary bytes across independent builds",
+    "Merge, package publication or release"
+  ]
+}

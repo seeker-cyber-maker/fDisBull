@@ -225,7 +225,7 @@ def verify_local_unified_preparation(root, source_commit, run_id, canonical_job_
     if (receipt.get('runtime_inputs') != list(checked['inputs'].values())
         or receipt.get('resource_receipts') != list(checked['resource_receipts'].values())
         or receipt.get('firmware') != checked['firmware']
-        or receipt.get('artifacts') != [checked['tested_wheel'], *checked['inputs'].values()]
+        or receipt.get('artifacts') != [checked['tested_wheel'], checked['tested_shared_wheel'], *checked['inputs'].values()]
         or receipt.get('backend_identity') != read(local_path(root, checked['backend_identity']['path']))):
         raise ValueError('Unified acceptance receipt does not match prepared runtime')
     windows = module.required_windows_cases(root, checked)
@@ -333,7 +333,7 @@ def verify_chat_consumer(root, source_commit, local_run_id, other_jobs, package_
         raise ValueError('Chat manifest source identity mismatch')
     wheels = manifest.get('wheel_artifacts')
     if not isinstance(wheels, list): raise ValueError('Chat wheel identities missing')
-    for kind in ('core','player'):
+    for kind in ('core','shared','player'):
         expected = package_artifacts[kind]
         matches = [w for w in wheels if isinstance(w, dict) and w.get('name') == expected['name']]
         if len(matches) != 1 or matches[0] != {'name':expected['name'],'sha256':expected['sha256'],'size':expected['size_bytes']}:
@@ -433,24 +433,31 @@ def validate(root, source_commit, pipeline_id=None, *, local_run_id=None, legacy
             results[job]['build_provenance'] = reuse
         if local_run_id is not None:
             results[job]['process_receipt'] = identity(root, str(process_path.relative_to(root)))
-            if profile == 'unified':
-                unified_receipt, unified_process = receipt, process
+        if profile == 'unified':
+            unified_receipt, unified_process = receipt, process
     payload = read(root / 'artifacts/receipts/package-payloads.json')
     if payload.get('source_commit') != source_commit or payload.get('tracked_worktree_dirty') is not False:
         raise ValueError("Package inventory is absent, dirty or from another commit")
     package_artifacts = payload.get('artifacts', {})
-    if set(package_artifacts) != {'core', 'player', 'sdist', 'tool'}:
+    if set(package_artifacts) != {'core', 'shared', 'player', 'sdist', 'tool'}:
         raise ValueError("Package inventory lacks an artifact kind")
     ordinary = {item['path']: item for item in results['test-and-package']['artifacts']}
     for item in package_artifacts.values():
         p = 'dist/' + item['name']
         if ordinary.get(p) != {"path": p, "sha256": item['sha256'], "size": item['size_bytes']}:
             raise ValueError(f"Package inventory and ordinary job disagree: {p}")
-    core = package_artifacts['core']
     tested = results['native-unified']['artifacts']
-    if (not tested or (local_run_id is None and len(tested) != 1)
-        or (tested[0]['sha256'], tested[0]['size']) != (core['sha256'], core['size_bytes'])):
-        raise ValueError("The installed-wheel native acceptance did not test the ordinary core wheel")
+    if len(tested) < 2 or (local_run_id is None and len(tested) != 2):
+        raise ValueError("The installed-wheel native acceptance requires the core and shared wheels")
+    for observed, kind, identity_key in zip(tested[:2], ('core', 'shared'), ('wheel', 'shared_wheel')):
+        expected = package_artifacts[kind]
+        if (PurePosixPath(observed['path']).name, observed['sha256'], observed['size']) != (
+            expected['name'], expected['sha256'], expected['size_bytes']
+        ):
+            raise ValueError(f"The installed-wheel native acceptance did not test the ordinary {kind} wheel")
+        reference = unified_receipt['backend_identity'].get(identity_key)
+        if not isinstance(reference, dict) or (reference.get('sha256'), reference.get('size')) != (observed['sha256'], observed['size']):
+            raise ValueError(f"The native backend identity does not match the tested {kind} wheel")
     if local_run_id is not None:
         results['native-unified']['preparation'] = verify_local_unified_preparation(
             root, source_commit, local_run_id, job_ids, unified_receipt, unified_process, origin, boat)

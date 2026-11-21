@@ -1,0 +1,167 @@
+{
+  "date": "2026-11-17",
+  "scope": "Installed predictive-play methodology and topic alias; no live scheduler, movement, worker guest or voice qualification",
+  "package_version": "0.1.0.dev3",
+  "primary_parent": "676ed6fdc16cafccbd4d676a016a5d5d4deeb463",
+  "mirror_parent": "e3e2548c5cefda60406ee4a8402edbbea1d9684a",
+  "parent_tree": "e25e44aa791ecc4159985a9c093d56e9c7e8737b",
+  "change_contract": [
+    "Dot may spawn supported full cloud agents when usage permits.",
+    "Selected graphical movement begins through known applicable controls while useful scene preparation proceeds.",
+    "One foreground blocker coexists with a bounded predictive frontier.",
+    "Workers have separate useful-by points and hard bounds; the existing foreground journal does not reset.",
+    "Candidate adoption uses current branch/state/source evidence between completed actions.",
+    "Natural movement, worker time, user decisions and actual blocked play are measured separately."
+  ],
+  "verification": {
+    "source_kit_tests": {
+      "passed": 21,
+      "seconds": 0.33
+    },
+    "installed_kit_tests": {
+      "passed": 21,
+      "seconds": 0.29,
+      "copied_outside_source_checkout": true,
+      "isolated_python": true
+    },
+    "offline_install": {
+      "no_index": true,
+      "python": "3.12.14",
+      "pillow": "12.3.0",
+      "iced_x86": "1.22.0",
+      "pytest": "9.2.0",
+      "fdisbull_installed": false,
+      "optional_mcp_installed": false
+    },
+    "build": {
+      "command": "python -m pip wheel . --no-index --no-deps --no-build-isolation",
+      "setuptools": "84.2.1",
+      "wheel": "0.48.0",
+      "initial_attempt": "Project test environment lacked setuptools; build completed using the existing runtime build tools without installing a dependency."
+    },
+    "source_wheel_installed_identity": {
+      "runtime_modules": 26,
+      "operational_resources": 37,
+      "all_compared_bytes_equal": true,
+      "catalog_sha256": "47b0fbfe5315042f129793df309356e18b395dcba13d942b27d7249c9b4b9bc8",
+      "runtime_module_map_sha256": "193c080378b311233353dd4834aa4115e5d7bb4e70c92a2c8296ad9fc3679c52"
+    },
+    "new_topic": "lookahead",
+    "alias_target": "continuous",
+    "installed_alias_bytes_equal": true,
+    "wheel": {
+      "filename": "dotbox-0.1.0.dev3-py3-none-any.whl",
+      "bytes": 263226,
+      "sha256": "b146037cf087267dd2e9baf894a8b8cdb0c669b8e31db0ba40166f0b78ca2604"
+    },
+    "diff_whitespace_check": "passed"
+  },
+  "independent_installed_guide_review": {
+    "review_type": "documentation scenario review",
+    "live_qualification": false,
+    "verdict": "pass_with_live_adapter_qualification_outstanding",
+    "scope": {
+      "sources": [
+        "guide",
+        "guide --topic conversation",
+        "guide --topic lookahead"
+      ],
+      "all_source_commands_exit_code": 0,
+      "method": "Forward review of installed guidance only; no git history, live game, cloud worker launch, or runtime concurrency test."
+    },
+    "assumptions": [
+      "Any ordinary route used below is applicable to the freshly observed game state and available through the supported input owner.",
+      "Cloud workers exist only when actual platform tools and available usage permit them.",
+      "A worker result remains a proposal until the play lead checks and adopts it."
+    ],
+    "scenarios": [
+      {
+        "case": "radio across room; interaction still being built",
+        "foreground": "Begin the qualified, bounded approach promptly within the selected intent. Narrate permitted observations and monitor movement through supported controls. Observe at arrival and use the ordinary applicable interaction if available. If final interaction remains genuinely unsupported, stop at a safe waypoint and address that specific blocker under the existing foreground policy.",
+        "workers": "Prioritize the radio slice, with a useful-by estimate at arrival and a separate explicit hard time/probe/resource bound. Movement does not renew a deliberately opened foreground learning journal.",
+        "mandatory_preparation_wait": false,
+        "possible_real_block": "Only an actually missing final capability or ownership need; no automatic new 15-second wait and no requirement to finish the whole destination scene."
+      },
+      {
+        "case": "player chooses another exit midwalk",
+        "foreground": "Honor the new intent using qualified stopping or cancellation, or the next safe boundary of a suitably bounded action. Refresh relevant state before redirecting. Do not promise interruption of an uninterruptible tool or replace the in-flight implementation with a candidate.",
+        "workers": "Reprioritize the new destination, cancel superseded work through supported tooling, and keep reusable partials inactive. Late uninterruptible results require fresh applicability checks.",
+        "mandatory_preparation_wait": false,
+        "possible_real_block": "A physical action may need to reach its supported stopping boundary; worker cancellation must not gate a usable live route."
+      },
+      {
+        "case": "worker misses arrival; ordinary action works",
+        "foreground": "Observe the actual destination and perform the applicable ordinary action immediately. Preserve the working revision and record its outcome without replay.",
+        "workers": "The candidate may continue within its original bound if still useful. A late result cannot renew a foreground focus and is adopted only after current applicability and revision checks between completed actions.",
+        "mandatory_preparation_wait": false,
+        "possible_real_block": null
+      },
+      {
+        "case": "usage ends midwalk",
+        "foreground": "Continue responsive single-lead play through known supported controls and ordinary fallbacks.",
+        "workers": "Stop admitting new jobs, retain usable returned work, respect existing resource and hard bounds, and use supported cancellation where applicable. Do not infer worker completion or remaining quotas from silence or task count.",
+        "mandatory_preparation_wait": false,
+        "possible_real_block": "Only a separately established live capability or ownership problem, not the loss of speculative workers itself."
+      },
+      {
+        "case": "takeover before candidate arrives",
+        "foreground": "For a planned handoff, settle movement and release owned holds before yielding. On abrupt ownership loss, inject no cleanup input. On handback, observe and reconcile current state, refresh bindings, and retire old queued intentions before fresh selection.",
+        "workers": "Cancel superseded work; permitted frozen-evidence work may continue within its bound. Retain late results as inactive proposals pending current state, branch, resource, policy, and base-revision checks. Never restore an old state to fit them.",
+        "mandatory_preparation_wait": false,
+        "possible_real_block": "The lead must yield input during human ownership, but does not wait for preparation or candidate arrival."
+      },
+      {
+        "case": "immediate Zork transition",
+        "foreground": "Execute the selected applicable text input without inventing a travel window. Observe the immediate destination and use its available ordinary input route. A genuinely missing current control follows the bounded foreground policy without restarting an existing focus or the startup budget.",
+        "workers": "Prepare early only where evidence justifies a bounded near-term prediction. Treat an immediate next-use boundary as a possible miss; late candidates remain proposals and must pass current applicability checks.",
+        "mandatory_preparation_wait": false,
+        "possible_real_block": "Only an actual missing capability; no padded conversation, detour, artificial delay, or guaranteed buffer."
+      }
+    ],
+    "consistency_checks": [
+      {
+        "topic": "15-second/two-probe foreground focus versus longer background jobs",
+        "finding": "No contradiction found. All three guides distinguish the lead's non-renewing missing-control focus from each worker's separate useful-by point and hard work bound. The lookahead guide explicitly includes reasoning and dispatch time, forbids resetting a focus during movement, and rejects an automatic renewed allowance at arrival.",
+        "evidence_sections": [
+          "default: Learn one missing interaction; Retain progress",
+          "lookahead: Keep the buffer useful; Use movement as useful preparation time",
+          "conversation: Graphical movement and predictive preparation"
+        ]
+      },
+      {
+        "topic": "revision adoption race",
+        "finding": "No conflicting instruction found. One play lead publishes; candidates stay separate; applicability, base revision, actual branch and resource identity are checked; publication occurs between completed actions; candidates cannot change an in-flight implementation; stale context and takeover require refresh.",
+        "limit": "These are operating requirements. This review does not establish an atomic promotion API, stale-base rejection, immutable binding, or cancellation behavior in a live adapter. If the runtime lacks those guarantees, preserve the working route and defer the candidate instead of assuming them.",
+        "evidence_sections": [
+          "lookahead: Use movement as useful preparation time; Promote a complete, compatible revision; Yield and resume without undoing progress",
+          "conversation: Current offline contract"
+        ]
+      },
+      {
+        "topic": "unsupported concurrency claims",
+        "finding": "No unconditional claim of implemented concurrency found. Full cloud tasks and independent guests are permitted conditionally on supported platform tooling and usage. Narration and movement may overlap, but their durations are not additive spare time. The guides explicitly disclaim an implemented cloud scheduler, live voice frontend, scene recognizer and movement monitor, and do not assume running tools are interruptible.",
+        "limit": "No actual launch/result/cancellation path, simultaneous live narration/input/observation, or isolated-guest operation was tested.",
+        "evidence_sections": [
+          "lookahead: Brief a full cloud worker with one near-term consumer; Measure blocked play separately from preparation",
+          "conversation: Graphical movement and predictive preparation; Acceptance"
+        ]
+      }
+    ],
+    "blocking_findings": [],
+    "followup_live_qualification": [
+      "Exercise the six documented cases through the eventual live adapter under actual ownership conditions.",
+      "Verify safe steering or bounded stopping when an in-flight tool cannot be interrupted.",
+      "Verify stale candidate rejection and active revision stability when completion, route changes and takeover coincide.",
+      "Measure actual blocked-play intervals separately from natural movement and concurrent preparation."
+    ]
+  },
+  "not_implemented_or_qualified": [
+    "Cloud scheduler or quota metering",
+    "Predictive scene recognizer",
+    "Live movement/narration concurrency or interruptible tools",
+    "Atomic live candidate promotion",
+    "Original-Dot input ownership gate",
+    "Reduced player-visible latency on a real game"
+  ],
+  "publication_scope": "Authored instructions and sanitized verification only; no original game files, states, captures or derived commercial resources"
+}

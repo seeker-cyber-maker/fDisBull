@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare distribution payloads with Git-tracked runtime and test support files.
 
-Run from the authoritative checkout against all four freshly built artifacts.
+Run from the authoritative checkout against all five freshly built artifacts.
 This is a completeness and byte-identity check, not a privacy or runtime test;
 run check_dist.py and isolated entry-point checks separately.
 """
@@ -20,7 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 # regardless of extension; do not silently exclude unfamiliar files here.
 CORE = "src/fdisbull/"
 PLAYER = "player/fdisbull_player/"
+SHARED = "packages/fdisbull-core/src/fdisbull_core/"
 SOURCE_SUPPORT = (
+    "packages/fdisbull-core/",
     "tests/",
     "scripts/",
     ".github/workflows/",
@@ -53,8 +55,8 @@ def tracked_payload(root: Path) -> dict[str, bytes]:
         if path.is_symlink() or not path.is_file():
             raise ValueError(f"Tracked payload is not a regular file: {name}")
         files[name] = path.read_bytes()
-    if not any(n.startswith(CORE) for n in files) or not any(n.startswith(PLAYER) for n in files):
-        raise ValueError("Source inventory lacks tracked core or player package")
+    if any(not any(n.startswith(prefix) for n in files) for prefix in (CORE, PLAYER, SHARED)):
+        raise ValueError("Source inventory lacks tracked core, shared, or player package")
     return files
 
 
@@ -99,8 +101,10 @@ def check_payload(source: dict[str, bytes], archive: dict[str, bytes], kind: str
         expected = {prefix + n: b for n, b in source.items()}
         # Detect unexpected package files too, without rejecting metadata or docs.
         actual_names = {n for n in archive if any(n.startswith(prefix + p) for p in (CORE, PLAYER, *SOURCE_SUPPORT))}
-    elif kind in {"core", "player"}:
-        source_prefix, package_prefix = (CORE, "fdisbull/") if kind == "core" else (PLAYER, "fdisbull_player/")
+    elif kind in {"core", "player", "shared"}:
+        source_prefix, package_prefix = {"core": (CORE, "fdisbull/"),
+                                         "player": (PLAYER, "fdisbull_player/"),
+                                         "shared": (SHARED, "fdisbull_core/")}[kind]
         expected = {package_prefix + n[len(source_prefix):]: b for n, b in source.items() if n.startswith(source_prefix)}
         actual_names = {n for n in archive if n.startswith(package_prefix)}
     else:
@@ -115,14 +119,14 @@ def check_payload(source: dict[str, bytes], archive: dict[str, bytes], kind: str
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", type=Path, default=ROOT)
-    for kind in ("core", "player", "sdist", "tool"):
+    for kind in ("core", "player", "shared", "sdist", "tool"):
         parser.add_argument("--" + kind, type=Path, required=True)
     parser.add_argument("--output", type=Path, help="Write a JSON receipt only after all comparisons pass")
     args = parser.parse_args()
     if args.output and args.output.exists():
         parser.error("Receipt output already exists; choose a new path")
     source = tracked_payload(args.source_root)
-    for kind in ("core", "player", "sdist", "tool"):
+    for kind in ("core", "player", "shared", "sdist", "tool"):
         path = getattr(args, kind)
         check_payload(source, archive_payload(path), kind)
         print(f"OK {kind}: {path}")
@@ -130,7 +134,7 @@ def main() -> None:
         commit = subprocess.check_output(["git", "-C", str(args.source_root), "rev-parse", "HEAD"], text=True).strip()
         dirty = bool(subprocess.check_output(["git", "-C", str(args.source_root), "status", "--porcelain", "--untracked-files=no"], text=True).strip())
         artifacts = {}
-        for kind in ("core", "player", "sdist", "tool"):
+        for kind in ("core", "player", "shared", "sdist", "tool"):
             path = getattr(args, kind)
             digest = hashlib.sha256()
             with path.open("rb") as stream:
@@ -140,6 +144,7 @@ def main() -> None:
         receipt = {"schema": "fdisbull-package-payloads-1", "source_commit": commit, "tracked_worktree_dirty": dirty,
                    "inventory_counts": {"core": sum(n.startswith(CORE) for n in source),
                                         "player": sum(n.startswith(PLAYER) for n in source),
+                                        "shared": sum(n.startswith(SHARED) for n in source),
                                         "source_total": len(source)}, "artifacts": artifacts}
         with args.output.open("x") as stream:
             stream.write(json.dumps(receipt, indent=2, sort_keys=True) + "\n")

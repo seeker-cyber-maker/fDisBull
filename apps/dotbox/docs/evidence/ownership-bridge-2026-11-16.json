@@ -1,0 +1,194 @@
+{
+  "schema": "dotbox-ownership-bridge-verification-1",
+  "date": "2026-11-16",
+  "source_parent_commit": "53fb013c22de8ed99fdc7390ddaba61ed3dffa99",
+  "implemented": [
+    "Optional viewer-bound coordination state, separate from native host input ownership",
+    "Separate publisher capability on existing authenticated loopback service; no additional external listener",
+    "Receiver-monotonic, one-use observation challenges; expiring, epoch-bound single-controller turn permissions",
+    "Finite bounded stdin/stdout source command and private nonce-bound mailbox",
+    "Existing-viewer CUA observer; URL/AX binding, explicit trusted owner UID, fail-closed UI parsing",
+    "Automatic wait-for-turn and before/after cooperating-action checks, retaining partial outcomes without replay"
+  ],
+  "source_tests": {
+    "passed": 333,
+    "skipped": 0,
+    "seconds": 14.1,
+    "scope": "Full source suite with real existing native executable and pinned base; fresh venv installed matching wheel, no inherited PYTHONPATH"
+  },
+  "installed_checks": {
+    "passed": 76,
+    "skipped": 0,
+    "seconds": 9.33,
+    "scope": "Isolated Python -I in fresh ordinary wheel venv, copied authored test/native fixtures outside checkout; includes 10 existing native/input checks",
+    "fdisbull_available": false,
+    "runtime_modules_exact_match": 20,
+    "wheel_sha256": "45e28b2b03dd0998309b456af8a318a3872cd67ac41fa963472aa0014cad073e",
+    "source_modules_sha256": {
+      "dotbox/__init__.py": "4e1ee1f59ee6f5b29cc21ea1d5eab35bdc3a8bd5fdcbb6f45c5866020fb4b929",
+      "dotbox/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+      "dotbox/backend.py": "7f38d109567c7e5150f3e82eeffdbebf176dc2ffa4879050831e9abda89c723a",
+      "dotbox/cli.py": "40eb25023b8da14880639f0e1c2fe342f3238ed68fba74dee0628fa65e1d3966",
+      "dotbox/client.py": "d7b201fabd4bf04a2109ef01747c0105e99fc69eeb14d6fd5567c7e2bea35d2e",
+      "dotbox/dos_launch_profile.py": "48a9c86c81dd107a96672f63254efd2dc8c259bc774e0afdf867ce52c9dcc678",
+      "dotbox/harness.py": "31e1bedb0fdcccd03a76deca17408465a6a464fc1984943c69e02428a1a7b016",
+      "dotbox/input_macros.py": "28d31f2da45c0d9f28c3aab5cdbc2b5225f54a2eadf4a8cd48a37b83e4e82b82",
+      "dotbox/keyboard_input.py": "10ac610742502dbc3ea7e7d806f0dacc026e6e601f3f2e93ac93ffaf155bb88f",
+      "dotbox/local_auth.py": "992a6af3869df8ca647375a4b1fb0f543bc1c4061c5410f9de4cce2919e5d36d",
+      "dotbox/native_rpc.py": "f24561fb5833c131036e7b1ea25cb97187066e9e400eeff1cf5b86438c9abda1",
+      "dotbox/native_session.py": "8f1a35e539cf934d99af811abb5468a42a5a4934647e40fd9a190cb33158c9cc",
+      "dotbox/operation_budget.py": "292fb60fc41360329f32847d9e1267db0f2e3d0d9dc4078e180e1926e7496994",
+      "dotbox/ownership.py": "f9fef5ccca9ac67b484762f5ece0ffb80253c50421ac1c83e4545135cfd31a68",
+      "dotbox/ownership_publisher.py": "58c12c8835bf8512652eef32ecf6ae1a06d2cfec14bc4cce040c568f9450f4bb",
+      "dotbox/ownership_source.py": "02f10db377c1b885caa8c5dbf3ed46085b9ba0e2943a8686169c763bc745e5d2",
+      "dotbox/runtime_probe.py": "5e6ae3021c3b003455d88c6cc98b6d8148e302cbd03a1e024663aae38d3bca99",
+      "dotbox/screenshot_codecs.py": "b611d232bcc5e12fca32321a031f6debd999f91f25a08bb285a549782490623d",
+      "dotbox/service.py": "a929d32a485f3d0dcb99760511a5421379a1892fa0594de2c793d827e0e7dc76",
+      "dotbox/store.py": "96dfc45e13e2f97ff5b7657eb2c8a03d49d57f633fae17d760cf23fe79315ce4"
+    }
+  },
+  "observer_checks": {
+    "passed": 35,
+    "skipped": 0,
+    "scope": "Node UI parser, bounded private mailbox, URL binding, corruption/timeout/permission and restricted-runtime configuration checks"
+  },
+  "source_distribution": {
+    "authored_observer_included": true,
+    "raw_app_source_and_target_or_screenshot_files_included": false,
+    "scope": "Candidate archive content check; final archive identities stay in private build receipts"
+  },
+  "live_viewer_to_local_receiver": {
+    "source_samples": 93,
+    "accepted_receiver_samples": 93,
+    "dot_samples_with_turn_permission": 89,
+    "human_samples_without_turn_permission": 4,
+    "source_failure_samples_without_turn_permission": 8,
+    "fresh_dot_samples_after_source_reconnect": 24,
+    "old_lease_rejected_after_return": true,
+    "all_receiver_samples_match_source": true,
+    "receiver_location": "Local Mac data-only witness; not Dot headless/cloud deployment",
+    "final_receiver_invalidated": true,
+    "takeover_return_cycles": 1,
+    "actual_desktop_keyboard_mouse_actions": 0,
+    "live_run_turn_step_callback_action_verified": false,
+    "transport": "Fresh CUA snapshots to private local mailbox, real Python command stdin/stdout, actual OwnershipState receiver",
+    "ssh_or_cloud_transport_used": false,
+    "final_viewer_owner": "dot",
+    "final_take_over_checked": false,
+    "observer_runs_bounded_ms": [
+      18000,
+      6000
+    ],
+    "first_runtime_attempts": "UID lookup unavailable in restricted CUA runtime; no control changes or grants. Explicit trusted ownerUid configuration corrected the observer; all qualified samples are from the corrected run."
+  },
+  "cloud_gate": {
+    "qualified": false,
+    "latest_managed_task_result": "Reported repository-access failure before runtime command startup; no fresh SSH receipt",
+    "configuration_readback": "Saved operations environments show Unknown repository; edit action disabled in inspected current UI",
+    "account_readback": "Two existing GitHub connections are visible; both display the same account label. Independent CLI account checks show account-specific access to the private operations repository. Selected Cloud connection binding remains unestablished.",
+    "historical_route": "Prior receipts show successful managed Tailscale SSH for the retained operations task; not current reachability or ordinary Dot-shell evidence",
+    "access_or_environment_configuration_changed": false
+  },
+  "limits": [
+    "Sampled English viewer UI evidence; not a supported server ownership subscription or atomic capture lease",
+    "Transitions entirely between polls may be missed; freshness expiry bounds stale evidence, not transition latency",
+    "Checks fence cooperating callers only; unrelated desktop tools and input already in flight remain owned by the outer harness",
+    "No Dot headless/cloud receiver deployment or SSH transport qualification; no live desktop action through run_turn_step",
+    "No whole-computer identity attestation; bind the intended viewer and session explicitly",
+    "Source commands are trusted operator configuration, not a command sandbox",
+    "Native executable reused and not rebuilt; no portable library, Windows, release or global install qualification",
+    "connection=live reflects the sampled viewer UI, not an independent server liveness check; a stalled UI may retain labels"
+  ],
+  "deferred": [
+    "Sound",
+    "Gameplay",
+    "Additional game qualification"
+  ],
+  "private_receipts": [
+    {
+      "name": "suite-03.log",
+      "bytes": 421,
+      "sha256": "6614f7a4129d7bdca580c59016af64df9e99fa1b15563dc4589d48aec36e34c4"
+    },
+    {
+      "name": "installed-checks-03.log",
+      "bytes": 179,
+      "sha256": "bb8e7df77b5c9cdd3ee571282956f73aeb65b00fdfaf868d81e5c8e81fbca5ce"
+    },
+    {
+      "name": "clean-install-identity-03.json",
+      "bytes": 2284,
+      "sha256": "95a6a0b97c575b5a1f647a674c5f3efc066e2fd52017b96eaf9771f9eb83e5ec"
+    },
+    {
+      "name": "node-final.log",
+      "bytes": 6849,
+      "sha256": "f20aab883bfc6a6d24f4a025d10286f4742e25415ee8fdea7d98ec3f988bd4d7"
+    },
+    {
+      "name": "live-03/live-receiver.jsonl",
+      "bytes": 43193,
+      "sha256": "660c45e770d9069790f5d4696dfcc1c1dff8dcb9ca77e01c9eda7ca73bebd4a0"
+    },
+    {
+      "name": "live-03/live-observer.jsonl",
+      "bytes": 47699,
+      "sha256": "09bf73c5a45d6ecf9ce3f6023ec89b7a7d1d9f9649865f1beede5a10e418c8cf"
+    },
+    {
+      "name": "live-03/live-actions.json",
+      "bytes": 2661,
+      "sha256": "0835987e47d0251c79b6926020f33583175519c2ade83324da08334ff15f97a5"
+    },
+    {
+      "name": "live-03/final-viewer-state.txt",
+      "bytes": 1098,
+      "sha256": "eca5f6d74a6fcf60e7ccdd21ea0f92ff76c1e7147d66ba30346b5f311ed3a8bd"
+    },
+    {
+      "name": "live-03/final-return.jpg",
+      "bytes": 32029,
+      "sha256": "051ad55568d6458c03cc4da6858a7959fa4f68be6ced92da6bd188b6085fbd09"
+    },
+    {
+      "name": "live-03/summary.json",
+      "bytes": 470,
+      "sha256": "9de1de396453963708ae132eeb77283eb254d4f27767124c42d9eb885ee5d891"
+    },
+    {
+      "name": "account-repository-readback.json",
+      "bytes": 2625,
+      "sha256": "3b0086ecf1cac1e134b884337fe205491f65a4eaeede8c0f0e53c14ac259e212"
+    },
+    {
+      "name": "account-settings-observed.txt",
+      "bytes": 5810,
+      "sha256": "8c7a7f9b6ad701ff5da4dab59ca87e4e089cb800a1b3126c3b878125076bec02"
+    },
+    {
+      "name": "account-settings-observed.jpg",
+      "bytes": 62534,
+      "sha256": "e9ee6bcd5f5a9b7fdb999ab74184c5c20f07c61e84c59a5dd9a24c34e57263a8"
+    },
+    {
+      "name": "live-03/live_receiver.py",
+      "bytes": 1943,
+      "sha256": "23f79ada0756eeb89744445b1a33e32b2653e75fd596649747e47eece111eda1"
+    },
+    {
+      "name": "live-03/live-receiver.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "live-03/live-receiver.stdout",
+      "bytes": 32,
+      "sha256": "2b21c66d3d2fd4eafbfba083e70bdd47a6ce5cf4550b5b740d68553c4b5b5a5c"
+    }
+  ],
+  "publication": "Authored code, tests, docs, compact results and hashes only; raw AX/screenshots/chats/routes, credentials, private account aliases, runtime IDs and viewer URLs remain private",
+  "source_tool_sha256": {
+    "scripts/observe_ownership.mjs": "0de402323468f3d1ba256d8734252fa7912f9c557f530aa7f390e3dc6b26cca1",
+    "scripts/test_observe_ownership.mjs": "119f3a6a8a0f45b425a7f0b5f6e77e2a16070ada2c6e9ba388e96b19067778b6"
+  }
+}

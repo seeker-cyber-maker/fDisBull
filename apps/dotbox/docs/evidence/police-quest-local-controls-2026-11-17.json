@@ -1,0 +1,127 @@
+{
+  "format": "dotbox-police-quest-local-controls-1",
+  "date": "2026-11-17",
+  "date_timezone": "America/New_York",
+  "recorded_utc": "2026-11-18T04:40:44.287253+00:00",
+  "result": "functional_controls_pass",
+  "scope": "One agent-driven local graphical controls run, using ordinary desktop keyboard input. This is not a reusable harness, latency or rewind qualification.",
+  "host": {
+    "system": "Linux",
+    "architecture": "x86_64",
+    "desktop": "Coordinator cloud computer; not the Mac Studio"
+  },
+  "source": {
+    "local_commit": "dee1213f1701917fd523911c3a477645c5bd2054",
+    "tree": "1911d22aceeb546712e90f7bcc2894f4389c8315",
+    "coordinator_git_identity_rechecked": true,
+    "native_executable_sha256": "c12db47a54ebfb9d0abc077d5d60715d5ba247ed85d1217cf7e2a974f087acfa"
+  },
+  "game": {
+    "edition": "Police Quest I EGA 2.0G, DOS AGI 2.917",
+    "launch_program": "SIERRA.COM",
+    "independent_game_copy": true,
+    "selected_input_sha256": {
+      "SIERRA.COM": "70fceed3f42470b610d17866a24c9b10dd2d00857bb4de08c5694c4aff2be0d5",
+      "AGI": "29ddd3f3b91d65b6eade156608d7915e3c8b7f47701cb226ff119b717f3e8bd7",
+      "AGIDATA.OVL": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383",
+      "LOGDIR": "bb8a07fb13a6af30ab587110ee4dfec66fb11f850776be8fdf5d3d55cedda0ec",
+      "PICDIR": "3546dc1692780cc3c9df232c7634be18997720f2931f9dc9a014b695124f4f4f",
+      "VIEWDIR": "e80e7b40535eeaad4b03141613a404329b7bbfd2fef0e9fd08a0a9da3ac457ce",
+      "WORDS.TOK": "a95eed1c9b2fcafb5ba63f2424adf05a3a1f7c349089fc22b09277ae020a13c2",
+      "VOL.0": "04449e1da52628290906eee1fe81c0cbfdae7a6fb146dfda652c1a7dd6304e52",
+      "VOL.1": "08927df46a0cf3d4d53e0c83c48a446ea5d81c9c46f6ad63c069a35d179b3ec8",
+      "VOL.2": "dbac3081ccf1f414cf0e8f5ad58ba6d788b7de8c0830ee317b093f8d4c8f3e90"
+    },
+    "all_recorded_original_and_copied_file_hashes_unchanged": 27
+  },
+  "input": {
+    "path": "DotBox default desktop service; supported bound native-window ordinary keyboard input",
+    "manual_control": false,
+    "live_controllers": 1,
+    "direct_agent_input_rpc_used": false,
+    "memory_edit_or_teleport_used": false,
+    "save_load_or_filesystem_rollback_used": false,
+    "original_dot_ownership_synchronization_qualified": false,
+    "platform_owner": "not established by this run",
+    "status_cli_limitation": "The separate command-execution namespace could not read the desktop service temporary token file. No credentials were copied and no claim of a CLI lease observation is made."
+  },
+  "observed_sequence": [
+    {
+      "step": "opening",
+      "evidence": "Native title and lobby rendered; Return advanced the original game"
+    },
+    {
+      "step": "locker_room",
+      "evidence": "Ordinary arrows crossed the lobby doorway; room overview rendered"
+    },
+    {
+      "step": "locker",
+      "evidence": "Walked around locker bank and opened assigned locker through command entry"
+    },
+    {
+      "step": "change",
+      "evidence": "Submitted remove clothes once, closed locker, and visibly returned in the towel outfit"
+    },
+    {
+      "step": "approach",
+      "evidence": "Walked around the shower collision barrier using a west/north/east approach, with fresh observations and stop inputs"
+    },
+    {
+      "step": "arrival_confirmation",
+      "evidence": "After final ordinary rightward adjustment, the game acknowledged shower activation and visibly rendered water"
+    },
+    {
+      "step": "cleanup",
+      "evidence": "Submitted turn off shower and observed removal of the water effect"
+    }
+  ],
+  "preparation_and_measurement": {
+    "blind": false,
+    "retained_guides_and_static_analysis_used": true,
+    "cold_preparation_measured": false,
+    "declared_opening_preparation_budget_seconds": 180,
+    "run_start_utc": "2026-11-18T04:25:53.272238+00:00",
+    "first_recorded_live_observation_utc": "2026-11-18T04:29:12.572478+00:00",
+    "opening_budget_qualified": false,
+    "budget_note": "The first recorded live observation occurred after the declared budget; actual game-ready time was not instrumented. Retained preparation time is unknown. This exploratory run is not a latency pass.",
+    "movement_time_seconds": null,
+    "turn_count": null,
+    "foreground_delay_breakdown": null,
+    "measurement_limit": "Tool execution times and partial event notes do not supply a complete movement, turn or player-visible delay trace."
+  },
+  "observed_findings": [
+    "Arrow input latched movement; repeating the same direction stopped motion in an unchanged room. Transitions and modal conversations require a new observation.",
+    "KP_5 entered the digit 5 with this desktop mapping; it was removed with BackSpace and was not treated as a working stop control.",
+    "NPC conversations interrupted the route and were dismissed before resuming.",
+    "A direct northward approach met a collision barrier; the static picture supported a western approach followed by eastward movement.",
+    "Head-pixel estimates were insufficient at the narrow interaction boundary. Final acceptance relied on the original game response and visible effect, without claiming measured live coordinates."
+  ],
+  "read_only_source_corroboration": {
+    "current_logic_payloads_matched_retained_disassembly": [
+      0,
+      5,
+      39,
+      47,
+      100
+    ],
+    "resource_sha256": {
+      "LOGIC5": "c65668019f7ef3c8ac65c7cdc876f071e470bf67db69f5a88db695c58f5422fc",
+      "PIC5": "5e68566725c63ca29e51cbf42798d955f75e2ad5896d74d163c4d0026eaca073",
+      "VIEW4": "75c18777a232f1ae21354ef7d9d88b71fdc70fd740b27d80f0f25feb3c658374"
+    },
+    "scope": "Asset and static branch verification; no live variable, flag or coordinate address mapping was measured."
+  },
+  "evidence_boundary": {
+    "live_basis": "Fresh native-window screenshots observed during the conversation and recorded ordinary input actions",
+    "public_contents": "Authored outcome, structural findings and hashes only; no game assets, scripts, messages, saves, screenshots, session tokens or raw memory"
+  },
+  "not_established": [
+    "A saved reusable route/harness with repeatable execution",
+    "A complete instrumented controls qualification with measured movement, turns and foreground delays",
+    "Bounded cold-start preparation or seamless conversational play",
+    "Live engine-state extraction and stale-choice filtering",
+    "Missed-briefing guest-clock characterization or memory-only rewind",
+    "Original-Dot takeover/input synchronization",
+    "A fresh Linux wheel installation or portable offline release"
+  ]
+}

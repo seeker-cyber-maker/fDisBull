@@ -18,11 +18,13 @@ from email.policy import default
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+SHARED_VERSION = tomllib.loads((ROOT / "packages/fdisbull-core/pyproject.toml").read_text())["project"]["version"]
 if not re.fullmatch(r"[0-9A-Za-z.+!]+", VERSION):
     raise ValueError("Invalid project version")
 REQUIRED = {
     "fdisbull": VERSION,
     "fdisbull-player": VERSION,
+    "fdisbull-core": SHARED_VERSION,
     "iced-x86": "1.21.0",
     "capstone": "5.0.9",
     "lief": "1.0.0",
@@ -95,7 +97,7 @@ def inspect_wheel(path, python_tag):
     name, version = normalize(msg["Name"]), str(msg["Version"])
     if normalize(parts[0]) != name or parts[1] != version:
         raise ValueError(f"wheel filename and metadata disagree: {path.name}")
-    if name in ("fdisbull", "fdisbull-player"):
+    if name in ("fdisbull", "fdisbull-player", "fdisbull-core"):
         spec = importlib.util.spec_from_file_location(
             "_offline_dist_guard", ROOT / "scripts/check_dist.py"
         )
@@ -180,7 +182,7 @@ cd "$HERE"
 sha256sum -c SHA256SUMS
 "$PYTHON" -m venv "$DEST"
 "$DEST/bin/python" -m pip install --no-index --find-links "$HERE/wheels" --require-hashes -r "$HERE/requirements.txt"
-"$DEST/bin/python" -c 'import importlib.metadata as m; assert m.version("fdisbull") == "__FDISBULL_VERSION__"; assert m.version("fdisbull-player") == "__FDISBULL_VERSION__"; import fdisbull_player; import z3; x=z3.Int("x"); s=z3.Solver(); s.add(x+1 != 1+x); assert s.check()==z3.unsat; s=z3.Solver(); s.add(x+1 != x); assert s.check()==z3.sat; print("Installed fdisbull and fdisbull-player __FDISBULL_VERSION__; Z3 equivalent and counterexample checks passed")'
+"$DEST/bin/python" -c 'import importlib.metadata as m; assert m.version("fdisbull") == "__FDISBULL_VERSION__"; assert m.version("fdisbull-player") == "__FDISBULL_VERSION__"; assert m.version("fdisbull-core") == "__SHARED_VERSION__"; from fdisbull import memory_search as old; from fdisbull_core import memory_search as shared; assert old.start_search is shared.start_search; import fdisbull_player; import z3; x=z3.Int("x"); s=z3.Solver(); s.add(x+1 != 1+x); assert s.check()==z3.unsat; s=z3.Solver(); s.add(x+1 != x); assert s.check()==z3.sat; print("Installed fdisbull and fdisbull-player __FDISBULL_VERSION__, shared core __SHARED_VERSION__; Z3 equivalent and counterexample checks passed")'
 printf '%s\n' "DOSBox backend with private libraries: $HERE/bin/dosbox"
 """
 
@@ -333,7 +335,7 @@ def build(args):
             "Z3 checks concern supplied bounded models and assumptions, not full recovered-program correctness.\n"
         )
         (root / "install.sh").write_text(
-            INSTALL.replace("__FDISBULL_VERSION__", VERSION)
+            INSTALL.replace("__FDISBULL_VERSION__", VERSION).replace("__SHARED_VERSION__", SHARED_VERSION)
         )
         (root / "install.sh").chmod(0o755)
         files = sorted(p for p in root.rglob("*") if p.is_file())

@@ -1,0 +1,728 @@
+{
+  "date": "2026-11-17",
+  "version": "0.1.0.dev5",
+  "scope": "Packaged bounded AGI V2 census and state-bound offline walking proposals; recovery integration contract",
+  "primary_parent": "cb72a966411a821cb860c56760675891fc0d0ea3",
+  "mirror_parent": "a7c8556a992a2a64a4474104e44a36f1cf2d8c84",
+  "parent_tree": "4dc1a12a2e871b980db37ea78decf5d85768b4f1",
+  "source_provenance": {
+    "fdisbull_version": "0.34.1",
+    "commit": "011f1b8cb281edda208026aee9cdb238b800b2d7",
+    "all_six_original_blobs_match_pinned_tag": true,
+    "original_sha256": {
+      "src/fdisbull/agi_resources.py": "a2d0cfa228279d4234211487eec81f9daccfe8c9e455ec4be9f5b886a833ea11",
+      "src/fdisbull/agi_layout.py": "4c81c70c000128141c964cb29a913ded5e9e1a05d9ff1622e9c580afbbf94edb",
+      "src/fdisbull/agi_scenes.py": "bb2833c63082204945c79cef2d83239b25b5eb9055cc747f505432de12a54d48",
+      "src/fdisbull/spatial_map.py": "878344201690fb076ffc15f6ab28d86810490c1e6222fc4d7d8f388020ec245f",
+      "src/fdisbull/scene_geometry.py": "b742795f9fc4994793d20b87732f0bec562749247f2d31f29832e79ef1d9b30d",
+      "src/fdisbull/scene_domains.py": "b37200848be4f2ccaeadb984780e5d33ce3d69c7b8ba16f0743ebd02f02736ca"
+    },
+    "license_reassigned": false,
+    "commercial_bytes_published": false
+  },
+  "implemented": [
+    "Explicit AGI 2.917/uncompressed V2 resource and logic census, standalone standard-library readers",
+    "Pre-parse code/instruction admission and global attempted-work accounting",
+    "Shared expanded-text budget and cached alias work; incremental bounded report hashes and serialization",
+    "New private report CLI, compact stdout summary, no live/executable interaction claims",
+    "Heading-aware bounded cardinal A* minimizing distance then turns, compressed straight legs",
+    "Whole actor footprint, unknown/hazard exclusion and blocked portals",
+    "Exact map/scene/state/condition-bound proposal validation by deterministic replanning",
+    "Installed AGI/navigation/recovery guidance, authored map and offline doctor checks"
+  ],
+  "verification": {
+    "source_suite": {
+      "passed": 733,
+      "skipped": 7,
+      "seconds": 34.72,
+      "command": "python -m pytest -q -ra",
+      "skip_reason": "Native source/executable acceptance inputs not configured; no new AGI/navigation test skipped"
+    },
+    "installed_suite": {
+      "passed": 412,
+      "skipped": 0,
+      "seconds": 16.6,
+      "copied_suites": 13,
+      "command": "python -I -m pytest -q --tb=short installed-tests",
+      "source_imported": false,
+      "fixtures": "Authored examples exported from the installed wheel"
+    },
+    "installed_environment": {
+      "python": "3.12.14",
+      "dotbox": "0.1.0.dev5",
+      "dependencies": {
+        "Pillow": "12.3.0",
+        "iced-x86": "1.22.0",
+        "pytest": "9.2.0"
+      },
+      "source_imported": false,
+      "fdisbull_available": false,
+      "mcp_available": false,
+      "matching_installed_modules": 35,
+      "doctor": {
+        "format": "dotbox-kit-doctor-1",
+        "version": "0.1.0.dev5",
+        "offline_learning_ready": true,
+        "native_runtime_qualified": false,
+        "scope": "Offline tools and resource integrity only; no native launch, input or network",
+        "resources": {
+          "layout": "installed",
+          "verified": 45,
+          "integrity": "content matches package catalog; not a publisher signature"
+        },
+        "inspection": {
+          "ok": true,
+          "decoder": {
+            "name": "iced-x86",
+            "version": "1.22.0"
+          },
+          "checks": {
+            "x86_16": true,
+            "x86_32": true,
+            "truncated_instruction_rejected": true
+          },
+          "scope": "Authored offline decode fixtures only; no native runtime or game qualification"
+        },
+        "learning": {
+          "clock_identity_available": true,
+          "store_opened": false,
+          "scope": "Journal prerequisites only; no player workspace inspected"
+        },
+        "scenes": {
+          "ok": true,
+          "checks": {
+            "authored_choice_available": true,
+            "selection_has_no_execution": true,
+            "state_change_removes_open": true,
+            "incidental_choice_remains_explicit": true,
+            "passive_look_has_no_execution": true
+          },
+          "scope": "Packaged authored fixture only; no game recognition, input or voice"
+        },
+        "agi": {
+          "ok": true,
+          "profile": "2.917",
+          "checks": {
+            "flag_write_and_condition_layout": true,
+            "ordinary_if_successors": true,
+            "signed_backward_goto": true,
+            "high_bit_if_refused": true,
+            "non_boundary_branch_refused": true,
+            "empty_message_table": true
+          },
+          "qualified_interactions": 0,
+          "scope": "Authored offline LOGIC fixtures only; no native runtime or game qualification"
+        },
+        "navigation": {
+          "ok": true,
+          "checks": {
+            "straight_compression": true,
+            "portal_boundary": true,
+            "bound_proposal": true
+          },
+          "scope": "Authored offline route proposals only; no native movement or live freshness qualification"
+        }
+      },
+      "authored_route": {
+        "status": "found",
+        "distance": 13,
+        "turns": 2,
+        "visited": 55,
+        "legs": [
+          {
+            "start": [
+              1,
+              3
+            ],
+            "end": [
+              1,
+              1
+            ],
+            "direction": "up",
+            "steps": 2
+          },
+          {
+            "start": [
+              1,
+              1
+            ],
+            "end": [
+              10,
+              1
+            ],
+            "direction": "right",
+            "steps": 9
+          },
+          {
+            "start": [
+              10,
+              1
+            ],
+            "end": [
+              10,
+              3
+            ],
+            "direction": "down",
+            "steps": 2
+          }
+        ]
+      },
+      "route_cli_envelope_roundtrip": true,
+      "restored_branch_refused": true,
+      "authored_agi_cli": {
+        "decoded_logics": 1,
+        "qualified_interactions": 0,
+        "private_report_mode": "0600",
+        "input_hashes_and_mtimes_unchanged": true
+      },
+      "scope": "Installed offline analysis and proposals; no live flags, movement, native restore or voice"
+    },
+    "source_direct_wheel_sdist_wheel_installed": {
+      "version": "0.1.0.dev5",
+      "runtime_modules": 35,
+      "resources": 45,
+      "topics": 15,
+      "module_hashes": {
+        "__init__.py": "695cb16e221dece3909c7ff8266c9a6db5d4203da0e66026ccf7dc730fb94f78",
+        "__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "agi.py": "d842d91ab7ad334ce45d83077bd0b7b9316498e9b4cfee4c5512b67a575b8bf9",
+        "agi_layout.py": "184c6a6f045ed58ddb167d2591e5e9a69dbf8dc147198513b263f0db701b43a0",
+        "agi_resources.py": "27a9a08cf2381f160bea366989ff1c45b76b3a90f52043f8f218c00e717f14e6",
+        "agi_scenes.py": "5a03f02147b6c28be5ad1b2aeccf4c6a4ffdc6a0ea7b0c0acba263295f3957b8",
+        "backend.py": "7f38d109567c7e5150f3e82eeffdbebf176dc2ffa4879050831e9abda89c723a",
+        "cli.py": "8a4a13b71335a130e12dda9ffaa5e381dacedaee995dbbdf0dbd17e7a1bbcb04",
+        "client.py": "89750d90f854de825ed2730fd2cd0325c6c3f94cc519c2150912cbdf364626fc",
+        "connector.py": "d7eb84645506ac34728c40a227821488b16b28a8aa197f2582e3d2d56383c652",
+        "coordination.py": "c80544ed85303525b0ab654114ea6e2ecdb1b4d8848feaf6ee1f481a748502c5",
+        "dos_launch_profile.py": "48a9c86c81dd107a96672f63254efd2dc8c259bc774e0afdf867ce52c9dcc678",
+        "harness.py": "31e1bedb0fdcccd03a76deca17408465a6a464fc1984943c69e02428a1a7b016",
+        "input_macros.py": "28d31f2da45c0d9f28c3aab5cdbc2b5225f54a2eadf4a8cd48a37b83e4e82b82",
+        "inspection.py": "3897a9fd3d6207f5ea214da427a6619dee44f745a1580476f3428cca4cb11404",
+        "keyboard_input.py": "10ac610742502dbc3ea7e7d806f0dacc026e6e601f3f2e93ac93ffaf155bb88f",
+        "kit.py": "9a0d06c80f2f44a56cf71e2b086a385a4bc16a04185d6a7feb9da96fc8c7377e",
+        "learning.py": "13e62388e8efe2744a7eb300aaa9acb4f703d66da3adfc365840ab98072ea268",
+        "local_auth.py": "992a6af3869df8ca647375a4b1fb0f543bc1c4061c5410f9de4cce2919e5d36d",
+        "native_rpc.py": "f24561fb5833c131036e7b1ea25cb97187066e9e400eeff1cf5b86438c9abda1",
+        "native_session.py": "8f1a35e539cf934d99af811abb5468a42a5a4934647e40fd9a190cb33158c9cc",
+        "navigation.py": "f34200eba605abbacd82a14c084ba4ea1ed0c4bfdd8b99e11ae649f0baeb2e87",
+        "operation_budget.py": "292fb60fc41360329f32847d9e1267db0f2e3d0d9dc4078e180e1926e7496994",
+        "ownership.py": "f9fef5ccca9ac67b484762f5ece0ffb80253c50421ac1c83e4545135cfd31a68",
+        "ownership_publisher.py": "58c12c8835bf8512652eef32ecf6ae1a06d2cfec14bc4cce040c568f9450f4bb",
+        "ownership_source.py": "02f10db377c1b885caa8c5dbf3ed46085b9ba0e2943a8686169c763bc745e5d2",
+        "runtime_probe.py": "5e6ae3021c3b003455d88c6cc98b6d8148e302cbd03a1e024663aae38d3bca99",
+        "scene_domains.py": "6793ded2a8f430cfddc8465a10402402e03fc6832755ecc1f2c9b5008ef5c1ff",
+        "scene_geometry.py": "8dce4adda6866cd8fa7f8ddc0720aea1f06f2fb142cf0d2ae1302ecec3e8a83c",
+        "scene_state.py": "d9f9c5a50cf5330bf61b83865249af8d3154015cf80288fbeabb1bdb4667e3ff",
+        "scenes.py": "f75fc92c5c2414e3ad6763bc1153cc80a64d6d8b9c0bc2bf43f1a49dc4e3e76a",
+        "screenshot_codecs.py": "b611d232bcc5e12fca32321a031f6debd999f91f25a08bb285a549782490623d",
+        "service.py": "b3e955ad18b35008c5c273cae88494f737eb0c0d9e09a51be9dc7259b4379ff4",
+        "spatial_map.py": "dfa2667b3a4c7ee4381be9d30058d3fd56250f85fb6b7282170f64d9b82aa2b0",
+        "store.py": "96dfc45e13e2f97ff5b7657eb2c8a03d49d57f633fae17d760cf23fe79315ce4"
+      },
+      "source_and_both_wheels_match": true,
+      "module_map_sha256": "5106740b09e14b27bf84d81742a7c32888236ce7eb3228f9d21957ae9be36840",
+      "catalog_sha256": "d9b01b8c4fed1f5e0a15ee688d568259ab0946098d333d60ae7b23a0730d8043",
+      "direct_wheel_sha256": "fd591c9b4f4134156b5f085444241ca86aea12ded479d8af406cc3f43120baf7",
+      "direct_wheel_bytes": 336114,
+      "sdist_wheel_sha256": "b9a7602ad43317e4b5b0c27982bcc235735c102619b07ba928be8eed428ccca7",
+      "sdist_sha256": "37a3d682a1d4d087bcb06214a5afb4ee149fb41021867b6faafd0893f9129f23"
+    },
+    "setup_corrections": [
+      "The first copied-test invocation omitted authored example fixtures, causing 55 navigation fixture-not-found failures. Exported those fixtures from the installed kit and reran successfully; no runtime fix was needed.",
+      "The initial 4 MiB report cap admitted Kings Quest but refused the roughly 4.6 MB Police Quest census without creating a report. Raised the default to 8 MiB, retained the 16 MiB hard ceiling, rebuilt and reverified the final source and installation."
+    ],
+    "agi_independent_review": {
+      "initial_findings": [
+        "layout parsed before instruction/code budget check",
+        "message aliases expand outside global text/report budgets"
+      ],
+      "both_fixed": true,
+      "focused_tests_passed": 56,
+      "blocking_findings_after_fix": 0,
+      "independent_reproductions": {
+        "60000_instruction_code_budget_1": "Refused before layout call",
+        "60000_instruction_instruction_budget_1": "Exactly one attempted instruction charged",
+        "255_message_aliases_4096_bytes": "64 slots retained, 262144 bytes charged, explicit message budget status",
+        "metadata_aliases": "4 unique bytes charged once with 3 cache hits",
+        "literal_aliases": "12 bytes charged across retained slot counts [2,1]",
+        "escaped_json_over_cap": "Failure with no success stdout or destination file",
+        "newline_boundary": "Exactly 16384 bytes fits; one additional byte refused"
+      }
+    },
+    "navigation_independent_review": {
+      "verdict": "pass_for_documented_offline_proposal_scope",
+      "independent_agent": true,
+      "focused_tests": {
+        "passed": 59,
+        "seconds": 0.26
+      },
+      "independent_oracle": {
+        "authored_seeded_maps": 80,
+        "map_size": [
+          6,
+          6
+        ],
+        "nonzero_anchor_maps": 31,
+        "endpoint_footprint_cases": 2880,
+        "route_comparisons": 632,
+        "found_routes": 337,
+        "mismatches": 0,
+        "method": "direct cell-set footprint classification, BFS distance, DAG turn minimization"
+      },
+      "native_execution": false,
+      "live_movement_qualified": false,
+      "reviewed_hashes": {
+        "src/dotbox/navigation.py": "f34200eba605abbacd82a14c084ba4ea1ed0c4bfdd8b99e11ae649f0baeb2e87",
+        "src/dotbox/spatial_map.py": "e72a1cc74da92cc750edc2ccba9b9a7a93c3a322aa7f27d362d63751c2a4d806",
+        "src/dotbox/scene_geometry.py": "8dce4adda6866cd8fa7f8ddc0720aea1f06f2fb142cf0d2ae1302ecec3e8a83c",
+        "src/dotbox/scene_domains.py": "67f3707361f70aba6c02cd6862b0258eb577d7761f69400f75a4f24bf52aacd6",
+        "tests/test_navigation.py": "23f83cfac61f765f29da30031c4858b9a426c9b299e1b2038fe8945425ea898c"
+      }
+    },
+    "navigation_authored_examples": {
+      "8_by_8_counterexample": {
+        "distance": 14,
+        "turns": 3,
+        "upstream_bfs_turns": 5
+      },
+      "160_by_168_open_grid": {
+        "distance": 326,
+        "turns": 1,
+        "legs": 2,
+        "expanded_states": 486,
+        "default_expansion_budget": 10000,
+        "seconds": 0.038331,
+        "timing_scope": "One local Python call, not gameplay or agent dispatch"
+      },
+      "exhaustive_small_oracle": {
+        "maps": 128,
+        "size": [
+          3,
+          3
+        ],
+        "method": "Independent exhaustive simple-path distance/turn comparison",
+        "mismatches": 0
+      }
+    },
+    "independent_installed_smoke": {
+      "verdict": "pass",
+      "scenario_checks": {
+        "agi_bound_report_explicitly_incomplete": true,
+        "agi_existing_report_preserved": true,
+        "authored_agi_inputs_unchanged": true,
+        "authored_agi_inspection_and_private_report": true,
+        "documented_route_cli_roundtrip": true,
+        "exported_inputs_unchanged": true,
+        "guides_usable_and_claims_scoped": true,
+        "installed_doctor": true,
+        "portal_blocked_despite_false_condition": true,
+        "stale_branch_refused": true
+      },
+      "initial_command_invocations": 15,
+      "initial_scope": "Installed wheel commands and packaged guidance only; authored fixtures; no source checkout/test imports, commercial inputs or native execution",
+      "initial_report_default_bytes": 4194304,
+      "final_default_checks": {
+        "cli_help_default_8MiB_and_hard_range": true,
+        "installed_45_resources_ready_native_unqualified": true,
+        "installed_api_defaults_agree": true,
+        "installed_guide_default_8MiB_and_hard_range": true
+      },
+      "final_command_invocations": 4,
+      "final_report_default_bytes": 8388608,
+      "findings": [],
+      "route_roundtrip": {
+        "distance": 13,
+        "execution": "not_performed",
+        "legs": [
+          {
+            "direction": "up",
+            "end": [
+              1,
+              1
+            ],
+            "start": [
+              1,
+              3
+            ],
+            "steps": 2
+          },
+          {
+            "direction": "right",
+            "end": [
+              10,
+              1
+            ],
+            "start": [
+              1,
+              1
+            ],
+            "steps": 9
+          },
+          {
+            "direction": "down",
+            "end": [
+              10,
+              3
+            ],
+            "start": [
+              10,
+              1
+            ],
+            "steps": 2
+          }
+        ],
+        "live_applicability": "unverified",
+        "plan_sha256": "0195560706a32efa7d7f7f422002f9ea84b4b1bbd4edea9e32dbf85a7f27d255",
+        "status": "found",
+        "turns": 2
+      },
+      "portal_results": {
+        "condition": {
+          "exit_open": false
+        },
+        "crossing": "no_route",
+        "endpoint": "endpoint_not_clear"
+      },
+      "stale_branch_error": "Stale movement proposal: map, scene, state or conditions changed",
+      "usability": "The installed guide examples and command roundtrips are usable without a source checkout or fDisBull; explicit stale-state and report-refusal messages match their documented contracts."
+    },
+    "read_only_installed_real_resources": {
+      "version": "0.1.0.dev5",
+      "python": "3.12.14",
+      "scope": "Installed read-only static resource census; no native game or live state qualification",
+      "timing_scope": "One local CLI process per stage, including file reads/report write; no agent dispatch or gameplay",
+      "games": [
+        {
+          "game": "King's Quest I",
+          "edition": "2.0F (previously identified)",
+          "profile": "2.917",
+          "input_file_count": 9,
+          "input_hashes_and_mtimes_unchanged": true,
+          "stages": [
+            {
+              "stage": "outline",
+              "seconds": 0.947369,
+              "coverage": {
+                "decoded_logics": 90,
+                "resource_errors": 0,
+                "layout_errors": 0,
+                "instructions": 11452,
+                "code_bytes": 54772,
+                "conditions": 5083,
+                "message_tables": 90,
+                "message_slots": 1526,
+                "present_messages": 1442,
+                "message_errors": 0,
+                "references": 3161,
+                "unresolved_references": 265,
+                "variable_references": 265,
+                "resolved_variable_references": 0,
+                "command_patterns": 1478,
+                "updates": 0,
+                "budget_stops": 0,
+                "instruction_budget_stops": 0,
+                "logic_decode_attempts": 90,
+                "logic_aliases": 0,
+                "instructions_attempted": 11452,
+                "code_bytes_admitted": 54772,
+                "message_budget_stops": 0,
+                "present_logics": 90,
+                "scene_candidates": 81,
+                "expanded_text_bytes": 76557,
+                "unique_text_bytes": 76557,
+                "text_cache_hits": 0,
+                "auxiliary_text_budget_stops": 0,
+                "vocabulary_status": "decoded",
+                "inventory_status": "decoded",
+                "vocabulary_groups": 260,
+                "vocabulary_entries": 496,
+                "inventory_objects": 27,
+                "background_producing_logics": 81,
+                "room_dispatch_sites": 1,
+                "resource_entries": {
+                  "logic": 90,
+                  "picture": 82,
+                  "view": 118,
+                  "sound": 26
+                },
+                "resource_census_complete": true,
+                "resource_integrity_complete": false,
+                "logic_layout_complete": true,
+                "value_analysis_complete": false,
+                "scene_discovery_complete": false,
+                "accepted_uil_interactions": 0
+              },
+              "limits": {
+                "max_instructions": 100000,
+                "max_updates": 200000,
+                "max_code_bytes": 1048576,
+                "max_message_bytes": 262144,
+                "max_report_bytes": 8388608
+              },
+              "qualified_interactions": 0,
+              "private_report_bytes": 2405151
+            },
+            {
+              "stage": "resolve",
+              "seconds": 0.962262,
+              "coverage": {
+                "decoded_logics": 90,
+                "resource_errors": 0,
+                "layout_errors": 0,
+                "instructions": 11452,
+                "code_bytes": 54772,
+                "conditions": 5083,
+                "message_tables": 90,
+                "message_slots": 1526,
+                "present_messages": 1442,
+                "message_errors": 0,
+                "references": 3161,
+                "unresolved_references": 260,
+                "variable_references": 265,
+                "resolved_variable_references": 5,
+                "command_patterns": 1478,
+                "updates": 11703,
+                "budget_stops": 0,
+                "instruction_budget_stops": 0,
+                "logic_decode_attempts": 90,
+                "logic_aliases": 0,
+                "instructions_attempted": 11452,
+                "code_bytes_admitted": 54772,
+                "message_budget_stops": 0,
+                "present_logics": 90,
+                "scene_candidates": 81,
+                "expanded_text_bytes": 76557,
+                "unique_text_bytes": 76557,
+                "text_cache_hits": 0,
+                "auxiliary_text_budget_stops": 0,
+                "vocabulary_status": "decoded",
+                "inventory_status": "decoded",
+                "vocabulary_groups": 260,
+                "vocabulary_entries": 496,
+                "inventory_objects": 27,
+                "background_producing_logics": 81,
+                "room_dispatch_sites": 1,
+                "resource_entries": {
+                  "logic": 90,
+                  "picture": 82,
+                  "view": 118,
+                  "sound": 26
+                },
+                "resource_census_complete": true,
+                "resource_integrity_complete": false,
+                "logic_layout_complete": true,
+                "value_analysis_complete": true,
+                "scene_discovery_complete": false,
+                "accepted_uil_interactions": 0
+              },
+              "limits": {
+                "max_instructions": 100000,
+                "max_updates": 200000,
+                "max_code_bytes": 1048576,
+                "max_message_bytes": 262144,
+                "max_report_bytes": 8388608
+              },
+              "qualified_interactions": 0,
+              "private_report_bytes": 2393814
+            }
+          ],
+          "resource_issues_by_kind": {
+            "sound": 4
+          }
+        },
+        {
+          "game": "Police Quest I EGA",
+          "edition": "2.0G (previously identified)",
+          "profile": "2.917",
+          "input_file_count": 9,
+          "input_hashes_and_mtimes_unchanged": true,
+          "stages": [
+            {
+              "stage": "outline",
+              "seconds": 1.883242,
+              "coverage": {
+                "decoded_logics": 118,
+                "resource_errors": 0,
+                "layout_errors": 0,
+                "instructions": 26105,
+                "code_bytes": 128087,
+                "conditions": 10446,
+                "message_tables": 118,
+                "message_slots": 3678,
+                "present_messages": 3592,
+                "message_errors": 0,
+                "references": 5114,
+                "unresolved_references": 358,
+                "variable_references": 358,
+                "resolved_variable_references": 0,
+                "command_patterns": 3147,
+                "updates": 0,
+                "budget_stops": 0,
+                "instruction_budget_stops": 0,
+                "logic_decode_attempts": 118,
+                "logic_aliases": 0,
+                "instructions_attempted": 26105,
+                "code_bytes_admitted": 128087,
+                "message_budget_stops": 0,
+                "present_logics": 118,
+                "scene_candidates": 42,
+                "expanded_text_bytes": 172308,
+                "unique_text_bytes": 172308,
+                "text_cache_hits": 0,
+                "auxiliary_text_budget_stops": 0,
+                "vocabulary_status": "decoded",
+                "inventory_status": "decoded",
+                "vocabulary_groups": 358,
+                "vocabulary_entries": 1126,
+                "inventory_objects": 25,
+                "background_producing_logics": 55,
+                "room_dispatch_sites": 3,
+                "resource_entries": {
+                  "logic": 118,
+                  "picture": 71,
+                  "view": 220,
+                  "sound": 36
+                },
+                "resource_census_complete": true,
+                "resource_integrity_complete": true,
+                "logic_layout_complete": true,
+                "value_analysis_complete": false,
+                "scene_discovery_complete": false,
+                "accepted_uil_interactions": 0
+              },
+              "limits": {
+                "max_instructions": 100000,
+                "max_updates": 200000,
+                "max_code_bytes": 1048576,
+                "max_message_bytes": 262144,
+                "max_report_bytes": 8388608
+              },
+              "qualified_interactions": 0,
+              "private_report_bytes": 4641540
+            },
+            {
+              "stage": "resolve",
+              "seconds": 1.961325,
+              "coverage": {
+                "decoded_logics": 118,
+                "resource_errors": 0,
+                "layout_errors": 0,
+                "instructions": 26105,
+                "code_bytes": 128087,
+                "conditions": 10446,
+                "message_tables": 118,
+                "message_slots": 3678,
+                "present_messages": 3592,
+                "message_errors": 0,
+                "references": 5114,
+                "unresolved_references": 337,
+                "variable_references": 358,
+                "resolved_variable_references": 21,
+                "command_patterns": 3147,
+                "updates": 28958,
+                "budget_stops": 0,
+                "instruction_budget_stops": 0,
+                "logic_decode_attempts": 118,
+                "logic_aliases": 0,
+                "instructions_attempted": 26105,
+                "code_bytes_admitted": 128087,
+                "message_budget_stops": 0,
+                "present_logics": 118,
+                "scene_candidates": 42,
+                "expanded_text_bytes": 172308,
+                "unique_text_bytes": 172308,
+                "text_cache_hits": 0,
+                "auxiliary_text_budget_stops": 0,
+                "vocabulary_status": "decoded",
+                "inventory_status": "decoded",
+                "vocabulary_groups": 358,
+                "vocabulary_entries": 1126,
+                "inventory_objects": 25,
+                "background_producing_logics": 55,
+                "room_dispatch_sites": 3,
+                "resource_entries": {
+                  "logic": 118,
+                  "picture": 71,
+                  "view": 220,
+                  "sound": 36
+                },
+                "resource_census_complete": true,
+                "resource_integrity_complete": true,
+                "logic_layout_complete": true,
+                "value_analysis_complete": true,
+                "scene_discovery_complete": false,
+                "accepted_uil_interactions": 0
+              },
+              "limits": {
+                "max_instructions": 100000,
+                "max_updates": 200000,
+                "max_code_bytes": 1048576,
+                "max_message_bytes": 262144,
+                "max_report_bytes": 8388608
+              },
+              "qualified_interactions": 0,
+              "private_report_bytes": 4624435
+            }
+          ],
+          "resource_issues_by_kind": {}
+        }
+      ],
+      "commercial_bytes_included": false,
+      "live_input_performed": false,
+      "save_restore_performed": false
+    },
+    "final_formatting_cleanup": {
+      "changes": {
+        "src/dotbox/scene_domains.py": {
+          "before_sha256": "67f3707361f70aba6c02cd6862b0258eb577d7761f69400f75a4f24bf52aacd6",
+          "after_sha256": "6793ded2a8f430cfddc8465a10402402e03fc6832755ecc1f2c9b5008ef5c1ff",
+          "change": "Removed one trailing blank line only"
+        },
+        "src/dotbox/spatial_map.py": {
+          "before_sha256": "e72a1cc74da92cc750edc2ccba9b9a7a93c3a322aa7f27d362d63751c2a4d806",
+          "after_sha256": "dfa2667b3a4c7ee4381be9d30058d3fd56250f85fb6b7282170f64d9b82aa2b0",
+          "change": "Removed one trailing blank line only"
+        }
+      },
+      "scope": "Trailing blank lines only, after the full suites; byte equivalence excluding trailing newlines verified",
+      "installed_navigation_and_kit_followup": {
+        "passed": 82,
+        "skipped": 0
+      },
+      "artifacts_rebuilt_and_all_runtime_resource_bytes_reverified": true,
+      "installed_authored_cli_and_doctor_rechecked": true
+    }
+  },
+  "recovery_audit": {
+    "native_primitives_exist": [
+      "state.save",
+      "state.load",
+      "frame.step",
+      "frame key edges"
+    ],
+    "dotbox_public_rewind_implemented": false,
+    "missing_fence": "Raw native state.load does not admit expected control generation or advance the DotBox ownership generation",
+    "required_restore": "Preflight scope, emulation-thread generation bump/input cleanup, declared machine/file restore, new branch/context, fresh complete observation",
+    "state_revision_not_ownership_epoch": "Ordinary input, execution transitions and saves also advance it",
+    "host_files_restored_by_native_state": false,
+    "first_native_increment": "One verified full checkpoint and one fenced restore before a rolling buffer",
+    "exact_previous_xy_script_recovered": false,
+    "existing_references": [
+      "BoundedNativeController.align",
+      "FrameTimelineSessionMixin",
+      "DebugSession.save_state/load_state",
+      "player_checkpoints"
+    ],
+    "broad_move_helper_limit": "Existing fDisBull move hardcodes fast-forward and has session-close policy requiring adaptation"
+  },
+  "limitations": [
+    "Static AGI candidates do not establish current flags, semantic meanings, current inventory or executable interactions",
+    "No original-game save decoder, live state capture, complete AGI interpreter or per-LOGIC CLI selector",
+    "High-bit IF and context-dependent trace.on remain opaque; no new native interpreter-equivalence claim",
+    "Offline route checks cannot establish that supplied geometry or state is still current in a live game",
+    "No movement/TAS executor, vehicle dynamics, live checkpoint/rewind command or rolling buffer",
+    "No cloud scheduler, live voice concurrency or original-Dot ownership/input qualification",
+    "Local timings exclude agent dispatch and live gameplay; original resources and full reports remain private",
+    "No native binary, commercial assets, saves, private stores or raw dumps included in publication"
+  ]
+}

@@ -976,6 +976,13 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
 }
 
 
+SHARED_MODULES = {"__init__.py", "memory_search.py", "pipe_rpc.py"}
+SHARED_SOURCE_FILES = {"pyproject.toml", "MANIFEST.in", "README.md", "PROVENANCE.json"} | {
+    "src/fdisbull_core/" + name for name in SHARED_MODULES
+}
+REQUIRED_SHARED_SOURCE = {"packages/fdisbull-core/" + name for name in SHARED_SOURCE_FILES}
+
+
 def archive_names(path: Path) -> list[str]:
     if path.suffix in {".whl", ".zip"}:
         with zipfile.ZipFile(path) as archive:
@@ -1022,7 +1029,34 @@ def check_archive(path: Path) -> int:
             for name in roots
             if name.startswith("fdisbull-") and name.endswith(".dist-info")
         }
-        if len(player_metadata) == 1 and roots == {"fdisbull_player", *player_metadata}:
+        shared_metadata = {
+            name for name in roots
+            if name.startswith("fdisbull_core-") and name.endswith(".dist-info")
+        }
+        if len(shared_metadata) == 1 and roots == {"fdisbull_core", *shared_metadata}:
+            metadata = next(iter(shared_metadata))
+            expected = {"fdisbull_core/" + name for name in SHARED_MODULES}
+            package_files = {name for name in names if name.startswith("fdisbull_core/")}
+            if package_files != expected:
+                raise ValueError(f"Shared wheel has missing or unexpected modules: {sorted(expected ^ package_files)}")
+            with zipfile.ZipFile(path) as archive:
+                try:
+                    message = BytesParser().parsebytes(archive.read(metadata + "/METADATA"))
+                    wheel = BytesParser().parsebytes(archive.read(metadata + "/WHEEL"))
+                    archive.getinfo(metadata + "/RECORD")
+                except KeyError:
+                    raise ValueError("Shared wheel is missing METADATA, WHEEL, or RECORD") from None
+            if message.get("Name", "").lower().replace("_", "-") != "fdisbull-core":
+                raise ValueError("Shared wheel distribution metadata has wrong Name")
+            if metadata != "fdisbull_core-" + message.get("Version", "") + ".dist-info":
+                raise ValueError("Shared wheel distribution metadata has wrong Version")
+            if message.get_all("Requires-Dist"):
+                raise ValueError("Shared wheel must have no runtime dependencies")
+            if message.get("Requires-Python") != ">=3.12":
+                raise ValueError("Shared wheel must require Python >=3.12")
+            if wheel.get("Root-Is-Purelib") != "true" or wheel.get_all("Tag") != ["py3-none-any"]:
+                raise ValueError("Shared wheel must be platform-independent pure Python")
+        elif len(player_metadata) == 1 and roots == {"fdisbull_player", *player_metadata}:
             metadata = next(iter(player_metadata))
             expected = {"fdisbull_player/" + name for name in PLAYER_MODULES}
             package_files = {
@@ -1071,6 +1105,16 @@ def check_archive(path: Path) -> int:
             )
     else:
         roots = {entry.parts[0] for entry in entries}
+        if len(roots) == 1 and next(iter(roots)).startswith(("fdisbull_core-", "fdisbull-core-")):
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            missing = SHARED_SOURCE_FILES - relative
+            if missing:
+                raise ValueError(f"Shared source archive is missing required files: {sorted(missing)}")
+            unexpected = {name for name in relative if name.startswith("src/")
+                          and not name.startswith(("src/fdisbull_core/", "src/fdisbull_core.egg-info/"))}
+            if unexpected:
+                raise ValueError(f"Shared source archive contains unexpected packages: {sorted(unexpected)}")
+            return len(names)
         if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
             raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
         relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
@@ -1084,6 +1128,7 @@ def check_archive(path: Path) -> int:
         required |= {"src/fdisbull/" + name for name in REQUIRED_CONSOLE_RESOURCES}
         required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
         required |= {"scripts/check_agent_skill.py"}
+        required |= REQUIRED_SHARED_SOURCE
         required |= (
             REQUIRED_SOURCE_EVIDENCE | REVIEWED_SOURCE_RECIPES | REQUIRED_SOURCE_DELIVERY
         )

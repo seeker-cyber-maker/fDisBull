@@ -24,17 +24,27 @@ def inventory(tmp):
         add(path)
     for role in ['firmware', 'kernel', 'wine_initramfs', 'dos_initramfs', 'source_companion', 'license', 'python_receipt', 'dosbox_receipt', 'qemu_receipt', 'wine_receipt', 'pe_fixture', 'verifier']:
         add('artifacts/' + role, role)
-    for role, name in [('wheel_core', 'fdisbull'), ('wheel_player', 'fdisbull-player'), ('wheel_z3', 'z3-solver'), ('payload', 'iced-x86'), ('payload', 'capstone'), ('payload', 'lief'), ('payload', 'pillow'), ('payload', 'unicorn'), ('payload', 'dnfile'), ('payload', 'dncil'), ('payload', 'pefile'), ('payload', 'tree-sitter'), ('payload', 'tree-sitter-c'), ('payload', 'pycparser'), ('payload', 'zstandard')]:
+    for role, name in [('wheel_core', 'fdisbull'), ('wheel_player', 'fdisbull-player'), ('wheel_shared', 'fdisbull-core'), ('wheel_z3', 'z3-solver'), ('payload', 'iced-x86'), ('payload', 'capstone'), ('payload', 'lief'), ('payload', 'pillow'), ('payload', 'unicorn'), ('payload', 'dnfile'), ('payload', 'dncil'), ('payload', 'pefile'), ('payload', 'tree-sitter'), ('payload', 'tree-sitter-c'), ('payload', 'pycparser'), ('payload', 'zstandard')]:
         wheel = tmp / (name + '.whl')
+        version = '0.1.0.dev1' if name == 'fdisbull-core' else '1.0'
+        dist_info = name.replace('-', '_') + '-' + version + '.dist-info'
+        metadata = f'Name: {name}\nVersion: {version}\n'
+        if name == 'fdisbull-core':
+            metadata += 'Requires-Python: >=3.12\n'
+        members = {dist_info + '/METADATA': metadata.encode(), dist_info + '/RECORD': b''}
+        if name == 'fdisbull-core':
+            members.update({'fdisbull_core/__init__.py': b'data', 'fdisbull_core/memory_search.py': b'data',
+                            dist_info + '/WHEEL': b'Wheel-Version: 1.0\nRoot-Is-Purelib: true\nTag: py3-none-any\n'})
         with zipfile.ZipFile(wheel, 'w') as z:
-            z.writestr(name + '.dist-info/METADATA', f'Name: {name}\nVersion: 1.0\n')
-            z.writestr(name + '.dist-info/RECORD', '')
-        add('python/lib/python3.13/site-packages/' + name + '.dist-info/METADATA', data=f'Name: {name}\nVersion: 1.0\n'.encode())
+            for member, payload in members.items():
+                z.writestr(member, payload)
+                if not member.endswith('/RECORD'):
+                    add('python/lib/python3.13/site-packages/' + member, data=payload)
         files.append(dict(source=str(wheel), destination='wheels/' + name + '.whl', role=role, sha256=kit.sha256(wheel), size=wheel.stat().st_size))
     objects = [{'path': x['destination'], 'needed': {}} for x in files if Path(x['source']).read_bytes().startswith(b'\x7fELF')]
     objects[0]['needed'] = {'libx.so': 'lib/libx.so'}
     add('receipts/closure.json', 'closure_receipt', json.dumps(dict(schema='fdisbull-elf-closure-v1', complete=True, objects=objects)).encode())
-    inv = dict(schema='fdisbull-chat-offline-inventory-v1', wheel_versions={name: '1.0' for name in kit.RUNTIME_WHEELS}, identities=dict(source_commit='a'*40, test_source_commit='b'*40, python='3.13.5', qemu='9.2.4', wine='11', version='1.0'), files=files)
+    inv = dict(schema='fdisbull-chat-offline-inventory-v1', wheel_versions={name: ('0.1.0.dev1' if name == 'fdisbull-core' else '1.0') for name in kit.RUNTIME_WHEELS}, identities=dict(source_commit='a'*40, test_source_commit='b'*40, python='3.13.5', qemu='9.2.4', wine='11', version='1.0'), files=files)
     p = tmp / 'inventory.json'
     p.write_text(json.dumps(inv))
     return p, inv
@@ -97,6 +107,21 @@ def test_rejects_missing_extra_wheel(tmp_path):
     data['files'] = [x for x in data['files'] if x['destination'] != 'wheels/unicorn.whl']
     inv.write_text(json.dumps(data))
     with pytest.raises(ValueError, match='wheelhouse distributions'):
+        kit.load_inventory(inv)
+
+
+def test_shared_core_requires_wheel_and_prepared_package(tmp_path):
+    inv, data = inventory(tmp_path)
+    wheel = next(item for item in data['files'] if item['role'] == 'wheel_shared')
+    data['files'].remove(wheel)
+    inv.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='missing roles.*wheel_shared'):
+        kit.load_inventory(inv)
+    data['files'].append(wheel)
+    data['files'] = [item for item in data['files']
+                     if '/site-packages/fdisbull_core/' not in item['destination']]
+    inv.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='prepared Python lacks fdisbull_core'):
         kit.load_inventory(inv)
 
 

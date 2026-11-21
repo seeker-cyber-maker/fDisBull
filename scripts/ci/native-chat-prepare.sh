@@ -9,9 +9,10 @@ mkdir -p .native/chat/wheels .native/chat/output native-evidence/chat
 shopt -s nullglob
 core=(dist/fdisbull-*.whl)
 player=(dist/fdisbull_player-*.whl)
-[ "${#core[@]}" = 1 ] && [ "${#player[@]}" = 1 ]
-python -m pip download --only-binary=:all: --dest .native/chat/wheels "${core[0]}[proof,udc,managed,source,console,screenshot]" "${player[0]}"
-python -m pip install --no-index --find-links .native/chat/wheels --force-reinstall "${core[0]}[proof,udc,managed,source,console,screenshot]" "${player[0]}"
+shared=(dist/fdisbull_core-*.whl)
+[ "${#core[@]}" = 1 ] && [ "${#player[@]}" = 1 ] && [ "${#shared[@]}" = 1 ]
+python -m pip download --only-binary=:all: --dest .native/chat/wheels "${core[0]}[proof,udc,managed,source,console,screenshot]" "${player[0]}" "${shared[0]}"
+python -m pip install --no-index --find-links .native/chat/wheels --force-reinstall "${core[0]}[proof,udc,managed,source,console,screenshot]" "${player[0]}" "${shared[0]}"
 python scripts/ci/prepare-chat-inputs.py
 python scripts/prepare_chat_offline_inventory.py --config .native/chat/config.json --stage .native/chat/stage
 python scripts/build_chat_offline_kit.py --inventory .native/chat/stage/inventory.json --output .native/chat/output/fdisbull-chat-offline.zip

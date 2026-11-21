@@ -1,0 +1,57 @@
+{
+  "schema": "dotbox-dune2-next-tests-baseline-1",
+  "date": "2026-11-19",
+  "status": "offline_baseline_passed_live_continuation_pending",
+  "tested_source": {
+    "primary_commit": "82954766efb4d093b5e90ac30cb0972ab0b27e9b",
+    "mirror_commit": "ec7b0270f5e80013d11d64bd6feed91e3cd3a92c",
+    "tree": "c5ca7656ab2c416fe3b19eb88c7eb49b9050ae3b",
+    "working_tree_clean": true
+  },
+  "offline_tests": {
+    "python": "3.12.14",
+    "pytest": "9.2.0",
+    "command": "python -m pytest tests/test_rts_world.py tests/test_rts_actions.py tests/test_rts_cli.py tests/test_scene_state.py tests/test_kit.py -p no:cacheprovider -q",
+    "environment": "DOTBOX_DOSBOX_EXECUTABLE unset; PYTHONDONTWRITEBYTECODE=1; isolated temporary directory",
+    "passed": 158,
+    "duration_seconds": 1.90,
+    "exit_code": 0,
+    "native_calls": 0,
+    "scope": ["RTS world projection", "independent primitive and single-use action contracts", "offline CLI", "scene identity and branch isolation", "kit resources and export"]
+  },
+  "recovered_evidence": {
+    "mission_one_archive_sha256": "b4c048515dfb35bcaec1dd3385d881062f2291d5beb99c37826364747b034009",
+    "embedded_manifest_sha256": "7f35e69386098e15d08fc90799c7569798bfde29e370ad445ac7e8994092d770",
+    "payload_files_verified": 1282,
+    "frozen_captures_verified": 113,
+    "memory_chunk_receipts_verified": 1130,
+    "frozen_request_response_pairs_verified": 114,
+    "journal_native_pairs_verified": 6525,
+    "report_relative_links_verified": 45,
+    "native_calls_during_verification": 0,
+    "replay_or_restore_performed": false
+  },
+  "continuation_boundary": {
+    "previous_guest_available": false,
+    "new_guest_started_at_this_checkpoint": false,
+    "cross_process_restore_qualified": false,
+    "fresh_original_opening_required": true,
+    "public_live_dune2_provider_installed": false,
+    "track_overlay_correction_qualified_at_this_checkpoint": false
+  },
+  "next_tests": [
+    "Qualify the observed track-overlay omission using frozen original captures and fog negatives without promoting modal or stale candidates to current visibility.",
+    "Verify a newly owned original guest and ordinary-input opening before further mission tests.",
+    "Treat campaign-region choice, briefing response and economy actions as independent observed operations."
+  ],
+  "work_record": {
+    "board": "https://agent-bbs-native.tiga-rce.chatgpt.site",
+    "project": "dotbox",
+    "ticket": "e-18c835bb-80c7-411c-bdde-d71c6b5cf06e"
+  },
+  "limits": [
+    "Archive integrity verifies retained evidence, not fresh gameplay or new-host native acceptance.",
+    "Generic authored tests do not establish live Dune II group, drag, context-click, NPC or mission behavior.",
+    "No commercial assets, raw memory, disassembly, screenshots or saves are included in this receipt."
+  ]
+}

@@ -21,7 +21,9 @@ RESOURCES = {
              'opt/fdisbull/selftest32.c': 'src/fdisbull/wine_guest/selftest32.c'},
     'dos': {'init': 'src/fdisbull/dos_guest/init.sh', 'opt/fdisbull/dos_broker.py': 'src/fdisbull/dos_guest/broker.py',
             'opt/fdisbull/remote/__init__.py': 'src/fdisbull/dos_guest/__init__.py',
-            'opt/fdisbull/remote/dosbox_rpc.py': 'src/fdisbull/dosbox_rpc.py'}}
+            'opt/fdisbull/remote/dosbox_rpc.py': 'src/fdisbull/dosbox_rpc.py',
+            'opt/fdisbull/fdisbull_core/__init__.py': 'packages/fdisbull-core/src/fdisbull_core/__init__.py',
+            'opt/fdisbull/fdisbull_core/pipe_rpc.py': 'packages/fdisbull-core/src/fdisbull_core/pipe_rpc.py'}}
 INPUT_PATHS = {'FDISBULL_PE_QEMU': '.native/pe/qemu-9.2.4/build/qemu-system-x86_64',
                'FDISBULL_PE_KERNEL': '.native/pe/linux-amd64',
                'FDISBULL_PE_INITRAMFS': '.native/pe/runtime.cpio.gz',
@@ -80,18 +82,22 @@ def context():
     return sha, canonical_uuid(os.environ.get('FDISBULL_LOCAL_RUN_ID'))
 
 
-def checked_wheel(root, identity):
+def checked_wheel(root, identity, *, kind='core'):
     root = Path(root).resolve()
-    prepared = list((root / '.native/pe/packages').glob('fdisbull-*.whl'))
-    ordinary = list((root / 'dist').glob('fdisbull-*.whl'))
+    pattern, identity_key = {
+        'core': ('fdisbull-*.whl', 'wheel'),
+        'shared': ('fdisbull_core-*.whl', 'shared_wheel'),
+    }[kind]
+    prepared = list((root / '.native/pe/packages').glob(pattern))
+    ordinary = list((root / 'dist').glob(pattern))
     if len(prepared) != 1 or len(ordinary) != 1:
-        raise ValueError('exactly one prepared and ordinary core wheel is required')
+        raise ValueError(f'exactly one prepared and ordinary {kind} wheel is required')
     tested, source = item(prepared[0], root), item(ordinary[0], root)
     if prepared[0].name != ordinary[0].name or (tested['sha256'], tested['size']) != (source['sha256'], source['size']):
-        raise ValueError('prepared and ordinary core wheels differ')
-    reference = identity['wheel']
-    if (tested['sha256'], tested['size']) != (reference['sha256'], reference['size']):
-        raise ValueError('backend identity wheel mismatch')
+        raise ValueError(f'prepared and ordinary {kind} wheels differ')
+    reference = identity.get(identity_key)
+    if not isinstance(reference, dict) or (tested['sha256'], tested['size']) != (reference.get('sha256'), reference.get('size')):
+        raise ValueError(f'backend identity {kind} wheel mismatch')
     return tested
 
 
@@ -236,9 +242,11 @@ def prepare():
             raise ValueError(f'required QEMU firmware missing: {name}')
     resource_receipts = check_resources(ROOT, ROOT, inputs)
     tested_wheel = checked_wheel(ROOT, identity)
+    tested_shared_wheel = checked_wheel(ROOT, identity, kind='shared')
     manifest = {'schema': 'fdisbull-unified-runtime-inputs-1', 'source_commit': sha,
                 'local_run_id': run, 'build_job_id': build_job, 'inputs': inputs,
                 'backend_identity': item(IDENTITY), 'tested_wheel': tested_wheel,
+                'tested_shared_wheel': tested_shared_wheel,
                 'firmware': firmware, 'resource_receipts': resource_receipts}
     provenance = retained_provenance(ROOT, sha, run, build_job, inputs, identity, ROOT)
     if provenance is not None:
@@ -281,6 +289,8 @@ def verify(root=None, source_sha=None, run_uuid=None, build_job_uuid=None, sourc
         raise ValueError('backend identity source mismatch')
     if manifest.get('tested_wheel') != checked_wheel(root, identity):
         raise ValueError('tested wheel identity mismatch')
+    if manifest.get('tested_shared_wheel') != checked_wheel(root, identity, kind='shared'):
+        raise ValueError('tested shared wheel identity mismatch')
     for key, value in inputs.items():
         ref = identity['inputs'][key]
         if (value['sha256'], value['size']) != (ref['sha256'], ref['size']):

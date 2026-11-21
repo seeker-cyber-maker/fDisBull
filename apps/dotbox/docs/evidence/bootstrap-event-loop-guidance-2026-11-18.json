@@ -1,0 +1,120 @@
+{
+  "format": "dotbox-bootstrap-event-loop-guidance-verification-1",
+  "date": "2026-11-18",
+  "scope": "source_reuse_audit_and_packaged_documentation",
+  "primary_parent": "e95e53f0460b02aa629c49a8e8d50561fa782a9e",
+  "mirror_parent": "a70d2e28a92aff2f39727dedd259b9b3a3196270",
+  "source_tests": {
+    "command": "python -m pytest -q tests/test_kit.py",
+    "passed": 23,
+    "seconds": 0.37,
+    "skipped": 0
+  },
+  "wheel": {
+    "filename": "dotbox-0.1.0.dev7-py3-none-any.whl",
+    "sha256": "1ac95e514887b9d81bca022552904c57e78e3607b1211a2c7f6337da532eec22",
+    "build": "setuptools.build_meta.build_wheel with existing primary build runtime; no dependency download",
+    "installation": "new isolated target; existing Python 3.12 test dependencies reused",
+    "imported_from_installed_target": true,
+    "runtime_modules_matching_source": 35
+  },
+  "resources": {
+    "count": 54,
+    "topics": 24,
+    "all_bytes_and_hashes_match_source": true,
+    "all_topic_functions_match_source": true,
+    "guide_cli_matches_source": [
+      "loops",
+      "xcom",
+      "learning",
+      "play",
+      "lookahead",
+      "start",
+      "world",
+      "dinopark",
+      "reversing"
+    ],
+    "relative_source_links_checked": 117
+  },
+  "doctor": {
+    "offline_learning_ready": true,
+    "native_runtime_qualified": false
+  },
+  "play_skill": {
+    "local_frontmatter_validator": "quick_validate.py",
+    "result": "Skill is valid!",
+    "personal_skill_installation_performed": false
+  },
+  "xcom_evidence": {
+    "merge_request": "https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/82",
+    "inspected_head": "b57f51d5e967e1f5ed1973271433d86300710574",
+    "files": [
+      {
+        "file": "results.md",
+        "bytes": 11681,
+        "sha256": "942a460971a8dd6749abc8391980010159d81d1204888c56d890f2406c263ca3"
+      },
+      {
+        "file": "metrics.json",
+        "bytes": 9053,
+        "sha256": "99aa5156740cc450c8d725f87c011458ff38ea645ca7ed71301621e6c5feb385"
+      },
+      {
+        "file": "agent-feedback-and-next-work.md",
+        "bytes": 5221,
+        "sha256": "70d6d226e08002c4e3bcdaa49080291e119c3b83372f9936b40bd88ef14cece3"
+      },
+      {
+        "file": "project-state-and-methodology.md",
+        "bytes": 7639,
+        "sha256": "152c34d50852378986ce81c9c08a3838b249741b4bce17546b9fe7c4bc589968"
+      },
+      {
+        "file": "XCOM_TFTD_ENTITY_STATE_CONTINUATION_2026-11-05.md",
+        "bytes": 20330,
+        "sha256": "774336171009f3c225d2b5da39347a083d49f7f2275445313b484965b30a2dab"
+      }
+    ],
+    "published_report_hashes_match": true,
+    "menu_addon_archive_recovered": false,
+    "private_raw_experiment_logs_recovered": false,
+    "historical_game_tests_reexecuted": false
+  },
+  "fdisbull_source_audit": {
+    "version": "0.34.1",
+    "source_commit": "ad1e9a3177cc8fda60b9c0c64e8a40f6fabb1edd",
+    "wheel_sha256": "2cabcc5956e40a3c205d90025b226e6c271b0b1c149050e6b5571b8c420fd0f6",
+    "additional_wheel_record_and_pinned_git_blob_matches": 5,
+    "files": [
+      "src/fdisbull/event_search.py",
+      "src/fdisbull/execution_trace.py",
+      "src/fdisbull/serializer_discovery.py",
+      "src/fdisbull/serializer_candidates.py",
+      "src/fdisbull/skills/fdisbull-investigate/references/execution-event-search.md"
+    ],
+    "dinopark_source_identity": "see dinopark-reuse-guidance-2026-11-18.json"
+  },
+  "independent_review": {
+    "design_and_timing_entrypoints": "passed",
+    "xcom_evidence_and_lineage": "passed",
+    "dinopark_and_generic_source_provenance": "passed",
+    "applied_clarifications": [
+      "Name live debug-trace-until rather than restricting all event search to real mode",
+      "Complete only witness boundaries required by the finding consumer",
+      "Restrict resume guidance to safe owned capture-only continuation; isolated helper stops may persist",
+      "Correct execution-event-search source locator to src/fdisbull/skills"
+    ]
+  },
+  "environment_notes": [
+    "Default shell Python lacked pytest; existing Python 3.12 test environment used successfully.",
+    "Cloud validator resource paths were unavailable; inspected and ran the available local frontmatter validator."
+  ],
+  "not_performed": [
+    "Native rebuild or gameplay execution",
+    "XCOM/DinoPark provider port",
+    "WorldStore/process engine implementation",
+    "Live event capture or scheduler implementation",
+    "Release publication"
+  ],
+  "whitespace_check": "git diff --check passed"
+}

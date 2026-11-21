@@ -1,4 +1,4 @@
-"""Guest-only Windows input, stopped frames, scenes and view-only dot-mode.
+"""Guest-only Windows input, stopped frames, scenes and a watch-only spectator.
 
 No operation in this module reads or injects host keyboard/mouse input. The
 optional loopback viewer serves already retained captures and has no control
@@ -135,10 +135,10 @@ class _Spectator:
                 prefix='/'+owner.token+'/'
                 if self.path==prefix:
                     page=("<!doctype html><meta charset=utf-8><meta http-equiv=refresh content=1>"
-                          "<title>fDisBull dot-mode spectator</title>"
+                          "<title>fDisBull spectator</title>"
                           "<style>body{background:#15191f;color:#e7edf5;font:16px system-ui;margin:24px}"
                           "img{max-width:100%;image-rendering:pixelated;border:1px solid #637083}</style>"
-                          "<h1>Dot-mode spectator</h1><p>View only. Host keyboard and mouse are never forwarded. "
+                          "<h1>Watch-only spectator</h1><p>View only. Host keyboard and mouse are never forwarded. "
                           "Images update from retained debugger captures at native stops; no live frame rate is promised.</p>"
                           "<img alt='No retained frame yet; run or capture the guest first.' src='frame.png'>")
                     return self._send(200,'text/html; charset=utf-8',page.encode())

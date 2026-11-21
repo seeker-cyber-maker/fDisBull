@@ -12,6 +12,21 @@ and Z3-checked code generation, leaving the agent only **a few bounded judgment
 decisions** along an automated seven-stage pipeline while giving the human
 clear milestone reports, visual evidence, and explicit approval gates.
 
+## Two products, shared reversing machinery
+
+This development tree also contains [DotBox](apps/dotbox/README.md), which builds
+useful game harnesses incrementally with minimal reasonable delay. fDisBull
+focuses on program recovery and recompilation through UDL → UIL → UDC. Both
+consume the small [shared analysis package](packages/fdisbull-core/README.md),
+starting with scalar memory search, while remaining independently installable.
+Their Agent BBS projects remain separate.
+
+DOSBox-X and QEMU keep independent build and qualification lifecycles. After
+QEMU parity is qualified, QEMU is intended to become fDisBull's primary backend;
+DOSBox-X remains for DotBox and fDisBull fallback. The current integration does
+not change backend defaults. See [the shared codebase policy](docs/SHARED_CODEBASE.md)
+for package boundaries, active QEMU coordination and migration scope.
+
 ## Built to minimize token usage and survive long investigations
 
 Reverse-engineering fails in LLM context windows when tools dump megabytes of
@@ -171,7 +186,7 @@ Python **3.12 or later** is required. From a source checkout:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install . ./player
+python -m pip install ./packages/fdisbull-core . ./player
 fdisbull --version-json
 fdisbull capabilities
 fdisbull preflight
@@ -288,7 +303,8 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   watchpoints, bounded fast-forward, short instruction traces, guest keyboard
   and mouse delivery, stored screenshots, and selected-PSP `guest_exit` versus
   `guest_tsr` termination tracking. Headless operation is the default;
-  `--dot-mode` opens a watch-only window on compatible builds. A separate
+  `--spectator` opens a watch-only window on compatible builds (`--dot-mode`
+  and `--window` remain aliases). A separate
   Linux/QEMU path supports DOS-in-QEMU and raw x86 boot contexts.
   [Protected-mode DOS](docs/DOS_PROTECTED_RUNTIME.md) adds checked runtime RAM
   bindings, guarded live edits and native whole-machine checkpoints, while
@@ -305,7 +321,8 @@ fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /p
   adds a Win32 PE32 route and experimental Win16 support alongside PE64.
   A prepared offline Wine/QEMU guest provides actual program stops, scoped
   watches, memory, traces and shared keyboard/frame/scene actions. Windows
-  `--dot-mode` supplies a read-only spectator without capturing host input.
+  `--spectator` supplies a read-only spectator without capturing host input;
+  the existing `--dot-mode` and `--window` aliases remain available.
   PE32 uses its actual 32-bit CPU context. Win16 requires observed selector
   mappings and restricts register edits; its native checkpoints, code layers
   and delta rewind remain unavailable.
@@ -513,9 +530,10 @@ reviewed source-bound console profiles into runnable hardware or native targets:
 
 ## Status, testing and history
 
-GitLab (`brewster-jennings-group/fdisbull`) and the local Git hub are the
-release and CI authority; GitHub (`seeker-cyber-maker/fDisBull`) is an active
-public peer mirror. Read
+The original GitHub repository (`seeker-cyber-maker/fDisBull`) is the preferred
+source and review platform. The guarded service preserves the local Git hub
+and GitLab (`brewster-jennings-group/fdisbull`) as peer histories; n8n owns CI.
+Read
 [CI coordination](docs/CI_COORDINATION.md) before inspecting hosted pipelines,
 and consult [release status](docs/RELEASE_STATUS.md), the
 [methodology determinism review](docs/METHODOLOGY_DETERMINISM_AB_PLAN_2026-11-08.md),
@@ -530,8 +548,9 @@ receipts and platform limits.
 For local development checks:
 
 ```bash
-python -m pip install '.[test]' ./player build
+python -m pip install ./packages/fdisbull-core '.[test]' ./player build
 python -m pytest -q
+python -m build packages/fdisbull-core --outdir dist
 python -m build
 python scripts/check_dist.py
 python scripts/build_release.py

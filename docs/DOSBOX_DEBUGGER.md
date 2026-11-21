@@ -27,7 +27,9 @@ Use the returned ID in place of `RUN` below. One-shot `request` calls cannot ret
 
 A prepared local project can retain analyzed routines, actual-game sessions, screenshots and traces. Keep original game files and runtime artifacts in a private local workspace; use your own project, game-directory and backend paths in the examples above.
 
-## Dot-mode
+<a id="dot-mode"></a>
+
+## Spectator mode
 
 Headless is the default. Its launch profile disables host quit-warning dialogs
 with `dosbox quit warning=false` and disables SDL/mixer/MIDI sound output. This
@@ -40,17 +42,23 @@ agent-owned DOSBox session, use a backend rebuilt from the current compatible
 patch and launch with:
 
 ```bash
-fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --dot-mode
+fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --spectator
 ```
 
-For `serve`, add `"window":true` to `debug-launch` parameters; in Python use
+`--spectator` is the preferred CLI name; `--dot-mode` and `--window` remain
+compatible aliases. For `serve`, add `"window":true` to `debug-launch`
+parameters; in Python use
 `project.debugger(executable, game_dir, version=1, window=True)`. The native
-DOSBox IDA endpoint also accepts `--dot-mode` (`--window` remains an alias) / `window=True`. State-fork launches
-accept the same option. Other backends reject it. The agent remains the sole
-source of guest keyboard and mouse input; window events do not provide manual
+DOSBox IDA endpoint and state-fork launches accept the same CLI aliases;
+their Python `window=True` option is unchanged. Other DOS backends reject it.
+The agent remains the sole source of guest keyboard and mouse input; window events do not provide manual
 game control. The target starts stopped at entry, and an image updates only as
 agent commands run the guest. Closing the window can terminate the owned
 emulator; the server must not treat saved run history as live state.
+
+This is passive observation of the debugger-owned session. DotBox's separate
+cooperative-play service manages interactive ownership and harness development;
+requesting a spectator does not start DotBox or enable human takeover.
 
 A window requires an accessible host display and a compatible native backend
 advertising `video.controlled_window: true` and `video.headless: false`; older

@@ -1,0 +1,768 @@
+diff --git a/include/agent/dotbox_input_control.h b/include/agent/dotbox_input_control.h
+new file mode 100644
+index 0000000..68cd132
+--- /dev/null
++++ b/include/agent/dotbox_input_control.h
+@@ -0,0 +1,93 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Emulation-thread ownership policy for the DotBox DOSBox-X overlay.
++#ifndef DOSBOX_DOTBOX_INPUT_CONTROL_H
++#define DOSBOX_DOTBOX_INPUT_CONTROL_H
++
++#include <cstdint>
++#include <limits>
++#include <string>
++
++namespace dosbox_agent {
++
++struct AgentInputControlState {
++    bool host = false;
++    std::uint64_t generation = 0;
++};
++
++// All reads and writes belong to the emulation thread. Checking the generation
++// when a queued command executes prevents a pre-handoff input from firing later.
++class DotBoxInputControl {
++public:
++    AgentInputControlState State() const { return state_; }
++    void Reset() { state_ = AgentInputControlState(); }
++
++    bool CanInject(bool has_generation, std::uint64_t generation,
++                   std::string* error) const
++    {
++        if (state_.host) {
++            if (error) *error = "Input is owned by the host";
++            return false;
++        }
++        if (has_generation && generation != state_.generation) {
++            if (error) *error = "Input control generation changed";
++            return false;
++        }
++        return true;
++    }
++
++    template<class Cleanup>
++    bool Transfer(bool host, std::uint64_t expected_generation, bool visible,
++                  Cleanup cleanup, std::string* error)
++    {
++        if (expected_generation != state_.generation) {
++            if (error) *error = "Input control generation changed";
++            return false;
++        }
++        if (host && !visible) {
++            if (error) *error = "Host input requires a visible agent window";
++            return false;
++        }
++        if (state_.generation == (std::numeric_limits<std::uint64_t>::max)()) {
++            if (error) *error = "Input control generation exhausted";
++            return false;
++        }
++        cleanup();
++        state_.host = host;
++        ++state_.generation;
++        return true;
++    }
++
++    // Restore keeps the live owner, but consumes its generation before any
++    // cleanup or serializer effects. Failure must never revive an old lease.
++    template<class Cleanup>
++    bool FenceRestore(std::uint64_t expected_generation, Cleanup cleanup,
++                      std::string* error)
++    {
++        if (expected_generation != state_.generation) {
++            if (error) *error = "Input control generation changed";
++            return false;
++        }
++        if (state_.generation == (std::numeric_limits<std::uint64_t>::max)()) {
++            if (error) *error = "Input control generation exhausted";
++            return false;
++        }
++        ++state_.generation;
++        cleanup();
++        return true;
++    }
++
++private:
++    AgentInputControlState state_;
++};
++
++AgentInputControlState AGENT_GetInputControlState();
++bool AGENT_ChangeInputControl(bool host, std::uint64_t expected_generation,
++                             std::string* error);
++bool AGENT_FenceStateRestore(std::uint64_t expected_generation,
++                            std::string* error);
++bool AGENT_CanInjectInput(bool has_generation, std::uint64_t generation,
++                          std::string* error);
++void AGENT_ResetInputControl();
++
++} // namespace dosbox_agent
++#endif
+diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+index a5b3e3f..bdb620d 100644
+--- a/include/agent/video_adapter.h
++++ b/include/agent/video_adapter.h
+@@ -26,7 +26,21 @@ struct FrameSnapshot {
+ void AGENT_EnableFrameCapture(bool enabled);
+ bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
+ // One completed renderer frame, stopped before the next guest fetch.
+-bool AGENT_ArmFrameStep(std::string* error);
++// Counters remain available after disarm, including early breakpoint stops.
++struct FrameStepProgress {
++    std::uint32_t max_frames = 1;
++    std::uint32_t max_guest_ms = 0; // zero only for the legacy single-frame call
++    std::uint32_t frames_completed = 0;
++    std::uint32_t guest_tick_bits = 0;
++    std::uint64_t guest_ticks_before = 0;
++    std::uint64_t guest_ticks_after = 0;
++    std::uint64_t guest_elapsed_ms = 0;
++    bool guest_limit_reached = false;
++};
++bool AGENT_ArmFrameStep(std::string* error, std::uint32_t max_frames = 1,
++                        std::uint32_t max_guest_ms = 0);
++FrameStepProgress AGENT_GetFrameStepProgress();
++bool AGENT_FrameStepGuestLimitReached();
+ bool AGENT_FrameStepStopRequested();
+ bool AGENT_FrameStepCompleted();
+ void AGENT_CancelFrameStep();
+diff --git a/include/debug.h b/include/debug.h
+index 2181266..e03c1e3 100644
+--- a/include/debug.h
++++ b/include/debug.h
+@@ -34,6 +34,7 @@ Bitu DEBUG_EnableDebugger(void);
+ bool DEBUG_AgentStep(bool over, bool* continued);
+ bool DEBUG_AgentResumeAfterTerminate(void);
+ bool DEBUG_AgentContinue(void);
++bool DEBUG_AgentStopForFrameStep(void);
+ bool DEBUG_AgentCanStartTarget(void);
+ uint64_t DEBUG_AgentEntryBreakpointSequence(void);
+ bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle);
+diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+index d3a96b1..605e8f0 100644
+--- a/src/agent/server/agent_server.cpp
++++ b/src/agent/server/agent_server.cpp
+@@ -7,6 +7,7 @@
+ #include "agent/trace_store.h"
+ #include "agent/video_adapter.h"
+ #include "agent/input_adapter.h"
++#include "agent/dotbox_input_control.h"
+ #include "dosbox.h"
+ #include "pic.h"
+ #include "debug.h"
+@@ -466,6 +467,7 @@ static bool IsKnownMethod(const std::string& method)
+            method == "execution.timing" || method == "state.save" || method == "state.load" || method == "state.set_register" ||
+            method == "state.get_registers" ||
+            method == "video.screenshot" || method == "video.probe" ||
++           method == "input.control" ||
+            method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" || method == "input.keyboard.down" || method == "input.keyboard.up" || method == "input.keyboard.frame_edges" ||
+            method == "input.mouse.move" || method == "input.mouse.click" ||
+            method == "input.mouse.button" || method == "input.mouse.state" ||
+@@ -547,11 +549,15 @@ public:
+         FrameSnapshot frame;
+         AgentMouseState mouse;
+         AgentKeyboardState keyboard;
++        AgentInputControlState input_control;
++        bool restore_control_rejected = false;
+         bool stale_frame = false;
+         std::uint64_t guest_ticks = 0;
+         bool fast_forward = false;
+         bool timing_changed = false;
+         bool frame_step_completed = false;
++        bool frame_available = false;
++        FrameStepProgress frame_step_progress;
+         bool trace_active = false;
+         std::size_t trace_event_count = 0;
+     };
+@@ -1448,6 +1454,13 @@ static std::string Capabilities(const AgentConfig& config)
+     Add(&result, "save_states", JsonValue::Bool(true));
+ #if C_DEBUG && C_HEAVY_DEBUG
+     Add(&result, "frame_timeline", JsonValue::Bool(true));
++    JsonValue execution = Object();
++    JsonValue bounded_frame_step = Object();
++    Add(&bounded_frame_step, "schema", String("dotbox-bounded-frame-step-1"));
++    Add(&bounded_frame_step, "max_frames", Number(10000));
++    Add(&bounded_frame_step, "max_guest_ms", Number(30000));
++    Add(&execution, "bounded_frame_step", bounded_frame_step);
++    Add(&result, "execution", execution);
+ #else
+     Add(&result, "frame_timeline", JsonValue::Bool(false));
+ #endif
+@@ -1459,6 +1472,8 @@ static std::string Capabilities(const AgentConfig& config)
+     JsonValue input = Object();
+     Add(&input, "keyboard", String("ibm_pc_controller_us_ascii_v1"));
+     Add(&input, "keyboard_held_leases", JsonValue::Bool(true));
++    Add(&input, "cooperative_control", String("dotbox-input-control-1"));
++    Add(&input, "restore_control", String("dotbox-restore-control-1"));
+     Add(&input, "absolute_mouse", JsonValue::Bool(true));
+     Add(&input, "driver", String("builtin_dos_int33_only"));
+     Add(&input, "coordinate_space", String("guest_frame_pixels"));
+@@ -2033,6 +2048,58 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                 }
+             }
+         }
++    } else if (parsed.method == "input.control") {
++        const bool transfer = parsed.params.Find("owner") != NULL;
++        std::string owner;
++        bool has_expected = false;
++        std::uint64_t expected = 0;
++        bool valid = OptionalFrameNumber(parsed.params, "expected_generation", &has_expected, &expected);
++        if (transfer) valid = valid && GetString(parsed.params, "owner", &owner) &&
++                              (owner == "agent" || owner == "host") && has_expected;
++        else valid = valid && !has_expected;
++        for (const auto& item : parsed.params.object)
++            if (item.first != "session_id" && item.first != "owner" && item.first != "expected_generation") valid = false;
++        if (!valid) response = InvalidParams(parsed.id, "input.control needs owner agent|host and expected_generation, or an empty query");
++        else if (session->state != Impl::SessionState::Running && session->state != Impl::SessionState::Stopped)
++            response = SessionError(parsed.id, kErrorCapabilityUnavailable, "Target is not active", "TARGET_EXITED", session);
++        else {
++            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
++            const std::string session_id = session->id;
++            if (SubmitEmulationCommandLocked(impl, [operation, transfer, owner, expected](const std::uint64_t) {
++                    std::string error;
++                    const bool ok = !transfer || AGENT_ChangeInputControl(owner == "host", expected, &error);
++                    std::lock_guard<std::mutex> guard(operation->mutex);
++                    operation->input_control = AGENT_GetInputControlState();
++                    operation->success = ok; operation->error = error; operation->done = true;
++                    operation->completed.notify_all();
++                }) == 0) response = Error(parsed.id, kErrorCapabilityUnavailable, "Input control bridge unavailable", "COMMAND_QUEUE_UNAVAILABLE");
++            else {
++                const JsonValue response_id = parsed.id;
++                Impl::DeferredRequest pending; pending.request = parsed; pending.fingerprint = parsed.fingerprint;
++                pending.wait = [operation](const std::uint32_t timeout_ms) {
++                    std::unique_lock<std::mutex> guard(operation->mutex);
++                    return operation->completed.wait_for(guard, std::chrono::milliseconds(timeout_ms), [operation]() { return operation->done; });
++                };
++                pending.finish = [impl, session_id, response_id, operation, transfer]() {
++                    if (!operation->success) return Error(response_id, kErrorCommandRejected, operation->error, "CONTROL_REJECTED");
++                    if (!impl->session || impl->session->id != session_id) return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
++                    if (transfer) ++impl->session->state_revision;
++                    JsonValue result = SessionResult(*impl->session);
++                    Add(&result, "owner", String(operation->input_control.host ? "host" : "agent"));
++                    Add(&result, "generation", Number(operation->input_control.generation));
++                    if (transfer) Add(&result, "input_reset", JsonValue::Bool(true));
++                    return AGENT_MakeJsonRpcResult(response_id, result);
++                };
++                if (parsed.has_id && parsed.id.type != JsonType::Null) session->deferred_requests[parsed.id_key] = pending;
++                lock.unlock(); const bool completed = pending.wait(impl->config.request_timeout_ms); lock.lock();
++                if (!RebindSessionAfterWait(impl, session_id, &session, &response, parsed.id)) return response;
++                if (!completed) { cache_response = false; response = Error(parsed.id, kErrorOperationTimeout, "Timed out transferring input ownership", "OPERATION_TIMEOUT"); }
++                else if (parsed.has_id && parsed.id.type != JsonType::Null) {
++                    auto deferred = session->deferred_requests.find(parsed.id_key);
++                    response = deferred->second.finish(); session->deferred_requests.erase(deferred);
++                } else response = pending.finish();
++            }
++        }
+     } else if (parsed.method.compare(0,15,"input.keyboard.")==0) {
+         const bool frame_edges=parsed.method=="input.keyboard.frame_edges";
+         std::vector<std::pair<std::string,bool>> edges;
+@@ -2043,6 +2110,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+         const bool press=parsed.method=="input.keyboard.press";
+         std::string key,text,modifiers,lease;
+         std::uint32_t hold_ms=40,gap_ms=40;
++        bool has_control_generation = false; std::uint64_t control_generation = 0;
+         bool valid=frame_edges || ((query || up || GetString(parsed.params,typing?"text":"key",typing?&text:&key)) && (query || up || down || press || typing));
+         if(frame_edges) {
+             const JsonValue* list=parsed.params.Find("edges");
+@@ -2053,11 +2121,12 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                 edges.emplace_back(edge_key,pressed->boolean);
+             }
+         }
++        valid = valid && OptionalFrameNumber(parsed.params, "control_generation", &has_control_generation, &control_generation);
+         if(down || up) {
+             valid=valid && GetString(parsed.params,"lease",&lease) && lease.size()==32;
+             for(const auto c:lease) if(!((c>='0' && c<='9') || (c>='a' && c<='f'))) valid=false;
+             for(const auto& item:parsed.params.object)
+-                if(item.first!="session_id" && item.first!="lease" && !(down && item.first=="key")) valid=false;
++                if(item.first!="session_id" && item.first!="lease" && item.first!="control_generation" && !(down && item.first=="key")) valid=false;
+         }
+         if(parsed.params.Find("modifiers")) valid=valid && GetString(parsed.params,"modifiers",&modifiers);
+         if(parsed.params.Find("hold_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"),&hold_ms);
+@@ -2071,13 +2140,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+         } else {
+             const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
+             const std::string session_id=session->id;
+-            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,down,up,key,text,modifiers,hold_ms,gap_ms,lease,session_id,frame_edges,edges](const std::uint64_t) {
++            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,down,up,key,text,modifiers,hold_ms,gap_ms,lease,session_id,frame_edges,edges,has_control_generation,control_generation](const std::uint64_t) {
+                 std::string error; AgentKeyboardState keyboard;
+-                bool ok=true;
+-                if(frame_edges) ok=AGENT_KeyboardFrameEdges(edges,&keyboard,&error);
+-                else if(query) AGENT_KeyboardGetState(&keyboard);
+-                else if(down || up) ok=AGENT_KeyboardLease(key,session_id+":"+lease,down,&keyboard,&error);
+-                else ok=AGENT_KeyboardQueue(key,text,modifiers,typing,hold_ms,gap_ms,&keyboard,&error);
++                bool ok = query || AGENT_CanInjectInput(has_control_generation, control_generation, &error);
++                if (ok) {
++                    if(frame_edges) ok=AGENT_KeyboardFrameEdges(edges,&keyboard,&error);
++                    else if(query) AGENT_KeyboardGetState(&keyboard);
++                    else if(down || up) ok=AGENT_KeyboardLease(key,session_id+":"+lease,down,&keyboard,&error);
++                    else ok=AGENT_KeyboardQueue(key,text,modifiers,typing,hold_ms,gap_ms,&keyboard,&error);
++                }
+                 std::lock_guard<std::mutex> guard(operation->mutex);
+                 operation->success=ok;operation->error=error;operation->keyboard=keyboard;operation->done=true;
+                 operation->completed.notify_all();
+@@ -2127,9 +2198,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+         std::uint32_t x = 0, y = 0, hold_ms = 50, button = 0;
+         std::uint64_t frame_id = 0, mode_id = 0;
+         bool pressed = false, has_frame = false, has_mode = false;
++        bool has_control_generation = false; std::uint64_t control_generation = 0;
+         std::string button_name = "left";
+         bool valid = OptionalFrameNumber(parsed.params, "frame_id", &has_frame, &frame_id) &&
+-                     OptionalFrameNumber(parsed.params, "mode_id", &has_mode, &mode_id);
++                     OptionalFrameNumber(parsed.params, "mode_id", &has_mode, &mode_id) &&
++                     OptionalFrameNumber(parsed.params, "control_generation", &has_control_generation, &control_generation);
+         if (screenshot) {
+             if (parsed.params.Find("encoding")) valid = valid && GetString(parsed.params, "encoding", &encoding);
+             if (parsed.params.Find("measure")) valid = valid && GetBool(parsed.params, "measure", &measure);
+@@ -2176,13 +2249,14 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
+             const std::string session_id = session->id;
+             if (SubmitEmulationCommandLocked(impl, [operation, screenshot, probe, points, move, click, button_op, encoding, measure,
+-                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id](const std::uint64_t) {
++                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id, has_control_generation, control_generation](const std::uint64_t) {
+                     std::string error;
+                     FrameSnapshot frame;
+                     AgentMouseState mouse;
+                     std::vector<std::uint8_t> png;
+-                    bool success = true, stale = false;
+-                    if (screenshot || probe || move || click) success = AGENT_GetFrameSnapshot(&frame, &error);
++                    bool success = !(move || click || button_op) || AGENT_CanInjectInput(has_control_generation, control_generation, &error);
++                    bool stale = false;
++                    if (success && (screenshot || probe || move || click)) success = AGENT_GetFrameSnapshot(&frame, &error);
+                     if (success && probe) {
+                         for (const auto& point : points) if (point.first>=frame.width || point.second>=frame.height) {
+                             success=false; error="Probe point outside completed guest frame"; break;
+@@ -2308,6 +2382,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+         }
+     } else if (parsed.method == "state.save" || parsed.method == "state.load") {
+         const bool load = parsed.method == "state.load";
++        bool has_expected_generation = false;
++        std::uint64_t expected_generation = 0;
++        const bool valid_generation = !load ||
++            (OptionalFrameNumber(parsed.params, "expected_generation", &has_expected_generation, &expected_generation) &&
++             has_expected_generation);
+         std::vector<std::string> frame_keys;
+         bool valid_frame_keys=true;
+         if(const JsonValue* keys=parsed.params.Find("frame_keys")) {
+@@ -2318,7 +2397,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             }
+         }
+         std::string path;
+-        if (!valid_frame_keys || !GetString(parsed.params, "path", &path) || path.empty() || path[0] != '/' || path.find('\0') != std::string::npos) {
++        if (!valid_generation) {
++            response = InvalidParams(parsed.id, "state.load requires integer expected_generation");
++        } else if (!valid_frame_keys || !GetString(parsed.params, "path", &path) || path.empty() || path[0] != '/' || path.find('\0') != std::string::npos) {
+             response = InvalidParams(parsed.id, "State path must be absolute");
+         } else if (session->state != Impl::SessionState::Stopped) {
+             response = SessionError(parsed.id, kErrorCapabilityUnavailable, "State operation requires stopped target", "TARGET_NOT_STOPPED", session);
+@@ -2329,13 +2410,34 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+ 
+             const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
+             const std::string session_id = session->id;
+-            if (SubmitEmulationCommandLocked(impl, [impl, session_id, operation, load, path, frame_keys](const std::uint64_t) {
++            if (SubmitEmulationCommandLocked(impl, [impl, session_id, operation, load, path, frame_keys, expected_generation](const std::uint64_t) {
+                     std::string error;
+                     if(load && !AGENT_KeyboardFrameKeys(frame_keys,false,&error)) {
+                         std::lock_guard<std::mutex> guard(operation->mutex);
+                         operation->success=false;operation->error=error;operation->done=true;operation->completed.notify_all();return;
+                     }
++                    AgentInputControlState restore_control;
+                     if(load) {
++                        // Recheck the stopped session when the queued restore
++                        // executes, before consuming its control generation.
++                        {
++                            std::lock_guard<std::mutex> session_lock(impl->mutex);
++                            if (!impl->session || impl->session->id != session_id ||
++                                impl->session->state != Impl::SessionState::Stopped) {
++                                std::lock_guard<std::mutex> guard(operation->mutex);
++                                operation->error = "State operation requires the same stopped target";
++                                operation->done = true; operation->completed.notify_all(); return;
++                            }
++                        }
++                        // Keep the live owner. Advance before cleanup and load
++                        // so even an unsuccessful load retires old tagged input.
++                        if (!AGENT_FenceStateRestore(expected_generation, &error)) {
++                            std::lock_guard<std::mutex> guard(operation->mutex);
++                            operation->restore_control_rejected = true;
++                            operation->error = error; operation->done = true;
++                            operation->completed.notify_all(); return;
++                        }
++                        restore_control = AGENT_GetInputControlState();
+                         std::lock_guard<std::mutex> identity_lock(impl->mutex);
+                         if(impl->session && impl->session->id==session_id) impl->session->target_psp=0;
+                     }
+@@ -2353,6 +2455,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     if (ok && (!load || (!before_hash.empty() && before_hash == after_hash)))
+                         operation->state_hash = after_hash;
+                     operation->keyboard = keyboard;
++                    if (load) operation->input_control = restore_control;
+                     operation->success = ok; operation->error = error; operation->done = true;
+                     operation->completed.notify_all();
+                 }) == 0) {
+@@ -2370,6 +2473,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     if (!impl->session || impl->session->id != session_id)
+                         return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
+                     Impl::Session& active = *impl->session;
++                    if (operation->restore_control_rejected)
++                        return Error(response_id, kErrorCommandRejected, operation->error, "CONTROL_REJECTED");
+                     if (!operation->success) return Error(response_id, kErrorCapabilityUnavailable, operation->error, "STATE_FAILED");
+                     if (!operation->state_hash.empty()) {
+                         if (!load && saved_psp) {
+@@ -2395,6 +2500,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     active.last_stop_breakpoint_id.clear(); active.has_last_stop_breakpoint_address = false;
+                     JsonValue result = SessionResult(active);
+                     Add(&result, "completed", JsonValue::Bool(true));
++                    if (load) {
++                        Add(&result, "owner", String(operation->input_control.host ? "host" : "agent"));
++                        Add(&result, "generation", Number(operation->input_control.generation));
++                        Add(&result, "input_reset", JsonValue::Bool(true));
++                    }
+                     JsonValue frame_keys=JsonValue::Array();for(const auto& key:operation->keyboard.frame_keys) frame_keys.array.push_back(String(key));
+                     Add(&result,"frame_keys",frame_keys);
+                     return AGENT_MakeJsonRpcResult(response_id, result);
+@@ -2934,8 +3044,16 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+         }
+     } else if (parsed.method == "execution.step" || parsed.method == "frame.step") {
+         const bool frame_step = parsed.method == "frame.step";
++        const JsonValue* frame_limit = parsed.params.Find("max_frames");
++        const JsonValue* guest_limit = parsed.params.Find("max_guest_ms");
++        const bool bounded_frame_step = frame_step && (frame_limit || guest_limit);
++        std::uint32_t max_frames = 1, max_guest_ms = 0;
+         std::string mode;
+-        if (!frame_step && (!GetString(parsed.params, "mode", &mode) || (mode != "into" && mode != "over"))) {
++        if (bounded_frame_step && (!frame_limit || !guest_limit ||
++            !GetUnsignedInteger(*frame_limit, &max_frames) || !max_frames || max_frames > 10000 ||
++            !GetUnsignedInteger(*guest_limit, &max_guest_ms) || !max_guest_ms || max_guest_ms > 30000)) {
++            response = InvalidParams(parsed.id, "Bounded frame.step requires max_frames=1..10000 and max_guest_ms=1..30000");
++        } else if (!frame_step && (!GetString(parsed.params, "mode", &mode) || (mode != "into" && mode != "over"))) {
+             response = InvalidParams(parsed.id, "execution.step requires mode=into or mode=over");
+         } else if (session->state == Impl::SessionState::Running) {
+             response = SessionError(parsed.id, kErrorTargetRunning,
+@@ -2949,14 +3067,14 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             operation->registers.reset(new Impl::AdapterOperation());
+             const StepMode step_mode = mode == "into" ? StepMode::Into : StepMode::Over;
+             const std::string session_id = session->id;
+-            if (SubmitEmulationCommandLocked(impl, [impl, operation, step_mode, session_id, frame_step](const std::uint64_t) {
++            if (SubmitEmulationCommandLocked(impl, [impl, operation, step_mode, session_id, frame_step, max_frames, max_guest_ms](const std::uint64_t) {
+                 AgentRuntime& adapter = *impl->runtime;
+                 std::string adapter_error;
+                 bool continued = false;
+                 RegisterSnapshot registers;
+                 bool success;
+                 if(frame_step) {
+-                    success=AGENT_ArmFrameStep(&adapter_error);
++                    success=AGENT_ArmFrameStep(&adapter_error, max_frames, max_guest_ms);
+                     if(success) { success=adapter.Continue(&adapter_error); continued=success; }
+                     if(!success) AGENT_CancelFrameStep();
+                 } else success = adapter.Step(step_mode, &continued, &adapter_error);
+@@ -2988,7 +3106,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                 Impl::DeferredRequest pending;
+                 pending.request = parsed;
+                 pending.fingerprint = parsed.fingerprint;
+-                pending.wait = [impl, session_id, operation, frame_step](const std::uint32_t timeout_ms) {
++                pending.wait = [impl, session_id, operation, frame_step, bounded_frame_step](const std::uint32_t timeout_ms) {
+                     {
+                         std::unique_lock<std::mutex> dispatch_lock(operation->dispatch->mutex);
+                         if (!operation->dispatch->completed.wait_for(dispatch_lock, std::chrono::milliseconds(timeout_ms),
+@@ -3021,13 +3139,20 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                             submit_registers = true;
+                         }
+                     }
+-                    if (submit_registers && SubmitEmulationCommand(impl, [impl, operation, frame_step](const std::uint64_t) {
++                    if (submit_registers && SubmitEmulationCommand(impl, [impl, operation, frame_step, bounded_frame_step](const std::uint64_t) {
+                             AgentRuntime& adapter = *impl->runtime;
+                             std::string registers_error;
+                             RegisterSnapshot registers;
+                             bool success = adapter.GetRegisters(&registers, &registers_error);
+                             FrameSnapshot frame;
+-                            if(success && frame_step) success=AGENT_GetFrameSnapshot(&frame,&registers_error);
++                            bool frame_available = false;
++                            FrameStepProgress frame_progress;
++                            if (success && frame_step) {
++                                frame_progress = AGENT_GetFrameStepProgress();
++                                frame_available = AGENT_GetFrameSnapshot(&frame, &registers_error);
++                                // A native guest-time stop is valid without a completed video frame.
++                                if (!bounded_frame_step) success = frame_available;
++                            }
+                             {
+                                 std::lock_guard<std::mutex> registers_lock(operation->registers->mutex);
+                                 operation->registers->success = success;
+@@ -3036,6 +3161,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                                 operation->registers->frame = std::move(frame);
+                                 operation->registers->guest_ticks = PIC_Ticks;
+                                 operation->registers->frame_step_completed = AGENT_FrameStepCompleted();
++                                operation->registers->frame_available = frame_available;
++                                operation->registers->frame_step_progress = frame_progress;
+                                 operation->registers->done = true;
+                             }
+                             operation->registers->completed.notify_all();
+@@ -3051,7 +3178,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     return operation->registers->completed.wait_for(registers_lock, std::chrono::milliseconds(timeout_ms),
+                                                                     [operation]() { return operation->registers->done; });
+                 };
+-                pending.finish = [impl, session_id, response_id, operation, frame_step]() {
++                pending.finish = [impl, session_id, response_id, operation, frame_step, bounded_frame_step]() {
+                     bool dispatch_success = false;
+                     bool continued = false;
+                     std::string dispatch_error;
+@@ -3117,7 +3244,24 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                         Add(&result,"mode_id",Number(operation->registers->frame.mode_id));
+                         Add(&result,"captured_ticks",Number(operation->registers->frame.captured_ticks));
+                         Add(&result,"guest_ticks",Number(operation->registers->guest_ticks));
+-                        Add(&result,"boundary",String("completed_renderer_frame_then_safe_fetch"));
++                        Add(&result,"boundary",String(bounded_frame_step ? "bounded_execution_then_safe_fetch" : "completed_renderer_frame_then_safe_fetch"));
++                        if (bounded_frame_step) {
++                            const FrameStepProgress& p = operation->registers->frame_step_progress;
++                            JsonValue budget = Object();
++                            Add(&budget,"max_frames",Number(p.max_frames));
++                            Add(&budget,"max_guest_ms",Number(p.max_guest_ms));
++                            Add(&budget,"frames_completed",Number(p.frames_completed));
++                            Add(&budget,"guest_tick_bits",Number(p.guest_tick_bits));
++                            Add(&budget,"guest_ticks_before",Number(p.guest_ticks_before));
++                            Add(&budget,"guest_ticks_after",Number(p.guest_ticks_after));
++                            Add(&budget,"guest_elapsed_ms",Number(p.guest_elapsed_ms));
++                            const char* cause = active.last_stop_kind == "breakpoint" ? "breakpoint" :
++                                active.last_stop_kind == "frame" && operation->registers->frame_step_completed ? "frame_limit" :
++                                active.last_stop_kind == "budget" && p.guest_limit_reached ? "guest_time_limit" : "other";
++                            Add(&budget,"stop_cause",String(cause));
++                            Add(&result,"bounded",budget);
++                            Add(&result,"frame_available",JsonValue::Bool(operation->registers->frame_available));
++                        }
+                     }
+                     return AGENT_MakeJsonRpcResult(response_id, result);
+                 };
+@@ -3661,6 +3805,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+                                                const std::string& workdir)
+ {
+     AgentRuntime& adapter = *impl->runtime;
++    AGENT_ResetInputControl();
+     AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput();
+     if (!adapter.IsReadyForTargetStart()) {
+         {
+@@ -3918,8 +4063,9 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+     }
+     impl->session->last_stop_kind = startup ? "startup" :
+             (native_breakpoint != 0 ? "breakpoint" :
+-             (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
+-              (trace_completed ? "pause" : "breakpoint")));
++             (impl->session->pending_stop_kind == "frame" && AGENT_FrameStepGuestLimitReached() ? "budget" :
++              (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
++               (trace_completed ? "pause" : "breakpoint"))));
+     impl->session->last_stop_segment = segment;
+     impl->session->last_stop_instruction_pointer = instruction_pointer;
+     impl->session->last_stop_breakpoint_id.clear();
+diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
+index 408c62e..efd1150 100644
+--- a/src/debug/debug.cpp
++++ b/src/debug/debug.cpp
+@@ -1171,6 +1171,18 @@ bool DEBUG_AgentResumeAfterTerminate(void)
+ 	return true;
+ }
+ 
++bool DEBUG_AgentStopForFrameStep(void)
++{
++    if (!dosbox_agent::AGENT_FrameStepStopRequested()) return false;
++    // A budget boundary can coincide with a breakpoint at the next fetch.
++    // Attribute that breakpoint now; RUN skips its first fetch after a stop.
++    // Preserve the legacy single-frame path when no bounded budget was supplied.
++    if (dosbox_agent::AGENT_GetFrameStepProgress().max_guest_ms)
++        (void)CBreakpoint::CheckBreakpoint(SegValue(cs), reg_eip);
++    DEBUG_EnableDebugger();
++    return true;
++}
++
+ bool DEBUG_AgentContinue(void)
+ {
+     if (!debugging || debug_running)
+@@ -6768,10 +6780,7 @@ bool DEBUG_HeavyIsBreakpoint(void) {
+ #if defined(C_DOSBOX_AGENT)
+     // Rendering-on-demand can complete inside the preceding instruction.
+     // Stop only here, at its next safe fetch, never from inside its callback.
+-    if (dosbox_agent::AGENT_FrameStepStopRequested()) {
+-        DEBUG_EnableDebugger();
+-        return true;
+-    }
++    if (DEBUG_AgentStopForFrameStep()) return true;
+ #endif
+ #if defined(C_DOSBOX_AGENT)
+ 	const bool agent_trace_was_active = agent_trace_active;
+diff --git a/src/dosbox.cpp b/src/dosbox.cpp
+index b523884..f0f8cdd 100644
+--- a/src/dosbox.cpp
++++ b/src/dosbox.cpp
+@@ -472,8 +472,7 @@ static Bitu Normal_Loop(void) {
+         while (1) {
+ #if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
+             dosbox_agent::AGENT_BridgePump();
+-            if (dosbox_agent::AGENT_FrameStepStopRequested()) {
+-                DEBUG_EnableDebugger();
++            if (DEBUG_AgentStopForFrameStep()) {
+                 (void)DEBUG_ExitLoop();
+                 return 0;
+             }
+@@ -483,8 +482,7 @@ static Bitu Normal_Loop(void) {
+                 // A renderer callback can finish inside PIC_RunQueue. Unwind
+                 // its event dispatch before serializing, without another IRQ
+                 // delivery or guest instruction slipping past the frame stop.
+-                if (dosbox_agent::AGENT_FrameStepStopRequested()) {
+-                    DEBUG_EnableDebugger();
++                if (DEBUG_AgentStopForFrameStep()) {
+                     (void)DEBUG_ExitLoop();
+                     return 0;
+                 }
+diff --git a/src/gui/render.cpp b/src/gui/render.cpp
+index 6ff3be1..52ffa4e 100644
+--- a/src/gui/render.cpp
++++ b/src/gui/render.cpp
+@@ -114,6 +114,7 @@ std::uint64_t agent_mode_sequence = 0;
+ FrameSnapshot agent_frame;
+ bool agent_frame_step_armed = false;
+ bool agent_frame_step_completed = false;
++FrameStepProgress agent_frame_step_progress;
+ 
+ void InvalidateAgentFrame()
+ {
+@@ -123,18 +124,46 @@ void InvalidateAgentFrame()
+ }
+ } // namespace
+ 
+-bool AGENT_ArmFrameStep(std::string* error)
++bool AGENT_ArmFrameStep(std::string* error, std::uint32_t max_frames, std::uint32_t max_guest_ms)
+ {
+     if (!agent_frame_capture_enabled || agent_frame_step_armed) {
+         if (error) *error = "Frame capture unavailable or a frame step is already active";
+         return false;
+     }
++    if (!max_frames || max_frames > 10000 || max_guest_ms > 30000) {
++        if (error) *error = "Frame-step budgets are outside native limits";
++        return false;
++    }
++    agent_frame_step_progress = FrameStepProgress();
++    agent_frame_step_progress.max_frames = max_frames;
++    agent_frame_step_progress.max_guest_ms = max_guest_ms;
++    agent_frame_step_progress.guest_tick_bits = sizeof(Bitu) * 8;
++    agent_frame_step_progress.guest_ticks_before = PIC_Ticks;
+     agent_frame_step_completed = false;
+     agent_frame_step_armed = true;
+     return true;
+ }
+ 
+-bool AGENT_FrameStepStopRequested() { return agent_frame_step_armed && agent_frame_step_completed; }
++FrameStepProgress AGENT_GetFrameStepProgress()
++{
++    FrameStepProgress result = agent_frame_step_progress;
++    result.guest_ticks_after = PIC_Ticks;
++    // Bitu subtraction preserves the native clock's unsigned wrap semantics.
++    result.guest_elapsed_ms = static_cast<Bitu>(PIC_Ticks -
++            static_cast<Bitu>(result.guest_ticks_before));
++    return result;
++}
++
++bool AGENT_FrameStepStopRequested()
++{
++    if (!agent_frame_step_armed) return false;
++    if (agent_frame_step_completed) return true;
++    const FrameStepProgress progress = AGENT_GetFrameStepProgress();
++    if (progress.max_guest_ms && progress.guest_elapsed_ms >= progress.max_guest_ms)
++        agent_frame_step_progress.guest_limit_reached = true;
++    return agent_frame_step_progress.guest_limit_reached;
++}
++bool AGENT_FrameStepGuestLimitReached() { return agent_frame_step_progress.guest_limit_reached; }
+ bool AGENT_FrameStepCompleted() { return agent_frame_step_completed; }
+ void AGENT_CancelFrameStep() { agent_frame_step_armed = false; }
+ 
+@@ -227,7 +256,11 @@ static void CaptureCompletedAgentFrame()
+     agent_frame.double_width = render.src.dblw;
+     agent_frame.double_height = render.src.dblh;
+     agent_frame_valid = true;
+-    if (agent_frame_step_armed) agent_frame_step_completed = true;
++    if (agent_frame_step_armed) {
++        ++agent_frame_step_progress.frames_completed;
++        agent_frame_step_completed = agent_frame_step_progress.frames_completed >=
++                                     agent_frame_step_progress.max_frames;
++    }
+ }
+ } // namespace dosbox_agent
+ #endif
+diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
+index 1a3467e..0e80b48 100644
+--- a/src/gui/sdlmain.cpp
++++ b/src/gui/sdlmain.cpp
+@@ -134,6 +134,8 @@ char* revert_escape_newlines(const char* aMessage);
+ #include "agent/agent_bridge.h"
+ #include "agent/agent_server.h"
+ #include "agent/video_adapter.h"
++#include "agent/input_adapter.h"
++#include "agent/dotbox_input_control.h"
+ #endif
+ #include "menudef.h"
+ #include "pic.h"
+@@ -152,6 +154,7 @@ char* revert_escape_newlines(const char* aMessage);
+ #if defined(C_DOSBOX_AGENT)
+ namespace dosbox_agent {
+ static bool agent_visible_window = false;
++static DotBoxInputControl agent_input_control;
+ 
+ bool AGENT_IsSession()
+ {
+@@ -5687,6 +5690,53 @@ void GFX_LosingFocus(void) {
+     DoExtendedKeyboardHook(false);
+ }
+ 
++#if defined(C_DOSBOX_AGENT)
++namespace dosbox_agent {
++AgentInputControlState AGENT_GetInputControlState() { return agent_input_control.State(); }
++void AGENT_ResetInputControl() { agent_input_control.Reset(); }
++bool AGENT_CanInjectInput(bool has_generation, std::uint64_t generation, std::string* error)
++{
++    return agent_input_control.CanInject(has_generation, generation, error);
++}
++
++static void ResetControlInput()
++{
++#if defined(C_SDL2)
++        // Discard input captured before the fence, but preserve window events.
++        SDL_PumpEvents();
++        for (const auto type : {SDL_KEYDOWN, SDL_KEYUP, SDL_TEXTEDITING, SDL_TEXTINPUT,
++                               SDL_MOUSEMOTION, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL})
++            SDL_FlushEvent(type);
++        SDL_GetRelativeMouseState(NULL, NULL);
++#endif
++#if C_DEBUG
++        AGENT_KeyboardResetInput();
++        AGENT_MouseResetInput();
++#endif
++        // RPC-owned input reset does not release human-owned mapper bindings.
++        GFX_LosingFocus();
++#if C_DEBUG
++        AgentMouseState mouse;
++        std::string ignored;
++        if (AGENT_MouseGetState(&mouse, &ignored))
++            for (std::uint32_t button = 0; button < 3; ++button)
++                if (mouse.buttons & (1u << button)) Mouse_ButtonReleased(static_cast<std::uint8_t>(button));
++#endif
++}
++
++bool AGENT_ChangeInputControl(bool host, std::uint64_t expected_generation, std::string* error)
++{
++    return agent_input_control.Transfer(host, expected_generation, AGENT_IsSession() && !AGENT_IsHeadless(),
++                                        ResetControlInput, error);
++}
++
++bool AGENT_FenceStateRestore(std::uint64_t expected_generation, std::string* error)
++{
++    return agent_input_control.FenceRestore(expected_generation, ResetControlInput, error);
++}
++} // namespace dosbox_agent
++#endif
++
+ bool GFX_IsFullscreen(void) {
+     return sdl.desktop.fullscreen;
+ }
+@@ -5966,7 +6016,8 @@ bool AGENT_ValidateWindow(std::string* error)
+ 
+ void GFX_Events() {
+ #if defined(C_DOSBOX_AGENT) && defined(C_SDL2)
+-    if (dosbox_agent::AGENT_IsSession() && !dosbox_agent::AGENT_IsHeadless()) {
++    if (dosbox_agent::AGENT_IsSession() && !dosbox_agent::AGENT_IsHeadless() &&
++        !dosbox_agent::AGENT_GetInputControlState().host) {
+         // Spectator window: do not deliver host input or mapper/menu shortcuts
+         // to the guest. In particular, bypass direct joystick and mouse polling
+         // and focus handlers that synthesize guest keyboard releases.

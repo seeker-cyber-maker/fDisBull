@@ -1,0 +1,27 @@
+{
+  "format": "dotbox-native-overlay-1",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "fdisbull_commit": "ce91c303f2fccd1db9b1e3917ecc8c98473bfdb9",
+  "fdisbull_profile": "experimental/dosbox-x",
+  "fdisbull_patch_sha256": "bc0ca8c93deaf6cb96eea91e39176b2713ab333e29bfefcf730e1a1d3c75eb2f",
+  "base_files": {
+    "include/agent/video_adapter.h": "f911a2a900a670a45d757c68443ea6df39973942cf41afa0c8596661e347c66d",
+    "include/debug.h": "2d2581aa678bb06a5b3cbf6655f41a7fcdd8ac3401103e8baa3f318293560511",
+    "src/agent/server/agent_server.cpp": "70cd74a6c75b2efcffdb2589576807dc02c85cc37ec1cf34129bd62c6ac76e01",
+    "src/debug/debug.cpp": "994453372b546da4e315ec0a8c9f0b7ade3af7d425298a8f7247709f9be7f09d",
+    "src/dosbox.cpp": "ebbf44f50db5e973420cc594f68b02a777d2d97e91dd68c7db68c10ccfb19d31",
+    "src/gui/render.cpp": "8070eb27629ad1235a027fc3a2998b78ed3ab7c13da449ad9e3128cb393326cd",
+    "src/gui/sdlmain.cpp": "489d0bffd31e0c194e756a7411c6313babbe6c50d2f236a78f4f94dbc8d6263b"
+  },
+  "result_files": {
+    "include/agent/dotbox_input_control.h": "93f36359698a332849dc3be9d7d066d21eab97733e6c3caa0be165d87414e838",
+    "include/agent/video_adapter.h": "e0bee6af06e55fc115f1d3e885d04e2f19ff34b679b5a5d7b7ea2ac70b8340b1",
+    "include/debug.h": "f1195fba3571cef5778a5fdc283d834eeb21fcf5bd46e80beb0535b7e14f6cd6",
+    "src/agent/server/agent_server.cpp": "4db688d443474e23014b795b1cdfb8d98c81d68353fc9c1a6217b88a554d39d6",
+    "src/debug/debug.cpp": "6378ba31f134bfd31638e7d9a2340f963f9c71f493b973b7069b55efa83bc93d",
+    "src/dosbox.cpp": "98d1df7fea97739c6245c2b7e5780afbbf291be973c3da8de09a185431243c82",
+    "src/gui/render.cpp": "b97bd5aff7b22a075ba00400573da476771615f9db2fc66dd94e716c7aae8c2d",
+    "src/gui/sdlmain.cpp": "309527776b174259a04d55a17a8343889d5f906d1e24b78c0ebe5cb4e48a4500"
+  },
+  "overlay_sha256": "a88cba36f6af1b18cb06753ce703146977720a5a9aa5da55464248aa3079971e"
+}

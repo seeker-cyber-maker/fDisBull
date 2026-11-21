@@ -1,0 +1,475 @@
+{
+  "schema": "dotbox-dune2-repair-save-load-verification-1",
+  "date": "2026-11-19",
+  "status": "passed_for_recorded_original_controls_with_explicit_limits",
+  "tested_source": {
+    "primary_repository": "https://github.com/seeker-cyber-maker/DotBox",
+    "primary_commit": "a0f0c12f1b68a78d05da69b58a4e63567763dac3",
+    "mirror_repository": "https://github.com/TiGa-RCE/DotBox",
+    "mirror_commit": "03e01c3c5d542cb89e0add859c3b2461f12bf6b5",
+    "common_tree": "80e1ac51fe39a4f537327b73a39527246d548d1c",
+    "runtime_changes_in_this_checkpoint": false
+  },
+  "game": {
+    "edition": "Original Dune II v1.0",
+    "executable_sha256": "d49f45729babd298fd72d0f623cc3cfaa4c3d144ab38e53f24355f2208b4e5a0",
+    "house": "Atreides",
+    "scenario_id": 1,
+    "campaign_id": 0,
+    "building": "Windtrap",
+    "separate_original_processes": 2
+  },
+  "scope": {
+    "fresh_request_range": [
+      8,
+      11
+    ],
+    "sliced_request_range": [
+      9,
+      30
+    ],
+    "sliced_request_9_role": "Already-published bounded-wait result supplies the completed-production baseline.",
+    "excluded": "The later failed fresh request 12, later Refinery work, and all unreviewed subsequent activity are outside these live claims.",
+    "inputs": "Independently chosen ordinary controls and separate bounded observations, including two explicit tutorial responses."
+  },
+  "independent_review": {
+    "result": "pass_for_bounded_claims_with_explicit_limits",
+    "report_sha256": "814b36903e28698adc9e4ba630332aaee84ae0de0ad074a340977ab9dc40458f",
+    "inventory_sha256": "92b261af19df8114bc11136601fd7b2abbff7b743e76251ca4b577bb2f9a29b7",
+    "checks": {
+      "memory_chunks_verified": 260,
+      "resident_code_guard_matches": 286,
+      "native_step_receipts_matched": 30,
+      "native_input_receipts_matched": 21,
+      "captures_verified": 26
+    },
+    "last_completed_frame_age_guest_ms_range": [
+      1,
+      15
+    ],
+    "instruction_simultaneous_frame_and_ram_claimed": false,
+    "reviewer_native_calls": 0,
+    "reviewer_external_writes": 0
+  },
+  "journal_prefixes": [
+    {
+      "run": "fresh",
+      "through_revision": 44,
+      "bytes": 690254,
+      "lines": 2243,
+      "last_native_sequence": 1105,
+      "sha256": "851aac477c7c3984f0479915a759afff72fee7047a2d768cdce63fbc4cbf49d5",
+      "native_state_load_calls": 0,
+      "scope": "Exact reviewed byte prefix; subsequent appended records are excluded."
+    },
+    {
+      "run": "sliced",
+      "through_revision": 89,
+      "bytes": 1426465,
+      "lines": 4583,
+      "last_native_sequence": 2256,
+      "sha256": "c90f7fdfcb8f4233360e428e5876164ffe70ba74a449f275bf6635dd4786fab9",
+      "native_state_load_calls": 0,
+      "scope": "Exact reviewed byte prefix; subsequent appended records are excluded."
+    }
+  ],
+  "hold_resume": {
+    "producer": "Construction Yard",
+    "held": {
+      "credits": 974,
+      "countdown": 11264,
+      "cost_remainder": 0,
+      "on_hold": true
+    },
+    "observation_without_input": {
+      "guest_ms": 3000,
+      "game_ticks_elapsed": 180,
+      "credits_unchanged": true,
+      "countdown_unchanged": true
+    },
+    "resumed_after_guest_ms": 2000,
+    "resumed": {
+      "credits": 956,
+      "countdown": 10496,
+      "on_hold": false
+    },
+    "hold_input_interval": {
+      "credits_before": 981,
+      "credits_after": 974,
+      "countdown_before": 11520,
+      "countdown_after": 11264,
+      "instantaneous_toggle_claimed": false
+    },
+    "display_lag": {
+      "held_actual_credits": 974,
+      "held_displayed_credits": 979,
+      "stable_displayed_credits": 974,
+      "value_source": "Displayed-credit memory samples, distinct from exact digits in the earlier last-completed frames."
+    }
+  },
+  "bare_placement": {
+    "footprint_tiles": [
+      2,
+      2
+    ],
+    "top_left_tile": [
+      28,
+      24
+    ],
+    "missing_concrete_cells": 4,
+    "stored_and_rendered_preview_agree": true,
+    "signed_original_validity": -4,
+    "initial_hitpoints": 100,
+    "nominal_hitpoints": 200,
+    "on_map": true,
+    "footprint_occupancy_cells_verified": 4,
+    "raw_house_power_production": 50,
+    "windtrap_count": 1,
+    "credits_before_and_after": 699,
+    "preview_visibility_limit": "One unveiled footprint tile retained partial-fog overlay 116. Successful ordinary placement does not qualify current-visible admission for every tile.",
+    "tutorials": [
+      "Construction Facility",
+      "Windtrap power"
+    ],
+    "tutorials_handled_as_separate_events": true
+  },
+  "repair": {
+    "first_paid_increment": {
+      "hitpoints_before": 100,
+      "hitpoints_after": 105,
+      "credits_before": 699,
+      "credits_after": 685,
+      "repair_and_hold_after": true
+    },
+    "explicit_stop": {
+      "repairing": false,
+      "on_hold": false,
+      "stable_guest_ms": 2000,
+      "game_ticks_elapsed": 120,
+      "hitpoints": 105,
+      "credits": 685
+    },
+    "later_post_save_interval": {
+      "hitpoints_before": 105,
+      "hitpoints_after": 115,
+      "credits_before": 685,
+      "credits_after": 657
+    },
+    "complete_repair_tested": false,
+    "insufficient_credits_tested": false,
+    "upgrade_tested": false,
+    "display_lag": {
+      "actual_credits_after_first_increment": 685,
+      "displayed_credits_after_first_increment": 694,
+      "displayed_credits_after_stop": 691,
+      "displayed_credits_after_stable_observation": 685,
+      "value_source": "Displayed-credit memory samples, distinct from exact digits in the earlier last-completed frames."
+    }
+  },
+  "original_repair_arithmetic": {
+    "authority": "Frozen original v1.0 instruction analysis, independently rehashed; live Windtrap deltas agree.",
+    "fraction": "floor(10 * 256 / nominal_HP)",
+    "credits_per_paid_step": "floor((fraction * build_price + 128) / 256)",
+    "nominal_hitpoints": 200,
+    "build_price": 300,
+    "computed_credits_per_step": 14,
+    "hitpoints_per_paid_player_step": 5,
+    "original_factor": 10,
+    "reference_factor": 2,
+    "original_research_sha256": "f9d8fa95dfa64a25237ee96fa421a63de2a85679ee5898c4114c149be611446c",
+    "original_code_provenance_sha256": "1994880a9498cce1d76996ad4cbdbc471e09d22b6a5ecd90586aabeeaebd816e",
+    "original_source_ram_sha256": "ff5f30ebddf7139bcdba989d88e0cc5309c18e03cb7db28a98302fd9318bf35c",
+    "reference_commit": "ebea79aeba025be2fe9004570e9255044aacc0be",
+    "reference_structure_c_sha256": "716bdd6ecd8bc7c42846569e0caff8f536ebd7b798f57186079ab1a035cbf70c",
+    "source_only_branches": [
+      "Strict-greater-than nominal-HP completion check",
+      "Insufficient-credit behavior"
+    ],
+    "exact_live_repair_instruction_trace": false
+  },
+  "power_observations": [
+    {
+      "stage": "bare Windtrap selected after tutorials",
+      "windtrap_hitpoints": 100,
+      "visible_building_output": 50,
+      "raw_house_power_production": 50,
+      "sliced_request": 15
+    },
+    {
+      "stage": "first repair and stable stop",
+      "windtrap_hitpoints": 105,
+      "visible_building_output": 52,
+      "raw_house_power_production": 50
+    },
+    {
+      "stage": "deliberate post-save repair change",
+      "windtrap_hitpoints": 115,
+      "visible_building_output": 57,
+      "raw_house_power_production": 50
+    },
+    {
+      "stage": "ordinary load completed",
+      "windtrap_hitpoints": 105,
+      "visible_building_output": 52,
+      "raw_house_power_production": 52
+    }
+  ],
+  "power_limit": "The raw house field changes on ordinary load; the precise update mechanism and general refresh schedule were not traced.",
+  "ordinary_save_load": {
+    "scope": "Same original process, ordinary in-game menus, newly created save slot.",
+    "description": "r1",
+    "filename": "_SAVE000.DAT",
+    "bytes": 3884,
+    "sha256": "79f820c053d76afda8fd8872f24003ab405ba1d2034290a72efa7ed04025ddb0",
+    "save_witness_sha256": "953ebdfa316c7f08b4fe28602b8d54c41014f14910982ffd8a776b53116eff00",
+    "initial_directory_had_save_files": false,
+    "container_and_name_checked": true,
+    "post_load_file_matches_save_witness": true,
+    "saved": {
+      "credits": 685,
+      "windtrap_hitpoints": 105,
+      "repairing": false,
+      "on_hold": false,
+      "elapsed_mission_ticks": 2192
+    },
+    "deliberately_changed": {
+      "credits": 657,
+      "windtrap_hitpoints": 115,
+      "repairing": true,
+      "on_hold": true
+    },
+    "restored": {
+      "credits": 685,
+      "windtrap_hitpoints": 105,
+      "repairing": false,
+      "on_hold": false
+    },
+    "transitional_load": {
+      "state_revision": 88,
+      "actual_credits": 685,
+      "displayed_credits": 65535,
+      "displayed_value_is_transition_sentinel": true,
+      "timer_mask": 1,
+      "current_gameplay_readiness_claimed": false
+    },
+    "ready_observation": {
+      "state_revision": 89,
+      "actual_credits": 685,
+      "displayed_credits": 685,
+      "timer_mask": 3,
+      "fresh_normal_tactical_frame_inspected": true
+    },
+    "clock_boundary": {
+      "native_guest_ms_at_named_save": 111208,
+      "native_guest_ms_after_save_completion": 112708,
+      "native_guest_ms_after_load": 117708,
+      "native_guest_ms_at_ready_observation": 119708,
+      "game_ticks_at_initial_load": 2290,
+      "scenario_start_ticks_after_load": 98,
+      "restored_elapsed_mission_ticks": 2192,
+      "elapsed_mission_ticks_at_ready_observation": 2308,
+      "native_or_absolute_game_clock_rewound": false
+    },
+    "world_observation_boundary_record_sha256": "4c4cc54db37da36cd9104d461826e881a1603e61475365e9fd1163f97ca78d4f",
+    "prior_object_keys_and_pending_selection_intents_discarded": true,
+    "native_state_load_used": false,
+    "cross_process_reload_tested": false,
+    "byte_identical_memory_restoration_claimed": false,
+    "save_witness_timestamp": "No standalone timestamp is asserted; the frozen associated observation, filename, length and hash bind the witness.",
+    "displayed_credit_value_source": "Displayed-credit memory samples; completed-frame readiness is separately witnessed."
+  },
+  "milestone_evidence": [
+    {
+      "run": "fresh",
+      "request": 8,
+      "state_revision": 39,
+      "response_sha256": "ddb275670f3c165ef8b88d6c7a01947733cfee41cc9fe8eb5c0deaba5f302265",
+      "summary_sha256": "156276c2683c62cd323d44f4711c9c3b7ad524d0bdb70ff72d75f7115001aa04",
+      "frame_sha256": "9bd11db3a4a3ec119eeec506178c81f139af19b43113622973e8fb20a5fcc02d",
+      "ram_sha256": "b658ec4f7f27f7b992478f701e49d465e6dc5a1dff1a40b66209e0bdd903990f"
+    },
+    {
+      "run": "fresh",
+      "request": 9,
+      "state_revision": 41,
+      "response_sha256": "d340e1d15adfc7ec8ef890cce855025f37e6359eb09ce6f6eef63c0a923b5dc1",
+      "summary_sha256": "f7acf087763e93af84097f0fad3fd5dfd77083cf8cc262e48936445b2738db56",
+      "frame_sha256": "95c680628275af8556340e8c67c15f707a83726680c1a90360ee98497565fbc2",
+      "ram_sha256": "8230155723bdc896b8743787ef3cbf3da01bb3f57e7406e8b178fe1bf7c237b2"
+    },
+    {
+      "run": "fresh",
+      "request": 10,
+      "state_revision": 42,
+      "response_sha256": "879af3acaa81a650f92337d3bdb4af80ccfd1355169f0b9c62b15e61b0f79763",
+      "summary_sha256": "ad49e83ab72e296a7e6deadbae7dca6a7a81f6179eda0c641be0c6b718ad7d99",
+      "frame_sha256": "8d94a73dabe65f909a65471c8dd3ae909cd90395de2a716159acfc7a01c86d59",
+      "ram_sha256": "52e9614006428e4902cf0de4177b2d9371d5efc6e4961f85364943d1c78ff509"
+    },
+    {
+      "run": "fresh",
+      "request": 11,
+      "state_revision": 44,
+      "response_sha256": "4966c4d698959f71d5b109256884486cbfb97c75a837c091f36daf40bf2013d7",
+      "summary_sha256": "eaf9fc81f1e3ec7bbddeecb20dd980347b9dc37a4c689def346f59d9979b42d4",
+      "frame_sha256": "77d44b1999453ad7459758ac2dd2effca1685dc080200cb9b6f547f4f45b5462",
+      "ram_sha256": "dbbc49de070a712d3546d775866fc71b93d52be5dd96edd290d74f2f4e5b2ff5"
+    },
+    {
+      "run": "sliced",
+      "request": 11,
+      "state_revision": 54,
+      "response_sha256": "9481c9c44b3bafd525ab3d3e7dd2fb2f6a5dbe63134ce264a96e9656fa05bb74",
+      "summary_sha256": "afad4cce82d8c1809a9a2452066cdcc956b672284bd8e9ba09e04c2ea8c6e23a",
+      "frame_sha256": "0a1c1f7bb2c52f16f8d999aec73818b1bae2723d719c505c8d0b9e8fa07ee381",
+      "ram_sha256": "fff5c12bc6dae9d5f0e5c9f10b16b0024f8c6f377a2941abb15e1c4ce4f2c29d"
+    },
+    {
+      "run": "sliced",
+      "request": 12,
+      "state_revision": 56,
+      "response_sha256": "be96873a604a3e731855a7387eae99f7dc70227a48c06a5f83062487a570ab41",
+      "summary_sha256": "f07231c616030b421a5a0eb2fd5032c0ebfe3e9c68dc6c2d91f2586f56fa7937",
+      "frame_sha256": "755c3224f7195bf29dfca35c3c271cf86606a437ebb32bfcbf5de8f78be2351f",
+      "ram_sha256": "b36cb0161699a1ad2e5ca7e6510c19f81f8153c380346373074cd31e794e8df4"
+    },
+    {
+      "run": "sliced",
+      "request": 13,
+      "state_revision": 58,
+      "response_sha256": "1b5085927a47444b81d6ca6ab19da006786c66dbe45757da3a703162a258ee26",
+      "summary_sha256": "f63bdef4d80b55197af2c82dc73bedb6709a5bce3ca3ef70e93ff3cd512fde39",
+      "frame_sha256": "4d7eb9aea7bc8757d1206ce74ce65c7d869a9cf2789ff49b14fcb6e0d6bdc93a",
+      "ram_sha256": "8480abf92d1a77bd10bb883fa9f1ffb6aa309651f784799a458d97926b1f00c9"
+    },
+    {
+      "run": "sliced",
+      "request": 14,
+      "state_revision": 60,
+      "response_sha256": "61b3ea2016ecc3720d969be24fa386cf634d0b9e6af3bdcd0f7a1807d0e967f9",
+      "summary_sha256": "44102fd0862aee44e154f089d9128cbfee1c6add5948f1593cd0a9e60c91435b",
+      "frame_sha256": "ff543b99823fde6caeb67ca94c70797c120867c44ecf3f5dd4a912b5ea408ad6",
+      "ram_sha256": "643e67385eafb267d217146a5cfe6e39c4ad5b179b505773151e4648e4527bd9"
+    },
+    {
+      "run": "sliced",
+      "request": 15,
+      "state_revision": 62,
+      "response_sha256": "face7ab4b1d3f20e1cb01cd677e53ad93acd7fe068564cfbbd8d7ee852774649",
+      "summary_sha256": "1fe8c03a1794b149b2745216432182420305c2e23e7307c51402b3e65c2b57f1",
+      "frame_sha256": "a979a6b40c080dfd16679ea85afeb6ab971af245475461de915441617f4d6d52",
+      "ram_sha256": "00bdf8b8da4b14e45e8066807f777e1e54990b91be2f719f097fa80985c9da42"
+    },
+    {
+      "run": "sliced",
+      "request": 16,
+      "state_revision": 64,
+      "response_sha256": "6e51101d971850bd693144e7cc45635e6f5ee2351d49ae48c1ed20236b746e4a",
+      "summary_sha256": "04dc6c04793d77d03de23ddac154de3b96af939f1baea815952b64c1fbf23d53",
+      "frame_sha256": "55f6ef40fc8aa24ea8e6ff167714a8ccad4e4c0236183df8384511b121d91055",
+      "ram_sha256": "1c37abdf130888a3f404260ea6a0558b4183559478968dbe09d1595f30fccd57"
+    },
+    {
+      "run": "sliced",
+      "request": 17,
+      "state_revision": 65,
+      "response_sha256": "97e2592eeb1ac468d8545cd597753a9c192b8356fe6b700892808722ecc61998",
+      "summary_sha256": "7bc8a61bf143480ff0b1ee3c03838f9b028d78a1ec8bd9439753d9eb35ce69b2",
+      "frame_sha256": "29e0eb02ff980923b79086e09bb4fa5c71f4b74c5e3c065da0c9d7850834a38b",
+      "ram_sha256": "d503b5986603aea51a7461727ac6fa6b94fb3a494010c9150b73480fdc576125"
+    },
+    {
+      "run": "sliced",
+      "request": 18,
+      "state_revision": 67,
+      "response_sha256": "5119e0c27b82f1a519085574325f78b102048a8bc723fb6964503b87223647af",
+      "summary_sha256": "59fa8c0ac7828db333a52e178e5d8a0b007da210f086d0d64d36457b2783c657",
+      "frame_sha256": "f1d6c4af110f4c80a39874df11aff95a06ed3117d29eb94c8ae9144f657d884c",
+      "ram_sha256": "35cbe6cce8e1f6215f2068161e1485e066d1732f94353c2433acdd5a23593606"
+    },
+    {
+      "run": "sliced",
+      "request": 19,
+      "state_revision": 68,
+      "response_sha256": "055c45d417ee665ed4e04d973ee90c712e654ee4481d4b53b2e4ec7ca8639427",
+      "summary_sha256": "e84b5927d57724b5c9bafc979c79a9b501d83986cc52cf59274fba58b99a8de9",
+      "frame_sha256": "868af579a43f85fd16adecaa7f2438588d0f49b5a90541f9913f429ce6419d37",
+      "ram_sha256": "884de66a1dd1876e52c1c4d57266a1437cd4ef5f8a5241faf7b8881c63f365f6"
+    },
+    {
+      "run": "sliced",
+      "request": 24,
+      "state_revision": 78,
+      "response_sha256": "cc670959b2404f9162978d9efeb71a1099893c68c35c1eb5c152957a61e81214",
+      "summary_sha256": "fbb24bc8e173bbb6bb24123eaa323ad28ecdf1f93968f094c32338fcfd070e76",
+      "frame_sha256": "efe128b28bfea57d560e6aa6063ad5edab1b10c8d57750f415e64b4756bd3c91",
+      "ram_sha256": "62d6c1b64bd3e100c8c388fc89f6dd334e0b2cd7b19a458c756e55f89ea5dc2b"
+    },
+    {
+      "run": "sliced",
+      "request": 25,
+      "state_revision": 80,
+      "response_sha256": "7e4d1eec835fe8c095e854b89c0fccd63cd2d3c336616d88bd1933bdee300c40",
+      "summary_sha256": "acb4964031c31df10b8fc67e48d94b8be8563f9bc1216f7157134f63b271ec88",
+      "frame_sha256": "0fe09d29f49af57194629ded010c2920744c65e609a57ebf261f0dd70820e4a7",
+      "ram_sha256": "deba01f081203d7b4834bee303af0c723289112475ead31f456387d7e5241e0a"
+    },
+    {
+      "run": "sliced",
+      "request": 26,
+      "state_revision": 82,
+      "response_sha256": "7d0fa0b5a30643ff4f73e4a75bc7a64b986a8d8646eb8ce72c2dbd11c0b23fe8",
+      "summary_sha256": "270ba7afd4b2a9d828ed5dc605b601d2f90a58593a99958dbb059b105db27da3",
+      "frame_sha256": "d5108749ad7099ed858306c9b0e6e63eeeffd1784ede24deb6eab8599ad96ca3",
+      "ram_sha256": "1d3abebf94e7ae1adf56ccb756906064c4cb09f48a129fb3e88b060ddb0d5b0f"
+    },
+    {
+      "run": "sliced",
+      "request": 28,
+      "state_revision": 86,
+      "response_sha256": "9332345ddd82ef7ea6ef4396598b065059d93fef8b1747a0e39971935258ce3d",
+      "summary_sha256": "0edc5d0687c44efe6be2003fca9864b49a87b7f1ed4b9b53f70b074709addbf4",
+      "frame_sha256": "0ffabc2eec9cbe10b33d902270713d09228c6cd5a62e651931fe0e6f0d92f550",
+      "ram_sha256": "54ee36bce485664b45d140d1fd9df5b835e93e75ceed82953eb4e42187a042b3"
+    },
+    {
+      "run": "sliced",
+      "request": 29,
+      "state_revision": 88,
+      "response_sha256": "a80ccc48624d35e8acf7259d8408a783b705b3128e71dd6b4460f10f9104d4d3",
+      "summary_sha256": "100f5d7404e228e11f46978427c2326ce364c8aa55700dce6daab5026940204a",
+      "frame_sha256": "474d5acfe54e165261a73ac9aa5dd2520bcea185f91df52f65f01581e09317ec",
+      "ram_sha256": "983e3bf4a724661d7d66ecf4c301dd95216a65c399caea41a28eaab2cf95b825"
+    },
+    {
+      "run": "sliced",
+      "request": 30,
+      "state_revision": 89,
+      "response_sha256": "eef5a2e36b12841724d2ce0bbc9777c8551500812beb97a11c4d2b4153fa6759",
+      "summary_sha256": "ab67810700dcf1c37815dc308e19de5a8e9e1f018860aa82bb74227d5e793684",
+      "frame_sha256": "023c7a400fa1e2f8273dd5591af92b7663d3dd6cb8ee5ab2391bff2644ac027b",
+      "ram_sha256": "15a4f4e6da56f949c36bf19b2825f47c4b51a6f693766b62b46704c1bc7150a6"
+    }
+  ],
+  "observation_limits": {
+    "all_summaries_are_diagnostic": true,
+    "all_summaries_action_admission": false,
+    "sliced_current_visibility_established": false,
+    "sliced_entity_list": "entity_candidates",
+    "fresh_legacy_visible_entities_name_is_visibility_proof": false,
+    "provider_or_current_visibility_qualification_added": false
+  },
+  "work_record": {
+    "board": "https://agent-bbs-native.tiga-rce.chatgpt.site",
+    "project": "dotbox",
+    "ticket": "e-18c835bb-80c7-411c-bdde-d71c6b5cf06e"
+  },
+  "limits": [
+    "No new end-to-end mission victory is claimed by this slice.",
+    "No complete repair, insufficient-credit repair, other building type or general partial-foundation rule is qualified.",
+    "No cross-process ordinary reload, emulator state.load, overwritten slot, corrupt-save recovery or complete save-format compatibility is qualified.",
+    "No current-visibility, public Dune II provider, action-admission or ownership qualification is added.",
+    "The earlier private frozen research remains a source study; its untested branches are not live passes.",
+    "Commercial assets, RAM, images, saves, disassembly, raw journals and private runtime paths remain excluded."
+  ]
+}

@@ -1,0 +1,5 @@
+# Unified-diff context includes significant leading-space lines; preserve bytes.
+native/input-control.patch -whitespace
+native/dosbox-x/headless-agent.patch -whitespace
+# Preserve the upstream license verbatim, including its CRLF bytes.
+native/dosbox-x/COPYING -text -whitespace

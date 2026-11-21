@@ -86,6 +86,18 @@ One controller owns each live guest; other workers consume immutable evidence.
 
 ## Working in this repository
 
+This tree contains two products and a shared reversing package. Read
+[shared codebase policy](docs/SHARED_CODEBASE.md) before cross-product work.
+fDisBull prioritizes recompilation and UDL–UIL–UDC; `apps/dotbox/` prioritizes
+rapid self-harness development with minimal reasonable delays. Shared
+mechanisms live in `packages/fdisbull-core/`; keep application orchestration
+and acceptance policy separate. DotBox has additional subtree guidance.
+Agent BBS projects `fdb` and `dotbox` stay separate, with linked tasks for one
+canonical shared implementation. Preserve active QEMU migration ownership.
+QEMU becomes fDisBull's primary interface only after parity is qualified;
+DOSBox-X then serves DotBox and explicit fDisBull fallback. This organization
+change does not change current backend defaults or native qualification.
+
 CI is local-first: branch, merge-request and tag events must not automatically
 start provider pipelines. Use the finite local Linux qualification route and
 keep its receipts explicitly local. GitLab web/API pipelines require an explicit

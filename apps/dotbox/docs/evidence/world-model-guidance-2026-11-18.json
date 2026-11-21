@@ -1,0 +1,51 @@
+{
+  "format": "dotbox-world-model-guidance-verification-1",
+  "date": "2026-11-18",
+  "scope": "documentation_and_packaged_guide_only",
+  "base_primary": "adade95acad4ae5062de99f76805305e7a3a2203",
+  "base_mirror": "6dbef65fe923eb54a1a498d63d5c8259671578f1",
+  "python": "3.12.14",
+  "source_tests": {
+    "command": "python -m pytest -q tests/test_kit.py",
+    "passed": 23,
+    "seconds": 0.53
+  },
+  "wheel": {
+    "filename": "dotbox-0.1.0.dev7-py3-none-any.whl",
+    "sha256": "eb451f53f97fcaa2c3d6a376c50f9c07cf7a3db2567d5ce02a3388a780d26fdf",
+    "build": "setuptools.build_meta.build_wheel using existing build runtime; no dependency download",
+    "installed_into_new_directory": true,
+    "source_checkout_imported": false,
+    "dependencies": "existing Python 3.12 test environment reused; no new dependency qualification"
+  },
+  "guide": {
+    "topic": "world",
+    "exit_code": 0,
+    "matches_source": true
+  },
+  "resources": {
+    "count": 49,
+    "all_source_bytes_and_hashes_match": true,
+    "topics": 19,
+    "relative_links_checked": 70
+  },
+  "doctor": {
+    "exit_code": 0,
+    "offline_learning_ready": true,
+    "native_runtime_qualified": false
+  },
+  "review": "independent read-only review found no actionable issues",
+  "not_exercised": [
+    "world store or compiler (not implemented)",
+    "embeddings",
+    "live game",
+    "driving",
+    "rewind",
+    "native rebuild"
+  ],
+  "initial_environment_attempts": [
+    "Default and system Python lacked pytest; existing project Python 3.12 test environment used successfully.",
+    "Initial pip wheel attempt in the test environment lacked setuptools.build_meta; build completed with existing primary build runtime.",
+    "Local link checker initially mishandled an existing multiline Markdown target; whitespace normalization fixed the checker."
+  ]
+}

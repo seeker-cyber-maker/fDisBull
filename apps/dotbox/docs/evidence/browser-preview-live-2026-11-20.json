@@ -1,0 +1,164 @@
+{
+  "schema": "dotbox-browser-preview-live-evidence-1",
+  "date": "2026-11-20",
+  "status": "live_cloud_browser_display_verified",
+  "tested_source_commit": "55ed0f99dbc219d513429a38946d61057a3d209c",
+  "previous_attempt_receipt": "browser-preview-2026-11-20.json",
+  "presenter": {
+    "path": "scripts/experiments/browser_preview.py",
+    "sha256": "457a7c7c919edbdd889bc98412859cf155860aa400ff7b1d8d407821d4746b22",
+    "unchanged_for_this_check": true,
+    "read_only": true,
+    "loopback_only": true,
+    "installed_dotbox_version": "0.1.0.dev9",
+    "new_packaged_release": false
+  },
+  "launch": {
+    "method": "User-approved terminal launch on attached cloud desktop using the installed DotBox Python and reviewed private native owner; detached with nohup. Exact command retained in private handoff.",
+    "owner_source_sha256": "8879b34acd6bbd243fab18734e041f29f279b77dd712d655d0a0e235a81024d2",
+    "bootstrap_source_sha256": "dafcaa392bd539714f926ef394e1c2fd5adeb576b35942c4e86f24441562a692",
+    "plan_sha256": "c039566a35d87c376399cddeb79145dc14926b278bd690046a8ea1c1b18b0800",
+    "native_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+    "game_executable_sha256": "36a22dbd3119c0b4cdff7adaf50a8abc3b11c21f7bc0d4d7c0d5dbf7b347e3ae",
+    "runtime_profile": "real-normal-v1",
+    "maximum_host_seconds": 3600
+  },
+  "browser": {
+    "method": "CUA screenshot inspection and read-only DOM image geometry",
+    "title": "DotBox game screen",
+    "url": "http://127.0.0.1:8766/",
+    "viewport_css_pixels": [
+      1363,
+      936
+    ],
+    "observations": [
+      {
+        "selection": "fit",
+        "native_px": [
+          320,
+          200
+        ],
+        "rendered_css_px": [
+          1275.1875,
+          797
+        ],
+        "position_css_px": [
+          43.90625,
+          76
+        ],
+        "frame_id": 7246,
+        "received": 1683,
+        "connection": "Live view",
+        "age_seconds": 0.0
+      },
+      {
+        "selection": "1",
+        "native_px": [
+          320,
+          200
+        ],
+        "rendered_css_px": [
+          320,
+          200
+        ],
+        "position_css_px": [
+          521.5,
+          374.5
+        ],
+        "frame_id": 8121,
+        "received": 1931,
+        "connection": "Live view",
+        "age_seconds": 0.0
+      },
+      {
+        "selection": "fit",
+        "native_px": [
+          320,
+          200
+        ],
+        "rendered_css_px": [
+          1275.1875,
+          797
+        ],
+        "position_css_px": [
+          43.90625,
+          76
+        ],
+        "frame_id": 8121,
+        "received": 1931,
+        "connection": "Live view",
+        "age_seconds": 0.0
+      },
+      {
+        "selection": "fit",
+        "native_px": [
+          320,
+          200
+        ],
+        "rendered_css_px": [
+          1275.1875,
+          797
+        ],
+        "position_css_px": [
+          43.90625,
+          76
+        ],
+        "frame_id": 16274,
+        "received": 4241,
+        "connection": "Live view",
+        "age_seconds": 0.0
+      }
+    ],
+    "same_frame_1x_to_fit": true,
+    "native_dimensions_unchanged": [
+      320,
+      200
+    ],
+    "original_game_visible": true,
+    "deliverable_marked": true,
+    "final_selection": "fit",
+    "temporary_terminal_closed": true
+  },
+  "native_execution": {
+    "bootstrap_rpc_receipts": 94,
+    "bootstrap_replies_successful": true,
+    "bootstrap_fast_forward": false,
+    "post_bootstrap_method_scope": "One execution.continue followed only by video.screenshot; no frame.step, input or clock mutation.",
+    "initial_frame": 1340,
+    "initial_captured_ticks": 19165,
+    "first_advanced_frame": 1344,
+    "audit_frame": 5574,
+    "audit_captured_ticks": 79576,
+    "snapshot_frame": 21782,
+    "snapshot_captured_ticks": 310833,
+    "snapshot_capture_count": 5790,
+    "canonical_dimensions": [
+      320,
+      200
+    ],
+    "native_png_hash_changed": true,
+    "installed_original_game_files_rehashed": 7,
+    "installed_original_game_hashes_unchanged": true,
+    "http_requests_advance_guest": false,
+    "game_physics_or_controller_modified": false,
+    "lifecycle_at_acceptance": "Left running for user review; closure not claimed."
+  },
+  "evidence": {
+    "browser_observation_sha256": "b9e95b3bc157367394b401ac77bc909d3b361431ac883fb40dca2099274a4e88",
+    "independent_runtime_audit_sha256": "5f3d58558c896a320bae320f4cad9edfe368aa38c00eb52af06a8b65d8780271",
+    "private_archive_sha256": "3a464501a29a58e4216f09e64e57894eec87f211cc6089c7c2cc824626cad8d8",
+    "private_archive_bytes": 36264,
+    "private_archive_payloads": 13,
+    "private_location": "Recorded in Agent BBS handoff; no commercial assets, raw captures or private runtime files in Git.",
+    "embedded_native_images_omitted": 7
+  },
+  "limits": [
+    "One cloud browser viewport; only Fit and 1x exercised.",
+    "Direct native-owner route tested; existing-service CLI not exercised by this acceptance.",
+    "Read-only display; no browser game input or platform takeover implementation.",
+    "Advancing frames verified; no sustained refresh-rate or input-latency bound claimed.",
+    "Active native session has no closure receipt at acceptance.",
+    "Browser screenshots visually inspected through CUA but not exported or archived.",
+    "Prior failed attempt and its missing closure evidence remain recorded separately."
+  ]
+}

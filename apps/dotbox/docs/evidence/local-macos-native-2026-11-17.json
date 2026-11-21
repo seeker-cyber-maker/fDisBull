@@ -1,0 +1,121 @@
+{
+  "format": "dotbox-local-macos-native-verification-1",
+  "date": "2026-11-17",
+  "date_timezone": "America/New_York",
+  "version": "0.1.0.dev7",
+  "scope": "Observed Apple Silicon build, installed-wheel offline doctor, and eight authored native fixtures on the Mac Studio. Commercial gameplay, complete memory-only rewind and original-Dot desktop integration remain separate gates.",
+  "evidence_collection": {
+    "method": "Read-only inspection of the completed local build and test reports through the Browser plugin's Studio terminal",
+    "raw_reports": "Retained privately on the Mac; hashes below identify the inspected files",
+    "sanitized_receipt_is_binary_attestation": false
+  },
+  "connection": {
+    "studio_command_access": "Working through the Browser plugin and the Mac's local browser terminal",
+    "direct_cloud_ssh": "Still unavailable; the cloud SSH client rejected ownership/permissions on its system configuration before connecting",
+    "supported_escalation": "Rejected by the session's automatic approval policy; elevated execution is disabled",
+    "tailscale_configuration_changed": false
+  },
+  "host": {
+    "system": "Darwin",
+    "release": "27.2.0",
+    "architecture": "arm64",
+    "python": "3.12.16",
+    "desktop": "Logged-in desktop session; visible native gate passed"
+  },
+  "source_at_build": {
+    "primary_repository": "seeker-cyber-maker/DotBox",
+    "branch": "codex/local-macos-build-20261117",
+    "commit": "6573cb5fb1c135629bac5d5ebcd1738fd91ab44c",
+    "base_tree": "116ead20afe9eacbc40b9a4c5d3331428ced6fdf",
+    "dirty": true,
+    "working_tree_change": "scripts/build_local_macos.py explicitly exports SDKROOT from xcrun --show-sdk-path",
+    "helper_sha256": "bfb462f0f57e337df9e3e805185cf0b14f3232cc6cc4ef8ed1b19cc21d82a155",
+    "later_published_sdk_fix": {
+      "primary_commit": "18d374d395471ef0ef741187a955c8ad66773b70",
+      "mirror_commit": "238b5a1bc3c9a35612bc93f7a0b9c6d74f000f23",
+      "shared_tree": "45d39466a994b488ed1faf767beff5f3abbcf587",
+      "relationship": "The built helper bytes match the published SDK fix. Publication also adds the regression test. The historical build report is not relabeled as a build of a later commit."
+    }
+  },
+  "initial_failure": {
+    "stage": "configure-sdl2",
+    "configure_exit_code": 77,
+    "diagnostic": "ld: library 'System' not found",
+    "cause": "The resolved Command Line Tools compiler was invoked without passing the already selected SDK path to its child environment",
+    "minimal_c_link_probe": {
+      "inherited_environment_exit_code": 1,
+      "selected_sdkroot_exit_code": 0
+    },
+    "resolution": "Set SDKROOT to the SDK returned by xcrun in the helper's build environment; no global SDK selection or shell settings changed",
+    "failed_output_preserved": true
+  },
+  "successful_build": {
+    "status": "succeeded",
+    "stage": "complete",
+    "mode": "all",
+    "started_utc": "2026-11-18T02:55:51+00:00",
+    "finished_utc": "2026-11-18T03:00:13+00:00",
+    "elapsed_seconds": 262,
+    "compiler_jobs": 2,
+    "sdl": "Bundled pinned SDL2",
+    "native_build_performed": true,
+    "executable_architectures": [
+      "arm64"
+    ],
+    "executable_sha256": "189039e82103cacd9e34314572afda020aa5968e4e174aec4a6dfb72943612b6",
+    "toolchain_and_linked_library_reports_retained": true
+  },
+  "installed_package": {
+    "offline_learning_ready": true,
+    "scope": "Installed-wheel doctor outside the source checkout; native fixtures separately import the checkout's source",
+    "installed_wheel_preserved_as_built": true
+  },
+  "native_gate": {
+    "accepted": true,
+    "mode": "all",
+    "case_count": 8,
+    "headless_cases": 4,
+    "visible_cases": 4,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "pytest_exit_code": 0,
+    "gui_status": "visible_native_tests_passed",
+    "executable_stable": true,
+    "selected_test_identities": "Exact cases enforced by scripts/test_native.py and recorded in the private JUnit report",
+    "scope": "Authored COM/MZ programs, native ownership and input fences, restore admission, and service/control persistence"
+  },
+  "sdk_fix_regression": {
+    "command": "python -m pytest -q tests/test_local_macos_build.py",
+    "passed": 39,
+    "failed": 0,
+    "seconds": 1.09,
+    "host": "Cloud Linux source checkout",
+    "coverage": "Selected SDK propagation for unset and stale inherited SDKROOT; actual child-process environment and parent-environment preservation",
+    "earlier_full_suite": "The 802-pass/eight-native-skip source run in local-macos-build-2026-11-17.json predates this SDK fix and was not rerun for the documentation update."
+  },
+  "retained_artifact_sha256": {
+    "result.json": "a5b4b0376bcd9bf8fb89fa2838edd1875bc60b0f3ffa7c321b3f6f853abf5473",
+    "native-tests/result.json": "a0b25aef125d5a3e1cf7ebd2dea8f5b613864a29fd0a5223a7ca8f0f9f446478",
+    "native-tests/junit.xml": "6c8e4e1030e81cccd5399f4bb6cc8cbfc376d3d63c1338f641d7952940afe4e8",
+    "native/src/dosbox-x": "189039e82103cacd9e34314572afda020aa5968e4e174aec4a6dfb72943612b6"
+  },
+  "retained_artifacts": [
+    "Compiled native developer executable",
+    "Prepared corresponding native source, patches and license notices",
+    "Isolated Python environment and wheel cache",
+    "Installed doctor report, native source receipt, compiler configuration and linked-library reports",
+    "Per-stage logs, native pytest log, JUnit XML and JSON result reports",
+    "Separate failed first attempt"
+  ],
+  "not_established": [
+    "Direct cloud SSH connectivity to Studio",
+    "Original-Dot desktop takeover/input synchronization",
+    "Police Quest locker-room-to-shower controls",
+    "Late-briefing memory rewind and successful attendance",
+    "Complete player-facing memory-only recovery",
+    "Signed application bundle or portable offline binary release",
+    "Reproducible binary bytes across independent builds",
+    "Merge or release"
+  ]
+}

@@ -125,6 +125,9 @@ def main():
     wheel = only((ROOT / 'dist').glob('fdisbull-*.whl'), 'ordinary core wheel')
     if identity(wheel) != {k: manifest['tested_wheel'][k] for k in ('sha256', 'size')}:
         raise ValueError('ordinary core wheel differs from unified preparation')
+    shared = only((ROOT / 'dist').glob('fdisbull_core-*.whl'), 'ordinary shared wheel')
+    if identity(shared) != {k: manifest['tested_shared_wheel'][k] for k in ('sha256', 'size')}:
+        raise ValueError('ordinary shared wheel differs from unified preparation')
     version = wheel_pins(CHAT / 'wheels')
     if set(version) != builder.RUNTIME_WHEELS:
         raise ValueError('downloaded wheelhouse does not match runtime distributions')

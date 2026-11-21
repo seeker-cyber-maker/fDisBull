@@ -1,4 +1,4 @@
-"""Dot-mode serves retained frames only; it has no guest/host input endpoint."""
+"""Spectator mode serves retained frames only; it has no guest/host input endpoint."""
 import urllib.error
 import urllib.request
 
@@ -15,10 +15,12 @@ def get(url,**kwargs):
 def test_dot_mode_is_explicit_read_only_and_viewer_requests_do_not_touch_native_session(program):
     assert program.dot_mode()['enabled'] is False
     state=program.dot_mode(True);assert state['view_only'] and state['host_input_capture'] is False
+    assert state['mode']=='dot-mode'  # Stable metadata despite the preferred spectator name.
     assert state['host_keyboard_forwarded'] is state['host_mouse_forwarded'] is False
     url=state['viewer_url'];before=list(program.calls)
     status,page,headers=get(url)
-    assert status==200 and b'Dot-mode spectator' in page and b'Host keyboard and mouse are never forwarded' in page
+    assert status==200 and b'<title>fDisBull spectator</title>' in page and b'<h1>Watch-only spectator</h1>' in page
+    assert b'Host keyboard and mouse are never forwarded' in page
     assert b'<script' not in page and b'pointerLock' not in page and b'onkeydown' not in page and b'onclick' not in page
     assert headers['Cache-Control']=='no-store'
     status,data,_=get(url+'frame.png');assert status==204 and data==b''

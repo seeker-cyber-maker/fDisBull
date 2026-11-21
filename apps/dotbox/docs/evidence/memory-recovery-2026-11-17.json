@@ -1,0 +1,144 @@
+{
+  "format": "dotbox-memory-recovery-verification-1",
+  "date": "2026-11-17",
+  "version": "0.1.0.dev6",
+  "branch": "codex/memory-recovery-20261117",
+  "base": {
+    "primary_commit": "f9572d84943c57dcdb83587f85966619ef392325",
+    "mirror_commit": "b018024963dac96e75785b0fc084c63d697333a2",
+    "shared_tree": "707ab7a0a3ce0cb68087368389c48895ad6cd448"
+  },
+  "scope": "Memory-only recovery contract, native restore control-generation fence and recovered AITD reuse guidance; no public Python recovery operation",
+  "contract": {
+    "revert": "Restore compatible emulator memory and machine/device state, never older host file contents",
+    "mutable_closed_saves": "Current disk versions survive; a changed closed autosave alone must not block recovery",
+    "current_io": "Flushing current buffered writes is not historical disk rollback; the first recovery profile still needs explicit DOS handle/device qualification",
+    "native_capability": "input.restore_control=dotbox-restore-control-1",
+    "load_admission": "Raw state.load requires expected_generation; preserve owner and consume generation before cleanup and serializer effects",
+    "failure": "Stale generation is rejected before effects; an admitted failure cannot revive the old generation",
+    "input_reset": "Pre-load cleanup only; does not prove neutral restored device input"
+  },
+  "source_tests": {
+    "passed": 736,
+    "skipped": 8,
+    "seconds": 36.01,
+    "command": "DOTBOX_DOSBOX_BASE_SOURCE=<verified-base-source> python -m pytest -q -ra",
+    "skip_reason": "All eight need a matching DOTBOX_DOSBOX_EXECUTABLE"
+  },
+  "independent_review": {
+    "passed": 21,
+    "skipped": 4,
+    "seconds": 2.77,
+    "scope": "Native overlay/build recipe and authenticated ownership service",
+    "blocking_findings": 0
+  },
+  "installed_tests": {
+    "passed": 44,
+    "skipped": 4,
+    "seconds": 3.12,
+    "command": "DOTBOX_DOSBOX_BASE_SOURCE=<verified-base-source> python -I -m pytest -q -ra installed-suite/tests/test_kit.py installed-suite/tests/test_native_overlay.py installed-suite/tests/test_native_buildrecipe.py installed-suite/tests/test_ownership_service.py",
+    "fixture": "Exact resources exported from the installed wheel; four suites plus a support module copied outside checkout",
+    "skip_reason": "Four actual native RPC checks require matching DOTBOX_DOSBOX_EXECUTABLE"
+  },
+  "installed": {
+    "python": "3.12.14",
+    "dotbox": "0.1.0.dev6",
+    "dependencies": {
+      "Pillow": "12.3.0",
+      "iced-x86": "1.22.0",
+      "pytest": "9.2.0"
+    },
+    "source_imported": false,
+    "fdisbull_available": false,
+    "mcp_available": false,
+    "matching_installed_modules": 35,
+    "installed_guides": [
+      "recovery",
+      "aitd"
+    ]
+  },
+  "artifacts": {
+    "version": "0.1.0.dev6",
+    "runtime_modules": 35,
+    "resources": 46,
+    "topics": 16,
+    "source_and_both_wheels_match": true,
+    "module_map_sha256": "cfd2f7c8aeed6eed1d80ecdf5d5a9f1dc9203296a005d55e6c75e737ad87560e",
+    "catalog_sha256": "db167e51ff0c2d4802485726825e3dfda2c730117d66d6cbabba4484a1642db2",
+    "direct_wheel_sha256": "ae1fda226ffe7a2738e27d8de58e40613d74315fea1628ea6b5fc7f7a076bcbd",
+    "direct_wheel_bytes": 345796,
+    "sdist_wheel_sha256": "215e243e41d4ec5bf00bc033d5d31eb11a2681a97cf883b10b9d97a902d0ff01",
+    "sdist_sha256": "501198934f51fc7a269aabe0fe0558b59f4697d6d49a1e08251486b0c61cc436"
+  },
+  "build": {
+    "commands": [
+      "python -m pip wheel . --no-index --no-deps --no-build-isolation",
+      "setuptools.build_meta.build_sdist(output_directory)",
+      "python -m pip wheel <sdist> --no-index --no-deps --no-build-isolation",
+      "python -m pip install --no-index --find-links <local-wheelhouse> <wheel> pytest"
+    ],
+    "setup_correction": "The test environment lacked setuptools.build_meta; the existing runtime build interpreter supplied setuptools 84.2.1. No build dependency download was used.",
+    "snapshot_note": "Build artifacts precede the final verification receipt and handoff update to avoid self-referential archive hashes. All runtime modules and cataloged operational resources match the final source; later changes are reporting only."
+  },
+  "native_source": {
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "upstream_git_tree": "68005f10ab25418b40621875ad8e7a4bd867335c",
+    "upstream_archive_files": 7829,
+    "base_result_hashes_verified": 37,
+    "final_recipe_result_hashes_verified": 38,
+    "overlay_actual_application_and_idempotence": true,
+    "changed_file_sha256": {
+      "native/dotbox_input_control.h": "93f36359698a332849dc3be9d7d066d21eab97733e6c3caa0be165d87414e838",
+      "native/input-control.patch": "e8b762631b4484c78fa149fba9e1854a9df051001c17197df019eda02c969dec",
+      "native/manifest.json": "0ff0b89610e2dbccadfd2cdc9d51f01e5934de3b7537e188934590ce940d9194",
+      "native/build-recipe.json": "b3704656798db7efc5508d22fc948b97d8647dac7c425165110ea395ba01cd7a",
+      "tests/test_native_overlay.py": "711da411c1b6d70e7c23a370a755a01b04e3f4b6d9bc16a748124e34fd3b3979"
+    },
+    "compiled_policy_checks": [
+      "stale rejection without cleanup",
+      "owner preservation",
+      "generation consumed before cleanup",
+      "throwing cleanup cannot revive prior generation"
+    ]
+  },
+  "service_regression": "Ordinary state_revision does not revoke a cooperative turn; a same-owner native generation change invalidates the prior lease and leaves the boundary unclaimed/unknown without replay",
+  "aitd_recovery": {
+    "source": "Original Charming board retained handoff led to preserved source/history archive",
+    "archive": "fdisbull-thread-source-and-reports-20261117.zip",
+    "bytes": 2257634,
+    "sha256": "a03860f21a790e59b573df1061ad82a7079c610dcfdd82acef0dd2f0003bff7f",
+    "indexed_artifacts_verified": 69,
+    "zip_members": 71,
+    "findings": [
+      "X/Z and heading feedback during bounded ordinary walking",
+      "Actor contact stances in furniture planner",
+      "Sparse observed menu predicates and highlight guards",
+      "Action selection distinct from execution",
+      "Research SAVE0.ITD replacement excluded from memory revert"
+    ],
+    "source_or_calibration_imported": false,
+    "historical_game_replays_rerun": false
+  },
+  "not_performed": [
+    "Complete emulator binary build",
+    "Actual native state.load execution",
+    "Live RAM restore with newer save preserved",
+    "Post-restore keyboard device neutrality qualification",
+    "Public Python recovery API",
+    "Automatic SceneStore/worker invalidation on native load",
+    "Original-Dot input or live AITD integration",
+    "Package release or merge"
+  ],
+  "independent_installed_review": {
+    "result": "No concrete issue found",
+    "method": "Installed interpreter with -I from /tmp; complete recovery and AITD guides read, catalog and native recipe/hash bindings compared",
+    "verified": [
+      "Memory-only contract with current disk versions retained",
+      "No blanket rejection of changed closed saves",
+      "Current pending-write flushing distinguished from historical rollback",
+      "AITD save-slot replacement policy excluded",
+      "No misleading shipped adapter or live rewind claim",
+      "Installed native source hashes match reviewed bytes"
+    ]
+  }
+}

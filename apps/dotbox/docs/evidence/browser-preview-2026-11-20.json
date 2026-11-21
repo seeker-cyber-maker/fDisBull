@@ -1,0 +1,82 @@
+{
+  "schema": "dotbox-browser-preview-evidence-1",
+  "date": "2026-11-20",
+  "status": "presenter_and_native_source_verified_browser_delivery_blocked",
+  "base_commit": "3ce6fa16ade5b14910397bfc03b6579b08b459ea",
+  "presenter": {
+    "path": "scripts/experiments/browser_preview.py",
+    "sha256": "457a7c7c919edbdd889bc98412859cf155860aa400ff7b1d8d407821d4746b22",
+    "routes": [
+      "/",
+      "/status",
+      "/frame.png"
+    ],
+    "read_only": true,
+    "loopback_only": true,
+    "canonical_dimensions_unchanged": true,
+    "game_steps_from_http": false,
+    "input_or_ownership_endpoint": false,
+    "new_packaged_release": false
+  },
+  "verification": {
+    "authored_png_contract": "passed: Python and embedded JS syntax, exact bytes, metadata/hash/dimension refusals, private metadata filtering, loopback/Host/method/path restriction, terminal retention and server cleanup",
+    "real_native_png_http_check": {
+      "status": "passed",
+      "source_sha256": "457a7c7c919edbdd889bc98412859cf155860aa400ff7b1d8d407821d4746b22",
+      "http_status": 200,
+      "native_png_sha256": "6d1dbb70ab54cbdd46b94ad3fcf224aa6324570208e56a49a1a2be082bbfd632",
+      "native_dimensions": [
+        320,
+        200
+      ],
+      "png_byte_identical": true,
+      "scope": "Single-process loopback HTTP test with a freshly captured original native PNG; no browser qualification or new guest."
+    },
+    "native_execution": {
+      "source_commit": "3ce6fa16ade5b14910397bfc03b6579b08b459ea",
+      "installed_version": "0.1.0.dev9",
+      "bootstrap_plan_sha256": "c039566a35d87c376399cddeb79145dc14926b278bd690046a8ea1c1b18b0800",
+      "native_sha256": "af4d353c128dbb58fa433a0f8601cb92d8fb93acc907e25827c038d6dea77e8e",
+      "owner_source_sha256": "012dddcf88efb8da24b4e7af69bf22ee1ff3087af2f6ae9d8c0af307274c0b3d",
+      "initial_frame": 1339,
+      "first_advanced_frame": 1343,
+      "last_retained_frame": 4151,
+      "native_captures": 801,
+      "guest_dimensions": [
+        320,
+        200
+      ],
+      "refresh_requests_advance_guest": false,
+      "browser_game_input": false,
+      "live_observed": true,
+      "scope": "Native source verified; not browser delivery."
+    }
+  },
+  "browser_result": {
+    "status": "blocked_before_browser_display",
+    "requested_url": "http://127.0.0.1:8766/",
+    "browser_id": "cdp",
+    "original_navigation_error": "net::ERR_CONNECTION_REFUSED",
+    "subsequent_tab_url": "chrome-error://chromewebdata/",
+    "internal_error_page_observation_and_issue_report": "rejected by browser protocol policy; allowed protocols http and https",
+    "desktop_inventory": "allowed after original HTTP failure and internal error URL distinction were verified",
+    "terminal_launch": "rejected by automatic approval review as an alternate-desktop workaround; not executed",
+    "execution_interruption_exit_code": 130,
+    "native_close_receipt_retained": false,
+    "browser_image_observed": false,
+    "pending": "Explicit user approval to start this loopback-only viewer from the existing cloud desktop terminal; preserve browser policy and do not inspect chrome-error URL."
+  },
+  "private_evidence": {
+    "name": "DotBox-Browser-Display-Attempt-20261120.zip",
+    "bytes": 275410,
+    "sha256": "bc6a284f8ba0fcca7d7d362016e42a24ab1738d3fe147b084f52f5639be65ff0",
+    "payloads": 20
+  },
+  "prepared_private_owner_sha256": "8879b34acd6bbd243fab18734e041f29f279b77dd712d655d0a0e235a81024d2",
+  "limits": [
+    "No observed browser image or browser resize/refresh qualification.",
+    "No user-input forwarding, platform takeover synchronization, audio or sustained refresh performance qualification.",
+    "The first command-surface run was interrupted with exit130 and no retained native closure receipt.",
+    "Prepared desktop launch needs explicit authorization after automatic approval review rejection."
+  ]
+}

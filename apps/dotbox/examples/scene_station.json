@@ -1,0 +1,230 @@
+{
+  "format": "dotbox-scene-1",
+  "source_sha256": "22f6acf6a9ec0ed835b4a5acf91272c17f65044f8527f1d937fb0ab1f9678fb9",
+  "edition": "authored_fixture_v1",
+  "scene_id": "station",
+  "observation_id": "authored_station_frame_1",
+  "title": "Station lobby",
+  "facts": [
+    {
+      "id": "radio_present",
+      "subject": "radio",
+      "predicate": "present",
+      "value": true,
+      "text": "A radio rests on a table.",
+      "audience": "player",
+      "observation_id": "authored_station_frame_1",
+      "evidence_ref": "fixture:station/frame_1",
+      "detail": "Its dial and speaker are visible."
+    },
+    {
+      "id": "key_present",
+      "subject": "key",
+      "predicate": "present",
+      "value": true,
+      "text": "A key hangs on the wall.",
+      "audience": "player",
+      "observation_id": "authored_station_frame_1",
+      "evidence_ref": "fixture:station/frame_1",
+      "detail": "The key is attached to a small hook."
+    },
+    {
+      "id": "north_door_present",
+      "subject": "north_door",
+      "predicate": "present",
+      "value": true,
+      "text": "A doorway is visible to the north.",
+      "audience": "player",
+      "observation_id": "authored_station_frame_1",
+      "evidence_ref": "fixture:station/frame_1"
+    },
+    {
+      "id": "east_door_present",
+      "subject": "east_door",
+      "predicate": "present",
+      "value": true,
+      "text": "Another doorway is visible to the east.",
+      "audience": "player",
+      "observation_id": "authored_station_frame_1",
+      "evidence_ref": "fixture:station/frame_1"
+    }
+  ],
+  "choices": [
+    {
+      "id": "inspect_radio",
+      "label": "Inspect the radio",
+      "requires": [
+        "radio_present"
+      ],
+      "observation_id": "authored_station_frame_1",
+      "available": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "fixture:station/known_route/inspect_radio"
+      }
+    },
+    {
+      "id": "take_key",
+      "label": "Take the key",
+      "requires": [
+        "key_present"
+      ],
+      "observation_id": "authored_station_frame_1",
+      "available": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "fixture:station/known_route/take_key"
+      }
+    },
+    {
+      "id": "go_north",
+      "label": "Go through the north doorway",
+      "requires": [
+        "north_door_present"
+      ],
+      "observation_id": "authored_station_frame_1",
+      "available": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "fixture:station/known_route/go_north"
+      }
+    },
+    {
+      "id": "go_east",
+      "label": "Go through the east doorway",
+      "requires": [
+        "east_door_present"
+      ],
+      "observation_id": "authored_station_frame_1",
+      "available": true,
+      "route": {
+        "kind": "ordinary",
+        "reference": "fixture:station/known_route/go_east"
+      }
+    }
+  ],
+  "guide_sources": [
+    {
+      "id": "authored_guide_a",
+      "reference": "fixture:guide/authored_guide_a",
+      "edition": "authored_fixture_v1",
+      "origin_group": "walkthrough_a",
+      "locator": "opening scene"
+    },
+    {
+      "id": "authored_guide_b",
+      "reference": "fixture:guide/authored_guide_b",
+      "edition": "authored_fixture_v1",
+      "origin_group": "walkthrough_b",
+      "locator": "opening scene"
+    },
+    {
+      "id": "authored_guide_a_copy",
+      "reference": "fixture:guide/authored_guide_a_copy",
+      "edition": "authored_fixture_v1",
+      "origin_group": "walkthrough_a",
+      "locator": "opening scene"
+    }
+  ],
+  "guide_claims": [
+    {
+      "id": "a_radio",
+      "source_id": "authored_guide_a",
+      "subject": "radio",
+      "predicate": "present",
+      "value": true,
+      "text": "The lobby has a radio.",
+      "condition": ""
+    },
+    {
+      "id": "b_radio",
+      "source_id": "authored_guide_b",
+      "subject": "radio",
+      "predicate": "present",
+      "value": true,
+      "text": "A radio can be examined in the lobby.",
+      "condition": ""
+    },
+    {
+      "id": "a_key",
+      "source_id": "authored_guide_a",
+      "subject": "key",
+      "predicate": "present",
+      "value": true,
+      "text": "A key hangs on the lobby wall.",
+      "condition": ""
+    },
+    {
+      "id": "b_key",
+      "source_id": "authored_guide_b",
+      "subject": "key",
+      "predicate": "present",
+      "value": true,
+      "text": "The lobby has a wall key.",
+      "condition": ""
+    },
+    {
+      "id": "a_north",
+      "source_id": "authored_guide_a",
+      "subject": "north_door",
+      "predicate": "present",
+      "value": true,
+      "text": "One door is on the north side.",
+      "condition": ""
+    },
+    {
+      "id": "a_east",
+      "source_id": "authored_guide_a",
+      "subject": "east_door",
+      "predicate": "present",
+      "value": true,
+      "text": "Another door is on the east side.",
+      "condition": ""
+    },
+    {
+      "id": "a_west",
+      "source_id": "authored_guide_a",
+      "subject": "west_door",
+      "predicate": "present",
+      "value": true,
+      "text": "A third door is on the west side.",
+      "condition": ""
+    },
+    {
+      "id": "copy_west",
+      "source_id": "authored_guide_a_copy",
+      "subject": "west_door",
+      "predicate": "present",
+      "value": true,
+      "text": "The copied guide also lists a west-side door.",
+      "condition": ""
+    },
+    {
+      "id": "a_destination",
+      "source_id": "authored_guide_a",
+      "subject": "north_door",
+      "predicate": "destination",
+      "value": "hallway",
+      "text": "The north door is described as leading to a hallway.",
+      "condition": ""
+    },
+    {
+      "id": "b_destination",
+      "source_id": "authored_guide_b",
+      "subject": "north_door",
+      "predicate": "destination",
+      "value": "office",
+      "text": "The north door is described as leading to an office.",
+      "condition": ""
+    },
+    {
+      "id": "captain_appears",
+      "source_id": "authored_guide_b",
+      "subject": "captain",
+      "predicate": "present",
+      "value": true,
+      "text": "The captain may appear later.",
+      "condition": "after a reported radio call"
+    }
+  ]
+}

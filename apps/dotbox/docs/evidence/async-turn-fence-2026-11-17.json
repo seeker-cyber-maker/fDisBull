@@ -1,0 +1,139 @@
+{
+  "schema": "dotbox-async-turn-fence-verification-1",
+  "date": "2026-11-17",
+  "source_parent_commit": "3e011712c628b86642003e780fbf482e5c913018",
+  "branch": "codex/async-turn-fence-20261117",
+  "qualification": "Local awaited Python callback fence; original-Dot desktop input remains unqualified",
+  "scope": {
+    "api": "Client.run_turn_step_async(lease, action)",
+    "same_flat_receipt_captured_before_first_await": true,
+    "fresh_unstarted_native_coroutine_required": true,
+    "callback_awaited_once_before_postcheck": true,
+    "completed_result_preserved_on_postcheck_failure": true,
+    "cancellation_propagates_with_inspection_note_and_completed_result": true,
+    "coordination_requests_offloaded_without_blocking_event_loop": true,
+    "automatic_retry_renewal_or_release": false,
+    "synchronous_helper_changed": false,
+    "connector_permissions_changed": false,
+    "native_code_changed": false
+  },
+  "verification": {
+    "python": "3.12.14",
+    "dependencies": {
+      "Pillow": "12.3.0",
+      "pytest": "9.2.0",
+      "mcp": "2.3.0"
+    },
+    "baseline_source_suite": {
+      "command": "python -m pytest -q -ra",
+      "passed": 400,
+      "skipped": 7,
+      "seconds": 28.8,
+      "exit_code": 0
+    },
+    "initial_regression": {
+      "command": "python -m pytest tests/test_client_callbacks_async.py -q",
+      "failed": 1,
+      "exit_code": 1,
+      "expected_failure": "AttributeError: Client has no run_turn_step_async"
+    },
+    "new_async_cases": {
+      "passed": 22,
+      "seconds": 4.37,
+      "exit_code": 0
+    },
+    "integrated_client_ownership_suite": {
+      "command": "python -m pytest tests/test_client_callbacks.py tests/test_client_callbacks_async.py tests/test_coordination.py tests/test_ownership.py -q -ra",
+      "passed": 101,
+      "skipped": 0,
+      "seconds": 14.93,
+      "exit_code": 0
+    },
+    "source_suite": {
+      "command": "python -m pytest -q -ra",
+      "passed": 422,
+      "skipped": 7,
+      "seconds": 32.6,
+      "exit_code": 0
+    },
+    "wheel_build": {
+      "command": "python -m build --wheel",
+      "exit_code": 0,
+      "isolated_build_setuptools": "84.2.1"
+    },
+    "wheel_identity": {
+      "installed_from_wheel": true,
+      "source_tree_import": false,
+      "fdisbull_available": false,
+      "mcp_available": false,
+      "runtime_modules_match_source_wheel_install": 22,
+      "runtime_module_map_sha256": "58e8875ab66a143a5c4e8c0d8983d7a6bb7147350f0016bbaaa683d7f3fe6646",
+      "wheel_sha256": "e512956d7bce06866664d54f4d65fb08b8b8f1b76c42469554da98b0edcc7796",
+      "client_sha256": "89750d90f854de825ed2730fd2cd0325c6c3f94cc519c2150912cbdf364626fc"
+    },
+    "independent_review": {
+      "blocking_findings": 0,
+      "focused_cancellation_experiment_exit_code": 0
+    },
+    "setup_failures_resolved": [
+      {
+        "operation": "Non-isolated wheel build",
+        "reason": "Fresh venv had no setuptools build backend",
+        "resolution": "Use standard isolated build with declared setuptools>=68 requirement"
+      },
+      {
+        "operation": "First isolated test-environment install",
+        "reason": "Test dependency command contained a trailing > in its version requirement",
+        "resolution": "Correct requirement to pytest>=8,<10 and install successfully"
+      }
+    ],
+    "native_skips": {
+      "total": 7,
+      "missing_inputs": [
+        "DOTBOX_DOSBOX_EXECUTABLE",
+        "DOTBOX_DOSBOX_BASE_SOURCE"
+      ],
+      "areas": [
+        "Persistent control native acceptance",
+        "Pinned source overlay application",
+        "Native protocol checks (2)",
+        "Full native play service",
+        "Native harness input",
+        "Original MZ launch"
+      ]
+    },
+    "isolated_installed_suite": {
+      "command": "python -I -m pytest -q -ra",
+      "execution": "Fresh base-package virtual environment, four copied test modules outside source checkout, no source PYTHONPATH",
+      "test_modules": [
+        "test_client_callbacks.py",
+        "test_client_callbacks_async.py",
+        "test_coordination.py",
+        "test_ownership.py"
+      ],
+      "passed": 101,
+      "skipped": 0,
+      "seconds": 15.26,
+      "exit_code": 0
+    }
+  },
+  "limits": [
+    "Authenticated loopback coordinator and harmless data callbacks only; no desktop input or game launch",
+    "The original Dot executor still needs a supported common path to turn checks, desktop input and observation",
+    "Status-only MCP responses remain observations, never turn receipts or input grants",
+    "The receiver three-second freshness contract is unchanged; a new heartbeat cannot renew an old lease",
+    "Sampled cooperation is not an atomic input-capture lock and can miss between-sample transitions",
+    "Callbacks must cooperate with cancellation, avoid detached effects, and be awaited sequentially",
+    "Cancellation cannot stop a read-only socket check already running in a worker thread",
+    "Native DOSBox checks were not rerun without their prepared executable and source"
+  ],
+  "live_actions": {
+    "ownership_probe": false,
+    "desktop_input": false,
+    "environment_switch": false,
+    "tunnel_or_permission_change": false,
+    "game_launch": false,
+    "audio": false,
+    "release_publication": false
+  }
+}

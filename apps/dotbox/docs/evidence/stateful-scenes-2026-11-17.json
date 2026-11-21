@@ -1,0 +1,379 @@
+{
+  "format": "dotbox-stateful-scenes-evidence-1",
+  "date": "2026-11-17",
+  "version": "0.1.0.dev4",
+  "scope": "Offline provider observation persistence, state-bound choices, suggestion policy and passive description",
+  "parents": {
+    "primary": "2322cfbf16441343ea998d76479b7b4fbfd59340",
+    "mirror": "c88464e656912e41a74b986f416d0380e804623f",
+    "shared_tree": "93e2baa150ea6e6234e23bad9ebb24c43217ac36"
+  },
+  "implementation": {
+    "observation_store": "Private SQLite; source, edition, optional selected resources, provider/session/branch binding; monotonic provider observations; identical current repeats are idempotent",
+    "facts": "Latest report per provider entity/predicate, or scene-local subject/predicate without entity_id; omitted values remain historical",
+    "outcomes": "Provider receipts retained with effect category and phase; never apply expected flags",
+    "selection": "Latest persisted packet selected within one read transaction; changed state revision invalidates old digest; intent remains unexecuted",
+    "choices": "Separate provider enabled/readiness assertions; stable prefer/normal shortlist; on_request actions remain explicitly selectable",
+    "look": "Passive current permitted description; no input, new menu or state advancement",
+    "compatibility": "Existing dotbox-scene-1 packets retain previous behavior without optional extensions"
+  },
+  "verification": {
+    "source": {
+      "command": "python -m pytest -q",
+      "passed": 616,
+      "skipped": 7,
+      "seconds": 34.98,
+      "skip_scope": "Native integration checks requiring configured DOSBox source or executable"
+    },
+    "focused": {
+      "suites": [
+        "test_scenes.py",
+        "test_scene_policy.py",
+        "test_scene_state.py",
+        "test_scene_cli_state.py",
+        "test_kit.py"
+      ],
+      "passed": 131,
+      "skipped": 0,
+      "seconds": 0.6
+    },
+    "installed": {
+      "command": "python -I -m pytest -q installed-tests",
+      "copied_suites": 11,
+      "passed": 295,
+      "skipped": 0,
+      "seconds": 15.57,
+      "python": "3.12.14",
+      "dependencies": {
+        "Pillow": "12.3.0",
+        "iced-x86": "1.22.0",
+        "pytest": "9.2.0"
+      },
+      "source_imported": false,
+      "fdisbull_available": false,
+      "mcp_available": false
+    },
+    "artifacts": {
+      "runtime_modules": 27,
+      "resources": 40,
+      "topics": 12,
+      "source_and_direct_and_sdist_and_installed_match": true,
+      "module_map_sha256": "703f63f84fd3d30456ca7f1ac4fbd6dc921b7a6aeadc2aacf528169f3f7e967a",
+      "catalog_sha256": "30be45e25e99a852023d598f4b289619c77c515103c511bbd2a39bd5e8cb8eec",
+      "direct_wheel_sha256": "987233c90900f8afcdd016bb7ea6955daaabdd01fee7be9cbf764e2de15ab4ca",
+      "direct_wheel_bytes": 277961,
+      "sdist_wheel_sha256": "e0601c1e7c4ac96887ac405212cd2dd4b94c529b8e230a7c739dc419b92032d9",
+      "sdist_sha256": "825c04926f8d28c1fa855483e47e8ada8879da4d3fa6d4831c1b9bc840c1896a"
+    },
+    "doctor": {
+      "format": "dotbox-kit-doctor-1",
+      "version": "0.1.0.dev4",
+      "offline_learning_ready": true,
+      "native_runtime_qualified": false,
+      "scope": "Offline tools and resource integrity only; no native launch, input or network",
+      "resources": {
+        "layout": "installed",
+        "verified": 40,
+        "integrity": "content matches package catalog; not a publisher signature"
+      },
+      "inspection": {
+        "ok": true,
+        "decoder": {
+          "name": "iced-x86",
+          "version": "1.22.0"
+        },
+        "checks": {
+          "x86_16": true,
+          "x86_32": true,
+          "truncated_instruction_rejected": true
+        },
+        "scope": "Authored offline decode fixtures only; no native runtime or game qualification"
+      },
+      "learning": {
+        "clock_identity_available": true,
+        "store_opened": false,
+        "scope": "Journal prerequisites only; no player workspace inspected"
+      },
+      "scenes": {
+        "ok": true,
+        "checks": {
+          "authored_choice_available": true,
+          "selection_has_no_execution": true,
+          "state_change_removes_open": true,
+          "incidental_choice_remains_explicit": true,
+          "passive_look_has_no_execution": true
+        },
+        "scope": "Packaged authored fixture only; no game recognition, input or voice"
+      }
+    },
+    "review": {
+      "identity_collision_found": true,
+      "fix": "Provider entity IDs across scenes; structurally encoded scene-local fallback; subject and entity contradiction checks both retained",
+      "regression_cases": [
+        "same-label doors in different rooms",
+        "global flag across scenes and alias changes",
+        "delimiter-bearing identity components",
+        "current entity alias contradictions",
+        "private entity identity redaction"
+      ],
+      "blocking_issues_after_fix": 0
+    },
+    "independent_installed_review": {
+      "verdict": "pass_for_bounded_offline_contract",
+      "blocking_gaps": [],
+      "environment": {
+        "python": "3.12.14",
+        "isolated_mode": true,
+        "dotbox_version": "0.1.0.dev4",
+        "native_game_used": false,
+        "network_used": false,
+        "source_checkout_read": false,
+        "fdisbull_used": false
+      },
+      "sources": [
+        "installed dotbox guide --topic state",
+        "installed dotbox guide --topic conversation",
+        "installed dotbox kit-export authored window examples",
+        "installed public dotbox.scenes and dotbox.scene_state APIs"
+      ],
+      "scenario_results": [
+        {
+          "scenario": 1,
+          "name": "Closed window, unknown lock and explicit unusual command",
+          "result": "pass",
+          "evidence": {
+            "suggested": [
+              "open_window",
+              "try_door"
+            ],
+            "eligible": [
+              "open_window",
+              "try_door",
+              "lick_window"
+            ],
+            "door_open": false,
+            "door_locked": null,
+            "explicit_choice": "lick_window",
+            "execution": "not_performed"
+          }
+        },
+        {
+          "scenario": 2,
+          "name": "Response completion does not imply state commitment or route readiness",
+          "result": "pass",
+          "evidence": {
+            "outcome": {
+              "id": "authored-interface-receipt",
+              "action_sent": true,
+              "complete": true,
+              "effects": "unknown",
+              "phase": "interface",
+              "evidence_ref": "authored:interface-receipt"
+            },
+            "remembered_window_open": false,
+            "eligible": [],
+            "selection_denial": {
+              "exception": "ValueError",
+              "message": "Choice is not currently offered"
+            }
+          }
+        },
+        {
+          "scenario": 3,
+          "name": "Window flag committed while input remains unready",
+          "result": "pass",
+          "evidence": {
+            "remembered_window_open": true,
+            "receipt_complete": true,
+            "effects": "applied-confirmed",
+            "eligible": [],
+            "selection_denial": {
+              "exception": "ValueError",
+              "message": "Choice is not currently offered"
+            }
+          }
+        },
+        {
+          "scenario": 4,
+          "name": "Ready open window, default suggestions, passive look",
+          "result": "pass",
+          "evidence": {
+            "suggested": [
+              "close_window",
+              "try_door"
+            ],
+            "eligible": [
+              "close_window",
+              "try_door",
+              "lick_window"
+            ],
+            "opening_denial": {
+              "exception": "ValueError",
+              "message": "Choice is not currently offered"
+            },
+            "request_only_suggestions": [],
+            "passive_narration": "The study\nThe window is open to the courtyard.\nA closed door leads out of the study.\nYou have not checked the door's lock.",
+            "passive_execution": "not_performed",
+            "passive_has_menu": false,
+            "store_unchanged_by_look": true
+          }
+        },
+        {
+          "scenario": 5,
+          "name": "Unseen side effect invalidates old selection without new narration",
+          "result": "pass",
+          "evidence": {
+            "same_scene": true,
+            "same_observation_id": true,
+            "same_narration": true,
+            "internal_flag_locked": false,
+            "internal_flag_current": true,
+            "old_menu_denial": {
+              "exception": "ValueError",
+              "message": "Stale scene or observation; project the current packet before choosing"
+            },
+            "new_intent_revision": 5,
+            "undiscovered_choice_excluded": true
+          }
+        },
+        {
+          "scenario": 6,
+          "name": "Out-of-order, duplicate and conflicting-revision delivery",
+          "result": "pass",
+          "evidence": {
+            "old_record_denial": {
+              "exception": "ValueError",
+              "message": "Stale provider revision; delayed observations cannot replace current state"
+            },
+            "exact_duplicate": {
+              "format": "dotbox-scene-state-1",
+              "status": "unchanged",
+              "revision": 5,
+              "scene_id": "study",
+              "observation_id": "authored-ready-frame",
+              "scene_sha256": "576eb8808a2e44dd1f1fb5ab74ff42e359c1bd78592496efe88a6a467174082b",
+              "scope": "persisted_snapshot_only",
+              "claim": "Persisted provider reports only; no independent recognition or live freshness verification"
+            },
+            "conflict_denial": {
+              "exception": "ValueError",
+              "message": "Conflicting observation at the same provider revision"
+            },
+            "head_revision": 5
+          }
+        },
+        {
+          "scenario": 7,
+          "name": "Same-label doors across rooms; closed and unlocked remain independent",
+          "result": "pass",
+          "evidence": {
+            "door_memory": [
+              {
+                "subject": "door",
+                "predicate": "locked",
+                "value": false,
+                "identity_scope": "scene",
+                "observed_scene_id": "study",
+                "observed_revision": 7,
+                "current_in_snapshot": true
+              },
+              {
+                "subject": "door",
+                "predicate": "open",
+                "value": false,
+                "identity_scope": "scene",
+                "observed_scene_id": "study",
+                "observed_revision": 7,
+                "current_in_snapshot": true
+              },
+              {
+                "subject": "door",
+                "predicate": "locked",
+                "value": false,
+                "identity_scope": "scene",
+                "observed_scene_id": "hall",
+                "observed_revision": 6,
+                "current_in_snapshot": false
+              },
+              {
+                "subject": "door",
+                "predicate": "open",
+                "value": true,
+                "identity_scope": "scene",
+                "observed_scene_id": "hall",
+                "observed_revision": 6,
+                "current_in_snapshot": false
+              }
+            ],
+            "historical_window_current": false,
+            "historical_remote_flag_current": false,
+            "study_narration": "The study\nA closed door leads out of the study.\nThe study door is unlocked."
+          }
+        },
+        {
+          "scenario": 8,
+          "name": "Restored branch isolation and persistent original timeline",
+          "result": "pass",
+          "evidence": {
+            "same_store_restore_denial": {
+              "exception": "ValueError",
+              "message": "Scene source, edition, selection or provider/session/branch binding differs; use a new store"
+            },
+            "original_branch": "first-play",
+            "original_revision": 7,
+            "restored_branch": "restored-play",
+            "restored_revision": 0,
+            "restored_remote_reports": 0,
+            "reopened_original_identical": true
+          }
+        }
+      ],
+      "guidance_assessment": {
+        "verdict": "clear_and_consistent_with_observed_offline_behavior",
+        "observations": [
+          "State guide explicitly separates player discovery, enabled state, route readiness and suggestion usefulness.",
+          "Both guides separate acceptance, response text, committed effects and readiness, and require live executor rechecks.",
+          "State guide says requires checks current public fact presence, not value; provider must update guards.",
+          "Window examples update enabled gates, preserve unknown lock state, and mark the incidental lick command on_request.",
+          "State guide requires branch separation, observation-time ordering and stable entity IDs for cross-room identity.",
+          "Passive look is explicitly current supplied description without input or a menu; authored text must be refreshed by the provider."
+        ]
+      },
+      "limits": [
+        "Provider facts, receipt semantics, input guards, readiness and audience are authored assertions; this review does not independently establish their truth.",
+        "No live asynchronous runner, native game, flag extractor, voice frontend, input ownership fence or desktop execution was exercised.",
+        "Out-of-order and busy-state checks simulate serialized provider packets; they are not concurrency or live engine timing qualification.",
+        "Passive look reads the latest supplied snapshot; it does not refresh a live game or regenerate stale provider prose.",
+        "Source and repository tests were intentionally not inspected; engineering-quality verdict is limited to installed public-boundary behavior and guidance."
+      ]
+    }
+  },
+  "provider_study": {
+    "version": "fDisBull 0.34.1, installed package and previously preserved Lost in Time continuation",
+    "primary_code_references": [
+      "fdisbull/scene_values.py: ObservationReads, expression, comparison",
+      "fdisbull/scenes.py: SceneHandle._observe, act, _wait_outcome",
+      "fdisbull/progressive_scenes.py: WorkflowHandle.execute, adopt",
+      "fdisbull/text_projection.py: TextProjectionHandle._read, act",
+      "fdisbull_player/player.py: Player.execute_result, execute, _resolve",
+      "fdisbull/il_scenes.py: ILSceneBackend"
+    ],
+    "findings": [
+      "Existing provider visible, enabled and ready states are distinct",
+      "Public Z verb bindings alone do not establish ready/enabled action admission",
+      "Provider outcome categories and outcome phases are retained instead of introducing transition rules",
+      "Existing passive Player look does not dispatch an action"
+    ],
+    "historical_examples": "Water response text may precede checked flag; pump drain flag may precede final interface readiness",
+    "native_examples_reexecuted_for_this_slice": false,
+    "commercial_game_material_included": false
+  },
+  "limitations": [
+    "Provider observation semantics, admission gates and public knowledge remain caller assertions",
+    "No live flag extraction, observation event delivery or automatic public-Z adapter",
+    "No independent evaluation of game rules, expected-effect application or generic verb blacklist",
+    "No live token or ownership recheck is performed by offline choice selection",
+    "No cloud scheduler, movement monitor, concurrent voice frontend or live async gameplay qualification",
+    "No native executable, commercial game assets, saves, raw dumps or private stores published"
+  ]
+}
