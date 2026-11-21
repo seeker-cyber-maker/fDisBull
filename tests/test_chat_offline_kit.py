@@ -26,7 +26,7 @@ def inventory(tmp):
         add('artifacts/' + role, role)
     for role, name in [('wheel_core', 'fdisbull'), ('wheel_player', 'fdisbull-player'), ('wheel_shared', 'fdisbull-core'), ('wheel_z3', 'z3-solver'), ('payload', 'iced-x86'), ('payload', 'capstone'), ('payload', 'lief'), ('payload', 'pillow'), ('payload', 'unicorn'), ('payload', 'dnfile'), ('payload', 'dncil'), ('payload', 'pefile'), ('payload', 'tree-sitter'), ('payload', 'tree-sitter-c'), ('payload', 'pycparser'), ('payload', 'zstandard')]:
         wheel = tmp / (name + '.whl')
-        version = '0.1.0.dev4' if name == 'fdisbull-core' else '1.0'
+        version = '0.1.0.dev5' if name == 'fdisbull-core' else '1.0'
         dist_info = name.replace('-', '_') + '-' + version + '.dist-info'
         metadata = f'Name: {name}\nVersion: {version}\n'
         if name == 'fdisbull-core':
@@ -45,7 +45,7 @@ def inventory(tmp):
     objects = [{'path': x['destination'], 'needed': {}} for x in files if Path(x['source']).read_bytes().startswith(b'\x7fELF')]
     objects[0]['needed'] = {'libx.so': 'lib/libx.so'}
     add('receipts/closure.json', 'closure_receipt', json.dumps(dict(schema='fdisbull-elf-closure-v1', complete=True, objects=objects)).encode())
-    inv = dict(schema='fdisbull-chat-offline-inventory-v1', wheel_versions={name: ('0.1.0.dev4' if name == 'fdisbull-core' else '1.0') for name in kit.RUNTIME_WHEELS}, identities=dict(source_commit='a'*40, test_source_commit='b'*40, python='3.13.5', qemu='9.2.4', wine='11', version='1.0'), files=files)
+    inv = dict(schema='fdisbull-chat-offline-inventory-v1', wheel_versions={name: ('0.1.0.dev5' if name == 'fdisbull-core' else '1.0') for name in kit.RUNTIME_WHEELS}, identities=dict(source_commit='a'*40, test_source_commit='b'*40, python='3.13.5', qemu='9.2.4', wine='11', version='1.0'), files=files)
     p = tmp / 'inventory.json'
     p.write_text(json.dumps(inv))
     return p, inv

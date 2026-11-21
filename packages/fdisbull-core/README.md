@@ -31,10 +31,16 @@ It performs no writes or execution. A fresh candidate replay must establish the
 actual outcome because later assignments may override the edited instruction.
 See the [edit/replay contract](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/agi-scene-position-edits-20261121/native/qemu-agi/SCENE_EDITING.md).
 
+The distinct `plan_variable_position_override` API deliberately converts one
+witnessed variable-position instruction to literals. It preserves variable IDs
+and historical read values, makes the changed binding explicit, and leaves fresh
+replay to establish placement and downstream effects. See the
+[variable override contract](https://github.com/seeker-cyber-maker/fDisBull/blob/codex/agi-variable-position-overrides-20261121/native/qemu-agi/VARIABLE_SCENE_EDITING.md).
+
 Build independently with `python -m build packages/fdisbull-core` from the shared
 repository, or `python -m build` from this directory. Install this package before
 installing either product from source; both products pin its version explicitly.
 Run its authored-byte checks with `python -m pytest packages/fdisbull-core/tests`.
 `PROVENANCE.json` identifies the unchanged initial kernel and the transport
 extraction and the independently authored scene consumer/planner. Applications pin
-`0.1.0.dev4`, which includes all three modules.
+`0.1.0.dev5`, which includes all three modules.

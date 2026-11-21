@@ -9,7 +9,7 @@ adds no native helper, flag or ABI change.
 `fdisbull_core.agi_scene.AGISceneConsumer` is a standard-library-only module. It
 does not import either application, start QEMU, own a process, alter guest
 controls, or make interpretation decisions for a full game engine. Both
-products pin the independently built shared package at `0.1.0.dev4`.
+products pin the independently built shared package at `0.1.0.dev5`.
 
 It accepts the native `agi-2917-scalar-position-pilot-1` profile: 16 actors,
 byte-valued coordinates, immutable raw code identity, and selected position
@@ -113,7 +113,7 @@ a new timing benchmark or a whole-game performance result.
 
 ## Shared Python API
 
-Install the matching fdisbull-core==0.1.0.dev4 package. The caller supplies a
+Install the matching fdisbull-core==0.1.0.dev5 package. The caller supplies a
 coherent stopped state/events pair and an opaque identity for that attachment.
 
     from fdisbull_core.agi_scene import AGISceneConsumer

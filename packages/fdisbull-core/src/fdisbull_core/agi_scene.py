@@ -322,22 +322,11 @@ class AGISceneConsumer:
         return _update("resynced", reason)
 
 
-def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y) -> dict:
-    """Plan one same-length literal position edit from a captured scene witness.
+def _plan_position_replacement(code, captured_view, *, actor, x, y, required_opcode):
+    """Validate one selected source witness and propose a literal replacement.
 
-    The caller supplies exact raw code and an already captured stopped view.
-    This function performs no I/O, captures no observations and mutates neither
-    input. It refuses missing or incomplete history and variable-position
-    instructions. A harmless stopped control change may leave the witness's
-    generation older than the checkpoint or leave SCENE disabled.
-
-    The result describes replacement operands, not an observed new position.
-    Editing this static instruction affects every execution of its PC. Later
-    assignments, including previously unchanged assignments with no SCENE
-    record, may overwrite the requested position. The caller must construct a
-    separate candidate from the expected bytes, verify its resulting source
-    hash, and observe a fresh bounded execution to assess the actual outcome.
-    Consistency checks do not authenticate caller-supplied observations.
+    The public entry points require their own original opcode. Shared admission
+    keeps source, coverage, timing and current-actor requirements identical.
     """
     if type(code) is not bytes or not 1 <= len(code) <= 65536:
         raise SceneInputError("code must be immutable bytes of length 1..65536")
@@ -361,7 +350,8 @@ def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y)
     if coverage.get("history_complete_since_attach") is not True \
             or _uint(coverage.get("gap_count"), "coverage.gap_count") != 0 \
             or "last_gap" not in coverage or coverage["last_gap"] is not None:
-        raise SceneInputError("literal position editing requires complete history without gaps")
+        kind = "literal" if required_opcode == 37 else "variable"
+        raise SceneInputError(f"{kind} position editing requires complete history without gaps")
     if type(coverage.get("scene_enabled")) is not bool:
         raise SceneInputError("coverage.scene_enabled must be a boolean")
     start = checkpoint(coverage.get("history_start"), "coverage.history_start")
@@ -402,10 +392,12 @@ def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y)
     if witness.get("kind") != "position":
         raise SceneInputError("expected a position-change witness")
     opcode = _uint(witness.get("opcode"), "witness.opcode", 255)
-    if opcode == 38:
+    if required_opcode == 37 and opcode == 38:
         raise SceneInputError("position.v cannot be edited as literal coordinates")
-    if opcode != 37:
-        raise SceneInputError("literal position editing requires opcode 37")
+    if opcode != required_opcode:
+        if required_opcode == 37:
+            raise SceneInputError("literal position editing requires opcode 37")
+        raise SceneInputError("variable position override requires opcode 38")
     if _uint(witness.get("actor"), "witness.actor", 15) != actor:
         raise SceneInputError("position witness identifies a different actor")
     _uint(witness.get("seq"), "witness.seq", current["eligible"], start["eligible"] + 1)
@@ -419,12 +411,14 @@ def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y)
           current["control_generation"], start["control_generation"])
     pc = _uint(witness.get("pc"), "witness.pc", source["size"] - 4)
     if _uint(witness.get("next_pc"), "witness.next_pc", source["size"]) != pc + 4:
-        raise SceneInputError("literal position witness has an inconsistent next PC")
+        kind = "literal" if required_opcode == 37 else "variable"
+        raise SceneInputError(f"{kind} position witness has an inconsistent next PC")
     raw = witness.get("bytes")
     if not isinstance(raw, list) or len(raw) != 4:
-        raise SceneInputError("literal position witness requires four instruction bytes")
+        kind = "literal" if required_opcode == 37 else "variable"
+        raise SceneInputError(f"{kind} position witness requires four instruction bytes")
     expected = [_uint(value, "instruction byte", 255) for value in raw]
-    if expected[:2] != [37, actor] or code[pc:pc + 4] != bytes(expected):
+    if expected[:2] != [required_opcode, actor] or code[pc:pc + 4] != bytes(expected):
         raise SceneInputError("position witness bytes differ from the source instruction")
     before = _position(witness.get("before"), "witness.before")
     after = _position(witness.get("after"), "witness.after")
@@ -433,8 +427,13 @@ def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y)
     if any(state["x"] != state["prev_x"] or state["y"] != state["prev_y"]
            for state in (before, after)):
         raise SceneInputError("position witness violates the selected profile")
-    if (after["x"], after["y"]) != (expected[2], expected[3]) or after != position:
-        raise SceneInputError("position witness differs from literal operands or current actor")
+    if after != position or (required_opcode == 37 and
+                             (after["x"], after["y"]) != (expected[2], expected[3])):
+        if required_opcode == 37:
+            raise SceneInputError("position witness differs from literal operands or current actor")
+        raise SceneInputError("position witness differs from current actor")
+    if required_opcode == 38 and expected[2] == expected[3] and after["x"] != after["y"]:
+        raise SceneInputError("aliased position variables require equal witnessed coordinates")
     try:
         json.dumps(witness, sort_keys=True, separators=(",", ":"), allow_nan=False)
     except (TypeError, ValueError) as error:
@@ -443,7 +442,8 @@ def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y)
     replacement = [37, actor, x, y]
     candidate = code[:pc] + bytes(replacement) + code[pc + 4:]
     return {
-        "schema": "fdisbull-agi-literal-position-edit-1",
+        "schema": ("fdisbull-agi-literal-position-edit-1" if required_opcode == 37
+                   else "fdisbull-agi-variable-position-override-1"),
         "session_id": session_id, "checkpoint": current, "source": source,
         "actor": actor, "witness": deepcopy(witness), "offset": pc, "length": 4,
         "expected_bytes": expected, "replacement_bytes": replacement,
@@ -452,3 +452,62 @@ def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y)
         "changed": replacement != expected, "write_performed": False,
         "scope": "static_instruction",
     }
+
+
+def plan_literal_position_edit(code: bytes, captured_view: dict, *, actor, x, y) -> dict:
+    """Plan one same-length literal position edit from a captured scene witness.
+
+    The caller supplies exact raw code and an already captured stopped view.
+    This function performs no I/O, captures no observations and mutates neither
+    input. It refuses missing or incomplete history and variable-position
+    instructions. A harmless stopped control change may leave the witness's
+    generation older than the checkpoint or leave SCENE disabled.
+
+    The result describes replacement operands, not an observed new position.
+    Editing this static instruction affects every execution of its PC. Later
+    assignments, including previously unchanged assignments with no SCENE
+    record, may overwrite the requested position. The caller must construct a
+    separate candidate from the expected bytes, verify its resulting source
+    hash, and observe a fresh bounded execution to assess the actual outcome.
+    Consistency checks do not authenticate caller-supplied observations.
+    """
+    return _plan_position_replacement(
+        code, captured_view, actor=actor, x=x, y=y, required_opcode=37,
+    )
+
+
+def plan_variable_position_override(code: bytes, captured_view: dict, *, actor, x, y) -> dict:
+    """Replace one witnessed position.v instruction with a literal position.
+
+    The original operand bytes identify variables. Their historical read values
+    come from the committed position witness, not from a later variable state.
+    This explicit opcode-38 to opcode-37 conversion removes those variable reads
+    at every future execution of this PC. Even matching the witnessed coordinates
+    changes that binding, so the returned plan always has changed=True.
+
+    This pure proposal performs no I/O and mutates neither input. It preserves
+    the exact original witness rather than fabricating a literal observation.
+    It does not identify the reaching variable assignments or edit their source.
+    The changed instruction writes actor coordinates, not variable storage, but
+    later get.posn or control flow can propagate that change to variables or
+    other actors. No whole-program isolation or final placement is guaranteed.
+    Construct a separate candidate, verify its identity and observe a fresh
+    bounded execution to assess the outcome. All source, coverage and stopped
+    checkpoint admission checks are shared with the literal-position planner.
+    """
+    plan = _plan_position_replacement(
+        code, captured_view, actor=actor, x=x, y=y, required_opcode=38,
+    )
+    witness = plan["witness"]
+    plan.update({
+        "binding_change": {"from": "variable", "to": "literal"},
+        "variable_reads": {
+            "x": {"index": witness["bytes"][2], "value": witness["after"]["x"]},
+            "y": {"index": witness["bytes"][3], "value": witness["after"]["y"]},
+        },
+        "read_value_basis": "position_witness",
+        "requested_position_matches_observed": (
+            plan["requested_position"] == {key: witness["after"][key] for key in ("x", "y")}
+        ),
+    })
+    return plan

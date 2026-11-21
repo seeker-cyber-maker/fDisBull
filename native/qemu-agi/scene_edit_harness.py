@@ -28,14 +28,14 @@ CASES = (
 REQUESTED = {"x": 30, "y": 40}
 
 
-def _run_program(binary, code, receipt, *, timeout, evidence_dir):
+def _run_program(binary, code, receipt, *, timeout, evidence_dir, step_budget=4):
     receipt["program"] = {"hex": code.hex(), "size": len(code),
                           "sha256": hashlib.sha256(code).hexdigest()}
     with QemuAGI(binary, code, timeout=timeout, evidence_dir=evidence_dir) as vm:
         receipt["binary"] = {"path": str(vm.binary), "sha256": vm.binary_sha256}
         scene = AGISceneHarness(vm)
         receipt["attachment"] = scene.attachment
-        receipt["configuration"] = scene.configure(mask=2, capacity=8, step_budget=4)
+        receipt["configuration"] = scene.configure(mask=2, capacity=8, step_budget=step_budget)
         receipt["capture"] = scene.run()
         receipt["final_state"] = vm.state()
         if receipt["final_state"]["guest"]["status"] != "return":
@@ -45,8 +45,10 @@ def _run_program(binary, code, receipt, *, timeout, evidence_dir):
     return receipt["capture"]["view"]
 
 
-def _candidate_bytes(original, plan):
+def _candidate_bytes(original, plan, *, original_opcode=37):
     """Independently check the preimage and candidate before starting replay."""
+    if type(original_opcode) is not int or original_opcode not in (37, 38):
+        raise HarnessError("Expected an explicit supported position binding")
     if plan["source"]["sha256"] != hashlib.sha256(original).hexdigest() \
             or plan["source"]["size"] != len(original):
         raise HarnessError("Edit plan does not bind the original source")
@@ -58,8 +60,9 @@ def _candidate_bytes(original, plan):
     replacement = bytes(plan["replacement_bytes"])
     if len(expected) != 4 or len(replacement) != 4 \
             or original[offset:offset + 4] != expected \
-            or expected[:2] != bytes((37, 0)) or replacement[:2] != expected[:2]:
-        raise HarnessError("Edit plan changed more than the selected literal operands")
+            or expected[:2] != bytes((original_opcode, 0)) \
+            or replacement[:2] != bytes((37, 0)):
+        raise HarnessError("Edit plan changed outside the selected position binding")
     candidate = original[:offset] + replacement + original[offset + 4:]
     if len(candidate) != len(original) \
             or plan["candidate_source"]["size"] != len(candidate) \
