@@ -132,10 +132,10 @@ def _authored_corpus():
         effect="control", edges=[])
     add("room_dead_view", [30, 98], "load.view", "resource.load_view", [_literal("view", "view", 98)])
     add("room_dead_return", [0], "return", "control.return", effect="control", support="native", edges=[])
-    add("unmodeled", [165, 50, 4], "mul.n", "unmodeled",
-        [_immediate("arg0", 50), _immediate("arg1", 4)], effect="unknown",
-        edges=[{"kind": "assumed_fallthrough", "pc": len(code) + 3}])
-    add("unmodeled_return", [0], "return", "control.return", effect="control", support="native", edges=[])
+    add("multiply", [165, 50, 4], "mul.n", "scalar.multiply",
+        [_variable("destination", 50, access="read_write"), _immediate("value", 4)],
+        effect="scalar")
+    add("multiply_return", [0], "return", "control.return", effect="control", support="native", edges=[])
     jump("interior_jump", "interior_position", adjustment=1)
     add("interior_position", [37, 0, 1, 2], "position", "object.position",
         [_literal("actor", "actor", 0), _immediate("x", 1), _immediate("y", 2)],
@@ -296,8 +296,21 @@ def test_scene_discovery_host_contract_batch():
     assert zero["ordered_tokens"][0]["operands"] == []
     assert zero["ordered_tokens"][1]["operands"] == [_immediate("word_count", 0)]
     assert zero["outcome"] == "unknown"
-    unmodeled = _derive(roots=(LABELS["unmodeled"],))
-    assert unmodeled["unknown_state_effect_sites"] == [LABELS["unmodeled"]]
+    multiply = _derive(roots=(LABELS["multiply"],))
+    assert multiply["unknown_state_effect_sites"] == []
+    # Archived structural-1 pages may still describe this as catalog-only.
+    # Retain their conservative fallback coverage without expecting new native
+    # pages to throw away the now-known variable write and immediate input.
+    archived_pages = deepcopy(pages)
+    for page in archived_pages:
+        for row in page["instructions"]:
+            if row["pc"] == LABELS["multiply"]:
+                row.update(operation="unmodeled", effect_class="unknown",
+                           operands=[_immediate("arg0", 50), _immediate("arg1", 4)],
+                           successors=[{"kind": "assumed_fallthrough", "pc": row["pc"] + 3,
+                                        "in_range": True}])
+    unmodeled = _derive(archived_pages, roots=(LABELS["multiply"],))
+    assert unmodeled["unknown_state_effect_sites"] == [LABELS["multiply"]]
     assert unmodeled["edges"][0]["qualification"] == "unmodeled_effect_fallthrough_assumed"
     for options, kind in [({"max_reached_nodes": 1}, "instruction_budget"),
                           ({"max_edges": 1}, "edge_budget")]:
@@ -421,7 +434,8 @@ def test_scene_discovery_packed_native_metadata_batch(record_property):
         assert zero["conditions"][0]["mnemonic"] == "false" and zero["conditions"][0]["operands"] == []
         assert zero["conditions"][1]["operands"] == [_immediate("word_count", 0)]
         assert zero["execution_support"] == "unsupported_profile"
-        assert by_pc[LABELS["unmodeled"]]["effect_class"] == "unknown"
+        assert by_pc[LABELS["multiply"]]["effect_class"] == "scalar"
+        assert by_pc[LABELS["multiply"]]["execution_support"] == "unsupported_profile"
         _assert_main_graph(_derive(pages))
         for label, expected in FAULTS.items():
             assert time.monotonic() - started < LIMITS["wall_seconds"]

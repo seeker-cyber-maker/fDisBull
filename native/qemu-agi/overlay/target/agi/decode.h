@@ -34,7 +34,9 @@ typedef enum AgiFault {
 } AgiFault;
 
 typedef enum AgiDecodeProfile {
-    AGI_DECODE_SCALAR, AGI_DECODE_BINDING, AGI_DECODE_INTENT
+    AGI_DECODE_SCALAR, AGI_DECODE_BINDING, AGI_DECODE_INTENT,
+    /* Explicit nominal-2.917 runtime dialect; not an upgrade of the pilots. */
+    AGI_DECODE_RUNTIME
 } AgiDecodeProfile;
 
 typedef enum AgiDecodePurpose {
@@ -51,7 +53,9 @@ typedef enum AgiOperandKind {
     AGI_OPERAND_U8, AGI_OPERAND_U16, AGI_OPERAND_S16,
     AGI_OPERAND_PICTURE, AGI_OPERAND_LOGIC, AGI_OPERAND_ROOM,
     AGI_OPERAND_SOUND, AGI_OPERAND_MESSAGE, AGI_OPERAND_INVENTORY_OBJECT,
-    AGI_OPERAND_WORD
+    AGI_OPERAND_WORD,
+    /* Encoded slot identities, never resolved string contents or input state. */
+    AGI_OPERAND_STRING, AGI_OPERAND_CONTROLLER
 } AgiOperandKind;
 
 typedef enum AgiOperandAccess {
@@ -80,7 +84,10 @@ typedef struct AgiDecodedOperand {
     AgiOperandKind kind;
     AgiOperandAccess access;
     uint32_t width;
-    /* An index for variable/flag kinds, otherwise the literal value. */
+    /* Encoded operand: a variable/flag/string/controller slot or a literal.
+     * Indirect roles identify the variable holding the runtime destination;
+     * structural decoding never reads it or claims the indirect target.
+     */
     int32_t value;
 } AgiDecodedOperand;
 
@@ -120,6 +127,9 @@ typedef struct AgiDecodedInstruction {
  * known commands can be structurally decoded in a profile that cannot run them.
  * EXECUTION preserves the native pilot's admission and fault order. STRUCTURAL
  * describes the broader fixed AGI 2.917 catalog without enabling those commands.
+ * RUNTIME opts into the same bounded full framing for either purpose and
+ * nominal zero-operand trace.on. Its handler support remains separately
+ * declared; decoding success alone never authorizes execution.
  */
 typedef uint8_t (*AgiDecodeRead)(void *opaque, uint32_t pc);
 bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
