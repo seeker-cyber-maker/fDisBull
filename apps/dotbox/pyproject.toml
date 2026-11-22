@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dotbox"
-version = "0.1.0.dev9"
+version = "0.1.0.dev10"
 description = "Persistent cooperative DOSBox-X play sessions for Dot"
 requires-python = ">=3.12"
 dependencies = ["Pillow>=10,<13", "iced-x86==1.22.0", "fdisbull-core==0.1.0.dev7"]
