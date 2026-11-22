@@ -229,7 +229,8 @@ def test_stale_or_invalid_input_batch_rejects_without_mutation(case):
 def test_boundary_batch_does_not_invent_a_continuation(case, reason):
     label = {"no_branch": "entry", "missing_record": "entry",
              "fault": "unknown_action", "step_budget": "entry",
-             "call_on_endpoint": "call_literal", "unknown_on_endpoint": "unmodeled",
+             "call_on_endpoint": "call_literal", "unknown_on_endpoint": "multiply",
+             "unmodeled": "multiply",
              "room_on_endpoint": "room_variable"}.get(case, case)
     inputs = {
         "code": CODE, "pages": _pages(), "source_mappings": deepcopy(MAPPINGS),
@@ -237,6 +238,17 @@ def test_boundary_batch_does_not_invent_a_continuation(case, reason):
         "endpoint": {"pc": LABELS["large_return"], "phase": "after"},
         "branch_choices": {}, "operand_bindings": [], "actor_inputs": [],
     }
+    if case in ("unmodeled", "unknown_on_endpoint"):
+        # Older structural pages described mul.n as an unknown effect. Preserve
+        # the conservative barrier for those archived records, while current
+        # native descriptors retain their known scalar operation and operands.
+        for page in inputs["pages"]:
+            for row in page["instructions"]:
+                if row["pc"] == LABELS["multiply"]:
+                    row.update(operation="unmodeled", effect_class="unknown",
+                               operands=[_immediate("arg0", 50), _immediate("arg1", 4)],
+                               successors=[{"kind": "assumed_fallthrough",
+                                            "pc": row["pc"] + 3, "in_range": True}])
     if case == "loop":
         inputs["branch_choices"] = {LABELS["loop"]: "true"}
     elif case == "missing_record":

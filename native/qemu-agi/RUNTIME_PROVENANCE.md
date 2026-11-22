@@ -4,6 +4,9 @@
 semantics. They use `decode.c` for every instruction and condition extent;
 there is no second host opcode parser. `runtime_actor.*` and `runtime_scene.*`
 have their own detailed Sarien provenance and retained GPL version 2 notices.
+The sound sequencer has [separate behavioral-source provenance](RUNTIME_SOUND_PROVENANCE.md).
+The complete [runtime interface contract](RUNTIME.md) records the supported
+device, clock, snapshot and compatibility policies.
 
 The command, predicate, parser and engine-cycle behavior was checked against
 [Sarien commit aaef5e667757385b5b3650cc1f7365908720f7e6](https://github.com/cmatsuoka/sarien/tree/aaef5e667757385b5b3650cc1f7365908720f7e6),
@@ -32,8 +35,9 @@ as bit-identical to Sierra's original platform RNG.
 
 The native state owns LOGIC/PC, 64 call frames, per-LOGIC scan starts, variables,
 flags, 256 actors, strings, parsed words, inventory, controllers, resource load
-membership, picture planes, text cells, menus, sound completion timing and
-script metadata. Resource bytes are immutable and independently hash-bound.
+membership and retention order, picture planes, text cells and saved windows,
+menus, per-channel sound sequencing and script replay pairs. Resource bytes
+are immutable and independently hash-bound.
 Actor preparation, LOGIC execution and actor completion form explicit phases;
 no wall clock is substituted for guest time.
 

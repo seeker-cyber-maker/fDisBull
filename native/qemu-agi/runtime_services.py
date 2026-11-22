@@ -3,9 +3,12 @@
 Only native-emitted request records are dispatched here. There is no bytecode
 framing, opcode execution, parser, renderer or invented device implementation.
 Text and native presentation output are implemented as a bounded headless
-capture ledger. Input, menu selection, restart/quit, pause, save-slot selection
+capture ledger. Input, menu selection, restart/quit, pause, normal-mode save-slot selection
 and a real joystick-calibration result require caller decisions. Capturing a
 frame plan does not claim that a GUI displayed it or a physical device ran.
+Timed print text is recorded once while explicit native timer/input commands
+control dismissal. Native simple-save mode selects its exact description as
+an in-memory slot; normal-mode save-slot selection remains a caller decision.
 
 Save slots contain opaque native snapshots in memory, bound to the exact
 resource package and executable. They are not original-interpreter save files
@@ -71,6 +74,7 @@ class RuntimeServices:
         self.max_saved_bytes = max_saved_bytes
         self._ledger, self._slots = [], {}
         self._output_attempts = set()
+        self._timed_outputs = {}
 
     @property
     def ledger(self):
@@ -142,6 +146,38 @@ class RuntimeServices:
             raise ValueError("choice requires explicit accepted Boolean and exactly "
                              + ", ".join(extra or ("no extra fields",)))
 
+    def _timed_output(self, ticket, choice, remaining):
+        """Record a timed window once; only explicit input acknowledges it."""
+        effect = ticket["effect"]
+        key = (ticket["context"], effect["id"])
+        entry = self._timed_outputs.get(key)
+        if entry is None:
+            if len(self._ledger) >= self.max_outputs:
+                raise HarnessError("Host output-ledger capacity exhausted")
+            entry = {"sequence": len(self._ledger) + 1, "kind": "output", "status": "recorded",
+                     "request": deepcopy(ticket), "operation": _TEXT_OUTPUTS[effect["opcode"]],
+                     "text": effect["text"], "timed": True}
+            self._ledger.append(entry)
+            self._timed_outputs[key] = entry
+        if choice is None:
+            return {"status": "waiting", "reason": "timed", "request": deepcopy(ticket),
+                    "window_ticks_remaining": remaining, "ticks_per_second": 20,
+                    "ledger_sequence": entry["sequence"]}
+        if key in self._output_attempts:
+            raise HarnessError("Output completion was already attempted; inspect state before resolving")
+        self._output_attempts.add(key)
+        try:
+            state = self.vm.complete(ticket, accepted=True)
+        except ValueError:
+            entry["status"] = "rejected_locally"
+            raise
+        except BaseException:
+            entry["status"] = "completion_failed_or_unknown"
+            raise
+        entry["status"] = "completed"
+        return {"status": "output", "request": deepcopy(ticket), "state": state,
+                "ledger_sequence": entry["sequence"]}
+
     def handle(self, *, choice=None):
         """Handle one stopped request; never run the guest or choose missing input."""
         ticket = self.vm.pending()
@@ -157,6 +193,19 @@ class RuntimeServices:
             self._choice(choice)
             return self._finish(ticket, "cancelled",
                                 lambda: self.vm.complete(ticket, accepted=False))
+        if choice is None and ((opcode == 125 and reply == "ack") or
+                               (opcode == 126 and reply == "restore")):
+            guest = self.vm.state()["guest"]
+            simple = guest.get("simple_save", 0)
+            if type(simple) is not int or simple not in (0, 1):
+                raise HarnessError("Invalid native simple-save mode")
+            if simple:
+                if not _runtime._same(guest.get("pending_effect"), effect):
+                    raise HarnessError("Simple-save request changed before slot selection")
+                # Opcode170 supplies this exact name. This selects only this
+                # owner's bounded memory slots; it never names a disk path.
+                name = self._slot_name(guest.get("simple_description"))
+                choice = {"accepted": True, "slot": name}
         presentation = None
         if opcode in _PRESENTATIONS:
             presentation = self.vm.presentation()
@@ -185,6 +234,15 @@ class RuntimeServices:
         if opcode in _TEXT_OUTPUTS and reply == "ack":
             if choice is not None:
                 self._choice(choice)
+            if opcode in (101, 102, 151, 152):
+                guest = self.vm.state()["guest"]
+                remaining = guest.get("window_ticks_remaining", 0)
+                if type(remaining) is not int or not 0 <= remaining <= 2550:
+                    raise HarnessError("Invalid native timed-window countdown")
+                if remaining:
+                    if not _runtime._same(guest.get("pending_effect"), effect):
+                        raise HarnessError("Timed output request changed before capture")
+                    return self._timed_output(ticket, choice, remaining)
             key = (ticket["context"], effect["id"])
             if key in self._output_attempts:
                 raise HarnessError("Output completion was already attempted; inspect state before resolving")
@@ -193,10 +251,24 @@ class RuntimeServices:
             # Even when completion is uncertain the output stays in the ledger.
             if len(self._ledger) >= self.max_outputs:
                 raise HarnessError("Host output-ledger capacity exhausted")
+            details = {"operation": _TEXT_OUTPUTS[opcode], "text": effect["text"]}
+            if opcode == 144:
+                guest = self.vm.state()["guest"]
+                variables, echo = guest.get("variables"), guest.get("echo")
+                if type(variables) is not list or len(variables) != 256 or \
+                        type(variables[0]) is not int or not 0 <= variables[0] <= 255:
+                    raise HarnessError("Invalid native room in log request")
+                try:
+                    _runtime._cp437_bytes(echo, 40, "native log input")
+                except (TypeError, ValueError) as error:
+                    raise HarnessError("Invalid native input in log request") from error
+                if not _runtime._same(guest.get("pending_effect"), effect):
+                    raise HarnessError("Log request changed before context capture")
+                details.update(room=variables[0], input=echo)
             self._output_attempts.add(key)
             return self._finish(
                 ticket, "output", lambda: self.vm.complete(ticket, accepted=True),
-                {"operation": _TEXT_OUTPUTS[opcode], "text": effect["text"]},
+                details,
             )
         if opcode == 125 and reply == "ack":
             if choice is None:

@@ -85,6 +85,7 @@ def test_qom_complete_architecture_observation_neutrality_and_scene(binary):
             assert len(guest["picture_visual_hex"]) == 160 * 168 * 2
             assert len(guest["window_text_hex"]) == len(guest["window_fg_hex"]) == len(guest["window_bg_hex"]) == 2000
             assert (guest["window_x"], guest["window_y"], guest["window_width"], guest["window_height"]) == (0, 0, 0, 0)
+            assert guest["window_ticks_remaining"] == 0
             assert vm.state()["guest"] == guest  # serialization is read-only
             guests.append(guest)
             scene = vm.scene()
@@ -731,3 +732,203 @@ def test_qom_presentation_is_bound_to_current_called_logic(binary):
         assert query["source"]["logic_sha256"] == sha256(code7).hexdigest()
         assert query["request"]["pc"] == 0 and query["request"]["next_pc"] == 1
         assert vm.state() == before
+
+
+@pytest.mark.parametrize("instruction", [
+    bytes([101, 1]), bytes([102, 50]), bytes([151, 1, 2, 3, 20]), bytes([152, 50, 2, 3, 20]),
+])
+def test_qom_timed_print_countdown_retires_once_with_observation_neutrality(binary, instruction):
+    code = instruction + bytes([3, 60, 9, 0])
+    outcomes = []
+    for mask in (0, 1, 2, 3):
+        with runtime(binary, package(code, ["Timed é text"])) as vm:
+            vm.configure(mask=mask, capacity=4096)
+            vm.seed(variables={21: 2, 19: 55, 50: 1})
+            original = vm.state()["guest"]
+            waiting = vm.run(step_budget=20)["guest"]
+            assert waiting["window_open"] == 1 and waiting["window_ticks_remaining"] == 20
+            assert waiting["variables"][19] == 0 and waiting["variables"][21] == 2
+            assert waiting["retired"] == waiting["pc"] == 0
+            assert waiting["pending_effect"]["text"] == "Timed é text"
+            saved_ticket = vm.pending()
+            before = vm.state()
+            with pytest.raises(harness.QMPError):
+                vm.snapshot()
+            assert vm.state() == before
+            # Neither a bounded raw run nor the60Hz audio-only API supplies
+            # a20Hz window timer tick or implicitly executes an actor phase.
+            assert vm.run(step_budget=1)["guest"] == waiting
+            after_audio = vm.sound_tick(2)["guest"]
+            assert after_audio["window_ticks_remaining"] == 20
+            assert after_audio["clock_ticks"] == after_audio["ticks"] == 0
+            almost = vm.clock(19)["guest"]
+            assert almost["window_ticks_remaining"] == 1 and almost["retired"] == 0
+            assert almost["pending_effect"] == waiting["pending_effect"]
+            assert almost["actors"] == waiting["actors"] and almost["ticks"] == 0
+            before = vm.state()
+            with pytest.raises(harness.QMPError):
+                vm.set("agi-runtime-command", '{"action":"clock","ticks":4097}')
+            assert vm.state() == before
+            expired = vm.clock()["guest"]
+            assert expired["window_ticks_remaining"] == expired["window_open"] == 0
+            assert expired["variables"][21] == 0 and expired["pending_effect"] is None
+            assert expired["status"] == "ready" and expired["retired"] == 1
+            assert expired["pc"] == len(instruction) and expired["variables"][60] == 0
+            assert expired["clock_ticks"] == 20 and expired["sound"]["ticks"] == 62
+            assert expired["actors"] == waiting["actors"] and expired["ticks"] == 0
+            for field in ("text_hex", "text_fg_hex", "text_bg_hex"):
+                assert expired[field] == original[field]
+            assert vm.snapshot().startswith(b"FDBAGIS1")
+            before = vm.state()
+            with pytest.raises(harness.QMPError):
+                vm.set("agi-runtime-command", json.dumps({
+                    "action": "complete", "id": saved_ticket["effect"]["id"], "accepted": True,
+                }))
+            assert vm.state() == before
+            assert vm.clock()["guest"]["retired"] == 1
+            events = vm.events()["events"]
+            assert sum(e["opcode"] == instruction[0] and e["channel_id"] == 0 for e in events) == bool(mask & 1)
+            assert sum(e["opcode"] == instruction[0] and e["channel_id"] == 1 for e in events) == bool(mask & 2)
+            one = vm.run(step_budget=1)["guest"]
+            assert one["retired"] == 2 and one["variables"][60] == 9
+            assert one["status"] == "budget"
+            outcomes.append(vm.run(step_budget=10)["guest"])
+    assert all(value == outcomes[0] for value in outcomes[1:])
+
+
+@pytest.mark.parametrize("delay", [0, 2])
+def test_qom_enter_dismisses_modal_print_without_implicit_time(binary, delay):
+    with runtime(binary, package(bytes([101, 1, 0]), ["Enter"])) as vm:
+        vm.seed(variables={21: delay})
+        vm.run(step_budget=10)
+        before = vm.state()["guest"]
+        assert before["window_ticks_remaining"] == 10 * delay
+        assert vm.key(0x0D, False)["guest"] == before
+        other = vm.key(0x20, True)["guest"]
+        assert other["pending_effect"] == before["pending_effect"]
+        entered = vm.key(0x0D, True)["guest"]
+        assert entered["pending_effect"] is None and entered["retired"] == 1
+        assert entered["window_ticks_remaining"] == entered["window_open"] == 0
+        assert entered["variables"][21] == entered["keypress"] == 0
+        assert entered["clock_ticks"] == entered["ticks"] == entered["sound"]["ticks"] == 0
+        assert vm.key(0x0D, False)["guest"]["retired"] == 1
+
+
+def test_qom_nonblocking_print_consumes_flag_without_starting_timer(binary):
+    with runtime(binary, package(bytes([101, 1, 0]), ["Nonmodal"])) as vm:
+        vm.seed(variables={21: 2}, flags={15: 1})
+        opened = vm.run(step_budget=10)["guest"]
+        assert opened["status"] == "return" and opened["retired"] == 2
+        assert opened["flags"][15] == 0 and opened["variables"][21] == 2
+        assert opened["window_open"] == 1 and opened["window_ticks_remaining"] == 0
+        assert opened["pending_effect"] is None
+        assert vm.snapshot().startswith(b"FDBAGIS1")
+        later = vm.clock(25)["guest"]
+        assert later["window_open"] == 1 and later["variables"][21] == 2
+        assert later["text_hex"] == opened["text_hex"] and later["retired"] == 2
+
+
+def test_qom_timed_completion_preserves_normal_cycle_finish_order(binary):
+    with runtime(binary, package(bytes([101, 1, 0]), ["Cycle wait"])) as vm:
+        vm.seed(variables={21: 1})
+        vm.cycle()
+        waiting = vm.run(step_budget=10)["guest"]
+        assert waiting["cycle_active"] == 1 and waiting["ticks"] == waiting["cycle_count"] == 0
+        ready = vm.clock(10)["guest"]
+        assert ready["retired"] == 1 and ready["pending_effect"] is None
+        assert ready["cycle_active"] == 1 and ready["ticks"] == ready["cycle_count"] == 0
+        returned = vm.run(step_budget=10)["guest"]
+        assert returned["cycle_active"] == 0 and returned["ticks"] == returned["cycle_count"] == 1
+        assert returned["retired"] == 2
+        assert vm.clock()["guest"]["ticks"] == 1
+
+
+def test_qom_timed_service_records_once_and_enforces_output_capacity(binary):
+    services = load("runtime_services")
+    code = bytes([3, 21, 1, 101, 1, 3, 21, 1, 101, 2, 0])
+    with runtime(binary, package(code, ["First timed output", "Second timed output"])) as vm:
+        vm.run(step_budget=20)
+        host = services.RuntimeServices(vm, max_outputs=1)
+        before = vm.state()
+        waiting = host.handle()
+        assert waiting["status"] == "waiting" and waiting["reason"] == "timed"
+        assert waiting["window_ticks_remaining"] == 10 and waiting["ticks_per_second"] == 20
+        assert vm.state() == before
+        assert host.ledger["entries"][0]["text"] == "First timed output"
+        assert host.ledger["entries"][0]["timed"] is True
+        assert host.ledger["entries"][0]["status"] == "recorded"
+        assert host.handle()["ledger_sequence"] == waiting["ledger_sequence"]
+        assert len(host.ledger["entries"]) == 1
+        vm.clock(9)
+        assert host.handle()["window_ticks_remaining"] == 1
+        assert len(host.ledger["entries"]) == 1
+        assert vm.clock()["guest"]["pending_effect"] is None
+        assert host.handle()["status"] == "idle"
+        vm.run(step_budget=20)
+        before = vm.state()
+        with pytest.raises(harness.HarnessError, match="capacity"):
+            host.handle()
+        assert vm.state() == before and len(host.ledger["entries"]) == 1
+
+
+@pytest.mark.parametrize("accepted", [True, False])
+def test_qom_timed_service_accepts_explicit_early_completion(binary, accepted):
+    services = load("runtime_services")
+    with runtime(binary, package(bytes([101, 1, 0]), ["Explicit early acknowledgement"])) as vm:
+        vm.seed(variables={21: 255})
+        vm.run(step_budget=10)
+        host = services.RuntimeServices(vm)
+        assert host.handle()["window_ticks_remaining"] == 2550
+        result = host.handle(choice={"accepted": accepted})
+        guest = result["state"]["guest"]
+        assert guest["retired"] == 1 and guest["pending_effect"] is None
+        assert guest["variables"][21] == guest["window_ticks_remaining"] == 0
+        assert guest["clock_ticks"] == guest["ticks"] == 0
+        assert sum(entry.get("text") == "Explicit early acknowledgement"
+                   for entry in host.ledger["entries"]) == 1
+
+
+def test_qom_native_simple_mode_drives_memory_slots_and_empty_disables(binary):
+    services = load("runtime_services")
+    code = bytes([114, 1, 1, 170, 1, 125, 3, 60, 9, 126, 170, 0, 125, 0])
+    with runtime(binary, package(code, ["épée slot"])) as vm:
+        vm.seed(variables={60: 7})
+        host = services.RuntimeServices(vm)
+        vm.run(step_budget=20)
+        assert host.handle()["status"] == "saved"
+        assert set(host.slots) == {"épée slot"}
+        assert vm.run(step_budget=20)["guest"]["variables"][60] == 9
+        restored = host.handle()
+        assert restored["status"] == "restored"
+        assert restored["state"]["guest"]["variables"][60] == 7
+        # Resume to the restore instruction again, then explicitly cancel it
+        # so the guest can disable simple mode with an empty string.
+        vm.run(step_budget=20)
+        host.handle(choice={"accepted": False})
+        pending = vm.run(step_budget=20)["guest"]
+        assert pending["simple_save"] == 0 and pending["simple_description"] == ""
+        assert host.handle()["status"] == "choice_required"
+
+
+def test_qom_native_simple_restore_missing_slot_preserves_request(binary):
+    services = load("runtime_services")
+    with runtime(binary, package(bytes([114, 1, 1, 170, 1, 126, 0]), ["missing"])) as vm:
+        vm.run(step_budget=20)
+        host = services.RuntimeServices(vm)
+        before = vm.state()
+        with pytest.raises(harness.HarnessError, match="does not exist"):
+            host.handle()
+        assert vm.state() == before and host.ledger["entries"] == []
+
+
+def test_qom_log_capture_preserves_native_room_and_echo(binary):
+    services = load("runtime_services")
+    with runtime(binary, package(bytes([144, 1, 0]), ["From room %v0"])) as vm:
+        vm.seed(variables={0: 7})
+        vm.input("look")
+        vm.run(step_budget=10)
+        host = services.RuntimeServices(vm)
+        assert host.handle()["status"] == "output"
+        entry = host.ledger["entries"][0]
+        assert entry["operation"] == "log" and entry["text"] == "From room 7"
+        assert entry["room"] == 7 and entry["input"] == "look"

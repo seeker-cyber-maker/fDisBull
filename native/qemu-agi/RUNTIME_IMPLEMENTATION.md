@@ -1,5 +1,9 @@
 # Native AGI runtime implementation
 
+The implemented interface and explicit compatibility decisions are documented
+in [RUNTIME.md](RUNTIME.md). This file records the reconstruction scope and
+acceptance plan; candidate-specific verification belongs in its retained receipt.
+
 This is the continuation of PR #102 (`a2bd8eb3ed9354067a995f066654bf399696aabc`).
 The unpushed 19-file candidate recorded by the previous agent was unavailable in
 its recorded recovery locations. This work is reconstructed from the published

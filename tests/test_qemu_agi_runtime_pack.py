@@ -278,6 +278,7 @@ def boundary(runtime, pack):
                 "observation": {"count": 0, "capacity": 4096},
                 "guest": {"status": "ready", "retired": 0, "pc": 0, "pending_effect": None,
                           "variables": [0] * 256, "flags": [0] * 256,
+                          "echo": "",
                           "future_architectural_field": {"retained": [1, 2, 3]}},
             }
             self.snapshot_bytes = b"opaque native snapshot: not interpreted by Python"
@@ -711,3 +712,32 @@ def test_failed_output_is_recorded_once_and_never_automatically_replayed(runtime
     with pytest.raises(runtime.HarnessError, match="capacity"):
         adapter.handle()
     assert boundary.pending()["effect"]["id"] == 2
+
+
+def test_simple_mode_uses_exact_native_description_for_memory_save_and_restore(services, boundary):
+    adapter = services.RuntimeServices(boundary)
+    boundary._state["guest"].update(simple_save=1, simple_description="épée slot")
+    boundary.request(125, "ack", ident=31)
+    assert adapter.handle()["status"] == "saved"
+    assert set(adapter.slots) == {"épée slot"}
+    assert adapter.ledger["entries"][-1]["slot"] == "épée slot"
+    boundary.request(126, "restore", ident=32)
+    assert adapter.handle()["status"] == "restored"
+    assert boundary.commands[-1] == {
+        "action": "restore", "id": 32, "snapshot": boundary.snapshot_bytes.hex(),
+    }
+
+
+def test_simple_restore_missing_slot_fails_and_disabled_mode_requires_choice(runtime, services, boundary):
+    adapter = services.RuntimeServices(boundary)
+    boundary._state["guest"].update(simple_save=1, simple_description="missing")
+    boundary.request(126, "restore", ident=41)
+    before = boundary.state()
+    with pytest.raises(runtime.HarnessError, match="does not exist"):
+        adapter.handle()
+    assert boundary.state() == before and boundary.commands == []
+    assert adapter.ledger["entries"] == []
+    boundary._state["guest"].update(simple_save=0, simple_description="")
+    boundary.request(125, "ack", ident=42)
+    assert adapter.handle()["status"] == "choice_required"
+    assert boundary.snapshot_reads == 0

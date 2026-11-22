@@ -35,13 +35,16 @@ def state_layout(tmp_path_factory):
                       'case 4:return offsetof(AgiRuntimeState,hold_key);'
                       'case 5:return offsetof(AgiRuntimeState,simple_save);'
                       'case 6:return offsetof(AgiRuntimeState,simple_description);'
+                      'case 7:return offsetof(AgiRuntimeState,window_height);'
+                      'case 8:return offsetof(AgiRuntimeState,window_ticks_remaining);'
+                      'case 9:return offsetof(AgiRuntimeState,retired);'
                       'default:return (size_t)-1;}}\n')
     subprocess.run([cc, "-std=c11", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC",
                     "-I", str(NATIVE), str(source), "-o", str(library)], check=True,
                    capture_output=True, text=True)
     lib = C.CDLL(str(library))
     lib.offset.argtypes, lib.offset.restype = [C.c_uint], C.c_size_t
-    return [lib.offset(n) for n in range(7)]
+    return [lib.offset(n) for n in range(10)]
 
 
 @pytest.fixture(scope="module")
@@ -399,3 +402,91 @@ def test_display_initial_column_is_not_a_continuation_indent(native, state_layou
         text, _, _ = text_planes(e, state_layout)
         assert text[2 * 40 + 5] == ord("X")
         assert text[3 * 40] == ord("Y")
+
+
+@pytest.mark.parametrize("opcode,row", [(113, 3), (119, 22)])
+def test_disabling_text_surface_clears_its_configured_row(native, state_layout, opcode, row):
+    with Engine(native, [111, 0, 22, 3, 103, row, 0, 1, opcode, 0],
+                messages={(0, 1): "OLD"}) as e:
+        assert e.run(2) == 1
+        assert text_planes(e, state_layout)[0][row * 40:row * 40 + 3] == b"OLD"
+        assert e.run() == 0
+        assert text_planes(e, state_layout)[0][row * 40:(row + 1) * 40] == b" " * 40
+
+
+@pytest.mark.parametrize("accepted", [False, True])
+def test_get_string_clears_old_value_before_prompt_and_cancellation(native, accepted):
+    with Engine(native, [114, 1, 1, 115, 1, 2, 10, 2, 5, 0],
+                messages={(0, 1): "old", (0, 2): "prompt"}) as e:
+        assert e.run(1) == 1 and native.rt_string(e.ptr, 1) == b"old"
+        assert e.run() == 0 and e.probe(11) == 115
+        assert native.rt_string(e.ptr, 1) == b""
+        assert e.complete(accepted=accepted, text="new" if accepted else None)
+        assert native.rt_string(e.ptr, 1) == (b"new" if accepted else b"")
+
+
+def test_actor_border_event_survives_finish_until_next_logic_cycle(native):
+    code = [30, 1, 33, 1, 41, 1, 1, 37, 1, 158, 60, 35, 1,
+            3, 50, 3, 86, 1, 50, 145, 4, 100, 4, 4, 101, 5, 0]
+    with Engine(native, code, blobs={(0, 1): VIEW}) as e:
+        assert native.rt_cycle(e.ptr)
+        assert e.run() == 0
+        assert (e.probe(0, 4), e.probe(0, 5)) == (1, 2)
+        assert native.rt_cycle(e.ptr)
+        assert e.run() == 0
+        assert (e.probe(0, 100), e.probe(0, 101)) == (1, 2)
+
+
+@pytest.mark.parametrize("opcode", [101, 151])
+def test_default_print_width_wraps_more_than_thirty_characters(native, state_layout, opcode):
+    code = [12, 15, opcode, 1] + ([10, 8, 0] if opcode == 151 else []) + [0]
+    with Engine(native, code, messages={(0, 1): "A" * 31}) as e:
+        assert e.run() == 0 and e.probe(38) == 1
+        assert scalar_field(e, state_layout[7]) == 4  # Two content rows plus borders.
+
+
+def test_timed_print_uses_system_clock_and_retires_exactly_once(native, timing_api, state_layout):
+    with Engine(native, [3, 21, 2, 101, 1, 3, 70, 9, 0],
+                messages={(0, 1): "timed"}, mask=3) as e:
+        assert e.run() == 0 and e.probe(11) == 101
+        ticket = e.probe(10)
+        assert scalar_field(e, state_layout[8]) == 20 and e.probe(5) == 1
+        assert timing_api.agi_runtime_sound_ticks(e.ptr, 60)
+        assert scalar_field(e, state_layout[8]) == 20 and e.probe(25) == 0
+        assert timing_api.agi_runtime_clock_ticks(e.ptr, 19)
+        assert scalar_field(e, state_layout[8]) == 1 and e.probe(5) == 1
+        assert timing_api.agi_runtime_clock_ticks(e.ptr, 1)
+        assert (e.probe(2), e.probe(3), e.probe(5), e.probe(38), e.probe(0, 21)) == (0, 5, 2, 0, 0)
+        assert e.probe(24) == 0 and scalar_field(e, state_layout[8]) == 0
+        before = e.state()
+        assert not e.complete(id=ticket)
+        assert e.state() == before
+        assert e.run() == 0 and e.probe(0, 70) == 9 and e.probe(5) == 4
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_enter_completes_one_modal_print_and_is_consumed(native, timing_api, state_layout, timed):
+    with Engine(native, [3, 21, int(timed), 101, 1, 0],
+                messages={(0, 1): "modal"}) as e:
+        assert e.run() == 0 and e.probe(11) == 101
+        if timed:
+            assert timing_api.agi_runtime_clock_ticks(e.ptr, 3)
+            assert scalar_field(e, state_layout[8]) == 7
+        assert native.rt_key(e.ptr, 13, False) and e.probe(2) == 4
+        assert native.rt_key(e.ptr, 13, True)
+        assert (e.probe(2), e.probe(5), e.probe(38), e.probe(17), e.probe(0, 21)) == (0, 2, 0, 0, 0)
+        assert scalar_field(e, state_layout[8]) == 0
+
+
+def test_failed_timed_completion_rolls_back_clock_audio_and_enter_fields(native, timing_api, state_layout):
+    with Engine(native, [3, 21, 1, 101, 1, 0],
+                messages={(0, 1): "timed"}, mask=3) as e:
+        assert e.run() == 0 and timing_api.agi_runtime_clock_ticks(e.ptr, 9)
+        # Exhaust the public state's retirement counter to reject only the
+        # final completion, after tentative clock/audio steps have succeeded.
+        C.c_uint64.from_address(native.rt_state(e.ptr) + state_layout[9]).value = (1 << 64) - 1
+        before, events = e.state(), e.probe(28)
+        assert not timing_api.agi_runtime_clock_ticks(e.ptr, 1)
+        assert e.state() == before and e.probe(28) == events
+        assert not native.rt_key(e.ptr, 13, True)
+        assert e.state() == before and e.probe(28) == events

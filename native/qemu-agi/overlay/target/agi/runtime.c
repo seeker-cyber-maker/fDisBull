@@ -372,10 +372,17 @@ static void close_window(AgiRuntimeState *s)
             }
     }
     s->window_open = s->dialogue = 0;
+    s->window_ticks_remaining = 0;
     s->window_x = s->window_y = s->window_width = s->window_height = 0;
     memset(s->window_text, 0, sizeof(s->window_text));
     memset(s->window_fg, 0, sizeof(s->window_fg));
     memset(s->window_bg, 0, sizeof(s->window_bg));
+}
+static bool pending_print(const AgiRuntimeState *s)
+{
+    uint32_t op = s->pending.opcode;
+    return s->status == AGI_RT_PENDING && s->pending.reply == AGI_RT_REPLY_ACK &&
+           (op == 101 || op == 102 || op == 151 || op == 152);
 }
 static void open_window(AgiRuntimeState *s, const char *text, int row, int col, unsigned width)
 {
@@ -762,14 +769,21 @@ int agi_runtime_step(AgiRuntime *r)
             changed_pc = true;
         } else {
             if (s->cycle_active) {
+                uint8_t prior_actor_border = s->v[4], prior_border_code = s->v[5];
+                /* LOGIC consumed the preceding movement's border report.
+                 * Clear it before movement so this cycle's new hit survives. */
+                s->v[4] = s->v[5] = 0;
                 if (s->graphics) {
                     cb = actor_callbacks(r);
                     result = agi_runtime_actor_finish(&s->world, s->v, s->f, &cb);
-                    if (result < 0) return fail(r, AGI_RT_ACTOR, -result);
+                    if (result < 0) {
+                        s->v[4] = prior_actor_border; s->v[5] = prior_border_code;
+                        return fail(r, AGI_RT_ACTOR, -result);
+                    }
                 }
                 s->cycle_active = 0; s->cycle_count++;
                 memset(s->controllers, 0, sizeof(s->controllers));
-                s->v[4] = s->v[5] = s->f[5] = s->f[6] = s->f[12] = 0;
+                s->f[5] = s->f[6] = s->f[12] = 0;
                 s->f[2] = s->f[4] = 0;
                 if (s->graphics) { draw_status(s); draw_input(s); }
                 s->scene_revision++;
@@ -898,13 +912,18 @@ int agi_runtime_step(AgiRuntime *r)
     case 101: case 102: case 151: case 152:
         value = (op == 102 || op == 152) ? s->v[a] : a;
         if (!formatted_message(r, value ? value : 1, text)) return fail(r, AGI_RT_MESSAGE, value);
+        n = op >= 151 && p[3] ? p[3] : 30;
         if (s->f[15]) {
-            open_window(s, text, op >= 151 ? (int)b : -1, op >= 151 ? (int)c : -1, op >= 151 ? p[3] : 0);
+            open_window(s, text, op >= 151 ? (int)b : -1, op >= 151 ? (int)c : -1, n);
             s->f[15] = 0; s->scene_revision++;
             break;
         }
         if (!request(r, &insn, AGI_RT_REPLY_ACK, text)) return fail(r, AGI_RT_LIMIT, 0);
-        open_window(s, text, op >= 151 ? (int)b : -1, op >= 151 ? (int)c : -1, op >= 151 ? p[3] : 0);
+        open_window(s, text, op >= 151 ? (int)b : -1, op >= 151 ? (int)c : -1, n);
+        /* Pinned Sarien text.c print(): f15 is handled above; blocking
+         * output clears V_key and latches10*v21 independent timer ticks. */
+        s->v[19] = 0;
+        s->window_ticks_remaining = 10u * s->v[21];
         s->scene_revision++;
         return 0;
     case 103: case 104:
@@ -946,6 +965,7 @@ int agi_runtime_step(AgiRuntime *r)
         if (a >= AGI_RT_STRINGS) return fail(r, AGI_RT_STRING, a);
         if (!formatted_message(r, b, text)) return fail(r, AGI_RT_MESSAGE, b);
         if (!request(r, &insn, AGI_RT_REPLY_TEXT, text)) return fail(r, AGI_RT_LIMIT, 0);
+        s->strings[a][0] = 0;
         return 0;
     case 116:
         if (a >= AGI_RT_STRINGS) return fail(r, AGI_RT_STRING, a);
@@ -1176,6 +1196,8 @@ static bool advance_time(AgiRuntime *r, uint32_t ticks, unsigned mode)
         s->status == AGI_RT_FAULT || s->status == AGI_RT_QUIT) return false;
     if (clock && UINT64_MAX - s->clock_ticks < ticks) return false;
     if (s->status == AGI_RT_PENDING && s->pending.opcode == 136) return false;
+    if (s->window_ticks_remaining &&
+        (!pending_print(s) || !s->window_open || s->window_ticks_remaining > 2550)) return false;
     /* Admit storage before modifying state. A later rejected tick rolls back
      * the entire command; external devices see only the committed batch. */
     saved = malloc(sizeof(*saved));
@@ -1187,6 +1209,16 @@ static bool advance_time(AgiRuntime *r, uint32_t ticks, unsigned mode)
         if (agi_runtime_sound_tick(&s->sound, s->f, s->v[23], &scb) < 0) goto rollback;
     sync_sound(s);
     if (clock) for (i = 0; i < ticks; i++) clock_tick(s);
+    if (clock && s->window_ticks_remaining) {
+        if (ticks >= s->window_ticks_remaining) {
+            /* Every fallible time/audio operation has succeeded. Completion
+             * either rejects before observer writes, or commits exactly once;
+             * external device output is dispatched only after this point. */
+            if (!agi_runtime_complete(r, s->pending.id, true, NULL, 0)) goto rollback;
+        } else {
+            s->window_ticks_remaining -= ticks;
+        }
+    }
     s->scene_revision++;
     if (r->obs_mask & 2) append_event(r, NULL, s->logic, 1, 256, NULL, NULL);
     if (r->sound_output && batch.count)
@@ -1221,6 +1253,19 @@ bool agi_runtime_key(AgiRuntime *r, uint16_t key, bool pressed)
     AgiRuntimeState *s = &r->state;
     uint32_t i, direction = 0;
     if (s->status == AGI_RT_FAULT || s->status == AGI_RT_QUIT) return false;
+    if (pressed && key == 0x0d && pending_print(s)) {
+        uint32_t prior_key = s->keypress;
+        uint8_t prior_report = s->v[19], prior_controllers[256];
+        memcpy(prior_controllers, s->controllers, sizeof(prior_controllers));
+        s->keypress = 0; /* Enter is consumed by this window, not have.key. */
+        s->v[19] = key;
+        for (i = 0; i < s->key_count; i++)
+            if (s->keys[i] == key) s->controllers[s->key_controllers[i]] = 1;
+        if (agi_runtime_complete(r, s->pending.id, true, NULL, 0)) return true;
+        s->keypress = prior_key; s->v[19] = prior_report;
+        memcpy(s->controllers, prior_controllers, sizeof(prior_controllers));
+        return false;
+    }
     switch (key) {
     case 0x4800: direction = 1; break; case 0x4900: direction = 2; break;
     case 0x4d00: direction = 3; break; case 0x5100: direction = 4; break;
@@ -1257,6 +1302,7 @@ bool agi_runtime_complete(AgiRuntime *r, uint64_t id, bool accepted,
     uint32_t i, resolved[7] = {0};
     uint64_t prior = s->scene_revision;
     if (s->status != AGI_RT_PENDING || p.id != id || !id ||
+        s->retired == UINT64_MAX || r->run_retired == UINT64_MAX ||
         p.logic != s->logic || p.pc != s->pc || number > 255 ||
         (text && strlen(text) >= AGI_RT_STRING_BYTES)) return false;
     if (p.reply == AGI_RT_REPLY_RESTORE && accepted) return false;
@@ -1279,7 +1325,10 @@ bool agi_runtime_complete(AgiRuntime *r, uint64_t id, bool accepted,
         if (p.reply == AGI_RT_REPLY_MENU) s->controllers[number] = 1;
     }
     if (p.opcode == 124 && p.reply == AGI_RT_REPLY_NUMBER && !accepted) s->v[25] = 255;
-    if (p.opcode == 101 || p.opcode == 102 || p.opcode == 151 || p.opcode == 152) close_window(s);
+    if (pending_print(s)) {
+        s->v[21] = 0;
+        close_window(s);
+    }
     if (p.opcode == 134 && accepted) { stop_sound(r); s->status = AGI_RT_QUIT; }
     else if (p.opcode == 128 && accepted) {
         uint64_t retired = s->retired;
@@ -1356,6 +1405,7 @@ static bool valid_snapshot(const AgiRuntime *r, const AgiRuntimeState *s)
         s->upper_left_x > 255 || s->upper_left_y > 255 || s->picture_shown > 1 || s->picture_id > 255 ||
         s->window_x > 39 || s->window_y > 24 || s->window_width > 40 - s->window_x ||
         s->window_height > 25 - s->window_y ||
+        s->window_ticks_remaining ||
         (s->window_open && (!s->window_width || !s->window_height)) ||
         s->menu_submitted > 1 || s->simple_save > 1 || s->trace_enabled > 1 || s->trace_logic > 255 ||
         s->trace_top > 255 || s->trace_height > 255 || s->keypress > 65535 ||

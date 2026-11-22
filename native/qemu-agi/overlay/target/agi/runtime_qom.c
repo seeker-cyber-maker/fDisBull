@@ -630,7 +630,8 @@ static bool runtime_valid(const AgiRuntime *r, Error **errp)
         r->state.script_count > AGI_RT_SCRIPT ||
         r->state.view_order_count > 256 || r->state.picture_order_count > 256 ||
         r->state.sound.channel_count > AGI_SOUND_CHANNELS ||
-        r->state.sound.last_output.count > AGI_SOUND_OUTPUT_MAX) {
+        r->state.sound.last_output.count > AGI_SOUND_OUTPUT_MAX ||
+        r->state.window_ticks_remaining > 2550) {
         error_setg(errp, "AGI_RUNTIME: unavailable or invalid native runtime state");
         return false;
     }
@@ -923,6 +924,7 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
     STATE_U(status_line); STATE_U(min_print_line); STATE_U(input_line);
     STATE_U(status_line_row); STATE_U(window_open); STATE_U(dialogue); STATE_U(monitor);
     STATE_U(window_x); STATE_U(window_y); STATE_U(window_width); STATE_U(window_height);
+    STATE_U(window_ticks_remaining);
     STATE_U(upper_left_x); STATE_U(upper_left_y); STATE_U(picture_shown); STATE_U(picture_id);
     STATE_U(sound_active); STATE_U(sound_id); STATE_U(sound_flag); STATE_U(sound_device); STATE_U(sound_remaining);
     STATE_U(menu_count); STATE_U(menu_item_count); STATE_U(menu_submitted);

@@ -1,15 +1,22 @@
 # AGI processor and optional observations in QEMU
 
-This experimental target runs a bounded AGI scalar/position instruction subset
-through QEMU TCG and selectively records information for a disassembler or scene
-tool. It is a separate `qemu-system-agi` executable built from clean QEMU
-**10.0.13**. It does not change either product's normal backend selection.
+This experimental target provides a [complete fixed-catalog native AGI runtime](RUNTIME.md)
+and retains the earlier scalar, VIEW-binding and deferred-draw pilots. It
+selectively records information for a disassembler or scene tool through one
+canonical decoder. The separate `qemu-system-agi` executable builds from clean
+QEMU **10.0.13** and preserves both products' normal backend selection.
 
-The experiment asks whether useful source-linked observations can be selected
-without charging every instruction for unused channels. Its native execution
-tests and benchmark use authored raw bytecode; a full AGI game engine, resource
-loader, renderer, scene editor and original-format resource writer are separate
-work.
+The [runtime profile](RUNTIME.md) adds actions0–173, all19 predicates, resource
+banks, calls, actor motion/cycling, native picture and VIEW composition, sound,
+text/menu state, resumable devices and snapshots. Its optional observations
+remain separate from architectural state. The runtime contract names its
+compatibility decisions, clock ownership and headless device interface.
+
+The raw-code pilot and its benchmark below retain their narrower purpose:
+measuring source-linked observation costs on authored instruction subsets.
+Their performance results do not measure the full runtime. Original-format
+resource writing, UIL emission and whole-game/original-DOS parity remain
+separate work.
 
 The [native processor-record interface](PROCESSOR_RECORDS.md) makes one bounded
 decoder the authority for both TCG execution and structured static disassembly.
@@ -58,6 +65,10 @@ when its native inputs are unchanged.
 
 ## Observation control
 
+The descriptions below refer to the raw pilot execution path. Runtime mode
+uses the same channel selection and loss policy with its complete guest state
+and source-bound runtime schemas, as described in [RUNTIME.md](RUNTIME.md).
+
 `agi-observation-mask` is a host-owned two-bit control register. It is separate
 from the 256 AGI variables and 256 AGI flags.
 
@@ -89,6 +100,9 @@ whose buffer is full. Reserved buffer memory and cached mode variants still
 exist; this is not a claim of zero total memory or control cost.
 
 ## Input and semantic limits
+
+This section describes the default raw-code scalar pilot. Select
+`runtime-package` explicitly for the full runtime resource/command interface.
 
 The machine accepts `-kernel` containing **raw LOGIC code bytes**, starting at
 code-relative PC zero. It does not accept a complete LOGIC resource, its

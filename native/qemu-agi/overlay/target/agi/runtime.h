@@ -110,6 +110,9 @@ typedef struct AgiRuntimeState {
     uint32_t min_print_line, input_line, status_line_row;
     uint32_t window_open, dialogue, monitor, upper_left_x, upper_left_y;
     uint32_t window_x, window_y, window_width, window_height;
+    /* Modal print delay, latched as10*v21 in explicit20Hz timer ticks.
+     * Nonzero only while that print's ACK request remains pending. */
+    uint32_t window_ticks_remaining;
     uint8_t text[25][40], text_fg[25][40], text_bg[25][40];
     uint8_t window_text[25][40], window_fg[25][40], window_bg[25][40];
     uint8_t picture_visual[AGI_RUNTIME_PLANE_BYTES];
