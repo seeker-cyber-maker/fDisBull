@@ -1437,10 +1437,11 @@
         "input.mouse.click"
       ],
       "qualification": "unqualified",
-      "implementation": "legacy_routes_absent_physical_and_scaled_relative_prerequisites_exist",
+      "implementation": "pinned_real_mode_int33_observation_implemented_coordinate_routes_open",
       "source_paths": [
         "src/fdisbull/qemu_mapped_mouse.py",
         "src/fdisbull/qemu_mouse_click.py",
+        "src/fdisbull/qemu_int33_mouse.py",
         "src/fdisbull/debugger.py"
       ],
       "depends_on": [
@@ -1454,7 +1455,7 @@
       ],
       "remaining_work": [
         "Implement debug-click/debug-click-frame and equivalent input.mouse.click using observed guest cursor/range and exact frame/mode guards.",
-        "Add an actual DOS mouse driver INT33 oracle for range, clipping, acceleration/scale, consumed motion/button edges and release; caller-declared relative scale is not absolute cursor state."
+        "A paired mode 13h fixture covers one pinned CuteMouse build, observed cursor/range/ratio/buttons, clipped endpoints and the different relative mickey counts delivered by the two routes. Qualify actual coordinate injection and observed motion/button consumption, timing, recovery and additional driver/mode profiles."
       ],
       "minimum_acceptance": [
         "The same requested coordinate lands on the same qualified target on both backends; stale frame/mode and unsupported driver state fail before input.",

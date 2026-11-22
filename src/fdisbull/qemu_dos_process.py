@@ -46,6 +46,8 @@ from .qemu_movement import QemuMovementMixin
 from .qemu_scenes import QemuSceneObservationMixin
 from .qemu_screenshot_hooks import QemuScreenshotHookMixin
 from .qemu_pending_events import pending_status_operation, pending_status_owner
+from .qemu_int33_mouse import observe_int33_mouse
+from .qemu_video_frame import validate_video_frame_parameters
 
 
 def _sha(data):
@@ -189,6 +191,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     as a DOS task. The internal return breakpoint is reserved until observed.
     """
     backend_id = 'qemu-dos'
+    observe_int33_mouse = machine_trace_operation(
+        observe_int33_mouse, label='Stopped INT33 mouse observation',
+        parameter_validator=validate_video_frame_parameters)
 
     def __init__(self, project, executable, game_dir, *, boot_image=None, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,

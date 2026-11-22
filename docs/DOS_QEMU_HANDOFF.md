@@ -1,5 +1,26 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Paired DOS loader, control and mouse evidence (2026-11-22)
+
+Local tests on QEMU 10.0.13 and the installed DOSBox-X paired COM and MZ
+launch, high-load MZ relocations, nested EXEC and child status, pause/resume,
+and a direct near-call step-over. The high-load MZ witness retains a
+difference in the loader-owned word immediately below the entry stack. Both
+engines reached the same authored program write and exit. The witness retains
+and checks each native loader's word before comparing the rest of the image.
+
+The authored INT 33h witness checks both guest cursor positions, programmed
+limits and buttons. DOSBox-X absolute placement left no relative mickeys for
+INT 33h AX=0Bh to consume. The QEMU relative route delivered (2, 4) and (4, 4)
+mickeys in the paired moves. The Python QEMU DOS process API can now observe
+stopped cursor state for the pinned CuteMouse 2.1b4 floppy setup in real mode
+with BIOS mode 13h and a retained source raster. It verifies the live vector
+and the relevant resident code spans. The paired witness checks native
+position readback and refusal for stale rasters and replaced handler bytes.
+The observation identifies the retained raster alongside the live cursor
+state. Exact coordinate injection, unsupported driver modes and cross-engine
+input equivalence remain open.
+
 ## Current native stopped-control checkpoint (2026-11-21)
 
 The fresh Native02 stopped-control witness **passed** at exact source

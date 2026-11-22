@@ -14,7 +14,7 @@ READ_ONLY = frozenset({'cpu_delta_status','status','registers','memory','memory_
     'bind_runtime_memory','runtime_memory','scene_check','scene_assert',
     'dos_process_info','dos_source_admit','dos_source_bind','dos_source_binding','dos_source_unbind','_le_source_refresh','tracking_status','dos_task_observe','dos_task_context','dos_task_scheduler_observe',
     'dos_task_memory','hooks','layer_stack','clock_observe','audio_observe', 'mixer_observe',
-    'display_observe','retrace_observe','input_state','keyboard_state',
+    'display_observe','retrace_observe','input_state','keyboard_state','observe_int33_mouse',
     'rewind_status','timeline_status','timeline_image','controls','close',
     'workspace_status','workspace_files','workspace_read','workspace_provenance_status'})
 FULL_RECOVERY = frozenset({'cpu_delta_recover','rewind','timeline_rewind','restore_experiment'})

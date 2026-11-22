@@ -183,6 +183,7 @@ def test_receipt_binds_commit_and_artifact_bytes(tmp_path):
 
 def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path):
     from importlib.util import module_from_spec, spec_from_file_location
+    from setuptools._distutils.filelist import FileList
 
     path = Path(__file__).parents[1] / "scripts/build_release.py"
     spec = spec_from_file_location("build_release_payload_test", path)
@@ -196,14 +197,13 @@ def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path
 
     directories = (
         "qemu-dos-checkpoint", "qemu-frame-history", "qemu-frame-keys",
-        "qemu-instrumented-checkpoint", "qemu-layers", "qemu-task-private",
+        "qemu-frame-key-repeat", "qemu-instrumented-checkpoint", "qemu-layers", "qemu-task-private",
         "qemu-task-context", "qemu-task-scheduler", "qemu-task-preemption",
         "qemu-task-cascade", "qemu-dos-provenance", "qemu-dos-save-operations", "qemu-dos-save-stop", "qemu-chip8", "qemu-chip8-devices", "qemu-chip8-classic", "qemu-chip8-layers", "qemu-chip8-frames", "qemu-chip8-frame-keys",
     )
-    manifest_rules = set((Path(__file__).parents[1] / "MANIFEST.in").read_text().splitlines())
+    manifest_rules = (Path(__file__).parents[1] / "MANIFEST.in").read_text().splitlines()
     expected = set()
     for directory in directories:
-        assert f"recursive-include native/{directory} *.md *.json *.patch" in manifest_rules
         root = tmp_path / "native" / directory
         root.mkdir(parents=True, exist_ok=True)
         for name in ("README.md", "source-manifest.json", "patch.patch"):
@@ -215,3 +215,13 @@ def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path
     selected = {p.relative_to(tmp_path) for p in builder.release_files(tmp_path)}
     assert expected <= selected
     assert not any(p.name == "qemu-system-x86_64" for p in selected)
+
+    source_manifest = FileList()
+    source_manifest.allfiles = [str(path.relative_to(tmp_path))
+                                for path in tmp_path.rglob("*") if path.is_file()]
+    for rule in manifest_rules:
+        if rule.startswith(("recursive-include native ", "recursive-include native/", "global-exclude ")):
+            source_manifest.process_template_line(rule)
+    source_files = {Path(path) for path in source_manifest.files}
+    assert expected <= source_files
+    assert not any(path.name == "qemu-system-x86_64" for path in source_files)

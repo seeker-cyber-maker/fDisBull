@@ -36,7 +36,7 @@ _READ_ONLY = frozenset({
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe', 'mixer_observe',
     'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status', 'controls',
-    'video_frame_observe', 'video_frame_rgba', 'capture_video_frame',
+    'video_frame_observe', 'video_frame_rgba', 'capture_video_frame', 'observe_int33_mouse',
     'workspace_status', 'workspace_files', 'workspace_read',
     'workspace_provenance_status',
 })
