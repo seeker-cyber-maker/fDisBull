@@ -323,6 +323,8 @@ class GDBRemote:
                         except BaseException:self.close();raise
 
     def close(self):
+        from .qemu_frame_read import close_frame_read_channel
+        if close_frame_read_channel(self):return
         authority=getattr(self,'_observation_authority',None)
         if authority is not None:authority.invalidate('GDB channel closed')
         channel=self.socket if authority is None else authority.original_channel(self)

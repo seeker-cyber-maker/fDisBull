@@ -64,6 +64,32 @@ A small local `call()` facade supports `session.status`, `video.probe`,
 by the shared screenshot decoders. It does not forward arbitrary DOSBox RPCs
 to QEMU. An optional supplied `session_id` must match the current owner.
 
+### Retained-read admission
+
+Each retained probe, RGBA read, local screenshot call and source-frame artifact
+capture retains its original owner before its existing initial stopped-clock
+context. After that context succeeds, one explicit admission freezes the
+cooperative revision before source selection. Admission adds no native request.
+An event or cooperating effect delivered before that boundary can become part
+of the new baseline only while the original owner, resources, configuration and
+session lifetime remain unchanged. Every covered effect after admission still
+invalidates the read, including unknown or same-valued events and same-byte
+bound memory writes. The reader never filters events, drains, retries or repairs
+the stream. Delivery time does not establish when a device generated an event.
+
+The returned revision and mode projection use the captured original authority.
+The scope retains its original cleanup resources through the outer operation's
+deadline restoration and lock release. A late timeout or replacement refuses
+success, preserves arrived evidence and closes only the captured resources;
+later cleanup does not adopt a replacement authority or channel. Missing-raster
+and unsupported-codec refusals with an otherwise healthy owner remain reusable.
+The conservative `ObservationAuthority` keeps its separate strict lease rules.
+
+An earlier caller's status remains separate evidence. A newly admitted frame
+can succeed at a later revision while `capture_frame_state` correctly refuses
+the caller's earlier bracket. No prior status is rewritten to match the read.
+The source-step helper retains its existing owner and execution contract.
+
 Missing, invalidated, or stale source rasters fail without implicit execution.
 Stopping a healthy source stream retains its last complete raster. A changed
 native configuration invalidates it; explicit restart and subsequent execution
@@ -251,6 +277,11 @@ application readiness. DOSBox continues to use its existing raw
 validation behavior.
 
 ## Qualification boundary
+
+The admission scope reconstructed after the interrupted workspace is new
+source. Historical qualification of unavailable earlier files does not qualify
+this reconstruction; it requires fresh host results and a separate native
+witness on the exact resulting source and producer.
 
 The focused host tests exercise the public facade through real QMP/GDB client
 framing against deterministic protocol peers, actual Pillow/Zstandard codecs,

@@ -11,6 +11,7 @@ import re
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -51,6 +52,7 @@ from .qemu_frame_contract import (QemuFrameContractMixin, configure_frame_contra
                                    validate_frame_rgba_parameters)
 from .qemu_frame_step import (QemuFrameStepMixin, validate_frame_step,
                               validate_source_frame_advance)
+from .qemu_frame_read import capture_frame_read, close_frame_read_owner
 from .qemu_stopped_control import (QemuStoppedControlMixin, STOPPED_CONTROL_COMMANDS,
                                    validate_stopped_control_parameters,
                                    preflight_stopped_control_binding)
@@ -160,6 +162,7 @@ def _close_observation_owner(vm, owner):
         try:action()
         except BaseException as error:failures.append(error)
     context=owner.get('context')
+    frame_read=owner.get('frame_read')
     # This invalidates only the captured VM's host bookkeeping; no input is
     # injected and no context callback can follow a replacement owner.
     from .qemu_input import _input_owner_closed
@@ -168,7 +171,9 @@ def _close_observation_owner(vm, owner):
         client=owner.get(name)
         channel=owner.get(name+'_socket')
         original_socket=(getattr(client,'socket',None) is channel)
-        if client is not None and original_socket:
+        if frame_read is not None:
+            cleanup(lambda name=name:frame_read.close_channel(name))
+        elif client is not None and original_socket:
             cleanup(client.close)
         elif channel is not None:
             cleanup(channel.close)
@@ -178,13 +183,17 @@ def _close_observation_owner(vm, owner):
         if getattr(vm,name,None) is client and (current_socket is channel or current_socket is None):
             setattr(vm,name,None)
     channels=owner.get('channels',())
-    for channel in channels:cleanup(channel.close)
+    for channel in channels:
+        if frame_read is not None:cleanup(lambda channel=channel:frame_read.close_resource(channel))
+        else:cleanup(channel.close)
     vm._channels=[channel for channel in getattr(vm,'_channels',())
                   if not any(channel is captured for captured in channels)]
     process=owner.get('process')
     if process is not None:
         for stream in (owner.get('stdin'),owner.get('stdout')):
-            if stream is not None:cleanup(stream.close)
+            if stream is not None:
+                if frame_read is not None:cleanup(lambda stream=stream:frame_read.close_resource(stream))
+                else:cleanup(stream.close)
         try:running=process.poll() is None
         except BaseException as error:failures.append(error);running=True
         if running:
@@ -198,7 +207,9 @@ def _close_observation_owner(vm, owner):
                                 ('_qemu_image_proof','qemu_image_proof','close')):
         resource=owner.get(key)
         if getattr(vm,attribute,None) is resource:setattr(vm,attribute,None)
-        if resource is not None:cleanup(getattr(resource,method))
+        if resource is not None:
+            if frame_read is not None:cleanup(lambda resource=resource,method=method:frame_read.close_resource(resource,method))
+            else:cleanup(getattr(resource,method))
     handle=owner.get('admission_guest_pidfd')
     if getattr(vm,'_admission_guest_pidfd',None)==handle:vm._admission_guest_pidfd=None
     if handle is not None:cleanup(lambda:os.close(handle))
@@ -213,6 +224,9 @@ def _close_observation_owner(vm, owner):
                 or (getattr(current,'socket',None) is not None
                     and getattr(current,'socket',None) is not owner.get(name+'_socket'))):
             current_context=False
+    if frame_read is not None:
+        try:current_context=current_context and frame_read.can_notify()
+        except BaseException as error:failures.append(error);current_context=False
     if observer is not None and current_context:
         try:observer()
         except Exception as error:vm.close_observer_error=type(error).__name__
@@ -447,6 +461,7 @@ class QemuMachine:
         return self.gdb
 
     def close(self):
+        if close_frame_read_owner(self):return
         authority=getattr(self,'observation_authority',None)
         if authority is not None:authority.invalidate('machine-close')
         session_revision(self).effect()
@@ -509,25 +524,51 @@ class QemuMachine:
 
 def _machine_operation_guard(vm, name, args=(), kwargs=None):
     """Keep legacy guards and parameter-aware history fences independent."""
-    authority=getattr(vm,'observation_authority',None)
-    if authority is not None:authority.public_operation(name)
+    frame_read=getattr(vm,'_frame_read_owner',None)
+    def check_read_owner():
+        if frame_read is not None:frame_read.check_owner()
+    # A nested public operation can arrive after a transport callback replaced
+    # an authority or context. Check the retained owner before selecting any
+    # guard, and after each callback before selecting or invoking the next one.
+    check_read_owner()
+    authority=frame_read.authority if frame_read is not None else getattr(vm,'observation_authority',None)
+    if authority is not None:
+        check_read_owner()
+        authority.public_operation(name)
+        check_read_owner()
     if name in ('step', 'run', 'resume', 'pause', 'trace', 'trace_until', 'execute_step_over'):
         require_no_step_over(vm, 'another execution operation')
+        check_read_owner()
     if name not in ('close','dos_process_info','tracking_status','dos_source_binding','dos_source_unbind') and getattr(vm,'_fdisbull_control_quarantine',None):
         raise DebuggerError('Machine controls are quarantined after '+vm._fdisbull_control_quarantine)
-    asynchronous = getattr(getattr(vm, 'context', None), '_dos_async_operation_guard', None)
+    context=frame_read.context if frame_read is not None else getattr(vm,'context',None)
+    asynchronous = getattr(context, '_dos_async_operation_guard', None)
     if asynchronous is not None:
+        check_read_owner()
         asynchronous(name, args, kwargs or {})
-    source = getattr(getattr(vm, 'context', None), '_le_source_operation_guard', None)
+        check_read_owner()
+    context=frame_read.context if frame_read is not None else getattr(vm,'context',None)
+    source = getattr(context, '_le_source_operation_guard', None)
     if source is not None:
+        check_read_owner()
         source(name, args, kwargs or {})
+        check_read_owner()
     guard = getattr(vm, 'operation_guard', None)
     if guard is not None:
+        check_read_owner()
         guard(name)
+        check_read_owner()
     history = getattr(vm, 'history_operation_guard', None)
     if history is not None:
+        check_read_owner()
         history(name, args, kwargs or {})
-    session_revision(vm).public_operation(name, args, kwargs)
+        check_read_owner()
+    if frame_read is not None:
+        frame_read.check_owner()
+        frame_read.revision.public_operation(name,args,kwargs)
+        frame_read.check_owner()
+    else:
+        session_revision(vm).public_operation(name, args, kwargs)
 
 
 def _machine_async_guard(session, name=None, args=(), kwargs=None):
@@ -798,6 +839,10 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         if native_token is not None:
             preflight_stopped_control_binding(self,native_token)
         def native_cleanup(error):
+            if frame_read is not None:
+                frame_read.close()
+                frame_read.attach(error)
+                return True
             binding=getattr(self,'_native_stopped_control_binding',None)
             if binding is None or (native_token is None and function.__name__!='stopped_control_arm'):
                 return False
@@ -810,6 +855,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                     *[getattr(channel,'operation_deadline',None) for channel in
                       (getattr(vm,'qmp',None),getattr(vm,'gdb',None)) if channel is not None]]
         bound=min(value for value in limits() if value is not None)
+        frame_read=capture_frame_read(self,vm,function.__name__,bound)
         wait=min(10,bound-time.monotonic())
         if wait<=0:raise TimeoutError(label+' host deadline expired before admission')
         lock=vm.lock
@@ -818,7 +864,10 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         previous_vm=getattr(vm,'operation_deadline',None)
         previous_channels=[]
         installed=False
+        result=None
         try:
+            if frame_read is not None and not frame_read.install():
+                frame_read=None
             if native_token is not None:
                 preflight_stopped_control_binding(self,native_token)
             if self.vm is not vm:
@@ -830,6 +879,9 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
             if self.vm is not vm:
                 raise DebuggerError('Machine owner changed during operation admission')
             bound=min(value for value in limits() if value is not None)
+            if frame_read is not None:
+                frame_read.deadline=min(frame_read.deadline,bound)
+                frame_read.check_owner()
             if time.monotonic()>=bound:
                 raise TimeoutError(label+' host deadline expired before dispatch')
             for channel in (getattr(vm,'qmp',None),getattr(vm,'gdb',None)):
@@ -888,14 +940,40 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 if not native_cleanup(error):vm.close()
             raise
         finally:
-            if installed:
-                self._deadline=previous_session
-                vm.operation_deadline=previous_vm
-                for channel,previous in previous_channels:channel.operation_deadline=previous
-                current=getattr(vm,'gdb',None)
-                if function.__name__ not in ('video_frame_state_observe','stopped_control_arm') and current is not None and not any(current is channel for channel,_ in previous_channels):
-                    current.operation_deadline=previous_vm
-            lock.release()
+            if frame_read is None:
+                if installed:
+                    self._deadline=previous_session
+                    vm.operation_deadline=previous_vm
+                    for channel,previous in previous_channels:channel.operation_deadline=previous
+                    current=getattr(vm,'gdb',None)
+                    if function.__name__ not in ('video_frame_state_observe','stopped_control_arm') and current is not None and not any(current is channel for channel,_ in previous_channels):
+                        current.operation_deadline=previous_vm
+                lock.release()
+            else:
+                primary=sys.exc_info()[1]
+                completion=None
+                if installed:
+                    restores=[(self,'_deadline',previous_session),(vm,'operation_deadline',previous_vm)]
+                    restores.extend((channel,'operation_deadline',previous) for channel,previous in previous_channels)
+                    for target,attribute,previous in restores:
+                        try:
+                            if target is self or target is vm or frame_read.restore_channel(target):
+                                setattr(target,attribute,previous)
+                        except BaseException as error:
+                            active=primary if primary is not None else completion
+                            if active is None:completion=error
+                            else:
+                                errors=getattr(active,'frame_read_restore_errors',[])
+                                errors.append(type(error).__name__)
+                                active.frame_read_restore_errors=errors
+                try:
+                    lock.release()
+                except BaseException as error:
+                    active=primary if primary is not None else completion
+                    if active is None:completion=error
+                    else:active.frame_read_release_error=type(error).__name__
+                frame_read.finish(primary if primary is not None else completion,result)
+                if primary is None and completion is not None:raise completion
     return invoke
 
 

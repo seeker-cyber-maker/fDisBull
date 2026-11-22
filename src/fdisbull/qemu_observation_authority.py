@@ -501,6 +501,8 @@ class ObservationAuthority:
 
 @contextmanager
 def transport_operation(client, protocol, operation, arguments, deadline):
+    from .qemu_frame_read import check_frame_read_client
+    check_frame_read_client(client)
     authority = getattr(client, '_observation_authority', None)
     if authority is None:
         yield _Admission(None, client, protocol, operation, arguments, deadline)
@@ -511,6 +513,8 @@ def transport_operation(client, protocol, operation, arguments, deadline):
 
 @contextmanager
 def memory_request(client, command):
+    from .qemu_frame_read import check_frame_read_client
+    check_frame_read_client(client)
     authority = getattr(client, '_observation_authority', None)
     if authority is None:
         yield
@@ -520,6 +524,8 @@ def memory_request(client, command):
 
 
 def check_transport(client):
+    from .qemu_frame_read import check_frame_read_client
+    check_frame_read_client(client)
     authority = getattr(client, '_observation_authority', None)
     if authority is not None:
         return authority.check_protocol(client)
@@ -529,5 +535,7 @@ def check_transport(client):
 
 
 def reply_limit(client, limit):
+    from .qemu_frame_read import check_frame_read_client
+    check_frame_read_client(client)
     authority = getattr(client, '_observation_authority', None)
     return min(limit, _REPLY_LIMIT) if authority is not None and authority._active is not None else limit

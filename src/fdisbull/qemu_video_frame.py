@@ -124,7 +124,9 @@ def _probe_points_snapshot(points):
 
 
 def _invalid(vm, message):
-    vm.close()
+    from .qemu_frame_read import close_frame_read_owner
+    if not close_frame_read_owner(vm):
+        vm.close()
     raise DebuggerError(message)
 
 
@@ -256,6 +258,9 @@ def _identity(native):
 
 
 def _remaining(vm):
+    owner = getattr(vm, '_frame_read_owner', None)
+    if owner is not None:
+        owner.check()
     deadline = getattr(vm, 'operation_deadline', None)
     if deadline is not None and time.monotonic() >= deadline:
         raise TimeoutError('Video frame operation host deadline expired')
@@ -273,7 +278,9 @@ def _failed(vm, error, stage, *, clock=None, native=None, result=None, artifact=
     else:
         error.video_frame_evidence = evidence
     try:
-        vm.close()
+        from .qemu_frame_read import close_frame_read_owner
+        if not close_frame_read_owner(vm):
+            vm.close()
     except BaseException as cleanup:
         error.video_frame_cleanup_error = type(cleanup).__name__
 
@@ -573,8 +580,17 @@ class QemuVideoFrameMixin:
         if self.capabilities.get('frame_contract'):
             vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=identity is None)
+        if identity is not None:
+            identity = self._frame_contract_admit(vm, identity)
         prior = self._video_frame_select(vm, before, stream, frame_id)
-        pixels, native = self._video_frame_selected_rgb(vm, before, prior)
+        try:
+            if identity is not None:
+                self._frame_contract_check(vm, identity)
+            pixels, native = self._video_frame_selected_rgb(vm, before, prior)
+        except BaseException as error:
+            if identity is not None:
+                _failed(vm, error, 'capture-source-read', clock=before, native=prior)
+            raise
         metadata = artifact = None
         try:
             _remaining(vm)
@@ -593,15 +609,14 @@ class QemuVideoFrameMixin:
         metadata = self._video_frame_result(native, before)
         metadata.update(source='qemu_completed_source_raster', pixel_sha256=native['frame']['pixel-sha256'],
                         stopped=True, clocks=dict(before=before, after=after), sha256=hashlib.sha256(data).hexdigest())
-        if identity is not None:
-            from .qemu_frame_contract import frame_contract_metadata
-            metadata.update(frame_contract_metadata(self, native, before, identity[-1]))
-            metadata['codec_origin'] = 'host-adapter'
         stage = 'frame-contract-validation'
         try:
             _remaining(vm)
             if identity is not None:
                 self._frame_contract_check(vm, identity)
+                from .qemu_frame_contract import frame_contract_metadata
+                metadata.update(frame_contract_metadata(self, native, before, identity[-1], authority=identity[1]))
+                metadata['codec_origin'] = 'host-adapter'
             stage = 'artifact-publication'
             artifact = self._artifact(name, 'screenshot', data, metadata)
             stage = 'event-publication'

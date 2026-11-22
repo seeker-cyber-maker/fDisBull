@@ -58,9 +58,9 @@ def validate_frame_rgba_parameters(*, encoding='rgba-zstd', timeout_ms=1000):
     validate_video_frame_parameters(timeout_ms=timeout_ms)
 
 
-def frame_contract_metadata(session, native, clock, revision=None):
+def frame_contract_metadata(session, native, clock, revision=None, *, authority=None):
     """Keep native identity explicit while projecting a legacy integer mode."""
-    authority = session_revision(session.vm)
+    authority = session_revision(session.vm) if authority is None else authority
     revision = authority.snapshot() if revision is None else revision
     frame = native['frame']
     identity = dict(owner_lifetime=revision['session_id'], native_epoch=native['epoch'],
@@ -129,6 +129,10 @@ class QemuFrameContractMixin:
     def _frame_contract_begin(self):
         from .qemu_observation_authority import ObservationAuthority
         vm = self.vm
+        owner = getattr(vm, '_frame_read_owner', None)
+        if owner is not None:
+            owner.check_owner()
+            owner.started = True
         authority = getattr(vm, 'observation_authority', None)
         if not self.capabilities.get('frame_contract') or not isinstance(authority, ObservationAuthority):
             raise ValueError('Frame consumers require the owned source-raster extension and explicit virtual/precise profiles')
@@ -139,11 +143,21 @@ class QemuFrameContractMixin:
             revision.snapshot())
         return vm, identity
 
+    def _frame_contract_admit(self, vm, identity):
+        owner = getattr(vm, '_frame_read_owner', None)
+        if owner is None or owner.session is not self:
+            raise DebuggerError('Retained frame read lacks its original owner scope')
+        revision = owner.admit()
+        return (*identity[:-1], revision)
+
     def _frame_contract_check(self, vm, identity):
         authority, revision, lock, qmp, channel, runtime, checkpoint, before = identity
+        owner = getattr(vm, '_frame_read_owner', None)
+        if owner is not None:
+            owner.check()
         _remaining(vm)
         if (self.vm is not vm or getattr(vm, 'closed', False)
-                or vm.observation_authority is not authority or session_revision(vm) is not revision
+                or vm.observation_authority is not authority or getattr(vm, 'session_revision', None) is not revision
                 or vm.lock is not lock or vm.qmp is not qmp or qmp.socket is not channel
                 or getattr(self, '_runtime_epoch', None) != runtime
                 or getattr(self, '_checkpoint_epoch', None) != checkpoint
@@ -156,19 +170,23 @@ class QemuFrameContractMixin:
         validate_video_frame_probe(points, timeout_ms=timeout_ms)
         vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=False)
+        identity = self._frame_contract_admit(vm, identity)
         prior = self._video_frame_select(vm, before, None, None)
         result = None
         raw, chunks = None, []
         try:
+            self._frame_contract_check(vm, identity)
             result, raw, chunks = self._video_frame_selected_probe(vm, before, prior, points)
-            result.update(frame_contract_metadata(self, prior, before, identity[-1]))
+            self._frame_contract_check(vm, identity)
+            result.update(frame_contract_metadata(self, prior, before, identity[-1], authority=identity[1]))
             result['format'] = 'rgb-samples'
             self._frame_contract_check(vm, identity)
             self._video_frame_publish(vm, 'frame-probe', result)
             self._frame_contract_check(vm, identity)
             return result
         except BaseException as error:
-            _failed(vm, error, 'frame-probe', clock=before, native=raw, result=result, probe_chunks=chunks)
+            _failed(vm, error, 'frame-probe', clock=before,
+                    native=prior if raw is None else raw, result=result, probe_chunks=chunks)
             raise
 
     def _frame_contract_read(self, encoding, *, decode):
@@ -177,12 +195,14 @@ class QemuFrameContractMixin:
         validate_encoding(encoding, self.capabilities)
         vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=False)
+        identity = self._frame_contract_admit(vm, identity)
         prior = self._video_frame_select(vm, before, None, None)
         result = None
         try:
-            frame = self._video_frame_selected_rgba(vm, before, prior)
-            frame.metadata.update(frame_contract_metadata(self, prior, before, identity[-1]))
             self._frame_contract_check(vm, identity)
+            frame = self._video_frame_selected_rgba(vm, before, prior)
+            self._frame_contract_check(vm, identity)
+            frame.metadata.update(frame_contract_metadata(self, prior, before, identity[-1], authority=identity[1]))
             result = _encode(frame, encoding)
             if decode:
                 result = decode_frame_rgba(result)
