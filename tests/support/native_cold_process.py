@@ -1,17 +1,19 @@
 """New recovery-slice POSIX child supervision, derived from recovered source.
 
-The recovered helper's Darwin EPERM failures remain failures. This revision
-handles only ESRCH from a signal to its still-owned group; it is not a claimed
-recovery of the later, missing helper revision or a Darwin qualification.
+The leader remains unreaped through the final owned-group cleanup decision.
+On Darwin, the kernel process table can confirm that the exited leader is
+the only remaining member when signaling that group returns EPERM.
 """
 from __future__ import annotations
 
+import errno
 import json
 import math
 import os
 from pathlib import Path
 import signal
 import subprocess
+import sys
 import time
 
 
@@ -29,7 +31,7 @@ def _exists(pgid):
 
 
 def _signal_owned_group(process, name, receipt):
-    """An absent group is benign; permission/observation errors stay errors.
+    """Send the signal while the group ID is still reserved by our child.
 
     The direct child has not been reaped when this is called. Its PID, which is
     also our group ID, therefore cannot have been reused for an unrelated group.
@@ -39,6 +41,11 @@ def _signal_owned_group(process, name, receipt):
         os.killpg(process.pid, getattr(signal, 'SIG' + name))
     except ProcessLookupError:
         outcome = 'absent'
+    except PermissionError as error:
+        if (error.errno != errno.EPERM or name != 'KILL' or sys.platform != 'darwin'
+                or not _only_exited_darwin_leader(process)):
+            raise
+        outcome = 'only-exited-leader'
     receipt['signals'].append(name)
     receipt.setdefault('group_signals', []).append(dict(signal=name, outcome=outcome))
 
@@ -53,6 +60,24 @@ def _exit_status(process, timeout):
         if time.monotonic() >= end:
             return None
         time.sleep(min(.01, max(0, end-time.monotonic())))
+
+
+def _only_exited_darwin_leader(process):
+    # The child started a new session; no other session can add a member to
+    # its group. Keep the zombie unreaped while checking for descendants.
+    try:
+        if _exit_status(process, 0) is None:
+            return False
+        result = subprocess.run(['/bin/ps', '-axo', 'pid=,pgid=,stat='],
+            capture_output=True, text=True, check=True, timeout=.5)
+        members = []
+        for line in result.stdout.splitlines():
+            pid, pgid, state = line.split()
+            if int(pgid) == process.pid:
+                members.append((int(pid), state[0]))
+        return members == [(process.pid, 'Z')]
+    except (IndexError, OSError, ValueError, subprocess.SubprocessError):
+        return False
 
 
 def _cleanup(process, grace, receipt):

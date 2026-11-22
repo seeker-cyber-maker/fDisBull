@@ -7,6 +7,7 @@ import signal
 import subprocess
 import sys
 import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -154,6 +155,34 @@ def test_group_signal_never_turns_other_errors_into_absence(monkeypatch, error_n
         cold._signal_owned_group(process, 'KILL', receipt)
     assert error.value.errno == error_number
     assert receipt['signals'] == [] and 'group_signals' not in receipt
+
+
+@pytest.mark.parametrize('other_member', ['', '54321 {pgid} R\n', '54321 {pgid} Z\n'])
+def test_darwin_eperm_requires_process_table_proof_of_an_exited_sole_leader(monkeypatch, other_member):
+    process = _OwnedProcess()
+    monkeypatch.setattr(cold, 'sys', SimpleNamespace(platform='darwin'))
+    monkeypatch.setattr(cold, '_exit_status', lambda process, timeout: 0)
+
+    def refused(pgid, sig):
+        assert pgid == process.pid and sig == signal.SIGKILL and process.returncode is None
+        raise PermissionError(errno.EPERM, 'authored Darwin refusal')
+
+    def process_table(command, **kwargs):
+        assert command == ['/bin/ps', '-axo', 'pid=,pgid=,stat=']
+        return SimpleNamespace(stdout=f'{process.pid} {process.pid} Z\n'
+                               +other_member.format(pgid=process.pid))
+
+    monkeypatch.setattr(cold.os, 'killpg', refused)
+    monkeypatch.setattr(cold.subprocess, 'run', process_table)
+    receipt = dict(signals=[])
+    if other_member:
+        with pytest.raises(PermissionError):
+            cold._signal_owned_group(process, 'KILL', receipt)
+        assert receipt == dict(signals=[])
+    else:
+        cold._signal_owned_group(process, 'KILL', receipt)
+        assert receipt['group_signals'] == [dict(signal='KILL', outcome='only-exited-leader')]
+    assert process.returncode is None
 
 
 def test_permission_denied_group_observation_is_not_gone(monkeypatch):
