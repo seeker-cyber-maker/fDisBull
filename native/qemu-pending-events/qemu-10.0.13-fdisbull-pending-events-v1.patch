@@ -1,3 +1,4 @@
+diff --git a/monitor/monitor.c b/monitor/monitor.c
 --- a/monitor/monitor.c
 +++ b/monitor/monitor.c
 @@ -29,6 +29,13 @@
@@ -14,7 +15,7 @@
  #include "qemu/error-report.h"
  #include "qemu/option.h"
  #include "system/qtest.h"
-@@ -72,6 +79,404 @@
+@@ -72,6 +79,438 @@
  
  MonitorList mon_list;
  static bool monitor_destroyed;
@@ -285,6 +286,41 @@
 +    return copy;
 +}
 +
++/* Called with monitor_lock held. The system GDB stub creates one private,
++ * non-interactive HMP frontend even with -monitor none. It cannot be selected
++ * by -chardev: char_get_class() rejects the internal chardev-gdb type. Do not
++ * confuse its presence with an active HMP/GDB command (checked by the system
++ * provider), or admit an externally addressable HMP or another QMP monitor. */
++static bool pending_events_monitor_layout(Monitor *original)
++{
++    Monitor *current;
++    bool original_seen = false, gdb_seen = false;
++    unsigned int visited = 0;
++
++    QTAILQ_FOREACH(current, &mon_list, entry) {
++        Chardev *chr;
++
++        if (++visited > 2) {
++            return false;
++        }
++        if (current == original) {
++            original_seen = true;
++            continue;
++        }
++        if (gdb_seen || monitor_is_qmp(current) ||
++            container_of(current, MonitorHMP, common)->use_readline) {
++            return false;
++        }
++        chr = qemu_chr_fe_get_driver(&current->chr);
++        if (!chr || !CHARDEV_GET_CLASS(chr)->internal ||
++            strcmp(object_get_typename(OBJECT(chr)), "chardev-gdb")) {
++            return false;
++        }
++        gdb_seen = true;
++    }
++    return original_seen;
++}
++
 +FdisbullPendingEventsInfo *qmp_x_fdisbull_take_pending_events(Error **errp)
 +{
 +    /* monitor_cur() locks monitor_lock internally: read it first. */
@@ -322,8 +358,7 @@
 +        !mon->pending_events_open || mon->pending_events_invalid ||
 +        !mon->pending_events_epoch || mon->pretty ||
 +        mon->capab[QMP_CAPABILITY_OOB] || mon->commands != &qmp_commands ||
-+        QTAILQ_FIRST(&mon_list) != original ||
-+        QTAILQ_NEXT(original, entry) || monitor_destroyed) {
++        !pending_events_monitor_layout(original) || monitor_destroyed) {
 +        error_setg(errp, "Pending-event monitor lifetime or setup is ineligible");
 +        return NULL;
 +    }
@@ -419,7 +454,7 @@
  
  Monitor *monitor_cur(void)
  {
-@@ -625,6 +1030,11 @@
+@@ -625,6 +1064,11 @@
       */
      if (!monitor_destroyed) {
          QTAILQ_INSERT_HEAD(&mon_list, mon, entry);
@@ -431,6 +466,7 @@
          mon = NULL;
      }
      qemu_mutex_unlock(&monitor_lock);
+diff --git a/monitor/qmp.c b/monitor/qmp.c
 --- a/monitor/qmp.c
 +++ b/monitor/qmp.c
 @@ -166,6 +166,7 @@
@@ -493,6 +529,7 @@
          g_free(mon);
          return;
      }
+diff --git a/monitor/monitor-internal.h b/monitor/monitor-internal.h
 --- a/monitor/monitor-internal.h
 +++ b/monitor/monitor-internal.h
 @@ -151,6 +151,15 @@
@@ -523,6 +560,7 @@
  void coroutine_fn monitor_qmp_dispatcher_co(void *data);
  void qmp_dispatcher_co_wake(void);
  
+diff --git a/qapi/control.json b/qapi/control.json
 --- a/qapi/control.json
 +++ b/qapi/control.json
 @@ -5,6 +5,44 @@
@@ -570,6 +608,7 @@
  
  ##
  # @qmp_capabilities:
+diff --git a/system/fdisbull-stopped-control.c b/system/fdisbull-stopped-control.c
 --- a/system/fdisbull-stopped-control.c
 +++ b/system/fdisbull-stopped-control.c
 @@ -17,6 +17,7 @@
@@ -637,6 +676,7 @@
  static bool control_arm_boundary(uint64_t *epoch, Error **errp)
  {
      g_autoptr(FdisbullClockInfo) clock = NULL;
+diff --git a/include/system/fdisbull-stopped-control.h b/include/system/fdisbull-stopped-control.h
 --- a/include/system/fdisbull-stopped-control.h
 +++ b/include/system/fdisbull-stopped-control.h
 @@ -3,6 +3,12 @@

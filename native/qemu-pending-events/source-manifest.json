@@ -3,9 +3,9 @@
   "files": [
     {
       "after": {
-        "bytes": 37387,
+        "bytes": 38581,
         "mode": 436,
-        "sha256": "1a6b4a5fff73970839ec8b51dc73fe8a4e3b54f8426d672e5bd396e08438dc59"
+        "sha256": "365a3ddeb35407a8a53dc9fbf6b81a8737662fad92270475c751025dfdd940c6"
       },
       "before": {
         "bytes": 22994,
@@ -80,15 +80,25 @@
       "path": "include/system/fdisbull-stopped-control.h"
     }
   ],
-  "format": "fdisbull-pending-events-native-source-1",
+  "format": "fdisbull-pending-events-native-source-2",
   "native_executed": false,
   "patch": {
-    "bytes": 23126,
-    "sha256": "d653f67bcbd03eb5b05d10dd07fbb7bb9c63ee0f886904ee7a0363f89c3bc0a5"
+    "bytes": 24750,
+    "sha256": "21456f65382c20ef9c63bc74b115cc7fa415df77dd9856a242b7e162cb18f2b6"
   },
   "provenance": "new reconstruction on six exact recovered Build03 preimages; no historical candidate afterimages recovered",
   "qapi_generated": false,
   "root_keybatch_classifier_delta": "separate later integration, excluded from this candidate",
   "scope": "stopped-pending-qmp-events-v1 / matching-response-event-batch",
-  "source_only": true
+  "source_only": true,
+  "delta_patch": {
+    "bytes": 2075,
+    "sha256": "824e3c41994335ed43a5e51fe99942d50ec74db31e8d3067631d7bdf32952fc6"
+  },
+  "original_patch": {
+    "bytes": 23126,
+    "sha256": "d653f67bcbd03eb5b05d10dd07fbb7bb9c63ee0f886904ee7a0363f89c3bc0a5"
+  },
+  "change": "Admit sole original QMP plus one noninteractive internal chardev-gdb HMP; all other monitor/active-dispatch/lifetime gates unchanged",
+  "regression_status": "source prepared; not compiled or executed by this worker"
 }
