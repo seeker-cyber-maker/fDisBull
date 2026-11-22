@@ -170,6 +170,8 @@ class QemuFrameContractMixin:
         validate_video_frame_probe(points, timeout_ms=timeout_ms)
         vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=False)
+        from .qemu_pending_events import take_pending_events
+        take_pending_events(self, vm)
         identity = self._frame_contract_admit(vm, identity)
         prior = self._video_frame_select(vm, before, None, None)
         result = None
@@ -195,6 +197,8 @@ class QemuFrameContractMixin:
         validate_encoding(encoding, self.capabilities)
         vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=False)
+        from .qemu_pending_events import take_pending_events
+        take_pending_events(self, vm)
         identity = self._frame_contract_admit(vm, identity)
         prior = self._video_frame_select(vm, before, None, None)
         result = None

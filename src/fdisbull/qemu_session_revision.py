@@ -71,6 +71,9 @@ def passive_dispatch(vm, admission, stack):
     if protocol == 'qmp':
         if type(operation) is not str:
             return False
+        if operation == 'x-fdisbull-take-pending-events':
+            return (operation in getattr(vm, 'qmp_commands', ())
+                    and (arguments is None or type(arguments) is dict and not arguments))
         if operation in _EMPTY_QMP_READS:
             return arguments is None or type(arguments) is dict and not arguments
         if operation == 'x-fdisbull-plan-frame-key-batch':

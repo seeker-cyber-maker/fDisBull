@@ -581,6 +581,8 @@ class QemuVideoFrameMixin:
             vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=identity is None)
         if identity is not None:
+            from .qemu_pending_events import take_pending_events
+            take_pending_events(self, vm)
             identity = self._frame_contract_admit(vm, identity)
         prior = self._video_frame_select(vm, before, stream, frame_id)
         try:

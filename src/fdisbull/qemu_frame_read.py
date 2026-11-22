@@ -30,6 +30,9 @@ class FrameReadOwner:
         self.project = getattr(session, 'project', None)
         self.context = getattr(vm, 'context', None)
         self.context_process = getattr(session, '_process', None)
+        self.transport = getattr(vm, 'transport', None)
+        self.commands = getattr(vm, 'qmp_commands', None)
+        self.command_values = frozenset(self.commands or ())
         self.state = _state(session, vm)
         self.original_close = vm.close
         process = getattr(vm, 'process', None)
@@ -63,8 +66,12 @@ class FrameReadOwner:
         targets = [self.vm, *(client for _, client, _ in self.clients if client is not None)]
         if any(getattr(target, '_frame_read_owner', None) is not None for target in targets):
             raise DebuggerError('Retained frame owner already has an active or failed read')
+        previous = getattr(self.session, '_frame_read_session_owner', None)
+        if previous is not None:
+            raise DebuggerError('Session already retains a captured read owner')
         for target in targets:
             target._frame_read_owner = self
+        self.session._frame_read_session_owner = self
         self.installed = True
         self.check_owner()
         return True
@@ -78,9 +85,14 @@ class FrameReadOwner:
                 or getattr(vm, 'session_revision', None) is not self.revision
                 or self.authority.vm is not vm or self.authority.lifetime != self.lifetime
                 or self.revision.session_id != self.session_id
+                or getattr(vm, 'transport', None) != self.transport
+                or getattr(vm, 'qmp_commands', None) is not self.commands
+                or frozenset(self.commands or ()) != self.command_values
                 or getattr(vm, 'lock', None) is not self.lock):
             return False
         if self.installed and getattr(vm, '_frame_read_owner', None) is not self:
+            return False
+        if self.installed and getattr(self.session, '_frame_read_session_owner', None) is not self:
             return False
         for name, client, channel in self.clients:
             if client is None:
@@ -109,13 +121,17 @@ class FrameReadOwner:
             and getattr(process, 'stdin', None) is saved['stdin']
             and getattr(process, 'stdout', None) is saved['stdout'])
 
+    def state_matches(self):
+        from .qemu_observation_authority import _state
+        return _state(self.session, self.vm) == self.state
+
     def check_owner(self):
         from .qemu_observation_authority import _channel_live, _state
         if self.closed:
             raise DebuggerError('Retained frame original owner was closed')
         if time.monotonic() >= self.deadline:
             raise TimeoutError('Retained frame read exceeded its original host deadline')
-        if not self.resources_match() or _state(self.session, self.vm) != self.state:
+        if not self.resources_match() or not self.state_matches():
             raise DebuggerError('Session control or owner changed across the retained-frame read')
         process = self.cleanup_owner['process']
         poll = getattr(process, 'poll', None)
@@ -191,7 +207,7 @@ class FrameReadOwner:
         # close callbacks may run only while all captured bindings still match.
         try:
             from .qemu_observation_authority import _state
-            ordinary_close = self.resources_match() and _state(self.session, self.vm) == self.state
+            ordinary_close = self.resources_match() and self.state_matches()
         except BaseException:
             ordinary_close = False
         self.closed = self.closing = True
@@ -224,6 +240,8 @@ class FrameReadOwner:
         for target in [self.vm, *(client for _, client, _ in self.clients if client is not None)]:
             if getattr(target, '_frame_read_owner', None) is self:
                 del target._frame_read_owner
+        if getattr(self.session, '_frame_read_session_owner', None) is self:
+            del self.session._frame_read_session_owner
         self.installed = False
 
     def finish(self, error=None, result=None):
@@ -268,6 +286,12 @@ def check_frame_read_client(client):
     if owner is not None:
         # Real same-byte writes still reach the bound transport. The retained
         # read's explicit checks reject their changed revision before success.
+        owner.check_owner()
+
+
+def check_frame_read_session(session):
+    owner = getattr(session, '_frame_read_session_owner', None)
+    if owner is not None:
         owner.check_owner()
 
 

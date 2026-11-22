@@ -1,0 +1,654 @@
+--- a/monitor/monitor.c
++++ b/monitor/monitor.c
+@@ -29,6 +29,13 @@
+ #include "qapi/qapi-emit-events.h"
+ #include "qapi/qapi-visit-control.h"
+ #include "qobject/qdict.h"
++#include "qobject/qbool.h"
++#include "qobject/qlist.h"
++#include "qobject/qnum.h"
++#include "qobject/qstring.h"
++#include "qapi/qapi-commands-control.h"
++#include "qemu/uuid.h"
++#include "system/fdisbull-stopped-control.h"
+ #include "qemu/error-report.h"
+ #include "qemu/option.h"
+ #include "system/qtest.h"
+@@ -72,6 +79,404 @@
+ 
+ MonitorList mon_list;
+ static bool monitor_destroyed;
++
++/* This provider is registered before frontend construction. Common-monitor
++ * users without the system provider keep the command explicitly unsupported. */
++static FdisbullPendingEventsGuard pending_events_guard;
++static bool pending_events_frontends_started;
++static bool pending_events_registry_invalid;
++static uint64_t pending_events_registered;
++static uint64_t pending_events_ever_registered;
++
++void fdisbull_pending_events_register_guard(FdisbullPendingEventsGuard guard)
++{
++    assert(guard && !pending_events_guard && !pending_events_frontends_started);
++    pending_events_guard = guard;
++}
++
++void monitor_pending_events_init(MonitorQMP *mon, Chardev *chr, bool pretty)
++{
++    QemuUUID uuid;
++
++    QEMU_LOCK_GUARD(&monitor_lock);
++    pending_events_frontends_started = true;
++    if (pending_events_registered == UINT64_MAX ||
++        pending_events_ever_registered == UINT64_MAX) {
++        pending_events_registry_invalid = true;
++        mon->pending_events_invalid = true;
++        return;
++    }
++    pending_events_registered++;
++    pending_events_ever_registered++;
++    pending_events_registry_invalid |= pending_events_ever_registered != 1;
++    mon->pending_events_registered = true;
++    mon->pending_events_invalid = !pending_events_guard || pretty ||
++        !object_dynamic_cast(OBJECT(chr), TYPE_CHARDEV_STDIO);
++    qemu_uuid_generate(&uuid);
++    qemu_uuid_unparse(&uuid, mon->pending_events_id);
++}
++
++void monitor_pending_events_destroy(MonitorQMP *mon)
++{
++    QEMU_LOCK_GUARD(&monitor_lock);
++    mon->pending_events_invalid = true;
++    mon->pending_events_ready = mon->pending_events_open = false;
++    if (mon->pending_events_registered) {
++        assert(pending_events_registered);
++        pending_events_registered--;
++        mon->pending_events_registered = false;
++    }
++    qobject_unref(mon->pending_events_request);
++    mon->pending_events_request = NULL;
++}
++
++void monitor_pending_events_channel(MonitorQMP *mon, QEMUChrEvent event)
++{
++    QEMU_LOCK_GUARD(&monitor_lock);
++    if (event == CHR_EVENT_OPENED) {
++        mon->pending_events_invalid |= mon->pending_events_open ||
++                                       mon->pending_events_epoch != 0;
++        mon->pending_events_open = true;
++    } else if (event == CHR_EVENT_CLOSED) {
++        mon->pending_events_open = false;
++        mon->pending_events_invalid = true;
++    } else if (event == CHR_EVENT_MUX_IN || event == CHR_EVENT_MUX_OUT) {
++        mon->pending_events_invalid = true;
++    } else {
++        return;
++    }
++    if (mon->pending_events_epoch == UINT64_MAX) {
++        mon->pending_events_invalid = true;
++    } else {
++        mon->pending_events_epoch++;
++    }
++}
++
++void monitor_pending_events_dispatch(MonitorQMP *mon, QObject *request)
++{
++    QEMU_LOCK_GUARD(&monitor_lock);
++    if (mon->pending_events_request) {
++        mon->pending_events_invalid = true;
++        return;
++    }
++    mon->pending_events_request = qobject_ref(request);
++    mon->pending_events_invalid |= mon->capab[QMP_CAPABILITY_OOB];
++}
++
++void monitor_pending_events_dispatched(MonitorQMP *mon)
++{
++    QEMU_LOCK_GUARD(&monitor_lock);
++    mon->pending_events_invalid |= mon->capab[QMP_CAPABILITY_OOB];
++    qobject_unref(mon->pending_events_request);
++    mon->pending_events_request = NULL;
++}
++
++typedef struct PendingEventBudget {
++    size_t nodes;
++    size_t strings;
++    const QObject *parents[8];
++} PendingEventBudget;
++
++static bool pending_event_string(const char *text, size_t limit,
++                                 PendingEventBudget *budget, size_t *size)
++{
++    size_t i, length = strnlen(text, limit + 1), encoded = 2;
++
++    if (length > limit || budget->strings + length > 32768) {
++        return false;
++    }
++    for (i = 0; i < length; i++) {
++        unsigned char ch = text[i];
++
++        if (ch >= 128) {
++            return false;
++        }
++        if (ch == '"' || ch == '\\' || ch == '\b' || ch == '\f' ||
++            ch == '\n' || ch == '\r' || ch == '\t') {
++            encoded += 2;
++        } else {
++            encoded += ch < 32 || ch == 127 ? 6 : 1;
++        }
++    }
++    budget->strings += length;
++    *size = encoded;
++    return true;
++}
++
++/* Count before serialization. Depth, nodes and child iterations are bounded;
++ * no unbounded qlist_size(), recursive copy or JSON conversion is used. */
++static bool pending_event_value(const QObject *obj, unsigned depth,
++                                PendingEventBudget *budget,
++                                size_t first_node, size_t *size)
++{
++    const QDictEntry *dict_entry;
++    const QListEntry *list_entry;
++    unsigned count = 0, i;
++    size_t total = 2, part;
++    const QNum *number;
++    char digits[32];
++
++    if (!obj || depth > 8 || ++budget->nodes > 4096 ||
++        budget->nodes - first_node > 256) {
++        return false;
++    }
++    switch (qobject_type(obj)) {
++    case QTYPE_QNULL:
++        *size = 4;
++        return true;
++    case QTYPE_QBOOL:
++        *size = qbool_get_bool(qobject_to(QBool, obj)) ? 4 : 5;
++        return true;
++    case QTYPE_QNUM:
++        number = qobject_to(QNum, obj);
++        if (number->kind == QNUM_I64) {
++            *size = snprintf(digits, sizeof(digits), "%" PRId64, number->u.i64);
++        } else if (number->kind == QNUM_U64) {
++            *size = snprintf(digits, sizeof(digits), "%" PRIu64, number->u.u64);
++        } else {
++            return false;
++        }
++        return true;
++    case QTYPE_QSTRING:
++        return pending_event_string(qstring_get_str(qobject_to(QString, obj)),
++                                    4096, budget, size);
++    case QTYPE_QDICT:
++    case QTYPE_QLIST:
++        for (i = 0; i + 1 < depth; i++) {
++            if (budget->parents[i] == obj) {
++                return false;
++            }
++        }
++        budget->parents[depth - 1] = obj;
++        break;
++    default:
++        return false;
++    }
++    if (qobject_type(obj) == QTYPE_QDICT) {
++        const QDict *dict = qobject_to(QDict, obj);
++
++        if (qdict_size(dict) > 64) {
++            return false;
++        }
++        for (dict_entry = qdict_first(dict); dict_entry;
++             dict_entry = qdict_next(dict, dict_entry)) {
++            if (++count > 64 ||
++                !pending_event_string(qdict_entry_key(dict_entry), 128,
++                                      budget, &part)) {
++                return false;
++            }
++            total += (count > 1 ? 2 : 0) + part + 2;
++            if (!pending_event_value(qdict_entry_value(dict_entry), depth + 1,
++                                     budget, first_node, &part)) {
++                return false;
++            }
++            total += part;
++            if (total > 16384) {
++                return false;
++            }
++        }
++    } else {
++        for (list_entry = qlist_first(qobject_to(QList, obj)); list_entry;
++             list_entry = qlist_next(list_entry)) {
++            if (++count > 256 ||
++                !pending_event_value(qlist_entry_obj(list_entry), depth + 1,
++                                     budget, first_node, &part)) {
++                return false;
++            }
++            total += (count > 1 ? 2 : 0) + part;
++            if (total > 16384) {
++                return false;
++            }
++        }
++    }
++    *size = total;
++    return true;
++}
++
++static bool pending_event_uint(const QDict *dict, const char *key,
++                               uint64_t maximum)
++{
++    QNum *number = qobject_to(QNum, qdict_get(dict, key));
++    uint64_t value;
++
++    return number && number->kind != QNUM_DOUBLE &&
++           qnum_get_try_uint(number, &value) && value <= maximum;
++}
++
++static bool pending_event_valid(const QDict *event, PendingEventBudget *budget,
++                                size_t *size)
++{
++    const QDictEntry *entry;
++    const char *name = qdict_get_try_str(event, "event");
++    QObject *data = qdict_get(event, "data");
++    QObject *raw_time = qdict_get(event, "timestamp");
++    QDict *stamp = qobject_to(QDict, raw_time);
++    size_t first_node = budget->nodes;
++
++    if (!name || !name[0] || strnlen(name, 129) > 128 ||
++        (data && !qobject_to(QDict, data)) ||
++        (raw_time && (!stamp || qdict_size(stamp) != 2 ||
++          !pending_event_uint(stamp, "seconds", INT64_MAX) ||
++          !pending_event_uint(stamp, "microseconds", 999999)))) {
++        return false;
++    }
++    if (qdict_size(event) > 3) {
++        return false;
++    }
++    for (entry = qdict_first(event); entry; entry = qdict_next(event, entry)) {
++        const char *key = qdict_entry_key(entry);
++
++        if (strcmp(key, "event") && strcmp(key, "data") &&
++            strcmp(key, "timestamp")) {
++            return false;
++        }
++    }
++    return pending_event_value(QOBJECT(event), 1, budget, first_node, size) &&
++           *size <= 16384;
++}
++
++static char *pending_events_copy_label(const char *value)
++{
++    size_t size = strlen(value) + 1;
++    char *copy = g_try_malloc(size);
++
++    if (copy) {
++        memcpy(copy, value, size);
++    }
++    return copy;
++}
++
++FdisbullPendingEventsInfo *qmp_x_fdisbull_take_pending_events(Error **errp)
++{
++    /* monitor_cur() locks monitor_lock internally: read it first. */
++    Monitor *original = monitor_cur();
++    MonitorQMP *mon;
++    MonitorQAPIEventState *selected[64];
++    PendingEventBudget budget = { 0 };
++    FdisbullPendingEventsInfo *info = NULL;
++    anyList **tail;
++    GHashTableIter iterator;
++    gpointer entry;
++    RunState state;
++    QDict *request;
++    QNum *id;
++    uint64_t request_id;
++    size_t visited = 0, count = 0, list_size = 2, size, i;
++
++    if (!pending_events_guard) {
++        error_setg(errp, "Pending events are unsupported by this producer");
++        return NULL;
++    }
++    /* Provider checks BQL, stopped CPU and the sole unarmed dispatcher. No
++     * monitor lock or strict-control mutex is held across this callback. */
++    if (!pending_events_guard(&state, errp)) {
++        return NULL;
++    }
++    if (!original || !monitor_is_qmp(original)) {
++        error_setg(errp, "Pending events require their original QMP monitor");
++        return NULL;
++    }
++    mon = container_of(original, MonitorQMP, common);
++    QEMU_LOCK_GUARD(&monitor_lock);
++    if (pending_events_registry_invalid || pending_events_registered != 1 ||
++        !mon->pending_events_registered || !mon->pending_events_ready ||
++        !mon->pending_events_open || mon->pending_events_invalid ||
++        !mon->pending_events_epoch || mon->pretty ||
++        mon->capab[QMP_CAPABILITY_OOB] || mon->commands != &qmp_commands ||
++        QTAILQ_FIRST(&mon_list) != original ||
++        QTAILQ_NEXT(original, entry) || monitor_destroyed) {
++        error_setg(errp, "Pending-event monitor lifetime or setup is ineligible");
++        return NULL;
++    }
++    request = qobject_to(QDict, mon->pending_events_request);
++    id = request ? qobject_to(QNum, qdict_get(request, "id")) : NULL;
++    if (!id || id->kind == QNUM_DOUBLE ||
++        !qnum_get_try_uint(id, &request_id) || !request_id) {
++        error_setg(errp, "Pending events require an exact positive integer ID");
++        return NULL;
++    }
++    /* Enqueue uses monitor_lock before the queue lock, so releasing the
++     * latter cannot admit another queued command during this transfer. */
++    WITH_QEMU_LOCK_GUARD(&mon->qmp_queue_lock) {
++        if (!g_queue_is_empty(mon->qmp_requests)) {
++            error_setg(errp, "Pending events require no other queued control");
++            return NULL;
++        }
++    }
++    QEMU_LOCK_GUARD(&original->mon_lock);
++    if (original->mux_out || !monitor_qapi_event_state) {
++        error_setg(errp, "Pending events require their unmuxed monitor");
++        return NULL;
++    }
++    /* Count every timed state, including an empty qdict waiting for removal.
++     * On excess, refuse permanently without traversing or consuming a prefix. */
++    if (g_hash_table_size(monitor_qapi_event_state) > 64) {
++        mon->pending_events_invalid = true;
++        error_setg(errp, "Pending-event throttle table exceeds 64 states");
++        return NULL;
++    }
++    g_hash_table_iter_init(&iterator, monitor_qapi_event_state);
++    while (g_hash_table_iter_next(&iterator, &entry, NULL)) {
++        MonitorQAPIEventState *current = entry;
++
++        if (++visited > 64) {
++            goto overflow;
++        }
++        if (!current->qdict) {
++            continue;
++        }
++        if (count == 64 || !pending_event_valid(current->qdict, &budget, &size)) {
++            goto overflow;
++        }
++        list_size += (count ? 2 : 0) + size;
++        if (list_size > 131072) {
++            goto overflow;
++        }
++        selected[count++] = current;
++    }
++    /* Fixed metadata plus uint64 ID/epoch is <512 bytes. Thus the complete
++     * non-pretty response including newline stays well below 256 KiB. */
++    info = g_try_new0(FdisbullPendingEventsInfo, 1);
++    if (!info) {
++        goto allocation;
++    }
++    info->model = pending_events_copy_label("stopped-pending-qmp-events-v1");
++    info->boundary = pending_events_copy_label("matching-response-event-batch");
++    info->monitor_id = pending_events_copy_label(mon->pending_events_id);
++    if (!info->model || !info->boundary || !info->monitor_id) {
++        goto allocation;
++    }
++    info->monitor_epoch = mon->pending_events_epoch;
++    info->status = state;
++    info->event_count = count;
++    tail = &info->events;
++    for (i = 0; i < count; i++) {
++        anyList *node = g_try_new0(anyList, 1);
++
++        if (!node) {
++            goto allocation;
++        }
++        node->value = QOBJECT(qobject_ref(selected[i]->qdict));
++        *tail = node;
++        tail = &node->next;
++    }
++    /* All validation/allocation/ref acquisition preceded the first consume.
++     * Keep throttle keys, data, timers and coalescing phase exactly intact. */
++    for (i = 0; i < count; i++) {
++        qobject_unref(selected[i]->qdict);
++        selected[i]->qdict = NULL;
++    }
++    return info;
++
++overflow:
++    mon->pending_events_invalid = true;
++    error_setg(errp, "Pending-event object or batch exceeds its bounded schema");
++    return NULL;
++allocation:
++    qapi_free_FdisbullPendingEventsInfo(info);
++    error_setg(errp, "Pending-event batch allocation failed without consumption");
++    return NULL;
++}
+ 
+ Monitor *monitor_cur(void)
+ {
+@@ -625,6 +1030,11 @@
+      */
+     if (!monitor_destroyed) {
+         QTAILQ_INSERT_HEAD(&mon_list, mon, entry);
++        if (monitor_is_qmp(mon)) {
++            MonitorQMP *qmp_mon = container_of(mon, MonitorQMP, common);
++
++            qmp_mon->pending_events_ready = true;
++        }
+         mon = NULL;
+     }
+     qemu_mutex_unlock(&monitor_lock);
+--- a/monitor/qmp.c
++++ b/monitor/qmp.c
+@@ -166,6 +166,7 @@
+     QDict *rsp;
+     QDict *error;
+ 
++    monitor_pending_events_dispatch(mon, req);
+     fdisbull_stopped_control_qmp_enter(req);
+     rsp = qmp_dispatch(mon->commands, req, qmp_oob_enabled(mon),
+                        &mon->common);
+@@ -185,6 +186,7 @@
+ 
+     monitor_qmp_respond(mon, rsp);
+     qobject_unref(rsp);
++    monitor_pending_events_dispatched(mon);
+ }
+ 
+ /*
+@@ -400,7 +402,8 @@
+     req_obj->err = err;
+ 
+     /* Protect qmp_requests and fetching its length. */
+-    WITH_QEMU_LOCK_GUARD(&mon->qmp_queue_lock) {
++    WITH_QEMU_LOCK_GUARD(&monitor_lock) {
++      WITH_QEMU_LOCK_GUARD(&mon->qmp_queue_lock) {
+ 
+         /*
+          * Suspend the monitor when we can't queue more requests after
+@@ -423,6 +426,7 @@
+                                           mon->qmp_requests->length);
+         assert(mon->qmp_requests->length < QMP_REQ_QUEUE_LEN_MAX);
+         g_queue_push_tail(mon->qmp_requests, req_obj);
++      }
+     }
+ 
+     /* Kick the dispatcher routine */
+@@ -463,6 +467,7 @@
+     QDict *data;
+     MonitorQMP *mon = opaque;
+ 
++    monitor_pending_events_channel(mon, event);
+     switch (event) {
+     case CHR_EVENT_OPENED:
+         fdisbull_stopped_control_channel("qmp-channel-opened", true);
+@@ -496,6 +501,7 @@
+ 
+ void monitor_data_destroy_qmp(MonitorQMP *mon)
+ {
++    monitor_pending_events_destroy(mon);
+     json_message_parser_destroy(&mon->parser);
+     qemu_mutex_destroy(&mon->qmp_queue_lock);
+     monitor_qmp_cleanup_req_queue_locked(mon);
+@@ -520,7 +526,9 @@
+ {
+     MonitorQMP *mon = g_new0(MonitorQMP, 1);
+ 
++    monitor_pending_events_init(mon, chr, pretty);
+     if (!qemu_chr_fe_init(&mon->common.chr, chr, errp)) {
++        monitor_pending_events_destroy(mon);
+         g_free(mon);
+         return;
+     }
+--- a/monitor/monitor-internal.h
++++ b/monitor/monitor-internal.h
+@@ -151,6 +151,15 @@
+     QemuMutex qmp_queue_lock;
+     /* Input queue that holds all the parsed QMP requests */
+     GQueue *qmp_requests;
++    /* Pending-event delivery identity. Protected by monitor_lock; initialized
++     * before qemu_chr_fe_init, even when setup later uses an I/O-thread BH. */
++    char pending_events_id[37];
++    uint64_t pending_events_epoch;
++    bool pending_events_registered;
++    bool pending_events_ready;
++    bool pending_events_open;
++    bool pending_events_invalid;
++    QObject *pending_events_request;
+ } MonitorQMP;
+ 
+ /**
+@@ -180,6 +189,11 @@
+ 
+ void qmp_send_response(MonitorQMP *mon, const QDict *rsp);
+ void monitor_data_destroy_qmp(MonitorQMP *mon);
++void monitor_pending_events_init(MonitorQMP *mon, Chardev *chr, bool pretty);
++void monitor_pending_events_destroy(MonitorQMP *mon);
++void monitor_pending_events_channel(MonitorQMP *mon, QEMUChrEvent event);
++void monitor_pending_events_dispatch(MonitorQMP *mon, QObject *request);
++void monitor_pending_events_dispatched(MonitorQMP *mon);
+ void coroutine_fn monitor_qmp_dispatcher_co(void *data);
+ void qmp_dispatcher_co_wake(void);
+ 
+--- a/qapi/control.json
++++ b/qapi/control.json
+@@ -5,6 +5,44 @@
+ ##
+ # = QMP monitor control
+ ##
++
++{ 'include': 'run-state.json' }
++
++##
++# @FdisbullPendingEventsInfo:
++#
++# One bounded batch of original monitor event objects retained at a stopped
++# delivery boundary. This is not an event-free stream or complete history.
++#
++# @model: stopped-pending-qmp-events-v1
++# @boundary: matching-response-event-batch
++# @monitor-id: Original eligible stdio monitor UUID
++# @monitor-epoch: Original positive connection lifetime
++# @status: Eligible stopped run state at this boundary
++# @event-count: Exact number of retained event objects
++# @events: Original event dictionaries, with no reconstructed payloads
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullPendingEventsInfo',
++  'data': { 'model': 'str', 'boundary': 'str', 'monitor-id': 'str',
++            'monitor-epoch': 'uint64', 'status': 'RunState',
++            'event-count': 'uint32', 'events': [ 'any' ] } }
++
++##
++# @x-fdisbull-take-pending-events:
++#
++# Transfer a fixed bounded retained-event batch to the original sole stdio
++# monitor while the native producer is stopped. No arguments are accepted.
++# Stable held-key ownership is preserved. Strict armed control refuses this
++# operation, including an armed scope that has already retired.
++#
++# Returns: A matching-response event batch, possibly empty
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-take-pending-events',
++  'returns': 'FdisbullPendingEventsInfo', 'allow-preconfig': true }
+ 
+ ##
+ # @qmp_capabilities:
+--- a/system/fdisbull-stopped-control.c
++++ b/system/fdisbull-stopped-control.c
+@@ -17,6 +17,7 @@
+ #include "qapi/qapi-commands-fdisbull-stopped-control.h"
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/main-loop.h"
++#include "qemu/module.h"
+ #include "qemu/thread.h"
+ #include "qemu/uuid.h"
+ #include "qobject/qdict.h"
+@@ -182,6 +183,9 @@
+     if (armed) {
+         return false;
+     }
++    if (!strcmp(name, "x-fdisbull-take-pending-events")) {
++        return count == 0;
++    }
+     if (!strcmp(name, "x-fdisbull-arm-stopped-control")) {
+         return count == 1 &&
+                control_token(qdict_get_try_str(args, "token"));
+@@ -579,6 +583,46 @@
+             runstate_check(RUN_STATE_DEBUG) || runstate_check(RUN_STATE_PAUSED));
+ }
+ 
++static bool control_pending_events_boundary(RunState *state, Error **errp)
++{
++    bool sole_unarmed;
++
++    assert(bql_locked());
++    /* Do not use control_arm_boundary: its idle keyboard and generic taint
++     * policy is stronger than this nonconsuming delivery boundary. A stable
++     * frame-key owner, with held keys or an empty held set, remains eligible. */
++    if (!control_stopped_cpu() || replay_mode != REPLAY_MODE_NONE ||
++        migration_is_running() || fdisbull_instrumented_checkpoint_busy() ||
++        qemu_system_dump_in_progress() ||
++        fdisbull_stopped_control_system_pending() ||
++        fdisbull_clock_budget_active() ||
++        fdisbull_display_frame_fence_blocks_control() ||
++        fdisbull_video_frame_fence_blocks_control() ||
++        fdisbull_video_frame_stop_pending()) {
++        error_setg(errp, "Pending events require one stopped CPU without "
++                   "pending native controllers");
++        return false;
++    }
++    control_lock();
++    sole_unarmed = !control.armed && control.qmp_active == 1 &&
++                   !control.gdb_active && !control.hmp_active;
++    control_unlock();
++    if (!sole_unarmed) {
++        error_setg(errp, "Pending events require the sole unarmed dispatcher");
++        return false;
++    }
++    *state = runstate_get();
++    return true;
++}
++
++static void control_register_pending_events(void)
++{
++    /* QOM module initialization precedes monitor_init_globals. Registration
++     * stores a provider pointer only; it must not acquire monitor locks. */
++    fdisbull_pending_events_register_guard(control_pending_events_boundary);
++}
++type_init(control_register_pending_events);
++
+ static bool control_arm_boundary(uint64_t *epoch, Error **errp)
+ {
+     g_autoptr(FdisbullClockInfo) clock = NULL;
+--- a/include/system/fdisbull-stopped-control.h
++++ b/include/system/fdisbull-stopped-control.h
+@@ -3,6 +3,12 @@
+ #define SYSTEM_FDISBULL_STOPPED_CONTROL_H
+ 
+ #include "qemu/typedefs.h"
++#include "qapi/qapi-types-run-state.h"
++
++/* Common monitor code defaults to unsupported. System QOM initialization
++ * registers this nonconsuming provider before any frontend exists. */
++typedef bool (*FdisbullPendingEventsGuard)(RunState *state, Error **errp);
++void fdisbull_pending_events_register_guard(FdisbullPendingEventsGuard guard);
+ 
+ /* These hooks never retain their mutex across a handler or BQL acquisition. */
+ void fdisbull_stopped_control_qmp_received(QObject *request);

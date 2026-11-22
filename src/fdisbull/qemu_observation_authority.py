@@ -212,6 +212,8 @@ class _Admission:
         self.max_reply_bytes = _REPLY_LIMIT if authority is not None and authority._active else None
 
     def dispatch(self):
+        from .qemu_frame_read import check_frame_read_client
+        check_frame_read_client(self.client)
         _remaining(self.deadline)
         authority = self.authority
         if authority is None:
@@ -228,6 +230,8 @@ class _Admission:
         self.dispatched = True
 
     def event(self, value):
+        from .qemu_frame_read import check_frame_read_client
+        check_frame_read_client(self.client)
         if self.authority is not None:
             from .qemu_session_revision import session_revision
             session_revision(self.authority.vm).effect()

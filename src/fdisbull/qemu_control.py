@@ -62,6 +62,8 @@ class QemuControl:
         deadline=time.monotonic()+timeout_ms/1000
         shared=getattr(self,'operation_deadline',None)
         if shared is not None:deadline=min(deadline,shared)
+        if type(method) is str and method == 'x-fdisbull-take-pending-events':
+            return self._call_pending(arguments,deadline)
         with transport_operation(self,'qmp',method,arguments,deadline) as control:
             deadline=control.deadline;arguments=control.arguments
             if control.max_reply_bytes is not None:max_reply_bytes=min(max_reply_bytes,control.max_reply_bytes)
@@ -99,6 +101,63 @@ class QemuControl:
                 if dispatched and not completed:self.close()
                 raise
             finally:self.lock.release()
+
+    def _call_pending(self, arguments, deadline):
+        from .qemu_pending_events import COMMAND, PendingReply
+        if arguments is not None and (type(arguments) is not dict or arguments):
+            raise ValueError('Pending QMP events accept no arguments')
+        pending = None
+        dispatched = completed = False
+        try:
+            with transport_operation(self,'qmp',COMMAND,arguments,deadline) as control:
+                deadline = control.deadline
+                lock = self.lock
+                remaining = deadline-time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError('Pending QMP deadline expired before lock admission')
+                if not lock.acquire(timeout=remaining):
+                    raise TimeoutError('QMP is busy')
+                try:
+                    if self.lock is not lock:
+                        raise DebuggerError('Pending QMP original lock changed')
+                    self.sequence += 1
+                    request_id = self.sequence
+                    if type(request_id) is not int or not 1 <= request_id < 1 << 64:
+                        raise DebuggerError('Pending QMP request ID exhausted')
+                    pending = PendingReply(self,control,request_id,deadline)
+                    wire = json.dumps({'execute':COMMAND,'id':request_id},separators=(',',':')).encode()+b'\n'
+                    control.dispatch()
+                    pending.check()
+                    channel = check_transport(self)
+                    channel.settimeout(deadline-time.monotonic())
+                    pending.check()
+                    dispatched = True
+                    channel.sendall(wire)
+                    pending.check()
+                    while True:
+                        reply, size = pending.read()
+                        if 'event' in reply:
+                            pending.bare(reply,size)
+                            continue
+                        if 'error' in reply:
+                            pending.error_reply(reply)
+                        result = pending.deliver(reply)
+                        break
+                finally:
+                    lock.release()
+                pending.check()
+            pending.check()
+            completed = True
+            return result
+        except BaseException as error:
+            if pending is not None:
+                pending.attach(error)
+                if dispatched and not completed and not pending.native_error:
+                    try:pending.close_original()
+                    except BaseException as cleanup:
+                        try:error.pending_events_cleanup_error = type(cleanup).__name__
+                        except BaseException:pass
+            raise
 
     def save(self,path,timeout_ms=240000):
         path=Path(path).resolve()

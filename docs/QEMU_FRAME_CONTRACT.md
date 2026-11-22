@@ -68,14 +68,24 @@ to QEMU. An optional supplied `session_id` must match the current owner.
 
 Each retained probe, RGBA read, local screenshot call and source-frame artifact
 capture retains its original owner before its existing initial stopped-clock
-context. After that context succeeds, one explicit admission freezes the
-cooperative revision before source selection. Admission adds no native request.
+context. When the original pipe monitor advertises
+`x-fdisbull-take-pending-events`, one bounded matching-response event batch is
+taken after that context succeeds. Its original events are fully validated and
+delivered through the existing event handler before one explicit admission
+freezes the cooperative revision. Admission itself adds no native request.
+Missing-command and other transport paths add no speculative cut query.
 An event or cooperating effect delivered before that boundary can become part
 of the new baseline only while the original owner, resources, configuration and
 session lifetime remain unchanged. Every covered effect after admission still
 invalidates the read, including unknown or same-valued events and same-byte
-bound memory writes. The reader never filters events, drains, retries or repairs
-the stream. Delivery time does not establish when a device generated an event.
+bound memory writes. The reader never filters events, drains after the matching
+reply, retries or repairs the stream. Later bytes remain buffered for their
+proper next operation. Delivery time does not establish when a device generated
+an event. The batch does not establish an event-free stream, complete history or
+device-cause order. See [QEMU_PENDING_EVENTS.md](QEMU_PENDING_EVENTS.md) for its
+bounds and status sequencing. Durable frame keys, including an attached
+controller with no held keys, do not alone make the native cut ineligible; the
+cut never queries, releases, detaches, or mutates those keys.
 
 The returned revision and mode projection use the captured original authority.
 The scope retains its original cleanup resources through the outer operation's

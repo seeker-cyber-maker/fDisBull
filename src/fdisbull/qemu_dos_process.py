@@ -45,6 +45,7 @@ from .qemu_spatial_policy import QemuSpatialPolicyMixin, initial_policy
 from .qemu_movement import QemuMovementMixin
 from .qemu_scenes import QemuSceneObservationMixin
 from .qemu_screenshot_hooks import QemuScreenshotHookMixin
+from .qemu_pending_events import pending_status_operation, pending_status_owner
 
 
 def _sha(data):
@@ -58,6 +59,10 @@ def _word(data, offset):
 def _async_process_operation(function):
     return machine_trace_operation(function, label='DOS asynchronous control',
                                    default_timeout_ms=30000)
+
+
+def _pending_dos_status(function):
+    return pending_status_operation(_async_process_operation(function), dos=True)
 
 
 def relocated_source(source, dos, image_format, report):
@@ -651,6 +656,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                 changes.append(dict(vector=vector, before=before.hex(), after=after.hex(),
                                     handler_linear=target,
                                     in_retained_allocation=any(b['start'] <= target < b['end'] for b in retained)))
+        status_owner = pending_status_owner(self)
+        if status_owner is not None:
+            status_owner.verified_return(self._dos_async_pending, report, raw, serial_bytes)
         self._advance_epoch()
         termination = dict(type=('normal', 'control_break', 'critical_error', 'resident')[termination_type],
             code=result_ax & 0xff, dos_ax=result_ax, resident=resident,
@@ -674,6 +682,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             'resident-allocation-intersection' if resident else 'invalidated-on-process-exit'))
         self._process.update(state='resident' if resident else 'exited', termination=termination,
                              capture_epoch=self._runtime_epoch)
+        if status_owner is not None:
+            status_owner.accept_return_state()
         outcome = 'guest_tsr' if resident else 'guest_exit'
         result = deepcopy(result)
         result['native_machine_stop'] = deepcopy(result['session']['stop_reason'])
@@ -695,6 +705,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                 # Reverting RAM here could overwrite the new owner of a page.
                 self._event('layer-process-ended', {'active': list(self._layer_active),
                                                     'disposition': 'owner_closed'})
+                if status_owner is not None:
+                    status_owner.permit_closed_return()
                 self.close()
                 result['process'] = deepcopy(self._process)
                 result['session']['state'] = 'closed'
@@ -1118,6 +1130,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                 returned = self._observe_return(stop)
             finally:
                 context['reconciling'] = False
+            status_owner = pending_status_owner(self)
+            if status_owner is not None:
+                status_owner.complete_return(context, returned)
             self._dos_async_stop = deepcopy(returned)
             result['process_stop'] = returned
             if returned['session']['state'] == 'closed':
@@ -1263,13 +1278,14 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             self.vm.close()
         return deepcopy(self._process)
 
-    @_async_process_operation
+    @_pending_dos_status
     def status(self):
         context = getattr(self, '_dos_async_pending', None)
         owner = self.vm
         revision = owner.session_revision
 
         def require_original_revision():
+            pending_status_owner(self)
             if self.vm is not owner or getattr(owner, 'session_revision', None) is not revision:
                 raise DebuggerError('DOS status owner or session revision changed')
 
@@ -1285,6 +1301,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                     raise DebuggerError('DOS asynchronous control lacks native running state')
                 if context['dispatched'] and not result['native_state']['running']:
                     result = self._observe_async_stop(result, context)
+            require_original_revision()
             result['process'] = deepcopy(self._process)
             stopped = getattr(self, '_dos_async_stop', None)
             if (stopped is not None

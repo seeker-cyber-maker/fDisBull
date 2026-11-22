@@ -1,0 +1,94 @@
+{
+  "compiled": false,
+  "files": [
+    {
+      "after": {
+        "bytes": 37387,
+        "mode": 436,
+        "sha256": "1a6b4a5fff73970839ec8b51dc73fe8a4e3b54f8426d672e5bd396e08438dc59"
+      },
+      "before": {
+        "bytes": 22994,
+        "mode": 436,
+        "sha256": "b47908206225648166176633f6cfba938bbf2707f9748a61da53a6b295c0d047"
+      },
+      "path": "monitor/monitor.c"
+    },
+    {
+      "after": {
+        "bytes": 18827,
+        "mode": 436,
+        "sha256": "6b545233dc96e8cd2d57b180777e4303ed04ecc5d25977271ab2d32fef6fc64a"
+      },
+      "before": {
+        "bytes": 18499,
+        "mode": 436,
+        "sha256": "2d66dcd7ca9fc62218cf9886813f21919dc2ec7a623453970cc492e097aefe17"
+      },
+      "path": "monitor/qmp.c"
+    },
+    {
+      "after": {
+        "bytes": 7454,
+        "mode": 436,
+        "sha256": "c4248b1e5784789ac9c43c5fed48755972ba77c23ca21e517c33a04d2c9ff865"
+      },
+      "before": {
+        "bytes": 6725,
+        "mode": 436,
+        "sha256": "df2c2f35d8a05b434ee3f1a07644acfe650b388421053851ed3526268dc27b7f"
+      },
+      "path": "monitor/monitor-internal.h"
+    },
+    {
+      "after": {
+        "bytes": 6209,
+        "mode": 436,
+        "sha256": "d9efd77e57339af93ebaa7954c3fdac5297351a8faafd899ddd0e7ae00835831"
+      },
+      "before": {
+        "bytes": 4839,
+        "mode": 436,
+        "sha256": "b2b274ce096679420a409e3d0e320793173211dfa2cd1a630f8dbd9a7838ba96"
+      },
+      "path": "qapi/control.json"
+    },
+    {
+      "after": {
+        "bytes": 23189,
+        "mode": 420,
+        "sha256": "fdcd468d323d146a850340d6a16899da7affae79a58585568eeabb554a936345"
+      },
+      "before": {
+        "bytes": 21434,
+        "mode": 420,
+        "sha256": "fb4670c788f330e1689f470634af5a33032435f33ee1f93e09299a07cab143a4"
+      },
+      "path": "system/fdisbull-stopped-control.c"
+    },
+    {
+      "after": {
+        "bytes": 1498,
+        "mode": 420,
+        "sha256": "e66bea4eab44d8dd9862d717e067563f2efd754d71db0cd05a0dd8c3f9ded4de"
+      },
+      "before": {
+        "bytes": 1159,
+        "mode": 420,
+        "sha256": "1d1f65f73fa96179d1c912065d0a95694d7666abc5c4779c6f8db88621cdc885"
+      },
+      "path": "include/system/fdisbull-stopped-control.h"
+    }
+  ],
+  "format": "fdisbull-pending-events-native-source-1",
+  "native_executed": false,
+  "patch": {
+    "bytes": 23126,
+    "sha256": "d653f67bcbd03eb5b05d10dd07fbb7bb9c63ee0f886904ee7a0363f89c3bc0a5"
+  },
+  "provenance": "new reconstruction on six exact recovered Build03 preimages; no historical candidate afterimages recovered",
+  "qapi_generated": false,
+  "root_keybatch_classifier_delta": "separate later integration, excluded from this candidate",
+  "scope": "stopped-pending-qmp-events-v1 / matching-response-event-batch",
+  "source_only": true
+}

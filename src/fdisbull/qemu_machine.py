@@ -577,9 +577,12 @@ def _machine_async_guard(session, name=None, args=(), kwargs=None):
     A named check also admits the nested operation; an unnamed check only
     verifies its original owner, leaving deadline cleanup to the outer call.
     """
+    from .qemu_frame_read import check_frame_read_session
+    check_frame_read_session(session)
     guard = getattr(session, '_dos_async_operation_guard', None)
     if guard is not None:
         guard(name, args, kwargs or {})
+        check_frame_read_session(session)
 
 
 def _machine_registers(vm, remote, *, qmp=None):
@@ -621,6 +624,11 @@ def machine_operation(function,*,script_budget=False):
             raise
         finally:vm.lock.release()
     return invoke
+
+
+def machine_status_operation(function):
+    from .qemu_pending_events import pending_status_operation
+    return pending_status_operation(machine_operation(function))
 
 
 def machine_io_operation(function, *, close_on_timeout=False):
@@ -855,7 +863,10 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                     *[getattr(channel,'operation_deadline',None) for channel in
                       (getattr(vm,'qmp',None),getattr(vm,'gdb',None)) if channel is not None]]
         bound=min(value for value in limits() if value is not None)
-        frame_read=capture_frame_read(self,vm,function.__name__,bound)
+        captured_status=getattr(self,'_frame_read_session_owner',None)
+        borrowed_status=(function.__name__=='status'
+                         and getattr(captured_status,'status_scope',False))
+        frame_read=captured_status if borrowed_status else capture_frame_read(self,vm,function.__name__,bound)
         wait=min(10,bound-time.monotonic())
         if wait<=0:raise TimeoutError(label+' host deadline expired before admission')
         lock=vm.lock
@@ -866,7 +877,7 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         installed=False
         result=None
         try:
-            if frame_read is not None and not frame_read.install():
+            if frame_read is not None and not borrowed_status and not frame_read.install():
                 frame_read=None
             if native_token is not None:
                 preflight_stopped_control_binding(self,native_token)
@@ -934,7 +945,8 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                 # Admission callbacks can fail after replacing the owner.
                 # Keep the captured binding ahead of any replacement cleanup.
                 preflight_stopped_control_binding(self,native_token)
-            channels=(getattr(vm,'qmp',None),getattr(vm,'gdb',None))
+            channels=(tuple(client for _,client,_ in frame_read.clients) if frame_read is not None
+                      else (getattr(vm,'qmp',None),getattr(vm,'gdb',None)))
             if not getattr(vm,'_fdisbull_control_quarantine',None) and any(channel is not None and hasattr(channel,'socket') and channel.socket is None
                    for channel in channels):
                 if not native_cleanup(error):vm.close()
@@ -972,7 +984,11 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
                     active=primary if primary is not None else completion
                     if active is None:completion=error
                     else:active.frame_read_release_error=type(error).__name__
-                frame_read.finish(primary if primary is not None else completion,result)
+                if borrowed_status:
+                    if primary is None and completion is None:
+                        frame_read.check_owner()
+                else:
+                    frame_read.finish(primary if primary is not None else completion,result)
                 if primary is None and completion is not None:raise completion
     return invoke
 
@@ -1231,14 +1247,23 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     def session_id(self):
         return session_revision(self.vm).session_id
 
-    @machine_operation
+    @machine_status_operation
     def status(self):
         from .debug_semantics import contract
-        state=self.vm.qmp.call('query-status')
+        retained=getattr(self,'_frame_read_session_owner',None)
+        if retained is not None:retained.check_owner()
+        vm=retained.vm if retained is not None else self.vm
+        revision=retained.revision if retained is not None else session_revision(vm)
+        state=vm.qmp.call('query-status')
+        if retained is not None:
+            retained.check_owner()
+            if getattr(retained,'status_scope',False):retained.observe_native(state)
         result=dict(context='machine',state='running' if state['running'] else 'stopped',native_state=state,capabilities=self.capabilities,
-                    semantics=contract('qemu-machine'),**session_revision(self.vm).snapshot())
+                    semantics=contract('qemu-machine'),**revision.snapshot())
+        if retained is not None:retained.check_owner()
         tracker=getattr(self,'_automatic_runtime_tracker',None)
         if tracker is not None:result['automatic_runtime_tracking']=tracker.status()
+        if retained is not None:retained.check_owner()
         return result
 
     @machine_operation
