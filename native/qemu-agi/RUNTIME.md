@@ -145,6 +145,30 @@ transport deadlines, and reaps that child on close. It does not locate or
 install an emulator, advance time, invent input or acknowledge requests during
 construction or `run()`.
 
+### Compact scene capture
+
+`checkpoint()` reads `agi-runtime-checkpoint-json`: source identity, stopped
+endpoint, pending/fault state, counters, clock/cycle/input facts and the existing
+same-build architectural digest. `scene_inputs()` reads
+`agi-runtime-scene-inputs-json`, adding selected actors in the native
+compositor's order and exact VIEW identities. Both are read-only, stopped
+queries. The order helper is shared with native composition; the host does not
+reimplement its ordering rules.
+
+The existing full `state()` remains the default capture. Explicit
+`capture="checkpoint"` on `run()`, `clock()` and `cycle()` selects the smaller
+response; `capture=None` performs the operation without a returned state
+projection. Neither choice changes the guest instruction budget or adds a
+clock pulse. See [scene preparation](SCENE_PREPARATION.md) for the minimal plan,
+prepared asset cache, evidence requirements and measurement boundaries.
+
+The descriptor does not recover background history. A source-bound complete
+SCENE journal from a known initial state can establish the executed picture
+operations. Dropped records, a late observer or an unknown initial background
+must remain unresolved. Neither the last `picture_id` nor the guest replay
+script proves a complete background: overlays change the former, and recording
+of the latter can be disabled or truncated.
+
 ### Clock, cycles and manual motion
 
 These operations have different purposes:

@@ -417,7 +417,7 @@ def test_native_untaken_out_of_range_if_target_does_not_fault(native_binary):
 @pytest.mark.parametrize("code", [
     bytes.fromhex("ff010101ff0080") + bytes(32769),
     bytes.fromhex("fe0300000000fefaff"),
-])
+], ids=["unsigned-if-32768-byte-skip", "signed-backward-goto"])
 def test_native_if_skip_is_unsigned_and_goto_is_signed(native_binary, code):
     expected, pcs = scalar_oracle(code)
     with QemuAGI(native_binary, code) as vm:

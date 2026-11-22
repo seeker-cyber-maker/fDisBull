@@ -12,6 +12,12 @@ text/menu state, resumable devices and snapshots. Its optional observations
 remain separate from architectural state. The runtime contract names its
 compatibility decisions, clock ownership and headless device interface.
 
+[Prepared scene composition](SCENE_PREPARATION.md) reuses the existing resource
+converter, PIC/VIEW readers and Sarien blit kernel. Additive compact runtime
+queries return stopped control facts and native actor order without exporting
+the complete state or picture planes. Immutable decoded assets can serve many
+editable scene plans; their preparation and execution costs remain distinct.
+
 The raw-code pilot and its benchmark below retain their narrower purpose:
 measuring source-linked observation costs on authored instruction subsets.
 Their performance results do not measure the full runtime. Original-format
