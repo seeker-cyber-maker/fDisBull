@@ -12,6 +12,9 @@ discarded history, event causation order, or atomic frame/CPU observation.
 The native patch targets QEMU 10.0.13 with the recovered FDisBull Build03
 extensions. It requires the sole initialized original stdio QMP monitor,
 without multiplexing, pretty printing, out-of-band dispatch, or reconnection.
+The private noninteractive HMP frontend created internally by the existing GDB
+stub is permitted; an externally addressable HMP or another QMP frontend is
+not. Active GDB/HMP dispatch remains excluded by the system provider.
 The provider refuses unsupported or running states, replay, migration,
 checkpoint and other competing native controllers. Native stopped-control
 scope checks remain separate from cooperative revision accounting.
@@ -126,3 +129,9 @@ tests do not qualify monitor scheduling, native allocation failure, actual
 scope refusal, or guest timing. Those require a newly built, identified native
 binary and separately retained probes. Prior build or test totals are not
 evidence for this reconstruction.
+
+The subsequent [2026-11-22 native qualification](QEMU_PENDING_EVENTS_VALIDATION.md)
+records the corrected monitor layout, four monitor controls and three actual
+RTC/frame/status/DOS-return cases on an identified fresh binary. Its native
+singleton event result and remaining overflow/allocation limits stay separate
+from the multi-event host coverage above.

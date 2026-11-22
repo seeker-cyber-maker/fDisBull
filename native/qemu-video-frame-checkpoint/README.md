@@ -150,14 +150,18 @@ restored Python 3.13 runtime whose original dependency maps were verified.
 The earlier fixture failure and a separate temporary-storage setup failure
 remain preserved; the 590-case total combines retained and fresh evidence.
 
-Patch composition, QAPI schema processing, compilation, native execution and
-paired legacy evidence remain **not run** for this implementation. The host
-peer results do not qualify the native producer or source-raster continuation.
+The subsequent [2026-11-22 continuation](../../docs/QEMU_CONTINUATION_2026_11_22.md)
+records exact composition, QAPI processing, compilation and native execution.
+Its sampled-frame trajectory has independent completed/prefix pixels, a real
+retained-past expiry, successful and failed save preservation, fresh hot and
+separate-process cold restore ownership, and matching future row completion.
+Fresh-owner native idle format 3 and neutral schema projections of formats 2/1
+also passed the unchanged host validator. These projections are not historical
+producer archives. The detailed continuation record separates each qualified
+result from preserved harness failures and remaining native combinations.
+The earlier host peers alone do not qualify those behaviors.
 
-A separately admitted native gate must restore into a second owner with
-different completed/prefix pixels, continue the exact saved rows, witness a
-retained deferred expiry across step/stop, and verify that successful and failed
-saves preserve the original armed expiry. It must also cover stopped-time
-refusal, fresh token/epoch mapping, metadata-only invalidation, idle off-profile
-and legacy formats, while retaining renderer/migration exclusions. Compilation
-alone cannot qualify those behaviors or establish whole-game parity.
+The complete acceptance gate also needs stopped-time refusal, metadata-only
+invalidation, idle off-profile and legacy-format combinations, while retaining
+renderer/migration exclusions. Only the separately recorded native cases count
+toward that gate; compilation cannot establish whole-game parity.

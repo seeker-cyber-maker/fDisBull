@@ -1,7 +1,8 @@
 # Remaining native frame-control work
 
-These are concrete implementation gaps after the retained-frame consumer and
-source-step adapters. They do not change the parity definition or promote a
+These are concrete implementation and qualification gaps after the retained-frame
+consumer and source-step adapters, updated for the 2026-11-22 continuation.
+They do not change the parity definition or promote a
 migration surface. The legacy renderer-source completion contract does not
 require application drawing completion or atomic image/CPU equivalence.
 
@@ -23,20 +24,25 @@ frame-key patch; host `frame_inputs` remains the owner of explicit transitions.
 
 ## Useful stopped batch capacity
 
-The existing QEMU helper `ps2_keyboard_frame_edge_capacity` reserves eight FIFO
-bytes per edge and the supported quiescent profile advertises two edges.
+The original QEMU helper `ps2_keyboard_frame_edge_capacity` reserves eight FIFO
+bytes per edge and its supported quiescent profile advertises two edges.
 Controller output, pending state, disabled scanning, command state, and throttle
 state can reduce the capacity to zero. Its up-to-32-edge request grammar is not
 a promise that a 32-edge batch is deliverable.
 
-DOSBox's admitted key names reserve three bytes per edge from its actual FIFO.
-The two implementations therefore have different useful chord capacity. A
-future QEMU increment can compute an exact conservative reservation for the
-admitted QCodes and translation/scancode state, validate the whole batch before
-delivery, and preserve zero partial dispatch on refusal. Required witnesses
-include a supported multi-modifier chord, extended keys, insufficient capacity,
-and command/controller-state interference. Splitting a requested atomic batch
-across guest execution would change its semantics.
+The reconstructed [frame-key batch extension](QEMU_FRAME_KEY_BATCH_GATE.md)
+adds exact native planning for the admitted QCodes and current translation and
+scan-code state. It validates the complete request before delivery and reports
+the actual post-enqueue proof. Its native witness accepted Ctrl/Alt/A/Up in one
+five-byte batch, preserved that queue through a fresh-owner checkpoint restore,
+and reproduced the independently checked IRQ stream. A separate capacity case
+accepted Shift/A/B and retained stale/foreign-owner refusal checks.
+
+These results close that bounded implementation increment. Broader scan-code
+profiles, Print/Pause/right modifiers and controller-state combinations still
+need their own native evidence. DOSBox's capacity and repeat semantics remain
+separate comparisons. Splitting a requested atomic batch across guest execution
+would change its semantics.
 
 The relevant existing sources are
 `native/qemu-frame-keys/qemu-10.0.13-fdisbull-frame-keys-v1.patch`,
@@ -44,17 +50,19 @@ The relevant existing sources are
 
 ## Source-raster checkpoint and timeline state
 
-`native/qemu-video-frame` deliberately keeps its partial rows, completed source
-raster, stream metadata and timer deadline outside native checkpoint state.
-Save leaves the current live stream intact; load invalidates it, and a new
-process starts idle. The current source fence is also never serialized.
+The original `native/qemu-video-frame` layer leaves its partial rows, completed
+source raster, stream metadata and timer deadline outside native checkpoint
+state. The reconstructed [source checkpoint extension](../native/qemu-video-frame-checkpoint/README.md)
+adds these fields to instrumented format 3, including separate completed and
+partial pixels and the actual armed expiry. It restores logical state with a
+fresh source token and epoch. The current source fence is still never serialized.
 
 Existing renderer timelines retain full process checkpoints and renderer PNGs.
 They cannot supply an immediate restored source-raster receipt or restore the
-source stream's future sampling phase. A source-backed timeline needs an
-explicit native checkpoint design for this state, fresh-lifetime identity
-binding, and host history admission/readback. Cached renderer pixels must not
-be relabeled as a restored source stream.
+source stream's future sampling phase. A source-backed timeline needs
+host history admission/readback in addition to the new native checkpoint
+contract and its separate qualification. Cached renderer pixels must not be
+relabeled as a restored source stream.
 
 Keep the retained artifact's historical identity separate from any new current
 owner identity. A bounded acceptance increment should prove immediate restored
