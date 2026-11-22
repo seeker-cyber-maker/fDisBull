@@ -20,6 +20,7 @@ from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.project import Project
 from fdisbull.qemu_dos_process import QemuDOSProcessSession
 from fdisbull.qemu_machine import MachineContext
+from fdisbull.qemu_session_revision import SessionRevision
 
 
 class NativePeer:
@@ -212,6 +213,8 @@ def test_stop_enrichment_returns_current_tracking_and_preserves_callback_control
     p.ram[0x20100:0x20100+len(payload)] = payload
     state = dict(state='initial', observations=0, controls=[])
     observations = []
+    projections = []
+    revision = owned.vm.session_revision
     private = s._return_breakpoint
 
     def before(reason):
@@ -232,6 +235,7 @@ def test_stop_enrichment_returns_current_tracking_and_preserves_callback_control
         retained = s.breakpoint(0x20201)['breakpoint_id']
         assert s.breakpoints[retained]['owner'] == 'automatic-runtime-tracking'
         state.update(state='qualified-stopped', observations=len(observations), controls=[retained])
+        projections.append((revision.snapshot(), (len(p.commands), len(p.requests), len(p.reads))))
 
     s._automatic_runtime_tracker = SimpleNamespace(before_execution=before, after_stop=after,
         status=lambda: deepcopy(state), close=lambda reason: state.update(state='closed'))
@@ -239,6 +243,9 @@ def test_stop_enrichment_returns_current_tracking_and_preserves_callback_control
     stopped = s.pause()
     assert stopped['automatic_runtime_tracking'] == state
     assert stopped['automatic_runtime_tracking']['observations'] == 1
+    assert owned.vm.session_revision is revision
+    assert {key: stopped[key] for key in projections[-1][0]} == projections[-1][0]
+    assert (len(p.commands), len(p.requests), len(p.reads)) == projections[-1][1]
     assert stopped == s.status() == s.status()
     registers, memory, snapshot = observations[0]
     assert registers['linear_pc'] == '0x20100' and memory['hex'] == payload.hex()
@@ -251,6 +258,8 @@ def test_stop_enrichment_returns_current_tracking_and_preserves_callback_control
     assert retained not in s.breakpoints and len(p.points) == 1
     second = s.pause()
     assert second['automatic_runtime_tracking']['observations'] == 2
+    assert {key: second[key] for key in projections[-1][0]} == projections[-1][0]
+    assert (len(p.commands), len(p.requests), len(p.reads)) == projections[-1][1]
     assert second == s.status() and len(observations) == 2
     assert dispatches(p) == ['cont', 'stop', 'cont', 'stop'] and not owned.closed
 
@@ -531,3 +540,106 @@ def test_deadline_loss_after_continue_closes_without_another_dispatch(owned, mon
         owned.session.resume()
     assert dispatches(owned.peer) == ['cont'] and len(owned.closed) == 1
 
+
+
+@pytest.mark.parametrize('boundary', ['base-query', 'tracker-status'])
+def test_async_status_rejects_replaced_revision_authority(owned, boundary):
+    s, p, owner = owned.session, owned.peer, owned.vm
+    original = owner.session_revision
+    replacement = SessionRevision()
+    enriched = []
+
+    def tracker_status():
+        if enriched:
+            owner.session_revision = replacement
+        return dict(observations=len(enriched))
+
+    if boundary == 'tracker-status':
+        s._automatic_runtime_tracker = SimpleNamespace(
+            before_execution=lambda reason: None,
+            after_stop=lambda reason: enriched.append(reason),
+            status=tracker_status, close=lambda reason: None)
+    s.resume()
+    p.running, p.runstate = False, 'paused'
+    before_reads = len(p.reads), len(p.requests)
+    if boundary == 'base-query':
+        p.on_query = lambda: setattr(owner, 'session_revision', replacement)
+    with pytest.raises(DebuggerError, match='session revision'):
+        s.status()
+    assert owner.session_revision is replacement and replacement is not original
+    assert len(owned.closed) == 1 and owner.qmp is None and owner.gdb is None
+    assert s._dos_async_pending is None and dispatches(p) == ['cont']
+    if boundary == 'base-query':
+        assert (len(p.reads), len(p.requests)) == before_reads
+    else:
+        assert len(enriched) == 1
+
+
+@pytest.mark.parametrize('projection', ['process', 'process-stop'])
+@pytest.mark.parametrize('replacement_kind', ['vm', 'revision'])
+def test_final_async_status_projection_rejects_owner_replacement(
+        owned, monkeypatch, projection, replacement_kind):
+    s, p, owner = owned.session, owned.peer, owned.vm
+    replacement_closed, replacement_calls, replaced = [], [], []
+    replacement_peer = SimpleNamespace(
+        call=lambda *a, **k: replacement_calls.append(('qmp', a)),
+        request=lambda *a, **k: replacement_calls.append(('gdb', a)))
+    replacement = SimpleNamespace(qmp=replacement_peer, gdb=replacement_peer,
+        session_revision=SessionRevision(), operation_deadline=123,
+        close=lambda: replacement_closed.append(True))
+    s.resume()
+    owned.finish()
+
+    def project(value, *args, **kwargs):
+        result = deepcopy(value, *args, **kwargs)
+        target = s._process if projection == 'process' else getattr(s, '_dos_async_stop', None)
+        if value is target and s._dos_async_pending is None and not replaced:
+            replaced.append(True)
+            if replacement_kind == 'vm':
+                s.vm = replacement
+            else:
+                owner.session_revision = replacement.session_revision
+        return result
+
+    monkeypatch.setattr('fdisbull.qemu_dos_process.deepcopy', project)
+    with pytest.raises(DebuggerError, match='owner or session revision') as failure:
+        s.status()
+    assert replaced == [True] and s._dos_async_pending is None
+    assert len(owned.closed) == 1 and owner.qmp is None and owner.gdb is None
+    assert not replacement_closed and not replacement_calls
+    assert replacement.qmp is replacement_peer and replacement.gdb is replacement_peer
+    assert replacement.operation_deadline == 123
+    assert dispatches(p) == ['cont'] and owned.serial.reads == 1
+    assert failure.value.result['process']['state'] == 'exited'
+
+
+@pytest.mark.parametrize(('category', 'layered', 'outcome', 'process_state'), [
+    (0, False, 'guest_exit', 'exited'),
+    (3, False, 'guest_tsr', 'resident'),
+    (0, True, 'guest_exit', 'exited'),
+])
+def test_async_return_status_keeps_final_original_revision(
+        owned, category, layered, outcome, process_state):
+    s, p, owner = owned.session, owned.peer, owned.vm
+    revision = owner.session_revision
+    s.resume()
+    if layered:
+        # A retained layer must close its old owner after the verified DOS
+        # return; this marker does not claim that a native RAM layer was run.
+        s._layer_active = ['authored-return-layer']
+    owned.finish(category=category)
+    result = s.status()
+    expected = revision.snapshot()
+    assert {key: result[key] for key in expected} == expected
+    assert s.vm is owner and owner.session_revision is revision
+    assert result['process']['state'] == process_state
+    assert result['process_stop']['outcome'] == outcome
+    assert result['state'] == ('closed' if layered else 'stopped')
+    assert len(owned.closed) == int(layered) and owned.serial.reads == 1
+    assert dispatches(p) == ['cont'] and s._return_breakpoint is None
+    if layered:
+        assert owner.qmp is None and owner.gdb is None
+        assert result['process']['machine_closed'] is True
+    else:
+        assert owner.qmp is p and owner.gdb is p
+        assert result == s.status()

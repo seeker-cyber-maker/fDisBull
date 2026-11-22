@@ -1266,11 +1266,19 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     @_async_process_operation
     def status(self):
         context = getattr(self, '_dos_async_pending', None)
+        owner = self.vm
+        revision = owner.session_revision
+
+        def require_original_revision():
+            if self.vm is not owner or getattr(owner, 'session_revision', None) is not revision:
+                raise DebuggerError('DOS status owner or session revision changed')
+
         result = None
         try:
             if context is not None:
                 self._async_owner_current(context)
             result = MachineDebugSession.status(self)
+            require_original_revision()
             if context is not None:
                 self._async_owner_current(context)
                 if type(result['native_state'].get('running')) is not bool:
@@ -1282,6 +1290,13 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             if (stopped is not None
                     and stopped['process']['capture_epoch'] == self._process['capture_epoch']):
                 result['process_stop'] = deepcopy(stopped)
+            # DOS return/tracker callbacks can change the cooperative revision
+            # after the base machine reply. Publish the original owner's final
+            # snapshot, including valid return paths that closed its channels.
+            require_original_revision()
+            final_revision = revision.snapshot()
+            require_original_revision()
+            result.update(final_revision)
             return result
         except BaseException as error:
             if context is not None and context['dispatched']:
