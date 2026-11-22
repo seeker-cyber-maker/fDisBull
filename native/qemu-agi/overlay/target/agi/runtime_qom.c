@@ -10,6 +10,7 @@
 #include "qobject/qnum.h"
 #include "qobject/qstring.h"
 #include "runtime_qom.h"
+#include "runtime_scene.h"
 
 typedef struct AgiCapturedSound {
     uint64_t seq, native_epoch;
@@ -1051,6 +1052,113 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
 fail:
     qobject_unref(root);
     return NULL;
+}
+
+static QDict *checkpoint_object(const AgiRuntime *r, Error **errp)
+{
+    const AgiRuntimeState *s = &r->state;
+    QDict *root = qdict_new(), *guest = qdict_new(), *run = qdict_new();
+    g_autofree char *digest = NULL;
+    qdict_put_str(root, "schema", AGI_RUNTIME_CHECKPOINT_SCHEMA);
+    qdict_put(root, "source", source_object(r));
+    qdict_put(root, "guest", guest);
+    qdict_put(root, "observation", observation_object(r));
+    put_uint(run, "retired", r->run_retired);
+    qdict_put(root, "run", run);
+#define CHECKPOINT_U(name) put_uint(guest, #name, s->name)
+    CHECKPOINT_U(logic); CHECKPOINT_U(pc); CHECKPOINT_U(retired);
+    CHECKPOINT_U(scene_revision); CHECKPOINT_U(presentation_revision);
+    CHECKPOINT_U(cycle_count); CHECKPOINT_U(clock_ticks); CHECKPOINT_U(cycle_active);
+    CHECKPOINT_U(input_enabled);
+#undef CHECKPOINT_U
+    put_uint(guest, "ticks", s->world.ticks);
+    put_uint(guest, "cycle_delay", s->v[10]);
+    qdict_put_str(guest, "status", agi_runtime_status_name(s->status));
+    if (s->fault) {
+        QDict *fault = qdict_new();
+        put_uint(fault, "code", s->fault);
+        qdict_put_str(fault, "name", agi_runtime_error_name(s->fault));
+        put_uint(fault, "detail", s->fault_detail);
+        put_uint(fault, "logic", s->fault_logic);
+        put_uint(fault, "pc", s->fault_pc);
+        qdict_put(guest, "fault", fault);
+    } else {
+        qdict_put_null(guest, "fault");
+    }
+    if (s->status == AGI_RT_PENDING) {
+        QDict *pending = pending_object(&s->pending, errp);
+        if (!pending) {
+            qobject_unref(root);
+            return NULL;
+        }
+        qdict_put(guest, "pending_effect", pending);
+    } else {
+        qdict_put_null(guest, "pending_effect");
+    }
+    digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256, (const uint8_t *)s, sizeof(*s));
+    qdict_put_str(guest, "state_bytes_sha256", digest);
+    put_uint(guest, "state_bytes_size", sizeof(*s));
+    qdict_put_str(guest, "state_encoding", "agi-runtime-native-abi-1");
+    return root;
+}
+
+char *agi_runtime_checkpoint_json(const AgiRuntime *r, Error **errp)
+{
+    QDict *root;
+    if (!runtime_valid(r, errp)) { return NULL; }
+    root = checkpoint_object(r, errp);
+    return root ? json_string(root) : NULL;
+}
+
+char *agi_runtime_scene_inputs_json(const AgiRuntime *r, Error **errp)
+{
+    AgiRuntimeSceneOrder order;
+    QDict *root, *scene;
+    QList *actors, *ids;
+    uint32_t i;
+    int status;
+    if (!runtime_valid(r, errp)) { return NULL; }
+    status = agi_runtime_scene_order(&r->state.world, &order);
+    if (status) {
+        error_setg(errp, "AGI_RUNTIME: scene input order failed: %s", agi_runtime_scene_error(status));
+        return NULL;
+    }
+    root = checkpoint_object(r, errp);
+    if (!root) { return NULL; }
+    qdict_put_str(root, "schema", AGI_RUNTIME_SCENE_INPUTS_SCHEMA);
+    scene = qdict_new();
+    actors = qlist_new(); ids = qlist_new();
+    qdict_put(root, "scene", scene);
+    put_uint(scene, "width", AGI_RUNTIME_WIDTH);
+    put_uint(scene, "height", AGI_RUNTIME_HEIGHT);
+    put_uint(scene, "picture_shown", r->state.picture_shown);
+    qdict_put_str(scene, "background_evidence_required", "complete_scene_journal");
+    qdict_put_str(scene, "order_validation", "current_actor_state");
+    qdict_put(scene, "draw_order", ids);
+    qdict_put(scene, "actors", actors);
+    for (i = 0; i < order.actor_count; i++) {
+        uint32_t id = order.draw_order[i];
+        const AgiRuntimeActor *a = &r->state.world.actors[id];
+        const AgiRuntimeBlob *view = &r->resources->views[a->view];
+        QDict *actor;
+        if (!view->data || !view->size) {
+            qobject_unref(root);
+            error_setg(errp, "AGI_RUNTIME: selected scene VIEW is absent");
+            return NULL;
+        }
+        actor = qdict_new();
+        qlist_append_int(ids, id);
+        qlist_append(actors, actor);
+        put_uint(actor, "id", id);
+        qdict_put_int(actor, "x", a->x); qdict_put_int(actor, "y", a->y);
+#define SCENE_ACTOR_U(name) put_uint(actor, #name, a->name)
+        SCENE_ACTOR_U(view); SCENE_ACTOR_U(loop); SCENE_ACTOR_U(cel);
+        SCENE_ACTOR_U(priority); SCENE_ACTOR_U(width); SCENE_ACTOR_U(height);
+#undef SCENE_ACTOR_U
+        qdict_put_bool(actor, "drawn", true);
+        qdict_put_str(actor, "view_sha256", view->sha256);
+    }
+    return json_string(root);
 }
 
 char *agi_runtime_events_json(const AgiRuntime *r, Error **errp)

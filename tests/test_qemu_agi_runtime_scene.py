@@ -42,6 +42,10 @@ class SceneInfo(C.Structure):
                 ("draw_order", C.c_uint16 * 256), ("hidden", U8 * 256)]
 
 
+class SceneOrder(C.Structure):
+    _fields_ = [("actor_count", U32), ("draw_order", C.c_uint16 * 256)]
+
+
 class Actor(C.Structure):
     _fields_ = (
         [(n, C.c_int32) for n in "x y prev_x prev_y target_x target_y".split()]
@@ -389,6 +393,46 @@ def test_compose_stationary_updating_priority_and_stable_actor_order(lib):
     s.compose()
     assert list(s.info.draw_order[:4]) == [20, 3, 1, 2]
     assert s.info.hidden[3] == 1 and s.visual[80 * W + 30] == 6
+
+
+def test_scene_order_is_read_only_and_shared_with_composition(lib):
+    order = lib.agi_runtime_scene_order
+    order.argtypes, order.restype = [C.POINTER(World), C.POINTER(SceneOrder)], C.c_int
+    s = Scene(lib)
+    s.actor(20, 2, updating=False)
+    s.actor(2, 6)
+    s.actor(1, 3)
+    s.actor(3, 5, priority=4, fixed=True)
+    # Loaded membership, animated/drawn flags and stable ties all matter.
+    s.actor(4, 7).flags &= ~DRAWN
+    s.actor(5, 9)
+    s.world.loaded_views[5] = 0
+    before = bytes(s.world), bytes(s.background), bytes(s.priority)
+    result = SceneOrder()
+    assert order(C.byref(s.world), C.byref(result)) == 0
+    assert result.actor_count == 4
+    assert list(result.draw_order[:4]) == [20, 3, 1, 2]
+    assert (bytes(s.world), bytes(s.background), bytes(s.priority)) == before
+    s.compose()
+    assert s.info.actor_count == result.actor_count
+    assert list(s.info.draw_order) == list(result.draw_order)
+
+
+def test_scene_order_invalid_geometry_or_palette_is_atomic(lib):
+    order = lib.agi_runtime_scene_order
+    order.argtypes, order.restype = [C.POINTER(World), C.POINTER(SceneOrder)], C.c_int
+    s = Scene(lib)
+    actor = s.actor(1, 3)
+    result = SceneOrder()
+    C.memset(C.byref(result), 0xA5, C.sizeof(result))
+    before = bytes(result)
+    actor.x = 159
+    assert order(C.byref(s.world), C.byref(result)) == -9
+    assert bytes(result) == before
+    actor.x = 30
+    s.world.priority_bands[80] = 16
+    assert order(C.byref(s.world), C.byref(result)) == -10
+    assert bytes(result) == before
 
 
 def test_compose_reconstructs_after_move_erase_and_discard(lib):
