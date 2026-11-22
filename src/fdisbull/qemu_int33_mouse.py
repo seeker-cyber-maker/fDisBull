@@ -25,8 +25,11 @@ _CODE = (
     ('coordinate_ranges', 0x9f2, 0x1d),
     ('mickey_ratio', 0xae4, 0x0f),
     ('motion_conversion', 0x39b, 0x75),
+    ('motion_and_button_dispatch', 0x327, 0x46),
+    ('button_edge_position', 0x410, 0x24),
+    ('button_history_queries', 0x967, 0x3d),
 )
-_DATA = ((0x4e, 8), (0xa4, 0x24), (0x15a, 2), (0x37a, 1))
+_DATA = ((0x4e, 8), (0xa4, 0x24), (0xce, 36), (0x15a, 2), (0x37a, 1))
 _CLOCK_FIELDS = ('run', 'epoch', 'session', 'native_state', 'clock_profile',
                  'counter', 'virtual_ns', 'virtual_clock')
 
@@ -103,8 +106,17 @@ def _decode(driver, base, selected):
             or not 0 <= minimum[0] <= raw[0] <= maximum[0] < 640
             or not 0 <= minimum[1] <= raw[1] <= maximum[1] < 200):
         _refuse('unsupported_coordinate_state', 'INT33 state is outside the qualified mode 13h coordinate profile')
+    # Press and release each retain a count and captured position per button.
+    # AX=5/6 clear their count but keep the previous position until another edge.
+    records = struct.iter_unpack('<Hhh', selected[base + 0xce])
+    edges = {}
+    for phase in ('press', 'release'):
+        edges[phase] = {}
+        for button in ('left', 'right', 'middle'):
+            count, y, x = next(records)
+            edges[phase][button] = dict(count=count, last_position=[x, y])
     return dict(position=list(position), raw_position=list(raw),
-                minimum=list(minimum), maximum=list(maximum), buttons=buttons,
+                minimum=list(minimum), maximum=list(maximum), buttons=buttons, button_edges=edges,
                 mickeys_per_eight_units=[ratio_x, ratio_y],
                 sensitivity_coefficients=[sensitivity_x, sensitivity_y],
                 position_remainders=list(rounding), matching_source_spans=spans)

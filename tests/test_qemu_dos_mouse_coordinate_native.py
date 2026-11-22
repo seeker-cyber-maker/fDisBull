@@ -133,6 +133,27 @@ alternate_vector:
     pop ds
 restored_vector:
     nop
+    mov ax,4
+    mov cx,300
+    mov dx,80
+    int 33h
+warped_after_edges:
+    nop
+    mov di,guest_edges
+    xor bx,bx
+    mov ax,5
+    call sample_edge
+    mov bx,1
+    mov ax,5
+    call sample_edge
+    xor bx,bx
+    mov ax,6
+    call sample_edge
+    mov bx,1
+    mov ax,6
+    call sample_edge
+edge_queries_done:
+    nop
     mov ax,4c2ah
     int 21h
 failure:
@@ -154,6 +175,16 @@ sample:
     mov [di+8],dx
     ret
 
+sample_edge:
+    push di
+    int 33h
+    pop di
+    mov [di],bx
+    mov [di+2],cx
+    mov [di+4],dx
+    add di,6
+    ret
+
 installed: dw 0
 origin: times 5 dw 0
 left_press: times 5 dw 0
@@ -161,6 +192,7 @@ left_release: times 5 dw 0
 clip_origin: times 5 dw 0
 right_press: times 5 dw 0
 right_release: times 5 dw 0
+guest_edges: times 12 dw 0
 old_offset: dw 0
 old_segment: dw 0
     times (0xb5e - 0x100 - ($ - $$)) db 0
@@ -169,6 +201,7 @@ alternate_handler:
 db 'I33C'
 dw ready,pressed,clip_ready,clipped,done,installed,alternate_vector,restored_vector,motion_landed
 dw origin,left_press,left_release,clip_origin,right_press,right_release
+dw warped_after_edges,edge_queries_done,guest_edges
 '''
 
 
@@ -197,9 +230,10 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
     code = assemble(tmp_path, 'coordinate-oracle', _ASSEMBLY, clock_runtime['nasm'])
     names = ('ready', 'pressed', 'clip_ready', 'clipped', 'done', 'installed',
              'alternate_vector', 'restored_vector', 'motion_landed', 'origin', 'left_press',
-             'left_release', 'clip_origin', 'right_press', 'right_release')
-    assert code[-34:-30] == b'I33C'
-    offsets = dict(zip(names, struct.unpack('<15H', code[-30:]), strict=True))
+             'left_release', 'clip_origin', 'right_press', 'right_release',
+             'warped_after_edges', 'edge_queries_done', 'guest_edges')
+    assert code[-40:-36] == b'I33C'
+    offsets = dict(zip(names, struct.unpack('<18H', code[-36:]), strict=True))
     binary = tmp_path / 'COORD.COM'
     binary.write_bytes(code)
     receipt = {'source_sha256': hashlib.sha256(code).hexdigest(),
@@ -240,14 +274,15 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         assert sample['vector_authority']['complete']
                         assert sample['driver']['sha256'] == CTMOUSE_SHA256
                         assert sample['driver']['vector']['offset'] == 0xb5e
-                        assert len(sample['matching_source_spans']) == 5
+                        assert len(sample['matching_source_spans']) == 8
                         assert sample['position'] + [sample['buttons']] == rows[name][:3]
                         assert sample['raster']['frame_id'] >= 1
                         assert sample['raster']['completed_ns'] <= sample['clock']['virtual_ns']
                         receipt['passive'][name] = {key: sample[key] for key in (
                             'driver', 'position', 'raw_position', 'buttons', 'minimum',
                             'maximum', 'mickeys_per_eight_units', 'clock', 'raster',
-                            'sensitivity_coefficients', 'position_remainders', 'matching_source_spans')}
+                            'sensitivity_coefficients', 'position_remainders', 'matching_source_spans',
+                            'button_edges')}
 
                     _park(debug, locations['ready'], qemu=qemu)
                     receipt['installed'][key] = int.from_bytes(read('installed', 2), 'little')
@@ -362,6 +397,24 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         assert debug.observe_int33_mouse(stream=frame['stream'],
                             frame_id=frame['frame_id'])['raster'] == frame
                         assert debug.capabilities['absolute_mouse'] is False
+                        _park(debug, locations['warped_after_edges'], qemu=qemu)
+                        warped = debug.observe_int33_mouse()
+                        history = warped['button_edges']
+                        assert warped['position'] == [300, 80]
+                        assert history == receipt['passive']['right_release']['button_edges']
+                        _park(debug, locations['edge_queries_done'], qemu=qemu)
+                        consumed = debug.observe_int33_mouse()['button_edges']
+                        guest_edges = [list(row) for row in
+                                       struct.iter_unpack('<3H', read('guest_edges', 24))]
+                        assert guest_edges == [[1, 320, 90]] * 4
+                        for phase in ('press', 'release'):
+                            for button in ('left', 'right'):
+                                assert history[phase][button] == dict(count=1, last_position=[320, 90])
+                                assert consumed[phase][button] == dict(count=0, last_position=[320, 90])
+                            assert consumed[phase]['middle'] == dict(count=0, last_position=[0, 0])
+                        receipt['native']['qemu_edge_query'] = dict(
+                            position_after_warp=warped['position'], history=history,
+                            consumed=consumed, guest_ax5_ax6=guest_edges)
                     result = debug.run(timeout_ms=5000)
                     assert result['outcome'] == 'guest_exit', result
                     receipt['native'][key + '_exit'] = result['outcome']
@@ -399,3 +452,17 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
         assert sample['mickeys_per_eight_units'] == [8, 16]
         assert sample['minimum'] == [96, 50]
         assert sample['maximum'] == ([400, 130] if name in ('origin', 'left_press') else [320, 90])
+
+    counted_edges = {
+        'origin': (),
+        'left_press': (('press', 'left'),),
+        'clip_origin': (('press', 'left'), ('release', 'left')),
+        'right_press': (('press', 'left'), ('release', 'left'), ('press', 'right')),
+        'right_release': (('press', 'left'), ('release', 'left'), ('press', 'right'), ('release', 'right')),
+    }
+    for name, sample in receipt['passive'].items():
+        for phase, buttons in sample['button_edges'].items():
+            for button, record in buttons.items():
+                expected = (dict(count=1, last_position=[320, 90]) if (phase, button) in counted_edges[name]
+                            else dict(count=0, last_position=[0, 0]))
+                assert record == expected
