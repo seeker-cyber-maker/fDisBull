@@ -18,8 +18,30 @@ with BIOS mode 13h and a retained source raster. It verifies the live vector
 and the relevant resident code spans. The paired witness checks native
 position readback and refusal for stale rasters and replaced handler bytes.
 The observation identifies the retained raster alongside the live cursor
-state. Exact coordinate injection, unsupported driver modes and cross-engine
-input equivalence remain open.
+state. The bounded Python position route now queues single calibrated packets
+and refuses a press until stopped readback confirms the landing. The same
+authored guest witnessed pixel (160, 90) with matching press and release
+endpoints. Generic coordinate clicks, wider driver modes and relative mickey
+equivalence remain open.
+
+Native QEMU can also opt in to the DOSBox-X millisecond typematic table. The
+paired authored IRQ1 runs observed overlapping default and guest-programmed
+repeat intervals, one break edge and silence after release. The newer native
+producer replayed its exact programmed deadline and raster future from a
+held-key checkpoint in a fresh Python process. Hardware-default launches refused checkpoints made in the opt-in profile
+on both the new and earlier producers.
+
+The new source-raster and key-repeat formats exposed a legacy assumption in
+the protected LE trace reader. Native machine restore succeeded but durable
+trace lookup required a format 1 instrumentation receipt. It now accepts the
+documented format 1, 3 and 4 receipt tags and still verifies immutable launch
+identity, native clock and receipt epoch. Authored local standard and virtual
+LE trace and history cases, protected/V86/paged restore and real IRQ1
+preemption passed after the change.
+
+A [paired audio receipt](evidence/qemu-paired-audio-timing-2026-11-22/README.md)
+records the shared authored OPL/SB16 frequency and DMA/IRQ results, different
+mixer capture windows and the remaining Doom timing question.
 
 ## Current native stopped-control checkpoint (2026-11-21)
 

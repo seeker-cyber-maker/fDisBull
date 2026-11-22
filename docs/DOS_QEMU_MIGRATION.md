@@ -624,6 +624,22 @@ resolution before a checkpoint. Foreign keyboard input invalidates an active
 frame owner; no automatic adoption is allowed. After owned keys are released,
 ordinary input positively detaches the empty frame owner.
 
+### Positioned INT 33h mouse input
+
+On the pinned CuteMouse 2.1b4 real-mode floppy setup, start and capture a
+mode 13h source raster before calling `observe_int33_mouse` on a stopped
+DOS process. It reports the live guest cursor and programmed bounds beside
+the retained raster. The raster and the cursor may have different capture times.
+
+`mouse_move_int33(x, y, stream=..., frame_id=...)` requires the currently
+retained raster, a neutral input queue and an in-range pixel. Under the
+observed default ratio and sensitivity it can queue one relative packet of
+up to four counts on each axis. Run to an intentional stop and observe the
+landing. Then `mouse_button_down_int33(x, y, stream=..., frame_id=...)`
+rechecks the current raster and actual guest position before queuing the
+press. The existing `mouse_button_up` releases the returned lease. Run and
+observe the guest after each edge to confirm delivery. Generic coordinate click routes and other driver modes remain open.
+
 ### Native key repeat
 
 A producer with the typematic extension advertises `frame_key_repeat` and
