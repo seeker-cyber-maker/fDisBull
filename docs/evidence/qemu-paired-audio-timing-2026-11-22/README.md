@@ -18,7 +18,17 @@ For the separately retained E1M5 original Doom demo prefix, DOSBox-X wrote 2,976
 
 Removing exact leading zeros would leave about 54.317 s of DOSBox-X PCM and 24.420 s of QEMU PCM. Startup silence alone cannot explain the difference. The workload lacked shared live Doom tic anchors and the DOSBox-X receipt did not record the terminal guest tick, so these WAV lengths do not determine a game speed ratio, output loss or matched gameplay duration. A timing comparison needs shared live game anchors and explicitly timed device or capture intervals.
 
-The explicit S16 result concerns the output PCM container. The fixture's guest SB16 data is U8. The separate signed-S16 guest-voice hot and cold recovery matrix has its own producer admission and acceptance criteria.
+The explicit S16 result concerns the output PCM container. The paired tone fixture's guest SB16 data is U8.
+
+## Signed-S16 guest checkpoint recovery
+
+The separate [native recovery matrix](../../../tests/test_qemu_sb16_s16_recovery_native.py) passed all 32 cases on macOS arm64 in a single finite local run. The exact harness was `9387667c6ea23dbd47baec971d05e7c87a5aca81`. It used the QEMU producer above and the retained pre-S16 transfer-count producer `d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268` as the legacy control.
+
+- Eighteen cases reproduced the selected 600 ms future after hot restore and restore in a separate Python process. The oracle compares the complete exposed CPU register dictionary, authored report and 16 KiB DMA arena, SB16 device fields, retained PCM bytes and callback chunks, virtual time and instruction count. The cases include mono and stereo, single-cycle and auto-init, FIFO off and on, 5–45 kHz rate boundaries, pending IRQs, masked DMA requests, and absent or inactive voices.
+- Five cases refused unsupported encodings or DMA geometry. The legacy producer refused four guest-S16 save attempts. Four corrupt-core imports failed at their native validation points, and one cross-producer checkpoint refused before destination construction.
+- All 91 admitted QEMU owners exited with code 0 and had complete logs. All 18 cold Python groups were confirmed gone. The host fixture and process-supervision gate passed 149 cases. On Darwin, the supervisor accepts an `EPERM` final signal only when the still-unreaped leader has exited and is the sole member of the group. It verifies group disappearance after reaping.
+
+The dedicated matrix verifies QEMU guest-S16 checkpoint and restore behavior. The paired tone and Doom results above compare bounded output observations across engines. They leave game timing and full audio parity open.
 
 ## Receipt hashes
 
@@ -29,5 +39,9 @@ The explicit S16 result concerns the output PCM container. The fixture's guest S
 | SB16 default-output pair | `28e611b3482f22a0fd73d69337d0155b1f12ef5279c50ab4e93e16c698582ac3` |
 | SB16 explicit stereo pair | `5f0dced10666ef0e94dce0f3443b1e6e16dd23b3bb55ea247d97d1a302229b0b` |
 | Doom and DMA aggregate | `1e1fa5480b1582b5c05440c0954b546a5f504252d430de5f93e016dfb46148c9` |
+| Reviewed S16 admission | `6ba71b3e3d45363f5edd1f40bdd60039e1e6fc7cfe1ac55519b019eed942d810` |
+| S16 host JUnit | `f63a403088ef499f25fc00fe1dd6ef7c04e36b1a0c75b1fc2e5ed94e63c726e6` |
+| S16 native JUnit | `7603bd6b21516d3b3e5e08e066694049e08131a1b6e80fbe53edcee033fe383c` |
+| S16 native postflight | `7b0ba756d8cb3b684b4fc10a1937ca274c9fe3094b1aceba24400f1703bdbb37` |
 
 The paired lane used [`tests/test_qemu_paired_tone_native.py`](../../../tests/test_qemu_paired_tone_native.py) with `-x`, the pinned native executables, FreeDOS and NASM. Raw receipts and media are private. Validation was local. DOSBox-X remains the default.
