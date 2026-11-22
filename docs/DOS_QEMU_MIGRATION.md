@@ -495,7 +495,7 @@ migration gate remains open and DOSBox-X stays default and retained.
 On a native `qemu-dos` session with explicit virtual-clock and precise-retrace
 profiles, first start a source stream and advance it to a retained raster.
 Use `frame_source="source-raster"` to record the stopped source raster and
-its complete format-3 checkpoint. The renderer timeline remains the default.
+its complete native checkpoint with source-raster state (format 3 or 4). The renderer timeline remains the default.
 
 ```python
 debug.video_frame_start()
@@ -624,10 +624,23 @@ resolution before a checkpoint. Foreign keyboard input invalidates an active
 frame owner; no automatic adoption is allowed. After owned keys are released,
 ordinary input positively detaches the empty frame owner.
 
-Typematic repeat is not modeled by this increment (`repeat_supported=false`).
-A held key proves its ownership and queued make state, not repeated characters,
-input consumption, a completed guest frame or DOSBox parity. Full checkpoints
-continue to report `host_files_restored=false`. DOSBox-X remains retained.
+### Native key repeat
+
+A producer with the typematic extension advertises `frame_key_repeat` and
+reports the programmed delay, interval, active QCode and absolute virtual
+deadline through `keyboard_state()["keyboard"]["frame_key_repeat"]` when no
+foreign key is held. The most recent eligible frame-owned make starts the delay. The guest can program
+delay and rate with PS/2 command `F3`. A native keyboard timer generates repeat
+makes through the device FIFO and IRQ path. Releasing the repeating key stops
+it, and modifiers do not themselves repeat.
+
+Format 4 retains the programmed parameter and the exact timer deadline with
+the keyboard ownership proof and source-raster state. Restore checks the
+repeat phase before admitting the checkpoint. The rebound owner keeps the
+saved cadence and explicit-edge count. Earlier producers keep their existing
+checkpoint formats and held-key behavior. Full checkpoints continue to report
+`host_files_restored=false`. DOSBox-X remains the default pending local parity
+and remains DotBox's gameplay backend.
 
 ## Save and restore a restricted raw-machine checkpoint
 

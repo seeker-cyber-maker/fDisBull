@@ -315,8 +315,11 @@ proof and adopts a fresh token/epoch without injecting makes again. Foreign
 input invalidates an active owner. Ordinary leases/pending input/schedules
 still require resolution before checkpointing; release all owned keys before
 switching back to ordinary physical input. N20 remains released-input only.
-Typematic repeat is unsupported; held ownership does not prove repeated output
-or guest consumption. Partial-memory policies remain open.
+Producers advertising `frame_key_repeat` generate eligible held-key repeats on
+native PS/2 virtual time. Format 4 restores the guest's rate parameter and next
+deadline. The stopped `keyboard_state` reports this phase as
+`keyboard.frame_key_repeat`. Other producers retain the earlier held-only
+profiles. Guest consumption and partial-memory policies require separate proof.
 Hooks and task-private RAM/fetch layers use the existing full checkpoint
 contract, including native task/IRQ state. Earlier nonordinary stops do not
 create a completed frame or trigger another continue. Limits include the root

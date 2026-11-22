@@ -1,0 +1,2 @@
+# Preserve the exact manifest-pinned patch and its unified-diff context.
+*.patch -text -whitespace

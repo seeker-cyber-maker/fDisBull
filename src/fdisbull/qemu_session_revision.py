@@ -29,7 +29,7 @@ _PASSIVE_PUBLIC = frozenset({
 _EMPTY_QMP_READS = frozenset({
     'query-status', 'query-replay', 'query-commands',
     'x-fdisbull-query-clock', 'x-fdisbull-query-video-frame',
-    'x-fdisbull-query-input', 'x-fdisbull-query-frame-keys',
+    'x-fdisbull-query-input', 'x-fdisbull-query-frame-keys', 'x-fdisbull-query-frame-key-repeat',
     'x-fdisbull-query-retrace', 'x-fdisbull-query-vga-configuration',
     'x-fdisbull-query-display', 'x-fdisbull-query-audio',
     'x-fdisbull-query-mixer', 'x-fdisbull-query-task-context',

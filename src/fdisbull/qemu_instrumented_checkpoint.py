@@ -17,6 +17,8 @@ from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT,
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
 FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
+FRAME_KEY_REPEAT_FORMAT = 'fdisbull-instrumented-qemu-state-4'
+_VIDEO_FORMATS = frozenset({VIDEO_FRAME_FORMAT, FRAME_KEY_REPEAT_FORMAT})
 PREFIX = 'x-fdisbull-instrumented-'
 COMMANDS = frozenset(PREFIX + name for name in (
     'checkpoint-export', 'checkpoint-import', 'checkpoint-status',
@@ -57,24 +59,34 @@ def _decode(record):
             or type(record.get('icount')) is not int or not 0 <= record['icount'] < 1 << 64):
         raise ValueError('Invalid instrumented checkpoint state or hash')
     state = json.loads(record['state'])
-    if (not isinstance(state, dict) or state.get('format') not in (FORMAT, FRAME_KEYS_FORMAT, VIDEO_FRAME_FORMAT)
+    if (not isinstance(state, dict) or type(state.get('format')) is not str
+            or state['format'] not in _VIDEO_FORMATS | {FORMAT, FRAME_KEYS_FORMAT}
             or type(state.get('virtual-ns')) is not int or not 0 <= state['virtual-ns'] < 1 << 63
             or type(state.get('source-epoch')) is not int or not 0 < state['source-epoch'] < 1 << 64
             or any(not isinstance(state.get(key), dict) for key in ('clock', 'audio', 'display', 'retrace'))):
         raise ValueError('Invalid instrumented checkpoint envelope')
-    if state['format'] in (FRAME_KEYS_FORMAT, VIDEO_FRAME_FORMAT):
+    if state['format'] in _VIDEO_FORMATS | {FRAME_KEYS_FORMAT}:
         from .qemu_frame_keys import validate_frame_key_checkpoint
         validate_frame_key_checkpoint(state.get('frame-keys'), epoch=state['source-epoch'])
     elif 'frame-keys' in state:
         raise ValueError('Frame key checkpoint requires instrumented format 2')
-    if state['format'] == VIDEO_FRAME_FORMAT:
-        if set(state) != {'format', 'virtual-ns', 'source-epoch', 'clock', 'audio',
-                          'display', 'retrace', 'frame-keys', 'video-frame'}:
-            raise ValueError('Invalid instrumented format 3 envelope fields')
+    if state['format'] in _VIDEO_FORMATS:
+        fields = {'format', 'virtual-ns', 'source-epoch', 'clock', 'audio',
+                  'display', 'retrace', 'frame-keys', 'video-frame'}
+        if state['format'] == FRAME_KEY_REPEAT_FORMAT:
+            fields.add('frame-key-repeat')
+        if set(state) != fields:
+            raise ValueError('Invalid instrumented source checkpoint envelope fields')
         validate_video_checkpoint(state['video-frame'], epoch=state['source-epoch'],
                                   virtual_ns=state['virtual-ns'])
-    elif 'video-frame' in state:
-        raise ValueError('Source video checkpoint requires instrumented format 3')
+    elif 'video-frame' in state or 'frame-key-repeat' in state:
+        raise ValueError('Source video and key repeat require their instrumented checkpoint formats')
+    if state['format'] == FRAME_KEY_REPEAT_FORMAT:
+        from .qemu_frame_keys import validate_frame_key_repeat
+        try:
+            validate_frame_key_repeat(state['frame-key-repeat'], held=state['frame-keys']['held'])
+        except DebuggerError as error:
+            raise ValueError('Invalid checkpoint frame key repeat proof') from error
     return state
 
 
@@ -85,9 +97,12 @@ def validate(vm, record):
         return None
     require_commands(vm)
     state = _decode(record)
-    if state['format'] == VIDEO_FRAME_FORMAT and not {
+    if state['format'] in _VIDEO_FORMATS and not {
             'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys'} <= vm.qmp_commands:
         raise ValueError('Source video checkpoint requires native video and key ownership queries')
+    from .qemu_frame_keys import REPEAT_QUERY
+    if (state['format'] == FRAME_KEY_REPEAT_FORMAT) != (REPEAT_QUERY in vm.qmp_commands):
+        raise ValueError('Checkpoint format differs from the native frame key repeat capability')
     if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
         from .qemu_audio import audio_capture_format, require_audio_capture_format
         require_audio_capture_format(vm, audio_capture_format(state['audio'].get('info')))
@@ -125,9 +140,14 @@ def capture(session):
         record = {key: value.get(key) for key in ('state', 'sha256')}
         record['icount'] = before['counter']['value']
         state = _decode(record)
+        from .qemu_frame_keys import REPEAT_QUERY
+        if (state['format'] == FRAME_KEY_REPEAT_FORMAT) != (REPEAT_QUERY in session.vm.qmp_commands):
+            raise DebuggerError('Exported checkpoint format differs from the native frame key repeat capability')
         if (state['virtual-ns'] != before['virtual_ns']
                 or state['source-epoch'] != before['virtual_clock']['native']['epoch']):
             raise DebuggerError('Native instrumentation changed during checkpoint capture')
+        if state['format'] == FRAME_KEY_REPEAT_FORMAT:
+            _verify_key_repeat(session.vm, state)
         return record, value['token']
     except BaseException as error:
         _close_capture_failure(session, error)
@@ -218,6 +238,13 @@ def restore(vm, record):
         raise
 
 
+def _verify_key_repeat(vm, state):
+    from .qemu_frame_keys import REPEAT_QUERY, validate_frame_key_repeat
+    actual = validate_frame_key_repeat(vm.qmp.call(REPEAT_QUERY), held=state['frame-keys']['held'])
+    if actual != state['frame-key-repeat']:
+        raise DebuggerError('Native frame key repeat readback differs from its checkpoint')
+
+
 def _validate_restore_receipt(result, saved):
     """Validate each native reply before comparing independent ownership."""
     epoch = result.get('new-epoch') if isinstance(result, dict) else None
@@ -231,7 +258,7 @@ def _validate_restore_receipt(result, saved):
         optional = {'audio-token', 'display-token', 'retrace-device',
                     'frame-key-token', 'video-frame-token'}
         if (not fields <= result.keys() or result.keys() - fields - optional
-                or result['format'] != VIDEO_FRAME_FORMAT
+                or result['format'] != saved['format']
                 or type(result['virtual-ns']) is not int
                 or type(result['frame-key-generation']) is not int
                 or result['frame-key-generation'] != saved['frame-keys']['generation']
@@ -275,6 +302,8 @@ def _restore(vm, record, saved):
     if key_state is not None or 'x-fdisbull-query-frame-keys' in vm.qmp_commands:
         from .qemu_frame_keys import validate_frame_key_state, adopt_frame_keys
         current_keys = validate_frame_key_state(vm.qmp.call('x-fdisbull-query-frame-keys'), epoch=epoch)
+        if current_keys['repeat-supported'] != (saved['format'] == FRAME_KEY_REPEAT_FORMAT):
+            raise DebuggerError('Restored frame key repeat capability differs from its checkpoint')
         if key_state is None:
             if (not _empty_key_owner(current_keys) or current_keys['foreign-held']
                     or 'token' in current_keys):
@@ -287,6 +316,8 @@ def _restore(vm, record, saved):
                 or key_state['active'] and (result.get('frame-key-token') != current_keys.get('token')
                     or result.get('frame-key-generation') != current_keys['generation'])):
             raise DebuggerError('Restored frame key ownership differs from its checkpoint')
+        if saved['format'] == FRAME_KEY_REPEAT_FORMAT:
+            _verify_key_repeat(vm, saved)
         adopt_frame_keys(vm, current_keys, expected_held=[] if key_state is None else key_state['held'])
     windows = {}
     if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
@@ -323,7 +354,7 @@ def _restore(vm, record, saved):
         raise DebuggerError('Invalid restored instrumentation export')
     current = _decode(dict(state=current.get('state'), sha256=current.get('sha256'), icount=record['icount']))
     if (current['source-epoch'] != epoch or current['virtual-ns'] != saved['virtual-ns']
-            or source is not None and current['format'] != VIDEO_FRAME_FORMAT
+            or source is not None and current['format'] != saved['format']
             or source_info is not None and current.get('video-frame', {}).get('info') != source_info):
         raise DebuggerError('Restored instrumentation readback owner differs')
     if source is not None and source_info is None:
@@ -339,7 +370,7 @@ def _restore(vm, record, saved):
         vm._video_frame_token = source_info['token']
         windows['video_frame'] = dict(old=source['info']['token'], new=source_info['token'])
         vm._video_frame_last = deepcopy(source_info)
-    return dict(format=VIDEO_FRAME_FORMAT if source is not None else FORMAT,
+    return dict(format=saved['format'] if source is not None else FORMAT,
                 source_epoch=saved['source-epoch'], native_epoch=epoch,
                 virtual_ns=saved['virtual-ns'], windows=windows,
                 host_clock_sync_restored=False)

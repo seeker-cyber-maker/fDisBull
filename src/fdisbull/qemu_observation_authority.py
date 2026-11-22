@@ -20,7 +20,8 @@ from .dosbox_rpc import DebuggerError
 
 _UNSET = object()
 _QMP_QUERIES = frozenset({'query-status', 'query-replay', 'x-fdisbull-query-clock',
-    'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', 'x-fdisbull-query-input'})
+    'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys',
+    'x-fdisbull-query-frame-key-repeat', 'x-fdisbull-query-input'})
 _EXPORT_NAME = re.compile(r'video-frame-[0-9a-f]{32}\.ppm\Z')
 _REPLY_LIMIT = 128 * 1024
 

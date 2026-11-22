@@ -27,7 +27,7 @@ def require_source_checkpoint_schema(vm):
                 member.get('name') for member in result.get('members', [])
                 if isinstance(member, dict)}:
             return
-    raise ValueError('Source raster timeline requires native format-3 checkpoints')
+    raise ValueError('Source raster timeline requires native format-3 or later checkpoints')
 
 
 def source_raster_record(info):

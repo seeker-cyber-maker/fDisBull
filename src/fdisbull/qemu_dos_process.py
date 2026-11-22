@@ -32,7 +32,7 @@ from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COM
 from .qemu_dos_preemption import COMMAND as PREEMPTION_COMMAND
 from .qemu_dos_history import QemuDOSHistoryMixin
 from .qemu_dos_frames import QemuDOSFramesMixin, FRAME_COMMANDS
-from .qemu_frame_keys import QemuFrameKeysMixin, FRAME_KEY_COMMANDS
+from .qemu_frame_keys import QemuFrameKeysMixin, FRAME_KEY_COMMANDS, REPEAT_QUERY
 from .qemu_cpu_deltas import QemuCpuDeltaMixin
 from .qemu_experiments import QemuExperimentMixin
 from .qemu_workspace import QemuDOSWorkspaceMixin as QemuWorkspaceMixin
@@ -415,7 +415,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             self.capabilities['frame_timeline_input'] = 'released input only; frame key ownership is unqualified'
             self.capabilities['frame_key_ownership'] = bool(self.capabilities['source_trace_clock']
                 and FRAME_KEY_COMMANDS <= vm.qmp_commands)
-            self.capabilities['frame_key_repeat'] = False
+            self.capabilities['frame_key_repeat'] = bool(self.capabilities['frame_key_ownership']
+                and REPEAT_QUERY in vm.qmp_commands)
             if self.capabilities['frame_key_ownership']:
                 self.capabilities['frame_timeline_input'] = 'owned stopped frame-key edges and checkpoint restore; ordinary leases and schedules excluded'
             self.capabilities['save_states'] = checkpoint_tool is not None

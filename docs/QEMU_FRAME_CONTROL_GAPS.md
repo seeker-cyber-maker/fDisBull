@@ -8,19 +8,16 @@ require application drawing completion or atomic image/CPU equivalence.
 
 ## Keyboard repeat and native checkpoint phase
 
-The native frame-key owner currently exposes `repeat-supported: false`.
-`tests/test_qemu_frame_keys_native.py` explicitly excludes typematic behavior.
-The existing DOSBox native case
-`test_held_frame_keys_survive_native_anchor_restore_without_reinjection` in
-`tests/test_frame_timeline_native.py` advances a held key for 48 frames, observes
-repeated guest input, restores the held-key anchor, and reproduces the endpoint.
+The [native key repeat extension](DOS_QEMU_MIGRATION.md#native-key-repeat)
+uses the PS/2 rate parameter and QEMU virtual time for eligible frame-owned
+keys. Instrumented format 4 captures the exact deadline while retaining the
+source-raster and device ownership state. The base frame-key producer still
+reports `repeat-supported: false`.
 
-Implementing this behavior requires actual native keyboard repeat state and
-timing, including continuity through the instrumented checkpoint path. Repeated
-host make injection would bypass the held-key owner and would not preserve the
-device's native repeat phase. The QEMU changes belong with the PS/2 device,
-`system/fdisbull-frame-keys.c`, its QAPI receipt/checkpoint proof, and the native
-frame-key patch; host `frame_inputs` remains the owner of explicit transitions.
+The DOSBox native case
+`test_held_frame_keys_survive_native_anchor_restore_without_reinjection`
+continues to provide a comparison target for broader guest-visible repeat
+qualification, including game-level behavior and input during device congestion.
 
 ## Useful stopped batch capacity
 

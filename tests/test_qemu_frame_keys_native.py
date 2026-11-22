@@ -1,7 +1,7 @@
 """Native owned frame-key edges, guest consumption and checkpoint identity.
 
-QEMU hardware typematic is explicitly unsupported; held keys are never assumed
-or tested to repeat. All target programs and expected scan codes are authored.
+The short observation windows isolate explicit edges. Native typematic timing
+has its own witness suite. All target programs and scan codes are authored.
 """
 import json
 import os
@@ -12,6 +12,7 @@ import sys
 import pytest
 
 from fdisbull.project import Project
+from fdisbull.qemu_frame_keys import REPEAT_QUERY
 from support.dos_process_fixture import BASELINE_CONFIG, digest, prepare_dos_baseline
 from support.qemu_io_fixture import bios_keyboard_display, raw_keyboard_mouse
 from test_qemu_dos_modes_checkpoint_native import _inputs, _launch
@@ -80,7 +81,8 @@ def _cold(control):
             assert fresh.poll() is not None and restored['source_binding_restored']
             native = debug.keyboard_state()['keyboard']['native']
             assert native['token'] != control['token'] and native['epoch'] != control['epoch']
-            assert native['active'] and native['valid'] and not native['repeat-supported']
+            assert native['active'] and native['valid']
+            assert native['repeat-supported'] == (REPEAT_QUERY in debug.vm.qmp_commands)
             assert _proof(native) == control['proof']
             assert sorted(debug.keyboard_state()['keyboard']['frame_keys']) == ['a','shift']
             symbols = control['symbols']
@@ -111,7 +113,8 @@ def test_native_held_key_checkpoint_before_consumption_restores_without_reinject
             receipt = debug.frame_inputs(MAKE,timeout_ms=5000)
             native = receipt['native']
             assert receipt['held'] == ['a','shift'] and receipt['guest_consumed'] is None
-            assert native['active'] and native['valid'] and not native['repeat-supported']
+            assert native['active'] and native['valid']
+            assert native['repeat-supported'] == (REPEAT_QUERY in debug.vm.qmp_commands)
             assert native['accepted-edges'] == 2 and native['generation'] == 1
             assert native['fifo-count'] > 0 or native['controller-status'] & 1
             assert debug.registers()['registers'] == before_regs and debug.clock_observe()['virtual_ns'] == before_clock
@@ -171,7 +174,8 @@ def test_native_frame_key_cas_capacity_and_external_input_guards(tmp_path):
         debug.timeline_start(period_ns=20_000_000,timeout_ms=60000)
         before = debug.registers()['registers'],debug.clock_observe()['virtual_ns']
         native = debug.vm.qmp.call('x-fdisbull-query-frame-keys')
-        assert native['repeat-supported'] is False and native['edge-capacity'] == 2
+        assert native['repeat-supported'] == (REPEAT_QUERY in debug.vm.qmp_commands)
+        assert native['edge-capacity'] == 2
         with pytest.raises(DebuggerError):
             debug.vm.qmp.call('x-fdisbull-apply-frame-key-edges',{
                 'token':uuid.uuid4().hex,'expected-generation':native['generation'] + 1,

@@ -244,7 +244,7 @@ def validate_apply(raw, request, plan):
             or after['fifo-command-pointer'] != -1 or after['write-command'] != -1
             or any(after[k] != before[k] for k in ('device-path', 'device-type',
                 'scan-enabled', 'scancode-set', 'translated', 'controller-mode',
-                'controller-obdata', 'throttle-deadline-ns'))):
+                'controller-obdata', 'throttle-deadline-ns', 'repeat-supported'))):
         raise DebuggerError('Native frame key batch acceptance differs from intent')
     if encoded:
         if (after['controller-status'] != (before['controller-status'] & ~0x21) | 1
@@ -266,7 +266,7 @@ def compact_receipt(native, edges, plan):
     from .qemu_frame_keys import _CANONICAL
     return dict(native=deepcopy(native), edges=deepcopy(edges),
         held=sorted(_CANONICAL[key] for key in native['held']),
-        guest_consumed=None, repeat_supported=False,
+        guest_consumed=None, repeat_supported=native['repeat-supported'],
         batch=dict(api_version=1, state_sha256=plan['state-sha256'],
             batch_sha256=plan['batch-sha256'], encoded_bytes=plan['encoded-byte-count'],
             accepted_edges=len(edges)))

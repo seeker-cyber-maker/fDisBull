@@ -1,0 +1,85 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "owned PS/2 typematic repeat and exact virtual deadline restore",
+  "base": {
+    "qemu_version": "10.0.13",
+    "composition": "complete fDisBull source raster checkpoint, stopped frame-key batch and pending-event stack; each exact before_sha256 is required",
+    "host_commit": "1b9dde00d906933caa93452f43dbf0c7558dc411"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-frame-key-repeat-v1.patch",
+    "bytes": 25848,
+    "sha256": "c59198a1ce0209b0a968e7c9e3b96fb9ad21c8a597b7926fc925ed01c9988091",
+    "modified_file_count": 8,
+    "files": [
+      {
+        "path": "hw/input/ps2.c",
+        "before_bytes": 42274,
+        "after_bytes": 43462,
+        "before_sha256": "ca1df2e4545accdc8d1002bc20d1036d024a36f20f8db34247aae21279f54e12",
+        "after_sha256": "08ce265689753e1e0675bc055852318cc4915cbd55ab9b0236d86eace0cd363c"
+      },
+      {
+        "path": "include/hw/input/ps2.h",
+        "before_bytes": 4118,
+        "after_bytes": 4186,
+        "before_sha256": "1536745ab5246cbd64c15120cda1df41c37ce668b7d82a355d148a07c8f32f9b",
+        "after_sha256": "024c99c579ab27a71e763a40b87c551af2b9b582d6abbc523719338a6ef5d990"
+      },
+      {
+        "path": "include/system/fdisbull-frame-keys.h",
+        "before_bytes": 1189,
+        "after_bytes": 1685,
+        "before_sha256": "aaf85bb426680a7c458c68d574c72eec330204c28694be788fa01c66fad2b274",
+        "after_sha256": "911844e334eb66192f90e4f62971e24c2fbfe30291dc79b730df641fac389d90"
+      },
+      {
+        "path": "include/system/fdisbull-instrumented-checkpoint.h",
+        "before_bytes": 3423,
+        "after_bytes": 3517,
+        "before_sha256": "fc123d42cfab00be82128083354afbe8bd78288ac437ce6794a8fa7a2460fcb0",
+        "after_sha256": "27a63f4043a9704cbb3d7bc0809d071c266dce842ad2474e17dd613e133c0c8f"
+      },
+      {
+        "path": "qapi/fdisbull-input.json",
+        "before_bytes": 36378,
+        "after_bytes": 37191,
+        "before_sha256": "a65ef00f8f0fa5679016503ad68f5f78f2b6473b22d2d4804d0b1284141c1af6",
+        "after_sha256": "b566477d11ae31f48d5e0a18d75d18c8f73f17cce0de6a6770e59f6e5df3987a"
+      },
+      {
+        "path": "qapi/fdisbull-instrumented-checkpoint.json",
+        "before_bytes": 10086,
+        "after_bytes": 10261,
+        "before_sha256": "e6587717f9d35b41e922185c96735347b57461e1809a0c7f818f3cd5891e86de",
+        "after_sha256": "e7042163cb4c2c1b9b0d26dd4e370134f78682dace38bae309b5235ca1cd30e8"
+      },
+      {
+        "path": "system/fdisbull-frame-keys.c",
+        "before_bytes": 52280,
+        "after_bytes": 61329,
+        "before_sha256": "935145259b9f7b04644e59d2b8876a3122ace2c82455d4f7677854d53cb906f9",
+        "after_sha256": "52d238dcc92fec196d6b21d07382d040a5eff2ec1e357fcadf88bdb70c9e7f5b"
+      },
+      {
+        "path": "system/fdisbull-instrumented-checkpoint.c",
+        "before_bytes": 19103,
+        "after_bytes": 19837,
+        "before_sha256": "a376923072fca4d4e188ac9a49ec3109acc8e468e57d1bf065200e31ce13e535",
+        "after_sha256": "e205ebf79f7becf61943a0929842205c9d4ecbc124ed7f37e84c962ced059d77"
+      }
+    ]
+  },
+  "protocol": {
+    "version": 1,
+    "commands": [
+      "x-fdisbull-query-frame-key-repeat"
+    ],
+    "checkpoint_format": "fdisbull-instrumented-qemu-state-4",
+    "profiles": [
+      "raw-set-1",
+      "raw-set-2",
+      "translated-set-2"
+    ]
+  }
+}

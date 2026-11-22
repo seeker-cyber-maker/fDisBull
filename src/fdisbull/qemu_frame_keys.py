@@ -13,6 +13,7 @@ from .keyboard_input import KEYS
 
 FRAME_KEY_COMMANDS = frozenset({'x-fdisbull-query-frame-keys',
     'x-fdisbull-apply-frame-key-edges', 'x-fdisbull-detach-frame-keys'})
+REPEAT_QUERY = 'x-fdisbull-query-frame-key-repeat'
 _CANONICAL = { _key(k)[1]: _key(k)[0] for k in KEYS }
 
 
@@ -48,8 +49,8 @@ def validate_frame_key_state(native, *, token=None, epoch=None):
     for key in ('active','valid','repeat-supported','scan-enabled','translated'):
         if type(native.get(key)) is not bool:
             raise DebuggerError('Invalid native frame key field: '+key)
-    if not native['valid'] or native['repeat-supported']:
-        raise DebuggerError('Native frame key owner is invalid or unsupported')
+    if not native['valid']:
+        raise DebuggerError('Native frame key owner is invalid')
     for key in ('held','foreign-held'):
         values = native.get(key)
         if (not isinstance(values,list) or len(values) > 64
@@ -73,6 +74,24 @@ def validate_frame_key_state(native, *, token=None, epoch=None):
     if epoch is not None and native['epoch'] != epoch:
         raise DebuggerError('Native frame key epoch changed')
     return deepcopy(native)
+
+
+def validate_frame_key_repeat(value, *, held):
+    fields = {'parameter', 'delay-ns', 'interval-ns', 'deadline-ns'}
+    if (type(value) is not dict or set(value) not in (fields, fields | {'key'})
+            or any(type(value[name]) is not int for name in fields)
+            or not 0 <= value['parameter'] <= 127
+            or not -1 <= value['deadline-ns'] < 1 << 63):
+        raise DebuggerError('Invalid native frame key repeat state')
+    parameter = value['parameter']
+    delay = (1 + (parameter >> 5)) * 250_000_000
+    cycles = (8 + (parameter & 7)) << ((parameter >> 3) & 3)
+    key = value.get('key')
+    if (value['delay-ns'] != delay or value['interval-ns'] != cycles * 1_000_000_000 // 240
+            or ('key' in value) != (value['deadline-ns'] >= 0)
+            or 'key' in value and (type(key) is not str or key not in held)):
+        raise DebuggerError('Native frame key repeat timing or ownership differs')
+    return deepcopy(value)
 
 
 def adopt_frame_keys(vm, native, *, expected_held=None):
@@ -189,6 +208,8 @@ class QemuFrameKeysMixin:
             raise ValueError('Native frame key ownership is unavailable')
         raw = owner.qmp('x-fdisbull-query-frame-keys') if owner is not None else vm.qmp.call('x-fdisbull-query-frame-keys')
         native = validate_frame_key_state(raw)
+        if native['repeat-supported'] != (REPEAT_QUERY in vm.qmp_commands):
+            raise DebuggerError('Native frame key repeat capability differs from its command inventory')
         if owner is not None: owner.check()
         ledger = getattr(vm,'_frame_key_owner',None)
         if native['foreign-held'] and not allow_foreign:
@@ -242,7 +263,7 @@ class QemuFrameKeysMixin:
                 raise DebuggerError('Native frame key application receipt differs from intent')
             owner.adopt(adopt_frame_keys, result, expected_held)
             receipt = dict(native=result,edges=deepcopy(edges),held=sorted(_CANONICAL[x] for x in expected_held),
-                           guest_consumed=None,repeat_supported=False)
+                           guest_consumed=None,repeat_supported=result['repeat-supported'])
             owner.accepted_evidence = deepcopy(receipt)
             owner.call('_event', 'frame-inputs', receipt)
             return receipt
@@ -314,7 +335,17 @@ class QemuFrameKeysMixin:
         if (self.vm.machine_configuration.get('clock_profile',{}).get('profile') != 'virtual'
                 or not FRAME_KEY_COMMANDS <= self.vm.qmp_commands):
             return physical
+        vm = self.vm
+        qmp = vm.qmp
         native = self._frame_keys_query(allow_foreign=True)
-        physical['keyboard'] = dict(frame_keys=sorted(_CANONICAL[k] for k in native['held']),
-                                    frame_edge_capacity=native['edge-capacity'],native=native)
+        keyboard = dict(frame_keys=sorted(_CANONICAL[k] for k in native['held']),
+                        frame_edge_capacity=native['edge-capacity'],native=native)
+        if native['repeat-supported'] and not native['foreign-held']:
+            if self.vm is not vm or vm.qmp is not qmp:
+                raise DebuggerError('Frame key repeat observation owner changed')
+            repeat = qmp.call(REPEAT_QUERY)
+            if self.vm is not vm or vm.qmp is not qmp:
+                raise DebuggerError('Frame key repeat observation owner changed')
+            keyboard['frame_key_repeat'] = validate_frame_key_repeat(repeat, held=native['held'])
+        physical['keyboard'] = keyboard
         return physical

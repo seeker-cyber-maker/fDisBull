@@ -1,0 +1,667 @@
+diff --git a/hw/input/ps2.c b/hw/input/ps2.c
+index ce9c2bc..e402d2d 100644
+--- a/hw/input/ps2.c
++++ b/hw/input/ps2.c
+@@ -687,6 +687,8 @@ static void ps2_reset_keyboard(PS2KbdState *s)
+     PS2State *ps2 = PS2_DEVICE(s);
+ 
+     trace_ps2_reset_keyboard(s);
++    s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
++    fdisbull_frame_key_repeat_cancel_for(s);
+     s->scan_enabled = 1;
+     s->scancode_set = 2;
+     ps2_reset_queue(ps2);
+@@ -761,6 +763,9 @@ void ps2_write_keyboard(PS2KbdState *s, int val)
+             ps2_cqueue_2(ps2, KBD_REPLY_ACK, s->translate ?
+                 translate_table[s->scancode_set] : s->scancode_set);
+         } else if (val >= 1 && val <= 3) {
++            if (s->scancode_set != val) {
++                fdisbull_frame_key_repeat_cancel_for(s);
++            }
+             s->scancode_set = val;
+             ps2_cqueue_1(ps2, KBD_REPLY_ACK);
+         } else {
+@@ -774,6 +779,8 @@ void ps2_write_keyboard(PS2KbdState *s, int val)
+         ps2->write_cmd = -1;
+         break;
+     case KBD_CMD_SET_RATE:
++        s->typematic_parameter = val & 0x7f;
++        fdisbull_frame_key_repeat_parameter_changed(s);
+         ps2_cqueue_1(ps2, KBD_REPLY_ACK);
+         ps2->write_cmd = -1;
+         break;
+@@ -1163,6 +1170,7 @@ static void ps2_kbd_reset_hold(Object *obj, ResetType type)
+     s->translate = 0;
+     s->scancode_set = 2;
+     s->modifiers = 0;
++    s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
+     fdisbull_frame_keys_keyboard_reset(s);
+ }
+ 
+@@ -1265,11 +1273,41 @@ static const VMStateDescription vmstate_ps2_keyboard_cqueue = {
+     }
+ };
+ 
++static bool ps2_keyboard_typematic_needed(void *opaque)
++{
++    PS2KbdState *s = opaque;
++
++    return s->typematic_parameter != PS2_TYPEMATIC_DEFAULT;
++}
++
++static const VMStateDescription vmstate_ps2_keyboard_typematic = {
++    .name = "ps2kbd/typematic_parameter",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = ps2_keyboard_typematic_needed,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT8(typematic_parameter, PS2KbdState),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
++static int ps2_kbd_pre_load(void *opaque)
++{
++    PS2KbdState *s = opaque;
++
++    s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
++    fdisbull_frame_key_repeat_cancel_for(s);
++    return 0;
++}
++
+ static int ps2_kbd_post_load(void *opaque, int version_id)
+ {
+     PS2KbdState *s = (PS2KbdState *)opaque;
+     PS2State *ps2 = PS2_DEVICE(s);
+ 
++    if (s->typematic_parameter > 0x7f) {
++        return -EINVAL;
++    }
+     if (version_id == 2) {
+         s->scancode_set = 2;
+     }
+@@ -1283,6 +1321,7 @@ static const VMStateDescription vmstate_ps2_keyboard = {
+     .name = "ps2kbd",
+     .version_id = 4,
+     .minimum_version_id = 2,
++    .pre_load = ps2_kbd_pre_load,
+     .post_load = ps2_kbd_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_STRUCT(parent_obj, PS2KbdState, 0, vmstate_ps2_common,
+@@ -1297,6 +1336,7 @@ static const VMStateDescription vmstate_ps2_keyboard = {
+         &vmstate_ps2_keyboard_ledstate,
+         &vmstate_ps2_keyboard_need_high_bit,
+         &vmstate_ps2_keyboard_cqueue,
++        &vmstate_ps2_keyboard_typematic,
+         NULL
+     }
+ };
+diff --git a/include/hw/input/ps2.h b/include/hw/input/ps2.h
+index 7f43fde..cb4ed29 100644
+--- a/include/hw/input/ps2.h
++++ b/include/hw/input/ps2.h
+@@ -45,6 +45,7 @@ struct PS2DeviceClass {
+  * older QEMU versions.
+  */
+ #define PS2_BUFFER_SIZE     256
++#define PS2_TYPEMATIC_DEFAULT 0x2b
+ 
+ typedef struct {
+     uint8_t data[PS2_BUFFER_SIZE];
+@@ -71,6 +72,7 @@ struct PS2KbdState {
+     int scan_enabled;
+     int translate;
+     int scancode_set; /* 1=XT, 2=AT, 3=PS/2 */
++    uint8_t typematic_parameter;
+     int ledstate;
+     bool need_high_bit;
+     unsigned int modifiers; /* bitmask of MOD_* constants above */
+diff --git a/include/system/fdisbull-frame-keys.h b/include/system/fdisbull-frame-keys.h
+index 89c2db8..58592aa 100644
+--- a/include/system/fdisbull-frame-keys.h
++++ b/include/system/fdisbull-frame-keys.h
+@@ -9,6 +9,15 @@
+ bool fdisbull_frame_keys_keyboard_event(PS2KbdState *keyboard,
+                                         QKeyCode key, bool down);
+ void fdisbull_frame_keys_keyboard_reset(PS2KbdState *keyboard);
++void fdisbull_frame_key_repeat_cancel_for(PS2KbdState *keyboard);
++void fdisbull_frame_key_repeat_parameter_changed(PS2KbdState *keyboard);
++bool fdisbull_frame_key_repeat_checkpoint_validate(
++    const FdisbullFrameKeyRepeatState *state,
++    const FdisbullFrameKeysCheckpointState *keys, Error **errp);
++void fdisbull_frame_key_repeat_checkpoint_restore(
++    const FdisbullFrameKeyRepeatState *state);
++void fdisbull_frame_key_repeat_save_begin(void);
++void fdisbull_frame_key_repeat_save_end(void);
+ bool fdisbull_frame_keys_checkpoint_safe(Error **errp);
+ bool fdisbull_frame_keys_checkpoint_allowed(void);
+ bool fdisbull_frame_keys_active(void);
+diff --git a/include/system/fdisbull-instrumented-checkpoint.h b/include/system/fdisbull-instrumented-checkpoint.h
+index 60b4d74..7212df7 100644
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -5,6 +5,8 @@
+ #include "qapi/error.h"
+ 
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT \
++    "fdisbull-instrumented-qemu-state-4"
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V3 \
+     "fdisbull-instrumented-qemu-state-3"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2 \
+     "fdisbull-instrumented-qemu-state-2"
+diff --git a/qapi/fdisbull-input.json b/qapi/fdisbull-input.json
+index 533b315..565b001 100644
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -306,7 +306,7 @@
+ # @held: Canonically ordered keys owned as pressed by the frame controller.
+ # @edge-capacity: Conservative event batch capacity at the current stopped
+ #     PS/2/i8042 boundary.
+-# @repeat-supported: Always false. This protocol preserves held keys only.
++# @repeat-supported: Native owned PS/2 typematic repeat is available.
+ # @accepted-edges: Monotone count of accepted native frame edges.
+ # @device-path: Canonical selected PS/2 keyboard object path.
+ # @device-type: Selected QOM keyboard type.
+@@ -376,6 +376,33 @@
+             'edges': ['FdisbullFrameKeyEdge'] },
+   'returns': 'FdisbullFrameKeysInfo' }
+ 
++##
++# @FdisbullFrameKeyRepeatState:
++#
++# Owned PS/2 typematic settings and one pending make deadline.
++#
++# @parameter: Guest PS/2 typematic parameter, with its reserved bit clear.
++# @delay-ns: Initial delay in virtual nanoseconds.
++# @interval-ns: Repeat interval in virtual nanoseconds.
++# @deadline-ns: Absolute virtual expiry, or -1 when idle.
++# @key: Held key to repeat, present only when a deadline is armed.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullFrameKeyRepeatState',
++  'data': { 'parameter': 'uint8', 'delay-ns': 'int64', 'interval-ns': 'int64',
++            'deadline-ns': 'int64', '*key': 'QKeyCode' } }
++
++##
++# @x-fdisbull-query-frame-key-repeat:
++#
++# Read the admitted stopped PS/2 typematic state.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-query-frame-key-repeat',
++  'returns': 'FdisbullFrameKeyRepeatState' }
++
+ ##
+ # @x-fdisbull-detach-frame-keys:
+ #
+diff --git a/qapi/fdisbull-instrumented-checkpoint.json b/qapi/fdisbull-instrumented-checkpoint.json
+index 1c96efe..dc2826c 100644
+--- a/qapi/fdisbull-instrumented-checkpoint.json
++++ b/qapi/fdisbull-instrumented-checkpoint.json
+@@ -6,6 +6,7 @@
+ { 'include': 'fdisbull-retrace.json' }
+ { 'include': 'fdisbull-vga-configuration.json' }
+ { 'include': 'fdisbull-video-frame.json' }
++{ 'include': 'fdisbull-input.json' }
+ 
+ ##
+ # @FdisbullInstrumentedAudioState:
+@@ -149,7 +150,8 @@
+ #
+ # @frame-keys: Native stopped frame-key ownership and device-state proof.
+ #
+-# @video-frame: Bounded source-raster state, mandatory only in format 3.
++# @video-frame: Bounded source-raster state, mandatory in formats 3 and 4.
++# @frame-key-repeat: Owned PS/2 typematic phase, mandatory in format 4.
+ #
+ # Since: 10.0
+ ##
+@@ -159,7 +161,8 @@
+             'display': 'FdisbullInstrumentedDisplayState',
+             'retrace': 'FdisbullInstrumentedRetraceState',
+             '*frame-keys': 'FdisbullFrameKeysCheckpointState',
+-            '*video-frame': 'FdisbullVideoFrameCheckpointState' } }
++            '*video-frame': 'FdisbullVideoFrameCheckpointState',
++            '*frame-key-repeat': 'FdisbullFrameKeyRepeatState' } }
+ 
+ ##
+ # @FdisbullInstrumentedCheckpointExport:
+diff --git a/system/fdisbull-frame-keys.c b/system/fdisbull-frame-keys.c
+index 350889a..a4c0c23 100644
+--- a/system/fdisbull-frame-keys.c
++++ b/system/fdisbull-frame-keys.c
+@@ -168,6 +168,269 @@ static bool frame_keys_clock(FdisbullClockInfo **out, Error **errp)
+     return true;
+ }
+ 
++/*
++ * The one repeat timer belongs to the existing stopped frame-key owner.
++ * Guest hardware state supplies the rate and all scan-code/IRQ behavior.
++ */
++static QEMUTimer frame_repeat_timer;
++static bool frame_repeat_timer_ready;
++static bool frame_repeat_save_paused;
++static QKeyCode frame_repeat_key = Q_KEY_CODE_UNMAPPED;
++static int64_t frame_repeat_deadline = -1;
++
++static bool frame_batch_key_supported(QKeyCode key);
++
++static bool frame_key_repeatable(QKeyCode key)
++{
++    return frame_batch_key_supported(key) && !ps2_keyboard_modifier_bit(key) &&
++           key != Q_KEY_CODE_PRINT && key != Q_KEY_CODE_PAUSE;
++}
++
++static int64_t frame_repeat_delay(uint8_t parameter)
++{
++    return (1 + (parameter >> 5)) * 250 * SCALE_MS;
++}
++
++static int64_t frame_repeat_interval(uint8_t parameter)
++{
++    int64_t ticks = (8 + (parameter & 7)) << ((parameter >> 3) & 3);
++
++    return ticks * 1000 * SCALE_MS / 240;
++}
++
++static void frame_key_repeat_cancel(void)
++{
++    if (frame_repeat_timer_ready) {
++        timer_del(&frame_repeat_timer);
++    }
++    frame_repeat_key = Q_KEY_CODE_UNMAPPED;
++    frame_repeat_deadline = -1;
++}
++
++void fdisbull_frame_key_repeat_cancel_for(PS2KbdState *keyboard)
++{
++    if (frame_keys.keyboard == keyboard) {
++        frame_key_repeat_cancel();
++    }
++}
++
++static void frame_key_repeat_timer_cb(void *opaque)
++{
++    PS2KbdState *keyboard = frame_keys.keyboard;
++    int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    int64_t interval, next;
++    PS2FrameKeyEncoding encoding = { 0 };
++    PS2Queue *queue;
++    KBDState *controller;
++    unsigned i;
++    bool stopping;
++
++    assert(bql_locked());
++    if (!keyboard || !frame_keys.active || !frame_keys.valid ||
++        frame_repeat_key == Q_KEY_CODE_UNMAPPED ||
++        !frame_keys.held[frame_repeat_key] || !keyboard->scan_enabled) {
++        frame_key_repeat_cancel();
++        return;
++    }
++    if (frame_repeat_save_paused) {
++        return;
++    }
++    stopping = fdisbull_clock_stop_pending();
++    if (stopping) {
++        /* A synchronous stop owns this boundary. Keep the make pending. */
++        next = 1;
++    } else {
++        interval = frame_repeat_interval(keyboard->typematic_parameter);
++        /* Preserve the cadence if a timer is late. Never emit a catch-up burst. */
++        next = interval - ((now - frame_repeat_deadline) % interval);
++    }
++    if (now > INT64_MAX - next) {
++        frame_key_repeat_cancel();
++        return;
++    }
++    frame_repeat_deadline = now + next;
++    timer_mod_ns(&frame_repeat_timer, frame_repeat_deadline);
++    if (stopping) {
++        return;
++    }
++
++    controller = frame_keyboard_controller(keyboard, NULL);
++    queue = &keyboard->parent_obj.queue;
++    if (!controller || (controller->mode & FRAME_KEYS_KBD_DISABLED) ||
++        keyboard->parent_obj.write_cmd != -1 || queue->cwptr != -1 ||
++        queue->count < 0 || queue->count > 16 ||
++        queue->wptr < 0 || queue->wptr >= PS2_BUFFER_SIZE ||
++        keyboard->need_high_bit) {
++        return;
++    }
++    encoding.modifiers = keyboard->modifiers;
++    if (!ps2_keyboard_frame_encode(keyboard->scancode_set, keyboard->translate,
++                                   frame_repeat_key, true, &encoding) ||
++        !encoding.count || encoding.count > 16 - queue->count ||
++        encoding.modifiers != keyboard->modifiers || encoding.need_high_bit) {
++        return;
++    }
++    /* Deliver the entire make or none of it, including an E0 prefix. */
++    for (i = 0; i < encoding.count; i++) {
++        ps2_queue_noirq(&keyboard->parent_obj, encoding.bytes[i]);
++    }
++    ps2_keyboard_frame_notify(keyboard);
++}
++
++static void frame_key_repeat_arm(QKeyCode key, int64_t deadline)
++{
++    if (!frame_repeat_timer_ready) {
++        timer_init_ns(&frame_repeat_timer, QEMU_CLOCK_VIRTUAL,
++                      frame_key_repeat_timer_cb, NULL);
++        frame_repeat_timer_ready = true;
++    }
++    frame_repeat_key = key;
++    frame_repeat_deadline = deadline;
++    timer_mod_ns(&frame_repeat_timer, frame_repeat_deadline);
++}
++
++static void frame_key_repeat_arm_initial(PS2KbdState *keyboard, QKeyCode key,
++                                         int64_t now)
++{
++    int64_t delay = frame_repeat_delay(keyboard->typematic_parameter);
++
++    if (now < 0 || now > INT64_MAX - delay) {
++        frame_key_repeat_cancel();
++    } else {
++        frame_key_repeat_arm(key, now + delay);
++    }
++}
++
++void fdisbull_frame_key_repeat_parameter_changed(PS2KbdState *keyboard)
++{
++    if (frame_keys.keyboard == keyboard &&
++        frame_repeat_key != Q_KEY_CODE_UNMAPPED) {
++        frame_key_repeat_arm_initial(keyboard, frame_repeat_key,
++                                    qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
++    }
++}
++
++static void frame_key_repeat_accept(const FdisbullFrameKeyEdgeList *edges,
++                                    int64_t now)
++{
++    PS2KbdState *keyboard = frame_keys.keyboard;
++
++    for (; edges; edges = edges->next) {
++        QKeyCode key = edges->value->key;
++
++        if (edges->value->pressed && frame_key_repeatable(key) &&
++            keyboard->scan_enabled && (keyboard->scancode_set == 1 ||
++                                       keyboard->scancode_set == 2) &&
++            (!keyboard->translate || keyboard->scancode_set == 2)) {
++            frame_key_repeat_arm_initial(keyboard, key, now);
++        } else if (!edges->value->pressed && frame_repeat_key == key) {
++            frame_key_repeat_cancel();
++        }
++    }
++}
++
++FdisbullFrameKeyRepeatState *qmp_x_fdisbull_query_frame_key_repeat(Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    g_autoptr(PS2KbdState) selected = NULL;
++    PS2KbdState *keyboard = frame_keys.keyboard;
++    FdisbullFrameKeyRepeatState *state;
++
++    assert(bql_locked());
++    if (fdisbull_instrumented_checkpoint_busy()) {
++        error_setg(errp, "Cannot query repeat during a checkpoint transaction");
++        return NULL;
++    }
++    if (!frame_keys_clock(&clock, errp) ||
++        !fdisbull_frame_keys_checkpoint_safe(errp)) {
++        return NULL;
++    }
++    if (!keyboard) {
++        selected = qemu_input_fdisbull_keyboard_target(errp);
++        keyboard = selected;
++    }
++    if (!keyboard || !frame_keyboard_controller(keyboard, errp)) {
++        return NULL;
++    }
++    if (frame_keys.active && frame_keys.epoch != clock->epoch) {
++        error_setg(errp, "Frame-key repeat owner epoch differs");
++        return NULL;
++    }
++    state = g_new0(FdisbullFrameKeyRepeatState, 1);
++    state->parameter = keyboard->typematic_parameter;
++    state->delay_ns = frame_repeat_delay(state->parameter);
++    state->interval_ns = frame_repeat_interval(state->parameter);
++    state->deadline_ns = frame_repeat_deadline;
++    state->has_key = frame_repeat_key != Q_KEY_CODE_UNMAPPED;
++    state->key = frame_repeat_key;
++    return state;
++}
++
++bool fdisbull_frame_key_repeat_checkpoint_validate(
++    const FdisbullFrameKeyRepeatState *state,
++    const FdisbullFrameKeysCheckpointState *keys, Error **errp)
++{
++    g_autoptr(PS2KbdState) keyboard = NULL;
++    const QKeyCodeList *key;
++
++    assert(bql_locked());
++    keyboard = qemu_input_fdisbull_keyboard_target(errp);
++    if (!keyboard) {
++        return false;
++    }
++    if (state->parameter != keyboard->typematic_parameter ||
++        state->delay_ns != frame_repeat_delay(state->parameter) ||
++        state->interval_ns != frame_repeat_interval(state->parameter) ||
++        state->deadline_ns < -1 || state->has_key != (state->deadline_ns >= 0)) {
++        error_setg(errp, "Frame-key repeat phase differs from the PS/2 device");
++        return false;
++    }
++    if (!state->has_key) {
++        return true;
++    }
++    if (keys && keys->active && keys->scan_enabled &&
++        (keys->scancode_set == 1 || keys->scancode_set == 2) &&
++        (!keys->translated || keys->scancode_set == 2) &&
++        frame_key_repeatable(state->key)) {
++        for (key = keys->held; key; key = key->next) {
++            if (key->value == state->key) {
++                return true;
++            }
++        }
++    }
++    error_setg(errp, "Frame-key repeat timer lacks an eligible held key");
++    return false;
++}
++
++void fdisbull_frame_key_repeat_checkpoint_restore(
++    const FdisbullFrameKeyRepeatState *state)
++{
++    assert(bql_locked());
++    frame_key_repeat_cancel();
++    if (state && state->has_key) {
++        frame_key_repeat_arm(state->key, state->deadline_ns);
++    }
++}
++
++void fdisbull_frame_key_repeat_save_begin(void)
++{
++    assert(bql_locked());
++    assert(!frame_repeat_save_paused);
++    frame_repeat_save_paused = true;
++    if (frame_repeat_timer_ready) {
++        timer_del(&frame_repeat_timer);
++    }
++}
++
++void fdisbull_frame_key_repeat_save_end(void)
++{
++    assert(bql_locked());
++    if (frame_repeat_save_paused && frame_repeat_deadline >= 0) {
++        timer_mod_ns(&frame_repeat_timer, frame_repeat_deadline);
++    }
++    frame_repeat_save_paused = false;
++}
++
+ static void checksum_u64_le(GChecksum *checksum, uint64_t value)
+ {
+     uint8_t bytes[8];
+@@ -243,7 +506,7 @@ static void frame_keys_info_scalars(FdisbullFrameKeysInfo *info,
+     info->active = frame_keys.active;
+     info->valid = frame_keys.valid;
+     info->generation = frame_keys.generation;
+-    info->repeat_supported = false;
++    info->repeat_supported = true;
+     info->accepted_edges = frame_keys.accepted_edges;
+     info->scan_enabled = keyboard->scan_enabled;
+     info->scancode_set = keyboard->scancode_set;
+@@ -304,6 +567,7 @@ bool fdisbull_frame_keys_keyboard_event(PS2KbdState *keyboard,
+     if (!key_valid(key)) {
+         if (frame_keys.active) {
+             frame_keys.valid = false;
++            frame_key_repeat_cancel();
+             g_free(frame_keys.fault);
+             frame_keys.fault = g_strdup("unmapped external keyboard event");
+         }
+@@ -315,6 +579,7 @@ bool fdisbull_frame_keys_keyboard_event(PS2KbdState *keyboard,
+     }
+     if (frame_keys.active) {
+         frame_keys.valid = false;
++        frame_key_repeat_cancel();
+         g_free(frame_keys.fault);
+         frame_keys.fault = g_strdup("unowned keyboard event while frame-key owner active");
+         return false;
+@@ -328,6 +593,7 @@ bool fdisbull_frame_keys_keyboard_event(PS2KbdState *keyboard,
+ void fdisbull_frame_keys_keyboard_reset(PS2KbdState *keyboard)
+ {
+     assert(bql_locked());
++    fdisbull_frame_key_repeat_cancel_for(keyboard);
+     if (frame_keys.active && frame_keys.keyboard == keyboard &&
+         !fdisbull_instrumented_checkpoint_busy()) {
+         frame_keys.active = false;
+@@ -404,6 +670,7 @@ FdisbullFrameKeysInfo *qmp_x_fdisbull_query_frame_keys(Error **errp)
+         keyboard = frame_keys.keyboard;
+         if (frame_keys.epoch != clock->epoch) {
+             frame_keys.valid = false;
++            frame_key_repeat_cancel();
+             g_free(frame_keys.fault);
+             frame_keys.fault = g_strdup("native clock epoch changed under frame-key owner");
+         }
+@@ -585,6 +852,7 @@ FdisbullFrameKeysInfo *qmp_x_fdisbull_apply_frame_key_edges(
+     memcpy(frame_keys.held, next, sizeof(frame_keys.held));
+     frame_keys.generation++;
+     frame_keys.accepted_edges += count;
++    frame_key_repeat_accept(edges, clock->virtual_ns);
+     return frame_keys_info(keyboard, controller, clock);
+ }
+ 
+@@ -1081,6 +1349,7 @@ FdisbullFrameKeyBatchApply *qmp_x_fdisbull_apply_frame_key_batch(
+     memcpy(frame_keys.held, batch->next, sizeof(frame_keys.held));
+     frame_keys.generation++;
+     frame_keys.accepted_edges += batch->count;
++    frame_key_repeat_accept(edges, batch->clock->virtual_ns);
+     if (batch->encoding.count) {
+         ps2_keyboard_frame_notify(keyboard);
+     }
+@@ -1129,6 +1398,7 @@ FdisbullFrameKeysInfo *qmp_x_fdisbull_detach_frame_keys(
+     if (!controller) {
+         return NULL;
+     }
++    frame_key_repeat_cancel();
+     frame_keys.active = false;
+     frame_keys.epoch = 0;
+     frame_keys.generation++;
+diff --git a/system/fdisbull-instrumented-checkpoint.c b/system/fdisbull-instrumented-checkpoint.c
+index c18788f..6d650ab 100644
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -15,6 +15,7 @@
+ #include "qapi/qapi-commands-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/qapi-commands-fdisbull-audio.h"
+ #include "qapi/qapi-commands-fdisbull-display.h"
++#include "qapi/qapi-commands-fdisbull-input.h"
+ #include "qapi/qapi-commands-fdisbull-retrace.h"
+ #include "qapi/qapi-commands-fdisbull-vga-configuration.h"
+ #include "qapi/clone-visitor.h"
+@@ -205,6 +206,10 @@ static FdisbullInstrumentedCheckpointState *capture_state(Error **errp)
+         error_setg(errp, "Precise retrace checkpoint lacks the display publication configuration");
+         return NULL;
+     }
++    result->frame_key_repeat = qmp_x_fdisbull_query_frame_key_repeat(errp);
++    if (!result->frame_key_repeat) {
++        return NULL;
++    }
+     result->video_frame = fdisbull_video_frame_checkpoint_state(result->clock,
+                                                                errp);
+     if (!result->video_frame) {
+@@ -285,6 +290,7 @@ bool fdisbull_instrumented_checkpoint_snapshot_save_authorize(
+     if (!fdisbull_video_frame_checkpoint_save_begin(errp)) {
+         return false;
+     }
++    fdisbull_frame_key_repeat_save_begin();
+     save_busy = true;
+     return true;
+ }
+@@ -297,6 +303,7 @@ void fdisbull_instrumented_checkpoint_snapshot_save_complete(
+     if (export_token && token && !strcmp(token, export_token)) {
+         /* Save success and failure preserve the exact original source expiry. */
+         fdisbull_video_frame_checkpoint_save_end();
++        fdisbull_frame_key_repeat_save_end();
+         save_busy = false;
+         g_clear_pointer(&export_token, g_free);
+         g_clear_pointer(&export_json, g_free);
+@@ -377,12 +384,16 @@ qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
+     bool legacy_v2 = !strcmp(state->format,
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2);
+     bool source_v3 = !strcmp(state->format,
++                             FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V3);
++    bool repeat_v4 = !strcmp(state->format,
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
+-    if ((!legacy_v1 && !legacy_v2 && !source_v3) ||
++    bool has_source = source_v3 || repeat_v4;
++    if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+         (!legacy_v1 && !state->frame_keys) ||
+-        source_v3 != (state->video_frame != NULL) ||
++        has_source != (state->video_frame != NULL) ||
++        repeat_v4 != (state->frame_key_repeat != NULL) ||
+         state->source_epoch != state->clock->epoch ||
+         state->virtual_ns != state->clock->virtual_ns) {
+         error_setg(errp, "Invalid instrumented checkpoint envelope identity");
+@@ -399,13 +410,16 @@ qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
+         (!legacy_v1 &&
+          !fdisbull_frame_keys_checkpoint_validate(state->frame_keys,
+                                                   state->source_epoch, errp)) ||
+-        (source_v3 &&
++        (repeat_v4 &&
++         !fdisbull_frame_key_repeat_checkpoint_validate(state->frame_key_repeat,
++                                                        state->frame_keys, errp)) ||
++        (has_source &&
+          !fdisbull_video_frame_checkpoint_validate(state->video_frame,
+                                                    state->source_epoch,
+                                                    state->virtual_ns, errp))) {
+         return NULL;
+     }
+-    if (source_v3 && state->video_frame->info->token &&
++    if (has_source && state->video_frame->info->token &&
+         (!state->retrace->admitted ||
+          g_strcmp0(state->video_frame->device_path,
+                    state->retrace->device_path))) {
+@@ -453,9 +467,9 @@ qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
+                                                  errp)) {
+         return NULL;
+     }
++    fdisbull_frame_key_repeat_checkpoint_restore(state->frame_key_repeat);
+     receipt = g_new0(FdisbullInstrumentedCheckpointReceipt, 1);
+-    receipt->format = g_strdup(source_v3 ?
+-        FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT :
++    receipt->format = g_strdup(has_source ? state->format :
+         FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2);
+     receipt->virtual_ns = state->virtual_ns;
+     receipt->new_epoch = epoch;
+@@ -465,7 +479,7 @@ qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
+     receipt->frame_key_token = frame_key_token ? g_strdup(frame_key_token) : NULL;
+     receipt->has_frame_key_generation = true;
+     receipt->frame_key_generation = frame_key_generation;
+-    if (source_v3) {
++    if (has_source) {
+         receipt->video_frame_token = g_strdup(video_frame_token);
+         receipt->has_video_frame_generation = true;
+         receipt->video_frame_generation = video_frame_generation;
