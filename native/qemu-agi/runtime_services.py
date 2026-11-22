@@ -2,9 +2,10 @@
 
 Only native-emitted request records are dispatched here. There is no bytecode
 framing, opcode execution, parser, renderer or invented device implementation.
-Text output is implemented as a bounded readable ledger. Input, menu selection,
-restart/quit, pause and save-slot selection require caller decisions. Remaining
-device requests stay visibly unsupported, unless explicitly cancelled.
+Text and native presentation output are implemented as a bounded headless
+capture ledger. Input, menu selection, restart/quit, pause, save-slot selection
+and a real joystick-calibration result require caller decisions. Capturing a
+frame plan does not claim that a GUI displayed it or a physical device ran.
 
 Save slots contain opaque native snapshots in memory, bound to the exact
 resource package and executable. They are not original-interpreter save files
@@ -43,12 +44,13 @@ SAVE_SCHEMA = "fdisbull-agi-runtime-memory-save-1"
 LEDGER_SCHEMA = "fdisbull-agi-runtime-output-ledger-1"
 _TEXT_OUTPUTS = {101: "print", 102: "print.v", 135: "memory", 141: "version",
                  144: "log", 151: "print.at", 152: "print.at.v"}
+_PRESENTATIONS = {29, 110, 124, 129, 133, 162}
 
 
 class RuntimeServices:
     """Bounded host output and explicit decisions for one existing QMP owner.
 
-    handle() auto-records only the text operations listed above. For other
+    handle() records text and native presentation payloads. For interactive
     supported requests use handle(choice={...}) with an explicit accepted
     Boolean and text, number or slot when required. accepted=False means
     cancellation, never successful emulation of an unavailable device.
@@ -155,6 +157,31 @@ class RuntimeServices:
             self._choice(choice)
             return self._finish(ticket, "cancelled",
                                 lambda: self.vm.complete(ticket, accepted=False))
+        presentation = None
+        if opcode in _PRESENTATIONS:
+            presentation = self.vm.presentation()
+            if presentation["presentation"] is None:
+                raise HarnessError("Native device request has no presentation payload")
+            expected = {key: value for key, value in effect.items() if key != "text"}
+            if not _runtime._same(presentation["request"], expected):
+                raise HarnessError("Presentation request changed before capture")
+            if reply == "ack":
+                if choice is not None:
+                    self._choice(choice)
+                return self._finish(ticket, "presentation",
+                    lambda: self.vm.complete(ticket, accepted=True),
+                    {"presentation": presentation["presentation"]})
+        if opcode == 139 and reply == "ack":
+            if choice is None:
+                return {"status": "choice_required", "request": deepcopy(ticket),
+                        "required": ["accepted", "calibrated"],
+                        "presentation": self.vm.presentation()["presentation"]}
+            self._choice(choice, ("calibrated",))
+            if choice["calibrated"] is not True:
+                raise ValueError("An accepted calibration requires an explicit successful device result")
+            return self._finish(ticket, "device_completed",
+                lambda: self.vm.complete(ticket, accepted=True),
+                {"calibration_result": deepcopy(choice), "result_source": "caller"})
         if opcode in _TEXT_OUTPUTS and reply == "ack":
             if choice is not None:
                 self._choice(choice)
@@ -207,7 +234,10 @@ class RuntimeServices:
         if reply in ("text", "number", "menu", "choice") or (opcode == 136 and reply == "ack"):
             field = "text" if reply == "text" else "number" if reply in ("number", "menu") else None
             if choice is None:
-                return self._waiting(ticket, field)
+                waiting = self._waiting(ticket, field)
+                if presentation is not None:
+                    waiting["presentation"] = presentation["presentation"]
+                return waiting
             self._choice(choice, () if field is None else (field,))
             values = {} if field is None else {field: choice[field]}
             return self._finish(

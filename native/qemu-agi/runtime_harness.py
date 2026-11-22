@@ -46,6 +46,10 @@ PROFILE = _pack.PROFILE
 STATE_SCHEMA = "fdisbull-agi-runtime-state-1"
 EVENTS_SCHEMA = "fdisbull-agi-runtime-events-1"
 SCENE_SCHEMA = "fdisbull-agi-runtime-scene-1"
+SOUND_SCHEMA = "fdisbull-agi-runtime-sound-events-1"
+PRESENTATION_SCHEMA = "fdisbull-agi-runtime-presentation-1"
+SOUND_COLUMNS = ["seq", "native_epoch", "sequence", "tick", "kind", "channel", "value", "enabled"]
+MAX_SOUND_EVENTS = 262144
 REQUEST_SCHEMA = "fdisbull-agi-runtime-request-1"
 MAX_SNAPSHOT_BYTES = 8 * 1024**2
 MAX_EVENT_CAPACITY = 4096
@@ -248,6 +252,89 @@ class QemuAGIRuntime(QemuAGI):
                 raise HarnessError(f"Invalid native runtime {name} plane")
         return value
 
+    def presentation(self):
+        """Read native device payloads for the current pending request.
+
+        Scene/VIEW pixels and descriptions originate in native resource code.
+        This query does not acknowledge output, change the guest, or consume
+        input. A headless capture driver or interactive display can use it.
+        """
+        ticket = self.pending()
+        value = self._json_property("agi-runtime-presentation-json")
+        if type(value) is not dict or value.get("schema") != PRESENTATION_SCHEMA:
+            raise HarnessError("Unsupported native presentation schema")
+        self._source(value)
+        request = None if ticket is None else {
+            key: val for key, val in ticket["effect"].items() if key != "text"}
+        if not _same(value.get("request"), request):
+            raise HarnessError("Native presentation belongs to a different pending request")
+        payload = value.get("presentation")
+        if payload is None:
+            return value
+        kinds = {29: "priority-plane", 110: "shake-screen", 124: "inventory",
+                 129: "show-object", 162: "show-object", 133: "actor-status",
+                 139: "joystick-calibration"}
+        if ticket is None or type(payload) is not dict \
+                or payload.get("kind") != kinds.get(request["opcode"]):
+            raise HarnessError("Native presentation kind differs from its instruction")
+
+        def pixels(name, length):
+            data = payload.get(name)
+            if type(data) is not str or len(data) != 2 * length \
+                    or re.fullmatch("[0-9a-f]*", data) is None \
+                    or any(color > 15 for color in bytes.fromhex(data)):
+                raise HarnessError(f"Invalid native presentation {name} pixels")
+
+        def literal(record, name):
+            raw = record.get(name + "_hex")
+            if type(raw) is not str or len(raw) % 2 or re.fullmatch("[0-9a-f]*", raw) is None \
+                    or bytes.fromhex(raw).decode("cp437") != record.get(name):
+                raise HarnessError(f"Native {name} differs from its exact CP437 bytes")
+
+        try:
+            kind = payload["kind"]
+            if kind in ("priority-plane", "shake-screen"):
+                if payload.get("width") != 160 or payload.get("height") != 168:
+                    raise ValueError("native presentation dimensions differ")
+                pixels("visual", 160 * 168); pixels("priority", 160 * 168)
+                if kind == "shake-screen":
+                    _uint(payload.get("count"), 255, "shake count")
+                    frames = payload.get("frames")
+                    if payload.get("frame_count") != 4 * payload["count"] \
+                            or type(frames) is not list or len(frames) != payload["frame_count"] \
+                            or payload.get("restore_original") is not True:
+                        raise ValueError("native shake frame extent differs")
+            elif kind == "show-object":
+                _uint(payload.get("view"), 255, "preview VIEW")
+                _uint(payload.get("width"), 160, "preview width", 1)
+                _uint(payload.get("height"), 168, "preview height", 1)
+                _uint(payload.get("transparent"), 15, "preview transparency")
+                pixels("pixels", payload["width"] * payload["height"])
+                literal(payload, "description")
+                match = [row for row in self.package["views"] if row["id"] == payload["view"]]
+                if len(match) != 1 or match[0]["sha256"] != payload.get("view_sha256"):
+                    raise ValueError("preview VIEW identity differs from the immutable package")
+            elif kind == "inventory":
+                entries = payload.get("entries")
+                if type(entries) is not list or len(entries) != len(self.package["objects"]):
+                    raise ValueError("inventory extent differs from the package")
+                for index, entry in enumerate(entries):
+                    if type(entry) is not dict or entry.get("id") != index:
+                        raise ValueError("inventory identity differs")
+                    _uint(entry.get("room"), 255, "inventory room")
+                    literal(entry, "name")
+                    if entry["name"] != self.package["objects"][index]["name"]:
+                        raise ValueError("inventory name differs from the package")
+            elif kind == "actor-status":
+                if type(payload.get("actor")) is not dict:
+                    raise ValueError("actor status is missing")
+                _uint(payload["actor"].get("id"), 255, "actor status ID")
+            elif payload.get("requires_host_result") is not True:
+                raise ValueError("calibration must require an explicit device result")
+        except (ValueError, KeyError, TypeError) as error:
+            raise HarnessError(f"Invalid native presentation: {error}") from error
+        return value
+
     def _command(self, command):
         self.set("agi-runtime-command", json.dumps(command, ensure_ascii=False,
                                                   separators=(",", ":"), allow_nan=False))
@@ -258,12 +345,84 @@ class QemuAGIRuntime(QemuAGI):
         return self._command({"action": "cycle"})
 
     def tick(self, ticks=1):
+        """Explicit manual world steps; normal cycle pacing uses clock()."""
         return self._command({"action": "tick", "ticks": _uint(ticks, 4096, "ticks", 1)})
+
+    def clock(self, ticks=1):
+        """Advance the20Hz system timer and60Hz sound without moving actors."""
+        return self._command({"action": "clock", "ticks": _uint(ticks, 4096, "clock ticks", 1)})
+
+    def sound_device(self, device):
+        """Choose explicit PC speaker0 or four-channel Tandy1 before execution."""
+        return self._command({"action": "sound-device", "device": _uint(device, 1, "sound device")})
 
     def sound_tick(self, ticks=1):
         """Advance explicit native 1/60-second sound ticks, independently of world ticks."""
         return self._command({"action": "sound-tick",
                               "ticks": _uint(ticks, 4096, "sound ticks", 1)})
+
+    def sound_events(self, *, allow_dropped=False):
+        """Capture ordered device output independently of DISASM/SCENE.
+
+        Reading does not consume it. The bounded native journal stops retaining
+        new records when full; dropped output is an error by default. Explicit
+        allow_dropped=True preserves a diagnostic receipt for acknowledging an
+        incomplete capture. Native embeddings can instead use the lossless
+        committed-output callback without this QMP journal limit.
+        """
+        if type(allow_dropped) is not bool:
+            raise ValueError("allow_dropped must be Boolean")
+        value = self._json_property("agi-runtime-sound-json")
+        if type(value) is not dict or value.get("schema") != SOUND_SCHEMA \
+                or value.get("available") is not True or value.get("columns") != SOUND_COLUMNS \
+                or type(value.get("events")) is not list:
+            raise HarnessError("Unsupported native sound journal schema")
+        self._source(value)
+        try:
+            for name in ("epoch", "eligible", "dropped", "last_seq", "native_epoch"):
+                _uint(value.get(name), _UINT64, "sound " + name)
+            _uint(value.get("capacity"), MAX_SOUND_EVENTS, "sound capacity", 1)
+            _uint(value.get("count"), value["capacity"], "sound count")
+            if value["count"] != len(value["events"]) \
+                    or value["count"] + value["dropped"] != value["eligible"] \
+                    or value["last_seq"] < value["eligible"]:
+                raise ValueError("sound counters do not reconcile")
+            prior = None
+            first = value["last_seq"] - value["eligible"] + 1
+            for index, row in enumerate(value["events"]):
+                if type(row) is not list or len(row) != len(SOUND_COLUMNS):
+                    raise ValueError("invalid sound event extent")
+                for number in row[:4]:
+                    _uint(number, _UINT64, "sound sequence/tick")
+                _uint(row[4], 2, "sound kind", 1)
+                _uint(row[5], 3, "sound channel")
+                _uint(row[6], 12276 if row[4] == 1 else 255, "sound device value")
+                _uint(row[7], 1, "sound enabled")
+                if row[0] != first + index or row[2] == 0 or row[1] > value["native_epoch"]:
+                    raise ValueError("sound event identity differs from journal")
+                if prior is not None and (row[1] < prior[1] or
+                        (row[1] == prior[1] and (row[2] <= prior[2] or row[3] < prior[3]))):
+                    raise ValueError("sound events are not in native commit order")
+                prior = row
+        except (ValueError, KeyError, TypeError) as error:
+            raise HarnessError(f"Invalid native sound journal: {error}") from error
+        if value["dropped"] and not allow_dropped:
+            raise HarnessError(f"Native sound journal dropped {value['dropped']} events; "
+                               "use allow_dropped=True only to inspect incomplete evidence")
+        value["context"] = self.context_id
+        value["binary_sha256"] = self.binary_sha256
+        return value
+
+    def clear_sound_events(self, capture):
+        """Acknowledge exactly the captured owner/epoch/output prefix once."""
+        if type(capture) is not dict or capture.get("context") != self.context_id \
+                or capture.get("binary_sha256") != self.binary_sha256:
+            raise HarnessError("Sound capture belongs to another owner or executable")
+        current = self.sound_events(allow_dropped=True)
+        if not _same(capture, current):
+            raise HarnessError("Sound capture is stale or modified")
+        return self._command({"action": "sound-clear", "epoch": capture["epoch"],
+                              "through": capture["last_seq"]})
 
     def input(self, text):
         _cp437_bytes(text, 40, "input")

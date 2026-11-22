@@ -305,3 +305,45 @@ int agi_runtime_sound_stop(AgiRuntimeSound *s, uint8_t flags[256],
     publish(s, &next, cb);
     return AGI_SOUND_OK;
 }
+
+int agi_runtime_sound_resync(AgiRuntimeSound *s,
+                             const AgiRuntimeSoundCallbacks *cb)
+{
+    AgiRuntimeSound next;
+    const uint8_t *data = NULL;
+    size_t length = 0;
+    unsigned i;
+    int result;
+    if (!s) return AGI_SOUND_ARGUMENT;
+    result = agi_runtime_sound_state_valid(s, cb);
+    if (result != AGI_SOUND_OK) return result;
+    if (UINT64_MAX - s->output_sequence < AGI_SOUND_OUTPUT_MAX)
+        return AGI_SOUND_LIMIT;
+    if (s->active && (!resource(cb, s->resource, &data, &length) ||
+        length != s->resource_size || overlaps(s, sizeof(*s), data, length)))
+        return AGI_SOUND_RESOURCE;
+    next = *s;
+    memset(&next.last_output, 0, sizeof(next.last_output));
+    if (channel_count(next.device) == 1) {
+        const AgiRuntimeSoundChannel *c = &next.channels[0];
+        bool enabled = next.active && !c->finished && c->attenuation != 15;
+        emit(&next, AGI_SOUND_SPEAKER, 0, enabled ? c->divisor : 0, enabled);
+    } else {
+        for (i = 0; i < AGI_SOUND_CHANNELS; i++) {
+            const AgiRuntimeSoundChannel *c = &next.channels[i];
+            uint32_t value = next.active && !c->finished ? c->attenuation : 15;
+            /* Before the first tick, no note has been read. An ongoing muted
+             * note still needs its tone restored: a later attenuation update
+             * may unmute it without issuing another tone command. */
+            if (next.active && !c->finished && c->offset != word(data + i * 2)) {
+                uint32_t high = c->tone >> 8;
+                emit(&next, AGI_SOUND_COMMAND, i, high, 1);
+                if ((high & 0xe0) != 0xe0)
+                    emit(&next, AGI_SOUND_COMMAND, i, c->tone & 255, 1);
+            }
+            emit(&next, AGI_SOUND_COMMAND, i, selectors[i] | value, value != 15);
+        }
+    }
+    publish(s, &next, cb);
+    return AGI_SOUND_OK;
+}

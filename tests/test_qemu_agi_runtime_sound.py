@@ -78,6 +78,7 @@ def sound_native(tmp_path_factory):
         "agi_runtime_sound_start": ([state, U8, U8, U8, flags, cb], C.c_int),
         "agi_runtime_sound_tick": ([state, flags, U8, cb], C.c_int),
         "agi_runtime_sound_stop": ([state, flags, cb], C.c_int),
+        "agi_runtime_sound_resync": ([state, cb], C.c_int),
     }
     for name, (args, result) in signatures.items():
         getattr(lib, name).argtypes = args
@@ -152,6 +153,10 @@ class Sound:
     def valid(self):
         return self.lib.agi_runtime_sound_state_valid(C.byref(self.state),
                                                       C.byref(self.callbacks))
+
+    def resync(self):
+        return self.lib.agi_runtime_sound_resync(C.byref(self.state),
+                                                 C.byref(self.callbacks))
 
     def checkpoint(self):
         return raw(self.state), bytes(self.flags), list(self.outputs)
@@ -351,3 +356,104 @@ def test_observation_callback_does_not_change_sound_state(sound_native):
         assert bytes(observed.flags) == bytes(silent.flags)
         assert observed.valid() == silent.valid() == 0
     assert observed.outputs and not silent.outputs
+
+
+def sequencer_fields(state):
+    """All state except the deliberately changed output journal fields."""
+    value = State.from_buffer_copy(raw(state))
+    value.output_sequence = 0
+    value.last_output = Output()
+    return raw(value)
+
+
+@pytest.mark.parametrize("device", [0, 8])
+@pytest.mark.parametrize("control,divisor,enabled", [(0x90, 10560, 1), (0x9F, 0, 0)])
+def test_resync_restores_speaker_gate_without_time_or_flag_changes(sound_native,
+                                                                  device, control, divisor, enabled):
+    s = Sound(sound_native, payload([(20, 0x8037, control)]))
+    assert s.start(device=device) == 0 and s.tick(3) == 0
+    before, flags, sequence = sequencer_fields(s.state), bytes(s.flags), s.state.output_sequence
+    count = len(s.outputs)
+    assert s.resync() == 0
+    assert s.outputs[count:] == [(sequence + 1, 3, 1, 0, divisor, enabled)]
+    assert sequencer_fields(s.state) == before and bytes(s.flags) == flags
+
+
+def test_resync_restores_each_tandy_latch_and_current_attenuation(sound_native):
+    s = Sound(sound_native, payload([(5, 0x8037, 0x95)], [(1, 0xA218, 0xB5)],
+                                    [(8, 0xC132, 0xD9)], [(6, 0xE437, 0xF7)]))
+    assert s.start(device=1) == 0 and s.tick(2) == 0
+    before, flags, sequence = sequencer_fields(s.state), bytes(s.flags), s.state.output_sequence
+    count = len(s.outputs)
+    assert s.resync() == 0
+    restored = s.outputs[count:]
+    assert [e[4] for e in restored] == [0x80, 0x37, 0x92, 0xBF, 0xC1, 0x32, 0xD6, 0xE4, 0xF7]
+    assert [e[0] for e in restored] == list(range(sequence + 1, sequence + 10))
+    assert all(e[1] == 2 for e in restored)
+    assert sequencer_fields(s.state) == before and bytes(s.flags) == flags
+    assert s.valid() == 0
+
+
+def test_resync_restores_muted_tone_before_a_later_unmute(sound_native):
+    s = Sound(sound_native, payload([(20, 0x8037, 0x95)]))
+    assert s.start(device=1) == 0 and s.tick(attenuation=255) == 0
+    count = len(s.outputs)
+    assert s.resync() == 0
+    assert [e[4] for e in s.outputs[count:]][:3] == [0x80, 0x37, 0x9F]
+    count = len(s.outputs)
+    assert s.tick() == 0
+    assert [e[4] for e in s.outputs[count:] if e[3] == 0] == [0x92]
+
+
+@pytest.mark.parametrize("device,values", [(0, [0]), (1, [0x9F, 0xBF, 0xDF, 0xFF])])
+def test_resync_before_first_read_silences_without_reading_a_note(sound_native, device, values):
+    s = Sound(sound_native, payload([(20, 0x8037, 0x90)]))
+    assert s.start(device=device) == 0
+    before, flags = sequencer_fields(s.state), bytes(s.flags)
+    assert s.resync() == 0
+    assert [e[4] for e in s.outputs] == values
+    assert all(e[1] == 0 and e[5] == 0 for e in s.outputs)
+    assert sequencer_fields(s.state) == before and bytes(s.flags) == flags
+
+
+@pytest.mark.parametrize("device,values", [(0, [0]), (1, [0x9F, 0xBF, 0xDF, 0xFF])])
+def test_resync_inactive_snapshot_explicitly_silences_without_recompleting(sound_native, device, values):
+    s = Sound(sound_native, payload([(20, 0x8037, 0x90)]))
+    assert s.start(device=device) == 0 and s.tick() == 0 and s.stop() == 0
+    s.flags[8] = 0
+    s.blobs.clear()
+    before, flags, count = sequencer_fields(s.state), bytes(s.flags), len(s.outputs)
+    assert s.resync() == 0
+    assert [e[4] for e in s.outputs[count:]] == values
+    assert all(e[5] == 0 for e in s.outputs[count:])
+    assert sequencer_fields(s.state) == before and bytes(s.flags) == flags
+
+
+@pytest.mark.parametrize("corruption", ["missing", "malformed", "offset", "remaining", "sequence"])
+def test_resync_rejects_invalid_state_or_resource_without_publishing(sound_native, corruption):
+    s = Sound(sound_native, payload([(20, 0x8037, 0x90)]))
+    assert s.start(device=1) == 0 and s.tick() == 0
+    if corruption == "missing":
+        s.blobs.clear()
+    elif corruption == "malformed":
+        s.set_blob(1, b"\x00" * s.state.resource_size)
+    elif corruption == "offset":
+        s.state.channels[0].offset += 1
+    elif corruption == "remaining":
+        s.state.channels[0].countdown += 1
+    else:
+        s.state.output_sequence = (1 << 64) - 1
+    before = s.checkpoint()
+    assert s.resync() < 0 and s.checkpoint() == before
+
+
+def test_resync_can_stage_commands_without_calling_a_device(sound_native):
+    data = payload([(5, 0x8037, 0x95)], [], [], [(3, 0xE037, 0xF8)])
+    observed, staged = Sound(sound_native, data), Sound(sound_native, data, observe=False)
+    assert observed.start(device=2) == staged.start(device=2) == 0
+    assert observed.tick(2) == staged.tick(2) == 0
+    assert observed.resync() == staged.resync() == 0
+    assert raw(observed.state) == raw(staged.state)
+    assert bytes(observed.flags) == bytes(staged.flags)
+    assert observed.outputs and not staged.outputs
+    assert staged.state.last_output.count > 0

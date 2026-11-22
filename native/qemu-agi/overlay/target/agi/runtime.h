@@ -20,6 +20,7 @@
 #define AGI_RT_MENU_ITEMS 256u
 #define AGI_RT_SCRIPT 4096u
 #define AGI_RT_EVENTS_MAX 65536u
+#define AGI_RT_RESOURCE_BUDGET (64u * 1024u * 1024u)
 
 enum AgiRuntimeStatus {
     AGI_RT_READY, AGI_RT_RUNNING, AGI_RT_BUDGET, AGI_RT_RETURN,
@@ -108,18 +109,21 @@ typedef struct AgiRuntimeState {
     uint32_t graphics, foreground, background, cursor, status_line;
     uint32_t min_print_line, input_line, status_line_row;
     uint32_t window_open, dialogue, monitor, upper_left_x, upper_left_y;
+    uint32_t window_x, window_y, window_width, window_height;
     uint8_t text[25][40], text_fg[25][40], text_bg[25][40];
+    uint8_t window_text[25][40], window_fg[25][40], window_bg[25][40];
     uint8_t picture_visual[AGI_RUNTIME_PLANE_BYTES];
     uint8_t picture_priority[AGI_RUNTIME_PLANE_BYTES];
     uint32_t picture_shown, picture_id;
     /* These summaries derive from sound, never drive the sequencer. */
-    uint32_t sound_active, sound_id, sound_flag;
+    uint32_t sound_active, sound_id, sound_flag, sound_device;
     uint64_t sound_remaining;
     AgiRuntimeSound sound;
     uint32_t menu_count, menu_item_count, menu_submitted;
     AgiRuntimeMenu menus[AGI_RT_MENUS];
     AgiRuntimeMenuItem menu_items[AGI_RT_MENU_ITEMS];
     uint32_t simple_save, script_capacity, script_count, script_saved;
+    char simple_description[AGI_RT_STRING_BYTES];
     AgiRuntimeScriptEntry script[AGI_RT_SCRIPT];
     uint32_t trace_enabled, trace_logic, trace_top, trace_height;
 } AgiRuntimeState;
@@ -155,7 +159,9 @@ int agi_runtime_step(AgiRuntime *runtime);
 int agi_runtime_run(AgiRuntime *runtime, uint64_t budget);
 bool agi_runtime_cycle(AgiRuntime *runtime);
 bool agi_runtime_tick(AgiRuntime *runtime, uint32_t ticks);
+bool agi_runtime_clock_ticks(AgiRuntime *runtime, uint32_t ticks);
 bool agi_runtime_sound_ticks(AgiRuntime *runtime, uint32_t ticks);
+bool agi_runtime_set_sound_device(AgiRuntime *runtime, uint32_t device);
 void agi_runtime_set_sound_output(AgiRuntime *runtime,
                                   AgiRuntimeSoundSink sink, void *opaque);
 bool agi_runtime_input(AgiRuntime *runtime, const char *text);

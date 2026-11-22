@@ -11,11 +11,63 @@
 #include "qobject/qstring.h"
 #include "runtime_qom.h"
 
+typedef struct AgiCapturedSound {
+    uint64_t seq, native_epoch;
+    AgiRuntimeSoundEvent event;
+} AgiCapturedSound;
+
+typedef struct AgiSoundJournalState {
+    uint32_t count;
+    uint64_t epoch, eligible, dropped, last_seq;
+    uint64_t native_epoch, last_native_sequence, last_native_tick;
+} AgiSoundJournalState;
+
 typedef struct AgiOwnedRuntime {
     AgiRuntime runtime; /* returned address; remains the first member */
     AgiRuntimeResources resources;
     AgiRuntimeEvent *event_storage;
+    AgiCapturedSound *sound_storage;
+    AgiSoundJournalState sound_journal;
 } AgiOwnedRuntime;
+
+static void capture_sound(void *opaque, const AgiRuntimeSoundEvent *events,
+                           uint32_t count)
+{
+    AgiOwnedRuntime *owned = opaque;
+    AgiSoundJournalState *journal = &owned->sound_journal;
+    uint32_t i;
+    for (i = 0; i < count; i++) {
+        const AgiRuntimeSoundEvent *event = &events[i];
+        if (journal->last_native_sequence &&
+            (event->sequence <= journal->last_native_sequence ||
+             event->tick < journal->last_native_tick)) {
+            journal->native_epoch++;
+        }
+        journal->last_native_sequence = event->sequence;
+        journal->last_native_tick = event->tick;
+        journal->eligible++;
+        journal->last_seq++;
+        if (journal->count < AGI_RUNTIME_SOUND_CAPACITY) {
+            AgiCapturedSound *capture = &owned->sound_storage[journal->count++];
+            capture->seq = journal->last_seq;
+            capture->native_epoch = journal->native_epoch;
+            capture->event = *event;
+        } else {
+            journal->dropped++;
+        }
+    }
+}
+
+static AgiOwnedRuntime *sound_owner(const AgiRuntime *runtime)
+{
+    AgiOwnedRuntime *owned;
+    if (!runtime || runtime->sound_output != capture_sound ||
+        !runtime->sound_output_opaque) {
+        return NULL;
+    }
+    owned = runtime->sound_output_opaque;
+    return &owned->runtime == runtime ? owned : NULL;
+}
 
 static bool keys_match(const QDict *dict, const char *const *names,
                        size_t count, size_t required, const char *label,
@@ -475,6 +527,7 @@ void agi_runtime_free(AgiRuntime *runtime)
     }
     g_free((void *)owned->resources.words);
     g_free(owned->event_storage);
+    g_free(owned->sound_storage);
     g_free(owned);
 }
 
@@ -544,12 +597,19 @@ AgiRuntime *agi_runtime_load_package(const char *filename, Error **errp)
         error_setg(errp, "AGI_RUNTIME: insufficient memory for bounded event storage");
         goto fail;
     }
+    owned->sound_storage = g_try_new0(AgiCapturedSound, AGI_RUNTIME_SOUND_CAPACITY);
+    if (!owned->sound_storage) {
+        error_setg(errp, "AGI_RUNTIME: insufficient memory for bounded sound journal");
+        goto fail;
+    }
     if (!agi_runtime_init(&owned->runtime, &owned->resources,
                            owned->event_storage, AGI_RT_EVENTS_MAX)) {
         error_setg(errp, "AGI_RUNTIME: core rejected package initialization");
         goto fail;
     }
     owned->runtime.obs_capacity = 4096;
+    owned->sound_journal.epoch = 1;
+    agi_runtime_set_sound_output(&owned->runtime, capture_sound, owned);
     qobject_unref(root);
     return &owned->runtime;
 fail:
@@ -567,7 +627,10 @@ static bool runtime_valid(const AgiRuntime *r, Error **errp)
         r->state.parsed_count > AGI_RT_WORDS || r->state.key_count > 256 ||
         r->state.menu_count > AGI_RT_MENUS ||
         r->state.menu_item_count > AGI_RT_MENU_ITEMS ||
-        r->state.script_count > AGI_RT_SCRIPT) {
+        r->state.script_count > AGI_RT_SCRIPT ||
+        r->state.view_order_count > 256 || r->state.picture_order_count > 256 ||
+        r->state.sound.channel_count > AGI_SOUND_CHANNELS ||
+        r->state.sound.last_output.count > AGI_SOUND_OUTPUT_MAX) {
         error_setg(errp, "AGI_RUNTIME: unavailable or invalid native runtime state");
         return false;
     }
@@ -715,6 +778,46 @@ static QDict *pending_object(const AgiRuntimePending *p, Error **errp)
     return out;
 }
 
+static QDict *sound_object(const AgiRuntimeSound *sound)
+{
+    QDict *out = qdict_new(), *output = qdict_new();
+    QList *channels = qlist_new(), *events = qlist_new();
+    unsigned i;
+#define SOUND_U(name) put_uint(out, #name, sound->name)
+    SOUND_U(active); SOUND_U(resource); SOUND_U(completion_flag); SOUND_U(device);
+    SOUND_U(channel_count); SOUND_U(resource_size); SOUND_U(ticks);
+    SOUND_U(output_sequence); SOUND_U(remaining);
+#undef SOUND_U
+    put_uint(out, "ticks_per_second", AGI_SOUND_TICKS_PER_SECOND);
+    qdict_put(out, "channels", channels);
+    for (i = 0; i < AGI_SOUND_CHANNELS; i++) {
+        const AgiRuntimeSoundChannel *channel = &sound->channels[i];
+        QDict *row = qdict_new();
+        put_uint(row, "id", i);
+#define SOUND_CHANNEL_U(name) put_uint(row, #name, channel->name)
+        SOUND_CHANNEL_U(offset); SOUND_CHANNEL_U(countdown); SOUND_CHANNEL_U(finished);
+        SOUND_CHANNEL_U(tone); SOUND_CHANNEL_U(divisor);
+        SOUND_CHANNEL_U(base_attenuation); SOUND_CHANNEL_U(attenuation);
+        SOUND_CHANNEL_U(envelope_index); SOUND_CHANNEL_U(envelope_value);
+        SOUND_CHANNEL_U(remaining);
+#undef SOUND_CHANNEL_U
+        qlist_append(channels, row);
+    }
+    qdict_put(out, "last_output", output);
+    put_uint(output, "count", sound->last_output.count);
+    qdict_put(output, "events", events);
+    for (i = 0; i < AGI_SOUND_OUTPUT_MAX; i++) {
+        const AgiRuntimeSoundEvent *event = &sound->last_output.events[i];
+        QDict *row = qdict_new();
+#define SOUND_EVENT_U(name) put_uint(row, #name, event->name)
+        SOUND_EVENT_U(sequence); SOUND_EVENT_U(tick); SOUND_EVENT_U(kind);
+        SOUND_EVENT_U(channel); SOUND_EVENT_U(value); SOUND_EVENT_U(enabled);
+#undef SOUND_EVENT_U
+        qlist_append(events, row);
+    }
+    return out;
+}
+
 static QDict *observation_object(const AgiRuntime *r)
 {
     QDict *out = qdict_new(), *channels = qdict_new();
@@ -743,6 +846,23 @@ static QDict *observation_object(const AgiRuntime *r)
     return out;
 }
 
+static QDict *sound_journal_object(const AgiOwnedRuntime *owned)
+{
+    QDict *out = qdict_new();
+    qdict_put_bool(out, "available", owned != NULL);
+    if (owned) {
+        const AgiSoundJournalState *journal = &owned->sound_journal;
+        put_uint(out, "capacity", AGI_RUNTIME_SOUND_CAPACITY);
+        put_uint(out, "count", journal->count);
+        put_uint(out, "epoch", journal->epoch);
+        put_uint(out, "eligible", journal->eligible);
+        put_uint(out, "dropped", journal->dropped);
+        put_uint(out, "last_seq", journal->last_seq);
+        put_uint(out, "native_epoch", journal->native_epoch);
+    }
+    return out;
+}
+
 char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
 {
     const AgiRuntimeState *s;
@@ -761,6 +881,7 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
     qdict_put(root, "source", source_object(r));
     qdict_put(root, "guest", guest);
     qdict_put(root, "observation", observation_object(r));
+    qdict_put(root, "sound_output", sound_journal_object(sound_owner(r)));
     put_uint(run, "retired", r->run_retired);
     qdict_put(root, "run", run);
     qdict_put(guest, "variables", byte_array(s->v, 256));
@@ -769,6 +890,10 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
     qdict_put(guest, "loaded_logics", byte_array(s->loaded_logics, 256));
     qdict_put(guest, "loaded_pictures", byte_array(s->loaded_pictures, 256));
     qdict_put(guest, "loaded_sounds", byte_array(s->loaded_sounds, 256));
+    qdict_put(guest, "view_order", byte_array(s->view_order, 256));
+    qdict_put(guest, "picture_order", byte_array(s->picture_order, 256));
+    put_uint(guest, "view_order_count", s->view_order_count);
+    put_uint(guest, "picture_order_count", s->picture_order_count);
     qdict_put(guest, "loaded_views", byte_array(s->world.loaded_views, 256));
     qdict_put(guest, "priority_bands", byte_array(s->world.priority_bands, AGI_RUNTIME_HEIGHT));
     put_uint(guest, "horizon", s->world.horizon);
@@ -797,12 +922,14 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
     STATE_U(graphics); STATE_U(foreground); STATE_U(background); STATE_U(cursor);
     STATE_U(status_line); STATE_U(min_print_line); STATE_U(input_line);
     STATE_U(status_line_row); STATE_U(window_open); STATE_U(dialogue); STATE_U(monitor);
+    STATE_U(window_x); STATE_U(window_y); STATE_U(window_width); STATE_U(window_height);
     STATE_U(upper_left_x); STATE_U(upper_left_y); STATE_U(picture_shown); STATE_U(picture_id);
-    STATE_U(sound_active); STATE_U(sound_id); STATE_U(sound_flag); STATE_U(sound_remaining);
+    STATE_U(sound_active); STATE_U(sound_id); STATE_U(sound_flag); STATE_U(sound_device); STATE_U(sound_remaining);
     STATE_U(menu_count); STATE_U(menu_item_count); STATE_U(menu_submitted);
     STATE_U(simple_save); STATE_U(script_capacity); STATE_U(script_count); STATE_U(script_saved);
     STATE_U(trace_enabled); STATE_U(trace_logic); STATE_U(trace_top); STATE_U(trace_height);
 #undef STATE_U
+    qdict_put(guest, "sound", sound_object(&s->sound));
     qdict_put_str(guest, "status", agi_runtime_status_name(s->status));
     put_uint(guest, "status_code", s->status);
     put_uint(guest, "fault_code", s->fault);
@@ -849,7 +976,9 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
     }
     if (!put_fixed_text(guest, "input", s->input, sizeof(s->input), errp) ||
         !put_fixed_text(guest, "echo", s->echo, sizeof(s->echo), errp) ||
-        !put_fixed_text(guest, "game_id", s->game_id, sizeof(s->game_id), errp)) {
+        !put_fixed_text(guest, "game_id", s->game_id, sizeof(s->game_id), errp) ||
+        !put_fixed_text(guest, "simple_description", s->simple_description,
+                         sizeof(s->simple_description), errp)) {
         goto fail;
     }
     qdict_put(guest, "word_ids", word_array(s->word_ids, AGI_RT_WORDS));
@@ -891,16 +1020,20 @@ char *agi_runtime_state_json(const AgiRuntime *r, Error **errp)
     }
     script = qlist_new();
     qdict_put(guest, "script", script);
+    qdict_put_str(guest, "script_entry_encoding", "agi-replay-byte-pairs-1");
     for (i = 0; i < AGI_RT_SCRIPT; i++) {
         QDict *entry = qdict_new();
-        put_uint(entry, "opcode", s->script[i].opcode);
+        uint32_t pair[2] = {s->script[i].opcode, s->script[i].args[0]};
+        qdict_put(entry, "pair", uint_array(pair, 2));
         qdict_put(entry, "args", byte_array(s->script[i].args, 7));
         qlist_append(script, entry);
     }
 #define STATE_HEX(name) put_hex(guest, #name "_hex", s->name, sizeof(s->name), errp)
     if (!STATE_HEX(strings) || !STATE_HEX(input) || !STATE_HEX(echo) ||
-        !STATE_HEX(game_id) || !STATE_HEX(parsed_words) || !STATE_HEX(text) ||
-        !STATE_HEX(text_fg) || !STATE_HEX(text_bg) || !STATE_HEX(picture_visual) ||
+        !STATE_HEX(game_id) || !STATE_HEX(simple_description) ||
+        !STATE_HEX(parsed_words) || !STATE_HEX(text) ||
+        !STATE_HEX(text_fg) || !STATE_HEX(text_bg) || !STATE_HEX(window_text) ||
+        !STATE_HEX(window_fg) || !STATE_HEX(window_bg) || !STATE_HEX(picture_visual) ||
         !STATE_HEX(picture_priority) ||
         !put_hex(guest, "pending_storage_hex", &s->pending, sizeof(s->pending), errp)) {
         goto fail;
@@ -1026,6 +1159,58 @@ char *agi_runtime_snapshot_hex(const AgiRuntime *r, Error **errp)
     return encode_hex(bytes, size, errp);
 }
 
+char *agi_runtime_sound_json(const AgiRuntime *r, Error **errp)
+{
+    static const char *const columns[] = {
+        "seq", "native_epoch", "sequence", "tick", "kind", "channel", "value", "enabled"
+    };
+    AgiOwnedRuntime *owned;
+    QDict *header;
+    QList *names;
+    GString *out;
+    char *prefix;
+    uint32_t i;
+    if (!runtime_valid(r, errp)) {
+        return NULL;
+    }
+    owned = sound_owner(r);
+    if (!owned || !owned->sound_storage || owned->sound_journal.count > AGI_RUNTIME_SOUND_CAPACITY) {
+        error_setg(errp, "AGI_RUNTIME: owned sound capture is unavailable");
+        return NULL;
+    }
+    header = sound_journal_object(owned);
+    qdict_put_str(header, "schema", AGI_RUNTIME_SOUND_SCHEMA);
+    qdict_put(header, "source", source_object(r));
+    names = qlist_new();
+    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
+        qlist_append_str(names, columns[i]);
+    }
+    qdict_put(header, "columns", names);
+    prefix = json_string(header);
+    out = g_string_new_len(prefix, strlen(prefix) - 1);
+    g_free(prefix);
+    g_string_append(out, ",\"events\":[");
+    for (i = 0; i < owned->sound_journal.count; i++) {
+        const AgiCapturedSound *capture = &owned->sound_storage[i];
+        const AgiRuntimeSoundEvent *event = &capture->event;
+        if (!event->sequence || event->kind < AGI_SOUND_SPEAKER || event->kind > AGI_SOUND_COMMAND ||
+            event->channel >= AGI_SOUND_CHANNELS || event->enabled > 1 ||
+            event->value > (event->kind == AGI_SOUND_SPEAKER ? 12276u : 255u)) {
+            g_string_free(out, true);
+            error_setg(errp, "AGI_RUNTIME: invalid captured sound event");
+            return NULL;
+        }
+        /* Four uint64 values plus bounded device scalars: even a full
+         * 262144-row journal remains below the 32MiB QMP line budget. */
+        g_string_append_printf(out, "%s[%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
+                               ",%u,%u,%u,%u]", i ? "," : "", capture->seq,
+                               capture->native_epoch, event->sequence, event->tick,
+                               event->kind, event->channel, event->value, event->enabled);
+    }
+    g_string_append(out, "]}");
+    return g_string_free(out, false);
+}
+
 static bool seed_array(QDict *values, uint8_t out[256], unsigned maximum,
                        const char *label, Error **errp)
 {
@@ -1072,17 +1257,25 @@ bool agi_runtime_command_json(AgiRuntime *r, const char *text, Error **errp)
     static const char *const complete_fields[] = {"action", "id", "accepted", "text", "number"};
     static const char *const restore_fields[] = {"action", "id", "snapshot"};
     static const char *const seed_fields[] = {"action", "variables", "flags"};
+    static const char *const sound_clear_fields[] = {"action", "epoch", "through"};
+    static const char *const sound_device_fields[] = {"action", "device"};
     g_autofree AgiRuntime *saved = NULL;
     g_autofree uint8_t *snapshot = NULL;
     g_autofree char *native_text = NULL;
     QObject *root;
     QDict *command;
     const char *action;
+    AgiOwnedRuntime *owned;
+    AgiSoundJournalState saved_journal = {0};
     uint64_t number = 0, id;
     bool success = false;
     size_t limit = agi_runtime_snapshot_size() * 2 + 8192, length;
     if (!runtime_valid(r, errp)) {
         return false;
+    }
+    owned = sound_owner(r);
+    if (owned) {
+        saved_journal = owned->sound_journal;
     }
     if (!text || (length = strnlen(text, limit + 1)) > limit || !length) {
         error_setg(errp, "AGI_RUNTIME: command is empty or exceeds its bounded JSON extent");
@@ -1115,7 +1308,8 @@ bool agi_runtime_command_json(AgiRuntime *r, const char *text, Error **errp)
             goto out;
         }
         success = agi_runtime_cycle(r);
-    } else if (!strcmp(action, "tick")) {
+    } else if (!strcmp(action, "tick") || !strcmp(action, "sound-tick") ||
+               !strcmp(action, "clock")) {
         if (!keys_match(command, tick_fields, G_N_ELEMENTS(tick_fields), 2, "tick", errp) ||
             !uint_value(qdict_get(command, "ticks"), 4096, &number, "ticks", errp)) {
             goto out;
@@ -1124,7 +1318,20 @@ bool agi_runtime_command_json(AgiRuntime *r, const char *text, Error **errp)
             error_setg(errp, "AGI_RUNTIME: ticks must be in 1..4096");
             goto out;
         }
-        success = agi_runtime_tick(r, number);
+        if (!strcmp(action, "tick")) {
+            success = agi_runtime_tick(r, number);
+        } else if (!strcmp(action, "sound-tick")) {
+            success = agi_runtime_sound_ticks(r, number);
+        } else {
+            success = agi_runtime_clock_ticks(r, number);
+        }
+    } else if (!strcmp(action, "sound-device")) {
+        if (!keys_match(command, sound_device_fields, G_N_ELEMENTS(sound_device_fields), 2,
+                         "sound-device", errp) ||
+            !uint_value(qdict_get(command, "device"), 1, &number, "sound-device.device", errp)) {
+            goto out;
+        }
+        success = agi_runtime_set_sound_device(r, number);
     } else if (!strcmp(action, "input")) {
         const char *input;
         if (!keys_match(command, input_fields, G_N_ELEMENTS(input_fields), 2, "input", errp)) {
@@ -1217,6 +1424,23 @@ bool agi_runtime_command_json(AgiRuntime *r, const char *text, Error **errp)
             goto out;
         }
         success = id && agi_runtime_restore(r, id, snapshot, size);
+    } else if (!strcmp(action, "sound-clear")) {
+        uint64_t epoch, through;
+        if (!keys_match(command, sound_clear_fields, G_N_ELEMENTS(sound_clear_fields), 3,
+                         "sound-clear", errp) ||
+            !uint_value(qdict_get(command, "epoch"), UINT64_MAX, &epoch, "sound-clear.epoch", errp) ||
+            !uint_value(qdict_get(command, "through"), UINT64_MAX, &through, "sound-clear.through", errp)) {
+            goto out;
+        }
+        if (!owned || owned->sound_journal.epoch != epoch ||
+            owned->sound_journal.last_seq != through || epoch == UINT64_MAX) {
+            error_setg(errp, "AGI_RUNTIME: sound clear requires the exact current journal epoch and last_seq");
+            goto out;
+        }
+        owned->sound_journal.count = 0;
+        owned->sound_journal.eligible = owned->sound_journal.dropped = 0;
+        owned->sound_journal.epoch++;
+        success = true;
     } else if (!strcmp(action, "seed")) {
         bool has_variables = qdict_haskey(command, "variables");
         bool has_flags = qdict_haskey(command, "flags");
@@ -1254,6 +1478,9 @@ out:
          * every architectural/observer field as an additional boundary guard;
          * uncommitted storage beyond obs_count is not publicly observable. */
         *r = *saved;
+        if (owned) {
+            owned->sound_journal = saved_journal;
+        }
     }
     qobject_unref(root);
     return success;

@@ -16,6 +16,7 @@
 #include "system/tcg.h"
 #include "cpu.h"
 #include "runtime_qom.h"
+#include "runtime_devices.h"
 
 static const char *const status_names[] = {
     "ready", "running", "budget", "return", "fault", "external", "effect"
@@ -694,6 +695,16 @@ static char *agi_get_runtime_snapshot(Object *obj, Error **errp)
     AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
     return runtime ? agi_runtime_snapshot_hex(runtime, errp) : NULL;
 }
+static char *agi_get_runtime_sound(Object *obj, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    return runtime ? agi_runtime_sound_json(runtime, errp) : NULL;
+}
+static char *agi_get_runtime_presentation(Object *obj, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    return runtime ? agi_runtime_presentation_json(runtime, errp) : NULL;
+}
 static void agi_set_runtime_command(Object *obj, const char *value, Error **errp)
 {
     AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
@@ -735,6 +746,8 @@ static void agi_instance_init(Object *obj)
                          agi_set_decode_logic, NULL, NULL);
     object_property_add_str(obj, "agi-runtime-scene-json", agi_get_runtime_scene, NULL);
     object_property_add_str(obj, "agi-runtime-snapshot-hex", agi_get_runtime_snapshot, NULL);
+    object_property_add_str(obj, "agi-runtime-sound-json", agi_get_runtime_sound, NULL);
+    object_property_add_str(obj, "agi-runtime-presentation-json", agi_get_runtime_presentation, NULL);
     object_property_add_str(obj, "agi-runtime-command", NULL, agi_set_runtime_command);
 }
 

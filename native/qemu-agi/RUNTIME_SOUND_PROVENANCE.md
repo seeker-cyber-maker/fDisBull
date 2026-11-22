@@ -55,6 +55,19 @@ and explicit silence. This implements the behavioral specification's output
 boundary. Analog synthesis and delivery to a host audio device are external
 services and are not claimed by this module.
 
+`resync` reconstructs that output boundary after a snapshot is restored or a
+device is rebound. It validates the state and its active resource, then emits
+the current speaker divisor/gate or each four-channel tone and attenuation.
+Finished and not-yet-read channels are explicitly silenced. An ongoing muted
+note still restores its tone, because a later envelope or global attenuation
+change can unmute the note without another tone latch. Resynchronization does
+not advance time, notes, envelopes, or completion flags; only `output_sequence`
+and `last_output` change. A null output callback stages those commands for an
+atomic parent-runtime commit. The caller must supply the target device identity
+even for a pristine inactive sound and retain or rebase its host journal epoch
+when restoring a sequence number from an older snapshot. These are integration
+requirements, not an added sound tick in the original interpreter's playback.
+
 Starting a new valid sound completes the old flag before clearing the new
 flag, including when both are the same flag. A start with f9 clear still
 clears its completion flag; the next sound tick observes f9 and stops without
@@ -88,6 +101,13 @@ per-note latch/data order, noise output, envelope deltas and termination,
 global/device attenuation order, silent events, flag replacement, malformed
 resources, failed-operation atomicity, snapshot boundaries, and equality with
 the observer enabled and disabled. All resource bytes are authored in the tests.
+
+The subsequent restore-output verification passes 49 cases in total. Its 16
+additional cases cover sounding and silent speaker restoration, four-channel
+tone/noise/volume ordering, completed-channel silence, a muted note followed by
+unmute, the initial unread tick, inactive snapshots, unchanged flags and all
+sequencing fields, staged output, and atomic rejection of missing/malformed
+resources, invalid offsets/countdowns, or exhausted output sequence numbers.
 
 A separate AddressSanitizer and UndefinedBehaviorSanitizer harness also passes
 20,000 authored/mutated resource trials, checking validation rollback, failed

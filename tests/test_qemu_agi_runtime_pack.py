@@ -598,17 +598,35 @@ def test_implemented_text_outputs_are_recorded_before_ack(services, boundary, op
     assert boundary.commands == [{"action": "complete", "id": 1, "accepted": True}]
 
 
-@pytest.mark.parametrize("opcode", [29, 110, 124, 127, 129, 133, 139, 162])
-def test_unimplemented_devices_remain_pending_without_silent_success(services, boundary, opcode):
+@pytest.mark.parametrize("opcode", [29, 110, 124, 129, 133, 139, 162])
+def test_unavailable_device_payload_never_gets_silent_success(services, runtime, boundary, opcode, monkeypatch):
     adapter = services.RuntimeServices(boundary)
     boundary.request(opcode)
     before = boundary.state()
-    assert adapter.handle()["status"] == "unsupported"
-    assert adapter.handle(choice={"accepted": True})["status"] == "unsupported"
+    def unavailable():
+        raise runtime.HarnessError("Native presentation is unavailable")
+    monkeypatch.setattr(boundary, "presentation", unavailable)
+    with pytest.raises(runtime.HarnessError, match="unavailable"):
+        adapter.handle()
+    if opcode != 139:
+        with pytest.raises(runtime.HarnessError, match="unavailable"):
+            adapter.handle(choice={"accepted": True})
+    else:
+        with pytest.raises(ValueError, match="calibrated"):
+            adapter.handle(choice={"accepted": True})
     assert boundary.state() == before and boundary.commands == []
     assert adapter.ledger["entries"] == []
     assert adapter.handle(choice={"accepted": False})["status"] == "cancelled"
     assert boundary.commands[-1]["accepted"] is False
+
+
+def test_unknown_native_effect_has_no_implicit_service(services, boundary):
+    # The transport double can supply an unregistered effect; real init.disk
+    # is now a native compatibility no-op and never produces this request.
+    adapter = services.RuntimeServices(boundary)
+    boundary.request(127)
+    assert adapter.handle()["status"] == "unsupported"
+    assert boundary.commands == [] and adapter.ledger["entries"] == []
 
 
 @pytest.mark.parametrize("opcode,reply,args,choice", [

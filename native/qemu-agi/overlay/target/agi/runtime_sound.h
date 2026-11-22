@@ -77,5 +77,13 @@ int agi_runtime_sound_tick(AgiRuntimeSound *sound, uint8_t flags[256],
                            const AgiRuntimeSoundCallbacks *callbacks);
 int agi_runtime_sound_stop(AgiRuntimeSound *sound, uint8_t flags[256],
                            const AgiRuntimeSoundCallbacks *callbacks);
+/* Reconstruct the current device output after restoring/rebinding a snapshot.
+ * Does not advance time, notes, envelopes, completion, or caller flags. Only
+ * output_sequence/last_output change, after full state/resource validation.
+ * Inactive and not-yet-read channels are explicitly silenced. The state device
+ * must identify the target hardware, including an inactive initial snapshot.
+ * Passing callbacks->output=NULL stages the committed commands for the caller. */
+int agi_runtime_sound_resync(AgiRuntimeSound *sound,
+                             const AgiRuntimeSoundCallbacks *callbacks);
 
 #endif

@@ -70,13 +70,21 @@ def test_qom_complete_architecture_observation_neutrality_and_scene(binary):
             }
             assert guest["status"] == "return" and guest["retired"] == 9
             assert guest["variables"][50] == 8 and guest["loaded_views"][1] == 1
+            assert guest["view_order_count"] == 1 and guest["view_order"][0] == 1
+            assert len(guest["picture_order"]) == 256 and not guest["picture_order_count"]
             assert len(guest["actors"]) == 256 and guest["actors"][1]["drawn"]
             assert len(guest["stack"]) == 64 and len(guest["script"]) == 4096
+            assert guest["script_entry_encoding"] == "agi-replay-byte-pairs-1"
+            assert guest["script_count"] == 1 and guest["script"][0]["pair"] == [1, 1]
+            assert len(guest["sound"]["channels"]) == 4
+            assert len(guest["sound"]["last_output"]["events"]) == 16
             assert len(guest["strings"]) == 25 and len(guest["menu_items"]) == 256
             assert len(guest["state_bytes_sha256"]) == 64
             assert guest["state_encoding"] == "agi-runtime-native-abi-1"
             assert guest["state_bytes_size"] > 100000
             assert len(guest["picture_visual_hex"]) == 160 * 168 * 2
+            assert len(guest["window_text_hex"]) == len(guest["window_fg_hex"]) == len(guest["window_bg_hex"]) == 2000
+            assert (guest["window_x"], guest["window_y"], guest["window_width"], guest["window_height"]) == (0, 0, 0, 0)
             assert vm.state()["guest"] == guest  # serialization is read-only
             guests.append(guest)
             scene = vm.scene()
@@ -106,6 +114,16 @@ def test_qom_complete_architecture_observation_neutrality_and_scene(binary):
     '{"action":"tick","ticks":0}',
     '{"action":"tick","ticks":1.0}',
     '{"action":"tick","ticks":4097}',
+    '{"action":"sound-tick","ticks":0}',
+    '{"action":"sound-tick","ticks":1.0}',
+    '{"action":"sound-tick","ticks":4097}',
+    '{"action":"clock","ticks":0}',
+    '{"action":"clock","ticks":1.0}',
+    '{"action":"clock","ticks":4097}',
+    '{"action":"sound-device","device":2}',
+    '{"action":"sound-device","device":true}',
+    '{"action":"sound-clear","epoch":1,"through":1}',
+    '{"action":"sound-clear","epoch":true,"through":0}',
     '{"action":"key","key":65536,"pressed":true}',
     '{"action":"key","key":1,"pressed":1}',
     '{"action":"controller","controller":-1}',
@@ -205,6 +223,128 @@ def test_qom_numeric_completion_requires_explicit_value(binary):
         assert vm.complete(ticket, accepted=True, number=123)["guest"]["variables"][77] == 123
 
 
+def test_qom_sound_state_and_explicit_native_output_ticks(binary):
+    # Channel zero: one tick of tone then a terminator. Other channels end
+    # immediately. Device zero selects the original PC speaker channel.
+    sound = bytes([8, 0, 15, 0, 17, 0, 19, 0,
+                   1, 0, 0x37, 0x80, 0x90, 0xFF, 0xFF]) + b"\xff\xff" * 3
+    value = package(bytes([3, 22, 0, 98, 1, 99, 1, 80, 0]),
+                    sounds=[{"id": 1, "data": sound}])
+    with runtime(binary, value) as vm:
+        start = vm.run(step_budget=20)["guest"]
+        assert start["retired"] == 4 and start["status"] == "return"
+        assert start["sound"]["active"] == 1 and start["sound_active"] == 1
+        assert start["sound"]["remaining"] == start["sound_remaining"] == 2
+        assert start["sound"]["ticks_per_second"] == 60
+        assert start["sound"]["channel_count"] == 1 and start["flags"][80] == 0
+        first = vm.sound_tick()["guest"]
+        assert first["ticks"] == first["clock_ticks"] == 0
+        assert first["sound"]["ticks"] == 1 and first["retired"] == 4
+        assert first["sound"]["channels"][0]["tone"] == 0x8037
+        output = first["sound"]["last_output"]
+        assert output["count"] == 1
+        assert output["events"][0] == {
+            "sequence": 1, "tick": 1, "kind": 1, "channel": 0,
+            "value": 10560, "enabled": 1,
+        }
+        ended = vm.sound_tick()["guest"]
+        assert ended["sound"]["active"] == ended["sound_active"] == 0
+        assert ended["sound"]["remaining"] == ended["sound_remaining"] == 0
+        assert ended["flags"][80] == 1 and ended["sound"]["ticks"] == 2
+        assert ended["sound"]["last_output"]["events"][0]["enabled"] == 0
+
+
+@pytest.mark.parametrize("clock", ["world", "sound"])
+def test_qom_sound_journal_keeps_all_batch_outputs_and_acknowledges_exact_capture(binary, clock):
+    # Two one-tick speaker records followed by the terminator. A single
+    # world tick contains three sound ticks; capture must retain all three.
+    sound = bytes([8, 0, 20, 0, 22, 0, 24, 0,
+                   1, 0, 0x37, 0x80, 0x90,
+                   1, 0, 0x10, 0x81, 0x90, 0xFF, 0xFF]) + b"\xff\xff" * 3
+    value = package(bytes([3, 22, 0, 98, 1, 99, 1, 80, 0]),
+                    sounds=[{"id": 1, "data": sound}])
+    guests, captures = [], []
+    for mask in (0, 3):
+        with runtime(binary, value) as vm:
+            vm.configure(mask=mask, capacity=4096)
+            vm.run(step_budget=20)
+            empty = vm._json_property("agi-runtime-sound-json")
+            assert empty["count"] == empty["eligible"] == empty["dropped"] == 0
+            if clock == "world":
+                vm.tick()
+            else:
+                vm.sound_tick(3)
+            before = vm.state()
+            captured = vm._json_property("agi-runtime-sound-json")
+            assert captured["schema"] == "fdisbull-agi-runtime-sound-events-1"
+            assert captured["source"] == before["source"]
+            assert captured["columns"] == [
+                "seq", "native_epoch", "sequence", "tick", "kind", "channel", "value", "enabled",
+            ]
+            assert captured["events"] == [
+                [1, 0, 1, 1, 1, 0, 10560, 1],
+                [2, 0, 2, 2, 1, 0, 3084, 1],
+                [3, 0, 3, 3, 1, 0, 0, 0],
+            ]
+            assert captured["count"] == captured["eligible"] == captured["last_seq"] == 3
+            assert captured["dropped"] == 0 and captured["capacity"] == 262144
+            assert vm.state() == before  # journal reads are nondestructive
+            with pytest.raises(harness.QMPError):
+                vm.set("agi-runtime-command", json.dumps({
+                    "action": "sound-clear", "epoch": empty["epoch"], "through": empty["last_seq"],
+                }))
+            assert vm.state() == before
+            vm.set("agi-runtime-command", json.dumps({
+                "action": "sound-clear", "epoch": captured["epoch"], "through": captured["last_seq"],
+            }))
+            after = vm.state()
+            assert after["guest"] == before["guest"]
+            assert after["observation"] == before["observation"]
+            cleared = vm._json_property("agi-runtime-sound-json")
+            assert cleared["count"] == cleared["eligible"] == cleared["dropped"] == 0
+            assert cleared["last_seq"] == 3 and cleared["epoch"] == captured["epoch"] + 1
+            guests.append(before["guest"])
+            captures.append(captured)
+    assert guests[0] == guests[1]
+    assert captures[0] == captures[1]
+
+
+def test_qom_sound_journal_overflow_is_explicit_and_full_capture_fits_transport(binary):
+    # Four zero-duration records play for65536 sound ticks. PCjr emits volume
+    # commands every tick, deliberately filling the bounded output journal.
+    streams = [bytes([0, 0, 0x37, high, control, 0xFF, 0xFF])
+               for high, control in [(0x80, 0x90), (0xA0, 0xB0), (0xC0, 0xD0), (0xE0, 0xF0)]]
+    sound = b"".join((8 + 7 * i).to_bytes(2, "little") for i in range(4)) + b"".join(streams)
+    value = package(bytes([3, 22, 1, 98, 1, 99, 1, 80, 0]),
+                    sounds=[{"id": 1, "data": sound}])
+    with runtime(binary, value) as vm:
+        vm.configure(mask=0, capacity=0)
+        vm.sound_device(1)
+        vm.run(step_budget=20)
+        for _ in range(6):
+            vm.tick(4096)
+        before = vm.state()
+        assert before["guest"]["flags"][80] == 1
+        captured = vm._json_property("agi-runtime-sound-json")
+        assert captured["count"] == len(captured["events"]) == captured["capacity"] == 262144
+        assert captured["eligible"] == captured["count"] + captured["dropped"]
+        assert captured["dropped"] > 0 and captured["last_seq"] == captured["eligible"]
+        assert captured["events"][0][0] == 1 and captured["events"][-1][0] == 262144
+        # The outer QMP string wrapping was already read under the actual
+        #32MiB transport budget. Clearing needs an explicit current receipt.
+        vm.set("agi-runtime-command", json.dumps({
+            "action": "sound-clear", "epoch": captured["epoch"], "through": captured["last_seq"],
+        }))
+        assert vm.state()["guest"] == before["guest"]
+        assert vm._json_property("agi-runtime-sound-json")["count"] == 0
+        vm.restart()
+        vm.run(step_budget=20)
+        vm.sound_tick()
+        restarted = vm._json_property("agi-runtime-sound-json")
+        assert restarted["native_epoch"] == 1
+        assert restarted["events"][0][:3] == [captured["last_seq"] + 1, 1, 1]
+
+
 @pytest.mark.parametrize("accepted,expected", [(True, "quit"), (False, "ready")])
 def test_qom_choice_uses_boolean_acceptance(binary, accepted, expected):
     with runtime(binary, package(bytes([134, 0, 0]))) as vm:
@@ -296,3 +436,298 @@ def test_qom_native_loader_rejects_malformed_packages(binary, tmp_path, kind):
     ], stdin=subprocess.DEVNULL, capture_output=True, timeout=10)
     assert result.returncode != 0
     assert b"AGI_RUNTIME" in result.stderr or b"JSON parse error" in result.stderr
+
+
+def test_qom_public_sound_capture_binds_and_clears_native_output(binary):
+    sound = bytes([8, 0, 15, 0, 17, 0, 19, 0,
+                   1, 0, 0x37, 0x80, 0x90, 0xFF, 0xFF]) + b"\xff\xff" * 3
+    value = package(bytes([98, 1, 99, 1, 80, 0]), sounds=[{"id": 1, "data": sound}])
+    with runtime(binary, value) as vm:
+        vm.configure(mask=0, capacity=0)
+        vm.run(step_budget=20)
+        vm.sound_tick(2)
+        before = vm.state()
+        capture = vm.sound_events()
+        assert capture["context"] == vm.context_id
+        assert capture["binary_sha256"] == vm.binary_sha256
+        assert capture["count"] == 2 and not capture["dropped"]
+        assert [row[7] for row in capture["events"]] == [1, 0]
+        assert vm.state() == before
+        forged = deepcopy(capture)
+        forged["events"][0][6] += 1
+        with pytest.raises(harness.HarnessError):
+            vm.clear_sound_events(forged)
+        assert vm.state() == before
+        after = vm.clear_sound_events(capture)
+        assert after["guest"] == before["guest"]
+        assert after["observation"] == before["observation"]
+        assert vm.sound_events()["count"] == 0
+        with pytest.raises(harness.HarnessError):
+            vm.clear_sound_events(capture)
+
+
+def test_qom_clock_advances_system_and_audio_without_actor_ticks(binary):
+    with runtime(binary, package(bytes([101, 1, 136, 0]), ["Wait"])) as vm:
+        vm.key(0x4D00, True)
+        vm.run(step_budget=10)
+        before = vm.state()["guest"]
+        assert before["pending_effect"]["opcode"] == 101
+        after = vm.clock(20)["guest"]
+        assert after["clock_ticks"] == 20 and after["variables"][11] == 1
+        assert after["sound"]["ticks"] == 60
+        assert after["actors"] == before["actors"] and after["ticks"] == 0
+        assert after["retired"] == before["retired"]
+        assert after["pending_effect"] == before["pending_effect"]
+        vm.complete(vm.pending(), accepted=True)
+        vm.run(step_budget=10)
+        paused = vm.state()
+        assert paused["guest"]["pending_effect"]["opcode"] == 136
+        with pytest.raises(harness.QMPError):
+            vm.clock()
+        assert vm.state() == paused
+
+
+def test_qom_hardware_choice_is_explicit_and_independent_of_report_variables(binary):
+    streams = [bytes([1, 0, 0x37, high, control, 0xFF, 0xFF])
+               for high, control in [(0x80, 0x90), (0xA0, 0xB0), (0xC0, 0xD0), (0xE0, 0xF0)]]
+    sound = b"".join((8 + 7 * i).to_bytes(2, "little") for i in range(4)) + b"".join(streams)
+    value = package(bytes([3, 22, 0, 98, 1, 99, 1, 80, 0]),
+                    sounds=[{"id": 1, "data": sound}])
+    with runtime(binary, value) as vm:
+        initial = vm.state()["guest"]
+        assert initial["sound_device"] == 0
+        assert [initial["variables"][i] for i in (20, 22, 24, 26)] == [0, 1, 38, 3]
+        configured = vm.sound_device(1)["guest"]
+        assert configured["sound_device"] == 1 and configured["variables"][22] == 3
+        started = vm.run(step_budget=20)["guest"]
+        assert started["variables"][22] == 0  # guest can overwrite its report
+        assert started["sound_device"] == 1 and started["sound"]["channel_count"] == 4
+        before = vm.state()
+        with pytest.raises(harness.QMPError):
+            vm.sound_device(0)
+        assert vm.state() == before
+        vm.restart()
+        restarted = vm.state()["guest"]
+        assert restarted["sound_device"] == 1 and restarted["variables"][22] == 3
+
+
+def test_qom_simple_description_preserves_native_bytes_and_empty_disables(binary):
+    with runtime(binary, package(bytes([114, 1, 1, 170, 1, 125, 170, 0, 0]), ["é" * 40])) as vm:
+        enabled = vm.run(step_budget=20)["guest"]
+        assert enabled["simple_save"] == 1 and enabled["simple_description"] == "é" * 40
+        assert bytes.fromhex(enabled["simple_description_hex"]) == b"\x82" * 40 + b"\0"
+        vm.complete(vm.pending(), accepted=True)
+        disabled = vm.run(step_budget=20)["guest"]
+        assert disabled["simple_save"] == 0 and disabled["simple_description"] == ""
+        assert bytes.fromhex(disabled["simple_description_hex"])[0] == 0
+
+
+def presentation_view():
+    # Two loops share one cel. Loop0 resolves its mirror here in native code;
+    # a short second row is padded with transparency before being mirrored.
+    return bytes([0, 0, 2, 20, 0, 9, 0, 9, 0, 1, 3, 0, 2, 2, 0x9F,
+                  0x21, 0x31, 0, 0x41, 0]) + b"\x82p\x82e\0"
+
+
+@pytest.mark.parametrize("opcode,args,kind", [
+    (29, b"", "priority-plane"),
+    (110, b"\x02", "shake-screen"),
+    (124, b"", "inventory"),
+    (129, b"\x07", "show-object"),
+    (162, b"\x32", "show-object"),
+    (133, b"\x33", "actor-status"),
+])
+def test_qom_native_device_queries_and_runtime_service_capture(binary, opcode, args, kind):
+    services = load("runtime_services")
+    view = presentation_view()
+    # Bind and draw actor3, then change inventory locations before the request.
+    prefix = bytes([30, 7, 33, 3, 41, 3, 7, 37, 3, 20, 80, 35, 3,
+                    95, 0, 52, 92, 1])
+    code = prefix + bytes([opcode]) + args + b"\0"
+    value = package(code, views=[{"id": 7, "data": view}], objects=[
+        {"name": "épée", "room": 255}, {"name": "clé", "room": 4},
+    ])
+    with runtime(binary, value) as vm:
+        vm.configure(mask=3, capacity=4096)
+        vm.seed(variables={50: 7, 51: 3, 52: 4})
+        vm.run(step_budget=100)
+        before, events = vm.state(), vm.events()
+        query = vm.presentation()
+        assert query["schema"] == "fdisbull-agi-runtime-presentation-1"
+        assert query["source"] == before["source"]
+        assert query["request"] == {k: v for k, v in before["guest"]["pending_effect"].items()
+                                     if k != "text"}
+        payload = query["presentation"]
+        assert payload["kind"] == kind
+        if opcode in (29, 110):
+            scene = vm.scene()
+            assert payload["visual"] == scene["visual"]
+            assert payload["priority"] == scene["priority"]
+            pixels = bytes.fromhex(payload["visual"])
+            assert pixels[79 * 160 + 20:79 * 160 + 22] == b"\x03\x02"
+            assert pixels[80 * 160 + 20:80 * 160 + 22] == b"\x0f\x04"
+            if opcode == 29:
+                assert payload["presented_plane"] == "priority"
+            else:
+                assert payload["frame_count"] == 8 and payload["restore_original"]
+                assert payload["coordinate_space"] == "display-pixels"
+                assert payload["frames"] == [
+                    {"index": i, "dx": 0 if i & 1 else -3, "dy": 0 if i & 1 else -3}
+                    for i in range(8)
+                ]
+                assert payload["picture_scale_x"] == 2 and payload["picture_scale_y"] == 1
+                assert payload["text_hex"] == before["guest"]["text_hex"]
+        elif opcode == 124:
+            assert payload["selectable"] is False
+            assert payload["entries"] == [
+                {"id": 0, "name": "épée", "name_hex": "82708265", "room": 4, "carried": False},
+                {"id": 1, "name": "clé", "name_hex": "636c82", "room": 255, "carried": True},
+            ]
+        elif opcode in (129, 162):
+            assert payload["view"] == 7 and payload["view_sha256"] == sha256(view).hexdigest()
+            assert payload["loop"] == payload["cel"] == 0
+            assert (payload["width"], payload["height"], payload["transparent"]) == (2, 2, 15)
+            assert payload["mirrored"] is True and payload["pixels"] == "03020f04"
+            assert payload["description"] == "épée" and payload["description_hex"] == "82708265"
+            assert payload["description_offset"] == 20
+            assert (payload["x"], payload["y"]) == (79, 112)
+        else:
+            assert payload["variable"] == 51
+            assert payload["actor"] == before["guest"]["actors"][3]
+        assert vm.state() == before and vm.events() == events
+        host = services.RuntimeServices(vm)
+        handled = host.handle()
+        assert handled["status"] == "presentation"
+        assert handled["state"]["guest"]["pending_effect"] is None
+        assert handled["state"]["guest"]["retired"] == before["guest"]["retired"] + 1
+        entry = host.ledger["entries"][0]
+        assert entry["status"] == "completed" and entry["presentation"] == payload
+        assert entry["request"]["effect"]["id"] == query["request"]["id"]
+        assert vm.run(step_budget=100)["guest"]["status"] == "return"
+
+
+@pytest.mark.parametrize("accepted", [False, True])
+def test_qom_inventory_selection_requires_a_caller_choice(binary, accepted):
+    services = load("runtime_services")
+    value = package(bytes([124, 0]), objects=[
+        {"name": "left behind", "room": 1}, {"name": "carried", "room": 255},
+    ])
+    with runtime(binary, value) as vm:
+        vm.seed(flags={13: 1})
+        vm.run(step_budget=10)
+        host = services.RuntimeServices(vm)
+        before = vm.state()
+        waiting = host.handle()
+        assert waiting["status"] == "choice_required"
+        assert waiting["required"] == ["accepted", "number"]
+        assert waiting["presentation"]["kind"] == "inventory"
+        assert waiting["presentation"]["selectable"] is True
+        assert waiting["presentation"]["selection_variable"] == 25
+        assert vm.state() == before and not host.ledger["entries"]
+        if accepted:
+            with pytest.raises(harness.QMPError):
+                host.handle(choice={"accepted": True, "number": 0})
+            assert vm.state() == before
+            handled = host.handle(choice={"accepted": True, "number": 1})
+        else:
+            handled = host.handle(choice={"accepted": False})
+        assert handled["state"]["guest"]["variables"][25] == (1 if accepted else 255)
+        assert handled["state"]["guest"]["pending_effect"] is None
+
+
+def test_qom_joystick_request_requires_an_explicit_device_result(binary):
+    services = load("runtime_services")
+    with runtime(binary, package(bytes([139, 0]))) as vm:
+        vm.run(step_budget=10)
+        host = services.RuntimeServices(vm)
+        before = vm.state()
+        waiting = host.handle()
+        assert waiting["status"] == "choice_required"
+        assert waiting["required"] == ["accepted", "calibrated"]
+        payload = waiting["presentation"]
+        assert payload == {
+            "kind": "joystick-calibration", "device": "joystick", "completion": "ack",
+            "requires_host_result": True, "guest_calibration_storage": False,
+        }
+        assert vm.state() == before and not host.ledger["entries"]
+        with pytest.raises(ValueError):
+            host.handle(choice={"accepted": True, "calibrated": False})
+        with pytest.raises(ValueError):
+            host.handle(choice={"accepted": True})
+        assert vm.state() == before
+        # An authored test device supplies a result; this makes no claim about
+        # real joystick hardware or an implicit physical calibration service.
+        handled = host.handle(choice={"accepted": True, "calibrated": True})
+        assert handled["status"] == "device_completed"
+        assert handled["state"]["guest"]["pending_effect"] is None
+        assert host.ledger["entries"][0]["result_source"] == "caller"
+
+
+@pytest.mark.parametrize("damage", ["description_offset", "description_nul", "row_extent"])
+def test_qom_bad_preview_resource_preserves_pending_state(binary, damage):
+    services = load("runtime_services")
+    view = bytearray(presentation_view())
+    if damage == "description_offset":
+        view[3:5] = (len(view) + 1).to_bytes(2, "little")
+    elif damage == "description_nul":
+        del view[-1]
+    else:
+        view[15] = 0x23
+    value = package(bytes([129, 7, 0]), views=[{"id": 7, "data": bytes(view)}])
+    with runtime(binary, value) as vm:
+        vm.configure(mask=3, capacity=4096)
+        vm.run(step_budget=10)
+        before, events = vm.state(), vm.events()
+        assert before["guest"]["pending_effect"]["opcode"] == 129
+        with pytest.raises(harness.QMPError):
+            vm.presentation()
+        assert vm.state() == before and vm.events() == events
+        host = services.RuntimeServices(vm)
+        with pytest.raises(harness.QMPError):
+            host.handle()
+        assert vm.state() == before and not host.ledger["entries"]
+
+
+@pytest.mark.parametrize("count", [0, 255])
+def test_qom_shake_plan_has_bounded_exact_phase_count(binary, count):
+    with runtime(binary, package(bytes([110, count, 0]))) as vm:
+        vm.run(step_budget=10)
+        before = vm.state()
+        payload = vm.presentation()["presentation"]
+        assert payload["count"] == count
+        assert payload["frame_count"] == len(payload["frames"]) == 4 * count
+        assert payload["restore_original"] is True
+        if count:
+            assert payload["frames"][0] == {"index": 0, "dx": -3, "dy": -3}
+            assert payload["frames"][-1] == {"index": 1019, "dx": 0, "dy": 0}
+        assert vm.state() == before
+
+
+def test_qom_presentation_without_request_or_for_unrelated_text_is_neutral(binary):
+    with runtime(binary, package(bytes([101, 1, 0]), ["Text only"])) as vm:
+        before = vm.state()
+        empty = vm.presentation()
+        assert empty["request"] is None and empty["presentation"] is None
+        assert vm.state() == before
+        vm.run(step_budget=10)
+        before = vm.state()
+        text = vm.presentation()
+        assert text["request"]["opcode"] == 101 and text["presentation"] is None
+        assert vm.state() == before
+
+
+def test_qom_presentation_is_bound_to_current_called_logic(binary):
+    code0, code7 = bytes([22, 7, 0]), bytes([29, 0])
+    value = pack.build_package(logics=[
+        {"id": 0, "code": code0, "messages": []},
+        {"id": 7, "code": code7, "messages": []},
+    ])
+    with runtime(binary, value) as vm:
+        vm.run(step_budget=10)
+        before = vm.state()
+        query = vm.presentation()
+        assert query["source"] == before["source"]
+        assert query["source"]["logic_id"] == query["request"]["logic"] == 7
+        assert query["source"]["logic_sha256"] == sha256(code7).hexdigest()
+        assert query["request"]["pc"] == 0 and query["request"]["next_pc"] == 1
+        assert vm.state() == before
