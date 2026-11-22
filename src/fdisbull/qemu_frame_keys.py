@@ -14,6 +14,10 @@ from .keyboard_input import KEYS
 FRAME_KEY_COMMANDS = frozenset({'x-fdisbull-query-frame-keys',
     'x-fdisbull-apply-frame-key-edges', 'x-fdisbull-detach-frame-keys'})
 REPEAT_QUERY = 'x-fdisbull-query-frame-key-repeat'
+DOSBOX_REPEAT_PROFILE = 'dosbox-millisecond'
+_DOSBOX_REPEAT_MS = (33, 37, 42, 46, 50, 54, 58, 63, 67, 75, 83, 92, 100, 109, 118,
+                     125, 133, 149, 167, 182, 200, 217, 233, 250, 270, 303, 333, 370,
+                     400, 435, 476, 500)
 _CANONICAL = { _key(k)[1]: _key(k)[0] for k in KEYS }
 
 
@@ -78,7 +82,9 @@ def validate_frame_key_state(native, *, token=None, epoch=None):
 
 def validate_frame_key_repeat(value, *, held):
     fields = {'parameter', 'delay-ns', 'interval-ns', 'deadline-ns'}
-    if (type(value) is not dict or set(value) not in (fields, fields | {'key'})
+    if (type(value) is not dict or not fields <= value.keys()
+            or value.keys() - fields - {'key', 'profile'}
+            or 'profile' in value and value['profile'] != DOSBOX_REPEAT_PROFILE
             or any(type(value[name]) is not int for name in fields)
             or not 0 <= value['parameter'] <= 127
             or not -1 <= value['deadline-ns'] < 1 << 63):
@@ -86,8 +92,10 @@ def validate_frame_key_repeat(value, *, held):
     parameter = value['parameter']
     delay = (1 + (parameter >> 5)) * 250_000_000
     cycles = (8 + (parameter & 7)) << ((parameter >> 3) & 3)
+    interval = (_DOSBOX_REPEAT_MS[parameter & 0x1f] * 1_000_000 if 'profile' in value
+                else cycles * 1_000_000_000 // 240)
     key = value.get('key')
-    if (value['delay-ns'] != delay or value['interval-ns'] != cycles * 1_000_000_000 // 240
+    if (value['delay-ns'] != delay or value['interval-ns'] != interval
             or ('key' in value) != (value['deadline-ns'] >= 0)
             or 'key' in value and (type(key) is not str or key not in held)):
         raise DebuggerError('Native frame key repeat timing or ownership differs')
@@ -346,6 +354,9 @@ class QemuFrameKeysMixin:
             repeat = qmp.call(REPEAT_QUERY)
             if self.vm is not vm or vm.qmp is not qmp:
                 raise DebuggerError('Frame key repeat observation owner changed')
-            keyboard['frame_key_repeat'] = validate_frame_key_repeat(repeat, held=native['held'])
+            repeat = validate_frame_key_repeat(repeat, held=native['held'])
+            if repeat.get('profile') != vm.machine_configuration.get('frame_key_repeat_profile'):
+                raise DebuggerError('Observed frame-key repeat profile differs from launch')
+            keyboard['frame_key_repeat'] = repeat
         physical['keyboard'] = keyboard
         return physical

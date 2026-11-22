@@ -200,7 +200,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                  boot_timeout_ms=30000, guest_profile=None, transport='unix',
                  firmware=None, clock_profile='standard', audio_profile='off', retrace_profile='standard',
                  checkpoint_tool=None, _on_spawn=None, directory=None, file_mode=None, freedos_runtime=None,
-                 generation=None, spatial_mode=None, fair_play=False):
+                 generation=None, spatial_mode=None, fair_play=False, frame_key_repeat_profile=None):
         from .dos_process_image import prepare_process_disk
         from .debugger import stamp
 
@@ -236,6 +236,10 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
         machine_audio_configuration(audio_profile, clock_profile)
         from .qemu_retrace import machine_retrace_configuration
         machine_retrace_configuration(retrace_profile, clock_profile)
+        if frame_key_repeat_profile is not None:
+            from .qemu_frame_keys import DOSBOX_REPEAT_PROFILE
+            if frame_key_repeat_profile != DOSBOX_REPEAT_PROFILE or clock_profile != 'virtual':
+                raise ValueError('DOSBox repeat pacing requires the dosbox-millisecond profile and a virtual clock')
         if not isinstance(arguments, str):
             raise ValueError('DOS arguments must be a CP437 command-tail string')
         try:
@@ -315,6 +319,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                 timeout_ms=self._remaining(), transport=transport, firmware=firmware,
                 clock_profile=clock_profile, audio_profile=audio_profile,
                 retrace_profile=retrace_profile, checkpoint_tool=checkpoint_tool)
+            if frame_key_repeat_profile is not None:
+                self._checkpoint_launch['frame_key_repeat_profile'] = frame_key_repeat_profile
             vm = QemuMachine(**self._checkpoint_launch, on_spawn=_on_spawn)
             MachineContext.__init__(self, vm)
             self.rpc = vm

@@ -1,0 +1,179 @@
+diff --git a/hw/input/ps2.c b/hw/input/ps2.c
+--- a/hw/input/ps2.c
++++ b/hw/input/ps2.c
+@@ -25,6 +25,7 @@
+ #include "qemu/osdep.h"
+ #include "qemu/log.h"
+ #include "hw/irq.h"
++#include "hw/qdev-properties.h"
+ #include "hw/sysbus.h"
+ #include "hw/input/ps2.h"
+ #include "migration/vmstate.h"
+@@ -682,12 +683,19 @@
+     kbd_put_ledstate(ledstate);
+ }
+ 
++static uint8_t ps2_typematic_default(PS2KbdState *s)
++{
++    return s->dosbox_typematic ? 0x20 : PS2_TYPEMATIC_DEFAULT;
++}
++
+ static void ps2_reset_keyboard(PS2KbdState *s)
+ {
+     PS2State *ps2 = PS2_DEVICE(s);
+ 
+     trace_ps2_reset_keyboard(s);
+-    s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
++    if (!s->dosbox_typematic) {
++        s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
++    }
+     fdisbull_frame_key_repeat_cancel_for(s);
+     s->scan_enabled = 1;
+     s->scancode_set = 2;
+@@ -1170,7 +1178,7 @@
+     s->translate = 0;
+     s->scancode_set = 2;
+     s->modifiers = 0;
+-    s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
++    s->typematic_parameter = ps2_typematic_default(s);
+     fdisbull_frame_keys_keyboard_reset(s);
+ }
+ 
+@@ -1277,7 +1285,7 @@
+ {
+     PS2KbdState *s = opaque;
+ 
+-    return s->typematic_parameter != PS2_TYPEMATIC_DEFAULT;
++    return s->typematic_parameter != ps2_typematic_default(s);
+ }
+ 
+ static const VMStateDescription vmstate_ps2_keyboard_typematic = {
+@@ -1295,7 +1303,7 @@
+ {
+     PS2KbdState *s = opaque;
+ 
+-    s->typematic_parameter = PS2_TYPEMATIC_DEFAULT;
++    s->typematic_parameter = ps2_typematic_default(s);
+     fdisbull_frame_key_repeat_cancel_for(s);
+     return 0;
+ }
+@@ -1396,6 +1404,11 @@
+     qemu_input_handler_register(dev, &ps2_mouse_handler);
+ }
+ 
++static const Property ps2_kbd_properties[] = {
++    DEFINE_PROP_BOOL("fdisbull-dosbox-typematic", PS2KbdState,
++                     dosbox_typematic, false),
++};
++
+ static void ps2_kbd_class_init(ObjectClass *klass, void *data)
+ {
+     DeviceClass *dc = DEVICE_CLASS(klass);
+@@ -1406,6 +1419,7 @@
+     resettable_class_set_parent_phases(rc, NULL, ps2_kbd_reset_hold, NULL,
+                                        &ps2dc->parent_phases);
+     dc->vmsd = &vmstate_ps2_keyboard;
++    device_class_set_props(dc, ps2_kbd_properties);
+ }
+ 
+ static const TypeInfo ps2_kbd_info = {
+diff --git a/include/hw/input/ps2.h b/include/hw/input/ps2.h
+--- a/include/hw/input/ps2.h
++++ b/include/hw/input/ps2.h
+@@ -73,6 +73,7 @@
+     int translate;
+     int scancode_set; /* 1=XT, 2=AT, 3=PS/2 */
+     uint8_t typematic_parameter;
++    bool dosbox_typematic;
+     int ledstate;
+     bool need_high_bit;
+     unsigned int modifiers; /* bitmask of MOD_* constants above */
+diff --git a/qapi/fdisbull-input.json b/qapi/fdisbull-input.json
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -386,12 +386,14 @@
+ # @interval-ns: Repeat interval in virtual nanoseconds.
+ # @deadline-ns: Absolute virtual expiry, or -1 when idle.
+ # @key: Held key to repeat, present only when a deadline is armed.
++# @profile: DOSBox-compatible pacing, present only for the explicitly
++#     selected dosbox-millisecond profile.
+ #
+ # Since: 10.0
+ ##
+ { 'struct': 'FdisbullFrameKeyRepeatState',
+   'data': { 'parameter': 'uint8', 'delay-ns': 'int64', 'interval-ns': 'int64',
+-            'deadline-ns': 'int64', '*key': 'QKeyCode' } }
++            'deadline-ns': 'int64', '*key': 'QKeyCode', '*profile': 'str' } }
+ 
+ ##
+ # @x-fdisbull-query-frame-key-repeat:
+diff --git a/system/fdisbull-frame-keys.c b/system/fdisbull-frame-keys.c
+--- a/system/fdisbull-frame-keys.c
++++ b/system/fdisbull-frame-keys.c
+@@ -191,10 +191,20 @@
+     return (1 + (parameter >> 5)) * 250 * SCALE_MS;
+ }
+ 
+-static int64_t frame_repeat_interval(uint8_t parameter)
+-{
++static const char frame_repeat_dosbox_profile[] = "dosbox-millisecond";
++
++static int64_t frame_repeat_interval(PS2KbdState *keyboard, uint8_t parameter)
++{
++    static const uint16_t dosbox_ms[] = {
++        33, 37, 42, 46, 50, 54, 58, 63, 67, 75, 83, 92, 100, 109, 118,
++        125, 133, 149, 167, 182, 200, 217, 233, 250, 270, 303, 333, 370,
++        400, 435, 476, 500,
++    };
+     int64_t ticks = (8 + (parameter & 7)) << ((parameter >> 3) & 3);
+ 
++    if (keyboard->dosbox_typematic) {
++        return (int64_t)dosbox_ms[parameter & 0x1f] * SCALE_MS;
++    }
+     return ticks * 1000 * SCALE_MS / 240;
+ }
+ 
+@@ -240,7 +250,7 @@
+         /* A synchronous stop owns this boundary. Keep the make pending. */
+         next = 1;
+     } else {
+-        interval = frame_repeat_interval(keyboard->typematic_parameter);
++        interval = frame_repeat_interval(keyboard, keyboard->typematic_parameter);
+         /* Preserve the cadence if a timer is late. Never emit a catch-up burst. */
+         next = interval - ((now - frame_repeat_deadline) % interval);
+     }
+@@ -303,7 +313,7 @@
+ 
+ void fdisbull_frame_key_repeat_parameter_changed(PS2KbdState *keyboard)
+ {
+-    if (frame_keys.keyboard == keyboard &&
++    if (!keyboard->dosbox_typematic && frame_keys.keyboard == keyboard &&
+         frame_repeat_key != Q_KEY_CODE_UNMAPPED) {
+         frame_key_repeat_arm_initial(keyboard, frame_repeat_key,
+                                     qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
+@@ -359,7 +369,10 @@
+     state = g_new0(FdisbullFrameKeyRepeatState, 1);
+     state->parameter = keyboard->typematic_parameter;
+     state->delay_ns = frame_repeat_delay(state->parameter);
+-    state->interval_ns = frame_repeat_interval(state->parameter);
++    state->interval_ns = frame_repeat_interval(keyboard, state->parameter);
++    if (keyboard->dosbox_typematic) {
++        state->profile = g_strdup(frame_repeat_dosbox_profile);
++    }
+     state->deadline_ns = frame_repeat_deadline;
+     state->has_key = frame_repeat_key != Q_KEY_CODE_UNMAPPED;
+     state->key = frame_repeat_key;
+@@ -378,9 +391,11 @@
+     if (!keyboard) {
+         return false;
+     }
+-    if (state->parameter != keyboard->typematic_parameter ||
++    if (g_strcmp0(state->profile, keyboard->dosbox_typematic ?
++                  frame_repeat_dosbox_profile : NULL) ||
++        state->parameter != keyboard->typematic_parameter ||
+         state->delay_ns != frame_repeat_delay(state->parameter) ||
+-        state->interval_ns != frame_repeat_interval(state->parameter) ||
++        state->interval_ns != frame_repeat_interval(keyboard, state->parameter) ||
+         state->deadline_ns < -1 || state->has_key != (state->deadline_ns >= 0)) {
+         error_setg(errp, "Frame-key repeat phase differs from the PS/2 device");
+         return false;

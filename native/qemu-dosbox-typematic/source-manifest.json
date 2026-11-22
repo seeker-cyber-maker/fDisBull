@@ -1,0 +1,45 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "optional DOSBox-X typematic pacing",
+  "base": {
+    "qemu_version": "10.0.13",
+    "host_commit": "3005867eaae862a33cea084c86fa9b80517e4390",
+    "composition": "Apply after native/qemu-frame-key-repeat. Require every exact preimage."
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-dosbox-typematic-v1.patch",
+    "bytes": 6491,
+    "sha256": "20c990b6880be8bd398c4d6201bccc649190e251a7c6ca27669abf4af21a6ad7",
+    "modified_file_count": 4,
+    "files": [
+      {
+        "path": "hw/input/ps2.c",
+        "before_bytes": 43462,
+        "after_bytes": 43879,
+        "before_sha256": "08ce265689753e1e0675bc055852318cc4915cbd55ab9b0236d86eace0cd363c",
+        "after_sha256": "575dffc079939722ffd0acbb5fca0ef8c47fcf3ad739c067fb2cea56896d8d72"
+      },
+      {
+        "path": "include/hw/input/ps2.h",
+        "before_bytes": 4186,
+        "after_bytes": 4213,
+        "before_sha256": "024c99c579ab27a71e763a40b87c551af2b9b582d6abbc523719338a6ef5d990",
+        "after_sha256": "b4f77a19c535410dfdba4bddce982b5a8211a52eea0af9f334fffbdd9070e1c6"
+      },
+      {
+        "path": "qapi/fdisbull-input.json",
+        "before_bytes": 37191,
+        "after_bytes": 37323,
+        "before_sha256": "b566477d11ae31f48d5e0a18d75d18c8f73f17cce0de6a6770e59f6e5df3987a",
+        "after_sha256": "c129daa986c5fee3a770c1755293a1462a91c27b5b100ccc0bf1c696230717de"
+      },
+      {
+        "path": "system/fdisbull-frame-keys.c",
+        "before_bytes": 61329,
+        "after_bytes": 62043,
+        "before_sha256": "52d238dcc92fec196d6b21d07382d040a5eff2ec1e357fcadf88bdb70c9e7f5b",
+        "after_sha256": "f2ab5630fd46be7ff068c240789e31b599fcb69ae141f9c1a4f3f1f55189a285"
+      }
+    ]
+  }
+}

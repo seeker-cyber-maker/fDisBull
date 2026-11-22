@@ -98,3 +98,23 @@ def test_producer_cannot_restore_phase_without_the_readback_command():
     with pytest.raises(ValueError, match='native frame key repeat capability'):
         checkpoint.restore(peer, envelope(peer.saved))
     assert peer.calls == []
+
+
+@pytest.mark.parametrize('parameter, interval', [(0x20, 33_000_000), (0x27, 63_000_000)])
+def test_dosbox_millisecond_profile_reports_legacy_cadence(parameter, interval):
+    repeat = {'parameter': parameter, 'delay-ns': 500_000_000, 'interval-ns': interval,
+              'deadline-ns': -1, 'profile': 'dosbox-millisecond'}
+    assert validate_frame_key_repeat(repeat, held=[]) == repeat
+    with pytest.raises(DebuggerError, match='timing or ownership'):
+        validate_frame_key_repeat({k: v for k, v in repeat.items() if k != 'profile'}, held=[])
+
+
+def test_checkpoint_repeat_profile_is_pinned_before_import(monkeypatch):
+    monkeypatch.setattr('fdisbull.qemu_retrace.admit_retrace', lambda vm: {'device': '/machine/vga'})
+    repeat = {**programmed(), 'interval-ns': 63_000_000, 'profile': 'dosbox-millisecond'}
+    peer = RepeatPeer(state4(repeat))
+    with pytest.raises(ValueError, match='profile differs from launch'):
+        checkpoint.restore(peer, peer.record)
+    assert peer.calls == []
+    peer.machine_configuration['frame_key_repeat_profile'] = 'dosbox-millisecond'
+    assert checkpoint.restore(peer, peer.record)['format'] == checkpoint.FRAME_KEY_REPEAT_FORMAT

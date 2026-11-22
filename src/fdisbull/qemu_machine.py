@@ -241,7 +241,7 @@ class QemuMachine:
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
                  clock_profile='standard', audio_profile='off', retrace_profile='standard',
-                 checkpoint_tool=None, _checkpoint_image=None):
+                 checkpoint_tool=None, _checkpoint_image=None, frame_key_repeat_profile=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self._qemu_image_proof=None;self._admission_guest=None
         self._admission_guest_pidfd=None
@@ -268,6 +268,11 @@ class QemuMachine:
             selected_retrace=machine_retrace_configuration(retrace_profile,clock_profile)
             if retrace_profile!='standard' and (boot_image is None or not paused or restore):
                 raise ValueError('Precise retrace observation requires a paused fresh PC boot machine')
+            if frame_key_repeat_profile is not None:
+                from .qemu_frame_keys import DOSBOX_REPEAT_PROFILE
+                if (frame_key_repeat_profile != DOSBOX_REPEAT_PROFILE or clock_profile != 'virtual'
+                        or boot_image is None or not paused or restore):
+                    raise ValueError('DOSBox repeat pacing requires a fresh stopped PC boot machine with a virtual clock')
             if audio_profile!='off' and (boot_image is None or not paused or restore):
                 raise ValueError('Audio capture requires a paused fresh PC boot machine')
             if clock_profile=='virtual' and (not paused or restore):
@@ -349,6 +354,8 @@ class QemuMachine:
                      '-serial',f'file:{self.log_path}']
             command+=machine_retrace_arguments(retrace_profile)
             command+=machine_audio_arguments(audio_profile)
+            if frame_key_repeat_profile is not None:
+                command += ['-global', 'ps2-kbd.fdisbull-dosbox-typematic=on']
             if transport=='pipe':
                 self.gdb_path=root/'gdb';self.rpc_path=root/'rpc'
                 create_fifo_pair(self.gdb_path);create_fifo_pair(self.rpc_path)
@@ -402,6 +409,14 @@ class QemuMachine:
                 require_commands(self)
             if clock_profile=='virtual':
                 self.machine_configuration['native_clock_admission']=admit_virtual_clock(self)
+            if frame_key_repeat_profile is not None:
+                from .qemu_frame_keys import REPEAT_QUERY, validate_frame_key_repeat
+                if REPEAT_QUERY not in self.qmp_commands:
+                    raise ValueError('Selected native QEMU has no repeat-profile proof')
+                repeat = validate_frame_key_repeat(self.qmp.call(REPEAT_QUERY), held=[])
+                if repeat.get('profile') != frame_key_repeat_profile:
+                    raise DebuggerError('Selected native QEMU did not admit the DOSBox repeat profile')
+                self.machine_configuration['frame_key_repeat_profile'] = frame_key_repeat_profile
             if audio_profile in ('pc-speaker', 'sb16', 'sb16-opl'):
                 self.machine_configuration['native_audio_admission']=admit_audio(self)
                 if audio_profile in ('sb16','sb16-opl'):

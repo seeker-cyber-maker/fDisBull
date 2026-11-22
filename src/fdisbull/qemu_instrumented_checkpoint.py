@@ -103,6 +103,9 @@ def validate(vm, record):
     from .qemu_frame_keys import REPEAT_QUERY
     if (state['format'] == FRAME_KEY_REPEAT_FORMAT) != (REPEAT_QUERY in vm.qmp_commands):
         raise ValueError('Checkpoint format differs from the native frame key repeat capability')
+    if (state['format'] == FRAME_KEY_REPEAT_FORMAT and state['frame-key-repeat'].get('profile')
+            != vm.machine_configuration.get('frame_key_repeat_profile')):
+        raise ValueError('Checkpoint frame key repeat profile differs from launch')
     if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
         from .qemu_audio import audio_capture_format, require_audio_capture_format
         require_audio_capture_format(vm, audio_capture_format(state['audio'].get('info')))
@@ -241,8 +244,9 @@ def restore(vm, record):
 def _verify_key_repeat(vm, state):
     from .qemu_frame_keys import REPEAT_QUERY, validate_frame_key_repeat
     actual = validate_frame_key_repeat(vm.qmp.call(REPEAT_QUERY), held=state['frame-keys']['held'])
-    if actual != state['frame-key-repeat']:
-        raise DebuggerError('Native frame key repeat readback differs from its checkpoint')
+    if (actual != state['frame-key-repeat']
+            or actual.get('profile') != vm.machine_configuration.get('frame_key_repeat_profile')):
+        raise DebuggerError('Native frame key repeat readback differs from its checkpoint or launch profile')
 
 
 def _validate_restore_receipt(result, saved):
