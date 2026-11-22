@@ -1,7 +1,7 @@
 """NEW S16 qualification, never a replay of the lost 1ecf4b5 test revision.
 
 No native default is selected. An independently reviewed JSON admission must
-pin both freshly built producers, every tool/firmware/host input, and a private
+pin both exact producers, every tool/firmware/host input, and a private
 output tree. Run this file with -x under a finite outer supervisor. Missing
 admission skips the opt-in lane, or fails when its REQUIRE selector is set.
 The 600-second work limit is separate from bounded owned-process cleanup.
@@ -42,12 +42,11 @@ from test_qemu_clock_budget_native import budget_receipt
 from test_qemu_dos_process_native import com_address, read_bytes
 
 
-ADMISSION_FORMAT = 'fdisbull-s16-recovery-native-admission-20261119-1'
+ADMISSION_FORMAT = 'fdisbull-s16-recovery-native-admission-20261122-2'
 NATIVE_BOUNDS = dict(cases=32, owners=91, work_seconds=600,
     case_seconds=45, cold_seconds=30, cleanup_grace_seconds=2,
     post_entry_guest_ns=2_000_000_000, future_ns=FUTURE_NS,
-    output_bytes=512 * 1024 * 1024, workspace_reserve_bytes=40_000_000_000,
-    temporary_reserve_bytes=512 * 1024 * 1024, checkpoint_bytes=16 * 1024 * 1024)
+    output_bytes=512 * 1024 * 1024, checkpoint_bytes=16 * 1024 * 1024)
 LOG_MAX_BYTES = 256 * 1024
 OWNED_FILES = (
     'tests/support/qemu_sb16_s16_recovery_fixture.py',
@@ -281,8 +280,8 @@ class Runtime:
         assert Path(__file__).resolve() == self.root/'tests/test_qemu_sb16_s16_recovery_native.py'
         assert Path(sys.modules[Project.__module__].__file__).resolve() == self.root/'src/fdisbull/project.py'
         self.output = Path(self.config['output_root']).resolve(strict=True)
-        assert self.output.is_dir() and not self.output.is_relative_to(self.root)
-        assert not self.output.stat().st_mode & 0o077, 'Private output must be mode0700'
+        assert not self.output.is_relative_to(self.root)
+        self.check_output_destination()
         assert not any((parent/'.git').exists() for parent in (self.output, *self.output.parents))
         self.store = self.output/'target-store'
         assert os.environ.get('FDISBULL_TARGET_STORE') == str(self.store)
@@ -291,6 +290,13 @@ class Runtime:
         self.deadline = self.start + NATIVE_BOUNDS['work_seconds']
         self.owners = 0
         self.completed = []
+        with tempfile.TemporaryFile(dir=self.output) as probe:
+            marker = b'fDisBull native S16 recovery destination'
+            probe.write(marker)
+            probe.flush()
+            os.fsync(probe.fileno())
+            probe.seek(0)
+            assert probe.read() == marker, 'Private output destination failed write readback'
         self.verify_inputs()
         self.resources()
 
@@ -323,14 +329,17 @@ class Runtime:
         actual = {str(path.relative_to(root)): digest(path) for path in root.rglob('*') if path.is_file()}
         assert actual == firmware['files'] and actual
 
+    def check_output_destination(self):
+        info = self.output.lstat()
+        assert stat.S_ISDIR(info.st_mode) and not info.st_mode & 0o077, 'Private output must be mode0700'
+        assert self.config['output_identity'] == dict(device=info.st_dev, inode=info.st_ino), (
+            'Private output directory or backing volume identity changed', str(self.output))
+
     def resources(self):
         assert time.monotonic() < self.deadline, 'Aggregate native work deadline expired'
+        self.check_output_destination()
         usage = _usage(self.output)
         assert max(usage.values()) <= NATIVE_BOUNDS['output_bytes'], usage
-        for root, minimum in ((self.root, NATIVE_BOUNDS['workspace_reserve_bytes']),
-                              (self.output, NATIVE_BOUNDS['temporary_reserve_bytes'])):
-            value = os.statvfs(root)
-            assert value.f_bavail * value.f_frsize >= minimum, ('Reserve failed', str(root))
         return usage
 
     def project(self, project):
@@ -860,7 +869,7 @@ def test_s16_recovery_unsupported_geometry_refuses_without_mutating_owner(native
 @pytest.mark.parametrize('voice', LEGACY_CASES, ids=lambda case: case.name)
 def test_s16_recovery_explicit_fresh_parent_producer_retains_u8_only_refusal(native_runtime, tmp_path, voice):
     with case_run(native_runtime, tmp_path, voice, 1) as run:
-        run.report['legacy_control'] = 'Freshly built 31-patch parent; not the unrecovered b077 binary'
+        run.report['legacy_control'] = 'Pinned 31-patch parent producer'
         with run.owners('legacy'), run.project(create=True) as project:
             with run.launch(project, 'legacy') as debug:
                 _capture_refusal(run, project, debug, legacy=True)

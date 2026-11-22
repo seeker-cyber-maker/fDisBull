@@ -288,6 +288,28 @@ def test_new_native_matrix_bounds_describe_all_authored_cases_and_owner_caps():
     assert NATIVE_BOUNDS['work_seconds'] == 600 and NATIVE_BOUNDS['future_ns'] == 600_000_000
 
 
+def test_native_matrix_rejects_replaced_output_and_bounds_its_own_bytes(tmp_path):
+    from test_qemu_sb16_s16_recovery_native import NATIVE_BOUNDS, Runtime
+    output = tmp_path/'owned'
+    output.mkdir(mode=0o700)
+    info = output.stat()
+    runtime = object.__new__(Runtime)
+    runtime.config = {'output_identity': dict(device=info.st_dev, inode=info.st_ino)}
+    runtime.output = output
+    runtime.deadline = time.monotonic()+10
+    assert runtime.resources()['logical'] == 0
+
+    with (output/'sparse.bin').open('xb') as stream:
+        stream.truncate(NATIVE_BOUNDS['output_bytes']+1)
+    with pytest.raises(AssertionError, match="'logical'"):
+        runtime.resources()
+
+    output.rename(tmp_path/'original')
+    output.mkdir(mode=0o700)
+    with pytest.raises(AssertionError, match='directory or backing volume identity changed'):
+        runtime.resources()
+
+
 def test_resource_accounting_counts_root_and_fifo_without_opening_it(tmp_path):
     from test_qemu_sb16_s16_recovery_native import _usage
     root = tmp_path/'owned'
