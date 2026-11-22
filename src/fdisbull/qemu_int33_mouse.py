@@ -24,8 +24,9 @@ _CODE = (
     ('position_and_buttons', 0x952, 0x15),
     ('coordinate_ranges', 0x9f2, 0x1d),
     ('mickey_ratio', 0xae4, 0x0f),
+    ('motion_conversion', 0x39b, 0x75),
 )
-_DATA = ((0x4e, 4), (0xa4, 0x24), (0x37a, 1))
+_DATA = ((0x4e, 8), (0xa4, 0x24), (0x15a, 2), (0x37a, 1))
 _CLOCK_FIELDS = ('run', 'epoch', 'session', 'native_state', 'clock_profile',
                  'counter', 'virtual_ns', 'virtual_clock')
 
@@ -94,15 +95,19 @@ def _decode(driver, base, selected):
     raw = struct.unpack_from('<hh', coordinates, 0xb0 - 0xa4)
     position = struct.unpack_from('<hh', coordinates, 0xb4 - 0xa4)
     minimum = struct.unpack_from('<hh', coordinates, 0xc4 - 0xa4)
-    ratios = struct.unpack('<hh', selected[base + 0x4e])
+    ratio_x, ratio_y, sensitivity_x, sensitivity_y = struct.unpack('<hhHH', selected[base + 0x4e])
+    rounding = struct.unpack_from('<hh', coordinates, 0xc0 - 0xa4)
     buttons = selected[base + 0x37a][0] & 7
-    if (position != (raw[0] & ~1, raw[1]) or any(ratio <= 0 for ratio in ratios)
+    if (selected[base + 0x15a] != b'\xfe\xff'
+            or position != (raw[0] & ~1, raw[1]) or min(ratio_x, ratio_y) <= 0
             or not 0 <= minimum[0] <= raw[0] <= maximum[0] < 640
             or not 0 <= minimum[1] <= raw[1] <= maximum[1] < 200):
         _refuse('unsupported_coordinate_state', 'INT33 state is outside the qualified mode 13h coordinate profile')
     return dict(position=list(position), raw_position=list(raw),
                 minimum=list(minimum), maximum=list(maximum), buttons=buttons,
-                mickeys_per_eight_units=list(ratios), matching_source_spans=spans)
+                mickeys_per_eight_units=[ratio_x, ratio_y],
+                sensitivity_coefficients=[sensitivity_x, sensitivity_y],
+                position_remainders=list(rounding), matching_source_spans=spans)
 
 
 def _same_clock(before, after):

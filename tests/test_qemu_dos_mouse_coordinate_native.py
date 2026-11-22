@@ -56,6 +56,16 @@ org 100h
     call sample
 ready:
     nop
+motion_loop:
+    inc byte [es:0]
+    mov ax,3
+    int 33h
+    cmp cx,320
+    jne motion_loop
+    cmp dx,90
+    jne motion_loop
+motion_landed:
+    nop
 left_press_loop:
     inc byte [es:0]
     mov ax,3
@@ -157,7 +167,7 @@ old_segment: dw 0
 alternate_handler:
     iret
 db 'I33C'
-dw ready,pressed,clip_ready,clipped,done,installed,alternate_vector,restored_vector
+dw ready,pressed,clip_ready,clipped,done,installed,alternate_vector,restored_vector,motion_landed
 dw origin,left_press,left_release,clip_origin,right_press,right_release
 '''
 
@@ -186,10 +196,10 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                                   mouse_inputs['driver'], clock_runtime['mcopy'])
     code = assemble(tmp_path, 'coordinate-oracle', _ASSEMBLY, clock_runtime['nasm'])
     names = ('ready', 'pressed', 'clip_ready', 'clipped', 'done', 'installed',
-             'alternate_vector', 'restored_vector', 'origin', 'left_press', 'left_release',
-             'clip_origin', 'right_press', 'right_release')
-    assert code[-32:-28] == b'I33C'
-    offsets = dict(zip(names, struct.unpack('<14H', code[-28:]), strict=True))
+             'alternate_vector', 'restored_vector', 'motion_landed', 'origin', 'left_press',
+             'left_release', 'clip_origin', 'right_press', 'right_release')
+    assert code[-34:-30] == b'I33C'
+    offsets = dict(zip(names, struct.unpack('<15H', code[-30:]), strict=True))
     binary = tmp_path / 'COORD.COM'
     binary.write_bytes(code)
     receipt = {'source_sha256': hashlib.sha256(code).hexdigest(),
@@ -230,14 +240,14 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         assert sample['vector_authority']['complete']
                         assert sample['driver']['sha256'] == CTMOUSE_SHA256
                         assert sample['driver']['vector']['offset'] == 0xb5e
-                        assert len(sample['matching_source_spans']) == 4
+                        assert len(sample['matching_source_spans']) == 5
                         assert sample['position'] + [sample['buttons']] == rows[name][:3]
                         assert sample['raster']['frame_id'] >= 1
                         assert sample['raster']['completed_ns'] <= sample['clock']['virtual_ns']
                         receipt['passive'][name] = {key: sample[key] for key in (
                             'driver', 'position', 'raw_position', 'buttons', 'minimum',
                             'maximum', 'mickeys_per_eight_units', 'clock', 'raster',
-                            'matching_source_spans')}
+                            'sensitivity_coefficients', 'position_remainders', 'matching_source_spans')}
 
                     _park(debug, locations['ready'], qemu=qemu)
                     receipt['installed'][key] = int.from_bytes(read('installed', 2), 'little')
@@ -258,8 +268,45 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         with pytest.raises(ValueError, match='no longer retained'):
                             debug.observe_int33_mouse(stream='stale-stream', frame_id=meta['frame_id'])
                         assert debug.vm.process.poll() is None
-                        debug.mouse_move_relative(2, 4)
-                        lease = debug.mouse_button_down('left')['lease']
+                        frame = receipt['passive']['origin']['raster']
+                        selector = dict(stream=frame['stream'], frame_id=frame['frame_id'])
+                        assert debug.video_frame_advance()['advance_completed']
+                        with pytest.raises(ValueError, match='no longer retained'):
+                            debug.mouse_move_int33(160, 90, **selector)
+                        fresh = debug.observe_int33_mouse()['raster']
+                        assert fresh['stream'] == frame['stream'] and fresh['frame_id'] > frame['frame_id']
+                        assert debug.input_state()['pending_edges'] == 0
+                        selector['frame_id'] = fresh['frame_id']
+                        with pytest.raises(ValueError, match='no observed landing'):
+                            debug.mouse_button_down_int33(160, 90, **selector)
+                        assert debug.input_state()['pending_edges'] == 0
+                        with pytest.raises(ValueError, match='clip range'):
+                            debug.mouse_move_int33(319, 199, **selector)
+                        with pytest.raises(ValueError, match='four physical counts'):
+                            debug.mouse_move_int33(160, 93, **selector)
+                        assert debug.input_state()['pending_edges'] == 0
+                        motion = debug.mouse_move_int33(160, 90, **selector)
+                        assert motion['counts'] == [2, 4] and motion['delivery'] == 'python_pending'
+                        with pytest.raises(ValueError, match='neutral owned input queue'):
+                            debug.mouse_button_down_int33(160, 90, **selector)
+                        execution = _park(debug, locations['motion_landed'], qemu=qemu)
+                        assert execution['input_delivery']['delivery'] == 'qmp_accepted'
+                        landing = debug.observe_int33_mouse()
+                        assert landing['position'] == [320, 90] and landing['buttons'] == 0
+                        selector = dict(stream=landing['raster']['stream'],
+                                        frame_id=landing['raster']['frame_id'])
+                        at_target = debug.mouse_move_int33(160, 90, **selector)
+                        assert at_target['delivery'] == 'already_at_target' and at_target['input'] is None
+                        assert debug.input_state()['pending_edges'] == 0
+                        press = debug.mouse_button_down_int33(160, 90, **selector)
+                        assert press['delivery'] == 'python_pending' and press['guest_consumed'] is None
+                        lease = press['lease']
+                        receipt['native']['qemu_guarded_landing'] = {
+                            'source_target': [160, 90], 'int33_target': landing['position'],
+                            'relative_counts': motion['counts'], 'prepress_buttons': landing['buttons'],
+                            'range_refusal': True, 'landing_refusal': True, 'queued_motion_refusal': True,
+                            'stale_raster_refusal': True,
+                        }
                     else:
                         debug.run(guest_ms=70, timeout_ms=5000, fast_forward=True)
                         stale = debug.screenshot('mode13-dosbox-stale.png')['metadata']
