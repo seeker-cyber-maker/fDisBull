@@ -25,7 +25,13 @@
     "overlay/target/agi/helper.c": "f9c55fe7ebf315e05dc48da3acf4427adc7c530f8332ac3fad7b191eb3b5b9a0",
     "overlay/target/agi/helper.h": "153f7cc3bd8172b40308c9d5d6694110984c22fdfd6a1e1934ab34c50d2f941c",
     "overlay/target/agi/meson.build": "0733a22a5479bb61f3ad1787c8c7a87d94f4291ca78a7fc2de528ca918109395",
-    "overlay/target/agi/translate.c": "8bf55fd22347f726185d54a281c15d037b1aaf911b34826bba47bcc11bc3322d"
+    "overlay/target/agi/translate.c": "8bf55fd22347f726185d54a281c15d037b1aaf911b34826bba47bcc11bc3322d",
+    "overlay/target/agi/runtime.c": "d826b2a52653ea3bb90120129114d3497a390ff1a59532e8de64d950060ecff4",
+    "overlay/target/agi/runtime.h": "3e6cef92fce5adb1680094f4ee31e914bb68758833712397075b376dc3ac5266",
+    "overlay/target/agi/runtime_actor.c": "8f1b7dd364ab723a979a95cf84a65421e2773ec3c46ec9bd6d254e4bd7ecfc1c",
+    "overlay/target/agi/runtime_actor.h": "3a13434edf651f77eb4ac612146f217f47a9134dcc1ad6d4fa035b3714973e2d",
+    "overlay/target/agi/runtime_scene.c": "1dacd6068ed5041638f2747e3f7bb1d3c002769e870b0b43999631ba1eabe893",
+    "overlay/target/agi/runtime_scene.h": "ab615492a7aab5581844fb0def8f5333cf4aaa74c12d983f317d8cd2852c9d4a"
   },
   "qualification": "This manifest identifies experimental source only. Build success, authored execution correctness, observation neutrality, generated-code shape and performance require separate receipts bound to the exact applied source and binary. It does not establish full AGI compatibility, cross-host support or QEMU/DOSBox parity.",
   "profiles": [
