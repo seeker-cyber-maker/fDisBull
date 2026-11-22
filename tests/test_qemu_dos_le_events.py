@@ -375,7 +375,8 @@ def test_owned_restore_exemption_requires_exact_lifecycle_and_immutable_launch(l
 
 @pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True, virtual=True)], indirect=True)
 @pytest.mark.parametrize('fault', ['admission-epoch', 'admission-time', 'native-capability', 'missing-proof',
-    'proof-epoch', 'proof-time', 'proof-source-epoch', 'clock-before-restore', 'cpus', 'profile', 'other-config'])
+    'proof-epoch', 'proof-time', 'proof-source-epoch', 'proof-format', 'proof-format-type',
+    'clock-before-restore', 'cpus', 'profile', 'other-config'])
 def test_restored_le_clock_requires_exact_load_proof_and_immutable_configuration(le_trace, fault):
     from fdisbull.qemu_clock import machine_clock_configuration
     o = le_trace
@@ -397,6 +398,8 @@ def test_restored_le_clock_requires_exact_load_proof_and_immutable_configuration
         if fault == 'missing-proof': del result['instrumentation']
         elif fault == 'proof-epoch': result['instrumentation']['native_epoch'] = 3
         elif fault == 'proof-time': result['instrumentation']['virtual_ns'] += 1
+        elif fault == 'proof-format': result['instrumentation']['format'] = 'fdisbull-instrumented-qemu-state-999'
+        elif fault == 'proof-format-type': result['instrumentation']['format'] = []
         else: result['instrumentation']['source_epoch'] = True
         with o.project.transaction(True):
             o.project.db.execute('UPDATE debug_events SET evidence=? WHERE sequence=?',
@@ -407,8 +410,15 @@ def test_restored_le_clock_requires_exact_load_proof_and_immutable_configuration
 
 
 @pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True, virtual=True)], indirect=True)
-def test_restored_le_clock_accepts_valid_stopped_budget_receipt(le_trace):
+@pytest.mark.parametrize('format_version', [1, 3, 4])
+def test_restored_le_clock_accepts_valid_stopped_budget_receipt(le_trace, format_version):
     o = le_trace
+    row = o.project.db.execute("SELECT sequence,evidence FROM debug_events WHERE operation='load-machine-state'").fetchone()
+    result = json.loads(row['evidence'])
+    result['instrumentation']['format'] = f'fdisbull-instrumented-qemu-state-{format_version}'
+    with o.project.transaction(True):
+        o.project.db.execute('UPDATE debug_events SET evidence=? WHERE sequence=?',
+                            (json.dumps(result), row['sequence']))
     document = deepcopy(o.document)
     document['mapping']['machine_configuration']['native_clock_admission'].update({
         'budget-state':'cancelled', 'budget-token':'authored-completed-budget',

@@ -19,6 +19,7 @@ FORMAT = 'fdisbull-instrumented-qemu-state-1'
 FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
 FRAME_KEY_REPEAT_FORMAT = 'fdisbull-instrumented-qemu-state-4'
 _VIDEO_FORMATS = frozenset({VIDEO_FRAME_FORMAT, FRAME_KEY_REPEAT_FORMAT})
+RESTORE_RECEIPT_FORMATS = _VIDEO_FORMATS | {FORMAT}
 PREFIX = 'x-fdisbull-instrumented-'
 COMMANDS = frozenset(PREFIX + name for name in (
     'checkpoint-export', 'checkpoint-import', 'checkpoint-status',

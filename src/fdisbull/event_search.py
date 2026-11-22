@@ -447,9 +447,10 @@ def _le_restored_clock(captured, current, restored):
     from .dosbox_rpc import DebuggerError
     from .execution_clock import MAX_COUNTER, MAX_NS, validate_clock_admission
     from .qemu_clock import _native_clock
-    from .qemu_instrumented_checkpoint import FORMAT
+    from .qemu_instrumented_checkpoint import RESTORE_RECEIPT_FORMATS
     proof = restored[2].get('instrumentation')
-    if (type(proof) is not dict or proof.get('format') != FORMAT
+    if (type(proof) is not dict or type(proof.get('format')) is not str
+            or proof['format'] not in RESTORE_RECEIPT_FORMATS
             or proof.get('host_clock_sync_restored') is not False
             or type(proof.get('windows')) is not dict):
         raise ValueError('LE restored source clock lacks its instrumentation receipt')
