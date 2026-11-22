@@ -87,10 +87,6 @@ def verify(root):
         name = relative.as_posix()
         if name in expected or name in {'MANIFEST.json', '.python-path'}:
             continue
-        if path.parent.name == '__pycache__' and path.suffix == '.pyc':
-            source = relative.parent.parent / (path.name.split('.')[0] + '.py')
-            if source.as_posix() in expected:
-                continue
         raise ValueError('Unexpected payload file: ' + name)
     return {'status': 'verified', 'files': len(manifest['files']),
             'source_commit': manifest['source_commit'],
@@ -121,6 +117,8 @@ def main():
     root = Path(__file__).resolve().parent
     verify(root)
     prefix = args.prefix.expanduser().resolve()
+    if prefix.is_relative_to(root):
+        raise ValueError('Environment prefix must be outside the sealed companion')
     if prefix.exists() or not prefix.parent.is_dir():
         raise ValueError('Prefix must be a new directory under an existing parent')
     check = ('import sys, platform; '
@@ -224,6 +222,9 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     out = args.output.expanduser().resolve()
+    kit = Path(__file__).resolve().parents[1]
+    if out.is_relative_to(kit):
+        raise ValueError('Demo output must be outside the sealed companion')
     if out.exists() or not out.parent.is_dir():
         raise ValueError('Output must be a new directory under an existing parent')
     binary = Path(os.environ['DOTBOX_AGI_QEMU'])
@@ -358,7 +359,8 @@ python3.12 bootstrap.py --prefix /private/new-agi-environment
 bin/agi-python examples/authored_scene.py --output /private/new-agi-demo
 ```
 
-The bootstrap verifies the sealed payload, refuses an existing destination,
+The bootstrap verifies the sealed payload, requires a new destination outside
+the companion directory,
 uses `pip --no-index --no-deps`, and records its interpreter for the launcher.
 It does not install the full fDisBull application. Runtime data and the demo's
 output directory remain separate from the tool/source package.
@@ -411,8 +413,7 @@ does so. Ordinary CPU calls retain ownership, hash and timeout checks.
   metadata and any VCS/cache directories; the normalized overlay receipt is
   retained in `sources/BUILD_PROVENANCE.json`.
 - Renderer C/header/source notices are included unchanged alongside its API.
-- The core wheel includes its license; its complete package source is also
-  included under `sources/fdisbull-core/`.
+- Complete core package source is included under `sources/fdisbull-core/`.
 
 `MANIFEST.json` binds every payload file. `sources/BUILD_PROVENANCE.json` records
 the historical native build inputs/configuration and the fresh source identity
