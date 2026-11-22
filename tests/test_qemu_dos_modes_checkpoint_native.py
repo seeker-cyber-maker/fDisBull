@@ -251,8 +251,8 @@ def _fixture(directory, nasm, mode):
     return source, dict(ready=ready, hook=hook, fetch=fetch, scratch=scratch, gp=gp, ret=ret, pm=pm, pt=pt)
 
 
-def _launch(project, runtime, directory, disk, *, clock_profile=None, retrace=None):
-    options = {}
+def _launch(project, runtime, directory, disk, *, clock_profile=None, retrace=None,
+            **options):
     if clock_profile is not None:
         options['qemu_clock'] = clock_profile
     if retrace is not None:

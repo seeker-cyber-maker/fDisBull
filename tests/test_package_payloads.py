@@ -197,7 +197,8 @@ def test_tool_release_selector_includes_patch_chain_and_excludes_binary(tmp_path
 
     directories = (
         "qemu-dos-checkpoint", "qemu-frame-history", "qemu-frame-keys",
-        "qemu-frame-key-repeat", "qemu-instrumented-checkpoint", "qemu-layers", "qemu-task-private",
+        "qemu-frame-key-repeat", "qemu-dosbox-typematic", "qemu-instrumented-checkpoint",
+        "qemu-layers", "qemu-task-private",
         "qemu-task-context", "qemu-task-scheduler", "qemu-task-preemption",
         "qemu-task-cascade", "qemu-dos-provenance", "qemu-dos-save-operations", "qemu-dos-save-stop", "qemu-chip8", "qemu-chip8-devices", "qemu-chip8-classic", "qemu-chip8-layers", "qemu-chip8-frames", "qemu-chip8-frame-keys",
     )

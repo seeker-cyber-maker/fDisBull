@@ -634,6 +634,15 @@ delay and rate with PS/2 command `F3`. A native keyboard timer generates repeat
 makes through the device FIFO and IRQ path. Releasing the repeating key stops
 it, and modifiers do not themselves repeat.
 
+On a compatible native producer, a DOS COM/MZ launch with `qemu_clock="virtual"`
+can request `qemu_key_repeat_profile="dosbox-millisecond"` or
+`--qemu-key-repeat-profile dosbox-millisecond` in the CLI. This selects the
+DOSBox-X initial 500 ms delay and 33 ms cadence and its integer-millisecond
+F3 table. Launch and checkpoint restore verify the profile. The native
+producer's hardware pacing remains the QEMU default. The
+[optional native patch](../native/qemu-dosbox-typematic/README.md) records
+the supported timing and remaining scan and reset differences.
+
 Format 4 retains the programmed parameter and the exact timer deadline with
 the keyboard ownership proof and source-raster state. Restore checks the
 repeat phase before admitting the checkpoint. The rebound owner keeps the

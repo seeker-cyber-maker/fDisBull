@@ -2,6 +2,7 @@
 
 FDISBULL_QEMU_KEY_REPEAT selects an exact privately prepared QEMU producer.
 FDISBULL_REQUIRE_QEMU_KEY_REPEAT=1 makes missing inputs a test failure.
+FDISBULL_REQUIRE_QEMU_DOSBOX_TYPEMATIC=1 also runs the opt-in DOSBox profile.
 """
 from __future__ import annotations
 
@@ -322,15 +323,29 @@ def test_native_typematic_default_and_latest_owned_key(tmp_path):
 
 
 def test_native_typematic_programmed_raster_timeline_hot_and_cold_restore(tmp_path):
+    _programmed_raster_restore(tmp_path)
+
+
+def test_native_dosbox_typematic_raster_timeline_hot_and_cold_restore(tmp_path):
+    if os.environ.get('FDISBULL_REQUIRE_QEMU_DOSBOX_TYPEMATIC') != '1':
+        pytest.skip('Enable the optional native DOSBox typematic profile witness')
+    _programmed_raster_restore(tmp_path, profile='dosbox-millisecond')
+
+
+def _programmed_raster_restore(tmp_path, *, profile=None):
     runtime = _runtime()
+    interval = 63*MILLISECOND if profile else 62_500_000
+    profile_fields = {'profile': profile} if profile else {}
+    rate = dict(parameter=0x27, **profile_fields,
+                **{'delay-ns':500*MILLISECOND, 'interval-ns':interval})
     disk,target,code,offsets = _input(tmp_path,runtime,programmed=True)
     boot = Path(runtime['FDISBULL_QEMU_DOS_BOOT_IMAGE'])
     db = tmp_path/'programmed.fdb'
     with Project.create(db,target,image='com') as project:
-        with _launch(project,runtime,tmp_path,disk,clock_profile='virtual',retrace='precise') as debug:
+        with _launch(project,runtime,tmp_path,disk,clock_profile='virtual',retrace='precise',
+                     qemu_key_repeat_profile=profile) as debug:
             symbols = _ready(debug,offsets,programmed=True)
-            assert _repeat(debug) == dict(parameter=0x27, **{
-                'delay-ns':500*MILLISECOND,'interval-ns':62_500_000,'deadline-ns':-1})
+            assert _repeat(debug) == dict(rate, **{'deadline-ns':-1})
             debug.video_frame_start()
             assert debug.video_frame_advance(timeout_ms=15000)['advance_completed']
             start = debug.clock_observe()['virtual_ns']
@@ -342,11 +357,11 @@ def test_native_typematic_programmed_raster_timeline_hot_and_cold_restore(tmp_pa
             _advance(debug, first+10*MILLISECOND)
             assert _scans(debug,symbols) == [MAKE, MAKE]
             repeat = _repeat(debug)
-            assert repeat == dict(parameter=0x27, key='a', **{
-                'delay-ns':500*MILLISECOND,'interval-ns':62_500_000,'deadline-ns':first+62_500_000})
+            assert repeat == dict(rate, key='a', **{'deadline-ns':first+interval})
             root = debug.timeline_start(frame_source='source-raster',max_frames=8,max_bytes=160*1024**2,
                 max_state_bytes=24*1024**2,timeout_ms=30000)
             control = dict(db=str(db),directory=str(tmp_path),disk=str(disk['image']), symbols=symbols,
+                repeat_profile=profile,
                 timeline=root['timeline'], point=root['point'], token=keys['token'], epoch=keys['epoch'],
                 accepted=keys['accepted-edges'], raster=root['nodes'][0]['frame']['source_raster'],
                 repeat=repeat,saved_ns=debug.clock_observe()['virtual_ns'])
@@ -410,7 +425,8 @@ def _cold(control):
     runtime = _runtime()
     with Project(control['db']) as project:
         with _launch(project,runtime,Path(control['directory']),{'image':control['disk']},
-                     clock_profile='virtual',retrace='precise') as debug:
+                     clock_profile='virtual',retrace='precise',
+                     qemu_key_repeat_profile=control['repeat_profile']) as debug:
             _restore(debug,control)
             assert _capture_future(debug,control['symbols'],control['repeat'],control['accepted']) == control['expected']
         assert debug.vm.process.poll() == 0
