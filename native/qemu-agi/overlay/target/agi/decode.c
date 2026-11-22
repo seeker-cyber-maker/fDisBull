@@ -14,193 +14,14 @@ typedef struct AgiOpcode {
     AgiDecodedOperand operands[AGI_DECODE_OPERANDS_MAX];
 } AgiOpcode;
 
-/* Fixed encoding facts reused from fDisBull's agi_layout.py and agi_scenes.py
- * at 1b27110bb43fe91fec5d09b4cffa7227771cb5e9. These project tables describe
- * the explicit 2.917 layout, not executable engine implementations. Opcode
- * 149 remains a contextual-layout boundary despite its nominal zero width.
+/* One descriptor table holds AGI 2.917 names, extents and typed operands.
+ * Encoding facts: fDisBull agi_layout.py/agi_scenes.py at
+ * 1b27110bb43fe91fec5d09b4cffa7227771cb5e9. Operand roles were checked against
+ * ScummVM f7403b6efaae2f033e8abea80b3fb6bee5303369 op_cmd.cpp/op_test.cpp,
+ * including cases where its display table has misleading parameter letters.
+ * Only format facts were used, not upstream implementation code.
+ * OPCODE_COVERAGE.md records the scope and contextual trace.on boundary.
  */
-typedef struct AgiCatalogEntry {
-    const char *mnemonic;
-    uint8_t operand_count;
-} AgiCatalogEntry;
-
-static const AgiCatalogEntry catalog[174] = {
-    [0] = { "return", 0 },
-    [1] = { "increment", 1 },
-    [2] = { "decrement", 1 },
-    [3] = { "assignn", 2 },
-    [4] = { "assignv", 2 },
-    [5] = { "addn", 2 },
-    [6] = { "addv", 2 },
-    [7] = { "subn", 2 },
-    [8] = { "subv", 2 },
-    [9] = { "lindirectv", 2 },
-    [10] = { "rindirect", 2 },
-    [11] = { "lindirectn", 2 },
-    [12] = { "set", 1 },
-    [13] = { "reset", 1 },
-    [14] = { "toggle", 1 },
-    [15] = { "set.v", 1 },
-    [16] = { "reset.v", 1 },
-    [17] = { "toggle.v", 1 },
-    [18] = { "new.room", 1 },
-    [19] = { "new.room.v", 1 },
-    [20] = { "load.logics", 1 },
-    [21] = { "load.logics.v", 1 },
-    [22] = { "call", 1 },
-    [23] = { "call.v", 1 },
-    [24] = { "load.pic", 1 },
-    [25] = { "draw.pic", 1 },
-    [26] = { "show.pic", 0 },
-    [27] = { "discard.pic", 1 },
-    [28] = { "overlay.pic", 1 },
-    [29] = { "show.pri.screen", 0 },
-    [30] = { "load.view", 1 },
-    [31] = { "load.view.v", 1 },
-    [32] = { "discard.view", 1 },
-    [33] = { "animate.obj", 1 },
-    [34] = { "unanimate.all", 0 },
-    [35] = { "draw", 1 },
-    [36] = { "erase", 1 },
-    [37] = { "position", 3 },
-    [38] = { "position.v", 3 },
-    [39] = { "get.posn", 3 },
-    [40] = { "reposition", 3 },
-    [41] = { "set.view", 2 },
-    [42] = { "set.view.v", 2 },
-    [43] = { "set.loop", 2 },
-    [44] = { "set.loop.v", 2 },
-    [45] = { "fix.loop", 1 },
-    [46] = { "release.loop", 1 },
-    [47] = { "set.cel", 2 },
-    [48] = { "set.cel.v", 2 },
-    [49] = { "last.cel", 2 },
-    [50] = { "current.cel", 2 },
-    [51] = { "current.loop", 2 },
-    [52] = { "current.view", 2 },
-    [53] = { "number.of.loops", 2 },
-    [54] = { "set.priority", 2 },
-    [55] = { "set.priority.v", 2 },
-    [56] = { "release.priority", 1 },
-    [57] = { "get.priority", 2 },
-    [58] = { "stop.update", 1 },
-    [59] = { "start.update", 1 },
-    [60] = { "force.update", 1 },
-    [61] = { "ignore.horizon", 1 },
-    [62] = { "observe.horizon", 1 },
-    [63] = { "set.horizon", 1 },
-    [64] = { "object.on.water", 1 },
-    [65] = { "object.on.land", 1 },
-    [66] = { "object.on.anything", 1 },
-    [67] = { "ignore.objs", 1 },
-    [68] = { "observe.objs", 1 },
-    [69] = { "distance", 3 },
-    [70] = { "stop.cycling", 1 },
-    [71] = { "start.cycling", 1 },
-    [72] = { "normal.cycle", 1 },
-    [73] = { "end.of.loop", 2 },
-    [74] = { "reverse.cycle", 1 },
-    [75] = { "reverse.loop", 2 },
-    [76] = { "cycle.time", 2 },
-    [77] = { "stop.motion", 1 },
-    [78] = { "start.motion", 1 },
-    [79] = { "step.size", 2 },
-    [80] = { "step.time", 2 },
-    [81] = { "move.obj", 5 },
-    [82] = { "move.obj.v", 5 },
-    [83] = { "follow.ego", 3 },
-    [84] = { "wander", 1 },
-    [85] = { "normal.motion", 1 },
-    [86] = { "set.dir", 2 },
-    [87] = { "get.dir", 2 },
-    [88] = { "ignore.blocks", 1 },
-    [89] = { "observe.blocks", 1 },
-    [90] = { "block", 4 },
-    [91] = { "unblock", 0 },
-    [92] = { "get", 1 },
-    [93] = { "get.v", 1 },
-    [94] = { "drop", 1 },
-    [95] = { "put", 2 },
-    [96] = { "put.v", 2 },
-    [97] = { "get.room.v", 2 },
-    [98] = { "load.sound", 1 },
-    [99] = { "sound", 2 },
-    [100] = { "stop.sound", 0 },
-    [101] = { "print", 1 },
-    [102] = { "print.v", 1 },
-    [103] = { "display", 3 },
-    [104] = { "display.v", 3 },
-    [105] = { "clear.lines", 3 },
-    [106] = { "text.screen", 0 },
-    [107] = { "graphics", 0 },
-    [108] = { "set.cursor.char", 1 },
-    [109] = { "set.text.attribute", 2 },
-    [110] = { "shake.screen", 1 },
-    [111] = { "configure.screen", 3 },
-    [112] = { "status.line.on", 0 },
-    [113] = { "status.line.off", 0 },
-    [114] = { "set.string", 2 },
-    [115] = { "get.string", 5 },
-    [116] = { "word.to.string", 2 },
-    [117] = { "parse", 1 },
-    [118] = { "get.num", 2 },
-    [119] = { "prevent.input", 0 },
-    [120] = { "accept.input", 0 },
-    [121] = { "set.key", 3 },
-    [122] = { "add.to.pic", 7 },
-    [123] = { "add.to.pic.v", 7 },
-    [124] = { "status", 0 },
-    [125] = { "save.game", 0 },
-    [126] = { "restore.game", 0 },
-    [127] = { "init.disk", 0 },
-    [128] = { "restart.game", 0 },
-    [129] = { "show.obj", 1 },
-    [130] = { "random", 3 },
-    [131] = { "program.control", 0 },
-    [132] = { "player.control", 0 },
-    [133] = { "obj.status.v", 1 },
-    [134] = { "quit", 1 },
-    [135] = { "show.mem", 0 },
-    [136] = { "pause", 0 },
-    [137] = { "echo.line", 0 },
-    [138] = { "cancel.line", 0 },
-    [139] = { "init.joy", 0 },
-    [140] = { "toggle.monitor", 0 },
-    [141] = { "version", 0 },
-    [142] = { "script.size", 1 },
-    [143] = { "set.game.id", 1 },
-    [144] = { "log", 1 },
-    [145] = { "set.scan.start", 0 },
-    [146] = { "reset.scan.start", 0 },
-    [147] = { "reposition.to", 3 },
-    [148] = { "reposition.to.v", 3 },
-    [149] = { "trace.on", 0 },
-    [150] = { "trace.info", 3 },
-    [151] = { "print.at", 4 },
-    [152] = { "print.at.v", 4 },
-    [153] = { "discard.view.v", 1 },
-    [154] = { "clear.text.rect", 5 },
-    [155] = { "set.upper.left", 2 },
-    [156] = { "set.menu", 1 },
-    [157] = { "set.menu.item", 2 },
-    [158] = { "submit.menu", 0 },
-    [159] = { "enable.item", 1 },
-    [160] = { "disable.item", 1 },
-    [161] = { "menu.input", 0 },
-    [162] = { "show.obj.v", 1 },
-    [163] = { "open.dialogue", 0 },
-    [164] = { "close.dialogue", 0 },
-    [165] = { "mul.n", 2 },
-    [166] = { "mul.v", 2 },
-    [167] = { "div.n", 2 },
-    [168] = { "div.v", 2 },
-    [169] = { "close.window", 0 },
-    [170] = { "set.simple", 1 },
-    [171] = { "push.script", 0 },
-    [172] = { "pop.script", 0 },
-    [173] = { "hold.key", 0 },
-};
-
 #define ARG(role_, kind_, width_, access_) \
     { .role = role_, .kind = AGI_OPERAND_##kind_, .width = width_, \
       .access = AGI_ACCESS_##access_ }
@@ -209,6 +30,8 @@ static const AgiCatalogEntry catalog[174] = {
 #define ACTOR ARG("actor", ACTOR, 8, REFERENCE)
 #define ORD(role_, kind_) ARG(role_, kind_, 8, REFERENCE)
 #define FLAG(access_) ARG("flag", FLAG, 1, access_)
+#define STRING(role_, access_) ARG(role_, STRING, 8, access_)
+#define CONTROLLER(access_) ARG("controller", CONTROLLER, 8, access_)
 #define OP(name_, operation_, effect_, profile_, size_, count_, ...) \
     { .mnemonic = name_, .operation = operation_, \
       .effect = AGI_EFFECT_##effect_, \
@@ -238,6 +61,12 @@ static const AgiOpcode actions[256] = {
              VAR("destination", READ_WRITE), IMM("value")),
     [8] = OP("subv", "scalar.subtract", SCALAR, SCALAR, 3, 2,
              VAR("destination", READ_WRITE), VAR("value", READ)),
+    [9] = META("lindirectv", "scalar.assign_indirect", SCALAR, 3, 2,
+               VAR("destination_pointer", READ), VAR("value", READ)),
+    [10] = META("rindirect", "scalar.read_indirect", SCALAR, 3, 2,
+                VAR("destination", WRITE), VAR("source_pointer", READ)),
+    [11] = META("lindirectn", "scalar.assign_indirect", SCALAR, 3, 2,
+                VAR("destination_pointer", READ), IMM("value")),
     [12] = OP("set", "flag.set", FLAG, SCALAR, 2, 1, FLAG(WRITE)),
     [13] = OP("reset", "flag.reset", FLAG, SCALAR, 2, 1, FLAG(WRITE)),
     [14] = OP("toggle", "flag.toggle", FLAG, SCALAR, 2, 1, FLAG(READ_WRITE)),
@@ -347,6 +176,9 @@ static const AgiOpcode actions[256] = {
                 ACTOR, VAR("step_time", READ)),
     [81] = META("move.obj", "object.move", ACTOR, 6, 5,
                 ACTOR, IMM("x"), IMM("y"), IMM("step_size"), FLAG(WRITE)),
+    [82] = META("move.obj.v", "object.move", ACTOR, 6, 5,
+                ACTOR, VAR("x", READ), VAR("y", READ),
+                VAR("step_size", READ), FLAG(WRITE)),
     [83] = META("follow.ego", "object.follow_ego", ACTOR, 4, 3,
                 ACTOR, IMM("step_size"), FLAG(WRITE)),
     [84] = META("wander", "object.wander", ACTOR, 2, 1, ACTOR),
@@ -360,6 +192,20 @@ static const AgiOpcode actions[256] = {
     [90] = META("block", "scene.block", HOST, 5, 4,
                 IMM("x1"), IMM("y1"), IMM("x2"), IMM("y2")),
     [91] = META("unblock", "scene.unblock", HOST, 1, 0, { 0 }),
+    [92] = META("get", "inventory.get", HOST, 2, 1,
+                ORD("inventory_object", INVENTORY_OBJECT)),
+    [93] = META("get.v", "inventory.get", HOST, 2, 1,
+                VAR("inventory_object", READ)),
+    [94] = META("drop", "inventory.drop", HOST, 2, 1,
+                ORD("inventory_object", INVENTORY_OBJECT)),
+    /* cmdPut reads the second byte as a variable despite the upstream
+     * display table's "nn" shorthand. See OPCODE_COVERAGE.md. */
+    [95] = META("put", "inventory.put", HOST, 3, 2,
+                ORD("inventory_object", INVENTORY_OBJECT), VAR("room", READ)),
+    [96] = META("put.v", "inventory.put", HOST, 3, 2,
+                VAR("inventory_object", READ), VAR("room", READ)),
+    [97] = META("get.room.v", "inventory.get_room", HOST, 3, 2,
+                VAR("inventory_object", READ), VAR("destination", WRITE)),
     [98] = META("load.sound", "resource.load_sound", RESOURCE, 2, 1,
                 ORD("sound", SOUND)),
     [99] = META("sound", "scene.play_sound", HOST, 3, 2,
@@ -371,6 +217,35 @@ static const AgiOpcode actions[256] = {
                  IMM("row"), IMM("column"), ORD("message", MESSAGE)),
     [104] = META("display.v", "scene.display", HOST, 4, 3,
                  VAR("row", READ), VAR("column", READ), VAR("message", READ)),
+    [105] = META("clear.lines", "scene.clear_lines", HOST, 4, 3,
+                 IMM("first_row"), IMM("last_row"), IMM("color")),
+    [106] = META("text.screen", "scene.text_screen", HOST, 1, 0, { 0 }),
+    [107] = META("graphics", "scene.graphics", HOST, 1, 0, { 0 }),
+    [108] = META("set.cursor.char", "scene.set_cursor_char", HOST, 2, 1,
+                 ORD("message", MESSAGE)),
+    [109] = META("set.text.attribute", "scene.set_text_attribute", HOST, 3, 2,
+                 IMM("foreground"), IMM("background")),
+    [110] = META("shake.screen", "scene.shake_screen", HOST, 2, 1,
+                 IMM("count")),
+    [111] = META("configure.screen", "scene.configure_screen", HOST, 4, 3,
+                 IMM("picture_row"), IMM("input_row"), IMM("status_row")),
+    [112] = META("status.line.on", "scene.status_line_on", HOST, 1, 0, { 0 }),
+    [113] = META("status.line.off", "scene.status_line_off", HOST, 1, 0, { 0 }),
+    [114] = META("set.string", "string.assign", HOST, 3, 2,
+                 STRING("destination", WRITE), ORD("message", MESSAGE)),
+    [115] = META("get.string", "string.read_input", HOST, 6, 5,
+                 STRING("destination", WRITE), ORD("message", MESSAGE),
+                 IMM("row"), IMM("column"), IMM("maximum_length")),
+    [116] = META("word.to.string", "string.from_word", HOST, 3, 2,
+                 STRING("destination", WRITE), IMM("parsed_word_index")),
+    [117] = META("parse", "parser.parse", HOST, 2, 1,
+                 STRING("string", READ)),
+    [118] = META("get.num", "input.get_number", HOST, 3, 2,
+                 ORD("message", MESSAGE), VAR("destination", WRITE)),
+    [119] = META("prevent.input", "input.prevent", HOST, 1, 0, { 0 }),
+    [120] = META("accept.input", "input.accept", HOST, 1, 0, { 0 }),
+    [121] = META("set.key", "input.set_key", HOST, 4, 3,
+                 IMM("ascii"), IMM("scan_code"), CONTROLLER(WRITE)),
     [122] = META("add.to.pic", "scene.add_to_picture", HOST, 8, 7,
                  ORD("view", VIEW), ORD("loop", LOOP), ORD("cel", CEL),
                  IMM("x"), IMM("y"), IMM("priority"), IMM("control")),
@@ -378,15 +253,80 @@ static const AgiOpcode actions[256] = {
                  VAR("view", READ), VAR("loop", READ), VAR("cel", READ),
                  VAR("x", READ), VAR("y", READ), VAR("priority", READ),
                  VAR("control", READ)),
+    [124] = META("status", "inventory.show_status", HOST, 1, 0, { 0 }),
+    [125] = META("save.game", "system.save_game", HOST, 1, 0, { 0 }),
+    [126] = META("restore.game", "system.restore_game", CONTROL, 1, 0, { 0 }),
+    [127] = META("init.disk", "system.init_disk", HOST, 1, 0, { 0 }),
+    [128] = META("restart.game", "system.restart_game", CONTROL, 1, 0, { 0 }),
     [129] = META("show.obj", "scene.show_object", HOST, 2, 1, ORD("view", VIEW)),
+    [130] = META("random", "scalar.random", SCALAR, 4, 3,
+                 IMM("minimum"), IMM("maximum"), VAR("destination", WRITE)),
+    [131] = META("program.control", "input.program_control", HOST, 1, 0, { 0 }),
+    [132] = META("player.control", "input.player_control", HOST, 1, 0, { 0 }),
+    [133] = META("obj.status.v", "debug.object_status", HOST, 2, 1,
+                 VAR("actor", READ)),
+    [134] = META("quit", "system.quit", CONTROL, 2, 1, IMM("without_prompt")),
+    [135] = META("show.mem", "debug.show_memory", HOST, 1, 0, { 0 }),
+    [136] = META("pause", "system.pause", HOST, 1, 0, { 0 }),
+    [137] = META("echo.line", "input.echo_line", HOST, 1, 0, { 0 }),
+    [138] = META("cancel.line", "input.cancel_line", HOST, 1, 0, { 0 }),
+    [139] = META("init.joy", "input.init_joystick", HOST, 1, 0, { 0 }),
+    [140] = META("toggle.monitor", "scene.toggle_monitor", HOST, 1, 0, { 0 }),
+    [141] = META("version", "debug.show_version", HOST, 1, 0, { 0 }),
+    [142] = META("script.size", "resource.script_size", RESOURCE, 2, 1,
+                 IMM("capacity")),
+    [143] = META("set.game.id", "system.set_game_id", HOST, 2, 1,
+                 ORD("message", MESSAGE)),
+    [144] = META("log", "debug.log", HOST, 2, 1, ORD("message", MESSAGE)),
     [145] = META("set.scan.start", "control.set_scan_start", CONTROL, 1, 0, { 0 }),
     [146] = META("reset.scan.start", "control.reset_scan_start", CONTROL, 1, 0, { 0 }),
     [147] = META("reposition.to", "object.reposition_to", ACTOR, 4, 3,
                  ACTOR, IMM("x"), IMM("y")),
     [148] = META("reposition.to.v", "object.reposition_to", ACTOR, 4, 3,
                  ACTOR, VAR("x", READ), VAR("y", READ)),
+    [149] = META("trace.on", "debug.trace_on", HOST, 1, 0, { 0 }),
+    [150] = META("trace.info", "debug.trace_info", HOST, 4, 3,
+                 ORD("logic", LOGIC), IMM("first_row"), IMM("row_count")),
+    [151] = META("print.at", "scene.print_at", HOST, 5, 4,
+                 ORD("message", MESSAGE), IMM("row"), IMM("column"), IMM("width")),
+    [152] = META("print.at.v", "scene.print_at", HOST, 5, 4,
+                 VAR("message", READ), IMM("row"), IMM("column"), IMM("width")),
     [153] = META("discard.view.v", "resource.discard_view", RESOURCE, 2, 1,
                  VAR("view", READ)),
+    [154] = META("clear.text.rect", "scene.clear_text_rect", HOST, 6, 5,
+                 IMM("first_row"), IMM("first_column"), IMM("last_row"),
+                 IMM("last_column"), IMM("color")),
+    /* The 2.917 handler is a no-op; operands are retained as the command's
+     * nominal coordinates, not claimed to change screen geometry. */
+    [155] = META("set.upper.left", "scene.set_upper_left", HOST, 3, 2,
+                 IMM("row"), IMM("column")),
+    [156] = META("set.menu", "menu.add", HOST, 2, 1, ORD("message", MESSAGE)),
+    [157] = META("set.menu.item", "menu.add_item", HOST, 3, 2,
+                 ORD("message", MESSAGE), CONTROLLER(REFERENCE)),
+    [158] = META("submit.menu", "menu.submit", HOST, 1, 0, { 0 }),
+    [159] = META("enable.item", "menu.enable_item", HOST, 2, 1,
+                 CONTROLLER(REFERENCE)),
+    [160] = META("disable.item", "menu.disable_item", HOST, 2, 1,
+                 CONTROLLER(REFERENCE)),
+    [161] = META("menu.input", "menu.input", HOST, 1, 0, { 0 }),
+    [162] = META("show.obj.v", "scene.show_object", HOST, 2, 1,
+                 VAR("view", READ)),
+    [163] = META("open.dialogue", "scene.open_dialogue", HOST, 1, 0, { 0 }),
+    [164] = META("close.dialogue", "scene.close_dialogue", HOST, 1, 0, { 0 }),
+    [165] = META("mul.n", "scalar.multiply", SCALAR, 3, 2,
+                 VAR("destination", READ_WRITE), IMM("value")),
+    [166] = META("mul.v", "scalar.multiply", SCALAR, 3, 2,
+                 VAR("destination", READ_WRITE), VAR("value", READ)),
+    [167] = META("div.n", "scalar.divide", SCALAR, 3, 2,
+                 VAR("destination", READ_WRITE), IMM("value")),
+    [168] = META("div.v", "scalar.divide", SCALAR, 3, 2,
+                 VAR("destination", READ_WRITE), VAR("value", READ)),
+    [169] = META("close.window", "scene.close_window", HOST, 1, 0, { 0 }),
+    [170] = META("set.simple", "system.set_simple", HOST, 2, 1,
+                 STRING("description", READ)),
+    [171] = META("push.script", "resource.push_script", RESOURCE, 1, 0, { 0 }),
+    [172] = META("pop.script", "resource.pop_script", RESOURCE, 1, 0, { 0 }),
+    [173] = META("hold.key", "input.hold_key", HOST, 1, 0, { 0 }),
     [0xfe] = OP("goto", "control.goto", CONTROL, SCALAR, 3, 1,
                 ARG("displacement", S16, 16, READ)),
     [0xff] = OP("if", "control.if", CONTROL, SCALAR, 0, 1,
@@ -415,11 +355,11 @@ static const AgiOpcode predicates[19] = {
                 ORD("inventory_object", INVENTORY_OBJECT), VAR("room", READ)),
     [11] = META("posn", "", CONTROL, 6, 5,
                 ACTOR, IMM("x1"), IMM("y1"), IMM("x2"), IMM("y2")),
-    [12] = META("controller", "", CONTROL, 2, 1, IMM("controller")),
+    [12] = META("controller", "", CONTROL, 2, 1, CONTROLLER(READ)),
     [13] = META("have.key", "", CONTROL, 1, 0, { 0 }),
     [14] = META("said", "", CONTROL, 0, 0, { 0 }),
     [15] = META("compare.strings", "", CONTROL, 3, 2,
-                IMM("left_string"), IMM("right_string")),
+                STRING("left_string", READ), STRING("right_string", READ)),
     [16] = META("obj.in.box", "", CONTROL, 6, 5,
                 ACTOR, IMM("x1"), IMM("y1"), IMM("x2"), IMM("y2")),
     [17] = META("center.posn", "", CONTROL, 6, 5,
@@ -430,6 +370,8 @@ static const AgiOpcode predicates[19] = {
 
 #undef META
 #undef OP
+#undef CONTROLLER
+#undef STRING
 #undef FLAG
 #undef ORD
 #undef ACTOR
@@ -470,9 +412,10 @@ static void agi_edge(AgiDecodedInstruction *out, AgiSuccessorKind kind,
  * but never feeds them to the native evaluator.
  */
 static bool agi_decode_if(AgiDecodeRead read, void *opaque, uint32_t code_size,
-                          AgiDecodePurpose purpose, AgiDecodedInstruction *out)
+                          AgiDecodePurpose purpose, bool runtime,
+                          AgiDecodedInstruction *out)
 {
-    const bool structural = purpose == AGI_DECODE_STRUCTURAL;
+    const bool structural = purpose == AGI_DECODE_STRUCTURAL || runtime;
     const uint32_t byte_limit = structural ? AGI_DECODE_BYTES_MAX : AGI_INSN_MAX;
     const uint32_t predicate_limit = structural ? AGI_DECODE_PREDICATES_MAX :
                                                 AGI_EXEC_PREDICATES_MAX;
@@ -487,7 +430,7 @@ static bool agi_decode_if(AgiDecodeRead read, void *opaque, uint32_t code_size,
         if (at - out->pc >= byte_limit - 2) {
             return agi_decode_fault(out, AGI_FAULT_CONDITION_LIMIT);
         }
-        if (at - out->pc >= AGI_INSN_MAX - 2) {
+        if (!runtime && at - out->pc >= AGI_INSN_MAX - 2) {
             native_admitted = false;
         }
         if (!agi_extent(code_size, at, 1)) {
@@ -541,7 +484,7 @@ static bool agi_decode_if(AgiDecodeRead read, void *opaque, uint32_t code_size,
             return agi_decode_fault(out, AGI_FAULT_CONDITION_LIMIT);
         }
         predicate = &predicates[op];
-        if (!predicate->native || tests > AGI_EXEC_PREDICATES_MAX) {
+        if (!runtime && (!predicate->native || tests > AGI_EXEC_PREDICATES_MAX)) {
             native_admitted = false;
         }
         count = predicate->operand_count;
@@ -621,11 +564,8 @@ bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
                 uint32_t pc, AgiDecodeProfile profile, AgiDecodePurpose purpose,
                 AgiDecodedInstruction *out)
 {
-    static const char *const argument_roles[AGI_DECODE_OPERANDS_MAX] = {
-        "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6",
-    };
+    const bool runtime = profile == AGI_DECODE_RUNTIME;
     const AgiOpcode *action;
-    AgiOpcode catalog_action;
     uint32_t i, at, value;
 
     *out = (AgiDecodedInstruction) { .pc = pc };
@@ -634,21 +574,6 @@ bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
     }
     out->opcode = agi_byte(read, opaque, out, pc);
     action = &actions[out->opcode];
-    if (!action->mnemonic && out->opcode < 174) {
-        catalog_action = (AgiOpcode) {
-            .mnemonic = catalog[out->opcode].mnemonic,
-            .operation = "unmodeled", .effect = AGI_EFFECT_UNKNOWN,
-            .size = catalog[out->opcode].operand_count + 1,
-            .operand_count = catalog[out->opcode].operand_count,
-        };
-        for (i = 0; i < catalog_action.operand_count; i++) {
-            catalog_action.operands[i] = (AgiDecodedOperand) {
-                .role = argument_roles[i], .kind = AGI_OPERAND_U8,
-                .width = 8, .access = AGI_ACCESS_READ,
-            };
-        }
-        action = &catalog_action;
-    }
     if (!action->mnemonic) {
         out->execution_support = AGI_EXEC_UNSUPPORTED_PROFILE;
         return agi_decode_fault(out, AGI_FAULT_OPCODE);
@@ -662,17 +587,33 @@ bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
                              AGI_EXEC_UNSUPPORTED_PROFILE :
                              action->effect == AGI_EFFECT_HOST ?
                              AGI_EXEC_PENDING_HOST : AGI_EXEC_NATIVE;
+    if (runtime) {
+        /* The runtime executes the fixed catalog. Device requests expose a
+         * separate resumable capability, including conditional modal paths. */
+        switch (out->opcode) {
+        case 29: case 101: case 102: case 110: case 115: case 118:
+        case 124: case 125: case 126: case 128: case 129:
+        case 133: case 134: case 135: case 136: case 139: case 141:
+        case 144: case 151: case 152: case 161: case 162:
+            out->execution_support = AGI_EXEC_PENDING_HOST;
+            break;
+        default:
+            out->execution_support = AGI_EXEC_NATIVE;
+        }
+    }
     /* Newly recognized metadata commands remain native unsupported-opcode
      * faults before fetching any operand, including truncated encodings.
      * Previously known profile-disabled commands retain their original path.
      */
-    if (purpose == AGI_DECODE_EXECUTION && !action->native) {
+    if (purpose == AGI_DECODE_EXECUTION && !action->native && !runtime) {
         return agi_decode_fault(out, AGI_FAULT_OPCODE);
     }
-    /* In AGI 2.917 trace.on can consume an extra byte when tracing is already
-     * enabled. Immutable raw bytes do not supply that engine state.
+    /* Original-context trace.on can consume an extra byte when tracing is
+     * already enabled. Immutable raw bytes do not supply that engine state.
+     * Only the explicit runtime dialect selects the nominal zero-operand
+     * policy; raw structural inspection and all legacy pilots retain the stop.
      */
-    if (out->opcode == 149) {
+    if (out->opcode == 149 && !runtime) {
         return agi_decode_fault(out, AGI_FAULT_CONTEXTUAL_LAYOUT);
     }
     out->operand_count = action->operand_count;
@@ -680,7 +621,7 @@ bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
         out->operands[i] = action->operands[i];
     }
     if (out->opcode == 0xff) {
-        return agi_decode_if(read, opaque, code_size, purpose, out);
+        return agi_decode_if(read, opaque, code_size, purpose, runtime, out);
     }
     if (!agi_extent(code_size, pc, action->size)) {
         return agi_decode_fault(out, AGI_FAULT_TRUNCATED);
@@ -705,6 +646,11 @@ bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
          */
         agi_edge(out, AGI_SUCCESSOR_ASSUMED_RETURN, (int64_t)pc + out->size,
                   code_size);
+    } else if (out->opcode == 126 || out->opcode == 128 || out->opcode == 134) {
+        /* A canceled/failed host transition may continue locally; successful
+         * restoration, restart or exit does not imply this continuation. */
+        agi_edge(out, AGI_SUCCESSOR_ASSUMED_FALLTHROUGH,
+                  (int64_t)pc + out->size, code_size);
     } else if (out->opcode != 0 && out->opcode != 18 && out->opcode != 19) {
         agi_edge(out, action->effect == AGI_EFFECT_UNKNOWN ?
                   AGI_SUCCESSOR_ASSUMED_FALLTHROUGH : AGI_SUCCESSOR_FALLTHROUGH,
@@ -718,6 +664,7 @@ const char *agi_operand_kind_name(AgiOperandKind kind)
     static const char *const names[] = {
         "variable", "flag", "actor", "view", "loop", "cel", "u8", "u16", "s16",
         "picture", "logic", "room", "sound", "message", "inventory_object", "word",
+        "string", "controller",
     };
     return names[kind];
 }

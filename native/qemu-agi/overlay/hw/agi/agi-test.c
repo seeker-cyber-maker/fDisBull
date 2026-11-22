@@ -11,15 +11,33 @@
 #include "exec/address-spaces.h"
 #include "target/agi/cpu-qom.h"
 #include "target/agi/cpu.h"
+#include "target/agi/runtime_qom.h"
 
 #define TYPE_AGI_TEST_MACHINE MACHINE_TYPE_NAME("agi-test")
 OBJECT_DECLARE_SIMPLE_TYPE(AgiTestMachineState, AGI_TEST_MACHINE)
 struct AgiTestMachineState {
     MachineState parent_obj;
     char *view_catalog;
+    char *runtime_package;
     bool draw_intent;
     bool initialized;
 };
+
+static char *agi_get_runtime_package(Object *obj, Error **errp)
+{
+    const AgiTestMachineState *m = AGI_TEST_MACHINE(obj);
+    return g_strdup(m->runtime_package ? m->runtime_package : "");
+}
+static void agi_set_runtime_package(Object *obj, const char *value, Error **errp)
+{
+    AgiTestMachineState *m = AGI_TEST_MACHINE(obj);
+    if (m->initialized || !value[0] || strlen(value) > 4096) {
+        error_setg(errp, "AGI_RUNTIME_PACKAGE: nonempty startup-only path required");
+        return;
+    }
+    g_free(m->runtime_package);
+    m->runtime_package = g_strdup(value);
+}
 
 static char *agi_get_catalog(Object *obj, Error **errp)
 {
@@ -70,8 +88,12 @@ static void agi_test_init(MachineState *machine)
 
     ms->initialized = true;
 
-    if (!machine->kernel_filename || machine->ram_size != AGI_CODE_MAX) {
-        error_report("agi-test requires -kernel raw code and fixed 64 KiB RAM");
+    if ((!machine->kernel_filename && !ms->runtime_package) || machine->ram_size != AGI_CODE_MAX) {
+        error_report("agi-test requires raw -kernel or runtime-package and fixed 64 KiB RAM");
+        exit(1);
+    }
+    if (ms->runtime_package && (ms->view_catalog || ms->draw_intent)) {
+        error_report("AGI_RUNTIME_PACKAGE: runtime-package cannot combine with a pilot profile");
         exit(1);
     }
     if (ms->draw_intent && !ms->view_catalog) {
@@ -80,6 +102,18 @@ static void agi_test_init(MachineState *machine)
     }
     memory_region_add_subregion(get_system_memory(), 0, machine->ram);
     cpu = AGI_CPU(cpu_create(mc->default_cpu_type));
+    if (ms->runtime_package) {
+        cpu->runtime = agi_runtime_load_package(ms->runtime_package, &error);
+        if (!cpu->runtime) { error_report_err(error); exit(1); }
+        cpu->env.runtime_profile = 1;
+        cpu->decode_logic = cpu->runtime->resources->entry_logic;
+        cpu->code[0] = 0;
+        cpu->env.code_size = 1;
+        pstrcpy(cpu->source_sha256, sizeof(cpu->source_sha256), cpu->runtime->resources->sha256);
+        rom_add_blob_fixed("agi.runtime.trampoline", cpu->code, 1, 0);
+        memory_region_set_readonly(machine->ram, true);
+        return;
+    }
     if (ms->view_catalog && !agi_load_view_catalog(cpu, ms->view_catalog, &error)) {
         error_report_err(error);
         exit(1);
@@ -124,11 +158,15 @@ static void agi_test_class_init(ObjectClass *oc, void *data)
                                   agi_get_draw_intent, agi_set_draw_intent);
     object_class_property_set_description(oc, "draw-intent",
         "Startup-only draw-intent profile; requires an immutable VIEW catalog");
+    object_class_property_add_str(oc, "runtime-package", agi_get_runtime_package, agi_set_runtime_package);
+    object_class_property_set_description(oc, "runtime-package",
+        "Immutable AGI runtime resource package; selects the native runtime profile");
 }
 
 static void agi_test_finalize(Object *obj)
 {
     g_free(AGI_TEST_MACHINE(obj)->view_catalog);
+    g_free(AGI_TEST_MACHINE(obj)->runtime_package);
 }
 
 static const TypeInfo agi_test_type = {

@@ -27,11 +27,13 @@ DOSBox-X remains for DotBox and fDisBull fallback. The current integration does
 not change backend defaults. See [the shared codebase policy](docs/SHARED_CODEBASE.md)
 for package boundaries, active QEMU coordination and migration scope.
 
-The [experimental AGI QEMU target](native/qemu-agi/README.md) explores optional
-disassembly and scene observations, including bounded actor-pose and cycling
-state. Its explicit draw-intent profile exposes a pending request for scene
-previews. It remains a separate developer experiment; a full AGI engine,
-completed drawing and a scene editor are subsequent work.
+The [experimental AGI QEMU target](native/qemu-agi/README.md) includes an explicitly
+selected [native runtime](native/qemu-agi/RUNTIME.md) for the nominal AGI 2.917
+command catalog, with resource banks, actor motion, picture/VIEW composition,
+sound, text and resumable device requests. Execution and static disassembly
+share one native decoder; optional disassembly and scene observations preserve
+guest state. Earlier pilot profiles remain available. Original-DOS parity,
+full-game compatibility and a scene-editor product remain separate work.
 
 ## Built to minimize token usage and survive long investigations
 

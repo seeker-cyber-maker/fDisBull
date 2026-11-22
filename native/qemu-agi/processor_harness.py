@@ -8,10 +8,32 @@ from __future__ import annotations
 
 from copy import deepcopy
 from hashlib import sha256
+import importlib.util
 import json
+from pathlib import Path
+import sys
 
 from fdisbull.processor import DecodedInstruction, Location, ProcessorInfo, Successor
-from harness import HarnessError
+try:
+    from harness import HarnessError
+except ModuleNotFoundError as error:
+    if error.name != "harness":
+        raise
+    # runtime_harness can be loaded directly from its source path. Reuse its
+    # owned QMP module without requiring a process-global Python path change.
+    _name = "_fdisbull_agi_harness"
+    _base = sys.modules.get(_name)
+    if _base is None:
+        _spec = importlib.util.spec_from_file_location(
+            _name, Path(__file__).resolve().with_name("harness.py"))
+        _base = importlib.util.module_from_spec(_spec)
+        sys.modules[_name] = _base
+        try:
+            _spec.loader.exec_module(_base)
+        except BaseException:
+            sys.modules.pop(_name, None)
+            raise
+    HarnessError = _base.HarnessError
 
 
 SCHEMA = "fdisbull-agi-native-instructions-1"
@@ -31,6 +53,7 @@ _CONTRACTS = {
                 "condition_operands": 1024},
 }
 MAX_PAGE_JSON_BYTES = 8 * 1024**2
+RUNTIME_PROFILE = "agi-2917-runtime-1"
 
 
 class NativePageSizeLimit(HarnessError):
@@ -58,7 +81,7 @@ def _operands(values, maximum=3, *, schema=SCHEMA):
               "loop": 8, "cel": 8, "u8": 8, "u16": 16, "s16": 16}
     if schema == SCHEMA_V2:
         widths.update(picture=8, logic=8, room=8, sound=8, message=8,
-                      inventory_object=8, word=16)
+                      inventory_object=8, word=16, string=8, controller=8)
     for operand in values:
         if type(operand) is not dict or type(operand.get("kind")) is not str \
                 or operand["kind"] not in widths:
@@ -76,15 +99,32 @@ def _operands(values, maximum=3, *, schema=SCHEMA):
             raise HarnessError("Native operand value is outside its domain")
 
 
-def validate_decode_page(page, *, code, source, start_pc=None, limit=None):
-    """Validate one linear page without decoding or interpreting its opcodes."""
+def _validate_source(code, source, *, schema=None):
     if type(code) is not bytes or not 1 <= len(code) <= 65536:
         raise HarnessError("Native decode requires exact 1..65536-byte code")
     if type(source) is not dict or source.get("sha256") != sha256(code).hexdigest() \
             or type(source.get("size")) is not int or source["size"] != len(code) \
-            or type(source.get("logic_id")) is not int or source["logic_id"] != 0 \
             or type(source.get("profile")) is not str or not source["profile"]:
         raise HarnessError("Native decode source identity differs")
+    if source["profile"] == RUNTIME_PROFILE:
+        digest = source.get("package_sha256")
+        if schema not in (None, SCHEMA_V2) \
+                or set(source) != {"sha256", "size", "logic_id", "profile", "package_sha256"} \
+                or not _integer(source.get("logic_id"), 0, 255) \
+                or type(digest) is not str or len(digest) != 64 \
+                or any(char not in "0123456789abcdef" for char in digest):
+            raise HarnessError("Runtime decode requires schema 2 and an exact LOGIC/package identity")
+    elif not _integer(source.get("logic_id"), 0, 0):
+        raise HarnessError("Legacy native decode source must retain logic_id zero")
+
+
+def validate_decode_page(page, *, code, source, start_pc=None, limit=None):
+    """Validate one linear page without decoding or interpreting its opcodes.
+
+    Runtime pages identify the selected LOGIC's code bytes and their complete
+    package. Legacy raw-code profiles retain their LOGIC-zero identity.
+    """
+    _validate_source(code, source, schema=page.get("schema") if type(page) is dict else None)
     fields = {"schema", "decoder", "source", "evidence", "traversal", "start_pc",
               "limit", "next_pc", "stop", "instructions", "error"}
     contract = _CONTRACTS.get(page.get("schema")) if type(page) is dict \
@@ -194,6 +234,9 @@ def request_decode_page(vm, code, source, *, start_pc, limit,
             or not _integer(start_pc, 0, len(code)) or not _integer(limit, 1, 64) \
             or not _integer(max_json_bytes, 1, MAX_PAGE_JSON_BYTES) or type(return_size) is not bool:
         raise ValueError("Invalid native page selectors")
+    _validate_source(code, source)
+    if source["profile"] == RUNTIME_PROFILE:
+        vm.set("agi-decode-logic", source["logic_id"])
     vm.set("agi-decode-pc", start_pc)
     vm.set("agi-decode-limit", limit)
     raw = vm.get("agi-decode-json")
@@ -210,22 +253,26 @@ def request_decode_page(vm, code, source, *, start_pc, limit,
     return (page, size) if return_size else page
 
 
-def read_decode_pages(vm, code, *, start_pc=0, max_instructions=256, page_limit=64):
+def read_decode_pages(vm, code, *, start_pc=0, max_instructions=256, page_limit=64,
+                      source=None):
     """Read a finite static batch; require all stopped native inputs unchanged.
 
     ``vm`` is the existing sole QMP owner. This function never resumes it.
     A final limit or decode fault remains visible in the returned pages.
+    Runtime callers supply a source from vm.logic_source(logic_id); its state
+    source instead identifies the package and current execution LOGIC.
     """
     if type(code) is not bytes or not 1 <= len(code) <= 65536 \
             or not _integer(start_pc, 0, len(code)) \
             or not _integer(max_instructions, 1, 4096) or not _integer(page_limit, 1, 64):
         raise ValueError("Invalid bounded native decode request")
     before, events_before = deepcopy(vm.state()), deepcopy(vm.events())
+    expected_source = before["source"] if source is None else deepcopy(source)
     pages, cursor, remaining = [], start_pc, max_instructions
     try:
         while remaining:
             count = min(page_limit, remaining)
-            page = request_decode_page(vm, code, before["source"], start_pc=cursor, limit=count)
+            page = request_decode_page(vm, code, expected_source, start_pc=cursor, limit=count)
             pages.append(page)
             cursor = page["next_pc"]
             remaining -= len(page["instructions"])
