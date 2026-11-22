@@ -427,6 +427,8 @@ def test_runtime_explicit_commands_and_seed_admission(runtime, boundary):
         lambda: boundary.seed(flags={0: True}),
         lambda: boundary.tick(0),
         lambda: boundary.tick(4097),
+        lambda: boundary.sound_tick(0),
+        lambda: boundary.sound_tick(4097),
         lambda: boundary.input("é" * 41),
         lambda: boundary.input("\U0001f600"),
         lambda: boundary.key(1, 1),
@@ -437,13 +439,15 @@ def test_runtime_explicit_commands_and_seed_admission(runtime, boundary):
             call()
         assert len(boundary.commands) == before
     boundary.cycle()
+    boundary.sound_tick(60)
     boundary.tick(4096)
     boundary.input("take key")
     boundary.key(0x4800, True)
     boundary.key(0x4800, False)
     boundary.controller(255)
-    assert boundary.commands[-6:] == [
-        {"action": "cycle"}, {"action": "tick", "ticks": 4096},
+    assert boundary.commands[-7:] == [
+        {"action": "cycle"}, {"action": "sound-tick", "ticks": 60},
+        {"action": "tick", "ticks": 4096},
         {"action": "input", "text": "take key"},
         {"action": "key", "key": 0x4800, "pressed": True},
         {"action": "key", "key": 0x4800, "pressed": False},

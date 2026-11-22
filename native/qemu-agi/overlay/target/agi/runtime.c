@@ -81,6 +81,37 @@ static AgiRuntimeActorCallbacks actor_callbacks(const AgiRuntime *r)
     return cb;
 }
 
+static int sound_source(void *opaque, uint8_t number, const uint8_t **data, size_t *size)
+{
+    const AgiRuntime *r = opaque;
+    const AgiRuntimeBlob *b = &r->resources->sounds[number];
+    if (!b->data || !b->size) return 0;
+    *data = b->data; *size = b->size;
+    return 1;
+}
+static void sound_output(void *opaque, const AgiRuntimeSoundOutput *output)
+{
+    AgiRuntime *r = opaque;
+    if (r->sound_output && output->count)
+        r->sound_output(r->sound_output_opaque, output->events, output->count);
+}
+void agi_runtime_set_sound_output(AgiRuntime *r, AgiRuntimeSoundSink sink, void *opaque)
+{ r->sound_output = sink; r->sound_output_opaque = opaque; }
+static AgiRuntimeSoundCallbacks sound_callbacks(const AgiRuntime *r)
+{
+    AgiRuntimeSoundCallbacks callbacks = {
+        .resource = sound_source, .output = sound_output, .opaque = (void *)r
+    };
+    return callbacks;
+}
+static void sync_sound(AgiRuntimeState *s)
+{
+    s->sound_active = s->sound.active;
+    s->sound_id = s->sound.resource;
+    s->sound_flag = s->sound.completion_flag;
+    s->sound_remaining = s->sound.remaining;
+}
+
 void agi_runtime_clear_events(AgiRuntime *r)
 {
     r->obs_count = 0;
@@ -144,8 +175,14 @@ void agi_runtime_restart(AgiRuntime *r)
 {
     AgiRuntimeState *s = &r->state;
     uint64_t next = s->next_effect_id;
+    if (s->sound.active) {
+        AgiRuntimeSoundCallbacks callbacks = sound_callbacks(r);
+        agi_runtime_sound_stop(&s->sound, s->f, &callbacks);
+    }
     memset(s, 0, sizeof(*s));
     agi_runtime_world_init(&s->world);
+    agi_runtime_sound_init(&s->sound);
+    sync_sound(s);
     s->world.rng_state = 0x6d2b79f5u;
     s->logic = r->resources->entry_logic;
     s->loaded_logics[s->logic] = 1;
@@ -197,6 +234,7 @@ static bool format_text(const AgiRuntime *r, uint32_t logic, const char *source,
         char expansion[AGI_RT_TEXT_BYTES];
         const char *part = expansion;
         uint32_t n = 0, width = 0;
+        bool fixed_width = false;
         char type;
         size_t length;
         expansion[0] = 0;
@@ -222,6 +260,7 @@ static bool format_text(const AgiRuntime *r, uint32_t logic, const char *source,
                 if (n > 255) return false;
             }
             if (type == 'v' && *source == '|') {
+                fixed_width = true;
                 source++;
                 while (isdigit((unsigned char)*source)) {
                     width = width * 10 + (*source++ - '0');
@@ -229,7 +268,11 @@ static bool format_text(const AgiRuntime *r, uint32_t logic, const char *source,
                 }
             }
             switch (type) {
-            case 'v': snprintf(expansion, sizeof(expansion), "%0*u", (int)width, r->state.v[n]); break;
+            case 'v':
+                snprintf(expansion, sizeof(expansion), "%0*u", (int)width, r->state.v[n]);
+                length = strlen(expansion);
+                if (fixed_width && length > width) memmove(expansion, expansion + length - width, width + 1);
+                break;
             case 's': if (n >= AGI_RT_STRINGS) return false; part = r->state.strings[n]; break;
             case 'w': if (!n || n > r->state.parsed_count) return false; part = r->state.parsed_words[n - 1]; break;
             case '0':
@@ -437,43 +480,57 @@ static bool request(AgiRuntime *r, const AgiDecodedInstruction *insn,
     r->state.status = AGI_RT_PENDING;
     return true;
 }
-static void stop_sound(AgiRuntimeState *s)
+static void stop_sound(AgiRuntime *r)
 {
-    if (s->sound_active) s->f[s->sound_flag] = 1;
-    s->sound_active = 0;
-    s->sound_remaining = 0;
+    AgiRuntimeSoundCallbacks callbacks = sound_callbacks(r);
+    agi_runtime_sound_stop(&r->state.sound, r->state.f, &callbacks);
+    sync_sound(&r->state);
 }
-static bool sound_duration(const AgiRuntimeBlob *b, uint32_t *duration)
-{
-    uint32_t channel, at, ticks, maximum = 0, n;
-    if (!b->data || b->size < 8) return false;
-    for (channel = 0; channel < 4; channel++) {
-        at = b->data[channel * 2] | b->data[channel * 2 + 1] << 8;
-        if (at < 8 || at + 2 > b->size) return false;
-        ticks = 0;
-        for (;;) {
-            if (at + 2 > b->size) return false;
-            n = b->data[at] | b->data[at + 1] << 8;
-            if (n == 65535) break;
-            if (at + 5 > b->size || UINT32_MAX - ticks < n) return false;
-            ticks += n;
-            at += 5;
-        }
-        if (ticks > maximum) maximum = ticks;
-    }
-    *duration = maximum;
-    return true;
-}
-static bool script_room(const AgiRuntimeState *s)
-{ return s->f[7] || s->script_count < s->script_capacity; }
+static bool script_room(const AgiRuntimeState *s, uint32_t pairs)
+{ return s->f[7] || pairs <= s->script_capacity - s->script_count; }
 static void script_record(AgiRuntimeState *s, uint32_t opcode, const uint8_t *args, size_t count)
 {
     AgiRuntimeScriptEntry *e;
+    uint32_t kind;
+    (void)count;
     if (s->f[7]) return;
+    switch (opcode) {
+    case 20: kind = 0; break; case 30: kind = 1; break;
+    case 24: kind = 2; break; case 98: kind = 3; break;
+    case 25: kind = 4; break; case 122: kind = 5; break;
+    case 27: kind = 6; break; case 32: kind = 7; break;
+    case 28: kind = 8; break; default: return;
+    }
     e = &s->script[s->script_count++];
     memset(e, 0, sizeof(*e));
-    e->opcode = opcode;
-    memcpy(e->args, args, count);
+    e->opcode = kind;
+    e->args[0] = kind == 5 ? 0 : args[0];
+    if (kind == 5) {
+        e = &s->script[s->script_count++]; memset(e, 0, sizeof(*e));
+        e->opcode = args[0]; e->args[0] = args[1];
+        e = &s->script[s->script_count++]; memset(e, 0, sizeof(*e));
+        e->opcode = args[2]; e->args[0] = args[3];
+        e = &s->script[s->script_count++]; memset(e, 0, sizeof(*e));
+        e->opcode = args[4]; e->args[0] = ((args[5] & 15) << 4) | (args[6] & 15);
+    }
+}
+static bool family_load(uint8_t loaded[256], uint8_t order[256], uint32_t *count, uint8_t id)
+{
+    if (loaded[id]) return true;
+    if (*count >= 256) return false;
+    loaded[id] = 1;
+    order[(*count)++] = id;
+    return true;
+}
+static bool family_discard(uint8_t loaded[256], uint8_t order[256], uint32_t *count, uint8_t id)
+{
+    uint32_t at, i;
+    if (!loaded[id]) return false;
+    for (at = 0; at < *count && order[at] != id; at++);
+    if (at == *count) return false;
+    for (i = at; i < *count; i++) { loaded[order[i]] = 0; order[i] = 0; }
+    *count = at;
+    return true;
 }
 static bool room_change(AgiRuntime *r, uint32_t room)
 {
@@ -481,7 +538,7 @@ static bool room_change(AgiRuntime *r, uint32_t room)
     AgiRuntimeActor *ego = &s->world.actors[0];
     uint32_t i;
     if (!logic_exists(r, 0) || !logic_exists(r, room)) return false;
-    stop_sound(s);
+    stop_sound(r);
     for (i = 0; i < AGI_RUNTIME_ACTORS; i++) {
         AgiRuntimeActor *a = &s->world.actors[i];
         a->flags &= ~(AGI_RA_ANIMATED | AGI_RA_DRAWN);
@@ -493,6 +550,9 @@ static bool room_change(AgiRuntime *r, uint32_t room)
     memset(s->loaded_pictures, 0, sizeof(s->loaded_pictures));
     memset(s->loaded_sounds, 0, sizeof(s->loaded_sounds));
     memset(s->world.loaded_views, 0, sizeof(s->world.loaded_views));
+    memset(s->view_order, 0, sizeof(s->view_order));
+    memset(s->picture_order, 0, sizeof(s->picture_order));
+    s->view_order_count = s->picture_order_count = 0;
     memset(s->scan_start + 1, 0, sizeof(s->scan_start) - sizeof(s->scan_start[0]));
     s->loaded_logics[0] = s->loaded_logics[room] = 1;
     s->world.player_control = 1;
@@ -507,6 +567,10 @@ static bool room_change(AgiRuntime *r, uint32_t room)
     case 4: ego->x = 160 - (int32_t)ego->width; break;
     }
     s->v[2] = 0;
+    s->v[9] = s->f[2] = s->f[4] = 0;
+    s->parsed_count = 0;
+    memset(s->word_ids, 0, sizeof(s->word_ids));
+    memset(s->parsed_words, 0, sizeof(s->parsed_words));
     s->f[5] = 1;
     s->stack_depth = 0;
     s->logic = 0; s->pc = s->scan_start[0];
@@ -547,7 +611,7 @@ int agi_runtime_step(AgiRuntime *r)
     c = insn.size > 3 ? p[2] : 0;
     next = s->pc + insn.size;
     logic = s->logic;
-    for (i = 0; i < insn.operand_count; i++) {
+    for (i = 0; i < insn.operand_count && i < 7; i++) {
         const AgiDecodedOperand *o = &insn.operands[i];
         resolved[i] = o->kind == AGI_OPERAND_VARIABLE && o->access == AGI_ACCESS_READ ?
                       s->v[o->value] : (uint32_t)o->value;
@@ -573,12 +637,15 @@ int agi_runtime_step(AgiRuntime *r)
             changed_pc = true;
         } else {
             if (s->cycle_active) {
-                cb = actor_callbacks(r);
-                result = agi_runtime_actor_finish(&s->world, s->v, s->f, &cb);
-                if (result < 0) return fail(r, AGI_RT_ACTOR, -result);
+                if (s->graphics) {
+                    cb = actor_callbacks(r);
+                    result = agi_runtime_actor_finish(&s->world, s->v, s->f, &cb);
+                    if (result < 0) return fail(r, AGI_RT_ACTOR, -result);
+                }
                 s->cycle_active = 0; s->cycle_count++;
                 memset(s->controllers, 0, sizeof(s->controllers));
                 s->v[4] = s->v[5] = s->f[5] = s->f[6] = s->f[12] = 0;
+                s->f[2] = s->f[4] = 0;
                 s->scene_revision++;
             }
             s->status = AGI_RT_RETURN;
@@ -609,21 +676,42 @@ int agi_runtime_step(AgiRuntime *r)
     case 20: case 21: case 22: case 23:
         value = (op & 1) ? s->v[a] : a;
         if (!logic_exists(r, value)) return fail(r, AGI_RT_RESOURCE, value);
+        if (!s->loaded_logics[value] && !script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
         if (op >= 22) {
             if (s->stack_depth == AGI_RT_STACK) return fail(r, AGI_RT_CALL_OVERFLOW, value);
             if (s->scan_start[value] >= r->resources->logics[value].code.size) return fail(r, AGI_RT_BAD_PC, value);
             s->stack[s->stack_depth++] = (AgiRuntimeFrame){logic, next};
             s->logic = value; s->pc = s->scan_start[value]; changed_pc = true;
         }
-        s->loaded_logics[value] = 1;
+        if (!s->loaded_logics[value]) {
+            uint8_t arg = value;
+            s->loaded_logics[value] = 1;
+            script_record(s, 20, &arg, 1);
+        }
         break;
     case 24: case 25: case 27: case 28:
         value = s->v[a];
-        if (op == 27) { s->loaded_pictures[value] = 0; break; }
+        if (op == 27) {
+            uint8_t arg = value;
+            if (!s->loaded_pictures[value]) break;
+            if (!script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+            if (!family_discard(s->loaded_pictures, s->picture_order, &s->picture_order_count, value))
+                return fail(r, AGI_RT_ARGUMENT, value);
+            script_record(s, 27, &arg, 1);
+            break;
+        }
         if (!r->resources->pictures[value].data) return fail(r, AGI_RT_RESOURCE, value);
-        if (op == 24) { s->loaded_pictures[value] = 1; break; }
+        if (op == 24) {
+            uint8_t arg = value;
+            if (s->loaded_pictures[value]) break;
+            if (!script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+            if (!family_load(s->loaded_pictures, s->picture_order, &s->picture_order_count, value))
+                return fail(r, AGI_RT_LIMIT, 256);
+            script_record(s, 24, &arg, 1);
+            break;
+        }
         if (!s->loaded_pictures[value]) return fail(r, AGI_RT_RESOURCE_NOT_LOADED, value);
-        if (!script_room(s)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+        if (!script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
         result = agi_runtime_decode_picture(r->resources->pictures[value].data,
                    r->resources->pictures[value].size, op == 25,
                    s->picture_visual, s->picture_priority, AGI_RUNTIME_PLANE_BYTES, NULL);
@@ -637,9 +725,24 @@ int agi_runtime_step(AgiRuntime *r)
         s->presentation_revision++; s->scene_revision++; break;
     case 30: case 31: case 32: case 153:
         value = (op == 31 || op == 153) ? s->v[a] : a;
-        if (op == 32 || op == 153) { s->world.loaded_views[value] = 0; break; }
+        if (op == 32 || op == 153) {
+            uint8_t arg = value;
+            if (!s->world.loaded_views[value]) break;
+            if (!script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+            if (!family_discard(s->world.loaded_views, s->view_order, &s->view_order_count, value))
+                return fail(r, AGI_RT_ARGUMENT, value);
+            script_record(s, 32, &arg, 1);
+            break;
+        }
         if (!r->resources->views[value].data) return fail(r, AGI_RT_RESOURCE, value);
-        s->world.loaded_views[value] = 1; break;
+        if (!s->world.loaded_views[value]) {
+            uint8_t arg = value;
+            if (!script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+            if (!family_load(s->world.loaded_views, s->view_order, &s->view_order_count, value))
+                return fail(r, AGI_RT_LIMIT, 256);
+            script_record(s, 30, &arg, 1);
+        }
+        break;
     case 92: case 93: case 94: case 95: case 96: case 97:
         value = (op == 93 || op == 96 || op == 97) ? s->v[a] : a;
         if (value >= r->resources->object_count) return fail(r, AGI_RT_INVENTORY, value);
@@ -648,23 +751,29 @@ int agi_runtime_step(AgiRuntime *r)
         break;
     case 98:
         if (!r->resources->sounds[a].data) return fail(r, AGI_RT_RESOURCE, a);
-        if (!sound_duration(&r->resources->sounds[a], &value)) return fail(r, AGI_RT_RESOURCE, a);
-        s->loaded_sounds[a] = 1; break;
+        if (agi_runtime_sound_validate(r->resources->sounds[a].data, r->resources->sounds[a].size, NULL) < 0)
+            return fail(r, AGI_RT_RESOURCE, a);
+        if (!s->loaded_sounds[a]) {
+            uint8_t arg = a;
+            if (!script_room(s, 1)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+            s->loaded_sounds[a] = 1;
+            script_record(s, 98, &arg, 1);
+        }
+        break;
     case 99:
         if (!s->loaded_sounds[a]) return fail(r, AGI_RT_RESOURCE_NOT_LOADED, a);
-        if (!sound_duration(&r->resources->sounds[a], &value)) return fail(r, AGI_RT_RESOURCE, a);
-        stop_sound(s);
-        s->sound_id = a; s->sound_flag = b;
-        s->sound_remaining = value;
-        s->sound_active = s->f[9] && value != 0;
-        s->f[b] = !s->sound_active; s->scene_revision++; break;
-    case 100: stop_sound(s); s->scene_revision++; break;
+        { AgiRuntimeSoundCallbacks callbacks = sound_callbacks(r);
+          if (agi_runtime_sound_start(&s->sound, a, b, s->v[22], s->f, &callbacks) < 0)
+              return fail(r, AGI_RT_RESOURCE, a);
+          sync_sound(s); }
+        s->scene_revision++; break;
+    case 100: stop_sound(r); s->scene_revision++; break;
     case 101: case 102: case 151: case 152:
         value = (op == 102 || op == 152) ? s->v[a] : a;
         if (!formatted_message(r, value ? value : 1, text)) return fail(r, AGI_RT_MESSAGE, value);
         if (s->f[15]) {
             put_text(s, op >= 151 ? b : 10, op >= 151 ? c : 1, text, op >= 151 ? p[3] : 38);
-            s->window_open = 1; s->scene_revision++;
+            s->window_open = 1; s->f[15] = 0; s->scene_revision++;
             break;
         }
         if (!request(r, &insn, AGI_RT_REPLY_ACK, text)) return fail(r, AGI_RT_LIMIT, 0);
@@ -721,6 +830,7 @@ int agi_runtime_step(AgiRuntime *r)
         if (i == s->key_count) {
             if (s->key_count == 256) return fail(r, AGI_RT_LIMIT, 256);
             s->keys[i] = value; s->key_controllers[i] = c; s->key_count++;
+            s->controllers[c] = 0;
         }
         break;
     case 122: case 123:
@@ -728,7 +838,7 @@ int agi_runtime_step(AgiRuntime *r)
         { uint8_t args[7];
           for (i = 0; i < 7; i++) args[i] = op == 123 ? s->v[p[i]] : p[i];
           if (!r->resources->views[args[0]].data) return fail(r, AGI_RT_RESOURCE, args[0]);
-          if (!script_room(s)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
+          if (!script_room(s, 4)) return fail(r, AGI_RT_LIMIT, AGI_RT_SCRIPT);
           uint8_t pixels[AGI_RUNTIME_PLANE_BYTES];
           AgiRuntimeViewCel cel;
           result = agi_runtime_view_cel(r->resources->views[args[0]].data,
@@ -753,8 +863,8 @@ int agi_runtime_step(AgiRuntime *r)
     case 140: s->monitor ^= 1; s->scene_revision++; break;
     case 142:
         n = a ? a : 256;
-        if (n < s->script_count) return fail(r, AGI_RT_LIMIT, n);
-        s->script_capacity = n; break;
+        s->script_capacity = n; s->script_count = s->script_saved = 0;
+        memset(s->script, 0, sizeof(s->script)); break;
     case 143:
         literal = message(r, logic, a);
         if (!literal) return fail(r, AGI_RT_MESSAGE, a);
@@ -766,13 +876,15 @@ int agi_runtime_step(AgiRuntime *r)
     case 154: clear_rect(s, a, b, c, p[3], p[4] ? 15 : 0); s->scene_revision++; break;
     case 155: /* Documented AGI 2.917 no-op; operands still decoded. */ break;
     case 156:
-        if (s->menu_count == AGI_RT_MENUS || s->menu_submitted) return fail(r, AGI_RT_LIMIT, op);
+        if (s->menu_submitted) break;
+        if (s->menu_count == AGI_RT_MENUS) return fail(r, AGI_RT_LIMIT, op);
         if (!formatted_message(r, a, text)) return fail(r, AGI_RT_MESSAGE, a);
         copy_text(s->menus[s->menu_count].text, AGI_RT_STRING_BYTES, text);
         s->menus[s->menu_count++].first_item = s->menu_item_count;
         s->scene_revision++; break;
     case 157:
-        if (!s->menu_count || s->menu_item_count == AGI_RT_MENU_ITEMS || s->menu_submitted) return fail(r, AGI_RT_LIMIT, op);
+        if (s->menu_submitted) break;
+        if (!s->menu_count || s->menu_item_count == AGI_RT_MENU_ITEMS) return fail(r, AGI_RT_LIMIT, op);
         if (!formatted_message(r, a, text)) return fail(r, AGI_RT_MESSAGE, a);
         copy_text(s->menu_items[s->menu_item_count].text, AGI_RT_STRING_BYTES, text);
         s->menu_items[s->menu_item_count].controller = b;
@@ -809,7 +921,8 @@ int agi_runtime_step(AgiRuntime *r)
           if (!insn.successors[value].in_range) { memcpy(s->f, saved_flags, sizeof(saved_flags)); s->keypress = saved_key; return fail(r, AGI_RT_BAD_PC, (uint32_t)insn.successors[value].pc); }
           s->pc = insn.successors[value].pc; changed_pc = true; }
         break;
-    case 29: case 110: case 124: case 125: case 126: case 127: case 128:
+    case 127: /* init.disk is a 2.917 compatibility no-op. */ break;
+    case 29: case 110: case 124: case 125: case 126: case 128:
     case 129: case 133: case 134: case 135: case 136: case 139: case 141:
     case 144: case 161: case 162:
         text[0] = 0;
@@ -818,6 +931,7 @@ int agi_runtime_step(AgiRuntime *r)
         if (op == 124 && s->f[13]) value = AGI_RT_REPLY_NUMBER;
         if (op == 128 || op == 134) value = AGI_RT_REPLY_CHOICE;
         if (op == 161) {
+            if (!s->f[14]) break;
             if (!s->menu_submitted) return fail(r, AGI_RT_ARGUMENT, op);
             value = AGI_RT_REPLY_MENU;
         }
@@ -825,13 +939,14 @@ int agi_runtime_step(AgiRuntime *r)
         if (op == 144 && !formatted_message(r, a, text)) return fail(r, AGI_RT_MESSAGE, a);
         if (op == 135) copy_text(text, sizeof(text), "Native AGI bounded resource memory");
         if (op == 141) copy_text(text, sizeof(text), "AGI 2.917 / fDisBull native runtime 1");
-        if (op == 134 && a) { stop_sound(s); s->status = AGI_RT_QUIT; break; }
+        if (op == 134 && a == 1) { stop_sound(r); s->status = AGI_RT_QUIT; break; }
         if (op == 128 && s->f[16]) {
             uint64_t retired = s->retired;
             agi_runtime_restart(r); s->retired = retired; s->f[6] = 1;
             changed_pc = true; break;
         }
         if (!request(r, &insn, value, text)) return fail(r, AGI_RT_LIMIT, 0);
+        if (op == 136) stop_sound(r);
         return 0;
     default: return fail(r, AGI_RT_UNIMPLEMENTED, op);
     }
@@ -879,23 +994,62 @@ static void clock_tick(AgiRuntimeState *s)
             if (++s->v[13] == 24) { s->v[13] = 0; s->v[14]++; }
         }
     }
-    if (s->sound_active && s->sound_remaining && --s->sound_remaining == 0) stop_sound(s);
 }
-bool agi_runtime_tick(AgiRuntime *r, uint32_t ticks)
+typedef struct AgiRuntimeSoundBatch {
+    AgiRuntime *runtime;
+    AgiRuntimeSoundEvent *events;
+    uint32_t count;
+} AgiRuntimeSoundBatch;
+static int batch_source(void *opaque, uint8_t number, const uint8_t **data, size_t *size)
+{ return sound_source(((AgiRuntimeSoundBatch *)opaque)->runtime, number, data, size); }
+static void batch_output(void *opaque, const AgiRuntimeSoundOutput *output)
+{
+    AgiRuntimeSoundBatch *batch = opaque;
+    memcpy(batch->events + batch->count, output->events,
+           output->count * sizeof(*batch->events));
+    batch->count += output->count;
+}
+static bool advance_time(AgiRuntime *r, uint32_t ticks, bool world)
 {
     AgiRuntimeState *s = &r->state;
+    AgiRuntimeState *saved;
     AgiRuntimeActorCallbacks cb = actor_callbacks(r);
-    uint32_t i;
-    int result;
-    if (!ticks || ticks > 4096 || s->cycle_active || s->status == AGI_RT_FAULT || s->status == AGI_RT_QUIT) return false;
+    AgiRuntimeSoundBatch batch = { .runtime = r };
+    AgiRuntimeSoundCallbacks scb = {
+        .resource = batch_source, .output = batch_output, .opaque = &batch
+    };
+    uint32_t i, audio_ticks = ticks * (world ? 3 : 1);
+    bool ok = false;
+    if (!ticks || ticks > 4096 || (world && s->cycle_active) ||
+        s->status == AGI_RT_FAULT || s->status == AGI_RT_QUIT) return false;
     if (s->status == AGI_RT_PENDING && s->pending.opcode == 136) return false;
-    result = agi_runtime_actor_tick(&s->world, ticks, s->v, s->f, &cb);
-    if (result < 0) return false;
-    for (i = 0; i < ticks; i++) clock_tick(s);
+    /* Admit storage before modifying state. A later rejected tick rolls back
+     * the entire command; external devices see only the committed batch. */
+    saved = malloc(sizeof(*saved));
+    batch.events = malloc((size_t)audio_ticks * AGI_SOUND_OUTPUT_MAX * sizeof(*batch.events));
+    if (!saved || !batch.events) goto done;
+    *saved = *s;
+    if (world && agi_runtime_actor_tick(&s->world, ticks, s->v, s->f, &cb) < 0) goto rollback;
+    for (i = 0; i < audio_ticks; i++)
+        if (agi_runtime_sound_tick(&s->sound, s->f, s->v[23], &scb) < 0) goto rollback;
+    sync_sound(s);
+    if (world) for (i = 0; i < ticks; i++) clock_tick(s);
     s->scene_revision++;
     if (r->obs_mask & 2) append_event(r, NULL, s->logic, 1, 256, NULL, NULL);
-    return true;
+    if (r->sound_output && batch.count)
+        r->sound_output(r->sound_output_opaque, batch.events, batch.count);
+    ok = true;
+    goto done;
+rollback:
+    *s = *saved;
+done:
+    free(saved); free(batch.events);
+    return ok;
 }
+bool agi_runtime_tick(AgiRuntime *r, uint32_t ticks)
+{ return advance_time(r, ticks, true); }
+bool agi_runtime_sound_ticks(AgiRuntime *r, uint32_t ticks)
+{ return advance_time(r, ticks, false); }
 bool agi_runtime_input(AgiRuntime *r, const char *text)
 {
     AgiRuntimeState saved;
@@ -969,7 +1123,8 @@ bool agi_runtime_complete(AgiRuntime *r, uint64_t id, bool accepted,
         }
         if (p.reply == AGI_RT_REPLY_MENU) s->controllers[number] = 1;
     }
-    if (p.opcode == 134 && accepted) { stop_sound(s); s->status = AGI_RT_QUIT; }
+    if (p.opcode == 124 && p.reply == AGI_RT_REPLY_NUMBER && !accepted) s->v[25] = 255;
+    if (p.opcode == 134 && accepted) { stop_sound(r); s->status = AGI_RT_QUIT; }
     else if (p.opcode == 128 && accepted) {
         uint64_t retired = s->retired;
         agi_runtime_restart(r);
@@ -992,6 +1147,7 @@ typedef struct AgiRuntimeSnapshotHeader {
     char magic[8], resource_sha256[65];
     uint32_t size, endian, version;
 } AgiRuntimeSnapshotHeader;
+static bool valid_snapshot(const AgiRuntime *r, const AgiRuntimeState *s);
 size_t agi_runtime_snapshot_size(void)
 { return sizeof(AgiRuntimeSnapshotHeader) + sizeof(AgiRuntimeState); }
 bool agi_runtime_snapshot(const AgiRuntime *r, void *out, size_t size)
@@ -1009,6 +1165,9 @@ bool agi_runtime_snapshot(const AgiRuntime *r, void *out, size_t size)
         state.status = AGI_RT_READY;
         memset(&state.pending, 0, sizeof(state.pending));
     }
+    if (state.status == AGI_RT_BUDGET || state.status == AGI_RT_RUNNING)
+        state.status = AGI_RT_READY;
+    if (!valid_snapshot(r, &state)) return false;
     memcpy(out, &header, sizeof(header));
     memcpy((uint8_t *)out + sizeof(header), &state, sizeof(state));
     return true;
@@ -1016,34 +1175,72 @@ bool agi_runtime_snapshot(const AgiRuntime *r, void *out, size_t size)
 static bool valid_snapshot(const AgiRuntime *r, const AgiRuntimeState *s)
 {
     uint32_t i;
-    if (!logic_exists(r, s->logic) || s->pc >= r->resources->logics[s->logic].code.size ||
-        s->status != AGI_RT_READY || s->pending.id || s->stack_depth > AGI_RT_STACK ||
+    AgiRuntimePending empty_pending = {0};
+    AgiRuntimeSoundCallbacks scb = sound_callbacks(r);
+    uint8_t views[256] = {0}, pictures[256] = {0};
+    if (!logic_exists(r, s->logic) || s->pc > r->resources->logics[s->logic].code.size ||
+        (s->status != AGI_RT_READY && s->status != AGI_RT_RETURN) ||
+        (s->status == AGI_RT_READY && s->pc == r->resources->logics[s->logic].code.size) ||
+        (s->status == AGI_RT_RETURN && (s->stack_depth || s->cycle_active)) ||
+        memcmp(&s->pending, &empty_pending, sizeof(empty_pending)) || s->stack_depth > AGI_RT_STACK ||
         s->parsed_count > AGI_RT_WORDS || s->key_count > 256 ||
         s->menu_count > AGI_RT_MENUS || s->menu_item_count > AGI_RT_MENU_ITEMS ||
         s->script_capacity > AGI_RT_SCRIPT || s->script_count > s->script_capacity ||
         s->script_saved > s->script_count || s->sound_flag > 255 || s->sound_id > 255 ||
-        s->graphics > 1 || s->cycle_active > 1 || s->world.horizon > 167 ||
+        s->view_order_count > 256 || s->picture_order_count > 256 ||
+        !s->next_effect_id || s->graphics > 1 || s->cycle_active > 1 ||
+        s->input_enabled > 1 || s->hold_key > 1 || s->foreground > 15 || s->background > 15 ||
+        s->cursor > 255 || s->status_line > 1 || s->min_print_line > 255 || s->input_line > 255 ||
+        s->status_line_row > 255 || s->window_open > 1 || s->dialogue > 1 || s->monitor > 1 ||
+        s->upper_left_x > 255 || s->upper_left_y > 255 || s->picture_shown > 1 || s->picture_id > 255 ||
+        s->menu_submitted > 1 || s->simple_save > 1 || s->trace_enabled > 1 || s->trace_logic > 255 ||
+        s->trace_top > 255 || s->trace_height > 255 || s->keypress > 65535 ||
+        agi_runtime_world_validate(&s->world) < 0 ||
+        agi_runtime_sound_state_valid(&s->sound, &scb) < 0 ||
+        s->sound_active != s->sound.active || s->sound_id != s->sound.resource ||
+        s->sound_flag != s->sound.completion_flag || s->sound_remaining != s->sound.remaining ||
         !memchr(s->game_id, 0, sizeof(s->game_id)) ||
         !memchr(s->input, 0, sizeof(s->input)) || !memchr(s->echo, 0, sizeof(s->echo))) return false;
+    for (i = 0; i < s->view_order_count; i++) {
+        if (views[s->view_order[i]]) return false;
+        views[s->view_order[i]] = 1;
+    }
+    for (i = 0; i < s->picture_order_count; i++) {
+        if (pictures[s->picture_order[i]]) return false;
+        pictures[s->picture_order[i]] = 1;
+    }
     for (i = 0; i < 256; i++) {
-        const AgiRuntimeActor *a = &s->world.actors[i];
         if (s->f[i] > 1 || s->controllers[i] > 1 || s->loaded_logics[i] > 1 ||
             s->loaded_pictures[i] > 1 || s->loaded_sounds[i] > 1 || s->world.loaded_views[i] > 1 ||
             (s->loaded_logics[i] && !logic_exists(r, i)) ||
+            (s->loaded_pictures[i] && !r->resources->pictures[i].data) ||
+            (s->loaded_sounds[i] && !r->resources->sounds[i].data) ||
+            (s->world.loaded_views[i] && !r->resources->views[i].data) ||
+            views[i] != s->world.loaded_views[i] || pictures[i] != s->loaded_pictures[i] ||
             (s->scan_start[i] && (!logic_exists(r, i) || s->scan_start[i] >= r->resources->logics[i].code.size)) ||
-            a->view > 255 || a->loop > 255 || a->cel > 255 || a->priority > 15 ||
-            a->direction > 8 || a->motion > AGI_RM_MOVE || a->cycle > AGI_RC_REVERSE ||
-            a->motion_flag > 255 || a->cycle_flag > 255 || a->width > 160 || a->height > 168 ||
-            a->x < -160 || a->x > 255 || a->y < -168 || a->y > 255) return false;
+            (i >= s->view_order_count && s->view_order[i]) ||
+            (i >= s->picture_order_count && s->picture_order[i])) return false;
     }
     for (i = 0; i < s->stack_depth; i++) if (!logic_exists(r, s->stack[i].logic) ||
         s->stack[i].pc >= r->resources->logics[s->stack[i].logic].code.size) return false;
     for (i = 0; i < AGI_RT_STRINGS; i++) if (!memchr(s->strings[i], 0, AGI_RT_STRING_BYTES)) return false;
     for (i = 0; i < AGI_RT_WORDS; i++) if (!memchr(s->parsed_words[i], 0, AGI_RT_STRING_BYTES)) return false;
-    for (i = 0; i < s->menu_count; i++) if (!memchr(s->menus[i].text, 0, AGI_RT_STRING_BYTES) ||
+    for (i = 0; i < AGI_RT_MENUS; i++) if (!memchr(s->menus[i].text, 0, AGI_RT_STRING_BYTES) ||
         s->menus[i].first_item > s->menu_item_count || s->menus[i].item_count > s->menu_item_count - s->menus[i].first_item) return false;
-    for (i = 0; i < s->menu_item_count; i++) if (!memchr(s->menu_items[i].text, 0, AGI_RT_STRING_BYTES) ||
+    for (i = 0; i < AGI_RT_MENU_ITEMS; i++) if (!memchr(s->menu_items[i].text, 0, AGI_RT_STRING_BYTES) ||
         s->menu_items[i].controller > 255 || s->menu_items[i].enabled > 1) return false;
+    for (i = 0; i < 25 * 40; i++) if (((const uint8_t *)s->text_fg)[i] > 15 ||
+        ((const uint8_t *)s->text_bg)[i] > 15) return false;
+    for (i = 0; i < s->script_count; i++) {
+        uint32_t j, kind = s->script[i].opcode;
+        if (kind > 8) return false;
+        if (kind == 5 && s->script_count - i < 4) return false;
+        for (j = i; j <= i + (kind == 5 ? 3 : 0); j++) {
+            static const uint8_t zeros[6] = {0};
+            if (s->script[j].opcode > 255 || memcmp(s->script[j].args + 1, zeros, 6)) return false;
+        }
+        if (kind == 5) i += 3;
+    }
     for (i = 0; i < AGI_RUNTIME_PLANE_BYTES; i++) if (s->picture_visual[i] > 15 || s->picture_priority[i] > 15) return false;
     return true;
 }

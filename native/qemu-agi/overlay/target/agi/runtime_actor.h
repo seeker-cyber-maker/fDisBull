@@ -77,6 +77,8 @@ typedef struct AgiRuntimeActorCallbacks {
 } AgiRuntimeActorCallbacks;
 
 void agi_runtime_world_init(AgiRuntimeWorld *world);
+/* Read-only admission for pointer-free snapshots; same domains as commands. */
+int agi_runtime_world_validate(const AgiRuntimeWorld *world);
 /* Width-checked bytecode arguments. 33..91 and 147/148 are handled;
  * resource load/discard (30..32), inventory (92..) belong to the parent.
  * On a negative result, world/variables/flags are unchanged. Callbacks must

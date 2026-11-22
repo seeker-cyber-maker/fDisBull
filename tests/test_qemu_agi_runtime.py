@@ -132,7 +132,7 @@ def native(tmp_path_factory):
     library = directory / "runtime.so"
     subprocess.run([cc, "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror",
                     "-shared", "-fPIC", "-I", str(NATIVE), str(bridge),
-                    *(str(NATIVE / p) for p in ["runtime.c", "runtime_actor.c", "runtime_scene.c", "decode.c"]),
+                    *(str(NATIVE / p) for p in ["runtime.c", "runtime_actor.c", "runtime_scene.c", "runtime_sound.c", "decode.c"]),
                     "-o", str(library)], check=True, capture_output=True, text=True)
     lib = C.CDLL(str(library))
     ptr, uint = C.c_void_p, C.c_uint
@@ -327,6 +327,7 @@ def test_menus_keys_controllers_and_disabled_selection(native):
     code = [156, 1, 157, 2, 7, 157, 3, 8, 158, 160, 8, 161,
             121, 65, 0, 9, 0]
     with Engine(native, code, messages={(0, 1): "Game", (0, 2): "Save", (0, 3): "Load"}) as e:
+        native.rt_flag(e.ptr, 14, 1)
         assert e.run() == 0 and e.probe(11) == 161
         before = e.state()
         assert not e.complete(number=8) and e.state() == before

@@ -2,9 +2,11 @@
 
 The AGI CPU owns instruction decoding and execution. Disassembly, scene
 construction and a future UIL emitter consume its instruction facts. Structural
-inspection describes a larger fixed AGI 2.917 catalog than the three experimental
-profiles can execute. The native parser has separate structural and execution
-admission policies; additional descriptions do not enable guest commands.
+inspection describes all documented fixed AGI 2.917 actions 0 through 173 and
+predicates 0 through 18. The three legacy experimental profiles retain their
+smaller execution admission. The explicit `agi-2917-runtime-1` profile uses the
+same canonical parser for its resource-backed engine. Adding a descriptor does
+not change any profile's execution admission.
 
 The same bounded native decoder supplies TCG lowering and the explicit stopped
 disassembly query. The existing DISASM channel remains a journal of retired
@@ -17,6 +19,7 @@ Use standard QMP QOM operations on the selected CPU:
 
 | Property | Contract |
 | --- | --- |
+| `agi-decode-logic` | Selected immutable LOGIC ID. Runtime packages admit present IDs in `0..255`; legacy raw-code profiles admit only zero. Selecting a LOGIC resets `agi-decode-pc` to zero. |
 | `agi-decode-pc` | Host-only starting byte PC, in `0..code_size`; default zero. A caller selects the boundary. |
 | `agi-decode-limit` | Host-only maximum instruction records, `1..64`; default 64. |
 | `agi-decode-json` | Read one bounded linear decode page from immutable loaded code. |
@@ -57,9 +60,30 @@ The current page schema is `fdisbull-agi-native-instructions-2`:
 ```
 
 The example omits instruction rows for brevity; an actual nonempty successful
-window includes every decoded row in its contiguous extent. Source has exactly
-the identity used by the native state/events, including `catalog_sha256` in
-binding profiles. `stop` is `end`, `limit` or `decode_fault`. A fault includes
+window includes every decoded row in its contiguous extent. For legacy raw-code
+profiles, source has exactly the identity used by native state/events,
+including `catalog_sha256` in binding profiles and `logic_id: 0`.
+
+Runtime decode pages identify the **selected** immutable LOGIC, which can
+differ from the currently executing LOGIC:
+
+```json
+{
+  "sha256": "<selected LOGIC code SHA-256>",
+  "size": 42,
+  "logic_id": 7,
+  "profile": "agi-2917-runtime-1",
+  "package_sha256": "<exact UTF-8 package JSON byte SHA-256>"
+}
+```
+
+Runtime state/event envelopes instead use `source.sha256` for package identity
+and `source.logic_id`/`source.logic_sha256` for the current execution LOGIC.
+Consumers must compare those explicit identities; the two envelope shapes are
+not interchangeable. Runtime records require schema 2. Identical code bytes
+in different LOGIC IDs or packages remain distinct address spaces.
+
+`stop` is `end`, `limit` or `decode_fault`. A fault includes
 `pc`, `opcode`, the numeric `code` and native fault `name`; its instruction has
 no invented extent or successor and is not appended as a successful row.
 `next_pc` is the end of the last decoded row, or the requested start if none.
@@ -77,7 +101,7 @@ Each successful row has these fields:
 | --- | --- |
 | `pc`, `opcode`, `size`, `bytes` | Raw code-relative identity and exact complete encoded bytes. |
 | `mnemonic` | AGI command/predicate spelling. |
-| `operation` | Semantic operation name, such as `object.position`, `object.set_view`, `resource.load_view` or `object.draw`. Catalog-only commands with unmodeled effects say `unmodeled`. This is not a UIL block. |
+| `operation` | Semantic operation name, such as `object.position`, `resource.load_view` or `string.assign`. Current fixed action descriptors are all named; archived catalog records may still say `unmodeled`. This is not a UIL block. |
 | `operands` | Ordered typed symbolic inputs and destinations. |
 | `conditions` | Ordered IF tokens; empty for other commands. |
 | `successors` | Possible static edges; never a replacement for an observed `next_pc`. |
@@ -87,8 +111,12 @@ Each successful row has these fields:
 Operands use `role`, `kind`, `width`, `access` and exactly one of `index` or
 `value`. Kinds include `variable`, `flag`, `actor`, `view`, `loop`, `cel`,
 `picture`, `logic`, `room`, `sound`, `message`, `inventory_object`, `word`,
-`u8`, `u16` and `s16`. Variables and flags use `index`; literal actor/resource/ordinal
-and immediate operands use `value`. `width` is the logical value width (1 for
+`string`, `controller`, `u8`, `u16` and `s16`. Variables and flags use `index`;
+literal actor/resource/ordinal and immediate operands use `value`. Schema-2
+`string` and `controller` operands also use `value` for their encoded 8-bit
+slot identity, retaining their native read/write/reference access. They are
+not resolved text or a historical controller state. Archived schema 1 retains
+its original operand kinds. `width` is the logical value width (1 for
 flags, 8 or 16 bits). `access` is `read`, `write`, `read_write` or `reference`.
 Variable resource/ordinal operands retain kind `variable`, their variable
 index and semantic role (`picture`, `logic`, `view`, `loop`, `cel`, etc.); a final snapshot must not
@@ -102,8 +130,8 @@ structural counts from 0 through 255 are described without evaluating the
 stateful predicate. Successors use `kind`, signed integer `pc` and
 boolean `in_range`. Ordinary kinds are `fallthrough`, `branch`, `true` and
 `false`. `assumed_return` is a call's possible local continuation if its callee
-returns. `assumed_fallthrough` retains the next encoded instruction after an
-unmodeled command without asserting that the command returns there. External
+returns. `assumed_fallthrough` retains a conservative encoded continuation
+without asserting that a control command's eventual outcome reaches it. External
 LOGIC targets are typed references, not byte addresses in the current source.
 Room changes have no local successor. Out-of-range encoded targets remain
 visible facts.
@@ -113,17 +141,27 @@ empty IF admission and empty OR rejection. Structural inspection admits up to
 1,024 encoded bytes and 64 predicates, at most 256 condition tokens, seven
 action operands and 1,024 aggregate condition operands per instruction.
 Its catalog describes the fixed action encodings from 0 through 173 and
-predicates 0 through 18. `trace.on` is a named contextual-layout boundary: its
-width cannot be established from this fixed profile alone. Unknown commands,
-malformed encodings and structural limits retain explicit fault boundaries.
+predicates 0 through 18. In legacy profiles, `trace.on` remains a named
+contextual-layout boundary. The explicitly selected runtime profile adopts
+the nominal AGI 2.917 zero-operand form, consuming exactly its opcode byte.
+Unknown commands, malformed encodings and structural limits retain explicit
+fault boundaries.
 
-Execution still admits only the existing 29-command union, predicates 1 through
-7, eight predicates per IF and the prior 64-byte bound. An invalid IF false
+The three legacy execution profiles still admit only the existing 29-command
+union, predicates 1 through 7, eight predicates per IF and the prior 64-byte
+bound. An invalid IF false
 target faults only if that edge is taken. Disabled commands retain their
 unsupported-opcode precedence, including before operand truncation or actor
 validation. Structurally known unsupported predicates still produce the
 existing condition fault during execution. The two policies share the parser;
 static recognition is not executable support or full interpreter compatibility.
+
+The runtime profile uses the broader canonical framing bounds and its own
+execution support resolver. `native` and `pending_host` records describe that
+resolver's contract; they do not establish a successful execution, accepted
+resource, completed host service or whole-game compatibility. A typed `call`
+retains its LOGIC reference and assumed local return; the host adapter does not
+invent a callee byte address from the encoded resource ID.
 
 The operation names retain AGI semantics: `scalar.increment` and
 `scalar.decrement` saturate at the unsigned-byte limits, while `scalar.add` and
@@ -175,6 +213,35 @@ instruction = decode_instruction(
 `read_decode_pages` compares the complete native state and retained events
 before and after its bounded batch. It never resumes the CPU. Static page
 limits or decode faults remain visible to the caller.
+
+For a `QemuAGIRuntime` owner, use its captured package bytes and explicit
+per-LOGIC source:
+
+```python
+logic_id = 7
+code = vm.logic_code(logic_id)
+page = vm.decode(logic_id, pc=0, limit=64)
+
+# The existing batch reader and Processor adapter work without a new decoder.
+pages = read_decode_pages(
+    vm, code, source=vm.logic_source(logic_id),
+    start_pc=0, max_instructions=256, page_limit=64)
+processor = NativeAGIProcessor(code, pages)
+instruction = decode_instruction(
+    processor, code, Location(processor.info.address_space, 0))
+```
+
+`vm.decode` selects `agi-decode-logic`, `agi-decode-pc` and `agi-decode-limit`,
+then delegates validation and complete state/event neutrality checks to the
+same batch reader. It accepts present resources even when execution has not
+loaded them. Its private immutable code capture is authoritative; mutating the
+public package metadata cannot substitute code. The runtime QMP client limits
+retained event batches to 4,096 so neutrality checks fit its 32 MiB transport
+bound; larger retained batches are refused before event serialization.
+
+The scene-specific consumers below retain their separate pilot capture
+contracts. Runtime page acceptance by the common Processor adapter does not
+also qualify runtime event envelopes for those scene planners.
 
 `processor_scene.py` joins those records to a complete native capture. Its first
 consumer admits a verified straight-line observed prefix and derives the bound
@@ -228,5 +295,18 @@ FDISBULL_QEMU_AGI_EXPECTED_SHA256=EXACT_SHA256 \
   tests/test_qemu_agi_behavior_batch.py tests/test_qemu_agi_discovery.py
 ```
 
-These bounded checks qualify the described increment. They do not establish
-full opcode coverage, whole-game compatibility or performance measurements.
+The runtime processor suite uses two authored native children. One package
+holds all 174 action encodings and all 19 predicate encodings across multiple
+LOGIC IDs, including IDs containing identical bytes. A separate program
+exercises strings, key/controller binding, a cross-LOGIC call and a pending
+print while verifying inspection neutrality:
+
+```sh
+FDISBULL_QEMU_AGI=/private/qemu-system-agi \
+FDISBULL_QEMU_AGI_EXPECTED_SHA256=EXACT_SHA256 \
+  python -m pytest -q tests/test_qemu_agi_runtime_processor.py
+```
+
+These bounded checks qualify descriptor/consumer contracts and the authored
+execution paths. They do not establish whole-game compatibility or performance
+measurements.

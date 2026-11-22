@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "decode.h"
 #include "runtime_actor.h"
+#include "runtime_sound.h"
 
 #define AGI_RUNTIME_PROFILE "agi-2917-runtime-1"
 #define AGI_RT_STRINGS 25u
@@ -86,6 +87,8 @@ typedef struct AgiRuntimeScriptEntry {
 typedef struct AgiRuntimeState {
     uint8_t v[256], f[256], inventory[256];
     uint8_t loaded_logics[256], loaded_pictures[256], loaded_sounds[256];
+    uint8_t view_order[256], picture_order[256];
+    uint32_t view_order_count, picture_order_count;
     AgiRuntimeWorld world;
     uint32_t logic, pc, status, fault, fault_detail, fault_logic, fault_pc;
     uint32_t scan_start[256], stack_depth;
@@ -109,7 +112,10 @@ typedef struct AgiRuntimeState {
     uint8_t picture_visual[AGI_RUNTIME_PLANE_BYTES];
     uint8_t picture_priority[AGI_RUNTIME_PLANE_BYTES];
     uint32_t picture_shown, picture_id;
-    uint32_t sound_active, sound_id, sound_flag, sound_remaining;
+    /* These summaries derive from sound, never drive the sequencer. */
+    uint32_t sound_active, sound_id, sound_flag;
+    uint64_t sound_remaining;
+    AgiRuntimeSound sound;
     uint32_t menu_count, menu_item_count, menu_submitted;
     AgiRuntimeMenu menus[AGI_RT_MENUS];
     AgiRuntimeMenuItem menu_items[AGI_RT_MENU_ITEMS];
@@ -125,6 +131,10 @@ typedef struct AgiRuntimeEvent {
     uint8_t bytes[AGI_DECODE_BYTES_MAX];
     AgiRuntimeActor before_actor, after_actor;
 } AgiRuntimeEvent;
+/* Complete ordered device commands, independent of optional observations.
+ * Called only after commit. The sink must not mutate/reenter this runtime. */
+typedef void (*AgiRuntimeSoundSink)(void *opaque,
+    const AgiRuntimeSoundEvent *events, uint32_t count);
 typedef struct AgiRuntime {
     AgiRuntimeState state;
     const AgiRuntimeResources *resources;
@@ -132,6 +142,8 @@ typedef struct AgiRuntime {
     uint32_t obs_mask, obs_capacity, obs_count, obs_limit;
     uint64_t obs_eligible[2], obs_dropped[2], obs_calls, epoch;
     uint64_t run_retired;
+    AgiRuntimeSoundSink sound_output;
+    void *sound_output_opaque;
 } AgiRuntime;
 
 /* Resources remain immutable/alive for the lifetime of the runtime. The
@@ -143,6 +155,9 @@ int agi_runtime_step(AgiRuntime *runtime);
 int agi_runtime_run(AgiRuntime *runtime, uint64_t budget);
 bool agi_runtime_cycle(AgiRuntime *runtime);
 bool agi_runtime_tick(AgiRuntime *runtime, uint32_t ticks);
+bool agi_runtime_sound_ticks(AgiRuntime *runtime, uint32_t ticks);
+void agi_runtime_set_sound_output(AgiRuntime *runtime,
+                                  AgiRuntimeSoundSink sink, void *opaque);
 bool agi_runtime_input(AgiRuntime *runtime, const char *text);
 bool agi_runtime_key(AgiRuntime *runtime, uint16_t key, bool pressed);
 bool agi_runtime_controller(AgiRuntime *runtime, uint8_t controller);

@@ -592,7 +592,7 @@ bool agi_decode(AgiDecodeRead read, void *opaque, uint32_t code_size,
          * separate resumable capability, including conditional modal paths. */
         switch (out->opcode) {
         case 29: case 101: case 102: case 110: case 115: case 118:
-        case 124: case 125: case 126: case 127: case 128: case 129:
+        case 124: case 125: case 126: case 128: case 129:
         case 133: case 134: case 135: case 136: case 139: case 141:
         case 144: case 151: case 152: case 161: case 162:
             out->execution_support = AGI_EXEC_PENDING_HOST;

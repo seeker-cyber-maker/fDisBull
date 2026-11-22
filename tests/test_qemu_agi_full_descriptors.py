@@ -334,7 +334,7 @@ def test_framing_limits_and_fetch_bounds_remain_explicit(native_decoder):
 
 
 def test_explicit_runtime_profile_reuses_full_framing_without_promoting_pilot_support(native_decoder):
-    pending = {29, 101, 102, 110, 115, 118, 124, 125, 126, 127, 128, 129,
+    pending = {29, 101, 102, 110, 115, 118, 124, 125, 126, 128, 129,
                133, 134, 135, 136, 139, 141, 144, 151, 152, 161, 162}
     for execution in (False, True):
         for opcode in range(174):

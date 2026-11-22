@@ -89,6 +89,22 @@ static int plane_valid(const AgiRuntimeWorld *w,
     return AGI_RA_HANDLED;
 }
 
+int agi_runtime_world_validate(const AgiRuntimeWorld *w)
+{
+    unsigned i;
+    int result;
+    if (!w) return AGI_RA_BAD_ARGUMENT;
+    result = world_valid(w);
+    if (result < 0) return result;
+    for (i = 0; i < AGI_RUNTIME_ACTORS; i++) {
+        if (w->loaded_views[i] > 1 || w->actors[i].flags & ~((1u << 18) - 1)) return AGI_RA_BAD_ARGUMENT;
+        result = actor_valid(&w->actors[i]);
+        if (result < 0) return result;
+    }
+    for (i = 0; i < AGI_RUNTIME_HEIGHT; i++) if (w->priority_bands[i] > 15) return AGI_RA_BAD_PLANE;
+    return AGI_RA_HANDLED;
+}
+
 static int geometry(const AgiRuntimeWorld *w,
                     const AgiRuntimeActorCallbacks *cb, uint32_t view,
                     uint32_t loop, uint32_t cel, AgiRuntimeGeometry *g)

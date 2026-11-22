@@ -128,6 +128,8 @@ class QemuAGIRuntime(QemuAGI):
         self.package_bytes = raw
         self.package_sha256 = sha256(raw).hexdigest()
         self.package_size = len(raw)
+        self._logic_codes = {item["id"]: bytes.fromhex(item["code"])
+                             for item in self.package["logics"]}
         self._logic_hashes = {item["id"]: item["sha256"] for item in self.package["logics"]}
         self._logic_sizes = {item["id"]: len(item["code"]) // 2 for item in self.package["logics"]}
         self.context_id = uuid4().hex
@@ -258,6 +260,11 @@ class QemuAGIRuntime(QemuAGI):
     def tick(self, ticks=1):
         return self._command({"action": "tick", "ticks": _uint(ticks, 4096, "ticks", 1)})
 
+    def sound_tick(self, ticks=1):
+        """Advance explicit native 1/60-second sound ticks, independently of world ticks."""
+        return self._command({"action": "sound-tick",
+                              "ticks": _uint(ticks, 4096, "sound ticks", 1)})
+
     def input(self, text):
         _cp437_bytes(text, 40, "input")
         return self._command({"action": "input", "text": text})
@@ -310,6 +317,36 @@ class QemuAGIRuntime(QemuAGI):
         return {"schema": REQUEST_SCHEMA, "context": self.context_id,
                 "package_sha256": self.package_sha256, "binary_sha256": self.binary_sha256,
                 "effect": deepcopy(effect)}
+
+    def logic_code(self, logic_id):
+        """Return immutable exact code bytes captured from the admitted package."""
+        _uint(logic_id, 255, "logic_id")
+        if logic_id not in self._logic_codes:
+            raise ValueError("logic_id is absent from the runtime package")
+        return self._logic_codes[logic_id]
+
+    def logic_source(self, logic_id):
+        """Describe a decode source, distinct from the current execution source."""
+        code = self.logic_code(logic_id)
+        return {"sha256": self._logic_hashes[logic_id], "size": len(code),
+                "logic_id": logic_id, "profile": PROFILE,
+                "package_sha256": self.package_sha256}
+
+    def decode(self, logic_id, pc=0, limit=64):
+        """Read one canonical native page and verify state/event neutrality.
+
+        Only native decode supplies instruction lengths, operands and control
+        flow. The existing processor adapter validates them against the exact
+        selected package bytes, including unexecuted/unloaded LOGIC resources.
+        """
+        code = self.logic_code(logic_id)
+        _uint(pc, len(code), "decode pc")
+        _uint(limit, 64, "decode limit", 1)
+        processor = _sibling("processor_harness")
+        return processor.read_decode_pages(
+            self, code, source=self.logic_source(logic_id), start_pc=pc,
+            max_instructions=limit, page_limit=limit,
+        )[0]
 
     def _require_ticket(self, ticket):
         if type(ticket) is not dict:
