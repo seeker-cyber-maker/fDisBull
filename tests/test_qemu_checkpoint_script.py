@@ -349,7 +349,7 @@ def test_modern_artifact_identity_refuses_before_native_or_earlier_save(process_
     assert len(o.owners)==1 and not o.session.closed
 
 
-@pytest.mark.parametrize('value', [True,None,12,[],{},''])
+@pytest.mark.parametrize('value', [True,None,12,[],{},pytest.param('', id='empty')])
 def test_resolved_artifact_type_refuses_before_checkpoint_dispatch(process_checkpoint, value):
     o = process_checkpoint
     result = execute_script(o.session,route(dict(op='load-state',artifact='$saved.value'),dict(op='save-state')),

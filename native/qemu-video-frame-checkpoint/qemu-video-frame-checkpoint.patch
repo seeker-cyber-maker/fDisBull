@@ -1,0 +1,811 @@
+diff --git a/include/system/fdisbull-instrumented-checkpoint.h b/include/system/fdisbull-instrumented-checkpoint.h
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -5,6 +5,8 @@
+ #include "qapi/error.h"
+ 
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT \
++    "fdisbull-instrumented-qemu-state-3"
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2 \
+     "fdisbull-instrumented-qemu-state-2"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V1 \
+     "fdisbull-instrumented-qemu-state-1"
+diff --git a/include/system/fdisbull-video-frame.h b/include/system/fdisbull-video-frame.h
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -3,6 +3,8 @@
+ #define SYSTEM_FDISBULL_VIDEO_FRAME_H
+ 
+ #include "qapi/error.h"
++#include "qapi/qapi-types-run-state.h"
++#include "qapi/qapi-types-fdisbull-video-frame.h"
+ 
+ struct QemuConsole;
+ /* Effective native writes/reset/load invalidate both partial and live pixels. */
+@@ -17,4 +19,16 @@
+ /* Authoritative clock loss/restore retires controls, without claiming a stop. */
+ void fdisbull_video_frame_clock_retire(const char *reason);
+ 
++/* Bounded source rasters, separate from the process-local control fence. */
++FdisbullVideoFrameCheckpointState *fdisbull_video_frame_checkpoint_state(
++    const FdisbullClockInfo *clock, Error **errp);
++bool fdisbull_video_frame_checkpoint_validate(
++    const FdisbullVideoFrameCheckpointState *state, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp);
++bool fdisbull_video_frame_checkpoint_restore(
++    const FdisbullVideoFrameCheckpointState *state, uint64_t epoch,
++    const char **new_token, uint64_t *generation, Error **errp);
++bool fdisbull_video_frame_checkpoint_save_begin(Error **errp);
++void fdisbull_video_frame_checkpoint_save_end(void);
++
+ #endif
+diff --git a/qapi/fdisbull-instrumented-checkpoint.json b/qapi/fdisbull-instrumented-checkpoint.json
+--- a/qapi/fdisbull-instrumented-checkpoint.json
++++ b/qapi/fdisbull-instrumented-checkpoint.json
+@@ -5,6 +5,7 @@
+ { 'include': 'fdisbull-display.json' }
+ { 'include': 'fdisbull-retrace.json' }
+ { 'include': 'fdisbull-vga-configuration.json' }
++{ 'include': 'fdisbull-video-frame.json' }
+ 
+ ##
+ # @FdisbullInstrumentedAudioState:
+@@ -148,6 +149,8 @@
+ #
+ # @frame-keys: Native stopped frame-key ownership and device-state proof.
+ #
++# @video-frame: Bounded source-raster state, mandatory only in format 3.
++#
+ # Since: 10.0
+ ##
+ { 'struct': 'FdisbullInstrumentedCheckpointState',
+@@ -155,7 +158,8 @@
+             'clock': 'FdisbullClockInfo', 'audio': 'FdisbullInstrumentedAudioState',
+             'display': 'FdisbullInstrumentedDisplayState',
+             'retrace': 'FdisbullInstrumentedRetraceState',
+-            '*frame-keys': 'FdisbullFrameKeysCheckpointState' } }
++            '*frame-keys': 'FdisbullFrameKeysCheckpointState',
++            '*video-frame': 'FdisbullVideoFrameCheckpointState' } }
+ 
+ ##
+ # @FdisbullInstrumentedCheckpointExport:
+@@ -192,6 +196,9 @@
+ # @frame-key-token: Fresh token for a restored active frame-key owner.
+ #     Absent when the checkpoint contains no active owner.
+ # @frame-key-generation: Restored frame-key CAS generation.
++# @video-frame-token: Fresh source-stream token, only for non-idle format 3.
++# @video-frame-generation: Restored source generation, including zero for idle
++#     format 3; absent from legacy import receipts.
+ #
+ # Since: 10.0
+ ##
+@@ -199,7 +206,8 @@
+   'data': { 'format': 'str', 'virtual-ns': 'int', 'new-epoch': 'uint64',
+             '*audio-token': 'str', '*display-token': 'str',
+             '*retrace-device': 'str', '*frame-key-token': 'str',
+-            '*frame-key-generation': 'uint64' } }
++            '*frame-key-generation': 'uint64', '*video-frame-token': 'str',
++            '*video-frame-generation': 'uint64' } }
+ 
+ ##
+ # @x-fdisbull-instrumented-checkpoint-export:
+diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -19,7 +19,8 @@
+ #
+ # @frame-id: Process-monotonic accepted complete-raster ordinal.
+ # @stream-generation: Process-local explicit-start generation.
+-# @epoch: Producing native clock epoch; never rebound to restored pixels.
++# @epoch: Native owner epoch. Scoped format-3 import creates a new live receipt
++#     with a fresh epoch; the archived source receipt remains unchanged.
+ # @configuration-generation: Selected VGA configuration identity for all rows.
+ # @timing-generation: Selected precise timing identity for all rows.
+ # @width: Source width, 320 pixels.
+@@ -59,15 +60,17 @@
+ # @api-version: Private protocol version, 1.
+ # @model: qemu-vga-chain4-scanline-v1.
+ # @state: idle, observing, stopped, or invalidated.
+-# @epoch: Current stopped native clock epoch; a retained frame has its own
+-#     frozen producing epoch.
++# @epoch: Current stopped native clock epoch; a retained frame has the same
++#     live owner epoch, including after scoped format-3 import.
+ # @virtual-ns: Current stopped QEMU_CLOCK_VIRTUAL timestamp.
+ # @stream-generation: Explicit-start generation, zero before the first start.
+-# @frame-sequence: Accepted raster count; not reset by start, stop, or load.
++# @frame-sequence: Accepted raster count, preserved by start and stop. Scoped
++#     format-3 import restores its saved logical value; legacy import clears
++#     source ownership to canonical idle.
+ # @aborted-frames: Discarded partial rasters that had sampled at least one row.
+ # @in-progress: Whether the current partial raster has sampled rows.
+ # @rows-sampled: Current partial row count, zero through 199.
+-# @token: Caller ownership token, present after explicit start.
++# @token: Ownership token, present after explicit start or scoped import.
+ # @device: Canonical selected VGA device path, present after explicit start.
+ # @reason: First invalidation reason; present only for an invalidated stream.
+ # @start-ns: Native stopped time of explicit start, present after start.
+@@ -87,6 +90,44 @@
+             'rows-sampled': 'int', '*token': 'str', '*device': 'str',
+             '*reason': 'str', '*start-ns': 'int', '*stop-ns': 'int',
+             '*next-deadline-ns': 'int', '*frame': 'FdisbullVideoFrame' } }
++
++##
++# @FdisbullVideoFrameCheckpointState:
++#
++# Source state for the private instrumented format-3 sidecar. A sampled
++# prefix is separate from the last complete image; neither comes from a
++# renderer refresh. Idle and invalidated states contain no image bytes.
++#
++# @info: Exact stopped stream observation at the enclosing capture time.
++# @device-path: Canonical selected VGA path, empty only for idle.
++# @console-index: Primary owned synchronous console, zero.
++# @configuration-generation: Source configuration generation, zero for idle or
++#     invalidated streams.
++# @timing-generation: Source timing generation, zero for idle or invalidated.
++# @period-ns: Whole precise-model period, zero for idle or invalidated.
++# @line-period-ns: Physical line period, zero for idle or invalidated.
++# @dac-8bit: Source DAC interpretation, false for idle or invalidated.
++# @frame-start-ns: Pending raster phase boundary, zero unless observing.
++# @timer-pending: True exactly while observing.
++# @timer-expire-ns: Actual armed timer expiry, or -1. This can differ from
++#     info.next-deadline-ns after a deferred callback and is never rebased.
++# @partial-rows: Exact ordered prefix of zero through 199 sampled rows.
++# @partial-rgb-base64: Canonical base64 of exactly 960 bytes per partial row.
++# @partial-sha256: Lowercase SHA-256 of that exact prefix, including empty.
++# @rgb-base64: Canonical base64 of an independent 192000-byte complete image
++#     if info.frame is present; otherwise empty.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFrameCheckpointState',
++  'data': { 'info': 'FdisbullVideoFrameInfo', 'device-path': 'str',
++            'console-index': 'int', 'configuration-generation': 'uint64',
++            'timing-generation': 'uint64', 'period-ns': 'int',
++            'line-period-ns': 'int', 'dac-8bit': 'bool',
++            'frame-start-ns': 'int', 'timer-pending': 'bool',
++            'timer-expire-ns': 'int', 'partial-rows': ['FdisbullVideoFrameRow'],
++            'partial-rgb-base64': 'str', 'partial-sha256': 'str',
++            'rgb-base64': 'str' } }
+ 
+ ##
+ # @FdisbullVideoFramePoint:
+diff --git a/system/fdisbull-instrumented-checkpoint.c b/system/fdisbull-instrumented-checkpoint.c
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -1,6 +1,7 @@
+ /*
+  * Bounded sidecar for fDisBull's process-local clock, audio, display and
+- * retrace owners.  Guest CPU/RAM/device state stays in the QEMU snapshot.
++ * retrace and source-raster owners. Guest CPU/RAM/device state stays in the
++ * QEMU snapshot.
+  * SPDX-License-Identifier: GPL-2.0-or-later
+  */
+ #include "qemu/osdep.h"
+@@ -204,6 +205,18 @@
+         error_setg(errp, "Precise retrace checkpoint lacks the display publication configuration");
+         return NULL;
+     }
++    result->video_frame = fdisbull_video_frame_checkpoint_state(result->clock,
++                                                               errp);
++    if (!result->video_frame) {
++        return NULL;
++    }
++    if (result->video_frame->info->token &&
++        (!result->retrace->admitted ||
++         g_strcmp0(result->video_frame->device_path,
++                   result->retrace->device_path))) {
++        error_setg(errp, "Source-video checkpoint lacks its precise VGA owner");
++        return NULL;
++    }
+     return g_steal_pointer(&result);
+ }
+ 
+@@ -269,6 +282,9 @@
+         error_setg(errp, "Native instrumented state changed after checkpoint export");
+         return false;
+     }
++    if (!fdisbull_video_frame_checkpoint_save_begin(errp)) {
++        return false;
++    }
+     save_busy = true;
+     return true;
+ }
+@@ -279,6 +295,8 @@
+     assert(bql_locked());
+     (void)success;
+     if (export_token && token && !strcmp(token, export_token)) {
++        /* Save success and failure preserve the exact original source expiry. */
++        fdisbull_video_frame_checkpoint_save_end();
+         save_busy = false;
+         g_clear_pointer(&export_token, g_free);
+         g_clear_pointer(&export_json, g_free);
+@@ -340,8 +358,8 @@
+     g_autoptr(FdisbullInstrumentedCheckpointState) state = NULL;
+     g_autoptr(FdisbullClockInfo) current_clock = NULL;
+     const char *audio_token = NULL, *display_token = NULL, *retrace_device = NULL;
+-    const char *frame_key_token = NULL;
+-    uint64_t frame_key_generation = 0;
++    const char *frame_key_token = NULL, *video_frame_token = NULL;
++    uint64_t frame_key_generation = 0, video_frame_generation = 0;
+     FdisbullInstrumentedCheckpointReceipt *receipt = NULL;
+     uint64_t epoch;
+ 
+@@ -356,11 +374,15 @@
+     }
+     bool legacy_v1 = !strcmp(state->format,
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V1);
+-    if ((!legacy_v1 && strcmp(state->format,
+-                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT)) ||
++    bool legacy_v2 = !strcmp(state->format,
++                             FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2);
++    bool source_v3 = !strcmp(state->format,
++                             FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    if ((!legacy_v1 && !legacy_v2 && !source_v3) ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+         (!legacy_v1 && !state->frame_keys) ||
++        source_v3 != (state->video_frame != NULL) ||
+         state->source_epoch != state->clock->epoch ||
+         state->virtual_ns != state->clock->virtual_ns) {
+         error_setg(errp, "Invalid instrumented checkpoint envelope identity");
+@@ -376,7 +398,18 @@
+                                               state->retrace->admitted, errp) ||
+         (!legacy_v1 &&
+          !fdisbull_frame_keys_checkpoint_validate(state->frame_keys,
+-                                                  state->source_epoch, errp))) {
++                                                  state->source_epoch, errp)) ||
++        (source_v3 &&
++         !fdisbull_video_frame_checkpoint_validate(state->video_frame,
++                                                   state->source_epoch,
++                                                   state->virtual_ns, errp))) {
++        return NULL;
++    }
++    if (source_v3 && state->video_frame->info->token &&
++        (!state->retrace->admitted ||
++         g_strcmp0(state->video_frame->device_path,
++                   state->retrace->device_path))) {
++        error_setg(errp, "Source-video checkpoint lacks its precise VGA owner");
+         return NULL;
+     }
+     current_clock = qmp_x_fdisbull_query_clock(errp);
+@@ -413,8 +446,17 @@
+                                                 &frame_key_generation, errp)) {
+         return NULL;
+     }
++    /* Last adoption: failures above cannot publish usable restored source data. */
++    if (!fdisbull_video_frame_checkpoint_restore(state->video_frame, epoch,
++                                                 &video_frame_token,
++                                                 &video_frame_generation,
++                                                 errp)) {
++        return NULL;
++    }
+     receipt = g_new0(FdisbullInstrumentedCheckpointReceipt, 1);
+-    receipt->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    receipt->format = g_strdup(source_v3 ?
++        FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT :
++        FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2);
+     receipt->virtual_ns = state->virtual_ns;
+     receipt->new_epoch = epoch;
+     receipt->audio_token = audio_token ? g_strdup(audio_token) : NULL;
+@@ -423,6 +465,11 @@
+     receipt->frame_key_token = frame_key_token ? g_strdup(frame_key_token) : NULL;
+     receipt->has_frame_key_generation = true;
+     receipt->frame_key_generation = frame_key_generation;
++    if (source_v3) {
++        receipt->video_frame_token = g_strdup(video_frame_token);
++        receipt->has_video_frame_generation = true;
++        receipt->video_frame_generation = video_frame_generation;
++    }
+     g_clear_pointer(&last_receipt, qapi_free_FdisbullInstrumentedCheckpointReceipt);
+     last_receipt = receipt_copy(receipt);
+     restore_pending = false;
+diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -26,7 +26,7 @@
+ #define VIDEO_MAX_POINTS 256
+ #define VIDEO_FENCE_MODEL "qemu-video-frame-fence-v1"
+ 
+-/* Never serialized. Counters survive stopped replacement streams and load. */
++/* Pointers/timer objects are private. Format 3 retains bounded logical state. */
+ static struct {
+     bool initialized;
+     bool observing;
+@@ -899,3 +899,497 @@
+     }
+     return video_fence_info();
+ }
++
++/* Source checkpoint helpers never sample a row or borrow renderer pixels. */
++static bool video_checkpoint_error(Error **errp, const char *reason)
++{
++    error_setg(errp, "Invalid source-video checkpoint: %s", reason);
++    return false;
++}
++
++static bool video_checkpoint_text(const char *text, size_t limit)
++{
++    return text && text[0] && strlen(text) <= limit &&
++           g_utf8_validate(text, -1, NULL);
++}
++
++static bool video_checkpoint_pixels(const char *encoded, size_t size,
++                                     const char *digest, uint8_t **out,
++                                     Error **errp)
++{
++    g_autofree guchar *data = NULL;
++    g_autofree char *canonical = NULL;
++    g_autofree char *actual_digest = NULL;
++    gsize length;
++
++    /* Check the exact bound before the decoder can allocate storage. */
++    if (!encoded || strlen(encoded) != 4 * ((size + 2) / 3)) {
++        return video_checkpoint_error(errp, "pixel encoding extent");
++    }
++    data = g_base64_decode(encoded, &length);
++    canonical = g_base64_encode(data, length);
++    if (length != size || strcmp(encoded, canonical)) {
++        return video_checkpoint_error(errp, "canonical pixel encoding");
++    }
++    if (digest) {
++        actual_digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256, data,
++                                                    length);
++        if (strcmp(digest, actual_digest)) {
++            return video_checkpoint_error(errp, "pixel digest");
++        }
++    }
++    if (out) {
++        *out = g_steal_pointer(&data);
++    }
++    return true;
++}
++
++static bool video_checkpoint_rows(const FdisbullVideoFrameRowList *entry,
++                                   unsigned count, int64_t start, int64_t line,
++                                   int64_t stopped, Error **errp)
++{
++    unsigned row;
++
++    for (row = 0; row < count; row++) {
++        const FdisbullVideoFrameRow *value = entry ? entry->value : NULL;
++        int64_t intended;
++
++        if (!value || value->row != row ||
++            !fdisbull_video_row_deadline(start, line, row, &intended) ||
++            value->intended_ns != intended || value->actual_ns > stopped ||
++            !fdisbull_video_row_timely(intended, value->actual_ns, line)) {
++            return video_checkpoint_error(errp, "row order, time or stop boundary");
++        }
++        entry = entry->next;
++    }
++    return !entry || video_checkpoint_error(errp, "extra row receipts");
++}
++
++static bool video_checkpoint_frame(const FdisbullVideoFrameCheckpointState *s,
++                                    Error **errp)
++{
++    const FdisbullVideoFrameInfo *info = s->info;
++    const FdisbullVideoFrame *f = info->frame;
++    const FdisbullVideoFrameRowList *last;
++    int64_t stopped = info->has_stop_ns ? info->stop_ns : info->virtual_ns;
++
++    if (!f) {
++        return video_checkpoint_pixels(s->rgb_base64, 0, NULL, NULL, errp);
++    }
++    if (!f->frame_id || f->frame_id != info->frame_sequence ||
++        f->stream_generation != info->stream_generation ||
++        f->epoch != info->epoch ||
++        f->configuration_generation != s->configuration_generation ||
++        f->timing_generation != s->timing_generation ||
++        f->width != FDISBULL_VIDEO_WIDTH ||
++        f->height != FDISBULL_VIDEO_HEIGHT ||
++        f->stride != FDISBULL_VIDEO_ROW_BYTES ||
++        g_strcmp0(f->pixel_format, "RGB888") ||
++        g_strcmp0(f->dac_conversion, "replicate-6-to-8-v1") ||
++        f->dac_8bit != s->dac_8bit || f->period_ns != s->period_ns ||
++        f->line_period_ns != s->line_period_ns ||
++        f->frame_start_ns <= info->start_ns ||
++        f->frame_start_ns % s->period_ns || !f->pixel_sha256) {
++        return video_checkpoint_error(errp, "complete frame identity or descriptor");
++    }
++    if (!video_checkpoint_rows(f->rows, FDISBULL_VIDEO_HEIGHT,
++                               f->frame_start_ns, f->line_period_ns,
++                               stopped, errp)) {
++        return false;
++    }
++    for (last = f->rows; last->next; last = last->next) {
++        /* The exact 200-row extent was validated above. */
++    }
++    if (f->first_sample_ns != f->rows->value->actual_ns ||
++        f->last_sample_ns != last->value->actual_ns ||
++        f->completed_ns != f->last_sample_ns) {
++        return video_checkpoint_error(errp, "complete frame sample endpoints");
++    }
++    if (info->has_next_deadline_ns &&
++        (f->frame_start_ns > INT64_MAX - s->period_ns ||
++         s->frame_start_ns != f->frame_start_ns + s->period_ns)) {
++        return video_checkpoint_error(errp, "next raster after complete image");
++    }
++    return video_checkpoint_pixels(s->rgb_base64, FDISBULL_VIDEO_RGB_BYTES,
++                                    f->pixel_sha256, NULL, errp);
++}
++
++bool fdisbull_video_frame_checkpoint_validate(
++    const FdisbullVideoFrameCheckpointState *s, uint64_t source_epoch,
++    int64_t virtual_ns, Error **errp)
++{
++    const FdisbullVideoFrameInfo *info;
++    bool idle, observing, stopped, invalidated;
++    int64_t intended, expiry;
++
++    if (!s || !(info = s->info) || !source_epoch || virtual_ns < 0 ||
++        info->api_version != 1 || g_strcmp0(info->model, VIDEO_MODEL) ||
++        info->epoch != source_epoch || info->virtual_ns != virtual_ns ||
++        info->rows_sampled < 0 || info->rows_sampled >= FDISBULL_VIDEO_HEIGHT ||
++        info->in_progress != (info->rows_sampled != 0) ||
++        !s->device_path || s->console_index || !s->partial_sha256) {
++        return video_checkpoint_error(errp, "stream identity or row progress");
++    }
++    idle = !g_strcmp0(info->state, "idle");
++    observing = !g_strcmp0(info->state, "observing");
++    stopped = !g_strcmp0(info->state, "stopped");
++    invalidated = !g_strcmp0(info->state, "invalidated");
++    if ((!idle && !observing && !stopped && !invalidated) ||
++        info->has_start_ns != !idle || info->has_stop_ns != stopped ||
++        info->has_next_deadline_ns != observing ||
++        (info->reason != NULL) != invalidated ||
++        ((idle || invalidated) && info->frame)) {
++        return video_checkpoint_error(errp, "canonical stream fields");
++    }
++    if (idle) {
++        if (info->token || info->device || s->device_path[0] ||
++            info->stream_generation || info->frame_sequence ||
++            info->aborted_frames) {
++            return video_checkpoint_error(errp, "idle identity");
++        }
++    } else if (!info->stream_generation ||
++               !video_checkpoint_text(info->token, 128) ||
++               !video_checkpoint_text(info->device, 1024) ||
++               strcmp(info->device, s->device_path) ||
++               info->start_ns < 0 || info->start_ns > virtual_ns ||
++               (invalidated && !video_checkpoint_text(info->reason, 1024)) ||
++               (stopped && (info->stop_ns < info->start_ns ||
++                            info->stop_ns > virtual_ns))) {
++        return video_checkpoint_error(errp, "source owner or stop interval");
++    }
++    if (idle || invalidated) {
++        if (s->configuration_generation || s->timing_generation ||
++            s->period_ns || s->line_period_ns || s->dac_8bit) {
++            return video_checkpoint_error(errp, "inactive source descriptor");
++        }
++    } else if (!s->configuration_generation || !s->timing_generation ||
++               !fdisbull_video_timing_valid(s->line_period_ns, s->period_ns)) {
++        return video_checkpoint_error(errp, "source timing");
++    }
++    if (observing) {
++        expiry = s->timer_expire_ns;
++        if (s->frame_start_ns <= info->start_ns ||
++            s->frame_start_ns % s->period_ns ||
++            !fdisbull_video_row_deadline(s->frame_start_ns, s->line_period_ns,
++                                         info->rows_sampled, &intended) ||
++            info->next_deadline_ns != intended || !s->timer_pending ||
++            expiry < 0 ||
++            !(expiry == intended ||
++              (expiry > intended && expiry - 1 <= virtual_ns))) {
++            /* A prior stopped callback may have armed T+1 before a later
++             * timer-disabled step advanced virtual_ns. Preserve that expiry. */
++            return video_checkpoint_error(errp, "pending raster or timer phase");
++        }
++        if (!video_checkpoint_rows(s->partial_rows, info->rows_sampled,
++                                   s->frame_start_ns, s->line_period_ns,
++                                   virtual_ns, errp)) {
++            return false;
++        }
++    } else if (info->rows_sampled || s->partial_rows || s->frame_start_ns ||
++               s->timer_pending || s->timer_expire_ns != -1) {
++        return video_checkpoint_error(errp, "inactive progress or timer");
++    }
++    if (!video_checkpoint_pixels(s->partial_rgb_base64,
++                                  info->rows_sampled * FDISBULL_VIDEO_ROW_BYTES,
++                                  s->partial_sha256, NULL, errp)) {
++        return false;
++    }
++    return video_checkpoint_frame(s, errp);
++}
++
++static bool video_checkpoint_device(const FdisbullVideoFrameCheckpointState *s,
++                                     Object **device, QemuConsole **console,
++                                     Error **errp)
++{
++    g_autofree char *path = NULL;
++    FdisbullVideoFrameSource source, expected = {
++        .configuration_generation = s->configuration_generation,
++        .timing_generation = s->timing_generation,
++        .line_period_ns = s->line_period_ns,
++        .period_ns = s->period_ns,
++        .dac_8bit = s->dac_8bit,
++    };
++
++    *device = video_device(console, errp);
++    if (!*device) {
++        return false;
++    }
++    path = object_get_canonical_path(*device);
++    if (g_strcmp0(path, s->device_path)) {
++        return video_checkpoint_error(errp, "selected source device changed");
++    }
++    /* Invalidated streams carry metadata only. Never repair their descriptor. */
++    if (strcmp(s->info->state, "invalidated") &&
++        (!pci_std_vga_fdisbull_video_frame_sample(
++            *device, s->info->virtual_ns, -1, NULL, &source, errp) ||
++         !video_source_equal(&source, &expected))) {
++        if (!errp || !*errp) {
++            video_checkpoint_error(errp, "selected source descriptor changed");
++        }
++        return false;
++    }
++    return true;
++}
++
++FdisbullVideoFrameCheckpointState *fdisbull_video_frame_checkpoint_state(
++    const FdisbullClockInfo *clock, Error **errp)
++{
++    g_autoptr(FdisbullVideoFrameCheckpointState) s = NULL;
++    FdisbullVideoFrameRowList **tail;
++    Object *device;
++    QemuConsole *console;
++    const uint8_t *prefix;
++    size_t size;
++    unsigned row;
++
++    assert(bql_locked());
++    if (!clock || !fdisbull_video_frame_checkpoint_safe(errp)) {
++        return NULL;
++    }
++    if ((video.rows && !video.partial) || (video.frame && !video.rgb) ||
++        video.rows >= FDISBULL_VIDEO_HEIGHT) {
++        video_checkpoint_error(errp, "live raster storage");
++        return NULL;
++    }
++    s = g_new0(FdisbullVideoFrameCheckpointState, 1);
++    s->info = video_info(clock);
++    s->device_path = g_strdup(video.device_path ? video.device_path : "");
++    s->timer_pending = video.initialized && timer_pending(&video.timer);
++    s->timer_expire_ns = s->timer_pending ?
++        (int64_t)timer_expire_time_ns(&video.timer) : -1;
++    if (video.observing || video.stopped) {
++        s->configuration_generation = video.source.configuration_generation;
++        s->timing_generation = video.source.timing_generation;
++        s->period_ns = video.source.period_ns;
++        s->line_period_ns = video.source.line_period_ns;
++        s->dac_8bit = video.source.dac_8bit;
++    }
++    if (video.observing) {
++        s->frame_start_ns = video.frame_start_ns;
++    }
++    tail = &s->partial_rows;
++    for (row = 0; row < video.rows; row++) {
++        FdisbullVideoFrameRowList *entry = g_new0(FdisbullVideoFrameRowList, 1);
++
++        entry->value = g_new0(FdisbullVideoFrameRow, 1);
++        entry->value->row = row;
++        entry->value->intended_ns = video.intended[row];
++        entry->value->actual_ns = video.actual[row];
++        *tail = entry;
++        tail = &entry->next;
++    }
++    size = video.rows * FDISBULL_VIDEO_ROW_BYTES;
++    prefix = size ? video.partial : (const uint8_t *)"";
++    s->partial_rgb_base64 = g_base64_encode(prefix, size);
++    s->partial_sha256 = g_compute_checksum_for_data(G_CHECKSUM_SHA256, prefix,
++                                                   size);
++    s->rgb_base64 = video.frame ?
++        g_base64_encode(video.rgb, FDISBULL_VIDEO_RGB_BYTES) : g_strdup("");
++    if (!fdisbull_video_frame_checkpoint_validate(s, clock->epoch,
++                                                   clock->virtual_ns, errp)) {
++        return NULL;
++    }
++    if (video.token &&
++        (!video_checkpoint_device(s, &device, &console, errp) ||
++         (!video.invalidated &&
++          (video.epoch != clock->epoch || video.device != device ||
++           video.console != console)))) {
++        if (!errp || !*errp) {
++            video_checkpoint_error(errp, "live source owner changed");
++        }
++        return NULL;
++    }
++    return g_steal_pointer(&s);
++}
++
++/* Clear only the destination live source. Historical fence receipts stay old. */
++static void video_checkpoint_discard(void)
++{
++    if (video.initialized) {
++        timer_del(&video.timer);
++    }
++    video_fence_retire("instrumented-checkpoint-restore");
++    g_clear_pointer(&video.token, g_free);
++    g_clear_pointer(&video.device_path, g_free);
++    g_clear_pointer(&video.reason, g_free);
++    g_clear_pointer(&video.frame, qapi_free_FdisbullVideoFrame);
++    g_clear_pointer(&video.partial, g_free);
++    g_clear_pointer(&video.rgb, g_free);
++    if (video.device) {
++        object_unref(video.device);
++        object_unref(OBJECT(video.console));
++    }
++    video.device = NULL;
++    video.console = NULL;
++    video.observing = video.stopped = video.invalidated = false;
++    video.epoch = video.generation = video.sequence = video.aborted = 0;
++    video.start_ns = video.stop_ns = video.frame_start_ns = video.deadline_ns = 0;
++    video.rows = 0;
++    memset(video.intended, 0, sizeof(video.intended));
++    memset(video.actual, 0, sizeof(video.actual));
++    memset(&video.source, 0, sizeof(video.source));
++}
++
++bool fdisbull_video_frame_checkpoint_restore(
++    const FdisbullVideoFrameCheckpointState *s, uint64_t epoch,
++    const char **new_token, uint64_t *generation, Error **errp)
++{
++    g_autofree uint8_t *prefix = NULL;
++    g_autofree uint8_t *complete = NULL;
++    g_autofree uint8_t *partial = NULL;
++    g_autofree uint8_t *rgb = NULL;
++    g_autofree char *token = NULL;
++    g_autoptr(FdisbullVideoFrame) frame = NULL;
++    const FdisbullVideoFrameInfo *info;
++    const FdisbullVideoFrameRowList *row;
++    Object *device;
++    QemuConsole *console;
++    bool observing, stopped;
++    size_t size;
++    unsigned index = 0;
++
++    assert(bql_locked());
++    *new_token = NULL;
++    *generation = 0;
++    if (!epoch) {
++        return video_checkpoint_error(errp, "restored native epoch");
++    }
++    /* Legacy snapshots contain no source owner; startup state cannot fill it. */
++    if (!s) {
++        video_checkpoint_discard();
++        return true;
++    }
++    info = s->info;
++    if (!info || !fdisbull_video_frame_checkpoint_validate(
++            s, info->epoch, info->virtual_ns, errp) || epoch == info->epoch ||
++        qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) != info->virtual_ns) {
++        if (!errp || !*errp) {
++            video_checkpoint_error(errp, "restored native time or epoch");
++        }
++        return false;
++    }
++    if (!strcmp(info->state, "idle")) {
++        video_checkpoint_discard();
++        return true;
++    }
++    if (!video_checkpoint_device(s, &device, &console, errp)) {
++        return false;
++    }
++    observing = !strcmp(info->state, "observing");
++    stopped = !strcmp(info->state, "stopped");
++    size = info->rows_sampled * FDISBULL_VIDEO_ROW_BYTES;
++    if (!video_checkpoint_pixels(s->partial_rgb_base64, size, s->partial_sha256,
++                                  &prefix, errp) ||
++        !video_checkpoint_pixels(s->rgb_base64,
++                                  info->frame ? FDISBULL_VIDEO_RGB_BYTES : 0,
++                                  info->frame ? info->frame->pixel_sha256 : NULL,
++                                  &complete, errp)) {
++        return false;
++    }
++    if (observing) {
++        partial = g_try_malloc0(FDISBULL_VIDEO_RGB_BYTES);
++        rgb = g_try_malloc0(FDISBULL_VIDEO_RGB_BYTES);
++        if (!partial || !rgb) {
++            return video_checkpoint_error(errp, "bounded restore storage");
++        }
++        if (size) {
++            memcpy(partial, prefix, size);
++        }
++        if (info->frame) {
++            memcpy(rgb, complete, FDISBULL_VIDEO_RGB_BYTES);
++        }
++    } else if (info->frame) {
++        rgb = g_steal_pointer(&complete);
++    }
++    token = g_uuid_string_random();
++    if (!strcmp(token, info->token) || !g_strcmp0(token, video.token)) {
++        return video_checkpoint_error(errp, "fresh source token unavailable");
++    }
++    if (info->frame) {
++        frame = QAPI_CLONE(FdisbullVideoFrame, info->frame);
++        frame->epoch = epoch;
++    }
++
++    /* All bounded validation/admission/allocation precedes live adoption. */
++    object_ref(device);
++    object_ref(OBJECT(console));
++    video_checkpoint_discard();
++    if (!video.initialized) {
++        video.initialized = true;
++        timer_init_ns(&video.timer, QEMU_CLOCK_VIRTUAL, video_timer_cb, NULL);
++        qemu_add_vm_change_state_handler(video_vm_state_change, NULL);
++    }
++    video.device = device;
++    video.console = console;
++    video.device_path = g_strdup(s->device_path);
++    video.token = g_steal_pointer(&token);
++    video.reason = g_strdup(info->reason);
++    video.frame = g_steal_pointer(&frame);
++    video.partial = g_steal_pointer(&partial);
++    video.rgb = g_steal_pointer(&rgb);
++    video.epoch = epoch;
++    video.generation = info->stream_generation;
++    video.sequence = info->frame_sequence;
++    video.aborted = info->aborted_frames;
++    video.start_ns = info->start_ns;
++    video.stop_ns = info->has_stop_ns ? info->stop_ns : 0;
++    video.frame_start_ns = s->frame_start_ns;
++    video.deadline_ns = info->has_next_deadline_ns ? info->next_deadline_ns : 0;
++    video.rows = info->rows_sampled;
++    for (row = s->partial_rows; row; row = row->next) {
++        video.intended[index] = row->value->intended_ns;
++        video.actual[index++] = row->value->actual_ns;
++    }
++    video.source.configuration_generation = s->configuration_generation;
++    video.source.timing_generation = s->timing_generation;
++    video.source.period_ns = s->period_ns;
++    video.source.line_period_ns = s->line_period_ns;
++    video.source.dac_8bit = s->dac_8bit;
++    video.observing = observing;
++    video.stopped = stopped;
++    video.invalidated = !observing && !stopped;
++    if (s->timer_pending) {
++        /* Exact expiry, including due or retained deferred timers; no callback. */
++        timer_mod_ns(&video.timer, s->timer_expire_ns);
++    }
++    *new_token = video.token;
++    *generation = video.generation;
++    return true;
++}
++
++/* This transaction state is never serialized or accepted from a sidecar. */
++static bool video_save_paused;
++static bool video_save_pending;
++static int64_t video_save_expiry;
++
++bool fdisbull_video_frame_checkpoint_save_begin(Error **errp)
++{
++    assert(bql_locked());
++    if (video_save_paused) {
++        return video_checkpoint_error(errp, "source save already active");
++    }
++    video_save_pending = video.initialized && timer_pending(&video.timer);
++    if (video_save_pending != video.observing) {
++        return video_checkpoint_error(errp, "live source timer pending state");
++    }
++    video_save_expiry = video_save_pending ?
++        (int64_t)timer_expire_time_ns(&video.timer) : -1;
++    if (video_save_pending) {
++        timer_del(&video.timer);
++    }
++    video_save_paused = true;
++    return true;
++}
++
++void fdisbull_video_frame_checkpoint_save_end(void)
++{
++    assert(bql_locked());
++    if (!video_save_paused) {
++        return;
++    }
++    if (video_save_pending && video.observing && !video.invalidated) {
++        timer_mod_ns(&video.timer, video_save_expiry);
++    }
++    video_save_paused = video_save_pending = false;
++    video_save_expiry = -1;
++}

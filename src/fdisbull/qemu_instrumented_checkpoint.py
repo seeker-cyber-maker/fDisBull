@@ -11,6 +11,9 @@ import hashlib
 import json
 
 from .dosbox_rpc import DebuggerError
+from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT,
+    clear_video_checkpoint_caches, logical_video_checkpoint,
+    restored_video_info, validate_video_checkpoint)
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
 FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
@@ -54,16 +57,24 @@ def _decode(record):
             or type(record.get('icount')) is not int or not 0 <= record['icount'] < 1 << 64):
         raise ValueError('Invalid instrumented checkpoint state or hash')
     state = json.loads(record['state'])
-    if (not isinstance(state, dict) or state.get('format') not in (FORMAT, FRAME_KEYS_FORMAT)
+    if (not isinstance(state, dict) or state.get('format') not in (FORMAT, FRAME_KEYS_FORMAT, VIDEO_FRAME_FORMAT)
             or type(state.get('virtual-ns')) is not int or not 0 <= state['virtual-ns'] < 1 << 63
             or type(state.get('source-epoch')) is not int or not 0 < state['source-epoch'] < 1 << 64
             or any(not isinstance(state.get(key), dict) for key in ('clock', 'audio', 'display', 'retrace'))):
         raise ValueError('Invalid instrumented checkpoint envelope')
-    if state['format'] == FRAME_KEYS_FORMAT:
+    if state['format'] in (FRAME_KEYS_FORMAT, VIDEO_FRAME_FORMAT):
         from .qemu_frame_keys import validate_frame_key_checkpoint
         validate_frame_key_checkpoint(state.get('frame-keys'), epoch=state['source-epoch'])
     elif 'frame-keys' in state:
         raise ValueError('Frame key checkpoint requires instrumented format 2')
+    if state['format'] == VIDEO_FRAME_FORMAT:
+        if set(state) != {'format', 'virtual-ns', 'source-epoch', 'clock', 'audio',
+                          'display', 'retrace', 'frame-keys', 'video-frame'}:
+            raise ValueError('Invalid instrumented format 3 envelope fields')
+        validate_video_checkpoint(state['video-frame'], epoch=state['source-epoch'],
+                                  virtual_ns=state['virtual-ns'])
+    elif 'video-frame' in state:
+        raise ValueError('Source video checkpoint requires instrumented format 3')
     return state
 
 
@@ -74,6 +85,9 @@ def validate(vm, record):
         return None
     require_commands(vm)
     state = _decode(record)
+    if state['format'] == VIDEO_FRAME_FORMAT and not {
+            'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys'} <= vm.qmp_commands:
+        raise ValueError('Source video checkpoint requires native video and key ownership queries')
     if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
         from .qemu_audio import audio_capture_format, require_audio_capture_format
         require_audio_capture_format(vm, audio_capture_format(state['audio'].get('info')))
@@ -151,6 +165,36 @@ def _logical(value):
     configuration = value['retrace'].get('configuration')
     if isinstance(configuration, dict):
         configuration.pop('epoch', None)
+    if 'video-frame' in value:
+        value['video-frame'] = logical_video_checkpoint(value['video-frame'])
+    return value
+
+
+def _empty_key_owner(state):
+    return (isinstance(state, dict) and state.get('active') is False
+            and state.get('generation') == 0 and state.get('accepted-edges') == 0
+            and state.get('held') == [] and state.get('modifier-mask') == 0)
+
+
+def _readback_view(saved, current, *, empty_native_key_owner):
+    """Project only validated neutral extensions onto an older saved format."""
+    if current['format'] == saved['format']:
+        return current
+    value = deepcopy(current)
+    if saved['format'] in (FORMAT, FRAME_KEYS_FORMAT) and value['format'] == VIDEO_FRAME_FORMAT:
+        if value['video-frame']['info']['state'] != 'idle':
+            raise DebuggerError('Legacy instrumentation unexpectedly restored a source video owner')
+        del value['video-frame']
+        value['format'] = FRAME_KEYS_FORMAT
+    if saved['format'] == FORMAT and value['format'] == FRAME_KEYS_FORMAT:
+        if not _empty_key_owner(value['frame-keys']):
+            raise DebuggerError('Legacy instrumentation unexpectedly restored a frame key owner')
+        if empty_native_key_owner is not True:
+            raise DebuggerError('Legacy instrumentation lacks independent empty frame key owner proof')
+        del value['frame-keys']
+        value['format'] = FORMAT
+    if value['format'] != saved['format']:
+        raise DebuggerError('Restored instrumentation readback format differs')
     return value
 
 
@@ -158,13 +202,56 @@ def restore(vm, record):
     saved = validate(vm, record)
     if saved is None:
         return None
-    result = vm.qmp.call(PREFIX + 'checkpoint-import', {'state': record['state']})
+    # A destination's startup source history cannot qualify restored history.
+    # Keep pre-dispatch validation outside the uncertain-import cleanup path.
+    clear_video_checkpoint_caches(vm)
+    try:
+        return _restore(vm, record, saved)
+    except BaseException as error:
+        clear_video_checkpoint_caches(vm)
+        vm._fdisbull_control_quarantine = 'uncertain instrumented checkpoint restore'
+        try:
+            vm.close()
+        except BaseException as cleanup_error:
+            error.machine_cleanup_error = type(cleanup_error).__name__
+        clear_video_checkpoint_caches(vm)
+        raise
+
+
+def _validate_restore_receipt(result, saved):
+    """Validate each native reply before comparing independent ownership."""
     epoch = result.get('new-epoch') if isinstance(result, dict) else None
     if (type(epoch) is not int or not 0 < epoch < 1 << 64
             or epoch == saved['source-epoch'] or result.get('virtual-ns') != saved['virtual-ns']):
         raise DebuggerError('Invalid restored native instrumentation ownership')
-    if vm.qmp.call(PREFIX + 'checkpoint-status') != result:
+    source = saved.get('video-frame')
+    if source is not None:
+        fields = {'format', 'virtual-ns', 'new-epoch', 'frame-key-generation',
+                  'video-frame-generation'}
+        optional = {'audio-token', 'display-token', 'retrace-device',
+                    'frame-key-token', 'video-frame-token'}
+        if (not fields <= result.keys() or result.keys() - fields - optional
+                or result['format'] != VIDEO_FRAME_FORMAT
+                or type(result['virtual-ns']) is not int
+                or type(result['frame-key-generation']) is not int
+                or result['frame-key-generation'] != saved['frame-keys']['generation']
+                or type(result['video-frame-generation']) is not int
+                or result['video-frame-generation'] != source['info']['stream-generation']
+                or ('frame-key-token' in result) != saved['frame-keys']['active']
+                or ('video-frame-token' in result) != (source['info']['state'] != 'idle')
+                or any(type(result[key]) is not str for key in optional & result.keys())):
+            raise DebuggerError('Invalid restored source video ownership receipt')
+    return epoch
+
+
+def _restore(vm, record, saved):
+    result = vm.qmp.call(PREFIX + 'checkpoint-import', {'state': record['state']})
+    epoch = _validate_restore_receipt(result, saved)
+    status = vm.qmp.call(PREFIX + 'checkpoint-status')
+    _validate_restore_receipt(status, saved)
+    if status != result:
         raise DebuggerError('Restored instrumentation ownership changed')
+    source = saved.get('video-frame')
 
     # Startup admissions describe the fresh, pre-load process. None of their
     # monotone frontiers can qualify the restored machine's earlier history.
@@ -184,17 +271,23 @@ def restore(vm, record):
         raise DebuggerError('Restored native instruction counter differs from its checkpoint')
     clock = dict(virtual_ns=native['virtual-ns'], virtual_clock=dict(native=native))
     key_state = saved.get('frame-keys')
-    if key_state is not None:
+    empty_native_key_owner = False
+    if key_state is not None or 'x-fdisbull-query-frame-keys' in vm.qmp_commands:
         from .qemu_frame_keys import validate_frame_key_state, adopt_frame_keys
         current_keys = validate_frame_key_state(vm.qmp.call('x-fdisbull-query-frame-keys'), epoch=epoch)
-        if (current_keys['active'] != key_state['active']
+        if key_state is None:
+            if (not _empty_key_owner(current_keys) or current_keys['foreign-held']
+                    or 'token' in current_keys):
+                raise DebuggerError('Legacy instrumentation unexpectedly restored a frame key owner')
+            empty_native_key_owner = True
+        elif (current_keys['active'] != key_state['active']
                 or current_keys['generation'] != key_state['generation']
                 or current_keys['accepted-edges'] != key_state['accepted-edges']
                 or current_keys['held'] != key_state['held']
                 or key_state['active'] and (result.get('frame-key-token') != current_keys.get('token')
                     or result.get('frame-key-generation') != current_keys['generation'])):
             raise DebuggerError('Restored frame key ownership differs from its checkpoint')
-        adopt_frame_keys(vm, current_keys, expected_held=key_state['held'])
+        adopt_frame_keys(vm, current_keys, expected_held=[] if key_state is None else key_state['held'])
     windows = {}
     if vm.machine_configuration.get('audio_profile', {}).get('profile') in ('pc-speaker', 'sb16', 'sb16-opl'):
         from .qemu_audio import _native_audio, audio_capture_format
@@ -218,12 +311,35 @@ def restore(vm, record):
         if result.get('retrace-device') != retrace['device'] or retrace['device'] != saved['retrace']['device-path']:
             raise DebuggerError('Restored retrace device differs from its checkpoint')
 
+    source_info = None
+    if source is not None and source['info']['state'] != 'idle':
+        source_info = restored_video_info(source, vm.qmp.call('x-fdisbull-query-video-frame'),
+            epoch=epoch, token=result.get('video-frame-token'))
+
     # Read back the retained bytes, native timer phase, configuration and
     # callback frontiers through the same bounded native serializer.
     current = vm.qmp.call(PREFIX + 'checkpoint-export', max_reply_bytes=64 * 1024 * 1024)
-    current = dict(state=current.get('state'), sha256=current.get('sha256'), icount=record['icount'])
-    if _logical(_decode(current)) != _logical(saved):
+    if not isinstance(current, dict):
+        raise DebuggerError('Invalid restored instrumentation export')
+    current = _decode(dict(state=current.get('state'), sha256=current.get('sha256'), icount=record['icount']))
+    if (current['source-epoch'] != epoch or current['virtual-ns'] != saved['virtual-ns']
+            or source is not None and current['format'] != VIDEO_FRAME_FORMAT
+            or source_info is not None and current.get('video-frame', {}).get('info') != source_info):
+        raise DebuggerError('Restored instrumentation readback owner differs')
+    if source is not None and source_info is None:
+        # The public source query requires precise VGA even when idle. A
+        # canonical idle sidecar also serves off-profile machines; verify its
+        # exact new epoch/time through this full export without adopting it.
+        restored_video_info(source, current['video-frame']['info'], epoch=epoch,
+                            token=result.get('video-frame-token'))
+    if _logical(_readback_view(saved, current,
+            empty_native_key_owner=empty_native_key_owner)) != _logical(saved):
         raise DebuggerError('Restored native instrumentation data differs from its checkpoint')
-    return dict(format=FORMAT, source_epoch=saved['source-epoch'], native_epoch=epoch,
+    if source_info is not None:
+        vm._video_frame_token = source_info['token']
+        windows['video_frame'] = dict(old=source['info']['token'], new=source_info['token'])
+        vm._video_frame_last = deepcopy(source_info)
+    return dict(format=VIDEO_FRAME_FORMAT if source is not None else FORMAT,
+                source_epoch=saved['source-epoch'], native_epoch=epoch,
                 virtual_ns=saved['virtual-ns'], windows=windows,
                 host_clock_sync_restored=False)

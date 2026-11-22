@@ -1,0 +1,77 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "cec82b2b2e8c76ba749bbd4f518d226e831b439d35b2480241ae46541e329c81",
+  "base_source_manifest_sha256": "990b6dc80d91c000911933852385ee9ecdfe234855bd4796fcd730e5581ff999",
+  "base_target_map_sha256": "e3896d46f81ac93a8e838551c78a954ed07b2ba6d20b0110f9993190ec1b84b4",
+  "patch": "qemu-video-frame-checkpoint.patch",
+  "patch_bytes": 35435,
+  "patch_sha256": "4c99192eb39da0375b1e32607dfc43f4063796746aee5ef1b5982890f67e8c52",
+  "scope": "New format3 bounded source-prefix and independent completed-raster checkpoint reconstruction; exact timer expiry and fresh native/host ownership; legacy formats1/2 and canonical idle3. No new native qualification.",
+  "reconstruction": {
+    "historical_patch_recovered": false,
+    "historical_passes_reused": false,
+    "unknown_lost_format3_compatibility": "unqualified",
+    "source_contract_sha256": "a7909198999d4f19a152b0658094fd28d857e44369db13b65413f5cc48f101da",
+    "timer_amendment_sha256": "59327f17a62acb798c16eb2624a598ad68ffcfd00fb1b80b42b98389eb1e0624"
+  },
+  "files": [
+    {
+      "path": "include/system/fdisbull-instrumented-checkpoint.h",
+      "base_bytes": 3329,
+      "base_sha256": "2c9d894600725a2c5e70aca8498e587fa6bc980da2a3818b69d91a82f8116f79",
+      "patched_bytes": 3423,
+      "patched_sha256": "fc123d42cfab00be82128083354afbe8bd78288ac437ce6794a8fa7a2460fcb0",
+      "mode": "100644"
+    },
+    {
+      "path": "include/system/fdisbull-video-frame.h",
+      "base_bytes": 812,
+      "base_sha256": "5bcfe08f3ca60c766d54204361ac0b0c2830f600136b213c156a745ca7413a1d",
+      "patched_bytes": 1560,
+      "patched_sha256": "c1099f5f2164f591ded540bedbe748f35f046e59ec89389de00bde6f51ba35ed",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-instrumented-checkpoint.json",
+      "base_bytes": 9617,
+      "base_sha256": "b18c6f336d73171ff2bb825fb176c1a829bef231604ad4e03c693766f9a491a5",
+      "patched_bytes": 10086,
+      "patched_sha256": "e6587717f9d35b41e922185c96735347b57461e1809a0c7f818f3cd5891e86de",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-video-frame.json",
+      "base_bytes": 12853,
+      "base_sha256": "65f959e86d105dc6ee3c39b2e8528b80a4bc66cddd715e28b03b1a85540d5fd6",
+      "patched_bytes": 15154,
+      "patched_sha256": "0ceefc53b5791346943bc3486876e394a9057463526547c4847af03040223806",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-instrumented-checkpoint.c",
+      "base_bytes": 16859,
+      "base_sha256": "dcf5c4a0b1e83d8d7d65870ac805a9d8f7d8f9deaa753ab04ce74e1c35ae1274",
+      "patched_bytes": 19103,
+      "patched_sha256": "a376923072fca4d4e188ac9a49ec3109acc8e468e57d1bf065200e31ce13e535",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-video-frame.c",
+      "base_bytes": 31097,
+      "base_sha256": "ac9de868c7ad36829a60dd64b5f82fd5c239f5cd939c0f4573c96cf844e7f510",
+      "patched_bytes": 51109,
+      "patched_sha256": "5662f9bed05f69953097473646bc216e81426052ec436eca513480cf89586408",
+      "mode": "100644"
+    }
+  ],
+  "qualification": {
+    "static_source_review": "host validator and restore independently reviewed; earlier native source review retained; no fresh native execution",
+    "host_tests": "590 selected cases passed: 465 retained candidate02 results plus 125 fresh results after tracking-fixture correction; exact expected case identities, zero failures/errors/skips, original candidate02 afterimages unchanged, and restored Python 3.13 dependency maps verified",
+    "patch_application": "not-run",
+    "full_schema_parse": "not-run",
+    "build": "not-run",
+    "native": "not-run",
+    "paired_legacy": "not-run"
+  }
+}

@@ -206,7 +206,7 @@ def test_format_can_change_only_by_starting_a_new_stopped_window(formatted_audio
     assert o.session.audio_observe()['sample_format'] == MONO
 
 
-@pytest.mark.parametrize('capture_format', [None, True, [], {}, 's16', 'stereo', ''])
+@pytest.mark.parametrize('capture_format', [None, True, [], {}, 's16', 'stereo', pytest.param('', id='empty')])
 def test_invalid_format_refuses_before_any_native_request(formatted_audio, capture_format):
     o = formatted_audio
     with pytest.raises(ValueError, match='capture_format'):

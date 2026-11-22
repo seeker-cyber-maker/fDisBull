@@ -80,7 +80,10 @@ class Machine:
 
 class TrackedMachine(MachineDebugSession):
     def __init__(self, project, path):
-        Session.__init__(self, project, owned=False)
+        # Keep the real VM-derived session_id property on MachineDebugSession.
+        fixture_state = vars(Session(project, owned=False)).copy()
+        fixture_state.pop('session_id')
+        self.__dict__.update(fixture_state)
         self.vm = Machine(path)
         self.vm.context = self
         self.rpc = self.vm

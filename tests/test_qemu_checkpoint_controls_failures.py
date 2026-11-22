@@ -8,6 +8,7 @@ from fdisbull.qemu_checkpoint_controls import restore_controls
 from fdisbull import qemu_instrumented_checkpoint as instrumented
 from fdisbull import qemu_layers
 from test_qemu_hooks import Harness
+from test_qemu_video_checkpoint import make_state, source_peer
 
 
 def closing_session(vm, *, close_fails=True):
@@ -93,7 +94,7 @@ def test_instrumented_export_retains_transport_error_and_result(error_type):
 @pytest.mark.parametrize('value,error_type,message',[
     ({'token':''},DebuggerError,'export token'),
     ({'token':'owned','state':'{}','sha256':'invalid'},ValueError,'state or hash'),
-])
+], ids=['empty-export-token', 'invalid-state-hash'])
 def test_instrumented_malformed_export_retains_validation_failure(value,error_type,message):
     session,calls=capture_session(value=value)
     with pytest.raises(error_type,match=message) as caught:instrumented.capture(session)
@@ -188,3 +189,78 @@ def test_invalid_layer_receipt_retains_intended_error_before_cleanup(
     assert constructed==[message] and primary.machine_cleanup_error=='RuntimeError'
     assert session.close_calls==1 and session.vm._fdisbull_control_quarantine
     assert calls==['x-fdisbull-layer-observe']
+
+
+@pytest.mark.parametrize('command', ['checkpoint-import', 'checkpoint-status',
+                                   'source-query', 'checkpoint-export'])
+@pytest.mark.parametrize('close_fails', [False, True])
+def test_source_restore_preserves_original_failure_result_and_clears_all_source_caches(
+        source_peer, command, close_fails):
+    vm = source_peer(make_state())
+    primary = OSError('authored incomplete source restoration')
+    primary.result = {'native_observation': 'retained'}
+    original_result = primary.result
+    names = ('_video_frame_token', '_video_frame_last',
+             '_video_frame_probe_samples', '_video_frame_owned_rgb')
+    vm.__dict__.update({name: 'startup-stale' for name in names})
+    fail_at = ('x-fdisbull-query-video-frame' if command == 'source-query'
+               else instrumented.PREFIX + command)
+    def fail(selected):
+        assert not any(name in vm.__dict__ for name in names)
+        if selected == fail_at:
+            raise primary
+    vm.before_call = fail
+    def close():
+        vm.close_calls += 1
+        vm.closed = True
+        # Even an uncertain cleanup that writes another cache cannot qualify it.
+        vm._video_frame_token = 'cleanup-stale'
+        if close_fails:
+            raise RuntimeError('authored source cleanup failure')
+    vm.close = close
+    with pytest.raises(OSError) as caught:
+        instrumented.restore(vm, vm.record)
+    assert caught.value is primary and caught.value.result is original_result
+    assert vm.close_calls == 1 and vm.closed and vm._fdisbull_control_quarantine
+    assert not any(name in vm.__dict__ for name in names)
+    assert vm.calls[-1][0] == fail_at
+    if close_fails:
+        assert primary.machine_cleanup_error == 'RuntimeError'
+    else:
+        assert not hasattr(primary, 'machine_cleanup_error')
+
+
+def test_source_restore_validation_failure_survives_cleanup_as_the_same_error(
+        source_peer, monkeypatch):
+    vm = source_peer(make_state())
+    primary = DebuggerError('Restored source video metadata differs from its checkpoint')
+    primary.result = {'source_receipt': 'retained'}
+    original_result = primary.result
+    constructed = []
+    def error(message):
+        constructed.append(message)
+        return primary
+    monkeypatch.setattr('fdisbull.qemu_video_checkpoint.DebuggerError', error)
+    vm.current['video-frame']['info']['aborted-frames'] += 1
+    def close():
+        vm.close_calls += 1
+        raise RuntimeError('authored source cleanup failure')
+    vm.close = close
+    with pytest.raises(DebuggerError) as caught:
+        instrumented.restore(vm, vm.record)
+    assert caught.value is primary and caught.value.result is original_result
+    assert constructed == [str(primary)] and primary.machine_cleanup_error == 'RuntimeError'
+    assert vm.close_calls == 1 and vm._fdisbull_control_quarantine
+    assert '_video_frame_token' not in vm.__dict__ and '_video_frame_last' not in vm.__dict__
+
+
+def test_source_preflight_refusal_preserves_unmodified_destination_owner(source_peer):
+    state = make_state()
+    state['video-frame']['partial-sha256'] = '0'*64
+    vm = source_peer(state)
+    original = object()
+    vm._video_frame_token = original
+    with pytest.raises(ValueError):
+        instrumented.restore(vm, vm.record)
+    assert not vm.calls and vm.close_calls == 0 and vm._video_frame_token is original
+    assert not hasattr(vm, '_fdisbull_control_quarantine')
