@@ -73,6 +73,9 @@ def passive_dispatch(vm, admission, stack):
             return False
         if operation in _EMPTY_QMP_READS:
             return arguments is None or type(arguments) is dict and not arguments
+        if operation == 'x-fdisbull-plan-frame-key-batch':
+            from .qemu_frame_key_batch import strict_plan_request
+            return strict_plan_request(arguments)
         if operation == 'human-monitor-command':
             return (type(arguments) is dict and set(arguments) == {'command-line'}
                     and arguments['command-line'] == 'info registers')

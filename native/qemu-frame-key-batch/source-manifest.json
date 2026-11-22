@@ -1,0 +1,89 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "bounded stopped frame-key batch planning and atomic acceptance",
+  "base": {
+    "qemu_version": "10.0.13",
+    "composition": "existing frame-key ownership and source-video-fence changes; each exact before_sha256 is required",
+    "host_commit": "af97dfa1105748098f354e4979df688d997c07d1"
+  },
+  "patch": {
+    "file": "qemu-10.0.13-fdisbull-frame-key-batch-v1.patch",
+    "bytes": 51784,
+    "sha256": "c4354b674511bac0ca5c02f8d22ff28a790ab1a5c03cb2a0414ecd4bfd3e1c23",
+    "modified_file_count": 4,
+    "files": [
+      {
+        "path": "hw/input/ps2.c",
+        "before_bytes": 40665,
+        "after_bytes": 42274,
+        "before_sha256": "0b217d7d29dd1994d7fa18e26ae95f5aa04eef630d7122bc66511c7d860364f7",
+        "after_sha256": "ca1df2e4545accdc8d1002bc20d1036d024a36f20f8db34247aae21279f54e12"
+      },
+      {
+        "path": "include/hw/input/ps2.h",
+        "before_bytes": 3528,
+        "after_bytes": 4118,
+        "before_sha256": "d65788abe6a7d6dded74b1f350c2f25e2763c8d17ba04fcfdefdfe4457f84c45",
+        "after_sha256": "1536745ab5246cbd64c15120cda1df41c37ce668b7d82a355d148a07c8f32f9b"
+      },
+      {
+        "path": "qapi/fdisbull-input.json",
+        "before_bytes": 29560,
+        "after_bytes": 36378,
+        "before_sha256": "0f4bfe101aa95494c2558e47a4a604df67dd5cb14b927f7ef7c90566c11a9366",
+        "after_sha256": "a65ef00f8f0fa5679016503ad68f5f78f2b6473b22d2d4804d0b1284141c1af6"
+      },
+      {
+        "path": "system/fdisbull-frame-keys.c",
+        "before_bytes": 31366,
+        "after_bytes": 52280,
+        "before_sha256": "36f98d9e59f9e49b8548f62a111eb8a73351a7c59a811054da841b628a59202c",
+        "after_sha256": "935145259b9f7b04644e59d2b8876a3122ace2c82455d4f7677854d53cb906f9"
+      }
+    ]
+  },
+  "protocol": {
+    "version": 1,
+    "commands": [
+      "x-fdisbull-plan-frame-key-batch",
+      "x-fdisbull-apply-frame-key-batch"
+    ],
+    "maximum_edges": 32,
+    "maximum_held_keys": 64,
+    "maximum_encoding_scratch_bytes": 256,
+    "protocol_fifo_bytes": 16,
+    "profiles": [
+      "raw-set-1",
+      "raw-set-2",
+      "translated-set-2"
+    ],
+    "independent_serializer_vectors": {
+      "path": "tests/fixtures/qemu_frame_key_batch_vectors.json",
+      "sha256": "2c5ff35502a0217709adec964d29ffd3aa58d14284cd40f7617b142b3e565d9b"
+    }
+  },
+  "composition": {
+    "checkpoint_native_paths_overlap": false,
+    "pending_event_native_paths_overlap": "must check selected pending candidate; no shared file presumed",
+    "host_overlap": [
+      "src/fdisbull/qemu_session_revision.py"
+    ]
+  },
+  "qualification": {
+    "host_selected_tests": 200,
+    "host_failures": 0,
+    "host_errors": 0,
+    "host_skipped": 0,
+    "native_patch_applied": false,
+    "qapi_generated": false,
+    "native_compiled": false,
+    "native_executed": false,
+    "historical_missing_commit_recovered": false,
+    "global_parity": false
+  },
+  "limitations": [
+    "Host protocol doubles and frozen serializer vectors do not qualify native scan-code bytes, IRQ/guest consumption or native checkpoint replay.",
+    "Typematic repeat remains unsupported; device acceptance reports guest_consumed unknown.",
+    "Native source is the surviving new reconstruction, not recovery of historical missing b556d637 commit."
+  ]
+}

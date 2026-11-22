@@ -1,0 +1,1316 @@
+--- a/hw/input/ps2.c
++++ b/hw/input/ps2.c
+@@ -329,105 +329,83 @@
+     }
+ }
+ 
+-static void ps2_keyboard_event(DeviceState *dev, QemuConsole *src,
+-                               InputEvent *evt)
++/* Shared decision tree: scalar values and a byte sink, with no device,
++ * ownership, IRQ, wakeup, timer or tracing side effects. Ordinary input keeps
++ * its existing live sink; the frame planner uses only a bounded local sink. */
++static bool ps2_encode_keycode(unsigned scancode_set, unsigned modifiers,
++                               QKeyCode qcode, bool pressed,
++                               void (*emit)(void *, int), void *opaque)
+ {
+-    PS2KbdState *s = (PS2KbdState *)dev;
+-    InputKeyEvent *key = evt->u.key.data;
+-    int qcode;
+     uint16_t keycode = 0;
+-    int mod;
+ 
+-    /* do not process events while disabled to prevent stream corruption */
+-    if (!s->scan_enabled) {
+-        return;
+-    }
+-
+-    qemu_system_wakeup_request(QEMU_WAKEUP_REASON_OTHER, NULL);
+-    assert(evt->type == INPUT_EVENT_KIND_KEY);
+-    qcode = qemu_input_key_value_to_qcode(key->key);
+-
+-    if (!fdisbull_frame_keys_keyboard_event(s, qcode, key->down)) {
+-        return;
+-    }
+-
+-    mod = ps2_modifier_bit(qcode);
+-    trace_ps2_keyboard_event(s, qcode, key->down, mod,
+-                             s->modifiers, s->scancode_set, s->translate);
+-    if (key->down) {
+-        s->modifiers |= mod;
+-    } else {
+-        s->modifiers &= ~mod;
+-    }
+-
+-    if (s->scancode_set == 1) {
++    if (scancode_set == 1) {
+         if (qcode == Q_KEY_CODE_PAUSE) {
+-            if (s->modifiers & (MOD_CTRL_L | MOD_CTRL_R)) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x46);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xc6);
++            if (modifiers & (MOD_CTRL_L | MOD_CTRL_R)) {
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x46);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xc6);
+                 }
+             } else {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe1);
+-                    ps2_put_keycode(s, 0x1d);
+-                    ps2_put_keycode(s, 0x45);
+-                    ps2_put_keycode(s, 0xe1);
+-                    ps2_put_keycode(s, 0x9d);
+-                    ps2_put_keycode(s, 0xc5);
++                if (pressed) {
++                    emit(opaque, 0xe1);
++                    emit(opaque, 0x1d);
++                    emit(opaque, 0x45);
++                    emit(opaque, 0xe1);
++                    emit(opaque, 0x9d);
++                    emit(opaque, 0xc5);
+                 }
+             }
+         } else if (qcode == Q_KEY_CODE_PRINT) {
+-            if (s->modifiers & MOD_ALT_L) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xb8);
+-                    ps2_put_keycode(s, 0x38);
+-                    ps2_put_keycode(s, 0x54);
+-                } else {
+-                    ps2_put_keycode(s, 0xd4);
+-                    ps2_put_keycode(s, 0xb8);
+-                    ps2_put_keycode(s, 0x38);
+-                }
+-            } else if (s->modifiers & MOD_ALT_R) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xb8);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x38);
+-                    ps2_put_keycode(s, 0x54);
+-                } else {
+-                    ps2_put_keycode(s, 0xd4);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xb8);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x38);
++            if (modifiers & MOD_ALT_L) {
++                if (pressed) {
++                    emit(opaque, 0xb8);
++                    emit(opaque, 0x38);
++                    emit(opaque, 0x54);
++                } else {
++                    emit(opaque, 0xd4);
++                    emit(opaque, 0xb8);
++                    emit(opaque, 0x38);
++                }
++            } else if (modifiers & MOD_ALT_R) {
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xb8);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x38);
++                    emit(opaque, 0x54);
++                } else {
++                    emit(opaque, 0xd4);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xb8);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x38);
+                 }
+-            } else if (s->modifiers & (MOD_SHIFT_L | MOD_CTRL_L |
++            } else if (modifiers & (MOD_SHIFT_L | MOD_CTRL_L |
+                                        MOD_SHIFT_R | MOD_CTRL_R)) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x37);
+-                } else {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xb7);
+-                }
+-            } else {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x2a);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x37);
+-                } else {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xb7);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xaa);
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x37);
++                } else {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xb7);
++                }
++            } else {
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x2a);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x37);
++                } else {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xb7);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xaa);
+                 }
+             }
+         } else if ((qcode == Q_KEY_CODE_LANG1 || qcode == Q_KEY_CODE_LANG2)
+-                   && !key->down) {
++                   && !pressed) {
+             /* Ignore release for these keys */
+         } else {
+             if (qcode < qemu_input_map_qcode_to_atset1_len) {
+@@ -435,97 +413,96 @@
+             }
+             if (keycode) {
+                 if (keycode & 0xff00) {
+-                    ps2_put_keycode(s, keycode >> 8);
++                    emit(opaque, keycode >> 8);
+                 }
+-                if (!key->down) {
++                if (!pressed) {
+                     keycode |= 0x80;
+                 }
+-                ps2_put_keycode(s, keycode & 0xff);
++                emit(opaque, keycode & 0xff);
+             } else {
+-                qemu_log_mask(LOG_UNIMP,
+-                              "ps2: ignoring key with qcode %d\n", qcode);
++                return false;
+             }
+         }
+-    } else if (s->scancode_set == 2) {
++    } else if (scancode_set == 2) {
+         if (qcode == Q_KEY_CODE_PAUSE) {
+-            if (s->modifiers & (MOD_CTRL_L | MOD_CTRL_R)) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x7e);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x7e);
+-                }
+-            } else {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe1);
+-                    ps2_put_keycode(s, 0x14);
+-                    ps2_put_keycode(s, 0x77);
+-                    ps2_put_keycode(s, 0xe1);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x14);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x77);
++            if (modifiers & (MOD_CTRL_L | MOD_CTRL_R)) {
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x7e);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x7e);
++                }
++            } else {
++                if (pressed) {
++                    emit(opaque, 0xe1);
++                    emit(opaque, 0x14);
++                    emit(opaque, 0x77);
++                    emit(opaque, 0xe1);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x14);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x77);
+                 }
+             }
+         } else if (qcode == Q_KEY_CODE_PRINT) {
+-            if (s->modifiers & MOD_ALT_L) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x11);
+-                    ps2_put_keycode(s, 0x11);
+-                    ps2_put_keycode(s, 0x84);
+-                } else {
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x84);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x11);
+-                    ps2_put_keycode(s, 0x11);
+-                }
+-            } else if (s->modifiers & MOD_ALT_R) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x11);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x11);
+-                    ps2_put_keycode(s, 0x84);
+-                } else {
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x84);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x11);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x11);
++            if (modifiers & MOD_ALT_L) {
++                if (pressed) {
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x11);
++                    emit(opaque, 0x11);
++                    emit(opaque, 0x84);
++                } else {
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x84);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x11);
++                    emit(opaque, 0x11);
++                }
++            } else if (modifiers & MOD_ALT_R) {
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x11);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x11);
++                    emit(opaque, 0x84);
++                } else {
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x84);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x11);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x11);
+                 }
+-            } else if (s->modifiers & (MOD_SHIFT_L | MOD_CTRL_L |
++            } else if (modifiers & (MOD_SHIFT_L | MOD_CTRL_L |
+                                        MOD_SHIFT_R | MOD_CTRL_R)) {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x7c);
+-                } else {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x7c);
+-                }
+-            } else {
+-                if (key->down) {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x12);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0x7c);
+-                } else {
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x7c);
+-                    ps2_put_keycode(s, 0xe0);
+-                    ps2_put_keycode(s, 0xf0);
+-                    ps2_put_keycode(s, 0x12);
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x7c);
++                } else {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x7c);
++                }
++            } else {
++                if (pressed) {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x12);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0x7c);
++                } else {
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x7c);
++                    emit(opaque, 0xe0);
++                    emit(opaque, 0xf0);
++                    emit(opaque, 0x12);
+                 }
+             }
+         } else if ((qcode == Q_KEY_CODE_LANG1 || qcode == Q_KEY_CODE_LANG2) &&
+-                   !key->down) {
++                   !pressed) {
+             /* Ignore release for these keys */
+         } else {
+             if (qcode < qemu_input_map_qcode_to_atset2_len) {
+@@ -533,32 +510,131 @@
+             }
+             if (keycode) {
+                 if (keycode & 0xff00) {
+-                    ps2_put_keycode(s, keycode >> 8);
++                    emit(opaque, keycode >> 8);
+                 }
+-                if (!key->down) {
+-                    ps2_put_keycode(s, 0xf0);
++                if (!pressed) {
++                    emit(opaque, 0xf0);
+                 }
+-                ps2_put_keycode(s, keycode & 0xff);
++                emit(opaque, keycode & 0xff);
+             } else {
+-                qemu_log_mask(LOG_UNIMP,
+-                              "ps2: ignoring key with qcode %d\n", qcode);
++                return false;
+             }
+         }
+-    } else if (s->scancode_set == 3) {
++    } else if (scancode_set == 3) {
+         if (qcode < qemu_input_map_qcode_to_atset3_len) {
+             keycode = qemu_input_map_qcode_to_atset3[qcode];
+         }
+         if (keycode) {
+             /* FIXME: break code should be configured on a key by key basis */
+-            if (!key->down) {
+-                ps2_put_keycode(s, 0xf0);
++            if (!pressed) {
++                emit(opaque, 0xf0);
+             }
+-            ps2_put_keycode(s, keycode);
++            emit(opaque, keycode);
+         } else {
+-            qemu_log_mask(LOG_UNIMP,
+-                          "ps2: ignoring key with qcode %d\n", qcode);
++            return false;
+         }
+     }
++    return true;
++}
++
++typedef struct PS2FrameKeySink {
++    PS2FrameKeyEncoding *encoding;
++    bool translated;
++    bool overflow;
++    unsigned raw_count;
++} PS2FrameKeySink;
++
++static void ps2_frame_key_byte(void *opaque, int value)
++{
++    PS2FrameKeySink *sink = opaque;
++    PS2FrameKeyEncoding *encoding = sink->encoding;
++
++    if (++sink->raw_count > 8 || value < 0 || value > 255) {
++        sink->overflow = true;
++        return;
++    }
++    if (sink->translated) {
++        if (value == 0xf0) {
++            encoding->need_high_bit = true;
++            return;
++        }
++        value = translate_table[value] |
++                (encoding->need_high_bit ? 0x80 : 0);
++        encoding->need_high_bit = false;
++    }
++    if (encoding->count >= PS2_FRAME_KEY_BYTES) {
++        sink->overflow = true;
++        return;
++    }
++    encoding->bytes[encoding->count++] = value;
++}
++
++bool ps2_keyboard_frame_encode(unsigned scancode_set, bool translated,
++                               QKeyCode key, bool pressed,
++                               PS2FrameKeyEncoding *encoding)
++{
++    PS2FrameKeyEncoding next = *encoding;
++    PS2FrameKeySink sink = { .encoding = &next, .translated = translated };
++    unsigned modifier;
++
++    if ((scancode_set != 1 && scancode_set != 2) ||
++        (translated && scancode_set != 2) ||
++        (unsigned)key >= Q_KEY_CODE__MAX || key == Q_KEY_CODE_UNMAPPED) {
++        return false;
++    }
++    modifier = ps2_modifier_bit(key);
++    if (pressed) {
++        next.modifiers |= modifier;
++    } else {
++        next.modifiers &= ~modifier;
++    }
++    if (!ps2_encode_keycode(scancode_set, next.modifiers, key, pressed,
++                            ps2_frame_key_byte, &sink) || sink.overflow) {
++        return false;
++    }
++    *encoding = next;
++    return true;
++}
++
++void ps2_keyboard_frame_notify(PS2KbdState *s)
++{
++    ps2_raise_irq(PS2_DEVICE(s));
++}
++
++static void ps2_keyboard_event(DeviceState *dev, QemuConsole *src,
++                               InputEvent *evt)
++{
++    PS2KbdState *s = (PS2KbdState *)dev;
++    InputKeyEvent *key = evt->u.key.data;
++    int qcode;
++    int mod;
++
++    /* do not process events while disabled to prevent stream corruption */
++    if (!s->scan_enabled) {
++        return;
++    }
++
++    qemu_system_wakeup_request(QEMU_WAKEUP_REASON_OTHER, NULL);
++    assert(evt->type == INPUT_EVENT_KIND_KEY);
++    qcode = qemu_input_key_value_to_qcode(key->key);
++
++    if (!fdisbull_frame_keys_keyboard_event(s, qcode, key->down)) {
++        return;
++    }
++
++    mod = ps2_modifier_bit(qcode);
++    trace_ps2_keyboard_event(s, qcode, key->down, mod,
++                             s->modifiers, s->scancode_set, s->translate);
++    if (key->down) {
++        s->modifiers |= mod;
++    } else {
++        s->modifiers &= ~mod;
++    }
++
++    if (!ps2_encode_keycode(s->scancode_set, s->modifiers, qcode,
++                            key->down, ps2_put_keycode, s)) {
++        qemu_log_mask(LOG_UNIMP, "ps2: ignoring key with qcode %d\n", qcode);
++    }
+ }
+ 
+ uint32_t ps2_read_data(PS2State *s)
+--- a/include/hw/input/ps2.h
++++ b/include/hw/input/ps2.h
+@@ -113,4 +113,19 @@
+ unsigned ps2_keyboard_frame_edge_capacity(PS2KbdState *s);
+ unsigned ps2_keyboard_modifier_bit(QKeyCode key);
+ 
++/* Pure bounded scan-code sink. This is not a copied QOM device. */
++#define PS2_FRAME_KEY_BYTES 256
++typedef struct PS2FrameKeyEncoding {
++    uint8_t bytes[PS2_FRAME_KEY_BYTES];
++    unsigned count;
++    unsigned modifiers;
++    bool need_high_bit;
++} PS2FrameKeyEncoding;
++
++bool ps2_keyboard_frame_encode(unsigned scancode_set, bool translated,
++                               QKeyCode key, bool pressed,
++                               PS2FrameKeyEncoding *encoding);
++/* Call only after publishing the entire stopped keyboard/owner afterimage. */
++void ps2_keyboard_frame_notify(PS2KbdState *s);
++
+ #endif /* HW_PS2_H */
+--- a/qapi/fdisbull-input.json
++++ b/qapi/fdisbull-input.json
+@@ -316,8 +316,8 @@
+ # @modifier-mask: PS/2 keyboard's modifier event-tracking mask.
+ # @fifo-count: Buffered PS/2 queue byte count.
+ # @fifo-sha256: Canonical digest of PS/2 FIFO/controller behavior state,
+-#     including FIFO bytes/cursors, modifiers, command state, i8042 latches
+-#     and throttle timer deadline. Integers are hashed as explicit little-endian
++#     including FIFO bytes/cursors, modifiers, command state and i8042 latches.
++#     The throttle timer deadline is a separate field. Integers are hashed as explicit little-endian
+ #     values; no C structure padding or pointers are included.
+ # @fifo-read-pointer: PS/2 FIFO read cursor.
+ # @fifo-write-pointer: PS/2 FIFO write cursor.
+@@ -391,6 +391,182 @@
+   'returns': 'FdisbullFrameKeysInfo' }
+ 
+ ##
++# @FdisbullFrameKeyBatchReason:
++#
++# Complete typed no-commit reasons for a stopped keyboard batch.
++#
++# @invalid-edges: The bounded request is not a set of real transitions.
++# @unsupported-profile: Scan-code or translation profile is unsupported.
++# @unsupported-qcode: A QCode lacks an admitted exact encoding.
++# @device-busy: Keyboard/controller command, FIFO, IRQ or timer state is busy.
++# @insufficient-space: The complete encoded stream exceeds the protocol FIFO.
++# @stale-state: Expected owner, epoch, generation or digest changed.
++# @ownership-conflict: Foreign holds or inconsistent modifier ownership exist.
++# @counter-exhausted: Generation or accepted-edge counter would overflow.
++# @migration-blocked: Migration blocker admission failed before commit.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullFrameKeyBatchReason',
++  'data': [ 'invalid-edges', 'unsupported-profile', 'unsupported-qcode',
++            'device-busy', 'insufficient-space', 'stale-state',
++            'ownership-conflict', 'counter-exhausted', 'migration-blocked' ] }
++
++##
++# @FdisbullFrameKeyBatchPlanOutcome:
++#
++# @ready: Exact stream fits; this is not a reservation.
++# @refused: The selected device proof is retained without committing.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullFrameKeyBatchPlanOutcome', 'data': [ 'ready', 'refused' ] }
++
++##
++# @FdisbullFrameKeyBatchReady:
++#
++# @state-sha256: Versioned complete selected-device and owner proof digest.
++# @batch-sha256: Digest binding that state, ordered request and exact encoding.
++# @encoded-bytes: Complete post-translation stream, at most 16 bytes.
++# @encoded-byte-count: Exact length of encoded-bytes.
++# @available-bytes: 16 minus the current protocol FIFO count.
++# @resulting-held: Canonically ordered resulting logical holds.
++# @resulting-modifier-mask: Scalar modifier result of pure encoding.
++# @resulting-translation-prefix: False after every admitted complete stream.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullFrameKeyBatchReady',
++  'data': { 'state-sha256': 'str', 'batch-sha256': 'str',
++            'encoded-bytes': ['uint8'], 'encoded-byte-count': 'uint64',
++            'available-bytes': 'uint64', 'resulting-held': ['QKeyCode'],
++            'resulting-modifier-mask': 'uint64',
++            'resulting-translation-prefix': 'bool' } }
++
++##
++# @FdisbullFrameKeyBatchPlanRefused:
++#
++# @reason: Exact no-commit reason.
++# @required-bytes: Present only for a fully encoded insufficient-space refusal.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullFrameKeyBatchPlanRefused',
++  'data': { 'reason': 'FdisbullFrameKeyBatchReason', '*required-bytes': 'uint64' } }
++
++##
++# @FdisbullFrameKeyBatchPlan:
++#
++# @api-version: Batch protocol version 1.
++# @outcome: Whether the exact stream fits without reserving native state.
++# @before: Complete unchanged selected keyboard/controller and owner proof.
++# @edges: Exact ordered bounded request.
++#
++# Since: 10.0
++##
++{ 'union': 'FdisbullFrameKeyBatchPlan',
++  'base': { 'api-version': 'uint64',
++            'outcome': 'FdisbullFrameKeyBatchPlanOutcome',
++            'before': 'FdisbullFrameKeysInfo', 'edges': ['FdisbullFrameKeyEdge'] },
++  'discriminator': 'outcome',
++  'data': { 'ready': 'FdisbullFrameKeyBatchReady',
++            'refused': 'FdisbullFrameKeyBatchPlanRefused' } }
++
++##
++# @x-fdisbull-plan-frame-key-batch:
++#
++# Observe one stopped PS/2 batch without callbacks, queue writes, IRQ, CPU run,
++# ownership initialization or a durable reservation. Raw sets1/2 and translated
++# set2 are supported. This selected-device proof is not a whole-machine revision.
++#
++# @edges: 1..32 distinct ordered transitions; at most64 resulting held keys.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-plan-frame-key-batch',
++  'data': { 'edges': ['FdisbullFrameKeyEdge'] },
++  'returns': 'FdisbullFrameKeyBatchPlan' }
++
++##
++# @FdisbullFrameKeyBatchApplyOutcome:
++#
++# @accepted: The complete queue/owner afterimage was committed once.
++# @refused: No commit began; before and after are the same current proof.
++#
++# Since: 10.0
++##
++{ 'enum': 'FdisbullFrameKeyBatchApplyOutcome', 'data': [ 'accepted', 'refused' ] }
++
++##
++# @FdisbullFrameKeyBatchAccepted:
++#
++# @encoded-byte-count: Number of accepted scan-code bytes; guest consumption unknown.
++# @accepted-edge-count: Number of explicit transitions, including zero-byte release.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullFrameKeyBatchAccepted',
++  'data': { 'encoded-byte-count': 'uint64', 'accepted-edge-count': 'uint64' } }
++
++##
++# @FdisbullFrameKeyBatchApplyRefused:
++#
++# @reason: Exact no-commit reason. Stale proof does not establish host continuity.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullFrameKeyBatchApplyRefused',
++  'data': { 'reason': 'FdisbullFrameKeyBatchReason' } }
++
++##
++# @FdisbullFrameKeyBatchApply:
++#
++# @api-version: Batch protocol version 1.
++# @outcome: Accepted once or refused without commit.
++# @token: Exact supplied owner token.
++# @expected-epoch: Exact supplied native epoch.
++# @expected-generation: Exact supplied owner generation.
++# @expected-state-sha256: Exact supplied selected-device state digest.
++# @expected-batch-sha256: Exact supplied ordered batch digest.
++# @edges: Exact supplied ordered bounded request.
++# @before: Actual proof immediately before this attempt.
++# @after: Actual post-IRQ proof if accepted; exact before proof if refused.
++#
++# Since: 10.0
++##
++{ 'union': 'FdisbullFrameKeyBatchApply',
++  'base': { 'api-version': 'uint64', 'outcome': 'FdisbullFrameKeyBatchApplyOutcome',
++            'token': 'str', 'expected-epoch': 'uint64', 'expected-generation': 'uint64',
++            'expected-state-sha256': 'str', 'expected-batch-sha256': 'str',
++            'edges': ['FdisbullFrameKeyEdge'],
++            'before': 'FdisbullFrameKeysInfo', 'after': 'FdisbullFrameKeysInfo' },
++  'discriminator': 'outcome',
++  'data': { 'accepted': 'FdisbullFrameKeyBatchAccepted',
++            'refused': 'FdisbullFrameKeyBatchApplyRefused' } }
++
++##
++# @x-fdisbull-apply-frame-key-batch:
++#
++# Recompute and compare one stopped plan, then commit the complete queue and
++# owner state under BQL before signaling the existing IRQ path once. A returned
++# acceptance proves device acceptance only. No retry or rollback is implied.
++#
++# @token: Existing owner token, or a fresh 1..128-byte token for first admission.
++# @expected-epoch: Plan's native epoch.
++# @expected-generation: Plan's owner generation.
++# @expected-state-sha256: Plan's complete selected-device proof digest.
++# @expected-batch-sha256: Plan's exact ordered encoding digest.
++# @edges: Exact ordered request used to create the plan.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-apply-frame-key-batch',
++  'data': { 'token': 'str', 'expected-epoch': 'uint64', 'expected-generation': 'uint64',
++            'expected-state-sha256': 'str', 'expected-batch-sha256': 'str',
++            'edges': ['FdisbullFrameKeyEdge'] },
++  'returns': 'FdisbullFrameKeyBatchApply' }
++
++##
+ # @x-fdisbull-query-input:
+ #
+ # Observe the latest schedule without dispatching input or running the VM.
+--- a/system/fdisbull-frame-keys.c
++++ b/system/fdisbull-frame-keys.c
+@@ -5,6 +5,8 @@
+ #include "hw/input/i8042.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
++#include "qapi/clone-visitor.h"
++#include "qapi/qapi-visit-fdisbull-input.h"
+ #include "qapi/qapi-commands-fdisbull-input.h"
+ #include "qapi/qapi-commands-run-state.h"
+ #include "qemu/uuid.h"
+@@ -177,10 +179,10 @@
+     g_checksum_update(checksum, bytes, sizeof(bytes));
+ }
+ 
+-static char *fifo_sha256(PS2KbdState *keyboard, KBDState *controller)
++static void fifo_checksum(GChecksum *checksum, PS2KbdState *keyboard,
++                          KBDState *controller)
+ {
+     PS2Queue *queue = &keyboard->parent_obj.queue;
+-    g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
+     uint8_t flags[4] = {
+         keyboard->scan_enabled != 0,
+         keyboard->translate != 0,
+@@ -207,6 +209,13 @@
+     checksum_u64_le(checksum, controller->pending);
+     checksum_u64_le(checksum, controller->obdata);
+     checksum_u64_le(checksum, controller->cbdata);
++}
++
++static char *fifo_sha256(PS2KbdState *keyboard, KBDState *controller)
++{
++    g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
++
++    fifo_checksum(checksum, keyboard, controller);
+     return g_strdup(g_checksum_get_string(checksum));
+ }
+ 
+@@ -220,11 +229,12 @@
+     return true;
+ }
+ 
+-static FdisbullFrameKeysInfo *frame_keys_info(PS2KbdState *keyboard,
+-                                               KBDState *controller,
+-                                               const FdisbullClockInfo *clock)
++/* Scalar-only fill is also used after the atomic batch IRQ. All pointed-to
++ * receipt storage and the checksum object already exist at that boundary. */
++static void frame_keys_info_scalars(FdisbullFrameKeysInfo *info,
++                                   PS2KbdState *keyboard, KBDState *controller,
++                                   const FdisbullClockInfo *clock)
+ {
+-    FdisbullFrameKeysInfo *info = g_new0(FdisbullFrameKeysInfo, 1);
+     PS2Queue *queue = &keyboard->parent_obj.queue;
+     int64_t throttle = -1;
+ 
+@@ -233,20 +243,13 @@
+     info->active = frame_keys.active;
+     info->valid = frame_keys.valid;
+     info->generation = frame_keys.generation;
+-    info->token = frame_keys.active && frame_keys.token ?
+-        g_strdup(frame_keys.token) : NULL;
+-    info->held = key_list(frame_keys.held);
+-    info->foreign_held = key_list(frame_keys.foreign);
+     info->repeat_supported = false;
+     info->accepted_edges = frame_keys.accepted_edges;
+-    info->device_path = object_get_canonical_path(OBJECT(keyboard));
+-    info->device_type = g_strdup(object_get_typename(OBJECT(keyboard)));
+     info->scan_enabled = keyboard->scan_enabled;
+     info->scancode_set = keyboard->scancode_set;
+     info->translated = keyboard->translate;
+     info->modifier_mask = keyboard->modifiers;
+     info->fifo_count = queue->count;
+-    info->fifo_sha256 = fifo_sha256(keyboard, controller);
+     info->fifo_read_pointer = queue->rptr;
+     info->fifo_write_pointer = queue->wptr;
+     info->fifo_command_pointer = queue->cwptr;
+@@ -263,6 +266,22 @@
+     info->edge_capacity = frame_keys.valid && !bitmap_any(frame_keys.foreign) &&
+         frame_keys_capacity(keyboard, controller) ?
+         ps2_keyboard_frame_edge_capacity(keyboard) : 0;
++}
++
++static FdisbullFrameKeysInfo *frame_keys_info(PS2KbdState *keyboard,
++                                             KBDState *controller,
++                                             const FdisbullClockInfo *clock)
++{
++    FdisbullFrameKeysInfo *info = g_new0(FdisbullFrameKeysInfo, 1);
++
++    info->token = frame_keys.active && frame_keys.token ?
++        g_strdup(frame_keys.token) : NULL;
++    info->held = key_list(frame_keys.held);
++    info->foreign_held = key_list(frame_keys.foreign);
++    info->device_path = object_get_canonical_path(OBJECT(keyboard));
++    info->device_type = g_strdup(object_get_typename(OBJECT(keyboard)));
++    info->fifo_sha256 = fifo_sha256(keyboard, controller);
++    frame_keys_info_scalars(info, keyboard, controller, clock);
+     return info;
+ }
+ 
+@@ -569,6 +588,510 @@
+     return frame_keys_info(keyboard, controller, clock);
+ }
+ 
++/* Exact encoding plans are ephemeral observations. No token table, cached
++ * reservation, device clone or live input callback belongs to this protocol. */
++typedef struct FrameKeyBatch {
++    FdisbullClockInfo *clock;
++    PS2KbdState *keyboard;
++    KBDState *controller;
++    FdisbullFrameKeysInfo *before;
++    PS2FrameKeyEncoding encoding;
++    bool next[Q_KEY_CODE__MAX];
++    unsigned count;
++    unsigned available;
++    bool ready;
++    bool required_known;
++    FdisbullFrameKeyBatchReason reason;
++    char *state_sha256;
++    char *batch_sha256;
++} FrameKeyBatch;
++
++static void frame_key_batch_free(FrameKeyBatch *batch)
++{
++    if (!batch) {
++        return;
++    }
++    qapi_free_FdisbullClockInfo(batch->clock);
++    qapi_free_FdisbullFrameKeysInfo(batch->before);
++    if (batch->keyboard) {
++        object_unref(OBJECT(batch->keyboard));
++    }
++    g_free(batch->state_sha256);
++    g_free(batch->batch_sha256);
++    g_free(batch);
++}
++G_DEFINE_AUTOPTR_CLEANUP_FUNC(FrameKeyBatch, frame_key_batch_free)
++
++static void checksum_u32_le(GChecksum *checksum, uint32_t value)
++{
++    uint8_t bytes[4];
++    unsigned i;
++
++    for (i = 0; i < sizeof(bytes); i++) {
++        bytes[i] = (value >> (i * 8)) & 0xff;
++    }
++    g_checksum_update(checksum, bytes, sizeof(bytes));
++}
++
++static void checksum_bool(GChecksum *checksum, bool value)
++{
++    uint8_t byte = value ? 1 : 0;
++
++    g_checksum_update(checksum, &byte, 1);
++}
++
++static void checksum_string(GChecksum *checksum, const char *value)
++{
++    size_t length = strlen(value);
++
++    checksum_u32_le(checksum, length);
++    g_checksum_update(checksum, (const uint8_t *)value, length);
++}
++
++static void checksum_keys(GChecksum *checksum, const QKeyCodeList *keys)
++{
++    const QKeyCodeList *item;
++    unsigned count = 0;
++
++    for (item = keys; item; item = item->next) {
++        count++;
++    }
++    checksum_u32_le(checksum, count);
++    for (item = keys; item; item = item->next) {
++        checksum_string(checksum, QKeyCode_str(item->value));
++    }
++}
++
++static char *frame_batch_state_sha256(const FdisbullFrameKeysInfo *info)
++{
++    static const uint8_t tag[] = "fdisbull-frame-key-batch-state-v1";
++    g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
++
++    /* Fixed lexicographic field order, explicit widths, including one NUL
++     * after the tag. The separate throttle deadline is intentionally bound. */
++    g_checksum_update(checksum, tag, sizeof(tag));
++    checksum_u64_le(checksum, info->accepted_edges);
++    checksum_bool(checksum, info->active);
++    checksum_u64_le(checksum, info->api_version);
++    checksum_u64_le(checksum, info->controller_mode);
++    checksum_u64_le(checksum, info->controller_obdata);
++    checksum_u64_le(checksum, info->controller_obsrc);
++    checksum_u64_le(checksum, info->controller_pending);
++    checksum_u64_le(checksum, info->controller_status);
++    checksum_string(checksum, info->device_path);
++    checksum_string(checksum, info->device_type);
++    checksum_u64_le(checksum, info->edge_capacity);
++    checksum_u64_le(checksum, info->epoch);
++    checksum_u64_le(checksum, (uint64_t)(int64_t)info->fifo_command_pointer);
++    checksum_u64_le(checksum, info->fifo_count);
++    checksum_u64_le(checksum, info->fifo_read_pointer);
++    checksum_string(checksum, info->fifo_sha256);
++    checksum_u64_le(checksum, info->fifo_write_pointer);
++    checksum_keys(checksum, info->foreign_held);
++    checksum_u64_le(checksum, info->generation);
++    checksum_keys(checksum, info->held);
++    checksum_u64_le(checksum, info->modifier_mask);
++    checksum_bool(checksum, info->repeat_supported);
++    checksum_bool(checksum, info->scan_enabled);
++    checksum_u64_le(checksum, info->scancode_set);
++    checksum_u64_le(checksum, (uint64_t)info->throttle_deadline_ns);
++    checksum_bool(checksum, info->token != NULL);
++    if (info->token) {
++        checksum_string(checksum, info->token);
++    }
++    checksum_bool(checksum, info->translated);
++    checksum_bool(checksum, info->valid);
++    checksum_u64_le(checksum, (uint64_t)(int64_t)info->write_command);
++    return g_strdup(g_checksum_get_string(checksum));
++}
++
++static bool batch_digest_valid(const char *value)
++{
++    unsigned i;
++
++    if (!value || strlen(value) != 64) {
++        return false;
++    }
++    for (i = 0; i < 64; i++) {
++        if (!((value[i] >= '0' && value[i] <= '9') ||
++              (value[i] >= 'a' && value[i] <= 'f'))) {
++            return false;
++        }
++    }
++    return true;
++}
++
++static unsigned batch_hex_nibble(char value)
++{
++    return value <= '9' ? value - '0' : value - 'a' + 10;
++}
++
++static char *frame_batch_request_sha256(const FrameKeyBatch *batch,
++                                       const FdisbullFrameKeyEdgeList *edges)
++{
++    static const uint8_t tag[] = "fdisbull-frame-key-batch-request-v1";
++    g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
++    const FdisbullFrameKeyEdgeList *item;
++    uint8_t state[32];
++    unsigned i;
++
++    for (i = 0; i < sizeof(state); i++) {
++        state[i] = (batch_hex_nibble(batch->state_sha256[2 * i]) << 4) |
++                   batch_hex_nibble(batch->state_sha256[2 * i + 1]);
++    }
++    g_checksum_update(checksum, tag, sizeof(tag));
++    g_checksum_update(checksum, state, sizeof(state));
++    checksum_u32_le(checksum, batch->count);
++    for (item = edges; item; item = item->next) {
++        checksum_string(checksum, QKeyCode_str(item->value->key));
++        checksum_bool(checksum, item->value->pressed);
++    }
++    checksum_u32_le(checksum, batch->encoding.count);
++    g_checksum_update(checksum, batch->encoding.bytes, batch->encoding.count);
++    checksum_u64_le(checksum, batch->encoding.modifiers);
++    checksum_bool(checksum, batch->encoding.need_high_bit);
++    return g_strdup(g_checksum_get_string(checksum));
++}
++
++static bool frame_batch_key_supported(QKeyCode key)
++{
++    /* Existing public physical grammar, plus bounded native encoder witnesses.
++     * Unsupported mapped QCodes cannot become accidental zero-byte successes. */
++    static const char *const names[] = {
++        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
++        "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
++        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
++        "minus", "equal", "bracket_left", "bracket_right", "semicolon",
++        "apostrophe", "comma", "dot", "slash", "backslash", "grave_accent",
++        "ret", "esc", "tab", "backspace", "spc", "left", "right", "up", "down",
++        "home", "end", "insert", "delete", "pgup", "pgdn", "shift", "ctrl", "alt",
++        "kp_5", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10",
++        "f11", "f12", "shift_r", "ctrl_r", "alt_r", "print", "pause",
++    };
++    unsigned i;
++
++    if ((unsigned)key >= Q_KEY_CODE__MAX || key == Q_KEY_CODE_UNMAPPED) {
++        return false;
++    }
++    for (i = 0; i < G_N_ELEMENTS(names); i++) {
++        if (!strcmp(QKeyCode_str(key), names[i])) {
++            return true;
++        }
++    }
++    return false;
++}
++
++static bool frame_batch_string(const char *value, size_t limit)
++{
++    return value && *value && strlen(value) <= limit &&
++           g_utf8_validate(value, -1, NULL);
++}
++
++static FrameKeyBatch *frame_batch_prepare(FdisbullFrameKeyEdgeList *edges,
++                                         Error **errp)
++{
++    g_autoptr(FrameKeyBatch) batch = g_new0(FrameKeyBatch, 1);
++    g_autoptr(Error) validation_error = NULL;
++    const FdisbullFrameKeyEdgeList *item;
++    PS2KbdState *keyboard;
++    PS2Queue *queue;
++    unsigned length = 0, checked_count = 0;
++
++    assert(bql_locked());
++    for (item = edges; item; item = item->next) {
++        if (++length > FRAME_KEYS_MAX_EDGES || !item->value ||
++            (unsigned)item->value->key >= Q_KEY_CODE__MAX) {
++            error_setg(errp, "Frame key planning requires a bounded typed request");
++            return NULL;
++        }
++    }
++    if (!length) {
++        error_setg(errp, "Frame key planning requires 1..32 explicit edges");
++        return NULL;
++    }
++    if (fdisbull_video_frame_fence_blocks_control()) {
++        error_setg(errp, "Release the source-video fence before frame key planning");
++        return NULL;
++    }
++    if (!frame_keys_clock(&batch->clock, errp) ||
++        !frame_keys_input_schedule_clear(errp)) {
++        return NULL;
++    }
++    batch->keyboard = qemu_input_fdisbull_keyboard_target(errp);
++    if (!batch->keyboard) {
++        return NULL;
++    }
++    keyboard = batch->keyboard;
++    batch->controller = frame_keyboard_controller(keyboard, errp);
++    if (!batch->controller) {
++        return NULL;
++    }
++    /* Unlike the legacy query, this observation never changes valid/fault
++     * when an owner or epoch is incompatible. No usable proof is returned. */
++    if (!frame_keys.valid || (frame_keys.active &&
++        (frame_keys.keyboard != keyboard || frame_keys.epoch != batch->clock->epoch ||
++         !frame_batch_string(frame_keys.token, 128)))) {
++        error_setg(errp, "Frame key planning cannot prove the current owner");
++        return NULL;
++    }
++    batch->before = frame_keys_info(keyboard, batch->controller, batch->clock);
++    if (!frame_batch_string(batch->before->device_path, 1024) ||
++        !frame_batch_string(batch->before->device_type, 128)) {
++        error_setg(errp, "Frame key device identity exceeds the batch proof bounds");
++        return NULL;
++    }
++    batch->count = length;
++    batch->state_sha256 = frame_batch_state_sha256(batch->before);
++    if (bitmap_any(frame_keys.foreign) ||
++        (!frame_keys.active && (bitmap_any(frame_keys.held) || frame_keys.migration_blocker)) ||
++        keyboard->modifiers != expected_modifier_mask(frame_keys.held)) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_OWNERSHIP_CONFLICT;
++        return g_steal_pointer(&batch);
++    }
++    if (frame_keys.generation == UINT64_MAX ||
++        frame_keys.accepted_edges > UINT64_MAX - length) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_COUNTER_EXHAUSTED;
++        return g_steal_pointer(&batch);
++    }
++    if ((keyboard->scancode_set != 1 && keyboard->scancode_set != 2) ||
++        (keyboard->translate != 0 && keyboard->translate != 1) ||
++        (keyboard->translate && keyboard->scancode_set != 2)) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_UNSUPPORTED_PROFILE;
++        return g_steal_pointer(&batch);
++    }
++    queue = &keyboard->parent_obj.queue;
++    if (keyboard->scan_enabled != 1 || keyboard->need_high_bit ||
++        keyboard->parent_obj.write_cmd != -1 || queue->cwptr != -1 ||
++        queue->rptr < 0 || queue->rptr >= PS2_BUFFER_SIZE ||
++        queue->wptr < 0 || queue->wptr >= PS2_BUFFER_SIZE ||
++        queue->count < 0 || queue->count > 16 ||
++        queue->wptr != (queue->rptr + queue->count) % PS2_BUFFER_SIZE ||
++        batch->controller->write_cmd ||
++        !frame_keys_capacity(keyboard, batch->controller)) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_DEVICE_BUSY;
++        return g_steal_pointer(&batch);
++    }
++    batch->available = 16 - queue->count;
++    for (item = edges; item; item = item->next) {
++        if (!frame_batch_key_supported(item->value->key)) {
++            batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_UNSUPPORTED_QCODE;
++            return g_steal_pointer(&batch);
++        }
++    }
++    if (!frame_edge_batch_validate(edges, batch->next, &checked_count,
++                                    &validation_error)) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_INVALID_EDGES;
++        return g_steal_pointer(&batch);
++    }
++    batch->encoding.modifiers = keyboard->modifiers;
++    batch->encoding.need_high_bit = keyboard->need_high_bit;
++    for (item = edges; item; item = item->next) {
++        if (!ps2_keyboard_frame_encode(keyboard->scancode_set, keyboard->translate,
++                                       item->value->key, item->value->pressed,
++                                       &batch->encoding)) {
++            batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_UNSUPPORTED_QCODE;
++            return g_steal_pointer(&batch);
++        }
++    }
++    if (batch->encoding.need_high_bit ||
++        batch->encoding.modifiers != expected_modifier_mask(batch->next)) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_UNSUPPORTED_PROFILE;
++        return g_steal_pointer(&batch);
++    }
++    if (batch->encoding.count > batch->available) {
++        batch->reason = FDISBULL_FRAME_KEY_BATCH_REASON_INSUFFICIENT_SPACE;
++        batch->required_known = true;
++        return g_steal_pointer(&batch);
++    }
++    batch->batch_sha256 = frame_batch_request_sha256(batch, edges);
++    batch->ready = true;
++    return g_steal_pointer(&batch);
++}
++
++FdisbullFrameKeyBatchPlan *qmp_x_fdisbull_plan_frame_key_batch(
++    FdisbullFrameKeyEdgeList *edges, Error **errp)
++{
++    g_autoptr(FrameKeyBatch) batch = frame_batch_prepare(edges, errp);
++    FdisbullFrameKeyBatchPlan *plan;
++    FdisbullFrameKeyBatchReady *ready;
++    uint8List **tail;
++    unsigned i;
++
++    if (!batch) {
++        return NULL;
++    }
++    plan = g_new0(FdisbullFrameKeyBatchPlan, 1);
++    plan->api_version = 1;
++    plan->before = QAPI_CLONE(FdisbullFrameKeysInfo, batch->before);
++    plan->edges = QAPI_CLONE(FdisbullFrameKeyEdgeList, edges);
++    if (!batch->ready) {
++        plan->outcome = FDISBULL_FRAME_KEY_BATCH_PLAN_OUTCOME_REFUSED;
++        plan->u.refused.reason = batch->reason;
++        plan->u.refused.has_required_bytes = batch->required_known;
++        plan->u.refused.required_bytes = batch->encoding.count;
++        return plan;
++    }
++    plan->outcome = FDISBULL_FRAME_KEY_BATCH_PLAN_OUTCOME_READY;
++    ready = &plan->u.ready;
++    ready->state_sha256 = g_strdup(batch->state_sha256);
++    ready->batch_sha256 = g_strdup(batch->batch_sha256);
++    ready->encoded_byte_count = batch->encoding.count;
++    ready->available_bytes = batch->available;
++    ready->resulting_held = key_list(batch->next);
++    ready->resulting_modifier_mask = batch->encoding.modifiers;
++    ready->resulting_translation_prefix = batch->encoding.need_high_bit;
++    tail = &ready->encoded_bytes;
++    for (i = 0; i < batch->encoding.count; i++) {
++        uint8List *node = g_new0(uint8List, 1);
++
++        node->value = batch->encoding.bytes[i];
++        *tail = node;
++        tail = &node->next;
++    }
++    return plan;
++}
++
++static FdisbullFrameKeyBatchApply *frame_batch_apply_reply(
++    const FrameKeyBatch *batch, const char *token, uint64_t expected_epoch,
++    uint64_t expected_generation, const char *expected_state_sha256,
++    const char *expected_batch_sha256, FdisbullFrameKeyEdgeList *edges)
++{
++    FdisbullFrameKeyBatchApply *reply = g_new0(FdisbullFrameKeyBatchApply, 1);
++
++    reply->api_version = 1;
++    reply->outcome = FDISBULL_FRAME_KEY_BATCH_APPLY_OUTCOME_REFUSED;
++    reply->token = g_strdup(token);
++    reply->expected_epoch = expected_epoch;
++    reply->expected_generation = expected_generation;
++    reply->expected_state_sha256 = g_strdup(expected_state_sha256);
++    reply->expected_batch_sha256 = g_strdup(expected_batch_sha256);
++    reply->edges = QAPI_CLONE(FdisbullFrameKeyEdgeList, edges);
++    reply->before = QAPI_CLONE(FdisbullFrameKeysInfo, batch->before);
++    reply->after = QAPI_CLONE(FdisbullFrameKeysInfo, batch->before);
++    return reply;
++}
++
++static void frame_batch_after_digest(GChecksum *checksum, char *output,
++                                     PS2KbdState *keyboard, KBDState *controller)
++{
++    static const char hex[] = "0123456789abcdef";
++    uint8_t digest[32];
++    gsize length = sizeof(digest);
++    unsigned i;
++
++    /* The checksum context and 65-byte output allocation precede commit. */
++    fifo_checksum(checksum, keyboard, controller);
++    g_checksum_get_digest(checksum, digest, &length);
++    for (i = 0; i < sizeof(digest); i++) {
++        output[2 * i] = hex[digest[i] >> 4];
++        output[2 * i + 1] = hex[digest[i] & 15];
++    }
++    output[64] = 0;
++}
++
++FdisbullFrameKeyBatchApply *qmp_x_fdisbull_apply_frame_key_batch(
++    const char *token, uint64_t expected_epoch, uint64_t expected_generation,
++    const char *expected_state_sha256, const char *expected_batch_sha256,
++    FdisbullFrameKeyEdgeList *edges, Error **errp)
++{
++    g_autoptr(FrameKeyBatch) batch = NULL;
++    g_autoptr(GChecksum) after_checksum = NULL;
++    g_autoptr(Error) blocker_error = NULL;
++    g_autofree char *new_token = NULL;
++    FdisbullFrameKeyBatchApply *reply;
++    FdisbullFrameKeysInfo *after;
++    PS2Queue staged;
++    PS2KbdState *keyboard;
++    bool starting;
++    unsigned i;
++
++    assert(bql_locked());
++    if (!frame_batch_string(token, 128) || !batch_digest_valid(expected_state_sha256) ||
++        !batch_digest_valid(expected_batch_sha256)) {
++        error_setg(errp, "Frame key batch token or digest is malformed");
++        return NULL;
++    }
++    batch = frame_batch_prepare(edges, errp);
++    if (!batch) {
++        return NULL;
++    }
++    reply = frame_batch_apply_reply(batch, token, expected_epoch,
++        expected_generation, expected_state_sha256, expected_batch_sha256, edges);
++    if (expected_epoch != batch->before->epoch ||
++        expected_generation != batch->before->generation ||
++        strcmp(expected_state_sha256, batch->state_sha256) ||
++        (frame_keys.active && strcmp(token, frame_keys.token))) {
++        reply->u.refused.reason = FDISBULL_FRAME_KEY_BATCH_REASON_STALE_STATE;
++        return reply;
++    }
++    if (!batch->ready) {
++        reply->u.refused.reason = batch->reason;
++        return reply;
++    }
++    if (strcmp(expected_batch_sha256, batch->batch_sha256)) {
++        reply->u.refused.reason = FDISBULL_FRAME_KEY_BATCH_REASON_STALE_STATE;
++        return reply;
++    }
++    keyboard = batch->keyboard;
++    starting = !frame_keys.active;
++    staged = keyboard->parent_obj.queue;
++    for (i = 0; i < batch->encoding.count; i++) {
++        staged.data[staged.wptr] = batch->encoding.bytes[i];
++        staged.wptr = (staged.wptr + 1) % PS2_BUFFER_SIZE;
++        staged.count++;
++    }
++    /* Preallocate every variable-sized acceptance field and the digest context
++     * before migration admission and the first guest-visible write. */
++    after = reply->after;
++    g_free(after->token);
++    after->token = g_strdup(token);
++    qapi_free_QKeyCodeList(after->held);
++    after->held = key_list(batch->next);
++    after_checksum = g_checksum_new(G_CHECKSUM_SHA256);
++    if (starting) {
++        new_token = g_strdup(token);
++        if (!frame_keys_block_migration(&blocker_error)) {
++            /* migrate_add_blocker clears its reason on rejection; deleting is
++             * also safe for a retained pointer. Restore the unchanged proof. */
++            migrate_del_blocker(&frame_keys.migration_blocker);
++            qapi_free_FdisbullFrameKeysInfo(reply->after);
++            reply->after = QAPI_CLONE(FdisbullFrameKeysInfo, batch->before);
++            reply->u.refused.reason = FDISBULL_FRAME_KEY_BATCH_REASON_MIGRATION_BLOCKED;
++            return reply;
++        }
++    }
++    reply->outcome = FDISBULL_FRAME_KEY_BATCH_APPLY_OUTCOME_ACCEPTED;
++    reply->u.accepted.encoded_byte_count = batch->encoding.count;
++    reply->u.accepted.accepted_edge_count = batch->count;
++
++    /* Commit boundary. BQL prevents another controller from observing a
++     * partial afterimage. No handler, allocator or recoverable dispatch remains
++     * before the complete owner/keyboard state is installed. */
++    keyboard->parent_obj.queue = staged;
++    keyboard->modifiers = batch->encoding.modifiers;
++    keyboard->need_high_bit = batch->encoding.need_high_bit;
++    if (starting) {
++        frame_keys.keyboard = batch->keyboard;
++        batch->keyboard = NULL; /* Transfer the already held object reference. */
++        frame_keys.active = true;
++        frame_keys.valid = true;
++        frame_keys.epoch = batch->clock->epoch;
++        frame_keys.token = g_steal_pointer(&new_token);
++    }
++    memcpy(frame_keys.held, batch->next, sizeof(frame_keys.held));
++    frame_keys.generation++;
++    frame_keys.accepted_edges += batch->count;
++    if (batch->encoding.count) {
++        ps2_keyboard_frame_notify(keyboard);
++    }
++    /* The IRQ callback updates i8042 pending/status/source latches. Read their
++     * actual resulting values, never a speculative pre-IRQ receipt. */
++    frame_keys_info_scalars(after, keyboard, batch->controller, batch->clock);
++    frame_batch_after_digest(after_checksum, after->fifo_sha256,
++                             keyboard, batch->controller);
++    return reply;
++}
++
+ FdisbullFrameKeysInfo *qmp_x_fdisbull_detach_frame_keys(
+     const char *token, uint64_t expected_generation, Error **errp)
+ {

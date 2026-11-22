@@ -1,0 +1,274 @@
+{
+  "batch_serializer": {
+    "hash": "sha256",
+    "sequence": [
+      "tag",
+      "32 raw state-digest bytes",
+      "u32 little-endian edge count",
+      "each ordered edge: length-prefixed canonical QCode string then one boolean byte",
+      "u32 little-endian encoded-byte count",
+      "complete post-translation encoded bytes",
+      "u64 little-endian resulting modifier mask",
+      "one resulting translation-prefix boolean byte"
+    ],
+    "tag_ascii_escaped": "fdisbull-frame-key-batch-request-v1\\0",
+    "tag_terminator": "one NUL byte"
+  },
+  "format": "fdisbull-frame-key-batch-serializer-vectors-2",
+  "state_serializer": {
+    "array_encoding": "u32 little-endian element count followed by length-prefixed strings in their canonical order",
+    "boolean_encoding": "one byte, 0 or 1",
+    "boolean_fields": [
+      "active",
+      "valid",
+      "repeat-supported",
+      "scan-enabled",
+      "translated"
+    ],
+    "field_names_serialized": false,
+    "field_order": [
+      "accepted-edges",
+      "active",
+      "api-version",
+      "controller-mode",
+      "controller-obdata",
+      "controller-obsrc",
+      "controller-pending",
+      "controller-status",
+      "device-path",
+      "device-type",
+      "edge-capacity",
+      "epoch",
+      "fifo-command-pointer",
+      "fifo-count",
+      "fifo-read-pointer",
+      "fifo-sha256",
+      "fifo-write-pointer",
+      "foreign-held",
+      "generation",
+      "held",
+      "modifier-mask",
+      "repeat-supported",
+      "scan-enabled",
+      "scancode-set",
+      "throttle-deadline-ns",
+      "token",
+      "translated",
+      "valid",
+      "write-command"
+    ],
+    "hash": "sha256",
+    "other_scalars": "u64 little-endian",
+    "scope": "selected keyboard/controller and frame-key ownership only",
+    "signed_i64_le_fields": [
+      "fifo-command-pointer",
+      "throttle-deadline-ns",
+      "write-command"
+    ],
+    "string_array_fields": [
+      "foreign-held",
+      "held"
+    ],
+    "string_encoding": "u32 little-endian UTF-8 byte count followed by exact UTF-8 bytes",
+    "string_fields": [
+      "device-path",
+      "device-type",
+      "fifo-sha256"
+    ],
+    "tag_ascii_escaped": "fdisbull-frame-key-batch-state-v1\\0",
+    "tag_terminator": "one NUL byte, not literal backslash-zero",
+    "token_encoding": "one absent/present byte; present is followed by the same length-prefixed UTF-8 string encoding"
+  },
+  "vectors": [
+    {
+      "batch_payload_hex": "6664697362756c6c2d6672616d652d6b65792d62617463682d726571756573742d7631001553d6f3e8e55986cf7830dac8faa8ea4964541fb8441f861d2901d83b0e847c04000000040000006374726c0103000000616c7401010000006101020000007570010500000014111ce075050000000000000000",
+      "batch_sha256": "fe8f72eac64e1eb8dd29799c17e3acf64c60fdd4a0b64434eb22fae4ab8afdf3",
+      "before": {
+        "accepted-edges": 0,
+        "active": false,
+        "api-version": 1,
+        "controller-mode": 1,
+        "controller-obdata": 0,
+        "controller-obsrc": 0,
+        "controller-pending": 0,
+        "controller-status": 0,
+        "device-path": "/machine/keyboard",
+        "device-type": "ps2-kbd",
+        "edge-capacity": 2,
+        "epoch": 7,
+        "fifo-command-pointer": -1,
+        "fifo-count": 0,
+        "fifo-read-pointer": 0,
+        "fifo-sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "fifo-write-pointer": 0,
+        "foreign-held": [],
+        "generation": 0,
+        "held": [],
+        "modifier-mask": 0,
+        "repeat-supported": false,
+        "scan-enabled": true,
+        "scancode-set": 2,
+        "throttle-deadline-ns": -1,
+        "translated": false,
+        "valid": true,
+        "write-command": -1
+      },
+      "edges": [
+        {
+          "key": "ctrl",
+          "pressed": true
+        },
+        {
+          "key": "alt",
+          "pressed": true
+        },
+        {
+          "key": "a",
+          "pressed": true
+        },
+        {
+          "key": "up",
+          "pressed": true
+        }
+      ],
+      "encoded_bytes": [
+        20,
+        17,
+        28,
+        224,
+        117
+      ],
+      "name": "idle-raw2-chord",
+      "resulting_modifier_mask": 5,
+      "resulting_translation_prefix": false,
+      "state_payload_hex": "6664697362756c6c2d6672616d652d6b65792d62617463682d73746174652d763100000000000000000000010000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000110000002f6d616368696e652f6b6579626f617264070000007073322d6b626402000000000000000700000000000000ffffffffffffffff000000000000000000000000000000004000000030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030000000000000000000000000000000000000000000000000000000000000000000010200000000000000ffffffffffffffff000001ffffffffffffffff",
+      "state_sha256": "1553d6f3e8e55986cf7830dac8faa8ea4964541fb8441f861d2901d83b0e847c",
+      "status": "independently serialized source/data vector; no project import or native execution"
+    },
+    {
+      "batch_payload_hex": "6664697362756c6c2d6672616d652d6b65792d62617463682d726571756573742d76310047447b4681a808188b23f9dfdd952734840fabef6d8151d1ccca6a4ac40e5483040000000200000075700001000000610003000000616c7400040000006374726c0009000000e0f075f01cf011f014000000000000000000",
+      "batch_sha256": "684ec5c17bf79b59c327f3aaf466529df19a4c9aa42d9cd33d35fd64829abff4",
+      "before": {
+        "accepted-edges": 4,
+        "active": true,
+        "api-version": 1,
+        "controller-mode": 1,
+        "controller-obdata": 0,
+        "controller-obsrc": 0,
+        "controller-pending": 0,
+        "controller-status": 0,
+        "device-path": "/machine/keyboard",
+        "device-type": "ps2-kbd",
+        "edge-capacity": 2,
+        "epoch": 7,
+        "fifo-command-pointer": -1,
+        "fifo-count": 0,
+        "fifo-read-pointer": 0,
+        "fifo-sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "fifo-write-pointer": 0,
+        "foreign-held": [],
+        "generation": 1,
+        "held": [
+          "a",
+          "alt",
+          "ctrl",
+          "up"
+        ],
+        "modifier-mask": 5,
+        "repeat-supported": false,
+        "scan-enabled": true,
+        "scancode-set": 2,
+        "throttle-deadline-ns": 123456789,
+        "token": "owner-01",
+        "translated": false,
+        "valid": true,
+        "write-command": -1
+      },
+      "edges": [
+        {
+          "key": "up",
+          "pressed": false
+        },
+        {
+          "key": "a",
+          "pressed": false
+        },
+        {
+          "key": "alt",
+          "pressed": false
+        },
+        {
+          "key": "ctrl",
+          "pressed": false
+        }
+      ],
+      "encoded_bytes": [
+        224,
+        240,
+        117,
+        240,
+        28,
+        240,
+        17,
+        240,
+        20
+      ],
+      "name": "active-raw2-release",
+      "resulting_modifier_mask": 0,
+      "resulting_translation_prefix": false,
+      "state_payload_hex": "6664697362756c6c2d6672616d652d6b65792d62617463682d73746174652d763100040000000000000001010000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000110000002f6d616368696e652f6b6579626f617264070000007073322d6b626402000000000000000700000000000000ffffffffffffffff000000000000000000000000000000004000000030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030000000000000000000000000010000000000000004000000010000006103000000616c74040000006374726c02000000757005000000000000000001020000000000000015cd5b070000000001080000006f776e65722d30310001ffffffffffffffff",
+      "state_sha256": "47447b4681a808188b23f9dfdd952734840fabef6d8151d1ccca6a4ac40e5483",
+      "status": "independently serialized source/data vector; no project import or native execution"
+    },
+    {
+      "batch_payload_hex": "6664697362756c6c2d6672616d652d6b65792d62617463682d726571756573742d76310019550f66deab9ebb722070bc8ef8c34e7e2825a1def141fb0d8a86969e1518a6010000000500000070617573650000000000000000000000000000",
+      "batch_sha256": "4b6edb8f7e168949d9e4f58e754e42f2170e45cd58b5f7ce6bd5fc927538a70f",
+      "before": {
+        "accepted-edges": 18446744073709551583,
+        "active": true,
+        "api-version": 1,
+        "controller-mode": 1,
+        "controller-obdata": 0,
+        "controller-obsrc": 0,
+        "controller-pending": 0,
+        "controller-status": 0,
+        "device-path": "/machine/\u03ba",
+        "device-type": "ps2-kbd",
+        "edge-capacity": 2,
+        "epoch": 7,
+        "fifo-command-pointer": -1,
+        "fifo-count": 0,
+        "fifo-read-pointer": 0,
+        "fifo-sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "fifo-write-pointer": 0,
+        "foreign-held": [],
+        "generation": 18446744073709551614,
+        "held": [
+          "pause"
+        ],
+        "modifier-mask": 0,
+        "repeat-supported": false,
+        "scan-enabled": true,
+        "scancode-set": 2,
+        "throttle-deadline-ns": 9223372036854775807,
+        "token": "\u00b5-owner",
+        "translated": false,
+        "valid": true,
+        "write-command": -1
+      },
+      "edges": [
+        {
+          "key": "pause",
+          "pressed": false
+        }
+      ],
+      "encoded_bytes": [],
+      "name": "utf8-owner-signed-bounds",
+      "resulting_modifier_mask": 0,
+      "resulting_translation_prefix": false,
+      "state_payload_hex": "6664697362756c6c2d6672616d652d6b65792d62617463682d73746174652d763100dfffffffffffffff010100000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000b0000002f6d616368696e652fceba070000007073322d6b626402000000000000000700000000000000ffffffffffffffff000000000000000000000000000000004000000030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030000000000000000000000000feffffffffffffff01000000050000007061757365000000000000000000010200000000000000ffffffffffffff7f0108000000c2b52d6f776e65720001ffffffffffffffff",
+      "state_sha256": "19550f66deab9ebb722070bc8ef8c34e7e2825a1def141fb0d8a86969e1518a6",
+      "status": "independently serialized source/data vector; no project import or native execution"
+    }
+  ]
+}

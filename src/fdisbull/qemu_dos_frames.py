@@ -17,6 +17,8 @@ from .qemu_dos_history import (FORMAT, MAX_NODES, MAX_STATE, QemuDOSHistoryMixin
                                _positive_int, _sha)
 from .dosbox_rpc import DebuggerError
 from .qemu_frame_step import source_frame_advance_route
+from .qemu_frame_key_batch import (INPUT_RECEIPT_RESERVE, InputReceiptBudgetError, VerifiedBatchRefusal,
+    batch_capability, frame_input_operation, input_owner, plan_batch)
 
 FRAME_COMMANDS = frozenset({'x-fdisbull-arm-display-frame',
     'x-fdisbull-query-display-frame', 'x-fdisbull-cancel-display-frame'})
@@ -279,16 +281,26 @@ class QemuDOSFramesMixin:
             path.unlink(missing_ok=True)
 
     def _frame_execute(self, publication, token):
+        owner = getattr(self, '_frame_input_owner', None)
+        vm = owner.check().vm if owner is not None else self.vm
+        def call(name, *args, **kwargs):
+            return owner.call(name, *args, **kwargs) if owner is not None else getattr(self, name)(*args, **kwargs)
+        def qmp(command, arguments):
+            return owner.qmp(command, arguments, mutating=command != 'x-fdisbull-query-display-frame') if owner is not None else vm.qmp.call(command, arguments)
         from .qemu_video_control import require_no_video_frame_fence
-        require_no_video_frame_fence(self.vm, 'renderer-frame advance')
         from .qemu_step_over import require_no_step_over
-        require_no_step_over(self.vm, 'renderer-frame advance')
+        if owner is not None:
+            owner.invoke(owner.preflights[0], vm, 'renderer-frame advance')
+            owner.invoke(owner.preflights[1], vm, 'renderer-frame advance')
+        else:
+            require_no_video_frame_fence(vm, 'renderer-frame advance')
+            require_no_step_over(vm, 'renderer-frame advance')
         native = publication['native']
         display_token, baseline = native['token'], native['updates']
-        self.vm._active_frame_fence = token
+        vm._active_frame_fence = token
         result = None
         try:
-            armed = _frame_receipt(self.vm.qmp.call('x-fdisbull-arm-display-frame',
+            armed = _frame_receipt(qmp('x-fdisbull-arm-display-frame',
                 {'token':token,'display-token':display_token}),token=token,display_token=display_token,
                 baseline=baseline,epoch=native['epoch'])
             if (armed['state'] != 'armed' or armed['updates'] != baseline
@@ -296,10 +308,10 @@ class QemuDOSFramesMixin:
                 raise DebuggerError('Renderer frame fence was not cleanly armed')
             self._frame_fence_context = dict(token=token,display_token=display_token,
                                              baseline=baseline,epoch=armed['epoch'])
-            result = self._run_with_hooks(timeout_ms=self._history_remaining_ms(),stop_on_hook=True)
-            observed = _frame_receipt(self.vm.qmp.call('x-fdisbull-query-display-frame',{'token':token}),
+            result = call('_run_with_hooks', timeout_ms=call('_history_remaining_ms'),stop_on_hook=True)
+            observed = _frame_receipt(qmp('x-fdisbull-query-display-frame',{'token':token}),
                 token=token,display_token=display_token,baseline=baseline,epoch=armed['epoch'])
-            final = _frame_receipt(self.vm.qmp.call('x-fdisbull-cancel-display-frame',{'token':token}),
+            final = _frame_receipt(qmp('x-fdisbull-cancel-display-frame',{'token':token}),
                 token=token,display_token=display_token,baseline=baseline,epoch=armed['epoch'])
             if observed['state'] != 'completed' and final['state'] != 'cancelled':
                 raise DebuggerError('Renderer fence did not cancel its incomplete arm')
@@ -307,7 +319,8 @@ class QemuDOSFramesMixin:
                     or any(final.get(k) != observed.get(k) for k in
                            ('completed-update-id','published-ns','stop-consumed','stop-pending')))):
                 raise DebuggerError('Renderer fence cleanup changed its completed publication')
-            self.vm._active_frame_fence = None
+            if owner is not None: owner.check()
+            vm._active_frame_fence = None
             self._frame_fence_context = None
             ordinary = (_ordinary_stop(result) and observed['state'] == 'completed'
                         and observed['stop-pending'] is False and observed['stop-consumed'] is True)
@@ -315,7 +328,7 @@ class QemuDOSFramesMixin:
         except BaseException as error:
             if result is not None and getattr(error, 'result', None) is None:
                 error.result = result
-            self.close()
+            if owner is None: self.close()
             raise
 
     @_history_operation
@@ -389,107 +402,122 @@ class QemuDOSFramesMixin:
                         unit='completed synchronous renderer update',completed_guest_frame=None)
         return self._frame_summary(self._frame_manifest(timeline))
 
-    @_history_operation
+    @frame_input_operation
     def timeline_advance(self, frames=1, inputs=None, timeout_ms=60000):
+        owner = input_owner(self)
         _positive_int(frames,'frames',1,MAX_NODES)
         from .debug_timeline import validate_schedule
-        from .qemu_frame_keys import _edges, _input_journal_budget
+        from .qemu_frame_keys import _edges, _input_journal_budget, resolve_batch_intent
         validate_schedule(inputs,frames)
         schedule = {item['frame']:item['edges'] for item in (inputs or [])}
-        self._frame_capability()
-        manifest = self._frame_manifest()
-        parent = self._frame_current(manifest)
-        if self._frame_delta(manifest):
+        owner.call('_frame_capability')
+        manifest = owner.call('_frame_manifest', )
+        parent = owner.call('_frame_current', manifest)
+        if owner.call('_frame_delta', manifest):
             from .qemu_frame_storage import materialize
-            materialize(self,manifest,parent)
-            self._history_validate_node_before_restore(parent)
-        self._frame_budget(manifest,parent,frames,
-                           input_reserve=8192 * sum(bool(v) for v in schedule.values()))
-        self._history_admission()
+            owner.invoke(materialize,self,manifest,parent)
+            owner.call('_history_validate_node_before_restore', parent)
+        owner.call('_frame_budget', manifest,parent,frames,
+                           input_reserve=INPUT_RECEIPT_RESERVE * sum(bool(v) for v in schedule.values()))
+        owner.call('_history_admission', )
         if schedule:
             if not hasattr(self,'_frame_keys_query'):
                 raise ValueError('Native frame key ownership is unavailable')
-            native = self._frame_keys_query()
+            native = owner.call('_frame_keys_query', )
             simulated = native['held']
             for index in range(frames):
                 _, simulated = _edges(schedule.get(index,[]),simulated)
-            _input_journal_budget(self,manifest,sum(bool(v) for v in schedule.values()))
+            owner.invoke(_input_journal_budget,self,manifest,sum(bool(v) for v in schedule.values()))
         records = []
-        with self._history_internal():
-            for index in range(frames):
-                self._history_admission()
-                edge_list = schedule.get(index,[])
-                key_receipt = None
-                if edge_list:
-                    native, converted, next_held = self._frame_keys_prepare(edge_list)
-                    if len(converted) > native['edge-capacity']:
-                        output = self._frame_summary(manifest)
-                        output.update(outcome='input_refused',pending_inputs=deepcopy(manifest.get('pending_inputs',[])),completed_frames=len(records),
-                                      recorded_frames=len(records),frames=records,
-                                      reason='Native frame key edge capacity is unavailable')
-                        return output
-                publication = self.display_observe()
-                if publication.get('state') != 'observing': raise ValueError('Renderer observation window is not active')
-                token = uuid.uuid4().hex
-                baseline = publication['native']['updates']
-                self._history_pending(manifest,parent['id'],'renderer-frame',receipt=dict(token=token,baseline=baseline))
+        def input_refused(reason):
+            output = owner.call('_frame_summary', manifest)
+            output.update(outcome='input_refused',
+                pending_inputs=deepcopy(manifest.get('pending_inputs',[])),
+                completed_frames=len(records), recorded_frames=len(records),
+                frames=deepcopy(records), reason=reason)
+            return output
+        for index in range(frames):
+            owner.call('_history_admission', )
+            edge_list = schedule.get(index,[])
+            key_receipt = planned = None
+            if edge_list:
+                native, converted, next_held = owner.call('_frame_keys_prepare', edge_list)
+                if not batch_capability(owner.vm) and len(converted) > native['edge-capacity']:
+                    return input_refused('Native frame key edge capacity is unavailable')
                 try:
-                    if edge_list:
-                        key_receipt = self._frame_keys_apply(native,converted,next_held)
-                        manifest.setdefault('input_journal',[]).append(deepcopy(key_receipt))
-                        manifest.setdefault('pending_inputs',[]).append(deepcopy(key_receipt))
-                        manifest['input_dirty'] = True
-                        self._history_pending(manifest,parent['id'],'renderer-frame',receipt=dict(
-                            token=token,baseline=baseline,input=deepcopy(key_receipt)))
-                    result, observed, final, ordinary = self._frame_execute(publication,token)
-                    if not ordinary:
-                        result = deepcopy(result)
-                        result['renderer_frame_fence'] = dict(
-                            observed=deepcopy(observed), final=deepcopy(final),
-                            publication_completed=observed['state'] == 'completed',
-                            ordinary_stop=False)
-                        stopped = self._history_resolve_known_stop(result,'renderer publication interrupted',
-                            records=records,requested_count=frames)
-                        output = self._frame_summary(self._frame_manifest(stopped['history']))
-                        output.update(pending_inputs=deepcopy(manifest.get('pending_inputs',[])),completed_frames=len(records),recorded_frames=len(records),
-                                      frames=records,stop=deepcopy(result),
-                                      outcome='interrupted')
-                        return output
-                    after = self.display_observe()
-                    if (after.get('update_id') != observed['completed-update-id']
-                            or after.get('published_ns') != observed['published-ns']):
-                        raise DebuggerError('Renderer publication differs from frame fence')
-                    config = manifest['frame_config']
-                    used = self._frame_bytes_used(manifest)
-                    node_id = uuid.uuid4().hex
-                    if self._frame_delta(manifest):
-                        checkpoint,image = self._frame_capture_delta(manifest,node_id,parent,
-                            f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2",
-                            lambda **kw:self.capture_display('timeline-frame.png',**kw))
-                        metadata = json.loads(_image_row(self,image)['metadata'])
-                    else:
-                        checkpoint = self._history_checkpoint(remaining_bytes=min(config['max_state_bytes'],config['max_bytes']-used),
-                            node_name=f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2")
-                        image_limit = min(config['max_image_bytes'],config['max_bytes']-used-checkpoint['size'])
-                        if image_limit < 1: raise ValueError('Renderer timeline image budget exhausted')
-                        captured = self.capture_display('timeline-frame.png',max_bytes=image_limit)
-                        image = self._frame_image(captured,image_limit)
-                        metadata = captured['metadata']
-                    frame = dict(kind='renderer-update',image=image,update_id=after['update_id'],
-                        published_ns=after['published_ns'],width=after['width'],height=after['height'],
-                        pixel_sha256=metadata['pixel_sha256'],keys=self._timeline_frame_keys(),
-                        input=deepcopy(key_receipt),completed_guest_frame=None)
-                    manifest['nodes'].append(dict(id=node_id,parent=parent['id'],checkpoint=checkpoint,
-                        edge=dict(kind='renderer-update',stop=deepcopy(result),fence=final,completed_instruction=None),
-                        registers=self.registers(),created=time.time_ns(),frame=frame))
-                    manifest.update(head=node_id,cursor=node_id,live_cursor_valid=True,pending=None,
-                                    invalid_reason=None,input_dirty=False,pending_inputs=[])
-                    manifest,artifact = self._history_new_revision(manifest)
-                    records.append(dict(point=node_id,parent=parent['id'],frame=deepcopy(frame),history=artifact['artifact']))
-                    parent = manifest['nodes'][-1]
-                except BaseException:
-                    self.close(); raise
-        output = self._frame_summary(manifest)
+                    planned = plan_batch(self, native, converted, next_held)
+                except (VerifiedBatchRefusal, InputReceiptBudgetError) as refusal:
+                    return input_refused(str(refusal))
+            publication = owner.call('display_observe', )
+            if publication.get('state') != 'observing': raise ValueError('Renderer observation window is not active')
+            token = uuid.uuid4().hex
+            baseline = publication['native']['updates']
+            owner.intent_written = True
+            owner.call('_history_pending', manifest,parent['id'],'renderer-frame',receipt=dict(token=token,baseline=baseline))
+            pending = deepcopy(manifest['pending'])
+            try:
+                if edge_list:
+                    key_receipt = owner.call('_frame_keys_apply', native,converted,next_held,planned=planned)
+                    manifest.setdefault('input_journal',[]).append(deepcopy(key_receipt))
+                    manifest.setdefault('pending_inputs',[]).append(deepcopy(key_receipt))
+                    manifest['input_dirty'] = True
+                    owner.call('_history_pending', manifest,parent['id'],'renderer-frame',receipt=dict(
+                        token=token,baseline=baseline,input=deepcopy(key_receipt)))
+                result, observed, final, ordinary = owner.call('_frame_execute', publication,token)
+                if not ordinary:
+                    result = deepcopy(result)
+                    result['renderer_frame_fence'] = dict(
+                        observed=deepcopy(observed), final=deepcopy(final),
+                        publication_completed=observed['state'] == 'completed',
+                        ordinary_stop=False)
+                    stopped = owner.call('_history_resolve_known_stop', result,'renderer publication interrupted',
+                        records=records,requested_count=frames)
+                    output = owner.call('_frame_summary', owner.call('_frame_manifest', stopped['history']))
+                    output.update(pending_inputs=deepcopy(manifest.get('pending_inputs',[])),completed_frames=len(records),recorded_frames=len(records),
+                                  frames=records,stop=deepcopy(result),
+                                  outcome='interrupted')
+                    return output
+                after = owner.call('display_observe', )
+                if (after.get('update_id') != observed['completed-update-id']
+                        or after.get('published_ns') != observed['published-ns']):
+                    raise DebuggerError('Renderer publication differs from frame fence')
+                config = manifest['frame_config']
+                used = owner.call('_frame_bytes_used', manifest)
+                node_id = uuid.uuid4().hex
+                if owner.call('_frame_delta', manifest):
+                    checkpoint,image = owner.call('_frame_capture_delta', manifest,node_id,parent,
+                        f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2",
+                        lambda **kw:owner.call('capture_display', 'timeline-frame.png',**kw))
+                    metadata = json.loads(_image_row(self,image)['metadata'])
+                else:
+                    checkpoint = owner.call('_history_checkpoint', remaining_bytes=min(config['max_state_bytes'],config['max_bytes']-used),
+                        node_name=f"frame-{manifest['id'][:8]}-{len(manifest['nodes'])+1:04d}.qcow2")
+                    image_limit = min(config['max_image_bytes'],config['max_bytes']-used-checkpoint['size'])
+                    if image_limit < 1: raise ValueError('Renderer timeline image budget exhausted')
+                    captured = owner.call('capture_display', 'timeline-frame.png',max_bytes=image_limit)
+                    image = owner.call('_frame_image', captured,image_limit)
+                    metadata = captured['metadata']
+                frame = dict(kind='renderer-update',image=image,update_id=after['update_id'],
+                    published_ns=after['published_ns'],width=after['width'],height=after['height'],
+                    pixel_sha256=metadata['pixel_sha256'],keys=owner.call('_timeline_frame_keys', ),
+                    input=deepcopy(key_receipt),completed_guest_frame=None)
+                manifest['nodes'].append(dict(id=node_id,parent=parent['id'],checkpoint=checkpoint,
+                    edge=dict(kind='renderer-update',stop=deepcopy(result),fence=final,completed_instruction=None),
+                    registers=owner.call('registers', ),created=time.time_ns(),frame=frame))
+                manifest.update(head=node_id,cursor=node_id,live_cursor_valid=True,pending=None,
+                                invalid_reason=None,input_dirty=False,pending_inputs=[])
+                manifest,artifact = owner.call('_history_new_revision', manifest)
+                owner.intent_written = False
+                records.append(dict(point=node_id,parent=parent['id'],frame=deepcopy(frame),history=artifact['artifact']))
+                parent = manifest['nodes'][-1]
+            except VerifiedBatchRefusal as refusal:
+                resolve_batch_intent(self, manifest, pending)
+                return input_refused(str(refusal))
+            except BaseException as error:
+                if key_receipt is not None and getattr(error, 'result', None) is None:
+                    error.result = deepcopy(key_receipt)
+                raise
+        output = owner.call('_frame_summary', manifest)
         output.update(outcome='completed',completed_frames=len(records),frames=records)
         return output
 

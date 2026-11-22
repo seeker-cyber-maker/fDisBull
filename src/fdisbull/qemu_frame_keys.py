@@ -6,6 +6,8 @@ import uuid
 from .debug_timeline import validate_edges
 from .dosbox_rpc import DebuggerError
 from .qemu_dos_history import _history_operation
+from .qemu_frame_key_batch import (INPUT_RECEIPT_RESERVE, VerifiedBatchRefusal,
+    apply_batch, batch_capability, frame_input_operation, input_owner, plan_batch)
 from .qemu_input import _key, _QCODE, require_released_machine_input
 from .keyboard_input import KEYS
 
@@ -125,7 +127,7 @@ def _input_journal_budget(session, manifest, count):
     used = (session._frame_state_bytes(manifest)
             + sum(n['frame']['image']['size'] for n in manifest['nodes']))
     journal_bytes = len(json.dumps(journal,sort_keys=True,separators=(',',':')).encode())
-    reserve = count * 8192
+    reserve = count * INPUT_RECEIPT_RESERVE
     if used + journal_bytes + reserve > manifest['max_bytes']:
         raise ValueError('Renderer input journal byte budget exhausted')
     used_project = int(session.project.db.execute(
@@ -133,6 +135,20 @@ def _input_journal_budget(session, manifest, count):
     manifest_bytes = len(json.dumps(manifest,sort_keys=True,separators=(',',':')).encode())
     if used_project + 2 * (manifest_bytes + reserve) > 256 * 1024**2:
         raise ValueError('Project artifact budget cannot reserve input journal revisions')
+
+
+def resolve_batch_intent(session, manifest, pending):
+    """Clear only this proven no-effect intent; retain all accepted history."""
+    owner = input_owner(session)
+    if manifest.get('pending') != pending:
+        raise DebuggerError('Frame input pending intent changed before refusal resolution')
+    updated, _ = owner.call('_history_new_revision', manifest, pending=None)
+    if updated.get('pending') is not None:
+        raise DebuggerError('Frame input refusal resolution retained an unresolved intent')
+    manifest.clear()
+    manifest.update(updated)
+    owner.check()
+    owner.intent_written = False
 
 
 class QemuFrameKeysMixin:
@@ -167,104 +183,124 @@ class QemuFrameKeysMixin:
                 raise
 
     def _frame_keys_query(self, *, allow_foreign=False):
-        if not FRAME_KEY_COMMANDS <= self.vm.qmp_commands:
+        owner = getattr(self, '_frame_input_owner', None)
+        vm = owner.check().vm if owner is not None else self.vm
+        if not FRAME_KEY_COMMANDS <= vm.qmp_commands:
             raise ValueError('Native frame key ownership is unavailable')
-        native = validate_frame_key_state(self.vm.qmp.call('x-fdisbull-query-frame-keys'))
-        owner = getattr(self.vm,'_frame_key_owner',None)
+        raw = owner.qmp('x-fdisbull-query-frame-keys') if owner is not None else vm.qmp.call('x-fdisbull-query-frame-keys')
+        native = validate_frame_key_state(raw)
+        if owner is not None: owner.check()
+        ledger = getattr(vm,'_frame_key_owner',None)
         if native['foreign-held'] and not allow_foreign:
             raise ValueError('Foreign keyboard holds prevent frame input')
-        if owner is None:
+        if ledger is None:
             if native['active']:
                 raise DebuggerError('Native frame key owner is not bound to this session')
-        elif (not native['active'] or any(native[k] != owner[v] for k,v in
+        elif (not native['active'] or any(native[k] != ledger[v] for k,v in
                 (('token','token'),('epoch','epoch'),('generation','generation'),
                  ('held','held'),('accepted-edges','accepted_edges')))):
             raise DebuggerError('Native frame key owner changed unexpectedly')
         return native
 
     def _frame_keys_prepare(self, edges, native=None):
-        from .qemu_video_control import require_no_video_frame_fence
-        require_no_video_frame_fence(self.vm, 'frame-key mutation')
-        from .qemu_step_over import require_no_step_over
-        require_no_step_over(self.vm, 'frame-key mutation')
-        if self.vm.machine_configuration.get('clock_profile',{}).get('profile') != 'virtual':
+        owner = input_owner(self)
+        vm = owner.vm
+        owner.invoke(owner.preflights[0], vm, 'frame-key mutation')
+        owner.invoke(owner.preflights[1], vm, 'frame-key mutation')
+        if vm.machine_configuration.get('clock_profile',{}).get('profile') != 'virtual':
             raise ValueError('Frame key ownership requires an explicit virtual clock')
-        require_released_machine_input(self.vm)
-        if self._input_schedule_bound():
+        owner.invoke(owner.preflights[2], vm)
+        if owner.call('_input_schedule_bound'):
             raise ValueError('Resolve scheduled input before frame input')
-        if getattr(self.vm,'_active_frame_fence',None) is not None:
+        if getattr(vm,'_active_frame_fence',None) is not None:
             raise ValueError('Resolve the frame fence before frame input')
-        from .qemu_instrumented_checkpoint import preflight
-        preflight(self)
-        self._input_no_transaction()
-        self._stopped()
-        native = native or self._frame_keys_query()
+        owner.invoke(owner.preflights[3], self)
+        owner.call('_input_no_transaction')
+        owner.call('_stopped')
+        native = native or owner.call('_frame_keys_query')
         converted, held = _edges(edges,native['held'])
         return native, converted, held
 
-    def _frame_keys_apply(self, native, edges, expected_held):
+    def _frame_keys_apply(self, native, edges, expected_held, planned=None):
+        owner = input_owner(self)
         if not edges: return dict(native=deepcopy(native),edges=[],held=sorted(_CANONICAL[x] for x in native['held']))
+        if batch_capability(owner.vm):
+            return apply_batch(self, native, edges, expected_held, planned)
         if len(edges) > native['edge-capacity']:
             raise ValueError('Native frame key edge capacity is unavailable')
         token = native.get('token') or uuid.uuid4().hex
         intent = dict(token=token,expected_generation=native['generation'],edges=deepcopy(edges))
-        self._event('frame-inputs-intent', intent)
+        owner.call('_event', 'frame-inputs-intent', intent)
         try:
-            raw = self.vm.qmp.call('x-fdisbull-apply-frame-key-edges',
-                {'token':token,'expected-generation':native['generation'],'edges':edges})
+            raw = owner.qmp('x-fdisbull-apply-frame-key-edges',
+                {'token':token,'expected-generation':native['generation'],'edges':edges}, mutating=True)
+            owner.accepted_evidence = deepcopy(raw)
             result = validate_frame_key_state(raw,token=token,epoch=native['epoch'])
             if (result['generation'] != native['generation'] + 1 or result['held'] != expected_held
                     or result['accepted-edges'] != native['accepted-edges'] + len(edges)
                     or result['foreign-held']):
                 raise DebuggerError('Native frame key application receipt differs from intent')
-            adopt_frame_keys(self.vm,result,expected_held=expected_held)
+            owner.adopt(adopt_frame_keys, result, expected_held)
             receipt = dict(native=result,edges=deepcopy(edges),held=sorted(_CANONICAL[x] for x in expected_held),
                            guest_consumed=None,repeat_supported=False)
-            self._event('frame-inputs',receipt)
+            owner.accepted_evidence = deepcopy(receipt)
+            owner.call('_event', 'frame-inputs', receipt)
             return receipt
         except BaseException as error:
-            if 'raw' in locals(): error.result = deepcopy(raw)
-            self.close()
+            if 'raw' in locals() and getattr(error, 'result', None) is None: error.result = deepcopy(raw)
             raise
 
-    @_history_operation
+    @frame_input_operation
     def frame_inputs(self, edges, *, timeout_ms=1000):
-        native, converted, held = self._frame_keys_prepare(edges)
-        if len(converted) > native['edge-capacity']:
+        owner = input_owner(self)
+        native, converted, held = owner.call('_frame_keys_prepare', edges)
+        if not batch_capability(owner.vm) and len(converted) > native['edge-capacity']:
             raise ValueError('Native frame key edge capacity is unavailable')
+        planned = plan_batch(self, native, converted, held)
         live = getattr(self,'_qemu_history_live',None)
-        manifest = None
+        manifest = invalidation = None
         if live and live.get('valid'):
-            selected, _ = self._history_latest(live['history'])
+            selected, _ = owner.call('_history_latest', live['history'])
             if selected.get('history_kind') == 'renderer-frames':
                 manifest = selected
-                self._frame_current(manifest)
-                _input_journal_budget(self,manifest,int(bool(converted)))
+                owner.call('_frame_current', manifest)
+                owner.invoke(_input_journal_budget, self, manifest, int(bool(converted)))
             elif converted:
-                live.update(valid=False,cursor=None,invalid_reason='unrecorded frame key input')
-        with self._history_internal():
+                invalidation = live
+        pending = None
+        try:
             if manifest is not None and converted:
-                self._history_pending(manifest,manifest['cursor'],'renderer-input',receipt=dict(edges=deepcopy(converted)))
-            receipt = self._frame_keys_apply(native,converted,held)
+                owner.intent_written = True
+                owner.call('_history_pending', manifest, manifest['cursor'], 'renderer-input',
+                           receipt=dict(edges=deepcopy(converted)))
+                pending = deepcopy(manifest['pending'])
+            receipt = owner.call('_frame_keys_apply', native, converted, held, planned=planned)
+            if invalidation is not None:
+                owner.check()
+                invalidation.update(valid=False,cursor=None,invalid_reason='unrecorded frame key input')
             if manifest is not None and converted:
-                try:
-                    journal = manifest.setdefault('input_journal',[])
-                    journal.append(deepcopy(receipt))
-                    manifest.setdefault('pending_inputs',[]).append(deepcopy(receipt))
-                    manifest['input_dirty'] = True
-                    updated, artifact = self._history_new_revision(manifest)
-                    self._qemu_history_live.update(history=artifact['artifact'],fingerprint=self._history_live_fingerprint())
-                except BaseException as error:
-                    error.result = receipt
-                    self.close()
-                    raise
+                manifest.setdefault('input_journal',[]).append(deepcopy(receipt))
+                manifest.setdefault('pending_inputs',[]).append(deepcopy(receipt))
+                manifest['input_dirty'] = True
+                updated, artifact = owner.call('_history_new_revision', manifest)
+                manifest.clear(); manifest.update(updated)
+                owner.intent_written = False
+        except VerifiedBatchRefusal:
+            if pending is not None:
+                resolve_batch_intent(self, manifest, pending)
+            raise
+        except BaseException as error:
+            if 'receipt' in locals() and getattr(error, 'result', None) is None:
+                error.result = deepcopy(receipt)
+            if invalidation is not None and owner.can_notify() and owner.mutating:
+                invalidation.update(valid=False,cursor=None,invalid_reason='uncertain frame key input')
+            raise
         if manifest is not None:
             try:
-                receipt['timeline'] = self._frame_summary(self._frame_manifest())
+                receipt['timeline'] = owner.call('_frame_summary', owner.call('_frame_manifest'))
             except BaseException as error:
-                if converted:
+                if converted and getattr(error, 'result', None) is None:
                     error.result = deepcopy(receipt)
-                    self.close()
                 raise
         return receipt
 
