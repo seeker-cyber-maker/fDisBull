@@ -5,8 +5,10 @@ clean installation and bounded native checks.
 
 DotBox owns its Python runtime and SQLite control store. No full fDisBull
 application or source checkout is required. Python 3.12+, Pillow, pinned
-iced-x86 1.22.0 and the small `fdisbull-core==0.1.0.dev1` distribution are the
-declared Python requirements. The shared core supplies the offline scalar
+iced-x86 1.22.0 and the small `fdisbull-core==0.1.0.dev7` distribution are the
+declared Python requirements. The release inventory also pins the exact shared
+wheel hash; the version alone does not identify its development build.
+The shared core supplies the offline scalar
 [memory search](MEMORY_SEARCH.md). A compatible native DOSBox-X executable and its platform libraries
 are required to run a guest. See [native preparation](STANDALONE_NATIVE.md).
 For a developer build on the Mac Studio, see the
@@ -25,9 +27,12 @@ resources and helpers. Exporting source does not prepare a native executable.
 ## Install
 
 ```sh
-python3 -m venv /private/dotbox/venv
+python3.12 -m venv /private/dotbox/venv
 /private/dotbox/venv/bin/python -m pip install \
-  /path/to/fdisbull_core-0.1.0.dev1-py3-none-any.whl /path/to/dotbox.whl
+  --no-index --find-links /path/to/wheelhouse \
+  /path/to/wheelhouse/fdisbull_core-0.1.0.dev7-py3-none-any.whl \
+  /path/to/wheelhouse/dotbox-0.1.0.dev10-py3-none-any.whl
+/private/dotbox/venv/bin/dotbox doctor
 /private/dotbox/venv/bin/dotbox --help
 ```
 
@@ -36,6 +41,27 @@ editable install or full fDisBull environment. Include the shared-core wheel
 in an offline wheelhouse with the other declared dependencies. Installing or
 updating these Python packages does not rebuild DOSBox-X. Verification records distinguish Python
 installation, native execution and actual Codex cloud integration.
+
+### Linux offline development package
+
+The `0.1.0.dev10` package targets Linux x86_64 as a development/prerelease
+delivery. Use its wheelhouse with a compatible Python 3.12 environment; the
+release inventory identifies the exact wheels, native executable, platform
+libraries and corresponding source. Check the accompanying qualification
+receipt for the interpreter and host actually exercised.
+
+The base runtime is DotBox's cooperative-input DOSBox-X, including its required
+platform libraries and license/source notices. A stock DOSBox-X executable or
+an arbitrary fDisBull runtime does not establish the required ownership,
+restore-fence or bounded-execution capabilities. Installing the Python package
+does not build or replace a native runtime. Pass the delivered native executable
+or launcher explicitly when starting a session.
+
+An optional AGI CPU analysis companion is separate from `dotbox serve`; it does
+not select a new gameplay backend or make QEMU an installation requirement.
+The installed offline-kit doctor and headless native checks do not establish
+visible input, takeover or audio on Dot's actual desktop. Qualify those on that
+host before reporting them as available.
 
 ## Display size and coordinates
 
