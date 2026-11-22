@@ -6,6 +6,7 @@
 #define AGI_CPU_H
 #include "cpu-qom.h"
 #include "decode.h"
+#include "runtime.h"
 #include "exec/cpu-defs.h"
 #include "qapi/error.h"
 
@@ -23,6 +24,7 @@
 #define AGI_OBS_MASK 3
 #define AGI_TB_BINDING 4
 #define AGI_TB_DRAW_INTENT 8
+#define AGI_TB_RUNTIME 16
 #define MMU_USER_IDX 0
 
 typedef enum AgiStatus {
@@ -73,7 +75,7 @@ typedef struct CPUArchState {
     uint32_t v[256], f[256];
     AgiActor actors[AGI_ACTORS];
     uint32_t binding_profile, horizon, loaded_views[256];
-    uint32_t draw_intent, pending_kind, pending_pc, pending_actor;
+    uint32_t draw_intent, pending_kind, pending_pc, pending_actor, runtime_profile;
     /* Diagnostic scratch is neither architectural state nor a guest register. */
     AgiActor observed_actor;
     uint32_t observed_loaded;
@@ -95,10 +97,11 @@ struct ArchCPU {
     char source_sha256[65];
     AgiEvent *events;
     AgiViewCatalog *catalog;
+    AgiRuntime *runtime;
     /* Immutable machine selection, restored to env at every guest restart. */
     bool draw_intent;
     /* Host-only static query selectors; restarting the guest preserves them. */
-    uint32_t decode_pc, decode_limit;
+    uint32_t decode_pc, decode_limit, decode_logic;
 };
 
 struct AgiCPUClass {
@@ -122,7 +125,8 @@ static inline void cpu_get_tb_cpu_state(CPUArchState *env, vaddr *pc,
     *cs_base = 0;
     *pflags = (env->obs_mask & AGI_OBS_MASK) |
               (env->binding_profile ? AGI_TB_BINDING : 0) |
-              (env->draw_intent ? AGI_TB_DRAW_INTENT : 0);
+              (env->draw_intent ? AGI_TB_DRAW_INTENT : 0) |
+              (env->runtime_profile ? AGI_TB_RUNTIME : 0);
 }
 
 #include "exec/cpu-all.h"

@@ -200,7 +200,12 @@ static bool format_text(const AgiRuntime *r, uint32_t logic, const char *source,
         char type;
         size_t length;
         expansion[0] = 0;
-        if (*source == '\\' && source[1]) source++;
+        if (*source == '\\' && source[1]) {
+            if (at + 1 >= capacity) return false;
+            source++;
+            out[at++] = *source++;
+            continue;
+        }
         if (*source != '%') {
             if (at + 1 >= capacity) return false;
             out[at++] = *source++;

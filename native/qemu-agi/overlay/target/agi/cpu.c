@@ -15,6 +15,7 @@
 #include "system/runstate.h"
 #include "system/tcg.h"
 #include "cpu.h"
+#include "runtime_qom.h"
 
 static const char *const status_names[] = {
     "ready", "running", "budget", "return", "fault", "external", "effect"
@@ -31,6 +32,8 @@ static const char *const event_names[] = {
 
 void agi_clear_observation(CPUArchState *env)
 {
+    AgiRuntime *runtime = AGI_CPU(env_cpu(env))->runtime;
+    if (runtime) agi_runtime_clear_events(runtime);
     env->obs_count = 0;
     memset(env->obs_eligible, 0, sizeof(env->obs_eligible));
     memset(env->obs_stored, 0, sizeof(env->obs_stored));
@@ -42,6 +45,8 @@ void agi_clear_observation(CPUArchState *env)
 void agi_restart(CPUArchState *env)
 {
     AgiCPU *cpu = AGI_CPU(env_cpu(env));
+    if (cpu->runtime) agi_runtime_restart(cpu->runtime);
+    env->runtime_profile = cpu->runtime != NULL;
     memset(env->v, 0, sizeof(env->v));
     memset(env->f, 0, sizeof(env->f));
     memset(env->actors, 0, sizeof(env->actors));
@@ -111,6 +116,13 @@ static void agi_set_uint(Object *obj, Visitor *v, const char *name,
         error_setg(errp, "AGI_CONTROL_PRECONDITION: invalid value for %s", name);
         return;
     }
+    if (AGI_CPU(obj)->runtime && field < 2 &&
+        !agi_runtime_observation(AGI_CPU(obj)->runtime,
+            field == 0 ? value : env->obs_mask,
+            field == 1 ? value : env->obs_capacity)) {
+        error_setg(errp, "AGI_CONTROL_PRECONDITION: invalid runtime observation capacity");
+        return;
+    }
     if (field == 0) {
         env->obs_mask = value;
     } else if (field == 1) {
@@ -144,7 +156,8 @@ static void agi_set_decode_uint(Object *obj, Visitor *v, const char *name,
         !agi_require_stopped(obj, errp)) {
         return;
     }
-    if ((field == 0 && value > cpu->env.code_size) ||
+    if ((field == 0 && value > (cpu->runtime ?
+            cpu->runtime->resources->logics[cpu->decode_logic].code.size : cpu->env.code_size)) ||
         (field == 1 && (value == 0 || value > 64))) {
         error_setg(errp, "AGI_DECODE_PRECONDITION: invalid value for %s", name);
         return;
@@ -155,6 +168,28 @@ static void agi_set_decode_uint(Object *obj, Visitor *v, const char *name,
         cpu->decode_limit = value;
     }
     /* A host query never changes execution or observation bookkeeping. */
+}
+
+static void agi_get_decode_logic(Object *obj, Visitor *v, const char *name,
+                                  void *opaque, Error **errp)
+{
+    uint64_t value = AGI_CPU(obj)->decode_logic;
+    if (!agi_require_stopped(obj, errp)) return;
+    visit_type_uint64(v, name, &value, errp);
+}
+static void agi_set_decode_logic(Object *obj, Visitor *v, const char *name,
+                                  void *opaque, Error **errp)
+{
+    AgiCPU *cpu = AGI_CPU(obj);
+    uint64_t value;
+    if (!visit_type_uint64(v, name, &value, errp) || !agi_require_stopped(obj, errp)) return;
+    if (value > 255 || (!cpu->runtime && value) ||
+        (cpu->runtime && !cpu->runtime->resources->logics[value].code.data)) {
+        error_setg(errp, "AGI_DECODE_PRECONDITION: unknown LOGIC resource");
+        return;
+    }
+    cpu->decode_logic = value;
+    cpu->decode_pc = 0;
 }
 
 static void agi_set_restart(Object *obj, bool value, Error **errp)
@@ -189,6 +224,14 @@ static void agi_set_clear(Object *obj, bool value, Error **errp)
 
 static void agi_json_source(GString *s, AgiCPU *cpu)
 {
+    if (cpu->runtime) {
+        const AgiRuntimeBlob *code = &cpu->runtime->resources->logics[cpu->decode_logic].code;
+        g_string_append_printf(s, "{\"sha256\":\"%s\",\"size\":%u,"
+                               "\"logic_id\":%u,\"profile\":\"%s\",\"package_sha256\":\"%s\"}",
+                               code->sha256, code->size, cpu->decode_logic,
+                               AGI_RUNTIME_PROFILE, cpu->runtime->resources->sha256);
+        return;
+    }
     g_string_append_printf(s, "{\"sha256\":\"%s\",\"size\":%u,"
                            "\"logic_id\":0,\"profile\":\"%s\"",
                            cpu->source_sha256, cpu->env.code_size,
@@ -261,6 +304,7 @@ static void agi_json_instruction(GString *s, const AgiDecodedInstruction *insn)
 static uint8_t agi_inspect_read(void *opaque, uint32_t pc)
 {
     const AgiCPU *cpu = opaque;
+    if (cpu->runtime) return cpu->runtime->resources->logics[cpu->decode_logic].code.data[pc];
     return cpu->code[pc];
 }
 
@@ -269,10 +313,12 @@ static char *agi_get_decode(Object *obj, Error **errp)
     AgiCPU *cpu = AGI_CPU(obj);
     const CPUArchState *env = &cpu->env;
     AgiDecodedInstruction insn;
-    AgiDecodeProfile profile = env->draw_intent ? AGI_DECODE_INTENT :
+    AgiDecodeProfile profile = cpu->runtime ? AGI_DECODE_RUNTIME :
+                               env->draw_intent ? AGI_DECODE_INTENT :
                                env->binding_profile ? AGI_DECODE_BINDING :
                                AGI_DECODE_SCALAR;
     uint32_t pc = cpu->decode_pc, count = 0;
+    uint32_t code_size = cpu->runtime ? cpu->runtime->resources->logics[cpu->decode_logic].code.size : env->code_size;
     bool fault = false;
     GString *s;
 
@@ -288,8 +334,8 @@ static char *agi_get_decode(Object *obj, Error **errp)
     g_string_append_printf(s, ",\"evidence\":\"static_decode\",\"traversal\":\"linear\","
                            "\"start_pc\":%u,\"limit\":%u,\"instructions\":[",
                            pc, cpu->decode_limit);
-    while (pc < env->code_size && count < cpu->decode_limit) {
-        if (!agi_decode(agi_inspect_read, cpu, env->code_size, pc, profile,
+    while (pc < code_size && count < cpu->decode_limit) {
+        if (!agi_decode(agi_inspect_read, cpu, code_size, pc, profile,
                         AGI_DECODE_STRUCTURAL, &insn)) {
             fault = true;
             break;
@@ -303,7 +349,7 @@ static char *agi_get_decode(Object *obj, Error **errp)
     }
     g_string_append_printf(s, "],\"next_pc\":%u,\"stop\":\"%s\",\"error\":",
                            pc, fault ? "decode_fault" :
-                           pc == env->code_size ? "end" : "limit");
+                           pc == code_size ? "end" : "limit");
     if (fault) {
         g_string_append_printf(s, "{\"pc\":%u,\"opcode\":%u,\"code\":%u,\"name\":\"%s\"}",
                                insn.pc, insn.opcode, (unsigned)insn.fault,
@@ -355,6 +401,7 @@ static char *agi_get_state(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
+    if (cpu->runtime) return agi_runtime_state_json(cpu->runtime, errp);
     s = g_string_new(env->draw_intent ?
                      "{\"schema\":\"fdisbull-agi-intent-state-1\",\"source\":" :
                      env->binding_profile ?
@@ -454,6 +501,7 @@ static char *agi_get_events(Object *obj, Error **errp)
     if (!agi_require_stopped(obj, errp)) {
         return NULL;
     }
+    if (cpu->runtime) return agi_runtime_events_json(cpu->runtime, errp);
     s = g_string_new(env->draw_intent ?
                      "{\"schema\":\"fdisbull-agi-intent-events-1\",\"source\":" :
                      env->binding_profile ?
@@ -545,6 +593,23 @@ static bool agi_tlb_fill(CPUState *cs, vaddr addr, int size,
 static void agi_exec_enter(CPUState *cs)
 {
     CPUArchState *env = cpu_env(cs);
+    AgiRuntime *runtime = AGI_CPU(cs)->runtime;
+    if (runtime) {
+        if (runtime->state.status == AGI_RT_PENDING || runtime->state.status == AGI_RT_RETURN ||
+            runtime->state.status == AGI_RT_FAULT || runtime->state.status == AGI_RT_QUIT) {
+            vm_stop(RUN_STATE_PAUSED);
+            cs->exception_index = EXCP_INTERRUPT;
+            return;
+        }
+        if (env->status != AGI_RUNNING) {
+            runtime->run_retired = 0;
+            env->run_retired = env->elapsed_ns = 0;
+            env->invocation++;
+            env->status = AGI_RUNNING;
+        }
+        env->segment_start_ns = get_clock(); env->timer_active = true;
+        return;
+    }
     if (env->status == AGI_EFFECT) {
         /* No completion API exists in this profile. A repeated cont leaves
          * guest state, observation state and prior run counters unchanged.
@@ -610,6 +675,39 @@ static void agi_realize(DeviceState *dev, Error **errp)
     acc->parent_realize(dev, errp);
 }
 
+static AgiRuntime *agi_stopped_runtime(Object *obj, Error **errp)
+{
+    if (!agi_require_stopped(obj, errp)) return NULL;
+    if (!AGI_CPU(obj)->runtime) {
+        error_setg(errp, "AGI_RUNTIME_PRECONDITION: runtime-package profile required");
+        return NULL;
+    }
+    return AGI_CPU(obj)->runtime;
+}
+static char *agi_get_runtime_scene(Object *obj, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    return runtime ? agi_runtime_scene_json(runtime, errp) : NULL;
+}
+static char *agi_get_runtime_snapshot(Object *obj, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    return runtime ? agi_runtime_snapshot_hex(runtime, errp) : NULL;
+}
+static void agi_set_runtime_command(Object *obj, const char *value, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    CPUArchState *env = &AGI_CPU(obj)->env;
+    if (!runtime || !agi_control_available(env, errp)) return;
+    if (!agi_runtime_command_json(runtime, value, errp)) return;
+    env->pc = 0;
+    env->status = AGI_READY;
+    env->retired = runtime->state.retired;
+    env->control_generation++;
+    CPU(obj)->exception_index = -1;
+    CPU(obj)->halted = 0;
+}
+
 static void agi_instance_init(Object *obj)
 {
     AgiCPU *cpu = AGI_CPU(obj);
@@ -633,12 +731,18 @@ static void agi_instance_init(Object *obj)
     object_property_add(obj, "agi-decode-limit", "uint64", agi_get_decode_uint,
                          agi_set_decode_uint, NULL, (void *)(uintptr_t)1);
     object_property_add_str(obj, "agi-decode-json", agi_get_decode, NULL);
+    object_property_add(obj, "agi-decode-logic", "uint64", agi_get_decode_logic,
+                         agi_set_decode_logic, NULL, NULL);
+    object_property_add_str(obj, "agi-runtime-scene-json", agi_get_runtime_scene, NULL);
+    object_property_add_str(obj, "agi-runtime-snapshot-hex", agi_get_runtime_snapshot, NULL);
+    object_property_add_str(obj, "agi-runtime-command", NULL, agi_set_runtime_command);
 }
 
 static void agi_instance_finalize(Object *obj)
 {
     g_free(AGI_CPU(obj)->events);
     g_free(AGI_CPU(obj)->catalog);
+    agi_runtime_free(AGI_CPU(obj)->runtime);
 }
 
 static const struct SysemuCPUOps agi_sysemu_ops = {

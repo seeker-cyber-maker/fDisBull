@@ -25,6 +25,28 @@ static G_NORETURN void agi_stop(CPUArchState *env, AgiStatus status)
     cpu_loop_exit(cs);
 }
 
+/* The runtime TB is an operand-free native trampoline. Its immutable ROM
+ * byte never changes; the canonical decoder reads the immutable LOGIC bank
+ * in the semantic helper at the actual architectural LOGIC/PC. Consequently
+ * cached TBs cannot retain bytes from another LOGIC or scan-start context. */
+void helper_agi_runtime(CPUArchState *env, uint32_t mask)
+{
+    AgiRuntime *r = AGI_CPU(env_cpu(env))->runtime;
+    int result;
+    g_assert(r && r->obs_mask == mask && env->runtime_profile);
+    result = agi_runtime_step(r);
+    env->pc = 0;
+    env->retired = r->state.retired;
+    env->run_retired = r->run_retired;
+    if (result < 0) agi_stop(env, AGI_FAULT);
+    if (r->state.status == AGI_RT_PENDING) agi_stop(env, AGI_EFFECT);
+    if (r->state.status == AGI_RT_RETURN || r->state.status == AGI_RT_QUIT) agi_stop(env, AGI_RETURN);
+    if (r->run_retired >= env->step_budget) {
+        r->state.status = AGI_RT_BUDGET;
+        agi_stop(env, AGI_BUDGET);
+    }
+}
+
 void helper_agi_fault(CPUArchState *env, uint32_t pc, uint32_t opcode,
                       uint32_t code)
 {

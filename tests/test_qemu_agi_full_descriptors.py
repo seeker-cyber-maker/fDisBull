@@ -334,14 +334,15 @@ def test_framing_limits_and_fetch_bounds_remain_explicit(native_decoder):
 
 
 def test_explicit_runtime_profile_reuses_full_framing_without_promoting_pilot_support(native_decoder):
-    # The integration owner supplies the runtime handler/support implementation.
-    # This check asserts the opt-in byte layout, not those future handlers.
+    pending = {29, 101, 102, 110, 115, 118, 124, 125, 126, 127, 128, 129,
+               133, 134, 135, 136, 139, 141, 144, 151, 152, 161, 162}
     for execution in (False, True):
         for opcode in range(174):
             raw = _action(opcode)
             ok, row, reads = native_decoder(raw, profile=3, execution=execution)
             assert ok and row.fault == 0 and row.size == len(raw), opcode
             assert row.mnemonic.decode() == ACTION_NAMES[opcode]
+            assert row.execution_support == (1 if opcode in pending else 0)
             assert reads == len(raw) and bytes(row.bytes[:row.size]) == raw
         for opcode, width in enumerate(PREDICATE_WIDTHS):
             payload = b"\x02\x01\x00\xff\xff" if opcode == 14 else bytes(width)
@@ -351,6 +352,7 @@ def test_explicit_runtime_profile_reuses_full_framing_without_promoting_pilot_su
         raw = bytes([255, *([7, 0] * 64), 255, 0, 0])
         ok, row, reads = native_decoder(raw, profile=3, execution=execution)
         assert ok and row.condition_count == 64 and reads == len(raw)
+        assert row.execution_support == 0
         ok, row, reads = native_decoder(bytes([149, 17, 42]), profile=3, execution=execution)
         assert ok and row.size == 1 and reads == 1 and row.mnemonic == b"trace.on"
     # Pilot EXECUTION still rejects a structurally valid ninth predicate.

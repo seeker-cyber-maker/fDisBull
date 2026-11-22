@@ -20,6 +20,7 @@ typedef struct DisasContext {
     uint32_t obs_mask;
     bool binding_profile;
     bool draw_intent;
+    bool runtime_profile;
 } DisasContext;
 
 static void agi_init_context(DisasContextBase *db, CPUState *cs)
@@ -29,6 +30,7 @@ static void agi_init_context(DisasContextBase *db, CPUState *cs)
     ctx->obs_mask = db->tb->flags & AGI_OBS_MASK;
     ctx->binding_profile = db->tb->flags & AGI_TB_BINDING;
     ctx->draw_intent = db->tb->flags & AGI_TB_DRAW_INTENT;
+    ctx->runtime_profile = db->tb->flags & AGI_TB_RUNTIME;
 }
 
 static void agi_tb_start(DisasContextBase *db, CPUState *cs) { }
@@ -142,6 +144,13 @@ static void agi_translate_insn(DisasContextBase *db, CPUState *cs)
     TCGv_i32 x, y, value, prior, part;
     TCGv_i32 before = tcg_constant_i32(0);
     TCGv_i32 next = tcg_temp_new_i32();
+
+    if (ctx->runtime_profile) {
+        gen_helper_agi_runtime(tcg_env, tcg_constant_i32(ctx->obs_mask));
+        db->pc_next = pc + 1;
+        db->is_jmp = DISAS_TOO_MANY;
+        return;
+    }
 
     decoded = agi_decode(agi_translate_read, ctx, ctx->env->code_size, pc,
                           ctx->draw_intent ? AGI_DECODE_INTENT :
