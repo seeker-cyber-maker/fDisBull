@@ -310,7 +310,8 @@ class QemuAGI:
             raise HarnessError("Unsupported AGI native events schema")
         return value
 
-    def run(self, *, step_budget=None):
+    def _run_stopped(self, *, step_budget=None):
+        """Own one bounded cont/STOP interval without selecting a state payload."""
         self._require_stopped()
         if step_budget is not None:
             self.configure(step_budget=step_budget)
@@ -331,6 +332,9 @@ class QemuAGI:
                 self._remember_event(message)
         self._require_stopped()
         self.last_run_wall_ns = time.perf_counter_ns() - start
+
+    def run(self, *, step_budget=None):
+        self._run_stopped(step_budget=step_budget)
         return self.state()
 
     def close(self, *, failed=False):

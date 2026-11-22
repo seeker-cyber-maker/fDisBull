@@ -9,6 +9,8 @@
 
 #define AGI_RUNTIME_PACKAGE_SCHEMA "fdisbull-agi-runtime-package-1"
 #define AGI_RUNTIME_STATE_SCHEMA "fdisbull-agi-runtime-state-1"
+#define AGI_RUNTIME_CHECKPOINT_SCHEMA "fdisbull-agi-runtime-checkpoint-1"
+#define AGI_RUNTIME_SCENE_INPUTS_SCHEMA "fdisbull-agi-runtime-scene-inputs-1"
 #define AGI_RUNTIME_EVENTS_SCHEMA "fdisbull-agi-runtime-events-1"
 #define AGI_RUNTIME_SCENE_SCHEMA "fdisbull-agi-runtime-scene-1"
 #define AGI_RUNTIME_SOUND_SCHEMA "fdisbull-agi-runtime-sound-events-1"
@@ -25,6 +27,8 @@ void agi_runtime_free(AgiRuntime *runtime);
 /* Each successful string result is owned by the caller (g_free).
  * All serializers are read-only. Failures return NULL and set errp. */
 char *agi_runtime_state_json(const AgiRuntime *runtime, Error **errp);
+char *agi_runtime_checkpoint_json(const AgiRuntime *runtime, Error **errp);
+char *agi_runtime_scene_inputs_json(const AgiRuntime *runtime, Error **errp);
 char *agi_runtime_events_json(const AgiRuntime *runtime, Error **errp);
 char *agi_runtime_scene_json(const AgiRuntime *runtime, Error **errp);
 char *agi_runtime_snapshot_hex(const AgiRuntime *runtime, Error **errp);

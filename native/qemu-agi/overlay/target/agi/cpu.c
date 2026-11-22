@@ -690,6 +690,16 @@ static char *agi_get_runtime_scene(Object *obj, Error **errp)
     AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
     return runtime ? agi_runtime_scene_json(runtime, errp) : NULL;
 }
+static char *agi_get_runtime_checkpoint(Object *obj, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    return runtime ? agi_runtime_checkpoint_json(runtime, errp) : NULL;
+}
+static char *agi_get_runtime_scene_inputs(Object *obj, Error **errp)
+{
+    AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
+    return runtime ? agi_runtime_scene_inputs_json(runtime, errp) : NULL;
+}
 static char *agi_get_runtime_snapshot(Object *obj, Error **errp)
 {
     AgiRuntime *runtime = agi_stopped_runtime(obj, errp);
@@ -745,6 +755,8 @@ static void agi_instance_init(Object *obj)
     object_property_add(obj, "agi-decode-logic", "uint64", agi_get_decode_logic,
                          agi_set_decode_logic, NULL, NULL);
     object_property_add_str(obj, "agi-runtime-scene-json", agi_get_runtime_scene, NULL);
+    object_property_add_str(obj, "agi-runtime-checkpoint-json", agi_get_runtime_checkpoint, NULL);
+    object_property_add_str(obj, "agi-runtime-scene-inputs-json", agi_get_runtime_scene_inputs, NULL);
     object_property_add_str(obj, "agi-runtime-snapshot-hex", agi_get_runtime_snapshot, NULL);
     object_property_add_str(obj, "agi-runtime-sound-json", agi_get_runtime_sound, NULL);
     object_property_add_str(obj, "agi-runtime-presentation-json", agi_get_runtime_presentation, NULL);

@@ -617,35 +617,15 @@ static int precedes(const AgiRuntimeWorld *world, uint16_t left, uint16_t right)
     return ay != by ? ay < by : left < right;
 }
 
-int agi_runtime_scene_compose(const AgiRuntimeWorld *world,
-                              const uint8_t *background_visual,
-                              const uint8_t *background_priority,
-                              size_t plane_size, AgiRuntimeViewSource source,
-                              void *opaque, uint8_t *visual, uint8_t *priority,
-                              AgiRuntimeSceneInfo *info)
+int agi_runtime_scene_order(const AgiRuntimeWorld *world,
+                            AgiRuntimeSceneOrder *out)
 {
-    AgiRuntimeSceneInfo result;
-    uint8_t *image, *cel;
+    AgiRuntimeSceneOrder result;
     uint32_t id, i;
-    int status = AGI_RS_SUCCESS;
-    if (!world || !source || !background_visual || !background_priority ||
-        !planes(visual, priority, plane_size) ||
-        overlap(background_visual, N, background_priority, N) ||
-        overlap(world, sizeof(*world), visual, N) ||
-        overlap(world, sizeof(*world), priority, N) ||
-        (visual != background_visual && overlap(visual, N, background_visual, N)) ||
-        (priority != background_priority && overlap(priority, N, background_priority, N)) ||
-        overlap(visual, N, background_priority, N) ||
-        overlap(priority, N, background_visual, N) ||
-        (info && (overlap(info, sizeof(*info), visual, N) ||
-                  overlap(info, sizeof(*info), priority, N) ||
-                  overlap(info, sizeof(*info), background_visual, N) ||
-                  overlap(info, sizeof(*info), background_priority, N) ||
-                  overlap(info, sizeof(*info), world, sizeof(*world))))) {
+    if (!world || !out || overlap(world, sizeof(*world), out, sizeof(*out))) {
         return AGI_RS_BAD_ARGUMENT;
     }
-    if (!palette(background_visual, N) || !palette(background_priority, N) ||
-        !palette(world->priority_bands, H)) { return AGI_RS_BAD_PALETTE; }
+    if (!palette(world->priority_bands, H)) { return AGI_RS_BAD_PALETTE; }
     memset(&result, 0, sizeof(result));
     for (id = 0; id < AGI_RUNTIME_ACTORS; id++) {
         const AgiRuntimeActor *a = &world->actors[id];
@@ -665,6 +645,46 @@ int agi_runtime_scene_compose(const AgiRuntimeWorld *world,
         }
         result.draw_order[i] = (uint16_t)id;
     }
+    *out = result;
+    return AGI_RS_SUCCESS;
+}
+
+int agi_runtime_scene_compose(const AgiRuntimeWorld *world,
+                              const uint8_t *background_visual,
+                              const uint8_t *background_priority,
+                              size_t plane_size, AgiRuntimeViewSource source,
+                              void *opaque, uint8_t *visual, uint8_t *priority,
+                              AgiRuntimeSceneInfo *info)
+{
+    AgiRuntimeSceneInfo result;
+    AgiRuntimeSceneOrder order;
+    uint8_t *image, *cel;
+    uint32_t i;
+    int status = AGI_RS_SUCCESS;
+    if (!world || !source || !background_visual || !background_priority ||
+        !planes(visual, priority, plane_size) ||
+        overlap(background_visual, N, background_priority, N) ||
+        overlap(world, sizeof(*world), visual, N) ||
+        overlap(world, sizeof(*world), priority, N) ||
+        (visual != background_visual && overlap(visual, N, background_visual, N)) ||
+        (priority != background_priority && overlap(priority, N, background_priority, N)) ||
+        overlap(visual, N, background_priority, N) ||
+        overlap(priority, N, background_visual, N) ||
+        (info && (overlap(info, sizeof(*info), visual, N) ||
+                  overlap(info, sizeof(*info), priority, N) ||
+                  overlap(info, sizeof(*info), background_visual, N) ||
+                  overlap(info, sizeof(*info), background_priority, N) ||
+                  overlap(info, sizeof(*info), world, sizeof(*world))))) {
+        return AGI_RS_BAD_ARGUMENT;
+    }
+    if (!palette(background_visual, N) || !palette(background_priority, N)) {
+        return AGI_RS_BAD_PALETTE;
+    }
+    status = agi_runtime_scene_order(world, &order);
+    if (status) { return status; }
+    memset(&result, 0, sizeof(result));
+    result.actor_count = order.actor_count;
+    memcpy(result.draw_order, order.draw_order, sizeof(result.draw_order));
     image = malloc(3 * N);
     if (!image) { return AGI_RS_NO_MEMORY; }
     cel = image + 2 * N;

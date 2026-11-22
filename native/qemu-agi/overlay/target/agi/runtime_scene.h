@@ -42,6 +42,11 @@ typedef struct AgiRuntimeSceneInfo {
     uint8_t hidden[AGI_RUNTIME_ACTORS];
 } AgiRuntimeSceneInfo;
 
+typedef struct AgiRuntimeSceneOrder {
+    uint32_t actor_count;
+    uint16_t draw_order[AGI_RUNTIME_ACTORS];
+} AgiRuntimeSceneOrder;
+
 /* Return 1 for immutable raw VIEW bytes and 0 when the resource is absent.
  * This callback is read-only; it must not mutate its inputs or the world. */
 typedef int (*AgiRuntimeViewSource)(void *opaque, uint8_t view,
@@ -85,6 +90,13 @@ int agi_runtime_scene_blit(uint8_t *visual, uint8_t *priority, size_t plane_size
                            uint32_t width, uint32_t height, uint32_t transparent,
                            int32_t x, int32_t baseline, uint32_t sprite_priority,
                            AgiRuntimeBlitInfo *info);
+
+/* Select and order current actors using the same state checks as composition.
+ * This validates state geometry and priority bands, not resource bytes or
+ * raster visibility. It performs no decoding, drawing, mutation or allocation.
+ * Failure preserves out; out must not overlap world. */
+int agi_runtime_scene_order(const AgiRuntimeWorld *world,
+                            AgiRuntimeSceneOrder *out);
 
 /* Compose from persistent background, not a previously composited frame.
  * This makes draw/erase/move/cycle changes remove previous sprite pixels.

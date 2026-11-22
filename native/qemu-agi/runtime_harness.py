@@ -44,6 +44,8 @@ _pack = _sibling("runtime_pack")
 HarnessError, QMPError, QemuAGI = _base.HarnessError, _base.QMPError, _base.QemuAGI
 PROFILE = _pack.PROFILE
 STATE_SCHEMA = "fdisbull-agi-runtime-state-1"
+CHECKPOINT_SCHEMA = "fdisbull-agi-runtime-checkpoint-1"
+SCENE_INPUTS_SCHEMA = "fdisbull-agi-runtime-scene-inputs-1"
 EVENTS_SCHEMA = "fdisbull-agi-runtime-events-1"
 SCENE_SCHEMA = "fdisbull-agi-runtime-scene-1"
 SOUND_SCHEMA = "fdisbull-agi-runtime-sound-events-1"
@@ -136,6 +138,7 @@ class QemuAGIRuntime(QemuAGI):
                              for item in self.package["logics"]}
         self._logic_hashes = {item["id"]: item["sha256"] for item in self.package["logics"]}
         self._logic_sizes = {item["id"]: len(item["code"]) // 2 for item in self.package["logics"]}
+        self._view_hashes = {item["id"]: item["sha256"] for item in self.package["views"]}
         self.context_id = uuid4().hex
         self.initial_context = []
         if not isinstance(extra_args, (list, tuple)) \
@@ -213,11 +216,144 @@ class QemuAGIRuntime(QemuAGI):
             raise HarnessError("Native effect is present outside pending status")
         return value
 
-    def events(self):
+    def _validate_checkpoint(self, value, schema=CHECKPOINT_SCHEMA):
+        if type(value) is not dict or value.get("schema") != schema \
+                or type(value.get("guest")) is not dict:
+            raise HarnessError("Unsupported AGI runtime checkpoint schema")
+        source = self._source(value)
+        guest = value["guest"]
+        try:
+            if guest.get("status") not in ("ready", "running", "budget", "return", "pending", "fault", "quit"):
+                raise ValueError("Invalid checkpoint status")
+            _uint(guest.get("logic"), 255, "checkpoint LOGIC")
+            if guest["logic"] != source["logic_id"]:
+                raise ValueError("Checkpoint LOGIC differs from its source")
+            _uint(guest.get("pc"), 65536, "checkpoint PC")
+            for name in ("retired", "scene_revision", "presentation_revision", "cycle_count", "clock_ticks", "ticks"):
+                _uint(guest.get(name), _UINT64, "checkpoint " + name)
+            for name in ("cycle_active", "input_enabled"):
+                _uint(guest.get(name), 1, "checkpoint " + name)
+            _uint(guest.get("cycle_delay"), 255, "checkpoint cycle delay")
+            if guest.get("state_encoding") != "agi-runtime-native-abi-1" \
+                    or type(guest.get("state_bytes_sha256")) is not str \
+                    or re.fullmatch("[0-9a-f]{64}", guest["state_bytes_sha256"]) is None:
+                raise ValueError("Checkpoint lacks its architectural identity")
+            _uint(guest.get("state_bytes_size"), MAX_SNAPSHOT_BYTES, "checkpoint state size", 1)
+            if "fault" not in guest or "pending_effect" not in guest:
+                raise ValueError("Checkpoint omits its stopped fault/request state")
+            fault = guest["fault"]
+            if fault is not None:
+                if type(fault) is not dict or set(fault) != {"code", "name", "detail", "logic", "pc"}:
+                    raise ValueError("Invalid checkpoint fault")
+                _uint(fault["code"], 2**32 - 1, "checkpoint fault code", 1)
+                _text(fault["name"], 64, "checkpoint fault name")
+                _uint(fault["detail"], 2**32 - 1, "checkpoint fault detail")
+                _uint(fault["logic"], 255, "checkpoint fault LOGIC")
+                _uint(fault["pc"], 65536, "checkpoint fault PC")
+            pending = guest["pending_effect"]
+            if guest["status"] == "pending":
+                self._effect(pending, source, guest)
+            elif pending is not None:
+                raise ValueError("Checkpoint request is present outside pending status")
+            observation = value.get("observation")
+            if type(observation) is not dict or type(observation.get("per_channel")) is not dict:
+                raise ValueError("Checkpoint lacks observation accounting")
+            _uint(observation.get("mask"), 3, "checkpoint mask")
+            limit = _uint(observation.get("limit"), 65536, "checkpoint event limit")
+            capacity = _uint(observation.get("capacity"), limit, "checkpoint event capacity")
+            _uint(observation.get("count"), capacity, "checkpoint event count")
+            for name in ("eligible", "dropped", "helper_calls", "epoch"):
+                _uint(observation.get(name), _UINT64, "checkpoint " + name)
+            totals = {"stored": 0, "eligible": 0, "dropped": 0}
+            for name in ("disasm", "scene"):
+                channel = observation["per_channel"].get(name)
+                if type(channel) is not dict:
+                    raise ValueError("Checkpoint lacks a channel counter")
+                for field in totals:
+                    totals[field] += _uint(channel.get(field), _UINT64, "checkpoint channel " + field)
+                if channel["eligible"] != channel["stored"] + channel["dropped"]:
+                    raise ValueError("Checkpoint channel accounting differs")
+            if totals != {"stored": observation["count"], "eligible": observation["eligible"], "dropped": observation["dropped"]}:
+                raise ValueError("Checkpoint observation totals differ")
+            if type(value.get("run")) is not dict:
+                raise ValueError("Checkpoint omits run accounting")
+            _uint(value["run"].get("retired"), _UINT64, "checkpoint run retirement")
+        except (ValueError, TypeError, KeyError) as error:
+            raise HarnessError(str(error)) from error
+        return value
+
+    def _owned_checkpoint(self, value, schema=CHECKPOINT_SCHEMA):
+        self._validate_checkpoint(value, schema)
+        value["owner"] = {"context": self.context_id, "binary_sha256": self.binary_sha256}
+        return value
+
+    def checkpoint(self):
+        """Read compact stopped state, loss counters and architectural identity.
+
+        No image, sound, inventory, text, full actor bank or replay slots are
+        transferred. The owner binding allows events(checkpoint=...) to reject
+        cross-child or stale supplied captures. Caller access remains serialized.
+        """
+        return self._owned_checkpoint(self._json_property("agi-runtime-checkpoint-json"))
+
+    def scene_inputs(self):
+        """Read native selected actors and actual order, without composing pixels.
+
+        Order validates current actor state, not resource raster visibility.
+        Background construction still requires a complete SCENE journal; this
+        query never substitutes picture_id or guest replay slots for history.
+        """
+        value = self._owned_checkpoint(self._json_property("agi-runtime-scene-inputs-json"), SCENE_INPUTS_SCHEMA)
+        scene = value.get("scene")
+        try:
+            if type(scene) is not dict or set(scene) != {"width", "height", "picture_shown", "background_evidence_required", "order_validation", "draw_order", "actors"} \
+                    or scene["width"] != 160 or scene["height"] != 168 \
+                    or scene["background_evidence_required"] != "complete_scene_journal" \
+                    or scene["order_validation"] != "current_actor_state":
+                raise ValueError("Unsupported native scene-input contract")
+            _uint(scene["picture_shown"], 1, "picture shown")
+            actors, order = scene["actors"], scene["draw_order"]
+            if type(actors) is not list or type(order) is not list or len(actors) > 256 or len(order) != len(actors):
+                raise ValueError("Invalid native actor/order extent")
+            ids = []
+            for actor in actors:
+                if type(actor) is not dict or set(actor) != {"id", "view", "loop", "cel", "x", "y", "priority", "width", "height", "drawn", "view_sha256"} \
+                        or actor["drawn"] is not True:
+                    raise ValueError("Invalid selected scene actor")
+                for name in ("id", "view", "loop", "cel"):
+                    _uint(actor[name], 255, "scene actor " + name)
+                _uint(actor["priority"], 15, "scene actor priority")
+                _uint(actor["x"], 159, "scene actor x")
+                _uint(actor["y"], 167, "scene actor baseline")
+                _uint(actor["width"], 160, "scene actor width", 1)
+                _uint(actor["height"], 168, "scene actor height", 1)
+                if actor["x"] + actor["width"] > 160 or actor["y"] + 1 < actor["height"]:
+                    raise ValueError("Native scene actor does not fit the canvas")
+                if self._view_hashes.get(actor["view"]) != actor["view_sha256"]:
+                    raise ValueError("Native scene VIEW differs from the immutable package")
+                ids.append(actor["id"])
+            if len(set(ids)) != len(ids) or not _same(ids, order):
+                raise ValueError("Native scene actor order differs from selected actors")
+        except (ValueError, TypeError, KeyError) as error:
+            raise HarnessError(str(error)) from error
+        return value
+
+    def events(self, *, checkpoint=None, allow_dropped=False):
         # The native recorder can retain 65536 events, but the inherited QMP
         # transport has a 32 MiB line bound. Refuse an oversized batch before
         # asking QOM to serialize it; never clear retained evidence implicitly.
-        observation = self.state().get("observation")
+        if type(allow_dropped) is not bool:
+            raise ValueError("allow_dropped must be Boolean")
+        before = None
+        if checkpoint is None:
+            observation = self.state().get("observation")
+        else:
+            before = self.checkpoint()
+            if not _same(checkpoint, before):
+                raise HarnessError("Supplied checkpoint is stale, modified or belongs to another owner")
+            observation = before["observation"]
+            if observation["dropped"] and not allow_dropped:
+                raise HarnessError("Native observation journal dropped records; explicit incomplete inspection is required")
         if type(observation) is not dict or type(observation.get("count")) is not int \
                 or not 0 <= observation["count"] <= MAX_EVENT_CAPACITY:
             raise HarnessError(f"This QMP client reads at most {MAX_EVENT_CAPACITY} retained events")
@@ -227,6 +363,13 @@ class QemuAGIRuntime(QemuAGI):
                 or len(value["events"]) > MAX_EVENT_CAPACITY:
             raise HarnessError("Unsupported AGI runtime events schema")
         self._source(value)
+        if before is not None:
+            if not _same(value.get("source"), before["source"]) \
+                    or value.get("epoch") != before["observation"]["epoch"] \
+                    or not _same(value.get("observation"), before["observation"]) \
+                    or len(value["events"]) != before["observation"]["count"] \
+                    or not _same(before, self.checkpoint()):
+                raise HarnessError("Event journal differs from its coherent stopped checkpoint")
         return value
 
     def configure(self, *, mask=None, capacity=None, step_budget=None):
@@ -335,22 +478,38 @@ class QemuAGIRuntime(QemuAGI):
             raise HarnessError(f"Invalid native presentation: {error}") from error
         return value
 
-    def _command(self, command):
+    @staticmethod
+    def _capture_mode(capture):
+        if capture is not None and (type(capture) is not str or capture not in ("state", "checkpoint")):
+            raise ValueError("capture must be 'state', 'checkpoint' or None")
+        return capture
+
+    def _capture_result(self, capture):
+        return self.state() if capture == "state" else self.checkpoint() if capture == "checkpoint" else None
+
+    def _command(self, command, *, capture="state"):
+        self._capture_mode(capture)
         self.set("agi-runtime-command", json.dumps(command, ensure_ascii=False,
                                                   separators=(",", ":"), allow_nan=False))
-        return self.state()
+        return self._capture_result(capture)
 
-    def cycle(self):
+    def run(self, *, step_budget=None, capture="state"):
+        """Run through the shared bounded stop machinery, then select readout."""
+        self._capture_mode(capture)
+        self._run_stopped(step_budget=step_budget)
+        return self._capture_result(capture)
+
+    def cycle(self, *, capture="state"):
         """Request the next native cycle; no implicit tick or run is performed."""
-        return self._command({"action": "cycle"})
+        return self._command({"action": "cycle"}, capture=capture)
 
     def tick(self, ticks=1):
         """Explicit manual world steps; normal cycle pacing uses clock()."""
         return self._command({"action": "tick", "ticks": _uint(ticks, 4096, "ticks", 1)})
 
-    def clock(self, ticks=1):
+    def clock(self, ticks=1, *, capture="state"):
         """Advance the20Hz system timer and60Hz sound without moving actors."""
-        return self._command({"action": "clock", "ticks": _uint(ticks, 4096, "clock ticks", 1)})
+        return self._command({"action": "clock", "ticks": _uint(ticks, 4096, "clock ticks", 1)}, capture=capture)
 
     def sound_device(self, device):
         """Choose explicit PC speaker0 or four-channel Tandy1 before execution."""
