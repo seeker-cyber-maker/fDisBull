@@ -57,17 +57,16 @@ adds these fields to instrumented format 3, including separate completed and
 partial pixels and the actual armed expiry. It restores logical state with a
 fresh source token and epoch. The current source fence is still never serialized.
 
-Existing renderer timelines retain full process checkpoints and renderer PNGs.
-They cannot supply an immediate restored source-raster receipt or restore the
-source stream's future sampling phase. A source-backed timeline needs
-host history admission/readback in addition to the new native checkpoint
-contract and its separate qualification. Cached renderer pixels must not be
-relabeled as a restored source stream.
+The [source-raster timeline](DOS_QEMU_MIGRATION.md#source-raster-timeline-replay)
+adds explicit host admission, PNG provenance, rewind readback and branching.
+The ordinary renderer profile and its artifacts remain available. The source
+profile requires a retained completed raster and stores its checkpoint with the
+partial next raster and timer phase. A rewind verifies the source pixels and
+logical phase under fresh stream ownership before admitting the cursor. Held
+frame keys use checkpoint restore without reinjection.
 
-Keep the retained artifact's historical identity separate from any new current
-owner identity. A bounded acceptance increment should prove immediate restored
-pixels, a partially sampled raster's future completion, and held-key ownership
-without reinjection before connecting broader timeline operations.
+The paired dynamic-phase campaign, wider input profiles and game-level
+timeline qualification remain open.
 
 ## Sampling remains profile-specific
 

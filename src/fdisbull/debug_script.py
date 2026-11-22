@@ -354,7 +354,13 @@ def validate_script(script, *, session=None):
                                     raise ValueError('Native frame key input requires its ownership extension')
                             if session is not None and op in ('frame-advance','timeline-start',
                                     'timeline-advance','timeline-rewind','timeline-pin'):
-                                if not source_step and not getattr(session,'capabilities',{}).get('frame_timeline'):
+                                capabilities = getattr(session,'capabilities',{})
+                                source_timeline = _source_timeline_step(op, params, backend or actual)
+                                if (op == 'timeline-start' and params.get('frame_source') == 'source-raster'
+                                        and not capabilities.get('source_raster_timeline')):
+                                    raise ValueError('Source raster timeline requires native source stepping and checkpoints')
+                                if (not source_step and not capabilities.get('frame_timeline')
+                                        and not (source_timeline and capabilities.get('source_raster_timeline'))):
                                     raise ValueError('Native frame histories require the renderer-frame fence and full checkpoints')
                                 if session.project.db.in_transaction:
                                     raise ValueError('Native frame histories require a project outside a caller-owned transaction')
@@ -385,6 +391,11 @@ def validate_script(script, *, session=None):
                                 from .external_files import _file_name
                                 _file_name(params['name'])
                         if op=='timeline-start':
+                            source = params.get('frame_source')
+                            if source not in (None, 'renderer', 'source-raster'):
+                                raise ValueError('frame_source must be renderer or source-raster')
+                            if source == 'source-raster' and params.get('period_ns',16666667) != 16666667:
+                                raise ValueError('Source raster timing uses the native stream period')
                             validate_storage(params.get('storage_mode','full'), params.get('keyframe_interval',8), allow_references=True)
                             sizes=[params.get('max_state_bytes',(128 if native_frames else 8)*1024**2),
                                    params.get('max_image_bytes',2*1024**2),
@@ -703,6 +714,15 @@ def _suppress_automatic_keeps(function):
     return invoke
 
 
+def _source_timeline_step(op, params, backend):
+    if backend != 'qemu-dos' or not op.startswith('timeline-'):
+        return False
+    if op != 'timeline-start':
+        return True
+    return (params.get('frame_source') == 'source-raster'
+            or 'timeline' in params and params.get('frame_source') is None)
+
+
 @rpc_budget
 @_suppress_automatic_keeps
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
@@ -738,8 +758,11 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         in ('qemu-machine','qemu-dos') and bool(getattr(session,'capabilities',{}).get('frame_step')))
     capabilities = (getattr(session,'capabilities',{}) if native_frames or source_steps else
                     getattr(getattr(session,'rpc',None),'capabilities',{}))
+    backend = getattr(session,'metadata',{}).get('backend')
     if any(step['op'] in frame_operations and not (native_frames and step['op']=='frame-inputs')
-            and not (source_steps and step['op']=='frame-advance') for step in steps):
+            and not (source_steps and step['op']=='frame-advance')
+            and not (isinstance(capabilities,dict) and capabilities.get('source_raster_timeline')
+                     and _source_timeline_step(step['op'],step,backend)) for step in steps):
         if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
             raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
@@ -769,7 +792,9 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         return normalized
     frame_owned_before = None
     native_key_tracking = native_frames and bool(capabilities.get('frame_key_ownership'))
-    track_restored_input = ((not native_frames or native_key_tracking) and isinstance(capabilities,dict) and capabilities.get('frame_timeline')
+    timeline_input = isinstance(capabilities,dict) and (
+        capabilities.get('frame_timeline') or capabilities.get('source_raster_timeline'))
+    track_restored_input = ((not native_frames or native_key_tracking) and timeline_input
                            and any(step['op'] in restore_operations for step in steps))
     track_native_edges = native_key_tracking and any(step['op'] in ('frame-inputs','timeline-advance') for step in steps)
     if track_restored_input or track_native_edges:

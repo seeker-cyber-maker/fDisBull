@@ -341,7 +341,9 @@ _CALLBACKS = (
     '_frame_capture_delta', '_history_checkpoint', '_frame_image',
     '_history_validate_node_before_restore', '_timeline_frame_keys',
     '_history_remaining_ms', '_run_with_hooks', 'display_observe',
-    'capture_display', 'registers', '_frame_state_bytes')
+    'capture_display', 'registers', '_frame_state_bytes',
+    '_frame_capture_source', 'video_frame_observe', 'video_frame_advance',
+    'capture_video_frame', '_history_state_artifact', '_history_identity')
 
 
 class FrameInputOwner:

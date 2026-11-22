@@ -4,6 +4,7 @@ import hashlib
 import json
 
 from . import frame_state_codec as codec
+from .qemu_source_timeline import SOURCE_RASTER
 from .qemu_dos_history import MAX_NODES, MAX_STATE
 
 FORMAT = 'fdisbull-qemu-renderer-history-2'
@@ -108,8 +109,10 @@ def validate_manifest(manifest):
                     or storage['depth'] != desc['depth'] or desc.get('payload_sha256') != storage['payload_sha256']):
                 raise ValueError('Renderer delta parent identity or depth differs')
         frame = node.get('frame')
+        kind = (SOURCE_RASTER if config.get('frame_source') == SOURCE_RASTER else
+                'initial-paused' if node.get('parent') is None else 'renderer-update')
         if (not isinstance(frame,dict) or frame.get('completed_guest_frame') is not None
-                or frame.get('kind') != ('initial-paused' if node.get('parent') is None else 'renderer-update')):
+                or frame.get('kind') != kind):
             raise ValueError('Invalid renderer publication scope')
         if frame['kind'] == 'renderer-update' and (
                 not _integer(frame.get('width'),1,8192) or not _integer(frame.get('height'),1,8192)

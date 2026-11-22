@@ -490,6 +490,43 @@ guards and task-private IRQ/layer/hook preservation. The dated handoff and
 !117 record the exact final source and verification receipt. The formal
 migration gate remains open and DOSBox-X stays default and retained.
 
+### Source-raster timeline replay
+
+On a native `qemu-dos` session with explicit virtual-clock and precise-retrace
+profiles, first start a source stream and advance it to a retained raster.
+Use `frame_source="source-raster"` to record the stopped source raster and
+its complete format-3 checkpoint. The renderer timeline remains the default.
+
+```python
+debug.video_frame_start()
+first = debug.video_frame_advance()
+if not first["advance_completed"]:
+    raise RuntimeError(first["outcome"])
+root = debug.timeline_start(frame_source="source-raster", storage_mode="delta")
+original = debug.timeline_advance(frames=1)
+restored = debug.timeline_rewind(timeline=original["timeline"], point=root["point"])
+raster = restored["restore"]["frame_readback"]
+replayed = debug.timeline_advance(frames=1)
+```
+
+Each child requires a consumed native source fence and an ordinary safe stop.
+An earlier hook, breakpoint or lifecycle stop retains its evidence without
+adding a point. Optional scheduled key edges use the existing frame-key
+owner. Rewind restores saved held keys without injecting makes. It verifies
+the stopped phase and RGB bytes through the restored owner before publishing
+the cursor. `frame_readback.historical` identifies the former stream and
+`frame_readback.live` identifies its fresh replacement. The checkpoint carries
+the in-progress raster and timer state for continuation. `timeline_image` reads
+the historical PNG with its source identity. Advancement from a restored point
+creates a new branch and takes any new input edges explicitly.
+
+The source profile supports full and delta checkpoint retention. It uses the
+native stream's sampling period, including when the root has partially sampled
+the next raster. JSON and saved scripts pass the same `frame_source` option to
+`debug-timeline-start` and `timeline-start`. A completed raster identifies a
+QEMU VGA source sample at its declared phase. Application drawing completion,
+input consumption and DOSBox-X phase equivalence remain open.
+
 ### Lossless checkpoint delta retention
 
 Select `storage_mode="delta"` and a `keyframe_interval` in 1..128 to retain

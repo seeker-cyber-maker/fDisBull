@@ -366,7 +366,7 @@ def _archive(machine, bundle):
     return output.getvalue()
 
 
-def _unarchive(data):
+def _unarchive(data, *, metadata_only=False):
     if len(data) > MAX_STATE:
         raise ValueError('Process checkpoint exceeds its byte budget')
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -376,7 +376,7 @@ def _unarchive(data):
             raise ValueError('Invalid private DOS checkpoint components')
         if archive.getinfo('process.json').file_size > MAX_SIDECAR:
             raise ValueError('Process checkpoint sidecar exceeds its byte budget')
-        machine = archive.read('machine.qcow2')
+        machine = None if metadata_only else archive.read('machine.qcow2')
         bundle = json.loads(archive.read('process.json'))
     if not isinstance(bundle, dict) or bundle.get('format') not in PROCESS_FORMATS:
         raise ValueError('Unknown DOS process checkpoint format')
@@ -456,6 +456,10 @@ def capture_process_state(session, name='dos-process-checkpoint.qcow2', max_byte
             metadata['instrumentation'] = dict(sha256=instrumentation['sha256'],
                 clock_profile='virtual', audio_profile=session._checkpoint_launch['audio_profile'],
                 retrace_profile=session._checkpoint_launch['retrace_profile'])
+            from .qemu_source_timeline import source_raster_record
+            info = json.loads(instrumentation['state']).get('video-frame', {}).get('info', {})
+            if info.get('state') == 'observing' and info.get('frame'):
+                metadata['source_raster'] = source_raster_record(info)
         return dict(name=name, kind='state', data=data, metadata=metadata,
                     sha256=_sha(data), size=len(data))
     except BaseException as error:
@@ -637,7 +641,12 @@ def load_process_state_data(session, data, metadata, *, source_id, timeout_ms=60
                     'fdisbull-qemu-controls-task-4','fdisbull-qemu-controls-task-5','fdisbull-qemu-controls-task-6')):
             raise ValueError('Native scheduler checkpoint requires its matching versioned control fence')
         instrumentation = bundle.get('instrumentation')
-        validate(session.vm, instrumentation)
+        state = validate(session.vm, instrumentation)
+        if 'source_raster' in metadata:
+            from .qemu_source_timeline import source_raster_record
+            if (state is None or source_raster_record(state.get('video-frame', {}).get('info'))
+                    != metadata['source_raster']):
+                raise ValueError('Process checkpoint source raster differs from its sidecar')
         validate_qcow_header(machine[:104], session.vm.checkpoint_virtual_size)
         remaining()
         new = None

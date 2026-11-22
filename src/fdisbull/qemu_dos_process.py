@@ -402,6 +402,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             self.capabilities['rewind_scope'] = 'persistent stopped full-checkpoint boundaries; private disk, layers, hooks and native task/IRQ state'
             self.capabilities['frame_timeline'] = bool(self.capabilities['rewind']
                 and self.capabilities['renderer_capture'] and FRAME_COMMANDS <= vm.qmp_commands)
+            from .qemu_source_timeline import source_timeline_capable
+            self.capabilities['source_raster_timeline'] = source_timeline_capable(self)
             self.capabilities['frame_timeline_unit'] = 'completed synchronous renderer publication followed by a safe CPU stop'
             self.capabilities['frame_timeline_storage'] = ['full','delta'] if self.capabilities['frame_timeline'] else []
             self.capabilities['frame_timeline_capture'] = 'complete native checkpoint at every point; delta mode changes retained storage only'

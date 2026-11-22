@@ -13,6 +13,7 @@ from functools import wraps
 import hashlib
 import inspect
 import json
+import sys
 import time
 import uuid
 
@@ -35,6 +36,7 @@ _READ_ONLY = frozenset({
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe', 'mixer_observe',
     'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status', 'controls',
+    'video_frame_observe', 'video_frame_rgba', 'capture_video_frame',
     'workspace_status', 'workspace_files', 'workspace_read',
     'workspace_provenance_status',
 })
@@ -120,14 +122,16 @@ def _history_operation(function):
                 raise error
             return result
         finally:
-            self._history_busy = saved['busy']
-            self._rpc_deadline = saved['rpc_deadline']
-            self._deadline = saved['session_deadline']
+            new_vm = getattr(self, 'vm', None)
+            foreign = new_vm is not None and getattr(sys.exc_info()[1], 'history_foreign_owner', None) is new_vm
+            if not foreign:
+                self._history_busy = saved['busy']
+                self._rpc_deadline = saved['rpc_deadline']
+                self._deadline = saved['session_deadline']
             vm.operation_deadline = saved['vm_deadline']
             for channel_name, (channel, old) in saved['channels'].items():
                 channel.operation_deadline = old
-            new_vm = getattr(self, 'vm', None)
-            if new_vm is not None and new_vm is not vm:
+            if not foreign and new_vm is not None and new_vm is not vm:
                 new_vm.operation_deadline = saved['vm_deadline']
                 for name in ('qmp', 'gdb'):
                     channel = getattr(new_vm, name, None)
@@ -753,6 +757,8 @@ class QemuDOSHistoryMixin:
         self._history_admission()
         self._history_pending(manifest, target['id'], 'restore')
         pending_manifest, pending_row = self._history_row(self._qemu_history_live['history'])
+        source_point = target.get('frame', {}).get('source_raster') is not None
+        restored_owner = None
         try:
             with self._history_internal():
                 if prepared is None:
@@ -760,16 +766,20 @@ class QemuDOSHistoryMixin:
                                                timeout_ms=self._history_remaining_ms())
                 else:
                     restored = self._history_load_prepared(prepared,timeout_ms=self._history_remaining_ms())
+                restored_owner = self.vm
                 self._history_verify_restored(restored)
                 current = self.registers()
+                if source_point and self.vm is not restored_owner:
+                    raise ValueError('Source timeline restore owner changed during CPU readback')
                 expected = target.get('registers')
                 if not isinstance(expected, dict) or any(current.get(key) != expected.get(key)
                         for key in ('registers', 'general', 'segments', 'instruction_pointer',
                                     'linear_pc', 'flags', 'cpu_mode', 'address_state')):
                     raise ValueError('Restored CPU readback differs from the selected history node')
                 validate_restored = getattr(self, '_history_restore_node_check', None)
-                if validate_restored is not None:
-                    validate_restored(target)
+                readback = validate_restored(target) if validate_restored is not None else None
+                if source_point and self.vm is not restored_owner:
+                    raise ValueError('Source timeline restore owner changed during raster readback')
                 update_manifest = getattr(self, '_history_restore_manifest_updates', None)
                 if update_manifest is not None:
                     update_manifest(target, pending_manifest)
@@ -780,9 +790,15 @@ class QemuDOSHistoryMixin:
                 new, artifact = self._history_new_revision(pending_manifest)
                 return dict(self._history_summary(new, artifact['artifact']),
                     rewound_count=count, target_node=target['id'],
-                    target_checkpoint=deepcopy(target['checkpoint']), restore=restored)
-        except BaseException:
-            # Load implementations close the owner on partial restoration. A
-            # later failure is also uncertain, so never retry or replay it.
-            self.close()
+                    target_checkpoint=deepcopy(target['checkpoint']), restore=restored,
+                    **({'frame_readback': readback} if readback is not None else {}))
+        except BaseException as error:
+            # Load implementations close the owner on partial restoration.
+            # On later uncertainty retire only the expected restored machine.
+            if source_point and restored_owner is not None and self.vm is not restored_owner:
+                error.history_foreign_owner = self.vm
+                if not getattr(restored_owner, 'closed', False):
+                    restored_owner.close()
+            else:
+                self.close()
             raise
