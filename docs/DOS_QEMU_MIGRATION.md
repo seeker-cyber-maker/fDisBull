@@ -628,8 +628,10 @@ ordinary input positively detaches the empty frame owner.
 
 On the pinned CuteMouse 2.1b4 real-mode floppy setup, start and capture a
 mode 13h source raster before calling `observe_int33_mouse` on a stopped
-DOS process. It reports the live guest cursor and programmed bounds beside
-the retained raster. The raster and the cursor may have different capture times.
+DOS process. It reports the live guest cursor, programmed bounds and stored
+press/release counts and positions beside the retained raster. Passive reads
+leave the counts available for guest INT 33h AX=5/6 queries. The raster and
+the cursor may have different capture times.
 
 `mouse_move_int33(x, y, stream=..., frame_id=...)` requires the currently
 retained raster, a neutral input queue and an in-range pixel. Under the
