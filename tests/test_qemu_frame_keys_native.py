@@ -165,6 +165,7 @@ def test_native_timeline_frame_keys_schedule_branch_and_dirty_rewind(tmp_path):
 def test_native_frame_key_cas_capacity_and_external_input_guards(tmp_path):
     import uuid
     from fdisbull.dosbox_rpc import DebuggerError
+    from fdisbull.qemu_frame_key_batch import batch_capability
     from test_qemu_memory_rules_native import _case
     with _case(tmp_path) as (project,debug,_,_,_,_):
         debug.timeline_start(period_ns=20_000_000,timeout_ms=60000)
@@ -176,20 +177,30 @@ def test_native_frame_key_cas_capacity_and_external_input_guards(tmp_path):
                 'token':uuid.uuid4().hex,'expected-generation':native['generation'] + 1,
                 'edges':[dict(key='a',pressed=True)]})
         assert debug.vm.qmp.call('x-fdisbull-query-frame-keys') == native
-        with pytest.raises(ValueError,match='capacity'):
-            debug.frame_inputs([dict(key='shift',pressed=True),dict(key='a',pressed=True),
-                                dict(key='b',pressed=True)])
-        assert debug.vm.qmp.call('x-fdisbull-query-frame-keys') == native
-        debug.frame_inputs(MAKE)
+        chord = [dict(key='shift',pressed=True),dict(key='a',pressed=True),
+                 dict(key='b',pressed=True)]
+        batched = batch_capability(debug.vm)
+        if not batched:
+            with pytest.raises(ValueError,match='capacity'):
+                debug.frame_inputs(chord)
+            assert debug.vm.qmp.call('x-fdisbull-query-frame-keys') == native
+        accepted = debug.frame_inputs(chord if batched else MAKE)
+        if batched:
+            assert accepted['held'] == ['a','b','shift']
+            assert accepted['batch']['accepted_edges'] == 3
+            assert accepted['batch']['encoded_bytes'] == 3
         held = debug.keyboard_state()['keyboard']['native']
+        assert held == accepted['native']
+        assert held['generation'] == native['generation'] + 1
+        assert held['accepted-edges'] == native['accepted-edges'] + (3 if batched else 2)
         assert held['edge-capacity'] == 0
         with pytest.raises(ValueError): debug.frame_inputs([dict(key='a',pressed=True)])
         with pytest.raises(ValueError,match='frame|owned|keyboard'):
-            debug.keyboard_key_down('b')
+            debug.keyboard_key_down('c')
         with pytest.raises(DebuggerError):
             debug.vm.qmp.call('x-fdisbull-apply-frame-key-edges',{
                 'token':uuid.uuid4().hex,'expected-generation':held['generation'],
-                'edges':[dict(key='b',pressed=True)]})
+                'edges':[dict(key='c',pressed=True)]})
         assert debug.keyboard_state()['keyboard']['native'] == held
         assert (debug.registers()['registers'],debug.clock_observe()['virtual_ns']) == before
 
