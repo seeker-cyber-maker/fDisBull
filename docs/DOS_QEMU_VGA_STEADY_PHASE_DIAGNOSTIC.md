@@ -160,6 +160,17 @@ and cold restore across the initial-to-steady transition. Default-off
 uses the existing native model and format 4.
 [Source recipe and receipt hashes](../native/qemu-video-mode13-phase/README.md)
 
+The local paired warm-raster fixture also ran with the production
+`dosbox-mode13` host profile and the installed DOSBox-X. Both quiet and
+both pulse RGB pairs matched byte for byte. Pulse 3 independently
+selected phase 1 and rejected phase 0 on both engines. Pulse 4 remained
+timing-ambiguous because the phase-0 row 101 interval overlaps a DAC-write
+window. After the QEMU comparison, public format-5 save and load reproduced
+the retained phase-1 rows and pending deadline with fresh ownership.
+Both original owners reaped and the pinned inputs rehashed unchanged.
+Private paired receipt SHA-256
+`e9e257369ae72d7843b37e9fd1328c91672a0e1d442c43a527472684cdf47d41`.
+
 ## Remaining qualification
 
 - Obtain independent DOSBox-X timing clearances for both pulse trials.
