@@ -420,6 +420,112 @@ def test_original_tic_tac_toe_complete_round_cold_restore_replay_reset_and_exit_
     assert dosbox['source_sha256'] == qemu['source_sha256'] == _ATTT_SHA256
 
 
+@pytest.mark.parametrize('backend', ('dosbox', 'qemu-dos'))
+def test_original_tic_tac_toe_guest_instruction_checkpoint_preserves_cold_text(tmp_path, request, backend):
+    """Use ATTT's own instruction boundary before its blocking DOS read."""
+    qemu = backend == 'qemu-dos'
+    selector = 'FDISBULL_QEMU_IMG' if qemu else 'FDISBULL_DOSBOX'
+    executable = os.environ.get(selector)
+    if not executable:
+        message = 'Guest-instruction checkpoint requires ' + selector
+        if os.environ.get('FDISBULL_REQUIRE_QEMU_DOS_OS') == '1':
+            pytest.fail(message)
+        pytest.skip(message)
+    game = tmp_path / 'game'
+    game.mkdir()
+    runtime = request.getfixturevalue('game_runtime') if qemu else None
+
+    def launch(project):
+        if qemu:
+            return _launch_qemu(project, game, runtime, checkpoint_tool=executable)
+        return project.debugger(executable, game, backend='dosbox')
+
+    source = _ATTT.read_bytes()
+    assert hashlib.sha256(source).hexdigest() == _ATTT_SHA256
+    # MOV AX,080Ch / INT 21h. Saving before entering this call avoids its
+    # nested host callback. The earlier paired callback test remains separate.
+    input_setup_ip = 0x723
+    offset = input_setup_ip - 0x100
+    assert source[offset:offset + 5] == bytes.fromhex('b80c08cd21')
+    program = game / _ATTT.name
+    program.write_bytes(source)
+    database = tmp_path / 'guest-stop.fdb'
+
+    def owner(debug):
+        return debug.vm.process if qemu else debug.rpc.process
+
+    def observe_text(debug, label):
+        return _text_screen(debug, qemu=qemu, diagnostic_dir=tmp_path, label=label)
+
+    with Project.create(database, program, image='com') as project:
+        project.analyze(max_instructions=4096)
+        with launch(project) as debug:
+            if qemu:
+                assert debug.clock_advance(750_000_000, timeout_ms=5000)['clock_budget']['deadline_reached']
+            else:
+                assert debug.run(timeout_ms=5000, guest_ms=750, fast_forward=True)['outcome'] == 'guest_time'
+            for key in ('q', '4', 'w'):
+                _play_one_move(debug, key, qemu=qemu)
+            if qemu:
+                origin = _number(debug.dos_process_info()['source_mapping']['runtime_base'])
+                point = debug.breakpoint(origin + offset)
+            else:
+                address = dict(space='segmented', segment=f'0x{debug.runtime_load:04x}',
+                               offset=f'0x{input_setup_ip:08x}')
+                point = debug.call('breakpoints.create', dict(kind='execution', once=True, address=address))
+            assert debug.keyboard_press('5', hold_ms=1, gap_ms=1)
+            if qemu:
+                stopped = debug.clock_advance(750_000_000, timeout_ms=5000)
+                assert stopped['outcome'] == 'breakpoint'
+                assert point['breakpoint_id'] in stopped['session']['stop_reason']['breakpoint_ids']
+                assert stopped['input_delivery']['state'] == 'dispatched'
+                assert _number(debug.registers()['linear_pc']) == origin + offset
+                keyboard = debug.keyboard_state()
+                assert keyboard['pending_edges'] == 0 and not keyboard['leases']
+                assert keyboard['keyboard']['native']['held'] == []
+                debug.delete_breakpoint(point['breakpoint_id'])
+            else:
+                stopped = debug.run(timeout_ms=5000, guest_ms=750, fast_forward=True)
+                assert stopped['outcome'] == 'breakpoint' and not stopped['timed_out']
+                assert stopped['session']['stop_reason']['breakpoint_id'] == point['breakpoint_id']
+                registers = debug.registers()
+                assert int(registers['segments']['cs'], 16) == debug.runtime_load
+                assert int(registers['instruction_pointer'], 16) == input_setup_ip
+                keyboard = debug.keyboard_state()['keyboard']
+                assert keyboard['pending_events'] == keyboard['owned_keys'] == 0
+            midpoint = _round_state(debug, qemu=qemu)
+            assert midpoint == dict(board='xx oo    ', player=1, winner=0, starts=1, wins=[0, 0], turns=4)
+            text_before = observe_text(debug, 'guest-stop-saved')
+            saved = debug.save_state(name='guest-stop.qcow2' if qemu else 'guest-stop.sav')
+            original_owner = owner(debug)
+        assert original_owner.poll() == 0
+
+    with Project(database) as project:
+        assert project.debug_state_info(saved['artifact'])['sha256'] == saved['sha256']
+        with launch(project) as debug:
+            fresh_owner = owner(debug)
+            assert fresh_owner is not original_owner
+            restored = debug.load_state(saved['artifact'])
+            assert restored['sha256'] == saved['sha256']
+            if qemu:
+                assert restored['source_binding_restored'] and fresh_owner.poll() == 0
+                assert _number(debug.registers()['linear_pc']) == origin + offset
+            else:
+                assert int(restored['registers']['instruction_pointer'], 16) == input_setup_ip
+            assert _round_state(debug, qemu=qemu) == midpoint
+            assert observe_text(debug, 'guest-stop-loaded') == text_before
+            _play_one_move(debug, 'e', qemu=qemu)
+            winning = _round_state(debug, qemu=qemu)
+            assert winning == dict(board='xxxoo    ', player=1, winner=1, starts=1, wins=[1, 0], turns=5)
+            assert 'WINS' in observe_text(debug, 'guest-stop-won')
+            _stored_frame(project, debug, tmp_path, 'guest-stop-won')
+            with Image.open(tmp_path / 'guest-stop-won-warm.png') as frame:
+                assert frame.convert('RGB').getbbox() is not None
+            resumed_owner = owner(debug)
+        assert resumed_owner.poll() == 0
+    assert program.read_bytes() == source == _ATTT.read_bytes()
+
+
 def _fresh_complete_round(root, runtime, *, qemu):
     """A separate fresh-game gate; no state save/load or recovery is performed."""
     root.mkdir()

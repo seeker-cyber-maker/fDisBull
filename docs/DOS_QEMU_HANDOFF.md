@@ -6694,6 +6694,26 @@ cause. Separately, a strict paired ATTT cold-restore comparison on the older
 correct while the image is black in mode 0 / 40 columns. Its strict oracle is
 retained; the passing fresh paired round is a different workflow.
 
+The installed DOSBox-X producer `df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e`
+also reproduces this callback-checkpoint failure when loaded directly through
+native `state.load` and resumed without input. The saved and immediately
+restored BDA, text VRAM and CPU match at mode 3 / 80 columns. The saved `IRET`
+at `F000:D186` returns to `F000:DAF2`, where the DOSBox-generated `INT 28h`
+thunk calls its native `STOP` handler. The cold instruction trace then repeats
+the `IRET` and fetches at `B221:CD52`. DOSBox-X's nested `CALLBACK_RunRealInt`
+keeps its caller's return CS and IP in C++ locals. The destination process
+lacks that live callback continuation. A separate video breakpoint observes
+`INT 10h` with `AX=0000` before the BDA changes to mode 0 / 40 columns.
+
+The separate `test_original_tic_tac_toe_guest_instruction_checkpoint_preserves_cold_text`
+control saves at ATTT's own `CS:0723` immediately before the blocking DOS
+read, with the same four-move board and released input. Fresh DOSBox-X and
+QEMU-DOS processes each restore their saved 80-column text. The next physical
+key produces the win, `WINS` text and a nonblack captured frame on both. For this program, stop before the call to prepare a
+cold save. A general native fix would need to identify and reject unsaved
+callback continuations or represent them in the checkpoint format. The strict
+callback-stop gate and its assertions remain in place.
+
 Next acceptance work is ordinary protected-game startup and observable
 menu-to-gameplay input/display, then public mid-program/cross-session recovery
 and a matched DOSBox-X comparison. Broader legacy scene/frame/mouse,
