@@ -1,5 +1,44 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Stopped unchained source rows and Doom checkpoint replay (2026-11-23)
+
+The explicit stopped VGA row probe reproduced the expected four-plane
+bytes on two authored pages. It retained the CPU and clock and refused
+wrapping storage. The same QEMU executable passed the existing initial and
+steady Mode 13h raster checkpoint regression.
+
+An original Doom E1M5 run compared logical rows 0, 100 and 199 at the
+protected tic 64 stop against the corresponding doubled 640 × 400 renderer
+rows after converting both DAC representations consistently. Each row
+matched. Format 5 checkpoint restore reproduced the exact renderer bytes,
+the programmed source page and the sampled row bytes in the same process
+and in a fresh host process. Both restores then executed the same protected
+instruction to tic 65 and preserved the SB16/OPL capture frontier. Both
+owners were reaped at exit zero, and postflight matched the original input
+and runtime hashes. The private hot and cold receipt digests are
+`dc3e9c255a9c4caad0ead084ce44d609090bcc18d6306fc5910428b648a08b25` and
+`1c314968691846b16ed48f4fbcf7808cd7287e8f0c7f79b123052487d73e05dc`.
+Timed unchained scanout and the display-start latch across page flips
+remain open. [Native probe and source manifest](../native/qemu-vga-unchained-probe/README.md)
+
+The stopped DOSBox-X and QEMU Doom captures at the same source tic 64
+still differ. All 2 × 2 pixel blocks in QEMU's 640 × 400 capture were
+identical within each block, so the comparison used one logical pixel per
+block against DOSBox-X's 320 × 200 capture. After converting QEMU's DAC
+representation, 25,446 of 64,000 logical pixels differed. The bottom 20
+rows matched exactly. This comparison matches the protected CPU landmark
+while leaving renderer phase independent. Comparison receipt SHA-256
+`21f239a1234122535c350956623c538193bbcf16e76c7cce30a313d34b460fd9`.
+
+## Paired BIOS text and held Shift (2026-11-23)
+
+The same 118-byte COM observed `aA1! ?~z` through BIOS INT 16h on both
+backends, with identical ASCII and scan codes. A subsequent BIOS read
+observed Left Shift held during bounded execution and cleared after
+explicit release. Each program returned DOS code 42 and both owners
+were reaped. The paired receipt SHA-256 is
+`263a2570b5fa13b2efdf3bc65175c359147be9e0c390474dd4e69a9c0ca38f7b`.
+
 ## Local installed fallback rehearsal (2026-11-23)
 
 A fresh offline wheel at `751c1c8413ec85f617d9f1b4666740eb316396eb`

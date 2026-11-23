@@ -5,8 +5,8 @@
   "base_host_commit": "30b098cdd74d60ddbf40b1403f5359cbba525038",
   "composition": "Apply after native/qemu-video-mode13-phase with every preimage verified.",
   "patch": "qemu-10.0.13-fdisbull-vga-unchained-probe.patch",
-  "patch_bytes": 12204,
-  "patch_sha256": "0c2f5efdfacf59391e2214293f830462a4ea823d7f4473d401eff792438b6c29",
+  "patch_bytes": 12197,
+  "patch_sha256": "859fdcaa7d62d773e6e5aa5e844b4aac87e1e1a344711200e0c5e3f2cf7b7c93",
   "scope": "Explicit stopped 320x200 unchained source read only.",
   "files": [
     {

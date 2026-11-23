@@ -4,7 +4,7 @@ diff --git a/hw/display/fdisbull-raster.h b/hw/display/fdisbull-raster.h
 @@ -48,6 +48,40 @@
      return NULL;
  }
- 
+
 +/* Timed renderers use a separate contract. This only admits a stopped
 + * nonwrapping 320x200 256-color source page in standard VGA storage. */
 +static inline const char *
@@ -56,7 +56,7 @@ diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
 @@ -226,6 +227,28 @@
      return true;
  }
- 
+
 +FdisbullUnchainedVideoProbe *pci_std_vga_fdisbull_probe_unchained_rows(
 +    Object *obj, uint64_t epoch, int64_t virtual_ns, const uint8_t *rows, unsigned count,
 +    Error **errp)
@@ -96,7 +96,7 @@ diff --git a/hw/display/vga.c b/hw/display/vga.c
 @@ -2124,6 +2125,83 @@
      return true;
  }
- 
+
 +FdisbullUnchainedVideoProbe *vga_fdisbull_probe_unchained_rows(
 +    VGACommonState *s, int64_t virtual_ns, const uint8_t *rows, unsigned count, Error **errp)
 +{
@@ -182,7 +182,7 @@ diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
 +++ b/hw/display/vga_int.h
 @@ -231,6 +231,10 @@
                                                     Error **errp);
- 
+
  struct FdisbullVideoFrameSource;
 +struct FdisbullUnchainedVideoProbe;
 +struct FdisbullUnchainedVideoProbe *vga_fdisbull_probe_unchained_rows(
@@ -197,7 +197,7 @@ diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
 @@ -50,6 +50,11 @@
  bool pci_std_vga_fdisbull_mode13_restore(Object *obj,
                         const struct FdisbullVideoSetupStamp *setup, Error **errp);
- 
+
 +struct FdisbullUnchainedVideoProbe;
 +struct FdisbullUnchainedVideoProbe *pci_std_vga_fdisbull_probe_unchained_rows(
 +    Object *obj, uint64_t epoch, int64_t virtual_ns, const uint8_t *rows, unsigned count,
@@ -211,7 +211,7 @@ diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
 +++ b/qapi/fdisbull-video-frame.json
 @@ -217,6 +217,54 @@
    'returns': 'FdisbullVideoFrameInfo' }
- 
+
  ##
 +# @FdisbullUnchainedVideoRow:
 +#
@@ -270,7 +270,7 @@ diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
 @@ -703,6 +703,40 @@
      return video_info(clock);
  }
- 
+
 +FdisbullUnchainedVideoProbe *qmp_x_fdisbull_probe_unchained_vga_rows(
 +    uint8List *rows, Error **errp)
 +{
