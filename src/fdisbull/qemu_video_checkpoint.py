@@ -29,10 +29,13 @@ VGA480_PAN_PROFILE = 'vga-640x480-pan'
 VGA480_PAN_MODEL = 'qemu-vga-640x480-pan-v1'
 VGA480_XY_PROFILE = 'vga-640x480-xy'
 VGA480_XY_MODEL = 'qemu-vga-640x480-xy-v1'
+VGA480_PALETTE_PROFILE = 'vga-640x480-palette'
+VGA480_PALETTE_MODEL = 'qemu-vga-640x480-palette-v1'
 VBE101_FLIP_ROM = 'fdisbull-vgabios-vbe101-flip.bin'
 VBE101_XY_ROM = 'fdisbull-vgabios-vbe101-xy.bin'
-VBE101_PAN_MODELS = (VGA480_PAN_MODEL, VGA480_XY_MODEL)
-VBE101_PAN_PROFILES = (VGA480_PAN_PROFILE, VGA480_XY_PROFILE)
+VBE101_PALETTE_ROM = 'fdisbull-vgabios-vbe101-palette.bin'
+VBE101_PAN_MODELS = (VGA480_PAN_MODEL, VGA480_XY_MODEL, VGA480_PALETTE_MODEL)
+VBE101_PAN_PROFILES = (VGA480_PAN_PROFILE, VGA480_XY_PROFILE, VGA480_PALETTE_PROFILE)
 VBE101_ORIGIN_FIELD = 'vbe101-origin-bytes'
 VBE101_PITCH_FIELD = 'vbe101-pitch-bytes'
 VBE101_PEL_FIELD = 'vbe101-pel'
@@ -48,6 +51,7 @@ VIDEO_SOURCE_PROFILES = {
     VGA480_FLIP_PROFILE: (VGA480_FLIP_MODEL, 'VGA.x-fdisbull-vbe101-flip=on'),
     VGA480_PAN_PROFILE: (VGA480_PAN_MODEL, 'VGA.x-fdisbull-vbe101-pan=on'),
     VGA480_XY_PROFILE: (VGA480_XY_MODEL, 'VGA.x-fdisbull-vbe101-xy=on'),
+    VGA480_PALETTE_PROFILE: (VGA480_PALETTE_MODEL, 'VGA.x-fdisbull-vbe101-palette=on'),
 }
 MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
 VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, *VGA480_MODELS))
@@ -151,15 +155,19 @@ def valid_vbe101_origin(origin):
     return _integer(origin, maximum=12000 * width) and origin % width == 0
 
 
-def valid_vbe101_pitch(pitch):
-    return _integer(pitch, VGA480_FRAME_SIZE[0], 8184) and pitch % 8 == 0
+def valid_vbe101_pitch(pitch, *, short_pitch=False):
+    minimum = 8 if short_pitch else VGA480_FRAME_SIZE[0]
+    return _integer(pitch, minimum, 8184) and pitch % 8 == 0
 
 
-def valid_vbe101_viewport(origin, pitch, pel, *, programmed=False):
-    if not valid_vbe101_pitch(pitch) or not _integer(origin) or origin % 4 or not _integer(pel, 0, 3):
+def valid_vbe101_viewport(origin, pitch, pel, *, programmed=False, short_pitch=False):
+    if (not valid_vbe101_pitch(pitch, short_pitch=short_pitch)
+            or not _integer(origin) or origin % 4 or not _integer(pel, 0, 3)):
         return False
     row, x = divmod(origin, pitch)
     width = VGA480_FRAME_SIZE[0]
+    if pitch < width:
+        return row <= 12000 and x == pel == 0
     return row <= 12000 and x + width + (pel if programmed else 0) <= pitch
 
 
@@ -177,7 +185,8 @@ def valid_vbe101_frame_fields(frame, model, layout):
     if tuple(key for key in VBE101_VIEWPORT_FIELDS if key in frame) != expected:
         return False
     if model in VBE101_PAN_MODELS and expected:
-        return valid_vbe101_viewport(*(frame[key] for key in expected))
+        return valid_vbe101_viewport(*(frame[key] for key in expected),
+                                     short_pitch=model == VGA480_PALETTE_MODEL)
     return not expected or valid_vbe101_origin(frame[VBE101_ORIGIN_FIELD])
 
 

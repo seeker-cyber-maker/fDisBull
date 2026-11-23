@@ -13,7 +13,8 @@ import time
 
 from .dosbox_rpc import DebuggerError
 from .qemu_clock import clock_timer_stop_is_ordinary, validate_clock_budget
-from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE, VBE101_PAN_PROFILES,
+from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PALETTE_PROFILE, VGA480_SYNC_PROFILE,
+                                    VBE101_PAN_PROFILES,
                                     valid_vbe101_origin, valid_vbe101_pitch, valid_vbe101_viewport)
 
 
@@ -172,7 +173,7 @@ def _validate_vbe101_latch(state, fields, changed, virtual_ns, timing, line, lab
         raise ValueError(f'Invalid VBE 101h {label} retrace deadline')
 
 
-def _validate_vbe101_display_start(state, virtual_ns, timing, panning=None):
+def _validate_vbe101_display_start(state, virtual_ns, timing, panning=None, *, short_pitch=False):
     fields = {'programmed-origin-bytes', 'active-origin-bytes'}
     if type(state) is not dict or not fields <= state.keys():
         raise ValueError('Invalid native VBE 101h display starts')
@@ -181,18 +182,20 @@ def _validate_vbe101_display_start(state, virtual_ns, timing, panning=None):
         valid = valid_vbe101_origin(programmed) and valid_vbe101_origin(active)
     else:
         pitch = panning['pitch-bytes']
-        valid = (valid_vbe101_viewport(programmed, pitch, panning['programmed-pel'], programmed=True)
-                 and valid_vbe101_viewport(active, pitch, panning['active-pel']))
+        valid = (valid_vbe101_viewport(programmed, pitch, panning['programmed-pel'],
+                                      programmed=True, short_pitch=short_pitch)
+                 and valid_vbe101_viewport(active, pitch, panning['active-pel'],
+                                           short_pitch=short_pitch))
     if not valid:
         raise ValueError('Invalid native VBE 101h display starts')
     _validate_vbe101_latch(state, fields, programmed != active, virtual_ns, timing,
                            'vsync-start-line', 'display start')
 
 
-def _validate_vbe101_panning(state, virtual_ns, timing):
+def _validate_vbe101_panning(state, virtual_ns, timing, *, short_pitch=False):
     fields = {'pitch-bytes', 'programmed-pel', 'active-pel'}
     if (type(state) is not dict or not fields <= state.keys()
-            or not valid_vbe101_pitch(state['pitch-bytes'])
+            or not valid_vbe101_pitch(state['pitch-bytes'], short_pitch=short_pitch)
             or any(not _integer(state[key], 0, 3) for key in ('programmed-pel', 'active-pel'))):
         raise ValueError('Invalid native VBE 101h panning')
     changed = state['programmed-pel'] != state['active-pel']
@@ -242,17 +245,19 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, source
     unsupported = _unsupported(raw, timing)
     vbe101_timing = value.get(VBE101_TIMING_FIELD)
     if VBE101_TIMING_FIELD in value:
+        palette = source_profile == VGA480_PALETTE_PROFILE
+        enable_values = (1, 0x21, 0x81, 0xa1) if palette else (1, 0x81)
         if (not value['phase-supported'] or unsupported != 'vbe-enabled'
-                or raw['vbe-enable'] not in (1, 0x81) or type(vbe101_timing) is not dict
+                or raw['vbe-enable'] not in enable_values or type(vbe101_timing) is not dict
                 or vbe101_timing != _VBE101_TIMING
                 or any(type(item) is not int for item in vbe101_timing.values())):
             invalid('Invalid native VBE 101h retrace timing descriptor')
         if source_profile in (VGA480_FLIP_PROFILE, *VBE101_PAN_PROFILES):
             panning = value.get(VBE101_PANNING_FIELD)
             if source_profile in VBE101_PAN_PROFILES:
-                _validate_vbe101_panning(panning, virtual_ns, vbe101_timing)
+                _validate_vbe101_panning(panning, virtual_ns, vbe101_timing, short_pitch=palette)
             _validate_vbe101_display_start(value[VBE101_DISPLAY_START_FIELD],
-                                           virtual_ns, vbe101_timing, panning)
+                                           virtual_ns, vbe101_timing, panning, short_pitch=palette)
         unsupported = None
     if value['phase-supported'] != (unsupported is None):
         invalid('Native retrace phase eligibility contradicts its timing model')

@@ -1,5 +1,55 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Banked VBE 101h stride, DAC width and timed palette restore (2026-11-23)
+
+The opt-in `vga-640x480-palette` profile extends combined X/Y panning with
+VBE 4F06h logical stride, 4F08h DAC width and 4F09h BGRX palette transfers.
+The new SeaVGABIOS ROM performs timed writes through the VGA DAC ports
+after waiting for a fresh leading retrace edge. Format 13 retains the
+guest BIOS continuation, DAC data and source raster.
+[Native patches and firmware](../native/qemu-video-vbe101-palette/README.md)
+
+At 16 MiB of VRAM, the same authored COM matched DOSBox-X for current
+and maximum stride readback, byte and pixel rounding to 648, a one-byte
+request rounded to eight with 65535 available lines, an oversized request
+capped at 8184, and zero rejected with `024Fh`. Both six- and eight-bit DAC
+transfers matched. Readback preserved the reserved byte and an invalid
+palette range returned `014Fh` before waiting or altering the palette.
+
+All RGB bytes matched in six complete or retained rasters. Timed calls
+started during active scanout and during retrace. Both waited for the
+next leading retrace edge, preserved the preceding raster, and exposed
+the new colors in the first following raster. The paired waits differed
+by 10 and 8 PIT ticks respectively in the integrated run. QEMU hot and
+fresh-process restores reproduced both the BIOS wait with 146 old-color
+rows sampled and the post-transfer cut with 96 new-color rows sampled.
+
+The single local native matrix passed all 28 checks, including timed VGA
+scanout, VBE page flips and both pan profiles, keyboard-repeat checkpoints
+and Mode 13h BIOS reapply. On the same build, the Doom format 6 witness
+matched its protected CPU continuation, 200 raster rows, page origin and
+SB16/OPL sample frontier across forward, hot and fresh-process execution
+from the same save. The private wheel exposed the new profile with
+DOSBox-X still the default. No CI ran.
+
+The broader host selection passed 5603 tests with 680 skips and one
+failure. The failing spatial-policy assertion expects `click` to be absent.
+It reproduced on the prior commit `d5dea097`, whose guarded INT 33h
+coordinate click is already present.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored paired DOS COM | `2cc2c92b0478a8ca2a74462ba6be1a8817e4c3d54615257d1efd3096eb1d9aaf` |
+| QEMU producer | `ac10d27e18a470ee92f4881dbe586e67356d52d27c4ea5e8b08c9e5e56b94136` |
+| QEMU checkpoint tool | `c9877430d943d8046314111739f24bba28b2f2a70861110b6bd2287aca8ce09f` |
+| Alternate SeaVGABIOS ROM | `430d72e7c60cf79f4b5ec5ffcb3efbb97fb14ad55a2e773212fe1027a1fabf10` |
+| DOSBox-X paired reference | `d1c90155c1feeda210cbdb58e4611f15a26f2d6f6595cf430c755a7cb709b4e8` |
+| QEMU format 13 and paired replay | `10f720543bc044cbb23c222ec0743e6a24dc9372cfb1efdb466eacdef5d98a16` |
+| Combined native suite | `3ea2381c62870ae87d2830f899f80201ce8ec1a14e3eaac1ac9c594ceb88a02c` |
+| Broader host suite | `eca23b2d9a50510eae26886963c17093f55dc212c44dad256bf929f7242ed045` |
+| Doom original run and hot restore | `4c7dab132a50eda4f5d4b70628426790b27c60e1bfb2f936b38c0c8b4b136a89` |
+| Doom fresh-process restore | `fd04c7fe1b810c25ebc7eb327d4fab89a703c675b28a209faec7d8323ff7bb6b` |
+
 ## Combined VBE 101h X/Y panning and format 12 restore (2026-11-23)
 
 The opt-in `vga-640x480-xy` profile uses a distinct SeaVGABIOS ROM that

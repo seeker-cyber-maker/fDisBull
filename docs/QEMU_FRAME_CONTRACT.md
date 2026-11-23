@@ -226,6 +226,15 @@ intact. The accepted pair keeps the separate coarse and fine latch times.
 Format 12 checkpoints preserve both latches with the same raster metadata
 used by the panning profile.
 
+Select `vga-640x480-palette` with `fdisbull-vgabios-vbe101-palette.bin`
+to add banked VBE stride queries and setters, six- and eight-bit DAC
+selection, and immediate and retrace-timed palette transfers. Format 13
+restores BIOS execution while a palette transfer waits for a fresh
+retrace edge. It also restores the DAC width, stored palette and partial
+raster after the transfer. A stride or DAC-width change invalidates the
+current stream. Palette data writes leave both the sampled prefix and
+the previous complete frame intact.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
 the selected `video_source_profile`. The script must match the owner's launch
@@ -269,7 +278,7 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, `qemu-vga-640x480-flip-v1`, `qemu-vga-640x480-pan-v1`, and `qemu-vga-640x480-xy-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, `qemu-vga-640x480-flip-v1`, `qemu-vga-640x480-pan-v1`, `qemu-vga-640x480-xy-v1`, and `qemu-vga-640x480-palette-v1` |
 | `scanout_layout` | `vga-mode12` or `vbe-banked-101` for the 640 × 480 source model |
 | `vbe101_origin_bytes` | The coarse byte origin sampled in a completed banked VBE 101h raster under the flip, panning and X/Y profiles |
 | `vbe101_pitch_bytes`, `vbe101_pel` | The backing row pitch and fine horizontal offset sampled under the panning and X/Y profiles. The first pixel uses the coarse origin plus the fine offset |

@@ -1,0 +1,134 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "3e3ec32664c7a0c8d32f98fa95af9b90907b6bdf894d3ce39582be58d7f84ba5",
+  "base_host_commit": "d5dea097212a28f945df96e3087cf6e0b949d974",
+  "composition": "Apply after native/qemu-video-vbe101-xy with every preimage verified.",
+  "scope": "Banked VBE 101h logical stride limits, DAC width and format 13 palette replay.",
+  "patch": "qemu-10.0.13-fdisbull-video-vbe101-palette.patch",
+  "patch_bytes": 20371,
+  "patch_sha256": "6968e27fcf9e0bb87a0d9c66b7b07839b21dc6b735aca2bb7cced0b9429cce08",
+  "files": [
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_bytes": 25406,
+      "base_sha256": "3c383a15cd1ba9670b22675998a24a9a0c2b1845c97db115fab770dbe1b46335",
+      "patched_bytes": 25843,
+      "patched_sha256": "7e3a631dd7cf24781a1f5f516596ac8d27fad800511c35fbd6e1c76d6ff471c1",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_bytes": 138808,
+      "base_sha256": "1ad93b2c4bbe5b0c041acb1e85a3df98d44392b98dc4966d6130dddf7d1c0011",
+      "patched_bytes": 141363,
+      "patched_sha256": "c98ff866cb5a6846bd6420d46fb0438fb3ab33dc4e81a5c03c4e49cf5604555d",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_bytes": 10184,
+      "base_sha256": "356730c5eb83ecf45bc8cc5408af5033603d1ee7fb64f635518b60115c1ebb31",
+      "patched_bytes": 10218,
+      "patched_sha256": "318a459ca2176edc5e0a48621696b21665d0a2267edbe44a2a4865dabef5782c",
+      "mode": "100644"
+    },
+    {
+      "path": "include/hw/display/bochs-vbe.h",
+      "base_bytes": 2738,
+      "base_sha256": "bfea39eefe968573453fd7b4530faf5e63d3a1ae35240b69aa3136b7bf9bbab1",
+      "patched_bytes": 2953,
+      "patched_sha256": "695377e2be6a7ebf608e429e384c837718c47cf17772b07c8a45fe0059a24bf1",
+      "mode": "100644"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_bytes": 2984,
+      "base_sha256": "064a290ee299de94a6e7bb409a61ad66b3cc197d4688207730f2706fea7c4184",
+      "patched_bytes": 3048,
+      "patched_sha256": "a07aeece24adbfe6e076d0f704628ee8e45e516305d9fdb688fee01e014f9324",
+      "mode": "100644"
+    },
+    {
+      "path": "include/system/fdisbull-instrumented-checkpoint.h",
+      "base_bytes": 4332,
+      "base_sha256": "fc868b323d10da22b9f11ab1b4c44a3d8298bee12d0eab09ff8c3b8ed0443226",
+      "patched_bytes": 4439,
+      "patched_sha256": "3dde7f4969da7c6b42d6aa3619397ff53a3b9d6de49f463fac5afe50fc42d8c0",
+      "mode": "100644"
+    },
+    {
+      "path": "include/system/fdisbull-video-frame.h",
+      "base_bytes": 2065,
+      "base_sha256": "6ff85944ddab3429b998d74b7d009f0824db852ecde8723b2fc1502dfb6066f7",
+      "patched_bytes": 2122,
+      "patched_sha256": "8afea130dce8ec59033cdd6ad28aad8928b92aa0b662c3b778b45a840871d612",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-instrumented-checkpoint.c",
+      "base_bytes": 23619,
+      "base_sha256": "bd721e12b199f84036004423dd01d838eda51cff1299d8b8dabd967576f6a12a",
+      "patched_bytes": 24012,
+      "patched_sha256": "994fa5cf50acc45d3db146db0fcd38f05fcb65cec75e51dbd910107cc812b971",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_bytes": 2402,
+      "base_sha256": "73486cd8368274cfa4cc6942e21231f60a344835af3d8189c07f228ffc96c892",
+      "patched_bytes": 2488,
+      "patched_sha256": "fc6924e1968137f898c442a0221bba94d72e1f4ebcbd6f3bc9dbd4882f4dcf14",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-video-frame.c",
+      "base_bytes": 83432,
+      "base_sha256": "63a96df1c21e788ec0f5d79157bd834bd00718e78af8af52b35fef1e0f970b57",
+      "patched_bytes": 84285,
+      "patched_sha256": "7a541c3a7572497c88f96e848b040848e35343cbc3be5187bc2118b918e08e5f",
+      "mode": "100644"
+    }
+  ],
+  "firmware": {
+    "version": "rel-1.16.3-0-ga6ed6b70",
+    "source_path": "roms/seabios",
+    "composition": "Apply after the SeaVGABIOS delta in native/qemu-video-vbe101-xy.",
+    "config_sha256": "ca7367ae57665fa01e0ebb741ba5823d646f4b65a9a87657ea163cc9f362a8a8",
+    "rom_name": "fdisbull-vgabios-vbe101-palette.bin",
+    "tested_rom_bytes": 40448,
+    "tested_rom_sha256": "430d72e7c60cf79f4b5ec5ffcb3efbb97fb14ad55a2e773212fe1027a1fabf10",
+    "tested_compiler": "i686-elf GCC 16.2.0",
+    "tested_binutils": "2.47.20260726",
+    "build_extraversion": "-fdisbull-vbe101-palette",
+    "patch": "seabios-1.16.3-fdisbull-vbe101-palette.patch",
+    "patch_bytes": 4850,
+    "patch_sha256": "3f3f5db557531dae71c06831b0ab17b0896b859e2cfdd3ac73567f88e9d3a356",
+    "files": [
+      {
+        "path": "vgasrc/bochsvga.c",
+        "base_bytes": 12428,
+        "base_sha256": "dcf79070522aac37790afb9608c44212e734dcfab65d3cb34f84a550f54dc634",
+        "patched_bytes": 12913,
+        "patched_sha256": "5b12a1158907d3e5382badde7d141085cf63db05f5feef9d649ea6d390b38092",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/bochsvga.h",
+        "base_bytes": 2375,
+        "base_sha256": "3e70b9b9e080892573842e711898d733a310d49ab9eeded4da8f25eaa7c71682",
+        "patched_bytes": 2506,
+        "patched_sha256": "ae41f07ed762614da4f58b65af370b4875097623090bc6aa0a406527f6e46766",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/vbe.c",
+        "base_bytes": 13726,
+        "base_sha256": "ec2603783bf26828c84d2d96917bda91fb01283d1fcd742f09d6a280b6ef2339",
+        "patched_bytes": 16308,
+        "patched_sha256": "1bb52908a88bd604ebbbbff56bfcad32eb366c0a6ff9fc2b3f61cc5349f9b2eb",
+        "mode": "100644"
+      }
+    ]
+  }
+}

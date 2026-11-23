@@ -1,0 +1,175 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -166,6 +166,29 @@
+
+     outl(pair, FDISBULL_XY_PORT);
+     return inl(FDISBULL_XY_PORT) == pair ? 0 : -1;
++}
++
++#define FDISBULL_PALETTE_INDEX 0xf3
++#define FDISBULL_PALETTE_ID 0xfb03
++#define FDISBULL_MAX_PITCH_INDEX 0xf4
++
++int
++bochsvga_fdisbull_palette_available(void)
++{
++    return (GET_BDA_EXT(vbe_mode) & ~MF_NOCLEARMEM) == 0x101
++        && dispi_read(FDISBULL_PALETTE_INDEX) == FDISBULL_PALETTE_ID;
++}
++
++u16
++bochsvga_fdisbull_max_pitch(void)
++{
++    return dispi_read(FDISBULL_MAX_PITCH_INDEX);
++}
++
++void
++bochsvga_fdisbull_set_pitch(u16 pitch)
++{
++    dispi_write(VBE_DISPI_INDEX_VIRT_WIDTH, pitch);
+ }
+
+ int
+--- a/vgasrc/bochsvga.h
++++ b/vgasrc/bochsvga.h
+@@ -49,6 +49,9 @@
+ int bochsvga_get_displaystart(struct vgamode_s *vmode_g);
+ int bochsvga_fdisbull_xy_available(void);
+ int bochsvga_fdisbull_set_xy(u16 x, u16 y);
++int bochsvga_fdisbull_palette_available(void);
++u16 bochsvga_fdisbull_max_pitch(void);
++void bochsvga_fdisbull_set_pitch(u16 pitch);
+ void bochsvga_wait_fdisbull_displaystart(void);
+ int bochsvga_set_displaystart(struct vgamode_s *vmode_g, int val);
+ int bochsvga_get_dacformat(struct vgamode_s *vmode_g);
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -279,12 +279,55 @@
+ }
+
+ static void
++vbe_104f06_fdisbull(struct bregs *regs, struct vgamode_s *vmode_g)
++{
++    int pitch;
++    switch (regs->bl) {
++    case 0x00:
++    case 0x02: {
++        // Packed 8-bit mode uses the same byte and pixel count.
++        int max_pitch = bochsvga_fdisbull_max_pitch();
++        int requested = ALIGN((int)regs->cx, 8);
++        if (!requested || !max_pitch) {
++            regs->ax = 0x024f;
++            return;
++        }
++        bochsvga_fdisbull_set_pitch(requested > max_pitch ? max_pitch : requested);
++        // Report the pitch actually accepted by the device.
++    }
++    // fall through
++    case 0x01:
++        pitch = vgahw_get_linelength(vmode_g);
++        break;
++    case 0x03:
++        pitch = bochsvga_fdisbull_max_pitch();
++        break;
++    default:
++        regs->ax = 0xff4f;
++        return;
++    }
++    if (pitch <= 0) {
++        regs->ax = 0x024f;
++        return;
++    }
++    regs->bx = pitch;
++    regs->cx = pitch;
++    u32 lines = GET_GLOBAL(VBE_total_memory) / pitch;
++    regs->dx = lines > 0xffff ? 0xffff : lines;
++    regs->ax = 0x004f;
++}
++
++static void
+ vbe_104f06(struct bregs *regs)
+ {
+-    if (regs->bl > 0x02)
+-        goto fail;
+     struct vgamode_s *vmode_g = get_current_mode();
+     if (! vmode_g)
++        goto fail;
++    if (CONFIG_VGA_BOCHS && bochsvga_fdisbull_palette_available()) {
++        vbe_104f06_fdisbull(regs, vmode_g);
++        return;
++    }
++    if (regs->bl > 0x02)
+         goto fail;
+     int bpp = vga_bpp(vmode_g);
+
+@@ -366,7 +409,10 @@
+     if (regs->bl > 1)
+         goto fail;
+     if (regs->bl == 0) {
+-        int ret = vgahw_set_dacformat(vmode_g, regs->bh);
++        int width = regs->bh;
++        if (CONFIG_VGA_BOCHS && bochsvga_fdisbull_palette_available())
++            width = width >= 8 ? 8 : 6;
++        int ret = vgahw_set_dacformat(vmode_g, width);
+         if (ret < 0)
+             goto fail;
+     }
+@@ -374,6 +420,45 @@
+     if (ret < 0)
+         goto fail;
+     regs->bh = ret;
++    regs->ax = 0x004f;
++    return;
++fail:
++    regs->ax = 0x014f;
++}
++
++static void
++vbe_104f09(struct bregs *regs)
++{
++    unsigned first = regs->dx;
++    unsigned count = regs->cx;
++    if (first >= 256 || count > 256 - first)
++        goto fail;
++
++    u16 seg = regs->es;
++    u8 *entry = (void *)(regs->di + 0);
++    switch (regs->bl) {
++    case 0x80:
++        bochsvga_wait_fdisbull_displaystart();
++        // fall through
++    case 0x00:
++        outb(first, VGAREG_DAC_WRITE_ADDRESS);
++        for (; count; count--, entry += 4) {
++            outb(GET_FARVAR(seg, entry[2]), VGAREG_DAC_DATA);
++            outb(GET_FARVAR(seg, entry[1]), VGAREG_DAC_DATA);
++            outb(GET_FARVAR(seg, entry[0]), VGAREG_DAC_DATA);
++        }
++        break;
++    case 0x01:
++        outb(first, VGAREG_DAC_READ_ADDRESS);
++        for (; count; count--, entry += 4) {
++            SET_FARVAR(seg, entry[2], inb(VGAREG_DAC_DATA));
++            SET_FARVAR(seg, entry[1], inb(VGAREG_DAC_DATA));
++            SET_FARVAR(seg, entry[0], inb(VGAREG_DAC_DATA));
++        }
++        break;
++    default:
++        goto fail;
++    }
+     regs->ax = 0x004f;
+     return;
+ fail:
+@@ -460,6 +545,12 @@
+     case 0x06: vbe_104f06(regs); break;
+     case 0x07: vbe_104f07(regs); break;
+     case 0x08: vbe_104f08(regs); break;
++    case 0x09:
++        if (CONFIG_VGA_BOCHS && bochsvga_fdisbull_palette_available())
++            vbe_104f09(regs);
++        else
++            vbe_104fXX(regs);
++        break;
+     case 0x0a: vbe_104f0a(regs); break;
+     case 0x10: vbe_104f10(regs); break;
+     case 0x15: vbe_104f15(regs); break;
