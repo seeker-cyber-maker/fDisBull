@@ -36,7 +36,7 @@ def _source_record_match(saved, current):
 
 def _verify_source_checkpoint(metadata, expected):
     if metadata.get('source_raster') != expected:
-        raise ValueError('Format-3 checkpoint and source raster identity differ')
+        raise ValueError('Native checkpoint and source raster identity differ')
 
 
 def _timeline_start_operation(function):

@@ -495,7 +495,7 @@ migration gate remains open and DOSBox-X stays default and retained.
 On a native `qemu-dos` session with explicit virtual-clock and precise-retrace
 profiles, first start a source stream and advance it to a retained raster.
 Use `frame_source="source-raster"` to record the stopped source raster and
-its complete native checkpoint with source-raster state (format 3 or 4). The renderer timeline remains the default.
+its complete native checkpoint with source-raster state. The renderer timeline remains the default.
 
 ```python
 debug.video_frame_start()
@@ -623,6 +623,24 @@ physical leases, pending input and active schedules still require explicit
 resolution before a checkpoint. Foreign keyboard input invalidates an active
 frame owner; no automatic adoption is allowed. After owned keys are released,
 ordinary input positively detaches the empty frame owner.
+
+### Mode 13h timing through checkpoint restore
+
+On a matching native QEMU build, launch a COM/MZ project with
+`qemu_clock="virtual"`, `qemu_retrace="precise"`, and
+`qemu_video_source_profile="dosbox-mode13"`. The corresponding CLI option
+is `--qemu-video-source-profile dosbox-mode13`. Select the regular
+`qemu_checkpoint_tool` to save and restore. The source stream requires an
+observed standard BIOS mode-13h programming sequence with 320×200 chain-4,
+400 displayed physical lines and 449 total lines.
+
+The first raster boundary after setup samples phase 0. Subsequent rasters
+sample phase 1. Stream attachment leaves the age of the observed mode alone.
+The opt-in format-5 checkpoint records the observed setup, exact sampled
+rows, intended deadline, and armed native expiry. Restore renews the source
+epoch and stream token while preserving that raster future. Default source
+producers still use their existing timing and formats 3 or 4.
+[Native profile and local receipts](../native/qemu-video-mode13-phase/README.md)
 
 ### Positioned INT 33h mouse input
 

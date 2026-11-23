@@ -1,5 +1,29 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Native Mode 13h checkpoint timing and coordinate routes (2026-11-23)
+
+The opt-in VGA model records effective standard BIOS programming and
+restores the first/steady raster phase, exact pending row deadline and
+sampled prefix. Native cold checks covered before the first draw and
+partial initial and steady rasters. The public DOS process path replays
+the same initial-to-steady future after hot and cold restore. Default
+source timing and format 4 remain available on the same binary.
+[Source timing and receipts](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md#persisted-native-mode-phase)
+
+The QEMU DOS Python and JSON coordinate click routes can explicitly run
+`observed-int33` against a retained frame on the qualified CuteMouse
+Mode 13h profile. They verify each motion packet and the press, hold and
+release, and return the confirmed prefix and actual stop on interruption.
+The original DOSBox-X click and default backend remain available.
+[Coordinate click contract](DOS_QEMU_TIMING.md)
+
+The original Doom E1M5 replay passed hot and separate-process cold restore
+with the standard format 4 and the opt-in format 5. Each recovered its
+own live tic 64 and stereo capture frontier, then executed the same
+relocated increment to tic 65. The Doom checks leave the source-raster
+stream idle. Exact active-raster restore was verified separately with
+the authored VGA fixture.
+
 ## Matched Doom timing and positioned input (2026-11-23)
 
 Both native engines reached the same two live Doom `leveltime` landmarks.

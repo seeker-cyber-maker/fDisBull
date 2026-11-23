@@ -6,6 +6,7 @@ fixture. These cases never import or launch a native executable.
 """
 from copy import deepcopy
 import json
+from threading import RLock
 from types import MethodType, SimpleNamespace
 
 import pytest
@@ -512,12 +513,13 @@ def test_reverse_controller_admission_preserves_the_source_owner(operation):
     from fdisbull.qemu_cpu_undo_runtime import _admission
     from fdisbull.qemu_video_frame import QemuVideoFrameMixin
     owner = {'kind': 'video-source', 'token': 'owned'}
-    session = SimpleNamespace(vm=SimpleNamespace(_active_video_frame_fence=deepcopy(owner)))
+    session = SimpleNamespace(vm=SimpleNamespace(lock=RLock(), _active_video_frame_fence=deepcopy(owner)))
+    session._frame_keys_prepare = MethodType(QemuFrameKeysMixin._frame_keys_prepare, session)
     calls = {
         'clock': lambda: MachineClockMixin._clock_advance(session, 1, timeout_ms=5000, hook_aware=False),
         'renderer': lambda: QemuDOSFramesMixin._frame_execute(session, None, 'renderer'),
         'input': lambda: QemuPhysicalInputMixin._input_prepare(session),
-        'frame-keys': lambda: QemuFrameKeysMixin._frame_keys_prepare(session, []),
+        'frame-keys': lambda: QemuFrameKeysMixin.frame_inputs(session, []),
         'detach': lambda: QemuFrameKeysMixin._frame_keys_before_physical_input(session),
         'checkpoint': lambda: _preflight(session),
         'instrumented': lambda: preflight(session),

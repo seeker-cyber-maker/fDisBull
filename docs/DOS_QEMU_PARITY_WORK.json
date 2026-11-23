@@ -1404,7 +1404,9 @@
         "native/qemu-raster-proof/qemu-raster-proof.patch",
         "src/fdisbull/qemu_frame_contract.py",
         "src/fdisbull/qemu_session_revision.py",
-        "src/fdisbull/qemu_video_frame.py"
+        "src/fdisbull/qemu_video_frame.py",
+        "src/fdisbull/qemu_video_checkpoint.py",
+        "native/qemu-video-mode13-phase/qemu-10.0.13-fdisbull-video-mode13-phase.patch"
       ],
       "depends_on": [
         "clock-and-physical-input",
@@ -1419,7 +1421,7 @@
       ],
       "remaining_work": [
         "The retained 320x200 chain-4 adapter implements frame_probe/frame_rgba, real host codecs, explicit source/clock identity, cooperative session revision and generic coherence; see docs/QEMU_FRAME_CONTRACT.md. Its separately owned native witness is pending. Qualify wider modes/lifecycles and downstream source-depth signature differences; host codec tests do not establish native or cross-backend parity.",
-        "The native guest-cadence source stream and next-raster fence are implemented and have authored native evidence. Preserve the prior paired Native07 quiet-raster agreement and pulse sampling-phase discriminator; resolve those documented phase differences for legacy consumer acceptance rather than treating the producer as caller-timed synchronous capture only.",
+        "Format 5 restores initial and steady phase for the opt-in standard BIOS mode-13h profile, including exact partial native rows and timer deadlines. Resolve first-draw timing and wider dynamic-mode differences against the paired DOSBox-X renderer.",
         "Qualify frame step and key scheduling at that boundary, including partial drawing, palette/mode/origin changes, typematic behavior and restore without reinjection."
       ],
       "minimum_acceptance": [
@@ -1437,13 +1439,14 @@
         "input.mouse.click"
       ],
       "qualification": "unqualified",
-      "implementation": "pinned_real_mode_int33_observed_click_implemented_generic_click_open",
+      "implementation": "pinned_real_mode_int33_coordinate_routes_with_observed_motion_and_click",
       "source_paths": [
         "src/fdisbull/qemu_mapped_mouse.py",
         "src/fdisbull/qemu_mouse_click.py",
         "src/fdisbull/qemu_int33_mouse.py",
         "src/fdisbull/qemu_int33_mouse_control.py",
         "src/fdisbull/qemu_int33_click.py",
+        "src/fdisbull/qemu_coordinate_click.py",
         "src/fdisbull/debugger.py"
       ],
       "depends_on": [
@@ -1456,8 +1459,8 @@
         "renderer-frame-legacy"
       ],
       "remaining_work": [
-        "Implement debug-click/debug-click-frame and equivalent input.mouse.click using observed guest cursor/range and exact frame/mode guards.",
-        "A paired mode 13h fixture covers one pinned CuteMouse build. The opt-in Python action can observe a complete press/release at an already-qualified landing and preserve a competing stop and lease. Relative mickeys still differ. Qualify the generic timed click contract and additional driver/mode profiles."
+        "debug-click, debug-click-frame and input.mouse.click accept the explicit observed-int33 delivery profile with retained session/frame/mode guards, verified small motion packets and observed press/hold/release. Qualify equivalent workflows across additional DOS drivers and video modes.",
+        "The pinned Mode 13h path reports confirmed motion prefixes and preserves a competing stop and any live lease. Relative mickey delivery still differs from legacy absolute input. Match that contract or document the disposition with paired application evidence."
       ],
       "minimum_acceptance": [
         "The same requested coordinate lands on the same qualified target on both backends; stale frame/mode and unsupported driver state fail before input.",

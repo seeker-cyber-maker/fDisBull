@@ -144,20 +144,31 @@ configuration. It uses the existing frame stream and introduces no live
 phase or checkpoint state. Raw receipt SHA-256
 `2b149a7b0a88fdcfee566b84a4766919b80d90153e7bc18969a140ac374bafef`.
 
+## Persisted native mode phase
+
+The current opt-in QEMU producer observes the completed standard BIOS
+mode-13h programming transaction and uses it as the age boundary for
+sampling. The first raster uses phase 0. Steady rasters use phase 1.
+A warm stream attach preserves the observed mode age.
+
+Native format 5 restores the same setup stamp and pending row schedule.
+Cold witnesses passed before the first draw, at 65 initial rows, and at
+65 steady rows with the preceding raster retained. Exact pixel hashes,
+intended and actual row times, prefix, and armed deadline survived with
+a fresh token and epoch. The public DOS process test also passed hot
+and cold restore across the initial-to-steady transition. Default-off
+uses the existing native model and format 4.
+[Source recipe and receipt hashes](../native/qemu-video-mode13-phase/README.md)
+
 ## Remaining qualification
 
 - Obtain independent DOSBox-X timing clearances for both pulse trials.
   Record the effective VGA renderer settings and tighten the VGA-edge and
   DAC-write brackets before any pixel read. Keep the phase families and
   overlap refusal.
-- If an opt-in production profile follows, admit this geometry explicitly.
-  Qualify the first raster after a real mode setup, later steady rasters and
-  capture that starts after warm-up. Observe a mode-setup boundary tied
-  to the effective VGA configuration. A stream start does not establish
-  that boundary, and a QEMU configuration generation alone has no
-  measured correspondence to DOSBox-X's draw setup.
-- Persist the profile, current phase and pending deadlines across checkpoint
-  restore. Verify restores before the first draw, between the first and
-  steady rasters, and with partial steady rows. Retain the existing model
-  and checkpoint formats for the default path, and reject model mismatches
-  before resume. [Current QEMU frame contract](QEMU_FRAME_CONTRACT.md)
+- Measure DOSBox-X's effective draw setup boundary and pair first rasters,
+  warm attachment and equivalent reapply with QEMU over the same declared
+  geometry. Qualify additional programming sequences and modes separately.
+- Exercise both engines through the same protected game's palette/origin
+  changes and replay its dynamic raster after a native checkpoint.
+  [Current QEMU frame contract](QEMU_FRAME_CONTRACT.md)

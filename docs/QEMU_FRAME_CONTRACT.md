@@ -157,8 +157,13 @@ Arming preserves partial source rows and their original deadlines.
 `baseline_rows_sampled` reports the pre-arm count; a next accepted raster may
 contain rows sampled before an input edge or step request. An owned safe stop
 does not establish application drawing completion or atomic image/CPU state.
-The paired Native07 evidence still distinguishes DOSBox phase 1 from QEMU phase
-0 for its authored dynamic raster; this adapter does not change either phase.
+The paired Native07 evidence still distinguishes DOSBox phase 1 from the
+default QEMU phase 0 for its authored dynamic raster. The opt-in
+`dosbox-mode13` model retains its first/steady phase from observed guest
+programming and uses format 5 for checkpoint restore. Its scope is the
+qualified standard BIOS programming sequence and exact mode geometry.
+Paired draw-start timing and broader renderer parity remain open.
+[Native mode timing profile](../native/qemu-video-mode13-phase/README.md)
 
 `advance_frames(frames=1, timeout_ms=10000)` on a machine context accepts 1..128
 frames under one outer deadline and original VM/channel lifetime. DOS process
