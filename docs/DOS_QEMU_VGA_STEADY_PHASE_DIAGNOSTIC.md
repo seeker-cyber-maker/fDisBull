@@ -362,11 +362,42 @@ retaining exact completed-frame identity.
 | DOSBox-X setup and vertical callback receipt | `125941baeb505861639429b7c5c0aedba467b5ed2be4c84202ea1c9615b87cd5` |
 | QEMU reapply receipt | `11433f30a5ca553d3640a0fd279341c59256e755f627377b8598c37658cd205c` |
 
+## Paired Mode 13h reapply and format 7 restore
+
+The [explicit overlap profile](../native/qemu-video-mode13-overlap/README.md)
+was exercised with the same 294-byte BIOS reapply COM on both engines.
+A fresh text-to-Mode 13h setup omitted the reapply marker. The identical
+second BIOS call set it. Both engines measured 200 drawn rows in each raster.
+
+| Raster after reapply | Physical parity | DOSBox-X row spacing | QEMU row spacing |
+| --- | --- | --- | --- |
+| Mixed callback raster | Odd | 31,777–31,778 ns | 31,700 ns |
+| Recovery raster | Even | 63,555–63,556 ns | 63,400 ns |
+| Steady raster | Odd | 63,555–63,556 ns | 63,400 ns |
+
+The QEMU test observed both deadlines before dispatch. The first callback
+advanced only the new chain and left the sampled prefix empty. The retained
+chain then sampled row zero at its distinct deadline. A write to two points
+after row 64 left that already captured row black and made row 65 white.
+The recovery and steady rasters included the new pixels throughout the
+selected observations. This ties the pixels to their native sampling times.
+
+The format 7 artifacts captured zero and 65 sampled rows. Both checkpoints
+reproduced the exact callback cursors, timer expiry, sampled prefix, 200-row
+timestamps, raster ordinals and RGB hashes in the original host and in
+separate Python processes. Each restore created a fresh owner. The witness
+uses the standard 320 × 200 BIOS packet on these two local producers. It
+compares the equivalent cadence using each engine's own virtual clock.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored reapply COM | `1742f5a2317b70365de38404732ad04128976543e862e0a913f38d3b02db2c9b` |
+| Overlap QEMU producer | `e94fc04678b8d8ecbe4d695bd158a2f911ae11826e747f28e0aff9143197e51a` |
+| Paired native and replay receipt | `aac20ed507c09b318a73e67b4b7178f005424cab1d10344d7b27fd053f2f91a4` |
+
 ## Remaining qualification
 
-- Qualify a transitional schedule if equivalent mode reapply must reproduce
-  the first mixed-cadence DOSBox-X raster. Qualify additional programming
-  sequences and modes separately.
+- Qualify additional VGA programming sequences and modes.
 - Pair more protected-game palette and origin transitions. The bounded
   Doom timedemo at demo ordinal 64 already matched all retained RGB bytes.
   Ordinary playback still needs a common render state, and the wider modes

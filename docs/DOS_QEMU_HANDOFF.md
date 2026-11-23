@@ -1,5 +1,23 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Mode 13h BIOS reapply and format 7 restore (2026-11-23)
+
+The explicit `dosbox-mode13-overlap` timing profile reproduced the paired
+standard BIOS reapply. The first raster samples the odd physical rows
+one line period apart. The recovery raster uses full even-line spacing
+and the steady raster returns to full odd-line spacing. Format 7 restored
+both pending callback deadlines, the native timer and the sampled pixels
+from zero-row and 65-row cuts in the same host and in fresh hosts.
+[Paired timing and replay evidence](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md#paired-mode-13h-reapply-and-format-7-restore)
+
+The same compiled QEMU producer ran the original Doom protected demo
+through the existing format 6 profile. Uninterrupted execution, hot
+restore and separate-process restore agreed on the selected page, all
+200 row times, the RGB hash, the continuation PC and the stereo frontier.
+The private hot and cold receipt digests are
+`b381531c5268b7b4d45681aa5a10f6472d4b2d050d54a1ce7af4ded0fa36b00a` and
+`56a713dc604ae84fb8da8b5e2a34b0c684055ddbf2aa0ee43dd3fb68ca20569e`.
+
 ## Paired native VGA scanout and cold continuation (2026-11-23)
 
 Both engines ran the same 441-byte unchained VGA program. Guest PIT and

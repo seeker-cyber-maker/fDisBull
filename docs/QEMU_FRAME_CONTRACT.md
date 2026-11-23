@@ -2,7 +2,7 @@
 
 The native QEMU backends provide `frame_probe` and `frame_rgba` over an explicitly
 retained 320 × 200 source raster. The selected profile admits standard chain-4,
-the explicit Mode 13h timing model, or standard unchained page-latched VGA.
+the explicit Mode 13h timing models, or standard unchained page-latched VGA.
 Inspect `frame_contract` and `frame_contract_profile` before using these operations.
 The producer must support the source-raster and virtual-clock extensions, the VM
 must use the explicit virtual/precise profiles, and the cooperating owner must
@@ -176,6 +176,12 @@ measurements cover the authored text-to-Mode 13h transition and two steady
 palette pulses. See the [paired timing diagnostics](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md)
 and the [native mode timing profile](../native/qemu-video-mode13-phase/README.md).
 
+The explicit `dosbox-mode13-overlap` profile adds the same-mode BIOS reapply
+sequence. The older stream retires at reapply. Start the new source stream
+before the next raster boundary to capture the overlapping callbacks. Format 7
+preserves both pending deadlines and the partial raster through restore.
+[Paired Mode 13h overlap evidence](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md#paired-mode-13h-reapply-and-format-7-restore)
+
 `advance_frames(frames=1, timeout_ms=10000)` on a machine context accepts 1..128
 frames under one outer deadline and original VM/channel lifetime. DOS process
 sessions retain their existing 60000 ms default; an explicit `timeout_ms`
@@ -213,7 +219,7 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, or `qemu-vga-unchained-320x200-latch-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, or `qemu-vga-unchained-320x200-latch-v1` |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
 | `double_width`, `double_height` | Both false; source coordinates are 320 × 200 |
 | `frame_id` | Native accepted raster ordinal, including identical consecutive pixels |
