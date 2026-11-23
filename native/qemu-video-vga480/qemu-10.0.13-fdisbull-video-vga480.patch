@@ -1,0 +1,972 @@
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -186,6 +186,12 @@
+            PCI_VGA(obj)->vga.fdisbull_mode13_overlap;
+ }
+
++bool pci_std_vga_fdisbull_vga480_selected(Object *obj)
++{
++    return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
++           PCI_VGA(obj)->vga.fdisbull_vga480;
++}
++
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
+ {
+     return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
+@@ -471,9 +477,8 @@
+     bool qext = false;
+     bool edid = false;
+
+-    if ((s->fdisbull_mode13_phase && s->fdisbull_mode13_overlap) ||
+-        ((s->fdisbull_mode13_phase || s->fdisbull_mode13_overlap) &&
+-         s->fdisbull_unchained_latch)) {
++    if ((unsigned)s->fdisbull_mode13_phase + s->fdisbull_mode13_overlap +
++        s->fdisbull_unchained_latch + s->fdisbull_vga480 > 1) {
+         error_setg(errp, "Select only one fDisBull VGA source timing profile");
+         return;
+     }
+@@ -573,6 +578,8 @@
+                      vga.fdisbull_mode13_phase, false),
+     DEFINE_PROP_BOOL("x-fdisbull-mode13-overlap", PCIVGAState,
+                      vga.fdisbull_mode13_overlap, false),
++    DEFINE_PROP_BOOL("x-fdisbull-vga480", PCIVGAState,
++                     vga.fdisbull_vga480, false),
+     DEFINE_PROP_BOOL("x-fdisbull-unchained-latch", PCIVGAState,
+                      vga.fdisbull_unchained_latch, false),
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -556,6 +556,24 @@
+     return !memcmp(&layout, previous, sizeof(layout));
+ }
+
++static bool vga_fdisbull_aperture_only(const VGAConfigurationState *raw,
++                                      const VGAConfigurationState *previous)
++{
++    VGAConfigurationState layout;
++
++    memcpy(&layout, raw, sizeof(layout));
++    layout.sequencer[VGA_SEQ_PLANE_WRITE] =
++        previous->sequencer[VGA_SEQ_PLANE_WRITE];
++    layout.graphics[VGA_GFX_PLANE_READ] =
++        previous->graphics[VGA_GFX_PLANE_READ];
++    if (raw->vbe[VBE_DISPI_INDEX_ENABLE] & VBE_DISPI_ENABLED) {
++        /* The aperture bank is CPU addressing. Scanout reads backing VRAM. */
++        layout.vbe[VBE_DISPI_INDEX_BANK] = previous->vbe[VBE_DISPI_INDEX_BANK];
++        layout.bank_offset = previous->bank_offset;
++    }
++    return !memcmp(&layout, previous, sizeof(layout));
++}
++
+ void vga_fdisbull_configuration_commit(VGACommonState *s, bool force)
+ {
+     VGAConfigurationState raw;
+@@ -589,9 +607,11 @@
+              s->fdisbull_configuration_committed.crtc[VGA_CRTC_START_LO])) {
+         fdisbull_video_frame_check_page_programming(s->con);
+     }
++    bool aperture_only = !force && s->fdisbull_vga480 &&
++        vga_fdisbull_aperture_only(&raw, &s->fdisbull_configuration_committed);
+     s->fdisbull_configuration_generation++;
+     memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
+-    if (!same_scanout_layout) {
++    if (!same_scanout_layout && !aperture_only) {
+         fdisbull_video_frame_invalidate(s->con, "configuration-changed");
+     }
+ }
+@@ -1493,6 +1513,16 @@
+ #include "vga-access.h"
+ #include "vga-helpers.h"
+
++static unsigned vga_palette16_index(const VGACommonState *s, unsigned color)
++{
++    unsigned value = s->ar[color];
++
++    if (s->ar[VGA_ATC_MODE] & 0x80) {
++        return ((s->ar[VGA_ATC_COLOR_PAGE] & 0xf) << 4) | (value & 0xf);
++    }
++    return ((s->ar[VGA_ATC_COLOR_PAGE] & 0xc) << 4) | (value & 0x3f);
++}
++
+ /* return true if the palette was modified */
+ static int update_palette16(VGACommonState *s)
+ {
+@@ -1502,13 +1532,7 @@
+     full_update = 0;
+     palette = s->last_palette;
+     for(i = 0; i < 16; i++) {
+-        v = s->ar[i];
+-        if (s->ar[VGA_ATC_MODE] & 0x80) {
+-            v = ((s->ar[VGA_ATC_COLOR_PAGE] & 0xf) << 4) | (v & 0xf);
+-        } else {
+-            v = ((s->ar[VGA_ATC_COLOR_PAGE] & 0xc) << 4) | (v & 0x3f);
+-        }
+-        v = v * 3;
++        v = vga_palette16_index(s, i) * 3;
+         col = rgb_to_pixel32(c6_to_8(s->palette[v]),
+                              c6_to_8(s->palette[v + 1]),
+                              c6_to_8(s->palette[v + 2]));
+@@ -2117,6 +2141,110 @@
+     result->reason = g_strdup(reason);
+ }
+
++static void vga_fdisbull_scanout_row(const VGACommonState *s,
++                                     FdisbullVideoScanoutLayout layout,
++                                     const uint8_t *memory, uint8_t *rgb)
++{
++    const unsigned plane_mask = s->ar[VGA_ATC_PLANE_ENABLE] & 15;
++
++    for (unsigned x = 0; x < FDISBULL_VIDEO_WIDE_WIDTH; x++) {
++        unsigned index;
++
++        if (layout == FDISBULL_SCANOUT_MODE12) {
++            const uint8_t *planes = memory + (x / 8) * 4;
++            unsigned bit = 7 - (x % 8);
++            unsigned color = 0;
++
++            for (unsigned plane = 0; plane < 4; plane++) {
++                color |= ((planes[plane] >> bit) & 1) << plane;
++            }
++            index = vga_palette16_index(s, color & plane_mask);
++        } else {
++            index = memory[x];
++        }
++        for (unsigned channel = 0; channel < 3; channel++) {
++            *rgb++ = fdisbull_video_dac(s->palette[index * 3 + channel],
++                                       s->dac_8bit);
++        }
++    }
++}
++
++static bool vga_fdisbull_sample_640x480(
++    VGACommonState *s, const FdisbullChain4Geometry *geometry,
++    const FdisbullVgaConfigurationSnapshot *configuration,
++    const FdisbullRetraceInfo *retrace, int row, uint8_t *rgb,
++    FdisbullVideoFrameSource *source, Error **errp)
++{
++    bool banked = vbe_enabled(s);
++    unsigned pitch = banked ? 640 : 320;
++    FdisbullVideoScanoutLayout layout = banked ? FDISBULL_SCANOUT_VBE101 :
++                                               FDISBULL_SCANOUT_MODE12;
++
++    if (geometry->width != FDISBULL_VIDEO_WIDE_WIDTH ||
++        geometry->height != FDISBULL_VIDEO_WIDE_HEIGHT ||
++        geometry->start_address != 0 || geometry->line_offset != pitch ||
++        geometry->line_compare < FDISBULL_VIDEO_WIDE_HEIGHT - 1 ||
++        geometry->multi_scan || geometry->hpel || !geometry->display_enabled ||
++        !(s->gr[VGA_GFX_MISC] & VGA_GR06_GRAPHICS_MODE) ||
++        (s->cr[VGA_CRTC_MODE] & 3) != 3 || s->dac_8bit ||
++        pitch * FDISBULL_VIDEO_WIDE_HEIGHT > MIN(s->vram_size, s->vbe_size)) {
++        error_setg(errp, "Unsupported 640x480 scanout geometry");
++        return false;
++    }
++    if (banked) {
++        if (geometry->depth != 8 || geometry->shift_control != 2 ||
++            (s->vbe_regs[VBE_DISPI_INDEX_ENABLE] &
++             ~(VBE_DISPI_ENABLED | VBE_DISPI_NOCLEARMEM)) ||
++            s->vbe_regs[VBE_DISPI_INDEX_X_OFFSET] ||
++            s->vbe_regs[VBE_DISPI_INDEX_Y_OFFSET] ||
++            s->vbe_regs[VBE_DISPI_INDEX_VIRT_WIDTH] != FDISBULL_VIDEO_WIDE_WIDTH ||
++            (s->gr[VGA_GFX_MISC] & 0x0c) != 0x04) {
++            error_setg(errp, "Unsupported banked VBE 101 scanout layout");
++            return false;
++        }
++    } else if (!retrace->phase_supported || geometry->depth != 0 ||
++               geometry->shift_control || geometry->chain4 ||
++               (sr(s, VGA_SEQ_CLOCK_MODE) & 8) ||
++               pitch * FDISBULL_VIDEO_WIDE_HEIGHT > VGA_VRAM_SIZE) {
++        error_setg(errp, "Unsupported VGA Mode 12 scanout layout");
++        return false;
++    }
++
++    *source = (FdisbullVideoFrameSource) {
++        .configuration_generation = configuration->configuration_generation,
++        .timing_generation = retrace->timing_generation,
++        .layout = layout,
++    };
++    if (banked) {
++        /* Bochs VBE has no analog raster timing. This profile models the
++         * DOSBox-X S3 BIOS's Mode 101h timing: 800 dots, 525 lines, and a
++         * 29.403 MHz PLL result for the nominal 70 Hz mode. Quantize the
++         * individual line to virtual-clock nanoseconds. */
++        const int64_t clock_hz = 29403000;
++
++        source->line_period_ns = (800 * (int64_t)NANOSECONDS_PER_SECOND +
++                                  clock_hz / 2) / clock_hz;
++        source->period_ns = source->line_period_ns * 525;
++    } else {
++        source->line_period_ns = retrace->timing->ticks_per_char *
++                                 retrace->timing->htotal;
++        source->period_ns = retrace->phase->period_ns;
++        if (retrace->timing->vstart < FDISBULL_VIDEO_WIDE_HEIGHT) {
++            error_setg(errp, "Mode 12 retrace overlaps visible rows");
++            return false;
++        }
++    }
++    if (!fdisbull_video_scanout_timing_valid(layout, source->line_period_ns,
++                                            source->period_ns)) {
++        error_setg(errp, "Insufficient timing for 480 visible rows");
++        return false;
++    }
++    if (row >= 0) {
++        vga_fdisbull_scanout_row(s, layout, s->vram_ptr + row * pitch, rgb);
++    }
++    return true;
++}
++
+ /* Fresh source description; never repair or borrow the renderer's params. */
+ bool vga_fdisbull_video_frame_sample(
+     VGACommonState *s, int64_t virtual_ns, uint64_t origin, int row,
+@@ -2131,7 +2259,10 @@
+     const char *reason;
+
+     assert(bql_locked());
+-    if (!source || row < -1 || row >= (int)FDISBULL_VIDEO_HEIGHT ||
++    unsigned height_limit = s->fdisbull_vga480 ?
++        FDISBULL_VIDEO_WIDE_HEIGHT : FDISBULL_VIDEO_HEIGHT;
++
++    if (!source || row < -1 || row >= (int)height_limit ||
+         (row >= 0 && !rgb) || !s->vram_ptr) {
+         error_setg(errp, "Invalid bounded video source-row request");
+         return false;
+@@ -2140,7 +2271,8 @@
+         !vga_fdisbull_retrace_query(s, virtual_ns, retrace, errp)) {
+         return false;
+     }
+-    if (!retrace->phase_supported) {
++    if (!retrace->phase_supported &&
++        !(s->fdisbull_vga480 && vbe_enabled(s))) {
+         error_setg(errp, "Video frame source requires admitted precise timing");
+         return false;
+     }
+@@ -2158,6 +2290,10 @@
+     geometry.line_offset = params.line_offset;
+     geometry.line_compare = params.line_compare;
+     geometry.hpel = params.hpel & 7;
++    if (s->fdisbull_vga480) {
++        return vga_fdisbull_sample_640x480(s, &geometry, configuration,
++                                          retrace, row, rgb, source, errp);
++    }
+     if (s->fdisbull_unchained_latch) {
+         if (origin != FDISBULL_VIDEO_PROGRAMMED_ORIGIN) {
+             geometry.start_address = origin;
+@@ -2180,6 +2316,7 @@
+     source->dac_8bit = s->dac_8bit;
+     source->mode13_phase = s->fdisbull_mode13_phase || s->fdisbull_mode13_overlap;
+     source->unchained_latch = s->fdisbull_unchained_latch;
++    source->layout = FDISBULL_SCANOUT_LEGACY;
+     source->origin_bytes = geometry.start_address;
+     source->page_latch_offset_ns = source->unchained_latch ?
+         retrace->timing->vstart * source->line_period_ns : 0;
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -187,6 +187,7 @@
+     bool fdisbull_configuration_invalidated;
+     bool fdisbull_mode13_phase;
+     bool fdisbull_mode13_overlap;
++    bool fdisbull_vga480;
+     bool fdisbull_mode13_reapply_candidate;
+     VGAConfigurationState fdisbull_mode13_before;
+     bool fdisbull_unchained_latch;
+--- a/include/hw/display/fdisbull-video-frame.h
++++ b/include/hw/display/fdisbull-video-frame.h
+@@ -14,6 +14,35 @@
+ #define FDISBULL_VIDEO_HEIGHT 200u
+ #define FDISBULL_VIDEO_ROW_BYTES (FDISBULL_VIDEO_WIDTH * 3u)
+ #define FDISBULL_VIDEO_RGB_BYTES (FDISBULL_VIDEO_ROW_BYTES * FDISBULL_VIDEO_HEIGHT)
++
++#define FDISBULL_VIDEO_WIDE_WIDTH 640u
++#define FDISBULL_VIDEO_WIDE_HEIGHT 480u
++
++typedef enum FdisbullVideoScanoutLayout {
++    FDISBULL_SCANOUT_LEGACY,
++    FDISBULL_SCANOUT_MODE12,
++    FDISBULL_SCANOUT_VBE101,
++} FdisbullVideoScanoutLayout;
++
++static inline unsigned fdisbull_video_width(FdisbullVideoScanoutLayout layout)
++{
++    return layout ? FDISBULL_VIDEO_WIDE_WIDTH : FDISBULL_VIDEO_WIDTH;
++}
++
++static inline unsigned fdisbull_video_height(FdisbullVideoScanoutLayout layout)
++{
++    return layout ? FDISBULL_VIDEO_WIDE_HEIGHT : FDISBULL_VIDEO_HEIGHT;
++}
++
++static inline size_t fdisbull_video_stride(FdisbullVideoScanoutLayout layout)
++{
++    return fdisbull_video_width(layout) * 3u;
++}
++
++static inline size_t fdisbull_video_rgb_size(FdisbullVideoScanoutLayout layout)
++{
++    return fdisbull_video_height(layout) * fdisbull_video_stride(layout);
++}
+
+ typedef struct FdisbullVideoSetupStamp {
+     int64_t committed_ns;
+@@ -30,6 +59,7 @@
+     bool dac_8bit;
+     bool mode13_phase;
+     bool unchained_latch;
++    FdisbullVideoScanoutLayout layout;
+     uint64_t origin_bytes;
+     int64_t page_latch_offset_ns;
+     FdisbullVideoSetupStamp setup;
+@@ -39,6 +69,34 @@
+ {
+     return line >= 4 && line <= INT64_MAX / 400 &&
+            period >= line * 400 && period % line == 0;
++}
++
++static inline bool fdisbull_video_scanout_timing_valid(
++    FdisbullVideoScanoutLayout layout, int64_t line, int64_t period)
++{
++    if (layout == FDISBULL_SCANOUT_LEGACY) {
++        return fdisbull_video_timing_valid(line, period);
++    }
++    return line >= 4 && line <= INT64_MAX / FDISBULL_VIDEO_WIDE_HEIGHT &&
++           period >= line * FDISBULL_VIDEO_WIDE_HEIGHT && period % line == 0;
++}
++
++static inline bool fdisbull_video_scanline_deadline(int64_t start, int64_t line,
++                                                   unsigned row,
++                                                   int64_t *deadline)
++{
++    int64_t offset;
++
++    if (start < 0 || line < 4 || line > INT64_MAX / FDISBULL_VIDEO_WIDE_HEIGHT ||
++        row >= FDISBULL_VIDEO_WIDE_HEIGHT || !deadline) {
++        return false;
++    }
++    offset = line / 4 + row * line;
++    if (start > INT64_MAX - offset) {
++        return false;
++    }
++    *deadline = start + offset;
++    return true;
+ }
+
+ static inline bool fdisbull_video_page_origin_valid(uint64_t origin)
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -45,6 +45,7 @@
+
+ bool pci_std_vga_fdisbull_mode13_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_overlap_selected(Object *obj);
++bool pci_std_vga_fdisbull_vga480_selected(Object *obj);
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_pending(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_setup(Object *obj,
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480 \
++    "fdisbull-instrumented-qemu-state-8"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP \
+     "fdisbull-instrumented-qemu-state-7"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED \
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -16,6 +16,7 @@
+ bool fdisbull_video_frame_stop_pending(void);
+ bool fdisbull_video_frame_mode13_selected(void);
+ bool fdisbull_video_frame_mode13_overlap_selected(void);
++bool fdisbull_video_frame_vga480_selected(void);
+ bool fdisbull_video_frame_unchained_latch_selected(void);
+ void fdisbull_video_frame_check_page_programming(struct QemuConsole *console);
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp);
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -51,9 +51,9 @@
+ #     with a fresh epoch; the archived source receipt remains unchanged.
+ # @configuration-generation: Selected VGA layout identity for the stream.
+ # @timing-generation: Selected precise timing identity for all rows.
+-# @width: Source width, 320 pixels.
+-# @height: Source height, 200 rows.
+-# @stride: Packed source stride, 960 bytes.
++# @width: Source width in pixels.
++# @height: Visible source rows.
++# @stride: Packed source stride in bytes.
+ # @pixel-format: RGB888 without padding or alpha.
+ # @dac-conversion: replicate-6-to-8-v1; separate from the QEMU renderer adapter.
+ # @dac-8bit: Eight-bit DAC channels are unchanged; otherwise six-bit channels
+@@ -69,7 +69,8 @@
+ # @page-latch: Selected page and actual callback time under the unchained
+ #     latch profile.
+ # @pixel-sha256: SHA-256 of exactly 192000 retained packed RGB bytes.
+-# @rows: Exactly 200 frozen source-row sampling receipts.
++# @rows: One frozen sampling receipt per visible source row.
++# @scanout-layout: Admitted planar VGA or banked VBE layout for 640 by 480.
+ #
+ # This receipt owns one complete row-sampled raster. It does not claim
+ # application drawing completion or equivalence with DOSBox's carried phase.
+@@ -87,7 +88,8 @@
+             'pixel-sha256': 'str', 'rows': ['FdisbullVideoFrameRow'],
+             '*source-phase': 'uint8',
+             '*reapply-overlap': 'FdisbullVideoReapplyOverlap',
+-            '*page-latch': 'FdisbullVideoFramePageLatch' } }
++            '*page-latch': 'FdisbullVideoFramePageLatch',
++            '*scanout-layout': 'str' } }
+
+ ##
+ # @FdisbullVideoModeSetup:
+@@ -107,7 +109,7 @@
+ # @FdisbullVideoFrameInfo:
+ #
+ # @api-version: Private protocol version, 1.
+-# @model: Selected chain-4 scanline, mode-13 or unchained latch profile.
++# @model: Selected native scanout profile.
+ # @state: idle, observing, stopped, or invalidated.
+ # @epoch: Current stopped native clock epoch; a retained frame has the same
+ #     live owner epoch, including after scoped format-3 import.
+@@ -118,7 +120,7 @@
+ #     source ownership to canonical idle.
+ # @aborted-frames: Discarded partial rasters that had sampled at least one row.
+ # @in-progress: Whether the current partial raster has sampled rows.
+-# @rows-sampled: Current partial row count, zero through 199.
++# @rows-sampled: Count of sampled rows in the current partial raster.
+ # @token: Ownership token, present after explicit start or scoped import.
+ # @device: Canonical selected VGA device path, present after explicit start.
+ # @reason: First invalidation reason; present only for an invalidated stream.
+@@ -135,6 +137,7 @@
+ # @reapply-overlap: Both callback anchors while the mixed raster is pending.
+ # @overlap-next-new-ns: Next intended callback on the new chain.
+ # @overlap-next-retained-ns: Next intended callback on the surviving chain.
++# @scanout-layout: Layout of the observing or stopped 640 by 480 source.
+ # @frame: Frozen retained complete raster, absent before completion or after
+ #     invalidation. Old renderer pixels cannot supply it.
+ #
+@@ -152,7 +155,8 @@
+             '*page-latch-offset-ns': 'int', '*awaiting-page-latch': 'bool',
+             '*pending-page-latch': 'FdisbullVideoFramePageLatch',
+             '*reapply-overlap': 'FdisbullVideoReapplyOverlap',
+-            '*overlap-next-new-ns': 'int', '*overlap-next-retained-ns': 'int' } }
++            '*overlap-next-new-ns': 'int', '*overlap-next-retained-ns': 'int',
++            '*scanout-layout': 'str' } }
+
+ ##
+ # @FdisbullVideoFrameCheckpointState:
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,7 +161,9 @@
+     }
+
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    if (fdisbull_video_frame_mode13_overlap_selected()) {
++    if (fdisbull_video_frame_vga480_selected()) {
++        result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480);
++    } else if (fdisbull_video_frame_mode13_overlap_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP);
+     } else if (fdisbull_video_frame_unchained_latch_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED);
+@@ -401,11 +403,15 @@
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED);
+     bool overlap_v7 = !strcmp(state->format,
+                               FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP);
+-    bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6 || overlap_v7;
++    bool vga480_v8 = !strcmp(state->format,
++                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480);
++    bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6 ||
++                      overlap_v7 || vga480_v8;
+     bool has_source = source_v3 || has_repeat;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+         (mode13_v5 || overlap_v7) != fdisbull_video_frame_mode13_selected() ||
+         overlap_v7 != fdisbull_video_frame_mode13_overlap_selected() ||
++        vga480_v8 != fdisbull_video_frame_vga480_selected() ||
+         unchained_v6 != fdisbull_video_frame_unchained_latch_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -58,6 +58,11 @@
+     return false;
+ }
+
++bool pci_std_vga_fdisbull_vga480_selected(Object *obj)
++{
++    return false;
++}
++
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
+ {
+     return false;
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -25,6 +25,7 @@
+ #define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
+ #define MODE13_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-v1"
+ #define MODE13_OVERLAP_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-overlap-v1"
++#define VGA480_VIDEO_MODEL "qemu-vga-640x480-scanline-v1"
+ #define UNCHAINED_LATCH_VIDEO_MODEL "qemu-vga-unchained-320x200-latch-v1"
+
+ static Object *video_device(QemuConsole **out, Error **errp);
+@@ -52,8 +53,8 @@
+     int64_t frame_start_ns;
+     int64_t deadline_ns;
+     unsigned rows;
+-    int64_t intended[FDISBULL_VIDEO_HEIGHT];
+-    int64_t actual[FDISBULL_VIDEO_HEIGHT];
++    int64_t intended[FDISBULL_VIDEO_WIDE_HEIGHT];
++    int64_t actual[FDISBULL_VIDEO_WIDE_HEIGHT];
+     FdisbullVideoFrameSource source;
+     FdisbullVideoFramePageLatch page_latch;
+     FdisbullVideoReapplyOverlap overlap;
+@@ -358,6 +359,13 @@
+         video_device(&console, NULL));
+ }
+
++bool fdisbull_video_frame_vga480_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_vga480_selected(video_device(&console, NULL));
++}
++
+ bool fdisbull_video_frame_unchained_latch_selected(void)
+ {
+     QemuConsole *console;
+@@ -366,8 +374,34 @@
+         video_device(&console, NULL));
+ }
+
++static const char *video_layout_name(FdisbullVideoScanoutLayout layout)
++{
++    switch (layout) {
++    case FDISBULL_SCANOUT_MODE12:
++        return "vga-mode12";
++    case FDISBULL_SCANOUT_VBE101:
++        return "vbe-banked-101";
++    default:
++        return NULL;
++    }
++}
++
++static FdisbullVideoScanoutLayout video_layout(const char *name)
++{
++    if (!g_strcmp0(name, video_layout_name(FDISBULL_SCANOUT_MODE12))) {
++        return FDISBULL_SCANOUT_MODE12;
++    }
++    if (!g_strcmp0(name, video_layout_name(FDISBULL_SCANOUT_VBE101))) {
++        return FDISBULL_SCANOUT_VBE101;
++    }
++    return FDISBULL_SCANOUT_LEGACY;
++}
++
+ static const char *video_model(Object *device)
+ {
++    if (pci_std_vga_fdisbull_vga480_selected(device)) {
++        return VGA480_VIDEO_MODEL;
++    }
+     if (pci_std_vga_fdisbull_unchained_latch_selected(device)) {
+         return UNCHAINED_LATCH_VIDEO_MODEL;
+     }
+@@ -435,6 +469,16 @@
+                             start, period, phase);
+ }
+
++static bool video_row_deadline(FdisbullVideoScanoutLayout layout,
++                               int64_t start, int64_t line, unsigned row,
++                               unsigned phase, int64_t *deadline)
++{
++    if (layout != FDISBULL_SCANOUT_LEGACY) {
++        return fdisbull_video_scanline_deadline(start, line, row, deadline);
++    }
++    return fdisbull_video_phase_deadline(start, line, row, phase, deadline);
++}
++
+ static bool video_src_deadline(int64_t start, const FdisbullVideoFrameSource *source,
+                                 unsigned row, int64_t *deadline)
+ {
+@@ -447,8 +491,8 @@
+                            source->period_ns, &phase))) {
+         return false;
+     }
+-    return fdisbull_video_phase_deadline(start, source->line_period_ns,
+-                                         row, phase, deadline);
++    return video_row_deadline(source->layout, start, source->line_period_ns,
++                              row, phase, deadline);
+ }
+
+ static bool video_next_deadline(int64_t start, const FdisbullVideoFrameSource *source,
+@@ -481,15 +525,16 @@
+     }
+ }
+
+-/* The only advancing census generations permitted on a live unchained
+- * stream are the start registers and CPU plane-write mask. All other changes
+- * invalidate at the VGA write boundary before a source callback can run. */
++/* Only raw writes classified by the VGA device as display-neutral can
++ * advance the census while preserving a layout. Every other write retires
++ * the stream before its next source callback. */
+ static bool video_source_equal(const FdisbullVideoFrameSource *a,
+                                const FdisbullVideoFrameSource *b)
+ {
+-    return (b->unchained_latch ?
++    return (b->unchained_latch || b->layout ?
+             a->configuration_generation >= b->configuration_generation :
+             a->configuration_generation == b->configuration_generation) &&
++           a->layout == b->layout &&
+            a->unchained_latch == b->unchained_latch &&
+            a->page_latch_offset_ns == b->page_latch_offset_ns &&
+            a->timing_generation == b->timing_generation &&
+@@ -538,6 +583,9 @@
+     info->stop_ns = video.stop_ns;
+     info->has_next_deadline_ns = video.observing;
+     info->next_deadline_ns = video.deadline_ns;
++    if (video.observing || video.stopped) {
++        info->scanout_layout = g_strdup(video_layout_name(video.source.layout));
++    }
+     if (video.source.unchained_latch && (video.observing || video.stopped)) {
+         info->has_page_latch_offset_ns = true;
+         info->page_latch_offset_ns = video.source.page_latch_offset_ns;
+@@ -605,9 +653,10 @@
+     frame->epoch = video.epoch;
+     frame->configuration_generation = video.source.configuration_generation;
+     frame->timing_generation = video.source.timing_generation;
+-    frame->width = FDISBULL_VIDEO_WIDTH;
+-    frame->height = FDISBULL_VIDEO_HEIGHT;
+-    frame->stride = FDISBULL_VIDEO_ROW_BYTES;
++    frame->width = fdisbull_video_width(video.source.layout);
++    frame->height = fdisbull_video_height(video.source.layout);
++    frame->stride = fdisbull_video_stride(video.source.layout);
++    frame->scanout_layout = g_strdup(video_layout_name(video.source.layout));
+     frame->pixel_format = g_strdup("RGB888");
+     frame->dac_conversion = g_strdup("replicate-6-to-8-v1");
+     frame->dac_8bit = video.source.dac_8bit;
+@@ -637,8 +686,8 @@
+     frame->last_sample_ns = actual_ns;
+     frame->completed_ns = actual_ns;
+     frame->pixel_sha256 = g_compute_checksum_for_data(
+-        G_CHECKSUM_SHA256, video.rgb, FDISBULL_VIDEO_RGB_BYTES);
+-    for (row = 0; row < FDISBULL_VIDEO_HEIGHT; row++) {
++        G_CHECKSUM_SHA256, video.rgb, fdisbull_video_rgb_size(video.source.layout));
++    for (row = 0; row < frame->height; row++) {
+         FdisbullVideoFrameRowList *entry = g_new0(FdisbullVideoFrameRowList, 1);
+
+         entry->value = g_new0(FdisbullVideoFrameRow, 1);
+@@ -736,7 +785,7 @@
+             device, clock->virtual_ns, origin,
+             (latching || new_chain) ? -1 : (int)video.rows,
+             (latching || new_chain) ? NULL :
+-                video.partial + video.rows * FDISBULL_VIDEO_ROW_BYTES,
++                video.partial + video.rows * fdisbull_video_stride(video.source.layout),
+             &source, &error) || !video_source_equal(&source, &video.source)) {
+         fdisbull_video_frame_invalidate(video.console, latching ?
+                                         "unsupported-page-latch-source" :
+@@ -763,7 +812,7 @@
+             video.overlap_next_retained_ns += video.overlap.line_period_ns;
+         }
+     }
+-    if (video.rows == FDISBULL_VIDEO_HEIGHT) {
++    if (video.rows == fdisbull_video_height(video.source.layout)) {
+         if (video.sequence == UINT64_MAX) {
+             fdisbull_video_frame_invalidate(video.console, "frame-sequence-overflow");
+             return;
+@@ -864,8 +913,8 @@
+         deadline = overlap.new_first_ns;
+     }
+     path = object_get_canonical_path(device);
+-    partial = g_try_malloc(FDISBULL_VIDEO_RGB_BYTES);
+-    rgb = g_try_malloc(FDISBULL_VIDEO_RGB_BYTES);
++    partial = g_try_malloc(fdisbull_video_rgb_size(source.layout));
++    rgb = g_try_malloc(fdisbull_video_rgb_size(source.layout));
+     if (!path || !partial || !rgb) {
+         error_setg(errp, "Video frame bounded storage or device path unavailable");
+         return NULL;
+@@ -873,7 +922,10 @@
+     /* Explicit start admits the existing precise owner/migration blocker. */
+     retrace = qmp_x_fdisbull_query_retrace(errp);
+     if (!retrace || retrace->epoch != clock->epoch ||
+-        strcmp(retrace->device, path) || !retrace->phase_supported ||
++        strcmp(retrace->device, path) ||
++        (!retrace->phase_supported &&
++         (source.layout != FDISBULL_SCANOUT_VBE101 ||
++          g_strcmp0(retrace->unsupported_reason, "vbe-enabled"))) ||
+         retrace->timing_generation != source.timing_generation) {
+         if (!errp || !*errp) {
+             error_setg(errp, "Video frame precise owner admission changed");
+@@ -1014,7 +1066,8 @@
+     const char *token, uint64_t frame_id, const char *filename, Error **errp)
+ {
+     g_autoptr(FdisbullClockInfo) clock = NULL;
+-    static const char header[] = "P6\n320 200\n255\n";
++    g_autofree char *header = NULL;
++    size_t header_size, rgb_size;
+     int fd, saved_errno;
+
+     if (!video_query_guard(&clock, errp) ||
+@@ -1025,14 +1078,18 @@
+         error_setg(errp, "Video frame export requires a bounded nonempty path");
+         return NULL;
+     }
++    header = g_strdup_printf("P6\n%u %u\n255\n",
++                            fdisbull_video_width(video.source.layout),
++                            fdisbull_video_height(video.source.layout));
++    header_size = strlen(header);
++    rgb_size = fdisbull_video_rgb_size(video.source.layout);
+     fd = open(filename, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+     if (fd < 0) {
+         error_setg_errno(errp, errno, "Cannot create private video frame export");
+         return NULL;
+     }
+-    if (qemu_write_full(fd, header, sizeof(header) - 1) != sizeof(header) - 1 ||
+-        qemu_write_full(fd, video.rgb, FDISBULL_VIDEO_RGB_BYTES) !=
+-        FDISBULL_VIDEO_RGB_BYTES) {
++    if (qemu_write_full(fd, header, header_size) != header_size ||
++        qemu_write_full(fd, video.rgb, rgb_size) != rgb_size) {
+         saved_errno = errno ? errno : EIO;
+         close(fd);
+         unlink(filename);
+@@ -1064,8 +1121,9 @@
+     }
+     for (point = points; point; point = point->next) {
+         if (++count > VIDEO_MAX_POINTS || point->value->x < 0 ||
+-            point->value->x >= FDISBULL_VIDEO_WIDTH || point->value->y < 0 ||
+-            point->value->y >= FDISBULL_VIDEO_HEIGHT) {
++            point->value->x >= fdisbull_video_width(video.source.layout) ||
++            point->value->y < 0 ||
++            point->value->y >= fdisbull_video_height(video.source.layout)) {
+             error_setg(errp, "Video frame probe requires at most 256 in-range points");
+             return NULL;
+         }
+@@ -1077,7 +1135,8 @@
+         FdisbullVideoFramePixelList *entry = g_new0(FdisbullVideoFramePixelList, 1);
+         FdisbullVideoFramePixel *pixel = g_new0(FdisbullVideoFramePixel, 1);
+         const uint8_t *rgb = video.rgb +
+-            (point->value->y * FDISBULL_VIDEO_WIDTH + point->value->x) * 3;
++            point->value->y * fdisbull_video_stride(video.source.layout) +
++            point->value->x * 3;
+
+         pixel->x = point->value->x;
+         pixel->y = point->value->y;
+@@ -1285,7 +1344,7 @@
+                                    unsigned count, int64_t start, int64_t line,
+                                    unsigned phase, int64_t stopped,
+                                    const FdisbullVideoReapplyOverlap *overlap,
+-                                   Error **errp)
++                                   FdisbullVideoScanoutLayout layout, Error **errp)
+ {
+     unsigned row;
+
+@@ -1299,8 +1358,8 @@
+             valid = value && value->actual_ns <
+                 overlap->new_first_ns + (row + 1) * line;
+         } else {
+-            valid = fdisbull_video_phase_deadline(start, line, row,
+-                                                   phase, &intended);
++            valid = video_row_deadline(layout, start, line, row,
++                                       phase, &intended);
+         }
+         if (!value || value->row != row || !valid ||
+             value->intended_ns != intended || value->actual_ns > stopped ||
+@@ -1340,6 +1399,7 @@
+     const FdisbullVideoFrame *f = info->frame;
+     const FdisbullVideoFrameRowList *last;
+     int64_t stopped = info->has_stop_ns ? info->stop_ns : info->virtual_ns;
++    FdisbullVideoScanoutLayout layout = video_layout(info->scanout_layout);
+
+     if (!f) {
+         return video_checkpoint_pixels(s->rgb_base64, 0, NULL, NULL, errp);
+@@ -1349,9 +1409,10 @@
+         f->epoch != info->epoch ||
+         f->configuration_generation != s->configuration_generation ||
+         f->timing_generation != s->timing_generation ||
+-        f->width != FDISBULL_VIDEO_WIDTH ||
+-        f->height != FDISBULL_VIDEO_HEIGHT ||
+-        f->stride != FDISBULL_VIDEO_ROW_BYTES ||
++        g_strcmp0(f->scanout_layout, info->scanout_layout) ||
++        f->width != fdisbull_video_width(layout) ||
++        f->height != fdisbull_video_height(layout) ||
++        f->stride != fdisbull_video_stride(layout) ||
+         g_strcmp0(f->pixel_format, "RGB888") ||
+         g_strcmp0(f->dac_conversion, "replicate-6-to-8-v1") ||
+         f->dac_8bit != s->dac_8bit || f->period_ns != s->period_ns ||
+@@ -1377,9 +1438,9 @@
+     if (!video_checkpoint_overlap(f->reapply_overlap, info->mode_setup,
+                                   f->frame_start_ns, f->line_period_ns,
+                                   f->period_ns, errp) ||
+-        !video_checkpoint_rows(f->rows, FDISBULL_VIDEO_HEIGHT,
++        !video_checkpoint_rows(f->rows, fdisbull_video_height(layout),
+                                f->frame_start_ns, f->line_period_ns, phase,
+-                               stopped, f->reapply_overlap, errp)) {
++                               stopped, f->reapply_overlap, layout, errp)) {
+         return false;
+     }
+     for (last = f->rows; last->next; last = last->next) {
+@@ -1395,7 +1456,7 @@
+          s->frame_start_ns != f->frame_start_ns + s->period_ns)) {
+         return video_checkpoint_error(errp, "next raster after complete image");
+     }
+-    return video_checkpoint_pixels(s->rgb_base64, FDISBULL_VIDEO_RGB_BYTES,
++    return video_checkpoint_pixels(s->rgb_base64, fdisbull_video_rgb_size(layout),
+                                     f->pixel_sha256, NULL, errp);
+ }
+
+@@ -1409,15 +1470,23 @@
+     bool selected = fdisbull_video_frame_mode13_selected();
+     bool overlap_model = fdisbull_video_frame_mode13_overlap_selected();
+     bool unchained = fdisbull_video_frame_unchained_latch_selected();
++    bool wide = fdisbull_video_frame_vga480_selected();
++    FdisbullVideoScanoutLayout layout;
+     unsigned phase;
+
+-    if (!s || !(info = s->info) || !source_epoch || virtual_ns < 0 ||
++    if (!s || !(info = s->info)) {
++        return video_checkpoint_error(errp, "missing source stream");
++    }
++    layout = video_layout(info->scanout_layout);
++    if (!source_epoch || virtual_ns < 0 ||
+         info->api_version != 1 ||
+-        g_strcmp0(info->model, unchained ? UNCHAINED_LATCH_VIDEO_MODEL :
++        g_strcmp0(info->model, wide ? VGA480_VIDEO_MODEL :
++                  unchained ? UNCHAINED_LATCH_VIDEO_MODEL :
+                   overlap_model ? MODE13_OVERLAP_VIDEO_MODEL :
+                   selected ? MODE13_VIDEO_MODEL : VIDEO_MODEL) ||
+         info->epoch != source_epoch || info->virtual_ns != virtual_ns ||
+-        info->rows_sampled < 0 || info->rows_sampled >= FDISBULL_VIDEO_HEIGHT ||
++        info->rows_sampled < 0 ||
++        info->rows_sampled >= fdisbull_video_height(layout) ||
+         info->in_progress != (info->rows_sampled != 0) ||
+         !s->device_path || s->console_index || !s->partial_sha256) {
+         return video_checkpoint_error(errp, "stream identity or row progress");
+@@ -1430,7 +1499,9 @@
+         info->has_start_ns != !idle || info->has_stop_ns != stopped ||
+         info->has_next_deadline_ns != observing ||
+         (info->reason != NULL) != invalidated ||
+-        ((idle || invalidated) && info->frame)) {
++        ((idle || invalidated) && info->frame) ||
++        (info->scanout_layout != NULL) != (wide && (observing || stopped)) ||
++        (info->scanout_layout && !layout)) {
+         return video_checkpoint_error(errp, "canonical stream fields");
+     }
+     if (idle) {
+@@ -1455,7 +1526,8 @@
+             return video_checkpoint_error(errp, "inactive source descriptor");
+         }
+     } else if (!s->configuration_generation || !s->timing_generation ||
+-               !fdisbull_video_timing_valid(s->line_period_ns, s->period_ns)) {
++               !fdisbull_video_scanout_timing_valid(layout, s->line_period_ns,
++                                                    s->period_ns)) {
+         return video_checkpoint_error(errp, "source timing");
+     }
+     if (info->has_page_latch_offset_ns != (unchained && (observing || stopped)) ||
+@@ -1529,8 +1601,8 @@
+                    (!fdisbull_video_page_deadline(s->frame_start_ns, s->period_ns,
+                                                   info->page_latch_offset_ns, &intended) ||
+                     intended <= info->start_ns) :
+-                   !fdisbull_video_phase_deadline(s->frame_start_ns, s->line_period_ns,
+-                                                   info->rows_sampled, phase, &intended)) {
++                   !video_row_deadline(layout, s->frame_start_ns, s->line_period_ns,
++                                       info->rows_sampled, phase, &intended)) {
+             return video_checkpoint_error(errp, "pending raster deadline");
+         }
+         if (info->next_deadline_ns != intended || !s->timer_pending ||
+@@ -1544,7 +1616,7 @@
+         if (!video_checkpoint_rows(s->partial_rows, info->rows_sampled,
+                                    s->frame_start_ns, s->line_period_ns,
+                                    phase, virtual_ns, info->reapply_overlap,
+-                                   errp)) {
++                                   layout, errp)) {
+             return false;
+         }
+     } else if (info->rows_sampled || s->partial_rows || s->frame_start_ns ||
+@@ -1552,7 +1624,7 @@
+         return video_checkpoint_error(errp, "inactive progress or timer");
+     }
+     if (!video_checkpoint_pixels(s->partial_rgb_base64,
+-                                  info->rows_sampled * FDISBULL_VIDEO_ROW_BYTES,
++                                  info->rows_sampled * fdisbull_video_stride(layout),
+                                   s->partial_sha256, NULL, errp)) {
+         return false;
+     }
+@@ -1570,6 +1642,7 @@
+         .line_period_ns = s->line_period_ns,
+         .period_ns = s->period_ns,
+         .dac_8bit = s->dac_8bit,
++        .layout = video_layout(s->info->scanout_layout),
+     };
+
+     *device = video_device(console, errp);
+@@ -1638,7 +1711,7 @@
+         return NULL;
+     }
+     if ((video.rows && !video.partial) || (video.frame && !video.rgb) ||
+-        video.rows >= FDISBULL_VIDEO_HEIGHT) {
++        video.rows >= fdisbull_video_height(video.source.layout)) {
+         video_checkpoint_error(errp, "live raster storage");
+         return NULL;
+     }
+@@ -1669,13 +1742,14 @@
+         *tail = entry;
+         tail = &entry->next;
+     }
+-    size = video.rows * FDISBULL_VIDEO_ROW_BYTES;
++    size = video.rows * fdisbull_video_stride(video.source.layout);
+     prefix = size ? video.partial : (const uint8_t *)"";
+     s->partial_rgb_base64 = g_base64_encode(prefix, size);
+     s->partial_sha256 = g_compute_checksum_for_data(G_CHECKSUM_SHA256, prefix,
+                                                    size);
+     s->rgb_base64 = video.frame ?
+-        g_base64_encode(video.rgb, FDISBULL_VIDEO_RGB_BYTES) : g_strdup("");
++        g_base64_encode(video.rgb, fdisbull_video_rgb_size(video.source.layout)) :
++        g_strdup("");
+     if (!fdisbull_video_frame_checkpoint_validate(s, clock->epoch,
+                                                    clock->virtual_ns, errp)) {
+         return NULL;
+@@ -1739,7 +1813,8 @@
+     Object *device;
+     QemuConsole *console;
+     bool observing, stopped;
+-    size_t size;
++    size_t size, rgb_size;
++    FdisbullVideoScanoutLayout layout;
+     unsigned index = 0;
+
+     assert(bql_locked());
+@@ -1790,18 +1865,20 @@
+     }
+     observing = !strcmp(info->state, "observing");
+     stopped = !strcmp(info->state, "stopped");
+-    size = info->rows_sampled * FDISBULL_VIDEO_ROW_BYTES;
++    layout = video_layout(info->scanout_layout);
++    size = info->rows_sampled * fdisbull_video_stride(layout);
++    rgb_size = fdisbull_video_rgb_size(layout);
+     if (!video_checkpoint_pixels(s->partial_rgb_base64, size, s->partial_sha256,
+                                   &prefix, errp) ||
+         !video_checkpoint_pixels(s->rgb_base64,
+-                                  info->frame ? FDISBULL_VIDEO_RGB_BYTES : 0,
++                                  info->frame ? rgb_size : 0,
+                                   info->frame ? info->frame->pixel_sha256 : NULL,
+                                   &complete, errp)) {
+         return false;
+     }
+     if (observing) {
+-        partial = g_try_malloc0(FDISBULL_VIDEO_RGB_BYTES);
+-        rgb = g_try_malloc0(FDISBULL_VIDEO_RGB_BYTES);
++        partial = g_try_malloc0(rgb_size);
++        rgb = g_try_malloc0(rgb_size);
+         if (!partial || !rgb) {
+             return video_checkpoint_error(errp, "bounded restore storage");
+         }
+@@ -1809,7 +1886,7 @@
+             memcpy(partial, prefix, size);
+         }
+         if (info->frame) {
+-            memcpy(rgb, complete, FDISBULL_VIDEO_RGB_BYTES);
++            memcpy(rgb, complete, rgb_size);
+         }
+     } else if (info->frame) {
+         rgb = g_steal_pointer(&complete);
+@@ -1855,6 +1932,7 @@
+     }
+     video.source.configuration_generation = s->configuration_generation;
+     video.source.timing_generation = s->timing_generation;
++    video.source.layout = layout;
+     video.source.period_ns = s->period_ns;
+     video.source.line_period_ns = s->line_period_ns;
+     video.source.dac_8bit = s->dac_8bit;

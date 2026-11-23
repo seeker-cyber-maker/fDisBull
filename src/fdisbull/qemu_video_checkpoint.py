@@ -19,16 +19,19 @@ OVERLAP_PROFILE = 'dosbox-mode13-overlap'
 OVERLAP_MODEL = 'qemu-vga-chain4-dosbox-mode13-overlap-v1'
 LATCH_PROFILE = 'vga-unchained-latch'
 LATCH_MODEL = 'qemu-vga-unchained-320x200-latch-v1'
+VGA480_PROFILE = 'vga-640x480'
+VGA480_MODEL = 'qemu-vga-640x480-scanline-v1'
+VGA480_LAYOUTS = ('vga-mode12', 'vbe-banked-101')
 VIDEO_SOURCE_PROFILES = {
     MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
     OVERLAP_PROFILE: (OVERLAP_MODEL, 'VGA.x-fdisbull-mode13-overlap=on'),
     LATCH_PROFILE: (LATCH_MODEL, 'VGA.x-fdisbull-unchained-latch=on'),
+    VGA480_PROFILE: (VGA480_MODEL, 'VGA.x-fdisbull-vga480=on'),
 }
 MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
-VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL))
-ROW_BYTES = 960
-HEIGHT = 200
-RGB_BYTES = ROW_BYTES * HEIGHT
+VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, VGA480_MODEL))
+DEFAULT_FRAME_SIZE = (320, 200)
+VGA480_FRAME_SIZE = (640, 480)
 I64_MAX = (1 << 63) - 1
 U64_MAX = (1 << 64) - 1
 EMPTY_SHA256 = hashlib.sha256(b'').hexdigest()
@@ -88,6 +91,36 @@ def _pixels(value, size, digest=None):
 def video_model(configuration):
     profile = configuration.get('video_source_profile')
     return VIDEO_SOURCE_PROFILES[profile][0] if type(profile) is str and profile in VIDEO_SOURCE_PROFILES else MODEL
+
+
+def video_frame_size(model):
+    return VGA480_FRAME_SIZE if model == VGA480_MODEL else DEFAULT_FRAME_SIZE
+
+
+def video_vm_size(vm):
+    return video_frame_size(video_model(getattr(vm, 'machine_configuration', {})))
+
+
+def video_period_valid(model, period, line):
+    height = video_frame_size(model)[1]
+    physical_rows = height if model == VGA480_MODEL else height * 2
+    return line >= 4 and period >= physical_rows * line and period % line == 0
+
+
+def validate_scanout_info(info):
+    expected = info['model'] == VGA480_MODEL and info['state'] in ('observing', 'stopped')
+    _require(('scanout-layout' in info) == expected, 'scanout layout presence')
+    if expected:
+        _require(info['scanout-layout'] in VGA480_LAYOUTS, 'scanout layout')
+    return {'scanout-layout'} if expected else set()
+
+
+def validate_frame_scanout(frame, info):
+    expected = info['model'] == VGA480_MODEL
+    _require(('scanout-layout' in frame) == expected, 'complete scanout layout presence')
+    if expected:
+        _require(frame['scanout-layout'] in VGA480_LAYOUTS
+                 and frame['scanout-layout'] == info.get('scanout-layout'), 'complete scanout layout')
 
 
 def validate_video_source_profile(profile, clock, retrace):
@@ -169,7 +202,8 @@ def validate_page_latch(stamp, info, *, upper, intended=None, generation=1):
     _require(type(stamp) is dict and set(stamp) == {
                 'origin-bytes', 'configuration-generation', 'intended-ns', 'actual-ns'},
              'page latch stamp fields')
-    _require(_integer(stamp['origin-bytes'], maximum=(256 * 1024 - 320 * HEIGHT))
+    width, height = DEFAULT_FRAME_SIZE
+    _require(_integer(stamp['origin-bytes'], maximum=(256 * 1024 - width * height))
              and stamp['origin-bytes'] % 4 == 0, 'page latch origin')
     _require(_integer(stamp['configuration-generation'], generation, U64_MAX),
              'page latch generation')
@@ -236,6 +270,8 @@ def raster_row_timing(info, source, schedule):
         _require(_overlap_stamp(stamp, info) == (start, line) and period == _MODE13_LINES * line,
                  'reapply overlap timing descriptor')
         return phase, stamp['retained-first-ns'], line
+    if info['model'] == VGA480_MODEL:
+        return phase, _deadline(start + line // 4, line, 0), line
     return phase, _deadline(start + line // 4 + phase * line, line * 2, 0), line * 2
 
 
@@ -268,6 +304,8 @@ def _frame(frame, info, source):
     fields = _FRAME | {'source-phase'} if phased else _FRAME
     if info['model'] == LATCH_MODEL:
         fields = fields | {'page-latch'}
+    if info['model'] == VGA480_MODEL:
+        fields = fields | {'scanout-layout'}
     if type(frame) is dict and info['model'] == OVERLAP_MODEL and 'reapply-overlap' in frame:
         fields = fields | {'reapply-overlap'}
     _require(type(frame) is dict and set(frame) == fields, 'complete frame fields')
@@ -276,8 +314,9 @@ def _frame(frame, info, source):
     _require(frame['frame-id'] == info['frame-sequence']
         and frame['stream-generation'] == info['stream-generation'] and frame['epoch'] == info['epoch'],
         'complete frame ownership')
+    width, height = video_frame_size(info['model'])
     _require(all(type(frame[k]) is int and frame[k] == value for k, value in
-        (('width', 320), ('height', HEIGHT), ('stride', ROW_BYTES)))
+        (('width', width), ('height', height), ('stride', width * 3)))
         and frame['pixel-format'] == 'RGB888'
         and frame['dac-conversion'] == 'replicate-6-to-8-v1'
         and type(frame['dac-8bit']) is bool, 'complete frame geometry or color format')
@@ -290,9 +329,10 @@ def _frame(frame, info, source):
     phase, first, spacing = raster_row_timing(info, frame, frame)
     if phased:
         _require(_integer(frame['source-phase'], 0, 1) and frame['source-phase'] == phase, 'complete source phase')
-    _rows(frame['rows'], HEIGHT, first, spacing, raster_row_slack(line, frame),
+    _rows(frame['rows'], height, first, spacing, raster_row_slack(line, frame),
           info.get('stop-ns', info['virtual-ns']))
     validate_frame_latch(frame, info)
+    validate_frame_scanout(frame, info)
     _require(frame['first-sample-ns'] == frame['rows'][0]['actual-ns']
         and frame['last-sample-ns'] == frame['completed-ns'] == frame['rows'][-1]['actual-ns'],
         'complete frame sample endpoints')
@@ -329,10 +369,13 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
     for key in ('stream-generation', 'frame-sequence', 'aborted-frames'):
         _require(_integer(info[key], 0, U64_MAX), 'stream counter')
     rows = info['rows-sampled']
-    _require(_integer(rows, 0, HEIGHT - 1) and type(info['in-progress']) is bool
+    width, height = video_frame_size(info['model'])
+    row_bytes = width * 3
+    _require(_integer(rows, 0, height - 1) and type(info['in-progress']) is bool
         and info['in-progress'] == bool(rows), 'stream row progress')
     fields.update(validate_latch_info(info))
     fields.update(validate_reapply_info(info))
+    fields.update(validate_scanout_info(info))
     _require(set(info) == fields, 'canonical stream fields')
     _require(type(record['console-index']) is int and record['console-index'] == 0
         and type(record['dac-8bit']) is bool and type(record['timer-pending']) is bool,
@@ -362,7 +405,7 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
     else:
         period, line = record['period-ns'], record['line-period-ns']
         _require(record['configuration-generation'] > 0 and record['timing-generation'] > 0
-            and line >= 4 and period >= 400 * line and period % line == 0, 'source timing')
+            and video_period_valid(info['model'], period, line), 'source timing')
         if info['model'] == LATCH_MODEL:
             latch_offset(info, period, line)
         if setup is not None:
@@ -395,7 +438,7 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         _require(rows == 0 and record['partial-rows'] == [] and type(record['partial-rows']) is list
             and record['frame-start-ns'] == 0 and record['timer-pending'] is False
             and record['timer-expire-ns'] == -1, 'inactive raster progress or timer')
-    _pixels(record['partial-rgb-base64'], rows * ROW_BYTES, record['partial-sha256'])
+    _pixels(record['partial-rgb-base64'], rows * row_bytes, record['partial-sha256'])
     if 'frame' in info:
         _frame(info['frame'], info, record)
         if 'pending-page-latch' in info:
@@ -405,7 +448,7 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         if state == 'observing':
             _require(record['frame-start-ns'] == info['frame']['frame-start-ns'] + period,
                 'next raster after complete image')
-        _pixels(record['rgb-base64'], RGB_BYTES, info['frame']['pixel-sha256'])
+        _pixels(record['rgb-base64'], height * row_bytes, info['frame']['pixel-sha256'])
     else:
         _pixels(record['rgb-base64'], 0)
     return deepcopy(record)

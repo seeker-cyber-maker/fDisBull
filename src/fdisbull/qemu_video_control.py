@@ -13,6 +13,7 @@ import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
+from .qemu_video_checkpoint import video_frame_size
 from .qemu_video_frame import _frame_valid, _integer, _remaining
 
 
@@ -78,7 +79,8 @@ def _fence(raw, context, clock, *, phase):
             or raw['epoch'] != clock['virtual_clock']['native']['epoch']
             or not _integer(raw['baseline-frame-sequence'], maximum=(1 << 64) - 2)
             or raw['baseline-frame-sequence'] != source['frame-sequence']
-            or not _integer(raw['baseline-rows-sampled'], maximum=199)
+            or not _integer(raw['baseline-rows-sampled'],
+                            maximum=video_frame_size(source['model'])[1] - 1)
             or raw['baseline-rows-sampled'] != source['rows-sampled']
             or not _integer(raw['armed-ns'])
             or raw['armed-ns'] != context['clock']['virtual_ns']

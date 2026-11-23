@@ -67,6 +67,44 @@ def test_public_frame_consumers_keep_one_session_revision_and_true_source(video)
                for command, _ in o.wire.calls)
 
 
+@pytest.mark.parametrize('layout', ['vga-mode12', 'vbe-banked-101'])
+def test_wide_native_public_consumers_own_exact_pixels_and_layout(video, layout):
+    from fdisbull.debug_script import execute_script, validate_script
+    from fdisbull.frame_coherence import _source_issue
+    from fdisbull.qemu_source_timeline import source_raster_record, validate_source_raster
+    from fdisbull.qemu_video_checkpoint import VGA480_MODEL, VGA480_PROFILE
+
+    o = video
+    o.vm.machine_configuration['video_source_profile'] = VGA480_PROFILE
+    o.wire.video['model'] = VGA480_MODEL
+    o.wire.scanout_layout = layout
+    o.wire.size = (640, 480)
+    o.wire.rgb = bytes((4, 85, 170)) * (640 * 480 - 1) + bytes((26, 37, 48))
+    seen = prepared(o)
+    point = [639, 479]
+    before = o.session.status()['state_revision']
+    result = o.session.frame_probe([point])
+    frame = o.session.frame_rgba(encoding='png')
+    assert result['samples'] == [dict(x=639, y=479, rgb=[26, 37, 48])]
+    assert result['state_revision'] == frame.metadata['state_revision'] == before
+    assert _source_issue(frame.metadata) is None
+    assert frame.pixel(*point) == (26, 37, 48, 255)
+    assert (frame.width, frame.height, frame.stride) == (640, 480, 2560)
+    assert frame.metadata['scanout_layout'] == result['scanout_layout'] == seen['scanout_layout'] == layout
+    assert frame.metadata['frame_profile'] == result['frame_profile'] == VGA480_MODEL
+    assert o.session.video_frame_probe([point])['samples'] == result['samples']
+    script = {'format': 'fdisbull-script-1', 'backend': 'qemu-machine',
+              'video_source_profile': VGA480_PROFILE,
+              'steps': [{'op': 'video-frame-probe', 'points': [point]}]}
+    assert validate_script(script) == script['steps']
+    assert execute_script(o.session, script)['steps'][0]['result']['samples'] == result['samples']
+    persisted = source_raster_record(seen['native'])
+    validate_source_raster(persisted)
+    assert persisted['scanout_layout'] == layout and persisted['width'] == 640
+    with pytest.raises(ValueError, match='within 640x480'):
+        o.session.frame_probe([[640, 479]])
+
+
 @pytest.mark.parametrize('encoding', ['png', 'png-indexed', 'rgba-zstd'])
 def test_each_codec_is_real_and_rgba_does_not_publish_or_run_hooks(video, monkeypatch, encoding):
     if encoding == 'rgba-zstd':

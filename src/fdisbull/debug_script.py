@@ -10,6 +10,7 @@ from functools import wraps
 
 from .debugger import bounded
 from .operation_budget import rpc_budget
+from .qemu_video_checkpoint import VIDEO_SOURCE_PROFILES, video_frame_size, video_vm_size
 from .qemu_video_frame import VIDEO_FRAME_SCRIPT_OPERATIONS, validate_video_frame_script_parameters
 from .qemu_video_frame_state import validate_video_frame_state_parameters
 from .qemu_stopped_control import validate_stopped_control_parameters
@@ -87,7 +88,8 @@ OPERATIONS = {
 def validate_script(script, *, session=None):
     from .debugger import DebugSession
     if (not isinstance(script,dict) or not {'format','steps'}<=set(script)
-            or set(script)-{'format','steps','backend'} or script['format'] != 'fdisbull-script-1'):
+            or set(script)-{'format','steps','backend','video_source_profile'}
+            or script['format'] != 'fdisbull-script-1'):
         raise ValueError('Script requires format=fdisbull-script-1 and steps')
     backend=script.get('backend')
     supported_backends=('wine-qemu','wine-ne','scummvm-agi','scummvm-gob','scummvm-kyra','qemu-machine','qemu-dos','qemu-chip8')
@@ -126,6 +128,17 @@ def validate_script(script, *, session=None):
             from .scummvm_debugger import ScummVMAGISession
             owner=ScummVMAGISession
     outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
+    vm = getattr(session, 'vm', None)
+    if 'video_source_profile' in script:
+        profile = script['video_source_profile']
+        if (backend not in ('qemu-machine', 'qemu-dos') or type(profile) is not str
+                or profile not in VIDEO_SOURCE_PROFILES):
+            raise ValueError('Script video source profile requires an explicit native QEMU backend and known profile')
+        if session is not None and profile != getattr(vm, 'machine_configuration', {}).get('video_source_profile'):
+            raise ValueError('Script video source profile differs from the live debugger')
+        probe_size = video_frame_size(VIDEO_SOURCE_PROFILES[profile][0])
+    else:
+        probe_size = video_vm_size(vm)
     if (backend or actual) in (None, 'dosbox', 'dosbox-x', 'dosbox-qemu', 'qemu-dos'):
         # Both DOS process implementations distinguish a selected program's
         # return or residency from the native emulator exiting.
@@ -568,14 +581,15 @@ def validate_script(script, *, session=None):
                         if session is not None and not getattr(session,'capabilities',{}).get('frame_contract'):
                             raise ValueError('Frame probe requires the owned QEMU source-raster contract')
                         from .qemu_video_frame import validate_video_frame_probe
-                        validate_video_frame_probe(**params, allow_references=True)
+                        validate_video_frame_probe(**params, allow_references=True, frame_size=probe_size)
                     if op in VIDEO_FRAME_SCRIPT_OPERATIONS:
                         if (backend or actual) not in ('qemu-machine','qemu-dos'):
                             raise ValueError('Source video frames require an explicit native QEMU backend')
                         capability = 'video_frame_control' if op == 'video-frame-advance' else 'video_frame_capture'
                         if session is not None and not getattr(session,'capabilities',{}).get(capability):
                             raise ValueError('Source video frames require their native extension and explicit virtual/precise profiles')
-                        validate_video_frame_script_parameters(op, params, allow_references=True)
+                        validate_video_frame_script_parameters(op, params, allow_references=True,
+                                                              frame_size=probe_size)
                     if op == 'video-frame-state-observe':
                         if (backend or actual) not in ('qemu-machine','qemu-dos'):
                             raise ValueError('Source raster state observation requires an explicit native QEMU backend')
@@ -931,14 +945,15 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if step['op'] == 'frame-probe' and (getattr(session,'backend_name',None)
                     or getattr(session,'metadata',{}).get('backend')) in ('qemu-machine','qemu-dos'):
                 from .qemu_video_frame import validate_video_frame_probe
-                validate_video_frame_probe(**params)
+                validate_video_frame_probe(**params, frame_size=video_vm_size(getattr(session, 'vm', None)))
                 params['timeout_ms'] = min(params.get('timeout_ms', 1000), remaining)
             if step['op'] == 'frame-advance' and source_steps:
                 from .qemu_frame_step import validate_source_frame_advance
                 validate_source_frame_advance(**params)
                 params['timeout_ms'] = min(params.get('timeout_ms', 10000), remaining)
             if step['op'] in VIDEO_FRAME_SCRIPT_OPERATIONS:
-                validate_video_frame_script_parameters(step['op'], params)
+                validate_video_frame_script_parameters(step['op'], params,
+                                                       frame_size=video_vm_size(getattr(session, 'vm', None)))
                 default = 5000 if step['op'] == 'video-frame-advance' else 1000
                 params['timeout_ms'] = min(params.get('timeout_ms', default), remaining)
             if step['op'] == 'video-frame-state-observe':

@@ -34,12 +34,15 @@ class VideoWire(NativeWire):
         self.after_video = lambda: None
         self.bad_export = False
         self.start_refusal = None
+        self.size = (320, 200)
+        self.scanout_layout = None
 
     def sendall(self, data):
         request = json.loads(data)
         command, args = request['execute'], request.get('arguments', {})
         if command not in VIDEO_FRAME_COMMANDS:
             return super().sendall(data)
+        width, height = self.size
         self.calls.append((command, args))
         self.budgets.append(self.timeout)
         if command == 'x-fdisbull-start-video-frame':
@@ -54,18 +57,20 @@ class VideoWire(NativeWire):
                    'next-deadline-ns': (self.receipt['virtual-ns'] // 32000 + 1) * 32000 + 8})
             for key in ('stop-ns', 'frame', 'reason'):
                 self.video.pop(key, None)
+            if self.scanout_layout is not None:
+                self.video['scanout-layout'] = self.scanout_layout
         elif command == 'x-fdisbull-stop-video-frame':
             self.video.update(state='stopped', **{'stop-ns': self.video.get('stop-ns', self.receipt['virtual-ns'])})
             self.video.pop('next-deadline-ns', None)
         elif command == 'x-fdisbull-export-video-frame':
-            rgb = bytes([7, 87, 168]) * (320 * 200) if self.bad_export else self.rgb
-            Path(args['filename']).write_bytes(b'P6\n320 200\n255\n' + rgb)
+            rgb = bytes([7, 87, 168]) * (width * height) if self.bad_export else self.rgb
+            Path(args['filename']).write_bytes(f'P6\n{width} {height}\n255\n'.encode() + rgb)
         self.video['virtual-ns'] = self.receipt['virtual-ns']
         value = self.change_video(deepcopy(self.video))
         if command == 'x-fdisbull-probe-video-frame':
             values = []
             for point in args['points']:
-                offset = (point['y'] * 320 + point['x']) * 3
+                offset = (point['y'] * width + point['x']) * 3
                 r, g, b = self.rgb[offset:offset + 3]
                 values.append(dict(**point, r=r, g=g, b=b))
             value = self.change_probe(dict(info=value, pixels=values))
@@ -75,19 +80,23 @@ class VideoWire(NativeWire):
 
     def publish(self):
         number = self.video['frame-sequence'] + 1
+        width, height = self.size
+        spacing = 64 if self.scanout_layout is None else 32
         start = (self.receipt['virtual-ns'] // 32000 + 1) * 32000
-        rows = [dict(row=r, **{'intended-ns': start + 8 + 64 * r,
-                               'actual-ns': start + 8 + 64 * r}) for r in range(200)]
+        rows = [dict(row=r, **{'intended-ns': start + 8 + spacing * r,
+                               'actual-ns': start + 8 + spacing * r}) for r in range(height)]
         self.video['frame-sequence'] = number
         self.video['frame'] = {'frame-id': number, 'stream-generation': self.video['stream-generation'],
             'epoch': 1, 'configuration-generation': 7, 'timing-generation': 4,
-            'width': 320, 'height': 200, 'stride': 960, 'pixel-format': 'RGB888',
+            'width': width, 'height': height, 'stride': width * 3, 'pixel-format': 'RGB888',
             'dac-conversion': 'replicate-6-to-8-v1', 'dac-8bit': False,
             'frame-start-ns': start, 'period-ns': 32000, 'line-period-ns': 32,
             'first-sample-ns': rows[0]['actual-ns'], 'last-sample-ns': rows[-1]['actual-ns'],
             'completed-ns': rows[-1]['actual-ns'], 'rows': rows,
             'pixel-sha256': hashlib.sha256(self.rgb).hexdigest()}
-        self.receipt['virtual-ns'] = start + 15000
+        if self.scanout_layout is not None:
+            self.video['frame']['scanout-layout'] = self.scanout_layout
+        self.receipt['virtual-ns'] = max(start + 15000, rows[-1]['actual-ns'])
         self.video['next-deadline-ns'] = start + 32000 + 8
 
 

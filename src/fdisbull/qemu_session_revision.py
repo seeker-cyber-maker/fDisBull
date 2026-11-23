@@ -10,6 +10,8 @@ import re
 import threading
 import uuid
 
+from .qemu_video_checkpoint import video_vm_size
+
 
 REVISION_SCOPE = 'cooperative-session-control-v1'
 _PASSIVE_PUBLIC = frozenset({
@@ -96,10 +98,11 @@ def passive_dispatch(vm, admission, stack):
             if not _selector(arguments, {'token', 'frame-id', 'points'}):
                 return False
             points = arguments['points']
+            width, height = video_vm_size(vm)
             return (type(points) is list and len(points) <= 256
                     and all(type(point) is dict and set(point) == {'x', 'y'}
-                        and type(point['x']) is int and 0 <= point['x'] < 320
-                        and type(point['y']) is int and 0 <= point['y'] < 200 for point in points))
+                        and type(point['x']) is int and 0 <= point['x'] < width
+                        and type(point['y']) is int and 0 <= point['y'] < height for point in points))
         if operation == 'x-fdisbull-export-video-frame':
             if not _selector(arguments, {'token', 'frame-id', 'filename'}):
                 return False

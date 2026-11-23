@@ -4,6 +4,7 @@ from copy import deepcopy
 from .qemu_dos_history import _hex_digest, _json, _sha
 from .qemu_frame_contract import FRAME_SOURCE
 from .qemu_instrumented_checkpoint import COMMANDS
+from .qemu_video_checkpoint import VGA480_LAYOUTS, VGA480_MODEL, video_frame_size
 
 
 SOURCE_RASTER = 'source-raster'
@@ -38,18 +39,24 @@ def source_raster_record(info):
     stream, epoch = logical.pop('token'), logical.pop('epoch')
     frame = logical['frame']
     del frame['epoch']
-    return dict(source=FRAME_SOURCE, stream=stream, epoch=epoch,
+    layout = (dict(frame_profile=VGA480_MODEL, scanout_layout=frame['scanout-layout'])
+              if info.get('model') == VGA480_MODEL else {})
+    return dict(**layout, source=FRAME_SOURCE, stream=stream, epoch=epoch,
                 frame_id=frame['frame-id'], width=frame['width'], height=frame['height'],
                 pixel_sha256=frame['pixel-sha256'], logical_sha256=_sha(_json(logical)))
 
 
 def validate_source_raster(record):
+    profile = record.get('frame_profile') if isinstance(record, dict) else None
+    width, height = video_frame_size(profile)
     if (not isinstance(record, dict) or record.get('source') != FRAME_SOURCE
             or not isinstance(record.get('stream'), str) or not 1 <= len(record['stream']) <= 128
             or any(type(record.get(k)) is not int or not 1 <= record[k] < 1 << 64
                    for k in ('epoch', 'frame_id'))
-            or type(record.get('width')) is not int or record['width'] != 320
-            or type(record.get('height')) is not int or record['height'] != 200
+            or type(record.get('width')) is not int or record['width'] != width
+            or type(record.get('height')) is not int or record['height'] != height
+            or ('scanout_layout' in record) != (profile == VGA480_MODEL)
+            or profile == VGA480_MODEL and record.get('scanout_layout') not in VGA480_LAYOUTS
             or not _hex_digest(record.get('pixel_sha256'))
             or not _hex_digest(record.get('logical_sha256'))):
         raise ValueError('Invalid stored source raster identity')

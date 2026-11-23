@@ -13,7 +13,7 @@ import io
 from .dosbox_rpc import DebuggerError
 from .qemu_session_revision import session_revision
 from .qemu_video_frame import (_failed, _probe_points_snapshot, _remaining,
-                               validate_video_frame_parameters, validate_video_frame_probe)
+                               validate_video_frame_parameters, validate_live_video_frame_probe)
 from .qemu_video_checkpoint import MODEL as FRAME_PROFILE, video_model
 from .screenshot_codecs import ENCODINGS, decode_frame_rgba, validate_encoding
 
@@ -72,7 +72,8 @@ def frame_contract_metadata(session, native, clock, revision=None, *, authority=
         runtime_epoch=getattr(session, '_runtime_epoch', None),
         checkpoint_epoch=getattr(session, '_checkpoint_epoch', None))
     mode = tuple((key, value) for key, value in identity.items() if key != 'frame_id')
-    return dict(**revision, source=FRAME_SOURCE, frame_profile=native.get('model', FRAME_PROFILE),
+    layout = {'scanout_layout': frame['scanout-layout']} if 'scanout-layout' in frame else {}
+    return dict(**revision, **layout, source=FRAME_SOURCE, frame_profile=native.get('model', FRAME_PROFILE),
         frame_identity=identity, mode_id=authority.mode(mode), frame_id=frame['frame-id'],
         width=frame['width'], height=frame['height'], source_bpp=24,
         double_width=False, double_height=False, captured_ns=frame['completed-ns'],
@@ -168,7 +169,7 @@ class QemuFrameContractMixin:
 
     def frame_probe(self, points, *, timeout_ms=1000):
         points = _probe_points_snapshot(points)
-        validate_video_frame_probe(points, timeout_ms=timeout_ms)
+        validate_live_video_frame_probe(self, points=points, timeout_ms=timeout_ms)
         vm, identity = self._frame_contract_begin()
         before = self._video_frame_context(cpu_context=False)
         from .qemu_pending_events import take_pending_events

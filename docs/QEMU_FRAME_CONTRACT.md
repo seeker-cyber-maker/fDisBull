@@ -182,6 +182,23 @@ before the next raster boundary to capture the overlapping callbacks. Format 7
 preserves both pending deadlines and the partial raster through restore.
 [Paired Mode 13h overlap evidence](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md#paired-mode-13h-reapply-and-format-7-restore)
 
+The explicit `vga-640x480` source profile samples one physical row at a time
+in standard planar Mode 12h and banked VBE 101h. Select it with
+`qemu_video_source_profile="vga-640x480"` for native DOS debug launch or
+`video_source_profile="vga-640x480"` on the machine API. Both routes require
+the virtual clock, precise VGA instrumentation and a matching native QEMU.
+The source reports its `scanout-layout` as `vga-mode12` or `vbe-banked-101`.
+Format 8 preserves the last complete 640 × 480 RGB raster, the partial next
+raster, and its deadline independently. Banked VBE source capture uses its
+own timing model while the legacy VGA retrace observer reports `vbe-enabled`.
+A source stream belongs to one layout. Start a new stream after a mode change.
+
+To save a script with literal coordinates outside the standard 320 × 200
+source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
+`"video_source_profile": "vga-640x480"`. The script must match the owner’s
+launch profile when it runs. A running session also checks each resolved
+probe against the selected source extent.
+
 `advance_frames(frames=1, timeout_ms=10000)` on a machine context accepts 1..128
 frames under one outer deadline and original VM/channel lifetime. DOS process
 sessions retain their existing 60000 ms default; an explicit `timeout_ms`
@@ -219,9 +236,10 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, or `qemu-vga-unchained-320x200-latch-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, and `qemu-vga-640x480-scanline-v1` |
+| `scanout_layout` | `vga-mode12` or `vbe-banked-101` for the 640 × 480 source model |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
-| `double_width`, `double_height` | Both false; source coordinates are 320 × 200 |
+| `double_width`, `double_height` | Both false. Coordinates use the retained source extent |
 | `frame_id` | Native accepted raster ordinal, including identical consecutive pixels |
 | `mode_id` | Monotonic session-local projection of the complete source-generation key |
 | `captured_ns` | Native `completed-ns`, on `QEMU_CLOCK_VIRTUAL` |

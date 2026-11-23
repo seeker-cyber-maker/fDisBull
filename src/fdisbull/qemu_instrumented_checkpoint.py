@@ -12,7 +12,7 @@ import json
 
 from .dosbox_rpc import DebuggerError
 from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT, LATCH_MODEL, MODEL, MODE13_MODEL,
-    OVERLAP_MODEL, clear_video_checkpoint_caches, logical_video_checkpoint, restored_video_info,
+    OVERLAP_MODEL, VGA480_MODEL, clear_video_checkpoint_caches, logical_video_checkpoint, restored_video_info,
     validate_video_checkpoint, video_model)
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
@@ -21,9 +21,11 @@ FRAME_KEY_REPEAT_FORMAT = 'fdisbull-instrumented-qemu-state-4'
 VIDEO_PHASE_FORMAT = 'fdisbull-instrumented-qemu-state-5'
 VIDEO_LATCH_FORMAT = 'fdisbull-instrumented-qemu-state-6'
 VIDEO_OVERLAP_FORMAT = 'fdisbull-instrumented-qemu-state-7'
+VIDEO_VGA480_FORMAT = 'fdisbull-instrumented-qemu-state-8'
 _VIDEO_MODEL = {
     VIDEO_FRAME_FORMAT: MODEL, FRAME_KEY_REPEAT_FORMAT: MODEL,
     VIDEO_PHASE_FORMAT: MODE13_MODEL, VIDEO_LATCH_FORMAT: LATCH_MODEL, VIDEO_OVERLAP_FORMAT: OVERLAP_MODEL,
+    VIDEO_VGA480_FORMAT: VGA480_MODEL,
 }
 _VIDEO_FORMATS = frozenset(_VIDEO_MODEL)
 _REPEAT_FORMATS = _VIDEO_FORMATS - {VIDEO_FRAME_FORMAT}
@@ -61,16 +63,16 @@ def preflight(session):
             raise ValueError('Resolve the native clock budget before checkpointing')
 
 
-def _validate_latch_census(state, video):
+def _validate_vga_census(state, video):
     info = video['info']
-    if 'page-latch-offset-ns' not in info:
+    if not {'page-latch-offset-ns', 'scanout-layout'}.intersection(info):
         return
     census = state['retrace'].get('configuration')
     generation = census.get('configuration-generation') if type(census) is dict else None
     selected = info.get('pending-page-latch') or info.get('frame', {}).get('page-latch')
     latest = selected['configuration-generation'] if selected else video['configuration-generation']
     if type(generation) is not int or not latest <= generation < 1 << 64:
-        raise ValueError('Source video page latch is ahead of the saved VGA census')
+        raise ValueError('Source video configuration is ahead of the saved VGA census')
 
 
 def _decode(record):
@@ -102,8 +104,8 @@ def _decode(record):
                                           virtual_ns=state['virtual-ns'])
         if video['info']['model'] != _VIDEO_MODEL[state['format']]:
             raise ValueError('Source video model differs from its checkpoint format')
-        if state['format'] == VIDEO_LATCH_FORMAT:
-            _validate_latch_census(state, video)
+        if state['format'] in (VIDEO_LATCH_FORMAT, VIDEO_VGA480_FORMAT):
+            _validate_vga_census(state, video)
     elif 'video-frame' in state or 'frame-key-repeat' in state:
         raise ValueError('Source video and key repeat require their instrumented checkpoint formats')
     if state['format'] in _REPEAT_FORMATS:

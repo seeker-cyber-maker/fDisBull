@@ -16,8 +16,10 @@ import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
-from .qemu_video_checkpoint import (MODE13_MODELS, OVERLAP_MODEL, raster_row_slack, raster_row_timing,
-    validate_frame_latch, validate_latch_info, validate_mode_setup, validate_reapply_info, video_model)
+from .qemu_video_checkpoint import (DEFAULT_FRAME_SIZE, MODE13_MODELS, OVERLAP_MODEL,
+    raster_row_slack, raster_row_timing, validate_frame_latch, validate_frame_scanout,
+    validate_latch_info, validate_mode_setup, validate_reapply_info, validate_scanout_info,
+    video_frame_size, video_model, video_period_valid, video_vm_size)
 
 
 VIDEO_FRAME_COMMANDS = frozenset({
@@ -37,8 +39,6 @@ MAX_VIDEO_FRAME_POINTS = 4096
 _NATIVE_PROBE_POINTS = 256
 _NATIVE_REPLY_BYTES = 128 * 1024
 _SHA = re.compile(r'[0-9a-f]{64}\Z')
-_HEADER = b'P6\n320 200\n255\n'
-_PIXEL_BYTES = 320 * 200 * 3
 
 
 def _reference(value, allowed):
@@ -61,7 +61,7 @@ def validate_video_frame_parameters(*, timeout_ms=1000, stream=None, frame_id=No
 
 
 def validate_video_frame_probe(points, *, stream=None, frame_id=None, timeout_ms=1000,
-                               allow_references=False):
+                               allow_references=False, frame_size=DEFAULT_FRAME_SIZE):
     validate_video_frame_parameters(timeout_ms=timeout_ms, stream=stream, frame_id=frame_id,
                                     allow_references=allow_references)
     if _reference(points, allow_references):
@@ -75,10 +75,15 @@ def validate_video_frame_probe(points, *, stream=None, frame_id=None, timeout_ms
             raise ValueError('Video frame probe points require exactly two source coordinates')
         if isinstance(point, tuple) and any(_reference(value, allow_references) for value in point):
             raise ValueError('Script video frame probe references require list points')
-        for coordinate, extent in zip(point, (320, 200), strict=True):
+        for coordinate, extent in zip(point, frame_size, strict=True):
             if not _reference(coordinate, allow_references) and (
                     type(coordinate) is not int or not 0 <= coordinate < extent):
-                raise ValueError('Video frame probe points must be integer source coordinates within 320x200')
+                width, height = frame_size
+                raise ValueError(f'Video frame probe points must be integer source coordinates within {width}x{height}')
+
+
+def validate_live_video_frame_probe(session, **params):
+    validate_video_frame_probe(**params, frame_size=video_vm_size(session.vm))
 
 
 def validate_video_frame_capture(name='video-frame.png', *, stream=None, frame_id=None,
@@ -93,10 +98,11 @@ def validate_video_frame_capture(name='video-frame.png', *, stream=None, frame_i
         raise ValueError('Video frame PNG max_bytes must be an integer in 1..16777216')
 
 
-def validate_video_frame_script_parameters(operation, params, *, allow_references=False):
+def validate_video_frame_script_parameters(operation, params, *, allow_references=False,
+                                           frame_size=DEFAULT_FRAME_SIZE):
     """Check every literal, then every resolved value, before route dispatch."""
     if operation == 'video-frame-probe':
-        validate_video_frame_probe(**params, allow_references=allow_references)
+        validate_video_frame_probe(**params, allow_references=allow_references, frame_size=frame_size)
     elif operation == 'capture-video-frame':
         validate_video_frame_capture(**params, allow_references=allow_references)
     elif operation == 'video-frame-advance':
@@ -142,12 +148,13 @@ def _frame_valid(frame, native):
     for key in ('frame-id', 'stream-generation', 'epoch', 'configuration-generation', 'timing-generation'):
         if not _integer(frame.get(key), positive=True, maximum=(1 << 64) - 1):
             return False
+    width, height = video_frame_size(native['model'])
     if (frame['frame-id'] != native['frame-sequence']
             or frame['stream-generation'] != native['stream-generation']
             or frame['epoch'] != native['epoch']
             or type(frame.get('dac-8bit')) is not bool
             or any(type(frame.get(k)) is not int for k in ('width', 'height', 'stride'))
-            or frame.get('width') != 320 or frame.get('height') != 200 or frame.get('stride') != 960
+            or frame.get('width') != width or frame.get('height') != height or frame.get('stride') != 3 * width
             or frame.get('pixel-format') != 'RGB888'
             or frame.get('dac-conversion') != 'replicate-6-to-8-v1'
             or type(frame.get('pixel-sha256')) is not str or not _SHA.fullmatch(frame['pixel-sha256'])):
@@ -158,12 +165,13 @@ def _frame_valid(frame, native):
             return False
     start, period, line = (frame[key] for key in ('frame-start-ns', 'period-ns', 'line-period-ns'))
     rows = frame.get('rows')
-    if (line < 4 or start <= native['start-ns'] or start % period or period < 400 * line or period % line
-            or type(rows) is not list or len(rows) != 200):
+    if (start <= native['start-ns'] or start % period or not video_period_valid(native['model'], period, line)
+            or type(rows) is not list or len(rows) != height):
         return False
     try:
         phase, first, spacing = raster_row_timing(native, frame, frame)
         validate_frame_latch(frame, native)
+        validate_frame_scanout(frame, native)
     except ValueError:
         return False
     if native['model'] in MODE13_MODELS:
@@ -188,9 +196,10 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
     """Validate native identity and completeness before publishing any result."""
     required = {'api-version', 'model', 'state', 'epoch', 'virtual-ns', 'stream-generation',
                 'frame-sequence', 'aborted-frames', 'in-progress', 'rows-sampled'}
+    model = video_model(getattr(vm, 'machine_configuration', {}))
     if (type(value) is not dict or not required <= value.keys()
             or type(value['api-version']) is not int or value['api-version'] != 1
-            or value['model'] != video_model(getattr(vm, 'machine_configuration', {}))
+            or value['model'] != model
             or value['state'] not in ('idle', 'observing', 'stopped', 'invalidated')
             or not _integer(value['epoch'], positive=True, maximum=(1 << 64) - 1)
             or value['epoch'] != clock['virtual_clock']['native']['epoch']
@@ -198,15 +207,16 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
             or any(not _integer(value[k], maximum=(1 << 64) - 1)
                    for k in ('stream-generation', 'frame-sequence', 'aborted-frames'))
             or type(value['in-progress']) is not bool
-            or not _integer(value['rows-sampled'], maximum=199)):
+            or not _integer(value['rows-sampled'], maximum=video_frame_size(model)[1] - 1)):
         _invalid(vm, 'Invalid native video frame stream receipt')
     state = value['state']
     try:
         validate_mode_setup(value)
         validate_latch_info(value)
         validate_reapply_info(value)
+        validate_scanout_info(value)
     except ValueError:
-        _invalid(vm, 'Invalid native video frame mode setup, page latch or reapply schedule')
+        _invalid(vm, 'Invalid native video frame layout, mode setup, page latch or reapply schedule')
     if state == 'idle':
         if (token is not None or value['stream-generation'] or value['frame-sequence']
                 or value['in-progress'] or value['rows-sampled']
@@ -249,6 +259,9 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
                 if value.get(key) != prior.get(key):
                     _invalid(vm, 'Native video frame stream owner changed')
             previous_frame, frame = prior.get('frame'), value.get('frame')
+            if (state in ('observing', 'stopped') and prior['state'] in ('observing', 'stopped')
+                    and value.get('scanout-layout') != prior.get('scanout-layout')):
+                _invalid(vm, 'Native scanout layout changed without retiring its stream')
             if (previous_frame is not None and state != 'invalidated'
                     and (frame is None or frame['frame-id'] == previous_frame['frame-id'] and frame != previous_frame)):
                 _invalid(vm, 'Native completed video frame changed under the same identity')
@@ -334,18 +347,23 @@ def _failed(vm, error, stage, *, clock=None, native=None, result=None, artifact=
         error.video_frame_cleanup_error = type(cleanup).__name__
 
 
-def _read_rgb(path):
+def _rgb_header(width, height):
+    return f'P6\n{width} {height}\n255\n'.encode('ascii')
+
+
+def _read_rgb(path, width, height):
     """Bound both type validation and byte reads to one non-following fd."""
-    expected = len(_HEADER) + _PIXEL_BYTES
+    header = _rgb_header(width, height)
+    expected = len(header) + width * height * 3
     flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     with os.fdopen(os.open(path, flags), 'rb') as stream:
         info = os.fstat(stream.fileno())
         if not stat.S_ISREG(info.st_mode) or info.st_size != expected:
             raise DebuggerError('Native video frame export is not an exact bounded regular file')
         raw = stream.read(expected + 1)
-    if len(raw) != expected or not raw.startswith(_HEADER):
+    if len(raw) != expected or not raw.startswith(header):
         raise DebuggerError('Native video frame export has the wrong header or byte count')
-    return raw[len(_HEADER):]
+    return raw[len(header):]
 
 
 class QemuVideoFrameMixin:
@@ -385,14 +403,15 @@ class QemuVideoFrameMixin:
 
     def _video_frame_result(self, native, clock):
         frame = native.get('frame')
-        return dict(format='fdisbull-video-frame-stream-1', context='machine', run=self.run_id,
+        layout = {'scanout_layout': native['scanout-layout']} if 'scanout-layout' in native else {}
+        return dict(**layout, format='fdisbull-video-frame-stream-1', context='machine', run=self.run_id,
                     epoch=clock['epoch'], stream=native.get('token'), state=native['state'],
                     stream_generation=native['stream-generation'], frame_sequence=native['frame-sequence'],
                     frame_id=frame['frame-id'] if frame else None, observed_ns=native['virtual-ns'],
                     width=frame['width'] if frame else None, height=frame['height'] if frame else None,
                     completed_source_raster=frame is not None, legacy_phase_equivalence=None,
                     application_frame_complete=None, frame=deepcopy(frame), native=deepcopy(native),
-                    clock=deepcopy(clock), scope=('Completed owned 320x200 VGA source raster sampled row by row '
+                    clock=deepcopy(clock), scope=('Completed owned VGA source raster sampled row by row '
                         'at the declared native phase with legacy DAC bit replication. No DOSBox phase '
                         'equivalence, application drawing completion, input consumption or atomic CPU/frame claim.'))
 
@@ -488,7 +507,7 @@ class QemuVideoFrameMixin:
         # copy as well, because a caller/guard may have mutated its lists while
         # we waited. All later callbacks see only this immutable point data.
         points = _probe_points_snapshot(points)
-        validate_video_frame_probe(points, stream=stream, frame_id=frame_id, timeout_ms=timeout_ms)
+        validate_live_video_frame_probe(self, points=points, stream=stream, frame_id=frame_id, timeout_ms=timeout_ms)
         vm = self.vm
         before = self._video_frame_context()
         prior = self._video_frame_select(vm, before, stream, frame_id)
@@ -507,6 +526,7 @@ class QemuVideoFrameMixin:
         try:
             known = getattr(vm, '_video_frame_probe_samples', {})
             rgb_bytes = getattr(vm, '_video_frame_owned_rgb', None)
+            width = prior['frame']['width']
             samples, observed = [], {}
             for start in range(0, len(points), _NATIVE_PROBE_POINTS):
                 _remaining(vm)
@@ -533,7 +553,7 @@ class QemuVideoFrameMixin:
                             or any(not 0 <= pixel[k] <= 255 for k in ('r', 'g', 'b'))):
                         _invalid(vm, 'Native video frame probe reordered points or returned invalid RGB')
                     rgb = bytes(pixel[k] for k in ('r', 'g', 'b'))
-                    offset = (point[1] * 320 + point[0]) * 3
+                    offset = (point[1] * width + point[0]) * 3
                     if (point in observed and observed[point] != rgb
                             or point in known and known[point] != rgb
                             or rgb_bytes is not None and rgb_bytes[offset:offset + 3] != rgb):
@@ -568,11 +588,12 @@ class QemuVideoFrameMixin:
             if native != prior:
                 _invalid(vm, 'Native video frame export changed identity')
             _remaining(vm)
-            pixels = _read_rgb(path)
+            width, height = native['frame']['width'], native['frame']['height']
+            pixels = _read_rgb(path, width, height)
             if hashlib.sha256(pixels).hexdigest() != native['frame']['pixel-sha256']:
                 _invalid(vm, 'Native video frame export differs from its owned raster hash')
             for (x, y), rgb in getattr(vm, '_video_frame_probe_samples', {}).items():
-                offset = (y * 320 + x) * 3
+                offset = (y * width + x) * 3
                 if pixels[offset:offset + 3] != rgb:
                     _invalid(vm, 'Native video frame export contradicts an earlier pixel probe')
             _remaining(vm)
@@ -610,24 +631,26 @@ class QemuVideoFrameMixin:
         metadata = None
         try:
             _remaining(vm)
-            rgba = bytearray(320 * 200 * 4)
+            width, height = native['frame']['width'], native['frame']['height']
+            header = _rgb_header(width, height)
+            rgba = bytearray(width * height * 4)
             rgba[0::4], rgba[1::4], rgba[2::4] = pixels[0::3], pixels[1::3], pixels[2::3]
-            rgba[3::4] = b'\xff' * (320 * 200)
+            rgba[3::4] = b'\xff' * (width * height)
             rgba = bytes(rgba)
             digest = hashlib.sha256(rgba).hexdigest()
             _remaining(vm)
             after = self._video_frame_stable(vm, before)
             metadata = self._video_frame_result(native, before)
-            metadata.update(format='rgba', encoding='rgba', pixel_format='RGBA8', stride=1280,
+            metadata.update(format='rgba', encoding='rgba', pixel_format='RGBA8', stride=width * 4,
                 uncompressed_bytes=len(rgba), sha256=digest, raw_sha256=digest,
                 source='qemu_completed_source_raster', pixel_sha256=native['frame']['pixel-sha256'],
                 stopped=True, clocks=dict(before=deepcopy(before), after=deepcopy(after)),
-                transport=dict(format='ppm', encoding='ppm', pixel_format='RGB888', stride=960,
-                    uncompressed_bytes=len(pixels), bytes=len(_HEADER) + len(pixels),
-                    sha256=hashlib.sha256(_HEADER + pixels).hexdigest(),
+                transport=dict(format='ppm', encoding='ppm', pixel_format='RGB888', stride=width * 3,
+                    uncompressed_bytes=len(pixels), bytes=len(header) + len(pixels),
+                    sha256=hashlib.sha256(header + pixels).hexdigest(),
                     pixel_sha256=native['frame']['pixel-sha256']))
             _remaining(vm)
-            return RGBAFrame(320, 200, rgba, digest, metadata)
+            return RGBAFrame(width, height, rgba, digest, metadata)
         except BaseException as error:
             _failed(vm, error, 'rgba', clock=before, native=native, result=metadata)
             raise
@@ -657,7 +680,8 @@ class QemuVideoFrameMixin:
         try:
             _remaining(vm)
             output = io.BytesIO()
-            with Image.frombytes('RGB', (320, 200), pixels) as image:
+            frame = native['frame']
+            with Image.frombytes('RGB', (frame['width'], frame['height']), pixels) as image:
                 image.save(output, format='PNG')
             _remaining(vm)
             after = self._video_frame_stable(vm, before)

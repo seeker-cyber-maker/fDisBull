@@ -41,7 +41,7 @@ from .qemu_mixer import QemuMixerMixin, MIXER_COMMAND
 from .qemu_display import (QemuDisplayMixin, DISPLAY_COMMANDS, DISPLAY_PROBE_COMMANDS,
                            validate_display_probe_parameters)
 from .qemu_video_frame import (QemuVideoFrameMixin, VIDEO_FRAME_COMMANDS,
-                               validate_video_frame_parameters, validate_video_frame_probe,
+                               validate_video_frame_parameters, validate_live_video_frame_probe,
                                validate_video_frame_capture)
 from .qemu_video_frame_state import (QemuVideoFrameStateMixin, VIDEO_FRAME_STATE_COMMANDS,
                                     validate_video_frame_state_parameters,
@@ -844,7 +844,7 @@ def machine_run_operation(function):
 
 def machine_trace_operation(function, *, label='Source trace', default_timeout_ms=None,
                             parameter_validator=None, parameter_freezer=None,
-                            required_capability=None):
+                            required_capability=None, validate_with_session=False):
     """Bound traces and composed timing operations from lock admission.
 
     Save each incoming bound separately. The DOS loader's ``_set_deadline``
@@ -864,7 +864,11 @@ def machine_trace_operation(function, *, label='Source trace', default_timeout_m
         arguments=signature.bind(self,*args,**kwargs)
         arguments.apply_defaults()
         if parameter_validator is not None:
-            parameter_validator(**{key:value for key,value in arguments.arguments.items() if key!='self'})
+            params = {key:value for key,value in arguments.arguments.items() if key!='self'}
+            if validate_with_session:
+                parameter_validator(self, **params)
+            else:
+                parameter_validator(**params)
         if parameter_freezer is not None:
             # Own declarative projections before lock admission. A caller may
             # mutate its original container while this operation is waiting.
@@ -1140,12 +1144,13 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     video_frame_stop=machine_trace_operation(QemuVideoFrameMixin.video_frame_stop,
         label='Video frame stream stop',parameter_validator=validate_video_frame_parameters)
     video_frame_probe=machine_trace_operation(QemuVideoFrameMixin.video_frame_probe,
-        label='Video frame pixel probe',parameter_validator=validate_video_frame_probe)
+        label='Video frame pixel probe',parameter_validator=validate_live_video_frame_probe,
+        validate_with_session=True)
     video_frame_rgba=machine_trace_operation(QemuVideoFrameMixin.video_frame_rgba,
         label='Video frame RGBA',parameter_validator=validate_video_frame_parameters)
     frame_probe=machine_trace_operation(QemuFrameContractMixin.frame_probe,
-        label='Retained frame pixel probe',parameter_validator=validate_video_frame_probe,
-        required_capability='frame_contract')
+        label='Retained frame pixel probe',parameter_validator=validate_live_video_frame_probe,
+        required_capability='frame_contract',validate_with_session=True)
     frame_rgba=machine_trace_operation(QemuFrameContractMixin.frame_rgba,
         label='Retained frame RGBA',parameter_validator=validate_frame_rgba_parameters,
         required_capability='frame_contract')

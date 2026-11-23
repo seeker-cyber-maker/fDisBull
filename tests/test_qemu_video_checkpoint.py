@@ -15,8 +15,8 @@ from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull import qemu_instrumented_checkpoint as checkpoint
 from fdisbull.qemu_video_checkpoint import (
     FORMAT, EMPTY_SHA256, I64_MAX, LATCH_MODEL, LATCH_PROFILE, MODE13_MODEL, MODE13_PROFILE,
-    OVERLAP_MODEL, OVERLAP_PROFILE, validate_video_checkpoint, logical_video_checkpoint,
-    restored_video_info)
+    OVERLAP_MODEL, OVERLAP_PROFILE, VGA480_MODEL, VGA480_PROFILE, validate_video_checkpoint,
+    logical_video_checkpoint, restored_video_info)
 
 
 def envelope(state):
@@ -927,3 +927,93 @@ def test_format7_checkpoint_requires_the_selected_profile():
     state['format'] = checkpoint.VIDEO_PHASE_FORMAT
     with pytest.raises(ValueError, match='model differs'):
         checkpoint.validate(machine, envelope(state))
+
+
+def wide_source_record(layout):
+    line = 31700 if layout == 'vga-mode12' else 27208
+    period = 525 * line
+    width, height = 640, 480
+    stride = width * 3
+    complete_start, pending_start = period, 2 * period
+
+    def rows(start, count):
+        first = start + line // 4
+        return [dict(row=row, **{'intended-ns': first + row * line,
+                               'actual-ns': first + row * line + 1})
+                for row in range(count)]
+
+    value = source_record()
+    info = value['info']
+    full_rows, prefix = rows(complete_start, height), rows(pending_start, height - 1)
+    deadline = pending_start + line // 4 + (height - 1) * line
+    complete_rgb = b'\x04\x55\xaa' * (width * height)
+    partial_rgb = b'\x0b\x16\x21' * (width * (height - 1))
+    info.update(model=VGA480_MODEL, **{'scanout-layout': layout,
+        'rows-sampled': height - 1, 'virtual-ns': prefix[-1]['actual-ns'],
+        'next-deadline-ns': deadline})
+    info['frame'].update(width=width, height=height, stride=stride, rows=full_rows,
+        **{'scanout-layout': layout, 'frame-start-ns': complete_start,
+           'line-period-ns': line, 'period-ns': period,
+           'first-sample-ns': full_rows[0]['actual-ns'],
+           'last-sample-ns': full_rows[-1]['actual-ns'],
+           'completed-ns': full_rows[-1]['actual-ns'],
+           'pixel-sha256': hashlib.sha256(complete_rgb).hexdigest()})
+    value.update({'period-ns': period, 'line-period-ns': line, 'frame-start-ns': pending_start,
+        'timer-expire-ns': deadline, 'partial-rows': prefix,
+        'partial-rgb-base64': b64encode(partial_rgb).decode(),
+        'partial-sha256': hashlib.sha256(partial_rgb).hexdigest(),
+        'rgb-base64': b64encode(complete_rgb).decode()})
+    return value
+
+
+@pytest.mark.parametrize('layout', ['vga-mode12', 'vbe-banked-101'])
+def test_format8_accepts_full_and_479_pending_rows_with_seeded_configuration(layout):
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    video = wide_source_record(layout)
+    state = make_state(video)
+    state.update(format=checkpoint.VIDEO_VGA480_FORMAT,
+                 **{'frame-key-repeat': {'parameter': 43, 'delay-ns': 500000000,
+                     'interval-ns': 91666666, 'deadline-ns': -1}})
+    # CPU-side aperture changes may advance raw VGA generation without
+    # changing the scanout descriptor retained by the stream.
+    census = state['retrace']['configuration']
+    census['configuration-generation'] = 10
+    if layout == 'vbe-banked-101':
+        state['retrace']['info'].update(**{'phase-supported': False,
+                                         'unsupported-reason': 'vbe-enabled'})
+    machine = SimpleNamespace(qmp_commands=checkpoint.COMMANDS | {
+        'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'},
+                               'video_source_profile': VGA480_PROFILE})
+    encoded = envelope(state)
+    assert 2_450_000 < len(encoded['state']) < checkpoint.MAX_BYTES
+    assert checkpoint.validate(machine, encoded) == state
+    assert len(b64decode(video['rgb-base64'])) == 640 * 480 * 3
+    assert len(b64decode(video['partial-rgb-base64'])) == 640 * 479 * 3
+    saved = deepcopy(state)
+    rebind(state)
+    actual = restored_video_info(video, state['video-frame']['info'],
+                                 epoch=2, token='fresh-source-owner')
+    assert actual['frame']['scanout-layout'] == layout
+    assert logical_video_checkpoint(saved['video-frame']) == logical_video_checkpoint(state['video-frame'])
+    saved['retrace']['configuration']['configuration-generation'] = 6
+    with pytest.raises(ValueError, match='ahead of the saved VGA census'):
+        checkpoint.validate(machine, envelope(saved))
+    state['format'] = checkpoint.VIDEO_OVERLAP_FORMAT
+    with pytest.raises(ValueError, match='model differs'):
+        checkpoint.validate(machine, envelope(state))
+
+
+@pytest.mark.parametrize('path,value', [
+    (('info', 'scanout-layout'), 'unknown-vbe'),
+    (('info', 'frame', 'scanout-layout'), 'vga-mode12'),
+    (('info', 'frame', 'height'), 200),
+    (('info', 'frame', 'stride'), 960),
+    (('period-ns',), 479 * 27208),
+    (('partial-rows', 478, 'intended-ns'), 1),
+])
+def test_wide_raster_rejects_unowned_layout_geometry_and_schedule(path, value):
+    source = wide_source_record('vbe-banked-101')
+    set_path(source, path, value)
+    with pytest.raises(ValueError):
+        validate_video_checkpoint(source, epoch=1, virtual_ns=source['info']['virtual-ns'])
