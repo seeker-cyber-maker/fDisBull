@@ -171,6 +171,47 @@ Both original owners reaped and the pinned inputs rehashed unchanged.
 Private paired receipt SHA-256
 `e9e257369ae72d7843b37e9fd1328c91672a0e1d442c43a527472684cdf47d41`.
 
+## Paired declared pulse windows
+
+A fresh pair ran the same authored COM on installed DOSBox-X and the
+production QEMU `dosbox-mode13` profile. It used two predeclared widths,
+40 PIT ticks for pulse 3 and 36 for pulse 4. The prior PIT-only record
+bounded the pulse-4 C overlap and motivated advancing that write. The
+guest retained the same calibrated delay for both pulses on each engine.
+The runner used no candidate pixels to pick the windows and kept the
+original strict oracle.
+
+| Engine | Pulse 3 | Pulse 4 |
+| --- | --- | --- |
+| QEMU phase profile, delay 8,991 ticks | Full phase 1 prediction matches and phase 0 is excluded | Full phase 1 prediction matches and phase 0 is excluded |
+| Installed DOSBox-X, delay 9,013 ticks | B write overlaps phase-0 row 100 by `18077/15132` PIT ticks | B write overlaps phase-1 row 100 by `849/388` PIT ticks |
+
+All four corresponding RGB images match. The independent audit rebuilt
+the line periods from native guest journals and verified each full RGB
+hash. QEMU reports phase 1 and a maximum callback lateness of 124 ns
+in both pulse trials. DOSBox-X remains timing-unqualified on both
+windows. The newer C window separates on both engines. The remaining
+DOSBox-X ambiguity is at the B-write interval, even though its schedule
+uses the same nominal delay. The qualification depends on the actual
+write and retrace brackets rather than nominal pulse placement.
+
+First draw remains unqualified on DOSBox-X. In the retained producer
+source, `VGA_StartResize` can schedule a later `VGA_SetupDrawing` through
+the PIC, so an INT 10h return or equivalent register readback establishes
+a guest programming boundary only. The completed-frame RPC records a
+frame ID, renderer mode ID and millisecond `PIC_Ticks`. It supplies no
+effective draw-setup timestamp or row callback time. That resolution
+cannot distinguish a physical scanline of approximately 31.7 µs. A
+paired first-raster proof needs an effective setup or first draw
+observation on the DOSBox-X producer. A strict steady proof needs an
+independent tighter DOSBox-X B-write and retrace bracket.
+
+Both native owners closed and reaped; the boot images and producer pins
+passed readback. Native receipt SHA-256
+`0af70ea41d901eeeaaf2ffd79af633def57bf6d38bc5f1d20f96319ce986162e`.
+Independent timing audit SHA-256
+`719aed07fb57d7cca525a8ae7e2c4fda2983922f97b21273a4c94fdd40aef768`.
+
 ## Remaining qualification
 
 - Obtain independent DOSBox-X timing clearances for both pulse trials.
