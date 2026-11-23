@@ -33,7 +33,7 @@ def _stopped_target(owner, x, y, stream, frame_id, timeout_ms):
     return cursor, target
 
 
-def _positioned_counts(cursor, target):
+def _calibrated_counts(cursor, target):
     if cursor['position'] == target:
         return (0, 0)
     if (cursor['mickeys_per_eight_units'] != [8, 16]
@@ -43,6 +43,11 @@ def _positioned_counts(cursor, target):
     current_x, current_y = cursor['raw_position']
     dx = 0 if cursor['position'][0] == target[0] else target[0] - current_x
     dy = 2 * (target[1] - current_y)
+    return dx, dy
+
+
+def _positioned_counts(cursor, target):
+    dx, dy = _calibrated_counts(cursor, target)
     if abs(dx) > 4 or abs(dy) > 4:
         raise ValueError('Positioned INT33 motion requires at most four physical counts on each axis')
     return dx, dy

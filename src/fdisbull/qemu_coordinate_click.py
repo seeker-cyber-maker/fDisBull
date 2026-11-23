@@ -1,8 +1,10 @@
 """Opt-in screenshot-coordinate routes for the pinned QEMU DOS mouse driver."""
+import time
+
 from .dosbox_rpc import DebuggerError
 from .external_files import _file_name
 from .qemu_int33_click import _DEFAULT_BUDGET_NS, _advance_observed
-from .qemu_int33_mouse_control import _positioned_counts, _stopped_target
+from .qemu_int33_mouse_control import _calibrated_counts, _stopped_target
 from .qemu_save_stop import safe_stop_enabled
 from .qemu_video_frame import validate_video_frame_parameters
 from .qemu_video_frame_state import _refuse
@@ -10,6 +12,8 @@ from .screenshot_grid import validate_step
 
 
 FORMAT = 'fdisbull-qemu-coordinate-click-1'
+_MOTION_FIELDS = ('minimum', 'maximum', 'buttons', 'button_edges',
+                  'mickeys_per_eight_units', 'sensitivity_coefficients', 'position_remainders')
 
 
 def validate_coordinate_click(x, y, *, delivery=None, button='left', hold_ms=80,
@@ -55,7 +59,7 @@ def _preflight(owner, x, y, mode_id, frame_id, session_id, timeout_ms):
         _refuse('stale_mode', 'STALE_MODE: Requested QEMU click mode is no longer retained')
     if frame_id is not None and frame_id != raster['frame_id']:
         _refuse('stale_frame', 'STALE_FRAME: Requested QEMU click frame is no longer retained')
-    return stopped, target, _positioned_counts(stopped, target)
+    return stopped, target, _calibrated_counts(stopped, target)
 
 
 def _public_observation(observed):
@@ -93,35 +97,86 @@ def _public_result(result):
     return result
 
 
+def _packets(counts):
+    # The source and clip rectangles bound the delta before this split.
+    dx, dy = counts
+    packets = []
+    while dx or dy:
+        step_x = max(-4, min(4, dx))
+        step_y = max(-4, min(4, dy))
+        packets.append((step_x, step_y))
+        dx -= step_x
+        dy -= step_y
+    return packets
+
+
+def _motion_next_action(vm, result):
+    state = getattr(vm, '_physical_input', None)
+    if state and not state['valid']:
+        return 'delivery_unknown'
+    if state and state['pending']:
+        queued = (result['motion'] or {}).get('queued') or {}
+        if (not state['leases'] and
+                [event['sequence'] for event in state['pending']] == queued.get('sequences')):
+            return 'cancel_unsent_input'
+        return 'inspect_owned_input'
+    return None
+
+
+def _move(owner, vm, result, stopped, packets, timeout_ms):
+    current = stopped
+    progress = result['motion_progress']
+    for index, packet in enumerate(packets, start=1):
+        if time.monotonic() >= vm.operation_deadline:
+            return current, 'deadline_exhausted'
+        raw_x, raw_y = current['raw_position']
+        expected = [raw_x + packet[0], raw_y + packet[1] // 2]
+        progress['attempted'] = index
+        progress['attempted_counts'] = list(packet)
+        result.update(stage='motion', motion=None)
+        queued = owner.mouse_move_relative(*packet)
+        outcome = _advance_observed(owner, vm, result, 'motion', queued, current,
+                                    _DEFAULT_BUDGET_NS, timeout_ms)
+        motion = result['motion']
+        motion['counts'] = list(packet)
+        if outcome is not None:
+            return current, outcome
+        observed = motion['observed']
+        raster = observed['raster']
+        if (observed['raw_position'] != expected
+                or observed['position'] != [expected[0] & ~1, expected[1]]
+                or any(observed[key] != stopped[key] for key in _MOTION_FIELDS)
+                or raster['session_id'] != stopped['raster']['session_id']
+                or raster['mode_id'] != stopped['raster']['mode_id']):
+            return current, 'target_landing_unconfirmed'
+        progress['verified'].append(dict(counts=list(packet), raw_position=expected,
+            position=observed['position'], frame_id=raster['frame_id'],
+            virtual_ns=observed['clock']['virtual_ns']))
+        current = observed
+    return current, None
+
+
 def _execute(owner, x, y, button, hold_ms, timeout_ms, stopped, target, counts, frame=None):
     vm = owner.vm
-    result = dict(format=FORMAT, run=owner.run_id, complete=False, outcome='unconfirmed',
+    packets = _packets(counts)
+    result = dict(format=FORMAT, run=owner.run_id, complete=False, outcome='unconfirmed', stage='preflight',
                   x=x, y=y, target=target, delivery='observed-int33', effect='unconfirmed',
                   mode_id=stopped['raster']['mode_id'], frame_id=stopped['raster']['frame_id'],
                   source=stopped['raster'], target_landing=None, motion=None, click=None,
+                  motion_progress=dict(total_counts=list(counts), planned=len(packets),
+                                       attempted=0, attempted_counts=None, verified=[]),
                   frame=frame, frame_phase='before_observed_input' if frame is not None else None,
                   next_action=None)
     try:
-        landed = stopped
-        if any(counts):
-            queued = owner.mouse_move_relative(*counts)
-            outcome = _advance_observed(owner, vm, result, 'motion', queued, stopped,
-                                        _DEFAULT_BUDGET_NS, timeout_ms)
-            motion = result['motion']
-            motion['counts'] = list(counts)
-            if outcome is not None:
-                pending = getattr(vm, '_physical_input', None) or {}
-                if pending.get('valid') and pending['pending']:
-                    result['next_action'] = 'cancel_unsent_input'
-                result['outcome'] = outcome
-                return _public_result(result)
-            landed = motion['observed']
-            if (landed['position'] != target or landed['buttons'] != 0
-                    or landed['button_edges'] != stopped['button_edges']
-                    or landed['minimum'] != stopped['minimum'] or landed['maximum'] != stopped['maximum']):
-                result['outcome'] = 'target_landing_unconfirmed'
-                return _public_result(result)
+        landed, motion_outcome = _move(owner, vm, result, stopped, packets, timeout_ms)
+        if motion_outcome is not None:
+            result.update(outcome=motion_outcome, next_action=_motion_next_action(vm, result))
+            return _public_result(result)
+        if landed['position'] != target:
+            result['outcome'] = 'target_landing_unconfirmed'
+            return _public_result(result)
         result['target_landing'] = landed
+        result['stage'] = 'click'
         raster = landed['raster']
         click = result['click'] = owner.mouse_click_int33(x, y, stream=raster['stream'],
             frame_id=raster['frame_id'], button=button, minimum_hold_ms=hold_ms,
@@ -133,6 +188,8 @@ def _execute(owner, x, y, button, hold_ms, timeout_ms, stopped, target, counts, 
         result.update(outcome='failed', click=getattr(error, 'int33_click', None))
         if result['click'] is not None:
             result.update(effect=result['click']['effect'], next_action=result['click']['next_action'])
+        elif result['stage'] == 'motion':
+            result['next_action'] = _motion_next_action(vm, result)
         error.coordinate_click = _public_result(result)
         raise
 

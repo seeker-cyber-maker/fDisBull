@@ -505,6 +505,13 @@ wait_press:
     inc byte [es:0]
     mov ax,3
     int 33h
+%if CASE = 3
+    cmp cx,326
+    jb keep_waiting
+travel_gate:
+    nop
+keep_waiting:
+%endif
     test bx,1
     jz wait_press
 pressed:
@@ -530,6 +537,9 @@ released:
     jmp released
 db 'CLK1'
 dw first_frame,pressed,released
+%if CASE = 3
+dw travel_gate
+%endif
 '''
 
 
@@ -618,7 +628,7 @@ def test_observed_int33_click_resolves_only_qualified_press(
     (tmp_path / 'int33-observed-click.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
 
 
-@pytest.mark.parametrize('route', ['python', 'rpc', 'json', 'frame', 'partial'])
+@pytest.mark.parametrize('route', ['python', 'rpc', 'json', 'frame', 'partial', 'travel', 'travel-partial'])
 def test_coordinate_click_routes_verify_landing_and_hold(
         tmp_path, clock_runtime, clock_disk, mouse_inputs, route):
     from fdisbull.cli import respond
@@ -626,9 +636,14 @@ def test_coordinate_click_routes_verify_landing_and_hold(
 
     baseline = prepare_mouse_disk(clock_disk['image'], tmp_path / 'mouse-boot.img',
                                   mouse_inputs['driver'], clock_runtime['mcopy'])
-    code = assemble(tmp_path, 'coordinate-click-route', '%define CASE 0\n' + _CLICK_ASSEMBLY,
+    case_number = 3 if route == 'travel-partial' else 0
+    code = assemble(tmp_path, 'coordinate-click-route', f'%define CASE {case_number}\n' + _CLICK_ASSEMBLY,
                     clock_runtime['nasm'])
-    ready, pressed, _ = struct.unpack('<3H', code[-6:])
+    travel_gate = None
+    if case_number:
+        ready, pressed, _, travel_gate = struct.unpack('<4H', code[-8:])
+    else:
+        ready, pressed, _ = struct.unpack('<3H', code[-6:])
     binary = tmp_path / 'ROUTE.COM'
     binary.write_bytes(code)
     options = launch_options(clock_runtime, baseline, qemu_clock='virtual', qemu_retrace='precise')
@@ -656,14 +671,18 @@ def test_coordinate_click_routes_verify_landing_and_hold(
                 selection.setdefault('delivery', 'observed-int33')
                 with pytest.raises(ValueError, match=reason):
                     debug.click(160, 90, **selection)
-            with pytest.raises(ValueError, match='four physical counts'):
-                debug.click(160, 110, delivery='observed-int33', **ids)
+            with pytest.raises(ValueError, match='within the 320x200'):
+                debug.click(320, 110, delivery='observed-int33', **ids)
             assert debug.observe_int33_mouse()['clock'] == initial['clock']
             assert debug.input_state()['pending_edges'] == 0
-            options = dict(x=160, y=90, delivery='observed-int33', hold_ms=15, **ids)
-            if route == 'partial':
-                point = debug.breakpoint(com_address(info, pressed))
-            if route in ('json', 'frame', 'partial'):
+            x, y = (170, 96) if route in ('travel', 'travel-partial') else (160, 90)
+            options = dict(x=x, y=y, delivery='observed-int33', hold_ms=15, **ids)
+            if route in ('travel', 'travel-partial'):
+                options['timeout_ms'] = 15000
+            if route in ('partial', 'travel-partial'):
+                offset = pressed if route == 'partial' else travel_gate
+                point = debug.breakpoint(com_address(info, offset))
+            if route in ('json', 'frame', 'partial', 'travel', 'travel-partial'):
                 workspace = DebugWorkspace()
                 workspace.sessions[debug.run_id] = debug
                 method = 'debug-click-frame' if route == 'frame' else 'debug-click'
@@ -679,8 +698,31 @@ def test_coordinate_click_routes_verify_landing_and_hold(
                 result = debug.click(**options)
             assert result['format'] == 'fdisbull-qemu-coordinate-click-1'
             assert result['source']['frame_id'] == selected['frame_id']
-            assert result['target_landing']['position'] == [320, 90]
-            assert result['motion']['counts'] == [2, 4]
+            motion = result['motion_progress']
+            if route == 'travel-partial':
+                assert not result['complete'] and result['outcome'] == 'competing_stop'
+                assert result['target_landing'] is None and result['click'] is None
+                assert motion['planned'] == 6 and motion['attempted'] == 2
+                assert [item['position'] for item in motion['verified']] == [[322, 90]]
+                assert result['motion']['counts'] == [4, 4]
+                reason = result['motion']['execution']['session']['stop_reason']
+                assert reason['breakpoint_ids'] == [point['breakpoint_id']]
+                debug.delete_breakpoint(point['breakpoint_id'])
+                sample = debug.observe_int33_mouse()
+                assert sample['position'] == [326, 92] and sample['buttons'] == 0
+            else:
+                assert result['target_landing']['position'] == [2 * x, y]
+                if route == 'travel':
+                    assert motion['planned'] == motion['attempted'] == 6
+                    assert [item['counts'] for item in motion['verified']] == [
+                        [4, 4], [4, 4], [4, 4], [4, 4], [4, 0], [2, 0]]
+                    assert [item['position'] for item in motion['verified']] == [
+                        [322, 90], [326, 92], [330, 94], [334, 96], [338, 96], [340, 96]]
+                    assert result['target_landing']['raster']['mode_id'] == selected['mode_id']
+                    assert result['target_landing']['raster']['frame_id'] > selected['frame_id']
+                else:
+                    assert result['motion']['counts'] == [2, 4]
+                    assert motion['planned'] == motion['attempted'] == len(motion['verified']) == 1
             if route == 'frame':
                 assert result['frame_phase'] == 'before_observed_input'
                 assert result['frame']['metadata']['frame_id'] == selected['frame_id']
@@ -697,7 +739,7 @@ def test_coordinate_click_routes_verify_landing_and_hold(
                 debug.mouse_button_up(click['lease'])
                 debug.clock_advance(50_000_000)
                 assert debug.observe_int33_mouse()['buttons'] == 0
-            else:
+            elif route != 'travel-partial':
                 assert result['complete'] and result['effect'] == 'press_and_release_observed'
                 assert click['verified_hold_ns'] >= 15_000_000
                 assert click['press']['observed_edge_at_target'] and click['release']['observed_edge_at_target']

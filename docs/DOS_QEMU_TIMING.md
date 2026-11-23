@@ -472,8 +472,12 @@ session, mode and frame. The stored screenshot and grid carry the full capture
 metadata.
 
 This route executes bounded virtual-clock phases for the pinned CuteMouse
-2.1b4 Mode 13h profile. It can verify one nearby movement of up to four physical
-counts per axis, or use an already-observed landing. It admits left and right
+2.1b4 Mode 13h profile. It can move to an in-range target using successive
+packets of up to four physical counts per axis, or use an already-observed
+landing. Each stopped read must confirm the incremental position and unchanged
+driver, video mode, clip bounds and buttons. The receipt records only verified
+packet progress and the latest attempted step. All packets share the request's
+`timeout_ms` host deadline. The route admits left and right
 buttons. The stopped driver reports the consumed press and release coordinates.
 `hold_ms` is the minimum guest-time interval after the verified press and
 before queuing release. Check `complete` and `outcome` in the receipt. A
