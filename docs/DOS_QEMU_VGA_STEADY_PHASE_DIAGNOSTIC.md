@@ -233,8 +233,7 @@ The four full RGB hashes match the retained installed DOSBox-X and pinned
 QEMU observations from the preceding pulse-window experiment. The archived
 QEMU producer independently passed both strict phase predictions there. The
 timing probe was rebuilt from the earlier DOSBox-X source diagnostic and
-verified on that derivative. Current-head QEMU execution requires its own
-measurement.
+verified on that derivative.
 
 | Evidence | SHA-256 |
 | --- | --- |
@@ -270,21 +269,45 @@ rounding. Maximum actual callback lateness was under 7 ns in both frames.
 This measures the first completed source raster on the authored text-mode
 reentry. It leaves the internal draw-setup instruction time, equivalent
 same-mode BIOS reapply, and other BIOS or programming sequences open.
-The pinned QEMU mode-13h producer has independent first/steady checkpoint
-evidence from its own fixture. A paired run of this specific transition on
-the current QEMU producer remains open.
+The earlier pinned QEMU mode-13h producer has independent first/steady
+checkpoint evidence from its own fixture.
 
 Authored COM SHA-256
 `360506d4851aaae7f9bdc328c4b4c66f067789a3704ba3791608ea03ea9577b6`.
 Private native receipt SHA-256
 `3ed410e1480886007bdf1a5c912bcdc096580d1cfb9bb32804ab7971984cf031`.
 
+## Current QEMU counterparts
+
+An [opt-in native test](../tests/test_qemu_mode13_paired_phase_native.py)
+ran both exact authored COMs on the read-plane candidate. The fresh QEMU
+warm trial used the previous guest-calibrated 8,991 tick delay and fixed
+40 and 36 tick pulse widths. Both strict phase predictions were written
+from the guest's PIT and VGA journals before export. Both quiet and both
+pulse rasters matched the DOSBox-X derivative byte for byte. Both pulses
+excluded phase 0 and the final-palette-only image. All 200 row receipts per
+frame matched the independently calculated 31,700 ns line schedule within
+124 ns.
+
+For the text-mode reentry, the fixture read the preceding VGA geometry and
+held the guest in its text loop until one sixteenth into the next VGA
+period. The second `INT 10h AX=0013h` used the original BIOS memory clear.
+QEMU recorded effective setup at virtual time 1,496,075,514 ns and return
+at 1,500,299,514 ns. The first phase-0 row was due at 1,508,737,725 ns,
+8,438,211 ns after return. The next frame was phase 1. Both completed
+raster schedules matched all 200 expected deadlines within 125 ns.
+This pairs the phase order on the same authored guest mode edge. The two
+engines have distinct measured physical line periods.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| QEMU read-plane candidate | `2ac168a830ada1b61c17a6fef87ddb40ae71479be48a2dd3e229247183d6eac0` |
+| QEMU warm native receipt | `99f8f58bdef6927bb08d0744d1a933733fe589fe7069def7af4d5c33b691a11e` |
+| QEMU text reentry native receipt | `06cf6732870ba3aca35bffb525aa77b10c1cb21d8d7eefd3f3e10f1a3c2489cd` |
+
 ## Remaining qualification
 
-- Replay the same declared steady pulse windows against a newly selected
-  release candidate when rechecking the current producer.
-- Pair the observed DOSBox-X text-to-mode-13h transition on current QEMU.
-  Measure the DOSBox-X draw-setup boundary for equivalent same-mode BIOS
+- Measure the paired draw-setup behavior for an equivalent same-mode BIOS
   reapply. Qualify additional programming sequences and modes separately.
 - Exercise both engines through the same protected game's palette/origin
   changes and replay its dynamic raster after a native checkpoint.
