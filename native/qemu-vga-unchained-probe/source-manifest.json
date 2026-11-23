@@ -1,0 +1,69 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "cea0a35169d6e51fafa6c32824e208ad2c14c9ec755cb9c9c005cd119c2e478f",
+  "base_host_commit": "30b098cdd74d60ddbf40b1403f5359cbba525038",
+  "composition": "Apply after native/qemu-video-mode13-phase with every preimage verified.",
+  "patch": "qemu-10.0.13-fdisbull-vga-unchained-probe.patch",
+  "patch_bytes": 12204,
+  "patch_sha256": "0c2f5efdfacf59391e2214293f830462a4ea823d7f4473d401eff792438b6c29",
+  "scope": "Explicit stopped 320x200 unchained source read only.",
+  "files": [
+    {
+      "path": "hw/display/fdisbull-raster.h",
+      "base_bytes": 3095,
+      "base_sha256": "294d829209adaaaef183aee9de973abd00a4f63178e4ee8e5a79deb701452c80",
+      "patched_bytes": 4531,
+      "patched_sha256": "56ce10448e743ea3ac9eee688d67d73634ec025db9500d2b7ab4f5ec4dacd820",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_bytes": 21582,
+      "base_sha256": "1abf735d2be3fcc9f1ab8acfe558e2cf65274a2b5035b1bb34f47767184414aa",
+      "patched_bytes": 22416,
+      "patched_sha256": "d21d504eeaac0fb865479d21672bae5e653abb6a892e7d57688259364700785b",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_bytes": 108498,
+      "base_sha256": "5efe104391613f8510a3a331bdaee93ae7d87f521ee834cb5c33587bb765f389",
+      "patched_bytes": 111961,
+      "patched_sha256": "b6b104bd8a66b37fe3b7a75f941e11631f1c12416eb754563123f460d875def1",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_bytes": 9447,
+      "base_sha256": "adcc57e7c5aba4ed71ba6b1c9f8a124156660747857f5826cbb4e176e366b8cf",
+      "patched_bytes": 9650,
+      "patched_sha256": "f5de77cefd37457fda3a8fb0d4cd5958488fc8e4942f227e8b89c924980e9210",
+      "mode": "100644"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_bytes": 2316,
+      "base_sha256": "9af083944c5046742d2e91b4fc673e8b0bbbe0b75c6239b1c3e543d01604c131",
+      "patched_bytes": 2541,
+      "patched_sha256": "0f65c2f6b956f8d68cff62c6d750dedde406450b5a863f28902e33237d1d8ff2",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-video-frame.json",
+      "base_bytes": 15826,
+      "base_sha256": "a491160ab33948d96c4b4992173cf5ec57b87ff2b31637ac8812fe7000d72c1f",
+      "patched_bytes": 17563,
+      "patched_sha256": "9a37a76488197e51b22f0ef21519506db39d2489d9189e13bb6f1d9261f774a3",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-video-frame.c",
+      "base_bytes": 56642,
+      "base_sha256": "60cb3f5c768c863f82dc0555d0fbf4e83fd4c5ea91cb4d8662cc986597fd9b4e",
+      "patched_bytes": 57717,
+      "patched_sha256": "39507a25edf26999510c5d867c7dd04a4f665978ce937bc6fdabcfd9acad98ea",
+      "mode": "100644"
+    }
+  ]
+}

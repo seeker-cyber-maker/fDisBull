@@ -1,0 +1,310 @@
+diff --git a/hw/display/fdisbull-raster.h b/hw/display/fdisbull-raster.h
+--- a/hw/display/fdisbull-raster.h
++++ b/hw/display/fdisbull-raster.h
+@@ -48,6 +48,40 @@
+     return NULL;
+ }
+ 
++/* Timed renderers use a separate contract. This only admits a stopped
++ * nonwrapping 320x200 256-color source page in standard VGA storage. */
++static inline const char *
++fdisbull_unchained_admission(const FdisbullChain4Geometry *g,
++                            unsigned sequencer_memory, unsigned graphics_misc,
++                            unsigned crtc_underline)
++{
++    const uint64_t source_bytes = 320u * 200u;
++
++    if (!g->display_enabled || !g->graphics) {
++        return "display-disabled-or-not-graphics";
++    }
++    if (g->vbe_enabled || g->chain4 || g->depth != 0 || g->shift_control != 2 ||
++        (sequencer_memory & 0x0e) != 0x06 || (graphics_misc & 0x0f) != 0x05) {
++        return "unsupported-unchained-pixel-interpretation";
++    }
++    if (g->width != 640 || g->height != 400 || g->multi_scan != 1) {
++        return "unsupported-source-extent";
++    }
++    if ((g->crtc_mode & 0x43) != 0x43 || (crtc_underline & 0x40) ||
++        (g->attribute_mode & ~0x20) != 0x41 || (g->plane_enable & 15) != 15) {
++        return "unsupported-address-or-plane-mode";
++    }
++    if (g->bank_offset || g->line_offset != 320 || g->line_compare < 400 ||
++        g->hpel || (g->start_address & 3)) {
++        return "unsupported-origin-pitch-split-or-panning";
++    }
++    if (g->vram_size < source_bytes ||
++        g->start_address > g->vram_size - source_bytes) {
++        return "incomplete-or-wrapping-source-storage";
++    }
++    return NULL;
++}
++
+ /* Verify every pixel, including all duplication and the final source row.
+  * Inputs are the admitted native packed XRGB32 surface, actual source indices
+  * and native-expanded palette. Outputs are owned canonical RGB888 copies.
+diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -31,6 +31,7 @@
+ #include "qapi/error.h"
+ #include "qapi/qapi-types-fdisbull-retrace.h"
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
++#include "qapi/qapi-types-fdisbull-video-frame.h"
+ #include "qapi/qapi-types-fdisbull-raster.h"
+ #include "qemu/main-loop.h"
+ #include "migration/vmstate.h"
+@@ -226,6 +227,28 @@
+     return true;
+ }
+ 
++FdisbullUnchainedVideoProbe *pci_std_vga_fdisbull_probe_unchained_rows(
++    Object *obj, uint64_t epoch, int64_t virtual_ns, const uint8_t *rows, unsigned count,
++    Error **errp)
++{
++    FdisbullUnchainedVideoProbe *result;
++
++    assert(bql_locked());
++    if (!pci_std_vga_fdisbull_configuration_selected(obj) ||
++        !qdev_is_realized(DEVICE(obj))) {
++        error_setg(errp, "Unchained VGA source probe requires realized precise VGA");
++        return NULL;
++    }
++    result = vga_fdisbull_probe_unchained_rows(&PCI_VGA(obj)->vga, virtual_ns,
++                                            rows, count, errp);
++    if (result) {
++        result->epoch = epoch;
++        result->virtual_ns = virtual_ns;
++        result->device = object_get_canonical_path(obj);
++    }
++    return result;
++}
++
+ bool pci_std_vga_fdisbull_video_frame_sample(
+     Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+     struct FdisbullVideoFrameSource *source, Error **errp)
+diff --git a/hw/display/vga.c b/hw/display/vga.c
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -28,6 +28,7 @@
+ #include "qapi/error.h"
+ #include "qapi/qapi-types-fdisbull-retrace.h"
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
++#include "qapi/qapi-types-fdisbull-video-frame.h"
+ #include "qapi/qapi-types-fdisbull-raster.h"
+ #include "qapi/clone-visitor.h"
+ #include "qapi/qapi-visit-fdisbull-raster.h"
+@@ -2124,6 +2125,83 @@
+     return true;
+ }
+ 
++FdisbullUnchainedVideoProbe *vga_fdisbull_probe_unchained_rows(
++    VGACommonState *s, int64_t virtual_ns, const uint8_t *rows, unsigned count, Error **errp)
++{
++    g_autoptr(FdisbullVgaConfigurationSnapshot) configuration =
++        g_new0(FdisbullVgaConfigurationSnapshot, 1);
++    g_autoptr(FdisbullRetraceInfo) retrace = g_new0(FdisbullRetraceInfo, 1);
++    g_autoptr(FdisbullUnchainedVideoProbe) result = NULL;
++    FdisbullUnchainedVideoRowList **tail;
++    VGADisplayParams params;
++    FdisbullChain4Geometry geometry;
++    int width, height, double_scan, multi_scan;
++    const char *reason;
++
++    assert(bql_locked());
++    if (!count || !s->vram_ptr) {
++        error_setg(errp, "Unchained VGA source rows and storage are required");
++        return NULL;
++    }
++    if (!vga_fdisbull_configuration_query(s, configuration, errp) ||
++        !vga_fdisbull_retrace_query(s, virtual_ns, retrace, errp)) {
++        return NULL;
++    }
++    if (!retrace->phase_supported) {
++        error_setg(errp, "Unchained VGA source probe requires admitted precise timing");
++        return NULL;
++    }
++
++    vga_get_params(s, &params);
++    vga_get_resolution(s, &width, &height);
++    double_scan = s->cr[VGA_CRTC_MAX_SCAN] >> 7;
++    multi_scan = (s->cr[VGA_CRTC_MODE] & 1) ?
++        (((s->cr[VGA_CRTC_MAX_SCAN] & 0x1f) + 1) << double_scan) - 1 :
++        double_scan;
++    geometry = vga_fdisbull_chain4_geometry(s, width, height, vga_get_bpp(s),
++                    (s->gr[VGA_GFX_MODE] >> 5) & 3, multi_scan);
++    geometry.start_address = (uint64_t)params.start_addr * 4;
++    geometry.line_offset = params.line_offset;
++    geometry.line_compare = params.line_compare;
++    geometry.hpel = params.hpel & 7;
++    geometry.vram_size = MIN(MIN(s->vram_size, s->vbe_size), VGA_VRAM_SIZE);
++    reason = fdisbull_unchained_admission(&geometry,
++                 sr(s, VGA_SEQ_MEMORY_MODE), s->gr[VGA_GFX_MISC],
++                 s->cr[VGA_CRTC_UNDERLINE]);
++    if (reason) {
++        error_setg(errp, "Unchained VGA source probe is unsupported: %s", reason);
++        return NULL;
++    }
++
++    result = g_new0(FdisbullUnchainedVideoProbe, 1);
++    result->model = g_strdup("qemu-vga-unchained-320x200-probe-v1");
++    result->configuration_generation = configuration->configuration_generation;
++    result->timing_generation = retrace->timing_generation;
++    result->origin_bytes = geometry.start_address;
++    result->pitch_bytes = geometry.line_offset;
++    result->dac_8bit = s->dac_8bit;
++    tail = &result->rows;
++    for (unsigned i = 0; i < count; i++) {
++        uint8_t rgb[FDISBULL_VIDEO_ROW_BYTES];
++
++        /* With this geometry QEMU's stock 8d2 renderer takes four adjacent
++         * interleaved plane bytes at a time from the same byte origin. */
++        if (!fdisbull_video_copy_row(s->vram_ptr + geometry.start_address +
++                                    rows[i] * geometry.line_offset,
++                                    FDISBULL_VIDEO_WIDTH, s->palette,
++                                    sizeof(s->palette), s->dac_8bit,
++                                    rgb, sizeof(rgb))) {
++            error_setg(errp, "Unchained VGA source row is incomplete");
++            return NULL;
++        }
++        FdisbullUnchainedVideoRow *row = g_new0(FdisbullUnchainedVideoRow, 1);
++        row->row = rows[i];
++        row->rgb_base64 = g_base64_encode(rgb, sizeof(rgb));
++        QAPI_LIST_APPEND(tail, row);
++    }
++    return g_steal_pointer(&result);
++}
++
+ void vga_invalidate_scanlines(VGACommonState *s, int y1, int y2)
+ {
+     int y;
+diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -231,6 +231,10 @@
+                                                    Error **errp);
+ 
+ struct FdisbullVideoFrameSource;
++struct FdisbullUnchainedVideoProbe;
++struct FdisbullUnchainedVideoProbe *vga_fdisbull_probe_unchained_rows(
++    VGACommonState *s, int64_t virtual_ns, const uint8_t *rows, unsigned count, Error **errp);
++
+ bool vga_fdisbull_video_frame_sample(
+     VGACommonState *s, int64_t virtual_ns, int row, uint8_t *rgb,
+     struct FdisbullVideoFrameSource *source, Error **errp);
+diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -50,6 +50,11 @@
+ bool pci_std_vga_fdisbull_mode13_restore(Object *obj,
+                        const struct FdisbullVideoSetupStamp *setup, Error **errp);
+ 
++struct FdisbullUnchainedVideoProbe;
++struct FdisbullUnchainedVideoProbe *pci_std_vga_fdisbull_probe_unchained_rows(
++    Object *obj, uint64_t epoch, int64_t virtual_ns, const uint8_t *rows, unsigned count,
++    Error **errp);
++
+ bool pci_std_vga_fdisbull_video_frame_sample(
+     Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+     struct FdisbullVideoFrameSource *source, Error **errp);
+diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -217,6 +217,54 @@
+   'returns': 'FdisbullVideoFrameInfo' }
+ 
+ ##
++# @FdisbullUnchainedVideoRow:
++#
++# @row: Logical source row number.
++# @rgb-base64: Canonical RGB888 row, exactly 960 bytes before base64 encoding.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullUnchainedVideoRow',
++  'data': { 'row': 'uint8', 'rgb-base64': 'str' } }
++
++##
++# @FdisbullUnchainedVideoProbe:
++#
++# @model: Model of the bounded stopped source read.
++# @virtual-ns: Stopped native virtual clock.
++# @epoch: Native clock epoch.
++# @device: Canonical owning standard VGA device path.
++# @configuration-generation: Effective stopped VGA register identity.
++# @timing-generation: Effective stopped precise retrace timing identity.
++# @origin-bytes: Programmed CRTC origin in QEMU interleaved VRAM bytes.
++# @pitch-bytes: Logical row stride in QEMU interleaved VRAM bytes.
++# @dac-8bit: Palette entries are 8-bit rather than expanded 6-bit values.
++# @rows: Requested source rows, in request order.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullUnchainedVideoProbe',
++  'data': { 'model': 'str', 'virtual-ns': 'int', 'epoch': 'uint64',
++            'device': 'str', 'configuration-generation': 'uint64',
++            'timing-generation': 'uint64', 'origin-bytes': 'uint64',
++            'pitch-bytes': 'uint64', 'dac-8bit': 'bool',
++            'rows': ['FdisbullUnchainedVideoRow'] } }
++
++##
++# @x-fdisbull-probe-unchained-vga-rows:
++#
++# Sample a bounded set of logical rows from stopped standard unchained
++# VGA source bytes. The address is the currently programmed origin.
++# This read produces no renderer frame, scanout timestamp or page latch.
++#
++# @rows: One to 16 unique logical row indices from 0 through 199.
++#
++# Since: 10.0
++##
++{ 'command': 'x-fdisbull-probe-unchained-vga-rows',
++  'data': { 'rows': ['uint8'] }, 'returns': 'FdisbullUnchainedVideoProbe' }
++
++##
+ # @x-fdisbull-stop-video-frame:
+ #
+ # Cancel future sampling while stopped. Discard a partial raster and retain
+diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -703,6 +703,40 @@
+     return video_info(clock);
+ }
+ 
++FdisbullUnchainedVideoProbe *qmp_x_fdisbull_probe_unchained_vga_rows(
++    uint8List *rows, Error **errp)
++{
++    g_autoptr(FdisbullClockInfo) clock = NULL;
++    QemuConsole *console;
++    Object *device;
++
++    uint8_t selected[16];
++    bool seen[FDISBULL_VIDEO_HEIGHT] = { 0 };
++    unsigned count = 0;
++
++    for (const uint8List *entry = rows; entry; entry = entry->next) {
++        unsigned row = entry->value;
++
++        if (count == ARRAY_SIZE(selected) || row >= FDISBULL_VIDEO_HEIGHT ||
++            seen[row]) {
++            error_setg(errp, "Expected one to 16 unique unchained VGA source rows");
++            return NULL;
++        }
++        selected[count++] = row;
++        seen[row] = true;
++    }
++    if (!count) {
++        error_setg(errp, "Expected one to 16 unique unchained VGA source rows");
++        return NULL;
++    }
++    if (!video_stopped(&clock, errp)) {
++        return NULL;
++    }
++    device = video_device(&console, errp);
++    return device ? pci_std_vga_fdisbull_probe_unchained_rows(
++        device, clock->epoch, clock->virtual_ns, selected, count, errp) : NULL;
++}
++
+ FdisbullVideoFrameInfo *qmp_x_fdisbull_query_video_frame(Error **errp)
+ {
+     g_autoptr(FdisbullClockInfo) clock = NULL;
