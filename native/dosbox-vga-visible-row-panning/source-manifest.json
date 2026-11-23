@@ -1,0 +1,22 @@
+{
+  "format": "fdisbull-dosbox-x-native-delta-1",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "base_dosbox_sha256": "b09dfb732d03ab3c2fbca9e5d8ab23d0073dc07b0e556ef23b5fa2a40e41da36",
+  "base_source_patch_sha256": "66c7e283f57e955acd39cc7948e960880ffbb53f619857277f2dd29b5ca18e73",
+  "base_source_manifest_sha256": "3a0684e1123269baefb13bd3a0134c988315197d6f8f78d75ccf69e0a6050f70",
+  "composition": "Apply after native/dosbox-vga-visible-row-timing with the exact preimage verified.",
+  "patch": "dosbox-x-029bd65c-fdisbull-vga-visible-row-panning.patch",
+  "patch_bytes": 1320,
+  "patch_sha256": "36136068c30f331cb19414ddf580ac2dbf8a0ceadb8f96cbdad0cff1f3a97175",
+  "scope": "Read-only renderer row observation for packed8 VGA fine panning up to three pixels.",
+  "files": [
+    {
+      "path": "src/hardware/vga_draw.cpp",
+      "base_bytes": 369092,
+      "base_sha256": "e0fef08ba4ae50dfa309fb6496669ecf2d1b51d76805415f3f5c5288ea881ef2",
+      "patched_bytes": 369186,
+      "patched_sha256": "ff78d1d7455b488c7246c8e54339e5dd8c5b3abc191dd562d71d003d2c3d6cd2",
+      "mode": "100644"
+    }
+  ]
+}

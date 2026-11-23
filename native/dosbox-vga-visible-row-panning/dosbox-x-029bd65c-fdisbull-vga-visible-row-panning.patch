@@ -1,0 +1,25 @@
+--- a/src/hardware/vga_draw.cpp
++++ b/src/hardware/vga_draw.cpp
+@@ -3927,17 +3927,19 @@
+     using Layout = dosbox_agent::FrameVisibleLayout;
+     if (machine != MCH_VGA || vga.draw.mode != DRAWLINE || vga.dosboxig.svga ||
+         is_vga_rendering_on_demand || vga_enable_hretrace_effects || video_debug_overlay ||
+-        vga_page_flip_occurred || vga_3da_polled || vga.attr.disabled || vga.draw.panning ||
++        vga_page_flip_occurred || vga_3da_polled || vga.attr.disabled ||
+         vga.draw.vblank_skip || vga.draw.render_max != 1 ||
+         vga.draw.width != dosbox_agent::FrameVisibleRows::width ||
+         vga.draw.lines_total != dosbox_agent::FrameVisibleRows::height ||
+         vga.draw.split_line < vga.draw.lines_total) {
+         return Layout::None;
+     }
+-    if (vga.mode == M_EGA && VGA_DrawLine == VGA_Draw_VGA_Planar_Xlat32_Line) {
++    if (vga.mode == M_EGA && !vga.draw.panning &&
++        VGA_DrawLine == VGA_Draw_VGA_Planar_Xlat32_Line) {
+         return Layout::Planar4;
+     }
+-    if (vga.mode == M_LIN8 && VGA_DrawLine == VGA_Draw_Xlat32_Linear_Line) {
++    if (vga.mode == M_LIN8 && VGA_DrawLine == VGA_Draw_Xlat32_Linear_Line &&
++        (!vga.draw.panning || (!vga_enable_hpel_effects && vga.draw.panning < 4))) {
+         return Layout::Packed8;
+     }
+     return Layout::None;
