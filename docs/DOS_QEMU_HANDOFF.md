@@ -1,5 +1,48 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## VBE 101h horizontal panning and format 11 restore (2026-11-23)
+
+The opt-in `vga-640x480-pan` profile uses banked 640 × 480 × 8 and a
+guest-selected backing pitch. VBE 4F07h programs the coarse start and
+fine offset. The coarse origin latches at line 490 and the fine offset
+at line 492. A request written between these edges can produce a
+one-frame combination of the old coarse start and new fine offset.
+The existing alternate SeaVGABIOS reports the programmed coordinates.
+[Native patches and viewport contract](../native/qemu-video-vbe101-pan/README.md)
+
+The same authored DOS COM ran on QEMU and DOSBox-X with a 648-byte
+pitch. Effective horizontal offsets across the selected frames were
+0 → 5 → 4 → 0 → 1 → 5 → 0. The engines agreed on all 480 rows of RGB in
+each frame. The DOSBox-X timing diagnostic also verified the actual
+backing address for each row. A separate run requested 645 pixels
+with VBE 4F06h. Both BIOSes returned 648 bytes and 648 pixels per row.
+The seven raster comparisons and QEMU restore checks passed again.
+
+The QEMU format 11 checkpoint retained a 146-row prefix with both
+latches pending. Forward execution, hot restore and fresh-process
+restore reproduced the separate deadlines, BIOS status and readback,
+row timestamps and full pixel rasters. A second checkpoint between the
+edges retained the pending fine latch after the coarse start became
+active and reproduced that continuation on hot restore.
+
+Doom format 6 matched the protected CPU continuation, page origin,
+200 timed rows and the SB16/OPL frontier on forward, hot and cold replay.
+The combined run passed all 24 native checks, including format 10 page
+flips, format 8 timed scanout, format 9 guest retrace, keyboard-repeat
+checkpoint stability, and Mode 13h BIOS reapply.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored paired DOS COM | `ce492b9d3cccfacd8ac4bec84eb98fa3d9299a45d797ef5e8f506069daca33ab` |
+| QEMU producer | `a2de80f643c87bbc7f35b52101266df1d140bf43d44fd4887f9454df3ea8a2dc` |
+| DOSBox-X panning row diagnostic | `6c1f71ef5d404ca89246eaf7492bcce9ebf4e973a2dcc7ff0016669477775e61` |
+| DOSBox-X split latches and complete rasters | `58fb52b4478d7f4197512ce3a23da97409b40a531e67aff74d6f4d7bc09c0a7a` |
+| QEMU format 11 split latches and restore | `35089484e485d4d6851df5ca1380b28525acdc8af02d808828184d6c7a7e3a51` |
+| Combined native suite | `c3cccceca30f5922ee8ca07ea29a511e599801ada5a9c6f95e136f8feb43ce2b` |
+| Paired 645-pixel pitch requests | `0d612ed501e62fa0823f457fd552395a9c85632120686d8fe114da28f23324a5` |
+| Doom original run and hot restore | `94101d97708c33595a44e3797791db7a706d5c2a226e3a205b432811eb6bd85c` |
+| Doom fresh-process restore | `b764ae60ae71d4804ccb9fb2712739121068ea128a13b092adee894816c523d8` |
+
 ## Overdue keyboard-repeat checkpoint stability (2026-11-23)
 
 A stopped checkpoint holds the key and its exact virtual repeat deadline.

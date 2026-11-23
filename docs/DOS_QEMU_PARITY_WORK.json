@@ -1413,6 +1413,7 @@
         "native/qemu-video-vbe101-sync/qemu-10.0.13-fdisbull-video-vbe101-sync.patch",
         "native/qemu-video-vbe101-flip/qemu-10.0.13-fdisbull-video-vbe101-flip.patch",
         "native/qemu-video-vbe101-flip/seabios-1.16.3-fdisbull-vbe101-flip.patch",
+        "native/qemu-video-vbe101-pan/qemu-10.0.13-fdisbull-video-vbe101-pan.patch",
         "native/qemu-vga-unchained-latch/qemu-10.0.13-fdisbull-vga-unchained-latch.patch",
         "native/qemu-vga-unchained-cpu-planes/qemu-10.0.13-fdisbull-vga-unchained-cpu-planes.patch"
       ],
@@ -1430,7 +1431,7 @@
       "remaining_work": [
         "Scoped local native evidence covers direct Python and JSON frame controls, saved scripts and cold format 6 replay. It verifies latched origin, partial raster continuation, held typematic IRQs, foreign-epoch refusal and the full matched Doom timedemo raster. The retained timed 320x200 profile still needs the wider legacy consumer and mode contracts, including downstream source-depth differences.",
         "Format 5 restores the opt-in standard Mode 13h initial and steady phase. The separate format 7 profile reproduces the paired standard same-mode BIOS overlap and restores both callback deadlines. Qualify additional dynamic programming sequences.",
-        "Paired text, planar and banked VBE renderer capture and point probes pass. Format 8 adds 480-row timed scanout and restore for Mode 12h and banked VBE 101h. The separate format 9 profile restores guest VBE 101h status-port phase on the same virtual clock as timed scanout. Format 10 adds retrace-latched banked VBE 101h display starts and restores an in-flight BIOS wait with the current and pending pages. Additional video layouts and their frame-input contracts remain open."
+        "Paired text, planar and banked VBE renderer capture and point probes pass. Format 8 adds 480-row timed scanout and restore for Mode 12h and banked VBE 101h. The separate format 9 profile restores guest VBE 101h status-port phase on the same virtual clock as timed scanout. Format 10 adds retrace-latched banked VBE 101h display starts and restores an in-flight BIOS wait with the current and pending pages. Format 11 adds horizontal panning at independent coarse and fine retrace latches and preserves their pending deadlines through restore. Additional video layouts and their frame-input contracts remain open."
       ],
       "minimum_acceptance": [
         "Bracket retained pixels, producing frame/mode identity, actual stopped session revision, native clock and input ownership under one owner. Refuse stale or mixed brackets; do not claim atomic image/CPU equivalence or application drawing completion.",
