@@ -1,0 +1,759 @@
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -176,7 +176,14 @@
+ bool pci_std_vga_fdisbull_mode13_selected(Object *obj)
+ {
+     return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
+-           PCI_VGA(obj)->vga.fdisbull_mode13_phase;
++           (PCI_VGA(obj)->vga.fdisbull_mode13_phase ||
++            PCI_VGA(obj)->vga.fdisbull_mode13_overlap);
++}
++
++bool pci_std_vga_fdisbull_mode13_overlap_selected(Object *obj)
++{
++    return pci_std_vga_fdisbull_mode13_selected(obj) &&
++           PCI_VGA(obj)->vga.fdisbull_mode13_overlap;
+ }
+
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
+@@ -464,7 +471,9 @@
+     bool qext = false;
+     bool edid = false;
+
+-    if (s->fdisbull_mode13_phase && s->fdisbull_unchained_latch) {
++    if ((s->fdisbull_mode13_phase && s->fdisbull_mode13_overlap) ||
++        ((s->fdisbull_mode13_phase || s->fdisbull_mode13_overlap) &&
++         s->fdisbull_unchained_latch)) {
+         error_setg(errp, "Select only one fDisBull VGA source timing profile");
+         return;
+     }
+@@ -562,6 +571,8 @@
+ static const Property vga_pci_properties[] = {
+     DEFINE_PROP_BOOL("x-fdisbull-mode13-phase", PCIVGAState,
+                      vga.fdisbull_mode13_phase, false),
++    DEFINE_PROP_BOOL("x-fdisbull-mode13-overlap", PCIVGAState,
++                     vga.fdisbull_mode13_overlap, false),
+     DEFINE_PROP_BOOL("x-fdisbull-unchained-latch", PCIVGAState,
+                      vga.fdisbull_unchained_latch, false),
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -816,6 +816,19 @@
+     } else {
+         at = port == packet[0].port && value == packet[0].value;
+     }
++    if (at == 1 && s->fdisbull_mode13_overlap) {
++        const FdisbullVideoSetupStamp *prior = &s->fdisbull_mode13_setup;
++
++        /* SeaBIOS masks the display while programming each attribute before
++         * this packet. The raw generation advances through those masks.
++         * Require the prior native timing and compare the entire effective
++         * layout on both ends of the packet. */
++        s->fdisbull_mode13_reapply_candidate =
++            prior->configuration_generation != 0 &&
++            prior->timing_generation == s->fdisbull_retrace_generation &&
++            s->fdisbull_configuration_committed.display_enabled;
++        s->fdisbull_mode13_before = s->fdisbull_configuration_committed;
++    }
+     if (at == ARRAY_SIZE(packet)) {
+         at = 0;
+         if (!s->ar_flip_flop || (s->ar_index & 0x3f) != 0x20) {
+@@ -826,6 +839,11 @@
+             .committed_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
+             .configuration_generation = s->fdisbull_configuration_generation,
+             .timing_generation = s->fdisbull_retrace_generation,
++            .same_mode_reapply = s->fdisbull_mode13_overlap &&
++                s->fdisbull_mode13_reapply_candidate &&
++                !memcmp(&s->fdisbull_mode13_before,
++                        &s->fdisbull_configuration_committed,
++                        sizeof(s->fdisbull_mode13_before)),
+         };
+         fdisbull_video_frame_invalidate(s->con, "vga-mode13-reapplied");
+     }
+@@ -972,7 +990,8 @@
+     }
+     /* Includes protected CR7 bit 4 and all VBE-derived write effects. */
+     vga_fdisbull_configuration_commit(s, false);
+-    if (s->fdisbull_retrace && s->fdisbull_mode13_phase) {
++    if (s->fdisbull_retrace &&
++        (s->fdisbull_mode13_phase || s->fdisbull_mode13_overlap)) {
+         vga_fdisbull_mode13_write(s, addr, written);
+     }
+ }
+@@ -2159,7 +2178,7 @@
+                              retrace->timing->htotal;
+     source->period_ns = retrace->phase->period_ns;
+     source->dac_8bit = s->dac_8bit;
+-    source->mode13_phase = s->fdisbull_mode13_phase;
++    source->mode13_phase = s->fdisbull_mode13_phase || s->fdisbull_mode13_overlap;
+     source->unchained_latch = s->fdisbull_unchained_latch;
+     source->origin_bytes = geometry.start_address;
+     source->page_latch_offset_ns = source->unchained_latch ?
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -186,6 +186,9 @@
+     bool fdisbull_configuration_initialized;
+     bool fdisbull_configuration_invalidated;
+     bool fdisbull_mode13_phase;
++    bool fdisbull_mode13_overlap;
++    bool fdisbull_mode13_reapply_candidate;
++    VGAConfigurationState fdisbull_mode13_before;
+     bool fdisbull_unchained_latch;
+     uint8_t fdisbull_mode13_prefix;
+     FdisbullVideoSetupStamp fdisbull_mode13_setup;
+--- a/include/hw/display/fdisbull-video-frame.h
++++ b/include/hw/display/fdisbull-video-frame.h
+@@ -19,6 +19,7 @@
+     int64_t committed_ns;
+     uint64_t configuration_generation;
+     uint64_t timing_generation;
++    bool same_mode_reapply;
+ } FdisbullVideoSetupStamp;
+
+ typedef struct FdisbullVideoFrameSource {
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -44,6 +44,7 @@
+ struct FdisbullVideoSetupStamp;
+
+ bool pci_std_vga_fdisbull_mode13_selected(Object *obj);
++bool pci_std_vga_fdisbull_mode13_overlap_selected(Object *obj);
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_pending(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_setup(Object *obj,
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP \
++    "fdisbull-instrumented-qemu-state-7"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED \
+     "fdisbull-instrumented-qemu-state-6"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13 \
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -15,6 +15,7 @@
+ bool fdisbull_video_frame_fence_blocks_control(void);
+ bool fdisbull_video_frame_stop_pending(void);
+ bool fdisbull_video_frame_mode13_selected(void);
++bool fdisbull_video_frame_mode13_overlap_selected(void);
+ bool fdisbull_video_frame_unchained_latch_selected(void);
+ void fdisbull_video_frame_check_page_programming(struct QemuConsole *console);
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp);
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -28,6 +28,19 @@
+ { 'struct': 'FdisbullVideoFramePageLatch',
+   'data': { 'intended-ns': 'int', 'actual-ns': 'int', 'origin-bytes': 'uint64',
+             'configuration-generation': 'uint64' } }
++
++##
++# @FdisbullVideoReapplyOverlap:
++#
++# @line-period-ns: Period of each individual recurring callback chain.
++# @new-first-ns: First callback on the newly scheduled row chain.
++# @retained-first-ns: First callback on the surviving chain. It supplies row zero.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoReapplyOverlap',
++  'data': { 'line-period-ns': 'int', 'new-first-ns': 'int',
++            'retained-first-ns': 'int' } }
+
+ ##
+ # @FdisbullVideoFrame:
+@@ -52,6 +65,7 @@
+ # @last-sample-ns: Actual row-199 sampling time.
+ # @completed-ns: Accepted publication time, equal to last-sample-ns.
+ # @source-phase: Physical line parity, present only on the selected mode-13 profile.
++# @reapply-overlap: Both callback anchors for the mixed Mode 13h raster.
+ # @page-latch: Selected page and actual callback time under the unchained
+ #     latch profile.
+ # @pixel-sha256: SHA-256 of exactly 192000 retained packed RGB bytes.
+@@ -72,6 +86,7 @@
+             'last-sample-ns': 'int', 'completed-ns': 'int',
+             'pixel-sha256': 'str', 'rows': ['FdisbullVideoFrameRow'],
+             '*source-phase': 'uint8',
++            '*reapply-overlap': 'FdisbullVideoReapplyOverlap',
+             '*page-latch': 'FdisbullVideoFramePageLatch' } }
+
+ ##
+@@ -80,12 +95,13 @@
+ # @committed-ns: Guest virtual time at the final accepted setup write.
+ # @configuration-generation: Effective VGA configuration at the setup boundary.
+ # @timing-generation: Precise VGA timing at the setup boundary.
++# @same-mode-reapply: An equivalent live Mode 13h programming packet.
+ #
+ # Since: 10.0
+ ##
+ { 'struct': 'FdisbullVideoModeSetup',
+   'data': { 'committed-ns': 'int', 'configuration-generation': 'uint64',
+-            'timing-generation': 'uint64' } }
++            'timing-generation': 'uint64', '*same-mode-reapply': 'bool' } }
+
+ ##
+ # @FdisbullVideoFrameInfo:
+@@ -116,6 +132,9 @@
+ # @awaiting-page-latch: Next event is a latch rather than a row. Present
+ #     while observing an unchained latch stream.
+ # @pending-page-latch: Page already selected for the current pending frame.
++# @reapply-overlap: Both callback anchors while the mixed raster is pending.
++# @overlap-next-new-ns: Next intended callback on the new chain.
++# @overlap-next-retained-ns: Next intended callback on the surviving chain.
+ # @frame: Frozen retained complete raster, absent before completion or after
+ #     invalidation. Old renderer pixels cannot supply it.
+ #
+@@ -131,7 +150,9 @@
+             '*next-deadline-ns': 'int', '*frame': 'FdisbullVideoFrame',
+             '*mode-setup': 'FdisbullVideoModeSetup',
+             '*page-latch-offset-ns': 'int', '*awaiting-page-latch': 'bool',
+-            '*pending-page-latch': 'FdisbullVideoFramePageLatch' } }
++            '*pending-page-latch': 'FdisbullVideoFramePageLatch',
++            '*reapply-overlap': 'FdisbullVideoReapplyOverlap',
++            '*overlap-next-new-ns': 'int', '*overlap-next-retained-ns': 'int' } }
+
+ ##
+ # @FdisbullVideoFrameCheckpointState:
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,7 +161,9 @@
+     }
+
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    if (fdisbull_video_frame_unchained_latch_selected()) {
++    if (fdisbull_video_frame_mode13_overlap_selected()) {
++        result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP);
++    } else if (fdisbull_video_frame_unchained_latch_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED);
+     } else {
+         result->format = g_strdup(fdisbull_video_frame_mode13_selected() ?
+@@ -397,10 +399,13 @@
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13);
+     bool unchained_v6 = !strcmp(state->format,
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED);
+-    bool has_source = source_v3 || repeat_v4 || mode13_v5 || unchained_v6;
+-    bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6;
++    bool overlap_v7 = !strcmp(state->format,
++                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP);
++    bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6 || overlap_v7;
++    bool has_source = source_v3 || has_repeat;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+-        mode13_v5 != fdisbull_video_frame_mode13_selected() ||
++        (mode13_v5 || overlap_v7) != fdisbull_video_frame_mode13_selected() ||
++        overlap_v7 != fdisbull_video_frame_mode13_overlap_selected() ||
+         unchained_v6 != fdisbull_video_frame_unchained_latch_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -53,6 +53,11 @@
+     return NULL;
+ }
+
++bool pci_std_vga_fdisbull_mode13_overlap_selected(Object *obj)
++{
++    return false;
++}
++
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
+ {
+     return false;
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -24,6 +24,7 @@
+
+ #define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
+ #define MODE13_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-v1"
++#define MODE13_OVERLAP_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-overlap-v1"
+ #define UNCHAINED_LATCH_VIDEO_MODEL "qemu-vga-unchained-320x200-latch-v1"
+
+ static Object *video_device(QemuConsole **out, Error **errp);
+@@ -55,6 +56,9 @@
+     int64_t actual[FDISBULL_VIDEO_HEIGHT];
+     FdisbullVideoFrameSource source;
+     FdisbullVideoFramePageLatch page_latch;
++    FdisbullVideoReapplyOverlap overlap;
++    int64_t overlap_next_new_ns;
++    int64_t overlap_next_retained_ns;
+     uint8_t *partial;
+     uint8_t *rgb;
+     FdisbullVideoFrame *frame;
+@@ -303,6 +307,8 @@
+     bool ok = true;
+
+     video.page_latch = (FdisbullVideoFramePageLatch) { 0 };
++    video.overlap = (FdisbullVideoReapplyOverlap) { 0 };
++    video.overlap_next_new_ns = video.overlap_next_retained_ns = 0;
+
+     if (video.rows) {
+         if (video.aborted == UINT64_MAX) {
+@@ -344,6 +350,14 @@
+     return pci_std_vga_fdisbull_mode13_selected(video_device(&console, NULL));
+ }
+
++bool fdisbull_video_frame_mode13_overlap_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_mode13_overlap_selected(
++        video_device(&console, NULL));
++}
++
+ bool fdisbull_video_frame_unchained_latch_selected(void)
+ {
+     QemuConsole *console;
+@@ -357,16 +371,68 @@
+     if (pci_std_vga_fdisbull_unchained_latch_selected(device)) {
+         return UNCHAINED_LATCH_VIDEO_MODEL;
+     }
++    if (pci_std_vga_fdisbull_mode13_overlap_selected(device)) {
++        return MODE13_OVERLAP_VIDEO_MODEL;
++    }
+     return pci_std_vga_fdisbull_mode13_selected(device) ?
+         MODE13_VIDEO_MODEL : VIDEO_MODEL;
+ }
+
++static bool video_mode_phase(int64_t setup, bool reapplied, int64_t start,
++                             int64_t period, unsigned *phase)
++{
++    int64_t first;
++
++    if (!reapplied) {
++        return fdisbull_video_mode_phase(setup, start, period, phase);
++    }
++    if (!fdisbull_video_next_start(setup, period, &first) ||
++        start < first || start % period) {
++        return false;
++    }
++    /* The mixed odd raster is followed by one full even raster. */
++    *phase = start - first == period ? 0 : 1;
++    return true;
++}
++
++/* Normalize the paired PIC witness's separation between the two recurring
++ * callbacks to the local physical line period. The model is confined to the
++ * exact standard BIOS programming packet and 449-line Mode 13h geometry. */
++static bool video_overlap_expected(bool reapplied, int64_t setup,
++                                   int64_t start, int64_t period)
++{
++    return reapplied && period > 0 && start >= period &&
++           setup >= start - period && setup < start;
++}
++
++static bool video_overlap_anchors(int64_t setup, int64_t start,
++                                  int64_t line, int64_t period,
++                                  FdisbullVideoReapplyOverlap *out)
++{
++    int64_t first, offset, new_first;
++
++    if (!fdisbull_video_timing_valid(line, period) ||
++        !fdisbull_video_next_start(setup, period, &first) || first != start ||
++        !fdisbull_video_phase_deadline(start, line, 0, 0, &new_first) ||
++        new_first > INT64_MAX - 201 * line) {
++        return false;
++    }
++    offset = (line / 31778) * 17773 + (line % 31778) * 17773 / 31778;
++    *out = (FdisbullVideoReapplyOverlap) {
++        .line_period_ns = line,
++        .new_first_ns = new_first,
++        .retained_first_ns = new_first + offset,
++    };
++    return true;
++}
++
+ static bool video_source_phase(const FdisbullVideoModeSetup *setup, int64_t start,
+                                int64_t period, unsigned *phase)
+ {
+     *phase = 0;
+     return !setup ||
+-           fdisbull_video_mode_phase(setup->committed_ns, start, period, phase);
++           video_mode_phase(setup->committed_ns, setup->same_mode_reapply,
++                            start, period, phase);
+ }
+
+ static bool video_src_deadline(int64_t start, const FdisbullVideoFrameSource *source,
+@@ -376,8 +442,9 @@
+
+     if (source->mode13_phase &&
+         (!source->setup.configuration_generation ||
+-         !fdisbull_video_mode_phase(source->setup.committed_ns, start,
+-                                    source->period_ns, &phase))) {
++         !video_mode_phase(source->setup.committed_ns,
++                           source->setup.same_mode_reapply, start,
++                           source->period_ns, &phase))) {
+         return false;
+     }
+     return fdisbull_video_phase_deadline(start, source->line_period_ns,
+@@ -430,6 +497,7 @@
+            a->period_ns == b->period_ns && a->dac_8bit == b->dac_8bit &&
+            a->mode13_phase == b->mode13_phase &&
+            a->setup.committed_ns == b->setup.committed_ns &&
++           a->setup.same_mode_reapply == b->setup.same_mode_reapply &&
+            a->setup.configuration_generation == b->setup.configuration_generation &&
+            a->setup.timing_generation == b->setup.timing_generation;
+ }
+@@ -448,6 +516,8 @@
+         info->mode_setup->committed_ns = setup.committed_ns;
+         info->mode_setup->configuration_generation = setup.configuration_generation;
+         info->mode_setup->timing_generation = setup.timing_generation;
++        info->mode_setup->has_same_mode_reapply = setup.same_mode_reapply;
++        info->mode_setup->same_mode_reapply = setup.same_mode_reapply;
+     }
+     info->state = g_strdup(video.invalidated ? "invalidated" :
+                           video.observing ? "observing" :
+@@ -480,6 +550,14 @@
+             }
+         }
+     }
++    if (video.observing && video.overlap.line_period_ns) {
++        info->reapply_overlap = QAPI_CLONE(FdisbullVideoReapplyOverlap,
++                                           &video.overlap);
++        info->has_overlap_next_new_ns = true;
++        info->overlap_next_new_ns = video.overlap_next_new_ns;
++        info->has_overlap_next_retained_ns = true;
++        info->overlap_next_retained_ns = video.overlap_next_retained_ns;
++    }
+     info->frame = video.frame ? QAPI_CLONE(FdisbullVideoFrame, video.frame) : NULL;
+     return info;
+ }
+@@ -541,12 +619,17 @@
+     }
+     if (video.source.mode13_phase) {
+         unsigned phase;
+-        bool valid = fdisbull_video_mode_phase(video.source.setup.committed_ns,
+-                                               video.frame_start_ns,
+-                                               video.source.period_ns, &phase);
++        bool valid = video_mode_phase(video.source.setup.committed_ns,
++                                      video.source.setup.same_mode_reapply,
++                                      video.frame_start_ns,
++                                      video.source.period_ns, &phase);
+         assert(valid);
+         frame->has_source_phase = true;
+         frame->source_phase = phase;
++    }
++    if (video.overlap.line_period_ns) {
++        frame->reapply_overlap = QAPI_CLONE(FdisbullVideoReapplyOverlap,
++                                            &video.overlap);
+     }
+     frame->period_ns = video.source.period_ns;
+     frame->line_period_ns = video.source.line_period_ns;
+@@ -600,7 +683,8 @@
+     Object *device;
+     CPUState *cpu;
+     bool stopping = false;
+-    bool latching;
++    bool latching, overlap, new_chain;
++    int64_t following;
+     uint64_t origin;
+
+     assert(bql_locked());
+@@ -633,7 +717,13 @@
+         return;
+     }
+     latching = video_awaiting_latch();
+-    if (!fdisbull_video_row_timely(video.deadline_ns, clock->virtual_ns,
++    overlap = video.overlap.line_period_ns != 0;
++    new_chain = overlap &&
++        video.overlap_next_new_ns < video.overlap_next_retained_ns;
++    following = new_chain ? video.overlap_next_retained_ns :
++                video.overlap_next_new_ns;
++    if ((overlap && clock->virtual_ns >= following) ||
++        !fdisbull_video_row_timely(video.deadline_ns, clock->virtual_ns,
+                                   video.source.line_period_ns)) {
+         fdisbull_video_frame_invalidate(video.console, latching ?
+                                         "page-latch-deadline-missed" :
+@@ -643,15 +733,21 @@
+     origin = latching ? FDISBULL_VIDEO_PROGRAMMED_ORIGIN :
+              video.page_latch.origin_bytes;
+     if (!pci_std_vga_fdisbull_video_frame_sample(
+-            device, clock->virtual_ns, origin, latching ? -1 : (int)video.rows,
+-            latching ? NULL : video.partial + video.rows * FDISBULL_VIDEO_ROW_BYTES,
++            device, clock->virtual_ns, origin,
++            (latching || new_chain) ? -1 : (int)video.rows,
++            (latching || new_chain) ? NULL :
++                video.partial + video.rows * FDISBULL_VIDEO_ROW_BYTES,
+             &source, &error) || !video_source_equal(&source, &video.source)) {
+         fdisbull_video_frame_invalidate(video.console, latching ?
+                                         "unsupported-page-latch-source" :
+                                         "source-or-generation-changed");
+         return;
+     }
+-    if (latching) {
++    if (new_chain) {
++        /* Each earlier new-chain callback is the even physical line. The
++         * interleaved retained callback samples the following odd line. */
++        video.overlap_next_new_ns += video.overlap.line_period_ns;
++    } else if (latching) {
+         assert(!video.rows);
+         video.page_latch = (FdisbullVideoFramePageLatch) {
+             .intended_ns = video.deadline_ns,
+@@ -663,6 +759,9 @@
+         video.intended[video.rows] = video.deadline_ns;
+         video.actual[video.rows] = clock->virtual_ns;
+         video.rows++;
++        if (overlap) {
++            video.overlap_next_retained_ns += video.overlap.line_period_ns;
++        }
+     }
+     if (video.rows == FDISBULL_VIDEO_HEIGHT) {
+         if (video.sequence == UINT64_MAX) {
+@@ -679,9 +778,15 @@
+             return;
+         }
+         video.frame_start_ns += video.source.period_ns;
+-    }
+-    if (!video_next_deadline(video.frame_start_ns, &video.source, video.rows,
+-                             video_awaiting_latch(), &video.deadline_ns)) {
++        video.overlap = (FdisbullVideoReapplyOverlap) { 0 };
++        video.overlap_next_new_ns = video.overlap_next_retained_ns = 0;
++    }
++    if (video.overlap.line_period_ns) {
++        video.deadline_ns = MIN(video.overlap_next_new_ns,
++                                video.overlap_next_retained_ns);
++    } else if (!video_next_deadline(video.frame_start_ns, &video.source,
++                                    video.rows, video_awaiting_latch(),
++                                    &video.deadline_ns)) {
+         fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
+         return;
+     }
+@@ -715,6 +820,7 @@
+     QemuConsole *con;
+     Object *device;
+     int64_t start, deadline;
++    FdisbullVideoReapplyOverlap overlap = { 0 };
+
+     if (!video_stopped(&clock, errp)) {
+         return NULL;
+@@ -745,6 +851,17 @@
+           !video_next_deadline(start, &source, 0, true, &deadline)))) {
+         error_setg(errp, "Video frame start deadline overflows native clock");
+         return NULL;
++    }
++    if (video_overlap_expected(source.setup.same_mode_reapply,
++                               source.setup.committed_ns, start,
++                               source.period_ns)) {
++        if (!video_overlap_anchors(source.setup.committed_ns, start,
++                                   source.line_period_ns, source.period_ns,
++                                   &overlap)) {
++            error_setg(errp, "Mode-13 reapply callbacks exceed native clock");
++            return NULL;
++        }
++        deadline = overlap.new_first_ns;
+     }
+     path = object_get_canonical_path(device);
+     partial = g_try_malloc(FDISBULL_VIDEO_RGB_BYTES);
+@@ -798,6 +915,9 @@
+     video.stop_ns = 0;
+     video.frame_start_ns = start;
+     video.deadline_ns = deadline;
++    video.overlap = overlap;
++    video.overlap_next_new_ns = overlap.new_first_ns;
++    video.overlap_next_retained_ns = overlap.retained_first_ns;
+     timer_mod_ns(&video.timer, deadline);
+     return video_info(clock);
+ }
+@@ -1141,18 +1261,48 @@
+     return true;
+ }
+
++static bool video_checkpoint_overlap(const FdisbullVideoReapplyOverlap *overlap,
++                                     const FdisbullVideoModeSetup *setup,
++                                     int64_t start, int64_t line, int64_t period,
++                                     Error **errp)
++{
++    FdisbullVideoReapplyOverlap expected;
++    bool required = setup && video_overlap_expected(setup->same_mode_reapply,
++                                  setup->committed_ns, start, period);
++
++    if ((overlap != NULL) != required ||
++        (required && (!video_overlap_anchors(setup->committed_ns, start,
++                                             line, period, &expected) ||
++         overlap->line_period_ns != expected.line_period_ns ||
++         overlap->new_first_ns != expected.new_first_ns ||
++         overlap->retained_first_ns != expected.retained_first_ns))) {
++        return video_checkpoint_error(errp, "mode-13 reapply callback anchors");
++    }
++    return true;
++}
++
+ static bool video_checkpoint_rows(const FdisbullVideoFrameRowList *entry,
+                                    unsigned count, int64_t start, int64_t line,
+-                                   unsigned phase, int64_t stopped, Error **errp)
++                                   unsigned phase, int64_t stopped,
++                                   const FdisbullVideoReapplyOverlap *overlap,
++                                   Error **errp)
+ {
+     unsigned row;
+
+     for (row = 0; row < count; row++) {
+         const FdisbullVideoFrameRow *value = entry ? entry->value : NULL;
+         int64_t intended;
+-
+-        if (!value || value->row != row ||
+-            !fdisbull_video_phase_deadline(start, line, row, phase, &intended) ||
++        bool valid;
++
++        if (overlap) {
++            intended = overlap->retained_first_ns + row * line;
++            valid = value && value->actual_ns <
++                overlap->new_first_ns + (row + 1) * line;
++        } else {
++            valid = fdisbull_video_phase_deadline(start, line, row,
++                                                   phase, &intended);
++        }
++        if (!value || value->row != row || !valid ||
+             value->intended_ns != intended || value->actual_ns > stopped ||
+             !fdisbull_video_row_timely(intended, value->actual_ns, line)) {
+             return video_checkpoint_error(errp, "row order, time or stop boundary");
+@@ -1224,9 +1374,12 @@
+         (f->has_source_phase && f->source_phase != phase)) {
+         return video_checkpoint_error(errp, "complete raster source phase");
+     }
+-    if (!video_checkpoint_rows(f->rows, FDISBULL_VIDEO_HEIGHT,
++    if (!video_checkpoint_overlap(f->reapply_overlap, info->mode_setup,
++                                  f->frame_start_ns, f->line_period_ns,
++                                  f->period_ns, errp) ||
++        !video_checkpoint_rows(f->rows, FDISBULL_VIDEO_HEIGHT,
+                                f->frame_start_ns, f->line_period_ns, phase,
+-                               stopped, errp)) {
++                               stopped, f->reapply_overlap, errp)) {
+         return false;
+     }
+     for (last = f->rows; last->next; last = last->next) {
+@@ -1254,12 +1407,14 @@
+     bool idle, observing, stopped, invalidated;
+     int64_t intended, expiry;
+     bool selected = fdisbull_video_frame_mode13_selected();
++    bool overlap_model = fdisbull_video_frame_mode13_overlap_selected();
+     bool unchained = fdisbull_video_frame_unchained_latch_selected();
+     unsigned phase;
+
+     if (!s || !(info = s->info) || !source_epoch || virtual_ns < 0 ||
+         info->api_version != 1 ||
+         g_strcmp0(info->model, unchained ? UNCHAINED_LATCH_VIDEO_MODEL :
++                  overlap_model ? MODE13_OVERLAP_VIDEO_MODEL :
+                   selected ? MODE13_VIDEO_MODEL : VIDEO_MODEL) ||
+         info->epoch != source_epoch || info->virtual_ns != virtual_ns ||
+         info->rows_sampled < 0 || info->rows_sampled >= FDISBULL_VIDEO_HEIGHT ||
+@@ -1314,7 +1469,9 @@
+         return video_checkpoint_error(errp, "source page latch phase");
+     }
+     if ((info->mode_setup &&
+-         (!selected || info->mode_setup->committed_ns < 0 ||
++         (!selected || (info->mode_setup->has_same_mode_reapply &&
++                        (!overlap_model || !info->mode_setup->same_mode_reapply)) ||
++          info->mode_setup->committed_ns < 0 ||
+           info->mode_setup->committed_ns > virtual_ns ||
+           !info->mode_setup->configuration_generation ||
+           !info->mode_setup->timing_generation)) ||
+@@ -1325,6 +1482,11 @@
+           info->mode_setup->timing_generation != s->timing_generation ||
+           info->mode_setup->committed_ns > info->start_ns))) {
+         return video_checkpoint_error(errp, "mode-13 source setup identity");
++    }
++    if (info->has_overlap_next_new_ns != (info->reapply_overlap != NULL) ||
++        info->has_overlap_next_retained_ns != (info->reapply_overlap != NULL) ||
++        (info->reapply_overlap && (!observing || !overlap_model))) {
++        return video_checkpoint_error(errp, "mode-13 reapply progress fields");
+     }
+     if (observing) {
+         expiry = s->timer_expire_ns;
+@@ -1343,13 +1505,35 @@
+             s->frame_start_ns % s->period_ns ||
+             !video_source_phase(info->mode_setup, s->frame_start_ns,
+                                 s->period_ns, &phase) ||
+-            (info->awaiting_page_latch ?
+-             (!fdisbull_video_page_deadline(s->frame_start_ns, s->period_ns,
+-                                            info->page_latch_offset_ns, &intended) ||
+-              intended <= info->start_ns) :
+-             !fdisbull_video_phase_deadline(s->frame_start_ns, s->line_period_ns,
+-                                            info->rows_sampled, phase, &intended)) ||
+-            info->next_deadline_ns != intended || !s->timer_pending ||
++            !video_checkpoint_overlap(info->reapply_overlap, info->mode_setup,
++                                      s->frame_start_ns, s->line_period_ns,
++                                      s->period_ns, errp)) {
++            if (!errp || !*errp) {
++                video_checkpoint_error(errp, "pending raster origin");
++            }
++            return false;
++        }
++        if (info->reapply_overlap) {
++            int64_t offset = info->rows_sampled * s->line_period_ns;
++            int64_t next_new = info->reapply_overlap->new_first_ns + offset;
++            int64_t next_retained = info->reapply_overlap->retained_first_ns + offset;
++
++            if (info->overlap_next_retained_ns != next_retained ||
++                (info->overlap_next_new_ns != next_new &&
++                 (info->overlap_next_new_ns != next_new + s->line_period_ns ||
++                  next_new > virtual_ns))) {
++                return video_checkpoint_error(errp, "mode-13 callback cursors");
++            }
++            intended = MIN(info->overlap_next_new_ns, next_retained);
++        } else if (info->awaiting_page_latch ?
++                   (!fdisbull_video_page_deadline(s->frame_start_ns, s->period_ns,
++                                                  info->page_latch_offset_ns, &intended) ||
++                    intended <= info->start_ns) :
++                   !fdisbull_video_phase_deadline(s->frame_start_ns, s->line_period_ns,
++                                                   info->rows_sampled, phase, &intended)) {
++            return video_checkpoint_error(errp, "pending raster deadline");
++        }
++        if (info->next_deadline_ns != intended || !s->timer_pending ||
+             expiry < 0 ||
+             !(expiry == intended ||
+               (expiry > intended && expiry - 1 <= virtual_ns))) {
+@@ -1359,7 +1543,8 @@
+         }
+         if (!video_checkpoint_rows(s->partial_rows, info->rows_sampled,
+                                    s->frame_start_ns, s->line_period_ns,
+-                                   phase, virtual_ns, errp)) {
++                                   phase, virtual_ns, info->reapply_overlap,
++                                   errp)) {
+             return false;
+         }
+     } else if (info->rows_sampled || s->partial_rows || s->frame_start_ns ||
+@@ -1399,6 +1584,7 @@
+             .committed_ns = s->info->mode_setup->committed_ns,
+             .configuration_generation = s->info->mode_setup->configuration_generation,
+             .timing_generation = s->info->mode_setup->timing_generation,
++            .same_mode_reapply = s->info->mode_setup->same_mode_reapply,
+         };
+     }
+     path = object_get_canonical_path(*device);
+@@ -1534,6 +1720,8 @@
+     memset(video.actual, 0, sizeof(video.actual));
+     memset(&video.source, 0, sizeof(video.source));
+     video.page_latch = (FdisbullVideoFramePageLatch) { 0 };
++    video.overlap = (FdisbullVideoReapplyOverlap) { 0 };
++    video.overlap_next_new_ns = video.overlap_next_retained_ns = 0;
+ }
+
+ bool fdisbull_video_frame_checkpoint_restore(
+@@ -1585,6 +1773,7 @@
+                 .committed_ns = info->mode_setup->committed_ns,
+                 .configuration_generation = info->mode_setup->configuration_generation,
+                 .timing_generation = info->mode_setup->timing_generation,
++                .same_mode_reapply = info->mode_setup->same_mode_reapply,
+             };
+         }
+         if (!pci_std_vga_fdisbull_mode13_restore(device,
+@@ -1675,12 +1864,18 @@
+     if (info->pending_page_latch) {
+         video.page_latch = *info->pending_page_latch;
+     }
++    if (info->reapply_overlap) {
++        video.overlap = *info->reapply_overlap;
++        video.overlap_next_new_ns = info->overlap_next_new_ns;
++        video.overlap_next_retained_ns = info->overlap_next_retained_ns;
++    }
+     video.source.setup = (FdisbullVideoSetupStamp) { 0 };
+     if (info->mode_setup) {
+         video.source.setup = (FdisbullVideoSetupStamp) {
+             .committed_ns = info->mode_setup->committed_ns,
+             .configuration_generation = info->mode_setup->configuration_generation,
+             .timing_generation = info->mode_setup->timing_generation,
++            .same_mode_reapply = info->mode_setup->same_mode_reapply,
+         };
+     }
+     video.observing = observing;

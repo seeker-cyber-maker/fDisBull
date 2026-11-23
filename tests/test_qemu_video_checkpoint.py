@@ -15,7 +15,8 @@ from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull import qemu_instrumented_checkpoint as checkpoint
 from fdisbull.qemu_video_checkpoint import (
     FORMAT, EMPTY_SHA256, I64_MAX, LATCH_MODEL, LATCH_PROFILE, MODE13_MODEL, MODE13_PROFILE,
-    validate_video_checkpoint, logical_video_checkpoint, restored_video_info)
+    OVERLAP_MODEL, OVERLAP_PROFILE, validate_video_checkpoint, logical_video_checkpoint,
+    restored_video_info)
 
 
 def envelope(state):
@@ -787,6 +788,142 @@ def test_format6_requires_the_unchained_latch_profile():
     with pytest.raises(ValueError, match='VGA census'):
         checkpoint.validate(machine, envelope(state))
     state['retrace']['configuration']['configuration-generation'] = 12
+    state['format'] = checkpoint.VIDEO_PHASE_FORMAT
+    with pytest.raises(ValueError, match='model differs'):
+        checkpoint.validate(machine, envelope(state))
+
+
+def overlap_record(stage, *, rows=3, new_ran=False):
+    # 449 physical lines * 8 ns. Row spacing changes without changing parity.
+    line, period = 8, 3592
+    first = dict(**{'new-first-ns': 3594, 'retained-first-ns': 3598, 'line-period-ns': line})
+    complete = stage in ('recovery', 'steady')
+    record = source_record(rows=rows, complete=complete)
+    info = record['info']
+    info.update(model=OVERLAP_MODEL, **{'mode-setup': {
+        'committed-ns': 100, 'configuration-generation': 7,
+        'timing-generation': 9, 'same-mode-reapply': True}})
+    start, phase = {
+        'overlap': (period, 1), 'recovery': (2 * period, 0),
+        'steady': (3 * period, 1), 'missed': (2 * period, 0)}[stage]
+    if stage == 'missed':
+        info['start-ns'] = period + 1
+    record.update({'period-ns': period, 'frame-start-ns': start})
+    due, spacing = start + line // 4 + phase * line, 2 * line
+    if stage == 'overlap':
+        due, spacing = first['retained-first-ns'], line
+        info.update({'reapply-overlap': first, 'overlap-next-retained-ns': due + rows * line,
+                     'overlap-next-new-ns': first['new-first-ns'] + (rows + new_ran) * line})
+    for index, row in enumerate(record['partial-rows']):
+        row.update({'intended-ns': due + spacing * index, 'actual-ns': due + spacing * index + 1})
+    deadline = due + rows * spacing
+    now = due if rows == 0 else record['partial-rows'][-1]['actual-ns']
+    if stage == 'overlap':
+        deadline = min(deadline, info['overlap-next-new-ns'])
+        now = max(now if rows else start, first['new-first-ns'] + rows * line if new_ran else 0)
+    info.update({'virtual-ns': now, 'next-deadline-ns': deadline})
+    record['timer-expire-ns'] = deadline
+    if complete:
+        frame = info['frame']
+        previous = start - period
+        frame.update({'frame-start-ns': previous, 'period-ns': period,
+                      'source-phase': int(stage == 'recovery')})
+        if stage == 'recovery':
+            frame['reapply-overlap'] = first
+        begin, interval = ((first['retained-first-ns'], line) if stage == 'recovery'
+                           else (previous + line // 4, 2 * line))
+        for index, row in enumerate(frame['rows']):
+            row.update({'intended-ns': begin + interval * index, 'actual-ns': begin + interval * index + 1})
+        frame.update({'first-sample-ns': frame['rows'][0]['actual-ns'],
+                      'last-sample-ns': frame['rows'][-1]['actual-ns'],
+                      'completed-ns': frame['rows'][-1]['actual-ns']})
+    return record
+
+
+@pytest.mark.parametrize('stage,rows,new_ran', [
+    ('overlap', 0, False), ('overlap', 0, True), ('overlap', 3, True),
+    ('recovery', 3, False), ('steady', 3, False), ('missed', 3, False),
+])
+def test_overlap_checkpoint_preserves_exact_pending_and_completed_schedules(stage, rows, new_ran):
+    record = overlap_record(stage, rows=rows, new_ran=new_ran)
+    info = record['info']
+    assert validate_video_checkpoint(record, epoch=1, virtual_ns=info['virtual-ns']) == record
+    restored = deepcopy(info)
+    restored.update(epoch=9, token='fresh-overlap-owner')
+    if 'frame' in restored:
+        restored['frame']['epoch'] = 9
+    assert restored_video_info(record, restored, epoch=9, token='fresh-overlap-owner') == restored
+
+
+@pytest.mark.parametrize('fault', ['offset', 'line', 'retained-timer', 'new-timer', 'next-deadline',
+    'origin', 'late-arm', 'foreign-model', 'false-marker', 'missing-schedule', 'wrong-row-due',
+    'row-crosses-new-chain', 'unpublished-frame'])
+def test_overlap_checkpoint_refuses_incoherent_schedule(fault):
+    record = overlap_record('overlap')
+    info = record['info']
+    stamp = info['reapply-overlap']
+    if fault == 'offset':
+        stamp['retained-first-ns'] += 1
+    elif fault == 'line':
+        stamp['line-period-ns'] += 1
+    elif fault == 'retained-timer':
+        info['overlap-next-retained-ns'] += 1
+    elif fault == 'new-timer':
+        info['overlap-next-new-ns'] += 16
+    elif fault == 'next-deadline':
+        info['next-deadline-ns'] += 1
+    elif fault == 'origin':
+        record['frame-start-ns'] += record['period-ns']
+    elif fault == 'late-arm':
+        info['start-ns'] = record['frame-start-ns']
+    elif fault == 'foreign-model':
+        info['model'] = MODE13_MODEL
+        del info['mode-setup']['same-mode-reapply']
+    elif fault == 'false-marker':
+        info['mode-setup']['same-mode-reapply'] = False
+    elif fault == 'missing-schedule':
+        for key in ('reapply-overlap', 'overlap-next-new-ns', 'overlap-next-retained-ns'):
+            del info[key]
+    elif fault == 'wrong-row-due':
+        record['partial-rows'][1]['intended-ns'] += 1
+    elif fault == 'row-crosses-new-chain':
+        record['partial-rows'][0]['actual-ns'] = stamp['new-first-ns'] + stamp['line-period-ns']
+    elif fault == 'unpublished-frame':
+        info['frame'] = overlap_record('recovery')['info']['frame']
+    with pytest.raises(ValueError):
+        validate_video_checkpoint(record, epoch=1, virtual_ns=info['virtual-ns'])
+
+
+def test_live_overlap_keeps_armed_schedule_and_only_the_new_completed_raster():
+    from fdisbull.qemu_video_frame import _native_video
+    vm = SimpleNamespace(machine_configuration={'video_source_profile': OVERLAP_PROFILE})
+    def receipt(info):
+        clock = dict(virtual_ns=info['virtual-ns'], virtual_clock={'native': {'epoch': 1}})
+        return _native_video(vm, info, clock, token=info['token'])
+
+    initial = overlap_record('overlap', rows=0)['info']
+    after_new = overlap_record('overlap', rows=0, new_ran=True)['info']
+    complete = overlap_record('recovery')['info']
+    for observed in (initial, after_new, complete):
+        assert receipt(observed) == observed
+    assert 'frame' not in initial and 'frame' not in after_new
+    assert complete['frame']['reapply-overlap'] == after_new['reapply-overlap']
+    assert complete['frame']['frame-id'] == initial['frame-sequence'] + 1
+
+
+def test_format7_checkpoint_requires_the_selected_profile():
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    state = make_state(overlap_record('overlap', new_ran=True))
+    state.update(format=checkpoint.VIDEO_OVERLAP_FORMAT,
+                 **{'frame-key-repeat': {'parameter': 43, 'delay-ns': 500000000,
+                     'interval-ns': 91666666, 'deadline-ns': -1}})
+    machine = SimpleNamespace(qmp_commands=checkpoint.COMMANDS | {
+        'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'}})
+    with pytest.raises(ValueError, match='profile differs'):
+        checkpoint.validate(machine, envelope(state))
+    machine.machine_configuration['video_source_profile'] = OVERLAP_PROFILE
+    assert checkpoint.validate(machine, envelope(state)) == state
     state['format'] = checkpoint.VIDEO_PHASE_FORMAT
     with pytest.raises(ValueError, match='model differs'):
         checkpoint.validate(machine, envelope(state))

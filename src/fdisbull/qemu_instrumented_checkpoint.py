@@ -12,7 +12,7 @@ import json
 
 from .dosbox_rpc import DebuggerError
 from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT, LATCH_MODEL, MODEL, MODE13_MODEL,
-    clear_video_checkpoint_caches, logical_video_checkpoint, restored_video_info,
+    OVERLAP_MODEL, clear_video_checkpoint_caches, logical_video_checkpoint, restored_video_info,
     validate_video_checkpoint, video_model)
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
@@ -20,9 +20,10 @@ FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
 FRAME_KEY_REPEAT_FORMAT = 'fdisbull-instrumented-qemu-state-4'
 VIDEO_PHASE_FORMAT = 'fdisbull-instrumented-qemu-state-5'
 VIDEO_LATCH_FORMAT = 'fdisbull-instrumented-qemu-state-6'
+VIDEO_OVERLAP_FORMAT = 'fdisbull-instrumented-qemu-state-7'
 _VIDEO_MODEL = {
     VIDEO_FRAME_FORMAT: MODEL, FRAME_KEY_REPEAT_FORMAT: MODEL,
-    VIDEO_PHASE_FORMAT: MODE13_MODEL, VIDEO_LATCH_FORMAT: LATCH_MODEL,
+    VIDEO_PHASE_FORMAT: MODE13_MODEL, VIDEO_LATCH_FORMAT: LATCH_MODEL, VIDEO_OVERLAP_FORMAT: OVERLAP_MODEL,
 }
 _VIDEO_FORMATS = frozenset(_VIDEO_MODEL)
 _REPEAT_FORMATS = _VIDEO_FORMATS - {VIDEO_FRAME_FORMAT}

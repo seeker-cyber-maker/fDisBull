@@ -16,8 +16,8 @@ import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
-from .qemu_video_checkpoint import (MODE13_MODEL, raster_source_phase, validate_frame_latch,
-    validate_latch_info, validate_mode_setup, video_model)
+from .qemu_video_checkpoint import (MODE13_MODELS, OVERLAP_MODEL, raster_row_slack, raster_row_timing,
+    validate_frame_latch, validate_latch_info, validate_mode_setup, validate_reapply_info, video_model)
 
 
 VIDEO_FRAME_COMMANDS = frozenset({
@@ -162,21 +162,22 @@ def _frame_valid(frame, native):
             or type(rows) is not list or len(rows) != 200):
         return False
     try:
-        phase = raster_source_phase(native, start, period, frame)
+        phase, first, spacing = raster_row_timing(native, frame, frame)
         validate_frame_latch(frame, native)
     except ValueError:
         return False
-    if native['model'] == MODE13_MODEL:
+    if native['model'] in MODE13_MODELS:
         claimed = frame.get('source-phase')
         if type(claimed) is not int or claimed != phase:
             return False
     elif 'source-phase' in frame:
         return False
+    slack = raster_row_slack(line, frame)
     for number, row in enumerate(rows):
         if (type(row) is not dict or type(row.get('row')) is not int or row['row'] != number
                 or not _integer(row.get('intended-ns')) or not _integer(row.get('actual-ns'))
-                or row['intended-ns'] != start + line // 4 + (2 * number + phase) * line
-                or not row['intended-ns'] <= row['actual-ns'] < row['intended-ns'] + line):
+                or row['intended-ns'] != first + spacing * number
+                or not row['intended-ns'] <= row['actual-ns'] < row['intended-ns'] + slack):
             return False
     return (frame['first-sample-ns'] == rows[0]['actual-ns']
             and frame['last-sample-ns'] == rows[-1]['actual-ns'] == frame['completed-ns']
@@ -203,8 +204,9 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
     try:
         validate_mode_setup(value)
         validate_latch_info(value)
+        validate_reapply_info(value)
     except ValueError:
-        _invalid(vm, 'Invalid native video frame mode setup or page latch')
+        _invalid(vm, 'Invalid native video frame mode setup, page latch or reapply schedule')
     if state == 'idle':
         if (token is not None or value['stream-generation'] or value['frame-sequence']
                 or value['in-progress'] or value['rows-sampled']
@@ -260,6 +262,17 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
                 if (pending is not None and value['frame-sequence'] == prior['frame-sequence'] + 1
                         and frame is not None and frame.get('page-latch') != pending):
                     _invalid(vm, 'Native completed raster used a different selected page')
+                if value['model'] == OVERLAP_MODEL:
+                    previous_overlap = prior.get('reapply-overlap')
+                    if value['frame-sequence'] == prior['frame-sequence']:
+                        if (value.get('reapply-overlap') != previous_overlap or previous_overlap is not None
+                                and any(value[k] < prior[k] for k in
+                                    ('overlap-next-new-ns', 'overlap-next-retained-ns'))):
+                            _invalid(vm, 'Native reapply overlap schedule changed within a raster')
+                    elif (previous_overlap is not None
+                            and value['frame-sequence'] == prior['frame-sequence'] + 1
+                            and frame is not None and frame.get('reapply-overlap') != previous_overlap):
+                        _invalid(vm, 'Native completed raster used a different reapply overlap schedule')
             if prior['state'] == 'stopped' and state == 'invalidated':
                 if value['frame-sequence'] != prior['frame-sequence']:
                     _invalid(vm, 'Stopped video stream invalidation invented a completed frame')

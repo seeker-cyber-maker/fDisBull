@@ -1,4 +1,4 @@
-"""Strict bounded source-raster state for instrumented checkpoint format 3.
+"""Strict bounded source-raster state for instrumented checkpoints.
 
 This record owns a sampled prefix separately from its retained complete image.
 Validation never queries a machine, samples a row, or adopts an owner.
@@ -15,13 +15,17 @@ FORMAT = 'fdisbull-instrumented-qemu-state-3'
 MODEL = 'qemu-vga-chain4-scanline-v1'
 MODE13_PROFILE = 'dosbox-mode13'
 MODE13_MODEL = 'qemu-vga-chain4-dosbox-mode13-v1'
+OVERLAP_PROFILE = 'dosbox-mode13-overlap'
+OVERLAP_MODEL = 'qemu-vga-chain4-dosbox-mode13-overlap-v1'
 LATCH_PROFILE = 'vga-unchained-latch'
 LATCH_MODEL = 'qemu-vga-unchained-320x200-latch-v1'
 VIDEO_SOURCE_PROFILES = {
     MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
+    OVERLAP_PROFILE: (OVERLAP_MODEL, 'VGA.x-fdisbull-mode13-overlap=on'),
     LATCH_PROFILE: (LATCH_MODEL, 'VGA.x-fdisbull-unchained-latch=on'),
 }
-VIDEO_MODELS = frozenset({MODEL, MODE13_MODEL, LATCH_MODEL})
+MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
+VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL))
 ROW_BYTES = 960
 HEIGHT = 200
 RGB_BYTES = ROW_BYTES * HEIGHT
@@ -40,6 +44,8 @@ _FRAME = frozenset({'frame-id', 'stream-generation', 'epoch', 'configuration-gen
     'last-sample-ns', 'completed-ns', 'pixel-sha256', 'rows'})
 _SOURCE = ('configuration-generation', 'timing-generation', 'period-ns', 'line-period-ns')
 _LATCH_INFO = frozenset({'page-latch-offset-ns', 'awaiting-page-latch', 'pending-page-latch'})
+_OVERLAP_INFO = frozenset({'reapply-overlap', 'overlap-next-new-ns', 'overlap-next-retained-ns'})
+_MODE13_LINES = 449
 _CACHES = ('_video_frame_token', '_video_frame_last',
            '_video_frame_probe_samples', '_video_frame_owned_rgb')
 
@@ -87,16 +93,20 @@ def video_model(configuration):
 def validate_video_source_profile(profile, clock, retrace):
     if profile is not None and (type(profile) is not str or profile not in VIDEO_SOURCE_PROFILES
                                 or clock != 'virtual' or retrace != 'precise'):
-        raise ValueError('Source video timing requires dosbox-mode13 or vga-unchained-latch, virtual clock and precise retrace')
+        choices = ', '.join(VIDEO_SOURCE_PROFILES)
+        raise ValueError(f'Source video timing requires one of {choices}, virtual clock and precise retrace')
 
 
 def validate_mode_setup(info):
     setup = info.get('mode-setup')
-    if info.get('model') != MODE13_MODEL:
+    if info.get('model') not in MODE13_MODELS:
         _require('mode-setup' not in info, 'unexpected mode setup on standard model')
     elif 'mode-setup' in info:
-        _require(type(setup) is dict and set(setup) == {
-                'committed-ns', 'configuration-generation', 'timing-generation'}
+        fields = {'committed-ns', 'configuration-generation', 'timing-generation'}
+        if info['model'] == OVERLAP_MODEL and type(setup) is dict and 'same-mode-reapply' in setup:
+            _require(setup['same-mode-reapply'] is True, 'mode reapply marker')
+            fields.add('same-mode-reapply')
+        _require(type(setup) is dict and set(setup) == fields
             and _integer(setup['committed-ns']) and setup['committed-ns'] <= info['virtual-ns']
             and all(_integer(setup[k], 1, U64_MAX)
                     for k in ('configuration-generation', 'timing-generation')), 'effective mode setup')
@@ -105,14 +115,22 @@ def validate_mode_setup(info):
     return setup
 
 
+def _first_setup_raster(setup, period):
+    first = setup['committed-ns'] + period - setup['committed-ns'] % period
+    _require(_integer(first), 'raster setup boundary')
+    return first
+
+
 def raster_source_phase(info, start, period, source):
-    if info['model'] != MODE13_MODEL:
+    if info['model'] not in MODE13_MODELS:
         return 0
     setup = validate_mode_setup(info)
     _require(setup is not None and all(setup[k] == source[k]
         for k in ('configuration-generation', 'timing-generation')), 'raster setup generation')
-    first = setup['committed-ns'] + period - setup['committed-ns'] % period
-    _require(_integer(first) and start >= first, 'raster precedes effective mode setup')
+    first = _first_setup_raster(setup, period)
+    _require(start >= first, 'raster precedes effective mode setup')
+    if setup.get('same-mode-reapply'):
+        return int(start != first + period)
     return int(start != first)
 
 
@@ -172,28 +190,86 @@ def validate_frame_latch(frame, info):
                         generation=frame['configuration-generation'])
 
 
-def _deadline(start, line, row, phase):
-    value = start + line // 4 + (2 * row + phase) * line
+def _overlap_stamp(stamp, info):
+    _require(type(stamp) is dict and set(stamp) == {
+        'new-first-ns', 'retained-first-ns', 'line-period-ns'}, 'reapply overlap stamp')
+    first, retained, line = (stamp[k] for k in ('new-first-ns', 'retained-first-ns', 'line-period-ns'))
+    _require(_integer(first) and _integer(retained) and _integer(line, 4)
+             and retained == first + line * 17773 // 31778, 'reapply overlap offset')
+    setup = validate_mode_setup(info)
+    start = first - line // 4
+    period = _MODE13_LINES * line
+    _require(_integer(period, 1) and setup is not None and setup.get('same-mode-reapply') is True
+             and _integer(info.get('start-ns')) and info['start-ns'] < start
+             and start == _first_setup_raster(setup, period), 'reapply overlap raster origin')
+    return start, line
+
+
+def validate_reapply_info(info):
+    fields = _OVERLAP_INFO.intersection(info)
+    if fields:
+        _require(fields == _OVERLAP_INFO and info['model'] == OVERLAP_MODEL
+                 and info['state'] == 'observing' and 'frame' not in info,
+                 'reapply overlap stream fields')
+        stamp = info['reapply-overlap']
+        _, line = _overlap_stamp(stamp, info)
+        rows = info['rows-sampled']
+        new, retained = info['overlap-next-new-ns'], info['overlap-next-retained-ns']
+        new_row = stamp['new-first-ns'] + rows * line
+        _require(_integer(new) and _integer(retained)
+                 and retained == stamp['retained-first-ns'] + rows * line
+                 and (new == new_row or new == new_row + line and new_row <= info['virtual-ns'])
+                 and info.get('next-deadline-ns') == min(new, retained), 'reapply overlap timers')
+    return fields
+
+
+def raster_row_timing(info, source, schedule):
+    """Return physical parity, first drawn row time and drawn row spacing."""
+    start, period, line = (source[k] for k in ('frame-start-ns', 'period-ns', 'line-period-ns'))
+    phase = raster_source_phase(info, start, period, source)
+    overlap = (info['model'] == OVERLAP_MODEL and
+               info['mode-setup'].get('same-mode-reapply') is True and
+               start == _first_setup_raster(info['mode-setup'], period))
+    _require(('reapply-overlap' in schedule) == overlap, 'reapply overlap schedule presence')
+    if overlap:
+        stamp = schedule['reapply-overlap']
+        _require(_overlap_stamp(stamp, info) == (start, line) and period == _MODE13_LINES * line,
+                 'reapply overlap timing descriptor')
+        return phase, stamp['retained-first-ns'], line
+    return phase, _deadline(start + line // 4 + phase * line, line * 2, 0), line * 2
+
+
+def raster_row_slack(line, schedule):
+    overlap = schedule.get('reapply-overlap')
+    if overlap is None:
+        return line
+    return line + overlap['new-first-ns'] - overlap['retained-first-ns']
+
+
+def _deadline(first, spacing, row):
+    value = first + spacing * row
     _require(_integer(value), 'row deadline overflow')
     return value
 
 
-def _rows(rows, count, start, line, stopped, phase):
+def _rows(rows, count, first, spacing, slack, stopped):
     _require(type(rows) is list and len(rows) == count, 'row prefix extent')
     for number, row in enumerate(rows):
         _require(type(row) is dict and set(row) == {'row', 'intended-ns', 'actual-ns'}, 'row fields')
         _require(type(row['row']) is int and row['row'] == number, 'row order')
         intended, actual = row['intended-ns'], row['actual-ns']
         _require(_integer(intended) and _integer(actual)
-            and intended == _deadline(start, line, number, phase)
-            and intended <= actual <= stopped and actual - intended < line, 'row time or stop boundary')
+            and intended == _deadline(first, spacing, number)
+            and intended <= actual <= stopped and actual - intended < slack, 'row time or stop boundary')
 
 
 def _frame(frame, info, source):
-    phased = info['model'] == MODE13_MODEL
+    phased = info['model'] in MODE13_MODELS
     fields = _FRAME | {'source-phase'} if phased else _FRAME
     if info['model'] == LATCH_MODEL:
         fields = fields | {'page-latch'}
+    if type(frame) is dict and info['model'] == OVERLAP_MODEL and 'reapply-overlap' in frame:
+        fields = fields | {'reapply-overlap'}
     _require(type(frame) is dict and set(frame) == fields, 'complete frame fields')
     for key in ('frame-id', 'stream-generation', 'epoch', 'configuration-generation', 'timing-generation'):
         _require(_integer(frame[key], 1, U64_MAX), 'complete frame identity')
@@ -211,10 +287,11 @@ def _frame(frame, info, source):
         _require(_integer(frame[key]), 'complete frame time')
     start, period, line = (frame[k] for k in ('frame-start-ns', 'period-ns', 'line-period-ns'))
     _require(start > info['start-ns'] and start % period == 0, 'complete frame phase')
-    phase = raster_source_phase(info, start, period, source)
+    phase, first, spacing = raster_row_timing(info, frame, frame)
     if phased:
         _require(_integer(frame['source-phase'], 0, 1) and frame['source-phase'] == phase, 'complete source phase')
-    _rows(frame['rows'], HEIGHT, start, line, info.get('stop-ns', info['virtual-ns']), phase)
+    _rows(frame['rows'], HEIGHT, first, spacing, raster_row_slack(line, frame),
+          info.get('stop-ns', info['virtual-ns']))
     validate_frame_latch(frame, info)
     _require(frame['first-sample-ns'] == frame['rows'][0]['actual-ns']
         and frame['last-sample-ns'] == frame['completed-ns'] == frame['rows'][-1]['actual-ns'],
@@ -241,7 +318,7 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         fields.add('reason')
     if 'frame' in info and state in ('observing', 'stopped'):
         fields.add('frame')
-    if 'mode-setup' in info and info['model'] == MODE13_MODEL:
+    if 'mode-setup' in info and info['model'] in MODE13_MODELS:
         fields.add('mode-setup')
     _require(type(info['api-version']) is int and info['api-version'] == 1 and type(info['model']) is str
         and info['model'] in VIDEO_MODELS,
@@ -255,6 +332,7 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
     _require(_integer(rows, 0, HEIGHT - 1) and type(info['in-progress']) is bool
         and info['in-progress'] == bool(rows), 'stream row progress')
     fields.update(validate_latch_info(info))
+    fields.update(validate_reapply_info(info))
     _require(set(info) == fields, 'canonical stream fields')
     _require(type(record['console-index']) is int and record['console-index'] == 0
         and type(record['dac-8bit']) is bool and type(record['timer-pending']) is bool,
@@ -293,24 +371,26 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
     if state == 'observing':
         start = record['frame-start-ns']
         intended, expiry = info['next-deadline-ns'], record['timer-expire-ns']
-        phase = raster_source_phase(info, start, period, record)
         _require(start > info['start-ns'] and start % period == 0 and _integer(intended), 'pending raster phase')
-        expected = _deadline(start, line, rows, phase)
+        _, first, spacing = raster_row_timing(info, record, info)
+        expected = _deadline(first, spacing, rows)
         if info['model'] == LATCH_MODEL:
             target = latch_deadline(info, start, period, line)
             if info['awaiting-page-latch']:
                 expected = target
             else:
                 validate_page_latch(info['pending-page-latch'], info, intended=target,
-                    upper=min(virtual_ns, target + line - 1, _deadline(start, line, 0, phase) - 1),
+                    upper=min(virtual_ns, target + line - 1, first - 1),
                     generation=record['configuration-generation'])
+        elif 'reapply-overlap' in info:
+            expected = min(info['overlap-next-new-ns'], expected)
         _require(intended == expected, 'pending raster phase')
         # Deferral arms T+1 without changing D. A timer-disabled step may then
         # advance the stopped clock, so a retained expiry need not equal N+1.
         _require(record['timer-pending'] is True and expiry >= 0
             and (expiry == intended or expiry > intended and expiry - 1 <= virtual_ns),
             'actual timer phase')
-        _rows(record['partial-rows'], rows, start, line, virtual_ns, phase)
+        _rows(record['partial-rows'], rows, first, spacing, raster_row_slack(line, info), virtual_ns)
     else:
         _require(rows == 0 and record['partial-rows'] == [] and type(record['partial-rows']) is list
             and record['frame-start-ns'] == 0 and record['timer-pending'] is False
