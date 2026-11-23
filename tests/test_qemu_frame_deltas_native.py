@@ -179,6 +179,7 @@ def test_native_corrupt_delta_base_refuses_before_replacing_live_owner(tmp_path)
 
 
 def test_native_delta_held_keys_restore_without_reinject(tmp_path):
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
     from support.qemu_io_fixture import bios_keyboard_display
     from test_qemu_frame_keys_native import MAKE, _consume, _proof, _release
     runtime = _inputs()
@@ -200,16 +201,20 @@ def test_native_delta_held_keys_restore_without_reinject(tmp_path):
             point = first['point']
             node = next(n for n in first['nodes'] if n['id'] == point)
             assert node['checkpoint']['storage']['kind'] == 'delta'
-            keys = debug.keyboard_state()['keyboard']['native']
-            assert keys['active'] and not keys['repeat-supported'] and keys['accepted-edges'] == 2
+            keyboard = debug.keyboard_state()['keyboard']
+            keys = keyboard['native']
+            assert keys['active'] and keys['valid'] and keys['accepted-edges'] == 2
+            assert keys['repeat-supported'] == (REPEAT_QUERY in debug.vm.qmp_commands)
             saved = _proof(keys)
             assert debug.timeline_advance(frames=1,timeout_ms=60000)['completed_frames'] == 1
             old = debug.vm.process
             debug.timeline_rewind(point=point,timeout_ms=60000)
             assert old.poll() is not None
-            restored = debug.keyboard_state()['keyboard']['native']
+            restored_keyboard = debug.keyboard_state()['keyboard']
+            restored = restored_keyboard['native']
             assert restored['epoch'] != keys['epoch'] and restored['token'] != keys['token']
             assert _proof(restored) == saved and restored['accepted-edges'] == 2
+            assert restored_keyboard.get('frame_key_repeat') == keyboard.get('frame_key_repeat')
             # The saved node already advanced a frame and consumed one BIOS A.
             count = int.from_bytes(bytes.fromhex(debug.memory(symbols['key_count_ip'],length=2)['hex']),'little')
             assert count == 1
