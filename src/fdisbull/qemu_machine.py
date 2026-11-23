@@ -88,9 +88,9 @@ def firmware_identity(directory):
 
 
 def _video_source_launch_arguments(profile, firmware, root):
-    from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PALETTE_PROFILE,
+    from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_LFB_PROFILE, VGA480_PALETTE_PROFILE,
                                         VGA480_PAN_PROFILE, VGA480_PMI_PROFILE, VGA480_XY_PROFILE,
-                                        VBE101_FLIP_ROM, VBE101_PALETTE_ROM, VBE101_PMI_ROM,
+                                        VBE101_FLIP_ROM, VBE101_LFB_ROM, VBE101_PALETTE_ROM, VBE101_PMI_ROM,
                                         VBE101_XY_ROM, VIDEO_SOURCE_PROFILES)
 
     if profile is None:
@@ -102,6 +102,7 @@ def _video_source_launch_arguments(profile, firmware, root):
         VGA480_XY_PROFILE: VBE101_XY_ROM,
         VGA480_PALETTE_PROFILE: VBE101_PALETTE_ROM,
         VGA480_PMI_PROFILE: VBE101_PMI_ROM,
+        VGA480_LFB_PROFILE: VBE101_LFB_ROM,
     }.get(profile)
     if rom_name is not None:
         files = firmware['files'] if firmware else ()

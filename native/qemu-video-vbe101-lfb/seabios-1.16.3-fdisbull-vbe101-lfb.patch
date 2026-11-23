@@ -1,0 +1,84 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -134,7 +134,7 @@
+     return 0;
+ }
+
+-/* The private capability is exposed only by the opt-in banked 101h device.
++/* The private capability is exposed only by the opt-in 101h device.
+  * Wait for a fresh leading edge even if INT 10h entered during retrace. */
+ void
+ bochsvga_wait_fdisbull_displaystart(void)
+@@ -174,7 +174,7 @@
+ int
+ bochsvga_fdisbull_palette_available(void)
+ {
+-    return (GET_BDA_EXT(vbe_mode) & ~MF_NOCLEARMEM) == 0x101
++    return (GET_BDA_EXT(vbe_mode) & ~(MF_NOCLEARMEM | MF_LINEARFB)) == 0x101
+         && dispi_read(FDISBULL_PALETTE_INDEX) == FDISBULL_PALETTE_ID;
+ }
+
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -256,6 +256,8 @@
+         goto fail;
+     if (GET_BDA_EXT(vbe_mode) & MF_LINEARFB) {
+         regs->ah = VBE_RETURN_STATUS_INVALID;
++        if (CONFIG_VGA_BOCHS && bochsvga_fdisbull_palette_available())
++            regs->al = 0x4f;
+         return;
+     }
+     struct vgamode_s *vmode_g = get_current_mode();
+--- a/vgasrc/vgaentry.S
++++ b/vgasrc/vgaentry.S
+@@ -190,7 +190,7 @@
+         .word PMI_DAC_INDEX, PMI_DAC_DATA, PMI_STATUS
+         .word 0xffff, 0xffff       // End of ports and MMIO descriptors.
+
+-        .macro PMI_REQUIRE_BANKED_101 done
++        .macro PMI_REQUIRE_VBE101 done
+         movw $FDISBULL_XY_PORT, %dx
+         inl %dx, %eax             // Programmed X/Y, or all ones outside 101h.
+         cmpl $-1, %eax
+@@ -213,8 +213,22 @@
+         jnz .Lpmi_window_return
+         pushal
+         movw %dx, %cx
+-        PMI_REQUIRE_BANKED_101 .Lpmi_window_done
++        PMI_REQUIRE_VBE101 .Lpmi_window_done
++        // VBE Set Window is unavailable while the linear framebuffer is active.
+         movw $VBE_DISPI_IOPORT_INDEX, %dx
++        inw %dx, %ax
++        movw %ax, %si
++        movw $VBE_DISPI_INDEX_ENABLE, %ax
++        outw %ax, %dx
++        movw $VBE_DISPI_IOPORT_DATA, %dx
++        inw %dx, %ax
++        testw $VBE_DISPI_LFB_ENABLED, %ax
++        movw $VBE_DISPI_IOPORT_INDEX, %dx
++        jz .Lpmi_window_banked
++        movw %si, %ax             // Restore the selector on refusal.
++        outw %ax, %dx
++        jmp .Lpmi_window_done
++.Lpmi_window_banked:
+         movw $VBE_DISPI_INDEX_VIDEO_MEMORY_64K, %ax
+         outw %ax, %dx
+         movw $VBE_DISPI_IOPORT_DATA, %dx
+@@ -243,7 +257,7 @@
+         cmpl $0x3fffffff, %esi
+         ja .Lpmi_start_done
+         shll $2, %esi
+-        PMI_REQUIRE_BANKED_101 .Lpmi_start_done
++        PMI_REQUIRE_VBE101 .Lpmi_start_done
+         andl $3, %eax
+         movl %eax, %ebp           // Preserve the programmed fine X offset.
+         movw $VBE_DISPI_IOPORT_INDEX, %dx
+@@ -284,7 +298,7 @@
+         leal (%esi,%ecx), %eax
+         cmpl $256, %eax
+         ja .Lpmi_palette_done
+-        PMI_REQUIRE_BANKED_101 .Lpmi_palette_done
++        PMI_REQUIRE_VBE101 .Lpmi_palette_done
+         testb $0x80, %bl
+         jz .Lpmi_palette_write
+         PMI_WAIT_NEXT_RETRACE

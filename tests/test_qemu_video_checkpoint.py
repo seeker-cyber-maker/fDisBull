@@ -1206,3 +1206,21 @@ def test_format12_refuses_a_programmed_pair_one_byte_beyond_the_full_backing_spa
         checkpoint._decode(envelope(state))
     raw['vbe-size'] = full_span_end
     assert checkpoint._decode(envelope(state)) == state
+
+
+def test_format14_linear_scanout_must_match_the_saved_vbe_addressing_mode():
+    from fdisbull.qemu_video_checkpoint import VGA480_LFB_MODEL, VBE101_LINEAR_LAYOUT
+
+    state = pan_checkpoint_state()
+    state['format'] = checkpoint.VIDEO_VGA480_LFB_FORMAT
+    info = state['video-frame']['info']
+    info.update(model=VGA480_LFB_MODEL, **{'scanout-layout': VBE101_LINEAR_LAYOUT})
+    info['frame']['scanout-layout'] = VBE101_LINEAR_LAYOUT
+    registers = state['retrace']['configuration']['raw']['vbe']
+    retrace = state['retrace']['info']['raw']
+    registers[4] = retrace['vbe-enable'] = 0x41
+    assert checkpoint._decode(envelope(state)) == state
+
+    registers[4] = retrace['vbe-enable'] = 1
+    with pytest.raises(ValueError, match='scanout layout differs from the saved addressing mode'):
+        checkpoint._decode(envelope(state))

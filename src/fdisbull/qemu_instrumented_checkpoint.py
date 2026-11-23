@@ -15,9 +15,10 @@ from .qemu_retrace import (VBE101_DISPLAY_START_FIELD, VBE101_PANNING_FIELD, VBE
                            validate_retrace_snapshot)
 from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT, LATCH_MODEL, MODEL, MODE13_MODEL,
     OVERLAP_MODEL, VGA480_FLIP_MODEL, VGA480_FLIP_PROFILE, VGA480_FRAME_SIZE, VGA480_MODEL,
-    VGA480_PALETTE_MODEL, VGA480_PALETTE_PROFILE,
+    VGA480_LFB_MODEL, VGA480_LFB_PROFILE, VGA480_PALETTE_MODEL, VGA480_PALETTE_PROFILE,
     VGA480_PAN_MODEL, VGA480_PAN_PROFILE, VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE, VGA480_XY_MODEL,
-    VGA480_XY_PROFILE, VBE101_ORIGIN_FIELD, VBE101_PEL_FIELD, VBE101_PITCH_FIELD,
+    VGA480_XY_PROFILE, VBE101_LAYOUTS, VBE101_LINEAR_LAYOUT,
+    VBE101_ORIGIN_FIELD, VBE101_PEL_FIELD, VBE101_PITCH_FIELD,
     clear_video_checkpoint_caches, logical_video_checkpoint,
     restored_video_info, validate_video_checkpoint, vbe101_frame_fields, video_model)
 
@@ -33,6 +34,7 @@ VIDEO_VGA480_FLIP_FORMAT = 'fdisbull-instrumented-qemu-state-10'
 VIDEO_VGA480_PAN_FORMAT = 'fdisbull-instrumented-qemu-state-11'
 VIDEO_VGA480_XY_FORMAT = 'fdisbull-instrumented-qemu-state-12'
 VIDEO_VGA480_PALETTE_FORMAT = 'fdisbull-instrumented-qemu-state-13'
+VIDEO_VGA480_LFB_FORMAT = 'fdisbull-instrumented-qemu-state-14'
 _VIDEO_MODEL = {
     VIDEO_FRAME_FORMAT: MODEL, FRAME_KEY_REPEAT_FORMAT: MODEL,
     VIDEO_PHASE_FORMAT: MODE13_MODEL, VIDEO_LATCH_FORMAT: LATCH_MODEL, VIDEO_OVERLAP_FORMAT: OVERLAP_MODEL,
@@ -41,12 +43,14 @@ _VIDEO_MODEL = {
     VIDEO_VGA480_PAN_FORMAT: VGA480_PAN_MODEL,
     VIDEO_VGA480_XY_FORMAT: VGA480_XY_MODEL,
     VIDEO_VGA480_PALETTE_FORMAT: VGA480_PALETTE_MODEL,
+    VIDEO_VGA480_LFB_FORMAT: VGA480_LFB_MODEL,
 }
 _VBE101_RETRACE_PROFILES = {VIDEO_VGA480_SYNC_FORMAT: VGA480_SYNC_PROFILE,
                             VIDEO_VGA480_FLIP_FORMAT: VGA480_FLIP_PROFILE,
                             VIDEO_VGA480_PAN_FORMAT: VGA480_PAN_PROFILE,
                             VIDEO_VGA480_XY_FORMAT: VGA480_XY_PROFILE,
-                            VIDEO_VGA480_PALETTE_FORMAT: VGA480_PALETTE_PROFILE}
+                            VIDEO_VGA480_PALETTE_FORMAT: VGA480_PALETTE_PROFILE,
+                            VIDEO_VGA480_LFB_FORMAT: VGA480_LFB_PROFILE}
 _VIDEO_FORMATS = frozenset(_VIDEO_MODEL)
 _REPEAT_FORMATS = _VIDEO_FORMATS - {VIDEO_FRAME_FORMAT}
 RESTORE_RECEIPT_FORMATS = _VIDEO_FORMATS | {FORMAT}
@@ -104,7 +108,8 @@ def _validate_vbe101_display_census(state, retrace):
     width, height = VGA480_FRAME_SIZE
     pitch = panning['pitch-bytes'] if panning is not None else width
     x, y = raw['vbe'][8:10]
-    palette = state['format'] == VIDEO_VGA480_PALETTE_FORMAT
+    lfb = state['format'] == VIDEO_VGA480_LFB_FORMAT
+    palette = state['format'] == VIDEO_VGA480_PALETTE_FORMAT or lfb
     x_fits = x == 0 if palette and pitch < width else x + width <= pitch
     pel = panning['programmed-pel'] if panning is not None else 0
     programmed = starts['programmed-origin-bytes']
@@ -115,16 +120,19 @@ def _validate_vbe101_display_census(state, retrace):
     if raw['vbe-start-address'] * 4 != programmed or y * pitch + x != programmed + pel:
         raise ValueError('VBE 101h programmed display start differs from the saved VGA census')
     limit = min(raw['vram-size'], raw['vbe-size'])
-    if (state['format'] in (VIDEO_VGA480_XY_FORMAT, VIDEO_VGA480_PALETTE_FORMAT)
+    if ((palette or state['format'] == VIDEO_VGA480_XY_FORMAT)
             and programmed + pel + (height - 1) * pitch + max(pitch, width) > limit):
         raise ValueError('VBE 101h programmed display start exceeds the saved backing span')
     origins = [programmed + pel,
                starts['active-origin-bytes'] + (panning['active-pel'] if panning is not None else 0)]
     video = state['video-frame']
     info = video['info']
+    layout = info.get('scanout-layout')
+    if (lfb and layout in VBE101_LAYOUTS
+            and (layout == VBE101_LINEAR_LAYOUT) != bool(raw['vbe'][4] & 0x40)):
+        raise ValueError('VBE 101h scanout layout differs from the saved addressing mode')
     if palette and (raw['dac-8bit'] != bool(raw['vbe'][4] & 0x20)
-            or (info.get('scanout-layout') == 'vbe-banked-101'
-                and video['dac-8bit'] != raw['dac-8bit'])):
+            or (layout in VBE101_LAYOUTS and video['dac-8bit'] != raw['dac-8bit'])):
         raise ValueError('VBE 101h DAC width differs from the saved VGA census')
     frame = info.get('frame', {})
     if VBE101_ORIGIN_FIELD in frame:
@@ -178,17 +186,17 @@ def _decode(record):
     if isinstance(retrace, dict) and fields.intersection(retrace):
         profile = _VBE101_RETRACE_PROFILES.get(state['format'])
         if profile is None:
-            raise ValueError('VBE 101h retrace timing requires instrumented checkpoint format 9 through 13')
+            raise ValueError('VBE 101h retrace timing requires instrumented checkpoint format 9 through 14')
         validate_retrace_snapshot(retrace, epoch=state['source-epoch'],
                                   virtual_ns=state['virtual-ns'], source_profile=profile)
         if VBE101_DISPLAY_START_FIELD in retrace:
             _validate_vbe101_display_census(state, retrace)
     if state['format'] in (VIDEO_VGA480_FLIP_FORMAT, VIDEO_VGA480_PAN_FORMAT,
-                           VIDEO_VGA480_XY_FORMAT, VIDEO_VGA480_PALETTE_FORMAT):
+                           VIDEO_VGA480_XY_FORMAT, VIDEO_VGA480_PALETTE_FORMAT, VIDEO_VGA480_LFB_FORMAT):
         info = video['info']
         if (info['state'] == 'observing' and vbe101_frame_fields(info['model'], info.get('scanout-layout'))
                 and (not isinstance(retrace, dict) or VBE101_DISPLAY_START_FIELD not in retrace)):
-            raise ValueError('Banked VBE 101h scanout lacks its checkpoint display starts')
+            raise ValueError('VBE 101h scanout lacks its checkpoint display starts')
     if state['format'] in _REPEAT_FORMATS:
         from .qemu_frame_keys import validate_frame_key_repeat
         try:

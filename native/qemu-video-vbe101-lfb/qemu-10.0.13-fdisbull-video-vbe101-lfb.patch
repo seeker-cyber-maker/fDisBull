@@ -1,0 +1,487 @@
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -194,7 +194,14 @@
+             PCI_VGA(obj)->vga.fdisbull_vbe101_flip ||
+             PCI_VGA(obj)->vga.fdisbull_vbe101_pan ||
+             PCI_VGA(obj)->vga.fdisbull_vbe101_xy ||
+-            PCI_VGA(obj)->vga.fdisbull_vbe101_palette);
++            PCI_VGA(obj)->vga.fdisbull_vbe101_palette ||
++            PCI_VGA(obj)->vga.fdisbull_vbe101_lfb);
++}
++
++bool pci_std_vga_fdisbull_vbe101_lfb_selected(Object *obj)
++{
++    return obj && !strcmp(object_get_typename(obj), "VGA") &&
++           PCI_VGA(obj)->vga.fdisbull_vbe101_lfb;
+ }
+
+ bool pci_std_vga_fdisbull_vbe101_palette_selected(Object *obj)
+@@ -516,13 +523,14 @@
+         s->fdisbull_unchained_latch + s->fdisbull_vga480 +
+         s->fdisbull_vbe101_sync + s->fdisbull_vbe101_flip +
+         s->fdisbull_vbe101_pan + s->fdisbull_vbe101_xy +
+-        s->fdisbull_vbe101_palette > 1) {
++        s->fdisbull_vbe101_palette + s->fdisbull_vbe101_lfb > 1) {
+         error_setg(errp, "Select only one fDisBull VGA source timing profile");
+         return;
+     }
+
+     if ((s->fdisbull_vbe101_flip || s->fdisbull_vbe101_pan ||
+-         s->fdisbull_vbe101_xy || s->fdisbull_vbe101_palette) &&
++         s->fdisbull_vbe101_xy || s->fdisbull_vbe101_palette ||
++         s->fdisbull_vbe101_lfb) &&
+         !s->fdisbull_retrace) {
+         error_setg(errp, "VBE viewport profiles require x-fdisbull-retrace");
+         return;
+@@ -631,6 +639,8 @@
+                      vga.fdisbull_vbe101_flip, false),
+     DEFINE_PROP_BOOL("x-fdisbull-vbe101-pan", PCIVGAState,
+                      vga.fdisbull_vbe101_pan, false),
++    DEFINE_PROP_BOOL("x-fdisbull-vbe101-lfb", PCIVGAState,
++                     vga.fdisbull_vbe101_lfb, false),
+     DEFINE_PROP_BOOL("x-fdisbull-vbe101-palette", PCIVGAState,
+                      vga.fdisbull_vbe101_palette, false),
+     DEFINE_PROP_BOOL("x-fdisbull-vbe101-xy", PCIVGAState,
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -145,10 +145,15 @@
+     return s->vbe_regs[VBE_DISPI_INDEX_ENABLE] & VBE_DISPI_ENABLED;
+ }
+
++static bool vga_fdisbull_vbe101_palette_profile(const VGACommonState *s)
++{
++    return s->fdisbull_vbe101_palette || s->fdisbull_vbe101_lfb;
++}
++
+ static bool vga_fdisbull_vbe101_pan_profile(const VGACommonState *s)
+ {
+     return s->fdisbull_vbe101_pan || s->fdisbull_vbe101_xy ||
+-           s->fdisbull_vbe101_palette;
++           vga_fdisbull_vbe101_palette_profile(s);
+ }
+
+ static bool vga_fdisbull_vbe101_latch_profile(const VGACommonState *s)
+@@ -175,14 +180,20 @@
+ {
+     const uint16_t *vbe = s->vbe_regs;
+     const uint16_t enable = vbe[VBE_DISPI_INDEX_ENABLE];
+-    const uint16_t allowed = VBE_DISPI_ENABLED | VBE_DISPI_NOCLEARMEM |
+-                             (s->fdisbull_vbe101_palette ? VBE_DISPI_8BIT_DAC : 0);
++    uint16_t allowed = VBE_DISPI_ENABLED | VBE_DISPI_NOCLEARMEM;
++
++    if (vga_fdisbull_vbe101_palette_profile(s)) {
++        allowed |= VBE_DISPI_8BIT_DAC;
++    }
++    if (s->fdisbull_vbe101_lfb) {
++        allowed |= VBE_DISPI_LFB_ENABLED;
++    }
+
+     return (enable & VBE_DISPI_ENABLED) && !(enable & ~allowed) &&
+            vbe[VBE_DISPI_INDEX_XRES] == FDISBULL_VIDEO_WIDE_WIDTH &&
+            vbe[VBE_DISPI_INDEX_YRES] == FDISBULL_VIDEO_WIDE_HEIGHT &&
+            vbe[VBE_DISPI_INDEX_BPP] == 8 &&
+-           (!s->dac_8bit || s->fdisbull_vbe101_palette) &&
++           (!s->dac_8bit || vga_fdisbull_vbe101_palette_profile(s)) &&
+            (s->gr[VGA_GFX_MISC] & 0x0c) == 0x04;
+ }
+
+@@ -196,7 +207,7 @@
+                                       unsigned pitch, unsigned x)
+ {
+     return pitch < FDISBULL_VIDEO_WIDE_WIDTH ?
+-           s->fdisbull_vbe101_palette && x == 0 :
++           vga_fdisbull_vbe101_palette_profile(s) && x == 0 :
+            x + FDISBULL_VIDEO_WIDE_WIDTH <= pitch;
+ }
+
+@@ -217,7 +228,7 @@
+                MIN(s->vram_size, s->vbe_size);
+ }
+
+-static bool vga_fdisbull_banked_101(const VGACommonState *s)
++static bool vga_fdisbull_vbe101_layout_valid(const VGACommonState *s)
+ {
+     const uint16_t *vbe = s->vbe_regs;
+     const uint64_t coarse = (uint64_t)s->vbe_start_addr * 4;
+@@ -244,7 +255,7 @@
+ static bool vga_fdisbull_vbe101_sync(const VGACommonState *s)
+ {
+     return (s->fdisbull_vbe101_sync || vga_fdisbull_vbe101_latch_profile(s)) &&
+-           s->fdisbull_retrace && (s->msr & 1) && vga_fdisbull_banked_101(s);
++           s->fdisbull_retrace && (s->msr & 1) && vga_fdisbull_vbe101_layout_valid(s);
+ }
+
+ static bool vga_fdisbull_vbe101_flip(const VGACommonState *s)
+@@ -630,7 +641,8 @@
+         unsigned pel = s->vbe_regs[VBE_DISPI_INDEX_X_OFFSET] & 3;
+
+         if (!vbe101_sync || !before->vbe101_sync ||
+-            before->vbe101_pitch != s->vbe_line_offset) {
++            before->vbe101_pitch != s->vbe_line_offset ||
++            ((before->raw.vbe_enable ^ raw.vbe_enable) & VBE_DISPI_LFB_ENABLED)) {
+             /* New layout or pitch establishes a fresh viewport. */
+             s->fdisbull_vbe101_active_bytes = vbe101_sync ? programmed : 0;
+             s->fdisbull_vbe101_deadline_ns = 0;
+@@ -1256,7 +1268,7 @@
+         s->dac_state = 0;
+         break;
+     case VGA_PEL_D:
+-        if (s->fdisbull_vbe101_palette && !s->dac_8bit &&
++        if (vga_fdisbull_vbe101_palette_profile(s) && !s->dac_8bit &&
+             vga_fdisbull_vbe101_packed_mode(s)) {
+             val &= 0x3f;
+         }
+@@ -1377,7 +1389,7 @@
+         r[VBE_DISPI_INDEX_VIRT_WIDTH] = VBE_DISPI_MAX_XRES;
+     }
+     if (r[VBE_DISPI_INDEX_VIRT_WIDTH] < r[VBE_DISPI_INDEX_XRES] &&
+-        (!s->fdisbull_vbe101_palette || !r[VBE_DISPI_INDEX_VIRT_WIDTH] ||
++        (!vga_fdisbull_vbe101_palette_profile(s) || !r[VBE_DISPI_INDEX_VIRT_WIDTH] ||
+          !vga_fdisbull_vbe101_packed_mode(s))) {
+         r[VBE_DISPI_INDEX_VIRT_WIDTH] = r[VBE_DISPI_INDEX_XRES];
+     }
+@@ -1404,7 +1416,7 @@
+     }
+     offset = r[VBE_DISPI_INDEX_X_OFFSET] * bits / 8;
+     offset += r[VBE_DISPI_INDEX_Y_OFFSET] * linelength;
+-    if (s->fdisbull_vbe101_palette && vga_fdisbull_vbe101_packed_mode(s) &&
++    if (vga_fdisbull_vbe101_palette_profile(s) && vga_fdisbull_vbe101_packed_mode(s) &&
+         (!vga_fdisbull_vbe101_x_fits(s, linelength, r[VBE_DISPI_INDEX_X_OFFSET]) ||
+          offset + (r[VBE_DISPI_INDEX_YRES] - 1) * linelength +
+              MAX(linelength, FDISBULL_VIDEO_WIDE_WIDTH) > s->vbe_size)) {
+@@ -1507,13 +1519,13 @@
+                vga_fdisbull_vbe101_flip(s)) {
+         val = VBE_DISPI_FDISBULL_FLIP_ID;
+     } else if (s->vbe_index == VBE_DISPI_INDEX_FDISBULL_XY &&
+-               (s->fdisbull_vbe101_xy || s->fdisbull_vbe101_palette) &&
++               (s->fdisbull_vbe101_xy || vga_fdisbull_vbe101_palette_profile(s)) &&
+                vga_fdisbull_vbe101_sync(s)) {
+         val = VBE_DISPI_FDISBULL_XY_ID;
+-    } else if (s->fdisbull_vbe101_palette && vga_fdisbull_vbe101_sync(s) &&
++    } else if (vga_fdisbull_vbe101_palette_profile(s) && vga_fdisbull_vbe101_sync(s) &&
+                s->vbe_index == VBE_DISPI_INDEX_FDISBULL_PALETTE) {
+         val = VBE_DISPI_FDISBULL_PALETTE_ID;
+-    } else if (s->fdisbull_vbe101_palette && vga_fdisbull_vbe101_sync(s) &&
++    } else if (vga_fdisbull_vbe101_palette_profile(s) && vga_fdisbull_vbe101_sync(s) &&
+                s->vbe_index == VBE_DISPI_INDEX_FDISBULL_MAX_PITCH) {
+         val = vga_fdisbull_vbe101_max_pitch(s);
+     } else {
+@@ -1559,7 +1571,7 @@
+             if (s->vbe_index == VBE_DISPI_INDEX_VIRT_WIDTH &&
+                 vga_fdisbull_vbe101_pan_profile(s) &&
+                 vga_fdisbull_vbe101_packed_mode(s) &&
+-                (s->fdisbull_vbe101_palette ? val != 0 :
++                (vga_fdisbull_vbe101_palette_profile(s) ? val != 0 :
+                  val >= FDISBULL_VIDEO_WIDE_WIDTH)) {
+                 val = ROUND_UP(MIN(val, vga_fdisbull_vbe101_max_pitch(s)), 8);
+             }
+@@ -1589,7 +1601,7 @@
+                     memset(s->vram_ptr, 0,
+                            s->vbe_regs[VBE_DISPI_INDEX_YRES] * s->vbe_line_offset);
+                 }
+-            } else if (!(s->fdisbull_vbe101_palette &&
++            } else if (!(vga_fdisbull_vbe101_palette_profile(s) &&
+                          vga_fdisbull_vbe101_packed_mode(s) &&
+                          !((val ^ s->vbe_regs[VBE_DISPI_INDEX_ENABLE]) &
+                            ~VBE_DISPI_8BIT_DAC))) {
+@@ -2573,10 +2585,10 @@
+     const FdisbullRetraceInfo *retrace, int row, uint8_t *rgb,
+     FdisbullVideoFrameSource *source, Error **errp)
+ {
+-    bool banked = vbe_enabled(s);
+-    bool flip = banked && vga_fdisbull_vbe101_flip(s);
++    bool vbe = vbe_enabled(s);
++    bool flip = vbe && vga_fdisbull_vbe101_flip(s);
+     bool pan = flip && vga_fdisbull_vbe101_pan_profile(s);
+-    unsigned pitch = pan ? s->vbe_line_offset : banked ? 640 : 320;
++    unsigned pitch = pan ? s->vbe_line_offset : vbe ? 640 : 320;
+     unsigned pel = pan ? geometry->hpel >> 1 : 0;
+     bool valid_start = geometry->start_address == 0;
+
+@@ -2585,8 +2597,12 @@
+     } else if (flip) {
+         valid_start = vga_fdisbull_vbe101_window(s, geometry->start_address);
+     }
+-    FdisbullVideoScanoutLayout layout = banked ? FDISBULL_SCANOUT_VBE101 :
+-                                               FDISBULL_SCANOUT_MODE12;
++    FdisbullVideoScanoutLayout layout = FDISBULL_SCANOUT_MODE12;
++
++    if (vbe) {
++        layout = (s->vbe_regs[VBE_DISPI_INDEX_ENABLE] & VBE_DISPI_LFB_ENABLED) ?
++                 FDISBULL_SCANOUT_VBE101_LINEAR : FDISBULL_SCANOUT_VBE101;
++    }
+
+     if (geometry->width != FDISBULL_VIDEO_WIDE_WIDTH ||
+         geometry->height != FDISBULL_VIDEO_WIDE_HEIGHT ||
+@@ -2596,17 +2612,17 @@
+         !geometry->display_enabled ||
+         !(s->gr[VGA_GFX_MISC] & VGA_GR06_GRAPHICS_MODE) ||
+         (s->cr[VGA_CRTC_MODE] & 3) != 3 ||
+-        (s->dac_8bit && !(banked && s->fdisbull_vbe101_palette)) ||
++        (s->dac_8bit && !(vbe && vga_fdisbull_vbe101_palette_profile(s))) ||
+         pitch * FDISBULL_VIDEO_WIDE_HEIGHT > MIN(s->vram_size, s->vbe_size)) {
+         error_setg(errp, "Unsupported 640x480 scanout geometry");
+         return false;
+     }
+-    if (banked) {
++    if (vbe) {
+         if (geometry->depth != 8 || geometry->shift_control != 2 ||
+-            !vga_fdisbull_banked_101(s) ||
++            !vga_fdisbull_vbe101_layout_valid(s) ||
+             ((s->fdisbull_vbe101_sync || vga_fdisbull_vbe101_latch_profile(s)) &&
+              !retrace->vbe101_timing)) {
+-            error_setg(errp, "Unsupported banked VBE 101 scanout layout");
++            error_setg(errp, "Unsupported VBE 101 scanout layout");
+             return false;
+         }
+     } else if (!retrace->phase_supported || geometry->depth != 0 ||
+@@ -2626,7 +2642,7 @@
+         .vbe101_pitch = pan ? pitch : 0,
+         .vbe101_pel = pel,
+     };
+-    if (banked) {
++    if (vbe) {
+         source->line_period_ns = vbe101_timing.line_period_ns;
+         source->period_ns = source->line_period_ns * vbe101_timing.lines_per_frame;
+     } else {
+@@ -3535,7 +3551,7 @@
+
+     /* The DAC width is derived from the saved DISPI enable register.
+      * Palette bytes and the partial DAC write are already in vmstate_vga. */
+-    if (s->fdisbull_vbe101_palette) {
++    if (vga_fdisbull_vbe101_palette_profile(s)) {
+         s->dac_8bit = (s->vbe_regs[VBE_DISPI_INDEX_ENABLE] & VBE_DISPI_8BIT_DAC) != 0;
+     }
+     /* force refresh */
+@@ -3853,7 +3869,7 @@
+         portio_list_init(&s->vbe_port_list, obj, vbe_ports, s, "vbe");
+         portio_list_add(&s->vbe_port_list, address_space_io, 0x1ce);
+     }
+-    if (s->fdisbull_vbe101_xy || s->fdisbull_vbe101_palette) {
++    if (s->fdisbull_vbe101_xy || vga_fdisbull_vbe101_palette_profile(s)) {
+         portio_list_init(&s->fdisbull_xy_port_list, obj, vbe_fdisbull_xy_ports,
+                          s, "fdisbull-vbe-xy");
+         portio_list_add(&s->fdisbull_xy_port_list, address_space_io,
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -194,6 +194,7 @@
+     bool fdisbull_vbe101_pan;
+     bool fdisbull_vbe101_xy;
+     bool fdisbull_vbe101_palette;
++    bool fdisbull_vbe101_lfb;
+     uint8_t fdisbull_vbe101_active_pel;
+     int64_t fdisbull_vbe101_pel_deadline_ns;
+     uint32_t fdisbull_vbe101_active_bytes;
+--- a/include/hw/display/fdisbull-video-frame.h
++++ b/include/hw/display/fdisbull-video-frame.h
+@@ -22,7 +22,14 @@
+     FDISBULL_SCANOUT_LEGACY,
+     FDISBULL_SCANOUT_MODE12,
+     FDISBULL_SCANOUT_VBE101,
++    FDISBULL_SCANOUT_VBE101_LINEAR,
+ } FdisbullVideoScanoutLayout;
++
++static inline bool fdisbull_video_vbe101_layout(FdisbullVideoScanoutLayout layout)
++{
++    return layout == FDISBULL_SCANOUT_VBE101 ||
++           layout == FDISBULL_SCANOUT_VBE101_LINEAR;
++}
+
+ static inline unsigned fdisbull_video_width(FdisbullVideoScanoutLayout layout)
+ {
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -49,6 +49,7 @@
+ bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vbe101_flip_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vbe101_pan_selected(Object *obj);
++bool pci_std_vga_fdisbull_vbe101_lfb_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vbe101_palette_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vbe101_xy_selected(Object *obj);
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj);
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_LFB \
++    "fdisbull-instrumented-qemu-state-14"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_PALETTE \
+     "fdisbull-instrumented-qemu-state-13"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_XY \
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -20,6 +20,7 @@
+ bool fdisbull_video_frame_vbe101_sync_selected(void);
+ bool fdisbull_video_frame_vbe101_flip_selected(void);
+ bool fdisbull_video_frame_vbe101_pan_selected(void);
++bool fdisbull_video_frame_vbe101_lfb_selected(void);
+ bool fdisbull_video_frame_vbe101_palette_selected(void);
+ bool fdisbull_video_frame_vbe101_xy_selected(void);
+ bool fdisbull_video_frame_unchained_latch_selected(void);
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,7 +161,9 @@
+     }
+
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    if (fdisbull_video_frame_vbe101_palette_selected()) {
++    if (fdisbull_video_frame_vbe101_lfb_selected()) {
++        result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_LFB);
++    } else if (fdisbull_video_frame_vbe101_palette_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_PALETTE);
+     } else if (fdisbull_video_frame_vbe101_xy_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_XY);
+@@ -425,20 +427,24 @@
+                            FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_XY);
+     bool palette_v13 = !strcmp(state->format,
+                                FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_PALETTE);
++    bool lfb_v14 = !strcmp(state->format,
++                           FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_LFB);
+     bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6 ||
+                       overlap_v7 || vga480_v8 || sync_v9 || flip_v10 ||
+-                      pan_v11 || xy_v12 || palette_v13;
++                      pan_v11 || xy_v12 || palette_v13 || lfb_v14;
+     bool has_source = source_v3 || has_repeat;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+         (mode13_v5 || overlap_v7) != fdisbull_video_frame_mode13_selected() ||
+         overlap_v7 != fdisbull_video_frame_mode13_overlap_selected() ||
+-        (vga480_v8 || sync_v9 || flip_v10 || pan_v11 || xy_v12 || palette_v13) !=
++        (vga480_v8 || sync_v9 || flip_v10 || pan_v11 || xy_v12 || palette_v13 ||
++         lfb_v14) !=
+             fdisbull_video_frame_vga480_selected() ||
+         sync_v9 != fdisbull_video_frame_vbe101_sync_selected() ||
+         flip_v10 != fdisbull_video_frame_vbe101_flip_selected() ||
+         pan_v11 != fdisbull_video_frame_vbe101_pan_selected() ||
+         xy_v12 != fdisbull_video_frame_vbe101_xy_selected() ||
+         palette_v13 != fdisbull_video_frame_vbe101_palette_selected() ||
++        lfb_v14 != fdisbull_video_frame_vbe101_lfb_selected() ||
+         unchained_v6 != fdisbull_video_frame_unchained_latch_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -58,6 +58,11 @@
+     return false;
+ }
+
++bool pci_std_vga_fdisbull_vbe101_lfb_selected(Object *obj)
++{
++    return false;
++}
++
+ bool pci_std_vga_fdisbull_vbe101_palette_selected(Object *obj)
+ {
+     return false;
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -29,6 +29,7 @@
+ #define VGA480_SYNC_VIDEO_MODEL "qemu-vga-640x480-sync-v1"
+ #define VGA480_FLIP_VIDEO_MODEL "qemu-vga-640x480-flip-v1"
+ #define VGA480_PAN_VIDEO_MODEL "qemu-vga-640x480-pan-v1"
++#define VGA480_LFB_VIDEO_MODEL "qemu-vga-640x480-lfb-v1"
+ #define VGA480_PALETTE_VIDEO_MODEL "qemu-vga-640x480-palette-v1"
+ #define VGA480_XY_VIDEO_MODEL "qemu-vga-640x480-xy-v1"
+ #define VGA480_VIDEO_MODEL "qemu-vga-640x480-scanline-v1"
+@@ -365,6 +366,13 @@
+         video_device(&console, NULL));
+ }
+
++bool fdisbull_video_frame_vbe101_lfb_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_vbe101_lfb_selected(video_device(&console, NULL));
++}
++
+ bool fdisbull_video_frame_vbe101_palette_selected(void)
+ {
+     QemuConsole *console;
+@@ -422,6 +430,8 @@
+         return "vga-mode12";
+     case FDISBULL_SCANOUT_VBE101:
+         return "vbe-banked-101";
++    case FDISBULL_SCANOUT_VBE101_LINEAR:
++        return "vbe-linear-101";
+     default:
+         return NULL;
+     }
+@@ -435,11 +445,17 @@
+     if (!g_strcmp0(name, video_layout_name(FDISBULL_SCANOUT_VBE101))) {
+         return FDISBULL_SCANOUT_VBE101;
+     }
++    if (!g_strcmp0(name, video_layout_name(FDISBULL_SCANOUT_VBE101_LINEAR))) {
++        return FDISBULL_SCANOUT_VBE101_LINEAR;
++    }
+     return FDISBULL_SCANOUT_LEGACY;
+ }
+
+ static const char *video_model(Object *device)
+ {
++    if (pci_std_vga_fdisbull_vbe101_lfb_selected(device)) {
++        return VGA480_LFB_VIDEO_MODEL;
++    }
+     if (pci_std_vga_fdisbull_vbe101_palette_selected(device)) {
+         return VGA480_PALETTE_VIDEO_MODEL;
+     }
+@@ -713,7 +729,7 @@
+     frame->height = fdisbull_video_height(video.source.layout);
+     frame->stride = fdisbull_video_stride(video.source.layout);
+     frame->scanout_layout = g_strdup(video_layout_name(video.source.layout));
+-    if (video.source.layout == FDISBULL_SCANOUT_VBE101 &&
++    if (fdisbull_video_vbe101_layout(video.source.layout) &&
+         (pci_std_vga_fdisbull_vbe101_flip_selected(video.device) ||
+          video.source.vbe101_pitch)) {
+         frame->has_vbe101_origin_bytes = true;
+@@ -873,7 +889,7 @@
+             .configuration_generation = source.configuration_generation,
+         };
+     } else {
+-        if (source.layout == FDISBULL_SCANOUT_VBE101 &&
++        if (fdisbull_video_vbe101_layout(source.layout) &&
+             (pci_std_vga_fdisbull_vbe101_flip_selected(device) ||
+              source.vbe101_pitch)) {
+             if (video.rows &&
+@@ -1490,9 +1506,10 @@
+     FdisbullVideoScanoutLayout layout = video_layout(info->scanout_layout);
+     bool flip = layout == FDISBULL_SCANOUT_VBE101 &&
+                 !g_strcmp0(info->model, VGA480_FLIP_VIDEO_MODEL);
+-    bool palette = layout == FDISBULL_SCANOUT_VBE101 &&
+-                   !g_strcmp0(info->model, VGA480_PALETTE_VIDEO_MODEL);
+-    bool pan = layout == FDISBULL_SCANOUT_VBE101 &&
++    bool palette = fdisbull_video_vbe101_layout(layout) &&
++                   (!g_strcmp0(info->model, VGA480_PALETTE_VIDEO_MODEL) ||
++                    !g_strcmp0(info->model, VGA480_LFB_VIDEO_MODEL));
++    bool pan = fdisbull_video_vbe101_layout(layout) &&
+                (palette || !g_strcmp0(info->model, VGA480_PAN_VIDEO_MODEL) ||
+                 !g_strcmp0(info->model, VGA480_XY_VIDEO_MODEL));
+
+@@ -1589,6 +1606,7 @@
+     bool pan = fdisbull_video_frame_vbe101_pan_selected();
+     bool xy = fdisbull_video_frame_vbe101_xy_selected();
+     bool palette = fdisbull_video_frame_vbe101_palette_selected();
++    bool lfb = fdisbull_video_frame_vbe101_lfb_selected();
+     FdisbullVideoScanoutLayout layout;
+     unsigned phase;
+
+@@ -1598,7 +1616,8 @@
+     layout = video_layout(info->scanout_layout);
+     if (!source_epoch || virtual_ns < 0 ||
+         info->api_version != 1 ||
+-        g_strcmp0(info->model, palette ? VGA480_PALETTE_VIDEO_MODEL :
++        g_strcmp0(info->model, lfb ? VGA480_LFB_VIDEO_MODEL :
++                  palette ? VGA480_PALETTE_VIDEO_MODEL :
+                   xy ? VGA480_XY_VIDEO_MODEL :
+                   pan ? VGA480_PAN_VIDEO_MODEL :
+                   flip ? VGA480_FLIP_VIDEO_MODEL :
+@@ -1624,7 +1643,8 @@
+         (info->reason != NULL) != invalidated ||
+         ((idle || invalidated) && info->frame) ||
+         (info->scanout_layout != NULL) != (wide && (observing || stopped)) ||
+-        (info->scanout_layout && !layout)) {
++        (info->scanout_layout && !layout) ||
++        (layout == FDISBULL_SCANOUT_VBE101_LINEAR && !lfb)) {
+         return video_checkpoint_error(errp, "canonical stream fields");
+     }
+     if (idle) {

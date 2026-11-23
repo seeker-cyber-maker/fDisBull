@@ -32,19 +32,25 @@ VGA480_XY_MODEL = 'qemu-vga-640x480-xy-v1'
 VGA480_PALETTE_PROFILE = 'vga-640x480-palette'
 VGA480_PALETTE_MODEL = 'qemu-vga-640x480-palette-v1'
 VGA480_PMI_PROFILE = 'vga-640x480-pmi'
+VGA480_LFB_PROFILE = 'vga-640x480-lfb'
+VGA480_LFB_MODEL = 'qemu-vga-640x480-lfb-v1'
 VBE101_FLIP_ROM = 'fdisbull-vgabios-vbe101-flip.bin'
 VBE101_XY_ROM = 'fdisbull-vgabios-vbe101-xy.bin'
 VBE101_PALETTE_ROM = 'fdisbull-vgabios-vbe101-palette.bin'
 VBE101_PMI_ROM = 'fdisbull-vgabios-vbe101-pmi.bin'
-VBE101_PALETTE_PROFILES = (VGA480_PALETTE_PROFILE, VGA480_PMI_PROFILE)
-VBE101_PAN_MODELS = (VGA480_PAN_MODEL, VGA480_XY_MODEL, VGA480_PALETTE_MODEL)
+VBE101_LFB_ROM = 'fdisbull-vgabios-vbe101-lfb.bin'
+VBE101_PALETTE_PROFILES = (VGA480_PALETTE_PROFILE, VGA480_PMI_PROFILE, VGA480_LFB_PROFILE)
+VBE101_PALETTE_MODELS = (VGA480_PALETTE_MODEL, VGA480_LFB_MODEL)
+VBE101_PAN_MODELS = (VGA480_PAN_MODEL, VGA480_XY_MODEL, *VBE101_PALETTE_MODELS)
 VBE101_PAN_PROFILES = (VGA480_PAN_PROFILE, VGA480_XY_PROFILE, *VBE101_PALETTE_PROFILES)
 VBE101_ORIGIN_FIELD = 'vbe101-origin-bytes'
 VBE101_PITCH_FIELD = 'vbe101-pitch-bytes'
 VBE101_PEL_FIELD = 'vbe101-pel'
 VBE101_VIEWPORT_FIELDS = (VBE101_ORIGIN_FIELD, VBE101_PITCH_FIELD, VBE101_PEL_FIELD)
 VGA480_MODELS = (VGA480_MODEL, VGA480_SYNC_MODEL, VGA480_FLIP_MODEL, *VBE101_PAN_MODELS)
-VGA480_LAYOUTS = ('vga-mode12', 'vbe-banked-101')
+VBE101_LINEAR_LAYOUT = 'vbe-linear-101'
+VBE101_LAYOUTS = ('vbe-banked-101', VBE101_LINEAR_LAYOUT)
+VGA480_LAYOUTS = ('vga-mode12', *VBE101_LAYOUTS)
 VIDEO_SOURCE_PROFILES = {
     MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
     OVERLAP_PROFILE: (OVERLAP_MODEL, 'VGA.x-fdisbull-mode13-overlap=on'),
@@ -56,6 +62,7 @@ VIDEO_SOURCE_PROFILES = {
     VGA480_XY_PROFILE: (VGA480_XY_MODEL, 'VGA.x-fdisbull-vbe101-xy=on'),
     VGA480_PALETTE_PROFILE: (VGA480_PALETTE_MODEL, 'VGA.x-fdisbull-vbe101-palette=on'),
     VGA480_PMI_PROFILE: (VGA480_PALETTE_MODEL, 'VGA.x-fdisbull-vbe101-palette=on'),
+    VGA480_LFB_PROFILE: (VGA480_LFB_MODEL, 'VGA.x-fdisbull-vbe101-lfb=on'),
 }
 MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
 VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, *VGA480_MODELS))
@@ -141,6 +148,8 @@ def validate_scanout_info(info):
     _require(('scanout-layout' in info) == expected, 'scanout layout presence')
     if expected:
         _require(info['scanout-layout'] in VGA480_LAYOUTS, 'scanout layout')
+        _require(info['scanout-layout'] != VBE101_LINEAR_LAYOUT or info['model'] == VGA480_LFB_MODEL,
+                 'linear scanout requires the VBE 101h LFB model')
     return {'scanout-layout'} if expected else set()
 
 
@@ -176,7 +185,7 @@ def valid_vbe101_viewport(origin, pitch, pel, *, programmed=False, short_pitch=F
 
 
 def vbe101_frame_fields(model, layout):
-    if layout == 'vbe-banked-101':
+    if layout in VBE101_LAYOUTS:
         if model in VBE101_PAN_MODELS:
             return VBE101_VIEWPORT_FIELDS
         if model == VGA480_FLIP_MODEL:
@@ -190,7 +199,7 @@ def valid_vbe101_frame_fields(frame, model, layout):
         return False
     if model in VBE101_PAN_MODELS and expected:
         return valid_vbe101_viewport(*(frame[key] for key in expected),
-                                     short_pitch=model == VGA480_PALETTE_MODEL)
+                                     short_pitch=model in VBE101_PALETTE_MODELS)
     return not expected or valid_vbe101_origin(frame[VBE101_ORIGIN_FIELD])
 
 

@@ -243,6 +243,14 @@ copied RAM. Format 13 restores the guest CPU and stack inside a
 pending protected-mode wait. The selected ROM and firmware inventory
 remain part of the checkpoint's machine identity.
 
+Select `vga-640x480-lfb` with `fdisbull-vgabios-vbe101-lfb.bin` for
+linear VBE 101h. The guest selects the linear bit with 4F02h and writes
+via the PCI aperture reported by 4F01h. Source frames distinguish
+`vbe-linear-101` from `vbe-banked-101`. Format 14 restores the
+addressing mode, VGA memory, the existing display-start latches and the
+sampled raster. Switching between linear and banked modes invalidates
+the current raster stream.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
 the selected `video_source_profile`. The script must match the owner's launch
