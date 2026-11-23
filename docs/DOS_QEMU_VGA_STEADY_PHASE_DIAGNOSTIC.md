@@ -65,6 +65,47 @@ diagnostic build or runtime setting was installed.
 | Quiet RGB, both backends | `141a920ca2ecdd0d6fd7684eca3918d7d9ce66f74573266a15656dd107295939` |
 | Pulse RGB, both backends | `ea3c07508b70c79784eeffab0106e1345771f9dc35c218cd3584ffefde7b5d23` |
 
+## Translated-pulse follow-up on macOS arm64
+
+One new paired run reused the same pinned producers, authored COM and
+strict PIT/DAC oracle. The prior raw timing intervals, before image
+comparison, allowed shifting the first scheduled DAC write by −1 PIT tick
+and the second by +2 ticks. The runner declared that single change before
+starting either guest. It did not alter the geometry, full-write uncertainty
+rule, H/8 allowance, phase models or historical runner. Actual writes were
+bracketed afresh because nominal waiter changes do not translate all
+observed write windows by the same amount.
+
+All four pulse RGB images now match the complete, timing-separated phase-1
+prediction and reject a final-palette-only image. Both quiet raster pairs
+also retain their exact RGB identity. The strict paired gate still refuses
+three trials because phase 0 has an ambiguous row. The separate
+[phase witness](../tests/support/paired_video_phase_witness.py) compares
+only independently determined counterphase rows and can positively exclude
+phase 0 where such a row differs from the captured RGB.
+
+| Producer and trial | Phase-0 overlap | Phase-0 rejection from a timing-separated row |
+| --- | --- | --- |
+| DOSBox-X pulse 3 | Row 100, B write, `129253/166616` PIT ticks | None |
+| DOSBox-X pulse 4 | Row 101, C write, `4001/1412` PIT ticks | Row 100, phase 0 predicts A and the image contains B |
+| Diagnostic QEMU pulse 3 | None | Row 100, phase 0 predicts A and the image contains B |
+| Diagnostic QEMU pulse 4 | Row 101, C write, `941/1656` PIT ticks | Row 100, phase 0 predicts A and the image contains B |
+
+The audit reparsed the raw PIT journals, reconstructed the line-period
+bounds, checked each retained RGB hash and used no native row time to pick
+a predicted color. DOSBox-X pulse 3 remains compatible with the conservative
+phase-0 timing window. This is steady-mode evidence for the authored
+geometry. First-raster timing and paired checkpoint behavior remain open.
+The diagnostic still refused checkpoint export while its raster stream was
+owned. Both guests exited zero and were reaped. Boot images and producer
+identities passed readback.
+
+Native receipt SHA-256
+`4f6fdbdd9cd1b382aac632fa33a953801b5f7bbe348fd36e13242bf1bb0646bb`.
+Timing audit SHA-256
+`d0cf9401d35d4d784975a695c55b55505d8dd0e150ccb5589a2ff256771c0e94`.
+The exact producer and COM pins are listed above.
+
 ## Remaining qualification
 
 - Obtain independent DOSBox-X timing clearances for both pulse trials.
@@ -73,8 +114,10 @@ diagnostic build or runtime setting was installed.
   overlap refusal.
 - If an opt-in production profile follows, admit this geometry explicitly.
   Qualify the first raster after a real mode setup, later steady rasters and
-  capture that starts after warm-up. A stream start by itself does not
-  establish a guest mode reset.
+  capture that starts after warm-up. Observe a mode-setup boundary tied
+  to the effective VGA configuration. A stream start does not establish
+  that boundary, and a QEMU configuration generation alone has no
+  measured correspondence to DOSBox-X's draw setup.
 - Persist the profile, current phase and pending deadlines across checkpoint
   restore. Verify restores before the first draw, between the first and
   steady rasters, and with partial steady rows. Retain the existing model
