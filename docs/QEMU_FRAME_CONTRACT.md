@@ -195,11 +195,18 @@ raster, and its deadline independently. Banked VBE source capture uses its
 own timing model while the legacy VGA retrace observer reports `vbe-enabled`.
 A source stream belongs to one layout. Start a new stream after a mode change.
 
+Select `vga-640x480-sync` to also model the guest’s port 03DAh status in the
+admitted banked VBE 101h layout. Bit 0 follows display blanking and bit 3 marks
+vertical sync. Retrace observation, waits and retrace-scheduled input use that
+same sync interval. The native receipt includes `vbe101-timing` alongside
+the inherited VGA timing registers. This profile uses format 9 checkpoints.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
-`"video_source_profile": "vga-640x480"`. The script must match the owner’s
-launch profile when it runs. A running session also checks each resolved
-probe against the selected source extent.
+the selected `video_source_profile`, either `vga-640x480` or
+`vga-640x480-sync`. The script must match the owner’s launch profile when it
+runs. A running session also checks each resolved probe against the selected
+source extent.
 
 `advance_frames(frames=1, timeout_ms=10000)` on a machine context accepts 1..128
 frames under one outer deadline and original VM/channel lifetime. DOS process
@@ -238,7 +245,7 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, and `qemu-vga-640x480-scanline-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, and `qemu-vga-640x480-sync-v1` |
 | `scanout_layout` | `vga-mode12` or `vbe-banked-101` for the 640 × 480 source model |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
 | `double_width`, `double_height` | Both false. Coordinates use the retained source extent |

@@ -23,6 +23,28 @@ RAW = {'msr': 1, 'sr1': 0, 'cr00': 95, 'cr04': 80, 'cr05': 9,
 # The inclusive horizontal/vertical windows both contain positions 80..90.
 TIMING = {'ticks-per-char': 317, 'total-chars': 10_000, 'htotal': 100,
           'hstart': 80, 'hend': 90, 'vstart': 80, 'vend': 90, 'freq': 0}
+VBE101_PERIOD = 14_284_200
+VBE101_ENTER = 13_331_920
+VBE101_EXIT = 13_386_337
+VBE101_TIMING = {'line-period-ns': 27_208, 'chars-per-line': 100, 'lines-per-frame': 525,
+                 'hblank-start-ns': 21_766, 'hblank-end-ns': 26_663,
+                 'hsync-start-ns': 22_854, 'hsync-end-ns': 26_119,
+                 'vblank-start-line': 480, 'vsync-start-line': 490, 'vsync-end-line': 492}
+
+
+def vbe101_receipt(value):
+    phase_ns = value['virtual-ns'] % VBE101_PERIOD
+    line, line_ns = divmod(phase_ns, 27_208)
+    character = line_ns * 100 // 27_208
+    vertical = VBE101_ENTER <= phase_ns < VBE101_EXIT
+    horizontal = 22_854 <= line_ns <= 26_119
+    bits = (8 if vertical else 0) | int(line >= 480 or 21_766 <= line_ns <= 26_663)
+    return dict(value, **{'raw': dict(value['raw'], **{'vbe-enable': 1}),
+        'vbe101-timing': deepcopy(VBE101_TIMING),
+        'phase': {'period-ns': VBE101_PERIOD, 'phase-ns': phase_ns,
+                  'character': line * 100 + character, 'line': line, 'line-character': character,
+                  'vertical-retrace': vertical, 'horizontal-retrace': horizontal,
+                  'status1-timing-bits': bits}})
 
 
 class RetraceWire(NativeWire):
@@ -235,6 +257,55 @@ def test_unsupported_vbe_or_wrapped_timing_is_normal_and_generation_qualified(re
     assert invalid['unsupported_reason'] == 'invalid-timing' and invalid['phase'] is None
     assert first['timing_generation'] < vbe['timing_generation'] < invalid['timing_generation']
     assert not o.vm.closed
+
+
+@pytest.mark.parametrize('time,bits,horizontal', [
+    (21_765, 0, False), (21_766, 1, False), (22_854, 1, True),
+    (26_119, 1, True), (26_120, 1, False), (26_664, 0, False),
+    (13_059_839, 0, False), (13_059_840, 1, False),
+    (VBE101_ENTER - 1, 1, False), (VBE101_ENTER, 9, False),
+    (VBE101_EXIT - 1, 9, False), (VBE101_EXIT, 1, False),
+    (VBE101_PERIOD - 1, 1, False), (VBE101_PERIOD, 0, False),
+])
+def test_sync_profile_validates_blanking_and_sync_independently_of_crtc_timing(
+        retrace, time, bits, horizontal):
+    from fdisbull.qemu_video_checkpoint import VGA480_SYNC_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = VGA480_SYNC_PROFILE
+    o.wire.receipt['virtual-ns'] = time
+    o.wire.mutate = vbe101_receipt
+    result = o.context.retrace_observe()
+    assert result['timing'] == TIMING
+    assert result['vbe101_timing'] == VBE101_TIMING
+    assert result['phase']['status1-timing-bits'] == bits
+    assert result['phase']['horizontal-retrace'] is horizontal
+    assert result['phase']['vertical-retrace'] is bool(bits & 8)
+    assert not o.vm.closed and not o.executions
+
+
+@pytest.mark.parametrize('case', ['old-profile', 'wrong-generation', 'malformed', 'lfb', 'crtc'])
+def test_bad_vbe101_phase_does_not_become_an_owned_observation(retrace, case):
+    from fdisbull.qemu_video_checkpoint import VGA480_SYNC_PROFILE
+
+    o = initialized(retrace)
+    if case != 'old-profile':
+        o.vm.machine_configuration['video_source_profile'] = VGA480_SYNC_PROFILE
+    if case == 'wrong-generation':
+        o.wire.retrace.update({'phase-supported': False, 'unsupported-reason': 'vbe-enabled'})
+        o.wire.retrace['raw']['vbe-enable'] = 1
+        assert o.context.retrace_observe()['unsupported_reason'] == 'vbe-enabled'
+        o.wire.initialized()
+    corruptions = {
+        'malformed': (('vbe101-timing', 'vsync-end-line'), 491),
+        'lfb': (('raw', 'vbe-enable'), 0x41),
+        'crtc': (('timing', 'ticks-per-char'), 272),
+    }
+    o.wire.mutate = (lambda value: change(vbe101_receipt(value), *corruptions[case])
+                     if case in corruptions else vbe101_receipt(value))
+    with pytest.raises(DebuggerError):
+        o.context.retrace_observe()
+    assert o.vm.closed
 
 
 def test_unsupported_reason_and_phase_fields_have_exact_state_shape(retrace):

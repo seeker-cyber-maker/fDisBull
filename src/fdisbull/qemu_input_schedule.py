@@ -18,7 +18,8 @@ from .qemu_keyboard_press import press_receipt, validate_native_press
 from .qemu_keyboard_type import typing_receipt, validate_native_typing
 from .qemu_mouse_click import click_receipt, validate_native_click
 from .qemu_mapped_mouse import motion_receipt, validate_native_motion
-from .qemu_retrace import RETRACE_COMMANDS, validate_retrace_snapshot
+from .qemu_retrace import (RETRACE_COMMANDS, VBE101_TIMING_FIELD, retrace_vertical_window,
+                           validate_retrace_snapshot, vbe101_retrace_enabled)
 
 
 INPUT_SCHEDULE_COMMANDS = frozenset({
@@ -46,11 +47,7 @@ def validate_retrace_input_parameters(*, edge='enter', timeout_ms=1000):
 def _retrace_input_window(armed, edge):
     if not armed['phase-supported']:
         raise ValueError('Retrace input phase is unsupported: ' + armed['unsupported-reason'])
-    timing = armed['timing']
-    tick, horizontal = timing['ticks-per-char'], timing['htotal']
-    period = tick * timing['total-chars']
-    entry = tick * horizontal * timing['vstart']
-    exit_ = tick * horizontal * (timing['vend'] + 1)
+    period, entry, exit_ = retrace_vertical_window(armed['timing'], armed.get(VBE101_TIMING_FIELD))
     if entry == 0 and exit_ == period:
         raise ValueError('Retrace input requires a real transition, not a whole-period interval')
     now = armed['virtual-ns']
@@ -113,8 +110,10 @@ def _native_retrace_schedule(owner, value, expected):
                 or any(type(descriptor[key]) is not int or not 0 <= descriptor[key] < 1 << 63
                        for key in ('target-ns', 'window-end-ns'))):
             raise ValueError('Invalid native retrace-input descriptor fields')
+        allow_vbe101 = vbe101_retrace_enabled(owner.vm)
         armed = validate_retrace_snapshot(descriptor['armed'], epoch=value['epoch'],
-            virtual_ns=value['start-ns'], previous=planned['before']['native'])
+            virtual_ns=value['start-ns'], previous=planned['before']['native'],
+            allow_vbe101=allow_vbe101)
         if armed != planned['before']['native']:
             raise ValueError('Native retrace-input arm differs from its exact stopped observation')
         target, end = _retrace_input_window(armed, descriptor['edge'])
@@ -132,7 +131,7 @@ def _native_retrace_schedule(owner, value, expected):
         checked = None
         if 'checked' in descriptor:
             checked = validate_retrace_snapshot(descriptor['checked'], epoch=value['epoch'],
-                virtual_ns=value['terminal-ns'], previous=armed)
+                virtual_ns=value['terminal-ns'], previous=armed, allow_vbe101=allow_vbe101)
         if needs_check:
             if checked['virtual-ns'] < target:
                 raise ValueError('Native retrace-input callback preceded its target')

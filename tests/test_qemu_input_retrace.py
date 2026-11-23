@@ -15,7 +15,8 @@ from fdisbull.qemu_retrace import (
 )
 from test_qemu_input_schedule import InputWire, scheduled
 from test_qemu_io_deadlines import observation
-from test_qemu_retrace import RetraceWire, change
+from test_qemu_retrace import (RetraceWire, VBE101_ENTER, VBE101_EXIT, VBE101_PERIOD,
+                               change, vbe101_receipt)
 
 
 ARM = 'x-fdisbull-arm-input-retrace'
@@ -45,6 +46,8 @@ class RetraceInputWire(InputWire):
             period = tick * timing['total-chars']
             entry = tick * horizontal * timing['vstart']
             exit_ = tick * horizontal * (timing['vend'] + 1)
+            if 'vbe101-timing' in armed:
+                period, entry, exit_ = VBE101_PERIOD, VBE101_ENTER, VBE101_EXIT
             phase = entry if args['edge'] == 'enter' else exit_ % period
             now = self.receipt['virtual-ns']
             target = now + ((phase - now) % period or period)
@@ -174,6 +177,30 @@ def test_real_transition_at_period_wrap_qualifies_one_original_window(retrace_in
     delivered = o.session.input_schedule_observe()
     assert delivered['retrace']['dispatch_phase_verified'] is True
     assert delivered['retrace']['native_check']['phase']['vertical-retrace'] is (edge == 'enter')
+
+
+@pytest.mark.parametrize('edge,target,window_end', [
+    ('enter', VBE101_ENTER, VBE101_EXIT),
+    ('exit', VBE101_EXIT, VBE101_ENTER + VBE101_PERIOD),
+])
+def test_vbe101_input_binds_frozen_receipts_at_guest_sync_boundary(retrace_input, edge, target, window_end):
+    from fdisbull.qemu_video_checkpoint import VGA480_SYNC_PROFILE
+
+    o = retrace_input
+    o.vm.machine_configuration['video_source_profile'] = VGA480_SYNC_PROFILE
+    o.wire.video.initialized(generation=3)
+    o.wire.video.mutate = vbe101_receipt
+    o.session.keyboard_key_down('a')
+    armed = o.session.input_schedule_retrace(edge=edge)
+    assert armed['deadline_ns'] == target
+    assert armed['retrace']['window_end_ns'] == window_end
+    o.wire.callback()
+    delivered = o.session.input_schedule_observe()
+    assert delivered['retrace']['dispatch_phase_verified'] is True
+    checked = delivered['retrace']['native_check']
+    assert checked['phase']['vertical-retrace'] is (edge == 'enter')
+    assert checked['phase']['status1-timing-bits'] == (9 if edge == 'enter' else 1)
+    assert checked['vbe101-timing']['line-period-ns'] == 27_208
 
 
 def test_armed_batch_cannot_be_silently_replaced(retrace_input):

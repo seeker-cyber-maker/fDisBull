@@ -13,6 +13,7 @@ import time
 
 from .dosbox_rpc import DebuggerError
 from .qemu_clock import clock_timer_stop_is_ordinary, validate_clock_budget
+from .qemu_video_checkpoint import VGA480_SYNC_PROFILE
 
 
 RETRACE_COMMANDS = frozenset({'x-fdisbull-query-retrace'})
@@ -28,6 +29,20 @@ _PHASE_BOOLS = frozenset(('vertical-retrace', 'horizontal-retrace'))
 _NATIVE_FIELDS = frozenset(('api-version', 'model', 'epoch', 'virtual-ns', 'device',
                             'device-type', 'console', 'head', 'timing-generation',
                             'phase-supported', 'raw', 'timing'))
+VBE101_TIMING_FIELD = 'vbe101-timing'
+_VBE101_LINE_NS = 27208
+_VBE101_TIMING = {
+    'line-period-ns': _VBE101_LINE_NS,
+    'chars-per-line': 100,
+    'lines-per-frame': 525,
+    'hblank-start-ns': _VBE101_LINE_NS * 80 // 100,
+    'hblank-end-ns': _VBE101_LINE_NS * 98 // 100,
+    'hsync-start-ns': _VBE101_LINE_NS * 84 // 100,
+    'hsync-end-ns': _VBE101_LINE_NS * 96 // 100,
+    'vblank-start-line': 480,
+    'vsync-start-line': 490,
+    'vsync-end-line': 492,
+}
 
 
 def machine_retrace_configuration(profile, clock_profile):
@@ -101,7 +116,47 @@ def _unsupported(raw, timing):
     return None
 
 
-def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None):
+def vbe101_retrace_enabled(vm):
+    configuration = getattr(vm, 'machine_configuration', {})
+    return configuration.get('video_source_profile') == VGA480_SYNC_PROFILE
+
+
+def retrace_vertical_window(timing, vbe101_timing):
+    """Return period, vertical-sync entry and its first false nanosecond."""
+    if vbe101_timing is not None:
+        line = vbe101_timing['line-period-ns']
+        return (line * vbe101_timing['lines-per-frame'],
+                line * vbe101_timing['vsync-start-line'],
+                line * vbe101_timing['vsync-end-line'] + 1)
+    tick, horizontal = timing['ticks-per-char'], timing['htotal']
+    return (tick * timing['total-chars'], tick * horizontal * timing['vstart'],
+            tick * horizontal * (timing['vend'] + 1))
+
+
+def _modeled_phase(virtual_ns, timing, vbe101_timing):
+    period, vertical_start, vertical_stop = retrace_vertical_window(timing, vbe101_timing)
+    phase_ns = virtual_ns % period
+    vertical = vertical_start <= phase_ns < vertical_stop
+    if vbe101_timing is not None:
+        line_period, width = (vbe101_timing[key] for key in ('line-period-ns', 'chars-per-line'))
+        line, line_ns = divmod(phase_ns, line_period)
+        line_character = line_ns * width // line_period
+        character = line * width + line_character
+        horizontal = vbe101_timing['hsync-start-ns'] <= line_ns <= vbe101_timing['hsync-end-ns']
+        blank = (line >= vbe101_timing['vblank-start-line'] or
+                 vbe101_timing['hblank-start-ns'] <= line_ns <= vbe101_timing['hblank-end-ns'])
+    else:
+        character = phase_ns // timing['ticks-per-char']
+        line, line_character = divmod(character, timing['htotal'])
+        horizontal = timing['hstart'] <= line_character <= timing['hend']
+        blank = vertical or horizontal
+    return {'period-ns': period, 'phase-ns': phase_ns, 'character': character,
+            'line': line, 'line-character': line_character,
+            'vertical-retrace': vertical, 'horizontal-retrace': horizontal,
+            'status1-timing-bits': (8 if vertical else 0) | int(blank)}
+
+
+def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, allow_vbe101=False):
     """Validate a native snapshot against explicit historical clock evidence.
 
     Callback receipts can precede the latest live observation. This pure
@@ -116,6 +171,8 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None):
             or type(value.get('phase-supported')) is not bool):
         invalid('Invalid native retrace receipt fields')
     fields = _NATIVE_FIELDS | ({'phase'} if value['phase-supported'] else {'unsupported-reason'})
+    if allow_vbe101 and VBE101_TIMING_FIELD in value:
+        fields |= {VBE101_TIMING_FIELD}
     if (set(value) != fields or type(value['api-version']) is not int or value['api-version'] != 1
             or value['model'] != RETRACE_MODEL or value['device-type'] != 'VGA'
             or not _integer(value['epoch'], 1, _MAX_UINT64)
@@ -135,6 +192,14 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None):
     if any(timing.values()) and timing != _model_timing(raw):
         invalid('Native retrace cached timing contradicts the declared raw model')
     unsupported = _unsupported(raw, timing)
+    vbe101_timing = value.get(VBE101_TIMING_FIELD)
+    if VBE101_TIMING_FIELD in value:
+        if (not value['phase-supported'] or unsupported != 'vbe-enabled'
+                or raw['vbe-enable'] not in (1, 0x81) or type(vbe101_timing) is not dict
+                or vbe101_timing != _VBE101_TIMING
+                or any(type(item) is not int for item in vbe101_timing.values())):
+            invalid('Invalid native VBE 101h retrace timing descriptor')
+        unsupported = None
     if value['phase-supported'] != (unsupported is None):
         invalid('Native retrace phase eligibility contradicts its timing model')
     if unsupported is not None:
@@ -147,23 +212,13 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None):
                 or any(type(phase[key]) is not bool for key in _PHASE_BOOLS)
                 or not _integer(phase['status1-timing-bits'], 0, 255)):
             invalid('Invalid native retrace phase fields')
-        period = timing['ticks-per-char'] * timing['total-chars']
-        phase_ns = value['virtual-ns'] % period
-        character = phase_ns // timing['ticks-per-char']
-        line, line_character = divmod(character, timing['htotal'])
-        vertical = timing['vstart'] <= line <= timing['vend']
-        horizontal = timing['hstart'] <= line_character <= timing['hend']
-        expected = {'period-ns': period, 'phase-ns': phase_ns, 'character': character,
-                    'line': line, 'line-character': line_character,
-                    'vertical-retrace': vertical, 'horizontal-retrace': horizontal,
-                    'status1-timing-bits': (8 if vertical else 0) | (1 if vertical or horizontal else 0)}
-        if phase != expected:
+        if phase != _modeled_phase(virtual_ns, timing, vbe101_timing):
             invalid('Native retrace phase contradicts its observed clock and timing model')
     if previous is not None:
         if type(previous) is not dict:
             invalid('Invalid previous native retrace snapshot')
         previous = validate_retrace_snapshot(previous, epoch=epoch,
-                                            virtual_ns=previous.get('virtual-ns'))
+            virtual_ns=previous.get('virtual-ns'), allow_vbe101=allow_vbe101)
         if any(value[key] != previous[key] for key in ('epoch', 'model', 'device', 'device-type', 'console', 'head')):
             invalid('Native retrace device or ownership epoch changed')
         if (value['timing-generation'] < previous['timing-generation']
@@ -171,7 +226,7 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None):
             invalid('Native retrace timing generation or clock regressed')
         if value['timing-generation'] == previous['timing-generation'] and any(
                 value.get(key) != previous.get(key) for key in
-                ('raw', 'timing', 'phase-supported', 'unsupported-reason')):
+                ('raw', 'timing', 'phase-supported', 'unsupported-reason', VBE101_TIMING_FIELD)):
             invalid('Native retrace timing changed without a new generation')
     return deepcopy(value)
 
@@ -181,7 +236,7 @@ def _native_retrace(vm, value, clock):
     try:
         checked = validate_retrace_snapshot(value,
             epoch=clock['virtual_clock']['native']['epoch'], virtual_ns=clock['virtual_ns'],
-            previous=getattr(vm, '_retrace_last', None))
+            previous=getattr(vm, '_retrace_last', None), allow_vbe101=vbe101_retrace_enabled(vm))
     except ValueError as error:
         _invalid(vm, str(error))
     vm._retrace_last = deepcopy(checked)
@@ -274,11 +329,8 @@ class QemuRetraceMixin:
             if not before['phase_supported']:
                 result.update(outcome='unsupported', unsupported_reason=before['unsupported_reason'])
             else:
-                timing = before['timing']
-                tick, horizontal = timing['ticks-per-char'], timing['htotal']
-                period = tick * timing['total-chars']
-                entry = tick * horizontal * timing['vstart']
-                exit_ = tick * horizontal * (timing['vend'] + 1)
+                period, entry, exit_ = retrace_vertical_window(before['timing'],
+                    before['native'].get(VBE101_TIMING_FIELD))
                 width = exit_ - entry
                 if entry == 0 and exit_ == period:
                     result.update(outcome='unsupported', unsupported_reason='no-transition')
@@ -377,6 +429,8 @@ class QemuRetraceMixin:
             scope=('Current phase of the explicitly selected QEMU VGA integer timing model. '
                    'No guest status-port read, renderer publication, historical scanout, '
                    'completed guest drawing, input consumption or host-time synchronization is established.'))
+        if VBE101_TIMING_FIELD in native:
+            result['vbe101_timing'] = deepcopy(native[VBE101_TIMING_FIELD])
         try:
             _remaining(self)
             self._event('machine-retrace-observe', result)

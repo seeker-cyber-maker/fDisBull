@@ -1,0 +1,520 @@
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -189,7 +189,14 @@
+ bool pci_std_vga_fdisbull_vga480_selected(Object *obj)
+ {
+     return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
+-           PCI_VGA(obj)->vga.fdisbull_vga480;
++           (PCI_VGA(obj)->vga.fdisbull_vga480 ||
++            PCI_VGA(obj)->vga.fdisbull_vbe101_sync);
++}
++
++bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj)
++{
++    return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
++           PCI_VGA(obj)->vga.fdisbull_vbe101_sync;
+ }
+
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
+@@ -478,7 +485,8 @@
+     bool edid = false;
+
+     if ((unsigned)s->fdisbull_mode13_phase + s->fdisbull_mode13_overlap +
+-        s->fdisbull_unchained_latch + s->fdisbull_vga480 > 1) {
++        s->fdisbull_unchained_latch + s->fdisbull_vga480 +
++        s->fdisbull_vbe101_sync > 1) {
+         error_setg(errp, "Select only one fDisBull VGA source timing profile");
+         return;
+     }
+@@ -580,6 +588,8 @@
+                      vga.fdisbull_mode13_overlap, false),
+     DEFINE_PROP_BOOL("x-fdisbull-vga480", PCIVGAState,
+                      vga.fdisbull_vga480, false),
++    DEFINE_PROP_BOOL("x-fdisbull-vbe101-sync", PCIVGAState,
++                     vga.fdisbull_vbe101_sync, false),
+     DEFINE_PROP_BOOL("x-fdisbull-unchained-latch", PCIVGAState,
+                      vga.fdisbull_unchained_latch, false),
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -26,7 +26,7 @@
+ #include "qemu/units.h"
+ #include "system/reset.h"
+ #include "qapi/error.h"
+-#include "qapi/qapi-types-fdisbull-retrace.h"
++#include "system/fdisbull-retrace.h"
+ #include "qapi/qapi-types-fdisbull-vga-configuration.h"
+ #include "qapi/qapi-types-fdisbull-video-frame.h"
+ #include "qapi/qapi-types-fdisbull-raster.h"
+@@ -143,6 +143,84 @@
+ static inline bool vbe_enabled(VGACommonState *s)
+ {
+     return s->vbe_regs[VBE_DISPI_INDEX_ENABLE] & VBE_DISPI_ENABLED;
++}
++
++static bool vga_fdisbull_wide(const VGACommonState *s)
++{
++    return s->fdisbull_vga480 || s->fdisbull_vbe101_sync;
++}
++
++static bool vga_fdisbull_banked_101(const VGACommonState *s)
++{
++    const uint16_t *vbe = s->vbe_regs;
++    const uint16_t enable = vbe[VBE_DISPI_INDEX_ENABLE];
++
++    return (enable & VBE_DISPI_ENABLED) &&
++           !(enable & ~(VBE_DISPI_ENABLED | VBE_DISPI_NOCLEARMEM)) &&
++           vbe[VBE_DISPI_INDEX_XRES] == FDISBULL_VIDEO_WIDE_WIDTH &&
++           vbe[VBE_DISPI_INDEX_YRES] == FDISBULL_VIDEO_WIDE_HEIGHT &&
++           vbe[VBE_DISPI_INDEX_BPP] == 8 &&
++           vbe[VBE_DISPI_INDEX_VIRT_WIDTH] == FDISBULL_VIDEO_WIDE_WIDTH &&
++           !vbe[VBE_DISPI_INDEX_X_OFFSET] && !vbe[VBE_DISPI_INDEX_Y_OFFSET] &&
++           s->vbe_line_offset == FDISBULL_VIDEO_WIDE_WIDTH &&
++           !s->vbe_start_addr && !s->dac_8bit &&
++           (s->gr[VGA_GFX_MISC] & 0x0c) == 0x04;
++}
++
++static bool vga_fdisbull_vbe101_sync(const VGACommonState *s)
++{
++    return s->fdisbull_vbe101_sync && s->fdisbull_retrace &&
++           (s->msr & 1) && vga_fdisbull_banked_101(s);
++}
++
++/* DOSBox-X S3 BIOS mode 101h has a 29.403 MHz PLL and 800 dots per line.
++ * Quantize one line once and keep the status and sample clocks identical. */
++#define VBE101_CLOCK_HZ 29403000
++#define VBE101_LINE_NS ((800 * (int64_t)NANOSECONDS_PER_SECOND + \
++                         VBE101_CLOCK_HZ / 2) / VBE101_CLOCK_HZ)
++
++static const FdisbullVbe101Timing vbe101_timing = {
++    .line_period_ns = VBE101_LINE_NS,
++    .chars_per_line = 100,
++    .lines_per_frame = 525,
++    .hblank_start_ns = VBE101_LINE_NS * 80 / 100,
++    .hblank_end_ns = VBE101_LINE_NS * 98 / 100,
++    .hsync_start_ns = VBE101_LINE_NS * 84 / 100,
++    .hsync_end_ns = VBE101_LINE_NS * 96 / 100,
++    .vblank_start_line = 480,
++    .vsync_start_line = 490,
++    .vsync_end_line = 492,
++};
++
++static uint8_t vga_fdisbull_vbe101_status(int64_t now, FdisbullRetracePhase *out)
++{
++    const FdisbullVbe101Timing *t = &vbe101_timing;
++    int64_t period = t->line_period_ns * t->lines_per_frame;
++    int64_t phase = now % period;
++    int64_t line = phase / t->line_period_ns;
++    int64_t line_ns = phase % t->line_period_ns;
++    bool vsync = phase >= t->vsync_start_line * t->line_period_ns &&
++                 phase <= t->vsync_end_line * t->line_period_ns;
++    bool hblank = line_ns >= t->hblank_start_ns && line_ns <= t->hblank_end_ns;
++    uint8_t status = (vsync ? ST01_V_RETRACE : 0) |
++        ((line >= t->vblank_start_line || hblank) ? ST01_DISP_ENABLE : 0);
++
++    if (out) {
++        int64_t line_char = line_ns * t->chars_per_line / t->line_period_ns;
++
++        *out = (FdisbullRetracePhase) {
++            .period_ns = period,
++            .phase_ns = phase,
++            .character = line * t->chars_per_line + line_char,
++            .line = line,
++            .line_character = line_char,
++            .vertical_retrace = vsync,
++            .horizontal_retrace = line_ns >= t->hsync_start_ns &&
++                                  line_ns <= t->hsync_end_ns,
++            .status1_timing_bits = status,
++        };
++    }
++    return status;
+ }
+
+ static inline uint8_t sr(VGACommonState *s, int idx)
+@@ -305,6 +383,7 @@
+     FdisbullRetraceRaw raw;
+     struct vga_precise_retrace timing;
+     bool initialized;
++    bool vbe101_sync;
+ } FdisbullRetraceBefore;
+
+ static FdisbullRetraceRaw vga_fdisbull_retrace_raw(VGACommonState *s)
+@@ -358,6 +437,7 @@
+     before->raw = vga_fdisbull_retrace_raw(s);
+     before->timing = s->retrace_info.precise;
+     before->initialized = s->fdisbull_retrace_initialized;
++    before->vbe101_sync = vga_fdisbull_vbe101_sync(s);
+ }
+
+ static void vga_fdisbull_retrace_after(VGACommonState *s,
+@@ -377,6 +457,7 @@
+     }
+     if (raw_changed ||
+         before->initialized != s->fdisbull_retrace_initialized ||
++        before->vbe101_sync != vga_fdisbull_vbe101_sync(s) ||
+         !vga_fdisbull_timing_equal(&before->timing, &s->retrace_info.precise)) {
+         vga_fdisbull_retrace_advance_generation(s);
+     }
+@@ -387,6 +468,10 @@
+     struct vga_precise_retrace *r = &s->retrace_info.precise;
+     uint8_t val = s->st01 & ~(ST01_V_RETRACE | ST01_DISP_ENABLE);
+
++    if (vga_fdisbull_vbe101_sync(s)) {
++        return val | vga_fdisbull_vbe101_status(
++            qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL), NULL);
++    }
+     if (r->total_chars) {
+         int cur_line, cur_line_char, cur_char;
+         int64_t cur_tick;
+@@ -463,7 +548,15 @@
+         return true;
+     }
+     if (vbe_enabled(s)) {
+-        info->unsupported_reason = g_strdup("vbe-enabled");
++        if (!vga_fdisbull_vbe101_sync(s) || virtual_ns < 0) {
++            info->unsupported_reason = g_strdup("vbe-enabled");
++            return true;
++        }
++        info->phase_supported = true;
++        info->vbe101_timing = g_new(FdisbullVbe101Timing, 1);
++        *info->vbe101_timing = vbe101_timing;
++        info->phase = g_new0(FdisbullRetracePhase, 1);
++        vga_fdisbull_vbe101_status(virtual_ns, info->phase);
+         return true;
+     }
+     if (virtual_ns < 0 || r->freq || r->ticks_per_char <= 0 ||
+@@ -607,7 +700,7 @@
+              s->fdisbull_configuration_committed.crtc[VGA_CRTC_START_LO])) {
+         fdisbull_video_frame_check_page_programming(s->con);
+     }
+-    bool aperture_only = !force && s->fdisbull_vga480 &&
++    bool aperture_only = !force && vga_fdisbull_wide(s) &&
+         vga_fdisbull_aperture_only(&raw, &s->fdisbull_configuration_committed);
+     s->fdisbull_configuration_generation++;
+     memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
+@@ -2193,12 +2286,8 @@
+     }
+     if (banked) {
+         if (geometry->depth != 8 || geometry->shift_control != 2 ||
+-            (s->vbe_regs[VBE_DISPI_INDEX_ENABLE] &
+-             ~(VBE_DISPI_ENABLED | VBE_DISPI_NOCLEARMEM)) ||
+-            s->vbe_regs[VBE_DISPI_INDEX_X_OFFSET] ||
+-            s->vbe_regs[VBE_DISPI_INDEX_Y_OFFSET] ||
+-            s->vbe_regs[VBE_DISPI_INDEX_VIRT_WIDTH] != FDISBULL_VIDEO_WIDE_WIDTH ||
+-            (s->gr[VGA_GFX_MISC] & 0x0c) != 0x04) {
++            !vga_fdisbull_banked_101(s) ||
++            (s->fdisbull_vbe101_sync && !retrace->vbe101_timing)) {
+             error_setg(errp, "Unsupported banked VBE 101 scanout layout");
+             return false;
+         }
+@@ -2216,15 +2305,8 @@
+         .layout = layout,
+     };
+     if (banked) {
+-        /* Bochs VBE has no analog raster timing. This profile models the
+-         * DOSBox-X S3 BIOS's Mode 101h timing: 800 dots, 525 lines, and a
+-         * 29.403 MHz PLL result for the nominal 70 Hz mode. Quantize the
+-         * individual line to virtual-clock nanoseconds. */
+-        const int64_t clock_hz = 29403000;
+-
+-        source->line_period_ns = (800 * (int64_t)NANOSECONDS_PER_SECOND +
+-                                  clock_hz / 2) / clock_hz;
+-        source->period_ns = source->line_period_ns * 525;
++        source->line_period_ns = vbe101_timing.line_period_ns;
++        source->period_ns = source->line_period_ns * vbe101_timing.lines_per_frame;
+     } else {
+         source->line_period_ns = retrace->timing->ticks_per_char *
+                                  retrace->timing->htotal;
+@@ -2259,7 +2341,7 @@
+     const char *reason;
+
+     assert(bql_locked());
+-    unsigned height_limit = s->fdisbull_vga480 ?
++    unsigned height_limit = vga_fdisbull_wide(s) ?
+         FDISBULL_VIDEO_WIDE_HEIGHT : FDISBULL_VIDEO_HEIGHT;
+
+     if (!source || row < -1 || row >= (int)height_limit ||
+@@ -2272,7 +2354,7 @@
+         return false;
+     }
+     if (!retrace->phase_supported &&
+-        !(s->fdisbull_vga480 && vbe_enabled(s))) {
++        !(vga_fdisbull_wide(s) && vbe_enabled(s))) {
+         error_setg(errp, "Video frame source requires admitted precise timing");
+         return false;
+     }
+@@ -2290,7 +2372,7 @@
+     geometry.line_offset = params.line_offset;
+     geometry.line_compare = params.line_compare;
+     geometry.hpel = params.hpel & 7;
+-    if (s->fdisbull_vga480) {
++    if (vga_fdisbull_wide(s)) {
+         return vga_fdisbull_sample_640x480(s, &geometry, configuration,
+                                           retrace, row, rgb, source, errp);
+     }
+@@ -3507,6 +3589,7 @@
+     if (!vga_fdisbull_raw_equal(actual->raw, retrace->raw) ||
+         actual->timing_generation != retrace->timing_generation ||
+         actual->phase_supported != retrace->phase_supported ||
++        !fdisbull_vbe101_timing_equal(actual->vbe101_timing, retrace->vbe101_timing) ||
+         actual->timing->ticks_per_char != retrace->timing->ticks_per_char ||
+         actual->timing->total_chars != retrace->timing->total_chars ||
+         actual->timing->htotal != retrace->timing->htotal ||
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -188,6 +188,7 @@
+     bool fdisbull_mode13_phase;
+     bool fdisbull_mode13_overlap;
+     bool fdisbull_vga480;
++    bool fdisbull_vbe101_sync;
+     bool fdisbull_mode13_reapply_candidate;
+     VGAConfigurationState fdisbull_mode13_before;
+     bool fdisbull_unchained_latch;
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -46,6 +46,7 @@
+ bool pci_std_vga_fdisbull_mode13_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_overlap_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vga480_selected(Object *obj);
++bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj);
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_pending(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_setup(Object *obj,
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_SYNC \
++    "fdisbull-instrumented-qemu-state-9"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480 \
+     "fdisbull-instrumented-qemu-state-8"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP \
+--- a/include/system/fdisbull-retrace.h
++++ b/include/system/fdisbull-retrace.h
+@@ -14,4 +14,22 @@
+  */
+ FdisbullRetraceInfo *fdisbull_retrace_snapshot_owned(Error **errp);
+
++static inline bool fdisbull_vbe101_timing_equal(const FdisbullVbe101Timing *a,
++                                                const FdisbullVbe101Timing *b)
++{
++    if (!a || !b) {
++        return a == b;
++    }
++    return a->line_period_ns == b->line_period_ns &&
++           a->chars_per_line == b->chars_per_line &&
++           a->lines_per_frame == b->lines_per_frame &&
++           a->hblank_start_ns == b->hblank_start_ns &&
++           a->hblank_end_ns == b->hblank_end_ns &&
++           a->hsync_start_ns == b->hsync_start_ns &&
++           a->hsync_end_ns == b->hsync_end_ns &&
++           a->vblank_start_line == b->vblank_start_line &&
++           a->vsync_start_line == b->vsync_start_line &&
++           a->vsync_end_line == b->vsync_end_line;
++}
++
+ #endif
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -17,6 +17,7 @@
+ bool fdisbull_video_frame_mode13_selected(void);
+ bool fdisbull_video_frame_mode13_overlap_selected(void);
+ bool fdisbull_video_frame_vga480_selected(void);
++bool fdisbull_video_frame_vbe101_sync_selected(void);
+ bool fdisbull_video_frame_unchained_latch_selected(void);
+ void fdisbull_video_frame_check_page_programming(struct QemuConsole *console);
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp);
+--- a/qapi/fdisbull-retrace.json
++++ b/qapi/fdisbull-retrace.json
+@@ -75,6 +75,31 @@
+             'status1-timing-bits': 'uint8' } }
+
+ ##
++# @FdisbullVbe101Timing:
++#
++# Quantized DOSBox-X S3 timing for the admitted banked VBE 101h geometry.
++#
++# @line-period-ns: One physical line in virtual nanoseconds.
++# @chars-per-line: Number of eight-dot character positions per line.
++# @lines-per-frame: Total physical lines including blanking.
++# @hblank-start-ns: Inclusive horizontal blank start relative to each line.
++# @hblank-end-ns: Inclusive horizontal blank end relative to each line.
++# @hsync-start-ns: Inclusive horizontal sync start relative to each line.
++# @hsync-end-ns: Inclusive horizontal sync end relative to each line.
++# @vblank-start-line: First vertically blanked physical line.
++# @vsync-start-line: Sync begins at the origin of this line.
++# @vsync-end-line: Sync includes the origin of this line, then ends.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVbe101Timing',
++  'data': { 'line-period-ns': 'int', 'chars-per-line': 'int',
++            'lines-per-frame': 'int', 'hblank-start-ns': 'int',
++            'hblank-end-ns': 'int', 'hsync-start-ns': 'int',
++            'hsync-end-ns': 'int', 'vblank-start-line': 'int',
++            'vsync-start-line': 'int', 'vsync-end-line': 'int' } }
++
++##
+ # @FdisbullRetraceInfo:
+ #
+ # @api-version: Private observation protocol version, one.
+@@ -92,7 +117,9 @@
+ #     detects A-to-B-to-A changes even without intervening queries.
+ # @phase-supported: Whether the current initialized model has a supported phase.
+ # @raw: Current stored timing registers and VBE eligibility.
+-# @timing: Current cached native model parameters.
++# @timing: Current cached native VGA CRTC parameters.
++# @vbe101-timing: Effective phase geometry for the opt-in banked VBE 101h
++#     model. When present the inherited CRTC cache is independent of phase.
+ # @unsupported-reason: Present only without phase support: uninitialized,
+ #     vbe-enabled or invalid-timing, in that precedence order.
+ # @phase: Present only when phase-supported is true.
+@@ -109,7 +136,8 @@
+             'console': 'int', 'head': 'int', 'timing-generation': 'uint64',
+             'phase-supported': 'bool', 'raw': 'FdisbullRetraceRaw',
+             'timing': 'FdisbullRetraceTiming', '*unsupported-reason': 'str',
+-            '*phase': 'FdisbullRetracePhase' } }
++            '*phase': 'FdisbullRetracePhase',
++            '*vbe101-timing': 'FdisbullVbe101Timing' } }
+
+ ##
+ # @x-fdisbull-query-retrace:
+--- a/system/fdisbull-input.c
++++ b/system/fdisbull-input.c
+@@ -577,6 +577,7 @@
+     const FdisbullRetraceTiming *at = a->timing, *bt = b->timing;
+
+     return a->phase_supported == b->phase_supported &&
++           fdisbull_vbe101_timing_equal(a->vbe101_timing, b->vbe101_timing) &&
+            !g_strcmp0(a->unsupported_reason, b->unsupported_reason) &&
+            ar->msr == br->msr && ar->sr1 == br->sr1 &&
+            ar->cr00 == br->cr00 && ar->cr04 == br->cr04 &&
+@@ -976,9 +977,17 @@
+      * are bounded by that checked period and cannot overflow signed time.
+      */
+     period = armed->phase->period_ns;
+-    line_ns = timing->ticks_per_char * timing->htotal;
+-    entry = line_ns * timing->vstart;
+-    exit_ns = line_ns * (timing->vend + 1);
++    if (armed->vbe101_timing) {
++        const FdisbullVbe101Timing *vbe = armed->vbe101_timing;
++
++        line_ns = vbe->line_period_ns;
++        entry = line_ns * vbe->vsync_start_line;
++        exit_ns = line_ns * vbe->vsync_end_line + 1;
++    } else {
++        line_ns = timing->ticks_per_char * timing->htotal;
++        entry = line_ns * timing->vstart;
++        exit_ns = line_ns * (timing->vend + 1);
++    }
+     width = exit_ns - entry;
+     if (entry == 0 && exit_ns == period) {
+         error_setg(errp, "Retrace input timing has no vertical transition");
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,7 +161,9 @@
+     }
+
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    if (fdisbull_video_frame_vga480_selected()) {
++    if (fdisbull_video_frame_vbe101_sync_selected()) {
++        result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_SYNC);
++    } else if (fdisbull_video_frame_vga480_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480);
+     } else if (fdisbull_video_frame_mode13_overlap_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP);
+@@ -405,13 +407,16 @@
+                               FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13_OVERLAP);
+     bool vga480_v8 = !strcmp(state->format,
+                               FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480);
++    bool sync_v9 = !strcmp(state->format,
++                           FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_SYNC);
+     bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6 ||
+-                      overlap_v7 || vga480_v8;
++                      overlap_v7 || vga480_v8 || sync_v9;
+     bool has_source = source_v3 || has_repeat;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+         (mode13_v5 || overlap_v7) != fdisbull_video_frame_mode13_selected() ||
+         overlap_v7 != fdisbull_video_frame_mode13_overlap_selected() ||
+-        vga480_v8 != fdisbull_video_frame_vga480_selected() ||
++        (vga480_v8 || sync_v9) != fdisbull_video_frame_vga480_selected() ||
++        sync_v9 != fdisbull_video_frame_vbe101_sync_selected() ||
+         unchained_v6 != fdisbull_video_frame_unchained_latch_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -58,6 +58,11 @@
+     return false;
+ }
+
++bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj)
++{
++    return false;
++}
++
+ bool pci_std_vga_fdisbull_vga480_selected(Object *obj)
+ {
+     return false;
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -25,6 +25,7 @@
+ #define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
+ #define MODE13_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-v1"
+ #define MODE13_OVERLAP_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-overlap-v1"
++#define VGA480_SYNC_VIDEO_MODEL "qemu-vga-640x480-sync-v1"
+ #define VGA480_VIDEO_MODEL "qemu-vga-640x480-scanline-v1"
+ #define UNCHAINED_LATCH_VIDEO_MODEL "qemu-vga-unchained-320x200-latch-v1"
+
+@@ -359,6 +360,13 @@
+         video_device(&console, NULL));
+ }
+
++bool fdisbull_video_frame_vbe101_sync_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_vbe101_sync_selected(video_device(&console, NULL));
++}
++
+ bool fdisbull_video_frame_vga480_selected(void)
+ {
+     QemuConsole *console;
+@@ -399,6 +407,9 @@
+
+ static const char *video_model(Object *device)
+ {
++    if (pci_std_vga_fdisbull_vbe101_sync_selected(device)) {
++        return VGA480_SYNC_VIDEO_MODEL;
++    }
+     if (pci_std_vga_fdisbull_vga480_selected(device)) {
+         return VGA480_VIDEO_MODEL;
+     }
+@@ -925,6 +936,7 @@
+         strcmp(retrace->device, path) ||
+         (!retrace->phase_supported &&
+          (source.layout != FDISBULL_SCANOUT_VBE101 ||
++          pci_std_vga_fdisbull_vbe101_sync_selected(device) ||
+           g_strcmp0(retrace->unsupported_reason, "vbe-enabled"))) ||
+         retrace->timing_generation != source.timing_generation) {
+         if (!errp || !*errp) {
+@@ -1471,6 +1483,7 @@
+     bool overlap_model = fdisbull_video_frame_mode13_overlap_selected();
+     bool unchained = fdisbull_video_frame_unchained_latch_selected();
+     bool wide = fdisbull_video_frame_vga480_selected();
++    bool sync = fdisbull_video_frame_vbe101_sync_selected();
+     FdisbullVideoScanoutLayout layout;
+     unsigned phase;
+
+@@ -1480,7 +1493,8 @@
+     layout = video_layout(info->scanout_layout);
+     if (!source_epoch || virtual_ns < 0 ||
+         info->api_version != 1 ||
+-        g_strcmp0(info->model, wide ? VGA480_VIDEO_MODEL :
++        g_strcmp0(info->model, sync ? VGA480_SYNC_VIDEO_MODEL :
++                  wide ? VGA480_VIDEO_MODEL :
+                   unchained ? UNCHAINED_LATCH_VIDEO_MODEL :
+                   overlap_model ? MODE13_OVERLAP_VIDEO_MODEL :
+                   selected ? MODE13_VIDEO_MODEL : VIDEO_MODEL) ||

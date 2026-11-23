@@ -5,7 +5,7 @@ import math
 import re
 
 from .native_controller import NativeControlError
-from .qemu_video_checkpoint import VGA480_LAYOUTS, VGA480_MODEL, VIDEO_MODELS, video_frame_size
+from .qemu_video_checkpoint import VGA480_LAYOUTS, VGA480_MODELS, VIDEO_MODELS, video_frame_size
 
 _MAX_RECORD_BYTES = 1024 * 1024
 _MAX_ATTEMPT_BYTES = 4 * 1024 * 1024
@@ -30,8 +30,8 @@ def _source_issue(metadata):
             or metadata.get('source_bpp') != 24 or type(metadata.get('source_bpp')) is not int
             or metadata.get('width') != width or type(metadata.get('width')) is not int
             or metadata.get('height') != height or type(metadata.get('height')) is not int
-            or ('scanout_layout' in metadata) != (profile == VGA480_MODEL)
-            or profile == VGA480_MODEL and metadata.get('scanout_layout') not in VGA480_LAYOUTS
+            or ('scanout_layout' in metadata) != (profile in VGA480_MODELS)
+            or profile in VGA480_MODELS and metadata.get('scanout_layout') not in VGA480_LAYOUTS
             or metadata.get('double_width') is not False or metadata.get('double_height') is not False
             or metadata.get('captured_ticks_clock') != 'QEMU_CLOCK_VIRTUAL_milliseconds'
             or type(metadata.get('captured_ns')) is not int or metadata['captured_ns'] < 0

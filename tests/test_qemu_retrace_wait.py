@@ -9,7 +9,8 @@ import pytest
 
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.qemu_retrace import validate_retrace_wait_parameters
-from test_qemu_retrace import initialized, retrace
+from test_qemu_retrace import (VBE101_ENTER, VBE101_EXIT, VBE101_PERIOD, initialized, retrace,
+                               vbe101_receipt)
 from test_qemu_clock_budget import owned
 
 
@@ -59,6 +60,25 @@ def test_enter_wait_runs_once_to_the_absolute_window(waiting):
     assert result['completed_renderer_update'] is None
     assert result['completed_guest_frame'] is None and result['guest_frame_id'] is None
     assert not state.vm.closed
+
+
+@pytest.mark.parametrize('edge,now,target,end', [
+    ('enter', VBE101_ENTER - 1, VBE101_ENTER, VBE101_EXIT),
+    ('enter', VBE101_ENTER, VBE101_ENTER + VBE101_PERIOD, VBE101_EXIT + VBE101_PERIOD),
+    ('exit', VBE101_EXIT - 1, VBE101_EXIT, VBE101_ENTER + VBE101_PERIOD),
+])
+def test_vbe101_wait_uses_the_guest_sync_interval(waiting, edge, now, target, end):
+    from fdisbull.qemu_video_checkpoint import VGA480_SYNC_PROFILE
+
+    state = waiting
+    state.vm.machine_configuration['video_source_profile'] = VGA480_SYNC_PROFILE
+    state.wire.mutate = vbe101_receipt
+    state.wire.receipt['virtual-ns'] = now
+    result = state.context.retrace_wait(edge=edge)
+    assert result['synchronized'] and len(state.executions) == 1
+    assert result['target_ns'] == target and result['window_end_ns'] == end
+    assert result['after']['phase']['vertical-retrace'] is (edge == 'enter')
+    assert result['after']['phase']['status1-timing-bits'] == (9 if edge == 'enter' else 1)
 
 
 @pytest.mark.parametrize('edge,now,target,end', [

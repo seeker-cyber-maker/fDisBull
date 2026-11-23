@@ -11,9 +11,10 @@ import hashlib
 import json
 
 from .dosbox_rpc import DebuggerError
+from .qemu_retrace import VBE101_TIMING_FIELD, validate_retrace_snapshot
 from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT, LATCH_MODEL, MODEL, MODE13_MODEL,
-    OVERLAP_MODEL, VGA480_MODEL, clear_video_checkpoint_caches, logical_video_checkpoint, restored_video_info,
-    validate_video_checkpoint, video_model)
+    OVERLAP_MODEL, VGA480_MODEL, VGA480_SYNC_MODEL, clear_video_checkpoint_caches,
+    logical_video_checkpoint, restored_video_info, validate_video_checkpoint, video_model)
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
 FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
@@ -22,10 +23,11 @@ VIDEO_PHASE_FORMAT = 'fdisbull-instrumented-qemu-state-5'
 VIDEO_LATCH_FORMAT = 'fdisbull-instrumented-qemu-state-6'
 VIDEO_OVERLAP_FORMAT = 'fdisbull-instrumented-qemu-state-7'
 VIDEO_VGA480_FORMAT = 'fdisbull-instrumented-qemu-state-8'
+VIDEO_VGA480_SYNC_FORMAT = 'fdisbull-instrumented-qemu-state-9'
 _VIDEO_MODEL = {
     VIDEO_FRAME_FORMAT: MODEL, FRAME_KEY_REPEAT_FORMAT: MODEL,
     VIDEO_PHASE_FORMAT: MODE13_MODEL, VIDEO_LATCH_FORMAT: LATCH_MODEL, VIDEO_OVERLAP_FORMAT: OVERLAP_MODEL,
-    VIDEO_VGA480_FORMAT: VGA480_MODEL,
+    VIDEO_VGA480_FORMAT: VGA480_MODEL, VIDEO_VGA480_SYNC_FORMAT: VGA480_SYNC_MODEL,
 }
 _VIDEO_FORMATS = frozenset(_VIDEO_MODEL)
 _REPEAT_FORMATS = _VIDEO_FORMATS - {VIDEO_FRAME_FORMAT}
@@ -104,10 +106,16 @@ def _decode(record):
                                           virtual_ns=state['virtual-ns'])
         if video['info']['model'] != _VIDEO_MODEL[state['format']]:
             raise ValueError('Source video model differs from its checkpoint format')
-        if state['format'] in (VIDEO_LATCH_FORMAT, VIDEO_VGA480_FORMAT):
+        if state['format'] in (VIDEO_LATCH_FORMAT, VIDEO_VGA480_FORMAT, VIDEO_VGA480_SYNC_FORMAT):
             _validate_vga_census(state, video)
     elif 'video-frame' in state or 'frame-key-repeat' in state:
         raise ValueError('Source video and key repeat require their instrumented checkpoint formats')
+    retrace = state['retrace'].get('info')
+    if isinstance(retrace, dict) and VBE101_TIMING_FIELD in retrace:
+        if state['format'] != VIDEO_VGA480_SYNC_FORMAT:
+            raise ValueError('VBE 101h retrace timing requires instrumented checkpoint format 9')
+        validate_retrace_snapshot(retrace, epoch=state['source-epoch'],
+                                  virtual_ns=state['virtual-ns'], allow_vbe101=True)
     if state['format'] in _REPEAT_FORMATS:
         from .qemu_frame_keys import validate_frame_key_repeat
         try:

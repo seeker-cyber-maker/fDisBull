@@ -1017,3 +1017,44 @@ def test_wide_raster_rejects_unowned_layout_geometry_and_schedule(path, value):
     set_path(source, path, value)
     with pytest.raises(ValueError):
         validate_video_checkpoint(source, epoch=1, virtual_ns=source['info']['virtual-ns'])
+
+
+def test_format9_sync_retrace_and_wide_scanout_are_bound_to_the_exact_profile():
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    from fdisbull.qemu_video_checkpoint import VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE
+    from test_qemu_retrace import RAW, RETRACE_MODEL, TIMING, vbe101_receipt
+
+    video = wide_source_record('vbe-banked-101')
+    video['info']['model'] = VGA480_SYNC_MODEL
+    state = make_state(video)
+    state.update(format=checkpoint.VIDEO_VGA480_SYNC_FORMAT,
+                 **{'frame-key-repeat': {'parameter': 43, 'delay-ns': 500000000,
+                     'interval-ns': 91666666, 'deadline-ns': -1}})
+    state['retrace']['configuration']['configuration-generation'] = 10
+    state['retrace']['info'] = vbe101_receipt({
+        'api-version': 1, 'model': RETRACE_MODEL, 'epoch': 1, 'virtual-ns': state['virtual-ns'],
+        'device': '/machine/vga', 'device-type': 'VGA', 'console': 0, 'head': 0,
+        'timing-generation': 9, 'phase-supported': True, 'raw': RAW, 'timing': TIMING})
+    machine = SimpleNamespace(qmp_commands=checkpoint.COMMANDS | {
+        'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'},
+                               'video_source_profile': VGA480_SYNC_PROFILE})
+    assert checkpoint.validate(machine, envelope(state)) == state
+    restored = deepcopy(state)
+    rebind(restored)
+    assert checkpoint._logical(state) == checkpoint._logical(restored)
+    with pytest.raises(ValueError, match='phase contradicts'):
+        malformed = deepcopy(state)
+        malformed['retrace']['info']['phase']['status1-timing-bits'] = 255
+        checkpoint.validate(machine, envelope(malformed))
+    machine.machine_configuration['video_source_profile'] = VGA480_PROFILE
+    with pytest.raises(ValueError, match='profile differs'):
+        checkpoint.validate(machine, envelope(state))
+    state['format'] = checkpoint.VIDEO_VGA480_FORMAT
+    state['video-frame']['info']['model'] = VGA480_MODEL
+    with pytest.raises(ValueError, match='requires instrumented checkpoint format 9'):
+        checkpoint.validate(machine, envelope(state))
+    old = state['retrace']['info']
+    del old['vbe101-timing'], old['phase']
+    old.update({'phase-supported': False, 'unsupported-reason': 'vbe-enabled'})
+    assert checkpoint.validate(machine, envelope(state)) == state

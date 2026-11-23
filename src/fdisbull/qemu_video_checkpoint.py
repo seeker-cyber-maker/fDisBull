@@ -21,15 +21,19 @@ LATCH_PROFILE = 'vga-unchained-latch'
 LATCH_MODEL = 'qemu-vga-unchained-320x200-latch-v1'
 VGA480_PROFILE = 'vga-640x480'
 VGA480_MODEL = 'qemu-vga-640x480-scanline-v1'
+VGA480_SYNC_PROFILE = 'vga-640x480-sync'
+VGA480_SYNC_MODEL = 'qemu-vga-640x480-sync-v1'
+VGA480_MODELS = (VGA480_MODEL, VGA480_SYNC_MODEL)
 VGA480_LAYOUTS = ('vga-mode12', 'vbe-banked-101')
 VIDEO_SOURCE_PROFILES = {
     MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
     OVERLAP_PROFILE: (OVERLAP_MODEL, 'VGA.x-fdisbull-mode13-overlap=on'),
     LATCH_PROFILE: (LATCH_MODEL, 'VGA.x-fdisbull-unchained-latch=on'),
     VGA480_PROFILE: (VGA480_MODEL, 'VGA.x-fdisbull-vga480=on'),
+    VGA480_SYNC_PROFILE: (VGA480_SYNC_MODEL, 'VGA.x-fdisbull-vbe101-sync=on'),
 }
 MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
-VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, VGA480_MODEL))
+VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, *VGA480_MODELS))
 DEFAULT_FRAME_SIZE = (320, 200)
 VGA480_FRAME_SIZE = (640, 480)
 I64_MAX = (1 << 63) - 1
@@ -94,7 +98,7 @@ def video_model(configuration):
 
 
 def video_frame_size(model):
-    return VGA480_FRAME_SIZE if model == VGA480_MODEL else DEFAULT_FRAME_SIZE
+    return VGA480_FRAME_SIZE if model in VGA480_MODELS else DEFAULT_FRAME_SIZE
 
 
 def video_vm_size(vm):
@@ -103,12 +107,12 @@ def video_vm_size(vm):
 
 def video_period_valid(model, period, line):
     height = video_frame_size(model)[1]
-    physical_rows = height if model == VGA480_MODEL else height * 2
+    physical_rows = height if model in VGA480_MODELS else height * 2
     return line >= 4 and period >= physical_rows * line and period % line == 0
 
 
 def validate_scanout_info(info):
-    expected = info['model'] == VGA480_MODEL and info['state'] in ('observing', 'stopped')
+    expected = info['model'] in VGA480_MODELS and info['state'] in ('observing', 'stopped')
     _require(('scanout-layout' in info) == expected, 'scanout layout presence')
     if expected:
         _require(info['scanout-layout'] in VGA480_LAYOUTS, 'scanout layout')
@@ -116,7 +120,7 @@ def validate_scanout_info(info):
 
 
 def validate_frame_scanout(frame, info):
-    expected = info['model'] == VGA480_MODEL
+    expected = info['model'] in VGA480_MODELS
     _require(('scanout-layout' in frame) == expected, 'complete scanout layout presence')
     if expected:
         _require(frame['scanout-layout'] in VGA480_LAYOUTS
@@ -270,7 +274,7 @@ def raster_row_timing(info, source, schedule):
         _require(_overlap_stamp(stamp, info) == (start, line) and period == _MODE13_LINES * line,
                  'reapply overlap timing descriptor')
         return phase, stamp['retained-first-ns'], line
-    if info['model'] == VGA480_MODEL:
+    if info['model'] in VGA480_MODELS:
         return phase, _deadline(start + line // 4, line, 0), line
     return phase, _deadline(start + line // 4 + phase * line, line * 2, 0), line * 2
 
@@ -304,7 +308,7 @@ def _frame(frame, info, source):
     fields = _FRAME | {'source-phase'} if phased else _FRAME
     if info['model'] == LATCH_MODEL:
         fields = fields | {'page-latch'}
-    if info['model'] == VGA480_MODEL:
+    if info['model'] in VGA480_MODELS:
         fields = fields | {'scanout-layout'}
     if type(frame) is dict and info['model'] == OVERLAP_MODEL and 'reapply-overlap' in frame:
         fields = fields | {'reapply-overlap'}
