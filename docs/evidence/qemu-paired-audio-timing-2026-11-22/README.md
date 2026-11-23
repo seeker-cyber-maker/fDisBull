@@ -20,6 +20,81 @@ Removing exact leading zeros would leave about 54.317 s of DOSBox-X PCM and 24.4
 
 The explicit S16 result concerns the output PCM container. The paired tone fixture's guest SB16 data is U8.
 
+## Matched live Doom tics (2026-11-23)
+
+Both native engines stopped at the same original Ultimate Doom code site,
+LE object 1 offset `0x33120`, immediately before the relocated `INC` of
+`leveltime`. The counter is in object 3 at offset `0x2d354`. Each engine
+independently matched the loaded code and derived data placement from the
+original executable and live relocation evidence. Initial single-instruction
+witnesses observed DOSBox-X increment 0 to 1 and QEMU increment 38 to 39.
+QEMU explicitly reacquired protected source at its endpoint. The DOSBox-X
+witness used the native CPU/GDT diagnostic, stopped segmented/physical reads
+and the owned breakpoint. The legacy native protocol leaves the hidden CS
+cache unavailable for independent comparison.
+
+The interval below starts immediately before the increment at `leveltime=64`
+and ends before the increment at `leveltime=128`. Each controlled run used the
+same exact original EXE, WAD, configuration and 512-command E1M5 demo prefix.
+For sparse runs the controller allowed 1.5 seconds of engine-reported guest
+time after the first landmark before arming the next breakpoint. It verified
+the relocated instruction and data address again at the exact final landmark.
+
+| Native producer and procedure | Reported time from 64 to 128 | Audio recording frontier advanced |
+| --- | ---: | ---: |
+| DOSBox-X, fast-forward, each tic stopped | 5.421 s of PIC ticks | WAV file grew 1,048,576 bytes |
+| DOSBox-X, fast-forward, sparse stops | 5.368 s of PIC ticks | WAV file grew 1,048,576 bytes |
+| DOSBox-X, normal speed, sparse stops | 1.815 s of PIC ticks | WAV file grew 393,216 bytes |
+| Earlier QEMU OPL producer, each tic stopped | 2.035180 s of virtual time | 55,890 mono PCM frames |
+| Earlier QEMU OPL producer, sparse stops | 2.036338 s of virtual time | 62,690 mono PCM frames |
+| Current QEMU producer, sparse stops | 1.902188 s of virtual time | 58,474 signed stereo PCM frames |
+
+The normal-speed DOSBox-X result is the relevant reference for ordinary
+timing. Fast-forward substantially changed the measured interval even in
+the sparse run. The current QEMU stereo capture reported zero dropped
+frames at both endpoints. Its retained samples span 1.827313 seconds at
+32 kHz. DOSBox-X file growth is an observation of flushed bytes from the
+48 kHz mixer writer. It leaves buffered samples at the exact endpoints
+unknown. PIC ticks and QEMU virtual time are separate counters. The
+remaining approximately 87 ms difference and sample-window alignment need
+direct device timing measurements before accepting waveform or gameplay
+speed parity.
+
+The native producers were installed DOSBox-X `df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e`,
+the earlier QEMU OPL producer `01773e0f8e4976db24449442e9e79f6f0042f9a1c21529a13b35dc8856991924`,
+and the current QEMU producer `7e6640b8015a95f42233b9193785570a87882804729a9b3aebadf0a001343648`.
+Every reported run reaped its emulator and verified the input hashes again.
+
+| Private timing receipt | SHA-256 |
+| --- | --- |
+| DOSBox-X fast-forward, dense | `72d8e8205aa7d9248906da3a8a77726bd869fdb22ccaf136eb12981a2f9e744f` |
+| DOSBox-X fast-forward, sparse | `a62d14f5697d979ab06b999fbd7723b49eb6a618d507294644cbeee6b380eeb5` |
+| DOSBox-X normal speed | `326994b61fa3f95eae4daea030738ebee1d90e4bc16885b4e140d1f7f936b105` |
+| Earlier QEMU, dense | `bc5b1eda73a479c7f22335518af2e0093d46189e82c8f7d7abe4df6b72542e0a` |
+| Earlier QEMU, sparse | `0183d6e8df3f78868897858f7fab7ae292a1588dd9bd601e0be63cc15a4f98c6` |
+| Current QEMU, stereo | `85bdc90b7334522a6e47403415666f25b8de22d1d72d4ba08dd71890a8c4d732` |
+
+## Native protected Doom checkpoint at a live tic (2026-11-23)
+
+A fresh QEMU guest running the same original E1M5 prefix and the current
+stereo producer saved a public protected LE source checkpoint at the
+`leveltime=64` landmark. The source and native machine artifacts charged
+30,982,293 bytes. Both a hot restore and a restore from a separate Python
+process established a fresh protected source binding, restored the pre-step
+PC and live counter, and restored the audio frontier of 220,095 stereo
+frames with zero reported drops. Each independent native step reached
+`leveltime=65` at the same next PC and virtual time. The exact observed
+audio frontier stayed equal after that instruction.
+
+This is a source-bound native checkpoint on a live protected demo route.
+Game-authored save files, a paired DOSBox-X mid-demo checkpoint,
+uninterrupted playback timing and waveform equality remain open.
+
+| Private replay receipt | SHA-256 |
+| --- | --- |
+| Live capture and hot replay | `9f2b753e7128d25796ceece34a11e6e83923a890d389f5ee03789ed858773fe8` |
+| Separate Python process replay | `85c82e3d97d8ee8da801949d1db768dda3dff7c3a3a380d3d415aefb973254bf` |
+
 ## Signed-S16 guest checkpoint recovery
 
 The separate [native recovery matrix](../../../tests/test_qemu_sb16_s16_recovery_native.py) passed all 32 cases on macOS arm64 in a single finite local run. The exact harness was `9387667c6ea23dbd47baec971d05e7c87a5aca81`. It used the QEMU producer above and the retained pre-S16 transfer-count producer `d41bece601da8127ed049b76c2e09a43fd04aab85299632d48942e1dcc551268` as the legacy control.

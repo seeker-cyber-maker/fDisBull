@@ -1,5 +1,30 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Matched Doom timing and positioned input (2026-11-23)
+
+Both native engines reached the same two live Doom `leveltime` landmarks.
+The normal-speed DOSBox-X interval was 1.815 seconds of PIC ticks. The
+current QEMU interval was 1.902188 seconds of virtual time with 58,474
+retained stereo frames and zero reported drops. DOSBox-X fast-forward
+measured a much longer interval under the same controller. At a live tic
+boundary, QEMU also passed its protected LE checkpoint replay in the same
+session and a separate Python process. Both restored the stereo capture
+frontier and advanced the exact next instruction to tic 65. Device timing
+and alignment of the actual sample windows remain open.
+[Matched tic evidence](evidence/qemu-paired-audio-timing-2026-11-22/README.md#matched-live-doom-tics-2026-11-23)
+
+An opt-in Python CuteMouse click can now compose an already-landed press
+and release as two bounded and individually observed guest windows. It
+retains competing stops and explicit input lease recovery. The guarded
+mode 13h profile is the only current scope.
+[Positioned INT 33h input](DOS_QEMU_MIGRATION.md#positioned-int-33h-mouse-input)
+
+The VGA witness now distinguishes BIOS mode entry and same-mode reapply from
+stream attachment. The ordinary final register snapshot can stay equal after
+a full reapply. The first native draw timing and checkpointed phase origin
+remain open.
+[Mode setup witness](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md)
+
 ## Paired DOS loader, control and mouse evidence (2026-11-22)
 
 Local tests on QEMU 10.0.13 and the installed DOSBox-X paired COM and MZ

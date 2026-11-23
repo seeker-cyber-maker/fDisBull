@@ -640,7 +640,17 @@ up to four counts on each axis. Run to an intentional stop and observe the
 landing. Then `mouse_button_down_int33(x, y, stream=..., frame_id=...)`
 rechecks the current raster and actual guest position before queuing the
 press. The existing `mouse_button_up` releases the returned lease. Run and
-observe the guest after each edge to confirm delivery. Generic coordinate click routes and other driver modes remain open.
+observe the guest after each edge to confirm delivery.
+
+For an already-landed cursor, the opt-in Python
+`mouse_click_int33(x, y, stream=..., frame_id=...)` performs separately
+bounded press and release continuations. The budgets bound guest observation
+time. To advance from press to release, the action requires an ordinary stop,
+exact queue acceptance, matching driver and raster configuration, and a new
+driver edge at the target. An intervening breakpoint or hook returns the
+original stop and the input lease or partial disposition. A cursor warp or
+a guest query that consumed the edge count can also leave a partial result.
+Generic coordinate routes and other driver modes remain open.
 
 ### Native key repeat
 

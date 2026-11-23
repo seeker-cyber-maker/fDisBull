@@ -1437,12 +1437,13 @@
         "input.mouse.click"
       ],
       "qualification": "unqualified",
-      "implementation": "pinned_real_mode_int33_positioned_motion_and_press_implemented_generic_click_open",
+      "implementation": "pinned_real_mode_int33_observed_click_implemented_generic_click_open",
       "source_paths": [
         "src/fdisbull/qemu_mapped_mouse.py",
         "src/fdisbull/qemu_mouse_click.py",
         "src/fdisbull/qemu_int33_mouse.py",
         "src/fdisbull/qemu_int33_mouse_control.py",
+        "src/fdisbull/qemu_int33_click.py",
         "src/fdisbull/debugger.py"
       ],
       "depends_on": [
@@ -1456,7 +1457,7 @@
       ],
       "remaining_work": [
         "Implement debug-click/debug-click-frame and equivalent input.mouse.click using observed guest cursor/range and exact frame/mode guards.",
-        "A paired mode 13h fixture covers one pinned CuteMouse build. It observed cursor/range/ratio/buttons, a calibrated packet landing, press and release, clipped endpoints and the different relative mickeys delivered by the two routes. Qualify generic timed click, its stop and release recovery and additional driver/mode profiles."
+        "A paired mode 13h fixture covers one pinned CuteMouse build. The opt-in Python action can observe a complete press/release at an already-qualified landing and preserve a competing stop and lease. Relative mickeys still differ. Qualify the generic timed click contract and additional driver/mode profiles."
       ],
       "minimum_acceptance": [
         "The same requested coordinate lands on the same qualified target on both backends; stale frame/mode and unsupported driver state fail before input.",
