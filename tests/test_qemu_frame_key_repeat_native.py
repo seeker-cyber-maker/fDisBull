@@ -22,6 +22,7 @@ from fdisbull.qemu_video_checkpoint import LATCH_MODEL, LATCH_PROFILE
 from support.dos_process_fixture import BASELINE_CONFIG, assemble, digest, prepare_dos_baseline
 from test_qemu_clock_budget_native import park
 from test_qemu_dos_modes_checkpoint_native import _launch
+from test_qemu_frame_keys_native import _proof
 
 
 QUERY = 'x-fdisbull-query-frame-key-repeat'
@@ -482,45 +483,168 @@ def _programmed_raster_restore(tmp_path, *, profile=None, timed_page_flip=False)
 
 
 
+def _overdue_state(debug, symbols):
+    clock = debug.clock_observe()
+    assert 'virtual_ns' in clock
+    return dict(virtual_ns=clock['virtual_ns'], counter=clock['counter'],
+                repeat=_repeat(debug), keyboard=_proof(_keys(debug)), scans=_scans(debug,symbols))
+
+
+def _overdue_irq(debug, target, code):
+    offset, segment = struct.unpack('<HH', _bytes(debug, 9*4, 4))
+    irq = segment*16+offset
+    base = debug.dos_process_info()['source_mapping']['runtime_base']
+    assert base <= irq < base+len(code)
+    # Entry comes from the actual IRQ1 vector installed by the authored COM.
+    # Bind the port-read instruction to that exact loaded handler.
+    before_read = b'\x50\x53\x1e\x0e\x1f\xe4\x64\x24\x21\x3c\x01'
+    start = irq-base
+    assert code[start:start+len(before_read)] == before_read
+    port_read = code.index(b'\xe4\x60',start+len(before_read),start+24)
+    span = code[start:port_read+2]
+    assert _bytes(debug,irq,len(span)) == span and target.read_bytes() == code
+    return dict(entry=irq, io_read=base+port_read, vector=[segment,offset])
+
+
+def _overdue_resume(debug, control):
+    symbols, saved, irq = (control[key] for key in ('symbols','saved','irq'))
+    assert _overdue_state(debug,symbols) == saved
+
+    # A debugger step from the captured frontier must also leave the
+    # overdue timer and PS/2 state intact after either kind of restore.
+    assert debug.step(timeout_ms=5000)['outcome'] == 'step'
+    masked = _overdue_state(debug,symbols)
+    assert masked['virtual_ns'] > saved['virtual_ns']
+    assert masked['repeat'] == saved['repeat'] and masked['keyboard'] == saved['keyboard']
+    assert masked['scans'] == saved['scans']
+
+    # Capture actual IRQ1 dispatch before the guest consumes the waiting byte.
+    park(debug,irq['entry'])
+    arrival = _overdue_state(debug,symbols)
+    assert int(debug.registers()['linear_pc'],0) == irq['entry']
+    next_phase = dict(saved['repeat'])
+    next_phase['deadline-ns'] += next_phase['interval-ns']
+    assert arrival['repeat'] == next_phase and arrival['scans'] == [MAKE]
+    fifo = arrival['keyboard']
+    assert fifo['fifo-count'] == 1 and fifo['fifo-sha256'] != saved['keyboard']['fifo-sha256']
+    assert fifo['controller-status'] & 0x21 == 1 and fifo['controller-obsrc'] == 1
+    assert fifo['accepted-edges'] == saved['keyboard']['accepted-edges']
+
+    park(debug,irq['io_read'])
+    assert _bytes(debug,irq['io_read'],2) == b'\xe4\x60'
+    assert debug.step(timeout_ms=5000)['outcome'] == 'step'
+    cpu = debug.registers()
+    assert int(cpu['linear_pc'],0) == irq['io_read']+2
+    registers = cpu['registers']
+    byte = int(registers.get('rax',registers.get('eax')),0) & 0xff
+    assert byte == MAKE and _scans(debug,symbols) == [MAKE]
+    after_read = _overdue_state(debug,symbols)
+    assert after_read['keyboard']['fifo-count'] == 0
+    assert not after_read['keyboard']['controller-status'] & 1
+
+    stopped = _advance(debug,saved['virtual_ns']+5*MILLISECOND)
+    consumed = _overdue_state(debug,symbols)
+    assert consumed['virtual_ns'] == stopped and consumed['repeat'] == next_phase
+    assert consumed['scans'] == [MAKE,MAKE]
+    assert consumed['keyboard']['accepted-edges'] == saved['keyboard']['accepted-edges']
+    return dict(masked_step=masked, irq_entry=arrival, native_byte=byte,
+                after_read=after_read, consumed=consumed)
+
+
+def _overdue_restore(debug, control):
+    previous = debug.vm.process
+    debug.load_state(control['artifact'],timeout_ms=30000)
+    assert previous.poll() == 0 and debug.vm.process is not previous
+    assert _overdue_state(debug,control['symbols']) == control['saved']
+    return debug.vm.process
+
+
 def test_native_typematic_checkpoint_preserves_past_pending_deadline(tmp_path):
     from fdisbull.qemu_step_policy import observe_step_policy
+
     runtime = _runtime()
     disk,target,code,offsets = _input(tmp_path,runtime,programmed=True,busy=True)
-    with Project.create(tmp_path/'past-repeat.fdb',target,image='com') as project:
-        with _launch(project,runtime,tmp_path,disk,clock_profile='virtual',retrace='precise') as debug:
-            symbols = _ready(debug,offsets,programmed=True)
-            keys = _edges(debug, ('a', True))
-            first = _repeat(debug)['deadline-ns']
-            stopped = _advance(debug, first-1)
-            pending = _repeat(debug)
-            assert first <= stopped and stopped <= pending['deadline-ns'] <= stopped+1, pending
-            assert _scans(debug,symbols) == [MAKE]
-            policy = observe_step_policy(debug._stopped(),timeout_ms=1000)
-            assert policy['status'] == 'observed' and policy['timers_masked'] is True
-            assert debug.step(timeout_ms=5000)['outcome'] == 'step'
-            saved_ns = debug.clock_observe()['virtual_ns']
-            assert pending['deadline-ns'] < saved_ns and _repeat(debug) == pending
-            assert _scans(debug,symbols) == [MAKE]
+    db = tmp_path/'past-repeat.fdb'
+    control = dict(db=str(db),directory=str(tmp_path),disk=str(disk['image']),
+                   producer_sha256=digest(runtime['FDISBULL_QEMU_LAYERS']),
+                   authored_com_sha256=sha256(code).hexdigest())
+    receipt = dict(completed=False,stopped_captures=[])
+    owners, cold_owners = {}, {}
 
-            checkpoint = debug.save_state('past-repeat.qcow2',max_bytes=24*1024**2)['artifact']
-            assert _repeat(debug) == pending
-            target_ns = saved_ns+5*MILLISECOND
-            original_stop = _advance(debug,target_ns)
-            next_phase = _repeat(debug)
-            assert next_phase['deadline-ns'] == pending['deadline-ns']+pending['interval-ns']
-            assert _scans(debug,symbols) == [MAKE, MAKE]
+    try:
+        with Project.create(db,target,image='com') as project:
+            with _launch(project,runtime,tmp_path,disk,clock_profile='virtual',retrace='precise') as debug:
+                owners['source'] = debug.vm.process
+                symbols = control['symbols'] = _ready(debug,offsets,programmed=True)
+                control['irq'] = _overdue_irq(debug,target,code)
+                _edges(debug, ('a', True))
+                first = _repeat(debug)['deadline-ns']
+                stopped = _advance(debug,first-1)
+                pending = _overdue_state(debug,symbols)
+                assert first <= stopped <= pending['repeat']['deadline-ns'] <= stopped+1, pending
+                assert pending['scans'] == [MAKE]
+                assert pending['keyboard']['fifo-count'] == 0
+                assert not pending['keyboard']['controller-status'] & 1
+                policy = observe_step_policy(debug._stopped(),timeout_ms=1000)
+                assert policy['status'] == 'observed' and policy['timers_masked'] is True
 
-            original_owner = debug.vm.process
-            debug.load_state(checkpoint,timeout_ms=30000)
-            assert original_owner.poll() == 0
-            assert _repeat(debug) == pending
-            assert debug.clock_observe()['virtual_ns'] == saved_ns
-            assert _scans(debug,symbols) == [MAKE]
-            assert _keys(debug)['accepted-edges'] == keys['accepted-edges']
-            assert _advance(debug,target_ns) == original_stop
-            assert _repeat(debug) == next_phase and _scans(debug,symbols) == [MAKE, MAKE]
-        assert debug.vm.process.poll() == 0
-    assert target.read_bytes() == code
+                # Each timer-masked debugger step moves the executed clock but
+                # leaves the logically overdue callback and the i8042 intact.
+                for ordinal in range(3):
+                    assert debug.step(timeout_ms=5000)['outcome'] == 'step'
+                    cut = dict(pre_save=_overdue_state(debug,symbols))
+                    receipt['stopped_captures'].append(cut)
+                    saved = cut['pre_save']
+                    assert pending['repeat']['deadline-ns'] < saved['virtual_ns']
+                    assert saved['repeat'] == pending['repeat']
+                    assert saved['keyboard'] == pending['keyboard'] and saved['scans'] == [MAKE]
+                    artifact = debug.save_state(f'past-repeat-{ordinal}.qcow2',max_bytes=24*1024**2)
+                    cut['artifact_sha256'] = artifact['sha256']
+                    cut['post_save'] = _overdue_state(debug,symbols)
+                    assert cut['post_save'] == saved
+                control.update(artifact=artifact['artifact'],saved=saved)
+                receipt['forward'] = _overdue_resume(debug,control)
+                owners['hot'] = _overdue_restore(debug,control)
+                receipt['hot'] = _overdue_resume(debug,control)
+                assert receipt['hot'] == receipt['forward']
+            assert all(owner.poll() == 0 for owner in owners.values())
+
+        control_path = tmp_path/'cold-overdue.json'
+        control_path.write_text(json.dumps(control),encoding='utf-8')
+        child = subprocess.run([sys.executable,__file__,'--cold-overdue',str(control_path)],
+            capture_output=True,text=True,check=False,timeout=150)
+        (tmp_path/'cold-overdue.log').write_text(child.stdout+child.stderr,encoding='utf-8')
+        assert child.returncode == 0, child.stderr[-6000:]
+        cold = json.loads(child.stdout)
+        assert cold['host_pid'] != os.getpid()
+        cold_owners = cold['owners']
+        assert not {owner.pid for owner in owners.values()} & {owner['pid'] for owner in cold_owners.values()}
+        receipt['cold'] = cold['replay']
+        assert receipt['cold'] == receipt['forward']
+        receipt['completed'] = True
+    finally:
+        assert target.read_bytes() == code and digest(disk['image']) == disk['prepared_sha256']
+        receipt['owners'] = {**{name:dict(pid=owner.pid,returncode=owner.poll())
+                                for name,owner in owners.items()}, **cold_owners}
+        receipt['control'] = control
+        (tmp_path/'overdue-repeat.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n',
+                                                 encoding='utf-8')
+
+
+def _cold_overdue(control):
+    runtime = _runtime()
+    assert digest(runtime['FDISBULL_QEMU_LAYERS']) == control['producer_sha256']
+    with Project(control['db']) as project:
+        with _launch(project,runtime,Path(control['directory']),{'image':control['disk']},
+                     clock_profile='virtual',retrace='precise') as debug:
+            entry = debug.vm.process
+            restored = _overdue_restore(debug,control)
+            replay = _overdue_resume(debug,control)
+    assert entry is not restored and entry.poll() == restored.poll() == 0
+    print(json.dumps(dict(host_pid=os.getpid(),replay=replay,owners={
+        'cold_entry': dict(pid=entry.pid,returncode=entry.poll()),
+        'cold_restored': dict(pid=restored.pid,returncode=restored.poll()),
+    })))
 
 
 def _cold(control):
@@ -539,5 +663,5 @@ def _cold(control):
 
 
 if __name__ == '__main__':
-    assert sys.argv[1] == '--cold'
-    _cold(json.loads(Path(sys.argv[2]).read_text(encoding='utf-8')))
+    worker = {'--cold': _cold, '--cold-overdue': _cold_overdue}[sys.argv[1]]
+    worker(json.loads(Path(sys.argv[2]).read_text(encoding='utf-8')))
