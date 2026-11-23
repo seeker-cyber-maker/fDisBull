@@ -1,5 +1,58 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Retrace-latched VBE 101h page flips and format 10 restore (2026-11-23)
+
+The opt-in `vga-640x480-flip` profile adds a banked display-start latch
+at the line-490 leading retrace edge. VBE 4F07h BL=00 returns after
+programming the origin. BL=80 programs it, then the alternate SeaVGABIOS
+waits for a fresh leading edge. BL=01 reads the programmed coordinates.
+The active origin still applies to the whole current visible raster.
+Select the alternate ROM only for this profile.
+[Native patches, firmware build and timing](../native/qemu-video-vbe101-flip/README.md)
+
+Format 10 preserves the programmed origin, active origin, pending
+absolute deadline and incomplete BIOS call along with the sampled
+prefix. The completed raster carries its sampled origin independently
+of the live latch. The format 9 profile and original VGA BIOS remain
+available. DOSBox-X stays the default backend.
+
+The same authored COM exercised a real BIOS page change from row 0 to
+row 256 with a 640-byte stride. Both engines returned the programmed
+coordinates and produced identical 480-row RGB images at origins 0
+and 163,840. Both completed the old page before showing the new one.
+BL=80 requests made while retrace was high waited for the next leading
+edge. BL=00 returned with the new page still pending.
+
+The QEMU checkpoint was taken inside the BL=80 BIOS wait, with 146
+rows of the old page sampled. Forward execution, hot restore and a
+fresh-process restore agreed on the pending deadline, the BIOS result,
+both RGB pages and every row timestamp. A separate guest VGA mode
+change retired the pending flip and the old source stream. Returning
+to the admitted layout started a new stream at the programmed origin.
+
+The original Doom format 6 replay also matched its protected CPU
+continuation, page latch, 200 timed rows and SB16/OPL frontier across
+all three paths. The combined native run passed both 480-row format 8
+cases, live VBE banking, format 9 guest status and restore, and Mode 13h
+BIOS reapply and restore.
+
+The combined run also observed an intermittent overdue keyboard-repeat
+checkpoint failure. The same check reproduced on the prior build, where
+the saved repeat deadline advanced by 128 ns during save with a fixed
+instruction count. The new build passed the check in eight isolated
+comparisons.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored paired DOS COM | `d9104b681918860b345e430f79cbba408b34fe25862b8054881080a22841f974` |
+| QEMU producer | `93472033a8024dbeffc6a89809c52773e0d22a95d55d7417b91e77a797cf58eb` |
+| Alternate SeaVGABIOS ROM | `74bc5d8ee91880a9139b1662626c4b5949e1be169be98cbeaa74339950f52f28` |
+| DOSBox-X page flip and complete rasters | `b1fc8efdc69fc2477655a6c599143cdbe32092b7dc0147e2d2c9ff2aebbd76c9` |
+| QEMU pending BIOS wait and format 10 restore | `7a19c78231ffa60662af42c05c7630f482c93c7a83b074e1f6d22a26807cdfb8` |
+| QEMU retirement at real VGA mode change | `9952a6d27c3dbeaf0f2124444ef6a00b1716018a5c0a811c3a3f98156ed2fd02` |
+| Doom original run and hot restore | `94a5821d3570910f0d0ed282a2252563c054005104a2636e5a37de0da35b1544` |
+| Doom fresh-process restore | `faea16f3a9d67d0e27fd1dffc56cc17b643dd32b6a25878370d0f93488ec48e2` |
+
 ## Guest VBE 101h retrace and format 9 restore (2026-11-23)
 
 Select `vga-640x480-sync` for the standard color 640 × 480 banked 8-bit
