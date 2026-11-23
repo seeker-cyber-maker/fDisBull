@@ -1,0 +1,46 @@
+{
+  "format": "fdisbull-dosbox-x-native-delta-1",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "base_dosbox_sha256": "eb13dc7cb4866ab2c182c23439cbd40d74463faafb94c173b76c38857ff33176",
+  "base_source_patch_sha256": "d960fb1421bb1b988e62b7c59a48e927e50898fbd46f01266078aa274e0e88db",
+  "base_source_manifest_sha256": "ab577ab8bb9139df7925a8b54b8e040ff75d550ed7a91931a8a2c92752c73adc",
+  "composition": "Apply after native/dosbox-vga-row-timing with every preimage verified.",
+  "patch": "dosbox-x-029bd65c-fdisbull-vga-visible-row-timing.patch",
+  "patch_bytes": 15612,
+  "patch_sha256": "66c7e283f57e955acd39cc7948e960880ffbb53f619857277f2dd29b5ca18e73",
+  "scope": "Opt-in scheduled and actual renderer row timing for standard 640x480 planar4 and packed8 VGA.",
+  "files": [
+    {
+      "path": "include/agent/video_adapter.h",
+      "base_bytes": 3771,
+      "base_sha256": "9179bdd0c57c534f3dfbee7f2603c1cb163240937113fd09209d6416fc52228f",
+      "patched_bytes": 5041,
+      "patched_sha256": "9f2c40e8948ce6a7ad66eed4271110c5482870ccbbdf3b7ee850830819098991",
+      "mode": "100644"
+    },
+    {
+      "path": "src/agent/server/agent_server.cpp",
+      "base_bytes": 229184,
+      "base_sha256": "3d964034cb13df45ec4fc434d0666ebbdd39e54abc792fc54b24ad6290c4f983",
+      "patched_bytes": 231694,
+      "patched_sha256": "dd25485872c43bcd3f97c80281439f1ac71b755b918798844bbba68e3912d20f",
+      "mode": "100644"
+    },
+    {
+      "path": "src/gui/render.cpp",
+      "base_bytes": 75949,
+      "base_sha256": "320f1119e7bb820b2c1989864c916379e990eccad534faf96ba037c207b26bb6",
+      "patched_bytes": 78626,
+      "patched_sha256": "529719923e92ec4c28506b8592b4648d1d4888f34d3cae9996101dd202cea5ac",
+      "mode": "100644"
+    },
+    {
+      "path": "src/hardware/vga_draw.cpp",
+      "base_bytes": 367215,
+      "base_sha256": "60021623ef1c70f87088aaae5b411aafe83025f9acfa9cf672d3ad214be14dd1",
+      "patched_bytes": 369092,
+      "patched_sha256": "e0fef08ba4ae50dfa309fb6496669ecf2d1b51d76805415f3f5c5288ea881ef2",
+      "mode": "100644"
+    }
+  ]
+}

@@ -240,7 +240,7 @@ def _check_pixels(image, page):
     return dict(size=list(rgb.size), sha256=sha256(actual).hexdigest(), samples=_samples(rgb))
 
 
-def _dosbox_pages(executable, tmp_path, directory, labels):
+def _dosbox_pages(executable, tmp_path, directory, labels, *, observe_rows=None):
     wrapper = tmp_path / 'dosbox-vga'
     args = [part for setting in PROFILE for part in ('-set', setting)]
     wrapper.write_text(f'#!{sys.executable}\nimport os, sys\n'
@@ -271,9 +271,11 @@ def _dosbox_pages(executable, tmp_path, directory, labels):
                 if not stop.get('running'):
                     break
             assert stop['stop_reason']['breakpoint_id'] == bp, stop
-            for _ in range(2):
+            for step in range(2 if observe_rows is None else 3):
                 frame = call('frame.step')
                 assert frame['completed'] is True, frame
+                if observe_rows is not None:
+                    observe_rows(call, page, step, frame)
             payload, info = decode_screenshot(call('video.screenshot'))
             assert info['frame_id'] == frame['frame_id'] and info['mode_id'] == frame['mode_id']
             with Image.open(BytesIO(payload)) as image:
