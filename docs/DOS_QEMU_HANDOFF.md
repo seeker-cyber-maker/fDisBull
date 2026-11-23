@@ -18,7 +18,17 @@ original palette indices and all 192,000 timed RGB bytes matched. QEMU
 frame 8 retained page 0 from the preceding retrace. Frame 9 selected page
 `4000h` at the next retrace and matched the DOSBox-X completed frame from
 its page `8000h`. QEMU recorded all 200 row times and the selected page's
-identity. Ordinary playback still needs its own render-boundary comparison.
+identity.
+
+Ordinary `-playdemo` was sampled separately. A fixed selector recorded the
+first 24 verified source writes in each engine's declared window and read
+zero pixels. Both runs shared demo tics 65, 70, 75 and 80. The sole
+differing field in the predeclared pre/post render state at those shared
+tics was the render-dependent fuzz cursor. The selector found no common
+render state. This leaves ordinary playback raster parity open and
+identifies different preceding render histories in the sampled window.
+Private selector receipt SHA-256
+`ebd006323bad7c5b953003e06b83b94e0b0c972fe1c6a2de2deb5ebfcc5b60c1`.
 
 Doom's CPU read-plane select used to retire the stream during fuzz
 rendering. The [native correction](../native/qemu-vga-unchained-cpu-planes/README.md)
