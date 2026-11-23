@@ -1,8 +1,9 @@
 # QEMU retained-frame compatibility contract
 
 The native QEMU backends provide `frame_probe` and `frame_rgba` over an explicitly
-retained 320 × 200 source raster. The selected profile admits standard chain-4,
-the explicit Mode 13h timing models, or standard unchained page-latched VGA.
+retained source raster. The selected profile admits standard 320 × 200 chain-4,
+the Mode 13h timing models, unchained page-latched VGA, or 640 × 480 planar VGA
+and banked VBE scanout.
 Inspect `frame_contract` and `frame_contract_profile` before using these operations.
 The producer must support the source-raster and virtual-clock extensions, the VM
 must use the explicit virtual/precise profiles, and the cooperating owner must
@@ -10,8 +11,8 @@ have its bound protocol authority.
 
 This adapter provides the existing pixel-consumer shapes. It preserves an
 explicit QEMU source profile and clock. It does not promote
-`completed_guest_frames`, change the default backend, or qualify wider video
-modes, scene readiness, pointer mapping, sampling-phase equivalence, or atomic
+`completed_guest_frames`, change the default backend, or qualify additional
+video modes, scene readiness, pointer mapping, sampling-phase equivalence, or atomic
 frame/CPU state. Existing `screenshot()` / `capture_surface()` continue to observe
 the stopped display surface; `capture_video_frame()` is the source-raster
 artifact route.
@@ -56,8 +57,9 @@ One successful call publishes one `frame-probe` event. It creates no image
 artifact and includes no encoded image payload.
 
 `frame_rgba(*, encoding='rgba-zstd', timeout_ms=1000)` returns the existing
-`RGBAFrame` object: 320 × 200, RGBA8, stride 1280, 256,000 immutable bytes, and
-opaque alpha. It performs actual encoding and decoding through the selected
+`RGBAFrame` object with RGBA8 pixels, opaque alpha and a packed stride of four
+bytes per pixel. The artifact carries 256,000 bytes at 320 × 200 or 1,228,800
+bytes at 640 × 480. It performs encoding and decoding through the selected
 host codec. Direct reads invoke no screenshot hooks and publish no event or
 artifact. The lower-level `video_frame_rgba()` continues to convert the native
 RGB export directly without an intermediate PNG or Zstandard encoding.
@@ -304,7 +306,7 @@ request; `encoding` records what was actually produced. The shared screenshot
 decoder validates payload hashes, layout, encoded dimensions, Zstandard bounds,
 and canonical pixel identity.
 
-The direct RGBA object's `sha256` hashes its 256,000 canonical RGBA bytes.
+The direct RGBA object's `sha256` hashes the packed RGBA bytes of the selected extent.
 `transport` describes the selected host codec and its encoded-byte hash;
 `native_transport` preserves the underlying P6/RGB888 export identity. The
 native `pixel_sha256` still hashes the 192,000 RGB source bytes. Stored PNG

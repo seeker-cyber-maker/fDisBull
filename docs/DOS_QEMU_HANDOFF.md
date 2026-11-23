@@ -1,5 +1,51 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Timed Mode 12h and banked VBE 101h with format 8 restore (2026-11-23)
+
+The explicit `vga-640x480` profile samples every visible row from live VGA
+backing memory. Mode 12h reads the four planes, attribute mapping and DAC.
+Banked VBE 101h reads packed indices from backing VRAM while the CPU
+selects its own aperture bank. Both modes retain 480 ordered row timestamps.
+[Native scanout profile](../native/qemu-video-vga480/README.md)
+
+Both engines ran the same authored DOS program and independently observed
+their row clocks. The complete timed RGB rasters matched all 307,200 pixels
+in each mode. The two DOSBox-X clock periods are rounded below. QEMU's
+Mode 12h timing uses its VGA CRTC. Its VBE model uses the observed 29.403 MHz
+S3 BIOS clock with QEMU's integral virtual nanoseconds.
+
+| Layout | QEMU line / frame (ns) | DOSBox-X line / frame (ns) |
+| --- | --- | --- |
+| Mode 12h | 31,700 / 16,642,500 | 31,778 / 16,683,217 |
+| VBE 101h | 27,208 / 14,284,200 | 27,208 / 14,284,257 |
+
+Format 8 saved a complete raster and a partial successor at 240 rows in
+Mode 12h and 445 rows in VBE. Hot restore and restore in a fresh Python
+process reproduced the completed frame, the pending row timer, the sampled
+prefix and both subsequent timed frames. Writes through the VBE aperture
+to rows 420 and 470 at the 445-row cut changed only row 470 in the current
+raster. Both changed in the following raster. A separate BIOS test switched
+banks 4→3→4 during active scanout, retaining the raster identity and prefix.
+It then restored the checkpoint at bank 3 and reproduced the bank 4 future.
+
+The same QEMU producer preserved the original Doom format 6 replay.
+Uninterrupted, hot-restored and separately restored runs agreed on the
+latched page, 200 row times, RGB, protected CPU boundary and SB16/OPL
+audio frontier. The VBE timing comparison qualifies the source sampler's
+own modeled cadence. Guest-visible VBE retrace synchronization and
+additional layouts remain outside the observed scope.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored paired DOS COM | `f3cb52889fb82b2f3fdf44af0c85a4d00b4dde3ba71640981945e79d337d9b8e` |
+| QEMU producer | `ab2833ef5fbd4a47372b145e0bfad3ee98da9533e2be01289be5ea0b6fc538b5` |
+| DOSBox-X timed row reference | `d4ca5f85c68473b191a5eba9e5b037886e623eb09f6a147ed681f41c226ede15` |
+| Mode 12h QEMU timing and restore | `1e8d44f9545f26af25649deb5ffe7b186b99124c267249635b2039af6316eecf` |
+| VBE QEMU timing and restore | `10d793b4076580e218b4642118029673268e07fbb96f904e3a4b80aa8c5a00a4` |
+| VBE BIOS bank changes and restore | `13e1b0e080dc919ddca69d2578e5e214dafb135448284c97673f930610d5a557` |
+| Doom original run and hot restore | `dbce3cff17d4547d3645401de3409e312a3be682bef8bfc49ad98696b427c0a2` |
+| Doom separate-process restore | `01a2e7b41b4c159aec6b90bd0971d21e7ac1b91f58df9be4889ba1ba7b19aedf` |
+
 ## Mode 13h BIOS reapply and format 7 restore (2026-11-23)
 
 The explicit `dosbox-mode13-overlap` timing profile reproduced the paired

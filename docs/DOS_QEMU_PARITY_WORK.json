@@ -1408,6 +1408,7 @@
         "src/fdisbull/qemu_video_checkpoint.py",
         "native/qemu-video-mode13-phase/qemu-10.0.13-fdisbull-video-mode13-phase.patch",
         "native/qemu-video-mode13-overlap/qemu-10.0.13-fdisbull-video-mode13-overlap.patch",
+        "native/qemu-video-vga480/qemu-10.0.13-fdisbull-video-vga480.patch",
         "native/qemu-vga-unchained-latch/qemu-10.0.13-fdisbull-vga-unchained-latch.patch",
         "native/qemu-vga-unchained-cpu-planes/qemu-10.0.13-fdisbull-vga-unchained-cpu-planes.patch"
       ],
@@ -1425,7 +1426,7 @@
       "remaining_work": [
         "Scoped local native evidence covers direct Python and JSON frame controls, saved scripts and cold format 6 replay. It verifies latched origin, partial raster continuation, held typematic IRQs, foreign-epoch refusal and the full matched Doom timedemo raster. The retained timed 320x200 profile still needs the wider legacy consumer and mode contracts, including downstream source-depth differences.",
         "Format 5 restores the opt-in standard Mode 13h initial and steady phase. The separate format 7 profile reproduces the paired standard same-mode BIOS overlap and restores both callback deadlines. Qualify additional dynamic programming sequences.",
-        "Paired text, planar and banked VBE renderer capture and point probes pass. Timed source sampling and the corresponding frame-input contract are still limited to the admitted 320x200 layouts."
+        "Paired text, planar and banked VBE renderer capture and point probes pass. Format 8 adds 480-row timed scanout and restore for Mode 12h and banked VBE 101h. Additional video layouts and their frame-input contracts remain open."
       ],
       "minimum_acceptance": [
         "Bracket retained pixels, producing frame/mode identity, actual stopped session revision, native clock and input ownership under one owner. Refuse stale or mixed brackets; do not claim atomic image/CPU equivalence or application drawing completion.",
