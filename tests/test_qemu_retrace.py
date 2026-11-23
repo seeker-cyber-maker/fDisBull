@@ -419,6 +419,25 @@ def test_vbe101_request_between_edges_can_latch_fine_before_coarse(retrace):
     assert receipt['vbe101_panning']['pending-deadline-ns'] == VBE101_EXIT - 1
 
 
+def test_vbe101_xy_reversal_in_one_window_leaves_both_latches_settled(retrace):
+    from fdisbull.qemu_video_checkpoint import VGA480_XY_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = VGA480_XY_PROFILE
+    o.wire.receipt['virtual-ns'] = VBE101_ENTER - 1000
+    o.wire.mutate = lambda value: vbe101_pan_receipt(value, programmed=(704 * 480 + 12, 1))
+    queued = o.context.retrace_observe()
+    assert queued['vbe101_display_start']['pending-deadline-ns'] == VBE101_ENTER
+    assert queued['vbe101_panning']['pending-deadline-ns'] == VBE101_EXIT - 1
+    o.wire.receipt['virtual-ns'] += 128
+    o.wire.mutate = vbe101_pan_receipt
+    settled = o.context.retrace_observe()
+    assert settled['vbe101_display_start'] == {
+        'programmed-origin-bytes': 0, 'active-origin-bytes': 0}
+    assert settled['vbe101_panning'] == {'pitch-bytes': 704, 'programmed-pel': 0, 'active-pel': 0}
+    assert settled['timing_generation'] == queued['timing_generation']
+
+
 @pytest.mark.parametrize('case', ['pitch-cap', 'pitch-alignment', 'fine-range',
     'coarse-alignment', 'fine-deadline', 'wrong-profile', 'programmed-spill', 'missing-fine'])
 def test_vbe101_viewport_rejects_incoherent_boundaries(retrace, case):

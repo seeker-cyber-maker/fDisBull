@@ -218,6 +218,14 @@ deadlines and the active viewport, including a stop between the two latches.
 Each completed banked raster retains the sampled pitch, coarse byte origin
 and fine offset. A pitch change retires the source stream.
 
+Select `vga-640x480-xy` with `fdisbull-vgabios-vbe101-xy.bin` in the explicit
+firmware directory to submit X and Y together through VBE function `4F07h`.
+This profile checks the whole pair before either coordinate is programmed.
+A rejected pair leaves the active viewport and any previously queued change
+intact. The accepted pair keeps the separate coarse and fine latch times.
+Format 12 checkpoints preserve both latches with the same raster metadata
+used by the panning profile.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
 the selected `video_source_profile`. The script must match the owner's launch
@@ -261,10 +269,10 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, `qemu-vga-640x480-flip-v1`, and `qemu-vga-640x480-pan-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, `qemu-vga-640x480-flip-v1`, `qemu-vga-640x480-pan-v1`, and `qemu-vga-640x480-xy-v1` |
 | `scanout_layout` | `vga-mode12` or `vbe-banked-101` for the 640 × 480 source model |
-| `vbe101_origin_bytes` | The coarse byte origin sampled in a completed banked VBE 101h raster under the flip and panning profiles |
-| `vbe101_pitch_bytes`, `vbe101_pel` | The backing row pitch and fine horizontal offset sampled under the panning profile. The first pixel uses the coarse origin plus the fine offset |
+| `vbe101_origin_bytes` | The coarse byte origin sampled in a completed banked VBE 101h raster under the flip, panning and X/Y profiles |
+| `vbe101_pitch_bytes`, `vbe101_pel` | The backing row pitch and fine horizontal offset sampled under the panning and X/Y profiles. The first pixel uses the coarse origin plus the fine offset |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
 | `double_width`, `double_height` | Both false. Coordinates use the retained source extent |
 | `frame_id` | Native accepted raster ordinal, including identical consecutive pixels |

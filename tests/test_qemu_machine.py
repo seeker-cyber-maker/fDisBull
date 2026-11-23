@@ -76,30 +76,34 @@ def test_qemu_identity_timeout_remains_bounded_and_never_spawns_machine(tmp_path
     assert machine.process is None and machine.temporary is None
 
 
-@pytest.mark.parametrize('selection', ['flip', 'pan'])
+@pytest.mark.parametrize('selection', ['flip', 'pan', 'xy'])
 def test_vbe101_profile_owns_the_selected_firmware_copy(tmp_path, selection):
     from fdisbull.qemu_machine import _video_source_launch_arguments, firmware_identity
     from fdisbull.qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE,
-                                                VGA480_SYNC_PROFILE, VBE101_FLIP_ROM)
+        VGA480_SYNC_PROFILE, VGA480_XY_PROFILE, VBE101_FLIP_ROM, VBE101_XY_ROM)
 
-    profile = VGA480_FLIP_PROFILE if selection == 'flip' else VGA480_PAN_PROFILE
+    profile = {'flip': VGA480_FLIP_PROFILE, 'pan': VGA480_PAN_PROFILE, 'xy': VGA480_XY_PROFILE}[selection]
+    rom = VBE101_XY_ROM if selection == 'xy' else VBE101_FLIP_ROM
+    other_rom = VBE101_FLIP_ROM if selection == 'xy' else VBE101_XY_ROM
     firmware, runtime = tmp_path / 'firmware', tmp_path / 'runtime'
     firmware.mkdir()
     runtime.mkdir()
     (firmware / 'bios.bin').write_bytes(b'authored base ROM')
+    (firmware / other_rom).write_bytes(b'a different profile ROM')
     old = firmware_identity(firmware)
     assert _video_source_launch_arguments(VGA480_SYNC_PROFILE, old, runtime) == [
         '-global', 'VGA.x-fdisbull-vbe101-sync=on']
-    with pytest.raises(ValueError, match='require .* explicit QEMU firmware'):
+    with pytest.raises(ValueError, match=f'requires {rom} in an explicit QEMU firmware'):
         _video_source_launch_arguments(profile, old, runtime)
     assert not tuple(runtime.iterdir())
-    selected = firmware / VBE101_FLIP_ROM
+    selected = firmware / rom
     selected.write_bytes(b'authored page flip ROM')
     admitted = firmware_identity(firmware)
     assert _video_source_launch_arguments(profile, admitted, runtime) == [
         '-global', f'VGA.x-fdisbull-vbe101-{selection}=on',
-        '-global', f'VGA.romfile={runtime / VBE101_FLIP_ROM}']
-    assert (runtime / VBE101_FLIP_ROM).read_bytes() == b'authored page flip ROM'
+        '-global', f'VGA.romfile={runtime / rom}']
+    assert (runtime / rom).read_bytes() == b'authored page flip ROM'
+    assert not (runtime / other_rom).exists()
     selected.write_bytes(b'changed after admission')
     with pytest.raises(ValueError, match='ROM changed'):
         _video_source_launch_arguments(profile, admitted, runtime)

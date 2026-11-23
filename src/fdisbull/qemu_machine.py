@@ -88,19 +88,21 @@ def firmware_identity(directory):
 
 
 def _video_source_launch_arguments(profile, firmware, root):
-    from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE, VBE101_FLIP_ROM,
-                                        VIDEO_SOURCE_PROFILES)
+    from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE, VGA480_XY_PROFILE,
+                                        VBE101_FLIP_ROM, VBE101_XY_ROM, VIDEO_SOURCE_PROFILES)
 
     if profile is None:
         return []
     arguments = ['-global', VIDEO_SOURCE_PROFILES[profile][1]]
-    if profile in (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE):
+    rom_name = {VGA480_FLIP_PROFILE: VBE101_FLIP_ROM, VGA480_PAN_PROFILE: VBE101_FLIP_ROM,
+                VGA480_XY_PROFILE: VBE101_XY_ROM}.get(profile)
+    if rom_name is not None:
         files = firmware['files'] if firmware else ()
-        rom = next((item for item in files if item['name'] == VBE101_FLIP_ROM), None)
+        rom = next((item for item in files if item['name'] == rom_name), None)
         if not rom or not rom['size']:
-            raise ValueError(f'VBE 101h page flips require {VBE101_FLIP_ROM} in an explicit QEMU firmware directory')
-        path = root / VBE101_FLIP_ROM
-        shutil.copyfile(Path(firmware['path']) / VBE101_FLIP_ROM, path)
+            raise ValueError(f'VBE 101h profile {profile} requires {rom_name} in an explicit QEMU firmware directory')
+        path = root / rom_name
+        shutil.copyfile(Path(firmware['path']) / rom_name, path)
         if path.stat().st_size != rom['size'] or file_hash(path) != rom['sha256']:
             raise ValueError('QEMU VBE 101h VGA ROM changed while creating its private runtime copy')
         arguments += ['-global', f'VGA.romfile={path}']

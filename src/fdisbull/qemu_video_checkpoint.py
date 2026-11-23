@@ -27,12 +27,17 @@ VGA480_FLIP_PROFILE = 'vga-640x480-flip'
 VGA480_FLIP_MODEL = 'qemu-vga-640x480-flip-v1'
 VGA480_PAN_PROFILE = 'vga-640x480-pan'
 VGA480_PAN_MODEL = 'qemu-vga-640x480-pan-v1'
+VGA480_XY_PROFILE = 'vga-640x480-xy'
+VGA480_XY_MODEL = 'qemu-vga-640x480-xy-v1'
 VBE101_FLIP_ROM = 'fdisbull-vgabios-vbe101-flip.bin'
+VBE101_XY_ROM = 'fdisbull-vgabios-vbe101-xy.bin'
+VBE101_PAN_MODELS = (VGA480_PAN_MODEL, VGA480_XY_MODEL)
+VBE101_PAN_PROFILES = (VGA480_PAN_PROFILE, VGA480_XY_PROFILE)
 VBE101_ORIGIN_FIELD = 'vbe101-origin-bytes'
 VBE101_PITCH_FIELD = 'vbe101-pitch-bytes'
 VBE101_PEL_FIELD = 'vbe101-pel'
 VBE101_VIEWPORT_FIELDS = (VBE101_ORIGIN_FIELD, VBE101_PITCH_FIELD, VBE101_PEL_FIELD)
-VGA480_MODELS = (VGA480_MODEL, VGA480_SYNC_MODEL, VGA480_FLIP_MODEL, VGA480_PAN_MODEL)
+VGA480_MODELS = (VGA480_MODEL, VGA480_SYNC_MODEL, VGA480_FLIP_MODEL, *VBE101_PAN_MODELS)
 VGA480_LAYOUTS = ('vga-mode12', 'vbe-banked-101')
 VIDEO_SOURCE_PROFILES = {
     MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
@@ -42,6 +47,7 @@ VIDEO_SOURCE_PROFILES = {
     VGA480_SYNC_PROFILE: (VGA480_SYNC_MODEL, 'VGA.x-fdisbull-vbe101-sync=on'),
     VGA480_FLIP_PROFILE: (VGA480_FLIP_MODEL, 'VGA.x-fdisbull-vbe101-flip=on'),
     VGA480_PAN_PROFILE: (VGA480_PAN_MODEL, 'VGA.x-fdisbull-vbe101-pan=on'),
+    VGA480_XY_PROFILE: (VGA480_XY_MODEL, 'VGA.x-fdisbull-vbe101-xy=on'),
 }
 MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
 VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, *VGA480_MODELS))
@@ -159,7 +165,7 @@ def valid_vbe101_viewport(origin, pitch, pel, *, programmed=False):
 
 def vbe101_frame_fields(model, layout):
     if layout == 'vbe-banked-101':
-        if model == VGA480_PAN_MODEL:
+        if model in VBE101_PAN_MODELS:
             return VBE101_VIEWPORT_FIELDS
         if model == VGA480_FLIP_MODEL:
             return (VBE101_ORIGIN_FIELD,)
@@ -170,7 +176,7 @@ def valid_vbe101_frame_fields(frame, model, layout):
     expected = vbe101_frame_fields(model, layout)
     if tuple(key for key in VBE101_VIEWPORT_FIELDS if key in frame) != expected:
         return False
-    if model == VGA480_PAN_MODEL and expected:
+    if model in VBE101_PAN_MODELS and expected:
         return valid_vbe101_viewport(*(frame[key] for key in expected))
     return not expected or valid_vbe101_origin(frame[VBE101_ORIGIN_FIELD])
 

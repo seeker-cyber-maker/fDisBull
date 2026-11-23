@@ -1149,15 +1149,20 @@ def pan_checkpoint_state(*, idle=False):
 
 
 @pytest.mark.parametrize('idle', [True, False])
-def test_format11_preserves_split_viewport_even_when_scanout_is_idle(idle):
+@pytest.mark.parametrize('xy', [False, True], ids=['panning', 'xy'])
+def test_split_viewport_checkpoints_survive_both_latch_cuts(idle, xy):
     from fdisbull.qemu_frame_keys import REPEAT_QUERY
-    from fdisbull.qemu_video_checkpoint import VGA480_PAN_PROFILE
+    from fdisbull.qemu_video_checkpoint import VGA480_PAN_PROFILE, VGA480_XY_MODEL, VGA480_XY_PROFILE
 
     state = pan_checkpoint_state(idle=idle)
+    if xy:
+        state['format'] = checkpoint.VIDEO_VGA480_XY_FORMAT
+        state['video-frame']['info']['model'] = VGA480_XY_MODEL
+    profile = VGA480_XY_PROFILE if xy else VGA480_PAN_PROFILE
     machine = SimpleNamespace(qmp_commands=checkpoint.COMMANDS | {
         'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', REPEAT_QUERY},
         machine_configuration={'clock_profile': {'profile': 'virtual'},
-                               'video_source_profile': VGA480_PAN_PROFILE})
+                               'video_source_profile': profile})
     assert checkpoint.validate(machine, envelope(state)) == state
     retrace = state['retrace']['info']
     assert ('pending-deadline-ns' in retrace['vbe101-display-start']) is not idle
@@ -1165,6 +1170,9 @@ def test_format11_preserves_split_viewport_even_when_scanout_is_idle(idle):
     restored = deepcopy(state)
     rebind(restored)
     assert checkpoint._logical(restored) == checkpoint._logical(state)
+    machine.machine_configuration['video_source_profile'] = VGA480_PAN_PROFILE if xy else VGA480_XY_PROFILE
+    with pytest.raises(ValueError, match='profile differs'):
+        checkpoint.validate(machine, envelope(state))
 
 
 @pytest.mark.parametrize('path,item,reason', [
@@ -1179,3 +1187,22 @@ def test_format11_checks_programmed_registers_and_strided_visible_extent(path, i
     set_path(state, path, item)
     with pytest.raises(ValueError, match=reason):
         checkpoint._decode(envelope(state))
+
+
+def test_format12_refuses_a_programmed_pair_one_byte_beyond_the_full_backing_span():
+    from fdisbull.qemu_video_checkpoint import VGA480_XY_MODEL
+
+    state = pan_checkpoint_state()
+    raw = state['retrace']['configuration']['raw']
+    pitch, x, y = 704, 13, 480
+    full_span_end = y * pitch + x + 480 * pitch
+    raw['vbe-size'] = full_span_end - 1
+    # The saved viewport's visible pixels fit. Format 12 also requires the
+    # complete backing rows used when the BIOS programs both coordinates.
+    assert checkpoint._decode(envelope(state)) == state
+    state['format'] = checkpoint.VIDEO_VGA480_XY_FORMAT
+    state['video-frame']['info']['model'] = VGA480_XY_MODEL
+    with pytest.raises(ValueError, match='programmed display start exceeds the saved backing span'):
+        checkpoint._decode(envelope(state))
+    raw['vbe-size'] = full_span_end
+    assert checkpoint._decode(envelope(state)) == state

@@ -68,19 +68,20 @@ def test_public_frame_consumers_keep_one_session_revision_and_true_source(video)
 
 
 @pytest.mark.parametrize('layout', ['vga-mode12', 'vbe-banked-101'])
-@pytest.mark.parametrize('variant', ['scanline', 'sync', 'flip', 'pan'])
+@pytest.mark.parametrize('variant', ['scanline', 'sync', 'flip', 'pan', 'xy'])
 def test_wide_native_public_consumers_own_exact_pixels_and_layout(video, layout, variant):
     from fdisbull.debug_script import execute_script, validate_script
     from fdisbull.frame_coherence import _source_issue
     from fdisbull.qemu_source_timeline import source_raster_record, validate_source_raster
     from fdisbull.qemu_video_checkpoint import (VGA480_FLIP_MODEL, VGA480_FLIP_PROFILE,
         VGA480_MODEL, VGA480_PAN_MODEL, VGA480_PAN_PROFILE, VGA480_PROFILE,
-        VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE)
+        VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE, VGA480_XY_MODEL, VGA480_XY_PROFILE)
 
     model, profile = {'scanline': (VGA480_MODEL, VGA480_PROFILE),
                       'sync': (VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE),
                       'flip': (VGA480_FLIP_MODEL, VGA480_FLIP_PROFILE),
-                      'pan': (VGA480_PAN_MODEL, VGA480_PAN_PROFILE)}[variant]
+                      'pan': (VGA480_PAN_MODEL, VGA480_PAN_PROFILE),
+                      'xy': (VGA480_XY_MODEL, VGA480_XY_PROFILE)}[variant]
     o = video
     o.vm.machine_configuration['video_source_profile'] = profile
     o.wire.video['model'] = model
@@ -91,7 +92,7 @@ def test_wide_native_public_consumers_own_exact_pixels_and_layout(video, layout,
     if layout == 'vbe-banked-101':
         if variant == 'flip':
             fields['vbe101-origin-bytes'] = 640 * 480
-        elif variant == 'pan':
+        elif variant in ('pan', 'xy'):
             fields = {'vbe101-origin-bytes': 704 * 480 + 12, 'vbe101-pitch-bytes': 704, 'vbe101-pel': 1}
     if fields:
         def reveal_page(value):

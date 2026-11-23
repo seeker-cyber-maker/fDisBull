@@ -13,7 +13,7 @@ import time
 
 from .dosbox_rpc import DebuggerError
 from .qemu_clock import clock_timer_stop_is_ordinary, validate_clock_budget
-from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE, VGA480_SYNC_PROFILE,
+from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE, VBE101_PAN_PROFILES,
                                     valid_vbe101_origin, valid_vbe101_pitch, valid_vbe101_viewport)
 
 
@@ -215,11 +215,11 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, source
         invalid('Invalid native retrace receipt fields')
     fields = _NATIVE_FIELDS | ({'phase'} if value['phase-supported'] else {'unsupported-reason'})
     if source_profile in (VGA480_SYNC_PROFILE, VGA480_FLIP_PROFILE,
-                          VGA480_PAN_PROFILE) and VBE101_TIMING_FIELD in value:
+                          *VBE101_PAN_PROFILES) and VBE101_TIMING_FIELD in value:
         fields |= {VBE101_TIMING_FIELD}
-        if source_profile in (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE):
+        if source_profile in (VGA480_FLIP_PROFILE, *VBE101_PAN_PROFILES):
             fields |= {VBE101_DISPLAY_START_FIELD}
-        if source_profile == VGA480_PAN_PROFILE:
+        if source_profile in VBE101_PAN_PROFILES:
             fields |= {VBE101_PANNING_FIELD}
     if (set(value) != fields or type(value['api-version']) is not int or value['api-version'] != 1
             or value['model'] != RETRACE_MODEL or value['device-type'] != 'VGA'
@@ -247,9 +247,9 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, source
                 or vbe101_timing != _VBE101_TIMING
                 or any(type(item) is not int for item in vbe101_timing.values())):
             invalid('Invalid native VBE 101h retrace timing descriptor')
-        if source_profile in (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE):
+        if source_profile in (VGA480_FLIP_PROFILE, *VBE101_PAN_PROFILES):
             panning = value.get(VBE101_PANNING_FIELD)
-            if source_profile == VGA480_PAN_PROFILE:
+            if source_profile in VBE101_PAN_PROFILES:
                 _validate_vbe101_panning(panning, virtual_ns, vbe101_timing)
             _validate_vbe101_display_start(value[VBE101_DISPLAY_START_FIELD],
                                            virtual_ns, vbe101_timing, panning)
