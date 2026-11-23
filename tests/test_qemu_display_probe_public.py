@@ -21,7 +21,7 @@ def test_sparse_renderer_probe_is_discoverable_without_a_legacy_frame_stub():
 
 
 @pytest.mark.parametrize('backend', ['qemu-machine', 'qemu-dos'])
-def test_sparse_renderer_probe_script_grammar_preserves_legacy_frame_refusal(raw_project, tmp_path, backend):
+def test_renderer_probe_does_not_admit_source_frames_or_clicks(raw_project, tmp_path, backend):
     session, peer = stopped_session(raw_project, tmp_path)
     session.metadata['backend'] = backend
     session.capabilities['renderer_probe'] = True
@@ -30,10 +30,13 @@ def test_sparse_renderer_probe_script_grammar_preserves_legacy_frame_refusal(raw
     assert validate_script(value, session=session) == value['steps']
     assert validate_script(value) == value['steps']
     assert 'display-probe' in session.script_operations
-    for old in ('frame-probe', 'click', 'click-frame'):
-        options = dict(points=[]) if old == 'frame-probe' else dict(x=0, y=0)
+    source = script(dict(op='frame-probe', points=[]), backend=backend)
+    assert validate_script(source) == source['steps']
+    with pytest.raises(ValueError, match='source-raster contract'):
+        validate_script(source, session=session)
+    for click in ('click', 'click-frame'):
         with pytest.raises(ValueError, match='Unsupported'):
-            validate_script(script(dict(op=old, **options), backend=backend))
+            validate_script(script(dict(op=click, x=0, y=0), backend=backend))
     assert not peer.calls
 
 
