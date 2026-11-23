@@ -74,10 +74,15 @@ def test_configuration_grammar_keeps_frame_and_coordinate_operations_separate(pu
     assert validate_script(value, session=session) == value['steps']
     assert validate_script(value) == value['steps']
     assert 'vga-configuration' in session.script_operations
-    for old in ('frame-probe', 'click', 'click-frame'):
-        options = dict(points=[]) if old == 'frame-probe' else dict(x=0, y=0)
+    frame = script(dict(op='frame-probe', points=[]), backend=backend)
+    assert validate_script(frame) == frame['steps']
+    with pytest.raises(ValueError, match='Frame probe requires'):
+        validate_script(frame, session=session)
+    session.capabilities['frame_contract'] = True
+    assert validate_script(frame, session=session) == frame['steps']
+    for old in ('click', 'click-frame'):
         with pytest.raises(ValueError, match='Unsupported'):
-            validate_script(script(dict(op=old, **options), backend=backend))
+            validate_script(script(dict(op=old, x=0, y=0), backend=backend))
     with pytest.raises(ValueError, match='Unsupported'):
         validate_script(dict(format='fdisbull-script-1', steps=[dict(op='vga-configuration')]))
     assert not peer.calls

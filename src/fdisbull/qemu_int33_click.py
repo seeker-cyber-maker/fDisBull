@@ -14,11 +14,13 @@ _DEFAULT_BUDGET_NS = 50_000_000
 
 def validate_int33_click(x, y, *, stream, frame_id, button='left',
                          press_budget_ns=_DEFAULT_BUDGET_NS,
-                         release_budget_ns=_DEFAULT_BUDGET_NS, timeout_ms=3000):
+                         release_budget_ns=_DEFAULT_BUDGET_NS, minimum_hold_ms=None, timeout_ms=3000):
     validate_int33_input(x, y, stream=stream, frame_id=frame_id, button=button,
                          timeout_ms=timeout_ms)
     validate_clock_budget(press_budget_ns, timeout_ms)
     validate_clock_budget(release_budget_ns, timeout_ms)
+    if minimum_hold_ms is not None and (type(minimum_hold_ms) is not int or not 1 <= minimum_hold_ms <= 1000):
+        raise ValueError('minimum_hold_ms must be an integer in 1..1000')
 
 
 def _click_owner(cursor):
@@ -45,9 +47,12 @@ def _owned_lease(vm, token):
 
 def _accepted(execution, queued):
     delivery = execution.get('input_delivery') or {}
+    sequences = queued.get('sequences')
+    if sequences is None:
+        sequences = [queued['sequence']]
     return (delivery.get('delivery') == 'qmp_accepted'
-            and delivery.get('edge_count') == 1
-            and delivery.get('sequences') == [queued['sequence']]
+            and delivery.get('edge_count') == len(sequences)
+            and delivery.get('sequences') == sequences
             and delivery.get('pending_edges') == 0)
 
 
@@ -58,7 +63,7 @@ def _observed_edge(before, after, phase, button, target):
     return after['button_edges'] == expected
 
 
-def _run_phase(owner, vm, result, phase, queued, before, budget_ns, timeout_ms):
+def _advance_observed(owner, vm, result, phase, queued, before, budget_ns, timeout_ms):
     section = result[phase] = dict(queued=queued, execution=None, observed=None,
                                    observed_edge_at_target=None)
     result['stage'] = phase
@@ -73,7 +78,7 @@ def _run_phase(owner, vm, result, phase, queued, before, budget_ns, timeout_ms):
     if (budget['epoch'] != before['clock']['epoch']
             or budget['start_ns'] != before['clock']['virtual_ns']):
         return 'execution_clock_changed'
-    if not _accepted(execution, queued):
+    if queued is not None and not _accepted(execution, queued):
         return 'dispatch_unconfirmed'
     try:
         after = section['observed'] = owner.observe_int33_mouse(timeout_ms=timeout_ms)
@@ -82,11 +87,22 @@ def _run_phase(owner, vm, result, phase, queued, before, budget_ns, timeout_ms):
             raise
         result['observation_refusal'] = dict(code=error.code, message=str(error))
         return 'observation_refused'
+    if queued is None and execution.get('input_delivery') is not None:
+        return 'unexpected_input_dispatch'
     if (_click_owner(after) != _click_owner(before)
             or after['raster']['frame_id'] < before['raster']['frame_id']
             or after['clock']['epoch'] != budget['epoch']
             or after['clock']['virtual_ns'] != budget['stopped_ns']):
         return 'observation_owner_changed'
+    return None
+
+
+def _run_phase(owner, vm, result, phase, queued, before, budget_ns, timeout_ms):
+    blocked = _advance_observed(owner, vm, result, phase, queued, before, budget_ns, timeout_ms)
+    if blocked is not None:
+        return blocked
+    section = result[phase]
+    after = section['observed']
     button, target = result['button'], result['target']
     section['observed_edge_at_target'] = _observed_edge(before, after, phase, button, target)
     if not section['observed_edge_at_target']:
@@ -101,7 +117,7 @@ def _run_phase(owner, vm, result, phase, queued, before, budget_ns, timeout_ms):
 
 def mouse_click_int33(self, x, y, *, stream, frame_id, button='left',
                       press_budget_ns=_DEFAULT_BUDGET_NS,
-                      release_budget_ns=_DEFAULT_BUDGET_NS, timeout_ms=3000):
+                      release_budget_ns=_DEFAULT_BUDGET_NS, minimum_hold_ms=None, timeout_ms=3000):
     """Execute a press and release at a qualified, already-landed cursor.
 
     The budgets bound observation windows. The guest handler determines when
@@ -119,7 +135,8 @@ def mouse_click_int33(self, x, y, *, stream, frame_id, button='left',
         raise ValueError('INT33 click requires room in the driver edge counters')
     result = dict(format=_FORMAT, stage='press', complete=False, button=button,
                   source_target=[x, y], target=target, before=before,
-                  press=None, release=None, lease=None, lease_state=None, next_action=None,
+                  press=None, hold=None, release=None, lease=None, lease_state=None, next_action=None,
+                  minimum_hold_ms=minimum_hold_ms, verified_hold_ns=None,
                   effect='unconfirmed',
                   scope='Stopped CuteMouse edge records and explicit virtual-time budgets')
     token = None
@@ -141,10 +158,25 @@ def mouse_click_int33(self, x, y, *, stream, frame_id, button='left',
             return finish(outcome)
 
         result['effect'] = 'press_observed'
+        held = result['press']['observed']
+        if minimum_hold_ms is not None:
+            outcome = _advance_observed(self, vm, result, 'hold', None, held,
+                                        minimum_hold_ms * 1_000_000, timeout_ms)
+            if outcome is not None:
+                return finish(outcome)
+            after_hold = result['hold']['observed']
+            if (after_hold['buttons'] != held['buttons'] or after_hold['position'] != target
+                    or after_hold['button_edges'] != held['button_edges']):
+                return finish('driver_hold_unconfirmed')
+            result['verified_hold_ns'] = after_hold['clock']['virtual_ns'] - held['clock']['virtual_ns']
+            if result['verified_hold_ns'] < minimum_hold_ms * 1_000_000:
+                return finish('driver_hold_unconfirmed')
+            held = after_hold
+
         result['stage'] = 'release'
         release = self.mouse_button_up(token)
-        outcome = _run_phase(self, vm, result, 'release', release,
-                             result['press']['observed'], release_budget_ns, timeout_ms)
+        outcome = _run_phase(self, vm, result, 'release', release, held,
+                             release_budget_ns, timeout_ms)
         if outcome is not None:
             if result['release']['observed_edge_at_target']:
                 result['effect'] = 'press_and_release_observed'

@@ -176,12 +176,15 @@ def observe_int33_mouse(self, *, stream=None, frame_id=None, timeout_ms=1000):
                 error.int33_observation_cleanup_error = type(cleanup).__name__
         raise
 
+    from .qemu_frame_contract import frame_contract_metadata
+    frame_meta = frame_contract_metadata(self, raster, entry_clock)
     return dict(format='fdisbull-qemu-int33-mouse-observation-1', complete=True, run=self.run_id,
                 runtime_epoch=self._runtime_epoch, checkpoint_epoch=self._checkpoint_epoch,
                 scope='Selected live CuteMouse state beside a retained source raster at one cooperative stopped boundary',
                 driver=dict(name='CuteMouse 2.1b4', sha256=_DRIVER_SHA256, boot_image_sha256=boot_hash,
                             vector=dict(segment=segment, offset=entry), bios_video_mode=0x13),
                 raster=dict(stream=raster['token'], frame_id=frame['frame-id'], epoch=frame['epoch'],
+                            mode_id=frame_meta['mode_id'], session_id=frame_meta['session_id'],
                             configuration_generation=frame['configuration-generation'],
                             completed_ns=frame['completed-ns'], native_pixel_sha256=frame['pixel-sha256']),
                 clock=dict(epoch=entry_clock['epoch'], virtual_ns=entry_clock['virtual_ns'],

@@ -48,6 +48,8 @@ from .qemu_screenshot_hooks import QemuScreenshotHookMixin
 from .qemu_pending_events import pending_status_operation, pending_status_owner
 from .qemu_int33_mouse import observe_int33_mouse
 from .qemu_int33_click import mouse_click_int33, validate_int33_click
+from .qemu_coordinate_click import (click, click_frame, validate_coordinate_click,
+                                    validate_coordinate_click_frame)
 from .qemu_int33_mouse_control import (mouse_button_down_int33, mouse_move_int33,
                                      validate_int33_input)
 from .qemu_video_frame import validate_video_frame_parameters
@@ -206,6 +208,17 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     mouse_click_int33 = machine_trace_operation(
         mouse_click_int33, label='Observed INT33 mouse click',
         parameter_validator=validate_int33_click)
+    click = machine_trace_operation(
+        click, label='QEMU coordinate click', parameter_validator=validate_coordinate_click)
+    click_frame = machine_trace_operation(
+        click_frame, label='QEMU captured coordinate click', parameter_validator=validate_coordinate_click_frame)
+
+    def call(self, method, params=None):
+        if method != 'input.mouse.click':
+            return super().call(method, params)
+        if type(params) is not dict:
+            raise ValueError('QEMU coordinate click requires an object with its retained frame identity')
+        return self.click(**params)
 
     def __init__(self, project, executable, game_dir, *, boot_image=None, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,

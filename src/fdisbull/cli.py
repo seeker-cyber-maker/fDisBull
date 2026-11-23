@@ -299,11 +299,11 @@ METHODS = {
     "debug-breakpoint": "Translate execution or data access breakpoint; run,address,[cs,access,length]",
     "debug-delete-breakpoint": "Delete a live breakpoint; run,breakpoint_id",
     "debug-run": "Run to a breakpoint or bounded guest time, pausing at host timeout; run,[timeout_ms,guest_ms,fast_forward]",
-    "debug-click": "Queue a screenshot-pixel mouse click; run,x,y,[button,hold_ms,mode_id]",
+    "debug-click": "Click a screenshot pixel; run,x,y,[button,hold_ms,mode_id,frame_id]. QEMU requires delivery=observed-int33 and the retained session_id,mode_id,frame_id",
     "debug-keyboard-press": "Queue a guest keyboard press/release; run,key,[modifiers,hold_ms,gap_ms]",
     "debug-keyboard-type": "Queue 1..64 US-layout ASCII characters; run,text,[hold_ms,gap_ms]",
     "debug-keyboard-state": "Inspect guest keyboard events or CHIP-8 logical frame-key ownership; run",
-    "debug-click-frame": "Capture and label the chosen point, then queue its frame-mode-bound click; run,x,y,[name,grid_step,button,hold_ms,mode_id]",
+    "debug-click-frame": "Capture, label and click a screenshot pixel; run,x,y,[name,grid_step,button,hold_ms,mode_id]. QEMU requires delivery=observed-int33, plus session_id for expected mode/frame",
     "debug-screenshot": "Store an actual guest PNG with optional grid, DOS hooks and negotiated native encoding; run,[name,grid,grid_step,hooks,encoding]",
     "debug-screenshot-hooks": "Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]",
     "debug-grid": "Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]",
@@ -1561,6 +1561,11 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(observed, dict)
                                and observed.get("format") in (STEP_SEQUENCE_FORMAT,STEP_OVER_FORMAT))
         scene_wait_result = getattr(e, "scene_wait_result", None)
+        coordinate_click = getattr(e, "coordinate_click", observed)
+        coordinate_click_error = (isinstance(request, dict)
+            and request.get("method") in ("debug-click", "debug-click-frame")
+            and isinstance(coordinate_click, dict)
+            and coordinate_click.get("format") == "fdisbull-qemu-coordinate-click-1")
         scene_act_result = getattr(e, "scene_act_result", None)
         script_result = getattr(e, "script_result", None)
         video_frame_error = (isinstance(request,dict) and request.get("method") in (
@@ -1599,7 +1604,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(script_result, dict)
                                and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error):
             raise
         value = {
             "id": request_id,
@@ -1614,6 +1619,10 @@ def respond(request, default_project=None, debugger=None):
             value["error"]["result"] = e.result
         if step_sequence_error:
             value["error"]["result"] = observed
+        if coordinate_click_error:
+            value["error"]["coordinate_click"] = coordinate_click
+            if observed is not None:
+                value["error"]["result"] = observed
         if video_frame_error:
             if observed is not None:
                 value["error"]["result"] = observed

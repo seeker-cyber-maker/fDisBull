@@ -33,6 +33,21 @@ def _stopped_target(owner, x, y, stream, frame_id, timeout_ms):
     return cursor, target
 
 
+def _positioned_counts(cursor, target):
+    if cursor['position'] == target:
+        return (0, 0)
+    if (cursor['mickeys_per_eight_units'] != [8, 16]
+            or cursor['sensitivity_coefficients'] != [256, 256]
+            or cursor['position_remainders'] != [0, 0]):
+        raise ValueError('Positioned INT33 motion requires the qualified driver ratio, sensitivity and rounding state')
+    current_x, current_y = cursor['raw_position']
+    dx = 0 if cursor['position'][0] == target[0] else target[0] - current_x
+    dy = 2 * (target[1] - current_y)
+    if abs(dx) > 4 or abs(dy) > 4:
+        raise ValueError('Positioned INT33 motion requires at most four physical counts on each axis')
+    return dx, dy
+
+
 def mouse_move_int33(self, x, y, *, stream, frame_id, timeout_ms=1000):
     """Queue at most one calibrated physical motion packet.
 
@@ -43,15 +58,7 @@ def mouse_move_int33(self, x, y, *, stream, frame_id, timeout_ms=1000):
                   observed=cursor, counts=None, input=None, guest_consumed=None)
     if cursor['position'] == target:
         return dict(result, delivery='already_at_target')
-    if (cursor['mickeys_per_eight_units'] != [8, 16]
-            or cursor['sensitivity_coefficients'] != [256, 256]
-            or cursor['position_remainders'] != [0, 0]):
-        raise ValueError('Positioned INT33 motion requires the qualified driver ratio, sensitivity and rounding state')
-    current_x, current_y = cursor['raw_position']
-    dx = 0 if cursor['position'][0] == target[0] else target[0] - current_x
-    dy = 2 * (target[1] - current_y)
-    if abs(dx) > 4 or abs(dy) > 4:
-        raise ValueError('Positioned INT33 motion requires at most four physical counts on each axis')
+    dx, dy = _positioned_counts(cursor, target)
     queued = self.mouse_move_relative(dx, dy)
     return dict(result, delivery=queued['delivery'], counts=[dx, dy], input=queued)
 

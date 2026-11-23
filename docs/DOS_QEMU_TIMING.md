@@ -458,12 +458,34 @@ Callback/sync completion does not establish packet acceptance, arbitrary guest
 consumption, INT33 behavior or an application click. Zero-delta packets require
 independent evidence from a controlled initialized fixture.
 
-There is no `GuestMouse` facade or legacy `DebugSession` stub. `click(x, y)`,
-`debug-click`, `click`/`click-frame` and `input.mouse.click` keep their
-coordinate/frame contracts and native refusal. General `timed_input`,
-`absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain false;
-DOSBox stays the default and all 127 promotion qualifications remain open.
-See the [native click contract](../native/qemu-mouse-click/README.md).
+The coordinate-free button operation has a separate
+[native click contract](../native/qemu-mouse-click/README.md).
+
+### Observed coordinate clicks
+
+QEMU-DOS accepts `delivery="observed-int33"` with `click`, SDK
+`input.mouse.click`, and the `debug-click` JSON method. Pass `session_id`,
+`mode_id` and `frame_id` from a retained QEMU source-raster capture or
+`video.screenshot` response. `click_frame` and `debug-click-frame` capture and
+mark the exact retained pre-input raster. They can also verify an expected
+session, mode and frame. The stored screenshot and grid carry the full capture
+metadata.
+
+This route executes bounded virtual-clock phases for the pinned CuteMouse
+2.1b4 Mode 13h profile. It can verify one nearby movement of up to four physical
+counts per axis, or use an already-observed landing. It admits left and right
+buttons. The stopped driver reports the consumed press and release coordinates.
+`hold_ms` is the minimum guest-time interval after the verified press and
+before queuing release. Check `complete` and `outcome` in the receipt. A
+competing stop returns its original cause and any live input lease for explicit
+recovery. Stale selectors, unsupported driver state and targets outside the
+observed range are refused before input.
+
+DOSBox-X remains the default and uses its existing queued click behavior.
+Relative movement can produce different guest-visible mickey counts.
+General `timed_input`, `absolute_mouse`, `guest_time_control` and
+`completed_guest_frames` remain false. Saved QEMU scripts continue to use
+their separate physical input operations.
 
 ### Clock synchronization and retrace waits
 

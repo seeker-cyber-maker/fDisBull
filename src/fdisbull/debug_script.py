@@ -231,6 +231,8 @@ def validate_script(script, *, session=None):
                                 raise ValueError('LE source history records one explicit capture; stepping is unsupported')
                         if op=='le-rewind' and 'count' in params:
                             bounded(params['count'],'count',1,128)
+                    if op in ('click', 'click-frame') and (backend or actual) in ('qemu-machine', 'qemu-dos'):
+                        raise ValueError('Unsupported operation for this backend script: ' + op)
                     operation_owner=owner
                     if session is None and backend is None and op in ENGINE_OPERATIONS and op!='step':
                         # Engine-only saved routes retain the AGI grammar; ordinary

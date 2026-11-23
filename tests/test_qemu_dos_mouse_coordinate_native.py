@@ -397,6 +397,12 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         with pytest.raises(ValueError, match='resident dispatcher bytes differ') as failure:
                             debug.observe_int33_mouse()
                         assert failure.value.code == 'resident_source_mismatch'
+                        source = receipt['passive']['right_release']['raster']
+                        with pytest.raises(ValueError, match='resident dispatcher bytes differ'):
+                            debug.click(160, 90, delivery='observed-int33',
+                                        session_id=source['session_id'], mode_id=source['mode_id'],
+                                        frame_id=source['frame_id'])
+                        assert debug.input_state()['pending_edges'] == 0
                         assert debug.vm.process.poll() is None
                         receipt['native']['qemu_other_int33_driver_refused'] = True
                         _park(debug, locations['restored_vector'], qemu=qemu)
@@ -610,3 +616,95 @@ def test_observed_int33_click_resolves_only_qualified_press(
         assert proc.poll() is not None
     assert binary.read_bytes() == code
     (tmp_path / 'int33-observed-click.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
+
+
+@pytest.mark.parametrize('route', ['python', 'rpc', 'json', 'frame', 'partial'])
+def test_coordinate_click_routes_verify_landing_and_hold(
+        tmp_path, clock_runtime, clock_disk, mouse_inputs, route):
+    from fdisbull.cli import respond
+    from fdisbull.debugger import DebugWorkspace
+
+    baseline = prepare_mouse_disk(clock_disk['image'], tmp_path / 'mouse-boot.img',
+                                  mouse_inputs['driver'], clock_runtime['mcopy'])
+    code = assemble(tmp_path, 'coordinate-click-route', '%define CASE 0\n' + _CLICK_ASSEMBLY,
+                    clock_runtime['nasm'])
+    ready, pressed, _ = struct.unpack('<3H', code[-6:])
+    binary = tmp_path / 'ROUTE.COM'
+    binary.write_bytes(code)
+    options = launch_options(clock_runtime, baseline, qemu_clock='virtual', qemu_retrace='precise')
+    with Project.create(tmp_path / 'route.fdb', binary, image='com') as project:
+        project.analyze(max_instructions=4096)
+        with project.debugger(str(clock_runtime['executable']), tmp_path, **options) as debug:
+            info = debug.dos_process_info()
+            _park(debug, com_address(info, ready), qemu=True)
+            _settle_boot_events(debug)
+            debug.video_frame_start()
+            assert debug.video_frame_advance()['advance_completed']
+            first = debug.call('video.screenshot', {'encoding': 'png'})
+            assert debug.video_frame_advance()['advance_completed']
+            selected = debug.call('video.screenshot', {'encoding': 'png'})
+            assert first['mode_id'] == selected['mode_id'] and first['frame_id'] < selected['frame_id']
+            ids = {key: selected[key] for key in ('session_id', 'mode_id', 'frame_id')}
+            initial = debug.observe_int33_mouse()
+            scenarios = [
+                (dict(ids, delivery=None), 'explicit delivery'),
+                (dict(ids, session_id='0' * 32), 'STALE_SESSION'),
+                (dict(ids, mode_id=ids['mode_id'] + 1), 'STALE_MODE'),
+                (dict(ids, frame_id=first['frame_id']), 'STALE_FRAME'),
+            ]
+            for selection, reason in scenarios:
+                selection.setdefault('delivery', 'observed-int33')
+                with pytest.raises(ValueError, match=reason):
+                    debug.click(160, 90, **selection)
+            with pytest.raises(ValueError, match='four physical counts'):
+                debug.click(160, 110, delivery='observed-int33', **ids)
+            assert debug.observe_int33_mouse()['clock'] == initial['clock']
+            assert debug.input_state()['pending_edges'] == 0
+            options = dict(x=160, y=90, delivery='observed-int33', hold_ms=15, **ids)
+            if route == 'partial':
+                point = debug.breakpoint(com_address(info, pressed))
+            if route in ('json', 'frame', 'partial'):
+                workspace = DebugWorkspace()
+                workspace.sessions[debug.run_id] = debug
+                method = 'debug-click-frame' if route == 'frame' else 'debug-click'
+                request = dict(id=1, method=method, params=dict(project=str(project.path),
+                               run=debug.run_id, **options))
+                reply = respond(request, debugger=workspace)
+                assert reply['ok'], reply
+                result = reply['result']
+                workspace.sessions.clear()
+            elif route == 'rpc':
+                result = debug.call('input.mouse.click', options)
+            else:
+                result = debug.click(**options)
+            assert result['format'] == 'fdisbull-qemu-coordinate-click-1'
+            assert result['source']['frame_id'] == selected['frame_id']
+            assert result['target_landing']['position'] == [320, 90]
+            assert result['motion']['counts'] == [2, 4]
+            if route == 'frame':
+                assert result['frame_phase'] == 'before_observed_input'
+                assert result['frame']['metadata']['frame_id'] == selected['frame_id']
+                assert result['frame']['metadata']['mode_id'] == selected['mode_id']
+                assert result['frame']['metadata']['coordinate_grid']['target'] == [160, 90]
+            click = result['click']
+            if route == 'partial':
+                assert not result['complete'] and result['outcome'] == 'competing_stop'
+                assert result['next_action'] == 'release_owned_button'
+                assert click['hold'] is None and click['release'] is None
+                reason = click['press']['execution']['session']['stop_reason']
+                assert reason['breakpoint_ids'] == [point['breakpoint_id']]
+                debug.delete_breakpoint(point['breakpoint_id'])
+                debug.mouse_button_up(click['lease'])
+                debug.clock_advance(50_000_000)
+                assert debug.observe_int33_mouse()['buttons'] == 0
+            else:
+                assert result['complete'] and result['effect'] == 'press_and_release_observed'
+                assert click['verified_hold_ns'] >= 15_000_000
+                assert click['press']['observed_edge_at_target'] and click['release']['observed_edge_at_target']
+                assert click['release']['observed']['buttons'] == 0
+            assert not debug.input_state()['leases']
+            assert debug.capabilities['absolute_mouse'] is False
+            native_process = debug.vm.process
+        assert native_process.poll() is not None
+    assert binary.read_bytes() == code
+    (tmp_path / 'coordinate-click-route.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
