@@ -1,0 +1,704 @@
+diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -172,6 +172,60 @@
+     return g_steal_pointer(&result);
+ }
+ 
++bool pci_std_vga_fdisbull_mode13_selected(Object *obj)
++{
++    return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
++           PCI_VGA(obj)->vga.fdisbull_mode13_phase;
++}
++
++bool pci_std_vga_fdisbull_mode13_pending(Object *obj)
++{
++    return pci_std_vga_fdisbull_mode13_selected(obj) &&
++           PCI_VGA(obj)->vga.fdisbull_mode13_prefix != 0;
++}
++
++bool pci_std_vga_fdisbull_mode13_setup(Object *obj, FdisbullVideoSetupStamp *out)
++{
++    if (!pci_std_vga_fdisbull_mode13_selected(obj)) {
++        return false;
++    }
++    VGACommonState *s = &PCI_VGA(obj)->vga;
++    if (!s->fdisbull_mode13_setup.configuration_generation ||
++        s->fdisbull_mode13_setup.configuration_generation !=
++            s->fdisbull_configuration_generation ||
++        s->fdisbull_mode13_setup.timing_generation != s->fdisbull_retrace_generation) {
++        return false;
++    }
++    *out = s->fdisbull_mode13_setup;
++    return true;
++}
++
++bool pci_std_vga_fdisbull_mode13_restore(Object *obj,
++                                 const FdisbullVideoSetupStamp *setup, Error **errp)
++{
++    VGACommonState *s;
++    FdisbullVideoFrameSource source;
++
++    if (!pci_std_vga_fdisbull_mode13_selected(obj)) {
++        error_setg(errp, "Mode-13 phase restore requires the selected VGA profile");
++        return false;
++    }
++    s = &PCI_VGA(obj)->vga;
++    s->fdisbull_mode13_prefix = 0;
++    s->fdisbull_mode13_setup = setup ? *setup : (FdisbullVideoSetupStamp) { 0 };
++    if (setup &&
++        (!vga_fdisbull_video_frame_sample(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
++                                         -1, NULL, &source, errp) ||
++         !source.setup.configuration_generation)) {
++        s->fdisbull_mode13_setup = (FdisbullVideoSetupStamp) { 0 };
++        if (!errp || !*errp) {
++            error_setg(errp, "Restored mode-13 setup differs from live VGA");
++        }
++        return false;
++    }
++    return true;
++}
++
+ bool pci_std_vga_fdisbull_video_frame_sample(
+     Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+     struct FdisbullVideoFrameSource *source, Error **errp)
+@@ -471,6 +525,8 @@
+ }
+ 
+ static const Property vga_pci_properties[] = {
++    DEFINE_PROP_BOOL("x-fdisbull-mode13-phase", PCIVGAState,
++                     vga.fdisbull_mode13_phase, false),
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+     DEFINE_PROP_BOOL("x-fdisbull-raster-proof", PCIVGAState,
+                      vga.fdisbull_raster_proof, false),
+diff --git a/hw/display/vga.c b/hw/display/vga.c
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -740,11 +740,73 @@
+     return val;
+ }
+ 
++/* Exact color standard-VGA BIOS mode-13 packet. The final attribute
++ * write must leave display enabled; sampling rechecks effective geometry. */
++static void vga_fdisbull_mode13_write(VGACommonState *s, uint32_t port,
++                                    uint8_t value)
++{
++    static const struct {
++        uint16_t port;
++        uint8_t value;
++    } packet[] = {
++        { 0x3c4, 0x00 }, { 0x3c5, 0x03 }, { 0x3c4, 0x01 },
++        { 0x3c5, 0x01 }, { 0x3c4, 0x02 }, { 0x3c5, 0x0f },
++        { 0x3c4, 0x03 }, { 0x3c5, 0x00 }, { 0x3c4, 0x04 },
++        { 0x3c5, 0x0e }, { 0x3ce, 0x00 }, { 0x3cf, 0x00 },
++        { 0x3ce, 0x01 }, { 0x3cf, 0x00 }, { 0x3ce, 0x02 },
++        { 0x3cf, 0x00 }, { 0x3ce, 0x03 }, { 0x3cf, 0x00 },
++        { 0x3ce, 0x04 }, { 0x3cf, 0x00 }, { 0x3ce, 0x05 },
++        { 0x3cf, 0x40 }, { 0x3ce, 0x06 }, { 0x3cf, 0x05 },
++        { 0x3ce, 0x07 }, { 0x3cf, 0x0f }, { 0x3ce, 0x08 },
++        { 0x3cf, 0xff }, { 0x3d4, 0x11 }, { 0x3d5, 0x00 },
++        { 0x3d4, 0x00 }, { 0x3d5, 0x5f }, { 0x3d4, 0x01 },
++        { 0x3d5, 0x4f }, { 0x3d4, 0x02 }, { 0x3d5, 0x50 },
++        { 0x3d4, 0x03 }, { 0x3d5, 0x82 }, { 0x3d4, 0x04 },
++        { 0x3d5, 0x54 }, { 0x3d4, 0x05 }, { 0x3d5, 0x80 },
++        { 0x3d4, 0x06 }, { 0x3d5, 0xbf }, { 0x3d4, 0x07 },
++        { 0x3d5, 0x1f }, { 0x3d4, 0x08 }, { 0x3d5, 0x00 },
++        { 0x3d4, 0x09 }, { 0x3d5, 0x41 }, { 0x3d4, 0x0a },
++        { 0x3d5, 0x00 }, { 0x3d4, 0x0b }, { 0x3d5, 0x00 },
++        { 0x3d4, 0x0c }, { 0x3d5, 0x00 }, { 0x3d4, 0x0d },
++        { 0x3d5, 0x00 }, { 0x3d4, 0x0e }, { 0x3d5, 0x00 },
++        { 0x3d4, 0x0f }, { 0x3d5, 0x00 }, { 0x3d4, 0x10 },
++        { 0x3d5, 0x9c }, { 0x3d4, 0x11 }, { 0x3d5, 0x8e },
++        { 0x3d4, 0x12 }, { 0x3d5, 0x8f }, { 0x3d4, 0x13 },
++        { 0x3d5, 0x28 }, { 0x3d4, 0x14 }, { 0x3d5, 0x40 },
++        { 0x3d4, 0x15 }, { 0x3d5, 0x96 }, { 0x3d4, 0x16 },
++        { 0x3d5, 0xb9 }, { 0x3d4, 0x17 }, { 0x3d5, 0xa3 },
++        { 0x3d4, 0x18 }, { 0x3d5, 0xff }, { 0x3c2, 0x63 },
++        { 0x3c0, 0x20 },
++    };
++    unsigned at = s->fdisbull_mode13_prefix;
++
++    if (packet[at].port == port && packet[at].value == value) {
++        at++;
++    } else {
++        at = port == packet[0].port && value == packet[0].value;
++    }
++    if (at == ARRAY_SIZE(packet)) {
++        at = 0;
++        if (!s->ar_flip_flop || (s->ar_index & 0x3f) != 0x20) {
++            s->fdisbull_mode13_prefix = at;
++            return;
++        }
++        s->fdisbull_mode13_setup = (FdisbullVideoSetupStamp) {
++            .committed_ns = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
++            .configuration_generation = s->fdisbull_configuration_generation,
++            .timing_generation = s->fdisbull_retrace_generation,
++        };
++        fdisbull_video_frame_invalidate(s->con, "vga-mode13-reapplied");
++    }
++    s->fdisbull_mode13_prefix = at;
++}
++
+ void vga_ioport_write(void *opaque, uint32_t addr, uint32_t val)
+ {
+     VGACommonState *s = opaque;
+     FdisbullRetraceBefore retrace_before = { 0 };
+     int index;
++    uint8_t written = val;
+ 
+     /* check port range access depending on color/monochrome mode */
+     if (vga_ioport_invalid(s, addr)) {
+@@ -879,6 +941,9 @@
+     }
+     /* Includes protected CR7 bit 4 and all VBE-derived write effects. */
+     vga_fdisbull_configuration_commit(s, false);
++    if (s->fdisbull_retrace && s->fdisbull_mode13_phase) {
++        vga_fdisbull_mode13_write(s, addr, written);
++    }
+ }
+ 
+ /*
+@@ -2032,6 +2097,19 @@
+                              retrace->timing->htotal;
+     source->period_ns = retrace->phase->period_ns;
+     source->dac_8bit = s->dac_8bit;
++    source->mode13_phase = s->fdisbull_mode13_phase;
++    source->setup = (FdisbullVideoSetupStamp) { 0 };
++    if (source->mode13_phase &&
++        s->fdisbull_mode13_setup.configuration_generation ==
++            source->configuration_generation &&
++        s->fdisbull_mode13_setup.timing_generation ==
++            source->timing_generation &&
++        retrace->timing->vstart == 412 &&
++        source->line_period_ns > 0 &&
++        source->period_ns / source->line_period_ns == 449 &&
++        !source->dac_8bit) {
++        source->setup = s->fdisbull_mode13_setup;
++    }
+     if (!fdisbull_video_timing_valid(source->line_period_ns, source->period_ns)) {
+         error_setg(errp, "Video frame timing cannot cover 400 physical lines");
+         return false;
+@@ -2459,6 +2537,8 @@
+ {
+     vga_fdisbull_raster_invalidate(s, "native-reset");
+     fdisbull_video_frame_invalidate(s->con, "native-reset");
++    s->fdisbull_mode13_prefix = 0;
++    s->fdisbull_mode13_setup = (FdisbullVideoSetupStamp) { 0 };
+     if (s->fdisbull_retrace) {
+         s->fdisbull_retrace_initialized = false;
+         vga_fdisbull_retrace_advance_generation(s);
+@@ -2737,6 +2817,8 @@
+ 
+     vga_fdisbull_raster_invalidate(s, "native-load");
+     fdisbull_video_frame_invalidate(s->con, "native-load");
++    s->fdisbull_mode13_prefix = 0;
++    s->fdisbull_mode13_setup = (FdisbullVideoSetupStamp) { 0 };
+ 
+     /* force refresh */
+     s->graphic_mode = -1;
+diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -28,6 +28,7 @@
+ #include "ui/console.h"
+ #include "exec/ioport.h"
+ #include "exec/memory.h"
++#include "hw/display/fdisbull-video-frame.h"
+ 
+ #include "hw/display/bochs-vbe.h"
+ #include "hw/acpi/acpi_aml_interface.h"
+@@ -184,6 +185,9 @@
+     /* Configuration identity is opt-in, process-local and never migrated. */
+     bool fdisbull_configuration_initialized;
+     bool fdisbull_configuration_invalidated;
++    bool fdisbull_mode13_phase;
++    uint8_t fdisbull_mode13_prefix;
++    FdisbullVideoSetupStamp fdisbull_mode13_setup;
+     uint64_t fdisbull_configuration_generation;
+     VGAConfigurationState fdisbull_configuration_committed;
+     /* Private raster evidence is process-local and is never migrated. */
+diff --git a/include/hw/display/fdisbull-video-frame.h b/include/hw/display/fdisbull-video-frame.h
+--- a/include/hw/display/fdisbull-video-frame.h
++++ b/include/hw/display/fdisbull-video-frame.h
+@@ -12,12 +12,20 @@
+ #define FDISBULL_VIDEO_ROW_BYTES (FDISBULL_VIDEO_WIDTH * 3u)
+ #define FDISBULL_VIDEO_RGB_BYTES (FDISBULL_VIDEO_ROW_BYTES * FDISBULL_VIDEO_HEIGHT)
+ 
++typedef struct FdisbullVideoSetupStamp {
++    int64_t committed_ns;
++    uint64_t configuration_generation;
++    uint64_t timing_generation;
++} FdisbullVideoSetupStamp;
++
+ typedef struct FdisbullVideoFrameSource {
+     uint64_t configuration_generation;
+     uint64_t timing_generation;
+     int64_t line_period_ns;
+     int64_t period_ns;
+     bool dac_8bit;
++    bool mode13_phase;
++    FdisbullVideoSetupStamp setup;
+ } FdisbullVideoFrameSource;
+ 
+ static inline bool fdisbull_video_timing_valid(int64_t line, int64_t period)
+@@ -42,20 +50,40 @@
+     return true;
+ }
+ 
+-static inline bool fdisbull_video_row_deadline(int64_t start, int64_t line,
+-                                              unsigned row, int64_t *deadline)
++static inline bool fdisbull_video_phase_deadline(int64_t start, int64_t line,
++                                               unsigned row, unsigned phase,
++                                               int64_t *deadline)
+ {
+     int64_t offset;
+ 
+     if (!deadline || start < 0 || line < 4 || line > INT64_MAX / 400 ||
+-        row >= FDISBULL_VIDEO_HEIGHT) {
++        row >= FDISBULL_VIDEO_HEIGHT || phase > 1) {
+         return false;
+     }
+-    offset = line / 4 + (int64_t)(2 * row) * line;
++    offset = line / 4 + (int64_t)(2 * row + phase) * line;
+     if (start > INT64_MAX - offset) {
+         return false;
+     }
+     *deadline = start + offset;
++    return true;
++}
++
++static inline bool fdisbull_video_row_deadline(int64_t start, int64_t line,
++                                              unsigned row, int64_t *deadline)
++{
++    return fdisbull_video_phase_deadline(start, line, row, 0, deadline);
++}
++
++static inline bool fdisbull_video_mode_phase(int64_t setup_ns, int64_t start,
++                                            int64_t period, unsigned *phase)
++{
++    int64_t first;
++
++    if (!phase || !fdisbull_video_next_start(setup_ns, period, &first) ||
++        start < first || start % period) {
++        return false;
++    }
++    *phase = start != first;
+     return true;
+ }
+ 
+diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -41,6 +41,15 @@
+ struct FdisbullRasterProof *pci_std_vga_fdisbull_raster_query(
+     Object *obj, uint64_t epoch, int64_t virtual_ns, Error **errp);
+ struct FdisbullVideoFrameSource;
++struct FdisbullVideoSetupStamp;
++
++bool pci_std_vga_fdisbull_mode13_selected(Object *obj);
++bool pci_std_vga_fdisbull_mode13_pending(Object *obj);
++bool pci_std_vga_fdisbull_mode13_setup(Object *obj,
++                                     struct FdisbullVideoSetupStamp *out);
++bool pci_std_vga_fdisbull_mode13_restore(Object *obj,
++                       const struct FdisbullVideoSetupStamp *setup, Error **errp);
++
+ bool pci_std_vga_fdisbull_video_frame_sample(
+     Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+     struct FdisbullVideoFrameSource *source, Error **errp);
+diff --git a/include/system/fdisbull-instrumented-checkpoint.h b/include/system/fdisbull-instrumented-checkpoint.h
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+ 
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13 \
++    "fdisbull-instrumented-qemu-state-5"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT \
+     "fdisbull-instrumented-qemu-state-4"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V3 \
+diff --git a/include/system/fdisbull-video-frame.h b/include/system/fdisbull-video-frame.h
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -14,6 +14,7 @@
+ /* Private source-frame control owner; none of this state is serialized. */
+ bool fdisbull_video_frame_fence_blocks_control(void);
+ bool fdisbull_video_frame_stop_pending(void);
++bool fdisbull_video_frame_mode13_selected(void);
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp);
+ void fdisbull_video_frame_handle_stop_request(void);
+ /* Authoritative clock loss/restore retires controls, without claiming a stop. */
+diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -36,6 +36,7 @@
+ # @first-sample-ns: Actual row-zero sampling time.
+ # @last-sample-ns: Actual row-199 sampling time.
+ # @completed-ns: Accepted publication time, equal to last-sample-ns.
++# @source-phase: Physical line parity, present only on the selected mode-13 profile.
+ # @pixel-sha256: SHA-256 of exactly 192000 retained packed RGB bytes.
+ # @rows: Exactly 200 frozen source-row sampling receipts.
+ #
+@@ -52,7 +53,21 @@
+             'dac-8bit': 'bool', 'frame-start-ns': 'int', 'period-ns': 'int',
+             'line-period-ns': 'int', 'first-sample-ns': 'int',
+             'last-sample-ns': 'int', 'completed-ns': 'int',
+-            'pixel-sha256': 'str', 'rows': ['FdisbullVideoFrameRow'] } }
++            'pixel-sha256': 'str', 'rows': ['FdisbullVideoFrameRow'],
++            '*source-phase': 'uint8' } }
++
++##
++# @FdisbullVideoModeSetup:
++#
++# @committed-ns: Guest virtual time at the final accepted setup write.
++# @configuration-generation: Effective VGA configuration at the setup boundary.
++# @timing-generation: Precise VGA timing at the setup boundary.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoModeSetup',
++  'data': { 'committed-ns': 'int', 'configuration-generation': 'uint64',
++            'timing-generation': 'uint64' } }
+ 
+ ##
+ # @FdisbullVideoFrameInfo:
+@@ -77,6 +92,7 @@
+ # @stop-ns: Native stopped time of explicit stop, present only while stopped.
+ # @next-deadline-ns: Original intended next-row deadline, present only while
+ #     observing; a deferred callback does not replace it.
++# @mode-setup: Live setup stamp for the selected mode-13 phase profile.
+ # @frame: Frozen retained complete raster, absent before completion or after
+ #     invalidation. Old renderer pixels cannot supply it.
+ #
+@@ -89,7 +105,8 @@
+             'aborted-frames': 'uint64', 'in-progress': 'bool',
+             'rows-sampled': 'int', '*token': 'str', '*device': 'str',
+             '*reason': 'str', '*start-ns': 'int', '*stop-ns': 'int',
+-            '*next-deadline-ns': 'int', '*frame': 'FdisbullVideoFrame' } }
++            '*next-deadline-ns': 'int', '*frame': 'FdisbullVideoFrame',
++            '*mode-setup': 'FdisbullVideoModeSetup' } }
+ 
+ ##
+ # @FdisbullVideoFrameCheckpointState:
+diff --git a/system/fdisbull-instrumented-checkpoint.c b/system/fdisbull-instrumented-checkpoint.c
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,7 +161,9 @@
+     }
+ 
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    result->format = g_strdup(fdisbull_video_frame_mode13_selected() ?
++                    FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13 :
++                    FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
+     result->virtual_ns = clock->virtual_ns;
+     result->source_epoch = clock->epoch;
+     result->clock = g_steal_pointer(&clock);
+@@ -387,13 +389,17 @@
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V3);
+     bool repeat_v4 = !strcmp(state->format,
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
+-    bool has_source = source_v3 || repeat_v4;
++    bool mode13_v5 = !strcmp(state->format,
++                             FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13);
++    bool has_source = source_v3 || repeat_v4 || mode13_v5;
++    bool has_repeat = repeat_v4 || mode13_v5;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
++        mode13_v5 != fdisbull_video_frame_mode13_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+         (!legacy_v1 && !state->frame_keys) ||
+         has_source != (state->video_frame != NULL) ||
+-        repeat_v4 != (state->frame_key_repeat != NULL) ||
++        has_repeat != (state->frame_key_repeat != NULL) ||
+         state->source_epoch != state->clock->epoch ||
+         state->virtual_ns != state->clock->virtual_ns) {
+         error_setg(errp, "Invalid instrumented checkpoint envelope identity");
+@@ -410,7 +416,7 @@
+         (!legacy_v1 &&
+          !fdisbull_frame_keys_checkpoint_validate(state->frame_keys,
+                                                   state->source_epoch, errp)) ||
+-        (repeat_v4 &&
++        (has_repeat &&
+          !fdisbull_frame_key_repeat_checkpoint_validate(state->frame_key_repeat,
+                                                         state->frame_keys, errp)) ||
+         (has_source &&
+diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -23,6 +23,9 @@
+ #include "ui/console.h"
+ 
+ #define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
++#define MODE13_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-v1"
++
++static Object *video_device(QemuConsole **out, Error **errp);
+ #define VIDEO_MAX_POINTS 256
+ #define VIDEO_FENCE_MODEL "qemu-video-frame-fence-v1"
+ 
+@@ -188,6 +191,11 @@
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp)
+ {
+     assert(bql_locked());
++    QemuConsole *console;
++    if (pci_std_vga_fdisbull_mode13_pending(video_device(&console, NULL))) {
++        error_setg(errp, "Cannot checkpoint a partial mode-13 programming packet");
++        return false;
++    }
+     if (fdisbull_video_frame_fence_blocks_control() ||
+         video_fence.stop_pending) {
+         error_setg(errp, "Release the source-video frame fence before checkpointing");
+@@ -325,13 +333,47 @@
+     /* Buffers stay allocated but are unreachable as published pixels. */
+ }
+ 
++bool fdisbull_video_frame_mode13_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_mode13_selected(video_device(&console, NULL));
++}
++
++static bool video_source_phase(const FdisbullVideoModeSetup *setup, int64_t start,
++                               int64_t period, unsigned *phase)
++{
++    *phase = 0;
++    return !setup ||
++           fdisbull_video_mode_phase(setup->committed_ns, start, period, phase);
++}
++
++static bool video_src_deadline(int64_t start, const FdisbullVideoFrameSource *source,
++                                unsigned row, int64_t *deadline)
++{
++    unsigned phase = 0;
++
++    if (source->mode13_phase &&
++        (!source->setup.configuration_generation ||
++         !fdisbull_video_mode_phase(source->setup.committed_ns, start,
++                                    source->period_ns, &phase))) {
++        return false;
++    }
++    return fdisbull_video_phase_deadline(start, source->line_period_ns,
++                                         row, phase, deadline);
++}
++
+ static bool video_source_equal(const FdisbullVideoFrameSource *a,
+                                const FdisbullVideoFrameSource *b)
+ {
+     return a->configuration_generation == b->configuration_generation &&
+            a->timing_generation == b->timing_generation &&
+            a->line_period_ns == b->line_period_ns &&
+-           a->period_ns == b->period_ns && a->dac_8bit == b->dac_8bit;
++           a->period_ns == b->period_ns && a->dac_8bit == b->dac_8bit &&
++           a->mode13_phase == b->mode13_phase &&
++           a->setup.committed_ns == b->setup.committed_ns &&
++           a->setup.configuration_generation == b->setup.configuration_generation &&
++           a->setup.timing_generation == b->setup.timing_generation;
+ }
+ 
+ static FdisbullVideoFrameInfo *video_info(const FdisbullClockInfo *clock)
+@@ -339,7 +381,17 @@
+     FdisbullVideoFrameInfo *info = g_new0(FdisbullVideoFrameInfo, 1);
+ 
+     info->api_version = 1;
+-    info->model = g_strdup(VIDEO_MODEL);
++    QemuConsole *console;
++    Object *device = video_device(&console, NULL);
++    FdisbullVideoSetupStamp setup;
++    info->model = g_strdup(pci_std_vga_fdisbull_mode13_selected(device) ?
++                           MODE13_VIDEO_MODEL : VIDEO_MODEL);
++    if (pci_std_vga_fdisbull_mode13_setup(device, &setup)) {
++        info->mode_setup = g_new0(FdisbullVideoModeSetup, 1);
++        info->mode_setup->committed_ns = setup.committed_ns;
++        info->mode_setup->configuration_generation = setup.configuration_generation;
++        info->mode_setup->timing_generation = setup.timing_generation;
++    }
+     info->state = g_strdup(video.invalidated ? "invalidated" :
+                           video.observing ? "observing" :
+                           video.stopped ? "stopped" : "idle");
+@@ -413,6 +465,15 @@
+     frame->dac_conversion = g_strdup("replicate-6-to-8-v1");
+     frame->dac_8bit = video.source.dac_8bit;
+     frame->frame_start_ns = video.frame_start_ns;
++    if (video.source.mode13_phase) {
++        unsigned phase;
++        bool valid = fdisbull_video_mode_phase(video.source.setup.committed_ns,
++                                               video.frame_start_ns,
++                                               video.source.period_ns, &phase);
++        assert(valid);
++        frame->has_source_phase = true;
++        frame->source_phase = phase;
++    }
+     frame->period_ns = video.source.period_ns;
+     frame->line_period_ns = video.source.line_period_ns;
+     frame->first_sample_ns = video.actual[0];
+@@ -525,9 +586,8 @@
+         }
+         video.frame_start_ns += video.source.period_ns;
+     }
+-    if (!fdisbull_video_row_deadline(video.frame_start_ns,
+-                                    video.source.line_period_ns, video.rows,
+-                                    &video.deadline_ns)) {
++    if (!video_src_deadline(video.frame_start_ns, &video.source, video.rows,
++                            &video.deadline_ns)) {
+         fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
+         return;
+     }
+@@ -579,8 +639,12 @@
+             device, clock->virtual_ns, -1, NULL, &source, errp)) {
+         return NULL;
+     }
++    if (source.mode13_phase && !source.setup.configuration_generation) {
++        error_setg(errp, "Source raster needs an observed effective mode-13 setup");
++        return NULL;
++    }
+     if (!fdisbull_video_next_start(clock->virtual_ns, source.period_ns, &start) ||
+-        !fdisbull_video_row_deadline(start, source.line_period_ns, 0, &deadline)) {
++        !video_src_deadline(start, &source, 0, &deadline)) {
+         error_setg(errp, "Video frame start deadline overflows native clock");
+         return NULL;
+     }
+@@ -946,7 +1010,7 @@
+ 
+ static bool video_checkpoint_rows(const FdisbullVideoFrameRowList *entry,
+                                    unsigned count, int64_t start, int64_t line,
+-                                   int64_t stopped, Error **errp)
++                                   unsigned phase, int64_t stopped, Error **errp)
+ {
+     unsigned row;
+ 
+@@ -955,7 +1019,7 @@
+         int64_t intended;
+ 
+         if (!value || value->row != row ||
+-            !fdisbull_video_row_deadline(start, line, row, &intended) ||
++            !fdisbull_video_phase_deadline(start, line, row, phase, &intended) ||
+             value->intended_ns != intended || value->actual_ns > stopped ||
+             !fdisbull_video_row_timely(intended, value->actual_ns, line)) {
+             return video_checkpoint_error(errp, "row order, time or stop boundary");
+@@ -992,8 +1056,15 @@
+         f->frame_start_ns % s->period_ns || !f->pixel_sha256) {
+         return video_checkpoint_error(errp, "complete frame identity or descriptor");
+     }
++    unsigned phase;
++    if (!video_source_phase(info->mode_setup, f->frame_start_ns, s->period_ns,
++                            &phase) ||
++        f->has_source_phase != (info->mode_setup != NULL) ||
++        (f->has_source_phase && f->source_phase != phase)) {
++        return video_checkpoint_error(errp, "complete raster source phase");
++    }
+     if (!video_checkpoint_rows(f->rows, FDISBULL_VIDEO_HEIGHT,
+-                               f->frame_start_ns, f->line_period_ns,
++                               f->frame_start_ns, f->line_period_ns, phase,
+                                stopped, errp)) {
+         return false;
+     }
+@@ -1021,9 +1092,12 @@
+     const FdisbullVideoFrameInfo *info;
+     bool idle, observing, stopped, invalidated;
+     int64_t intended, expiry;
++    bool selected = fdisbull_video_frame_mode13_selected();
++    unsigned phase;
+ 
+     if (!s || !(info = s->info) || !source_epoch || virtual_ns < 0 ||
+-        info->api_version != 1 || g_strcmp0(info->model, VIDEO_MODEL) ||
++        info->api_version != 1 ||
++        g_strcmp0(info->model, selected ? MODE13_VIDEO_MODEL : VIDEO_MODEL) ||
+         info->epoch != source_epoch || info->virtual_ns != virtual_ns ||
+         info->rows_sampled < 0 || info->rows_sampled >= FDISBULL_VIDEO_HEIGHT ||
+         info->in_progress != (info->rows_sampled != 0) ||
+@@ -1066,12 +1140,27 @@
+                !fdisbull_video_timing_valid(s->line_period_ns, s->period_ns)) {
+         return video_checkpoint_error(errp, "source timing");
+     }
++    if ((info->mode_setup &&
++         (!selected || info->mode_setup->committed_ns < 0 ||
++          info->mode_setup->committed_ns > virtual_ns ||
++          !info->mode_setup->configuration_generation ||
++          !info->mode_setup->timing_generation)) ||
++        (selected && (observing || stopped) &&
++         (!info->mode_setup || s->dac_8bit ||
++          s->period_ns / s->line_period_ns != 449 ||
++          info->mode_setup->configuration_generation != s->configuration_generation ||
++          info->mode_setup->timing_generation != s->timing_generation ||
++          info->mode_setup->committed_ns > info->start_ns))) {
++        return video_checkpoint_error(errp, "mode-13 source setup identity");
++    }
+     if (observing) {
+         expiry = s->timer_expire_ns;
+         if (s->frame_start_ns <= info->start_ns ||
+             s->frame_start_ns % s->period_ns ||
+-            !fdisbull_video_row_deadline(s->frame_start_ns, s->line_period_ns,
+-                                         info->rows_sampled, &intended) ||
++            !video_source_phase(info->mode_setup, s->frame_start_ns,
++                                s->period_ns, &phase) ||
++            !fdisbull_video_phase_deadline(s->frame_start_ns, s->line_period_ns,
++                                           info->rows_sampled, phase, &intended) ||
+             info->next_deadline_ns != intended || !s->timer_pending ||
+             expiry < 0 ||
+             !(expiry == intended ||
+@@ -1082,7 +1171,7 @@
+         }
+         if (!video_checkpoint_rows(s->partial_rows, info->rows_sampled,
+                                    s->frame_start_ns, s->line_period_ns,
+-                                   virtual_ns, errp)) {
++                                   phase, virtual_ns, errp)) {
+             return false;
+         }
+     } else if (info->rows_sampled || s->partial_rows || s->frame_start_ns ||
+@@ -1113,6 +1202,14 @@
+     *device = video_device(console, errp);
+     if (!*device) {
+         return false;
++    }
++    expected.mode13_phase = pci_std_vga_fdisbull_mode13_selected(*device);
++    if (s->info->mode_setup) {
++        expected.setup = (FdisbullVideoSetupStamp) {
++            .committed_ns = s->info->mode_setup->committed_ns,
++            .configuration_generation = s->info->mode_setup->configuration_generation,
++            .timing_generation = s->info->mode_setup->timing_generation,
++        };
+     }
+     path = object_get_canonical_path(*device);
+     if (g_strcmp0(path, s->device_path)) {
+@@ -1267,6 +1364,24 @@
+             video_checkpoint_error(errp, "restored native time or epoch");
+         }
+         return false;
++    }
++    if (fdisbull_video_frame_mode13_selected()) {
++        FdisbullVideoSetupStamp setup;
++        device = video_device(&console, errp);
++        if (!device) {
++            return false;
++        }
++        if (info->mode_setup) {
++            setup = (FdisbullVideoSetupStamp) {
++                .committed_ns = info->mode_setup->committed_ns,
++                .configuration_generation = info->mode_setup->configuration_generation,
++                .timing_generation = info->mode_setup->timing_generation,
++            };
++        }
++        if (!pci_std_vga_fdisbull_mode13_restore(device,
++                    info->mode_setup ? &setup : NULL, errp)) {
++            return false;
++        }
+     }
+     if (!strcmp(info->state, "idle")) {
+         video_checkpoint_discard();
+@@ -1345,6 +1460,15 @@
+     video.source.period_ns = s->period_ns;
+     video.source.line_period_ns = s->line_period_ns;
+     video.source.dac_8bit = s->dac_8bit;
++    video.source.mode13_phase = pci_std_vga_fdisbull_mode13_selected(device);
++    video.source.setup = (FdisbullVideoSetupStamp) { 0 };
++    if (info->mode_setup) {
++        video.source.setup = (FdisbullVideoSetupStamp) {
++            .committed_ns = info->mode_setup->committed_ns,
++            .configuration_generation = info->mode_setup->configuration_generation,
++            .timing_generation = info->mode_setup->timing_generation,
++        };
++    }
+     video.observing = observing;
+     video.stopped = stopped;
+     video.invalidated = !observing && !stopped;
