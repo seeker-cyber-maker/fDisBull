@@ -1406,7 +1406,9 @@
         "src/fdisbull/qemu_session_revision.py",
         "src/fdisbull/qemu_video_frame.py",
         "src/fdisbull/qemu_video_checkpoint.py",
-        "native/qemu-video-mode13-phase/qemu-10.0.13-fdisbull-video-mode13-phase.patch"
+        "native/qemu-video-mode13-phase/qemu-10.0.13-fdisbull-video-mode13-phase.patch",
+        "native/qemu-vga-unchained-latch/qemu-10.0.13-fdisbull-vga-unchained-latch.patch",
+        "native/qemu-vga-unchained-cpu-planes/qemu-10.0.13-fdisbull-vga-unchained-cpu-planes.patch"
       ],
       "depends_on": [
         "clock-and-physical-input",
@@ -1420,9 +1422,9 @@
         "raster-proof-native"
       ],
       "remaining_work": [
-        "The retained 320x200 chain-4 adapter implements frame_probe/frame_rgba, real host codecs, explicit source/clock identity, cooperative session revision and generic coherence; see docs/QEMU_FRAME_CONTRACT.md. Its separately owned native witness is pending. Qualify wider modes/lifecycles and downstream source-depth signature differences; host codec tests do not establish native or cross-backend parity.",
-        "Format 5 restores initial and steady phase for the opt-in standard BIOS mode-13h profile, including exact partial native rows and timer deadlines. Resolve first-draw timing and wider dynamic-mode differences against the paired DOSBox-X renderer.",
-        "Qualify frame step and key scheduling at that boundary, including partial drawing, palette/mode/origin changes, typematic behavior and restore without reinjection."
+        "Scoped local native evidence covers direct Python and JSON frame controls, saved scripts and cold format 6 replay. It verifies latched origin, partial raster continuation, held typematic IRQs, foreign-epoch refusal and the full matched Doom timedemo raster. The retained timed 320x200 profile still needs the wider legacy consumer and mode contracts, including downstream source-depth differences.",
+        "Format 5 restores the opt-in standard Mode 13h initial and steady phase. Paired native measurements cover the text-to-Mode 13h transition and both declared steady pulses. Close the remaining same-mode BIOS and dynamic-programming timing differences.",
+        "Paired text, planar and banked VBE renderer capture and point probes pass. Timed source sampling and the corresponding frame-input contract are still limited to the admitted 320x200 layouts."
       ],
       "minimum_acceptance": [
         "Bracket retained pixels, producing frame/mode identity, actual stopped session revision, native clock and input ownership under one owner. Refuse stale or mixed brackets; do not claim atomic image/CPU equivalence or application drawing completion.",

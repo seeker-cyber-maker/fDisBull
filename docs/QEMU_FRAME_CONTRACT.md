@@ -1,10 +1,12 @@
 # QEMU retained-frame compatibility contract
 
 The native QEMU backends provide `frame_probe` and `frame_rgba` over an explicitly
-retained 320 × 200 chain-4 source raster. Inspect the session's `frame_contract`
-capability before using them. The producer must support the source-raster and
-virtual-clock extensions, the VM must use the explicit virtual/precise profiles,
-and the cooperating owner must have its bound protocol authority.
+retained 320 × 200 source raster. The selected profile admits standard chain-4,
+the explicit Mode 13h timing model, or standard unchained page-latched VGA.
+Inspect `frame_contract` and `frame_contract_profile` before using these operations.
+The producer must support the source-raster and virtual-clock extensions, the VM
+must use the explicit virtual/precise profiles, and the cooperating owner must
+have its bound protocol authority.
 
 This adapter provides the existing pixel-consumer shapes. It preserves an
 explicit QEMU source profile and clock. It does not promote
@@ -108,11 +110,12 @@ the caller's earlier bracket. No prior status is rewritten to match the read.
 The source-step helper retains its existing owner and execution contract.
 
 Missing, invalidated, or stale source rasters fail without implicit execution.
-Stopping a healthy source stream retains its last complete raster. A changed
-native configuration invalidates it; explicit restart and subsequent execution
-are required. Completed or cancelled input schedules do not prevent frame
-reads. The adapter does not call the separate selected-state observer and does
-not require initial neutral keyboard/scheduler state.
+Stopping a healthy source stream retains its last complete raster. A change in
+display layout invalidates the stream and requires explicit restart and execution.
+The unchained latch profile retains the active raster across programmed page
+starts and CPU plane selection. Completed or cancelled input schedules do not
+prevent frame reads. The adapter does not call the separate selected-state
+observer and does not require initial neutral keyboard/scheduler state.
 
 ## Advance the existing source stream
 
@@ -168,9 +171,10 @@ The paired Native07 evidence still distinguishes DOSBox phase 1 from the
 default QEMU phase 0 for its authored dynamic raster. The opt-in
 `dosbox-mode13` model retains its first/steady phase from observed guest
 programming and uses format 5 for checkpoint restore. Its scope is the
-qualified standard BIOS programming sequence and exact mode geometry.
-Paired draw-start timing and broader renderer parity remain open.
-[Native mode timing profile](../native/qemu-video-mode13-phase/README.md)
+qualified standard BIOS programming and exact mode geometry. Native paired
+measurements cover the authored text-to-Mode 13h transition and two steady
+palette pulses. See the [paired timing diagnostics](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md)
+and the [native mode timing profile](../native/qemu-video-mode13-phase/README.md).
 
 `advance_frames(frames=1, timeout_ms=10000)` on a machine context accepts 1..128
 frames under one outer deadline and original VM/channel lifetime. DOS process
@@ -209,7 +213,7 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | `qemu-vga-chain4-scanline-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, or `qemu-vga-unchained-320x200-latch-v1` |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
 | `double_width`, `double_height` | Both false; source coordinates are 320 × 200 |
 | `frame_id` | Native accepted raster ordinal, including identical consecutive pixels |

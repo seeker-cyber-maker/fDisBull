@@ -1,5 +1,53 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Paired native VGA scanout and cold continuation (2026-11-23)
+
+Both engines ran the same 441-byte unchained VGA program. Guest PIT and
+status-port reads bracketed each CRTC write. An early write displayed B in
+the next complete frame. A late write displayed B and then A. Both engines
+matched the full page color oracle. The paired
+[Mode 13h diagnostics](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md) also matched
+all four authored steady-pulse RGB images and separately measured the first
+even-line and subsequent odd-line rasters after a text-to-graphics BIOS edge.
+The measured line periods were 31,700 ns in QEMU and approximately 31,778 ns
+in DOSBox-X.
+
+Original Doom E1M5 stock `-timedemo` reached the predeclared demo ordinal 64
+and the same camera, game and render state on both engines. The full 64,000
+original palette indices and all 192,000 timed RGB bytes matched. QEMU
+frame 8 retained page 0 from the preceding retrace. Frame 9 selected page
+`4000h` at the next retrace and matched the DOSBox-X completed frame from
+its page `8000h`. QEMU recorded all 200 row times and the selected page's
+identity. Ordinary playback still needs its own render-boundary comparison.
+
+Doom's CPU read-plane select used to retire the stream during fuzz
+rendering. The [native correction](../native/qemu-vga-unchained-cpu-planes/README.md)
+preserves scanout across the CPU-only change and records the new raw
+configuration generation. A true display shift-mode change still retires it.
+The accepted producer is QEMU `2ac168a830ada1b61c17a6fef87ddb40ae71479be48a2dd3e229247183d6eac0`.
+The private original timedemo receipt SHA-256 is
+`f15a5a2cc0b4d61b05ee9b0db3d7e2de93a5ea8a752ed530c26132d1d11d3283`.
+
+With format 6, a JSON-persisted timeline replay in a fresh Python process
+restored the 65 sampled B rows while page A was programmed. The restored
+owner completed B and then A with identical frame times, pixels and PNGs.
+The stale stream token was refused. Python, JSON and saved-script frame
+steps report the originating profile for completed and interrupted batches.
+An authored IRQ1 handler then used native typematic make codes to change
+the display page. Hot and cold restore reproduced the repeat deadline,
+make/break stream, page choices, raster identity and full RGB digests
+without reinjecting the held key.
+
+The same authored COM also moved both renderers through 720 × 400 Mode 3
+text, 640 × 480 Mode 12h planar graphics, 640 × 480 banked VBE 101h and
+back to text. Both engines matched every RGB byte and the named probe
+points, including the first VBE bank boundary. The QEMU retained renderer
+export reproduced the matched pixels under an owned window and update ID.
+The planar and VBE images reproduced after a format 6 checkpoint restore
+and a new renderer publication. Timed source admission refused these
+wider modes and preserved the live owner. The paired receipt SHA-256 is
+`b8831363be6bdc1dd89a68007d402956ea86ba5302e2a1a941c24bcac3060558`.
+
 ## Timed unchained VGA selection and native boot (2026-11-23)
 
 The opt-in QEMU `vga-unchained-latch` source profile selects a page at
