@@ -6,13 +6,14 @@ import re
 
 from .native_controller import NativeControlError
 from .qemu_video_checkpoint import (VGA480_LAYOUTS, VGA480_MODELS, VIDEO_MODELS,
-                                    valid_vbe101_origin, vbe101_flip_scanout, video_frame_size)
+                                    valid_vbe101_frame_metadata, video_frame_size)
 
 _MAX_RECORD_BYTES = 1024 * 1024
 _MAX_ATTEMPT_BYTES = 4 * 1024 * 1024
 _SHA = re.compile(r'^[0-9a-f]{64}$')
 _QEMU_FRAME_FIELDS = ('source', 'frame_profile', 'frame_identity', 'state_revision_scope', 'scanout_layout',
-    'vbe101_origin_bytes', 'source_bpp', 'width', 'height', 'double_width', 'double_height',
+    'vbe101_origin_bytes', 'vbe101_pitch_bytes', 'vbe101_pel',
+    'source_bpp', 'width', 'height', 'double_width', 'double_height',
     'captured_ns', 'captured_ticks', 'captured_ticks_clock')
 
 
@@ -26,7 +27,6 @@ def _source_issue(metadata):
     if source != 'qemu_completed_source_raster':
         return 'frame source is missing or invalid'
     width, height = video_frame_size(profile)
-    flip = vbe101_flip_scanout(profile, metadata.get('scanout_layout'))
     if (not valid_profile
             or metadata.get('state_revision_scope') != 'cooperative-session-control-v1'
             or metadata.get('source_bpp') != 24 or type(metadata.get('source_bpp')) is not int
@@ -34,8 +34,7 @@ def _source_issue(metadata):
             or metadata.get('height') != height or type(metadata.get('height')) is not int
             or ('scanout_layout' in metadata) != (profile in VGA480_MODELS)
             or profile in VGA480_MODELS and metadata.get('scanout_layout') not in VGA480_LAYOUTS
-            or ('vbe101_origin_bytes' in metadata) != flip
-            or flip and not valid_vbe101_origin(metadata.get('vbe101_origin_bytes'))
+            or not valid_vbe101_frame_metadata(metadata, profile, metadata.get('scanout_layout'))
             or metadata.get('double_width') is not False or metadata.get('double_height') is not False
             or metadata.get('captured_ticks_clock') != 'QEMU_CLOCK_VIRTUAL_milliseconds'
             or type(metadata.get('captured_ns')) is not int or metadata['captured_ns'] < 0

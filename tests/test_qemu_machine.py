@@ -76,10 +76,13 @@ def test_qemu_identity_timeout_remains_bounded_and_never_spawns_machine(tmp_path
     assert machine.process is None and machine.temporary is None
 
 
-def test_vbe101_flip_profile_owns_the_selected_firmware_copy(tmp_path):
+@pytest.mark.parametrize('selection', ['flip', 'pan'])
+def test_vbe101_profile_owns_the_selected_firmware_copy(tmp_path, selection):
     from fdisbull.qemu_machine import _video_source_launch_arguments, firmware_identity
-    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE, VBE101_FLIP_ROM
+    from fdisbull.qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE,
+                                                VGA480_SYNC_PROFILE, VBE101_FLIP_ROM)
 
+    profile = VGA480_FLIP_PROFILE if selection == 'flip' else VGA480_PAN_PROFILE
     firmware, runtime = tmp_path / 'firmware', tmp_path / 'runtime'
     firmware.mkdir()
     runtime.mkdir()
@@ -88,17 +91,18 @@ def test_vbe101_flip_profile_owns_the_selected_firmware_copy(tmp_path):
     assert _video_source_launch_arguments(VGA480_SYNC_PROFILE, old, runtime) == [
         '-global', 'VGA.x-fdisbull-vbe101-sync=on']
     with pytest.raises(ValueError, match='require .* explicit QEMU firmware'):
-        _video_source_launch_arguments(VGA480_FLIP_PROFILE, old, runtime)
+        _video_source_launch_arguments(profile, old, runtime)
     assert not tuple(runtime.iterdir())
     selected = firmware / VBE101_FLIP_ROM
     selected.write_bytes(b'authored page flip ROM')
     admitted = firmware_identity(firmware)
-    assert _video_source_launch_arguments(VGA480_FLIP_PROFILE, admitted, runtime) == [
-        '-global', 'VGA.x-fdisbull-vbe101-flip=on', '-global', f'VGA.romfile={runtime / VBE101_FLIP_ROM}']
+    assert _video_source_launch_arguments(profile, admitted, runtime) == [
+        '-global', f'VGA.x-fdisbull-vbe101-{selection}=on',
+        '-global', f'VGA.romfile={runtime / VBE101_FLIP_ROM}']
     assert (runtime / VBE101_FLIP_ROM).read_bytes() == b'authored page flip ROM'
     selected.write_bytes(b'changed after admission')
     with pytest.raises(ValueError, match='ROM changed'):
-        _video_source_launch_arguments(VGA480_FLIP_PROFILE, admitted, runtime)
+        _video_source_launch_arguments(profile, admitted, runtime)
 
 
 def boot_sector():

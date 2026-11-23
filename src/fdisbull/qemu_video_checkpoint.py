@@ -25,9 +25,14 @@ VGA480_SYNC_PROFILE = 'vga-640x480-sync'
 VGA480_SYNC_MODEL = 'qemu-vga-640x480-sync-v1'
 VGA480_FLIP_PROFILE = 'vga-640x480-flip'
 VGA480_FLIP_MODEL = 'qemu-vga-640x480-flip-v1'
+VGA480_PAN_PROFILE = 'vga-640x480-pan'
+VGA480_PAN_MODEL = 'qemu-vga-640x480-pan-v1'
 VBE101_FLIP_ROM = 'fdisbull-vgabios-vbe101-flip.bin'
 VBE101_ORIGIN_FIELD = 'vbe101-origin-bytes'
-VGA480_MODELS = (VGA480_MODEL, VGA480_SYNC_MODEL, VGA480_FLIP_MODEL)
+VBE101_PITCH_FIELD = 'vbe101-pitch-bytes'
+VBE101_PEL_FIELD = 'vbe101-pel'
+VBE101_VIEWPORT_FIELDS = (VBE101_ORIGIN_FIELD, VBE101_PITCH_FIELD, VBE101_PEL_FIELD)
+VGA480_MODELS = (VGA480_MODEL, VGA480_SYNC_MODEL, VGA480_FLIP_MODEL, VGA480_PAN_MODEL)
 VGA480_LAYOUTS = ('vga-mode12', 'vbe-banked-101')
 VIDEO_SOURCE_PROFILES = {
     MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
@@ -36,6 +41,7 @@ VIDEO_SOURCE_PROFILES = {
     VGA480_PROFILE: (VGA480_MODEL, 'VGA.x-fdisbull-vga480=on'),
     VGA480_SYNC_PROFILE: (VGA480_SYNC_MODEL, 'VGA.x-fdisbull-vbe101-sync=on'),
     VGA480_FLIP_PROFILE: (VGA480_FLIP_MODEL, 'VGA.x-fdisbull-vbe101-flip=on'),
+    VGA480_PAN_PROFILE: (VGA480_PAN_MODEL, 'VGA.x-fdisbull-vbe101-pan=on'),
 }
 MODE13_MODELS = (MODE13_MODEL, OVERLAP_MODEL)
 VIDEO_MODELS = frozenset((*MODE13_MODELS, MODEL, LATCH_MODEL, *VGA480_MODELS))
@@ -130,10 +136,8 @@ def validate_frame_scanout(frame, info):
     if expected:
         _require(frame['scanout-layout'] in VGA480_LAYOUTS
                  and frame['scanout-layout'] == info.get('scanout-layout'), 'complete scanout layout')
-    flip = vbe101_flip_scanout(info['model'], info.get('scanout-layout'))
-    _require((VBE101_ORIGIN_FIELD in frame) == flip, 'complete VBE 101h display start presence')
-    if flip:
-        _require(valid_vbe101_origin(frame[VBE101_ORIGIN_FIELD]), 'complete VBE 101h display start')
+    _require(valid_vbe101_frame_fields(frame, info['model'], info.get('scanout-layout')),
+             'complete VBE 101h display start or viewport')
 
 
 def valid_vbe101_origin(origin):
@@ -141,8 +145,44 @@ def valid_vbe101_origin(origin):
     return _integer(origin, maximum=12000 * width) and origin % width == 0
 
 
-def vbe101_flip_scanout(model, layout):
-    return model == VGA480_FLIP_MODEL and layout == 'vbe-banked-101'
+def valid_vbe101_pitch(pitch):
+    return _integer(pitch, VGA480_FRAME_SIZE[0], 8184) and pitch % 8 == 0
+
+
+def valid_vbe101_viewport(origin, pitch, pel, *, programmed=False):
+    if not valid_vbe101_pitch(pitch) or not _integer(origin) or origin % 4 or not _integer(pel, 0, 3):
+        return False
+    row, x = divmod(origin, pitch)
+    width = VGA480_FRAME_SIZE[0]
+    return row <= 12000 and x + width + (pel if programmed else 0) <= pitch
+
+
+def vbe101_frame_fields(model, layout):
+    if layout == 'vbe-banked-101':
+        if model == VGA480_PAN_MODEL:
+            return VBE101_VIEWPORT_FIELDS
+        if model == VGA480_FLIP_MODEL:
+            return (VBE101_ORIGIN_FIELD,)
+    return ()
+
+
+def valid_vbe101_frame_fields(frame, model, layout):
+    expected = vbe101_frame_fields(model, layout)
+    if tuple(key for key in VBE101_VIEWPORT_FIELDS if key in frame) != expected:
+        return False
+    if model == VGA480_PAN_MODEL and expected:
+        return valid_vbe101_viewport(*(frame[key] for key in expected))
+    return not expected or valid_vbe101_origin(frame[VBE101_ORIGIN_FIELD])
+
+
+def vbe101_frame_metadata(frame):
+    return {key.replace('-', '_'): frame[key] for key in VBE101_VIEWPORT_FIELDS if key in frame}
+
+
+def valid_vbe101_frame_metadata(metadata, model, layout):
+    native = {key: metadata[key.replace('-', '_')] for key in VBE101_VIEWPORT_FIELDS
+              if key.replace('-', '_') in metadata}
+    return valid_vbe101_frame_fields(native, model, layout)
 
 
 def validate_video_source_profile(profile, clock, retrace):
@@ -328,8 +368,7 @@ def _frame(frame, info, source):
         fields = fields | {'page-latch'}
     if info['model'] in VGA480_MODELS:
         fields = fields | {'scanout-layout'}
-    if vbe101_flip_scanout(info['model'], info.get('scanout-layout')):
-        fields = fields | {VBE101_ORIGIN_FIELD}
+    fields = fields.union(vbe101_frame_fields(info['model'], info.get('scanout-layout')))
     if type(frame) is dict and info['model'] == OVERLAP_MODEL and 'reapply-overlap' in frame:
         fields = fields | {'reapply-overlap'}
     _require(type(frame) is dict and set(frame) == fields, 'complete frame fields')

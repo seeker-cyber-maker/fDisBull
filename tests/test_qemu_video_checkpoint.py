@@ -1120,3 +1120,62 @@ def test_format10_refuses_unowned_page_geometry(path, item, reason):
     set_path(state, path, item)
     with pytest.raises(ValueError, match=reason):
         checkpoint._decode(envelope(state))
+
+
+def pan_checkpoint_state(*, idle=False):
+    from fdisbull.qemu_video_checkpoint import VGA480_PAN_MODEL
+    from test_qemu_retrace import VBE101_ENTER, vbe101_pan_receipt
+
+    state = flip_checkpoint_state(idle=idle)
+    state['format'] = checkpoint.VIDEO_VGA480_PAN_FORMAT
+    pitch, x, y = 704, 13, 480
+    programmed = (pitch * y + 12, 1)
+    info = state['video-frame']['info']
+    info['model'] = VGA480_PAN_MODEL
+    if not idle:
+        info['frame'].update({'vbe101-pitch-bytes': pitch, 'vbe101-pel': 3})
+    raw = state['retrace']['configuration']['raw']
+    raw.update({'vbe-line-offset': pitch, 'vbe-start-address': programmed[0] // 4})
+    raw['vbe'][6], raw['vbe'][8], raw['vbe'][9] = pitch, x, y
+    # The idle source case saves after the coarse latch and before fine.
+    if idle:
+        now = VBE101_ENTER + 1
+        state['virtual-ns'] = info['virtual-ns'] = now
+        state['clock']['virtual-ns'] = state['display']['info']['virtual-ns'] = now
+        state['retrace']['configuration']['virtual-ns'] = state['retrace']['info']['virtual-ns'] = now
+    state['retrace']['info'] = vbe101_pan_receipt(state['retrace']['info'],
+        pitch=pitch, programmed=programmed, active=(programmed[0] if idle else 0, 3))
+    return state
+
+
+@pytest.mark.parametrize('idle', [True, False])
+def test_format11_preserves_split_viewport_even_when_scanout_is_idle(idle):
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    from fdisbull.qemu_video_checkpoint import VGA480_PAN_PROFILE
+
+    state = pan_checkpoint_state(idle=idle)
+    machine = SimpleNamespace(qmp_commands=checkpoint.COMMANDS | {
+        'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'},
+                               'video_source_profile': VGA480_PAN_PROFILE})
+    assert checkpoint.validate(machine, envelope(state)) == state
+    retrace = state['retrace']['info']
+    assert ('pending-deadline-ns' in retrace['vbe101-display-start']) is not idle
+    assert 'pending-deadline-ns' in retrace['vbe101-panning']
+    restored = deepcopy(state)
+    rebind(restored)
+    assert checkpoint._logical(restored) == checkpoint._logical(state)
+
+
+@pytest.mark.parametrize('path,item,reason', [
+    (('retrace', 'configuration', 'raw', 'vbe', 8), 12, 'programmed display start differs'),
+    (('retrace', 'configuration', 'raw', 'vbe-line-offset'), 640, 'display layout differs'),
+    (('retrace', 'configuration', 'raw', 'vbe-size'), 704*959 + 652, 'exceeds the saved VGA memory'),
+    (('video-frame', 'info', 'frame', 'vbe101-pitch-bytes'), 712, 'retained raster pitch differs'),
+    (('video-frame', 'info', 'frame', 'vbe101-pel'), True, 'complete VBE 101h display start or viewport'),
+])
+def test_format11_checks_programmed_registers_and_strided_visible_extent(path, item, reason):
+    state = pan_checkpoint_state()
+    set_path(state, path, item)
+    with pytest.raises(ValueError, match=reason):
+        checkpoint._decode(envelope(state))

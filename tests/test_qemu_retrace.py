@@ -58,6 +58,19 @@ def vbe101_flip_receipt(value, *, programmed=0, active=0):
     return vbe
 
 
+def vbe101_pan_receipt(value, *, pitch=704, programmed=(0, 0), active=(0, 0)):
+    programmed_origin, programmed_pel = programmed
+    active_origin, active_pel = active
+    receipt = vbe101_flip_receipt(value, programmed=programmed_origin, active=active_origin)
+    panning = {'pitch-bytes': pitch, 'programmed-pel': programmed_pel, 'active-pel': active_pel}
+    if programmed_pel != active_pel:
+        now = value['virtual-ns']
+        target = (now // VBE101_PERIOD) * VBE101_PERIOD + VBE101_EXIT - 1
+        panning['pending-deadline-ns'] = target if target > now else target + VBE101_PERIOD
+    receipt['vbe101-panning'] = panning
+    return receipt
+
+
 class RetraceWire(NativeWire):
     def __init__(self, clock):
         super().__init__(clock)
@@ -362,6 +375,76 @@ def test_vbe101_display_start_rejects_bad_profile_bounds_and_deadlines(retrace, 
         elif defect == 'settled':
             start['active-origin-bytes'] = start['programmed-origin-bytes']
         return vbe
+
+    o.wire.mutate = invalid
+    with pytest.raises(DebuggerError):
+        o.context.retrace_observe()
+    assert o.vm.closed
+
+
+def test_vbe101_panning_keeps_independent_coarse_and_fine_latches(retrace):
+    from fdisbull.qemu_video_checkpoint import VGA480_PAN_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = VGA480_PAN_PROFILE
+    programmed = (704 * 480 + 12, 1)
+    held = None
+    for now, active in [(VBE101_ENTER - 1, (64, 3)), (VBE101_ENTER, (programmed[0], 3)),
+                        (VBE101_EXIT - 1, programmed)]:
+        o.wire.receipt['virtual-ns'] = now
+        o.wire.mutate = lambda value, active=active: vbe101_pan_receipt(
+            value, programmed=programmed, active=active)
+        observed = o.context.retrace_observe()
+        starts = observed['vbe101_display_start']
+        panning = observed['vbe101_panning']
+        assert starts['active-origin-bytes'] == active[0]
+        assert panning['active-pel'] == active[1]
+        assert starts.get('pending-deadline-ns') == (VBE101_ENTER if now < VBE101_ENTER else None)
+        assert panning.get('pending-deadline-ns') == (VBE101_EXIT - 1 if now < VBE101_EXIT - 1 else None)
+        if held is not None:
+            assert observed['timing_generation'] == held['timing_generation']
+        held = observed
+    assert not o.vm.closed
+
+
+def test_vbe101_request_between_edges_can_latch_fine_before_coarse(retrace):
+    from fdisbull.qemu_video_checkpoint import VGA480_PAN_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = VGA480_PAN_PROFILE
+    o.wire.receipt['virtual-ns'] = VBE101_ENTER + 1
+    o.wire.mutate = lambda value: vbe101_pan_receipt(value, programmed=(12, 1))
+    receipt = o.context.retrace_observe()
+    assert receipt['vbe101_display_start']['pending-deadline-ns'] == VBE101_ENTER + VBE101_PERIOD
+    assert receipt['vbe101_panning']['pending-deadline-ns'] == VBE101_EXIT - 1
+
+
+@pytest.mark.parametrize('case', ['pitch-cap', 'pitch-alignment', 'fine-range',
+    'coarse-alignment', 'fine-deadline', 'wrong-profile', 'programmed-spill', 'missing-fine'])
+def test_vbe101_viewport_rejects_incoherent_boundaries(retrace, case):
+    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_PROFILE, VGA480_PAN_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = (
+        VGA480_FLIP_PROFILE if case == 'wrong-profile' else VGA480_PAN_PROFILE)
+    o.wire.receipt['virtual-ns'] = VBE101_ENTER - 1
+
+    def invalid(value):
+        descriptor = vbe101_pan_receipt(value, programmed=(60, 1), active=(64, 3))
+        pan = descriptor['vbe101-panning']
+        if case in ('pitch-cap', 'pitch-alignment'):
+            pan['pitch-bytes'] = 8192 if case == 'pitch-cap' else 703
+        elif case == 'fine-range':
+            pan['active-pel'] = 4
+        elif case == 'coarse-alignment':
+            descriptor['vbe101-display-start']['active-origin-bytes'] = 63
+        elif case == 'fine-deadline':
+            pan['pending-deadline-ns'] = VBE101_EXIT
+        elif case == 'programmed-spill':
+            descriptor['vbe101-display-start']['programmed-origin-bytes'] = 64
+        elif case == 'missing-fine':
+            del descriptor['vbe101-panning']
+        return descriptor
 
     o.wire.mutate = invalid
     with pytest.raises(DebuggerError):

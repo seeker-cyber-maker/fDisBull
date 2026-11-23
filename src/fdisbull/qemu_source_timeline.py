@@ -4,8 +4,8 @@ from copy import deepcopy
 from .qemu_dos_history import _hex_digest, _json, _sha
 from .qemu_frame_contract import FRAME_SOURCE
 from .qemu_instrumented_checkpoint import COMMANDS
-from .qemu_video_checkpoint import (VGA480_LAYOUTS, VGA480_MODELS, VBE101_ORIGIN_FIELD,
-                                    valid_vbe101_origin, vbe101_flip_scanout, video_frame_size)
+from .qemu_video_checkpoint import (VGA480_LAYOUTS, VGA480_MODELS, valid_vbe101_frame_metadata,
+                                    vbe101_frame_metadata, video_frame_size)
 
 
 SOURCE_RASTER = 'source-raster'
@@ -43,8 +43,7 @@ def source_raster_record(info):
     model = info.get('model')
     layout = (dict(frame_profile=model, scanout_layout=frame['scanout-layout'])
               if model in VGA480_MODELS else {})
-    if VBE101_ORIGIN_FIELD in frame:
-        layout['vbe101_origin_bytes'] = frame[VBE101_ORIGIN_FIELD]
+    layout.update(vbe101_frame_metadata(frame))
     return dict(**layout, source=FRAME_SOURCE, stream=stream, epoch=epoch,
                 frame_id=frame['frame-id'], width=frame['width'], height=frame['height'],
                 pixel_sha256=frame['pixel-sha256'], logical_sha256=_sha(_json(logical)))
@@ -55,7 +54,6 @@ def validate_source_raster(record):
         raise ValueError('Invalid stored source raster identity')
     profile = record.get('frame_profile')
     width, height = video_frame_size(profile)
-    flip = vbe101_flip_scanout(profile, record.get('scanout_layout'))
     if (record.get('source') != FRAME_SOURCE
             or not isinstance(record.get('stream'), str) or not 1 <= len(record['stream']) <= 128
             or any(type(record.get(k)) is not int or not 1 <= record[k] < 1 << 64
@@ -64,8 +62,7 @@ def validate_source_raster(record):
             or type(record.get('height')) is not int or record['height'] != height
             or ('scanout_layout' in record) != (profile in VGA480_MODELS)
             or profile in VGA480_MODELS and record.get('scanout_layout') not in VGA480_LAYOUTS
-            or ('vbe101_origin_bytes' in record) != flip
-            or flip and not valid_vbe101_origin(record.get('vbe101_origin_bytes'))
+            or not valid_vbe101_frame_metadata(record, profile, record.get('scanout_layout'))
             or not _hex_digest(record.get('pixel_sha256'))
             or not _hex_digest(record.get('logical_sha256'))):
         raise ValueError('Invalid stored source raster identity')

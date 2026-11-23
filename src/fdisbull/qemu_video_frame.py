@@ -16,10 +16,10 @@ import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
-from .qemu_video_checkpoint import (DEFAULT_FRAME_SIZE, MODE13_MODELS, OVERLAP_MODEL, VBE101_ORIGIN_FIELD,
+from .qemu_video_checkpoint import (DEFAULT_FRAME_SIZE, MODE13_MODELS, OVERLAP_MODEL,
     raster_row_slack, raster_row_timing, validate_frame_latch, validate_frame_scanout,
     validate_latch_info, validate_mode_setup, validate_reapply_info, validate_scanout_info,
-    video_frame_size, video_model, video_period_valid, video_vm_size)
+    vbe101_frame_metadata, video_frame_size, video_model, video_period_valid, video_vm_size)
 
 
 VIDEO_FRAME_COMMANDS = frozenset({
@@ -404,8 +404,8 @@ class QemuVideoFrameMixin:
     def _video_frame_result(self, native, clock):
         frame = native.get('frame')
         layout = {'scanout_layout': native['scanout-layout']} if 'scanout-layout' in native else {}
-        if frame is not None and VBE101_ORIGIN_FIELD in frame:
-            layout['vbe101_origin_bytes'] = frame[VBE101_ORIGIN_FIELD]
+        if frame is not None:
+            layout.update(vbe101_frame_metadata(frame))
         return dict(**layout, format='fdisbull-video-frame-stream-1', context='machine', run=self.run_id,
                     epoch=clock['epoch'], stream=native.get('token'), state=native['state'],
                     stream_generation=native['stream-generation'], frame_sequence=native['frame-sequence'],

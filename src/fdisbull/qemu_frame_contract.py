@@ -14,7 +14,7 @@ from .dosbox_rpc import DebuggerError
 from .qemu_session_revision import session_revision
 from .qemu_video_frame import (_failed, _probe_points_snapshot, _remaining,
                                validate_video_frame_parameters, validate_live_video_frame_probe)
-from .qemu_video_checkpoint import MODEL as FRAME_PROFILE, VBE101_ORIGIN_FIELD, video_model
+from .qemu_video_checkpoint import MODEL as FRAME_PROFILE, vbe101_frame_metadata, video_model
 from .screenshot_codecs import ENCODINGS, decode_frame_rgba, validate_encoding
 
 
@@ -73,8 +73,7 @@ def frame_contract_metadata(session, native, clock, revision=None, *, authority=
         checkpoint_epoch=getattr(session, '_checkpoint_epoch', None))
     mode = tuple((key, value) for key, value in identity.items() if key != 'frame_id')
     layout = {'scanout_layout': frame['scanout-layout']} if 'scanout-layout' in frame else {}
-    if VBE101_ORIGIN_FIELD in frame:
-        layout['vbe101_origin_bytes'] = frame[VBE101_ORIGIN_FIELD]
+    layout.update(vbe101_frame_metadata(frame))
     return dict(**revision, **layout, source=FRAME_SOURCE, frame_profile=native.get('model', FRAME_PROFILE),
         frame_identity=identity, mode_id=authority.mode(mode), frame_id=frame['frame-id'],
         width=frame['width'], height=frame['height'], source_bpp=24,
