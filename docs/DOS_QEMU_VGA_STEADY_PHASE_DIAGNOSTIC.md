@@ -332,21 +332,34 @@ callbacks remained within 7 ns of their dispatched event times. The first
 full-spacing DOSBox-X frame used even physical lines. The next frame
 restored the steady odd sequence and four further frames repeated it.
 
-In the retained DOSBox-X source, `VGA_SetupDrawing` resets the carried
-render step, and `VGA_DrawSingleLine` reads the current delay each time it
-schedules a line. A setup that changes effective FPS can call
-`VGA_VerticalTimer` before replacing `singleline_delay`. These separate
-setup and callback operations allow a retained raster to straddle a
-timing change. The diagnostic observes those row events and the return
-to the steady cadence. The exact setup call that preceded each event
-remains unobserved. QEMU's mode-13h source sampler uses one whole-frame
-line period and one phase. Pairing this transition would require modeling
-and preserving a schedule with changing row intervals.
+A second DOSBox-X diagnostic directly tagged the setup and the vertical
+callback that armed the mixed raster. It reproduced every timing field
+from all eight retained frames. Vertical callback 2 fired at
+77,265,036 ns. Setup entered and committed at 79,000,863 ns, resetting
+`lines_done` from 27 to 0 while the hsync count remained 55. The
+configured horizontal period, frame period and row callback delay kept
+their prior values. Setup ran no nested vertical callback. Periodic
+vertical callback 5 then fired at 91,547,163 ns with 198 rows completed
+after 450 physical callbacks. It armed the short raster with a new row
+chain. Each row of that raster still reported a configured callback
+delay of about 31,778 ns.
+
+The source leaves the prior queued row events live when this setup keeps
+its output settings and frame rate. The old chain's calculated next
+callback coincides with the first emitted row of the new frame. This
+supports overlapping old and new PIC row callbacks as the reason for the
+short interval between drawn rows. Setup and frame callback IDs were read
+directly. The per-row chain attribution is inferred from the ordered
+timestamps, counters and source. QEMU's source sampler uses a single
+frame schedule. Matching this transition requires native timing and
+checkpoint state that can represent the overlapping callbacks while
+retaining exact completed-frame identity.
 
 | Evidence | SHA-256 |
 | --- | --- |
 | Authored reapply COM | `1742f5a2317b70365de38404732ad04128976543e862e0a913f38d3b02db2c9b` |
 | DOSBox-X reapply receipt | `2affe690f6bb629f7b5465fd25686ec79cd302a74bb0b311018ce9a616cd3667` |
+| DOSBox-X setup and vertical callback receipt | `125941baeb505861639429b7c5c0aedba467b5ed2be4c84202ea1c9615b87cd5` |
 | QEMU reapply receipt | `11433f30a5ca553d3640a0fd279341c59256e755f627377b8598c37658cd205c` |
 
 ## Remaining qualification
