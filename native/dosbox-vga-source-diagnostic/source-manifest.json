@@ -1,0 +1,46 @@
+{
+  "format": "fdisbull-dosbox-x-native-delta-1",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "base_dosbox_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+  "base_layers_patch_sha256": "069fba0afbc7f8d0fad3a8e204362d4a2ed26877d28cec0298471aa50f0e3a41",
+  "base_layers_manifest_sha256": "09a4ab52f363253bff57459500a9613dd981a5c2fcb92d26ec73d77bbda712ef",
+  "composition": "Apply after the exact historical fDisBull layers headless-agent patch with every preimage verified.",
+  "patch": "dosbox-x-029bd65c-fdisbull-vga-source-diagnostic.patch",
+  "patch_bytes": 18080,
+  "patch_sha256": "8856dc1d46bd9f1f8b4a9358c8f82ce8e9db3b56f46890159719ae2616fdee2b",
+  "scope": "Explicit completed 320x200 VGA source address, time and original index observations.",
+  "files": [
+    {
+      "path": "include/agent/video_adapter.h",
+      "base_bytes": 1306,
+      "base_sha256": "f911a2a900a670a45d757c68443ea6df39973942cf41afa0c8596661e347c66d",
+      "patched_bytes": 2265,
+      "patched_sha256": "74c69c225a126138cce558510f697b863f9e0e9b6783152f113457703f077368",
+      "mode": "100644"
+    },
+    {
+      "path": "src/agent/server/agent_server.cpp",
+      "base_bytes": 222455,
+      "base_sha256": "5cbea1e867018e8a3ae726b1c50adfa3e40652871957a53dee7ee0ab8a839e65",
+      "patched_bytes": 225536,
+      "patched_sha256": "e5339e3d6a0d5075dbe354fb7984d9d998f4bde801738cc0d24713cb4119b868",
+      "mode": "100644"
+    },
+    {
+      "path": "src/gui/render.cpp",
+      "base_bytes": 70328,
+      "base_sha256": "8070eb27629ad1235a027fc3a2998b78ed3ab7c13da449ad9e3128cb393326cd",
+      "patched_bytes": 72746,
+      "patched_sha256": "990986b65d513a851e6c74db5f80718c0eb84ec06d560e7b83cec1caa771f1b6",
+      "mode": "100644"
+    },
+    {
+      "path": "src/hardware/vga_draw.cpp",
+      "base_bytes": 364224,
+      "base_sha256": "6c1cbe3db39828bc5c9d634aba494951f390c3ee41b3d742a8458635ad0ccb1d",
+      "patched_bytes": 366302,
+      "patched_sha256": "cb191397420d0caaad7423ba73c62b40c4ae8f1d2153067dbc859067f6e33f89",
+      "mode": "100644"
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+index a5b3e3f..71415cc 100644
+--- a/include/agent/video_adapter.h
++++ b/include/agent/video_adapter.h
+@@ -9,6 +9,18 @@ namespace dosbox_agent {
+ 
+ // Pixels use the completed guest renderer source, before host scaling, menu
+ // bars and aspect correction. Mouse coordinates use this same upper-left grid.
++struct FrameSourceSnapshot {
++    static constexpr std::uint32_t width = 320;
++    static constexpr std::uint32_t height = 200;
++    std::uint64_t latched_crtc_start = 0;
++    std::uint64_t selected_draw_address = 0;
++    std::uint64_t first_row_address = 0;
++    std::uint64_t selected_ticks = 0;
++    std::uint64_t selected_tick_cycles = 0;
++    std::uint64_t cycles_per_tick = 0;
++    std::vector<std::uint8_t> indices;
++};
++
+ struct FrameSnapshot {
+     std::uint32_t width = 0;
+     std::uint32_t height = 0;
+@@ -19,12 +31,22 @@ struct FrameSnapshot {
+     bool double_width = false;
+     bool double_height = false;
+     std::vector<std::uint8_t> rgba;
++    FrameSourceSnapshot source;
+ };
+ 
+ // Invoke these on the emulation thread. A snapshot never advances execution;
+ // it fails until a complete frame exists for the current video mode.
+ void AGENT_EnableFrameCapture(bool enabled);
+ bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
++void AGENT_EnableFrameSourceProbe(bool enabled);
++bool AGENT_FrameSourceProbeEnabled();
++void AGENT_BeginFrameSource(std::uint64_t latched_start, std::uint64_t draw_address,
++                            std::uint64_t ticks, std::uint64_t cycles,
++                            std::uint64_t cycles_per_tick);
++bool AGENT_FrameSourcePending();
++void AGENT_AbandonFrameSource();
++void AGENT_RecordFrameSourceRow(std::uint32_t row, std::uint64_t row_address,
++                                const std::uint8_t* indices);
+ // One completed renderer frame, stopped before the next guest fetch.
+ bool AGENT_ArmFrameStep(std::string* error);
+ bool AGENT_FrameStepStopRequested();
+diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+index b7ffeed..7646d59 100644
+--- a/src/agent/server/agent_server.cpp
++++ b/src/agent/server/agent_server.cpp
+@@ -2128,6 +2128,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+     } else if (parsed.method == "video.screenshot" || parsed.method == "video.probe" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
+         const bool screenshot = parsed.method == "video.screenshot";
+         const bool probe = parsed.method == "video.probe";
++        const bool source_option = probe && parsed.params.Find("source_indices");
++        bool source_indices = false;
+         std::string encoding = "png";
+         bool measure = false;
+         std::vector<std::pair<std::uint32_t,std::uint32_t>> points;
+@@ -2147,8 +2149,13 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             valid = valid && (encoding == "png" || encoding == "png-indexed" || encoding == "rgba-zstd");
+         }
+         if (probe) {
++            if (source_option) {
++                valid = valid && GetBool(parsed.params, "source_indices", &source_indices) &&
++                        session->state == Impl::SessionState::Stopped;
++            }
+             const JsonValue* samples = parsed.params.Find("points");
+             valid = valid && samples && samples->type == JsonType::Array && samples->array.size() <= 4096;
++            if (valid && source_option && !samples->array.empty()) valid = false;
+             if (valid) for (const auto& point : samples->array) {
+                 std::uint32_t px=0, py=0;
+                 if (point.type != JsonType::Array || point.array.size()!=2 ||
+@@ -2175,7 +2182,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             valid = valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"), &hold_ms);
+         if (click && (hold_ms < 1 || hold_ms > 1000)) valid = false;
+         if (!valid) {
+-            response = InvalidParams(parsed.id, "Invalid mouse coordinates, frame/mode id, button, pressed or hold_ms (1..1000)");
++            response = InvalidParams(parsed.id, source_option ?
++                "Source indices require a stopped session, an empty point list and valid optional frame/mode ids" :
++                "Invalid mouse coordinates, frame/mode id, button, pressed or hold_ms (1..1000)");
+ #if !defined(C_DOSBOX_AGENT_ZSTD)
+         } else if (screenshot && encoding == "rgba-zstd") {
+             response = Error(parsed.id, kErrorCapabilityUnavailable,
+@@ -2187,13 +2196,22 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
+             const std::string session_id = session->id;
+             if (SubmitEmulationCommandLocked(impl, [operation, screenshot, probe, points, move, click, button_op, encoding, measure,
+-                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id](const std::uint64_t) {
++                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id,
++                    source_option, source_indices](const std::uint64_t) {
+                     std::string error;
+                     FrameSnapshot frame;
+                     AgentMouseState mouse;
+                     std::vector<std::uint8_t> png;
+                     bool success = true, stale = false;
+                     if (screenshot || probe || move || click) success = AGENT_GetFrameSnapshot(&frame, &error);
++                    if (success && source_option &&
++                        ((has_frame && frame_id != frame.frame_id) ||
++                         (has_mode && mode_id != frame.mode_id))) {
++                        success = false;
++                        stale = true;
++                        error = "Requested source frame identity is stale";
++                    }
++                    if (success && source_option) AGENT_EnableFrameSourceProbe(source_indices);
+                     if (success && probe) {
+                         for (const auto& point : points) if (point.first>=frame.width || point.second>=frame.height) {
+                             success=false; error="Probe point outside completed guest frame"; break;
+@@ -2244,7 +2262,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     return operation->completed.wait_for(operation_lock, std::chrono::milliseconds(timeout_ms),
+                                                           [operation]() { return operation->done; });
+                 };
+-                pending.finish = [impl, session_id, response_id, operation, screenshot, probe, points, mutation, encoding, measure]() {
++                pending.finish = [impl, session_id, response_id, operation, screenshot, probe, points, mutation, encoding, measure,
++                                  source_option, source_indices]() {
+                     if (!operation->success)
+                         return Error(response_id, kErrorCapabilityUnavailable, operation->error,
+                                      operation->stale_frame ? "STALE_FRAME" : "COMMAND_REJECTED");
+@@ -2256,6 +2275,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     if (screenshot || probe) {
+                         const FrameSnapshot& frame = operation->frame;
+                         // Include JSON metadata and base64 expansion in the configured message budget.
++                        const std::size_t index_bytes = source_indices ? frame.source.indices.size() : 0;
+                         if ((operation->data.size() + 2) / 3 * 4 + 1024 > impl->config.max_message_bytes)
+                             return Error(response_id, kErrorRequestTooLarge,
+                                          "Screenshot exceeds max_message_bytes; raise the configured response budget", "RESPONSE_TOO_LARGE");
+@@ -2269,6 +2289,24 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                                 Add(&sample,"rgb",rgb);samples.array.push_back(sample);
+                             }
+                             Add(&result,"samples",samples); Add(&result,"format",String("rgb-samples"));
++                            if (source_option) {
++                                Add(&result, "source_indices_available", JsonValue::Bool(index_bytes != 0));
++                            }
++                            if (index_bytes) {
++                                const auto& source = frame.source;
++                                JsonValue proof = Object();
++                                Add(&proof, "model", String("dosbox-vga-source-indices-v1"));
++                                Add(&proof, "latched_crtc_start", Number(source.latched_crtc_start));
++                                Add(&proof, "selected_draw_address", Number(source.selected_draw_address));
++                                Add(&proof, "first_row_address", Number(source.first_row_address));
++                                Add(&proof, "selected_ticks", Number(source.selected_ticks));
++                                Add(&proof, "selected_tick_cycles", Number(source.selected_tick_cycles));
++                                Add(&proof, "cycles_per_tick", Number(source.cycles_per_tick));
++                                Add(&proof, "indices_bytes", Number(index_bytes));
++                                Add(&proof, "indices_sha256", String(Sha256Hex(source.indices)));
++                                Add(&proof, "indices_base64", String(EncodeBase64(source.indices)));
++                                Add(&result, "frame_source", proof);
++                            }
+                         } else {
+                         const bool raw = operation->screenshot_encoding == "rgba-zstd";
+                         Add(&result, "format", String(raw ? "rgba-zstd" : "png"));
+@@ -2301,7 +2339,12 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                             Add(&result, "delivery", String("queued"));
+                         }
+                     }
+-                    return AGENT_MakeJsonRpcResult(response_id, result);
++                    const std::string reply = AGENT_MakeJsonRpcResult(response_id, result);
++                    if (source_option && reply.size() > impl->config.max_message_bytes)
++                        return Error(response_id, kErrorRequestTooLarge,
++                                     "Source indices exceed max_message_bytes; raise the configured response budget",
++                                     "RESPONSE_TOO_LARGE");
++                    return reply;
+                 };
+                 if (parsed.has_id && parsed.id.type != JsonType::Null) session->deferred_requests[parsed.id_key] = pending;
+                 lock.unlock();
+diff --git a/src/gui/render.cpp b/src/gui/render.cpp
+index 6ff3be1..71e3dd2 100644
+--- a/src/gui/render.cpp
++++ b/src/gui/render.cpp
+@@ -42,6 +42,7 @@
+ #include "pc98_gdc.h"
+ #include "pc98_gdc_const.h"
+ #if defined(C_DOSBOX_AGENT)
++#include <utility>
+ #include "agent/video_adapter.h"
+ #endif
+ 
+@@ -112,6 +113,9 @@ bool agent_frame_valid = false;
+ std::uint64_t agent_frame_sequence = 0;
+ std::uint64_t agent_mode_sequence = 0;
+ FrameSnapshot agent_frame;
++bool frame_source_probe_enabled = false;
++FrameSourceSnapshot pending_frame_source;
++std::uint32_t frame_source_rows = 0;
+ bool agent_frame_step_armed = false;
+ bool agent_frame_step_completed = false;
+ 
+@@ -119,6 +123,8 @@ void InvalidateAgentFrame()
+ {
+     agent_frame_valid = false;
+     agent_frame = FrameSnapshot();
++    pending_frame_source.indices.clear();
++    frame_source_rows = 0;
+     ++agent_mode_sequence;
+ }
+ } // namespace
+@@ -160,6 +166,62 @@ bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error)
+     return true;
+ }
+ 
++void AGENT_EnableFrameSourceProbe(bool enabled)
++{
++    if (enabled != frame_source_probe_enabled) {
++        frame_source_probe_enabled = enabled;
++        AGENT_AbandonFrameSource();
++        agent_frame.source = FrameSourceSnapshot();
++    }
++}
++
++bool AGENT_FrameSourceProbeEnabled()
++{
++    return frame_source_probe_enabled && agent_frame_capture_enabled;
++}
++
++void AGENT_BeginFrameSource(std::uint64_t latched_start, std::uint64_t draw_address,
++                            std::uint64_t ticks, std::uint64_t cycles,
++                            std::uint64_t cycles_per_tick)
++{
++    if (!frame_source_probe_enabled || !agent_frame_capture_enabled) {
++        return;
++    }
++    FrameSourceSnapshot pending;
++    pending.latched_crtc_start = latched_start;
++    pending.selected_draw_address = draw_address;
++    pending.selected_ticks = ticks;
++    pending.selected_tick_cycles = cycles;
++    pending.cycles_per_tick = cycles_per_tick;
++    pending.indices.resize(FrameSourceSnapshot::width * FrameSourceSnapshot::height);
++    pending_frame_source = std::move(pending);
++    frame_source_rows = 0;
++}
++
++bool AGENT_FrameSourcePending() { return !pending_frame_source.indices.empty(); }
++
++void AGENT_AbandonFrameSource()
++{
++    pending_frame_source.indices.clear();
++    frame_source_rows = 0;
++}
++
++void AGENT_RecordFrameSourceRow(std::uint32_t row, std::uint64_t row_address,
++                                const std::uint8_t* indices)
++{
++    if (!AGENT_FrameSourcePending() || row != frame_source_rows ||
++        row >= FrameSourceSnapshot::height) {
++        AGENT_AbandonFrameSource();
++        return;
++    }
++    if (row == 0) {
++        pending_frame_source.first_row_address = row_address;
++    }
++    memcpy(pending_frame_source.indices.data() + row * FrameSourceSnapshot::width,
++           indices, FrameSourceSnapshot::width);
++    ++frame_source_rows;
++}
++
+ static void CaptureCompletedAgentFrame()
+ {
+     if (!agent_frame_capture_enabled || !scalerSourceCacheBuffer ||
+@@ -226,6 +288,12 @@ static void CaptureCompletedAgentFrame()
+     agent_frame.captured_ticks = PIC_Ticks;
+     agent_frame.double_width = render.src.dblw;
+     agent_frame.double_height = render.src.dblh;
++    agent_frame.source = FrameSourceSnapshot();
++    if (frame_source_rows == FrameSourceSnapshot::height &&
++        width == FrameSourceSnapshot::width && height == FrameSourceSnapshot::height) {
++        agent_frame.source = std::move(pending_frame_source);
++    }
++    AGENT_AbandonFrameSource();
+     agent_frame_valid = true;
+     if (agent_frame_step_armed) agent_frame_step_completed = true;
+ }
+@@ -577,6 +645,9 @@ bool RENDER_StartUpdate(void) {
+                 render.fullFrame = false;
+         }
+     }
++#if defined(C_DOSBOX_AGENT)
++    dosbox_agent::AGENT_AbandonFrameSource();
++#endif
+     render.updating = true;
+     return true;
+ }
+diff --git a/src/hardware/vga_draw.cpp b/src/hardware/vga_draw.cpp
+index f9b5f36..c87a174 100644
+--- a/src/hardware/vga_draw.cpp
++++ b/src/hardware/vga_draw.cpp
+@@ -33,6 +33,9 @@
+ #include "hardware.h"
+ #include "video.h"
+ #include "render.h"
++#if defined(C_DOSBOX_AGENT)
++#include "agent/video_adapter.h"
++#endif
+ #include "../gui/render_scalers.h"
+ #include "vga.h"
+ #include "pic.h"
+@@ -3917,6 +3920,27 @@ void VGA_FreeBiosLogo(void) {
+ 	BIOSlogo.free();
+ }
+ 
++#if defined(C_DOSBOX_AGENT)
++/* Same aligned raw address and decoder as the standard VGA renderer. */
++static bool VGA_AgentSourceLineValid()
++{
++    const Bitu width = dosbox_agent::FrameSourceSnapshot::width;
++    return machine == MCH_VGA && vga.mode == M_VGA && !vga.dosboxig.svga &&
++           !is_vga_rendering_on_demand && !vga_enable_hretrace_effects &&
++           !video_debug_overlay && !vga_page_flip_occurred && !vga_3da_polled &&
++           !vga.attr.disabled && !vga.tandy.line_mask && !vga.draw.panning &&
++           vga.draw.width == width && vga.draw.line_length == width * 4 &&
++           vga.draw.lines_total == dosbox_agent::FrameSourceSnapshot::height &&
++           vga.draw.split_line >= vga.draw.lines_total &&
++           vga.draw.linear_base == vga.mem.linear &&
++           (vga.draw.linear_mask & 3) == 3 &&
++           vga.draw.linear_mask < vga.mem.memsize &&
++           vga.config.addr_shift <= 2 && !(vga.draw.address & 3) &&
++           VGA_DrawLine == VGA_Draw_Xlat32_VGA_CRTC_bmode_Line &&
++           VGA_DrawRawLine == VGA_RawDraw_Xlat32_VGA_CRTC_bmode_Line;
++}
++#endif
++
+ static void VGA_DrawSingleLine(Bitu /*blah*/) {
+     unsigned int lines = 0;
+     bool skiprender;
+@@ -3955,6 +3979,18 @@ again:
+             }
+         }
+ 
++#if defined(C_DOSBOX_AGENT)
++        if (dosbox_agent::AGENT_FrameSourcePending()) {
++            if (!VGA_AgentSourceLineValid()) {
++                dosbox_agent::AGENT_AbandonFrameSource();
++            } else {
++                uint8_t indices[dosbox_agent::FrameSourceSnapshot::width];
++                VGA_DrawRawLine(indices, vga.draw.address, vga.draw.address_line);
++                dosbox_agent::AGENT_RecordFrameSourceRow(
++                    vga.draw.lines_done, vga.draw.address, indices);
++            }
++        }
++#endif
+         VGA_DAC_DeferredUpdateColorPalette();
+         if (GCC_UNLIKELY(vga.attr.disabled && !vga.dosboxig.svga)) {
+             switch(machine) {
+@@ -7013,8 +7049,19 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
+ 			if (!is_vga_rendering_on_demand) {
+ 				if (vga.draw.mode==EGALINE)
+ 					PIC_AddEvent(VGA_DrawEGASingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
+-				else
++				else {
++#if defined(C_DOSBOX_AGENT)
++					const Bits tick_cycles = PIC_TickIndexND();
++					if (dosbox_agent::AGENT_FrameSourceProbeEnabled() &&
++					    VGA_AgentSourceLineValid() && CPU_CycleMax > 0 &&
++					    tick_cycles >= 0) {
++						dosbox_agent::AGENT_BeginFrameSource(
++						    vga.config.real_start, vga.draw.address,
++						    PIC_Ticks, tick_cycles, CPU_CycleMax);
++					}
++#endif
+ 					PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
++				}
+ 			}
+ 			break;
+ 	}
