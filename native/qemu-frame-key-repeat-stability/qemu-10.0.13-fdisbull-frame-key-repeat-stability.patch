@@ -1,0 +1,99 @@
+--- a/system/fdisbull-frame-keys.c
++++ b/system/fdisbull-frame-keys.c
+@@ -2,6 +2,7 @@
+  * SPDX-License-Identifier: GPL-2.0-or-later
+  */
+ #include "qemu/osdep.h"
++#include "hw/core/cpu.h"
+ #include "hw/input/i8042.h"
+ #include "migration/blocker.h"
+ #include "qapi/error.h"
+@@ -227,7 +228,8 @@
+ static void frame_key_repeat_timer_cb(void *opaque)
+ {
+     PS2KbdState *keyboard = frame_keys.keyboard;
+-    int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++    CPUState *cpu = first_cpu;
++    int64_t now;
+     int64_t interval, next;
+     PS2FrameKeyEncoding encoding = { 0 };
+     PS2Queue *queue;
+@@ -236,15 +238,19 @@
+     bool stopping;
+
+     assert(bql_locked());
++    /* A stopped or timer-masked dispatch leaves the logical expiry intact.
++     * The next resume will rearm this timer if the dispatch consumed it. */
++    if (frame_repeat_save_paused || !runstate_is_running() ||
++        (cpu && (cpu->singlestep_enabled & SSTEP_NOTIMER))) {
++        return;
++    }
+     if (!keyboard || !frame_keys.active || !frame_keys.valid ||
+         frame_repeat_key == Q_KEY_CODE_UNMAPPED ||
+         !frame_keys.held[frame_repeat_key] || !keyboard->scan_enabled) {
+         frame_key_repeat_cancel();
+         return;
+     }
+-    if (frame_repeat_save_paused) {
+-        return;
+-    }
++    now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+     stopping = fdisbull_clock_stop_pending();
+     if (stopping) {
+         /* A synchronous stop owns this boundary. Keep the make pending. */
+@@ -287,16 +293,39 @@
+     ps2_keyboard_frame_notify(keyboard);
+ }
+
++static void frame_key_repeat_rearm(void)
++{
++    /* A due timer must not be reinserted while saving or restoring a stop.
++     * Future timers keep their ordering across ordinary stops. */
++    if (!frame_repeat_save_paused && frame_repeat_deadline >= 0 &&
++        (runstate_is_running() ||
++         frame_repeat_deadline > qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL))) {
++        timer_mod_ns(&frame_repeat_timer, frame_repeat_deadline);
++    }
++}
++
++static void frame_key_repeat_vm_state_change(void *opaque, bool running,
++                                             RunState state)
++{
++    assert(bql_locked());
++    if (running && state == RUN_STATE_RUNNING &&
++        !timer_pending(&frame_repeat_timer)) {
++        frame_key_repeat_rearm();
++    }
++}
++
+ static void frame_key_repeat_arm(QKeyCode key, int64_t deadline)
+ {
+     if (!frame_repeat_timer_ready) {
+         timer_init_ns(&frame_repeat_timer, QEMU_CLOCK_VIRTUAL,
+                       frame_key_repeat_timer_cb, NULL);
+         frame_repeat_timer_ready = true;
++        qemu_add_vm_change_state_handler(frame_key_repeat_vm_state_change,
++                                         NULL);
+     }
+     frame_repeat_key = key;
+     frame_repeat_deadline = deadline;
+-    timer_mod_ns(&frame_repeat_timer, frame_repeat_deadline);
++    frame_key_repeat_rearm();
+ }
+
+ static void frame_key_repeat_arm_initial(PS2KbdState *keyboard, QKeyCode key,
+@@ -440,10 +469,10 @@
+ void fdisbull_frame_key_repeat_save_end(void)
+ {
+     assert(bql_locked());
+-    if (frame_repeat_save_paused && frame_repeat_deadline >= 0) {
+-        timer_mod_ns(&frame_repeat_timer, frame_repeat_deadline);
+-    }
+-    frame_repeat_save_paused = false;
++    if (frame_repeat_save_paused) {
++        frame_repeat_save_paused = false;
++        frame_key_repeat_rearm();
++    }
+ }
+
+ static void checksum_u64_le(GChecksum *checksum, uint64_t value)

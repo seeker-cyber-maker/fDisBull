@@ -1,0 +1,21 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "93472033a8024dbeffc6a89809c52773e0d22a95d55d7417b91e77a797cf58eb",
+  "base_host_commit": "916db52e4d47525dd7ac5c9d33552bb834e4ab67",
+  "composition": "Apply after native/qemu-video-vbe101-flip with every preimage verified.",
+  "patch": "qemu-10.0.13-fdisbull-frame-key-repeat-stability.patch",
+  "patch_bytes": 3429,
+  "patch_sha256": "5c8ac11271750776d6e7ca1ca3cb393393dce8a1c9be6a9e746d6498c842a1b8",
+  "scope": "Retain the logical typematic expiry through stopped saves, loads and timer-masked steps.",
+  "files": [
+    {
+      "path": "system/fdisbull-frame-keys.c",
+      "base_bytes": 62043,
+      "base_sha256": "f2ab5630fd46be7ff068c240789e31b599fcb69ae141f9c1a4f3f1f55189a285",
+      "patched_bytes": 63120,
+      "patched_sha256": "80247797da7f8a524920a17211496350d948496528700dae5359af9960545a9c",
+      "mode": "100644"
+    }
+  ]
+}
