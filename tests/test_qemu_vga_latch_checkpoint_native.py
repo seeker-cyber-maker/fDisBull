@@ -232,3 +232,59 @@ def test_unchained_page_latch_replays_the_paired_guest_pit_witness(
             receipt['owner_returncode'] = owner.poll()
         assert binary.read_bytes() == code and digest(clock_disk['image']) == clock_disk['prepared_sha256']
         (tmp_path / 'qemu-paired-latch.json').write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n')
+
+
+def test_unchained_cpu_read_plane_change_keeps_the_selected_raster(
+        tmp_path, clock_runtime, clock_disk):
+    source = _held_pages()
+    start = '    mov ax,800ch\n    call crtc\npage_b:\n    nop\n    jmp page_b\n'
+    assert source.count(start) == 1
+    source = source.replace(start, '''    mov dx,3ceh
+    mov ax,0104h
+    out dx,ax
+page_b:
+    cmp byte [go],2
+    jne page_b
+    mov dx,3ceh
+    mov ax,0005h
+    out dx,ax
+different_layout:
+    jmp different_layout
+''').replace('dw page_a,page_b,go', 'dw page_a,page_b,different_layout,go')
+    code = assemble(tmp_path, 'cpu-plane-select', source, clock_runtime['nasm'])
+    assert code[-12:-8] == b'SVGA'
+    original, read_plane, changed_layout, flag = struct.unpack('<4H', code[-8:])
+    binary = tmp_path / 'PLANES.COM'
+    binary.write_bytes(code)
+    with Project.create(tmp_path / 'planes.fdb', binary, image='com') as project:
+        with project.debugger(clock_runtime['executable'], tmp_path,
+                **launch_options(clock_runtime, clock_disk, qemu_clock='virtual',
+                    qemu_retrace='precise', qemu_video_source_profile=LATCH_PROFILE)) as debug:
+            owner = debug.vm.process
+            info = process_record(debug)
+            original, read_plane, changed_layout, flag = (com_address(info, n)
+                for n in (original, read_plane, changed_layout, flag))
+            park(debug, original)
+            debug.video_frame_start()
+            before_frame = _finish(debug, 0x4000, 1)['frame']
+            before = debug.vga_configuration_observe()['current']
+            assert before['raw']['graphics'][4] == 0
+            debug.write_memory(flag, '01', expected_hex='00')
+            park(debug, read_plane)
+            after = debug.vga_configuration_observe()['current']
+            expected = deepcopy(before['raw'])
+            expected['graphics'][4] = 1
+            assert after['raw'] == expected
+            assert after['configuration_generation'] == before['configuration_generation'] + 1
+            state = _native(debug)
+            assert state['state'] == 'observing', state
+            assert state['frame']['pixel-sha256'] == before_frame['pixel-sha256']
+            next_frame = _finish(debug, 0x4000, 1)['frame']
+            assert next_frame['configuration-generation'] == before_frame['configuration-generation']
+            assert next_frame['page-latch']['configuration-generation'] == after['configuration_generation']
+            debug.write_memory(flag, '02', expected_hex='01')
+            park(debug, changed_layout)
+            state = _native(debug)
+            assert state['state'] == 'invalidated' and state['reason'] == 'configuration-changed'
+        assert owner.poll() == 0
+    assert binary.read_bytes() == code

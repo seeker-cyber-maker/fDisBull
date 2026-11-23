@@ -1,4 +1,4 @@
-"""Same-byte text and planar VGA transitions on both native renderers."""
+"""Same-byte text, planar VGA and banked VBE transitions on both renderers."""
 from base64 import b64encode
 from contextlib import closing
 from hashlib import sha256
@@ -63,9 +63,82 @@ first:
 planar:
     cmp byte [advance],2
     jne planar
+    call banked_page
+banked:
+    cmp byte [advance],3
+    jne banked
     call text_page
 last:
     jmp last
+
+banked_page:
+    push ds
+    pop es
+    mov di,vbe_info
+    mov ax,4f01h
+    mov cx,101h
+    int 10h
+    cmp ax,4fh
+    jne .fault
+    push cs
+    pop ds
+    cmp word [vbe_info+6],64
+    jne .fault
+    cmp word [vbe_info+8],0a000h
+    jne .fault
+    cmp word [vbe_info+16],640
+    jne .fault
+    cmp word [vbe_info+18],640
+    jne .fault
+    cmp word [vbe_info+20],480
+    jne .fault
+    cmp byte [vbe_info+25],8
+    jne .fault
+    cmp word [vbe_info+4],0
+    je .fault
+    mov ax,64
+    xor dx,dx
+    div word [vbe_info+4]
+    test dx,dx
+    jnz .fault
+    mov [bank_step],ax
+    mov ax,4f02h
+    mov bx,101h
+    int 10h
+    cmp ax,4fh
+    jne .fault
+    call palette
+    mov word [bank],0
+.window:
+    mov ax,[bank]
+    mul word [bank_step]
+    mov dx,ax
+    mov ax,4f05h
+    xor bx,bx
+    int 10h
+    cmp ax,4fh
+    jne .fault
+    push cs
+    pop ds
+    mov ax,0a000h
+    mov es,ax
+    xor di,di
+    mov al,[bank]
+    inc al
+    mov ah,al
+    mov cx,32768
+    cmp word [bank],4
+    jne .fill
+    mov cx,(640*480-4*65536)/2
+.fill:
+    rep stosw
+    inc word [bank]
+    cmp word [bank],5
+    jb .window
+    ret
+.fault:
+    mov ax,4c01h
+    int 21h
 
 text_page:
     mov ax,3
@@ -123,9 +196,14 @@ palette:
 pattern: db 55h,33h,0fh,0ffh
 last_row: db 0aah,55h,0,0ffh
 advance: db 0
+bank_step: dw 0
+bank: dw 0
+vbe_info: times 256 db 0
 db 'VGA3'
-dw first,planar,last,advance
+dw first,planar,banked,last,advance
 '''
+
+_PAGES = ('first', 'planar', 'banked', 'last')
 
 
 def _check_pixels(image, page):
@@ -137,9 +215,13 @@ def _check_pixels(image, page):
         down = b''.join(_RGB[index] for index in range(7, -1, -1)) * 80
         end = (_RGB[9] + _RGB[10]) * 320
         expected = up * 239 + down * 240 + end
+    elif page == 'banked':
+        assert (width, height) == (640, 480)
+        expected = (b''.join(_RGB[index] * 65536 for index in range(1, 5))
+                    + _RGB[5] * (640 * 480 - 4 * 65536))
     else:
         assert width in (640, 720) and height == 400
-        shift = 0 if page == 'first' else 2
+        shift = 0 if page == 'first' else 3
         line = b''.join(_RGB[(column + shift) & 7] * (width // 80) for column in range(80))
         expected = line * 400
     actual = rgb.tobytes()
@@ -170,7 +252,7 @@ def _dosbox_pages(executable, tmp_path, directory, labels):
             return dict(space='segmented', segment=cs, offset=f'0x{offset:08x}')
 
         call('execution.timing', fast_forward=False)
-        for index, page in enumerate(('first', 'planar', 'last')):
+        for index, page in enumerate(_PAGES):
             bp = call('breakpoints.create', kind='execution', once=True,
                       address=address(labels[index]))['breakpoint_id']
             operation = call('execution.continue')['operation_id']
@@ -186,26 +268,26 @@ def _dosbox_pages(executable, tmp_path, directory, labels):
             assert info['frame_id'] == frame['frame_id'] and info['mode_id'] == frame['mode_id']
             with Image.open(BytesIO(payload)) as image:
                 result[page] = _check_pixels(image, page)
-            if index < 2:
-                call('memory.write', address=address(labels[3]),
+            if page != 'last':
+                call('memory.write', address=address(labels[-1]),
                      expected_sha256=sha256(bytes([index])).hexdigest(),
                      data_base64=b64encode(bytes([index + 1])).decode('ascii'))
     assert owner.poll() == 0
     return result
 
 
-def test_paired_text_and_planar_rendering_survive_mode_changes(
+def test_paired_text_planar_and_vbe_rendering_survive_mode_changes(
         tmp_path, clock_runtime, clock_disk):
     if os.environ.get('FDISBULL_REQUIRE_DOSBOX_VGA_MODES') != '1':
-        pytest.skip('Select the paired native text and planar VGA fixture')
+        pytest.skip('Select the paired native VGA and VBE fixture')
     dosbox = Path(os.environ['FDISBULL_DOSBOX']).resolve(strict=True)
     assert digest(dosbox) == os.environ['FDISBULL_DOSBOX_VGA_MODES_SHA256']
     assert digest(clock_runtime['executable']) == os.environ['FDISBULL_QEMU_VGA_LATCH_SHA256']
     code = assemble(tmp_path, 'vga-modes', _SOURCE + '\ncolors: db '
                     + ','.join(str(value) for color in _DAC for value in color), clock_runtime['nasm'])
-    marker = len(code) - 60
+    marker = len(code) - 62
     assert code[marker:marker + 4] == b'VGA3'
-    labels = struct.unpack('<4H', code[marker + 4:marker + 12])
+    labels = struct.unpack('<5H', code[marker + 4:marker + 14])
     directory = tmp_path / 'game'
     directory.mkdir()
     binary = directory / 'VGA.COM'
@@ -229,22 +311,24 @@ def test_paired_text_and_planar_rendering_survive_mode_changes(
                     with Image.open(path) as image:
                         return _check_pixels(image, page.removeprefix('restored-'))
 
-                for index, page in enumerate(('first', 'planar', 'last')):
+                checkpoints = {}
+                for index, page in enumerate(_PAGES):
                     park(debug, positions[index])
                     with pytest.raises(DebuggerError) as refused:
                         debug.video_frame_start()
                     assert refused.value.result['verified_refusal']
                     assert debug.vm.process is process and process.poll() is None
                     qemu[page] = capture(page)
-                    if page == 'planar':
-                        checkpoint = debug.save_state('planar')
-                    if index < 2:
-                        debug.write_memory(positions[3], f'{index + 1:02x}', expected_hex=f'{index:02x}')
-                debug.load_state(checkpoint['artifact'], timeout_ms=60000)
-                restored_process = debug.vm.process
-                assert restored_process is not process and process.poll() == 0
-                assert capture('restored-planar') == qemu['planar']
-            assert restored_process.poll() == 0
+                    if page in ('planar', 'banked'):
+                        checkpoints[page] = debug.save_state(page)['artifact']
+                    if page != 'last':
+                        debug.write_memory(positions[-1], f'{index + 1:02x}', expected_hex=f'{index:02x}')
+                for page, artifact in checkpoints.items():
+                    debug.load_state(artifact, timeout_ms=60000)
+                    assert debug.vm.process is not process and process.poll() == 0
+                    process = debug.vm.process
+                    assert capture('restored-' + page) == qemu[page]
+            assert process.poll() == 0
         assert qemu == results['dosbox']
     finally:
         assert binary.read_bytes() == code

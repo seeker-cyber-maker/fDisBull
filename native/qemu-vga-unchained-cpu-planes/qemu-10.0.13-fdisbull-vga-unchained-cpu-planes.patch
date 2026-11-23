@@ -1,0 +1,48 @@
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -539,9 +539,9 @@
+     vga_fdisbull_configuration_raw(s, &s->fdisbull_configuration_committed);
+ }
+
+-/* A start-address write affects the next latch, never the selected page.
+- * The sequencer plane write mask is CPU-only in standard unchained VGA. */
+-static bool vga_fdisbull_page_programming_only(
++/* CRTC start selects the next page. The write mask and read map select CPU
++ * planes in standard unchained VGA. None changes the active scanout layout. */
++static bool vga_fdisbull_scanout_layout_unchanged(
+     const VGAConfigurationState *raw, const VGAConfigurationState *previous)
+ {
+     VGAConfigurationState layout;
+@@ -551,6 +551,8 @@
+     layout.crtc[VGA_CRTC_START_LO] = previous->crtc[VGA_CRTC_START_LO];
+     layout.sequencer[VGA_SEQ_PLANE_WRITE] =
+         previous->sequencer[VGA_SEQ_PLANE_WRITE];
++    layout.graphics[VGA_GFX_PLANE_READ] =
++        previous->graphics[VGA_GFX_PLANE_READ];
+     return !memcmp(&layout, previous, sizeof(layout));
+ }
+
+@@ -576,11 +578,11 @@
+         s->fdisbull_configuration_invalidated = true;
+         return;
+     }
+-    bool page_programming = !force && s->fdisbull_unchained_latch &&
+-        vga_fdisbull_page_programming_only(
++    bool same_scanout_layout = !force && s->fdisbull_unchained_latch &&
++        vga_fdisbull_scanout_layout_unchanged(
+             &raw, &s->fdisbull_configuration_committed);
+
+-    if (page_programming &&
++    if (same_scanout_layout &&
+         (raw.crtc[VGA_CRTC_START_HI] !=
+              s->fdisbull_configuration_committed.crtc[VGA_CRTC_START_HI] ||
+          raw.crtc[VGA_CRTC_START_LO] !=
+@@ -589,7 +591,7 @@
+     }
+     s->fdisbull_configuration_generation++;
+     memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
+-    if (!page_programming) {
++    if (!same_scanout_layout) {
+         fdisbull_video_frame_invalidate(s->con, "configuration-changed");
+     }
+ }

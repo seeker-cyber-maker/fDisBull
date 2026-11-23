@@ -1,0 +1,21 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "aad47cf70c912a4c95ec4236f4fa1c6f032e5bbe33c2c3e671fcfc2fb5821001",
+  "base_host_commit": "e45033f698b5085ec491b9dffdc5b7627a2448ca",
+  "composition": "Apply after native/qemu-vga-unchained-latch with every preimage verified.",
+  "patch": "qemu-10.0.13-fdisbull-vga-unchained-cpu-planes.patch",
+  "patch_bytes": 1922,
+  "patch_sha256": "02bab5aa3d86fe9fe55d530445e88050318b9e5324c04fd5c27992d44376c723",
+  "scope": "Keep the timed unchained raster observing across CPU read-plane selection.",
+  "files": [
+    {
+      "path": "hw/display/vga.c",
+      "base_bytes": 114820,
+      "base_sha256": "2735342ce65a5f82d2809b6fc6bad734db216f48a81bfdeb721d1cde02a68e5c",
+      "patched_bytes": 114931,
+      "patched_sha256": "5a8d50bbac6638734906f9a51fac51bf8aa0a3ed2d931f125e1963fd5fd42f70",
+      "mode": "100644"
+    }
+  ]
+}
