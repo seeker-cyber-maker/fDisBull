@@ -1,0 +1,54 @@
+{
+  "format": "fdisbull-dosbox-x-native-delta-1",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "base_dosbox_sha256": "8f5fafefdb54fcc09915a4cd7eb7d555fea56e32062922be03cdc07aa940df10",
+  "base_source_patch_sha256": "8856dc1d46bd9f1f8b4a9358c8f82ce8e9db3b56f46890159719ae2616fdee2b",
+  "base_source_manifest_sha256": "1e0436b85387f0e2facbd31d775d675409c2156ddce1fb36b781ca1cf3f9d9aa",
+  "composition": "Apply after native/dosbox-vga-source-diagnostic with every preimage verified.",
+  "patch": "dosbox-x-029bd65c-fdisbull-vga-row-timing.patch",
+  "patch_bytes": 21833,
+  "patch_sha256": "d960fb1421bb1b988e62b7c59a48e927e50898fbd46f01266078aa274e0e88db",
+  "scope": "Explicit completed chain-4 VGA row scheduling and bounded six-bit palette commit timestamps.",
+  "files": [
+    {
+      "path": "include/agent/video_adapter.h",
+      "base_bytes": 2265,
+      "base_sha256": "74c69c225a126138cce558510f697b863f9e0e9b6783152f113457703f077368",
+      "patched_bytes": 3771,
+      "patched_sha256": "9179bdd0c57c534f3dfbee7f2603c1cb163240937113fd09209d6416fc52228f",
+      "mode": "100644"
+    },
+    {
+      "path": "src/agent/server/agent_server.cpp",
+      "base_bytes": 225536,
+      "base_sha256": "e5339e3d6a0d5075dbe354fb7984d9d998f4bde801738cc0d24713cb4119b868",
+      "patched_bytes": 229184,
+      "patched_sha256": "3d964034cb13df45ec4fc434d0666ebbdd39e54abc792fc54b24ad6290c4f983",
+      "mode": "100644"
+    },
+    {
+      "path": "src/gui/render.cpp",
+      "base_bytes": 72746,
+      "base_sha256": "990986b65d513a851e6c74db5f80718c0eb84ec06d560e7b83cec1caa771f1b6",
+      "patched_bytes": 75949,
+      "patched_sha256": "320f1119e7bb820b2c1989864c916379e990eccad534faf96ba037c207b26bb6",
+      "mode": "100644"
+    },
+    {
+      "path": "src/hardware/vga_dac.cpp",
+      "base_bytes": 17521,
+      "base_sha256": "b439808b4974bb9ceca12b8de39c3f44cd0bef7269f823aff32765ce71ed8a2a",
+      "patched_bytes": 17868,
+      "patched_sha256": "24a8bb1bac160a0bc7fe5c67579d199017e37b605a5acbf6447d2b61248fcc24",
+      "mode": "100644"
+    },
+    {
+      "path": "src/hardware/vga_draw.cpp",
+      "base_bytes": 366302,
+      "base_sha256": "cb191397420d0caaad7423ba73c62b40c4ae8f1d2153067dbc859067f6e33f89",
+      "patched_bytes": 367215,
+      "patched_sha256": "60021623ef1c70f87088aaae5b411aafe83025f9acfa9cf672d3ad214be14dd1",
+      "mode": "100644"
+    }
+  ]
+}

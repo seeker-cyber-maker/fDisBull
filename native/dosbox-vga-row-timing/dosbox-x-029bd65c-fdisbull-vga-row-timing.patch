@@ -1,0 +1,460 @@
+diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+index 71415cc..12a5556 100644
+--- a/include/agent/video_adapter.h
++++ b/include/agent/video_adapter.h
+@@ -1,6 +1,7 @@
+ #ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
+ #define DOSBOX_AGENT_VIDEO_ADAPTER_H
+ 
++#include <array>
+ #include <cstdint>
+ #include <string>
+ #include <vector>
+@@ -9,6 +10,36 @@ namespace dosbox_agent {
+ 
+ // Pixels use the completed guest renderer source, before host scaling, menu
+ // bars and aspect correction. Mouse coordinates use this same upper-left grid.
++struct FrameSourceActualTime {
++    std::uint64_t ticks = 0;
++    std::uint64_t tick_cycles = 0;
++    std::uint64_t cycles_per_tick = 0;
++};
++
++struct FrameSourceRowTime {
++    std::uint32_t physical_line = 0;
++    std::uint64_t scheduled_ns = 0;
++    FrameSourceActualTime actual;
++};
++
++struct FrameSourceDacCommit {
++    std::array<std::uint8_t, 3> rgb6 = {};
++    FrameSourceActualTime actual;
++};
++
++struct FrameSourceTiming {
++    static constexpr std::size_t max_commits = 16;
++    int palette_index = -1;
++    std::uint32_t physical_phase = 0;
++    std::uint64_t frame_scheduled_ns = 0;
++    std::uint64_t first_callback_scheduled_ns = 0;
++    std::uint64_t line_period_ns = 0;
++    std::uint64_t retrace_scheduled_ns = 0;
++    std::array<std::uint8_t, 3> initial_rgb6 = {};
++    std::vector<FrameSourceRowTime> rows;
++    std::vector<FrameSourceDacCommit> commits;
++};
++
+ struct FrameSourceSnapshot {
+     static constexpr std::uint32_t width = 320;
+     static constexpr std::uint32_t height = 200;
+@@ -19,6 +50,7 @@ struct FrameSourceSnapshot {
+     std::uint64_t selected_tick_cycles = 0;
+     std::uint64_t cycles_per_tick = 0;
+     std::vector<std::uint8_t> indices;
++    FrameSourceTiming timing;
+ };
+ 
+ struct FrameSnapshot {
+@@ -38,7 +70,15 @@ struct FrameSnapshot {
+ // it fails until a complete frame exists for the current video mode.
+ void AGENT_EnableFrameCapture(bool enabled);
+ bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
+-void AGENT_EnableFrameSourceProbe(bool enabled);
++void AGENT_EnableFrameSourceProbe(bool enabled, int timing_palette);
++int AGENT_FrameSourceTimingPalette();
++void AGENT_BeginFrameSourceTiming(std::uint32_t phase, double frame_ms,
++                                 double first_callback_ms, double line_ms,
++                                 double retrace_ms, std::uint8_t red,
++                                 std::uint8_t green, std::uint8_t blue);
++void AGENT_RecordFrameSourceDacCommit(std::uint32_t palette_index,
++                                     std::uint8_t red, std::uint8_t green,
++                                     std::uint8_t blue);
+ bool AGENT_FrameSourceProbeEnabled();
+ void AGENT_BeginFrameSource(std::uint64_t latched_start, std::uint64_t draw_address,
+                             std::uint64_t ticks, std::uint64_t cycles,
+@@ -46,7 +86,8 @@ void AGENT_BeginFrameSource(std::uint64_t latched_start, std::uint64_t draw_addr
+ bool AGENT_FrameSourcePending();
+ void AGENT_AbandonFrameSource();
+ void AGENT_RecordFrameSourceRow(std::uint32_t row, std::uint64_t row_address,
+-                                const std::uint8_t* indices);
++                                const std::uint8_t* indices,
++                                std::uint32_t physical_line);
+ // One completed renderer frame, stopped before the next guest fetch.
+ bool AGENT_ArmFrameStep(std::string* error);
+ bool AGENT_FrameStepStopRequested();
+diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+index 7646d59..968903d 100644
+--- a/src/agent/server/agent_server.cpp
++++ b/src/agent/server/agent_server.cpp
+@@ -1389,6 +1389,53 @@ static JsonValue MouseResult(const AgentMouseState& mouse)
+     return result;
+ }
+ 
++static JsonValue FrameSourceClockResult(const FrameSourceActualTime& clock)
++{
++    JsonValue time = Object();
++    Add(&time, "ticks", Number(clock.ticks));
++    Add(&time, "tick_cycles", Number(clock.tick_cycles));
++    Add(&time, "cycles_per_tick", Number(clock.cycles_per_tick));
++    return time;
++}
++
++static JsonValue FrameSourceRgb6Result(const std::array<std::uint8_t, 3>& colors)
++{
++    JsonValue rgb = JsonValue::Array();
++    for (const auto component : colors) {
++        rgb.array.push_back(Number(component));
++    }
++    return rgb;
++}
++
++static JsonValue FrameSourceTimingResult(const FrameSourceTiming& timing)
++{
++    JsonValue result = Object(), rows = JsonValue::Array(), commits = JsonValue::Array();
++    Add(&result, "model", String("dosbox-vga-chain4-row-timing-v1"));
++    Add(&result, "palette_index", Number(timing.palette_index));
++    Add(&result, "physical_phase", Number(timing.physical_phase));
++    Add(&result, "frame_scheduled_ns", Number(timing.frame_scheduled_ns));
++    Add(&result, "first_callback_scheduled_ns", Number(timing.first_callback_scheduled_ns));
++    Add(&result, "line_period_ns", Number(timing.line_period_ns));
++    Add(&result, "retrace_scheduled_ns", Number(timing.retrace_scheduled_ns));
++    Add(&result, "initial_rgb6", FrameSourceRgb6Result(timing.initial_rgb6));
++    for (const auto& row : timing.rows) {
++        JsonValue record = Object();
++        Add(&record, "physical_line", Number(row.physical_line));
++        Add(&record, "scheduled_ns", Number(row.scheduled_ns));
++        Add(&record, "actual", FrameSourceClockResult(row.actual));
++        rows.array.push_back(std::move(record));
++    }
++    for (const auto& commit : timing.commits) {
++        JsonValue record = Object();
++        Add(&record, "rgb6", FrameSourceRgb6Result(commit.rgb6));
++        Add(&record, "actual", FrameSourceClockResult(commit.actual));
++        commits.array.push_back(std::move(record));
++    }
++    Add(&result, "rows", rows);
++    Add(&result, "dac_commits", commits);
++    return result;
++}
++
+ static bool OptionalFrameNumber(const JsonValue& params, const char* name,
+                                 bool* present, std::uint64_t* result)
+ {
+@@ -2128,8 +2175,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+     } else if (parsed.method == "video.screenshot" || parsed.method == "video.probe" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
+         const bool screenshot = parsed.method == "video.screenshot";
+         const bool probe = parsed.method == "video.probe";
+-        const bool source_option = probe && parsed.params.Find("source_indices");
++        const bool indices_option = probe && parsed.params.Find("source_indices");
++        const JsonValue* timing_option = probe ? parsed.params.Find("source_timing_palette_index") : nullptr;
++        const bool source_option = indices_option || timing_option;
+         bool source_indices = false;
++        int timing_palette = -1;
+         std::string encoding = "png";
+         bool measure = false;
+         std::vector<std::pair<std::uint32_t,std::uint32_t>> points;
+@@ -2150,8 +2200,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+         }
+         if (probe) {
+             if (source_option) {
+-                valid = valid && GetBool(parsed.params, "source_indices", &source_indices) &&
+-                        session->state == Impl::SessionState::Stopped;
++                valid = valid && session->state == Impl::SessionState::Stopped;
++            }
++            if (indices_option) {
++                valid = valid && GetBool(parsed.params, "source_indices", &source_indices);
++            }
++            if (timing_option) {
++                std::uint32_t index = 0;
++                valid = valid && GetUnsignedInteger(*timing_option, &index) && index <= 255;
++                if (valid) {
++                    timing_palette = static_cast<int>(index);
++                }
+             }
+             const JsonValue* samples = parsed.params.Find("points");
+             valid = valid && samples && samples->type == JsonType::Array && samples->array.size() <= 4096;
+@@ -2182,7 +2241,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             valid = valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"), &hold_ms);
+         if (click && (hold_ms < 1 || hold_ms > 1000)) valid = false;
+         if (!valid) {
+-            response = InvalidParams(parsed.id, source_option ?
++            response = InvalidParams(parsed.id, timing_option ?
++                "Source timing requires a stopped session, an empty point list and a palette index in 0..255" :
++                source_option ?
+                 "Source indices require a stopped session, an empty point list and valid optional frame/mode ids" :
+                 "Invalid mouse coordinates, frame/mode id, button, pressed or hold_ms (1..1000)");
+ #if !defined(C_DOSBOX_AGENT_ZSTD)
+@@ -2197,7 +2258,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             const std::string session_id = session->id;
+             if (SubmitEmulationCommandLocked(impl, [operation, screenshot, probe, points, move, click, button_op, encoding, measure,
+                     x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id,
+-                    source_option, source_indices](const std::uint64_t) {
++                    source_option, source_indices, timing_palette](const std::uint64_t) {
+                     std::string error;
+                     FrameSnapshot frame;
+                     AgentMouseState mouse;
+@@ -2211,7 +2272,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                         stale = true;
+                         error = "Requested source frame identity is stale";
+                     }
+-                    if (success && source_option) AGENT_EnableFrameSourceProbe(source_indices);
++                    if (success && source_option) {
++                        AGENT_EnableFrameSourceProbe(source_indices || timing_palette >= 0, timing_palette);
++                    }
+                     if (success && probe) {
+                         for (const auto& point : points) if (point.first>=frame.width || point.second>=frame.height) {
+                             success=false; error="Probe point outside completed guest frame"; break;
+@@ -2263,7 +2326,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                                                           [operation]() { return operation->done; });
+                 };
+                 pending.finish = [impl, session_id, response_id, operation, screenshot, probe, points, mutation, encoding, measure,
+-                                  source_option, source_indices]() {
++                                  source_option, source_indices, indices_option, timing_palette]() {
+                     if (!operation->success)
+                         return Error(response_id, kErrorCapabilityUnavailable, operation->error,
+                                      operation->stale_frame ? "STALE_FRAME" : "COMMAND_REJECTED");
+@@ -2289,9 +2352,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                                 Add(&sample,"rgb",rgb);samples.array.push_back(sample);
+                             }
+                             Add(&result,"samples",samples); Add(&result,"format",String("rgb-samples"));
+-                            if (source_option) {
++                            if (indices_option) {
+                                 Add(&result, "source_indices_available", JsonValue::Bool(index_bytes != 0));
+                             }
++                            if (timing_palette >= 0) {
++                                const auto& timing = frame.source.timing;
++                                const bool available = timing.palette_index == timing_palette &&
++                                    timing.rows.size() == FrameSourceSnapshot::height;
++                                Add(&result, "source_timing_available", JsonValue::Bool(available));
++                                if (available) {
++                                    Add(&result, "source_timing", FrameSourceTimingResult(timing));
++                                }
++                            }
+                             if (index_bytes) {
+                                 const auto& source = frame.source;
+                                 JsonValue proof = Object();
+@@ -2342,6 +2414,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     const std::string reply = AGENT_MakeJsonRpcResult(response_id, result);
+                     if (source_option && reply.size() > impl->config.max_message_bytes)
+                         return Error(response_id, kErrorRequestTooLarge,
++                                     timing_palette >= 0 ?
++                                     "Source timing exceeds max_message_bytes; raise the configured response budget" :
+                                      "Source indices exceed max_message_bytes; raise the configured response budget",
+                                      "RESPONSE_TOO_LARGE");
+                     return reply;
+diff --git a/src/gui/render.cpp b/src/gui/render.cpp
+index 71e3dd2..1cd4f08 100644
+--- a/src/gui/render.cpp
++++ b/src/gui/render.cpp
+@@ -42,6 +42,7 @@
+ #include "pc98_gdc.h"
+ #include "pc98_gdc_const.h"
+ #if defined(C_DOSBOX_AGENT)
++#include <cmath>
+ #include <utility>
+ #include "agent/video_adapter.h"
+ #endif
+@@ -114,6 +115,7 @@ std::uint64_t agent_frame_sequence = 0;
+ std::uint64_t agent_mode_sequence = 0;
+ FrameSnapshot agent_frame;
+ bool frame_source_probe_enabled = false;
++int frame_source_timing_palette = -1;
+ FrameSourceSnapshot pending_frame_source;
+ std::uint32_t frame_source_rows = 0;
+ bool agent_frame_step_armed = false;
+@@ -123,8 +125,7 @@ void InvalidateAgentFrame()
+ {
+     agent_frame_valid = false;
+     agent_frame = FrameSnapshot();
+-    pending_frame_source.indices.clear();
+-    frame_source_rows = 0;
++    AGENT_AbandonFrameSource();
+     ++agent_mode_sequence;
+ }
+ } // namespace
+@@ -166,15 +167,82 @@ bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error)
+     return true;
+ }
+ 
+-void AGENT_EnableFrameSourceProbe(bool enabled)
++void AGENT_EnableFrameSourceProbe(bool enabled, int timing_palette)
+ {
+-    if (enabled != frame_source_probe_enabled) {
++    if (enabled != frame_source_probe_enabled || timing_palette != frame_source_timing_palette) {
+         frame_source_probe_enabled = enabled;
++        frame_source_timing_palette = timing_palette;
+         AGENT_AbandonFrameSource();
+         agent_frame.source = FrameSourceSnapshot();
+     }
+ }
+ 
++int AGENT_FrameSourceTimingPalette() { return frame_source_timing_palette; }
++
++static bool FrameSourceActualClock(FrameSourceActualTime *out)
++{
++    const Bits tick_cycles = PIC_TickIndexND();
++
++    if (tick_cycles < 0 || CPU_CycleMax <= 0) {
++        return false;
++    }
++    out->ticks = PIC_Ticks;
++    out->tick_cycles = static_cast<std::uint64_t>(tick_cycles);
++    out->cycles_per_tick = static_cast<std::uint64_t>(CPU_CycleMax);
++    return true;
++}
++
++static bool FrameSourceScheduledClock(double ms, std::uint64_t *out)
++{
++    if (!(ms >= 0.0 && ms < static_cast<double>(INT64_MAX / 1000000))) {
++        return false;
++    }
++    *out = static_cast<std::uint64_t>(std::llround(ms * 1000000.0));
++    return true;
++}
++
++void AGENT_BeginFrameSourceTiming(std::uint32_t phase, double frame_ms,
++                                 double first_callback_ms, double line_ms,
++                                 double retrace_ms, std::uint8_t red,
++                                 std::uint8_t green, std::uint8_t blue)
++{
++    FrameSourceTiming timing;
++
++    if (frame_source_timing_palette < 0 || !AGENT_FrameSourcePending() ||
++        phase > 1 || red > 63 || green > 63 || blue > 63 ||
++        !FrameSourceScheduledClock(frame_ms, &timing.frame_scheduled_ns) ||
++        !FrameSourceScheduledClock(first_callback_ms, &timing.first_callback_scheduled_ns) ||
++        !FrameSourceScheduledClock(line_ms, &timing.line_period_ns) ||
++        !FrameSourceScheduledClock(retrace_ms, &timing.retrace_scheduled_ns) ||
++        !timing.line_period_ns) {
++        return;
++    }
++    timing.palette_index = frame_source_timing_palette;
++    timing.physical_phase = phase;
++    timing.initial_rgb6 = {{red, green, blue}};
++    timing.rows.reserve(FrameSourceSnapshot::height);
++    pending_frame_source.timing = std::move(timing);
++}
++
++void AGENT_RecordFrameSourceDacCommit(std::uint32_t palette_index,
++                                     std::uint8_t red, std::uint8_t green,
++                                     std::uint8_t blue)
++{
++    auto& timing = pending_frame_source.timing;
++    FrameSourceDacCommit commit;
++
++    if (timing.palette_index < 0 || static_cast<std::uint32_t>(timing.palette_index) != palette_index) {
++        return;
++    }
++    if (timing.commits.size() >= FrameSourceTiming::max_commits ||
++        red > 63 || green > 63 || blue > 63 || !FrameSourceActualClock(&commit.actual)) {
++        timing = FrameSourceTiming();
++        return;
++    }
++    commit.rgb6 = {{red, green, blue}};
++    timing.commits.push_back(commit);
++}
++
+ bool AGENT_FrameSourceProbeEnabled()
+ {
+     return frame_source_probe_enabled && agent_frame_capture_enabled;
+@@ -202,12 +270,13 @@ bool AGENT_FrameSourcePending() { return !pending_frame_source.indices.empty();
+ 
+ void AGENT_AbandonFrameSource()
+ {
+-    pending_frame_source.indices.clear();
++    pending_frame_source = FrameSourceSnapshot();
+     frame_source_rows = 0;
+ }
+ 
+ void AGENT_RecordFrameSourceRow(std::uint32_t row, std::uint64_t row_address,
+-                                const std::uint8_t* indices)
++                                const std::uint8_t* indices,
++                                std::uint32_t physical_line)
+ {
+     if (!AGENT_FrameSourcePending() || row != frame_source_rows ||
+         row >= FrameSourceSnapshot::height) {
+@@ -217,6 +286,18 @@ void AGENT_RecordFrameSourceRow(std::uint32_t row, std::uint64_t row_address,
+     if (row == 0) {
+         pending_frame_source.first_row_address = row_address;
+     }
++    auto& timing = pending_frame_source.timing;
++    if (timing.palette_index >= 0) {
++        FrameSourceRowTime sample;
++        sample.physical_line = physical_line;
++        if (physical_line != row * 2 + timing.physical_phase ||
++            !FrameSourceActualClock(&sample.actual) ||
++            !FrameSourceScheduledClock(PIC_GetCurrentEventTime(), &sample.scheduled_ns)) {
++            timing = FrameSourceTiming();
++        } else {
++            timing.rows.push_back(sample);
++        }
++    }
+     memcpy(pending_frame_source.indices.data() + row * FrameSourceSnapshot::width,
+            indices, FrameSourceSnapshot::width);
+     ++frame_source_rows;
+diff --git a/src/hardware/vga_dac.cpp b/src/hardware/vga_dac.cpp
+index 509d42f..4793bd0 100644
+--- a/src/hardware/vga_dac.cpp
++++ b/src/hardware/vga_dac.cpp
+@@ -21,6 +21,9 @@
+ #include "logging.h"
+ #include "render.h"
+ #include "vga.h"
++#if defined(C_DOSBOX_AGENT)
++#include "agent/video_adapter.h"
++#endif
+ 
+ extern bool vga_enable_3C6_ramdac;
+ extern bool vga_8bit_dac;
+@@ -339,6 +342,12 @@ void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
+             vga.dac.rgb[vga.dac.write_index].red=tmp_dac[0];
+             vga.dac.rgb[vga.dac.write_index].green=tmp_dac[1];
+             vga.dac.rgb[vga.dac.write_index].blue=tmp_dac[2];
++#if defined(C_DOSBOX_AGENT)
++            if (!vga_8bit_dac && dosbox_agent::AGENT_FrameSourceTimingPalette() >= 0) {
++                dosbox_agent::AGENT_RecordFrameSourceDacCommit(
++                    vga.dac.write_index, tmp_dac[0], tmp_dac[1], tmp_dac[2]);
++            }
++#endif
+             update = true;
+         }
+ 
+diff --git a/src/hardware/vga_draw.cpp b/src/hardware/vga_draw.cpp
+index c87a174..ac4dd83 100644
+--- a/src/hardware/vga_draw.cpp
++++ b/src/hardware/vga_draw.cpp
+@@ -3783,6 +3783,7 @@ void VGA_Update_SplitLineCompare() {
+ }
+ 
+ void VGA_DAC_DeferredUpdateColorPalette();
++extern bool vga_palette_update_on_full_load;
+ void VGA_DebugAddEvent(debugline_event &ev);
+ void VGA_DrawDebugLine(uint8_t *line,unsigned int w);
+ 
+@@ -3987,7 +3988,7 @@ again:
+                 uint8_t indices[dosbox_agent::FrameSourceSnapshot::width];
+                 VGA_DrawRawLine(indices, vga.draw.address, vga.draw.address_line);
+                 dosbox_agent::AGENT_RecordFrameSourceRow(
+-                    vga.draw.lines_done, vga.draw.address, indices);
++                    vga.draw.lines_done, vga.draw.address, indices, vga.draw.hsync_events - 1);
+             }
+         }
+ #endif
+@@ -7058,6 +7059,17 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
+ 						dosbox_agent::AGENT_BeginFrameSource(
+ 						    vga.config.real_start, vga.draw.address,
+ 						    PIC_Ticks, tick_cycles, CPU_CycleMax);
++                        const int palette = dosbox_agent::AGENT_FrameSourceTimingPalette();
++                        if (palette >= 0 && vga.config.chained && vga.draw.render_max == 2 &&
++                            !vga.draw.vblank_skip && !vga_8bit_dac && vga_palette_update_on_full_load) {
++                            const auto& colors = vga.dac.rgb[palette];
++                            dosbox_agent::AGENT_BeginFrameSourceTiming(
++                                vga.draw.render_step ? 1 : 0, current_time,
++                                current_time + (float)(vga.draw.delay.htotal / 4.0 + draw_skip),
++                                vga.draw.delay.singleline_delay,
++                                current_time + vga.draw.delay.vrstart,
++                                colors.red, colors.green, colors.blue);
++                        }
+ 					}
+ #endif
+ 					PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
