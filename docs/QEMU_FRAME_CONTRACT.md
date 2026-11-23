@@ -201,10 +201,19 @@ vertical sync. Retrace observation, waits and retrace-scheduled input use that
 same sync interval. The native receipt includes `vbe101-timing` alongside
 the inherited VGA timing registers. This profile uses format 9 checkpoints.
 
+Select `vga-640x480-flip` with an explicit QEMU firmware directory containing
+`fdisbull-vgabios-vbe101-flip.bin` to enable retrace-synchronized display
+starts for banked VBE 101h. The runtime loads a verified private copy of that
+ROM. The retrace receipt reports the programmed and active byte origins in
+`vbe101-display-start`. A scheduled change also reports its next retrace
+deadline. Format 10 checkpoints preserve the device's display start and
+deadline even with source capture idle. Each completed banked raster reports
+its own sampled origin, which can precede the currently active page.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
-the selected `video_source_profile`, either `vga-640x480` or
-`vga-640x480-sync`. The script must match the owner’s launch profile when it
+the selected `video_source_profile`, `vga-640x480`, `vga-640x480-sync`, or
+`vga-640x480-flip`. The script must match the owner's launch profile when it
 runs. A running session also checks each resolved probe against the selected
 source extent.
 
@@ -245,8 +254,9 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, and `qemu-vga-640x480-sync-v1` |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, and `qemu-vga-640x480-flip-v1` |
 | `scanout_layout` | `vga-mode12` or `vbe-banked-101` for the 640 × 480 source model |
+| `vbe101_origin_bytes` | The byte origin sampled in a completed banked VBE 101h raster under the flip profile |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
 | `double_width`, `double_height` | Both false. Coordinates use the retained source extent |
 | `frame_id` | Native accepted raster ordinal, including identical consecutive pixels |

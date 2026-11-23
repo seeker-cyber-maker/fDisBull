@@ -16,7 +16,7 @@ from fdisbull.qemu_retrace import (
 from test_qemu_input_schedule import InputWire, scheduled
 from test_qemu_io_deadlines import observation
 from test_qemu_retrace import (RetraceWire, VBE101_ENTER, VBE101_EXIT, VBE101_PERIOD,
-                               change, vbe101_receipt)
+                               change, vbe101_flip_receipt, vbe101_receipt)
 
 
 ARM = 'x-fdisbull-arm-input-retrace'
@@ -201,6 +201,24 @@ def test_vbe101_input_binds_frozen_receipts_at_guest_sync_boundary(retrace_input
     assert checked['phase']['vertical-retrace'] is (edge == 'enter')
     assert checked['phase']['status1-timing-bits'] == (9 if edge == 'enter' else 1)
     assert checked['vbe101-timing']['line-period-ns'] == 27_208
+
+
+def test_retrace_input_remains_owned_when_the_display_start_latches(retrace_input):
+    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_PROFILE
+
+    o = retrace_input
+    o.vm.machine_configuration['video_source_profile'] = VGA480_FLIP_PROFILE
+    o.wire.video.initialized(generation=3)
+    page_b = 640 * 480
+    o.wire.video.mutate = lambda value: vbe101_flip_receipt(
+        value, programmed=page_b, active=page_b if value['virtual-ns'] >= VBE101_ENTER else 0)
+    o.session.keyboard_key_down('a')
+    armed = o.session.input_schedule_retrace()
+    assert armed['deadline_ns'] == VBE101_ENTER
+    o.wire.callback()
+    delivered = o.session.input_schedule_observe()['retrace']
+    assert delivered['dispatch_phase_verified'] is True
+    assert delivered['native_check']['vbe101-display-start']['active-origin-bytes'] == page_b
 
 
 def test_armed_batch_cannot_be_silently_replaced(retrace_input):

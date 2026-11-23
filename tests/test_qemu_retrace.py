@@ -47,6 +47,17 @@ def vbe101_receipt(value):
                   'status1-timing-bits': bits}})
 
 
+def vbe101_flip_receipt(value, *, programmed=0, active=0):
+    vbe = vbe101_receipt(value)
+    starts = {'programmed-origin-bytes': programmed, 'active-origin-bytes': active}
+    if programmed != active:
+        base = (vbe['virtual-ns'] // VBE101_PERIOD) * VBE101_PERIOD
+        deadline = base + VBE101_ENTER
+        starts['pending-deadline-ns'] = deadline if deadline > vbe['virtual-ns'] else deadline + VBE101_PERIOD
+    vbe['vbe101-display-start'] = starts
+    return vbe
+
+
 class RetraceWire(NativeWire):
     def __init__(self, clock):
         super().__init__(clock)
@@ -303,6 +314,56 @@ def test_bad_vbe101_phase_does_not_become_an_owned_observation(retrace, case):
     }
     o.wire.mutate = (lambda value: change(vbe101_receipt(value), *corruptions[case])
                      if case in corruptions else vbe101_receipt(value))
+    with pytest.raises(DebuggerError):
+        o.context.retrace_observe()
+    assert o.vm.closed
+
+
+def test_pending_and_active_display_starts_do_not_change_timing_generation(retrace):
+    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = VGA480_FLIP_PROFILE
+    page_b = 640 * 480
+    o.wire.receipt['virtual-ns'] = VBE101_ENTER - 1
+    o.wire.mutate = lambda value: vbe101_flip_receipt(value, programmed=page_b)
+    pending = o.context.retrace_observe()
+    assert pending['vbe101_display_start'] == {
+        'programmed-origin-bytes': page_b, 'active-origin-bytes': 0,
+        'pending-deadline-ns': VBE101_ENTER}
+    o.wire.receipt['virtual-ns'] = VBE101_ENTER
+    o.wire.mutate = lambda value: vbe101_flip_receipt(value, programmed=page_b, active=page_b)
+    active = o.context.retrace_observe()
+    assert active['vbe101_display_start'] == {'programmed-origin-bytes': page_b, 'active-origin-bytes': page_b}
+    assert active['timing_generation'] == pending['timing_generation']
+    assert active['phase']['vertical-retrace'] is True
+
+
+@pytest.mark.parametrize('defect', ['old-profile', 'missing', 'early', 'late', 'unaligned', 'too-large', 'settled'])
+def test_vbe101_display_start_rejects_bad_profile_bounds_and_deadlines(retrace, defect):
+    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE
+
+    o = initialized(retrace)
+    o.vm.machine_configuration['video_source_profile'] = (
+        VGA480_SYNC_PROFILE if defect == 'old-profile' else VGA480_FLIP_PROFILE)
+    o.wire.receipt['virtual-ns'] = VBE101_ENTER
+
+    def invalid(value):
+        vbe = vbe101_flip_receipt(value, programmed=640)
+        start = vbe['vbe101-display-start']
+        if defect == 'missing':
+            del vbe['vbe101-display-start']
+        elif defect in ('early', 'late'):
+            start['pending-deadline-ns'] += -1 if defect == 'early' else 1
+        elif defect == 'unaligned':
+            start['programmed-origin-bytes'] = 4
+        elif defect == 'too-large':
+            start['active-origin-bytes'] = 12001 * 640
+        elif defect == 'settled':
+            start['active-origin-bytes'] = start['programmed-origin-bytes']
+        return vbe
+
+    o.wire.mutate = invalid
     with pytest.raises(DebuggerError):
         o.context.retrace_observe()
     assert o.vm.closed

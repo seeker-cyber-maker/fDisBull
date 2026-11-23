@@ -68,21 +68,30 @@ def test_public_frame_consumers_keep_one_session_revision_and_true_source(video)
 
 
 @pytest.mark.parametrize('layout', ['vga-mode12', 'vbe-banked-101'])
-@pytest.mark.parametrize('sync', [False, True], ids=['scanline', 'sync'])
-def test_wide_native_public_consumers_own_exact_pixels_and_layout(video, layout, sync):
+@pytest.mark.parametrize('variant', ['scanline', 'sync', 'flip'])
+def test_wide_native_public_consumers_own_exact_pixels_and_layout(video, layout, variant):
     from fdisbull.debug_script import execute_script, validate_script
     from fdisbull.frame_coherence import _source_issue
     from fdisbull.qemu_source_timeline import source_raster_record, validate_source_raster
-    from fdisbull.qemu_video_checkpoint import (VGA480_MODEL, VGA480_PROFILE, VGA480_SYNC_MODEL,
-                                                VGA480_SYNC_PROFILE)
+    from fdisbull.qemu_video_checkpoint import (VGA480_FLIP_MODEL, VGA480_FLIP_PROFILE,
+        VGA480_MODEL, VGA480_PROFILE, VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE)
 
-    model, profile = (VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE) if sync else (VGA480_MODEL, VGA480_PROFILE)
+    model, profile = {'scanline': (VGA480_MODEL, VGA480_PROFILE),
+                      'sync': (VGA480_SYNC_MODEL, VGA480_SYNC_PROFILE),
+                      'flip': (VGA480_FLIP_MODEL, VGA480_FLIP_PROFILE)}[variant]
     o = video
     o.vm.machine_configuration['video_source_profile'] = profile
     o.wire.video['model'] = model
     o.wire.scanout_layout = layout
     o.wire.size = (640, 480)
     o.wire.rgb = bytes((4, 85, 170)) * (640 * 480 - 1) + bytes((26, 37, 48))
+    origin = 640 * 480 if variant == 'flip' and layout == 'vbe-banked-101' else None
+    if origin is not None:
+        def reveal_page(value):
+            if 'frame' in value:
+                value['frame']['vbe101-origin-bytes'] = origin
+            return value
+        o.wire.change_video = reveal_page
     seen = prepared(o)
     point = [639, 479]
     before = o.session.status()['state_revision']
@@ -105,6 +114,9 @@ def test_wide_native_public_consumers_own_exact_pixels_and_layout(video, layout,
     validate_source_raster(persisted)
     assert persisted['scanout_layout'] == layout and persisted['width'] == 640
     assert persisted['frame_profile'] == model
+    for receipt in (persisted, result, frame.metadata, seen):
+        assert receipt.get('vbe101_origin_bytes') == origin
+        assert ('vbe101_origin_bytes' in receipt) is (origin is not None)
     with pytest.raises(ValueError, match='within 640x480'):
         o.session.frame_probe([[640, 479]])
 

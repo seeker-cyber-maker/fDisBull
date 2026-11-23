@@ -18,8 +18,8 @@ from .qemu_keyboard_press import press_receipt, validate_native_press
 from .qemu_keyboard_type import typing_receipt, validate_native_typing
 from .qemu_mouse_click import click_receipt, validate_native_click
 from .qemu_mapped_mouse import motion_receipt, validate_native_motion
-from .qemu_retrace import (RETRACE_COMMANDS, VBE101_TIMING_FIELD, retrace_vertical_window,
-                           validate_retrace_snapshot, vbe101_retrace_enabled)
+from .qemu_retrace import (RETRACE_COMMANDS, VBE101_TIMING_FIELD, retrace_source_profile,
+                           retrace_vertical_window, validate_retrace_snapshot)
 
 
 INPUT_SCHEDULE_COMMANDS = frozenset({
@@ -110,10 +110,10 @@ def _native_retrace_schedule(owner, value, expected):
                 or any(type(descriptor[key]) is not int or not 0 <= descriptor[key] < 1 << 63
                        for key in ('target-ns', 'window-end-ns'))):
             raise ValueError('Invalid native retrace-input descriptor fields')
-        allow_vbe101 = vbe101_retrace_enabled(owner.vm)
+        source_profile = retrace_source_profile(owner.vm)
         armed = validate_retrace_snapshot(descriptor['armed'], epoch=value['epoch'],
             virtual_ns=value['start-ns'], previous=planned['before']['native'],
-            allow_vbe101=allow_vbe101)
+            source_profile=source_profile)
         if armed != planned['before']['native']:
             raise ValueError('Native retrace-input arm differs from its exact stopped observation')
         target, end = _retrace_input_window(armed, descriptor['edge'])
@@ -131,7 +131,7 @@ def _native_retrace_schedule(owner, value, expected):
         checked = None
         if 'checked' in descriptor:
             checked = validate_retrace_snapshot(descriptor['checked'], epoch=value['epoch'],
-                virtual_ns=value['terminal-ns'], previous=armed, allow_vbe101=allow_vbe101)
+                virtual_ns=value['terminal-ns'], previous=armed, source_profile=source_profile)
         if needs_check:
             if checked['virtual-ns'] < target:
                 raise ValueError('Native retrace-input callback preceded its target')

@@ -87,6 +87,25 @@ def firmware_identity(directory):
                 scope='top-level firmware file identities at admission; not guest OS qualification')
 
 
+def _video_source_launch_arguments(profile, firmware, root):
+    from .qemu_video_checkpoint import VGA480_FLIP_PROFILE, VBE101_FLIP_ROM, VIDEO_SOURCE_PROFILES
+
+    if profile is None:
+        return []
+    arguments = ['-global', VIDEO_SOURCE_PROFILES[profile][1]]
+    if profile == VGA480_FLIP_PROFILE:
+        files = firmware['files'] if firmware else ()
+        rom = next((item for item in files if item['name'] == VBE101_FLIP_ROM), None)
+        if not rom or not rom['size']:
+            raise ValueError(f'VBE 101h page flips require {VBE101_FLIP_ROM} in an explicit QEMU firmware directory')
+        path = root / VBE101_FLIP_ROM
+        shutil.copyfile(Path(firmware['path']) / VBE101_FLIP_ROM, path)
+        if path.stat().st_size != rom['size'] or file_hash(path) != rom['sha256']:
+            raise ValueError('QEMU VBE 101h VGA ROM changed while creating its private runtime copy')
+        arguments += ['-global', f'VGA.romfile={path}']
+    return arguments
+
+
 def _tracking(session, operation, reason):
     from .debugger import _tracking_callback
     guard_step_over_owner(session, check_deadline=False, allow_exited=operation=='close')
@@ -310,6 +329,8 @@ class QemuMachine:
             self.inputs={name:dict(path=str(path),sha256=launcher_sha256 if name=='qemu' else file_hash(path)) for name,path in paths.items()}
             self.inputs['qemu']['version']=version
             if firmware is not None:self.inputs['firmware']=firmware_identity(firmware)
+            source_arguments = _video_source_launch_arguments(
+                video_source_profile, self.inputs.get('firmware'), root)
             self.machine_configuration=dict(cpu=cpu_model,memory_mib=memory_mib,cpus=cpus,network='none',accelerator='tcg',
                                             disk='private-verified-copy-and-snapshot' if boot_image else None,
                                             boot_device=boot_device if boot_image else None,control_transport=transport,
@@ -318,6 +339,8 @@ class QemuMachine:
                                             retrace_profile=selected_retrace,
                                             firmware='explicit-directory' if firmware is not None else 'QEMU default search path; not pinned',
                                             hostcalls='not configured; experimental FDB_HOSTCALL_/FDB_LAYER_ selectors removed')
+            if video_source_profile is not None:
+                self.machine_configuration['video_source_profile'] = video_source_profile
             selected_boot=paths.get('boot_image')
             if boot_image_sha256 is not None:
                 if self.inputs['boot_image']['sha256']!=boot_image_sha256:
@@ -359,9 +382,7 @@ class QemuMachine:
             command+=machine_audio_arguments(audio_profile)
             if frame_key_repeat_profile is not None:
                 command += ['-global', 'ps2-kbd.fdisbull-dosbox-typematic=on']
-            if video_source_profile is not None:
-                from .qemu_video_checkpoint import VIDEO_SOURCE_PROFILES
-                command += ['-global', VIDEO_SOURCE_PROFILES[video_source_profile][1]]
+            command += source_arguments
             if transport=='pipe':
                 self.gdb_path=root/'gdb';self.rpc_path=root/'rpc'
                 create_fifo_pair(self.gdb_path);create_fifo_pair(self.rpc_path)
@@ -438,7 +459,6 @@ class QemuMachine:
                 require_commands(self)
                 if not VIDEO_FRAME_COMMANDS | {REPEAT_QUERY} <= self.qmp_commands:
                     raise ValueError('Selected native QEMU cannot prove the requested source video timing')
-                self.machine_configuration['video_source_profile'] = video_source_profile
                 clock = self.machine_configuration['native_clock_admission']
                 _native_video(self, self.qmp.call('x-fdisbull-query-video-frame'),
                     dict(virtual_ns=clock['virtual-ns'], virtual_clock=dict(native=clock)), token=None)

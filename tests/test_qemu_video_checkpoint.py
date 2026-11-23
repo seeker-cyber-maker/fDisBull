@@ -1058,3 +1058,65 @@ def test_format9_sync_retrace_and_wide_scanout_are_bound_to_the_exact_profile():
     del old['vbe101-timing'], old['phase']
     old.update({'phase-supported': False, 'unsupported-reason': 'vbe-enabled'})
     assert checkpoint.validate(machine, envelope(state)) == state
+
+
+def flip_checkpoint_state(*, idle=False, pending=True):
+    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_MODEL
+    from test_qemu_retrace import RAW, RETRACE_MODEL, TIMING, vbe101_flip_receipt
+    from test_qemu_vga_configuration import ConfigurationWire
+
+    video = source_record('idle') if idle else wide_source_record('vbe-banked-101')
+    video['info']['model'] = VGA480_FLIP_MODEL
+    if not idle:
+        video['info']['frame']['vbe101-origin-bytes'] = 0
+    state = make_state(video)
+    state.update(format=checkpoint.VIDEO_VGA480_FLIP_FORMAT,
+        **{'frame-key-repeat': {'parameter': 43, 'delay-ns': 500000000,
+                                'interval-ns': 91666666, 'deadline-ns': -1}})
+    programmed = 640 * 480
+    retrace = vbe101_flip_receipt({
+        'api-version': 1, 'model': RETRACE_MODEL, 'epoch': 1, 'virtual-ns': state['virtual-ns'],
+        'device': '/machine/vga', 'device-type': 'VGA', 'console': 0, 'head': 0,
+        'timing-generation': 9, 'phase-supported': True, 'raw': RAW, 'timing': TIMING},
+        programmed=programmed, active=0 if pending else programmed)
+    config = ConfigurationWire(None).configuration
+    config.update(device=retrace['device'], **{'virtual-ns': state['virtual-ns'], 'configuration-generation': 10})
+    config['raw'].update({'vbe-line-offset': 640, 'vbe-start-address': programmed // 4})
+    config['raw']['vbe'][1:5] = [640, 480, 8, 1]
+    config['raw']['vbe'][6] = 640
+    config['raw']['vbe'][9] = 480
+    state['retrace'].update(info=retrace, configuration=config)
+    return state
+
+
+@pytest.mark.parametrize('idle,pending', [(False, True), (False, False), (True, True)])
+def test_format10_retains_programmed_active_and_completed_origins_independently(idle, pending):
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    from fdisbull.qemu_video_checkpoint import VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE
+
+    state = flip_checkpoint_state(idle=idle, pending=pending)
+    machine = SimpleNamespace(qmp_commands=checkpoint.COMMANDS | {
+        'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys', REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'},
+                               'video_source_profile': VGA480_FLIP_PROFILE})
+    assert checkpoint.validate(machine, envelope(state)) == state
+    restored = deepcopy(state)
+    rebind(restored)
+    assert checkpoint._logical(state) == checkpoint._logical(restored)
+    machine.machine_configuration['video_source_profile'] = VGA480_SYNC_PROFILE
+    with pytest.raises(ValueError, match='profile differs'):
+        checkpoint.validate(machine, envelope(state))
+
+
+@pytest.mark.parametrize('path,item,reason', [
+    (('retrace', 'configuration', 'raw', 'vbe-start-address'), 0, 'programmed display start differs'),
+    (('retrace', 'configuration', 'raw', 'vbe', 9), 0, 'programmed display start differs'),
+    (('retrace', 'configuration', 'raw', 'vbe', 2), 200, 'display layout differs'),
+    (('retrace', 'configuration', 'raw', 'vbe-size'), 10, 'exceeds the saved VGA memory'),
+    (('video-frame', 'info', 'frame', 'vbe101-origin-bytes'), 1, 'complete VBE 101h display start'),
+])
+def test_format10_refuses_unowned_page_geometry(path, item, reason):
+    state = flip_checkpoint_state()
+    set_path(state, path, item)
+    with pytest.raises(ValueError, match=reason):
+        checkpoint._decode(envelope(state))

@@ -13,7 +13,7 @@ import time
 
 from .dosbox_rpc import DebuggerError
 from .qemu_clock import clock_timer_stop_is_ordinary, validate_clock_budget
-from .qemu_video_checkpoint import VGA480_SYNC_PROFILE
+from .qemu_video_checkpoint import VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE, valid_vbe101_origin
 
 
 RETRACE_COMMANDS = frozenset({'x-fdisbull-query-retrace'})
@@ -30,6 +30,7 @@ _NATIVE_FIELDS = frozenset(('api-version', 'model', 'epoch', 'virtual-ns', 'devi
                             'device-type', 'console', 'head', 'timing-generation',
                             'phase-supported', 'raw', 'timing'))
 VBE101_TIMING_FIELD = 'vbe101-timing'
+VBE101_DISPLAY_START_FIELD = 'vbe101-display-start'
 _VBE101_LINE_NS = 27208
 _VBE101_TIMING = {
     'line-period-ns': _VBE101_LINE_NS,
@@ -116,9 +117,8 @@ def _unsupported(raw, timing):
     return None
 
 
-def vbe101_retrace_enabled(vm):
-    configuration = getattr(vm, 'machine_configuration', {})
-    return configuration.get('video_source_profile') == VGA480_SYNC_PROFILE
+def retrace_source_profile(vm):
+    return getattr(vm, 'machine_configuration', {}).get('video_source_profile')
 
 
 def retrace_vertical_window(timing, vbe101_timing):
@@ -156,7 +156,23 @@ def _modeled_phase(virtual_ns, timing, vbe101_timing):
             'status1-timing-bits': (8 if vertical else 0) | int(blank)}
 
 
-def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, allow_vbe101=False):
+def _validate_vbe101_display_start(state, virtual_ns, timing):
+    fields = {'programmed-origin-bytes', 'active-origin-bytes'}
+    if type(state) is not dict or not fields <= state.keys() or any(
+            not valid_vbe101_origin(state[key]) for key in fields):
+        raise ValueError('Invalid native VBE 101h display starts')
+    if state['programmed-origin-bytes'] == state['active-origin-bytes']:
+        if set(state) != fields:
+            raise ValueError('Settled VBE 101h display start retains a pending deadline')
+        return
+    period, entry, _ = retrace_vertical_window(None, timing)
+    deadline = virtual_ns + ((entry - virtual_ns) % period or period)
+    if (set(state) != fields | {'pending-deadline-ns'}
+            or not _integer(state['pending-deadline-ns']) or state['pending-deadline-ns'] != deadline):
+        raise ValueError('Invalid VBE 101h display start retrace deadline')
+
+
+def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, source_profile=None):
     """Validate a native snapshot against explicit historical clock evidence.
 
     Callback receipts can precede the latest live observation. This pure
@@ -171,8 +187,10 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, allow_
             or type(value.get('phase-supported')) is not bool):
         invalid('Invalid native retrace receipt fields')
     fields = _NATIVE_FIELDS | ({'phase'} if value['phase-supported'] else {'unsupported-reason'})
-    if allow_vbe101 and VBE101_TIMING_FIELD in value:
+    if source_profile in (VGA480_SYNC_PROFILE, VGA480_FLIP_PROFILE) and VBE101_TIMING_FIELD in value:
         fields |= {VBE101_TIMING_FIELD}
+        if source_profile == VGA480_FLIP_PROFILE:
+            fields |= {VBE101_DISPLAY_START_FIELD}
     if (set(value) != fields or type(value['api-version']) is not int or value['api-version'] != 1
             or value['model'] != RETRACE_MODEL or value['device-type'] != 'VGA'
             or not _integer(value['epoch'], 1, _MAX_UINT64)
@@ -199,6 +217,8 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, allow_
                 or vbe101_timing != _VBE101_TIMING
                 or any(type(item) is not int for item in vbe101_timing.values())):
             invalid('Invalid native VBE 101h retrace timing descriptor')
+        if source_profile == VGA480_FLIP_PROFILE:
+            _validate_vbe101_display_start(value[VBE101_DISPLAY_START_FIELD], virtual_ns, vbe101_timing)
         unsupported = None
     if value['phase-supported'] != (unsupported is None):
         invalid('Native retrace phase eligibility contradicts its timing model')
@@ -218,7 +238,7 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, allow_
         if type(previous) is not dict:
             invalid('Invalid previous native retrace snapshot')
         previous = validate_retrace_snapshot(previous, epoch=epoch,
-            virtual_ns=previous.get('virtual-ns'), allow_vbe101=allow_vbe101)
+            virtual_ns=previous.get('virtual-ns'), source_profile=source_profile)
         if any(value[key] != previous[key] for key in ('epoch', 'model', 'device', 'device-type', 'console', 'head')):
             invalid('Native retrace device or ownership epoch changed')
         if (value['timing-generation'] < previous['timing-generation']
@@ -236,7 +256,7 @@ def _native_retrace(vm, value, clock):
     try:
         checked = validate_retrace_snapshot(value,
             epoch=clock['virtual_clock']['native']['epoch'], virtual_ns=clock['virtual_ns'],
-            previous=getattr(vm, '_retrace_last', None), allow_vbe101=vbe101_retrace_enabled(vm))
+            previous=getattr(vm, '_retrace_last', None), source_profile=retrace_source_profile(vm))
     except ValueError as error:
         _invalid(vm, str(error))
     vm._retrace_last = deepcopy(checked)
@@ -431,6 +451,8 @@ class QemuRetraceMixin:
                    'completed guest drawing, input consumption or host-time synchronization is established.'))
         if VBE101_TIMING_FIELD in native:
             result['vbe101_timing'] = deepcopy(native[VBE101_TIMING_FIELD])
+        if VBE101_DISPLAY_START_FIELD in native:
+            result['vbe101_display_start'] = deepcopy(native[VBE101_DISPLAY_START_FIELD])
         try:
             _remaining(self)
             self._event('machine-retrace-observe', result)
