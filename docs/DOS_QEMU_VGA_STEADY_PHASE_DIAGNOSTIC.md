@@ -233,8 +233,8 @@ The four full RGB hashes match the retained installed DOSBox-X and pinned
 QEMU observations from the preceding pulse-window experiment. The archived
 QEMU producer independently passed both strict phase predictions there. The
 timing probe was rebuilt from the earlier DOSBox-X source diagnostic and
-verified on that derivative. Current-head QEMU execution and DOSBox-X first
-raster timing require their own measurements.
+verified on that derivative. Current-head QEMU execution requires its own
+measurement.
 
 | Evidence | SHA-256 |
 | --- | --- |
@@ -244,13 +244,48 @@ raster timing require their own measurements.
 | Previously qualified QEMU producer | `cea0a35169d6e51fafa6c32824e208ad2c14c9ec755cb9c9c005cd119c2e478f` |
 | Previously paired native receipt | `0af70ea41d901eeeaaf2ffd79af633def57bf6d38bc5f1d20f96319ce986162e` |
 
+## Direct DOSBox-X first completed mode-13h raster
+
+The same diagnostic producer was armed against an earlier completed
+320×200 mode-13h frame. A 57-byte authored COM then entered text mode and
+stopped immediately before a new `INT 10h` with `AX=0013h`. At the stop the
+host read the `CD 10` instruction and the guest's zero return marker. The
+first newly completed 320×200 frame carried the marker set after BIOS
+return. Each frame step advanced exactly one completed renderer frame.
+
+| Completed frame | Renderer mode ID | Source extent | Selected physical rows |
+| --- | --- | --- | --- |
+| 3 | 5 | 320×200 | 1, 3, …, 399 |
+| 4 | 6 | 720×400 | Text mode |
+| 5 | 7 | 320×200 | 0, 2, …, 398 |
+| 6 | 7 | 320×200 | 1, 3, …, 399 |
+
+The producer returned the first new-mode timing from the already completed
+frame, which shows that diagnostic arming survived both mode transitions.
+Each graphical receipt contained all 200 callback times. The first retained
+row started 7,945 ns after its frame origin. In the subsequent frame it
+started 39,722 ns after its origin, one physical line later within scheduler
+rounding. Maximum actual callback lateness was under 7 ns in both frames.
+
+This measures the first completed source raster on the authored text-mode
+reentry. It leaves the internal draw-setup instruction time, equivalent
+same-mode BIOS reapply, and other BIOS or programming sequences open.
+The pinned QEMU mode-13h producer has independent first/steady checkpoint
+evidence from its own fixture. A paired run of this specific transition on
+the current QEMU producer remains open.
+
+Authored COM SHA-256
+`360506d4851aaae7f9bdc328c4b4c66f067789a3704ba3791608ea03ea9577b6`.
+Private native receipt SHA-256
+`3ed410e1480886007bdf1a5c912bcdc096580d1cfb9bb32804ab7971984cf031`.
+
 ## Remaining qualification
 
 - Replay the same declared steady pulse windows against a newly selected
   release candidate when rechecking the current producer.
-- Measure DOSBox-X's effective draw setup boundary and pair first rasters,
-  warm attachment and equivalent reapply with QEMU over the same declared
-  geometry. Qualify additional programming sequences and modes separately.
+- Pair the observed DOSBox-X text-to-mode-13h transition on current QEMU.
+  Measure the DOSBox-X draw-setup boundary for equivalent same-mode BIOS
+  reapply. Qualify additional programming sequences and modes separately.
 - Exercise both engines through the same protected game's palette/origin
   changes and replay its dynamic raster after a native checkpoint.
   [Current QEMU frame contract](QEMU_FRAME_CONTRACT.md)

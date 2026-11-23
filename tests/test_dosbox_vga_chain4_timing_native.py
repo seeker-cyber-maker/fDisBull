@@ -8,13 +8,43 @@ import sys
 
 import pytest
 
-from support.dos_process_fixture import digest
+from support.dos_process_fixture import assemble, digest
 from support.paired_video_frame_fixture import TRIAL_BYTES
 from support.paired_video_frame_oracle import HEIGHT, PALETTES, PIT_HZ, parse_trial, rgb_for_rows
 from test_paired_video_frame_native import PROFILE, _calibration, _owner, _write_json, paired_video_program
 
 
 COM_SHA256 = 'c2ddebd5affa489302f22c9139d354be1cb31b38d5edbe58b5e491c90ed3cb1d'
+
+MODE_SWITCH = r'''
+bits 16
+org 100h
+    nop
+    push cs
+    pop ds
+    mov ax,0013h
+    int 10h
+warm:
+    cmp byte [go],1
+    jne warm
+    mov ax,0003h
+    int 10h
+text:
+    cmp byte [go],2
+    jne text
+    mov ax,0013h
+bios13:
+    int 10h
+    mov byte [entered],1
+hold:
+    jmp hold
+fault_stop:
+    ud2
+go: db 0
+entered: db 0
+    db 'FDBF'
+    dw warm,bios13,fault_stop,go,entered
+'''
 
 
 def _ns(stamp):
@@ -77,7 +107,7 @@ def _timing_predictions(timing, geometry, horizontal, *, pulse):
             'maximum_actual_lateness_ns': [max(latency).numerator, max(latency).denominator]}
 
 
-def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
+def _timing_producer(tmp_path):
     if os.environ.get('FDISBULL_REQUIRE_DOSBOX_CHAIN4_TIMING') != '1':
         pytest.skip('Select the exact DOSBox-X diagnostic producer')
     executable = Path(os.environ['FDISBULL_DOSBOX_CHAIN4_TIMING']).resolve(strict=True)
@@ -85,14 +115,19 @@ def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
     assert digest(executable) == executable_sha
     assert not any((directory / '.git').exists() for directory in
                    (tmp_path.resolve(), *tmp_path.resolve().parents))
-    code, offsets = paired_video_program(tmp_path, os.environ['NASM'])
-    assert hashlib.sha256(code).hexdigest() == COM_SHA256
     wrapper = tmp_path / 'timing-dosbox'
     arguments = [part for setting in PROFILE for part in ('-set', setting)]
     wrapper.write_text(f'#!{sys.executable}\nimport os, sys\n'
         "os.environ.update(SDL_AUDIODRIVER='dummy', SDL_VIDEODRIVER='dummy')\n"
         f'os.execv({str(executable)!r}, [{str(executable)!r}, *sys.argv[1:], *{arguments!r}])\n')
     wrapper.chmod(0o700)
+    return executable, executable_sha, wrapper
+
+
+def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
+    executable, executable_sha, wrapper = _timing_producer(tmp_path)
+    code, offsets = paired_video_program(tmp_path, os.environ['NASM'])
+    assert hashlib.sha256(code).hexdigest() == COM_SHA256
     work = tmp_path / 'dosbox'
     work.mkdir()
     evidence = {'producer_sha256': executable_sha, 'fixture_sha256': COM_SHA256, 'frames': []}
@@ -156,3 +191,100 @@ def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
         _write_json(tmp_path / 'chain4-timing-receipt.json', evidence)
     assert evidence['producer_unchanged'] and evidence['reaped'] and evidence['returncode'] == 0
     assert evidence['strict_both_pulses'], 'See retained timing receipt for any uncertain phase rows'
+
+
+def _first_phase_probe(adapter, identity, phase, evidence, key):
+    proof = adapter.call('video.probe', {'points': [], 'source_timing_palette_index': 1, **identity})
+    evidence[key] = proof
+    assert {name: proof[name] for name in identity} == identity
+    assert proof['source_timing_available'], proof
+    timing = proof['source_timing']
+    assert timing['model'] == 'dosbox-vga-chain4-row-timing-v1'
+    assert timing['physical_phase'] == phase
+    h = timing['line_period_ns']
+    first = timing['first_callback_scheduled_ns']
+    rows = timing['rows']
+    assert [row['physical_line'] for row in rows] == list(range(phase, 400, 2))
+    for row in rows:
+        expected = first + row['physical_line'] * h
+        assert abs(row['scheduled_ns'] - expected) <= Fraction(row['physical_line'] + 2, 2)
+        late = _ns(row['actual']) - row['scheduled_ns']
+        assert -Fraction(1, 2) <= late < Fraction(h, 8)
+    assert rows[-1]['scheduled_ns'] < timing['retrace_scheduled_ns']
+    return timing
+
+
+def test_native_dosbox_first_completed_mode13_raster_differs_from_warm_raster(tmp_path):
+    executable, executable_sha, wrapper = _timing_producer(tmp_path)
+    code = assemble(tmp_path, 'mode13-first-raster', MODE_SWITCH, os.environ['NASM'])
+    assert code[-14:-10] == b'FDBF'
+    offsets = dict(zip(('warm', 'bios13', 'fault_stop', 'go', 'entered'),
+                       struct.unpack('<5H', code[-10:]), strict=True))
+    work = tmp_path / 'dosbox'
+    work.mkdir()
+    evidence = {'producer_sha256': executable_sha, 'fixture_sha256': hashlib.sha256(code).hexdigest(),
+                'completed': []}
+    try:
+        with _owner('dosbox', work, code, offsets, {'wrapper': wrapper}, evidence) as adapter:
+            def step(previous=None):
+                value = adapter.call('frame.step')
+                assert value['completed'] is True and value['stop_reason']['kind'] == 'frame'
+                identity = {name: value[name] for name in ('frame_id', 'mode_id')}
+                if previous is not None:
+                    assert identity['frame_id'] == previous['frame_id'] + 1
+                probe = adapter.call('video.probe', {'points': [], **identity})
+                assert {name: probe[name] for name in identity} == identity
+                size = (probe['width'], probe['height'])
+                evidence['completed'].append(dict(identity, size=size))
+                return identity, size
+
+            adapter.park('warm')
+            current, size = step()
+            for _ in range(3):
+                if size == (320, 200):
+                    break
+                current, size = step(current)
+            assert size == (320, 200)
+            arm = adapter.call('video.probe', {'points': [], 'source_timing_palette_index': 1, **current})
+            assert arm['source_timing_available'] is False
+            current, size = step(current)
+            assert size == (320, 200)
+            _first_phase_probe(adapter, current, 1, evidence, 'prior_warm')
+            evidence['armed_mode_id'] = current['mode_id']
+
+            adapter.write('go', b'\x01')
+            for _ in range(5):
+                current, size = step(current)
+                if size != (320, 200) and current['mode_id'] != evidence['armed_mode_id']:
+                    break
+            assert size != (320, 200) and current['mode_id'] > evidence['armed_mode_id']
+            evidence['text'] = dict(current, size=size)
+            adapter.write('go', b'\x02')
+            stop = adapter.park('bios13')
+            registers = adapter.call('state.get_registers')
+            assert int(registers['general']['eax'], 16) & 0xffff == 0x13
+            assert adapter.read(offsets['bios13'], 2) == b'\xcd\x10'
+            assert adapter.read(offsets['entered'], 1) == b'\0'
+            assert adapter.call('video.probe', {'points': [], **current})['frame_id'] == current['frame_id']
+            evidence['before_bios13'] = {'stop': stop, 'ax': '0013', 'instruction': 'cd10', 'returned': False}
+
+            for _ in range(5):
+                current, size = step(current)
+                if size == (320, 200):
+                    break
+            assert size == (320, 200) and current['mode_id'] > evidence['text']['mode_id']
+            assert adapter.read(offsets['entered'], 1) == b'\x01'
+            evidence['first_mode13'] = current
+            # The probe copies the already completed frame before applying
+            # its options. A receipt at this point proves the original arm
+            # survived both changes of mode.
+            first = _first_phase_probe(adapter, current, 0, evidence, 'first_timing')
+            warm, size = step(current)
+            assert size == (320, 200) and warm['mode_id'] == current['mode_id']
+            evidence['next_mode13'] = warm
+            steady = _first_phase_probe(adapter, warm, 1, evidence, 'next_timing')
+            assert first['frame_scheduled_ns'] < steady['frame_scheduled_ns']
+    finally:
+        evidence['producer_unchanged'] = digest(executable) == executable_sha
+        _write_json(tmp_path / 'chain4-first-raster-receipt.json', evidence)
+    assert evidence['producer_unchanged'] and evidence['reaped'] and evidence['returncode'] == 0
