@@ -253,7 +253,17 @@ def test_pinned_machine_copy_is_private_immutable_and_cleaned(tmp_path, monkeypa
     image = tmp_path / 'private.img'
     original = b'authored boot provenance'
     image.write_bytes(original)
-    monkeypatch.setattr(qemu_machine, 'QemuControl', lambda *args: SimpleNamespace(close=lambda: None, call=lambda method, **options: []))
+    def authored_control(path, process, deadline):
+        def call(method, **options):
+            if method == 'query-cpus-fast':
+                return [{'cpu-index': 0, 'thread-id': process.pid}]
+            assert method == 'query-commands'
+            return []
+
+        greeting = {'QMP': {'version': {'qemu': {'major': 9, 'minor': 2, 'micro': 4}}}}
+        return SimpleNamespace(close=lambda: None, call=call, greeting=greeting)
+
+    monkeypatch.setattr(qemu_machine, 'QemuControl', authored_control)
     machine = qemu_machine.QemuMachine(executable, boot_image=image, cpu_model='486', cpus=1,
                                        memory_mib=32, boot_image_sha256=hashlib.sha256(original).hexdigest(),
                                        boot_device=boot_device)
@@ -269,6 +279,11 @@ def test_pinned_machine_copy_is_private_immutable_and_cleaned(tmp_path, monkeypa
         image.write_bytes(b'changed caller image')
         assert private.read_bytes() == original
         assert machine.inputs['boot_image']['sha256'] == hashlib.sha256(original).hexdigest()
+        interpreter = Path(sys.executable).resolve()
+        executing = machine.inputs['qemu_image']
+        assert Path(executing['path']).resolve() == interpreter
+        assert executing['sha256'] == hashlib.sha256(interpreter.read_bytes()).hexdigest()
+        assert machine.inputs['qemu']['sha256'] == hashlib.sha256(executable.read_bytes()).hexdigest()
     finally:
         machine.close()
     assert machine.process.poll() is not None and not temporary.exists()

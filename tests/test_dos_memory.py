@@ -275,6 +275,7 @@ def qpi_record(*, status=0, active=0):
 
 def qpi_context(tmp_path, monkeypatch, report):
     from fdisbull.project import Project
+    from fdisbull.qemu_image import FORMAT
     monkeypatch.setenv('FDISBULL_TARGET_STORE', str(tmp_path / 'objects'))
     source = tmp_path / 'authored.bin'
     source.write_bytes(b'\x90' * 16)
@@ -286,7 +287,11 @@ def qpi_context(tmp_path, monkeypatch, report):
     debug.guest_profile = dict(profile='qemm-386-v1', profile_sha256='b' * 64,
                               boot_image=dict(sha256=project.meta['source_sha256']),
                               memory_manager=dict(configured='qemm', observed='unknown'))
-    debug.vm.inputs = dict(qemu=dict(sha256='c' * 64))
+    debug.vm.inputs = dict(
+        qemu=dict(sha256='c' * 64),
+        qemu_image=dict(format=FORMAT, path='/private/authored-qemu', sha256='d' * 64,
+                        size=123, version='10.0.13'),
+    )
     debug.metadata = dict(guest_profile=debug.guest_profile)
     with project.transaction(True):
         project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
@@ -312,6 +317,8 @@ def test_qpi_observation_persists_exact_report_without_freshness_claim(tmp_path,
         assert observation['freshness'] == 'not_established'
         assert observation['native_execution_validation'] == 'not_established_by_report'
         assert observation['identity']['boot_image_sha256'] == project.meta['source_sha256']
+        assert observation['identity']['launcher_sha256'] == 'c' * 64
+        assert observation['identity']['emulator_sha256'] == 'd' * 64
         assert result['registers']['cpu_mode'] == 'v86'
         assert peer.steps == 0
         artifact_id = result['artifact']['artifact']
@@ -325,6 +332,7 @@ def test_qpi_observation_persists_exact_report_without_freshness_claim(tmp_path,
         assert run['metadata']['qemm_observation']['observed'] == observed
         assert run['metadata']['qemm_observation']['complete'] is complete
         assert run['metadata']['qemm_observation']['artifact'] == artifact_id
+        assert run['metadata']['qemm_observation']['identity'] == observation['identity']
         assert bytes(reopened.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (artifact_id,)).fetchone()[0]) == record
         assert reopened.debug_runs()['live_state_verified'] is False
 
