@@ -1,5 +1,37 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Protected Doom display restore and paired input evidence (2026-11-23)
+
+Original Doom's E1M5 demo reaches the protected LE tic 64 boundary using
+unchained 256-color VGA. Stopped configuration readback reported SR4
+`06h`, GR5 `40h`, CRTC start `8000h` and pitch register `28h`. The
+chain-4 source stream refused this layout. The corrected start path verified
+the same native stream, stopped clock and live owner after the refusal.
+
+An instrumented format 5 checkpoint then preserved the stopped 640 × 400
+renderer RGB, live protected LE binding, and stereo frontier of 221,400
+frames at 38,760,241,658 ns with zero drops. Same-process and separate-process
+restore each reproduced the renderer bytes, rebound protected source, and
+stepped the relocated leveltime increment from 64 to 65. Both QEMU owners
+exited successfully and the selected original inputs and native runtime
+hashes matched at postflight. The private hot and cold receipt digests are
+`b7559688917b8bd63b90bf73d165078987a4886b9ee2c40c578c6b0243a0281f` and
+`009e5ffc98a7253d773a613596d4a50e7bc16518ea287ecf2398d1a6501eb97e`.
+This gate covers the stopped QEMU renderer. Unchained timed source-raster
+replay and paired Doom display equivalence remain open.
+
+The paired INT 33h guest confirmed a stationary press and release at
+`(300,80)` with zero new mickeys on both backends. The moving route still
+reports four mickeys on each axis on QEMU and zero on DOSBox-X. Passive
+readback of the pinned CuteMouse resident counters preserves the values
+until the guest reads them. A real Mode 12h transition refused input
+before a click was queued. [Mouse observation and scope](DOS_QEMU_TIMING.md)
+
+The strict VGA oracle accepted both measured QEMU pulse windows and all
+four paired RGB captures matched. DOSBox-X B writes intersected a predicted
+sampling row in each pulse, leaving paired timing unqualified.
+[Paired VGA timing receipts](DOS_QEMU_VGA_STEADY_PHASE_DIAGNOSTIC.md)
+
 ## Native Mode 13h checkpoint timing and coordinate routes (2026-11-23)
 
 The opt-in VGA model records effective standard BIOS programming and
