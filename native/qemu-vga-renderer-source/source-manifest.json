@@ -1,0 +1,45 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "4f943d26699f1e870c9196e83dd47ccf5b7f12a9e32369e1153aa862c427a3fc",
+  "base_host_commit": "b9a09198aeb232d41ede12ee9b6e8d524294e6d3",
+  "composition": "Apply after native/qemu-vga-unchained-probe with every preimage verified.",
+  "patch": "qemu-10.0.13-fdisbull-vga-renderer-source.patch",
+  "patch_bytes": 7673,
+  "patch_sha256": "308b68024774608f8a5859cf6c05be0c1a8df1dae6865cd3ed2dd55f05868dfe",
+  "scope": "Explicit stopped synchronous renderer proof for the effective standard VGA page.",
+  "files": [
+    {
+      "path": "hw/display/vga.c",
+      "base_bytes": 111961,
+      "base_sha256": "b6b104bd8a66b37fe3b7a75f941e11631f1c12416eb754563123f460d875def1",
+      "patched_bytes": 112703,
+      "patched_sha256": "2442989a73fda92ffa11d21408eb4f7139ea6c760202eda14a97f87131688ba9",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-raster.json",
+      "base_bytes": 4800,
+      "base_sha256": "ecde64ad9164ee04a53ddfa34917631e29e7b7a0c4f8de52367e66b19ead2186",
+      "patched_bytes": 5401,
+      "patched_sha256": "fbdc685faf60c0a5bb0e1e7dbc60397a80320852269d8cd682c5bc7eda3e1a65",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-retrace.c",
+      "base_bytes": 9927,
+      "base_sha256": "3d443c11787521562e31630b614d3f7f6d6408814e57d8cc247940c6332f5914",
+      "patched_bytes": 10718,
+      "patched_sha256": "c197b28a02b564f4c58d194bc01964e9ee031d3f305f918a3149aad40eb39267",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_bytes": 1640,
+      "base_sha256": "706d6de7edacab7b1adf3bc5e2357b121a085d07b964d63ea12c7365fc3bdf9e",
+      "patched_bytes": 1805,
+      "patched_sha256": "d338eec3ceb563d2b5060371cec4a95db792d67826b86b20fdfb93182dc21824",
+      "mode": "100644"
+    }
+  ]
+}

@@ -1,15 +1,18 @@
 """Opt-in stopped-source witness with independently authored VGA planes."""
 from base64 import b64decode
+from hashlib import sha256
 import os
 import struct
 
 import pytest
 
+from fdisbull import qemu_machine
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull.project import Project
 from support.dos_process_fixture import assemble, digest
 from test_qemu_clock_budget_native import clock_disk, clock_runtime, park
 from test_qemu_dos_process_native import com_address, launch_options, process_record
+from test_qemu_raster_proof_native import passive, unavailable
 
 pytestmark = pytest.mark.skipif(
     os.environ.get('FDISBULL_REQUIRE_QEMU_UNCHAINED_PROBE') != '1',
@@ -17,6 +20,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 COMMAND = 'x-fdisbull-probe-unchained-vga-rows'
+RENDER_PROOF = 'x-fdisbull-render-raster-proof'
 BODY = r'''
 bits 16
 org 100h
@@ -133,8 +137,44 @@ def _indices_rgb(first):
     return bytes(result) * 80
 
 
+def _render_page(project, debug, first, origin):
+    regs, clock = debug.registers(), debug.clock_observe()['virtual_ns']
+    proof = debug.vm.qmp.call(RENDER_PROOF)
+    assert proof['outcome'] == 'updated' and proof['current-configuration-matches'], proof
+    assert passive(project, debug) == proof
+    assert (debug.registers(), debug.clock_observe()['virtual_ns']) == (regs, clock)
+    assert proof['attempt-ns'] == proof['virtual-ns']
+    source = proof['source']
+    assert source['profile'] == 'qemu-vga-unchained-320x200-raster-v1'
+    assert source['start-address'] == origin and source['line-offset'] == 320
+    assert source['rows-considered'] == source['rows-redrawn'] == 400
+    expected = (bytes(range(first, first + 4)) * (199 * 80)
+                + bytes(range(first + 8, first + 12)) * 80)
+    assert source['source-index-sha256'] == sha256(expected).hexdigest()
+    # Stock QEMU VGA duplicates the low bit of 6-bit color in its renderer.
+    def surface_row(first_color):
+        unit = b''
+        for color in range(first_color, first_color + 4):
+            rgb = bytes((dac << 2) | (3 if dac & 1 else 0)
+                        for dac in (color, 2 * color, 3 * color))
+            unit += rgb * 2
+        return unit * 80
+    surface = surface_row(first) * (2 * 199) + surface_row(first + 8) * 2
+    assert source['surface-rgb-sha256'] == sha256(surface).hexdigest()
+
+
+@pytest.mark.parametrize('renderer', [
+    False,
+    pytest.param(True, marks=pytest.mark.skipif(
+        os.environ.get('FDISBULL_REQUIRE_QEMU_UNCHAINED_RENDER_PROOF') != '1',
+        reason='Select a QEMU with unchained renderer-source proof')),
+])
 def test_native_unchained_probe_selects_programmed_page_and_interleaved_planes(
-        tmp_path, clock_runtime, clock_disk):
+        tmp_path, clock_runtime, clock_disk, monkeypatch, renderer):
+    if renderer:
+        original = qemu_machine.machine_retrace_arguments
+        monkeypatch.setattr(qemu_machine, 'machine_retrace_arguments',
+            lambda profile: original(profile) + ['-global', 'VGA.x-fdisbull-raster-proof=on'])
     code = assemble(tmp_path, 'unchained-pages', BODY, clock_runtime['nasm'])
     assert code[-14:-10] == b'UVGA'
     symbols = dict(zip(('chain4', 'page_a', 'page_b', 'wrapping', 'restored_page'),
@@ -173,6 +213,8 @@ def test_native_unchained_probe_selects_programmed_page_and_interleaved_planes(
 
             park(debug, address['page_a'])
             page_a = probe(1, 0x10000)
+            if renderer:
+                _render_page(project, debug, 1, 0x10000)
             with pytest.raises(DebuggerError, match='unsupported-pixel-interpretation'):
                 debug.video_frame_start()
             assert debug.vm.process is owner and owner.poll() is None
@@ -182,12 +224,21 @@ def test_native_unchained_probe_selects_programmed_page_and_interleaved_planes(
             park(debug, address['page_b'])
             page_b = probe(5, 0x20000)
             assert page_b['configuration-generation'] > page_a['configuration-generation']
+            if renderer:
+                assert passive(project, debug)['current-configuration-matches'] is False
+                _render_page(project, debug, 5, 0x20000)
             park(debug, address['wrapping'])
             with pytest.raises(DebuggerError, match='incomplete-or-wrapping-source-storage'):
                 debug.vm.qmp.call(COMMAND, {'rows': [199]})
+            if renderer:
+                proof = debug.vm.qmp.call(RENDER_PROOF)
+                unavailable(proof, attempted=True)
+                assert proof['reason'] == 'incomplete-or-wrapping-source-storage'
             park(debug, address['restored_page'])
             restored = probe(5, 0x20000)
             assert restored['rows'] == page_b['rows']
             assert restored['configuration-generation'] > page_b['configuration-generation']
+            if renderer:
+                _render_page(project, debug, 5, 0x20000)
     assert owner.poll() is not None and source.read_bytes() == code
     assert digest(clock_disk['image']) == clock_disk['prepared_sha256']
