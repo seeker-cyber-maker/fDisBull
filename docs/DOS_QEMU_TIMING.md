@@ -298,9 +298,9 @@ refused. After full completion, a new press can be admitted normally.
 The separate host clock controller can supply that explicitly requested bounded
 execution through `clock_sync_step()`. Its fixed mapping, drift latch and
 first-stop policy still apply; input never advances the clock or rebases the
-mapping by itself. Coordinate clicks remain unavailable, and `timed_input`,
-`guest_time_control` and `completed_guest_frames` stay false.
-See the [native press contract](../native/qemu-keyboard-press/README.md).
+mapping by itself. The general `timed_input`, `guest_time_control` and
+`completed_guest_frames` capabilities stay false.
+[Native press contract](../native/qemu-keyboard-press/README.md)
 
 ### Queue bounded US-layout text
 

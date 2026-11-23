@@ -669,7 +669,8 @@ exact queue acceptance, matching driver and raster configuration, and a new
 driver edge at the target. An intervening breakpoint or hook returns the
 original stop and the input lease or partial disposition. A cursor warp or
 a guest query that consumed the edge count can also leave a partial result.
-Generic coordinate routes and other driver modes remain open.
+The public coordinate methods use the explicit delivery profile for this driver.
+[Observed coordinate clicks](DOS_QEMU_TIMING.md#observed-coordinate-clicks)
 
 ### Native key repeat
 
