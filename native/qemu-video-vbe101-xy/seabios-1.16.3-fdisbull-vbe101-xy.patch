@@ -1,0 +1,67 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -149,6 +149,25 @@
+     irq_disable();
+ }
+
++#define FDISBULL_XY_INDEX 0xf2
++#define FDISBULL_XY_ID 0xfb02
++#define FDISBULL_XY_PORT 0x01d4
++
++int
++bochsvga_fdisbull_xy_available(void)
++{
++    return bochsvga_dispi_enabled() && dispi_read(FDISBULL_XY_INDEX) == FDISBULL_XY_ID;
++}
++
++int
++bochsvga_fdisbull_set_xy(u16 x, u16 y)
++{
++    u32 pair = ((u32)y << 16) | x;
++
++    outl(pair, FDISBULL_XY_PORT);
++    return inl(FDISBULL_XY_PORT) == pair ? 0 : -1;
++}
++
+ int
+ bochsvga_get_displaystart(struct vgamode_s *vmode_g)
+ {
+@@ -156,6 +175,10 @@
+         return stdvga_get_displaystart(vmode_g);
+     int bpp = vga_bpp(vmode_g);
+     int linelength = dispi_read(VBE_DISPI_INDEX_VIRT_WIDTH) * bpp / 8;
++    if (bochsvga_fdisbull_xy_available()) {
++        u32 pair = inl(FDISBULL_XY_PORT);
++        return (u16)pair + linelength * (pair >> 16);
++    }
+     int x = dispi_read(VBE_DISPI_INDEX_X_OFFSET);
+     int y = dispi_read(VBE_DISPI_INDEX_Y_OFFSET);
+     return x * bpp / 8 + linelength * y;
+--- a/vgasrc/bochsvga.h
++++ b/vgasrc/bochsvga.h
+@@ -47,6 +47,8 @@
+ int bochsvga_get_linelength(struct vgamode_s *vmode_g);
+ int bochsvga_set_linelength(struct vgamode_s *vmode_g, int val);
+ int bochsvga_get_displaystart(struct vgamode_s *vmode_g);
++int bochsvga_fdisbull_xy_available(void);
++int bochsvga_fdisbull_set_xy(u16 x, u16 y);
+ void bochsvga_wait_fdisbull_displaystart(void);
+ int bochsvga_set_displaystart(struct vgamode_s *vmode_g, int val);
+ int bochsvga_get_dacformat(struct vgamode_s *vmode_g);
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -325,8 +325,12 @@
+     switch (regs->bl) {
+     case 0x80:
+     case 0x00:
+-        ret = vgahw_set_displaystart(
+-            vmode_g, DIV_ROUND_UP(regs->cx * bpp, 8) + linelength * regs->dx);
++        if (CONFIG_VGA_BOCHS && bochsvga_fdisbull_xy_available())
++            ret = bochsvga_fdisbull_set_xy(regs->cx, regs->dx);
++        else
++            ret = vgahw_set_displaystart(
++                vmode_g, DIV_ROUND_UP(regs->cx * bpp, 8)
++                + linelength * regs->dx);
+         if (ret)
+             goto fail;
+         if (CONFIG_VGA_BOCHS && regs->bl == 0x80)
