@@ -1,5 +1,25 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Local installed fallback rehearsal (2026-11-23)
+
+A fresh offline wheel at `751c1c8413ec85f617d9f1b4666740eb316396eb`
+ran the same authored COM through explicit `dosbox`, `dosbox-qemu` and
+`qemu-dos` selection. Every backend restored its own checkpoint, returned
+DOS code 42, and reaped its host process successfully. Reopening the project
+confirmed three finished runs. Missing prerequisites refused before spawn.
+Native QEMU refused the DOSBox checkpoint while retaining its CPU state
+and live owner.
+
+The DOSBox/QEMU lane used a separate offline DOS-only initramfs with the
+same embedded DOSBox executable and broker resources. The explicit
+`memory_mib=1536` selected the observed `-m 1536M` allocation. DOSBox
+remains the default backend, and the bridge uses 4096 MiB when the caller
+omits the new option. Installed wheel SHA-256
+`8d2828ea33895a14528c4b181783135d0d0afe1953f0a477a9161eb54adb3f82`
+and sanitized receipt SHA-256
+`042ce4cd582634eb862f198319617b1d832d1c16fd7e4de08a1eb4a021f1c6ba`.
+[Backend selection](DOS_QEMU_MIGRATION.md)
+
 ## Protected Doom display restore and paired input evidence (2026-11-23)
 
 Original Doom's E1M5 demo reaches the protected LE tic 64 boundary using
