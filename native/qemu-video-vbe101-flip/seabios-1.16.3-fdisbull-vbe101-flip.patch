@@ -1,0 +1,45 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -132,6 +132,21 @@
+         dispi_write(VBE_DISPI_INDEX_VIRT_WIDTH, pixels);
+     }
+     return 0;
++}
++
++/* The private capability is exposed only by the opt-in banked 101h device.
++ * Wait for a fresh leading edge even if INT 10h entered during retrace. */
++void
++bochsvga_wait_fdisbull_displaystart(void)
++{
++    if (dispi_read(0xf1) != 0xfb01)
++        return;
++    irq_enable();
++    while (inb(0x03da) & 0x08)
++        ;
++    while (!(inb(0x03da) & 0x08))
++        ;
++    irq_disable();
+ }
+
+ int
+--- a/vgasrc/bochsvga.h
++++ b/vgasrc/bochsvga.h
+@@ -47,6 +47,7 @@
+ int bochsvga_get_linelength(struct vgamode_s *vmode_g);
+ int bochsvga_set_linelength(struct vgamode_s *vmode_g, int val);
+ int bochsvga_get_displaystart(struct vgamode_s *vmode_g);
++void bochsvga_wait_fdisbull_displaystart(void);
+ int bochsvga_set_displaystart(struct vgamode_s *vmode_g, int val);
+ int bochsvga_get_dacformat(struct vgamode_s *vmode_g);
+ int bochsvga_set_dacformat(struct vgamode_s *vmode_g, int val);
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -329,6 +329,8 @@
+             vmode_g, DIV_ROUND_UP(regs->cx * bpp, 8) + linelength * regs->dx);
+         if (ret)
+             goto fail;
++        if (CONFIG_VGA_BOCHS && regs->bl == 0x80)
++            bochsvga_wait_fdisbull_displaystart();
+         break;
+     case 0x01:
+         ret = vgahw_get_displaystart(vmode_g);

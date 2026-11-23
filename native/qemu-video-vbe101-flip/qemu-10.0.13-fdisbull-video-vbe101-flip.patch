@@ -1,0 +1,687 @@
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -190,7 +190,14 @@
+ {
+     return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
+            (PCI_VGA(obj)->vga.fdisbull_vga480 ||
+-            PCI_VGA(obj)->vga.fdisbull_vbe101_sync);
++            PCI_VGA(obj)->vga.fdisbull_vbe101_sync ||
++            PCI_VGA(obj)->vga.fdisbull_vbe101_flip);
++}
++
++bool pci_std_vga_fdisbull_vbe101_flip_selected(Object *obj)
++{
++    return obj && !strcmp(object_get_typename(obj), "VGA") &&
++           PCI_VGA(obj)->vga.fdisbull_vbe101_flip;
+ }
+
+ bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj)
+@@ -486,8 +493,13 @@
+
+     if ((unsigned)s->fdisbull_mode13_phase + s->fdisbull_mode13_overlap +
+         s->fdisbull_unchained_latch + s->fdisbull_vga480 +
+-        s->fdisbull_vbe101_sync > 1) {
++        s->fdisbull_vbe101_sync + s->fdisbull_vbe101_flip > 1) {
+         error_setg(errp, "Select only one fDisBull VGA source timing profile");
++        return;
++    }
++
++    if (s->fdisbull_vbe101_flip && !s->fdisbull_retrace) {
++        error_setg(errp, "x-fdisbull-vbe101-flip requires x-fdisbull-retrace");
+         return;
+     }
+
+@@ -590,6 +602,8 @@
+                      vga.fdisbull_vga480, false),
+     DEFINE_PROP_BOOL("x-fdisbull-vbe101-sync", PCIVGAState,
+                      vga.fdisbull_vbe101_sync, false),
++    DEFINE_PROP_BOOL("x-fdisbull-vbe101-flip", PCIVGAState,
++                     vga.fdisbull_vbe101_flip, false),
+     DEFINE_PROP_BOOL("x-fdisbull-unchained-latch", PCIVGAState,
+                      vga.fdisbull_unchained_latch, false),
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -147,7 +147,17 @@
+
+ static bool vga_fdisbull_wide(const VGACommonState *s)
+ {
+-    return s->fdisbull_vga480 || s->fdisbull_vbe101_sync;
++    return s->fdisbull_vga480 || s->fdisbull_vbe101_sync ||
++           s->fdisbull_vbe101_flip;
++}
++
++static bool vga_fdisbull_vbe101_window(const VGACommonState *s, uint64_t origin)
++{
++    const unsigned width = FDISBULL_VIDEO_WIDE_WIDTH;
++    const unsigned height = FDISBULL_VIDEO_WIDE_HEIGHT;
++
++    return origin % width == 0 && origin / width <= VBE_DISPI_MAX_YRES &&
++           origin + width * height <= MIN(s->vram_size, s->vbe_size);
+ }
+
+ static bool vga_fdisbull_banked_101(const VGACommonState *s)
+@@ -161,16 +171,25 @@
+            vbe[VBE_DISPI_INDEX_YRES] == FDISBULL_VIDEO_WIDE_HEIGHT &&
+            vbe[VBE_DISPI_INDEX_BPP] == 8 &&
+            vbe[VBE_DISPI_INDEX_VIRT_WIDTH] == FDISBULL_VIDEO_WIDE_WIDTH &&
+-           !vbe[VBE_DISPI_INDEX_X_OFFSET] && !vbe[VBE_DISPI_INDEX_Y_OFFSET] &&
+-           s->vbe_line_offset == FDISBULL_VIDEO_WIDE_WIDTH &&
+-           !s->vbe_start_addr && !s->dac_8bit &&
++           !vbe[VBE_DISPI_INDEX_X_OFFSET] &&
++           (s->fdisbull_vbe101_flip ?
++            (uint64_t)s->vbe_start_addr * 4 ==
++            vbe[VBE_DISPI_INDEX_Y_OFFSET] * FDISBULL_VIDEO_WIDE_WIDTH &&
++            vga_fdisbull_vbe101_window(s, (uint64_t)s->vbe_start_addr * 4) :
++            !vbe[VBE_DISPI_INDEX_Y_OFFSET] && !s->vbe_start_addr) &&
++           s->vbe_line_offset == FDISBULL_VIDEO_WIDE_WIDTH && !s->dac_8bit &&
+            (s->gr[VGA_GFX_MISC] & 0x0c) == 0x04;
+ }
+
+ static bool vga_fdisbull_vbe101_sync(const VGACommonState *s)
+ {
+-    return s->fdisbull_vbe101_sync && s->fdisbull_retrace &&
+-           (s->msr & 1) && vga_fdisbull_banked_101(s);
++    return (s->fdisbull_vbe101_sync || s->fdisbull_vbe101_flip) &&
++           s->fdisbull_retrace && (s->msr & 1) && vga_fdisbull_banked_101(s);
++}
++
++static bool vga_fdisbull_vbe101_flip(const VGACommonState *s)
++{
++    return s->fdisbull_vbe101_flip && vga_fdisbull_vbe101_sync(s);
+ }
+
+ /* DOSBox-X S3 BIOS mode 101h has a 29.403 MHz PLL and 800 dots per line.
+@@ -191,6 +210,57 @@
+     .vsync_start_line = 490,
+     .vsync_end_line = 492,
+ };
++
++/* No IRQ or host update is produced by this latch. Materialize an elapsed
++ * edge before inspecting or replacing the pending display start. */
++static void vga_fdisbull_vbe101_advance(VGACommonState *s, int64_t now)
++{
++    if (s->fdisbull_vbe101_deadline_ns > 0 &&
++        now >= s->fdisbull_vbe101_deadline_ns) {
++        s->fdisbull_vbe101_active_bytes = s->vbe_start_addr * 4;
++        s->fdisbull_vbe101_deadline_ns = 0;
++    }
++}
++
++static int64_t vga_fdisbull_vbe101_next_edge(int64_t now)
++{
++    const int64_t period = vbe101_timing.line_period_ns *
++                           vbe101_timing.lines_per_frame;
++    const int64_t leading = vbe101_timing.line_period_ns *
++                            vbe101_timing.vsync_start_line;
++    int64_t delta = leading - now % period;
++
++    if (delta <= 0) {
++        delta += period;
++    }
++    return now <= INT64_MAX - delta ? now + delta : 0;
++}
++
++static FdisbullVbe101DisplayStart *vga_fdisbull_vbe101_start(
++    VGACommonState *s, int64_t now)
++{
++    FdisbullVbe101DisplayStart *display = g_new0(FdisbullVbe101DisplayStart, 1);
++
++    vga_fdisbull_vbe101_advance(s, now);
++    display->programmed_origin_bytes = s->vbe_start_addr * 4;
++    display->active_origin_bytes = s->fdisbull_vbe101_active_bytes;
++    display->has_pending_deadline_ns = s->fdisbull_vbe101_deadline_ns > 0;
++    display->pending_deadline_ns = s->fdisbull_vbe101_deadline_ns;
++    return display;
++}
++
++static bool vga_fdisbull_vbe101_start_equal(
++    const FdisbullVbe101DisplayStart *a, const FdisbullVbe101DisplayStart *b)
++{
++    if (!a || !b) {
++        return a == b;
++    }
++    return a->programmed_origin_bytes == b->programmed_origin_bytes &&
++           a->active_origin_bytes == b->active_origin_bytes &&
++           a->has_pending_deadline_ns == b->has_pending_deadline_ns &&
++           (!a->has_pending_deadline_ns ||
++            a->pending_deadline_ns == b->pending_deadline_ns);
++}
+
+ static uint8_t vga_fdisbull_vbe101_status(int64_t now, FdisbullRetracePhase *out)
+ {
+@@ -557,6 +627,9 @@
+         *info->vbe101_timing = vbe101_timing;
+         info->phase = g_new0(FdisbullRetracePhase, 1);
+         vga_fdisbull_vbe101_status(virtual_ns, info->phase);
++        if (vga_fdisbull_vbe101_flip(s)) {
++            info->vbe101_display_start = vga_fdisbull_vbe101_start(s, virtual_ns);
++        }
+         return true;
+     }
+     if (virtual_ns < 0 || r->freq || r->ticks_per_char <= 0 ||
+@@ -649,8 +722,9 @@
+     return !memcmp(&layout, previous, sizeof(layout));
+ }
+
+-static bool vga_fdisbull_aperture_only(const VGAConfigurationState *raw,
+-                                      const VGAConfigurationState *previous)
++static bool vga_fdisbull_scanout_unchanged(const VGAConfigurationState *raw,
++                                           const VGAConfigurationState *previous,
++                                           bool flip)
+ {
+     VGAConfigurationState layout;
+
+@@ -664,6 +738,14 @@
+         layout.vbe[VBE_DISPI_INDEX_BANK] = previous->vbe[VBE_DISPI_INDEX_BANK];
+         layout.bank_offset = previous->bank_offset;
+     }
++    if (flip) {
++        /* SeaVGABIOS writes the CRTC start before the DISPI Y offset.
++         * The former is ignored in this layout. The latter is latched. */
++        layout.crtc[VGA_CRTC_START_HI] = previous->crtc[VGA_CRTC_START_HI];
++        layout.crtc[VGA_CRTC_START_LO] = previous->crtc[VGA_CRTC_START_LO];
++        layout.vbe[VBE_DISPI_INDEX_Y_OFFSET] = previous->vbe[VBE_DISPI_INDEX_Y_OFFSET];
++        layout.vbe_start_address = previous->vbe_start_address;
++    }
+     return !memcmp(&layout, previous, sizeof(layout));
+ }
+
+@@ -700,11 +782,12 @@
+              s->fdisbull_configuration_committed.crtc[VGA_CRTC_START_LO])) {
+         fdisbull_video_frame_check_page_programming(s->con);
+     }
+-    bool aperture_only = !force && vga_fdisbull_wide(s) &&
+-        vga_fdisbull_aperture_only(&raw, &s->fdisbull_configuration_committed);
++    bool wide_unchanged = !force && vga_fdisbull_wide(s) &&
++        vga_fdisbull_scanout_unchanged(&raw, &s->fdisbull_configuration_committed,
++                                      vga_fdisbull_vbe101_flip(s));
+     s->fdisbull_configuration_generation++;
+     memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
+-    if (!same_scanout_layout && !aperture_only) {
++    if (!same_scanout_layout && !wide_unchanged) {
+         fdisbull_video_frame_invalidate(s->con, "configuration-changed");
+     }
+ }
+@@ -1272,6 +1355,9 @@
+         }
+     } else if (s->vbe_index == VBE_DISPI_INDEX_VIDEO_MEMORY_64K) {
+         val = s->vbe_size / (64 * KiB);
++    } else if (s->vbe_index == VBE_DISPI_INDEX_FDISBULL_FLIP &&
++               vga_fdisbull_vbe101_flip(s)) {
++        val = VBE_DISPI_FDISBULL_FLIP_ID;
+     } else {
+         val = 0;
+     }
+@@ -1289,6 +1375,14 @@
+ {
+     VGACommonState *s = opaque;
+     FdisbullRetraceBefore retrace_before = { 0 };
++    int64_t now = 0;
++    unsigned previous_start = s->vbe_start_addr;
++    bool was_flip = vga_fdisbull_vbe101_flip(s);
++
++    if (s->fdisbull_vbe101_flip) {
++        now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
++        vga_fdisbull_vbe101_advance(s, now);
++    }
+
+     if (s->fdisbull_retrace) {
+         vga_fdisbull_retrace_before(s, &retrace_before);
+@@ -1353,6 +1447,16 @@
+     if (s->fdisbull_retrace) {
+         vga_fdisbull_retrace_after(s, &retrace_before);
+     }
++    if (s->fdisbull_vbe101_flip) {
++        if (!vga_fdisbull_vbe101_flip(s)) {
++            s->fdisbull_vbe101_active_bytes = 0;
++            s->fdisbull_vbe101_deadline_ns = 0;
++        } else if (!was_flip || previous_start != s->vbe_start_addr) {
++            s->fdisbull_vbe101_deadline_ns =
++                s->vbe_start_addr * 4 == s->fdisbull_vbe101_active_bytes ?
++                0 : vga_fdisbull_vbe101_next_edge(now);
++        }
++    }
+     /* Commit the final fixed-up vector, not intermediate VBE assignments. */
+     vga_fdisbull_configuration_commit(s, false);
+ }
+@@ -1670,7 +1774,12 @@
+ {
+     if (vbe_enabled(s)) {
+         params->line_offset = s->vbe_line_offset;
+-        params->start_addr = s->vbe_start_addr;
++        if (vga_fdisbull_vbe101_flip(s)) {
++            vga_fdisbull_vbe101_advance(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
++            params->start_addr = s->fdisbull_vbe101_active_bytes / 4;
++        } else {
++            params->start_addr = s->vbe_start_addr;
++        }
+         params->line_compare = 65535;
+         params->hpel = VGA_HPEL_NEUTRAL;
+         params->hpel_split = false;
+@@ -2269,13 +2378,15 @@
+     FdisbullVideoFrameSource *source, Error **errp)
+ {
+     bool banked = vbe_enabled(s);
++    bool flip = banked && vga_fdisbull_vbe101_flip(s);
+     unsigned pitch = banked ? 640 : 320;
+     FdisbullVideoScanoutLayout layout = banked ? FDISBULL_SCANOUT_VBE101 :
+                                                FDISBULL_SCANOUT_MODE12;
+
+     if (geometry->width != FDISBULL_VIDEO_WIDE_WIDTH ||
+         geometry->height != FDISBULL_VIDEO_WIDE_HEIGHT ||
+-        geometry->start_address != 0 || geometry->line_offset != pitch ||
++        (flip ? !vga_fdisbull_vbe101_window(s, geometry->start_address) :
++                geometry->start_address != 0) || geometry->line_offset != pitch ||
+         geometry->line_compare < FDISBULL_VIDEO_WIDE_HEIGHT - 1 ||
+         geometry->multi_scan || geometry->hpel || !geometry->display_enabled ||
+         !(s->gr[VGA_GFX_MISC] & VGA_GR06_GRAPHICS_MODE) ||
+@@ -2287,7 +2398,8 @@
+     if (banked) {
+         if (geometry->depth != 8 || geometry->shift_control != 2 ||
+             !vga_fdisbull_banked_101(s) ||
+-            (s->fdisbull_vbe101_sync && !retrace->vbe101_timing)) {
++            ((s->fdisbull_vbe101_sync || s->fdisbull_vbe101_flip) &&
++             !retrace->vbe101_timing)) {
+             error_setg(errp, "Unsupported banked VBE 101 scanout layout");
+             return false;
+         }
+@@ -2303,6 +2415,7 @@
+         .configuration_generation = configuration->configuration_generation,
+         .timing_generation = retrace->timing_generation,
+         .layout = layout,
++        .origin_bytes = geometry->start_address,
+     };
+     if (banked) {
+         source->line_period_ns = vbe101_timing.line_period_ns;
+@@ -2322,7 +2435,7 @@
+         return false;
+     }
+     if (row >= 0) {
+-        vga_fdisbull_scanout_row(s, layout, s->vram_ptr + row * pitch, rgb);
++        vga_fdisbull_scanout_row(s, layout, s->vram_ptr + geometry->start_address + row * pitch, rgb);
+     }
+     return true;
+ }
+@@ -2954,6 +3067,8 @@
+     memset(s->vbe_regs, '\0', sizeof(s->vbe_regs));
+     s->vbe_regs[VBE_DISPI_INDEX_ID] = VBE_DISPI_ID5;
+     s->vbe_start_addr = 0;
++    s->fdisbull_vbe101_active_bytes = 0;
++    s->fdisbull_vbe101_deadline_ns = 0;
+     s->vbe_line_offset = 0;
+     s->vbe_bank_mask = (s->vram_size >> 16) - 1;
+     memset(s->font_offsets, '\0', sizeof(s->font_offsets));
+@@ -3239,6 +3354,25 @@
+     }
+ };
+
++static bool vga_vbe101_flip_state_needed(void *opaque)
++{
++    VGACommonState *s = opaque;
++
++    return s->fdisbull_vbe101_flip;
++}
++
++static const VMStateDescription vmstate_vga_vbe101_flip = {
++    .name = "vga.fdisbull-vbe101-flip",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = vga_vbe101_flip_state_needed,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT32(fdisbull_vbe101_active_bytes, VGACommonState),
++        VMSTATE_INT64(fdisbull_vbe101_deadline_ns, VGACommonState),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
+ const VMStateDescription vmstate_vga_common = {
+     .name = "vga",
+     .version_id = 2,
+@@ -3278,6 +3412,7 @@
+     },
+     .subsections = (const VMStateDescription * const []) {
+         &vmstate_vga_endian,
++        &vmstate_vga_vbe101_flip,
+         NULL
+     }
+ };
+@@ -3590,6 +3725,8 @@
+         actual->timing_generation != retrace->timing_generation ||
+         actual->phase_supported != retrace->phase_supported ||
+         !fdisbull_vbe101_timing_equal(actual->vbe101_timing, retrace->vbe101_timing) ||
++        !vga_fdisbull_vbe101_start_equal(actual->vbe101_display_start,
++                                        retrace->vbe101_display_start) ||
+         actual->timing->ticks_per_char != retrace->timing->ticks_per_char ||
+         actual->timing->total_chars != retrace->timing->total_chars ||
+         actual->timing->htotal != retrace->timing->htotal ||
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -189,6 +189,9 @@
+     bool fdisbull_mode13_overlap;
+     bool fdisbull_vga480;
+     bool fdisbull_vbe101_sync;
++    bool fdisbull_vbe101_flip;
++    uint32_t fdisbull_vbe101_active_bytes;
++    int64_t fdisbull_vbe101_deadline_ns;
+     bool fdisbull_mode13_reapply_candidate;
+     VGAConfigurationState fdisbull_mode13_before;
+     bool fdisbull_unchained_latch;
+--- a/include/hw/display/bochs-vbe.h
++++ b/include/hw/display/bochs-vbe.h
+@@ -19,6 +19,10 @@
+ #define VBE_DISPI_INDEX_VIRT_HEIGHT     0x7
+ #define VBE_DISPI_INDEX_X_OFFSET        0x8
+ #define VBE_DISPI_INDEX_Y_OFFSET        0x9
++/* Read-only indication that this specific banked mode has a display latch. */
++#define VBE_DISPI_INDEX_FDISBULL_FLIP   0xf1
++#define VBE_DISPI_FDISBULL_FLIP_ID      0xfb01
++
+ #define VBE_DISPI_INDEX_NB              0xa /* size of vbe_regs[] */
+ #define VBE_DISPI_INDEX_VIDEO_MEMORY_64K 0xa /* read-only, not in vbe_regs */
+
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -47,6 +47,7 @@
+ bool pci_std_vga_fdisbull_mode13_overlap_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vga480_selected(Object *obj);
+ bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj);
++bool pci_std_vga_fdisbull_vbe101_flip_selected(Object *obj);
+ bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_pending(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_setup(Object *obj,
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_FLIP \
++    "fdisbull-instrumented-qemu-state-10"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_SYNC \
+     "fdisbull-instrumented-qemu-state-9"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480 \
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -18,6 +18,7 @@
+ bool fdisbull_video_frame_mode13_overlap_selected(void);
+ bool fdisbull_video_frame_vga480_selected(void);
+ bool fdisbull_video_frame_vbe101_sync_selected(void);
++bool fdisbull_video_frame_vbe101_flip_selected(void);
+ bool fdisbull_video_frame_unchained_latch_selected(void);
+ void fdisbull_video_frame_check_page_programming(struct QemuConsole *console);
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp);
+--- a/qapi/fdisbull-retrace.json
++++ b/qapi/fdisbull-retrace.json
+@@ -100,6 +100,21 @@
+             'vsync-start-line': 'int', 'vsync-end-line': 'int' } }
+
+ ##
++# @FdisbullVbe101DisplayStart:
++#
++# Programmed and latched byte origins in banked VBE 101h.
++#
++# @programmed-origin-bytes: Display start returned by the guest BIOS.
++# @active-origin-bytes: Display start used by scanout.
++# @pending-deadline-ns: Next leading vertical retrace when they differ.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVbe101DisplayStart',
++  'data': { 'programmed-origin-bytes': 'uint32',
++            'active-origin-bytes': 'uint32', '*pending-deadline-ns': 'int' } }
++
++##
+ # @FdisbullRetraceInfo:
+ #
+ # @api-version: Private observation protocol version, one.
+@@ -120,6 +135,8 @@
+ # @timing: Current cached native VGA CRTC parameters.
+ # @vbe101-timing: Effective phase geometry for the opt-in banked VBE 101h
+ #     model. When present the inherited CRTC cache is independent of phase.
++# @vbe101-display-start: Programmed, active and pending display start in
++#     the opt-in flip profile while the banked mode is active.
+ # @unsupported-reason: Present only without phase support: uninitialized,
+ #     vbe-enabled or invalid-timing, in that precedence order.
+ # @phase: Present only when phase-supported is true.
+@@ -137,7 +154,8 @@
+             'phase-supported': 'bool', 'raw': 'FdisbullRetraceRaw',
+             'timing': 'FdisbullRetraceTiming', '*unsupported-reason': 'str',
+             '*phase': 'FdisbullRetracePhase',
+-            '*vbe101-timing': 'FdisbullVbe101Timing' } }
++            '*vbe101-timing': 'FdisbullVbe101Timing',
++            '*vbe101-display-start': 'FdisbullVbe101DisplayStart' } }
+
+ ##
+ # @x-fdisbull-query-retrace:
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -71,6 +71,8 @@
+ # @pixel-sha256: SHA-256 of exactly 192000 retained packed RGB bytes.
+ # @rows: One frozen sampling receipt per visible source row.
+ # @scanout-layout: Admitted planar VGA or banked VBE layout for 640 by 480.
++# @vbe101-origin-bytes: Retrace-latched origin for this banked VBE 101h
++#     raster under the opt-in flip profile.
+ #
+ # This receipt owns one complete row-sampled raster. It does not claim
+ # application drawing completion or equivalence with DOSBox's carried phase.
+@@ -89,7 +91,7 @@
+             '*source-phase': 'uint8',
+             '*reapply-overlap': 'FdisbullVideoReapplyOverlap',
+             '*page-latch': 'FdisbullVideoFramePageLatch',
+-            '*scanout-layout': 'str' } }
++            '*scanout-layout': 'str', '*vbe101-origin-bytes': 'uint32' } }
+
+ ##
+ # @FdisbullVideoModeSetup:
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,7 +161,9 @@
+     }
+
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    if (fdisbull_video_frame_vbe101_sync_selected()) {
++    if (fdisbull_video_frame_vbe101_flip_selected()) {
++        result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_FLIP);
++    } else if (fdisbull_video_frame_vbe101_sync_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_SYNC);
+     } else if (fdisbull_video_frame_vga480_selected()) {
+         result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480);
+@@ -409,14 +411,17 @@
+                               FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VGA480);
+     bool sync_v9 = !strcmp(state->format,
+                            FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_SYNC);
++    bool flip_v10 = !strcmp(state->format,
++                             FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_VBE101_FLIP);
+     bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6 ||
+-                      overlap_v7 || vga480_v8 || sync_v9;
++                      overlap_v7 || vga480_v8 || sync_v9 || flip_v10;
+     bool has_source = source_v3 || has_repeat;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+         (mode13_v5 || overlap_v7) != fdisbull_video_frame_mode13_selected() ||
+         overlap_v7 != fdisbull_video_frame_mode13_overlap_selected() ||
+-        (vga480_v8 || sync_v9) != fdisbull_video_frame_vga480_selected() ||
++        (vga480_v8 || sync_v9 || flip_v10) != fdisbull_video_frame_vga480_selected() ||
+         sync_v9 != fdisbull_video_frame_vbe101_sync_selected() ||
++        flip_v10 != fdisbull_video_frame_vbe101_flip_selected() ||
+         unchained_v6 != fdisbull_video_frame_unchained_latch_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -58,6 +58,11 @@
+     return false;
+ }
+
++bool pci_std_vga_fdisbull_vbe101_flip_selected(Object *obj)
++{
++    return false;
++}
++
+ bool pci_std_vga_fdisbull_vbe101_sync_selected(Object *obj)
+ {
+     return false;
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -3,6 +3,7 @@
+ #include "qemu/osdep.h"
+ #include "exec/cpu-interrupt.h"
+ #include "hw/core/cpu.h"
++#include "hw/display/bochs-vbe.h"
+ #include "hw/display/fdisbull-video-frame.h"
+ #include "hw/display/vga.h"
+ #include "hw/qdev-core.h"
+@@ -26,6 +27,7 @@
+ #define MODE13_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-v1"
+ #define MODE13_OVERLAP_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-overlap-v1"
+ #define VGA480_SYNC_VIDEO_MODEL "qemu-vga-640x480-sync-v1"
++#define VGA480_FLIP_VIDEO_MODEL "qemu-vga-640x480-flip-v1"
+ #define VGA480_VIDEO_MODEL "qemu-vga-640x480-scanline-v1"
+ #define UNCHAINED_LATCH_VIDEO_MODEL "qemu-vga-unchained-320x200-latch-v1"
+
+@@ -360,6 +362,13 @@
+         video_device(&console, NULL));
+ }
+
++bool fdisbull_video_frame_vbe101_flip_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_vbe101_flip_selected(video_device(&console, NULL));
++}
++
+ bool fdisbull_video_frame_vbe101_sync_selected(void)
+ {
+     QemuConsole *console;
+@@ -407,6 +416,9 @@
+
+ static const char *video_model(Object *device)
+ {
++    if (pci_std_vga_fdisbull_vbe101_flip_selected(device)) {
++        return VGA480_FLIP_VIDEO_MODEL;
++    }
+     if (pci_std_vga_fdisbull_vbe101_sync_selected(device)) {
+         return VGA480_SYNC_VIDEO_MODEL;
+     }
+@@ -668,6 +680,11 @@
+     frame->height = fdisbull_video_height(video.source.layout);
+     frame->stride = fdisbull_video_stride(video.source.layout);
+     frame->scanout_layout = g_strdup(video_layout_name(video.source.layout));
++    if (video.source.layout == FDISBULL_SCANOUT_VBE101 &&
++        pci_std_vga_fdisbull_vbe101_flip_selected(video.device)) {
++        frame->has_vbe101_origin_bytes = true;
++        frame->vbe101_origin_bytes = video.source.origin_bytes;
++    }
+     frame->pixel_format = g_strdup("RGB888");
+     frame->dac_conversion = g_strdup("replicate-6-to-8-v1");
+     frame->dac_8bit = video.source.dac_8bit;
+@@ -816,6 +833,15 @@
+             .configuration_generation = source.configuration_generation,
+         };
+     } else {
++        if (source.layout == FDISBULL_SCANOUT_VBE101 &&
++            pci_std_vga_fdisbull_vbe101_flip_selected(device)) {
++            if (video.rows && source.origin_bytes != video.source.origin_bytes) {
++                fdisbull_video_frame_invalidate(video.console,
++                                                "vbe-origin-changed-during-raster");
++                return;
++            }
++            video.source.origin_bytes = source.origin_bytes;
++        }
+         video.intended[video.rows] = video.deadline_ns;
+         video.actual[video.rows] = clock->virtual_ns;
+         video.rows++;
+@@ -937,6 +963,7 @@
+         (!retrace->phase_supported &&
+          (source.layout != FDISBULL_SCANOUT_VBE101 ||
+           pci_std_vga_fdisbull_vbe101_sync_selected(device) ||
++          pci_std_vga_fdisbull_vbe101_flip_selected(device) ||
+           g_strcmp0(retrace->unsupported_reason, "vbe-enabled"))) ||
+         retrace->timing_generation != source.timing_generation) {
+         if (!errp || !*errp) {
+@@ -1412,6 +1439,8 @@
+     const FdisbullVideoFrameRowList *last;
+     int64_t stopped = info->has_stop_ns ? info->stop_ns : info->virtual_ns;
+     FdisbullVideoScanoutLayout layout = video_layout(info->scanout_layout);
++    bool flip = layout == FDISBULL_SCANOUT_VBE101 &&
++                !g_strcmp0(info->model, VGA480_FLIP_VIDEO_MODEL);
+
+     if (!f) {
+         return video_checkpoint_pixels(s->rgb_base64, 0, NULL, NULL, errp);
+@@ -1433,6 +1462,12 @@
+         f->frame_start_ns % s->period_ns || !f->pixel_sha256) {
+         return video_checkpoint_error(errp, "complete frame identity or descriptor");
+     }
++    if (f->has_vbe101_origin_bytes != flip ||
++        (flip && (f->vbe101_origin_bytes % FDISBULL_VIDEO_WIDE_WIDTH ||
++                  f->vbe101_origin_bytes / FDISBULL_VIDEO_WIDE_WIDTH >
++                  VBE_DISPI_MAX_YRES))) {
++        return video_checkpoint_error(errp, "latched VBE raster origin");
++    }
+     if (info->has_page_latch_offset_ns != (f->page_latch != NULL)) {
+         return video_checkpoint_error(errp, "complete frame page latch presence");
+     }
+@@ -1484,6 +1519,7 @@
+     bool unchained = fdisbull_video_frame_unchained_latch_selected();
+     bool wide = fdisbull_video_frame_vga480_selected();
+     bool sync = fdisbull_video_frame_vbe101_sync_selected();
++    bool flip = fdisbull_video_frame_vbe101_flip_selected();
+     FdisbullVideoScanoutLayout layout;
+     unsigned phase;
+
+@@ -1493,7 +1529,8 @@
+     layout = video_layout(info->scanout_layout);
+     if (!source_epoch || virtual_ns < 0 ||
+         info->api_version != 1 ||
+-        g_strcmp0(info->model, sync ? VGA480_SYNC_VIDEO_MODEL :
++        g_strcmp0(info->model, flip ? VGA480_FLIP_VIDEO_MODEL :
++                  sync ? VGA480_SYNC_VIDEO_MODEL :
+                   wide ? VGA480_VIDEO_MODEL :
+                   unchained ? UNCHAINED_LATCH_VIDEO_MODEL :
+                   overlap_model ? MODE13_OVERLAP_VIDEO_MODEL :
+@@ -1647,7 +1684,7 @@
+
+ static bool video_checkpoint_device(const FdisbullVideoFrameCheckpointState *s,
+                                      Object **device, QemuConsole **console,
+-                                     Error **errp)
++                                     uint64_t *origin, Error **errp)
+ {
+     g_autofree char *path = NULL;
+     FdisbullVideoFrameSource source, expected = {
+@@ -1689,6 +1726,9 @@
+             video_checkpoint_error(errp, "selected source descriptor changed");
+         }
+         return false;
++    }
++    if (origin) {
++        *origin = source.origin_bytes;
+     }
+     const FdisbullVideoFramePageLatch *latches[] = {
+         s->info->pending_page_latch,
+@@ -1769,7 +1809,7 @@
+         return NULL;
+     }
+     if (video.token &&
+-        (!video_checkpoint_device(s, &device, &console, errp) ||
++        (!video_checkpoint_device(s, &device, &console, NULL, errp) ||
+          (!video.invalidated &&
+           (video.epoch != clock->epoch || video.device != device ||
+            video.console != console)))) {
+@@ -1874,7 +1914,8 @@
+         video_checkpoint_discard();
+         return true;
+     }
+-    if (!video_checkpoint_device(s, &device, &console, errp)) {
++    uint64_t origin = 0;
++    if (!video_checkpoint_device(s, &device, &console, &origin, errp)) {
+         return false;
+     }
+     observing = !strcmp(info->state, "observing");
+@@ -1947,6 +1988,7 @@
+     video.source.configuration_generation = s->configuration_generation;
+     video.source.timing_generation = s->timing_generation;
+     video.source.layout = layout;
++    video.source.origin_bytes = origin;
+     video.source.period_ns = s->period_ns;
+     video.source.line_period_ns = s->line_period_ns;
+     video.source.dac_8bit = s->dac_8bit;

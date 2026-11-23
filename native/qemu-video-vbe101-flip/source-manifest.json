@@ -1,0 +1,147 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "fc13a497ec4e55c8233f1de48efd0776d11a029088d466aa8a23e32e9cd65730",
+  "base_host_commit": "2ae7ea71c5587abca6c57ee37b4142afb7653ca4",
+  "composition": "Apply after native/qemu-video-vbe101-sync with every preimage verified.",
+  "scope": "Retrace-latched banked VBE 101h display start, BIOS wait and format 10 restore.",
+  "patch": "qemu-10.0.13-fdisbull-video-vbe101-flip.patch",
+  "patch_bytes": 28434,
+  "patch_sha256": "3a24656c8ca7866be7b08b65b44a51839d8d697da8139e14477e8f848964d930",
+  "files": [
+    {
+      "path": "hw/display/vga-pci.c",
+      "base_bytes": 24075,
+      "base_sha256": "f2c4814f8ca3d9be741920a0df6de038c64246722055ac08d744ab9601c34731",
+      "patched_bytes": 24610,
+      "patched_sha256": "6edbef8aa27a441e139f25355dd5c3991aa406ff87742ef1407dbf3906ea1925",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga.c",
+      "base_bytes": 125107,
+      "base_sha256": "f4f22bb53d591c58da453768945854d6d59b104361cf24bc9552a1208a1b1cf8",
+      "patched_bytes": 130650,
+      "patched_sha256": "8bf847189cd5cf46fd98378ba39f0f8c6fda67bf6a61f8272940b6448a049aee",
+      "mode": "100644"
+    },
+    {
+      "path": "hw/display/vga_int.h",
+      "base_bytes": 9887,
+      "base_sha256": "a607cb6bf55c7eaa9e2c863d01f7acfb4f415e53942c1d045d82e0cc8cf673ae",
+      "patched_bytes": 10002,
+      "patched_sha256": "b5dd8613502525e959d68289607ce051184be11ba63fd329f49e5a9b20b225ed",
+      "mode": "100644"
+    },
+    {
+      "path": "include/hw/display/bochs-vbe.h",
+      "base_bytes": 2230,
+      "base_sha256": "a72518caebd6dfcdb45ee45e97fed47a4909f48a688613188d59d5f9a4820731",
+      "patched_bytes": 2402,
+      "patched_sha256": "fde2affe8004e4b856c3887faa216d185d2c9e88cf96401a4f6f4403a3b508b7",
+      "mode": "100644"
+    },
+    {
+      "path": "include/hw/display/vga.h",
+      "base_bytes": 2804,
+      "base_sha256": "96ccb17d3fecce4c805bfc91599a8f128fcd37bceaf324e9134cfe6a9bb01fdf",
+      "patched_bytes": 2865,
+      "patched_sha256": "5c08e84fcc22250e0b64229bf11ac656582eb88bb9af9362fdfbac65171494a4",
+      "mode": "100644"
+    },
+    {
+      "path": "include/system/fdisbull-instrumented-checkpoint.h",
+      "base_bytes": 4023,
+      "base_sha256": "e1da13a0eb0124b6a5486553650842db7f84450ed228304da4dcca25025474e5",
+      "patched_bytes": 4127,
+      "patched_sha256": "4d80681f7df722d15b9531f59ecf2543f246b803f3a33be5ba1685f5e2a71a0c",
+      "mode": "100644"
+    },
+    {
+      "path": "include/system/fdisbull-video-frame.h",
+      "base_bytes": 1906,
+      "base_sha256": "b4c1943157dc17d842bc787d04c24d008e585d381147a56b528df4bc1f7993c0",
+      "patched_bytes": 1960,
+      "patched_sha256": "3fbeacd643b0e1e1407c0bd9a02c63e8dc26482336686f4b68ddc04532e671f2",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-retrace.json",
+      "base_bytes": 7065,
+      "base_sha256": "a6cdd42b2559ae2faa54c7c5103d3f0622082ac84b0605242324012ea38feb95",
+      "patched_bytes": 7751,
+      "patched_sha256": "358e6e535531428bd7d9346ccd17ce65bdb76c2b791faf0726f83a02d0c275a2",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-video-frame.json",
+      "base_bytes": 19982,
+      "base_sha256": "6f0925138c20488ac9372b83aa90b0d12bc72fd9c3b19b8b38da7fba9d27e040",
+      "patched_bytes": 20132,
+      "patched_sha256": "059d311f08da8ed728b1f0ee4353587786cf777691dd15f2e55646bdb8086067",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-instrumented-checkpoint.c",
+      "base_bytes": 22511,
+      "base_sha256": "3203a90208284a5bf1c33a59f18364fb8f408069759021eb40bbca7148ce9249",
+      "patched_bytes": 22878,
+      "patched_sha256": "9208d7b3d84ebaefcb3bd9b7ac0cef7d4c89bbc0553b38f8a4e431277ae4d9a1",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-retrace-stub.c",
+      "base_bytes": 2156,
+      "base_sha256": "33fa886539decfc1dbab993f17eb92ad34d72d1c6266299dc7e5f4d05482d740",
+      "patched_bytes": 2239,
+      "patched_sha256": "79b9665caa084443da6bf0ed20641f1b5489b37001cf683bbdd5f85838b08c96",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-video-frame.c",
+      "base_bytes": 78773,
+      "base_sha256": "7a83cb5ea4a725dba54d444ca2991c9dcce6e2b39e3401ec5d245d3e33a35585",
+      "patched_bytes": 80610,
+      "patched_sha256": "288de7557399153fefdb36ffef96894ba25e020fdd14a0f70732f43c051a6709",
+      "mode": "100644"
+    }
+  ],
+  "firmware": {
+    "version": "rel-1.16.3-0-ga6ed6b70",
+    "source_path": "roms/seabios",
+    "config_sha256": "ca7367ae57665fa01e0ebb741ba5823d646f4b65a9a87657ea163cc9f362a8a8",
+    "rom_name": "fdisbull-vgabios-vbe101-flip.bin",
+    "tested_rom_bytes": 39424,
+    "tested_rom_sha256": "74bc5d8ee91880a9139b1662626c4b5949e1be169be98cbeaa74339950f52f28",
+    "tested_compiler": "i686-elf GCC 16.2.0",
+    "patch": "seabios-1.16.3-fdisbull-vbe101-flip.patch",
+    "patch_bytes": 1400,
+    "patch_sha256": "f51d24978b2c68e8ce957e732190273c801a71ac78afa8e073f9306f5345f652",
+    "files": [
+      {
+        "path": "vgasrc/bochsvga.c",
+        "base_bytes": 11507,
+        "base_sha256": "2c2e74ca658db2e3396c382fa1655f792d2760befa440b1b25646145794b6f27",
+        "patched_bytes": 11885,
+        "patched_sha256": "60b1ed23db5b8c18447e3801ab3fda73c8ab5149a18af01d4c1d29f310823f14",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/bochsvga.h",
+        "base_bytes": 2241,
+        "base_sha256": "22be80ca49fd81c8aa1a14994762d3b0e92a310f0c1e90085e54f7d174010cf7",
+        "patched_bytes": 2289,
+        "patched_sha256": "8fb785e178de66f977b076f9bf6cc33a87c3980a437ad07758e7f10bb68b97c4",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/vbe.c",
+        "base_bytes": 13458,
+        "base_sha256": "dd3048814e38700a8a4e0ecbcb864c98d3c18a9b67453d80812d735d927deb7c",
+        "patched_bytes": 13559,
+        "patched_sha256": "6650571af124fa3f156b40266de521648e0b59281e26242dbddf6628e41be38a",
+        "mode": "100644"
+      }
+    ]
+  }
+}
