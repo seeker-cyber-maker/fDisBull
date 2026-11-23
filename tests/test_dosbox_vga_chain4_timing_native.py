@@ -104,8 +104,6 @@ def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
             base_width = parameters['width_ticks'] + 3
             evidence['declared_pulses'] = [[base_delay, base_width], [base_delay, base_width - 4]]
             request = {'points': [], 'source_timing_palette_index': 1}
-            arm = adapter.call('video.probe', request)
-            assert arm['source_timing_available'] is False
             for number in range(1, 5):
                 pulse = number > 2
                 if pulse:
@@ -117,7 +115,11 @@ def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
                 adapter.park('trial_ready')
                 ready = parse_trial(adapter.read(offsets['trial'], TRIAL_BYTES))
                 assert (ready['number'], ready['mode']) == (number, pulse)
-                advance = adapter.advance(adapter.before_frame())
+                baseline = adapter.before_frame()
+                if number == 1:
+                    arm = adapter.call('video.probe', request)
+                    assert arm['source_timing_available'] is False
+                advance = adapter.advance(baseline)
                 raw_trial = adapter.read(offsets['trial'], TRIAL_BYTES)
                 assert parse_trial(raw_trial)['post_generation'] == 0
                 identity = {name: advance[name] for name in ('frame_id', 'mode_id')}
@@ -153,3 +155,4 @@ def test_native_dosbox_chain4_callback_phase_precedes_rgb_read(tmp_path):
         evidence['producer_unchanged'] = digest(executable) == executable_sha
         _write_json(tmp_path / 'chain4-timing-receipt.json', evidence)
     assert evidence['producer_unchanged'] and evidence['reaped'] and evidence['returncode'] == 0
+    assert evidence['strict_both_pulses'], 'See retained timing receipt for any uncertain phase rows'

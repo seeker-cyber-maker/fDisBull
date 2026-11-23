@@ -19,9 +19,15 @@ ordered scheduled and actual row timestamps with physical line ordinals.
 Scheduled times are rounded to the nearest nanosecond from the producer's
 PIC event clock. Actual callback and write times use the producer's exact
 `ticks + tick_cycles / cycles_per_tick` emulated millisecond representation.
-The renderer samples live after the selected DAC commit and applies its
-existing deferred palette update just before drawing the row.
+The renderer applies any pending palette updates just before drawing each row.
 
 Unsupported geometry or an incomplete timing journal yields an unavailable
 receipt. `source_indices: false` without a requested timing index disarms
 capture. Ordinary frame and checkpoint contracts retain their existing form.
+
+For the authored warm-phase proof, set `FDISBULL_REQUIRE_DOSBOX_CHAIN4_TIMING=1`,
+`FDISBULL_DOSBOX_CHAIN4_TIMING`, `FDISBULL_DOSBOX_CHAIN4_TIMING_SHA256` and
+`NASM`, then run
+`python -m pytest -q tests/test_dosbox_vga_chain4_timing_native.py`.
+The private receipt records the native timings even if the strict phase
+comparison has overlapping rows.

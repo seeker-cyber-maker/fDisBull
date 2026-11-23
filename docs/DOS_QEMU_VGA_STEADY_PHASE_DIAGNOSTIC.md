@@ -212,12 +212,42 @@ passed readback. Native receipt SHA-256
 Independent timing audit SHA-256
 `719aed07fb57d7cca525a8ae7e2c4fda2983922f97b21273a4c94fdd40aef768`.
 
+## Direct DOSBox-X steady row timing
+
+The [row timing diagnostic](../native/dosbox-vga-row-timing/README.md)
+records the PIC schedule and actual renderer callback clock, phase ordinals
+and completed writes to the authored palette index. Its timing-only RPC
+returns no image. The fixture wrote both complete timing predictions before
+reading the exact same frame's RGB. The authored COM and declared pulse delay
+and widths stayed at 9,013 and 40 or 36 PIT ticks on DOSBox-X. The original
+PIT-only oracle and its archived results retain their earlier scope.
+
+Both quiet and both pulse rasters recorded physical lines 1, 3, …, 399.
+The scheduled line period is 31,778 ns and the largest observed callback
+lateness is 1,019 ns rounded up, below the declared one-eighth-line bound.
+Both pulses separated every row for both phase predictions. Row 100 is A
+under phase 0 and B under phase 1. Both full images match phase 1 and exclude
+both phase 0 and the final-palette-only image.
+
+The four full RGB hashes match the retained installed DOSBox-X and pinned
+QEMU observations from the preceding pulse-window experiment. The archived
+QEMU producer independently passed both strict phase predictions there. The
+timing probe was rebuilt from the earlier DOSBox-X source diagnostic and
+verified on that derivative. Current-head QEMU execution and DOSBox-X first
+raster timing require their own measurements.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored COM | `c2ddebd5affa489302f22c9139d354be1cb31b38d5edbe58b5e491c90ed3cb1d` |
+| DOSBox-X row timing derivative | `eb13dc7cb4866ab2c182c23439cbd40d74463faafb94c173b76c38857ff33176` |
+| Timing-only native receipt | `885deae5058315102ae9ee19c6ae1267eff776c043908ecd5ebfeda00f900225` |
+| Previously qualified QEMU producer | `cea0a35169d6e51fafa6c32824e208ad2c14c9ec755cb9c9c005cd119c2e478f` |
+| Previously paired native receipt | `0af70ea41d901eeeaaf2ffd79af633def57bf6d38bc5f1d20f96319ce986162e` |
+
 ## Remaining qualification
 
-- Obtain independent DOSBox-X timing clearances for both pulse trials.
-  Record the effective VGA renderer settings and tighten the VGA-edge and
-  DAC-write brackets before any pixel read. Keep the phase families and
-  overlap refusal.
+- Replay the same declared steady pulse windows against a newly selected
+  release candidate when rechecking the current producer.
 - Measure DOSBox-X's effective draw setup boundary and pair first rasters,
   warm attachment and equivalent reapply with QEMU over the same declared
   geometry. Qualify additional programming sequences and modes separately.
