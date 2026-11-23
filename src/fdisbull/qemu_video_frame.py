@@ -286,16 +286,20 @@ def _remaining(vm):
 
 
 def _failed(vm, error, stage, *, clock=None, native=None, result=None, artifact=None,
-            probe_chunks=None):
+            probe_chunks=None, verified_refusal=False):
     evidence = dict(format='fdisbull-video-frame-error-1', stage=stage,
                     clock=deepcopy(clock), native=deepcopy(native), result=deepcopy(result),
                     artifact=deepcopy(artifact))
     if probe_chunks is not None:
         evidence['probe_chunks'] = deepcopy(probe_chunks)
+    if verified_refusal:
+        evidence['verified_refusal'] = True
     if getattr(error, 'result', None) is None:
         error.result = evidence
     else:
         error.video_frame_evidence = evidence
+    if verified_refusal:
+        return
     try:
         from .qemu_frame_read import close_frame_read_owner
         if not close_frame_read_owner(vm):
@@ -392,10 +396,20 @@ class QemuVideoFrameMixin:
             raise ValueError('Stop the current video frame stream before starting another')
         token = uuid.uuid4().hex
         native = result = None
+        verified_refusal = False
         try:
-            native = _native_video(vm, vm.qmp.call('x-fdisbull-start-video-frame', {'token': token},
-                                   max_reply_bytes=_NATIVE_REPLY_BYTES),
-                                   before, token=token, new_stream=True)
+            try:
+                reply = vm.qmp.call('x-fdisbull-start-video-frame', {'token': token},
+                                    max_reply_bytes=_NATIVE_REPLY_BYTES)
+            except DebuggerError as error:
+                # A correlated QMP refusal can leave the stopped machine
+                # available. Confirm the exact prior stream before doing so.
+                if str(error).startswith('QMP x-fdisbull-start-video-frame: '):
+                    native = self._video_frame_read(vm, before)
+                    self._video_frame_stable(vm, before)
+                    verified_refusal = native == prior
+                raise
+            native = _native_video(vm, reply, before, token=token, new_stream=True)
             if native['state'] != 'observing' or native['start-ns'] != before['virtual_ns']:
                 _invalid(vm, 'Video frame start did not establish the requested stream')
             self._video_frame_stable(vm, before)
@@ -404,7 +418,8 @@ class QemuVideoFrameMixin:
             self._video_frame_publish(vm, 'machine-video-frame-start', result)
             return result
         except BaseException as error:
-            _failed(vm, error, 'start', clock=before, native=native, result=result)
+            _failed(vm, error, 'start', clock=before, native=native, result=result,
+                    verified_refusal=verified_refusal)
             raise
 
     def video_frame_stop(self, *, timeout_ms=1000):

@@ -20,6 +20,13 @@ The caller explicitly starts the source stream and chooses bounded execution
 until a complete raster exists. The frame consumers never start, restart,
 advance, repair, or fall back to another stream or backend.
 
+A correlated native start refusal keeps the session available when readback
+confirms the same native stream and stopped clock. The error carries
+`verified_refusal: true` in its video-frame evidence. An uncertain start or
+changed readback still closes the captured owner. This lets callers continue
+with renderer capture or process checkpoints when the guest uses an
+unsupported source layout.
+
 ```python
 assert debug.capabilities['frame_contract']
 debug.video_frame_start()

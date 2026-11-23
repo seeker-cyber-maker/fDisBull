@@ -33,6 +33,7 @@ class VideoWire(NativeWire):
         self.change_probe = lambda value: value
         self.after_video = lambda: None
         self.bad_export = False
+        self.start_refusal = None
 
     def sendall(self, data):
         request = json.loads(data)
@@ -42,6 +43,11 @@ class VideoWire(NativeWire):
         self.calls.append((command, args))
         self.budgets.append(self.timeout)
         if command == 'x-fdisbull-start-video-frame':
+            if self.start_refusal is not None:
+                self.start_refusal()
+                error = {'class': 'GenericError', 'desc': 'Video frame source is unsupported'}
+                self.buffer.extend(json.dumps({'id': request['id'], 'error': error}).encode() + b'\n')
+                return
             self.video['stream-generation'] += 1
             self.video.update(state='observing', token=args['token'], device='/machine/vga',
                 **{'start-ns': self.receipt['virtual-ns'],
@@ -226,6 +232,29 @@ def test_invalidated_stream_has_no_current_frame_and_can_be_restarted(video):
         o.session.capture_video_frame()
     restarted = o.session.video_frame_start()
     assert restarted['stream_generation'] == 2 and not o.vm.closed
+
+
+@pytest.mark.parametrize('change', ['same', 'stream', 'clock'])
+def test_native_start_refusal_requires_unchanged_stream_and_clock(video, change):
+    o = video
+
+    def refusal():
+        if change == 'stream':
+            o.wire.video['stream-generation'] += 1
+        elif change == 'clock':
+            o.wire.receipt['virtual-ns'] += 1
+
+    o.wire.start_refusal = refusal
+    with pytest.raises(DebuggerError) as caught:
+        o.session.video_frame_start()
+    if change == 'same':
+        assert caught.value.result['verified_refusal'] is True
+        assert not o.vm.closed
+        assert o.session.video_frame_observe()['state'] == 'idle'
+        o.wire.start_refusal = None
+        assert o.session.video_frame_start()['stream_generation'] == 1
+    else:
+        assert o.vm.closed
 
 
 def test_explicit_stale_guard_has_no_probe_or_export_side_effect(video):
