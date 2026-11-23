@@ -106,6 +106,44 @@ Timing audit SHA-256
 `d0cf9401d35d4d784975a695c55b55505d8dd0e150ccb5589a2ff256771c0e94`.
 The exact producer and COM pins are listed above.
 
+## Guest mode-setup witness
+
+A separate, opt-in [native test](../tests/test_qemu_vga_mode_setup_native.py)
+uses the existing standard-VGA I/O trace on the pinned QEMU producer
+`91321d463ad4b06e183f46cc1ab356dc4b2a23dd831531761b7f39845a835fe9`
+and VGA BIOS `651513519f9e0d5b99d3b051a8f5c68db69e987339b59a441d371068c34c146b`.
+The authored COM enters mode 13h from text, waits 45 ms of native virtual
+time with stable VGA configuration, attaches and detaches the source
+stream while stopped, and reissues the same mode set in the guest.
+
+The two BIOS requests each emitted the same 915-write journal. The
+qualifying suffix follows the retained SeaBIOS `stdvga_set_mode` source.
+It writes all five sequencer and all nine graphics registers, unlocks
+CRTC writes, programs CRTC 00h–18h, writes miscellaneous output and
+enables display. The witness compares this ordered suffix to the raw
+mode-13h configuration after the guest returns from INT 10h.
+
+| Guest or observer event | Native evidence |
+| --- | --- |
+| Initial mode-13h entry | Complete setup suffix and changed effective configuration |
+| Same-mode BIOS reapply | Complete setup suffix with equal final raw configuration |
+| Warm attach and detach | Zero VGA I/O writes with equal configuration and stopped virtual time |
+| Isolated write of the current sequencer reset value | Two index/data writes with equal configuration generation |
+
+The BIOS mode set writes sequencer register 0 directly with `03h`.
+An asserted-to-released reset transition is therefore unsuitable as the
+sole setup marker for this firmware. An isolated write of `03h` also
+cannot identify a mode set. The trace identifies the bracketed firmware
+transaction. It does not expose a guest-virtual timestamp for each write
+or establish when DOSBox-X executes its own draw setup. The evidence
+therefore supports a bounded source-side witness and leaves a persistent
+cross-backend phase origin unqualified.
+
+The probe scopes logging to the disposable QEMU process and reads stopped
+configuration. It uses the existing frame stream and introduces no live
+phase or checkpoint state. Raw receipt SHA-256
+`2b149a7b0a88fdcfee566b84a4766919b80d90153e7bc18969a140ac374bafef`.
+
 ## Remaining qualification
 
 - Obtain independent DOSBox-X timing clearances for both pulse trials.
