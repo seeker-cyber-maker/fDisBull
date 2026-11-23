@@ -36,12 +36,14 @@ DAC and the color VGA status port. CPU aperture banking is independent
 of the selected display start.
 
 For VBE function 4F07h, BL=00 programs the origin and returns. BL=80
-programs it and waits in the guest BIOS for a fresh leading retrace edge.
-A request while bit 3 is already high waits for that bit to clear and
-rise again. BL=01 returns the programmed origin. Both set operations
+programs it and then starts polling for a fresh leading retrace edge.
+If bit 3 is already high when the BIOS starts polling, it waits for that
+bit to clear and rise again. BL=01 returns the programmed origin. Both set operations
 become visible at the next line-490 leading edge on the same virtual
 clock used for status reads, with the new origin sampled in the next
 visible frame. This matches the DOSBox-X S3 banked mode.
+Leaving the admitted layout retires a pending flip and invalidates the
+timed stream. On re-entry the programmed origin is the new baseline.
 
 Format 10 retains the programmed origin, active origin and pending
 absolute deadline even if timed scanout is idle. Complete timed frames

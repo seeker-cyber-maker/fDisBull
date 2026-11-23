@@ -6,8 +6,8 @@
   "composition": "Apply after native/qemu-video-vbe101-sync with every preimage verified.",
   "scope": "Retrace-latched banked VBE 101h display start, BIOS wait and format 10 restore.",
   "patch": "qemu-10.0.13-fdisbull-video-vbe101-flip.patch",
-  "patch_bytes": 28434,
-  "patch_sha256": "3a24656c8ca7866be7b08b65b44a51839d8d697da8139e14477e8f848964d930",
+  "patch_bytes": 29382,
+  "patch_sha256": "15c930af0014c1f892de531cc27bf92ccb28c5e68a11116f8a4bf40935f38386",
   "files": [
     {
       "path": "hw/display/vga-pci.c",
@@ -21,8 +21,8 @@
       "path": "hw/display/vga.c",
       "base_bytes": 125107,
       "base_sha256": "f4f22bb53d591c58da453768945854d6d59b104361cf24bc9552a1208a1b1cf8",
-      "patched_bytes": 130650,
-      "patched_sha256": "8bf847189cd5cf46fd98378ba39f0f8c6fda67bf6a61f8272940b6448a049aee",
+      "patched_bytes": 130930,
+      "patched_sha256": "df1e4580fbea7005c940a934f9ccf7243b9d75eedffcb78cc318de05ea869f3c",
       "mode": "100644"
     },
     {
