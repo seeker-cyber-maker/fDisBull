@@ -36,7 +36,8 @@ _READ_ONLY = frozenset({
     'dos_task_layers', 'code',
     'hooks', 'layer_stack', 'clock_observe', 'audio_observe', 'mixer_observe',
     'display_observe', 'retrace_observe', 'input_state', 'keyboard_state', 'cpu_delta_status', 'controls',
-    'video_frame_observe', 'video_frame_rgba', 'capture_video_frame', 'observe_int33_mouse',
+    'video_frame_observe', 'video_frame_probe', 'video_frame_rgba', 'capture_video_frame', 'observe_int33_mouse',
+    'vga_configuration_observe',
     'workspace_status', 'workspace_files', 'workspace_read',
     'workspace_provenance_status',
 })

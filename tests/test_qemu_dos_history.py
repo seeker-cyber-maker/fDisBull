@@ -139,6 +139,19 @@ def test_unrecorded_mutation_invalidates_live_cursor_but_capture_is_explicit(ses
     assert not any(call[0]=='step' for call in session.calls)
 
 
+@pytest.mark.parametrize('operation,args', [
+    ('video_frame_probe', ([[0, 0]],)),
+    ('vga_configuration_observe', ()),
+])
+def test_source_video_observation_preserves_the_live_history_cursor(session, operation, args):
+    initial = session.rewind_start(max_steps=4, max_bytes=65536)
+    session.vm.history_operation_guard(operation, args, {})
+    observed = session.rewind_status()
+    assert observed['valid'] and observed['cursor'] == initial['cursor']
+    session.vm.history_operation_guard('video_frame_stop', (), {})
+    assert not session.rewind_status()['valid']
+
+
 def test_saved_history_can_be_attached_and_restored_in_another_session(project,session):
     first = session.rewind_start(max_steps=4,max_bytes=65536)
     latest = session.rewind_record()
