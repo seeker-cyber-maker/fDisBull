@@ -6,6 +6,7 @@ FDISBULL_REQUIRE_QEMU_DOSBOX_TYPEMATIC=1 also runs the opt-in DOSBox profile.
 """
 from __future__ import annotations
 
+from hashlib import sha256
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,7 @@ import sys
 import pytest
 
 from fdisbull.project import Project
+from fdisbull.qemu_video_checkpoint import LATCH_MODEL, LATCH_PROFILE
 from support.dos_process_fixture import BASELINE_CONFIG, assemble, digest, prepare_dos_baseline
 from test_qemu_clock_budget_native import park
 from test_qemu_dos_modes_checkpoint_native import _launch
@@ -37,6 +39,9 @@ org 100h
     pop ds
     mov ax,13h
     int 10h
+%if TIMED_PAGE_FLIP
+    call setup_pages
+%endif
     cli
     xor ax,ax
     mov es,ax
@@ -117,6 +122,9 @@ keyboard_irq:
     push ax
     push bx
     push ds
+%if TIMED_PAGE_FLIP
+    push dx
+%endif
     push cs
     pop ds
     in al,64h
@@ -128,15 +136,76 @@ keyboard_irq:
     cmp bx,64
     jae .full
     mov [scans+bx],al
+%if TIMED_PAGE_FLIP
+    cmp al,1eh
+    jne .full
+    mov ax,800ch
+    test bl,1
+    jz .show_page
+    mov ah,40h
+.show_page:
+    mov dx,3d4h
+    out dx,ax
+%endif
 .full:
     inc word [scan_count]
 .eoi:
     mov al,20h
     out 20h,al
+%if TIMED_PAGE_FLIP
+    pop dx
+%endif
     pop ds
     pop bx
     pop ax
     iret
+%if TIMED_PAGE_FLIP
+setup_pages:
+    push es
+    mov dx,3c4h
+    mov ax,0604h
+    out dx,ax
+    mov ax,0f02h
+    out dx,ax
+    mov dx,3d4h
+    mov ax,0014h
+    out dx,ax
+    mov ax,0e317h
+    out dx,ax
+    mov ax,2813h
+    out dx,ax
+    mov ax,400ch
+    out dx,ax
+    mov ax,000dh
+    out dx,ax
+    mov dx,3c8h
+    mov al,1
+    out dx,al
+    inc dx
+    mov al,63
+    out dx,al
+    xor al,al
+    out dx,al
+    out dx,al
+    out dx,al
+    mov al,63
+    out dx,al
+    xor al,al
+    out dx,al
+    mov ax,0a000h
+    mov es,ax
+    cld
+    mov ax,0101h
+    mov di,4000h
+    mov cx,8000
+    rep stosw
+    mov ax,0202h
+    mov di,8000h
+    mov cx,8000
+    rep stosw
+    pop es
+    ret
+%endif
 ready_flag: db 0
 ack_count: dw 0
 acks: times 3 db 0
@@ -164,11 +233,12 @@ def _runtime():
     return runtime
 
 
-def _input(directory, runtime, programmed, *, busy=False):
+def _input(directory, runtime, programmed, *, busy=False, timed_page_flip=False):
     boot = Path(runtime['FDISBULL_QEMU_DOS_BOOT_IMAGE'])
     disk = prepare_dos_baseline(boot, directory/'baseline.img', runtime['FDISBULL_QEMU_DOS_MCOPY'],
         config=b'SWITCHES=/F\r\n'+BASELINE_CONFIG)
-    defines = f'%define PROGRAM_RATE {int(programmed)}\n%define BUSY_LOOP {int(busy)}\n'
+    defines = (f'%define PROGRAM_RATE {int(programmed)}\n%define BUSY_LOOP {int(busy)}\n'
+               f'%define TIMED_PAGE_FLIP {int(timed_page_flip)}\n')
     code = assemble(directory, 'typematic', defines+KEYBOARD, runtime['NASM'])
     offsets = struct.unpack_from('<6H', code, code.index(b'TYPEMATIC-SYMBOLS')+len(b'TYPEMATIC-SYMBOLS'))
     target = directory/'REPEAT.COM'
@@ -231,7 +301,20 @@ def _edges(debug, *entries):
     return debug.frame_inputs([dict(key=key, pressed=pressed) for key, pressed in entries])['native']
 
 
-def _capture_future(debug, symbols, saved, accepted):
+def _selected_page(debug, origin, color):
+    expected = sha256(color * (320 * 200)).hexdigest()
+    for _ in range(2):
+        assert debug.video_frame_advance(timeout_ms=15000)['advance_completed']
+        native = debug.video_frame_observe()['native']
+        assert native['model'] == LATCH_MODEL
+        frame = native['frame']
+        if frame['page-latch']['origin-bytes'] == origin:
+            assert len(frame['rows']) == 200 and frame['pixel-sha256'] == expected
+            return {key: frame[key] for key in ('frame-id', 'page-latch', 'pixel-sha256')}
+    pytest.fail(f'VGA page {origin:#x} did not latch within two completed frames')
+
+
+def _capture_future(debug, symbols, saved, accepted, *, timed_page_flip=False):
     # Exercise the normal source-raster timeline route as well as raw IRQ1.
     # The middle-of-phase root has more than one frame before its due key.
     next_raster = debug.timeline_advance(frames=1, timeout_ms=15000)
@@ -245,8 +328,13 @@ def _capture_future(debug, symbols, saved, accepted):
     _advance(debug, expected_deadline+3*MILLISECOND)
     assert _scans(debug, symbols) == [MAKE]*3
     assert _repeat(debug)['deadline-ns'] == expected_deadline+interval
+    latched = []
+    if timed_page_flip:
+        latched.append(_selected_page(debug, 0x20000, b'\0\xff\0'))
     _advance(debug, expected_deadline+interval+3*MILLISECOND)
     assert _scans(debug, symbols) == [MAKE]*4
+    if timed_page_flip:
+        latched.append(_selected_page(debug, 0x10000, b'\xff\0\0'))
     next_deadline = expected_deadline+2*interval
     assert _repeat(debug)['deadline-ns'] == next_deadline
     assert _keys(debug)['accepted-edges'] == accepted
@@ -258,6 +346,7 @@ def _capture_future(debug, symbols, saved, accepted):
     stopped = _advance(debug, next_deadline+2*interval)
     assert _scans(debug, symbols) == [MAKE]*4+[BREAK]
     return dict(raster={key:raster[key] for key in ('frame_id','pixel_sha256','logical_sha256')},
+                latched=latched,
                 scans=_scans(debug,symbols),stopped_ns=stopped)
 
 
@@ -326,24 +415,34 @@ def test_native_typematic_programmed_raster_timeline_hot_and_cold_restore(tmp_pa
     _programmed_raster_restore(tmp_path)
 
 
+@pytest.mark.skipif(os.environ.get('FDISBULL_REQUIRE_QEMU_VGA_LATCH') != '1',
+                    reason='Select the exact native timed unchained VGA witness')
+def test_native_typematic_replays_guest_irq_page_flips_in_timed_raster(tmp_path):
+    runtime = _runtime()
+    assert digest(runtime['FDISBULL_QEMU_LAYERS']) == os.environ['FDISBULL_QEMU_VGA_LATCH_SHA256']
+    assert digest(runtime['FDISBULL_QEMU_IMG']) == os.environ['FDISBULL_QEMU_VGA_LATCH_IMG_SHA256']
+    _programmed_raster_restore(tmp_path, timed_page_flip=True)
+
+
 def test_native_dosbox_typematic_raster_timeline_hot_and_cold_restore(tmp_path):
     if os.environ.get('FDISBULL_REQUIRE_QEMU_DOSBOX_TYPEMATIC') != '1':
         pytest.skip('Enable the optional native DOSBox typematic profile witness')
     _programmed_raster_restore(tmp_path, profile='dosbox-millisecond')
 
 
-def _programmed_raster_restore(tmp_path, *, profile=None):
+def _programmed_raster_restore(tmp_path, *, profile=None, timed_page_flip=False):
     runtime = _runtime()
     interval = 63*MILLISECOND if profile else 62_500_000
     profile_fields = {'profile': profile} if profile else {}
     rate = dict(parameter=0x27, **profile_fields,
                 **{'delay-ns':500*MILLISECOND, 'interval-ns':interval})
-    disk,target,code,offsets = _input(tmp_path,runtime,programmed=True)
+    disk,target,code,offsets = _input(tmp_path,runtime,programmed=True,timed_page_flip=timed_page_flip)
+    source_profile = {'qemu_video_source_profile': LATCH_PROFILE} if timed_page_flip else {}
     boot = Path(runtime['FDISBULL_QEMU_DOS_BOOT_IMAGE'])
     db = tmp_path/'programmed.fdb'
     with Project.create(db,target,image='com') as project:
         with _launch(project,runtime,tmp_path,disk,clock_profile='virtual',retrace='precise',
-                     qemu_key_repeat_profile=profile) as debug:
+                     qemu_key_repeat_profile=profile, **source_profile) as debug:
             symbols = _ready(debug,offsets,programmed=True)
             assert _repeat(debug) == dict(rate, **{'deadline-ns':-1})
             debug.video_frame_start()
@@ -362,12 +461,15 @@ def _programmed_raster_restore(tmp_path, *, profile=None):
                 max_state_bytes=24*1024**2,timeout_ms=30000)
             control = dict(db=str(db),directory=str(tmp_path),disk=str(disk['image']), symbols=symbols,
                 repeat_profile=profile,
+                timed_page_flip=timed_page_flip,
                 timeline=root['timeline'], point=root['point'], token=keys['token'], epoch=keys['epoch'],
                 accepted=keys['accepted-edges'], raster=root['nodes'][0]['frame']['source_raster'],
                 repeat=repeat,saved_ns=debug.clock_observe()['virtual_ns'])
-            control['expected'] = _capture_future(debug,symbols,repeat,control['accepted'])
+            control['expected'] = _capture_future(
+                debug,symbols,repeat,control['accepted'],timed_page_flip=timed_page_flip)
             _restore(debug,control)
-            assert _capture_future(debug,symbols,repeat,control['accepted']) == control['expected']
+            assert _capture_future(
+                debug,symbols,repeat,control['accepted'],timed_page_flip=timed_page_flip) == control['expected']
         assert debug.vm.process.poll() == 0
     control_path = tmp_path/'cold-control.json'
     control_path.write_text(json.dumps(control),encoding='utf-8')
@@ -423,12 +525,15 @@ def test_native_typematic_checkpoint_preserves_past_pending_deadline(tmp_path):
 
 def _cold(control):
     runtime = _runtime()
+    timed_page_flip = control['timed_page_flip']
+    source_profile = {'qemu_video_source_profile': LATCH_PROFILE} if timed_page_flip else {}
     with Project(control['db']) as project:
         with _launch(project,runtime,Path(control['directory']),{'image':control['disk']},
                      clock_profile='virtual',retrace='precise',
-                     qemu_key_repeat_profile=control['repeat_profile']) as debug:
+                     qemu_key_repeat_profile=control['repeat_profile'], **source_profile) as debug:
             _restore(debug,control)
-            assert _capture_future(debug,control['symbols'],control['repeat'],control['accepted']) == control['expected']
+            assert _capture_future(debug,control['symbols'],control['repeat'],control['accepted'],
+                                   timed_page_flip=timed_page_flip) == control['expected']
         assert debug.vm.process.poll() == 0
     print(json.dumps(dict(passed=True)))
 
