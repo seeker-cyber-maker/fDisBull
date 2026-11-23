@@ -1,5 +1,48 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Guest VBE 101h retrace and format 9 restore (2026-11-23)
+
+Select `vga-640x480-sync` for the standard color 640 × 480 banked 8-bit
+mode. Input Status 1 at port 03DAh, the retrace observer and timed source
+rows share the 27,208 ns line clock and 525-line frame grid. Bit 0 reports
+horizontal blanking or vertical blanking. Bit 3 reports vertical retrace
+from the start of line 490 through the first instant of line 492.
+[Native profile and timing](../native/qemu-video-vbe101-sync/README.md)
+
+Format 9 restores that phase from the saved virtual clock and effective
+VBE timing. It also preserves the retained raster, sampled rows and
+pending callbacks. Format 8 remains available with the `vga-640x480`
+profile. The new timing qualification is bounded to this VBE layout.
+DOSBox-X remains the default backend.
+
+The same authored COM polled port 03DAh and used PIT channel 2 to bracket
+transitions on both engines. The measured vertical periods share the
+interval 17,037–17,049 PIT ticks and the pulse widths share 60–71 ticks.
+The visible horizontal blank transitions follow the expected 80-to-98
+character interval. The complete 480-row RGB frames matched across the
+two engines. The polling intervals describe timing uncertainty, including
+guest reads that can miss a narrow pulse.
+
+The QEMU checkpoint retained a complete raster and 181 sampled rows of
+its successor. Forward execution, hot restore and fresh-process restore
+matched all 2,890 guest PIT records, the stopped status-port observations,
+the subsequent row timestamps and RGB. The original Doom timedemo still
+matched its format 6 protected CPU continuation, page latch, next 200
+timed rows and SB16/OPL frontier across the same three replay paths.
+The same QEMU build passed Mode 13h BIOS reapply overlap and restore,
+format 8 Mode 12h and banked VBE scanout, live bank switching, and
+checkpointed keyboard repeat.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored paired DOS COM | `3dd4cbaf8ad2ff81c2bbbbadb7b1ec5f4ee92498f12377eec28eb764e4894347` |
+| QEMU producer | `fc13a497ec4e55c8233f1de48efd0776d11a029088d466aa8a23e32e9cd65730` |
+| QEMU guest status and format 9 restore | `79eae02034bbb345d91fc2015038f8563347d9b9d35d2897cc70fbe52b651df0` |
+| DOSBox-X guest status and timed rows | `fdc97b510fce3b1a76013cc37bdc0abfd047089e0d1f95a4c9f75303d5dd4b38` |
+| Matching 480-row RGB raster | `5a5656922ff09ce0d4292da990de6ea5cd13fd2f17f883be9cf863c574cbef27` |
+| Doom original run and hot restore | `fb4d26ed60e2f1c47707e25a3a2710b597352ceb1ea3c8d79acb8aa7b26db010` |
+| Doom fresh-process restore | `1d2fd02b0f31a670c3578cf76e3eccc90bdee5782e298ca73a15cb8ae16abdfd` |
+
 ## Timed Mode 12h and banked VBE 101h with format 8 restore (2026-11-23)
 
 The explicit `vga-640x480` profile samples every visible row from live VGA
@@ -32,8 +75,8 @@ The same QEMU producer preserved the original Doom format 6 replay.
 Uninterrupted, hot-restored and separately restored runs agreed on the
 latched page, 200 row times, RGB, protected CPU boundary and SB16/OPL
 audio frontier. The VBE timing comparison qualifies the source sampler's
-own modeled cadence. Guest-visible VBE retrace synchronization and
-additional layouts remain outside the observed scope.
+own modeled cadence. The format 9 profile above covers guest-visible
+VBE 101h retrace. Additional layouts remain open.
 
 | Evidence | SHA-256 |
 | --- | --- |
