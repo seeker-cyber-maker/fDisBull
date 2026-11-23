@@ -110,7 +110,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False, memory_mib=None, dot_mode=None, game_id=None, language=None, platform=None,
                  guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None, qemu_retrace=None,
-                 qemu_checkpoint_tool=None, qemu_key_repeat_profile=None,
+                 qemu_checkpoint_tool=None, qemu_key_repeat_profile=None, qemu_video_source_profile=None,
                  dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None,
                  dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None):
         if game_dir is None:
@@ -120,6 +120,11 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if qemu_key_repeat_profile is not None and (
                 backend != 'qemu-dos' or self.meta['format'] not in ('COM', 'MZ')):
             raise ValueError('qemu_key_repeat_profile requires a native DOS COM/MZ process')
+        if qemu_video_source_profile is not None:
+            if backend != 'qemu-dos' or self.meta['format'] not in ('COM', 'MZ'):
+                raise ValueError('qemu_video_source_profile requires a native DOS COM/MZ process')
+            from .qemu_video_checkpoint import validate_video_source_profile
+            validate_video_source_profile(qemu_video_source_profile, qemu_clock, qemu_retrace)
         dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments,
                                dos_directory, dos_file_mode, freedos_runtime, dos_generation)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
@@ -226,6 +231,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                     options['boot_image'] = dos_boot_image
                     if qemu_key_repeat_profile is not None:
                         options['frame_key_repeat_profile'] = qemu_key_repeat_profile
+                    if qemu_video_source_profile is not None:
+                        options['video_source_profile'] = qemu_video_source_profile
                     return QemuDOSProcessSession(self, executable, game_dir,
                         mcopy=dos_mcopy, startup_batch='FDAUTO.BAT' if dos_startup_batch is None else dos_startup_batch,
                         arguments='' if dos_arguments is None else dos_arguments,

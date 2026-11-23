@@ -16,6 +16,7 @@ import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
+from .qemu_video_checkpoint import MODE13_MODEL, raster_source_phase, validate_mode_setup, video_model
 
 
 VIDEO_FRAME_COMMANDS = frozenset({
@@ -159,10 +160,20 @@ def _frame_valid(frame, native):
     if (line < 4 or start <= native['start-ns'] or start % period or period < 400 * line or period % line
             or type(rows) is not list or len(rows) != 200):
         return False
+    try:
+        phase = raster_source_phase(native, start, period, frame)
+    except ValueError:
+        return False
+    if native['model'] == MODE13_MODEL:
+        claimed = frame.get('source-phase')
+        if type(claimed) is not int or claimed != phase:
+            return False
+    elif 'source-phase' in frame:
+        return False
     for number, row in enumerate(rows):
         if (type(row) is not dict or type(row.get('row')) is not int or row['row'] != number
                 or not _integer(row.get('intended-ns')) or not _integer(row.get('actual-ns'))
-                or row['intended-ns'] != start + line // 4 + 2 * number * line
+                or row['intended-ns'] != start + line // 4 + (2 * number + phase) * line
                 or not row['intended-ns'] <= row['actual-ns'] < row['intended-ns'] + line):
             return False
     return (frame['first-sample-ns'] == rows[0]['actual-ns']
@@ -176,7 +187,7 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
                 'frame-sequence', 'aborted-frames', 'in-progress', 'rows-sampled'}
     if (type(value) is not dict or not required <= value.keys()
             or type(value['api-version']) is not int or value['api-version'] != 1
-            or value['model'] != 'qemu-vga-chain4-scanline-v1'
+            or value['model'] != video_model(getattr(vm, 'machine_configuration', {}))
             or value['state'] not in ('idle', 'observing', 'stopped', 'invalidated')
             or not _integer(value['epoch'], positive=True, maximum=(1 << 64) - 1)
             or value['epoch'] != clock['virtual_clock']['native']['epoch']
@@ -187,6 +198,10 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
             or not _integer(value['rows-sampled'], maximum=199)):
         _invalid(vm, 'Invalid native video frame stream receipt')
     state = value['state']
+    try:
+        validate_mode_setup(value)
+    except ValueError:
+        _invalid(vm, 'Invalid native video frame mode setup')
     if state == 'idle':
         if (token is not None or value['stream-generation'] or value['frame-sequence']
                 or value['in-progress'] or value['rows-sampled']
@@ -239,6 +254,10 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
                 expected = dict(prior, **{'virtual-ns': value['virtual-ns']})
                 if state == 'invalidated':
                     expected['epoch'] = value['epoch']
+                    if 'mode-setup' in value:
+                        expected['mode-setup'] = value['mode-setup']
+                    else:
+                        expected.pop('mode-setup', None)
                 if value != expected:
                     _invalid(vm, 'Native inactive video stream changed without a new start')
             if state != 'invalidated' and value['epoch'] != prior['epoch']:

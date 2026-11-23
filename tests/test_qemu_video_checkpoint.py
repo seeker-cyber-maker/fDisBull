@@ -7,13 +7,15 @@ from base64 import b64encode, b64decode
 from copy import deepcopy
 import hashlib
 import json
+from types import SimpleNamespace
 
 import pytest
 
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull import qemu_instrumented_checkpoint as checkpoint
 from fdisbull.qemu_video_checkpoint import (
-    FORMAT, EMPTY_SHA256, I64_MAX, validate_video_checkpoint, logical_video_checkpoint)
+    FORMAT, EMPTY_SHA256, I64_MAX, MODE13_MODEL, MODE13_PROFILE,
+    validate_video_checkpoint, logical_video_checkpoint, restored_video_info)
 
 
 def envelope(state):
@@ -626,3 +628,75 @@ def test_idle_format3_off_profile_uses_exact_readback_without_source_query_or_ca
         assert result['windows'] == {} and not vm.closed
     assert '_video_frame_token' not in vm.__dict__ and '_video_frame_last' not in vm.__dict__
     assert vm.calls[-1][0] == checkpoint.PREFIX+'checkpoint-export'
+
+
+def phased_record(*, complete):
+    """An authored initial raster and a partial steady raster, eight ns apart per line."""
+    record = source_record(rows=3, complete=complete)
+    info = record['info']
+    info.update(model=MODE13_MODEL, **{'mode-setup': {'committed-ns': 100,
+        'configuration-generation': 7, 'timing-generation': 9}})
+    if complete:
+        info['frame']['source-phase'] = 0
+        # H=8; the second raster samples one physical line later.
+        info['next-deadline-ns'] = record['timer-expire-ns'] = 6458
+        for r, row in enumerate(record['partial-rows']):
+            row.update({'intended-ns': 6410 + 16*r, 'actual-ns': 6411 + 16*r})
+        info['virtual-ns'] = 6443
+    return record
+
+
+@pytest.mark.parametrize('complete', [False, True], ids=['initial', 'steady'])
+def test_mode_setup_phase_preserves_pending_row_across_owner_rebind(complete):
+    record = phased_record(complete=complete)
+    info = record['info']
+    assert validate_video_checkpoint(record, epoch=1, virtual_ns=info['virtual-ns']) == record
+    restored = deepcopy(info)
+    restored.update(epoch=9, token='replacement')
+    if complete:
+        restored['frame']['epoch'] = 9
+    assert restored_video_info(record, restored, epoch=9, token='replacement') == restored
+    restored['next-deadline-ns'] += 8
+    with pytest.raises(ValueError, match='pending raster phase'):
+        restored_video_info(record, restored, epoch=9, token='replacement')
+
+
+@pytest.mark.parametrize('fault', ['unknown-setup', 'stale-generation', 'foreign-phase',
+    'boolean-phase', 'wrong-deadline', 'setup-after-first-frame', 'standard-with-phase'])
+def test_mode_setup_phase_rejects_inconsistent_saved_raster(fault):
+    record = phased_record(complete=True)
+    info = record['info']
+    if fault == 'unknown-setup':
+        del info['mode-setup']
+    elif fault == 'stale-generation':
+        info['mode-setup']['configuration-generation'] += 1
+    elif fault == 'wrong-deadline':
+        info['next-deadline-ns'] -= 8
+    elif fault == 'setup-after-first-frame':
+        info['mode-setup']['committed-ns'] = 3200
+    elif fault == 'standard-with-phase':
+        info['model'] = 'qemu-vga-chain4-scanline-v1'
+    else:
+        info['frame']['source-phase'] = True if fault == 'boolean-phase' else 1
+    with pytest.raises(ValueError):
+        validate_video_checkpoint(record, epoch=1, virtual_ns=info['virtual-ns'])
+
+
+def test_format5_admits_only_the_selected_checkpoint_profile():
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    source = phased_record(complete=True)
+    state = make_state(source)
+    state.update(format=checkpoint.VIDEO_PHASE_FORMAT,
+                 **{'frame-key-repeat': {'parameter': 43, 'delay-ns': 500000000,
+                     'interval-ns': 91666666, 'deadline-ns': -1}})
+    machine = SimpleNamespace(
+        qmp_commands=checkpoint.COMMANDS | {'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys',
+                                           REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'}})
+    with pytest.raises(ValueError, match='profile differs'):
+        checkpoint.validate(machine, envelope(state))
+    machine.machine_configuration['video_source_profile'] = MODE13_PROFILE
+    assert checkpoint.validate(machine, envelope(state)) == state
+    state['format'] = checkpoint.FRAME_KEY_REPEAT_FORMAT
+    with pytest.raises(ValueError, match='model differs'):
+        checkpoint.validate(machine, envelope(state))

@@ -14,11 +14,11 @@ from .dosbox_rpc import DebuggerError
 from .qemu_session_revision import session_revision
 from .qemu_video_frame import (_failed, _probe_points_snapshot, _remaining,
                                validate_video_frame_parameters, validate_video_frame_probe)
+from .qemu_video_checkpoint import MODEL as FRAME_PROFILE, video_model
 from .screenshot_codecs import ENCODINGS, decode_frame_rgba, validate_encoding
 
 
 FRAME_SOURCE = 'qemu_completed_source_raster'
-FRAME_PROFILE = 'qemu-vga-chain4-scanline-v1'
 FRAME_CLOCK = 'QEMU_CLOCK_VIRTUAL_milliseconds'
 
 
@@ -35,15 +35,16 @@ def configure_frame_contract(session):
             pass
         else:
             encodings.append('rgba-zstd')
+    profile = video_model(getattr(session.vm, 'machine_configuration', {}))
     video = dict(pixel_probe=available, screenshot_encodings=encodings,
-        source=FRAME_SOURCE, frame_profile=FRAME_PROFILE, codec_origin='host-adapter',
+        source=FRAME_SOURCE, frame_profile=profile, codec_origin='host-adapter',
         source_bpp=24, captured_ticks_clock=FRAME_CLOCK,
         requires_retained_source_raster=True, stopped_only=True,
         native_transport='RGB888/P6', completed_guest_frames=False)
     session.capabilities.update(frame_contract=available, frame_probe=available,
-        frame_rgba=available, frame_contract_profile=FRAME_PROFILE, video=video,
+        frame_rgba=available, frame_contract_profile=profile, video=video,
         frame_step=available and bool(session.capabilities.get('video_frame_control')),
-        frame_step_profile=FRAME_PROFILE, frame_step_requires_observing_stream=True)
+        frame_step_profile=profile, frame_step_requires_observing_stream=True)
     # Existing frame consumers discover codecs through rpc.capabilities.
     # QEMU's machine object is the DOS session's RPC owner, not a DOSBox agent.
     capabilities = dict(getattr(session.vm, 'capabilities', {}))
@@ -71,7 +72,7 @@ def frame_contract_metadata(session, native, clock, revision=None, *, authority=
         runtime_epoch=getattr(session, '_runtime_epoch', None),
         checkpoint_epoch=getattr(session, '_checkpoint_epoch', None))
     mode = tuple((key, value) for key, value in identity.items() if key != 'frame_id')
-    return dict(**revision, source=FRAME_SOURCE, frame_profile=FRAME_PROFILE,
+    return dict(**revision, source=FRAME_SOURCE, frame_profile=native.get('model', FRAME_PROFILE),
         frame_identity=identity, mode_id=authority.mode(mode), frame_id=frame['frame-id'],
         width=frame['width'], height=frame['height'], source_bpp=24,
         double_width=False, double_height=False, captured_ns=frame['completed-ns'],

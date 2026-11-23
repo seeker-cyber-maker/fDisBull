@@ -190,7 +190,7 @@ METHODS = {
     "debug-chip8-tick": "Apply explicit stopped CHIP-8 timer ticks without advancing CPU or virtual time; run,ticks",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,qemu_key_repeat_profile,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,qemu_key_repeat_profile,qemu_video_source_profile,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
@@ -2375,6 +2375,8 @@ def parser():
                    help="Explicit native audio profile; capture requires virtual clock and the matching audio/checkpoint extension")
     c.add_argument("--qemu-key-repeat-profile", choices=["dosbox-millisecond"],
                    help="Select legacy DOSBox-X repeat pacing on a native DOS process.")
+    c.add_argument("--qemu-video-source-profile", choices=["dosbox-mode13"],
+                   help="Opt into DOSBox-style first/steady native Mode 13h source timing.")
     c.add_argument("--qemu-retrace", choices=["standard", "precise"],
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
     c.add_argument("--qemu-checkpoint-tool",

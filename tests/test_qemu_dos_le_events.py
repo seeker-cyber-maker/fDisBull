@@ -410,7 +410,7 @@ def test_restored_le_clock_requires_exact_load_proof_and_immutable_configuration
 
 
 @pytest.mark.parametrize('le_trace', [dict(epoch='source-run:process:2', owned_restore=True, virtual=True)], indirect=True)
-@pytest.mark.parametrize('format_version', [1, 3, 4])
+@pytest.mark.parametrize('format_version', [1, 3, 4, 5])
 def test_restored_le_clock_accepts_valid_stopped_budget_receipt(le_trace, format_version):
     o = le_trace
     row = o.project.db.execute("SELECT sequence,evidence FROM debug_events WHERE operation='load-machine-state'").fetchone()

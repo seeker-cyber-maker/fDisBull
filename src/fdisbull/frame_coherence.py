@@ -5,6 +5,7 @@ import math
 import re
 
 from .native_controller import NativeControlError
+from .qemu_video_checkpoint import VIDEO_MODELS
 
 _MAX_RECORD_BYTES = 1024 * 1024
 _MAX_ATTEMPT_BYTES = 4 * 1024 * 1024
@@ -17,12 +18,13 @@ _QEMU_FRAME_FIELDS = ('source', 'frame_profile', 'frame_identity', 'state_revisi
 def _source_issue(metadata):
     """Validate the declared source contract, never its native authenticity."""
     source = metadata.get('source')
+    profile = metadata.get('frame_profile')
+    valid_profile = type(profile) is str and profile in VIDEO_MODELS
     if source == 'last_completed_guest_frame':
-        return ('frame source/profile conflict' if metadata.get('frame_profile') ==
-                'qemu-vga-chain4-scanline-v1' else None)
+        return 'frame source/profile conflict' if valid_profile else None
     if source != 'qemu_completed_source_raster':
         return 'frame source is missing or invalid'
-    if (metadata.get('frame_profile') != 'qemu-vga-chain4-scanline-v1'
+    if (not valid_profile
             or metadata.get('state_revision_scope') != 'cooperative-session-control-v1'
             or metadata.get('source_bpp') != 24 or type(metadata.get('source_bpp')) is not int
             or metadata.get('width') != 320 or type(metadata.get('width')) is not int

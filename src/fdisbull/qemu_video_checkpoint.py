@@ -13,6 +13,9 @@ from .dosbox_rpc import DebuggerError
 
 FORMAT = 'fdisbull-instrumented-qemu-state-3'
 MODEL = 'qemu-vga-chain4-scanline-v1'
+MODE13_PROFILE = 'dosbox-mode13'
+MODE13_MODEL = 'qemu-vga-chain4-dosbox-mode13-v1'
+VIDEO_MODELS = frozenset({MODEL, MODE13_MODEL})
 ROW_BYTES = 960
 HEIGHT = 200
 RGB_BYTES = ROW_BYTES * HEIGHT
@@ -69,25 +72,62 @@ def _pixels(value, size, digest=None):
         _require(_hash(digest) and hashlib.sha256(data).hexdigest() == digest, 'pixel digest')
 
 
-def _deadline(start, line, row):
-    value = start + line // 4 + 2 * row * line
+def video_model(configuration):
+    return MODE13_MODEL if configuration.get('video_source_profile') == MODE13_PROFILE else MODEL
+
+
+def validate_video_source_profile(profile, clock, retrace):
+    if profile is not None and (profile != MODE13_PROFILE or clock != 'virtual' or retrace != 'precise'):
+        raise ValueError('DOSBox mode 13h source timing requires dosbox-mode13, virtual clock and precise retrace')
+
+
+def validate_mode_setup(info):
+    setup = info.get('mode-setup')
+    if info.get('model') == MODEL:
+        _require('mode-setup' not in info, 'unexpected mode setup on standard model')
+    elif 'mode-setup' in info:
+        _require(type(setup) is dict and set(setup) == {
+                'committed-ns', 'configuration-generation', 'timing-generation'}
+            and _integer(setup['committed-ns']) and setup['committed-ns'] <= info['virtual-ns']
+            and all(_integer(setup[k], 1, U64_MAX)
+                    for k in ('configuration-generation', 'timing-generation')), 'effective mode setup')
+    else:
+        _require(info.get('state') in ('idle', 'invalidated'), 'missing effective mode setup')
+    return setup
+
+
+def raster_source_phase(info, start, period, source):
+    if info['model'] == MODEL:
+        return 0
+    setup = validate_mode_setup(info)
+    _require(setup is not None and all(setup[k] == source[k]
+        for k in ('configuration-generation', 'timing-generation')), 'raster setup generation')
+    first = setup['committed-ns'] + period - setup['committed-ns'] % period
+    _require(_integer(first) and start >= first, 'raster precedes effective mode setup')
+    return int(start != first)
+
+
+def _deadline(start, line, row, phase):
+    value = start + line // 4 + (2 * row + phase) * line
     _require(_integer(value), 'row deadline overflow')
     return value
 
 
-def _rows(rows, count, start, line, stopped):
+def _rows(rows, count, start, line, stopped, phase):
     _require(type(rows) is list and len(rows) == count, 'row prefix extent')
     for number, row in enumerate(rows):
         _require(type(row) is dict and set(row) == {'row', 'intended-ns', 'actual-ns'}, 'row fields')
         _require(type(row['row']) is int and row['row'] == number, 'row order')
         intended, actual = row['intended-ns'], row['actual-ns']
         _require(_integer(intended) and _integer(actual)
-            and intended == _deadline(start, line, number)
+            and intended == _deadline(start, line, number, phase)
             and intended <= actual <= stopped and actual - intended < line, 'row time or stop boundary')
 
 
 def _frame(frame, info, source):
-    _require(type(frame) is dict and set(frame) == _FRAME, 'complete frame fields')
+    phased = info['model'] == MODE13_MODEL
+    fields = _FRAME | {'source-phase'} if phased else _FRAME
+    _require(type(frame) is dict and set(frame) == fields, 'complete frame fields')
     for key in ('frame-id', 'stream-generation', 'epoch', 'configuration-generation', 'timing-generation'):
         _require(_integer(frame[key], 1, U64_MAX), 'complete frame identity')
     _require(frame['frame-id'] == info['frame-sequence']
@@ -104,7 +144,10 @@ def _frame(frame, info, source):
         _require(_integer(frame[key]), 'complete frame time')
     start, period, line = (frame[k] for k in ('frame-start-ns', 'period-ns', 'line-period-ns'))
     _require(start > info['start-ns'] and start % period == 0, 'complete frame phase')
-    _rows(frame['rows'], HEIGHT, start, line, info.get('stop-ns', info['virtual-ns']))
+    phase = raster_source_phase(info, start, period, source)
+    if phased:
+        _require(_integer(frame['source-phase'], 0, 1) and frame['source-phase'] == phase, 'complete source phase')
+    _rows(frame['rows'], HEIGHT, start, line, info.get('stop-ns', info['virtual-ns']), phase)
     _require(frame['first-sample-ns'] == frame['rows'][0]['actual-ns']
         and frame['last-sample-ns'] == frame['completed-ns'] == frame['rows'][-1]['actual-ns'],
         'complete frame sample endpoints')
@@ -130,11 +173,15 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         fields.add('reason')
     if 'frame' in info and state in ('observing', 'stopped'):
         fields.add('frame')
+    if 'mode-setup' in info and info['model'] == MODE13_MODEL:
+        fields.add('mode-setup')
     _require(set(info) == fields, 'canonical stream fields')
-    _require(type(info['api-version']) is int and info['api-version'] == 1 and info['model'] == MODEL,
+    _require(type(info['api-version']) is int and info['api-version'] == 1 and type(info['model']) is str
+        and info['model'] in VIDEO_MODELS,
         'stream API or model')
     _require(_integer(info['epoch'], 1, U64_MAX) and info['epoch'] == epoch
         and _integer(info['virtual-ns']) and info['virtual-ns'] == virtual_ns, 'stream clock')
+    setup = validate_mode_setup(info)
     for key in ('stream-generation', 'frame-sequence', 'aborted-frames'):
         _require(_integer(info[key], 0, U64_MAX), 'stream counter')
     rows = info['rows-sampled']
@@ -169,17 +216,21 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         period, line = record['period-ns'], record['line-period-ns']
         _require(record['configuration-generation'] > 0 and record['timing-generation'] > 0
             and line >= 4 and period >= 400 * line and period % line == 0, 'source timing')
+        if setup is not None:
+            _require(all(setup[k] == record[k]
+                for k in ('configuration-generation', 'timing-generation')), 'stream setup generation')
     if state == 'observing':
         start = record['frame-start-ns']
         intended, expiry = info['next-deadline-ns'], record['timer-expire-ns']
+        phase = raster_source_phase(info, start, period, record)
         _require(start > info['start-ns'] and start % period == 0
-            and _integer(intended) and intended == _deadline(start, line, rows), 'pending raster phase')
+            and _integer(intended) and intended == _deadline(start, line, rows, phase), 'pending raster phase')
         # Deferral arms T+1 without changing D. A timer-disabled step may then
         # advance the stopped clock, so a retained expiry need not equal N+1.
         _require(record['timer-pending'] is True and expiry >= 0
             and (expiry == intended or expiry > intended and expiry - 1 <= virtual_ns),
             'actual timer phase')
-        _rows(record['partial-rows'], rows, start, line, virtual_ns)
+        _rows(record['partial-rows'], rows, start, line, virtual_ns, phase)
     else:
         _require(rows == 0 and record['partial-rows'] == [] and type(record['partial-rows']) is list
             and record['frame-start-ns'] == 0 and record['timer-pending'] is False

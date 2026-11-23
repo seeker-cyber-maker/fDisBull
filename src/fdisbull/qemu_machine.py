@@ -241,7 +241,8 @@ class QemuMachine:
                  paused=False, restore=False, memory_mib=4096, cpus=2, timeout_ms=240000,on_spawn=None,
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
                  clock_profile='standard', audio_profile='off', retrace_profile='standard',
-                 checkpoint_tool=None, _checkpoint_image=None, frame_key_repeat_profile=None):
+                 checkpoint_tool=None, _checkpoint_image=None, frame_key_repeat_profile=None,
+                 video_source_profile=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self._qemu_image_proof=None;self._admission_guest=None
         self._admission_guest_pidfd=None
@@ -266,6 +267,8 @@ class QemuMachine:
             selected_clock=machine_clock_configuration(clock_profile,cpus)
             selected_audio=machine_audio_configuration(audio_profile,clock_profile)
             selected_retrace=machine_retrace_configuration(retrace_profile,clock_profile)
+            from .qemu_video_checkpoint import validate_video_source_profile
+            validate_video_source_profile(video_source_profile, clock_profile, retrace_profile)
             if retrace_profile!='standard' and (boot_image is None or not paused or restore):
                 raise ValueError('Precise retrace observation requires a paused fresh PC boot machine')
             if frame_key_repeat_profile is not None:
@@ -356,6 +359,8 @@ class QemuMachine:
             command+=machine_audio_arguments(audio_profile)
             if frame_key_repeat_profile is not None:
                 command += ['-global', 'ps2-kbd.fdisbull-dosbox-typematic=on']
+            if video_source_profile is not None:
+                command += ['-global', 'VGA.x-fdisbull-mode13-phase=on']
             if transport=='pipe':
                 self.gdb_path=root/'gdb';self.rpc_path=root/'rpc'
                 create_fifo_pair(self.gdb_path);create_fifo_pair(self.rpc_path)
@@ -425,6 +430,17 @@ class QemuMachine:
                     self.machine_configuration['native_opl_admission']=self.native_opl_admission
             if retrace_profile=='precise':
                 self.machine_configuration['native_retrace_admission']=admit_retrace(self)
+            if video_source_profile is not None:
+                from .qemu_frame_keys import REPEAT_QUERY
+                from .qemu_instrumented_checkpoint import require_commands
+                from .qemu_video_frame import VIDEO_FRAME_COMMANDS, _native_video
+                require_commands(self)
+                if not VIDEO_FRAME_COMMANDS | {REPEAT_QUERY} <= self.qmp_commands:
+                    raise ValueError('Selected native QEMU cannot prove DOSBox mode 13h source timing')
+                self.machine_configuration['video_source_profile'] = video_source_profile
+                clock = self.machine_configuration['native_clock_admission']
+                _native_video(self, self.qmp.call('x-fdisbull-query-video-frame'),
+                    dict(virtual_ns=clock['virtual-ns'], virtual_clock=dict(native=clock)), token=None)
             self.qmp.operation_deadline=None
             self.context=MachineContext(self)
         except BaseException as error:
