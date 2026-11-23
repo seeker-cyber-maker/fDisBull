@@ -1,6 +1,7 @@
 """Mode X page choices across native latch boundaries and instrumented restore."""
 from copy import deepcopy
 from hashlib import sha256
+import json
 import os
 import struct
 
@@ -11,6 +12,7 @@ from fdisbull.qemu_instrumented_checkpoint import VIDEO_LATCH_FORMAT
 from fdisbull.qemu_video_checkpoint import LATCH_MODEL, LATCH_PROFILE
 from support.dos_process_fixture import assemble, digest
 from test_dosbox_frame_source_probe_native import _held_pages, _pixels
+from test_dosbox_unchained_timed_latch_native import _delta, _guest as _paired_guest
 from test_qemu_clock_budget_native import clock_disk, clock_runtime, park
 from test_qemu_dos_process_native import com_address, launch_options, process_record
 from test_qemu_vga_phase_checkpoint_native import _reach
@@ -155,3 +157,78 @@ def test_unchained_page_latch_replays_early_and_late_writes(
         assert last_cold_process.poll() == 0
     assert binary.read_bytes() == code
     assert digest(clock_disk['image']) == clock_disk['prepared_sha256']
+
+
+def test_unchained_page_latch_replays_the_paired_guest_pit_witness(
+        tmp_path, clock_runtime, clock_disk, record_property):
+    """Use the exact DOSBox reference program and guest-measured write phases."""
+    native_sha = digest(clock_runtime['executable'])
+    assert native_sha == os.environ['FDISBULL_QEMU_VGA_LATCH_SHA256']
+    code = assemble(tmp_path, 'paired-latch', _paired_guest(), clock_runtime['nasm'])
+    assert code[-12:-8] == b'LVGA'
+    assert sha256(code).hexdigest() == '8bfc1d46e3f3c4c8b83df416d4b814c38cc340946f7f1fef66117a8ee9e54434'
+    hold, out, report, command = struct.unpack('<4H', code[-8:])
+    assert code[out - 0x100:out - 0x100 + 1] == b'\xef'
+    binary = tmp_path / 'LATCH.COM'
+    binary.write_bytes(code)
+    receipt = dict(backend_sha256=native_sha, authored_com_sha256=digest(binary), trials=[])
+    record_property('authored_com_sha256', digest(binary))
+
+    try:
+        with Project.create(tmp_path / 'pair.fdb', binary, image='com') as project:
+            with project.debugger(clock_runtime['executable'], tmp_path,
+                    **launch_options(clock_runtime, clock_disk, qemu_clock='virtual',
+                        qemu_retrace='precise', qemu_video_source_profile=LATCH_PROFILE)) as debug:
+                owner = debug.vm.process
+                process = process_record(debug)
+                hold, out, report, command = (com_address(process, n) for n in (hold, out, report, command))
+                park(debug, hold)
+                debug.video_frame_start()
+                _finish(debug, 0x4000, 1)
+
+                for number, old, new, sequence in (
+                        (1, 0x4000, 0x8000, [0x8000]),
+                        (2, 0x8000, 0x4000, [0x8000, 0x4000])):
+                    trial = dict(phase=number, requested_crtc_start=new, frames=[])
+                    receipt['trials'].append(trial)
+                    debug.write_memory(command, f'{number:02x}', expected_hex='00')
+                    park(debug, out)
+                    regs = debug.registers()['registers']
+                    assert int(regs.get('rax', regs.get('eax')), 0) & 65535 == new | 0x0c
+                    assert int(regs.get('rdx', regs.get('edx')), 0) & 65535 == 0x03d4
+                    pre = _native(debug)
+                    trial['pre'] = {k:pre[k] for k in ('virtual-ns', 'awaiting-page-latch', 'next-deadline-ns')}
+                    assert pre['frame']['page-latch']['origin-bytes'] == old * 4
+                    assert _page(debug) == old
+                    debug.step(count=1, timeout_ms=5000)
+                    assert int(debug.registers()['linear_pc'], 0) == out + 1
+                    assert _page(debug) == new
+                    after = _native(debug)
+                    assert after['frame'] == pre['frame']
+                    if number == 1:
+                        assert after['awaiting-page-latch']
+                        assert after['virtual-ns'] < after['next-deadline-ns']
+                    else:
+                        assert after['pending-page-latch'] == pre['pending-page-latch']
+                        assert after['pending-page-latch']['origin-bytes'] == old * 4
+                    for origin in sequence:
+                        frame = _finish(debug, origin, 1 if origin == 0x4000 else 5)['frame']
+                        trial['frames'].append(dict(
+                            frame=frame['frame-id'], latch=frame['page-latch'], rgb_sha256=frame['pixel-sha256']))
+                    raw = bytes.fromhex(debug.memory(report, length=13, space='virtual')['hex'])
+                    edge, period, started, ended, following, before, after, completed = struct.unpack('<5H3B', raw)
+                    trial['guest'] = dict(before_status=before, after_status=after, completed=completed,
+                                          bracket=_delta(started, ended), since_rise=_delta(edge, started))
+                    assert completed == number and _delta(started, ended) < 96, trial
+                    if number == 1:
+                        trial['guest']['after_out_until_rise'] = _delta(ended, following)
+                        assert not ((before | after) & 8) and 15 <= _delta(ended, following) <= 400, trial
+                        assert 16000 <= period <= 18000 and 16000 <= _delta(edge, following) <= 18000, trial
+                    else:
+                        assert before & after & 8 and _delta(edge, started) < 100, trial
+            assert owner.poll() == 0
+    finally:
+        if 'owner' in locals():
+            receipt['owner_returncode'] = owner.poll()
+        assert binary.read_bytes() == code and digest(clock_disk['image']) == clock_disk['prepared_sha256']
+        (tmp_path / 'qemu-paired-latch.json').write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n')
