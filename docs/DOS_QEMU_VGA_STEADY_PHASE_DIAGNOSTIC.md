@@ -305,10 +305,55 @@ engines have distinct measured physical line periods.
 | QEMU warm native receipt | `99f8f58bdef6927bb08d0744d1a933733fe589fe7069def7af4d5c33b691a11e` |
 | QEMU text reentry native receipt | `06cf6732870ba3aca35bffb525aa77b10c1cb21d8d7eefd3f3e10f1a3c2489cd` |
 
+## Equivalent BIOS mode reapply
+
+A [same-byte native fixture](../tests/test_paired_mode13_reapply_native.py)
+entered and held mode 13h on both engines. It detected leading vertical
+retrace at port 03DAh, waited 2,300 channel-2 PIT ticks, then stopped at an
+authored `INT 10h AX=0013h` edge with the normal BIOS clear. Actual PIT
+entry intervals were 2,303 ticks on DOSBox-X and 2,300 on QEMU. The BIOS
+return brackets were 3 and 5,933 PIT ticks respectively. All 17 guest-read
+VGA census bytes were identical before and after on both engines. The QEMU
+setup stamp advanced and the old source stream invalidated. Neither run
+read a raster image.
+
+| Producer and completed raster | Physical phase | Scheduled interval between drawn rows |
+| --- | --- | --- |
+| DOSBox-X first after BIOS, frame 5 mode 5 | 1 | 31,777–31,778 ns |
+| DOSBox-X second, frame 6 mode 5 | 0 | 63,555–63,556 ns |
+| DOSBox-X frames 7 through 11, mode 5 | 1 | 63,555–63,556 ns |
+| QEMU first after setup | 0 | 63,400 ns |
+| QEMU second after setup | 1 | 63,400 ns |
+
+The first DOSBox-X frame started from a recorded nominal 31,778 ns
+physical-line schedule. Its row zero was 14,005 ns early relative to that
+initial lattice and its final row was 6,337,915 ns early. All actual
+callbacks remained within 7 ns of their dispatched event times. The first
+full-spacing DOSBox-X frame used even physical lines. The next frame
+restored the steady odd sequence and four further frames repeated it.
+
+In the retained DOSBox-X source, `VGA_SetupDrawing` resets the carried
+render step, and `VGA_DrawSingleLine` reads the current delay each time it
+schedules a line. A setup that changes effective FPS can call
+`VGA_VerticalTimer` before replacing `singleline_delay`. These separate
+setup and callback operations allow a retained raster to straddle a
+timing change. The diagnostic observes those row events and the return
+to the steady cadence. The exact setup call that preceded each event
+remains unobserved. QEMU's mode-13h source sampler uses one whole-frame
+line period and one phase. Pairing this transition would require modeling
+and preserving a schedule with changing row intervals.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored reapply COM | `1742f5a2317b70365de38404732ad04128976543e862e0a913f38d3b02db2c9b` |
+| DOSBox-X reapply receipt | `2affe690f6bb629f7b5465fd25686ec79cd302a74bb0b311018ce9a616cd3667` |
+| QEMU reapply receipt | `11433f30a5ca553d3640a0fd279341c59256e755f627377b8598c37658cd205c` |
+
 ## Remaining qualification
 
-- Measure the paired draw-setup behavior for an equivalent same-mode BIOS
-  reapply. Qualify additional programming sequences and modes separately.
+- Qualify a transitional schedule if equivalent mode reapply must reproduce
+  the first mixed-cadence DOSBox-X raster. Qualify additional programming
+  sequences and modes separately.
 - Exercise both engines through the same protected game's palette/origin
   changes and replay its dynamic raster after a native checkpoint.
   [Current QEMU frame contract](QEMU_FRAME_CONTRACT.md)
