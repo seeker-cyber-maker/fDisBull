@@ -40,7 +40,7 @@ WINDOWS = {3: (8991, 40), 4: (8991, 36)}
 
 
 @contextmanager
-def _mode13_owner(tmp_path, runtime, disk, code, evidence):
+def _mode13_owner(tmp_path, runtime, disk, code, evidence, *, profile='dosbox-mode13'):
     assert not any((directory / '.git').exists() for directory in
                    (tmp_path.resolve(), *tmp_path.resolve().parents))
     assert digest(runtime['boot_image']) == disk['source_sha256'] == BOOT_SHA256
@@ -58,7 +58,7 @@ def _mode13_owner(tmp_path, runtime, disk, code, evidence):
         with project:
             with project.debugger(runtime['executable'], tmp_path,
                     **launch_options(runtime, disk, qemu_clock='virtual', qemu_retrace='precise',
-                                     qemu_video_source_profile='dosbox-mode13', qemu_checkpoint_tool=str(tool))) as debug:
+                                     qemu_video_source_profile=profile, qemu_checkpoint_tool=str(tool))) as debug:
                 owner = debug.vm.process
                 evidence['owner_pid'] = owner.pid
                 yield project, debug

@@ -201,7 +201,7 @@ def _observed_dosbox_lattice(timing):
                 minimum_row_gap_ns=min(gaps), maximum_row_gap_ns=max(gaps))
 
 
-def test_native_dosbox_same_mode13_reapply_reports_physical_phase(tmp_path):
+def _dosbox_reapply_witness(tmp_path):
     executable, executable_sha, wrapper = _timing_producer(tmp_path)
     code, addr = _program(tmp_path, os.environ['NASM'])
     work = tmp_path / 'dosbox'
@@ -252,6 +252,11 @@ def test_native_dosbox_same_mode13_reapply_reports_physical_phase(tmp_path):
         assert digest(executable) == executable_sha
         _write_json(tmp_path / 'dosbox-mode13-reapply.json', evidence)
     assert evidence['reaped'] and evidence['returncode'] == 0
+    return evidence
+
+
+def test_native_dosbox_same_mode13_reapply_reports_physical_phase(tmp_path):
+    _dosbox_reapply_witness(tmp_path)
 
 
 @pytest.mark.skipif(os.environ.get('FDISBULL_REQUIRE_QEMU_MODE13_PHASE') != '1',
