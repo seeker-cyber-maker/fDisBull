@@ -18,8 +18,9 @@ import struct
 import pytest
 
 from fdisbull.project import Project
-from support.dos_process_fixture import (com_exit, mz_exit, nested_exec,
-                                         prepare_dos_baseline, relocated_module)
+from support.dos_process_fixture import (com_exit, digest, mz_exit, nested_exec,
+                                         prepare_dos_baseline, relocated_module,
+                                         resident_com)
 
 
 _CODE_OFFSET = 0x100
@@ -105,10 +106,8 @@ def parity_inputs(tmp_path):
     return runtime
 
 
-def _launch_qemu(project, runtime, directory):
-    return project.debugger(
-        str(runtime["qemu"]),
-        directory,
+def _qemu_launch_options(runtime):
+    return dict(
         backend="qemu-dos",
         dos_boot_image=str(runtime["boot"]["image"]),
         dos_mcopy=str(runtime["mcopy"]),
@@ -117,6 +116,10 @@ def _launch_qemu(project, runtime, directory):
         qemu_firmware=os.environ.get("FDISBULL_QEMU_DOS_FIRMWARE"),
         boot_timeout_ms=15000,
     )
+
+
+def _launch_qemu(project, runtime, directory):
+    return project.debugger(str(runtime["qemu"]), directory, **_qemu_launch_options(runtime))
 
 
 def _observe_dosbox_controls(project, directory, runtime):
@@ -245,6 +248,63 @@ def test_paired_authored_com_guest_exit_code_when_freedos_is_available(
             "source_sha256": source_hash,
         }
         assert source.read_bytes() == code
+
+
+@pytest.mark.parametrize("resident", [False, True], ids=["exit", "resident"])
+def test_paired_saved_script_reports_selected_dos_completion(tmp_path, parity_inputs, resident):
+    from fdisbull.cli import respond
+    from fdisbull.debugger import DebugWorkspace
+
+    source = tmp_path / "TARGET.COM"
+    code = resident_com()[0] if resident else com_exit(37)
+    source.write_bytes(code)
+    database = tmp_path / "completion-parity.fdb"
+    with Project.create(database, source, image="com") as project:
+        project.analyze(max_instructions=64)
+
+    workspace = DebugWorkspace()
+
+    def invoke(method, **params):
+        reply = respond({"method": method, "params": {"project": str(database), **params}},
+                        debugger=workspace)
+        assert reply["ok"], reply
+        return reply["result"]
+
+    try:
+        outcome = "guest_tsr" if resident else "guest_exit"
+        for qemu in (False, True):
+            options = _qemu_launch_options(parity_inputs) if qemu else {}
+            script = {"format": "fdisbull-script-1", "steps": [
+                {"op": "run", "expect": outcome, "timeout_ms": 5000}
+            ]}
+            if qemu:
+                script["backend"] = "qemu-dos"
+            else:
+                script["steps"][0]["fast_forward"] = True
+            executable = parity_inputs["qemu" if qemu else "dosbox"]
+            name = ("qemu-dos" if qemu else "dosbox") + "-completion.json"
+            saved = invoke("debug-save-script", name=name, script=script)
+            run = invoke("debug-launch", executable=str(executable), game_dir=str(tmp_path), **options)["run"]
+            report = invoke("debug-script", run=run, script_id=saved["script_id"], timeout_ms=8000)
+            assert report["ok"] and report["completed_steps"] == 1, report
+            result = report["steps"][0]["result"]
+            assert result["outcome"] == outcome
+            if qemu:
+                info = result["process"]["termination"]
+                exit_code = info["code"]
+            else:
+                info = result["session"]["stop_reason"]["guest_exit"]
+                exit_code = info["requested_exit_code"]
+            assert info["resident"] is resident and exit_code == 37
+            assert invoke("debug-stop", run=run)["process_reaped"]
+            with Project(database) as reopened:
+                recorded = next(row for row in reopened.debug_scripts()["scripts"]
+                                if row["id"] == saved["script_id"])
+                assert recorded["sha256"] == saved["sha256"]
+    finally:
+        workspace.close()
+    assert source.read_bytes() == code
+    assert digest(parity_inputs["boot_image"]) == parity_inputs["boot_sha256"]
 
 
 def _run_exit_dosbox(project, runtime, directory):
@@ -438,6 +498,81 @@ def test_paired_authored_nested_exec_keeps_the_selected_parent_until_its_exit(tm
     assert source.read_bytes() == code
     assert child.read_bytes() == child_code
     assert hashlib.sha256(parity_inputs["boot_image"].read_bytes()).hexdigest() == parity_inputs["boot_sha256"]
+
+
+@pytest.mark.parametrize("interrupt27", [False, True], ids=["int21-ah31", "int27"])
+def test_paired_nested_resident_child_keeps_callable_vector_and_mcb(
+        tmp_path, parity_inputs, interrupt27, record_property):
+    nasm = os.environ.get("NASM") or shutil.which("nasm")
+    if not nasm:
+        message = "Paired resident EXEC requires an explicit NASM executable"
+        if os.environ.get("FDISBULL_REQUIRE_QEMU_DOS_OS") == "1":
+            pytest.fail(message)
+        pytest.skip(message)
+    parent_code, symbols = nested_exec(tmp_path, nasm, resident=True)
+    resident_code, resident = resident_com(interrupt27=interrupt27)
+    game = tmp_path / "game"
+    game.mkdir()
+    parent, child = game / "PARENT.COM", game / "RESIDENT.COM"
+    parent.write_bytes(parent_code)
+    child.write_bytes(resident_code)
+    boot = tmp_path / "resident-boot"
+    boot.mkdir()
+    disk = prepare_dos_baseline(parity_inputs["boot_image"], boot / "baseline.img",
+                                parity_inputs["mcopy"], extra_files={child.name: resident_code})
+    runtime = dict(parity_inputs, boot=disk)
+    with Project.create(tmp_path / "resident-parity.fdb", parent, image="com") as project:
+        project.analyze(max_instructions=128)
+        for qemu in (False, True):
+            backend = "qemu-dos" if qemu else "dosbox"
+            session = (_launch_qemu(project, runtime, game) if qemu else
+                       project.debugger(str(runtime["dosbox"]), game, backend=backend))
+            with session as debug:
+                psp = _word(debug.registers(), "cs")
+                vector = resident["interrupt"] * 4
+                old_pointer = _memory_bytes(debug, vector, 4, qemu=qemu)
+                base = psp * 16 + _CODE_OFFSET if qemu else debug.static_base
+                point = debug.breakpoint(base + symbols["after_child_ip"] - _CODE_OFFSET,
+                                         **({} if qemu else {"view": "execute"}))
+                run_options = {} if qemu else {"fast_forward": True}
+                stopped = debug.run(timeout_ms=5000, **run_options)
+                assert stopped["outcome"] == "breakpoint", stopped
+                registers = debug.registers()
+                assert (_word(registers, "cs"), _ip(registers)) == (psp, symbols["after_child_ip"])
+                assert _word(registers, "ax", "eax", "rax") == 0x6a5b
+                status = _memory_bytes(debug, psp * 16 + symbols["child_status_ip"], 2, qemu=qemu)
+                assert status[1] == 3, status.hex()  # DOS 4Dh: child stayed resident.
+                if resident["exit_code"] is not None:
+                    assert status[0] == resident["exit_code"]
+                record_property(f"{backend}_child_status", status.hex())
+
+                pointer = _memory_bytes(debug, vector, 4, qemu=qemu)
+                offset, segment = struct.unpack("<HH", pointer)
+                assert pointer != old_pointer and segment > 1 and segment != psp
+                assert offset == resident["handler_ip"]
+                assert _memory_bytes(debug, 16 * segment, 2, qemu=qemu) == b"\xcd\x20"
+                handler = resident["handler"]
+                assert _memory_bytes(debug, 16 * segment + offset, len(handler), qemu=qemu) == handler
+                mcb = _memory_bytes(debug, 16 * (segment - 1), 5, qemu=qemu)
+                owner, paragraphs = struct.unpack_from("<HH", mcb, 1)
+                assert mcb[:1] in (b"M", b"Z") and owner == segment
+                assert paragraphs >= resident["paragraphs"] and offset + len(handler) <= 16 * paragraphs
+
+                if qemu:
+                    assert debug.dos_process_info()["state"] == "active"
+                debug.delete_breakpoint(point["breakpoint_id"])
+                exit_result = debug.run(timeout_ms=5000, **run_options)
+                assert _exit_code(exit_result, qemu=qemu) == 17
+                if qemu:
+                    assert int(str(exit_result["process"]["psp_segment"]), 0) == psp
+                else:
+                    assert int(exit_result["session"]["stop_reason"]["guest_exit"]["psp"], 16) == psp
+                native = _owned_process(debug, qemu=qemu)
+            assert native.poll() == 0
+        assert len(project.debug_runs()["runs"]) == 2
+    assert parent.read_bytes() == parent_code and child.read_bytes() == resident_code
+    assert digest(disk["image"]) == disk["prepared_sha256"]
+    assert digest(parity_inputs["boot_image"]) == parity_inputs["boot_sha256"]
 
 
 def _observe_explicit_pause(project, runtime, directory, *, qemu):

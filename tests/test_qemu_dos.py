@@ -160,3 +160,25 @@ def test_script_admission_uses_native_machine_contract():
             validate_script(dict(script, steps=[step]), session=session)
     with pytest.raises(ValueError, match='differs'):
         validate_script(dict(script, backend='qemu-machine'), session=session)
+
+
+@pytest.mark.parametrize('outcome', ['guest_exit', 'guest_tsr'])
+def test_dos_script_completion_preserves_backend_grammar(outcome):
+    from fdisbull.debugger import DebugSession
+    from fdisbull.debug_script import validate_script
+    from fdisbull.dos_qemu import DOSQemuSession
+
+    steps = [{'op': 'run', 'expect': outcome, 'timeout_ms': 1000}]
+    legacy = {'format': 'fdisbull-script-1', 'steps': steps}
+    assert validate_script(legacy) == steps
+    for session_type, metadata in ((DebugSession, {}), (DOSQemuSession, {'backend': 'dosbox-qemu'})):
+        session = session_type.__new__(session_type)
+        session.metadata = metadata
+        assert validate_script(legacy, session=session) == steps
+    assert validate_script(dict(legacy, backend='qemu-dos')) == steps
+    for backend in ('dosbox', 'dosbox-qemu'):
+        with pytest.raises(ValueError, match='omit it for the legacy DOS grammar'):
+            validate_script(dict(legacy, backend=backend))
+    for backend in ('qemu-machine', 'qemu-chip8', 'wine-qemu'):
+        with pytest.raises(ValueError, match='supported run outcome'):
+            validate_script(dict(legacy, backend=backend))

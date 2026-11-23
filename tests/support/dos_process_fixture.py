@@ -325,9 +325,9 @@ counter:
     return code, {"park_ip": park, "counter_ip": counter}
 
 
-def nested_exec(directory, nasm):
-    """EXEC CHILD.COM, publish its exit status, then exit the selected parent."""
-    code = assemble(directory, "nested-exec", r"""
+def nested_exec(directory, nasm, *, resident=False):
+    """Run an authored child and optionally call its retained INT 60h hook."""
+    code = assemble(directory, "nested-exec", f"%define RESIDENT_CHILD {int(resident)}\n" + r"""
 bits 16
 org 100h
     nop
@@ -354,6 +354,10 @@ org 100h
     mov ax,4d00h
     int 21h
     mov [child_status],ax
+%if RESIDENT_CHILD
+    mov ax,1234h
+    int 60h
+%endif
     mov word [marker],0beefh
 after_child:
     nop
@@ -367,7 +371,11 @@ parameters:
 tail:
     db 0,13
 filename:
+%if RESIDENT_CHILD
+    db 'RESIDENT.COM',0
+%else
     db 'CHILD.COM',0
+%endif
 marker:
     dw 0
 child_status:

@@ -126,9 +126,9 @@ def validate_script(script, *, session=None):
             from .scummvm_debugger import ScummVMAGISession
             owner=ScummVMAGISession
     outcomes={'breakpoint','watchpoint','guest_time','timeout','exited','pause'}
-    if (backend or actual) == 'qemu-dos':
-        # DOS return/residency leave the owned machine alive. Preserve the
-        # separate 'exited' outcome for native machine termination.
+    if (backend or actual) in (None, 'dosbox', 'dosbox-x', 'dosbox-qemu', 'qemu-dos'):
+        # Both DOS process implementations distinguish a selected program's
+        # return or residency from the native emulator exiting.
         outcomes|={'guest_exit','guest_tsr'}
     if (backend or actual) in ('qemu-machine','qemu-dos'):
         outcomes.add('hook')
