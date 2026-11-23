@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import struct
+import time
 
 import pytest
 
@@ -216,6 +217,14 @@ def _park(debug, address, *, qemu):
         debug.delete_breakpoint(point['breakpoint_id'])
 
 
+def _settle_boot_events(debug):
+    # QEMU coalesces boot RTC_CHANGE notifications for one host-realtime
+    # second. Let that existing event expire while the authored guest stays
+    # stopped, then acknowledge it before opening a strict observation lease.
+    time.sleep(1.1)
+    debug.clock_observe()
+
+
 def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk, mouse_inputs):
     dosbox_path = os.environ.get('FDISBULL_DOSBOX')
     if not dosbox_path:
@@ -288,6 +297,7 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                     receipt['installed'][key] = int.from_bytes(read('installed', 2), 'little')
                     take('origin')
                     if qemu:
+                        _settle_boot_events(debug)
                         assert debug.capabilities['absolute_mouse'] is False
                         with pytest.raises(ValueError, match='active retained source raster'):
                             debug.observe_int33_mouse()
@@ -466,3 +476,137 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                 expected = (dict(count=1, last_position=[320, 90]) if (phase, button) in counted_edges[name]
                             else dict(count=0, last_position=[0, 0]))
                 assert record == expected
+
+
+_CLICK_ASSEMBLY = r'''
+bits 16
+org 100h
+    push cs
+    pop ds
+    mov ax,13h
+    int 10h
+    mov ax,0a000h
+    mov es,ax
+    xor ax,ax
+    int 33h
+    mov ax,4
+    mov cx,318
+    mov dx,88
+    int 33h
+first_frame:
+    nop
+wait_press:
+    inc byte [es:0]
+    mov ax,3
+    int 33h
+    test bx,1
+    jz wait_press
+pressed:
+    nop
+%if CASE = 1
+    mov ax,4
+    mov cx,300
+    mov dx,80
+    int 33h
+%elif CASE = 2
+    mov ax,5
+    xor bx,bx
+    int 33h
+%endif
+wait_release:
+    inc byte [es:0]
+    mov ax,3
+    int 33h
+    test bx,1
+    jnz wait_release
+released:
+    inc byte [es:0]
+    jmp released
+db 'CLK1'
+dw first_frame,pressed,released
+'''
+
+
+@pytest.mark.parametrize(('case', 'outcome'), [
+    ('complete', 'completed'),
+    ('breakpoint', 'competing_stop'),
+    ('release_breakpoint', 'competing_stop'),
+    ('warp', 'cursor_left_target'),
+    ('consumed', 'driver_edge_unconfirmed'),
+])
+def test_observed_int33_click_resolves_only_qualified_press(
+        tmp_path, clock_runtime, clock_disk, mouse_inputs, case, outcome):
+    baseline = prepare_mouse_disk(clock_disk['image'], tmp_path / 'mouse-boot.img',
+                                  mouse_inputs['driver'], clock_runtime['mcopy'])
+    case_number = {'warp': 1, 'consumed': 2}.get(case, 0)
+    code = assemble(tmp_path, 'observed-click', f'%define CASE {case_number}\n' + _CLICK_ASSEMBLY,
+                    clock_runtime['nasm'])
+    assert code[-10:-6] == b'CLK1'
+    ready, pressed, released = struct.unpack('<3H', code[-6:])
+    binary = tmp_path / 'CLICK.COM'
+    binary.write_bytes(code)
+    options = launch_options(clock_runtime, baseline, qemu_clock='virtual', qemu_retrace='precise')
+    with Project.create(tmp_path / 'click.fdb', binary, image='com') as project:
+        project.analyze(max_instructions=4096)
+        with project.debugger(str(clock_runtime['executable']), tmp_path, **options) as debug:
+            info = debug.dos_process_info()
+            _park(debug, com_address(info, ready), qemu=True)
+            _settle_boot_events(debug)
+            debug.video_frame_start()
+            assert debug.video_frame_advance()['advance_completed']
+            sample = debug.observe_int33_mouse()
+            frame = sample['raster']
+            selection = dict(stream=frame['stream'], frame_id=frame['frame_id'])
+            with pytest.raises(ValueError, match='observed landing'):
+                debug.mouse_click_int33(160, 88, **selection)
+            assert debug.input_state()['pending_edges'] == 0
+            stop_offset = {'breakpoint': pressed, 'release_breakpoint': released}.get(case)
+            stop = None if stop_offset is None else debug.breakpoint(com_address(info, stop_offset))
+            result = debug.mouse_click_int33(159, 88, **selection)
+            assert result['outcome'] == outcome, result
+            assert result['complete'] is (case == 'complete')
+            assert result['press']['execution']['input_delivery']['delivery'] == 'qmp_accepted'
+            if stop is not None:
+                phase = 'press' if case == 'breakpoint' else 'release'
+                original = result[phase]['execution']['session']['stop_reason']
+                assert original['breakpoint_ids'] == [stop['breakpoint_id']]
+                assert result[phase]['observed'] is None
+                debug.delete_breakpoint(stop['breakpoint_id'])
+            if case in ('complete', 'release_breakpoint'):
+                assert result['press']['observed']['buttons'] == 1
+                assert result['release']['execution']['input_delivery']['delivery'] == 'qmp_accepted'
+                assert result['press']['observed_edge_at_target'] is True
+                assert result['lease_state'] is None and not debug.input_state()['leases']
+                if case == 'complete':
+                    assert result['effect'] == 'press_and_release_observed'
+                    assert result['release']['observed_edge_at_target'] is True
+                    live = result['release']['observed']
+                    assert live['buttons'] == 0
+                    assert live['button_edges']['release']['left'] == dict(count=1, last_position=[318, 88])
+                else:
+                    assert result['effect'] == 'press_observed'
+            else:
+                assert result['release'] is None
+                assert result['next_action'] == 'release_owned_button'
+                assert result['lease_state']['make'] == 'qmp_accepted'
+                assert result['lease_state']['release'] is None
+                assert debug.input_state()['pending_edges'] == 0
+                if case in ('warp', 'consumed'):
+                    live = result['press']['observed']
+                    assert live['buttons'] == 1
+                    assert live['button_edges']['release']['left']['count'] == 0
+                    if case == 'warp':
+                        assert result['press']['observed_edge_at_target'] is True
+                        assert live['position'] == [300, 80]
+                        assert live['button_edges']['press']['left']['last_position'] == [318, 88]
+                    else:
+                        assert live['button_edges']['press']['left']['count'] == 0
+                debug.mouse_button_up(result['lease'])
+                debug.clock_advance(50_000_000)
+                assert debug.observe_int33_mouse()['buttons'] == 0
+                assert not debug.input_state()['leases']
+            assert debug.capabilities['absolute_mouse'] is False
+            proc = debug.vm.process
+        assert proc.poll() is not None
+    assert binary.read_bytes() == code
+    (tmp_path / 'int33-observed-click.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')

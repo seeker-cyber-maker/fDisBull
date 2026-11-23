@@ -47,6 +47,7 @@ from .qemu_scenes import QemuSceneObservationMixin
 from .qemu_screenshot_hooks import QemuScreenshotHookMixin
 from .qemu_pending_events import pending_status_operation, pending_status_owner
 from .qemu_int33_mouse import observe_int33_mouse
+from .qemu_int33_click import mouse_click_int33, validate_int33_click
 from .qemu_int33_mouse_control import (mouse_button_down_int33, mouse_move_int33,
                                      validate_int33_input)
 from .qemu_video_frame import validate_video_frame_parameters
@@ -202,6 +203,9 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     mouse_button_down_int33 = machine_trace_operation(
         mouse_button_down_int33, label='Positioned INT33 mouse press',
         parameter_validator=validate_int33_input)
+    mouse_click_int33 = machine_trace_operation(
+        mouse_click_int33, label='Observed INT33 mouse click',
+        parameter_validator=validate_int33_click)
 
     def __init__(self, project, executable, game_dir, *, boot_image=None, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,
