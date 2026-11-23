@@ -2371,7 +2371,7 @@ def parser():
     c.add_argument("project")
     c.add_argument("--executable", required=True)
     c.add_argument("--game-dir", help="Target directory; qemu-dos defaults to the captured caller workspace")
-    c.add_argument("--memory-mib", type=int, help="Owned Windows guest RAM, up to 8192 MiB")
+    c.add_argument("--memory-mib", type=int, help="Owned Windows or explicit DOSBox/QEMU guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
     c.add_argument("--guest-profile", choices=["dos", "dos-pc-v1", "qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
                    help="Admit and pin a DOS/QEMM/DESQview boot image (native QEMU only; dos profile uses qemu-dos)")

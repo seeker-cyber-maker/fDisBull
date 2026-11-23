@@ -167,9 +167,9 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             window=dot_mode
         if type(window) is not bool:raise ValueError('window must be boolean')
         if memory_mib is not None:bounded(memory_mib,'memory_mib',16,8192)
-        if memory_mib is not None and (self.meta['format'] not in ('PE','NE')
+        if memory_mib is not None and backend != 'dosbox-qemu' and (self.meta['format'] not in ('PE','NE')
                 or backend not in (None,'wine-qemu','wine-ne','ida-wine-qemu')):
-            raise ValueError('memory_mib is a Windows guest option')
+            raise ValueError('memory_mib requires a Windows guest or explicit dosbox-qemu backend')
         if backend == 'scummvm-kyra':
             if (any(x is not None for x in (kernel, initramfs, files, state, remote_server,
                                            spatial_mode, language, platform)) or window or fair_play):
@@ -247,8 +247,9 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             if kernel is None or initramfs is None or state is not None or remote_server is not None:
                 raise ValueError('DOSBox/QEMU launch requires kernel and prepared initramfs; load native states after launch')
             from .dos_qemu import DOSQemuSession
+            memory_options = {} if memory_mib is None else {'memory_mib': memory_mib}
             return DOSQemuSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,version=version,
-                                  files=files,boot_timeout_ms=boot_timeout_ms,_on_spawn=_on_spawn)
+                                  files=files,boot_timeout_ms=boot_timeout_ms,_on_spawn=_on_spawn,**memory_options)
         if backend == 'ida-wine-qemu':
             if kernel is None or initramfs is None or remote_server is None:
                 raise ValueError('IDA launch requires kernel, prepared IDA initramfs and remote_server')
@@ -383,6 +384,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             options['files']=[item['path'] for item in info['metadata']['files']]
         elif backend=='dosbox-qemu':
             options['files']=[item['path'] for item in info['metadata'].get('source_files',info['metadata']['files'])]
+            if 'guest_memory_mib' in info['metadata']:
+                options['memory_mib'] = info['metadata']['guest_memory_mib']
         with self.debugger(executable,game_dir,version=info['version'],**options) as debug:
             if not pe:debug.load_state(artifact)
             edits = apply_edits(debug,memory,registers)

@@ -38,6 +38,64 @@ def test_dos_qemu_alias_upload_budget_is_checked_before_spawn(tmp_path):
         assert project.debug_runs()['runs']==[]
 
 
+@pytest.mark.parametrize(('requested', 'configured'), [(None, 4096), (1536, 1536)])
+def test_dos_qemu_memory_selection_reaches_the_vm_launcher(tmp_path, monkeypatch, requested, configured):
+    from fdisbull.wine_rpc import WineQemuRPC
+
+    def capture(_rpc, _executable, _kernel, _initramfs, *, memory_mib=4096, **_options):
+        selected.append(memory_mib)
+        raise RuntimeError('authored stop before VM launch')
+
+    selected = []
+    monkeypatch.setattr(WineQemuRPC, '__init__', capture)
+    binary = tmp_path / 'TEST.COM'
+    binary.write_bytes(bytes.fromhex('90b82a4ccd21'))
+    launcher = tmp_path / 'authored-qemu'
+    launcher.write_text('fixture')
+    with Project.create(tmp_path / 'project.fdb', binary, image='com') as project:
+        with pytest.raises(RuntimeError, match='authored stop before VM launch'):
+            project.debugger(launcher, tmp_path, backend='dosbox-qemu', kernel='k',
+                             initramfs='i', memory_mib=requested)
+        with pytest.raises(ValueError, match='requires a Windows guest or explicit dosbox-qemu'):
+            project.debugger(launcher, tmp_path, backend='dosbox', memory_mib=1536)
+        with pytest.raises(ValueError, match='memory_mib'):
+            project.debugger(launcher, tmp_path, backend='dosbox-qemu', kernel='k',
+                             initramfs='i', memory_mib=True)
+        assert selected == [configured] and project.debug_runs()['runs'] == []
+
+
+def test_real_dos_qemu_selected_memory_preserves_com_save_restore_and_exit(tmp_path):
+    qemu, kernel, runtime = inputs()
+    selected = os.environ.get('FDISBULL_DOS_QEMU_MEMORY_MIB')
+    if not selected:
+        pytest.skip('Select the DOS bridge memory cap with FDISBULL_DOS_QEMU_MEMORY_MIB')
+    memory_mib = int(selected)
+    game = tmp_path / 'game'
+    game.mkdir()
+    binary = game / 'PARITY.COM'
+    code = bytes.fromhex('90b82a4ccd21')
+    binary.write_bytes(code)
+    with Project.create(tmp_path / 'com.fdb', binary, image='com') as project:
+        with project.debugger(qemu, game, backend='dosbox-qemu', kernel=kernel,
+                              initramfs=runtime, memory_mib=memory_mib) as debug:
+            vm = debug.rpc.vm
+            assert debug.metadata['guest_memory_mib'] == vm.machine_configuration['memory_mib'] == memory_mib
+            assert vm.command[vm.command.index('-m') + 1] == f'{memory_mib}M'
+            assert vm.machine_configuration['network'] == 'none'
+            before = debug.registers()
+            saved = debug.save_state()
+            assert debug.load_state(saved['artifact'])['sha256'] == saved['sha256']
+            after = debug.registers()
+            for key in ('general', 'segments', 'instruction_pointer', 'flags', 'cpu_mode'):
+                assert after[key] == before[key]
+            run = debug.run(timeout_ms=10000, guest_ms=1000, fast_forward=True)
+            assert run['outcome'] == 'guest_exit' and not run['timed_out']
+            guest_exit = run['session']['stop_reason']['guest_exit']
+            assert guest_exit['requested_exit_code'] == 42 and not guest_exit['resident']
+        assert vm.process.poll() == 0
+    assert binary.read_bytes() == code
+
+
 @pytest.mark.parametrize('filename',['AGI','A long executable.SAV'])
 def test_real_dos_qemu_structural_mz_alias_stays_in_guest(tmp_path,filename):
     qemu,kernel,runtime=inputs()

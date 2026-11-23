@@ -83,6 +83,13 @@ Selecting QEMU never silently launches DOSBox. After a failed or uncertain
 operation, the caller inspects the result and explicitly starts a separate
 fallback session. A DOSBox state cannot be loaded as a QEMU checkpoint.
 
+An explicit `dosbox-qemu` launch accepts `memory_mib` in Python or `debug-launch`
+JSON and `--memory-mib` in the `debug` CLI. The default remains 4096 MiB. Select
+a smaller value only with a prepared Linux initramfs sized for that guest and
+its workload. Run metadata records the actual allocation. Forking a saved
+state reuses its recorded allocation when available and retains the normal
+runtime and file identity checks.
+
 ### Resume an active DOS child and observe its return
 
 Public asynchronous resume now preserves only the exact launch-bound private

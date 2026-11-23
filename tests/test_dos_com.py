@@ -105,7 +105,8 @@ def test_com_native_launch_and_breakpoint(tmp_path):
     assert (tmp_path/'saved.png').read_bytes().startswith(b'\x89PNG')
 
 
-def test_qemu_state_fork_reuses_source_allowlist_not_derived_alias(tmp_path, monkeypatch):
+@pytest.mark.parametrize('recorded_memory', [None, 1536])
+def test_qemu_state_fork_reuses_source_allowlist_and_recorded_memory(tmp_path, monkeypatch, recorded_memory):
     binary=tmp_path/'LONG GAME.COM';binary.write_bytes(CODE)
     seen={}
     class Session:
@@ -117,6 +118,8 @@ def test_qemu_state_fork_reuses_source_allowlist_not_derived_alias(tmp_path, mon
     with Project.create(tmp_path/'fork.fdb',binary,image='com') as db:
         metadata={'files':[{'path':binary.name},{'path':'FBABCDEF.COM'}],
                   'source_files':[{'path':binary.name}]}
+        if recorded_memory is not None:
+            metadata['guest_memory_mib'] = recorded_memory
         monkeypatch.setattr(db,'debug_state_info',lambda artifact: {'version':1,'sha256':'fake','metadata':metadata})
         def debugger(executable,game_dir,**options):
             seen.update(options);return Session()
@@ -124,6 +127,7 @@ def test_qemu_state_fork_reuses_source_allowlist_not_derived_alias(tmp_path, mon
         db.debug_fork_state('old','agent',tmp_path,backend='dosbox-qemu',kernel='kernel',initramfs='initramfs',
                             registers={'eax':{'expected':0,'value':1}})
     assert seen['files']==[binary.name] and seen['loaded']=='old'
+    assert seen.get('memory_mib') == recorded_memory
 
 
 def test_com_refuses_stale_static_breakpoint(tmp_path):

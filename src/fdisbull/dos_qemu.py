@@ -20,8 +20,9 @@ class DOSQemuRPC(WineQemuRPC):
         from .dos_runtime import resources
         return resources()
 
-    def __init__(self,executable,game_dir,*,kernel,initramfs,files,target,boot_timeout_ms,on_spawn=None):
-        super().__init__(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,on_spawn=on_spawn)
+    def __init__(self,executable,game_dir,*,kernel,initramfs,files,target,boot_timeout_ms,on_spawn=None,memory_mib=None):
+        memory_options = {} if memory_mib is None else {'memory_mib': memory_mib}
+        super().__init__(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,on_spawn=on_spawn,**memory_options)
         try:
             self.started=self._bridge('dos.start',dict(files=files,target=target),timeout_ms=300000)
             self.capabilities=self.started['capabilities']
@@ -50,8 +51,10 @@ class DOSQemuRPC(WineQemuRPC):
 
 
 class DOSQemuSession(DebugSession):
-    def __init__(self,project,executable,game_dir,*,kernel,initramfs,version=None,files=None,boot_timeout_ms=240000,_on_spawn=None):
+    def __init__(self,project,executable,game_dir,*,kernel,initramfs,version=None,files=None,boot_timeout_ms=240000,_on_spawn=None,memory_mib=None):
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
+        if memory_mib is not None:
+            bounded(memory_mib,'memory_mib',16,8192)
         filename=project.meta['filename']
         target=guest_name(filename,project.meta['source_sha256'],project.meta['format'])
         assets=uploads(project,game_dir,filename,files)
@@ -75,7 +78,8 @@ class DOSQemuSession(DebugSession):
         if len(assets)>1024 or total>64*1024*1024:
             raise ValueError('Final DOS guest upload including executable alias exceeds asset budget')
         self._transport_options=dict(kernel=kernel,initramfs=initramfs,files=assets,
-                                     target=target,boot_timeout_ms=boot_timeout_ms,on_spawn=_on_spawn)
+                                     target=target,boot_timeout_ms=boot_timeout_ms,on_spawn=_on_spawn,
+                                     memory_mib=memory_mib)
         super().__init__(project,executable,game_dir,version=version,_on_spawn=_on_spawn)
 
     def _open_rpc(self,executable,game_dir):return DOSQemuRPC(executable,game_dir,**self._transport_options)
@@ -85,6 +89,7 @@ class DOSQemuSession(DebugSession):
 
     def _transport_metadata(self):
         return dict(backend='dosbox-qemu',runtime_profile='dosbox-qemu-real-normal-com-v1' if self.project.meta['format']=='COM' else 'dosbox-qemu-real-normal-v1',runtime_inputs=self.rpc.inputs,
+                    guest_memory_mib=self.rpc.vm.machine_configuration['memory_mib'],
                     emulator_sha256=self.rpc.hello['emulator_sha256'],guest_kernel=self.rpc.hello['guest_kernel'],
                     target_pid=self.rpc.started['pid'],files=[dict(path=f['path'],sha256=f['sha256']) for f in self._transport_options['files']],
                     source_files=self._source_files,
