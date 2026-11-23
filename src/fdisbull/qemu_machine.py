@@ -360,7 +360,8 @@ class QemuMachine:
             if frame_key_repeat_profile is not None:
                 command += ['-global', 'ps2-kbd.fdisbull-dosbox-typematic=on']
             if video_source_profile is not None:
-                command += ['-global', 'VGA.x-fdisbull-mode13-phase=on']
+                from .qemu_video_checkpoint import VIDEO_SOURCE_PROFILES
+                command += ['-global', VIDEO_SOURCE_PROFILES[video_source_profile][1]]
             if transport=='pipe':
                 self.gdb_path=root/'gdb';self.rpc_path=root/'rpc'
                 create_fifo_pair(self.gdb_path);create_fifo_pair(self.rpc_path)
@@ -436,7 +437,7 @@ class QemuMachine:
                 from .qemu_video_frame import VIDEO_FRAME_COMMANDS, _native_video
                 require_commands(self)
                 if not VIDEO_FRAME_COMMANDS | {REPEAT_QUERY} <= self.qmp_commands:
-                    raise ValueError('Selected native QEMU cannot prove DOSBox mode 13h source timing')
+                    raise ValueError('Selected native QEMU cannot prove the requested source video timing')
                 self.machine_configuration['video_source_profile'] = video_source_profile
                 clock = self.machine_configuration['native_clock_admission']
                 _native_video(self, self.qmp.call('x-fdisbull-query-video-frame'),

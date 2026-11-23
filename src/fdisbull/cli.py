@@ -2384,8 +2384,9 @@ def parser():
                    help="Explicit native audio profile; capture requires virtual clock and the matching audio/checkpoint extension")
     c.add_argument("--qemu-key-repeat-profile", choices=["dosbox-millisecond"],
                    help="Select legacy DOSBox-X repeat pacing on a native DOS process.")
-    c.add_argument("--qemu-video-source-profile", choices=["dosbox-mode13"],
-                   help="Opt into DOSBox-style first/steady native Mode 13h source timing.")
+    from .qemu_video_checkpoint import VIDEO_SOURCE_PROFILES
+    c.add_argument("--qemu-video-source-profile", choices=VIDEO_SOURCE_PROFILES,
+                   help="Select Mode 13h source timing or timed unchained VGA page selection.")
     c.add_argument("--qemu-retrace", choices=["standard", "precise"],
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
     c.add_argument("--qemu-checkpoint-tool",

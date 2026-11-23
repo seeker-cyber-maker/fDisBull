@@ -16,7 +16,8 @@ import time
 import uuid
 
 from .dosbox_rpc import DebuggerError
-from .qemu_video_checkpoint import MODE13_MODEL, raster_source_phase, validate_mode_setup, video_model
+from .qemu_video_checkpoint import (MODE13_MODEL, raster_source_phase, validate_frame_latch,
+    validate_latch_info, validate_mode_setup, video_model)
 
 
 VIDEO_FRAME_COMMANDS = frozenset({
@@ -162,6 +163,7 @@ def _frame_valid(frame, native):
         return False
     try:
         phase = raster_source_phase(native, start, period, frame)
+        validate_frame_latch(frame, native)
     except ValueError:
         return False
     if native['model'] == MODE13_MODEL:
@@ -200,8 +202,9 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
     state = value['state']
     try:
         validate_mode_setup(value)
+        validate_latch_info(value)
     except ValueError:
-        _invalid(vm, 'Invalid native video frame mode setup')
+        _invalid(vm, 'Invalid native video frame mode setup or page latch')
     if state == 'idle':
         if (token is not None or value['stream-generation'] or value['frame-sequence']
                 or value['in-progress'] or value['rows-sampled']
@@ -247,6 +250,16 @@ def _native_video(vm, value, clock, *, token, new_stream=False):
             if (previous_frame is not None and state != 'invalidated'
                     and (frame is None or frame['frame-id'] == previous_frame['frame-id'] and frame != previous_frame)):
                 _invalid(vm, 'Native completed video frame changed under the same identity')
+            if state == 'observing' and prior['state'] == 'observing':
+                if value.get('page-latch-offset-ns') != prior.get('page-latch-offset-ns'):
+                    _invalid(vm, 'Native page latch timing changed without retiring its stream')
+                pending = prior.get('pending-page-latch')
+                if (pending is not None and value['frame-sequence'] == prior['frame-sequence']
+                        and value.get('pending-page-latch') != pending):
+                    _invalid(vm, 'Native page selection changed within a raster')
+                if (pending is not None and value['frame-sequence'] == prior['frame-sequence'] + 1
+                        and frame is not None and frame.get('page-latch') != pending):
+                    _invalid(vm, 'Native completed raster used a different selected page')
             if prior['state'] == 'stopped' and state == 'invalidated':
                 if value['frame-sequence'] != prior['frame-sequence']:
                     _invalid(vm, 'Stopped video stream invalidation invented a completed frame')

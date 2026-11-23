@@ -1,0 +1,917 @@
+diff --git a/hw/display/vga-pci.c b/hw/display/vga-pci.c
+index 551bef8..36a27b5 100644
+--- a/hw/display/vga-pci.c
++++ b/hw/display/vga-pci.c
+@@ -179,6 +179,12 @@ bool pci_std_vga_fdisbull_mode13_selected(Object *obj)
+            PCI_VGA(obj)->vga.fdisbull_mode13_phase;
+ }
+ 
++bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
++{
++    return obj && pci_std_vga_fdisbull_configuration_selected(obj) &&
++           PCI_VGA(obj)->vga.fdisbull_unchained_latch;
++}
++
+ bool pci_std_vga_fdisbull_mode13_pending(Object *obj)
+ {
+     return pci_std_vga_fdisbull_mode13_selected(obj) &&
+@@ -216,7 +222,7 @@ bool pci_std_vga_fdisbull_mode13_restore(Object *obj,
+     s->fdisbull_mode13_setup = setup ? *setup : (FdisbullVideoSetupStamp) { 0 };
+     if (setup &&
+         (!vga_fdisbull_video_frame_sample(s, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL),
+-                                         -1, NULL, &source, errp) ||
++                                         0, -1, NULL, &source, errp) ||
+          !source.setup.configuration_generation)) {
+         s->fdisbull_mode13_setup = (FdisbullVideoSetupStamp) { 0 };
+         if (!errp || !*errp) {
+@@ -250,8 +256,8 @@ FdisbullUnchainedVideoProbe *pci_std_vga_fdisbull_probe_unchained_rows(
+ }
+ 
+ bool pci_std_vga_fdisbull_video_frame_sample(
+-    Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+-    struct FdisbullVideoFrameSource *source, Error **errp)
++    Object *obj, int64_t virtual_ns, uint64_t origin, int row,
++    uint8_t *rgb, struct FdisbullVideoFrameSource *source, Error **errp)
+ {
+     VGACommonState *s;
+ 
+@@ -269,7 +275,8 @@ bool pci_std_vga_fdisbull_video_frame_sample(
+         error_setg(errp, "Video frame source lost its owned headless VGA console");
+         return false;
+     }
+-    return vga_fdisbull_video_frame_sample(s, virtual_ns, row, rgb, source, errp);
++    return vga_fdisbull_video_frame_sample(s, virtual_ns, origin, row, rgb,
++                                           source, errp);
+ }
+ 
+ static const VMStateDescription vmstate_vga_pci = {
+@@ -457,6 +464,11 @@ static void pci_std_vga_realize(PCIDevice *dev, Error **errp)
+     bool qext = false;
+     bool edid = false;
+ 
++    if (s->fdisbull_mode13_phase && s->fdisbull_unchained_latch) {
++        error_setg(errp, "Select only one fDisBull VGA source timing profile");
++        return;
++    }
++
+     /* vga + console init */
+     if (!vga_common_init(s, OBJECT(dev), errp)) {
+         return;
+@@ -550,6 +562,8 @@ static void pci_secondary_vga_reset(DeviceState *dev)
+ static const Property vga_pci_properties[] = {
+     DEFINE_PROP_BOOL("x-fdisbull-mode13-phase", PCIVGAState,
+                      vga.fdisbull_mode13_phase, false),
++    DEFINE_PROP_BOOL("x-fdisbull-unchained-latch", PCIVGAState,
++                     vga.fdisbull_unchained_latch, false),
+     DEFINE_PROP_BOOL("x-fdisbull-retrace", PCIVGAState, vga.fdisbull_retrace, false),
+     DEFINE_PROP_BOOL("x-fdisbull-raster-proof", PCIVGAState,
+                      vga.fdisbull_raster_proof, false),
+diff --git a/hw/display/vga.c b/hw/display/vga.c
+index 13e2f68..8ff4d6a 100644
+--- a/hw/display/vga.c
++++ b/hw/display/vga.c
+@@ -539,6 +539,21 @@ static void vga_fdisbull_configuration_init(VGACommonState *s)
+     vga_fdisbull_configuration_raw(s, &s->fdisbull_configuration_committed);
+ }
+ 
++/* A start-address write affects the next latch, never the selected page.
++ * The sequencer plane write mask is CPU-only in standard unchained VGA. */
++static bool vga_fdisbull_page_programming_only(
++    const VGAConfigurationState *raw, const VGAConfigurationState *previous)
++{
++    VGAConfigurationState layout;
++
++    memcpy(&layout, raw, sizeof(layout));
++    layout.crtc[VGA_CRTC_START_HI] = previous->crtc[VGA_CRTC_START_HI];
++    layout.crtc[VGA_CRTC_START_LO] = previous->crtc[VGA_CRTC_START_LO];
++    layout.sequencer[VGA_SEQ_PLANE_WRITE] =
++        previous->sequencer[VGA_SEQ_PLANE_WRITE];
++    return !memcmp(&layout, previous, sizeof(layout));
++}
++
+ void vga_fdisbull_configuration_commit(VGACommonState *s, bool force)
+ {
+     VGAConfigurationState raw;
+@@ -561,9 +576,22 @@ void vga_fdisbull_configuration_commit(VGACommonState *s, bool force)
+         s->fdisbull_configuration_invalidated = true;
+         return;
+     }
++    bool page_programming = !force && s->fdisbull_unchained_latch &&
++        vga_fdisbull_page_programming_only(
++            &raw, &s->fdisbull_configuration_committed);
++
++    if (page_programming &&
++        (raw.crtc[VGA_CRTC_START_HI] !=
++             s->fdisbull_configuration_committed.crtc[VGA_CRTC_START_HI] ||
++         raw.crtc[VGA_CRTC_START_LO] !=
++             s->fdisbull_configuration_committed.crtc[VGA_CRTC_START_LO])) {
++        fdisbull_video_frame_check_page_programming(s->con);
++    }
+     s->fdisbull_configuration_generation++;
+     memcpy(&s->fdisbull_configuration_committed, &raw, sizeof(raw));
+-    fdisbull_video_frame_invalidate(s->con, "configuration-changed");
++    if (!page_programming) {
++        fdisbull_video_frame_invalidate(s->con, "configuration-changed");
++    }
+ }
+ 
+ static uint8List *vga_fdisbull_configuration_bytes(const uint8_t *data,
+@@ -2070,8 +2098,8 @@ unavailable:
+ 
+ /* Fresh source description; never repair or borrow the renderer's params. */
+ bool vga_fdisbull_video_frame_sample(
+-    VGACommonState *s, int64_t virtual_ns, int row, uint8_t *rgb,
+-    FdisbullVideoFrameSource *source, Error **errp)
++    VGACommonState *s, int64_t virtual_ns, uint64_t origin, int row,
++    uint8_t *rgb, FdisbullVideoFrameSource *source, Error **errp)
+ {
+     g_autoptr(FdisbullRetraceInfo) retrace = g_new0(FdisbullRetraceInfo, 1);
+     g_autoptr(FdisbullVgaConfigurationSnapshot) configuration =
+@@ -2109,7 +2137,16 @@ bool vga_fdisbull_video_frame_sample(
+     geometry.line_offset = params.line_offset;
+     geometry.line_compare = params.line_compare;
+     geometry.hpel = params.hpel & 7;
+-    reason = fdisbull_chain4_admission(&geometry);
++    if (s->fdisbull_unchained_latch) {
++        if (origin != FDISBULL_VIDEO_PROGRAMMED_ORIGIN) {
++            geometry.start_address = origin;
++        }
++        reason = fdisbull_video_page_origin_valid(geometry.start_address) ?
++            vga_fdisbull_unchained_layout(s, geometry) :
++            "incomplete-or-wrapping-source-storage";
++    } else {
++        reason = fdisbull_chain4_admission(&geometry);
++    }
+     if (reason) {
+         error_setg(errp, "Video frame source is unsupported: %s", reason);
+         return false;
+@@ -2121,6 +2158,10 @@ bool vga_fdisbull_video_frame_sample(
+     source->period_ns = retrace->phase->period_ns;
+     source->dac_8bit = s->dac_8bit;
+     source->mode13_phase = s->fdisbull_mode13_phase;
++    source->unchained_latch = s->fdisbull_unchained_latch;
++    source->origin_bytes = geometry.start_address;
++    source->page_latch_offset_ns = source->unchained_latch ?
++        retrace->timing->vstart * source->line_period_ns : 0;
+     source->setup = (FdisbullVideoSetupStamp) { 0 };
+     if (source->mode13_phase &&
+         s->fdisbull_mode13_setup.configuration_generation ==
+@@ -2137,8 +2178,15 @@ bool vga_fdisbull_video_frame_sample(
+         error_setg(errp, "Video frame timing cannot cover 400 physical lines");
+         return false;
+     }
++    if (source->unchained_latch && !fdisbull_video_page_offset_valid(
++            source->page_latch_offset_ns, source->line_period_ns,
++            source->period_ns)) {
++        error_setg(errp, "Video frame latch requires retrace after visible rows");
++        return false;
++    }
+     if (row >= 0 && !fdisbull_video_copy_row(
+-            s->vram_ptr + (size_t)row * FDISBULL_VIDEO_WIDTH,
++            s->vram_ptr + geometry.start_address +
++            (size_t)row * FDISBULL_VIDEO_WIDTH,
+             FDISBULL_VIDEO_WIDTH, s->palette, sizeof(s->palette), s->dac_8bit,
+             rgb, FDISBULL_VIDEO_ROW_BYTES)) {
+         error_setg(errp, "Video frame row source is incomplete");
+diff --git a/hw/display/vga_int.h b/hw/display/vga_int.h
+index 0ab33a5..436d9ff 100644
+--- a/hw/display/vga_int.h
++++ b/hw/display/vga_int.h
+@@ -186,6 +186,7 @@ typedef struct VGACommonState {
+     bool fdisbull_configuration_initialized;
+     bool fdisbull_configuration_invalidated;
+     bool fdisbull_mode13_phase;
++    bool fdisbull_unchained_latch;
+     uint8_t fdisbull_mode13_prefix;
+     FdisbullVideoSetupStamp fdisbull_mode13_setup;
+     uint64_t fdisbull_configuration_generation;
+@@ -236,8 +237,8 @@ struct FdisbullUnchainedVideoProbe *vga_fdisbull_probe_unchained_rows(
+     VGACommonState *s, int64_t virtual_ns, const uint8_t *rows, unsigned count, Error **errp);
+ 
+ bool vga_fdisbull_video_frame_sample(
+-    VGACommonState *s, int64_t virtual_ns, int row, uint8_t *rgb,
+-    struct FdisbullVideoFrameSource *source, Error **errp);
++    VGACommonState *s, int64_t virtual_ns, uint64_t origin, int row,
++    uint8_t *rgb, struct FdisbullVideoFrameSource *source, Error **errp);
+ 
+ void vga_dirty_log_start(VGACommonState *s);
+ void vga_dirty_log_stop(VGACommonState *s);
+diff --git a/include/hw/display/fdisbull-video-frame.h b/include/hw/display/fdisbull-video-frame.h
+index 68f8b73..15d6fd4 100644
+--- a/include/hw/display/fdisbull-video-frame.h
++++ b/include/hw/display/fdisbull-video-frame.h
+@@ -7,6 +7,9 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ 
++#define FDISBULL_VIDEO_PROGRAMMED_ORIGIN UINT64_MAX
++#define FDISBULL_VIDEO_STANDARD_VRAM (256u * 1024u)
++
+ #define FDISBULL_VIDEO_WIDTH 320u
+ #define FDISBULL_VIDEO_HEIGHT 200u
+ #define FDISBULL_VIDEO_ROW_BYTES (FDISBULL_VIDEO_WIDTH * 3u)
+@@ -25,6 +28,9 @@ typedef struct FdisbullVideoFrameSource {
+     int64_t period_ns;
+     bool dac_8bit;
+     bool mode13_phase;
++    bool unchained_latch;
++    uint64_t origin_bytes;
++    int64_t page_latch_offset_ns;
+     FdisbullVideoSetupStamp setup;
+ } FdisbullVideoFrameSource;
+ 
+@@ -34,6 +40,32 @@ static inline bool fdisbull_video_timing_valid(int64_t line, int64_t period)
+            period >= line * 400 && period % line == 0;
+ }
+ 
++static inline bool fdisbull_video_page_origin_valid(uint64_t origin)
++{
++    return !(origin & 3) && origin <= FDISBULL_VIDEO_STANDARD_VRAM -
++           FDISBULL_VIDEO_WIDTH * FDISBULL_VIDEO_HEIGHT;
++}
++
++static inline bool fdisbull_video_page_offset_valid(int64_t offset,
++                                                    int64_t line,
++                                                    int64_t period)
++{
++    return fdisbull_video_timing_valid(line, period) && offset >= 400 * line &&
++           offset < period && offset % line == 0;
++}
++
++static inline bool fdisbull_video_page_deadline(int64_t start, int64_t period,
++                                               int64_t offset,
++                                               int64_t *deadline)
++{
++    if (!deadline || period <= 0 || start < period || start % period ||
++        offset <= 0 || offset >= period) {
++        return false;
++    }
++    *deadline = start - period + offset;
++    return true;
++}
++
+ static inline bool fdisbull_video_next_start(int64_t now, int64_t period,
+                                             int64_t *start)
+ {
+diff --git a/include/hw/display/vga.h b/include/hw/display/vga.h
+index ec9a81e..9d557ff 100644
+--- a/include/hw/display/vga.h
++++ b/include/hw/display/vga.h
+@@ -44,6 +44,7 @@ struct FdisbullVideoFrameSource;
+ struct FdisbullVideoSetupStamp;
+ 
+ bool pci_std_vga_fdisbull_mode13_selected(Object *obj);
++bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_pending(Object *obj);
+ bool pci_std_vga_fdisbull_mode13_setup(Object *obj,
+                                      struct FdisbullVideoSetupStamp *out);
+@@ -56,8 +57,8 @@ struct FdisbullUnchainedVideoProbe *pci_std_vga_fdisbull_probe_unchained_rows(
+     Error **errp);
+ 
+ bool pci_std_vga_fdisbull_video_frame_sample(
+-    Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+-    struct FdisbullVideoFrameSource *source, Error **errp);
++    Object *obj, int64_t virtual_ns, uint64_t origin, int row,
++    uint8_t *rgb, struct FdisbullVideoFrameSource *source, Error **errp);
+ bool pci_std_vga_fdisbull_checkpoint_restore(
+     Object *obj, const struct FdisbullRetraceInfo *retrace,
+     const struct FdisbullVgaConfigurationSnapshot *configuration,
+diff --git a/include/system/fdisbull-instrumented-checkpoint.h b/include/system/fdisbull-instrumented-checkpoint.h
+index d6bc6e7..aba92aa 100644
+--- a/include/system/fdisbull-instrumented-checkpoint.h
++++ b/include/system/fdisbull-instrumented-checkpoint.h
+@@ -4,6 +4,8 @@
+ #include "qapi/qapi-types-fdisbull-instrumented-checkpoint.h"
+ #include "qapi/error.h"
+ 
++#define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED \
++    "fdisbull-instrumented-qemu-state-6"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13 \
+     "fdisbull-instrumented-qemu-state-5"
+ #define FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT \
+diff --git a/include/system/fdisbull-video-frame.h b/include/system/fdisbull-video-frame.h
+index 9bee03a..f974d63 100644
+--- a/include/system/fdisbull-video-frame.h
++++ b/include/system/fdisbull-video-frame.h
+@@ -15,6 +15,8 @@ void fdisbull_video_frame_invalidate(struct QemuConsole *console,
+ bool fdisbull_video_frame_fence_blocks_control(void);
+ bool fdisbull_video_frame_stop_pending(void);
+ bool fdisbull_video_frame_mode13_selected(void);
++bool fdisbull_video_frame_unchained_latch_selected(void);
++void fdisbull_video_frame_check_page_programming(struct QemuConsole *console);
+ bool fdisbull_video_frame_checkpoint_safe(Error **errp);
+ void fdisbull_video_frame_handle_stop_request(void);
+ /* Authoritative clock loss/restore retires controls, without claiming a stop. */
+diff --git a/qapi/fdisbull-instrumented-checkpoint.json b/qapi/fdisbull-instrumented-checkpoint.json
+index dc2826c..56e91e4 100644
+--- a/qapi/fdisbull-instrumented-checkpoint.json
++++ b/qapi/fdisbull-instrumented-checkpoint.json
+@@ -150,8 +150,8 @@
+ #
+ # @frame-keys: Native stopped frame-key ownership and device-state proof.
+ #
+-# @video-frame: Bounded source-raster state, mandatory in formats 3 and 4.
+-# @frame-key-repeat: Owned PS/2 typematic phase, mandatory in format 4.
++# @video-frame: Bounded source-raster state, mandatory since format 3.
++# @frame-key-repeat: Owned PS/2 typematic phase, mandatory since format 4.
+ #
+ # Since: 10.0
+ ##
+diff --git a/qapi/fdisbull-video-frame.json b/qapi/fdisbull-video-frame.json
+index d22b353..75b3c8a 100644
+--- a/qapi/fdisbull-video-frame.json
++++ b/qapi/fdisbull-video-frame.json
+@@ -14,6 +14,21 @@
+ { 'struct': 'FdisbullVideoFrameRow',
+   'data': { 'row': 'int', 'intended-ns': 'int', 'actual-ns': 'int' } }
+ 
++##
++# @FdisbullVideoFramePageLatch:
++#
++# @intended-ns: Start of precise-model vertical retrace in the preceding
++#     period.
++# @actual-ns: Virtual time when the timed sampler selected the page.
++# @origin-bytes: Latched interleaved VGA page origin used for every row.
++# @configuration-generation: Live VGA census generation at selection.
++#
++# Since: 10.0
++##
++{ 'struct': 'FdisbullVideoFramePageLatch',
++  'data': { 'intended-ns': 'int', 'actual-ns': 'int', 'origin-bytes': 'uint64',
++            'configuration-generation': 'uint64' } }
++
+ ##
+ # @FdisbullVideoFrame:
+ #
+@@ -21,7 +36,7 @@
+ # @stream-generation: Process-local explicit-start generation.
+ # @epoch: Native owner epoch. Scoped format-3 import creates a new live receipt
+ #     with a fresh epoch; the archived source receipt remains unchanged.
+-# @configuration-generation: Selected VGA configuration identity for all rows.
++# @configuration-generation: Selected VGA layout identity for the stream.
+ # @timing-generation: Selected precise timing identity for all rows.
+ # @width: Source width, 320 pixels.
+ # @height: Source height, 200 rows.
+@@ -37,6 +52,8 @@
+ # @last-sample-ns: Actual row-199 sampling time.
+ # @completed-ns: Accepted publication time, equal to last-sample-ns.
+ # @source-phase: Physical line parity, present only on the selected mode-13 profile.
++# @page-latch: Selected page and actual callback time under the unchained
++#     latch profile.
+ # @pixel-sha256: SHA-256 of exactly 192000 retained packed RGB bytes.
+ # @rows: Exactly 200 frozen source-row sampling receipts.
+ #
+@@ -54,7 +71,8 @@
+             'line-period-ns': 'int', 'first-sample-ns': 'int',
+             'last-sample-ns': 'int', 'completed-ns': 'int',
+             'pixel-sha256': 'str', 'rows': ['FdisbullVideoFrameRow'],
+-            '*source-phase': 'uint8' } }
++            '*source-phase': 'uint8',
++            '*page-latch': 'FdisbullVideoFramePageLatch' } }
+ 
+ ##
+ # @FdisbullVideoModeSetup:
+@@ -73,7 +91,7 @@
+ # @FdisbullVideoFrameInfo:
+ #
+ # @api-version: Private protocol version, 1.
+-# @model: qemu-vga-chain4-scanline-v1.
++# @model: Selected chain-4 scanline, mode-13 or unchained latch profile.
+ # @state: idle, observing, stopped, or invalidated.
+ # @epoch: Current stopped native clock epoch; a retained frame has the same
+ #     live owner epoch, including after scoped format-3 import.
+@@ -90,9 +108,14 @@
+ # @reason: First invalidation reason; present only for an invalidated stream.
+ # @start-ns: Native stopped time of explicit start, present after start.
+ # @stop-ns: Native stopped time of explicit stop, present only while stopped.
+-# @next-deadline-ns: Original intended next-row deadline, present only while
++# @next-deadline-ns: Original intended next-event deadline, present only while
+ #     observing; a deferred callback does not replace it.
+ # @mode-setup: Live setup stamp for the selected mode-13 phase profile.
++# @page-latch-offset-ns: Latch boundary relative to the preceding period's
++#     start. Present on observing and stopped unchained latch streams.
++# @awaiting-page-latch: Next event is a latch rather than a row. Present
++#     while observing an unchained latch stream.
++# @pending-page-latch: Page already selected for the current pending frame.
+ # @frame: Frozen retained complete raster, absent before completion or after
+ #     invalidation. Old renderer pixels cannot supply it.
+ #
+@@ -106,7 +129,9 @@
+             'rows-sampled': 'int', '*token': 'str', '*device': 'str',
+             '*reason': 'str', '*start-ns': 'int', '*stop-ns': 'int',
+             '*next-deadline-ns': 'int', '*frame': 'FdisbullVideoFrame',
+-            '*mode-setup': 'FdisbullVideoModeSetup' } }
++            '*mode-setup': 'FdisbullVideoModeSetup',
++            '*page-latch-offset-ns': 'int', '*awaiting-page-latch': 'bool',
++            '*pending-page-latch': 'FdisbullVideoFramePageLatch' } }
+ 
+ ##
+ # @FdisbullVideoFrameCheckpointState:
+diff --git a/system/fdisbull-instrumented-checkpoint.c b/system/fdisbull-instrumented-checkpoint.c
+index 94854d9..00bcf8a 100644
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -161,9 +161,13 @@ static FdisbullInstrumentedCheckpointState *capture_state(Error **errp)
+     }
+ 
+     result = g_new0(FdisbullInstrumentedCheckpointState, 1);
+-    result->format = g_strdup(fdisbull_video_frame_mode13_selected() ?
+-                    FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13 :
+-                    FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    if (fdisbull_video_frame_unchained_latch_selected()) {
++        result->format = g_strdup(FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED);
++    } else {
++        result->format = g_strdup(fdisbull_video_frame_mode13_selected() ?
++                        FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13 :
++                        FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
++    }
+     result->virtual_ns = clock->virtual_ns;
+     result->source_epoch = clock->epoch;
+     result->clock = g_steal_pointer(&clock);
+@@ -391,10 +395,13 @@ qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT);
+     bool mode13_v5 = !strcmp(state->format,
+                              FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_MODE13);
+-    bool has_source = source_v3 || repeat_v4 || mode13_v5;
+-    bool has_repeat = repeat_v4 || mode13_v5;
++    bool unchained_v6 = !strcmp(state->format,
++                             FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_UNCHAINED);
++    bool has_source = source_v3 || repeat_v4 || mode13_v5 || unchained_v6;
++    bool has_repeat = repeat_v4 || mode13_v5 || unchained_v6;
+     if ((!legacy_v1 && !legacy_v2 && !has_source) ||
+         mode13_v5 != fdisbull_video_frame_mode13_selected() ||
++        unchained_v6 != fdisbull_video_frame_unchained_latch_selected() ||
+         !state->clock || !state->audio || !state->display || !state->retrace ||
+         (legacy_v1 && state->frame_keys) ||
+         (!legacy_v1 && !state->frame_keys) ||
+@@ -432,6 +439,23 @@ qmp_x_fdisbull_instrumented_checkpoint_import(const char *json, Error **errp)
+         error_setg(errp, "Source-video checkpoint lacks its precise VGA owner");
+         return NULL;
+     }
++    if (unchained_v6 && state->video_frame->info->has_page_latch_offset_ns) {
++        const FdisbullVideoFrameCheckpointState *video = state->video_frame;
++        const FdisbullVgaConfigurationSnapshot *census =
++            state->retrace->configuration;
++        const FdisbullVideoFramePageLatch *latest = video->info->pending_page_latch;
++
++        if (!latest && video->info->frame) {
++            latest = video->info->frame->page_latch;
++        }
++        if (!census || video->configuration_generation >
++                census->configuration_generation ||
++            (latest && latest->configuration_generation >
++                 census->configuration_generation)) {
++            error_setg(errp, "Source-video page latch is ahead of the saved VGA census");
++            return NULL;
++        }
++    }
+     current_clock = qmp_x_fdisbull_query_clock(errp);
+     if (!current_clock) {
+         return NULL;
+diff --git a/system/fdisbull-retrace-stub.c b/system/fdisbull-retrace-stub.c
+index 0d5514d..8e3c711 100644
+--- a/system/fdisbull-retrace-stub.c
++++ b/system/fdisbull-retrace-stub.c
+@@ -53,9 +53,14 @@ FdisbullRasterProof *qmp_x_fdisbull_render_raster_proof(Error **errp)
+     return NULL;
+ }
+ 
++bool pci_std_vga_fdisbull_unchained_latch_selected(Object *obj)
++{
++    return false;
++}
++
+ bool pci_std_vga_fdisbull_video_frame_sample(
+-    Object *obj, int64_t virtual_ns, int row, uint8_t *rgb,
+-    struct FdisbullVideoFrameSource *source, Error **errp)
++    Object *obj, int64_t virtual_ns, uint64_t origin, int row,
++    uint8_t *rgb, struct FdisbullVideoFrameSource *source, Error **errp)
+ {
+     error_setg(errp, "Video frame source requires standard PCI VGA support");
+     return false;
+diff --git a/system/fdisbull-video-frame.c b/system/fdisbull-video-frame.c
+index c70d781..d1503b8 100644
+--- a/system/fdisbull-video-frame.c
++++ b/system/fdisbull-video-frame.c
+@@ -24,6 +24,7 @@
+ 
+ #define VIDEO_MODEL "qemu-vga-chain4-scanline-v1"
+ #define MODE13_VIDEO_MODEL "qemu-vga-chain4-dosbox-mode13-v1"
++#define UNCHAINED_LATCH_VIDEO_MODEL "qemu-vga-unchained-320x200-latch-v1"
+ 
+ static Object *video_device(QemuConsole **out, Error **errp);
+ #define VIDEO_MAX_POINTS 256
+@@ -53,6 +54,7 @@ static struct {
+     int64_t intended[FDISBULL_VIDEO_HEIGHT];
+     int64_t actual[FDISBULL_VIDEO_HEIGHT];
+     FdisbullVideoFrameSource source;
++    FdisbullVideoFramePageLatch page_latch;
+     uint8_t *partial;
+     uint8_t *rgb;
+     FdisbullVideoFrame *frame;
+@@ -300,6 +302,8 @@ static bool video_drop_partial(void)
+ {
+     bool ok = true;
+ 
++    video.page_latch = (FdisbullVideoFramePageLatch) { 0 };
++
+     if (video.rows) {
+         if (video.aborted == UINT64_MAX) {
+             ok = false;
+@@ -340,6 +344,23 @@ bool fdisbull_video_frame_mode13_selected(void)
+     return pci_std_vga_fdisbull_mode13_selected(video_device(&console, NULL));
+ }
+ 
++bool fdisbull_video_frame_unchained_latch_selected(void)
++{
++    QemuConsole *console;
++
++    return pci_std_vga_fdisbull_unchained_latch_selected(
++        video_device(&console, NULL));
++}
++
++static const char *video_model(Object *device)
++{
++    if (pci_std_vga_fdisbull_unchained_latch_selected(device)) {
++        return UNCHAINED_LATCH_VIDEO_MODEL;
++    }
++    return pci_std_vga_fdisbull_mode13_selected(device) ?
++        MODE13_VIDEO_MODEL : VIDEO_MODEL;
++}
++
+ static bool video_source_phase(const FdisbullVideoModeSetup *setup, int64_t start,
+                                int64_t period, unsigned *phase)
+ {
+@@ -363,10 +384,47 @@ static bool video_src_deadline(int64_t start, const FdisbullVideoFrameSource *so
+                                          row, phase, deadline);
+ }
+ 
++static bool video_next_deadline(int64_t start, const FdisbullVideoFrameSource *source,
++                                unsigned row, bool awaiting_latch,
++                                int64_t *deadline)
++{
++    if (awaiting_latch) {
++        return source->unchained_latch && !row &&
++               fdisbull_video_page_deadline(start, source->period_ns,
++                                            source->page_latch_offset_ns,
++                                            deadline);
++    }
++    return video_src_deadline(start, source, row, deadline);
++}
++
++static bool video_awaiting_latch(void)
++{
++    return video.source.unchained_latch &&
++           !video.page_latch.configuration_generation;
++}
++
++void fdisbull_video_frame_check_page_programming(QemuConsole *console)
++{
++    assert(bql_locked());
++    if (video.observing && video.console == console && video_awaiting_latch() &&
++        qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) >= video.deadline_ns) {
++        /* A delayed callback cannot establish which origin was live at its
++         * intended deadline once the guest has overwritten the register. */
++        fdisbull_video_frame_invalidate(console, "page-write-raced-latch");
++    }
++}
++
++/* The only advancing census generations permitted on a live unchained
++ * stream are the start registers and CPU plane-write mask. All other changes
++ * invalidate at the VGA write boundary before a source callback can run. */
+ static bool video_source_equal(const FdisbullVideoFrameSource *a,
+                                const FdisbullVideoFrameSource *b)
+ {
+-    return a->configuration_generation == b->configuration_generation &&
++    return (b->unchained_latch ?
++            a->configuration_generation >= b->configuration_generation :
++            a->configuration_generation == b->configuration_generation) &&
++           a->unchained_latch == b->unchained_latch &&
++           a->page_latch_offset_ns == b->page_latch_offset_ns &&
+            a->timing_generation == b->timing_generation &&
+            a->line_period_ns == b->line_period_ns &&
+            a->period_ns == b->period_ns && a->dac_8bit == b->dac_8bit &&
+@@ -384,8 +442,7 @@ static FdisbullVideoFrameInfo *video_info(const FdisbullClockInfo *clock)
+     QemuConsole *console;
+     Object *device = video_device(&console, NULL);
+     FdisbullVideoSetupStamp setup;
+-    info->model = g_strdup(pci_std_vga_fdisbull_mode13_selected(device) ?
+-                           MODE13_VIDEO_MODEL : VIDEO_MODEL);
++    info->model = g_strdup(video_model(device));
+     if (pci_std_vga_fdisbull_mode13_setup(device, &setup)) {
+         info->mode_setup = g_new0(FdisbullVideoModeSetup, 1);
+         info->mode_setup->committed_ns = setup.committed_ns;
+@@ -411,6 +468,18 @@ static FdisbullVideoFrameInfo *video_info(const FdisbullClockInfo *clock)
+     info->stop_ns = video.stop_ns;
+     info->has_next_deadline_ns = video.observing;
+     info->next_deadline_ns = video.deadline_ns;
++    if (video.source.unchained_latch && (video.observing || video.stopped)) {
++        info->has_page_latch_offset_ns = true;
++        info->page_latch_offset_ns = video.source.page_latch_offset_ns;
++        if (video.observing) {
++            info->has_awaiting_page_latch = true;
++            info->awaiting_page_latch = video_awaiting_latch();
++            if (!info->awaiting_page_latch) {
++                info->pending_page_latch = QAPI_CLONE(FdisbullVideoFramePageLatch,
++                                                        &video.page_latch);
++            }
++        }
++    }
+     info->frame = video.frame ? QAPI_CLONE(FdisbullVideoFrame, video.frame) : NULL;
+     return info;
+ }
+@@ -433,7 +502,7 @@ static bool video_query_guard(FdisbullClockInfo **out, Error **errp)
+         (video.device != device || video.console != con ||
+          video.epoch != (*out)->epoch ||
+          !pci_std_vga_fdisbull_video_frame_sample(device, (*out)->virtual_ns,
+-                                                -1, NULL, &source, errp) ||
++                                                0, -1, NULL, &source, errp) ||
+          !video_source_equal(&source, &video.source))) {
+         if (!errp || !*errp) {
+             error_setg(errp, "Video frame owner/source identity changed");
+@@ -465,6 +534,11 @@ static void video_publish(int64_t actual_ns)
+     frame->dac_conversion = g_strdup("replicate-6-to-8-v1");
+     frame->dac_8bit = video.source.dac_8bit;
+     frame->frame_start_ns = video.frame_start_ns;
++    if (video.source.unchained_latch) {
++        assert(video.page_latch.configuration_generation);
++        frame->page_latch = QAPI_CLONE(FdisbullVideoFramePageLatch,
++                                      &video.page_latch);
++    }
+     if (video.source.mode13_phase) {
+         unsigned phase;
+         bool valid = fdisbull_video_mode_phase(video.source.setup.committed_ns,
+@@ -526,6 +600,8 @@ static void video_timer_cb(void *opaque)
+     Object *device;
+     CPUState *cpu;
+     bool stopping = false;
++    bool latching;
++    uint64_t origin;
+ 
+     assert(bql_locked());
+     if (!video.observing || video.invalidated) {
+@@ -556,27 +632,45 @@ static void video_timer_cb(void *opaque)
+         fdisbull_video_frame_invalidate(video.console, "video-owner-lost");
+         return;
+     }
++    latching = video_awaiting_latch();
+     if (!fdisbull_video_row_timely(video.deadline_ns, clock->virtual_ns,
+                                   video.source.line_period_ns)) {
+-        fdisbull_video_frame_invalidate(video.console, "row-deadline-missed");
++        fdisbull_video_frame_invalidate(video.console, latching ?
++                                        "page-latch-deadline-missed" :
++                                        "row-deadline-missed");
+         return;
+     }
++    origin = latching ? FDISBULL_VIDEO_PROGRAMMED_ORIGIN :
++             video.page_latch.origin_bytes;
+     if (!pci_std_vga_fdisbull_video_frame_sample(
+-            device, clock->virtual_ns, video.rows,
+-            video.partial + video.rows * FDISBULL_VIDEO_ROW_BYTES,
++            device, clock->virtual_ns, origin, latching ? -1 : (int)video.rows,
++            latching ? NULL : video.partial + video.rows * FDISBULL_VIDEO_ROW_BYTES,
+             &source, &error) || !video_source_equal(&source, &video.source)) {
+-        fdisbull_video_frame_invalidate(video.console, "source-or-generation-changed");
++        fdisbull_video_frame_invalidate(video.console, latching ?
++                                        "unsupported-page-latch-source" :
++                                        "source-or-generation-changed");
+         return;
+     }
+-    video.intended[video.rows] = video.deadline_ns;
+-    video.actual[video.rows] = clock->virtual_ns;
+-    video.rows++;
++    if (latching) {
++        assert(!video.rows);
++        video.page_latch = (FdisbullVideoFramePageLatch) {
++            .intended_ns = video.deadline_ns,
++            .actual_ns = clock->virtual_ns,
++            .origin_bytes = source.origin_bytes,
++            .configuration_generation = source.configuration_generation,
++        };
++    } else {
++        video.intended[video.rows] = video.deadline_ns;
++        video.actual[video.rows] = clock->virtual_ns;
++        video.rows++;
++    }
+     if (video.rows == FDISBULL_VIDEO_HEIGHT) {
+         if (video.sequence == UINT64_MAX) {
+             fdisbull_video_frame_invalidate(video.console, "frame-sequence-overflow");
+             return;
+         }
+         video_publish(clock->virtual_ns);
++        video.page_latch = (FdisbullVideoFramePageLatch) { 0 };
+         if (video.invalidated) {
+             return;
+         }
+@@ -586,8 +680,8 @@ static void video_timer_cb(void *opaque)
+         }
+         video.frame_start_ns += video.source.period_ns;
+     }
+-    if (!video_src_deadline(video.frame_start_ns, &video.source, video.rows,
+-                            &video.deadline_ns)) {
++    if (!video_next_deadline(video.frame_start_ns, &video.source, video.rows,
++                             video_awaiting_latch(), &video.deadline_ns)) {
+         fdisbull_video_frame_invalidate(video.console, "deadline-overflow");
+         return;
+     }
+@@ -636,7 +730,7 @@ FdisbullVideoFrameInfo *qmp_x_fdisbull_start_video_frame(const char *token,
+     }
+     device = video_device(&con, errp);
+     if (!device || !pci_std_vga_fdisbull_video_frame_sample(
+-            device, clock->virtual_ns, -1, NULL, &source, errp)) {
++            device, clock->virtual_ns, 0, -1, NULL, &source, errp)) {
+         return NULL;
+     }
+     if (source.mode13_phase && !source.setup.configuration_generation) {
+@@ -644,7 +738,11 @@ FdisbullVideoFrameInfo *qmp_x_fdisbull_start_video_frame(const char *token,
+         return NULL;
+     }
+     if (!fdisbull_video_next_start(clock->virtual_ns, source.period_ns, &start) ||
+-        !video_src_deadline(start, &source, 0, &deadline)) {
++        !video_next_deadline(start, &source, 0, source.unchained_latch,
++                             &deadline) ||
++        (source.unchained_latch && deadline <= clock->virtual_ns &&
++         (!fdisbull_video_next_start(start, source.period_ns, &start) ||
++          !video_next_deadline(start, &source, 0, true, &deadline)))) {
+         error_setg(errp, "Video frame start deadline overflows native clock");
+         return NULL;
+     }
+@@ -689,6 +787,7 @@ FdisbullVideoFrameInfo *qmp_x_fdisbull_start_video_frame(const char *token,
+     video.partial = g_steal_pointer(&partial);
+     video.rgb = g_steal_pointer(&rgb);
+     video.source = source;
++    video.page_latch = (FdisbullVideoFramePageLatch) { 0 };
+     video.epoch = clock->epoch;
+     video.generation++;
+     video.rows = 0;
+@@ -1063,6 +1162,27 @@ static bool video_checkpoint_rows(const FdisbullVideoFrameRowList *entry,
+     return !entry || video_checkpoint_error(errp, "extra row receipts");
+ }
+ 
++static bool video_checkpoint_page_latch(
++    const FdisbullVideoFramePageLatch *latch,
++    const FdisbullVideoFrameCheckpointState *s, int64_t frame_start,
++    int64_t stopped, Error **errp)
++{
++    int64_t deadline, first_row;
++
++    if (!latch || !fdisbull_video_page_origin_valid(latch->origin_bytes) ||
++        latch->configuration_generation < s->configuration_generation ||
++        !fdisbull_video_page_deadline(frame_start, s->period_ns,
++                                     s->info->page_latch_offset_ns, &deadline) ||
++        !fdisbull_video_row_deadline(frame_start, s->line_period_ns, 0,
++                                    &first_row) ||
++        latch->intended_ns != deadline || deadline <= s->info->start_ns ||
++        latch->actual_ns >= first_row || latch->actual_ns > stopped ||
++        !fdisbull_video_row_timely(deadline, latch->actual_ns, s->line_period_ns)) {
++        return video_checkpoint_error(errp, "selected source page or latch time");
++    }
++    return true;
++}
++
+ static bool video_checkpoint_frame(const FdisbullVideoFrameCheckpointState *s,
+                                     Error **errp)
+ {
+@@ -1090,6 +1210,13 @@ static bool video_checkpoint_frame(const FdisbullVideoFrameCheckpointState *s,
+         f->frame_start_ns % s->period_ns || !f->pixel_sha256) {
+         return video_checkpoint_error(errp, "complete frame identity or descriptor");
+     }
++    if (info->has_page_latch_offset_ns != (f->page_latch != NULL)) {
++        return video_checkpoint_error(errp, "complete frame page latch presence");
++    }
++    if (f->page_latch && !video_checkpoint_page_latch(
++            f->page_latch, s, f->frame_start_ns, stopped, errp)) {
++        return false;
++    }
+     unsigned phase;
+     if (!video_source_phase(info->mode_setup, f->frame_start_ns, s->period_ns,
+                             &phase) ||
+@@ -1127,11 +1254,13 @@ bool fdisbull_video_frame_checkpoint_validate(
+     bool idle, observing, stopped, invalidated;
+     int64_t intended, expiry;
+     bool selected = fdisbull_video_frame_mode13_selected();
++    bool unchained = fdisbull_video_frame_unchained_latch_selected();
+     unsigned phase;
+ 
+     if (!s || !(info = s->info) || !source_epoch || virtual_ns < 0 ||
+         info->api_version != 1 ||
+-        g_strcmp0(info->model, selected ? MODE13_VIDEO_MODEL : VIDEO_MODEL) ||
++        g_strcmp0(info->model, unchained ? UNCHAINED_LATCH_VIDEO_MODEL :
++                  selected ? MODE13_VIDEO_MODEL : VIDEO_MODEL) ||
+         info->epoch != source_epoch || info->virtual_ns != virtual_ns ||
+         info->rows_sampled < 0 || info->rows_sampled >= FDISBULL_VIDEO_HEIGHT ||
+         info->in_progress != (info->rows_sampled != 0) ||
+@@ -1174,6 +1303,16 @@ bool fdisbull_video_frame_checkpoint_validate(
+                !fdisbull_video_timing_valid(s->line_period_ns, s->period_ns)) {
+         return video_checkpoint_error(errp, "source timing");
+     }
++    if (info->has_page_latch_offset_ns != (unchained && (observing || stopped)) ||
++        (info->has_page_latch_offset_ns &&
++         !fdisbull_video_page_offset_valid(info->page_latch_offset_ns,
++                                           s->line_period_ns, s->period_ns)) ||
++        info->has_awaiting_page_latch != (unchained && observing) ||
++        (info->pending_page_latch != NULL) !=
++            (unchained && observing && !info->awaiting_page_latch) ||
++        (info->awaiting_page_latch && info->rows_sampled)) {
++        return video_checkpoint_error(errp, "source page latch phase");
++    }
+     if ((info->mode_setup &&
+          (!selected || info->mode_setup->committed_ns < 0 ||
+           info->mode_setup->committed_ns > virtual_ns ||
+@@ -1189,12 +1328,27 @@ bool fdisbull_video_frame_checkpoint_validate(
+     }
+     if (observing) {
+         expiry = s->timer_expire_ns;
++        if (info->pending_page_latch &&
++            (!video_checkpoint_page_latch(info->pending_page_latch, s,
++                                          s->frame_start_ns, virtual_ns, errp) ||
++             (info->frame && info->frame->page_latch &&
++              info->frame->page_latch->configuration_generation >
++                  info->pending_page_latch->configuration_generation))) {
++            if (!errp || !*errp) {
++                video_checkpoint_error(errp, "source page generation order");
++            }
++            return false;
++        }
+         if (s->frame_start_ns <= info->start_ns ||
+             s->frame_start_ns % s->period_ns ||
+             !video_source_phase(info->mode_setup, s->frame_start_ns,
+                                 s->period_ns, &phase) ||
+-            !fdisbull_video_phase_deadline(s->frame_start_ns, s->line_period_ns,
+-                                           info->rows_sampled, phase, &intended) ||
++            (info->awaiting_page_latch ?
++             (!fdisbull_video_page_deadline(s->frame_start_ns, s->period_ns,
++                                            info->page_latch_offset_ns, &intended) ||
++              intended <= info->start_ns) :
++             !fdisbull_video_phase_deadline(s->frame_start_ns, s->line_period_ns,
++                                            info->rows_sampled, phase, &intended)) ||
+             info->next_deadline_ns != intended || !s->timer_pending ||
+             expiry < 0 ||
+             !(expiry == intended ||
+@@ -1238,6 +1392,8 @@ static bool video_checkpoint_device(const FdisbullVideoFrameCheckpointState *s,
+         return false;
+     }
+     expected.mode13_phase = pci_std_vga_fdisbull_mode13_selected(*device);
++    expected.unchained_latch = pci_std_vga_fdisbull_unchained_latch_selected(*device);
++    expected.page_latch_offset_ns = s->info->page_latch_offset_ns;
+     if (s->info->mode_setup) {
+         expected.setup = (FdisbullVideoSetupStamp) {
+             .committed_ns = s->info->mode_setup->committed_ns,
+@@ -1250,15 +1406,33 @@ static bool video_checkpoint_device(const FdisbullVideoFrameCheckpointState *s,
+         return video_checkpoint_error(errp, "selected source device changed");
+     }
+     /* Invalidated streams carry metadata only. Never repair their descriptor. */
+-    if (strcmp(s->info->state, "invalidated") &&
+-        (!pci_std_vga_fdisbull_video_frame_sample(
+-            *device, s->info->virtual_ns, -1, NULL, &source, errp) ||
+-         !video_source_equal(&source, &expected))) {
++    if (!strcmp(s->info->state, "invalidated")) {
++        return true;
++    }
++    if (!pci_std_vga_fdisbull_video_frame_sample(
++            *device, s->info->virtual_ns, 0, -1, NULL, &source, errp) ||
++        !video_source_equal(&source, &expected)) {
+         if (!errp || !*errp) {
+             video_checkpoint_error(errp, "selected source descriptor changed");
+         }
+         return false;
+     }
++    const FdisbullVideoFramePageLatch *latches[] = {
++        s->info->pending_page_latch,
++        s->info->frame ? s->info->frame->page_latch : NULL,
++    };
++    for (unsigned i = 0; i < ARRAY_SIZE(latches); i++) {
++        if (latches[i] &&
++            (latches[i]->configuration_generation > source.configuration_generation ||
++             !pci_std_vga_fdisbull_video_frame_sample(
++                 *device, s->info->virtual_ns, latches[i]->origin_bytes, -1,
++                 NULL, &source, errp))) {
++            if (!errp || !*errp) {
++                video_checkpoint_error(errp, "selected source page differs from live VGA");
++            }
++            return false;
++        }
++    }
+     return true;
+ }
+ 
+@@ -1359,6 +1533,7 @@ static void video_checkpoint_discard(void)
+     memset(video.intended, 0, sizeof(video.intended));
+     memset(video.actual, 0, sizeof(video.actual));
+     memset(&video.source, 0, sizeof(video.source));
++    video.page_latch = (FdisbullVideoFramePageLatch) { 0 };
+ }
+ 
+ bool fdisbull_video_frame_checkpoint_restore(
+@@ -1495,6 +1670,11 @@ bool fdisbull_video_frame_checkpoint_restore(
+     video.source.line_period_ns = s->line_period_ns;
+     video.source.dac_8bit = s->dac_8bit;
+     video.source.mode13_phase = pci_std_vga_fdisbull_mode13_selected(device);
++    video.source.unchained_latch = pci_std_vga_fdisbull_unchained_latch_selected(device);
++    video.source.page_latch_offset_ns = info->page_latch_offset_ns;
++    if (info->pending_page_latch) {
++        video.page_latch = *info->pending_page_latch;
++    }
+     video.source.setup = (FdisbullVideoSetupStamp) { 0 };
+     if (info->mode_setup) {
+         video.source.setup = (FdisbullVideoSetupStamp) {

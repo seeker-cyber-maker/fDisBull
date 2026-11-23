@@ -14,7 +14,7 @@ import pytest
 from fdisbull.dosbox_rpc import DebuggerError
 from fdisbull import qemu_instrumented_checkpoint as checkpoint
 from fdisbull.qemu_video_checkpoint import (
-    FORMAT, EMPTY_SHA256, I64_MAX, MODE13_MODEL, MODE13_PROFILE,
+    FORMAT, EMPTY_SHA256, I64_MAX, LATCH_MODEL, LATCH_PROFILE, MODE13_MODEL, MODE13_PROFILE,
     validate_video_checkpoint, logical_video_checkpoint, restored_video_info)
 
 
@@ -698,5 +698,95 @@ def test_format5_admits_only_the_selected_checkpoint_profile():
     machine.machine_configuration['video_source_profile'] = MODE13_PROFILE
     assert checkpoint.validate(machine, envelope(state)) == state
     state['format'] = checkpoint.FRAME_KEY_REPEAT_FORMAT
+    with pytest.raises(ValueError, match='model differs'):
+        checkpoint.validate(machine, envelope(state))
+
+
+def latched_record(*, awaiting=False):
+    # 8 ns per line, 450 lines per period, latch at prior line 412.
+    complete_start, next_start, offset = 3600, 7200, 3296
+    record = source_record(rows=0 if awaiting else 3)
+    info, frame = record['info'], record['info']['frame']
+    record.update({'period-ns': 3600, 'frame-start-ns': next_start})
+    frame.update({'period-ns': 3600, 'frame-start-ns': complete_start,
+        'page-latch': {'origin-bytes': 0x10000, 'configuration-generation': 7,
+                       'intended-ns': offset, 'actual-ns': offset + 1}})
+    for key in ('first-sample-ns', 'last-sample-ns', 'completed-ns'):
+        frame[key] += 400
+    for row in frame['rows']:
+        row['intended-ns'] += 400
+        row['actual-ns'] += 400
+    for row in record['partial-rows']:
+        row['intended-ns'] += 800
+        row['actual-ns'] += 800
+    target = 3600 + offset
+    deadline = target if awaiting else next_start + 2 + 16 * 3
+    now = 6800 if awaiting else next_start + 3 + 16 * 2
+    info.update({'model': LATCH_MODEL, 'page-latch-offset-ns': offset,
+                 'awaiting-page-latch': awaiting, 'next-deadline-ns': deadline, 'virtual-ns': now})
+    if not awaiting:
+        info['pending-page-latch'] = {'origin-bytes': 0x20000, 'configuration-generation': 9,
+                                      'intended-ns': target, 'actual-ns': target + 1}
+    record['timer-expire-ns'] = deadline
+    return record
+
+
+@pytest.mark.parametrize('awaiting', [True, False])
+def test_latch_checkpoint_rebinds_both_timer_phases(awaiting):
+    record = latched_record(awaiting=awaiting)
+    info = record['info']
+    assert validate_video_checkpoint(record, epoch=1, virtual_ns=info['virtual-ns']) == record
+    restored = deepcopy(info)
+    restored.update(epoch=9, token='fresh-latch-owner')
+    restored['frame']['epoch'] = 9
+    assert restored_video_info(record, restored, epoch=9, token='fresh-latch-owner') == restored
+
+
+@pytest.mark.parametrize('fault', ['alignment', 'wrapping', 'wrong-target', 'too-late',
+    'regressed-generation', 'missing-pending', 'rows-before-latch', 'legacy-latch'])
+def test_latch_checkpoint_refuses_incoherent_page_provenance(fault):
+    record = latched_record()
+    info = record['info']
+    stamp = info['pending-page-latch']
+    if fault == 'alignment':
+        stamp['origin-bytes'] += 1
+    elif fault == 'wrapping':
+        stamp['origin-bytes'] = 0x38000
+    elif fault == 'wrong-target':
+        stamp['intended-ns'] -= 8
+    elif fault == 'too-late':
+        stamp['actual-ns'] += 8
+    elif fault == 'regressed-generation':
+        stamp['configuration-generation'] = 6
+    elif fault == 'missing-pending':
+        del info['pending-page-latch']
+    elif fault == 'rows-before-latch':
+        info['awaiting-page-latch'] = True
+    elif fault == 'legacy-latch':
+        info['model'] = 'qemu-vga-chain4-scanline-v1'
+    with pytest.raises(ValueError, match='page latch'):
+        validate_video_checkpoint(record, epoch=1, virtual_ns=info['virtual-ns'])
+
+
+def test_format6_requires_the_unchained_latch_profile():
+    from fdisbull.qemu_frame_keys import REPEAT_QUERY
+    state = make_state(latched_record())
+    state.update(format=checkpoint.VIDEO_LATCH_FORMAT,
+                 **{'frame-key-repeat': {'parameter': 43, 'delay-ns': 500000000,
+                     'interval-ns': 91666666, 'deadline-ns': -1}})
+    state['retrace']['configuration']['configuration-generation'] = 12
+    machine = SimpleNamespace(
+        qmp_commands=checkpoint.COMMANDS | {'x-fdisbull-query-video-frame', 'x-fdisbull-query-frame-keys',
+                                           REPEAT_QUERY},
+        machine_configuration={'clock_profile': {'profile': 'virtual'}})
+    with pytest.raises(ValueError, match='profile differs'):
+        checkpoint.validate(machine, envelope(state))
+    machine.machine_configuration['video_source_profile'] = LATCH_PROFILE
+    assert checkpoint.validate(machine, envelope(state)) == state
+    state['retrace']['configuration']['configuration-generation'] = 8
+    with pytest.raises(ValueError, match='VGA census'):
+        checkpoint.validate(machine, envelope(state))
+    state['retrace']['configuration']['configuration-generation'] = 12
+    state['format'] = checkpoint.VIDEO_PHASE_FORMAT
     with pytest.raises(ValueError, match='model differs'):
         checkpoint.validate(machine, envelope(state))

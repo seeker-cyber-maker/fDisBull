@@ -15,7 +15,13 @@ FORMAT = 'fdisbull-instrumented-qemu-state-3'
 MODEL = 'qemu-vga-chain4-scanline-v1'
 MODE13_PROFILE = 'dosbox-mode13'
 MODE13_MODEL = 'qemu-vga-chain4-dosbox-mode13-v1'
-VIDEO_MODELS = frozenset({MODEL, MODE13_MODEL})
+LATCH_PROFILE = 'vga-unchained-latch'
+LATCH_MODEL = 'qemu-vga-unchained-320x200-latch-v1'
+VIDEO_SOURCE_PROFILES = {
+    MODE13_PROFILE: (MODE13_MODEL, 'VGA.x-fdisbull-mode13-phase=on'),
+    LATCH_PROFILE: (LATCH_MODEL, 'VGA.x-fdisbull-unchained-latch=on'),
+}
+VIDEO_MODELS = frozenset({MODEL, MODE13_MODEL, LATCH_MODEL})
 ROW_BYTES = 960
 HEIGHT = 200
 RGB_BYTES = ROW_BYTES * HEIGHT
@@ -33,6 +39,7 @@ _FRAME = frozenset({'frame-id', 'stream-generation', 'epoch', 'configuration-gen
     'dac-8bit', 'frame-start-ns', 'period-ns', 'line-period-ns', 'first-sample-ns',
     'last-sample-ns', 'completed-ns', 'pixel-sha256', 'rows'})
 _SOURCE = ('configuration-generation', 'timing-generation', 'period-ns', 'line-period-ns')
+_LATCH_INFO = frozenset({'page-latch-offset-ns', 'awaiting-page-latch', 'pending-page-latch'})
 _CACHES = ('_video_frame_token', '_video_frame_last',
            '_video_frame_probe_samples', '_video_frame_owned_rgb')
 
@@ -73,17 +80,19 @@ def _pixels(value, size, digest=None):
 
 
 def video_model(configuration):
-    return MODE13_MODEL if configuration.get('video_source_profile') == MODE13_PROFILE else MODEL
+    profile = configuration.get('video_source_profile')
+    return VIDEO_SOURCE_PROFILES[profile][0] if type(profile) is str and profile in VIDEO_SOURCE_PROFILES else MODEL
 
 
 def validate_video_source_profile(profile, clock, retrace):
-    if profile is not None and (profile != MODE13_PROFILE or clock != 'virtual' or retrace != 'precise'):
-        raise ValueError('DOSBox mode 13h source timing requires dosbox-mode13, virtual clock and precise retrace')
+    if profile is not None and (type(profile) is not str or profile not in VIDEO_SOURCE_PROFILES
+                                or clock != 'virtual' or retrace != 'precise'):
+        raise ValueError('Source video timing requires dosbox-mode13 or vga-unchained-latch, virtual clock and precise retrace')
 
 
 def validate_mode_setup(info):
     setup = info.get('mode-setup')
-    if info.get('model') == MODEL:
+    if info.get('model') != MODE13_MODEL:
         _require('mode-setup' not in info, 'unexpected mode setup on standard model')
     elif 'mode-setup' in info:
         _require(type(setup) is dict and set(setup) == {
@@ -97,7 +106,7 @@ def validate_mode_setup(info):
 
 
 def raster_source_phase(info, start, period, source):
-    if info['model'] == MODEL:
+    if info['model'] != MODE13_MODEL:
         return 0
     setup = validate_mode_setup(info)
     _require(setup is not None and all(setup[k] == source[k]
@@ -105,6 +114,62 @@ def raster_source_phase(info, start, period, source):
     first = setup['committed-ns'] + period - setup['committed-ns'] % period
     _require(_integer(first) and start >= first, 'raster precedes effective mode setup')
     return int(start != first)
+
+
+def validate_latch_info(info):
+    """Verify the fields that identify the next timer boundary on this stream."""
+    expected = set()
+    if info['model'] == LATCH_MODEL and info['state'] in ('observing', 'stopped'):
+        expected.add('page-latch-offset-ns')
+        _require(_integer(info.get('page-latch-offset-ns'), 1), 'page latch offset')
+        if info['state'] == 'observing':
+            expected.add('awaiting-page-latch')
+            awaiting = info.get('awaiting-page-latch')
+            _require(type(awaiting) is bool and (not awaiting or info['rows-sampled'] == 0),
+                     'page latch phase')
+            if not awaiting:
+                expected.add('pending-page-latch')
+                validate_page_latch(info.get('pending-page-latch'), info,
+                                    upper=info['virtual-ns'])
+    _require(_LATCH_INFO.intersection(info) == expected, 'page latch stream fields')
+    return expected
+
+
+def latch_offset(info, period, line):
+    offset = info['page-latch-offset-ns']
+    _require(400 * line <= offset < period and offset % line == 0, 'page latch timing')
+    return offset
+
+
+def latch_deadline(info, start, period, line):
+    intended = start - period + latch_offset(info, period, line)
+    _require(_integer(intended) and intended > info['start-ns'], 'page latch target')
+    return intended
+
+
+def validate_page_latch(stamp, info, *, upper, intended=None, generation=1):
+    _require(type(stamp) is dict and set(stamp) == {
+                'origin-bytes', 'configuration-generation', 'intended-ns', 'actual-ns'},
+             'page latch stamp fields')
+    _require(_integer(stamp['origin-bytes'], maximum=(256 * 1024 - 320 * HEIGHT))
+             and stamp['origin-bytes'] % 4 == 0, 'page latch origin')
+    _require(_integer(stamp['configuration-generation'], generation, U64_MAX),
+             'page latch generation')
+    target, actual = stamp['intended-ns'], stamp['actual-ns']
+    lower = info.get('start-ns')
+    _require(_integer(lower) and _integer(target) and _integer(actual) and lower < target <= actual <= upper
+             and (intended is None or target == intended), 'page latch time')
+
+
+def validate_frame_latch(frame, info):
+    if info['model'] != LATCH_MODEL:
+        _require('page-latch' not in frame, 'unexpected complete page latch')
+        return
+    line = frame['line-period-ns']
+    target = latch_deadline(info, frame['frame-start-ns'], frame['period-ns'], line)
+    validate_page_latch(frame.get('page-latch'), info, intended=target,
+                        upper=min(target + line, frame['first-sample-ns']) - 1,
+                        generation=frame['configuration-generation'])
 
 
 def _deadline(start, line, row, phase):
@@ -127,6 +192,8 @@ def _rows(rows, count, start, line, stopped, phase):
 def _frame(frame, info, source):
     phased = info['model'] == MODE13_MODEL
     fields = _FRAME | {'source-phase'} if phased else _FRAME
+    if info['model'] == LATCH_MODEL:
+        fields = fields | {'page-latch'}
     _require(type(frame) is dict and set(frame) == fields, 'complete frame fields')
     for key in ('frame-id', 'stream-generation', 'epoch', 'configuration-generation', 'timing-generation'):
         _require(_integer(frame[key], 1, U64_MAX), 'complete frame identity')
@@ -148,6 +215,7 @@ def _frame(frame, info, source):
     if phased:
         _require(_integer(frame['source-phase'], 0, 1) and frame['source-phase'] == phase, 'complete source phase')
     _rows(frame['rows'], HEIGHT, start, line, info.get('stop-ns', info['virtual-ns']), phase)
+    validate_frame_latch(frame, info)
     _require(frame['first-sample-ns'] == frame['rows'][0]['actual-ns']
         and frame['last-sample-ns'] == frame['completed-ns'] == frame['rows'][-1]['actual-ns'],
         'complete frame sample endpoints')
@@ -175,7 +243,6 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         fields.add('frame')
     if 'mode-setup' in info and info['model'] == MODE13_MODEL:
         fields.add('mode-setup')
-    _require(set(info) == fields, 'canonical stream fields')
     _require(type(info['api-version']) is int and info['api-version'] == 1 and type(info['model']) is str
         and info['model'] in VIDEO_MODELS,
         'stream API or model')
@@ -187,6 +254,8 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
     rows = info['rows-sampled']
     _require(_integer(rows, 0, HEIGHT - 1) and type(info['in-progress']) is bool
         and info['in-progress'] == bool(rows), 'stream row progress')
+    fields.update(validate_latch_info(info))
+    _require(set(info) == fields, 'canonical stream fields')
     _require(type(record['console-index']) is int and record['console-index'] == 0
         and type(record['dac-8bit']) is bool and type(record['timer-pending']) is bool,
         'console or Boolean field')
@@ -216,6 +285,8 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         period, line = record['period-ns'], record['line-period-ns']
         _require(record['configuration-generation'] > 0 and record['timing-generation'] > 0
             and line >= 4 and period >= 400 * line and period % line == 0, 'source timing')
+        if info['model'] == LATCH_MODEL:
+            latch_offset(info, period, line)
         if setup is not None:
             _require(all(setup[k] == record[k]
                 for k in ('configuration-generation', 'timing-generation')), 'stream setup generation')
@@ -223,8 +294,17 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
         start = record['frame-start-ns']
         intended, expiry = info['next-deadline-ns'], record['timer-expire-ns']
         phase = raster_source_phase(info, start, period, record)
-        _require(start > info['start-ns'] and start % period == 0
-            and _integer(intended) and intended == _deadline(start, line, rows, phase), 'pending raster phase')
+        _require(start > info['start-ns'] and start % period == 0 and _integer(intended), 'pending raster phase')
+        expected = _deadline(start, line, rows, phase)
+        if info['model'] == LATCH_MODEL:
+            target = latch_deadline(info, start, period, line)
+            if info['awaiting-page-latch']:
+                expected = target
+            else:
+                validate_page_latch(info['pending-page-latch'], info, intended=target,
+                    upper=min(virtual_ns, target + line - 1, _deadline(start, line, 0, phase) - 1),
+                    generation=record['configuration-generation'])
+        _require(intended == expected, 'pending raster phase')
         # Deferral arms T+1 without changing D. A timer-disabled step may then
         # advance the stopped clock, so a retained expiry need not equal N+1.
         _require(record['timer-pending'] is True and expiry >= 0
@@ -238,6 +318,10 @@ def validate_video_checkpoint(record, *, epoch, virtual_ns):
     _pixels(record['partial-rgb-base64'], rows * ROW_BYTES, record['partial-sha256'])
     if 'frame' in info:
         _frame(info['frame'], info, record)
+        if 'pending-page-latch' in info:
+            _require(info['pending-page-latch']['configuration-generation']
+                     >= info['frame']['page-latch']['configuration-generation'],
+                     'page latch generation regressed')
         if state == 'observing':
             _require(record['frame-start-ns'] == info['frame']['frame-start-ns'] + period,
                 'next raster after complete image')

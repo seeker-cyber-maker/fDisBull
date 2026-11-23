@@ -11,16 +11,21 @@ import hashlib
 import json
 
 from .dosbox_rpc import DebuggerError
-from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT, MODEL, MODE13_MODEL,
-    MODE13_PROFILE, clear_video_checkpoint_caches, logical_video_checkpoint,
-    restored_video_info, validate_video_checkpoint)
+from .qemu_video_checkpoint import (FORMAT as VIDEO_FRAME_FORMAT, LATCH_MODEL, MODEL, MODE13_MODEL,
+    clear_video_checkpoint_caches, logical_video_checkpoint, restored_video_info,
+    validate_video_checkpoint, video_model)
 
 FORMAT = 'fdisbull-instrumented-qemu-state-1'
 FRAME_KEYS_FORMAT = 'fdisbull-instrumented-qemu-state-2'
 FRAME_KEY_REPEAT_FORMAT = 'fdisbull-instrumented-qemu-state-4'
 VIDEO_PHASE_FORMAT = 'fdisbull-instrumented-qemu-state-5'
-_REPEAT_FORMATS = frozenset({FRAME_KEY_REPEAT_FORMAT, VIDEO_PHASE_FORMAT})
-_VIDEO_FORMATS = _REPEAT_FORMATS | {VIDEO_FRAME_FORMAT}
+VIDEO_LATCH_FORMAT = 'fdisbull-instrumented-qemu-state-6'
+_VIDEO_MODEL = {
+    VIDEO_FRAME_FORMAT: MODEL, FRAME_KEY_REPEAT_FORMAT: MODEL,
+    VIDEO_PHASE_FORMAT: MODE13_MODEL, VIDEO_LATCH_FORMAT: LATCH_MODEL,
+}
+_VIDEO_FORMATS = frozenset(_VIDEO_MODEL)
+_REPEAT_FORMATS = _VIDEO_FORMATS - {VIDEO_FRAME_FORMAT}
 RESTORE_RECEIPT_FORMATS = _VIDEO_FORMATS | {FORMAT}
 PREFIX = 'x-fdisbull-instrumented-'
 COMMANDS = frozenset(PREFIX + name for name in (
@@ -55,6 +60,18 @@ def preflight(session):
             raise ValueError('Resolve the native clock budget before checkpointing')
 
 
+def _validate_latch_census(state, video):
+    info = video['info']
+    if 'page-latch-offset-ns' not in info:
+        return
+    census = state['retrace'].get('configuration')
+    generation = census.get('configuration-generation') if type(census) is dict else None
+    selected = info.get('pending-page-latch') or info.get('frame', {}).get('page-latch')
+    latest = selected['configuration-generation'] if selected else video['configuration-generation']
+    if type(generation) is not int or not latest <= generation < 1 << 64:
+        raise ValueError('Source video page latch is ahead of the saved VGA census')
+
+
 def _decode(record):
     if (not isinstance(record, dict) or not isinstance(record.get('state'), str)
             or len(record['state'].encode()) > MAX_BYTES
@@ -82,9 +99,10 @@ def _decode(record):
             raise ValueError('Invalid instrumented source checkpoint envelope fields')
         video = validate_video_checkpoint(state['video-frame'], epoch=state['source-epoch'],
                                           virtual_ns=state['virtual-ns'])
-        expected_model = MODE13_MODEL if state['format'] == VIDEO_PHASE_FORMAT else MODEL
-        if video['info']['model'] != expected_model:
+        if video['info']['model'] != _VIDEO_MODEL[state['format']]:
             raise ValueError('Source video model differs from its checkpoint format')
+        if state['format'] == VIDEO_LATCH_FORMAT:
+            _validate_latch_census(state, video)
     elif 'video-frame' in state or 'frame-key-repeat' in state:
         raise ValueError('Source video and key repeat require their instrumented checkpoint formats')
     if state['format'] in _REPEAT_FORMATS:
@@ -120,8 +138,7 @@ def _validate_launch_format(vm, state):
     if (state['format'] in _REPEAT_FORMATS and state['frame-key-repeat'].get('profile')
             != vm.machine_configuration.get('frame_key_repeat_profile')):
         raise ValueError('Checkpoint frame key repeat profile differs from launch')
-    if (state['format'] == VIDEO_PHASE_FORMAT) != (
-            vm.machine_configuration.get('video_source_profile') == MODE13_PROFILE):
+    if _VIDEO_MODEL.get(state['format'], MODEL) != video_model(vm.machine_configuration):
         raise ValueError('Checkpoint source video timing profile differs from launch')
 
 

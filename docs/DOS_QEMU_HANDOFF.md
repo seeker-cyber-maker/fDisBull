@@ -1,5 +1,41 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Timed unchained VGA selection and native boot (2026-11-23)
+
+The opt-in QEMU `vga-unchained-latch` source profile selects a page at
+the preceding leading retrace and samples each row from that page. The
+authored native tests confirmed the early-write and late-write frame order.
+Format 6 checkpoints reproduced both a pending latch and a partially
+sampled 65-row frame with a later programmed origin. Each restore recreated
+the exact frame digests and timing. The old chain-4 and Mode 13h profiles
+keep their formats. [Native source and validation](../native/qemu-vga-unchained-latch/README.md)
+
+The DOSBox-X reference guest verified its timing at the CRTC output using
+PIT and status-port observations. The write 176 ticks before retrace
+selected the new page in the next complete frame. The late write followed
+the observed leading edge and kept the old page for another complete
+frame. Both full index rasters matched their declared pages. Private
+receipt SHA-256 `622e68930a35454682e23b7b9ab32738013f0cd309ed161c69f050d5cfabd8cd`.
+
+Original Doom E1M5 saved its native QEMU timed source stream at the
+protected tic 64 stop before the first latch. Same-session and
+separate-process restore reproduced the selected origin, all 200 sample
+times, RGB digest, stopped PC and stereo frontier. The cold run rebound
+the original LE source and matched the original byte identities on
+postflight. The private hot and cold receipts have SHA-256 values
+`81d80ae089328f829a5d330295cd5adb4465c2b71dcb1d0217dc7a5fe283ddc3` and
+`e48a1054caca5e861ad70982c96daf9d2d576f1207e42566b2254d08a323831f`.
+Matched original-game display commits and stricter cross-engine scanline
+timing remain open.
+
+Both native engines booted the same FreeDOS image and registered the
+authored `FDBTEST$` driver with its expected header and INIT marker
+`0xA55A`. With the file still present and the DEVICE directive removed,
+both reported the driver absent. Both read-only media copies and the
+original image verified, and all four guests were reaped. Registration
+and INIT are qualified for this driver. Request I/O remains open.
+Native receipt SHA-256 `78dce7f8eacf8a5fb13246a71968b7ddf1f98c5c9f426ed6dea5e9f2d309b003`.
+
 ## Renderer-selected VGA pages and paired DOS completion (2026-11-23)
 
 Both native engines can now identify the original VGA indices and origin
