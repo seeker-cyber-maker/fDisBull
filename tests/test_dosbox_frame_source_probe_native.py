@@ -11,10 +11,14 @@ import time
 
 import pytest
 
+from fdisbull import qemu_machine
 from fdisbull.dosbox_rpc import DOSBoxRPC, DebuggerError
+from fdisbull.project import Project
 from support.dos_process_fixture import assemble, digest
 from test_paired_video_frame_native import PROFILE
-from test_qemu_vga_unchained_probe_native import BODY
+from test_qemu_clock_budget_native import clock_disk, clock_runtime, park
+from test_qemu_dos_process_native import com_address, launch_options, process_record
+from test_qemu_vga_unchained_probe_native import BODY, RENDER_PROOF
 
 
 def _held_pages():
@@ -154,3 +158,36 @@ def test_native_dosbox_source_probe_binds_exact_selected_pages_and_original_indi
                     **second_identity)['source_indices_available'] is False
 
     assert owner.poll() is not None and game.read_bytes() == code
+
+
+def test_native_qemu_renders_the_same_held_page_fixture(
+        tmp_path, clock_runtime, clock_disk, monkeypatch, record_property):
+    if os.environ.get('FDISBULL_REQUIRE_QEMU_UNCHAINED_RENDER_PROOF') != '1':
+        pytest.skip('Select a QEMU with unchained renderer-source proof')
+    code = assemble(tmp_path, 'qemu-source-pages', _held_pages(), clock_runtime['nasm'])
+    assert code[-10:-6] == b'SVGA'
+    page_a, page_b, go = struct.unpack('<3H', code[-6:])
+    binary = tmp_path / 'PLANES.COM'
+    binary.write_bytes(code)
+    record_property('authored_com_sha256', digest(binary))
+
+    original = qemu_machine.machine_retrace_arguments
+    monkeypatch.setattr(qemu_machine, 'machine_retrace_arguments',
+        lambda profile: original(profile) + ['-global', 'VGA.x-fdisbull-raster-proof=on'])
+    with Project.create(tmp_path / 'planes.fdb', binary, image='com') as project:
+        with project.debugger(clock_runtime['executable'], tmp_path,
+                **launch_options(clock_runtime, clock_disk, qemu_clock='virtual',
+                                 qemu_retrace='precise')) as debug:
+            owner = debug.vm.process
+            info = process_record(debug)
+            for position, origin, first in ((page_a, 0x4000, 1), (page_b, 0x8000, 5)):
+                park(debug, com_address(info, position))
+                proof = debug.vm.qmp.call(RENDER_PROOF)
+                assert proof['outcome'] == 'updated' and proof['current-configuration-matches'], proof
+                source = proof['source']
+                assert source['start-address'] == origin * 4
+                assert source['source-index-sha256'] == hashlib.sha256(_pixels(first)).hexdigest()
+                if position == page_a:
+                    debug.write_memory(com_address(info, go), '01', expected_hex='00')
+        assert owner.poll() == 0
+    assert binary.read_bytes() == code and digest(clock_disk['image']) == clock_disk['prepared_sha256']

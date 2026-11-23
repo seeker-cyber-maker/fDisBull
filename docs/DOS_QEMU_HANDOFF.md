@@ -1,5 +1,49 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Renderer-selected VGA pages and paired DOS completion (2026-11-23)
+
+Both native engines can now identify the original VGA indices and origin
+used by their renderer. The QEMU command performs one exclusive stopped
+render and checks the full resulting surface against the selected page.
+The DOSBox-X diagnostic retains the source-selection time, origin and
+original indices with the completed frame ID. Its timestamp identifies
+renderer selection. Both diagnostics require explicit admission.
+[QEMU proof](../native/qemu-vga-renderer-source/README.md)
+[DOSBox-X proof](../native/dosbox-vga-source-diagnostic/README.md)
+
+Both diagnostic builds rendered identical original indices throughout both
+held pages from one 187-byte COM, SHA-256
+`6f7b2ce64ac547e6933e48f74b0785a8aab6b42d15f8a54b216cb0c73a3ac960`.
+The exact selected origins were `4000h` and `8000h`. The integrated
+native receipt covers this paired witness, ordinary DOS/TSR execution
+and the existing QEMU renderer proofs. Its SHA-256 is
+`5ed65c5388cef8c9bc418b30d3f20415208bd1ada184cc9fb791949b95f2bb36`.
+
+The original Doom demo exposed different render boundaries. The source
+landmark is LE object 1 offset `0x19fdc`, with the normal display caller
+returning to `0x1d4bb`. The live QEMU binding confirmed the write at
+leveltime 70. A stopped render immediately before and after its single
+CRTC I/O instruction selected pages `0000h` and `4000h` with different
+source index digests. DOSBox-X observed normal writes at leveltime 66 and
+71. After the latter requested `8000h`, the first completed frame still
+consumed `4000h` with identical indices. The next completed frame consumed
+`8000h` with new indices. The runs sampled different Doom display
+commits. They establish distinct renderer behavior and keep game
+raster and hardware latch timing parity open.
+
+Private QEMU and DOSBox-X receipt SHA-256 values are
+`688034f4af76031608ce166ee0c06c13732a54eeceb3fd81c621b21303bffc8e` and
+`0af75da8b6c447f6d6be4cd4ed7dd6879a57055261c8b76d81b2be610fe78501`.
+
+The paired authored DOS campaign covered nested child residency via
+INT 21h/AH=31h and INT 27h. Both engines kept the child vector and
+allocated MCB, called its interrupt handler, and returned to the selected
+parent, which exited with code 17. The nonresident control also passed.
+Legacy saved scripts now admit `guest_exit` and `guest_tsr` expectations
+alongside direct QEMU DOS. Both backends executed a JSON-persisted script
+by ID and observed the expected code and residency. The remaining DOS
+campaign still includes actual CONFIG.SYS driver boot behavior.
+
 ## Stopped unchained source rows and Doom checkpoint replay (2026-11-23)
 
 The explicit stopped VGA row probe reproduced the expected four-plane
