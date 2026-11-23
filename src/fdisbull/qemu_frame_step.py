@@ -10,9 +10,10 @@ import inspect
 import time
 
 from .dosbox_rpc import DebuggerError
-from .qemu_frame_contract import (FRAME_CLOCK, FRAME_PROFILE, FRAME_SOURCE,
+from .qemu_frame_contract import (FRAME_CLOCK, FRAME_SOURCE,
                                    frame_contract_metadata)
 from .qemu_session_revision import session_revision
+from .qemu_video_checkpoint import video_model
 from .qemu_video_frame import _remaining
 
 
@@ -68,6 +69,7 @@ class _FrameOwner:
         (self.authority, self.revision, self.lock, _, _,
          self.runtime, self.checkpoint, self.before) = identity
         self.run = session.run_id
+        self.frame_profile = video_model(getattr(self.vm, 'machine_configuration', {}))
         self.process = getattr(self.vm, 'process', None)
         self.channels = tuple((name, getattr(self.vm, name),
                                getattr(getattr(self.vm, name), 'socket', None))
@@ -197,7 +199,7 @@ class QemuFrameStepMixin:
                 state='exited' if exited else native['session'].get('state'),
                 completed=completed, stop_reason=stop,
                 registers=deepcopy(native.get('registers')), owner_exited=exited,
-                source=FRAME_SOURCE, frame_profile=FRAME_PROFILE,
+                source=FRAME_SOURCE, frame_profile=owner.frame_profile,
                 frame_id=None, mode_id=None, frame_identity=None,
                 captured_ns=None, captured_ticks=None, captured_ticks_clock=FRAME_CLOCK,
                 guest_ticks=None if after is None else after['virtual_ns'] // 1_000_000,
@@ -229,7 +231,7 @@ class QemuFrameStepMixin:
         def receipt(outcome, **fields):
             return dict(format=FORMAT, run=owner.run, outcome=outcome,
                 requested_frames=frames, completed_frames=len(completed), frames=deepcopy(completed),
-                unit=UNIT, source=FRAME_SOURCE, frame_profile=FRAME_PROFILE,
+                unit=UNIT, source=FRAME_SOURCE, frame_profile=owner.frame_profile,
                 completed_guest_frame=None, **owner.revision.snapshot(), **fields)
         try:
             for _ in range(frames):

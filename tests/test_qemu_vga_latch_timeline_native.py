@@ -130,6 +130,28 @@ def _replay(call, run, control, *, label):
     return receipts, branch
 
 
+def _public_frame_steps(call, run, debug, expected):
+    baseline = _native(debug)["frame-sequence"]
+    python_step = debug.call("frame.step", {"timeout_ms": 5000})
+    json_advance = call("debug-frame-advance", run=run, frames=1, timeout_ms=5000)
+    script = call("debug-save-script", name="step-latched-page.json", script={
+        "format": "fdisbull-script-1", "backend": "qemu-dos",
+        "steps": [{"op": "frame-advance", "frames": 1, "timeout_ms": 5000}],
+    })
+    replay = call("debug-script", run=run, script_id=script["script_id"], timeout_ms=8000)
+    assert replay["ok"] and replay["completed_steps"] == 1, replay
+    script_advance = replay["steps"][0]["result"]
+    for batch in (json_advance, script_advance):
+        assert batch["frame_profile"] == LATCH_MODEL and batch["completed_frames"] == 1
+    frames = [python_step, json_advance["frames"][0], script_advance["frames"][0]]
+    for offset, step in enumerate(frames, start=1):
+        assert step["completed"] and step["frame_profile"] == LATCH_MODEL
+        assert step["frame_id"] == baseline + offset
+        frame = step["native_advance"]["frame"]
+        assert frame["page-latch"]["origin-bytes"] == expected["page-latch"]["origin-bytes"]
+        assert frame["pixel-sha256"] == expected["pixel-sha256"]
+
+
 def _cold(control):
     with _workspace(control) as (call, run, debug):
         previous = debug.vm.process
@@ -153,7 +175,8 @@ def _cold(control):
             assert _stored_png(call, run, point["timeline"], point,
                                Path(control["directory"]) / f"retained-{number}.png") == (
                                    point["frame"]["source_raster"]["pixel_sha256"])
-    print(json.dumps({"cold_replay": True, "rasters": len(actual)}))
+        _public_frame_steps(call, run, debug, actual[-1]["native"]["frame"])
+    print(json.dumps({"cold_replay": True, "rasters": len(actual), "frame_step_routes": 3}))
 
 
 @pytest.mark.skipif(os.environ.get("FDISBULL_REQUIRE_QEMU_VGA_LATCH") != "1",
@@ -192,7 +215,7 @@ def test_unchained_latch_source_timeline_replays_saved_script_in_separate_python
     child = subprocess.run([sys.executable, __file__, "--cold", str(capsule)],
                            capture_output=True, text=True, timeout=100)
     assert child.returncode == 0, child.stderr[-8000:]
-    assert json.loads(child.stdout) == {"cold_replay": True, "rasters": 2}
+    assert json.loads(child.stdout) == {"cold_replay": True, "rasters": 2, "frame_step_routes": 3}
     record_property("png_sha256", [receipt["image_sha256"] for receipt in expected])
     assert binary.read_bytes() == data and digest(clock_disk["image"]) == clock_disk["prepared_sha256"]
     assert digest(clock_runtime["boot_image"]) == clock_disk["source_sha256"]

@@ -14,6 +14,7 @@ from fdisbull.qemu_dos_frames import QemuDOSFramesMixin
 from fdisbull.qemu_frame_contract import configure_frame_contract
 from fdisbull.qemu_machine import QemuMachine
 from fdisbull.qemu_observation_authority import ObservationAuthority
+from fdisbull.qemu_video_checkpoint import LATCH_MODEL, LATCH_PROFILE, MODE13_MODEL, MODE13_PROFILE
 from fdisbull.output_limits import OutputPolicy, output_policy_context
 from test_qemu_video_control import control, stopped
 from test_qemu_video_frame import audio, observation, video
@@ -189,6 +190,40 @@ def test_batch_returns_only_the_completed_prefix_and_actual_interruption(source_
     assert result['interrupted_frame']['native_advance']['native_result'] == o.actual
     assert result['interrupted_frame']['frame_id'] is None
     assert len(o.executions) == 2 and not o.vm.closed
+
+
+@pytest.mark.parametrize('profile,model', [(MODE13_PROFILE, MODE13_MODEL), (LATCH_PROFILE, LATCH_MODEL)])
+@pytest.mark.parametrize('outcome', ['complete', 'prefix', 'empty'])
+def test_opt_in_frame_step_batches_report_the_owned_native_model(source_step, monkeypatch, profile, model, outcome):
+    o = source_step
+    o.session.video_frame_start()
+    native = []
+    if outcome != 'empty':
+        native.append(o.session.video_frame_advance())
+    if outcome != 'complete':
+        o.actual = stopped('breakpoint', reply='T05')
+        o.dispatch = lambda: None
+        native.append(o.session.video_frame_advance())
+
+    # The protocol peer above supplies validated stops. This seam varies only
+    # the selected producer model, whose native timing has separate witnesses.
+    o.vm.machine_configuration['video_source_profile'] = profile
+    configure_frame_contract(o.session)
+    for advance in native:
+        for source in advance['source'].values():
+            source['model'] = model
+    outstanding = iter(native)
+    monkeypatch.setattr(o.session, 'video_frame_advance', lambda **kwargs: next(outstanding))
+    result = o.session.advance_frames(frames=len(native))
+    assert result['frame_profile'] == o.session.capabilities['frame_step_profile'] == model
+    assert result['completed_frames'] == (outcome != 'empty')
+    if outcome != 'empty':
+        assert result['frames'][0]['frame_profile'] == model
+    if outcome != 'complete':
+        assert result['outcome'] == 'interrupted'
+        assert result['interrupted_frame']['frame_profile'] == model
+        assert result['interrupted_frame']['frame_identity'] is None
+        assert result['stop'] == o.actual
 
 
 def test_source_abort_retains_the_actual_result_and_allows_explicit_recovery(source_step):
