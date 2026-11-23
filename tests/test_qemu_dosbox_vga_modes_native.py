@@ -240,7 +240,7 @@ def _check_pixels(image, page):
     return dict(size=list(rgb.size), sha256=sha256(actual).hexdigest(), samples=_samples(rgb))
 
 
-def _dosbox_pages(executable, tmp_path, directory, labels, *, observe_rows=None):
+def _dosbox_pages(executable, tmp_path, directory, labels, *, observe_rows=None, operate_page=None):
     wrapper = tmp_path / 'dosbox-vga'
     args = [part for setting in PROFILE for part in ('-set', setting)]
     wrapper.write_text(f'#!{sys.executable}\nimport os, sys\n'
@@ -284,6 +284,8 @@ def _dosbox_pages(executable, tmp_path, directory, labels, *, observe_rows=None)
             probe = call('video.probe', points=_points(result[page]['size']))
             assert all(probe[key] == value for key, value in identity.items())
             assert probe['samples'] == result[page]['samples']
+            if operate_page is not None:
+                operate_page(call, page, address)
             if page != 'last':
                 call('memory.write', address=address(labels[-1]),
                      expected_sha256=sha256(bytes([index])).hexdigest(),
