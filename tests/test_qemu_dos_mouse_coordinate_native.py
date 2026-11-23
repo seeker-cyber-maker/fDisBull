@@ -102,6 +102,8 @@ right_press_loop:
     int 33h
     test bx,2
     jz right_press_loop
+right_before_read:
+    nop
     mov di,right_press
     call sample
 clipped:
@@ -155,6 +157,33 @@ warped_after_edges:
     call sample_edge
 edge_queries_done:
     nop
+    mov di,stationary_origin
+    call sample
+stationary_ready:
+    nop
+stationary_wait_press:
+    inc byte [es:0]
+    mov ax,3
+    int 33h
+    test bx,1
+    jz stationary_wait_press
+    mov di,stationary_press
+    call sample
+stationary_pressed:
+    nop
+stationary_wait_release:
+    mov ax,3
+    int 33h
+    test bx,1
+    jnz stationary_wait_release
+    mov di,stationary_release
+    call sample
+stationary_done:
+    nop
+    mov ax,0012h
+    int 10h
+mode12_ready:
+    nop
     mov ax,4c2ah
     int 21h
 failure:
@@ -193,6 +222,9 @@ left_release: times 5 dw 0
 clip_origin: times 5 dw 0
 right_press: times 5 dw 0
 right_release: times 5 dw 0
+stationary_origin: times 5 dw 0
+stationary_press: times 5 dw 0
+stationary_release: times 5 dw 0
 guest_edges: times 12 dw 0
 old_offset: dw 0
 old_segment: dw 0
@@ -203,6 +235,8 @@ db 'I33C'
 dw ready,pressed,clip_ready,clipped,done,installed,alternate_vector,restored_vector,motion_landed
 dw origin,left_press,left_release,clip_origin,right_press,right_release
 dw warped_after_edges,edge_queries_done,guest_edges
+dw right_before_read,stationary_ready,stationary_pressed,stationary_done
+dw stationary_origin,stationary_press,stationary_release,mode12_ready
 '''
 
 
@@ -240,9 +274,11 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
     names = ('ready', 'pressed', 'clip_ready', 'clipped', 'done', 'installed',
              'alternate_vector', 'restored_vector', 'motion_landed', 'origin', 'left_press',
              'left_release', 'clip_origin', 'right_press', 'right_release',
-             'warped_after_edges', 'edge_queries_done', 'guest_edges')
-    assert code[-40:-36] == b'I33C'
-    offsets = dict(zip(names, struct.unpack('<18H', code[-36:]), strict=True))
+             'warped_after_edges', 'edge_queries_done', 'guest_edges', 'right_before_read',
+             'stationary_ready', 'stationary_pressed', 'stationary_done',
+             'stationary_origin', 'stationary_press', 'stationary_release', 'mode12_ready')
+    assert code[-56:-52] == b'I33C'
+    offsets = dict(zip(names, struct.unpack('<26H', code[-52:]), strict=True))
     binary = tmp_path / 'COORD.COM'
     binary.write_bytes(code)
     receipt = {'source_sha256': hashlib.sha256(code).hexdigest(),
@@ -283,7 +319,7 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         assert sample['vector_authority']['complete']
                         assert sample['driver']['sha256'] == CTMOUSE_SHA256
                         assert sample['driver']['vector']['offset'] == 0xb5e
-                        assert len(sample['matching_source_spans']) == 8
+                        assert len(sample['matching_source_spans']) == 9
                         assert sample['position'] + [sample['buttons']] == rows[name][:3]
                         assert sample['raster']['frame_id'] >= 1
                         assert sample['raster']['completed_ns'] <= sample['clock']['virtual_ns']
@@ -291,7 +327,7 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                             'driver', 'position', 'raw_position', 'buttons', 'minimum',
                             'maximum', 'mickeys_per_eight_units', 'clock', 'raster',
                             'sensitivity_coefficients', 'position_remainders', 'matching_source_spans',
-                            'button_edges')}
+                            'button_edges', 'driver_mickeys')}
 
                     _park(debug, locations['ready'], qemu=qemu)
                     receipt['installed'][key] = int.from_bytes(read('installed', 2), 'little')
@@ -338,6 +374,8 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         assert execution['input_delivery']['delivery'] == 'qmp_accepted'
                         landing = debug.observe_int33_mouse()
                         assert landing['position'] == [320, 90] and landing['buttons'] == 0
+                        assert landing['driver_mickeys'] == [2, 4]
+                        assert debug.observe_int33_mouse()['driver_mickeys'] == [2, 4]
                         selector = dict(stream=landing['raster']['stream'],
                                         frame_id=landing['raster']['frame_id'])
                         at_target = debug.mouse_move_int33(160, 90, **selector)
@@ -384,6 +422,12 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                     else:
                         receipt['native']['dosbox_clip_click'] = debug.click(
                             319, 199, button='right', mode_id=mode, hold_ms=80)['mouse']
+                    _park(debug, locations['right_before_read'], qemu=qemu)
+                    if qemu:
+                        clipped_mickeys = debug.observe_int33_mouse()['driver_mickeys']
+                        assert clipped_mickeys == [4, 4]
+                        assert debug.observe_int33_mouse()['driver_mickeys'] == clipped_mickeys
+                        receipt['native']['qemu_mickeys_before_guest_read'] = clipped_mickeys
                     _park(debug, locations['clipped'], qemu=qemu)
                     take('right_press')
                     if qemu:
@@ -431,6 +475,39 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
                         receipt['native']['qemu_edge_query'] = dict(
                             position_after_warp=warped['position'], history=history,
                             consumed=consumed, guest_ax5_ax6=guest_edges)
+                    _park(debug, locations['stationary_ready'], qemu=qemu)
+                    take('stationary_origin')
+                    if qemu:
+                        stationary = debug.observe_int33_mouse()
+                        assert stationary['driver_mickeys'] == [0, 0]
+                        assert stationary['position'] == [300, 80]
+                        selector = dict(stream=stationary['raster']['stream'],
+                                        frame_id=stationary['raster']['frame_id'])
+                        lease = debug.mouse_button_down_int33(150, 80, **selector)['lease']
+                    else:
+                        debug.run(guest_ms=70, timeout_ms=5000, fast_forward=True)
+                        frame = debug.screenshot('stationary-click.png')['metadata']
+                        debug.click(150, 80, mode_id=frame['mode_id'], frame_id=frame['frame_id'])
+                    _park(debug, locations['stationary_pressed'], qemu=qemu)
+                    take('stationary_press')
+                    if qemu:
+                        assert debug.observe_int33_mouse()['driver_mickeys'] == [0, 0]
+                        debug.mouse_button_up(lease)
+                    _park(debug, locations['stationary_done'], qemu=qemu)
+                    take('stationary_release')
+                    if qemu:
+                        stationary = debug.observe_int33_mouse()
+                        assert stationary['driver_mickeys'] == [0, 0]
+                        raster = stationary['raster']
+                        _park(debug, locations['mode12_ready'], qemu=qemu)
+                        bda = debug.memory(0x449, length=1, space='physical')
+                        assert bytes.fromhex(bda['hex']) == b'\x12'
+                        with pytest.raises(ValueError, match='active retained source raster') as refused:
+                            debug.click(150, 80, delivery='observed-int33',
+                                        session_id=raster['session_id'], mode_id=raster['mode_id'],
+                                        frame_id=raster['frame_id'])
+                        assert debug.input_state()['pending_edges'] == 0
+                        receipt['native']['qemu_mode12_refusal'] = refused.value.code
                     result = debug.run(timeout_ms=5000)
                     assert result['outcome'] == 'guest_exit', result
                     receipt['native'][key + '_exit'] = result['outcome']
@@ -452,6 +529,9 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
         'clip_origin': [320, 90, 0],
         'right_press': [320, 90, 2],
         'right_release': [320, 90, 0],
+        'stationary_origin': [300, 80, 0],
+        'stationary_press': [300, 80, 1],
+        'stationary_release': [300, 80, 0],
     }
     for phase, values in expected.items():
         assert dosbox_samples[phase][:3] == qemu_samples[phase][:3] == values
@@ -461,10 +541,13 @@ def test_paired_int33_position_and_clipping(tmp_path, clock_runtime, clock_disk,
     assert qemu_samples['left_press'][3:] == [2, 4]
     assert qemu_samples['right_press'][3:] == [4, 4]
     assert all(sample[3:] == [0, 0] for sample in dosbox_samples.values())
+    for phase in ('stationary_origin', 'stationary_press', 'stationary_release'):
+        assert qemu_samples[phase][3:] == [0, 0]
 
     assert list(receipt['passive']) == ['origin', 'left_press', 'clip_origin', 'right_press', 'right_release']
     for name, sample in receipt['passive'].items():
         assert sample['position'] == sample['raw_position']
+        assert sample['driver_mickeys'] == [0, 0]
         assert sample['mickeys_per_eight_units'] == [8, 16]
         assert sample['minimum'] == [96, 50]
         assert sample['maximum'] == ([400, 130] if name in ('origin', 'left_press') else [320, 90])
@@ -498,6 +581,8 @@ org 100h
     mov ax,4
     mov cx,318
     mov dx,88
+    int 33h
+    mov ax,0bh
     int 33h
 first_frame:
     nop
@@ -628,7 +713,9 @@ def test_observed_int33_click_resolves_only_qualified_press(
     (tmp_path / 'int33-observed-click.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
 
 
-@pytest.mark.parametrize('route', ['python', 'rpc', 'json', 'frame', 'partial', 'travel', 'travel-partial'])
+@pytest.mark.parametrize('route', [
+    'python', 'rpc', 'json', 'frame', 'partial', 'travel', 'travel-partial', 'stationary',
+])
 def test_coordinate_click_routes_verify_landing_and_hold(
         tmp_path, clock_runtime, clock_disk, mouse_inputs, route):
     from fdisbull.cli import respond
@@ -676,6 +763,8 @@ def test_coordinate_click_routes_verify_landing_and_hold(
             assert debug.observe_int33_mouse()['clock'] == initial['clock']
             assert debug.input_state()['pending_edges'] == 0
             x, y = (170, 96) if route in ('travel', 'travel-partial') else (160, 90)
+            if route == 'stationary':
+                x, y = 159, 88
             options = dict(x=x, y=y, delivery='observed-int33', hold_ms=15, **ids)
             if route in ('travel', 'travel-partial'):
                 options['timeout_ms'] = 15000
@@ -720,6 +809,10 @@ def test_coordinate_click_routes_verify_landing_and_hold(
                         [322, 90], [326, 92], [330, 94], [334, 96], [338, 96], [340, 96]]
                     assert result['target_landing']['raster']['mode_id'] == selected['mode_id']
                     assert result['target_landing']['raster']['frame_id'] > selected['frame_id']
+                elif route == 'stationary':
+                    assert result['motion'] is None
+                    assert motion['planned'] == motion['attempted'] == 0 and not motion['verified']
+                    assert motion['total_counts'] == [0, 0]
                 else:
                     assert result['motion']['counts'] == [2, 4]
                     assert motion['planned'] == motion['attempted'] == len(motion['verified']) == 1
@@ -744,6 +837,8 @@ def test_coordinate_click_routes_verify_landing_and_hold(
                 assert click['verified_hold_ns'] >= 15_000_000
                 assert click['press']['observed_edge_at_target'] and click['release']['observed_edge_at_target']
                 assert click['release']['observed']['buttons'] == 0
+                assert click['before']['driver_mickeys'] == motion['total_counts']
+                assert click['release']['observed']['driver_mickeys'] == motion['total_counts']
             assert not debug.input_state()['leases']
             assert debug.capabilities['absolute_mouse'] is False
             native_process = debug.vm.process

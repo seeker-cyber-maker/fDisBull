@@ -64,7 +64,8 @@ def _preflight(owner, x, y, mode_id, frame_id, session_id, timeout_ms):
 
 def _public_observation(observed):
     return None if observed is None else {key: observed[key] for key in (
-        'driver', 'raster', 'clock', 'position', 'buttons', 'minimum', 'maximum', 'button_edges')}
+        'driver', 'raster', 'clock', 'position', 'buttons', 'minimum', 'maximum',
+        'button_edges', 'driver_mickeys')}
 
 
 def _public_phase(phase):
@@ -151,7 +152,7 @@ def _move(owner, vm, result, stopped, packets, timeout_ms):
             return current, 'target_landing_unconfirmed'
         progress['verified'].append(dict(counts=list(packet), raw_position=expected,
             position=observed['position'], frame_id=raster['frame_id'],
-            virtual_ns=observed['clock']['virtual_ns']))
+            virtual_ns=observed['clock']['virtual_ns'], driver_mickeys=observed['driver_mickeys']))
         current = observed
     return current, None
 

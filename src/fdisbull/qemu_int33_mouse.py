@@ -28,8 +28,9 @@ _CODE = (
     ('motion_and_button_dispatch', 0x327, 0x46),
     ('button_edge_position', 0x410, 0x24),
     ('button_history_queries', 0x967, 0x3d),
+    ('mickey_counter_query', 0x9a4, 0x0f),
 )
-_DATA = ((0x4e, 8), (0xa4, 0x24), (0xce, 36), (0x15a, 2), (0x37a, 1))
+_DATA = ((0x4e, 8), (0xa4, 0x24), (0xca, 4), (0xce, 36), (0x15a, 2), (0x37a, 1))
 _CLOCK_FIELDS = ('run', 'epoch', 'session', 'native_state', 'clock_profile',
                  'counter', 'virtual_ns', 'virtual_clock')
 
@@ -100,6 +101,8 @@ def _decode(driver, base, selected):
     minimum = struct.unpack_from('<hh', coordinates, 0xc4 - 0xa4)
     ratio_x, ratio_y, sensitivity_x, sensitivity_y = struct.unpack('<hhHH', selected[base + 0x4e])
     rounding = struct.unpack_from('<hh', coordinates, 0xc0 - 0xa4)
+    # AX=0Bh consumes these signed counters. A physical RAM read leaves them in place.
+    mickeys = struct.unpack('<hh', selected[base + 0xca])
     buttons = selected[base + 0x37a][0] & 7
     if (selected[base + 0x15a] != b'\xfe\xff'
             or position != (raw[0] & ~1, raw[1]) or min(ratio_x, ratio_y) <= 0
@@ -117,7 +120,7 @@ def _decode(driver, base, selected):
             edges[phase][button] = dict(count=count, last_position=[x, y])
     return dict(position=list(position), raw_position=list(raw),
                 minimum=list(minimum), maximum=list(maximum), buttons=buttons, button_edges=edges,
-                mickeys_per_eight_units=[ratio_x, ratio_y],
+                driver_mickeys=list(mickeys), mickeys_per_eight_units=[ratio_x, ratio_y],
                 sensitivity_coefficients=[sensitivity_x, sensitivity_y],
                 position_remainders=list(rounding), matching_source_spans=spans)
 

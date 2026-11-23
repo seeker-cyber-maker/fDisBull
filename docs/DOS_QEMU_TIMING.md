@@ -486,7 +486,14 @@ recovery. Stale selectors, unsupported driver state and targets outside the
 observed range are refused before input.
 
 DOSBox-X remains the default and uses its existing queued click behavior.
-Relative movement can produce different guest-visible mickey counts.
+The scoped QEMU readback includes the pinned driver's signed `driver_mickeys`
+accumulators without consuming them. The paired Mode 13h guest observed
+different AX=0Bh counts when QEMU moved relative to the cursor and DOSBox-X
+placed it directly. At a separate guest-owned AX=0Bh boundary, both engines
+reported zero additional mickeys for a stationary press and release over the
+same already-landed target. Software that requires zero mickeys during a
+nonstationary click still needs the DOSBox-X path.
+
 General `timed_input`, `absolute_mouse`, `guest_time_control` and
 `completed_guest_frames` remain false. Saved QEMU scripts continue to use
 their separate physical input operations.
