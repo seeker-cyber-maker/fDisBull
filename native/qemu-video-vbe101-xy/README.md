@@ -20,13 +20,12 @@ boundary. The getter reads the programmed pair together. The device
 validates the visible row and full backing span before updating either
 coordinate. An unavailable position returns failure and preserves the
 existing programmed and pending state. The [VBE 3.0 specification
-for 4F07h](https://www.sra.uni-hannover.de/Lehre/SS21/V_BSB/doc/vbe3.pdf#page=52)
+for 4F07h](https://www.sra.uni-hannover.de/Lehre/SS21/V_BSB/doc/vbe3.pdf)
 defines the failure behavior.
 
 The VGA start address and the fine offset still latch independently
 at lines 490 and 492. A request between the edges can produce a
-mixed viewport for one frame. Superseding a queued move with the
-current programmed viewport before either latch can retire both pending
-changes. Checkpoints retain the active and programmed viewport plus
+mixed viewport for one frame. Requesting the currently visible viewport
+again before either latch retires both pending changes. Checkpoints retain the active and programmed viewport plus
 each pending absolute deadline and the partial raster. The paired I/O
 uses a single write and has no separate staged coordinate.

@@ -1,5 +1,55 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Combined VBE 101h X/Y panning and format 12 restore (2026-11-23)
+
+The opt-in `vga-640x480-xy` profile uses a distinct SeaVGABIOS ROM that
+commits both VBE 4F07h coordinates in one native I/O operation. The
+guest getter reports the committed pair together. The underlying
+coarse origin and fine offset still latch separately at lines 490
+and 492. Format 12 retains both deadlines, active and programmed
+positions, the pitch and the sampled prefix.
+[Native patches, firmware and scope](../native/qemu-video-vbe101-xy/README.md)
+
+QEMU and DOSBox-X ran the same authored DOS COM at a 648-byte pitch,
+using X5/Y64 and the origin. The selected rasters started at effective
+byte offsets 0 → A205h → A204h → 0 → 1 → A205h → 0 → 0.
+Every RGB pixel matched across all 480 rows, including scanlines
+crossing a 64 KiB bank boundary. The intermediate viewports were
+X4/Y64 and X1/Y0, each visible for one frame.
+
+Checkpoints before both latches and between the coarse and fine latches
+both reproduced forward execution on hot and fresh-process restore.
+The checkpoint before both latches retained 146 old-viewport rows.
+The local batch also confirmed that a reversal before retrace canceled
+both pending updates. QEMU returned `014Fh` for an out-of-row X/Y
+request and preserved the valid programmed pair, both pending
+deadlines, VGA generation, and retained raster.
+
+All 26 checks in the combined native run passed. The same build
+preserved format 11 horizontal panning, format 10 page flips, earlier
+timed scanout, keyboard-repeat restore and Mode 13h BIOS reapply.
+Doom format 6 separately matched its protected CPU continuation,
+200 timed rows, page origin and SB16/OPL frontier across forward, hot,
+and fresh-process replay.
+
+The next banked VBE BIOS test batch can share a fixture for logical
+scanline length set and maximum queries (4F06h), 6-bit and 8-bit DAC
+selection (4F08h), and palette transfers with immediate and retrace
+timing (4F09h). A pitch-change case should check retirement of pending
+viewports and the current timed stream.
+[Pinned DOSBox-X VBE dispatch](https://raw.githubusercontent.com/joncampbell123/dosbox-x/029bd65c5dcc7cdc7f2e14e35278620d9707d969/src/ints/int10.cpp)
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Authored paired DOS COM | `f4d593ea95b410273f2eef68622d7ddc89acb453f3ce8b932f74a17608d65b45` |
+| QEMU producer | `3e3ec32664c7a0c8d32f98fa95af9b90907b6bdf894d3ce39582be58d7f84ba5` |
+| Alternate SeaVGABIOS ROM | `a8fb603c666056d1ae84a3a792c7a6b703bac184f58321efbb5c42f7c7194f8c` |
+| DOSBox-X combined viewport, bank seams and reversal | `20741a0a568217dab132ed71a0fc859997a4339d1ec2fac8bc34914acd0451b9` |
+| QEMU combined viewport, atomic rejection and format 12 restore | `7457586b9d08bf45b39fb7c5b4b422d6c11f42a9af0f091a256dc755dc24a1cb` |
+| Combined native suite | `ad9e30a227f6110e708106419b8c53c2fc55894cfd484058e994bab622b9e574` |
+| Doom original run and hot restore | `e7acbab6766bfecc9529cdfca4109599352bfa26673fc32c8ae6c8d25bb5790f` |
+| Doom fresh-process restore | `7305f35dd5c2d442e45a9364149935f5980ac63f127d639ccbb3c4b8965cf89e` |
+
 ## VBE 101h horizontal panning and format 11 restore (2026-11-23)
 
 The opt-in `vga-640x480-pan` profile uses banked 640 × 480 × 8 and a
