@@ -1,5 +1,61 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## VBE 101h guest display-state save and restore (2026-11-23)
+
+The opt-in `vga-640x480-vbe-state` profile uses a distinct SeaVGABIOS
+ROM and the existing QEMU producer and format 14. VBE 4F04h rounds
+the required buffer up to complete 64-byte blocks. The previous ROM
+reported 14 blocks for the paired test and wrote past the advertised
+boundary. The corrected restore preserves current VRAM, restores the
+selected DAC width and palette, and reapplies the saved stride,
+bank and X/Y through the existing VBE latches.
+[Firmware patch and scope](../native/qemu-video-vbe101-state/README.md)
+
+The same banked 101h COM reproduced the original and disturbed 480-row
+rasters on QEMU and DOSBox-X. Both full-mask restores reapplied the
+palette and retained the guest's intervening VRAM byte. QEMU restored
+the saved 648-byte pitch, X5/Y64 viewport and bank 2. DOSBox-X reported
+640 bytes, X1/Y0 and bank 0. The guest buffers are firmware-specific.
+QEMU reported and respected 15 blocks for the full mask. DOSBox-X
+reported and respected 16 blocks.
+
+The QEMU checkpoint captured 146 rows of the disturbed raster while the
+guest RAM still held the saved original VGA state. Forward execution,
+hot restore and fresh-process restore reproduced that buffer, the
+guest restore, the two pending viewport deadlines and the final
+restored raster. A separate DAC-only case restored width 8 and the
+full high-bit channels. DOSBox-X returned width 6 and truncated
+those channels.
+
+A native linear-mode check also selected 4101h, restored a DAC-only
+buffer and verified that stride, display start and mode were unchanged.
+Its zero-mask query and a save whose buffer would cross the end of
+ES both returned `014Fh`. A separate linear-to-banked-to-linear
+smoke test restored 4101h, stride and viewport with identical RGB.
+The banked write remained readable through the linear aperture.
+
+All 32 local native preservation cases passed, including linear and
+banked VGA, protected-mode VBE calls and keyboard repeat. Doom matched
+its protected CPU, timed raster and SB16/OPL frontier on forward, hot
+and fresh-process replay. The broader host run passed 5605 tests
+with 682 skips and no failures. The private wheel confirmed DOSBox-X
+as the default. CI was skipped.
+
+| Local evidence | SHA-256 |
+| --- | --- |
+| Authored paired COM | `09a8aac1f12291414efca5073be4471844a0d9f639cf0da763425080c0469994` |
+| Existing QEMU producer | `863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25` |
+| Display-state SeaVGABIOS ROM | `2adaebc70e0bd1930cf7f8605a12258b6216694ae3f6d5a757024f9abaf30f1b` |
+| DOSBox-X VBE 4F04h reference | `cdef00cbb1cc10edd03f74fbea7ae71b8cc2876ae2ceaecd0154ea07285e4c5c` |
+| QEMU VBE 4F04h and format 14 replay | `9263d8cb439b69f09ddc446e84f38a0a9765ec8b5e36077a92c1be506ede9c38` |
+| Paired native tests | `7019e40faf863f1d7eb2dd945bb1198e904a86ef5775dab27cc06fcf1836f648` |
+| Additional QEMU DAC and bounds test | `e202459d2ebe45e00830d6387802db6aa8d2b1028fff4a5c4c38454958556a3f` |
+| Additional QEMU linear restore and VRAM readback | `8a0456294bcc19ae945f43bd00bfcc586e178736d755aaf91dddbed36fadaa1e` |
+| Native VGA, protected-mode and keyboard regressions | `66d60b8274eec96f1b58de145aed014fdaf1f91e558a0767643e232bd556a397` |
+| Host suite | `2c340413b60719c4faa0aefaeaf72f9f9ab0a5d57d987d5813694e65ab2c67f0` |
+| Doom original run and hot restore | `10639d248a83084e6e84405dd3eb77177cf56ac1443102663060acdf72c1bd16` |
+| Doom fresh-process restore | `7f4f3279b41c9b4e23dbb763226e9b5a1596aa5f54f6f38c87b4aa0351e4783b` |
+
 ## VBE 101h linear framebuffer and restore (2026-11-23)
 
 The opt-in `vga-640x480-lfb` profile uses the PCI VGA aperture

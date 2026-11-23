@@ -251,6 +251,14 @@ addressing mode, VGA memory, the existing display-start latches and the
 sampled raster. Switching between linear and banked modes invalidates
 the current raster stream.
 
+Select `vga-640x480-vbe-state` and `fdisbull-vgabios-vbe101-state.bin`
+for corrected VBE 4F04h guest display-state save and restore.
+The profile keeps format 14 for native checkpoints. A saved guest buffer
+can survive a native checkpoint and then restore the saved VGA
+configuration. Guest 4F04h preserves the current framebuffer bytes.
+After a guest restore changes video configuration, explicitly start
+a new source stream.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
 the selected `video_source_profile`. The script must match the owner's launch
@@ -294,10 +302,10 @@ and timing remain visible.
 | Field | QEMU meaning |
 | --- | --- |
 | `source` | `qemu_completed_source_raster` |
-| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, `qemu-vga-640x480-flip-v1`, `qemu-vga-640x480-pan-v1`, `qemu-vga-640x480-xy-v1`, and `qemu-vga-640x480-palette-v1` |
-| `scanout_layout` | `vga-mode12` or `vbe-banked-101` for the 640 × 480 source model |
-| `vbe101_origin_bytes` | The coarse byte origin sampled in a completed banked VBE 101h raster under the flip, panning and X/Y profiles |
-| `vbe101_pitch_bytes`, `vbe101_pel` | The backing row pitch and fine horizontal offset sampled under the panning and X/Y profiles. The first pixel uses the coarse origin plus the fine offset |
+| `frame_profile` | The selected native model, including `qemu-vga-chain4-scanline-v1`, `qemu-vga-chain4-dosbox-mode13-v1`, `qemu-vga-chain4-dosbox-mode13-overlap-v1`, `qemu-vga-unchained-320x200-latch-v1`, `qemu-vga-640x480-scanline-v1`, `qemu-vga-640x480-sync-v1`, `qemu-vga-640x480-flip-v1`, `qemu-vga-640x480-pan-v1`, `qemu-vga-640x480-xy-v1`, `qemu-vga-640x480-palette-v1`, and `qemu-vga-640x480-lfb-v1` |
+| `scanout_layout` | `vga-mode12`, `vbe-banked-101`, or `vbe-linear-101` for the 640 × 480 source models |
+| `vbe101_origin_bytes` | The coarse byte origin sampled in a completed VBE 101h raster on a viewport-aware profile |
+| `vbe101_pitch_bytes`, `vbe101_pel` | The backing row pitch and fine horizontal offset on a panning-capable profile. The first pixel uses the coarse origin plus the fine offset |
 | `source_bpp` | **24**, the native producer's RGB888 source bytes |
 | `double_width`, `double_height` | Both false. Coordinates use the retained source extent |
 | `frame_id` | Native accepted raster ordinal, including identical consecutive pixels |

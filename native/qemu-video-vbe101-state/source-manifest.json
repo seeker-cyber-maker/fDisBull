@@ -1,0 +1,54 @@
+{
+  "format": "fdisbull-seabios-native-patch-1",
+  "composition": "Apply after the SeaVGABIOS delta in native/qemu-video-vbe101-lfb.",
+  "base_host_commit": "a63c0507179ec0adc4bef1f466f21830f6737366",
+  "scope": "VBE 4F04h guest display state in mode 101h and pending buffer replay through format 14.",
+  "qemu": {
+    "version": "10.0.13",
+    "source_manifest": "../qemu-video-vbe101-lfb/source-manifest.json",
+    "tested_producer_sha256": "863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25",
+    "tested_checkpoint_tool_sha256": "4b60500fd28759b9bec46300b649f3bbeeef1653fafe3f08192c96f5df50afd1"
+  },
+  "firmware": {
+    "version": "rel-1.16.3-0-ga6ed6b70",
+    "source_path": "roms/seabios",
+    "composition": "Apply after the SeaVGABIOS delta in native/qemu-video-vbe101-lfb.",
+    "base_rom_sha256": "b0e3357a36f07f02cff6e3887ff63c7114781805ca1382032a263cc493d5e714",
+    "config_sha256": "ca7367ae57665fa01e0ebb741ba5823d646f4b65a9a87657ea163cc9f362a8a8",
+    "rom_name": "fdisbull-vgabios-vbe101-state.bin",
+    "tested_rom_bytes": 41984,
+    "tested_rom_sha256": "2adaebc70e0bd1930cf7f8605a12258b6216694ae3f6d5a757024f9abaf30f1b",
+    "tested_compiler": "i686-elf GCC 16.2.0",
+    "tested_binutils": "2.47.20260726",
+    "build_extraversion": "-fdisbull-vbe101-state",
+    "patch": "seabios-1.16.3-fdisbull-vbe101-state.patch",
+    "patch_bytes": 5656,
+    "patch_sha256": "954de9474d8887fab803c12aea325144230a8546bd423840995eb78c3adb1465",
+    "files": [
+      {
+        "path": "vgasrc/bochsvga.c",
+        "base_bytes": 12890,
+        "base_sha256": "a1cb92fda013e3769ade401b2735be5e0402a9e9a90ac2ce9e349b133e161ad6",
+        "patched_bytes": 17103,
+        "patched_sha256": "ead989be0621598559e6903791fc2d0d3752031befc20b0a2208e666544ddc8c",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/bochsvga.h",
+        "base_bytes": 2601,
+        "base_sha256": "8d26f81e84a43a35d6d4a2da733c346a3957ce34bd84ca662cc4cb738565c564",
+        "patched_bytes": 2667,
+        "patched_sha256": "30d2fb21dd9f1666bfe5512f4378e8534677ee1ce72b66e45be2f851c70f80d3",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/vbe.c",
+        "base_bytes": 17371,
+        "base_sha256": "f0cbed22b1c566b3c021dc16689f85964fd45e460473ecdd743bbe02a58fd5b7",
+        "patched_bytes": 17519,
+        "patched_sha256": "19981fdd4db8ae0147ed779f9cb1ecad7d574915cf29e7839eecbf5d3348ab55",
+        "mode": "100644"
+      }
+    ]
+  }
+}

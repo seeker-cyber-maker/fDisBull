@@ -1,0 +1,151 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -297,6 +297,115 @@
+     if (cmd & SR_RESTORE)
+         bochsvga_restore_state(seg, info);
+     return ret + (VBE_DISPI_INDEX_Y_OFFSET-VBE_DISPI_INDEX_XRES+1)*sizeof(u16);
++}
++
++/* Same word order as bochsvga_save_state(). The virtual height is derived
++ * after writing the saved pitch and does not need its own port write. */
++struct fdisbull_vbe_state {
++    u16 enable, width, height, bpp, bank, pitch, virtual_height, x, y;
++};
++
++static int
++fdisbull_vbe101_state_fits(u16 pitch, u16 x, u16 y, u16 bank)
++{
++    u16 banks = dispi_read(VBE_DISPI_INDEX_VIDEO_MEMORY_64K);
++    u32 end = (u32)y * pitch + x + 479u * pitch + (pitch < 640 ? 640 : pitch);
++    return pitch >= 8 && pitch <= 8184 && !(pitch & 7) && y <= 12000
++        && (pitch < 640 ? !x : x + 640 <= pitch) && bank < banks
++        && end <= ((u32)banks << 16);
++}
++
++int
++bochsvga_fdisbull_save_restore(int cmd, u16 seg, u16 offset)
++{
++    void *data = (void *)(offset + 0);
++    int states = cmd & 0x0f;
++    int stdsize = stdvga_save_restore(states, seg, data);
++    struct fdisbull_vbe_state *ext = data + stdsize;
++    int extsize = states & SR_REGISTERS ? sizeof(*ext) : 0;
++    u8 *dac_width = data + stdsize + extsize;
++    int size = stdsize + extsize + !!(states & SR_DAC);
++
++    if (!(cmd & (SR_SAVE | SR_RESTORE)))
++        return size;
++    if ((u32)offset + size > 0x10000)
++        return -1;
++
++    u16 index = inw(VBE_DISPI_IOPORT_INDEX);
++    if (cmd & SR_SAVE) {
++        stdvga_save_restore(cmd, seg, data);
++        if (extsize)
++            bochsvga_save_state(seg, (u16 *)ext);
++        if (states & SR_DAC) {
++            u8 width = bochsvga_fdisbull_palette_available()
++                ? bochsvga_get_dacformat(NULL) : 0;
++            SET_FARVAR(seg, *dac_width, width);
++        }
++        outw(index, VBE_DISPI_IOPORT_INDEX);
++        return size;
++    }
++
++    u16 enable = 0, pitch = 0, x = 0, y = 0, bank = 0;
++    u8 width = states & SR_DAC ? GET_FARVAR(seg, *dac_width) : 0;
++    if (extsize)
++        enable = GET_FARVAR(seg, ext->enable);
++    int vbe101 = (enable & VBE_DISPI_ENABLED)
++        && GET_FARVAR(seg, ext->width) == 640
++        && GET_FARVAR(seg, ext->height) == 480
++        && GET_FARVAR(seg, ext->bpp) == 8;
++    if (vbe101) {
++        pitch = GET_FARVAR(seg, ext->pitch);
++        x = GET_FARVAR(seg, ext->x);
++        y = GET_FARVAR(seg, ext->y);
++        bank = GET_FARVAR(seg, ext->bank);
++    }
++    if ((width && width != 6 && width != 8) ||
++        (vbe101 && ((enable & ~(VBE_DISPI_ENABLED | VBE_DISPI_8BIT_DAC
++                                | VBE_DISPI_LFB_ENABLED | VBE_DISPI_NOCLEARMEM))
++                    || !fdisbull_vbe101_state_fits(pitch, x, y, bank)))) {
++        outw(index, VBE_DISPI_IOPORT_INDEX);
++        return -1;
++    }
++
++    if (vbe101) {
++        if (!(states & SR_DAC)) {
++            u16 current = dispi_read(VBE_DISPI_INDEX_ENABLE);
++            enable = (enable & ~VBE_DISPI_8BIT_DAC) | (current & VBE_DISPI_8BIT_DAC);
++        }
++        dispi_write(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
++        dispi_write(VBE_DISPI_INDEX_XRES, 640);
++        dispi_write(VBE_DISPI_INDEX_YRES, 480);
++        dispi_write(VBE_DISPI_INDEX_BPP, 8);
++        /* 4F04h contains controller state only. Preserve the live VRAM. */
++        dispi_write(VBE_DISPI_INDEX_ENABLE, enable | VBE_DISPI_NOCLEARMEM);
++        dispi_write(VBE_DISPI_INDEX_VIRT_WIDTH, pitch);
++        dispi_write(VBE_DISPI_INDEX_ENABLE, enable);
++    }
++
++    int prefix = stdvga_save_restore(cmd & ~SR_DAC, seg, data);
++    if (states & SR_DAC) {
++        int has_packed_dac = width && dispi_read(FDISBULL_PALETTE_INDEX) == FDISBULL_PALETTE_ID;
++        /* Preserve raw palette bytes even when the saved width was six:
++         * a preceding DAC8 session may have left upper bits in the RAMDAC. */
++        if (has_packed_dac)
++            bochsvga_set_dacformat(NULL, 8);
++        stdvga_save_restore(SR_DAC | SR_RESTORE, seg, data + prefix);
++        if (has_packed_dac)
++            bochsvga_set_dacformat(NULL, width);
++    }
++    if (vbe101) {
++        if (bochsvga_fdisbull_xy_available())
++            bochsvga_fdisbull_set_xy(x, y);
++        else {
++            dispi_write(VBE_DISPI_INDEX_X_OFFSET, x);
++            dispi_write(VBE_DISPI_INDEX_Y_OFFSET, y);
++        }
++        dispi_write(VBE_DISPI_INDEX_BANK, bank);
++    } else if (extsize) {
++        bochsvga_restore_state(seg, (u16 *)ext);
++    }
++    outw(index, VBE_DISPI_IOPORT_INDEX);
++    return size;
+ }
+
+
+--- a/vgasrc/bochsvga.h
++++ b/vgasrc/bochsvga.h
+@@ -60,6 +60,7 @@
+ int bochsvga_get_dacformat(struct vgamode_s *vmode_g);
+ int bochsvga_set_dacformat(struct vgamode_s *vmode_g, int val);
+ int bochsvga_save_restore(int cmd, u16 seg, void *data);
++int bochsvga_fdisbull_save_restore(int cmd, u16 seg, u16 offset);
+ int bochsvga_set_mode(struct vgamode_s *vmode_g, int flags);
+ int bochsvga_setup(void);
+
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -236,13 +236,16 @@
+     void *data = (void*)(regs->bx+0);
+     u16 states = regs->cx;
+     u8 cmd = regs->dl;
+-    if (states & ~0x0f || cmd > 2)
+-        goto fail;
+-    int ret = vgahw_save_restore(states | (cmd<<8), seg, data);
++    if (!states || states & ~0x0f || cmd > 2)
++        goto fail;
++    int statecmd = states | (cmd << 8);
++    int ret = CONFIG_VGA_BOCHS
++        ? bochsvga_fdisbull_save_restore(statecmd, seg, regs->bx)
++        : vgahw_save_restore(statecmd, seg, data);
+     if (ret < 0)
+         goto fail;
+     if (cmd == 0)
+-        regs->bx = ret / 64;
++        regs->bx = DIV_ROUND_UP(ret, 64);
+     regs->ax = 0x004f;
+     return;
+ fail:
