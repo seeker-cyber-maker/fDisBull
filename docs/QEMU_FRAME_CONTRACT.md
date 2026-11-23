@@ -235,6 +235,14 @@ raster after the transfer. A stride or DAC-width change invalidates the
 current stream. Palette data writes leave both the sampled prefix and
 the previous complete frame intact.
 
+Select `vga-640x480-pmi` with `fdisbull-vgabios-vbe101-pmi.bin` to expose
+the VBE 2.0 4F0Ah table for protected-mode bank selection, display
+start and palette writes in banked 101h. The guest can discover the
+table before setting the mode and execute its 32-bit near calls from
+copied RAM. Format 13 restores the guest CPU and stack inside a
+pending protected-mode wait. The selected ROM and firmware inventory
+remain part of the checkpoint's machine identity.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
 the selected `video_source_profile`. The script must match the owner's launch

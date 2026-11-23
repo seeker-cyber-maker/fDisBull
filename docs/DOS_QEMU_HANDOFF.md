@@ -1,5 +1,62 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## VBE 101h protected-mode interface and restore (2026-11-23)
+
+The opt-in `vga-640x480-pmi` profile adds a SeaVGABIOS VBE 2.0
+4F0Ah table to the existing banked 101h palette device. Guests can
+discover it before setting mode 101h and copy the three 32-bit near-call
+routines into RAM. They select Window A's bank, program a display start
+in DWORD units, and write primary BGRX palette entries. The table
+declares every I/O port the caller needs.
+[Native firmware and implementation scope](../native/qemu-video-vbe101-pmi/README.md)
+
+The QEMU binary and format 13 device state are shared with the palette
+profile. Guest RAM and CPU state already cover the copied code, caller
+stack and in-flight routine. Restore is bound to the original launch
+profile and exact firmware identity.
+
+The paired COM ran in 32-bit protected mode on QEMU and DOSBox-X.
+Both BIOSes exposed the table at startup, returned success for BL=00h
+through BL=03h and rejected BL=04h. Both engines matched Window A bank
+contents, low-to-high retrace transitions, palette readback, display
+start at byte 41476 and back to zero, and every pixel in five 640 × 480
+rasters. The COM returned to real mode and read back the final zero
+viewport through INT 10h.
+
+QEMU hot and fresh-process restore reproduced the pending palette wait
+after 146 rows and the pending display-start wait after 96 rows. At the
+display cut, the programmed origin was zero and the active origin
+remained 41476 until the saved latch deadline. The replay checks
+compared the copied routine, CPU context, caller stack, VGA state and
+raster continuation. All six QEMU processes in the paired run exited
+cleanly.
+[VESA VBE 2.0 near-call convention](https://www.sra.uni-hannover.de/Lehre/SS21/V_BSB/doc/vbe3.pdf#page=64)
+
+The coordinate-click spatial-policy regression now checks that the
+implemented method still requires explicit INT 33h delivery and retained
+raster identity. The test retains the frozen input and history checks.
+The broader host run passed 5604 cases with 681 skips and no failures.
+
+All 28 local native preservation cases passed, including Mode 13h BIOS
+reapply, timed VGA scanout, VBE bank and viewport changes, DAC and palette
+replay, and keyboard repeat. The Doom format 6 checkpoint preserved the
+same protected CPU continuation, 200-row raster, page origin and
+SB16/OPL frontier in forward, hot and fresh-process runs. The private
+wheel reported DOSBox-X as the default. CI was skipped.
+
+| Local evidence | SHA-256 |
+| --- | --- |
+| Authored paired COM | `7fd9ba69264c9ca2282df59e8cb73800e066ee1286e257198f4544ea3322bb05` |
+| Reused QEMU producer | `ac10d27e18a470ee92f4881dbe586e67356d52d27c4ea5e8b08c9e5e56b94136` |
+| PMI SeaVGABIOS ROM | `f2d9901683a17463ba823f942c55bf92cc3dd107dde543f806e3ddafe3b738eb` |
+| DOSBox-X protected-mode reference | `3e9e19414375d5bbd63dc061245c4adf83aaebd15a7abbdbb23cd6f616b55d4d` |
+| QEMU protected-mode replay | `0bcf77dbb001857575746c14545a6ce6de45eb3bfff9b950b1b1881977e584d0` |
+| Paired native suite | `70642b7e450466b1cfa38cbf98b266e2aa41f2e0c7185d0909f9f25164a1ae9f` |
+| Host suite | `2d7e88bce372df73b490154f024a366b93d0ef2d1c8c620915470b6daa6cceee` |
+| Local native VGA and keyboard suite | `2c7822101b52566704c31b0bde4da2ca586fbb05f51baf3879cf1b1af603d212` |
+| Doom original run and hot restore | `f350844e7121f696b809e510105374aa99d9d6c06a52534ca1c313ff191c43cf` |
+| Doom fresh-process restore | `46395c01ab7214aedb4dc3340e96e806d625873e5cf2b8131cbdbbaea07a7579` |
+
 ## Banked VBE 101h stride, DAC width and timed palette restore (2026-11-23)
 
 The opt-in `vga-640x480-palette` profile extends combined X/Y panning with

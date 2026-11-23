@@ -13,7 +13,7 @@ import time
 
 from .dosbox_rpc import DebuggerError
 from .qemu_clock import clock_timer_stop_is_ordinary, validate_clock_budget
-from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_PALETTE_PROFILE, VGA480_SYNC_PROFILE,
+from .qemu_video_checkpoint import (VGA480_FLIP_PROFILE, VGA480_SYNC_PROFILE, VBE101_PALETTE_PROFILES,
                                     VBE101_PAN_PROFILES,
                                     valid_vbe101_origin, valid_vbe101_pitch, valid_vbe101_viewport)
 
@@ -245,7 +245,7 @@ def validate_retrace_snapshot(value, *, epoch, virtual_ns, previous=None, source
     unsupported = _unsupported(raw, timing)
     vbe101_timing = value.get(VBE101_TIMING_FIELD)
     if VBE101_TIMING_FIELD in value:
-        palette = source_profile == VGA480_PALETTE_PROFILE
+        palette = source_profile in VBE101_PALETTE_PROFILES
         enable_values = (1, 0x21, 0x81, 0xa1) if palette else (1, 0x81)
         if (not value['phase-supported'] or unsupported != 'vbe-enabled'
                 or raw['vbe-enable'] not in enable_values or type(vbe101_timing) is not dict

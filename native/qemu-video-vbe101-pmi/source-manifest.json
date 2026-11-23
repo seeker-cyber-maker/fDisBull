@@ -1,0 +1,61 @@
+{
+  "format": "fdisbull-seabios-native-patch-1",
+  "composition": "Apply after the SeaVGABIOS delta in native/qemu-video-vbe101-palette.",
+  "base_host_commit": "3cad29209b593c43b375bd7f8f232daa32d0931e",
+  "scope": "VBE 2.0 startup table discovery, banked 101h near calls, and format 13 machine restore.",
+  "qemu": {
+    "version": "10.0.13",
+    "source_manifest": "../qemu-video-vbe101-palette/source-manifest.json",
+    "tested_producer_sha256": "ac10d27e18a470ee92f4881dbe586e67356d52d27c4ea5e8b08c9e5e56b94136",
+    "tested_checkpoint_tool_sha256": "c9877430d943d8046314111739f24bba28b2f2a70861110b6bd2287aca8ce09f"
+  },
+  "firmware": {
+    "version": "rel-1.16.3-0-ga6ed6b70",
+    "source_path": "roms/seabios",
+    "base_rom_sha256": "430d72e7c60cf79f4b5ec5ffcb3efbb97fb14ad55a2e773212fe1027a1fabf10",
+    "config_sha256": "ca7367ae57665fa01e0ebb741ba5823d646f4b65a9a87657ea163cc9f362a8a8",
+    "rom_name": "fdisbull-vgabios-vbe101-pmi.bin",
+    "tested_rom_bytes": 40448,
+    "tested_rom_sha256": "f2d9901683a17463ba823f942c55bf92cc3dd107dde543f806e3ddafe3b738eb",
+    "tested_compiler": "i686-elf GCC 16.2.0",
+    "tested_binutils": "2.47.20260726",
+    "build_extraversion": "-fdisbull-vbe101-pmi",
+    "patch": "seabios-1.16.3-fdisbull-vbe101-pmi.patch",
+    "patch_bytes": 7041,
+    "patch_sha256": "a982f606882899ad868fa6bba89c56e116ea5eac185a5f46536a42f42a240c1b",
+    "files": [
+      {
+        "path": "vgasrc/bochsvga.c",
+        "base_bytes": 12913,
+        "base_sha256": "5b12a1158907d3e5382badde7d141085cf63db05f5feef9d649ea6d390b38092",
+        "patched_bytes": 12881,
+        "patched_sha256": "dd940177946b523e0a53fb267aaddfd7ca5c07edfd5b1450a0817b5ec5692a7a",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/bochsvga.h",
+        "base_bytes": 2506,
+        "base_sha256": "ae41f07ed762614da4f58b65af370b4875097623090bc6aa0a406527f6e46766",
+        "patched_bytes": 2601,
+        "patched_sha256": "8d26f81e84a43a35d6d4a2da733c346a3957ce34bd84ca662cc4cb738565c564",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/vbe.c",
+        "base_bytes": 16308,
+        "base_sha256": "1bb52908a88bd604ebbbbff56bfcad32eb366c0a6ff9fc2b3f61cc5349f9b2eb",
+        "patched_bytes": 17271,
+        "patched_sha256": "a3d6e7f4bf4cde08f043a31686dd2662096092c1e91caf70e2b74bb70f83aa48",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/vgaentry.S",
+        "base_bytes": 4474,
+        "base_sha256": "6712851369acbd36f5a1510048b662dcd8e1f7686632c67da5ac1d45e3b3a59b",
+        "patched_bytes": 8907,
+        "patched_sha256": "39e3aa63e7055be63c4364c16c21a286d36a7da8c323ec3342e0f9c999b36953",
+        "mode": "100644"
+      }
+    ]
+  }
+}

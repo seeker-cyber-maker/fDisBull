@@ -79,8 +79,12 @@ def test_policy_does_not_grant_missing_consumers_or_touch_frozen_source_input(ow
     s.vm.lock = SimpleNamespace(acquire=forbidden, release=forbidden)
     s.vm.operation_guard = s.vm.history_operation_guard = forbidden
     assert s.spatial_policy('assisted')['assisted_travel'] is True
-    assert all(not hasattr(s, operation) for operation in (
-        'assisted_travel', 'spatial_action', 'click'))
+    assert all(not hasattr(s, operation) for operation in ('assisted_travel', 'spatial_action'))
+    assert callable(s.click)
+    with pytest.raises(ValueError, match='explicit delivery=observed-int33'):
+        s.click(10, 15)
+    with pytest.raises(ValueError, match='retained positive mode_id'):
+        s.click(10, 15, delivery='observed-int33')
     # These methods have implementations, but host policy cannot grant the
     # native profile/producer capabilities absent from this stopped fixture.
     assert callable(s.frame_probe) and callable(s.scene_act)

@@ -1,0 +1,245 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -151,7 +151,6 @@
+
+ #define FDISBULL_XY_INDEX 0xf2
+ #define FDISBULL_XY_ID 0xfb02
+-#define FDISBULL_XY_PORT 0x01d4
+
+ int
+ bochsvga_fdisbull_xy_available(void)
+--- a/vgasrc/bochsvga.h
++++ b/vgasrc/bochsvga.h
+@@ -1,7 +1,5 @@
+ #ifndef __BOCHSVGA_H
+ #define __BOCHSVGA_H
+-
+-#include "types.h" // u8
+
+ #define VBE_DISPI_BANK_ADDRESS           0xA0000
+ #define VBE_DISPI_BANK_SIZE_KB           64
+@@ -40,6 +38,11 @@
+
+ #define VBE_DISPI_LFB_PHYSICAL_ADDRESS   0xE0000000
+
++#define FDISBULL_XY_PORT                 0x01d4
++
++#ifndef __ASSEMBLER__
++#include "types.h" // u8
++
+ struct vgamode_s *bochsvga_find_mode(int mode);
+ void bochsvga_list_modes(u16 seg, u16 *dest, u16 *last);
+ int bochsvga_get_window(struct vgamode_s *vmode_g, int window);
+@@ -60,4 +63,5 @@
+ int bochsvga_set_mode(struct vgamode_s *vmode_g, int flags);
+ int bochsvga_setup(void);
+
++#endif // __ASSEMBLER__
+ #endif // bochsvga.h
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -468,8 +468,42 @@
+ static void
+ vbe_104f0a(struct bregs *regs)
+ {
+-    debug_stub(regs);
+-    regs->ax = 0x0100;
++    extern const u8 fdisbull_pmi_table[], fdisbull_pmi_window[];
++    extern const u8 fdisbull_pmi_start[], fdisbull_pmi_palette[];
++    extern const u8 fdisbull_pmi_end[];
++    const u8 *start, *end;
++
++    // The dedicated ROM publishes the table before mode selection.
++    // Each copied entry independently checks for active banked 101h.
++    if (!CONFIG_VGA_BOCHS)
++        goto fail;
++    switch (regs->bl) {
++    case 0x00:
++        start = fdisbull_pmi_table;
++        end = fdisbull_pmi_end;
++        break;
++    case 0x01:
++        start = fdisbull_pmi_window;
++        end = fdisbull_pmi_start;
++        break;
++    case 0x02:
++        start = fdisbull_pmi_start;
++        end = fdisbull_pmi_palette;
++        break;
++    case 0x03:
++        start = fdisbull_pmi_palette;
++        end = fdisbull_pmi_end;
++        break;
++    default:
++        goto fail;
++    }
++    regs->es = get_global_seg();
++    regs->di = (u32)start;
++    regs->cx = (u32)end - (u32)start;
++    regs->ax = 0x004f;
++    return;
++fail:
++    regs->ax = 0x014f;
+ }
+
+ static void
+--- a/vgasrc/vgaentry.S
++++ b/vgasrc/vgaentry.S
+@@ -6,6 +6,7 @@
+
+
+ #include "asm-offsets.h" // BREGS_*
++#include "bochsvga.h" // VBE_DISPI_*
+ #include "config.h" // CONFIG_*
+ #include "entryfuncs.S" // ENTRY_*
+
+@@ -162,3 +163,149 @@
+         movl PUSHBREGS_size(%eax), %esp
+         RESTOREBREGS_DSEAX
+         ljmpw *%cs:Timer_Hook_Resume
++
++#if CONFIG_VGA_BOCHS
++        // VBE 2.0 interface. Each entry can be copied and called separately.
++        // Only relative branches, the caller's stack and I/O ports are used.
++        .section .text.vbe_pmi,"ax"
++        .code32
++        .globl fdisbull_pmi_table, fdisbull_pmi_end
++        .globl fdisbull_pmi_window, fdisbull_pmi_start, fdisbull_pmi_palette
++
++        .equ PMI_DAC_INDEX, 0x03c8
++        .equ PMI_DAC_DATA, 0x03c9
++        .equ PMI_STATUS, 0x03da
++
++fdisbull_pmi_table:
++        .word fdisbull_pmi_window - fdisbull_pmi_table
++        .word fdisbull_pmi_start - fdisbull_pmi_table
++        .word fdisbull_pmi_palette - fdisbull_pmi_table
++        .word .Lpmi_ports - fdisbull_pmi_table
++.Lpmi_ports:
++        // Include all permission bits touched by word and dword I/O.
++        .word VBE_DISPI_IOPORT_INDEX, VBE_DISPI_IOPORT_DATA
++        .word VBE_DISPI_IOPORT_DATA + 1
++        .word FDISBULL_XY_PORT, FDISBULL_XY_PORT + 1
++        .word FDISBULL_XY_PORT + 2, FDISBULL_XY_PORT + 3
++        .word PMI_DAC_INDEX, PMI_DAC_DATA, PMI_STATUS
++        .word 0xffff, 0xffff       // End of ports and MMIO descriptors.
++
++        .macro PMI_REQUIRE_BANKED_101 done
++        movw $FDISBULL_XY_PORT, %dx
++        inl %dx, %eax             // Programmed X/Y, or all ones outside 101h.
++        cmpl $-1, %eax
++        je \done
++        .endm
++
++        .macro PMI_WAIT_NEXT_RETRACE
++        movw $PMI_STATUS, %dx
++1:      inb %dx, %al
++        testb $8, %al
++        jnz 1b
++2:      inb %dx, %al
++        testb $8, %al
++        jz 2b
++        .endm
++
++fdisbull_pmi_window:
++        // Window A only. DX is a bank number in units of 64 KiB.
++        testw %bx, %bx
++        jnz .Lpmi_window_return
++        pushal
++        movw %dx, %cx
++        PMI_REQUIRE_BANKED_101 .Lpmi_window_done
++        movw $VBE_DISPI_IOPORT_INDEX, %dx
++        movw $VBE_DISPI_INDEX_VIDEO_MEMORY_64K, %ax
++        outw %ax, %dx
++        movw $VBE_DISPI_IOPORT_DATA, %dx
++        inw %dx, %ax
++        cmpw %ax, %cx
++        jae .Lpmi_window_done
++        movw $VBE_DISPI_IOPORT_INDEX, %dx
++        movw $VBE_DISPI_INDEX_BANK, %ax
++        outw %ax, %dx
++        movw $VBE_DISPI_IOPORT_DATA, %dx
++        movw %cx, %ax
++        outw %ax, %dx
++.Lpmi_window_done:
++        popal
++.Lpmi_window_return:
++        ret
++
++fdisbull_pmi_start:
++        // DX:CX is a dword address for packed 8-bit pixels.
++        testw $0xff7f, %bx
++        jnz .Lpmi_start_return
++        pushal
++        movzwl %dx, %esi
++        shll $16, %esi
++        movw %cx, %si
++        cmpl $0x3fffffff, %esi
++        ja .Lpmi_start_done
++        shll $2, %esi
++        PMI_REQUIRE_BANKED_101 .Lpmi_start_done
++        andl $3, %eax
++        movl %eax, %ebp           // Preserve the programmed fine X offset.
++        movw $VBE_DISPI_IOPORT_INDEX, %dx
++        movw $VBE_DISPI_INDEX_VIRT_WIDTH, %ax
++        outw %ax, %dx
++        movw $VBE_DISPI_IOPORT_DATA, %dx
++        inw %dx, %ax
++        movzwl %ax, %ecx
++        testl %ecx, %ecx
++        jz .Lpmi_start_done
++        movl %esi, %eax
++        xorl %edx, %edx
++        divl %ecx                 // EAX = Y, EDX = X
++        cmpl $0xffff, %eax
++        ja .Lpmi_start_done
++        shll $16, %eax
++        orl %edx, %eax
++        orl %ebp, %eax
++        movw $FDISBULL_XY_PORT, %dx
++        outl %eax, %dx            // Submit both offsets in one device write.
++        testb $0x80, %bl
++        jz .Lpmi_start_done
++        PMI_WAIT_NEXT_RETRACE
++.Lpmi_start_done:
++        popal
++.Lpmi_start_return:
++        ret
++
++fdisbull_pmi_palette:
++        // Write the BGRX records at the caller's 32-bit ES:EDI pointer.
++        testb $0x7f, %bl
++        jnz .Lpmi_palette_return
++        pushal
++        movzwl %dx, %esi
++        movzwl %cx, %ecx
++        testl %ecx, %ecx
++        jz .Lpmi_palette_done
++        leal (%esi,%ecx), %eax
++        cmpl $256, %eax
++        ja .Lpmi_palette_done
++        PMI_REQUIRE_BANKED_101 .Lpmi_palette_done
++        testb $0x80, %bl
++        jz .Lpmi_palette_write
++        PMI_WAIT_NEXT_RETRACE
++.Lpmi_palette_write:
++        movw $PMI_DAC_INDEX, %dx
++        movl %esi, %eax
++        outb %al, %dx
++        movw $PMI_DAC_DATA, %dx
++.Lpmi_palette_entry:
++        movb %es:2(%edi), %al
++        outb %al, %dx
++        movb %es:1(%edi), %al
++        outb %al, %dx
++        movb %es:0(%edi), %al
++        outb %al, %dx
++        addl $4, %edi
++        decl %ecx
++        jnz .Lpmi_palette_entry
++.Lpmi_palette_done:
++        popal
++.Lpmi_palette_return:
++        ret
++fdisbull_pmi_end:
++#endif
