@@ -206,6 +206,16 @@ dw first,planar,banked,last,advance
 _PAGES = ('first', 'planar', 'banked', 'last')
 
 
+def _points(size):
+    width, height = size
+    return [[0, 0], [255, 102], [256, 102], [0, height // 2], [width - 1, height - 1]]
+
+
+def _samples(image):
+    rgb = image.convert('RGB')
+    return [dict(x=x, y=y, rgb=list(rgb.getpixel((x, y)))) for x, y in _points(rgb.size)]
+
+
 def _check_pixels(image, page):
     rgb = image.convert('RGB')
     width, height = rgb.size
@@ -227,7 +237,7 @@ def _check_pixels(image, page):
     actual = rgb.tobytes()
     assert actual == expected, dict(page=page, size=rgb.size, expected=sha256(expected).hexdigest(),
                                     actual=sha256(actual).hexdigest())
-    return dict(size=list(rgb.size), sha256=sha256(actual).hexdigest())
+    return dict(size=list(rgb.size), sha256=sha256(actual).hexdigest(), samples=_samples(rgb))
 
 
 def _dosbox_pages(executable, tmp_path, directory, labels):
@@ -268,6 +278,10 @@ def _dosbox_pages(executable, tmp_path, directory, labels):
             assert info['frame_id'] == frame['frame_id'] and info['mode_id'] == frame['mode_id']
             with Image.open(BytesIO(payload)) as image:
                 result[page] = _check_pixels(image, page)
+            identity = {key: frame[key] for key in ('frame_id', 'mode_id')}
+            probe = call('video.probe', points=_points(result[page]['size']))
+            assert all(probe[key] == value for key, value in identity.items())
+            assert probe['samples'] == result[page]['samples']
             if page != 'last':
                 call('memory.write', address=address(labels[-1]),
                      expected_sha256=sha256(bytes([index])).hexdigest(),
@@ -304,12 +318,36 @@ def test_paired_text_planar_and_vbe_rendering_survive_mode_changes(
                 info = process_record(debug)
                 positions = tuple(com_address(info, label) for label in labels)
 
-                def capture(page):
-                    artifact = debug.screenshot(page + '.png')
+                def capture(page, artifact):
                     path = tmp_path / (page + '.png')
                     project.debug_export(artifact['artifact'], path)
                     with Image.open(path) as image:
                         return _check_pixels(image, page.removeprefix('restored-'))
+
+                previous = None
+
+                def retained(page, expected):
+                    nonlocal previous
+                    debug.display_start(period_ns=1_000_000)
+                    assert debug.clock_advance(2_000_000, timeout_ms=5000)['clock_budget']['deadline_reached']
+                    update = debug.display_stop()
+                    assert update['completed_renderer_update'] and update['guest_frame_id'] is None
+                    identity = {key: update[key] for key in ('window', 'update_id')}
+                    if previous is not None:
+                        with pytest.raises(ValueError, match='different retained publication'):
+                            debug.display_probe([], **previous)
+                    stopped = debug.clock_observe()['virtual_ns']
+                    probe = debug.display_probe(_points(expected['size']), **identity)
+                    assert all(probe[key] == value for key, value in identity.items())
+                    assert probe['pixels'] == expected['samples'] and probe['guest_frame_id'] is None
+                    export_name = page + '-retained.png'
+                    export = debug.capture_display(export_name)
+                    path = tmp_path / export_name
+                    project.debug_export(export['artifact'], path)
+                    with Image.open(path) as image:
+                        assert _check_pixels(image, page.removeprefix('restored-')) == expected
+                    assert debug.clock_observe()['virtual_ns'] == stopped
+                    previous = identity
 
                 checkpoints = {}
                 for index, page in enumerate(_PAGES):
@@ -318,7 +356,8 @@ def test_paired_text_planar_and_vbe_rendering_survive_mode_changes(
                         debug.video_frame_start()
                     assert refused.value.result['verified_refusal']
                     assert debug.vm.process is process and process.poll() is None
-                    qemu[page] = capture(page)
+                    qemu[page] = capture(page, debug.screenshot(page + '.png'))
+                    retained(page, qemu[page])
                     if page in ('planar', 'banked'):
                         checkpoints[page] = debug.save_state(page)['artifact']
                     if page != 'last':
@@ -327,7 +366,9 @@ def test_paired_text_planar_and_vbe_rendering_survive_mode_changes(
                     debug.load_state(artifact, timeout_ms=60000)
                     assert debug.vm.process is not process and process.poll() == 0
                     process = debug.vm.process
-                    assert capture('restored-' + page) == qemu[page]
+                    restored = 'restored-' + page
+                    assert capture(restored, debug.screenshot(restored + '.png')) == qemu[page]
+                    retained(restored, qemu[page])
             assert process.poll() == 0
         assert qemu == results['dosbox']
     finally:
