@@ -1,5 +1,50 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Overdue keyboard-repeat checkpoint stability (2026-11-23)
+
+A stopped checkpoint holds the key and its exact virtual repeat deadline.
+On the previous QEMU build, completing a save could rearm an overdue
+timer while the VM was stopped. A dispatch then moved the saved deadline
+by 128 ns even though the instruction count stayed fixed.
+
+The native fix leaves an overdue timer detached across save and restore.
+A stopped or timer-masked debugger callback preserves its deadline.
+Normal resume rearms the original deadline with the existing FIFO and
+IRQ delivery rules and the original cadence. The existing checkpoint
+formats carry the same state. The synchronous-stop rule still wins
+on a live stop boundary.
+[Native repeat patch](../native/qemu-frame-key-repeat-stability/README.md)
+
+The expanded test also reproduced a second symptom on the previous
+binary. After an overdue save, a timer-masked debugger step advanced
+virtual time by 128 ns and placed a repeat byte in the i8042 FIFO.
+The deadline advanced by a full 62.5 ms repeat interval.
+
+The corrected binary held the same deadline and empty FIFO through
+three overdue masked step-and-save cycles. Normal continuation delivered
+exactly one repeat via the guest's IRQ1 handler, which read `0x1e` from
+port `60h`. The next deadline matched the original expiry plus one
+interval. Forward continuation, hot restore and fresh-process restore
+matched the deadline, controller state and guest scan journal. The
+integrated test also performed a masked step from the saved frontier
+in each of the three replay paths before resuming.
+
+Doom format 6 preserved its protected CPU continuation, page latch,
+200 timed rows and SB16/OPL frontier across forward, hot and cold replay.
+The combined native suite passed all 22 checks, including VBE 101h
+page flips and restore, format 8 timed scanout, format 9 guest retrace,
+live banking and Mode 13h BIOS reapply.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| QEMU producer | `b9642d86d6b2565cf479422ac6d108ad29f7d97dbae859cb9910edf4f1b044a6` |
+| Prior build deadline drift on save | `0aefe7cc3fc5a2b35fa8ac518e02a69c39fbe5f5b3a85e00869fce091b61a56d` |
+| Prior build FIFO change on timer-masked step | `0cc6ac23d90152757825a89e647a1f92349a253d5b43e14ad42963d34827e4dc` |
+| Corrected QEMU deadline, FIFO and IRQ1 restore | `ecf8f991ddd4d18f057f7101b54180a65ed1562b24a91f3dd3e2e05e436b63dd` |
+| Combined local native suite | `a416951ad9750cc193d14aecffcf8418ac1e4cb166d34e8a83a56f5d6f2f53b8` |
+| Doom original run and hot restore | `efed96ce974206346903d941f6d56f8102060129bb138f0cf199384bc276e934` |
+| Doom fresh-process restore | `80fac24c6039ba656709cc7847ead8cf6b644e94cc805c790950755423678d41` |
+
 ## Retrace-latched VBE 101h page flips and format 10 restore (2026-11-23)
 
 The opt-in `vga-640x480-flip` profile adds a banked display-start latch

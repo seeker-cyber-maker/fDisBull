@@ -1359,7 +1359,8 @@
         "src/fdisbull/qemu_input_schedule.py",
         "src/fdisbull/qemu_keyboard_press.py",
         "src/fdisbull/qemu_keyboard_type.py",
-        "src/fdisbull/qemu_wait.py"
+        "src/fdisbull/qemu_wait.py",
+        "native/qemu-frame-key-repeat-stability/qemu-10.0.13-fdisbull-frame-key-repeat-stability.patch"
       ],
       "depends_on": [
         "core-control"
