@@ -12,6 +12,15 @@ even-line and subsequent odd-line rasters after a text-to-graphics BIOS edge.
 The measured line periods were 31,700 ns in QEMU and approximately 31,778 ns
 in DOSBox-X.
 
+An equivalent same-mode BIOS reapply exposes a remaining timing difference.
+The first complete DOSBox-X raster after the BIOS return used intervals of
+31,777–31,778 ns between drawn rows. Its next raster returned to full
+spacing in phase 0, then subsequent rasters remained in phase 1. QEMU
+used 63,400 ns between drawn rows from its first post-setup raster.
+The paired diagnostic records both schedules and the unchanged 17-byte
+guest register census. Reproducing the transient requires a row schedule
+that can change during a raster and survive checkpoint restore.
+
 Original Doom E1M5 stock `-timedemo` reached the predeclared demo ordinal 64
 and the same camera, game and render state on both engines. The full 64,000
 original palette indices and all 192,000 timed RGB bytes matched. QEMU

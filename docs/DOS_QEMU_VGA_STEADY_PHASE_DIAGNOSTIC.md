@@ -354,6 +354,7 @@ and preserving a schedule with changing row intervals.
 - Qualify a transitional schedule if equivalent mode reapply must reproduce
   the first mixed-cadence DOSBox-X raster. Qualify additional programming
   sequences and modes separately.
-- Exercise both engines through the same protected game's palette/origin
-  changes and replay its dynamic raster after a native checkpoint.
-  [Current QEMU frame contract](QEMU_FRAME_CONTRACT.md)
+- Pair more protected-game palette and origin transitions. The bounded
+  Doom timedemo at demo ordinal 64 already matched all retained RGB bytes.
+  Ordinary playback still needs a common render state, and the wider modes
+  still need explicit timing qualification. [VGA handoff](DOS_QEMU_HANDOFF.md)
