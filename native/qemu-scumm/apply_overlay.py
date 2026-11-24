@@ -17,28 +17,7 @@ from pathlib import Path
 import tempfile
 
 
-REGISTRATIONS = {
-    "hw/Kconfig": (
-        "f7940f36d1aa7b15a554f6378be03a85ddc9a40e2608b107c9d7c5dd2ccbe3d0",
-        "source avr/Kconfig\n", "source avr/Kconfig\nsource scumm/Kconfig\n"),
-    "hw/meson.build": (
-        "c3bc3f1e22ff16eea62af2e2fe8642d1d683e9ec8307c5f05ba5d66171678d5b",
-        "subdir('avr')\n", "subdir('avr')\nsubdir('scumm')\n"),
-    "target/Kconfig": (
-        "ac823c76c3267069432d63943e82cb067fb9ead2451785b798558457327e6544",
-        "source avr/Kconfig\n", "source avr/Kconfig\nsource scumm/Kconfig\n"),
-    "target/meson.build": (
-        "43d9537ac1fc911a9c76cd03ddc59753795e2acb3e76de4a9f0ba683c49f345b",
-        "subdir('avr')\n", "subdir('avr')\nsubdir('scumm')\n"),
-    "include/system/arch_init.h": (
-        "2bed554869e91d03a85060eb3e006592b7cf3488c029edab55c6a3f23201e20f",
-        "    QEMU_ARCH_LOONGARCH = (1 << 23),\n",
-        "    QEMU_ARCH_LOONGARCH = (1 << 23),\n    QEMU_ARCH_SCUMM = (1 << 26),\n"),
-    "qapi/machine.json": (
-        "78f0ecaa75dbb8c69c93cefe915e735fddb49de315bd267d5fd92f5678f961f6",
-        "  'data' : [ 'aarch64', 'alpha', 'arm', 'avr', 'hppa', 'i386',\n",
-        "  'data' : [ 'aarch64', 'scumm', 'alpha', 'arm', 'avr', 'hppa', 'i386',\n"),
-}
+from registration_check import REGISTRATIONS, plan_registration
 
 
 def sha(data: bytes) -> str:
@@ -74,25 +53,12 @@ def main() -> int:
     previous_files = previous.get("files", {})
     planned: dict[str, bytes] = {}
 
-    for relative, (expected, old, new) in REGISTRATIONS.items():
+    for relative in REGISTRATIONS:
         path = source / relative
         if path.is_symlink() or path.resolve() != path:
             raise ValueError(f"registration path is not a regular source path: {relative}")
         current = path.read_bytes()
-        old_b, new_b = old.encode(), new.encode()
-        if sha(current) == expected:
-            base = current
-        else:
-            variants = [new_b]
-            bases = [current.replace(variant, old_b, 1) for variant in variants
-                     if current.count(variant) == 1]
-            bases = [candidate for candidate in bases if sha(candidate) == expected]
-            if len(bases) != 1:
-                raise ValueError(f"unrecognized modified registration: {relative}")
-            base = bases[0]
-        if base.count(old_b) != 1:
-            raise ValueError(f"ambiguous registration anchor: {relative}")
-        planned[relative] = base.replace(old_b, new_b, 1)
+        planned[relative] = plan_registration(relative, current)
 
     for item in sorted(overlay.rglob("*")):
         if not item.is_file():
