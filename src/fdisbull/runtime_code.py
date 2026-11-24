@@ -62,9 +62,15 @@ class RuntimeCodeMixin:
             raise ValueError('Runtime code snapshot hash mismatch')
         try:
             observation = json.loads(data)
-            proof = validate_qemu_le_capture(self, observation, json.loads(row['run_metadata']),
-                                             run=row['run'], version=row['version'])
-            if _capture_sequence(self, dict(row, size=len(data))) <= proof['source_receipt_sequence']:
+            if observation.get('qemu_paged_le_source_admission'):
+                from .qemu_paged_le_capture import validate
+                proof = validate(self, observation, json.loads(row['run_metadata']), run=row['run'], version=row['version'])
+            else:
+                proof = validate_qemu_le_capture(self, observation, json.loads(row['run_metadata']),
+                                                 run=row['run'], version=row['version'])
+            capture_sequence = _capture_sequence(self, dict(row, size=len(data)))
+            if ('source_receipt_sequence' in proof and
+                    capture_sequence <= proof['source_receipt_sequence']):
                 raise ValueError('LE capture predates its source binding')
             image, recipe, location, raw = (proof[k] for k in ('image', 'recipe', 'source_location', 'raw'))
             obj = next(o for o in image.metadata['le']['objects'] if o['index'] == location['object_index'])
@@ -111,7 +117,8 @@ class RuntimeCodeMixin:
             selector_offset = proof['selector_offset']
             runtime_instruction = Decoder(32, raw[:size], ip=selector_offset).decode()
             cpu = proof['cpu']
-            return dict(artifact=artifact, artifact_sha256=row['sha256'], run=row['run'],
+            return dict(**({'address_translation': proof['address_translation']} if 'address_translation' in proof else {}),
+                        artifact=artifact, artifact_sha256=row['sha256'], run=row['run'],
                         source_version=row['version'], source_location=location,
                         selector=cpu, runtime_address=observation['runtime_address'],
                         instruction_selector_offset=hex(selector_offset),

@@ -597,6 +597,12 @@
       "execution": "local-original-doom-before-and-after-cold-restore",
       "scope": "Offline QEMU instruction decode and complete internal offset32 fixup compared with the original LE record and independent DOSBox-X selector, segment translation and loaded operand."
     },
+    "protected-paged-le-code-paired": {
+      "environment_profile": "paired-code-layers",
+      "argv": ["python", "-m", "pytest", "-q", "--require-native", "tests/test_qemu_le_translation_paired_native.py"],
+      "execution": "local-authored-before-and-after-cold-restore",
+      "scope": "Requires NASM and a plain FreeDOS boot image. Compares paged GDT, unpaged LDT and paged LDT source and physical backing on an instruction and offset32 operand spanning two pages."
+    },
     "layers-legacy": {
       "environment_profile": "dosbox",
       "argv": [
@@ -1601,6 +1607,7 @@
         "layers-legacy",
         "real-mode-code-paired",
         "protected-doom-code-paired",
+        "protected-paged-le-code-paired",
         "protected-source-native"
       ],
       "remaining_work": [

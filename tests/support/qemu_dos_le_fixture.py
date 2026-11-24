@@ -21,6 +21,12 @@ OUTSIDE_BASE = 0x140000
 COUNTER_OFFSET = 128
 BUFFER_OFFSET = 0x1000
 
+# The paged variants map the same guest linear code onto noncontiguous RAM.
+PAGED_CODE_PHYSICAL = (0x200000, 0x205000, 0x20a000)
+PAGED_DATA_PHYSICAL = 0x210000
+PAGED_ENTRY_OFFSET = 4094
+PAGED_LDT_CODE_SELECTOR = 0x0c  # LDT index 1, ring 0; GDT CS is 0x08.
+
 
 def build_fixture(directory, nasm):
     """Write authored source/listings and return the actual executable layout."""
@@ -165,3 +171,249 @@ protected_jump:
         code_file_offset=code_file, data_file_offset=data_file,
         code_size=len(code), data_size=len(data), offset32_sites=sites,
         source_view='embedded-le', carrier='mz-bw-mz-le')
+
+
+def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True):
+    """Build a bounded MZ/BW/MZ/LE carrier with paging and an LDT CS.
+
+    The protected-mode loader optionally copies the LE logical pages to three
+    distinct physical pages, installs an identity page table with those three
+    code pages remapped, optionally loads a real LDT, then enters the code
+    through either the LDT or GDT selector. The entry instruction starts at
+    byte 4094, so its four-byte fixup crosses the logical page boundary.  This is an
+    authored carrier for native engine checks, not a general DOS extender.
+    """
+    from test_le_loader import le_file
+    from test_le_runtime_carrier import bound_le
+
+    directory = Path(directory)
+    # The first instruction starts at the last two bytes of page zero.  Its
+    # immediate is an LE offset32 fixup to the declared data object.
+    code = bytearray(b'\x90' * (3 * 4096))
+    code[PAGED_ENTRY_OFFSET:PAGED_ENTRY_OFFSET + 5] = b'\xb8\0\0\0\0'
+    # Increment through the loaded pointer, then jump back to the MOV.
+    code[PAGED_ENTRY_OFFSET + 5:PAGED_ENTRY_OFFSET + 10] = b'\xff\x00\xeb\xf7\x90'
+    # Keep the target visibly initialized, and place eight additional
+    # offset32 sites in page two for the source matcher witness.
+    data = bytearray((0x40 + i * 3) & 0xff for i in range(256))
+    data[COUNTER_OFFSET:COUNTER_OFFSET + 4] = bytes(4)
+    fixup = struct.pack('<BBhBH', 7, 0, PAGED_ENTRY_OFFSET + 1, 2, COUNTER_OFFSET)
+    # A duplicate record on page one is required for a fixup which crosses a
+    # logical-page boundary. Page two carries the independent witness sites.
+    duplicate = struct.pack('<BBhBH', 7, 0, -1, 2, COUNTER_OFFSET)
+    witness_sites = tuple(2 * 4096 + i * 8 + 1 for i in range(8))
+    for site in witness_sites:
+        code[site - 1:site + 4] = b'\xb8\0\0\0\0'
+    witness_records = b''.join(
+        struct.pack('<BBhBH', 7, 0, site - 2 * 4096, 2, i * 4)
+        for i, site in enumerate(witness_sites)
+    )
+    application = le_file(code=bytes(code), data=bytes(data),
+                          fixups=[fixup, duplicate, witness_records, b''],
+                          object_sizes=(len(code), len(data)),
+                          object_bases=(0x10000, 0x20000),
+                          entry_offset=PAGED_ENTRY_OFFSET)
+    carrier = bytearray(bound_le(application))
+    # Reserve a second outer MZ sector so the larger protected bootstrap fits
+    # without changing the inner LE byte coordinates.  The declared BW link
+    # is updated, never discovered by signature search.
+    carrier[512:512] = b'\0' * 512
+    struct.pack_into('<HH', carrier, 2, 0, 2)
+    carrier[1024:1026] = b'BW'
+    struct.pack_into('<I', carrier, 1024 + 28, 1536)
+    parsed = load_runtime_le_carrier(bytes(carrier))
+    header = parsed.metadata['le']['header_offset']
+    page_table = header + struct.unpack_from('<I', carrier, header + 0x48)[0]
+    data_pages = parsed.metadata['le']['carrier']['application_offset'] + struct.unpack_from('<I', carrier, header + 0x80)[0]
+    # Logical page order is [code0, code1, code2, data0].  File physical
+    # order is deliberately permuted [code1, code0, code2, data0].
+    physical = [bytes(carrier[data_pages + i * 4096:data_pages + (i + 1) * 4096])
+                for i in range(4)]
+    physical[0], physical[1] = physical[1], physical[0]
+    for i, page in enumerate(physical):
+        carrier[data_pages + i * 4096:data_pages + (i + 1) * 4096] = page
+    for logical, physical_index in enumerate((2, 1, 3, 4)):
+        carrier[page_table + logical * 4:page_table + logical * 4 + 4] = (
+            physical_index.to_bytes(3, 'big') + b'\0')
+    parsed = load_runtime_le_carrier(bytes(carrier))
+    mappings = parsed.metadata['file_mappings']
+    code_files = [row['file_offset'] for row in mappings
+                  if 0x10000 <= row['virtual_address'] < 0x13000]
+    data_file = next(row['file_offset'] for row in mappings
+                     if row['virtual_address'] == 0x20000)
+    # The loader is deliberately compact: it copies each declared logical
+    # page to its physical backing, creates a page table, and then switches
+    # to the LDT code selector.  The page-table identity entries cover the
+    # loader itself and are overwritten only for code/data pages.
+    runtime_code_pages = PAGED_CODE_PHYSICAL if paging else (CODE_BASE,
+                                                              CODE_BASE + 0x1000,
+                                                              CODE_BASE + 0x2000)
+    runtime_data = PAGED_DATA_PHYSICAL if paging else DATA_BASE
+    copies = '\n'.join(
+        f'    lea esi,[ebp+{BUFFER_OFFSET + file:#x}]\n'
+        f'    mov edi,{phys:#x}\n    mov ecx,0x1000\n    rep movsb'
+        for file, phys in zip(code_files, runtime_code_pages))
+    paging_setup = f'''
+    xor eax,eax
+    mov edi,0x300000
+    mov ecx,2048
+    rep stosd
+    mov dword [0x300000],0x301003
+    mov edi,0x301000
+    mov eax,3
+    mov ecx,1024
+.identity:
+    stosd
+    add eax,0x1000
+    loop .identity
+    mov dword [0x301480],{runtime_code_pages[0] | 3:#x}
+    mov dword [0x301484],{runtime_code_pages[1] | 3:#x}
+    mov dword [0x301488],{runtime_code_pages[2] | 3:#x}
+    mov dword [0x3014c0],{runtime_data | 3:#x}
+    mov eax,0x300000
+    mov cr3,eax
+    mov eax,cr0
+    or eax,0x80000000
+    mov cr0,eax
+    jmp short .paging
+.paging:
+'''
+    if not paging:
+        paging_setup = ''
+    ldt_setup = '    mov ax,0x18\n    lldt ax\n' if ldt else ''
+    jump_selector = PAGED_LDT_CODE_SELECTOR if ldt else 8
+    entry_ip = PAGED_ENTRY_OFFSET if ldt else CODE_BASE + PAGED_ENTRY_OFFSET
+    patches = '\n'.join(
+        f'    mov dword [{CODE_BASE + site:#x}],{DATA_BASE + target:#x}'
+        for site, target in [(PAGED_ENTRY_OFFSET + 1, COUNTER_OFFSET)] +
+                            [(site, i * 4) for i, site in enumerate(witness_sites)])
+    source = f'''
+bits 16
+org 0
+start:
+    push cs
+    pop ds
+    mov ax,cs
+    sub ax,0x10
+    mov es,ax
+    mov ax,[es:0x2c]
+    test ax,ax
+    jz failed
+    mov es,ax
+    xor di,di
+    xor ax,ax
+    cld
+next_environment:
+    mov cx,0x7fff
+    repne scasb
+    jne failed
+    cmp byte [es:di],0
+    jne next_environment
+    inc di
+    cmp word [es:di],1
+    jb failed
+    add di,2
+    push ds
+    push es
+    pop ds
+    mov dx,di
+    mov ax,0x3d00
+    int 0x21
+    pop ds
+    jc failed
+    mov bx,ax
+    mov dx,{BUFFER_OFFSET:#x}
+    mov cx,{len(carrier)}
+    mov ah,0x3f
+    int 0x21
+    jc failed
+    cmp ax,{len(carrier)}
+    jne failed
+    mov ah,0x3e
+    int 0x21
+    cli
+    in al,0x92
+    or al,2
+    and al,0xfe
+    out 0x92,al
+    xor ebp,ebp
+    mov bp,cs
+    shl ebp,4
+    lea eax,[ebp+ldt]
+    mov word [gdt+0x1a],ax
+    shr eax,16
+    mov byte [gdt+0x1c],al
+    mov byte [gdt+0x1f],ah
+    lea eax,[ebp+gdt]
+    mov [gdtr+2],eax
+    lea eax,[ebp+protected_entry]
+    mov [protected_jump],eax
+    lgdt [gdtr]
+    mov eax,cr0
+    or al,1
+    mov cr0,eax
+    jmp dword far [protected_jump]
+failed:
+    mov ax,0x4c7e
+    int 0x21
+bits 32
+protected_entry:
+    mov ax,0x10
+    mov ds,ax
+    mov es,ax
+    mov ss,ax
+    mov esp,0x180000
+{copies}
+    ; Copy the declared data object to a physical page, then build identity
+    ; PDE/PTEs and replace only the code/data linear mappings.
+    lea esi,[ebp+{BUFFER_OFFSET + data_file:#x}]
+    mov edi,{runtime_data:#x}
+    mov ecx,{len(data)}
+    rep movsb
+{paging_setup}{patches}
+{ldt_setup}
+    jmp dword {jump_selector}:{entry_ip:#x}
+align 8
+gdt:
+    dq 0
+    dq 0x00cf9a000000ffff
+    dq 0x00cf92000000ffff
+    dq 0x00008200000000ff
+gdt_end:
+ldt:
+    dq 0
+    dq 0x00cf9a120000ffff
+    dq 0x00cf92000000ffff
+ldt_end:
+gdtr:
+    dw gdt_end-gdt-1
+    dd 0
+protected_jump:
+    dd 0
+    dw 8
+'''
+    bootstrap = assemble(directory, 'le-paged-ldt-bootstrap', source, nasm)
+    if len(bootstrap) > 960:
+        raise ValueError(f'Paged/LDT DOS bootstrap exceeds outer MZ module: {len(bootstrap)} bytes')
+    carrier[64:1024] = bootstrap.ljust(960, b'\0')
+    struct.pack_into('<H', carrier, 0x0a, (65536 - 960) // 16)
+    struct.pack_into('<H', carrier, 0x10, 0xfffe)
+    suffix = ('paged' if paging else 'flat') + ('-ldt' if ldt else '-gdt')
+    target = directory / ('LE' + suffix.upper() + '.EXE')
+    target.write_bytes(carrier)
+    image = load_runtime_le_carrier(bytes(carrier))
+    pages = image.metadata['le']['pages']
+    return dict(path=target, sha256=hashlib.sha256(carrier).hexdigest(), size=len(carrier),
+                bootstrap_size=len(bootstrap), code_base=CODE_BASE,
+                data_base=DATA_BASE, entry_offset=PAGED_ENTRY_OFFSET, entry_ip=entry_ip,
+                entry_address=CODE_BASE + PAGED_ENTRY_OFFSET,
+                data_physical=runtime_data,
+                code_physical=runtime_code_pages,
+                ldt_code_selector=PAGED_LDT_CODE_SELECTOR if ldt else None,
+                witness_sites=witness_sites,
+                page_map=tuple((p['index'], p['physical_page']) for p in pages),
+                code_file_offsets=tuple(code_files), data_file_offset=data_file,
+                cross_page_fixup_offsets=(PAGED_ENTRY_OFFSET + 1, -1),
+                counter_address=DATA_BASE + COUNTER_OFFSET, paging=paging, ldt=ldt,
+                carrier='mz-bw-mz-le-' + suffix,
+                source_view='embedded-le')

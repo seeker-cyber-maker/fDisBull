@@ -35,7 +35,7 @@ captures remain available as observation artifacts.
 
 ### Protected-mode DOS LE instructions
 
-For a stopped 32-bit LE application inside a DOS carrier, bind the original
+For an unpaged 32-bit LE application using a GDT code selector, bind the original
 source and capture the instruction at a guest linear address. After closing
 the guest, reopen the same project and analyze the artifact offline.
 
@@ -56,13 +56,41 @@ normalized offset32 operand includes its target object and offset and the
 fixup record's position in the original carrier. The original MZ disassembly
 and version history stay intact.
 
-Capture requires a live protected-source binding, an unpaged 32-bit code
+This unpaged path requires a live protected-source binding, a 32-bit code
 segment and file-backed executable bytes in ordinary RAM. A complete internal
 offset32 fixup must point into a target object with a verified runtime
 placement. A changed relocation operand, a truncated instruction, or an
 unsupported fixup stops analysis. Each capture retains the evidence from its
 own run and checkpoint epoch. To take a new capture after a cold restore, use
 the fresh binding returned by `load_le_source_state`.
+
+### Paged code and LDT selectors
+
+For a protected 32-bit CS selected through the LDT, or code mapped through
+legacy 4 KiB paging, capture the stopped guest linear address directly with
+`capture_code(pc, space="linear", length=15, view="execute")`. The capture
+matches the stopped instruction to a unique source window in the original LE.
+The requested span may also start elsewhere in that file-backed code object
+within the current CS. The capture receipt reports
+`metadata.offline_analysis="qualified-paged-le-source-capture"` when the
+source, descriptor and physical reads agree.
+
+After reopening the project, `debug_analyze_le_code` returns
+`address_translation.selector_table`, the observed LDTR selector, and one
+`instruction_segments` entry per backing page touched by the first instruction.
+Paged entries include the addresses and raw values of the PDE and PTE.
+For an LDT selector the capture checks its cached table against the parent
+descriptor in the GDT. A complete offset32 operand can span two pages with
+different physical addresses and separate fragments in the original LE file.
+
+Use `save_machine_state` and `load_machine_state` for a machine checkpoint,
+then take a fresh capture in the restored session. Each capture establishes
+its own translation. Analysis requires one stopped CPU, A20 enabled and
+ordinary RAM with no active overlay or task-private view. PAE, large pages
+and long mode are outside this path. The result grants no continuing source
+binding for tracing or execution control.
+
+### Promoted runtime versions
 
 The child is a mapped-byte interpretation, not a reconstructed executable.
 It retains the original container in its parent and has no replacement disk

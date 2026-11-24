@@ -1,5 +1,23 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Protected LE captures with paging and LDT selectors (2026-11-24)
+
+A local authored LE carrier exercised paged GDT, unpaged LDT and paged LDT
+code on both QEMU and DOSBox-X. Each engine stopped at the five-byte MOV
+at LE object 1 offset 4094, saved a native checkpoint, and restored it in a
+fresh host process. Both engines loaded the relocated pointer `0x130080`
+and incremented its pointee on the next instruction. QEMU's offline analysis
+recovered the preferred pointer `0x20080` from the original LE.
+
+The LDT cases used selector `0x000c`, CS base `0x120000` and EIP `0x0ffe`.
+With paging enabled, the first two instruction bytes came from physical
+`0x200ffe` and the last three from `0x205000`. The DOSBox-X reference walked
+its own tables and compared physical, linear and segmented reads. The live
+QEMU capture rechecked its backing bytes, and the offline query repeated
+the walk from retained evidence. Whole-game use of paged code, PAE, large
+pages and persistent source bindings remain open. DOSBox-X is the default.
+[Capture workflow](RUNTIME_CODE.md#paged-code-and-ldt-selectors)
+
 ## Offline protected-mode Doom LE instruction analysis (2026-11-24)
 
 The public QEMU-DOS debugger can reopen a private capture and decode an

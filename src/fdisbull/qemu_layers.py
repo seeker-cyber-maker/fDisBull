@@ -409,6 +409,19 @@ class QemuLayerSessionMixin:
                     backing=[dict(physical_address=hex(a), length=n) for a, n in spans],
                     evidence='stopped native backing bytes and guarded instruction overlay')
 
+    def _needs_translated_le_capture(self):
+        from .qemu_dos_source_admission import _integer
+        if not getattr(self, '_process', None):
+            return False
+        registers = self.registers()
+        state = registers.get('address_state', {})
+        if registers.get('cpu_mode') != 'protected':
+            return False
+        try:
+            return state.get('paging') is True or bool(_integer(registers.get('registers', {}).get('cs')) & 4)
+        except ValueError:
+            return False
+
     @_locked
     def capture_code(self, address, *, cs=None, length=64, view='execute', space=None, name='code-view.json'):
         result = self.code(address, cs=cs, length=length, view=view, space=space)
@@ -420,6 +433,12 @@ class QemuLayerSessionMixin:
             if qualified is not None:
                 result = qualified
                 metadata['static_promotion'] = 'qualified-source-capture'
+        elif result['space'] == 'linear' and self._needs_translated_le_capture():
+            from .qemu_paged_le_capture import qualify
+            qualified = qualify(self, result)
+            if qualified is not None:
+                result = qualified
+                metadata['offline_analysis'] = 'qualified-paged-le-source-capture'
         elif result['space'] == 'linear' and getattr(self, '_le_source', None) is not None:
             from .qemu_runtime_capture import qualify_qemu_le_capture
             qualified = qualify_qemu_le_capture(self, result)
