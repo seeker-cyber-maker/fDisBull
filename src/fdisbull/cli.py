@@ -68,7 +68,8 @@ METHODS = {
     "debug-spectator": "Read or enable the owned watch-only Windows dot-mode viewer; run,[enabled]",
     "debug-spectator-frame": "Capture one native paused Windows frame for the watch-only viewer; run",
     "debug-agi-scene-observe": "Read coherent stopped AGI actor state and native observation journal; run,[timeout_ms]",
-    "debug-agi-reply": "Reply to a pending resource-backed AGI host request; run,ticket,accepted,[text,number,snapshot_hex,timeout_ms] (requires agi_host_replies)",
+    "debug-agi-reply": "Reply to a pending resource-backed AGI host request; run,ticket,accepted,[text,number,snapshot_hex,guest_save_artifact,timeout_ms] (requires agi_host_replies)",
+    "debug-agi-capture-guest-save": "Capture a pending AGI guest save into a private project artifact without answering; run,ticket,[name,timeout_ms] (requires agi_guest_saves)",
     "debug-engine-state": "Read paused engine VM state with its own address context; run",
     "debug-write-engine-state": "Apply a checked engine state edit; run,kind,index,value,[expected,width,signed,endian]",
     "debug-read-variable": "Read a typed engine variable at a byte offset; run,offset,[width,signed,endian]",
@@ -1571,6 +1572,9 @@ def respond(request, default_project=None, debugger=None):
         agi_reply_error = (isinstance(request, dict) and request.get('method') == 'debug-agi-reply'
                            and isinstance(observed, dict)
                            and observed.get('format') == 'fdisbull-qemu-agi-host-reply-error-1')
+        agi_guest_save_error = (isinstance(request, dict) and request.get('method') == 'debug-agi-capture-guest-save'
+                                and isinstance(observed, dict)
+                                and observed.get('format') == 'fdisbull-qemu-agi-guest-save-error-1')
         agi_checkpoint_error = (isinstance(request, dict) and request.get('method') in
                                 ('debug-save-state', 'debug-load-state', 'debug-save-anchor-stone',
                                  'debug-load-anchor-stone') and isinstance(observed, dict)
@@ -1619,7 +1623,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(script_result, dict)
                                and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error or agi_execution_error or agi_checkpoint_error or agi_reply_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error or agi_execution_error or agi_checkpoint_error or agi_reply_error or agi_guest_save_error):
             raise
         value = {
             "id": request_id,
@@ -1636,7 +1640,7 @@ def respond(request, default_project=None, debugger=None):
         from .execution_trace import ExecutionTraceError
         if isinstance(e, ExecutionTraceError):
             value["error"]["result"] = e.result
-        if step_sequence_error or agi_execution_error or agi_checkpoint_error or agi_reply_error:
+        if step_sequence_error or agi_execution_error or agi_checkpoint_error or agi_reply_error or agi_guest_save_error:
             value["error"]["result"] = observed
         if coordinate_click_error:
             value["error"]["coordinate_click"] = coordinate_click

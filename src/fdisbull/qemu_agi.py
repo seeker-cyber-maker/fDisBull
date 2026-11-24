@@ -128,7 +128,7 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
                         native_cpu_inventory=None, memory=False, breakpoints=False,
                         runtime_scene_observation=True, scene_planes=False,
                         save_states=False, save_states_runtime_stops=False, input=False,
-                        agi_host_replies=False)
+                        agi_host_replies=False, agi_guest_saves=False)
 
     def __init__(self, project, executable, *, version=None, timeout_ms=30000, runtime_package=None, _on_spawn=None):
         _timeout(timeout_ms)
@@ -288,11 +288,18 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
             self._stopped()
             return self._events()
 
-    def reply_host(self, ticket, *, accepted, text=None, number=None, snapshot_hex=None, timeout_ms=10000):
+    def reply_host(self, ticket, *, accepted, text=None, number=None, snapshot_hex=None,
+                   guest_save_artifact=None, timeout_ms=10000):
         """Complete one current native host request without resuming execution."""
         from .qemu_agi_reply import reply_host
         return reply_host(self, ticket, accepted=accepted, text=text, number=number,
-                          snapshot_hex=snapshot_hex, timeout_ms=timeout_ms)
+                          snapshot_hex=snapshot_hex, guest_save_artifact=guest_save_artifact,
+                          timeout_ms=timeout_ms)
+
+    def capture_guest_save(self, ticket, *, name='agi-guest-save.bin', timeout_ms=10000):
+        """Capture the pending save.game snapshot in a private project artifact."""
+        from .qemu_agi_guest_save import capture
+        return capture(self, ticket, name=name, timeout_ms=timeout_ms)
 
     def scene_observe(self, *, timeout_ms=10000):
         from .qemu_agi_scene import observe

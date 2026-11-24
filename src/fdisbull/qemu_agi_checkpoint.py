@@ -47,7 +47,8 @@ def checkpoint_capabilities(owner, deadline, *, runtime):
                                timeout_ms=_remaining(deadline))
         can_save_runtime_stops = value == 'pending-fault-quit-1'
     return dict(save_states=can_save, save_states_runtime_stops=can_save_runtime_stops,
-                agi_host_replies=runtime and 'agi-runtime-command' in string_properties)
+                agi_host_replies=runtime and 'agi-runtime-command' in string_properties,
+                agi_guest_saves=runtime and 'agi-runtime-snapshot-hex' in string_properties)
 
 
 def _snapshot(owner, deadline):
@@ -131,6 +132,18 @@ def inspect_agi_state(project, artifact):
                 scope='stopped native AGI checkpoint; host files excluded')
 
 
+def _identity_admit(session, *, context):
+    """Verify live project, source, runtime package, and native binary identity."""
+    source = session.project.source_info(session.version['id'])
+    if (not source.get('verified') or source.get('identity', {}).get('sha256') != session.identity['source_sha256']
+            or _sha(session._source_data) != session.identity['source_sha256']
+            or session.project.version(session.version['id'])['sha256'] != session.identity['version_sha256']
+            or _sha(session._executable.read_bytes()) != session.identity['qemu_sha256']
+            or (_sha(session._runtime_package) if session._runtime_package is not None else None)
+            != session.identity['runtime_package_sha256']):
+        raise ValueError(f'AGI {context} source or native identity changed')
+
+
 class AGICheckpointMixin:
     def _agi_checkpoint_admit(self):
         if self.project.db.in_transaction:
@@ -138,15 +151,7 @@ class AGICheckpointMixin:
         if not self.capabilities.get('save_states'):
             raise ValueError('AGI native checkpoint interface is unavailable')
         self._stopped()
-        row = self.project.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',
-                                      (self.version['id'],)).fetchone()
-        if (not self.project.source_info(self.version['id']).get('verified') or row is None
-                or row[0] is None or _sha(bytes(row[0])) != self.identity['source_sha256']
-                or _sha(self._source_data) != self.identity['source_sha256']
-                or _sha(self._executable.read_bytes()) != self.identity['qemu_sha256']
-                or (_sha(self._runtime_package) if self._runtime_package is not None else None)
-                != self.identity['runtime_package_sha256']):
-            raise ValueError('AGI checkpoint source or native identity changed')
+        _identity_admit(self, context='checkpoint')
 
     def save_state(self, name='agi-checkpoint.bin', *, max_bytes=None, timeout_ms=60000):
         from .external_files import _file_name
@@ -207,6 +212,8 @@ class AGICheckpointMixin:
                     raise ValueError('AGI candidate lacks native checkpoint interface')
                 if self.capabilities.get('agi_host_replies') and not caps['agi_host_replies']:
                     raise ValueError('AGI candidate lacks native host reply interface')
+                if self.capabilities.get('agi_guest_saves') and not caps['agi_guest_saves']:
+                    raise ValueError('AGI candidate lacks native guest save interface')
                 if _sha(self._executable.read_bytes()) != self.identity['qemu_sha256']:
                     raise ValueError('AGI native binary changed during restore')
                 candidate.qmp.call('qom-set', {'path': candidate.cpu_path, 'property': PROPERTY,

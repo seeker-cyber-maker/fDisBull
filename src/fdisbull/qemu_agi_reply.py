@@ -151,10 +151,13 @@ def _uncertain(session, error, receipt, disposition):
     error.result = evidence
 
 
-def reply_host(session, ticket, *, accepted, text, number, snapshot_hex, timeout_ms):
+def reply_host(session, ticket, *, accepted, text, number, snapshot_hex, timeout_ms,
+               guest_save_artifact=None):
     from .qemu_agi import _remaining, _timeout
     _timeout(timeout_ms)
     snapshot_hex = _inputs(ticket, accepted, text, number, snapshot_hex)
+    if guest_save_artifact is not None and snapshot_hex is not None:
+        raise ValueError('AGI guest save artifact and snapshot_hex are mutually exclusive')
     if session.project.db.in_transaction:
         raise ValueError('AGI host reply requires no caller transaction')
     deadline = time.monotonic() + timeout_ms / 1000
@@ -165,7 +168,19 @@ def reply_host(session, ticket, *, accepted, text, number, snapshot_hex, timeout
                 raise ValueError('AGI native host reply interface is unavailable')
             session._stopped()
             before = session._state().get('guest')
+            if guest_save_artifact is not None:
+                pending = before.get('pending_effect') if isinstance(before, dict) else None
+                if (not accepted or not isinstance(pending, dict) or pending.get('opcode') != 126
+                        or pending.get('reply') != 'restore' or pending.get('id') != ticket
+                        or before.get('status') != 'pending'):
+                    raise ValueError('AGI guest save artifact requires the current accepted restore.game request')
+                from .qemu_agi_checkpoint import _identity_admit
+                from .qemu_agi_guest_save import artifact_data
+                _identity_admit(session, context='guest save')
+                snapshot_hex = artifact_data(session, guest_save_artifact).hex()
             command, receipt = _prepare(before, ticket, accepted, text, number, snapshot_hex)
+            if guest_save_artifact is not None:
+                receipt['snapshot']['artifact'] = guest_save_artifact
             params = dict(path=session.cpu_path, property='agi-runtime-command',
                           value=json.dumps(command, sort_keys=True, separators=(',', ':')))
             remaining = _remaining(deadline)

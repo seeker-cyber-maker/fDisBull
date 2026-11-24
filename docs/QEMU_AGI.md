@@ -141,12 +141,12 @@ from the request, an explicit Boolean `accepted`, and an optional `timeout_ms`.
 | `ack`, `choice` | Omit payload fields. |
 | `text` | Supply `text` in CP437, up to the prompt limit and at most 40 encoded bytes. NUL is invalid. |
 | `number`, `menu` | Supply `number` from 0 to 255. Menu selection uses the enabled item's controller number. |
-| `restore` | Supply `snapshot_hex`, a caller-owned native AGI guest save from the same build and resource package. |
+| `restore` | Supply `guest_save_artifact`, or `snapshot_hex` for a caller-owned native AGI guest save from the same build and resource package. Supply only one. |
 
 Decline any request with `accepted=false` and omit the payload fields.
-Acknowledging a save prompt records the host's answer. The caller manages the
-guest save data and its storage. A debugger checkpoint has its own format and
-loads through `debug-load-state`.
+Acknowledging a save prompt records the host's answer; capture the guest save
+first if it should be kept. A debugger checkpoint has its own format and loads
+through `debug-load-state`.
 
 A successful reply leaves the machine stopped. An ordinary completion retires
 the pending instruction exactly once. Accepting a guest restore reinstates the
@@ -159,3 +159,44 @@ If the native command refuses an answer, its `native rejection` receipt leaves
 the ticket pending. If the result is uncertain, the error carries
 `error.result.do_not_replay=true` and indicates whether the owner was closed.
 Retain that receipt and avoid resending the request.
+
+## Capture and restore a guest save
+
+With a resource package and a native CPU exposing the guest snapshot property,
+the run advertises `agi_guest_saves`. This capability is independent of
+debugger checkpoints. At a pending save request, capture its ticket before
+acknowledging it. Capture reads the stopped guest and stores a durable artifact
+in the private project. The guest stays at the prompt until the caller replies.
+
+```python
+request = debug.state()["guest"]["pending_effect"]
+saved = debug.capture_guest_save(request["id"], name="room-save.bin")
+artifact = saved["artifact"]
+assert saved["kind"] == "agi-guest-save"
+ack = debug.reply_host(request["id"], accepted=True)
+assert ack["verified"]
+
+# In a later run on the same project, with the matching executable and package,
+# advance to a restore prompt and obtain its current ticket.
+restored = later.reply_host(restore_ticket, accepted=True, guest_save_artifact=artifact)
+assert restored["verified"]
+```
+
+The JSON equivalents use the live run ID and current ticket:
+
+```json
+{"id":"save","method":"debug-agi-capture-guest-save","params":{"run":"<RUN>","ticket":123,"name":"room-save.bin"}}
+{"id":"ack","method":"debug-agi-reply","params":{"run":"<RUN>","ticket":123,"accepted":true}}
+{"id":"restore","method":"debug-agi-reply","params":{"run":"<LATER_RUN>","ticket":456,"accepted":true,"guest_save_artifact":"<ARTIFACT>"}}
+```
+
+The capture receipt includes the artifact ID, kind, size, hash and metadata
+binding the payload to its source identity and ticket. Each capture gets a new
+ID, including saves with the same name. After closing the debugger, use
+`fdisbull debug-artifacts PROJECT` to find the ID. Keep the private project
+and its external object store available so later sessions can resolve the bytes.
+
+A stale ticket, incompatible artifact or conflicting restore payload leaves the
+request pending. A successful restore receipt identifies the artifact and the
+snapshot hash and size. If capture reports `do_not_replay` after publication,
+keep the returned artifact ID. The save is already in the project.

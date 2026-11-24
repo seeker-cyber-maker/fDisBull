@@ -6,6 +6,7 @@ import ctypes
 import hashlib
 import json
 import os
+from contextlib import contextmanager
 from pathlib import Path
 import subprocess
 import sys
@@ -774,6 +775,192 @@ def test_public_restore_reply_uses_bound_guest_snapshot_without_resuming(tmp_pat
             with pytest.raises((ValueError, DebuggerError)):
                 debug.reply_host(ticket, accepted=True, snapshot_hex=target_snapshot)
             assert debug.state()["guest"] == restored
+
+
+def _reach_save_restore_prompt(debug):
+    assert debug.step()["outcome"] == "step"  # v5 = 1
+    assert debug.step()["outcome"] == "pending"  # save.game
+    save = debug.state()["guest"]["pending_effect"]
+    assert save["reply"] == "ack"
+    debug.reply_host(save["id"], accepted=True)
+    assert debug.step()["outcome"] == "step"  # v5 = 9
+    assert debug.step()["outcome"] == "pending"
+    restore = debug.state()["guest"]["pending_effect"]
+    assert restore["reply"] == "restore"
+    return save["id"], restore["id"]
+
+
+def _track_runtime_setters(debug):
+    calls = []
+    owner = debug.vm
+    original = owner.qmp.call
+
+    def track(command, *args, **kwargs):
+        if command == "qom-set" and args and args[0].get("property") == "agi-runtime-command":
+            calls.append(args[0]["value"])
+        return original(command, *args, **kwargs)
+
+    owner.qmp.call = track
+    return calls
+
+
+def test_guest_save_artifact_capture_is_nonmutating_and_restores_only_after_ack(tmp_path):
+    executable = _stopped_checkpoint_executable()
+    code = bytes((3, 5, 1, 125, 3, 5, 9, 126, 3, 6, 7, 0))
+    project, database, _source = _project(tmp_path, code)
+    package = _stop_package(tmp_path, code)
+    with project:
+        with project.debugger(str(executable), backend="qemu-agi",
+                              agi_runtime_package=str(package)) as debug:
+            assert debug.capabilities["agi_guest_saves"] is True
+            assert debug.step()["outcome"] == "step"
+            assert debug.step()["outcome"] == "pending"
+            before = _runtime_snapshot(debug)
+            ticket = debug.state()["guest"]["pending_effect"]["id"]
+            calls = _track_runtime_setters(debug)
+            with pytest.raises(ValueError, match="ticket"):
+                debug.capture_guest_save(ticket + 1)
+            capture = debug.capture_guest_save(ticket, name="agi-save-test.bin")
+            assert capture["kind"] == "agi-guest-save" and capture["size"] > 0
+            assert calls == [] and _runtime_snapshot(debug) == before
+            assert debug.vm.process.poll() is None
+
+    with Project(database) as reopened:
+        with reopened.debugger(str(executable), backend="qemu-agi",
+                               agi_runtime_package=str(package)) as debug:
+            save_ticket, restore_ticket = _reach_save_restore_prompt(debug)
+            assert restore_ticket > save_ticket
+            before = _runtime_snapshot(debug)
+            calls = _track_runtime_setters(debug)
+            artifact_id = capture["artifact"]
+            row = debug.project.db.execute(
+                "SELECT data,metadata FROM debug_artifacts WHERE id=?", (artifact_id,)
+            ).fetchone()
+            payload = bytes(row["data"])
+            metadata = json.loads(row["metadata"])
+
+            variants = [
+                ("wrong-kind", "screenshot", payload, dict(metadata)),
+                ("bad-checksum", "agi-guest-save", payload,
+                 dict(metadata, payload_sha256="0" * 64)),
+                ("wrong-size", "agi-guest-save", payload,
+                 dict(metadata, payload_size=len(payload) + 1)),
+            ]
+            for offset in (76, 80, 84):
+                damaged = bytearray(payload)
+                damaged[offset:offset + 4] = b"\0\0\0\0"
+                damaged = bytes(damaged)
+                digest = hashlib.sha256(damaged).hexdigest()
+                variants.append((f"bad-envelope-{offset}", "agi-guest-save", damaged,
+                                dict(metadata, payload_sha256=digest, payload_size=len(damaged))))
+            for name, kind, data, meta in variants:
+                bad_id = reopened._debug_artifact(debug.run_id, name, kind, data, meta)["artifact"]
+                with pytest.raises((ValueError, DebuggerError)):
+                    debug.reply_host(restore_ticket, accepted=True, guest_save_artifact=bad_id)
+                assert _runtime_snapshot(debug)["state"] == before["state"]
+                assert debug.vm.process.poll() is None
+
+            with pytest.raises(ValueError, match="mutually exclusive"):
+                debug.reply_host(restore_ticket, accepted=True, snapshot_hex="00",
+                                 guest_save_artifact=artifact_id)
+            with pytest.raises(ValueError):
+                debug.reply_host(restore_ticket + 1, accepted=True, guest_save_artifact=artifact_id)
+            with pytest.raises(ValueError):
+                debug.reply_host(restore_ticket, accepted=True, guest_save_artifact="missing")
+            assert calls == []
+
+            receipt = debug.reply_host(restore_ticket, accepted=True,
+                                      guest_save_artifact=artifact_id)
+            guest = debug.state()["guest"]
+            assert receipt["verified"] and receipt["snapshot"]["artifact"] == artifact_id
+            assert guest["pending_effect"] is None and guest["pc"] == 4
+            assert guest["variables"][5] == 1 and guest["flags"][12] == 1
+            assert guest["next_effect_id"] >= restore_ticket
+            assert len(calls) == 1
+            with pytest.raises((ValueError, DebuggerError)):
+                debug.reply_host(restore_ticket, accepted=True, guest_save_artifact=artifact_id)
+            assert debug.state()["guest"] == guest
+
+    # A project with the same target identity still cannot resolve another project's ID.
+    foreign_dir = tmp_path / "foreign"
+    foreign_dir.mkdir()
+    foreign, _foreign_db, _ = _project(foreign_dir, code)
+    with foreign:
+        with foreign.debugger(str(executable), backend="qemu-agi",
+                              agi_runtime_package=str(package)) as debug:
+            _, ticket = _reach_save_restore_prompt(debug)
+            before = debug.state()
+            with pytest.raises(ValueError, match="artifact"):
+                debug.reply_host(ticket, accepted=True, guest_save_artifact=artifact_id)
+            assert debug.state() == before
+
+    # A different package identity rejects the artifact before native dispatch.
+    with Project(database) as reopened:
+        alternate = tmp_path / "alternate-runtime-package.json"
+        altered = json.loads(package.read_text())
+        altered["logics"][0]["messages"] = ["Another resource package"]
+        alternate.write_text(json.dumps(altered, sort_keys=True, separators=(",", ":")) + "\n")
+        with reopened.debugger(str(executable), backend="qemu-agi",
+                               agi_runtime_package=str(alternate)) as debug:
+            _, ticket = _reach_save_restore_prompt(debug)
+            before = debug.state()
+            calls = _track_runtime_setters(debug)
+            with pytest.raises(ValueError, match="identity"):
+                debug.reply_host(ticket, accepted=True, guest_save_artifact=artifact_id)
+            assert calls == [] and debug.state() == before
+
+
+def test_guest_save_late_publication_failure_returns_receipt_without_replay(tmp_path):
+    executable = _stopped_checkpoint_executable()
+    code = bytes((125, 0))
+    project, _database, _source = _project(tmp_path, code)
+    package = _stop_package(tmp_path, code)
+    with project:
+        with project.debugger(str(executable), backend="qemu-agi",
+                              agi_runtime_package=str(package)) as debug:
+            assert debug.step()["outcome"] == "pending"
+            ticket = debug.state()["guest"]["pending_effect"]["id"]
+            before = _runtime_snapshot(debug)
+            owner, original_budget = debug.vm, debug._budget
+
+            @contextmanager
+            def fail_after_operation(vm, deadline):
+                with original_budget(vm, deadline):
+                    yield
+                raise TimeoutError("injected post-publication budget failure")
+
+            debug._budget = fail_after_operation
+            try:
+                with pytest.raises(TimeoutError) as failure:
+                    debug.capture_guest_save(ticket)
+            finally:
+                debug._budget = original_budget
+            evidence = failure.value.result
+            assert evidence["format"] == "fdisbull-qemu-agi-guest-save-error-1"
+            assert evidence["do_not_replay"] and evidence["artifact"]["kind"] == "agi-guest-save"
+            ids = [item["id"] for item in project.debug_artifacts(run=debug.run_id)["artifacts"]]
+            assert evidence["artifact"]["artifact"] in ids
+            assert debug.vm is owner and debug.vm.process.poll() is None
+            assert _runtime_snapshot(debug) == before
+
+
+def test_guest_save_capture_rejects_raw_and_non_save_pending_requests(tmp_path):
+    executable = _stopped_checkpoint_executable()
+    code = bytes((101, 1, 0))
+    project, _database, _source = _project(tmp_path, code)
+    package = _stop_package(tmp_path, code, ["Wait for a key"])
+    with project:
+        with project.debugger(str(executable), backend="qemu-agi",
+                              agi_runtime_package=str(package)) as debug:
+            assert debug.step()["outcome"] == "pending"
+            before = _runtime_snapshot(debug)
+            with pytest.raises(ValueError, match="save.game"):
+                debug.capture_guest_save(before["state"]["guest"]["pending_effect"]["id"])
+            assert _runtime_snapshot(debug) == before
+        with project.debugger(str(executable), backend="qemu-agi") as raw:
+            assert raw.capabilities["agi_guest_saves"] is False
+            with pytest.raises(ValueError, match="unavailable"):
+                raw.capture_guest_save(1)
 
 
 def test_host_reply_lost_ack_is_not_replayed_and_records_uncertainty(tmp_path):
