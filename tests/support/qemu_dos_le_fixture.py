@@ -180,7 +180,8 @@ protected_jump:
 
 def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=False,
                             paging_mode="legacy-4k", dirty_overlay_writes=False,
-                            dirty_overlay_cmpxchg=False, cmpxchg_lock=False):
+                            dirty_overlay_cmpxchg=False, cmpxchg_lock=False,
+                            dirty_overlay_atomic_batch=False):
     """Build a bounded MZ/BW/MZ/LE carrier with paging and an LDT CS.
 
     The protected-mode loader optionally copies the LE logical pages to three
@@ -221,6 +222,8 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
         raise ValueError('dirty overlay write witness requires tracking')
     if dirty_overlay_cmpxchg and not dirty_overlay_writes:
         raise ValueError('CMPXCHG overlay witness requires dirty overlay writes')
+    if dirty_overlay_atomic_batch and not dirty_overlay_writes:
+        raise ValueError('atomic batch witness requires dirty overlay writes')
     if tracking and not (paging and ldt):
         raise ValueError('tracking mode requires paging and the LDT')
 
@@ -260,10 +263,69 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
             # The watched byte and its sibling writes are on logical page 1,
             # separate from the executing controller on logical page 2.
             watched = code_base + 0x1f01
+            atomic_target = code_base + 0x1f00
+            # The batch-only operand bytes are part of the authored LE image;
+            # legacy scalar witnesses retain their original initialized NOPs.
+            if dirty_overlay_atomic_batch:
+                code[0x1f00:0x1f08] = bytes.fromhex('8877665544332211')
+            # A separate batch-only DWORD straddles logical pages one and
+            # two. End at offset 0x2000 to avoid the LE fixup at 0x2001.
+            # Its overlay covers only the second page's backing.
+            split_target = code_base + 0x1ffd
+            if dirty_overlay_atomic_batch:
+                code[0x1ffd:0x2001] = bytes.fromhex('44332211')
             unrelated = code_base + 0x1f10
             sentinel = code_base + 0x1f11
             controller = bytearray(b'\xc6\x05' + struct.pack('<I', unrelated) + b'\xa5')
-            if dirty_overlay_cmpxchg:
+            if dirty_overlay_atomic_batch:
+                result_base = code_base + 0x1f40
+                result_flags = result_base
+                result_eax = result_base + 0x10
+                result_edx = result_base + 0x20
+
+                def mov_imm(reg_opcode, value):
+                    return bytes((reg_opcode,)) + struct.pack('<I', value)
+
+                def cmpxchg8b():
+                    # 0F C7 /1 with absolute disp32 uses ModR/M 0D.
+                    return (b'\xf0' if cmpxchg_lock else b'') + b'\x0f\xc7\x0d' + struct.pack('<I', atomic_target)
+
+                def capture_results(index):
+                    # Capture flags and the architectural EAX:EDX result pair.
+                    delta = index * 4
+                    return (b'\x9c\x8f\x05' + struct.pack('<I', result_flags + delta)
+                            + b'\xa3' + struct.pack('<I', result_eax + delta)
+                            + b'\x89\x15' + struct.pack('<I', result_edx + delta))
+
+                controller += mov_imm(0xb8, 0x55667789) + mov_imm(0xba, 0x11223344)
+                controller += mov_imm(0xbb, 0x44332211) + mov_imm(0xb9, 0x88776655)
+                cmp_failed = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += cmpxchg8b() + capture_results(0)
+                controller += mov_imm(0xb8, 0x55667788) + mov_imm(0xba, 0x11223344)
+                controller += mov_imm(0xbb, 0x44332211) + mov_imm(0xb9, 0x88776655)
+                cmp_succeeded = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += cmpxchg8b() + capture_results(1)
+                controller += mov_imm(0xb8, 0x44332211) + mov_imm(0xba, 0x88776655)
+                controller += mov_imm(0xbb, 0x44332211) + mov_imm(0xb9, 0x88776655)
+                cmp_same = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += cmpxchg8b() + capture_results(2)
+                split_store = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += b'\xc7\x05' + struct.pack('<I', split_target) + struct.pack('<I', 0xa1b2c3d4)
+                sentinel_store = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += b'\xc6\x05' + struct.pack('<I', sentinel) + b'\xcc\xeb\xfe'
+                dirty_write_offsets = dict(
+                    watched=watched, unrelated=unrelated, sentinel=sentinel,
+                    atomic_target=atomic_target, atomic_result_flags=result_flags,
+                    atomic_result_eax=result_eax, atomic_result_edx=result_edx,
+                    cmp_failed=cmp_failed, cmp_succeeded=cmp_succeeded,
+                    cmp_same=cmp_same, split_target=split_target,
+                    split_store=split_store, split_page0=split_target & ~0xfff,
+                    split_page1=(split_target + 3) & ~0xfff,
+                    overlay_page=(atomic_target & ~0xfff),
+                    unrelated_store=code_base + PAGED_TRACKING_CONTROLLER,
+                    sentinel_store=sentinel_store, cmpxchg_lock=cmpxchg_lock,
+                )
+            elif dirty_overlay_cmpxchg:
                 # Record the failed compare's architectural accumulator and flags
                 # before the changed-value success reaches the dirty execute byte.
                 result_al = code_base + 0x1f20
@@ -295,19 +357,20 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
             else:
                 controller += b'\xc6\x05' + struct.pack('<I', watched) + b'\x5a'
                 cmp_failed = cmp_succeeded = None
-            controller += b'\xc6\x05' + struct.pack('<I', sentinel) + b'\xcc\xeb\xfe'
-            sentinel_store = code_base + PAGED_TRACKING_CONTROLLER + len(controller) - 9
-            dirty_write_offsets = dict(watched=watched, unrelated=unrelated,
-                                       sentinel=sentinel, overlay_page=watched & ~0xfff,
-                                       unrelated_store=code_base + PAGED_TRACKING_CONTROLLER,
-                                       watched_store=code_base + PAGED_TRACKING_CONTROLLER + 7,
-                                       sentinel_store=sentinel_store)
-            if dirty_overlay_cmpxchg:
-                dirty_write_offsets.update(cmp_failed=cmp_failed, cmp_succeeded=cmp_succeeded,
-                                           cmp_result_al=result_al, cmp_result_flags=result_flags,
-                                           cmp_result_ram=result_ram,
-                                           cmp_same=same_pc,
-                                           cmpxchg_lock=cmpxchg_lock)
+            if not dirty_overlay_atomic_batch:
+                controller += b'\xc6\x05' + struct.pack('<I', sentinel) + b'\xcc\xeb\xfe'
+                sentinel_store = code_base + PAGED_TRACKING_CONTROLLER + len(controller) - 9
+                dirty_write_offsets = dict(watched=watched, unrelated=unrelated,
+                                           sentinel=sentinel, overlay_page=watched & ~0xfff,
+                                           unrelated_store=code_base + PAGED_TRACKING_CONTROLLER,
+                                           watched_store=code_base + PAGED_TRACKING_CONTROLLER + 7,
+                                           sentinel_store=sentinel_store)
+                if dirty_overlay_cmpxchg:
+                    dirty_write_offsets.update(cmp_failed=cmp_failed, cmp_succeeded=cmp_succeeded,
+                                               cmp_result_al=result_al, cmp_result_flags=result_flags,
+                                               cmp_result_ram=result_ram,
+                                               cmp_same=same_pc,
+                                               cmpxchg_lock=cmpxchg_lock)
         else:
             controller = bytearray()
             controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)

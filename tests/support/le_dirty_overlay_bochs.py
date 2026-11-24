@@ -83,13 +83,90 @@ def run(stage, phase):
             assert debug.proc.pid != prior['pid']
             assert initial_context == prior['checkpoint_context']
         first = _observation(debug, offsets, offsets['unrelated_store'], cfg['paging_mode'])
+        initial_watched = '77' if 'atomic_target' in offsets else '90'
         assert {k: v['hex'] for k, v in first['values'].items()} == {
-            'unrelated': '90', 'watched': '90', 'sentinel': '90'}
+            'unrelated': '90', 'watched': initial_watched, 'sentinel': '90'}
         if phase == 'before':
             checkpoint.mkdir()
             saved = debug.cmd(f'restore "__save_state__" "{checkpoint}"')
             assert 'native save state' in saved and ': OK' in saved, saved
-        if 'cmp_failed' in offsets:
+        if 'atomic_target' in offsets:
+            compare_sites = {offsets[name]: name for name in
+                             ('cmp_failed', 'cmp_succeeded', 'cmp_same')}
+            seen = []
+            steps = {}
+            spans = {}
+            for name, linear, count in (
+                ('atomic', offsets['atomic_target'], 8),
+                ('split', offsets['split_target'], 4),
+            ):
+                spans[name] = [walk_linear(debug, first['context'], linear + i)[0]
+                               for i in range(count)]
+                assert [debug.read(physical, 1, physical=True)[0]
+                        for physical in spans[name]] == list(debug.read(linear, count))
+
+            low_aliases = {
+                name: bytes(debug.read(address & 0xffffffff, 1, physical=True)[0]
+                            for address in addresses).hex()
+                for name, addresses in spans.items()
+            }
+
+            def batch_step(name):
+                debug.cmd('s')
+                state = debug.context()
+                regs = debug.cmd('regs')
+
+                def reg(pattern):
+                    found = re.search(pattern, regs, re.MULTILINE)
+                    assert found, (pattern, regs)
+                    return int(found.group(1).replace('_', ''), 16)
+
+                pc_after = state['cs_base'] + state['ip']
+                return dict(
+                    pc=pc_after,
+                    atomic=debug.read(offsets['atomic_target'], 8).hex(),
+                    split=debug.read(offsets['split_target'], 4).hex(),
+                    sentinel=debug.read(offsets['sentinel'], 1).hex(),
+                    eax=reg(r'^rax:\s*([0-9a-fA-F_]+)') & 0xffffffff,
+                    edx=reg(r'^rdx:\s*([0-9a-fA-F_]+)') & 0xffffffff,
+                    zf=bool(reg(r'^eflags(?:\s*:|)\s*(?:0x)?([0-9a-fA-F_]+)') & (1 << 6)),
+                )
+
+            pc = offsets['unrelated_store']
+            for _ in range(160):
+                if pc == offsets['sentinel_store']:
+                    break
+                if pc in compare_sites:
+                    name = compare_sites[pc]
+                    seen.append(name)
+                    steps[name] = batch_step(name)
+                elif pc == offsets['split_store']:
+                    steps['split_store'] = batch_step('split_store')
+                else:
+                    debug.cmd('s')
+                context = debug.context()
+                pc = context['cs_base'] + context['ip']
+            assert pc == offsets['sentinel_store'], hex(pc)
+            assert seen == ['cmp_failed', 'cmp_succeeded', 'cmp_same'], seen
+            assert debug.read(offsets['atomic_target'], 8).hex() == '1122334455667788'
+            assert debug.read(offsets['split_target'], 4).hex() == 'd4c3b2a1'
+            flags = [int.from_bytes(debug.read(offsets['atomic_result_flags'] + i * 4, 4), 'little')
+                     for i in range(3)]
+            eax = [int.from_bytes(debug.read(offsets['atomic_result_eax'] + i * 4, 4), 'little')
+                   for i in range(3)]
+            edx = [int.from_bytes(debug.read(offsets['atomic_result_edx'] + i * 4, 4), 'little')
+                   for i in range(3)]
+            assert [bool(value & (1 << 6)) for value in flags] == [False, True, True]
+            assert eax == [0x55667788, 0x55667788, 0x44332211]
+            assert edx == [0x11223344, 0x11223344, 0x88776655]
+            final = _observation(debug, offsets, offsets['sentinel_store'], cfg['paging_mode'])
+            observation = dict(final=final, flags=flags, eax=eax, edx=edx,
+                               split=debug.read(offsets['split_target'], 4).hex(),
+                               atomic=debug.read(offsets['atomic_target'], 8).hex(),
+                               backing=spans, low_aliases=low_aliases, steps=steps, seen=seen)
+            if phase == 'after':
+                assert observation == prior['observations']
+        elif 'cmp_failed' in offsets:
             # Run native guest instructions without host intervention until
             # the sentinel store. Bochs has no execution overlay; this records
             # ordinary x86 RAM, accumulator, and flag semantics independently.

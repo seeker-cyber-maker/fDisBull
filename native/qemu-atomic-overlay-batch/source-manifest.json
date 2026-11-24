@@ -1,0 +1,63 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_manifest": "../qemu-cmpxchg-overlay/source-manifest.json",
+  "base_producer_sha256": "a25557c5d811fc2aa83abcd0eb472291bac72a593ac7862396691012501f7a87",
+  "composition": "Apply after exact CMPXCHG overlay candidate, verifying each preimage hash and git apply --check.",
+  "patch": "qemu-10.0.13-fdisbull-atomic-overlay-batch-v1.patch",
+  "patch_bytes": 2447,
+  "patch_sha256": "f5c04ddea9b1c808e555b14e95fffbb4ae55cf64a63e2160710ad2c0ca28dc5b",
+  "files": [
+    {
+      "path": "accel/tcg/cputlb.c",
+      "base_bytes": 98793,
+      "base_sha256": "df05fba5b8baf879bcd422ca876c74125114804506514113d25f231e29dd1f39",
+      "patched_bytes": 99286,
+      "patched_sha256": "eb06bc1434f034705c41af281e077e495c77ba7b519740d83a4b18db25995130"
+    },
+    {
+      "path": "target/i386/helper.h",
+      "base_bytes": 8093,
+      "base_sha256": "7723dd6b13257ea153ef30cd5c3cc8c98e3323aad85b3b90e7223eded63f7d42",
+      "patched_bytes": 8164,
+      "patched_sha256": "2751009a79bfc6c8ab8f5b8ced2dc67e6de99377c35be19649cb1eaa8071a767"
+    },
+    {
+      "path": "target/i386/tcg/emit.c.inc",
+      "base_bytes": 152941,
+      "base_sha256": "bbc2265e479166fc3b1d5c3a3a82a22593ab3b065ba8d1f11097caf81d8df36b",
+      "patched_bytes": 153550,
+      "patched_sha256": "d05ce083cc2e41e8e48501c64e29bfa4adea32ee055101e07cddc002f24ceeb2"
+    }
+  ],
+  "scope": "Nonparallel x86 CMPXCHG8B, LOCK and unlocked, with local high-backed paging qualification. An existing split DWORD store path is also qualified. CMPXCHG16B, parallel translation, paging-fault retry and later watchpoint faults remain open.",
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "configure_argv": [
+      "--target-list=x86_64-softmmu",
+      "--without-default-features",
+      "--enable-system",
+      "--enable-tcg",
+      "--enable-pixman",
+      "--disable-user",
+      "--enable-tools",
+      "--disable-docs",
+      "--disable-guest-agent",
+      "--disable-containers",
+      "--disable-download",
+      "--disable-install-blobs",
+      "--disable-debug-info",
+      "--disable-qom-cast-debug",
+      "--audio-drv-list=",
+      "--firmwarepath=/Volumes/HIKSEMI/.fdisbull-vbe101-lfb-Ja20vq9x/native-source/pc-bios",
+      "--prefix=/Volumes/GitHub/GitHub/fDisBull-private/atomic-overlay-batch-20261124.HWbgDd/install",
+      "--ninja=/Users/tiga/miniconda/bin/ninja",
+      "--python=/Users/tiga/miniconda/bin/python3"
+    ],
+    "command": "ninja -j1 qemu-system-x86_64",
+    "candidate_sha256": "7e4573a3d97a55fdcabfe139de0ac928bb8529b5208d84a80e94562ef260c0de",
+    "frozen_executable": "/Volumes/GitHub/GitHub/fDisBull-private/atomic-overlay-batch-20261124.HWbgDd/frozen/qemu-system-x86_64-7e4573a3d97a55fd",
+    "qualification": "Local Bochs comparisons passed in 4 KiB PAE, 2 MiB PAE and 4 MiB PSE-36 high RAM, LOCK and unlocked, live and after unprimed cold restore. Covers aligned CMPXCHG8B failed/changed/same-value outcomes and a DWORD overlapping an execute override only on its second physical subpage. See docs/DOS_QEMU_HANDOFF.md."
+  }
+}

@@ -161,3 +161,19 @@ match. After rebinding to the new backing value, QEMU must also stop after a
 same-value match. Bochs steps the same guest and supplies independent status
 flags, bytes, addresses and post-instruction PCs. Both engines load their
 own checkpoints in fresh processes before repeating the sequence.
+
+### Compare CMPXCHG8B and split-store overlays
+
+Select the [CMPXCHG8B candidate](../qemu-atomic-overlay-batch/README.md) and
+the same Bochs reference, then run the local batch with
+
+```sh
+python -m pytest -q tests/test_qemu_dirty_overlay_atomic_batch_native.py
+```
+
+Each mode and prefix combination shares one guest program. A sibling write
+dirties the watched subpage before the failed, changed-value and same-value
+comparisons. After rebinding the execute layer, a separate DWORD write spans
+two physical 4 KiB subpages and overlaps an override only on the second one.
+Both engines repeat the sequence after cold restore. The test compares the
+complete operands, accumulator pair, ZF, stopped PCs and untouched sentinel.

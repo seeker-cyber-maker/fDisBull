@@ -1,0 +1,60 @@
+diff --git a/accel/tcg/cputlb.c b/accel/tcg/cputlb.c
+--- a/accel/tcg/cputlb.c
++++ b/accel/tcg/cputlb.c
+@@ -2896,6 +2896,18 @@
+         qemu_plugin_vcpu_mem_cb(cpu, addr, val, 0, oi, QEMU_PLUGIN_MEM_W);
+     }
+ }
++
++/* CMPXCHG8B needs the complete writeback value even on 32-bit targets. */
++void HELPER(fdisbull_cmpxchg8b_failed_store)(CPUArchState *env,
++                                            target_ulong addr, uint64_t val,
++                                            uint32_t oi)
++{
++    CPUState *cpu = env_cpu(env);
++    do_st8_mmu_impl(cpu, addr, val, oi, GETPC(), false);
++    if (cpu_plugin_mem_cbs_enabled(cpu)) {
++        qemu_plugin_vcpu_mem_cb(cpu, addr, val, 0, oi, QEMU_PLUGIN_MEM_W);
++    }
++}
+ #endif
+ 
+ static void do_st16_mmu(CPUState *cpu, vaddr addr, Int128 val,
+diff --git a/target/i386/helper.h b/target/i386/helper.h
+--- a/target/i386/helper.h
++++ b/target/i386/helper.h
+@@ -47,6 +47,7 @@
+ 
+ #ifndef CONFIG_USER_ONLY
+ DEF_HELPER_4(fdisbull_cmpxchg_failed_store, void, env, tl, tl, i32)
++DEF_HELPER_4(fdisbull_cmpxchg8b_failed_store, void, env, tl, i64, i32)
+ DEF_HELPER_FLAGS_3(set_dr, TCG_CALL_NO_WG, void, env, int, tl)
+ DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
+ #endif /* !CONFIG_USER_ONLY */
+diff --git a/target/i386/tcg/emit.c.inc b/target/i386/tcg/emit.c.inc
+--- a/target/i386/tcg/emit.c.inc
++++ b/target/i386/tcg/emit.c.inc
+@@ -1873,7 +1873,22 @@
+     tcg_gen_concat_tl_i64(cmp, cpu_regs[R_EAX], cpu_regs[R_EDX]);
+     tcg_gen_concat_tl_i64(val, cpu_regs[R_EBX], cpu_regs[R_ECX]);
+ 
+-    /* Only require atomic with LOCK; non-parallel handled in generator. */
++    /* Preserve the failed write cycle without reporting an overlay write. */
++#ifndef CONFIG_USER_ONLY
++    if (!(tb_cflags(s->base.tb) & CF_PARALLEL)) {
++        TCGLabel *failed = gen_new_label();
++        TCGLabel *done = gen_new_label();
++        tcg_gen_qemu_ld_i64(old, s->A0, s->mem_index, MO_TEUQ);
++        tcg_gen_brcond_i64(TCG_COND_NE, old, cmp, failed);
++        tcg_gen_qemu_st_i64(val, s->A0, s->mem_index, MO_TEUQ);
++        tcg_gen_br(done);
++        gen_set_label(failed);
++        gen_helper_fdisbull_cmpxchg8b_failed_store(
++            tcg_env, s->A0, old,
++            tcg_constant_i32(make_memop_idx(MO_TEUQ, s->mem_index)));
++        gen_set_label(done);
++    } else
++#endif
+     if (s->prefix & PREFIX_LOCK) {
+         tcg_gen_atomic_cmpxchg_i64(old, s->A0, cmp, val, s->mem_index, MO_TEUQ);
+     } else {

@@ -1,5 +1,50 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## CMPXCHG8B and second-page store overlays (2026-11-24)
+
+The nonparallel native x86 path now treats the failed CMPXCHG8B writeback
+as an access that preserves the execute overlay. The comparison still
+performs its architectural eight-byte write cycle. A match reports the
+overlap after the instruction completes, including a match that writes the
+existing value. The same path handles locked and unlocked CMPXCHG8B.
+
+The authored guest batches a sibling write, a failed compare, a changed-value
+match, a same-value match and a DWORD store crossing a physical 4 KiB subpage
+boundary. Its initial atomic operand is `8877665544332211` in memory. The
+failed compare loads EDX:EAX with `11223344:55667788` and clears ZF. The match
+changes memory to `1122334455667788` and sets ZF. After rebinding the overlay,
+the same-value match sets ZF and reports another conflict.
+
+The separate DWORD at linear `0x401ffd` spans physical `0x100801ffd` through
+`0x100802000`. Its overlay covers only the last byte on the second subpage.
+The instruction commits all four bytes as `d4c3b2a1` before QEMU stops. The
+following sentinel remains at `90`. The existing cross-page store path
+supplies this behavior. The native patch changes the CMPXCHG8B path.
+
+The paired fixture compares QEMU with independent Bochs register, ZF,
+memory, page-table and post-instruction observations. Each mode and prefix
+combination reuses one startup and repeats from the engine's own checkpoint
+in a fresh process. QEMU restores the initial active execute overlay after
+starting in real mode with paging, PAE and PSE off. The split-store stage is
+then armed in the restored session.
+
+All six paging-mode and prefix combinations passed live and after cold
+restore. The DWORD write stopped at linear `0x402198` for the plain variant
+and `0x40219b` for the variant with locked comparisons. Bochs independently
+reproduced the complete eight-byte atomic value, four-byte split value and
+each post-instruction PC. An offline read of Bochs's saved CPU, page tables
+and sparse RAM confirmed the initial operands and backing.
+
+The split operand ends just before an LE relocation at offset `0x2001`.
+The buffer leaves that relocation intact. The native executable was frozen
+throughout the local qualification. Paging-fault retry, later watchpoint
+faults, parallel execution, CMPXCHG16B and plugin callback parity remain
+open.
+
+See the [native patch and scope](../native/qemu-atomic-overlay-batch/README.md)
+and the [local test procedure](../native/bochs-pae-reference/README.md#compare-cmpxchg8b-and-split-store-overlays).
+DOSBox-X remains the default.
+
 ## Scalar CMPXCHG overlay notification on dirty high pages (2026-11-24)
 
 The native nonparallel x86 path preserves CMPXCHG's writeback cycle on a

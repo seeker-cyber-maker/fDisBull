@@ -363,3 +363,37 @@ def test_retained_dirty_overlay_producer_keeps_only_its_image_allowances():
         assert not _compatible_producer(old, current, tracking=tracking)
         assert not _supports_high_ram(old, current)
         assert not _supports_pse36(old, current, QEMU_TCG_OVERLAY_WRITE_IMAGE)
+
+
+def test_retained_cmpxchg_producer_preserves_only_its_image_allowances():
+    from fdisbull.qemu_le_translation import (
+        QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE,
+        QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE,
+        QEMU_TCG_ATOMIC_BATCH_IMAGE)
+    from fdisbull.qemu_paged_le_capture import (
+        _producer, _compatible_producer, _supports_high_ram,
+        _supports_pse36, _replay_qemu_image, _pse36)
+    from fdisbull.qemu_paged_le_tracking import _paged_producer
+
+    for current, tracking in ((_producer(), False), (_paged_producer(), True)):
+        old = dict(current)
+        old.update({
+            'qemu_le_translation.py': '4491743cf9a05dd0ed49b4c06ff529fe748666b48584ea06e699c33273d80225',
+            'qemu_paged_le_capture.py': 'bedf72206421088ecaaadebaa0b96b69caeb0d7dbcbb7fef13448b368bc7efc5',
+        })
+        assert _compatible_producer(old, current, tracking=tracking)
+        assert _supports_high_ram(old, current)
+        for image in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE,
+                      QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE):
+            assert _supports_pse36(old, current, image)
+            assert _replay_qemu_image(old, current, image) == image
+        assert not _supports_pse36(old, current, 'f' * 64)
+        assert not _supports_pse36(old, current, QEMU_TCG_ATOMIC_BATCH_IMAGE)
+        assert _replay_qemu_image(old, current, QEMU_TCG_ATOMIC_BATCH_IMAGE) is None
+        assert _pse36({'memory_mib': 64, 'max_ram_below_4g_mib': 32, 'cpu': 'max'}, QEMU_TCG_ATOMIC_BATCH_IMAGE)
+        assert _replay_qemu_image(current, current, QEMU_TCG_ATOMIC_BATCH_IMAGE) == QEMU_TCG_ATOMIC_BATCH_IMAGE
+        old['qemu_paged_le_match.py'] = 'f' * 64
+        assert not _compatible_producer(old, current, tracking=tracking)
+        assert not _supports_high_ram(old, current)
+        assert not _supports_pse36(old, current, QEMU_TCG_CMPXCHG_IMAGE)
+        assert _replay_qemu_image(old, current, QEMU_TCG_CMPXCHG_IMAGE) is None
