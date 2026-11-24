@@ -341,3 +341,68 @@ def test_native_source_fetch_layer_preserves_mz_relocations(tmp_path):
             result = debug.run(timeout_ms=5000)
             assert result['outcome'] == 'guest_exit' and result['process']['termination']['code'] == 42
     assert source.read_bytes() == image
+
+
+def test_native_fxsave_reserved_byte_is_not_a_guest_write(tmp_path):
+    """A prepared 512-byte span must not be confused with actual stores."""
+    from struct import unpack_from
+
+    from support.dos_process_fixture import assemble
+    from fdisbull.qemu_dos import prepare_dos_profile
+
+    executable, options = _candidate()
+    nasm = os.environ.get('NASM') or shutil.which('nasm')
+    if not nasm:
+        if os.environ.get('FDISBULL_REQUIRE_QEMU_LAYERS') == '1':
+            pytest.fail('NASM is required for the FXSAVE overlay witness')
+        pytest.skip('Supply NASM for the FXSAVE overlay witness')
+    # FXSAVE prepares a 512-byte memory span, but QEMU's x86 helper writes
+    # neither byte of FOP at offsets 6 and 7. FCW at offset 0 is real output.
+    # The later ordinary store targets the reserved byte, with a following
+    # sentinel to prove that the debug stop precedes the next instruction.
+    sector = assemble(tmp_path, 'layer-fxsave-reserved', r'''
+bits 16
+org 0x7c00
+    jmp short start
+    nop
+    dd save_fpu, writer
+start:
+    cli
+    xor ax,ax
+    mov ds,ax
+    mov ss,ax
+    mov sp,0x7000
+    mov word [0x9000],0
+    mov byte [0x9007],0x5a
+    mov word [0x9008],0xbeef
+    mov byte [0x9300],0
+    fninit
+save_fpu:
+    fxsave [0x9000]
+writer:
+    mov byte [0x9007],0x66
+    mov byte [0x9300],0x7b
+halt:
+    jmp halt
+times 510-($-$$) db 0
+dw 0xaa55
+''', nasm)
+    save_fpu, writer = unpack_from('<II', sector, 3)
+    source = tmp_path / 'fxsave-layer.img'
+    source.write_bytes(sector.ljust(1440 * 1024, b'\0'))
+    profile = prepare_dos_profile(source, cpu='max')
+    with Project.create(tmp_path / 'fxsave-layer.fdb', source, arch='x86', bits=32) as project:
+        with project.debugger(executable, tmp_path, guest_profile=profile, **options) as debug:
+            _stop_at(debug, save_fpu)
+            debug.layer_patch('fxsave-reserved', 0x9007, space='physical',
+                              kind='execute', expected_hex='5a', data_hex='90')
+            _stop_at(debug, writer)
+            assert debug.memory(0x9000, length=2, space='physical')['hex'] == '7f03'
+            assert debug.memory(0x9008, length=2, space='physical')['hex'] == '0000'
+            assert debug.memory(0x9007, length=1, space='physical')['hex'] == '5a'
+            assert debug.memory(0x9300, length=1, space='physical')['hex'] == '00'
+            result = debug.run(timeout_ms=3000)
+            assert result['outcome'] == 'stopped' and result['layer_conflict']['fault'], result
+            assert debug.memory(0x9007, length=1, space='physical')['hex'] == '66'
+            assert debug.memory(0x9300, length=1, space='physical')['hex'] == '00'
+    assert source.read_bytes() == sector.ljust(1440 * 1024, b'\0')

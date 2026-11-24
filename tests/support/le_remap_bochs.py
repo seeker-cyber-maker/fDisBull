@@ -112,43 +112,46 @@ class Bochs:
         }
 
 
+def walk_linear(debug, ctx, linear):
+    """Walk Bochs physical tables for one stopped linear address."""
+    pae = bool(ctx["cr4"] & 0x20)
+    levels = []
+
+    if not pae:
+        address = (ctx["cr3"] & 0xFFFFF000) + ((linear >> 22) & 1023) * 4
+        value = int.from_bytes(debug.read(address, 4, True), "little")
+        assert value & 1 and value & 0x80, ("legacy-4m-pde", address, value)
+        levels.append({"level": "pde", "address": address, "value": value})
+        # PSE-36 carries physical address bits 32..39 in PDE bits 13..20.
+        base = (value & 0xFFC00000) | ((value & 0x001FE000) << 19)
+        return base + (linear & 0x3FFFFF), 0x400000, levels
+
+    def entry(level, address):
+        value = int.from_bytes(debug.read(address, 8, True), "little")
+        assert value & 1, (level, address, value)
+        levels.append({"level": level, "address": address, "value": value})
+        return value
+
+    pdpte = entry("pdpte", (ctx["cr3"] & ~31) + (linear >> 30) * 8)
+    pde = entry("pde", (pdpte & 0x000FFFFFFFFFF000) + ((linear >> 21) & 511) * 8)
+    if pde & 0x80:
+        return (pde & 0x000FFFFFFFE00000) + (linear & 0x1FFFFF), 0x200000, levels
+    pte = entry("pte", (pde & 0x000FFFFFFFFFF000) + ((linear >> 12) & 511) * 8)
+    return (pte & 0x000FFFFFFFFFF000) + (linear & 4095), 0x1000, levels
+
+
 def observation(debug, *, capture_window=False):
     ctx = debug.context()
     assert ctx["cr0"] & 0x80000001 == 0x80000001
     pae = bool(ctx["cr4"] & 0x20)
     pc = ctx["cs_base"] + ctx["ip"]
 
-    def walk(linear):
-        levels = []
-
-        if not pae:
-            address = (ctx["cr3"] & 0xFFFFF000) + ((linear >> 22) & 1023) * 4
-            value = int.from_bytes(debug.read(address, 4, True), "little")
-            assert value & 1 and value & 0x80, ("legacy-4m-pde", address, value)
-            levels.append({"level": "pde", "address": address, "value": value})
-            # PSE-36 carries physical address bits 32..39 in PDE bits 13..20.
-            base = (value & 0xFFC00000) | ((value & 0x001FE000) << 19)
-            return base + (linear & 0x3FFFFF), 0x400000, levels
-
-        def entry(level, address):
-            value = int.from_bytes(debug.read(address, 8, True), "little")
-            assert value & 1, (level, address, value)
-            levels.append({"level": level, "address": address, "value": value})
-            return value
-
-        pdpte = entry("pdpte", (ctx["cr3"] & ~31) + (linear >> 30) * 8)
-        pde = entry("pde", (pdpte & 0x000FFFFFFFFFF000) + ((linear >> 21) & 511) * 8)
-        if pde & 0x80:
-            return (pde & 0x000FFFFFFFE00000) + (linear & 0x1FFFFF), 0x200000, levels
-        pte = entry("pte", (pde & 0x000FFFFFFFFFF000) + ((linear >> 12) & 511) * 8)
-        return (pte & 0x000FFFFFFFFFF000) + (linear & 4095), 0x1000, levels
-
     window = debug.read(pc, 15) if capture_window else None
     data = window if window is not None else debug.read(pc, 15)
     decoded = Decoder(32, data, ip=ctx["ip"]).decode()
     assert not decoded.is_invalid
     data = data[: decoded.len]
-    walks = [walk(pc + i) for i in range(len(data))]
+    walks = [walk_linear(debug, ctx, pc + i) for i in range(len(data))]
     assert bytes(debug.read(p, 1, True)[0] for p, _, _ in walks) == data
     mmu_pages = {}
     for offset, (physical, _, _) in enumerate(walks):
@@ -176,7 +179,7 @@ def observation(debug, *, capture_window=False):
             if page == (pc & ~0xFFF) and linear == pc:
                 physical, page_size, entries = walks[0]
             else:
-                physical, page_size, entries = walk(linear)
+                physical, page_size, entries = walk_linear(debug, ctx, linear)
             if page not in mmu_pages:
                 output = debug.cmd(f"page {linear:#x}")
                 found = re.search(
@@ -382,6 +385,46 @@ def verify_saved_high_checkpoint(stage, cfg, hot, cold, captures=(), views=("exe
                     assert physical_read(physical, 1) == bytes((observed,))
 
 
+def prepare_bochs_media(stage, source, share, high_memory, *, disk_name, batch_name, config_name, log_name):
+    disk = stage / disk_name
+    shutil.copyfile(stage / "boot.img", disk)
+    batch = stage / batch_name
+    batch.write_bytes(b"@echo off\r\nA:\\REMAP.EXE\r\n")
+    for path, name in ((source, "REMAP.EXE"), (batch, "FDAUTO.BAT")):
+        subprocess.run(
+            [
+                os.environ["FDISBULL_QEMU_DOS_MCOPY"],
+                "-i",
+                str(disk),
+                "-o",
+                str(path),
+                "::" + name,
+            ],
+            check=True,
+            capture_output=True,
+            timeout=15,
+        )
+    config = stage / config_name
+    memory = (
+        "memory: guest=4120, host=32, block_size=2048"
+        if high_memory
+        else "megs: 32"
+    )
+    config.write_text(f'''{memory}
+romimage: file="{share / "BIOS-bochs-latest"}"
+vgaromimage: file="{share / "VGABIOS-lgpl-latest.bin"}"
+display_library: nogui
+floppya: 1_44="{disk}", status=inserted
+boot: floppy
+log: "{stage / log_name}"
+panic: action=fatal
+error: action=report
+info: action=ignore
+debug: action=ignore
+''')
+    return disk, config
+
+
 def run(stage, phase):
     stage = Path(stage).resolve()
     assert phase in ("before", "after")
@@ -393,42 +436,9 @@ def run(stage, phase):
     share = Path(os.environ.get("FDISBULL_BOCHS_SHARE", binary.parent.parent / "share" / "bochs"))
     checkpoint = stage / "bochs-state"
     if phase == "before":
-        disk = stage / "bochs.img"
-        shutil.copyfile(stage / "boot.img", disk)
-        batch = stage / "bochs-auto.bat"
-        batch.write_bytes(b"@echo off\r\nA:\\REMAP.EXE\r\n")
-        for path, name in ((source, "REMAP.EXE"), (batch, "FDAUTO.BAT")):
-            subprocess.run(
-                [
-                    os.environ["FDISBULL_QEMU_DOS_MCOPY"],
-                    "-i",
-                    str(disk),
-                    "-o",
-                    str(path),
-                    "::" + name,
-                ],
-                check=True,
-                capture_output=True,
-                timeout=15,
-            )
-        config = stage / "bochsrc"
-        memory = (
-            "memory: guest=4120, host=32, block_size=2048"
-            if high_memory
-            else "megs: 32"
-        )
-        config.write_text(f'''{memory}
-romimage: file="{share / "BIOS-bochs-latest"}"
-vgaromimage: file="{share / "VGABIOS-lgpl-latest.bin"}"
-display_library: nogui
-floppya: 1_44="{disk}", status=inserted
-boot: floppy
-log: "{stage / "bochs.log"}"
-panic: action=fatal
-error: action=report
-info: action=ignore
-debug: action=ignore
-''')
+        disk, config = prepare_bochs_media(
+            stage, source, share, high_memory, disk_name="bochs.img",
+            batch_name="bochs-auto.bat", config_name="bochsrc", log_name="bochs.log")
         args = [str(binary), "-q", "-debugger", "-f", str(config)]
     else:
         args = [str(binary), "-q", "-debugger", "-r", str(checkpoint)]

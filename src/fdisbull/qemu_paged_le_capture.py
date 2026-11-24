@@ -70,6 +70,15 @@ def _compatible_producer(recorded, current, *, tracking=False):
     """Accept only exact manifests for current and retained supported producers."""
     if recorded == current:
         return True
+    # Preserve the immediately preceding physical64 producer exactly. Its
+    # native paging allowances cover only its two already qualified images.
+    physical64 = dict(current)
+    physical64.update({
+        'qemu_le_translation.py': '264bd620cf88d782d2a5dbb5650b014b1b257400f3cdae30e8868d3a0a29cb44',
+        'qemu_paged_le_capture.py': '2581302612566a4c03bbc8df8d1280a33d6eb4eb782fa7f4e7adf168ae4bbc19',
+    })
+    if recorded == physical64:
+        return True
     # Preserve the exact pre-physical64 producer, including tracking variants.
     pre_physical64 = dict(current)
     pre_physical64.update({
@@ -124,6 +133,7 @@ def _supports_extended_walks(recorded):
 def _supports_high_ram(recorded, current):
     return recorded == current or (
         recorded.get('qemu_le_translation.py') in (
+            '264bd620cf88d782d2a5dbb5650b014b1b257400f3cdae30e8868d3a0a29cb44',
             'd25de015b988de444bd70bf53dfd4be64e3ed8651373748b05d679ba6f8c536f',
             '6e40403e81266323e8e96a978a3c73764b7bc337724880835bc968206ea13ee6')
         and _compatible_producer(recorded, current, tracking='qemu_paged_le_tracking.py' in current)
@@ -131,13 +141,25 @@ def _supports_high_ram(recorded, current):
 
 
 def _supports_pse36(recorded, current, image_hash):
-    # PSE36 was added in the immediately preceding producer, never earlier ones.
-    from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE
-    return recorded == current or (
-        image_hash == QEMU_TCG_QUALIFIED_IMAGE
-        and recorded.get('qemu_le_translation.py') == 'd25de015b988de444bd70bf53dfd4be64e3ed8651373748b05d679ba6f8c536f'
-        and _compatible_producer(recorded, current, tracking='qemu_paged_le_tracking.py' in current)
-    )
+    # A historical producer may only use images that it itself admitted.
+    from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE
+    if recorded == current:
+        return True
+    if not _compatible_producer(recorded, current, tracking='qemu_paged_le_tracking.py' in current):
+        return False
+    translation = recorded.get('qemu_le_translation.py')
+    if translation == '264bd620cf88d782d2a5dbb5650b014b1b257400f3cdae30e8868d3a0a29cb44':
+        return image_hash in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE)
+    return (translation == 'd25de015b988de444bd70bf53dfd4be64e3ed8651373748b05d679ba6f8c536f'
+            and image_hash == QEMU_TCG_QUALIFIED_IMAGE)
+
+
+def _replay_qemu_image(recorded, current, image_hash):
+    """Do not give historical producers new native-image allowances."""
+    from .qemu_le_translation import QEMU_TCG_OVERLAY_WRITE_IMAGE
+    if recorded != current and image_hash == QEMU_TCG_OVERLAY_WRITE_IMAGE:
+        return None
+    return image_hash
 
 
 def _pse36(configuration, image_hash):
@@ -606,7 +628,7 @@ def validate(project, observation, run_metadata, *, run, version):
 
         def read(a, n):
             data, actual = translate_linear(context, a, n, physical,
-                                            qemu_image_sha256=ident['runtime_inputs'].get('qemu_image'), high_ram_end=high_end,
+                                            qemu_image_sha256=_replay_qemu_image(proof['producer'], current_producer, ident['runtime_inputs'].get('qemu_image')), high_ram_end=high_end,
                                             pse36=_supports_pse36(proof['producer'], current_producer, ident['runtime_inputs'].get('qemu_image')) and _pse36(run_metadata['machine_configuration'], ident['runtime_inputs'].get('qemu_image')))
             if not _supports_extended_walks(proof['producer']) and any('page_size' in walk for walk in actual):
                 raise ValueError('Legacy producer cannot attest an extended page walk')

@@ -1,0 +1,77 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "7a9f04b14e74caf83d74c1ebb160f0f3d130b04a3b094a176091ad33a50b7f1e",
+  "base_manifest": "../qemu-high-execute/source-manifest.json",
+  "base_source_tree_sha256": "5038e862dfd203345391e294eb0d93870a423a4a4d161e723ad981f8ca7482cc",
+  "patched_source_tree_sha256": "530d6ebe0d984b83dcf46c40ccd7fec6a1a8d165bcfbff28cf0467a3ac8bd188",
+  "source_tree_digest": "SHA256 over recursive os.walk records, each directory name list and file name list sorted separately, no symlink traversal; each file or symlink record is kind NUL relative POSIX path NUL octal permission bits NUL symlink target or file SHA256 newline; directories omitted",
+  "composition": "Apply to exact qemu-high-execute source with git apply --whitespace=error; verify preimage hashes.",
+  "scope": "Single-vCPU TCG execute-overlay guest-write observation; replay one instruction on exact overlap, fail closed without recoverable TB.",
+  "patch": "qemu-10.0.13-fdisbull-dirty-overlay-v1.patch",
+  "patch_bytes": 10142,
+  "patch_sha256": "492c2a3ce62350bc1d6a3f0a2d12a2fae22d5481200379fa57430c543fe7cb6d",
+  "files": [
+    {
+      "path": "accel/tcg/cputlb.c",
+      "base_bytes": 95777,
+      "base_sha256": "6a80bf5231dce5cb2cffc7bd1e51d21473140d47e871ef27a21b6ef2d4e0da30",
+      "patched_bytes": 96631,
+      "patched_sha256": "d05fe5bbdb25a1b38f82c06352ab51efe37cd5dd0cae7719bda36d46a81e7c9f",
+      "mode": "100644"
+    },
+    {
+      "path": "include/system/fdisbull-layers.h",
+      "base_bytes": 407,
+      "base_sha256": "2ecb6317e89580fcedeaac4a967f7ac0af1cc450b85609ae8df2c9c3b9660df3",
+      "patched_bytes": 567,
+      "patched_sha256": "e94f00d9c6ee39d995071c7a221bb84a0d2b311288e0cf9d9b6596906fe45d65",
+      "mode": "100644"
+    },
+    {
+      "path": "system/fdisbull-layers.c",
+      "base_bytes": 18539,
+      "base_sha256": "75e5bbfac3d77f0583360a139094a3a7672b87809a422de570b4c3810f372f38",
+      "patched_bytes": 20225,
+      "patched_sha256": "9bf1e546c1cef20e3c753d22d605c72fbba08809796cc7950b4f2b181d7e5760",
+      "mode": "100644"
+    },
+    {
+      "path": "target/i386/tcg/access.c",
+      "base_bytes": 4146,
+      "base_sha256": "954ea8603cb5b7d033217c15749c151361d961babd854a840d4825b4a05f8c47",
+      "patched_bytes": 4709,
+      "patched_sha256": "5a334b30f9fee4cf9713af21f39d57da7dc82095346824ec26711ce31f365bfe",
+      "mode": "100644"
+    }
+  ],
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "command": "ninja -j4 qemu-system-x86_64",
+    "candidate_sha256": "71bdaef65a9241d2d4ff451fbd3e44a9a5cc93cb437b4adc51026ad211db8bd1",
+    "qualification": "Local ordinary guest stores on already-dirty high-backed 4 KiB PAE, 2 MiB PAE and 4 MiB PSE-36 pages compared with Bochs before and after unprimed cold restore. See docs/DOS_QEMU_HANDOFF.md for the exact stop and open paths.",
+    "configure_argv": [
+      "--target-list=x86_64-softmmu",
+      "--without-default-features",
+      "--enable-system",
+      "--enable-tcg",
+      "--enable-pixman",
+      "--disable-user",
+      "--enable-tools",
+      "--disable-docs",
+      "--disable-guest-agent",
+      "--disable-containers",
+      "--disable-download",
+      "--disable-install-blobs",
+      "--disable-debug-info",
+      "--disable-qom-cast-debug",
+      "--audio-drv-list=",
+      "--firmwarepath=/Volumes/HIKSEMI/.fdisbull-vbe101-lfb-Ja20vq9x/native-source/pc-bios",
+      "--prefix=/Volumes/GitHub/GitHub/fDisBull-private/dirty-overlay-native-20261124/install",
+      "--ninja=/Users/tiga/miniconda/bin/ninja",
+      "--python=/Users/tiga/miniconda/bin/python3"
+    ],
+    "frozen_executable": "/Volumes/GitHub/GitHub/fDisBull-private/dirty-overlay-native-20261124/frozen/qemu-system-x86_64-71bdaef65a9241d2"
+  }
+}

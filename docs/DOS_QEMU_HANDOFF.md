@@ -1,5 +1,40 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Immediate overlay write stops on dirty high pages (2026-11-24)
+
+The guest wrote a sibling byte and then the byte covered by an execute
+layer in a single uninterrupted debugger run. The writer ran on a different
+4 KiB subpage. In all three mappings the watched guest address
+`0x401f01` resolved to physical `0x100801f01`. Bochs checked the mapping
+through its debugger and an independent walk of its guest page tables.
+
+| QEMU result | Previous high-execute build | Dirty-page candidate |
+| --- | --- | --- |
+| Stop PC | `0x402115`, past the sentinel | `0x40210e`, before the sentinel |
+| Sibling / watched / sentinel RAM | `a5 / 5a / cc` | `a5 / 5a / 90` |
+| Stop reason | Fallback breakpoint | Native execution-layer write conflict |
+
+The table held for 4 KiB PAE, 2 MiB PAE and 4 MiB PSE-36, both live and
+after cold restore. Each new QEMU receiver started in real mode with paging,
+PAE and PSE disabled. Loading its checkpoint restored the control registers
+and re-established the active layer in the new session. Bochs supplied the
+PC and all three RAM bytes at the two store boundaries from both its original
+process and a fresh process started directly from its own checkpoint.
+The low 32-bit alias of the QEMU target retained `90`. Clearing the fault
+allowed the sentinel store to execute and change its byte to `cc`.
+
+A separate word-store control touched the overlaid byte with the second byte
+of the store and wrote its existing value. The candidate still stopped there.
+An FXSAVE control exercised a prepared memory span. An untouched byte within
+the span kept its overlay, adjacent FPU fields were written, and a later
+explicit write to the watched byte stopped before its sentinel.
+
+This qualification covers ordinary CPU stores to execute overlays. Direct
+page-table A/D updates, conditional atomics and replay of multi-access
+instructions with side effects remain open. DOSBox-X remains the default.
+See the [native candidate](../native/qemu-dirty-overlay/README.md) and the
+[local Bochs procedure](../native/bochs-pae-reference/README.md#compare-writes-to-overlaid-bytes-on-dirty-pages).
+
 ## High-backed execute capture with active overlays (2026-11-24)
 
 The physical64 QEMU candidate captured an active execute overlay at the

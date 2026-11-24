@@ -27,3 +27,6 @@ The existing guest-write hook triggers on QEMU code-dirty handling. A prior
 write elsewhere on the same page may prevent eager notification of a later
 overlaid-byte write; the new observer checks the backing at observation time.
 Eager guest-write notification timing remains unqualified.
+
+The subsequent [dirty-page candidate](../qemu-dirty-overlay/README.md)
+covers ordinary guest stores to active execute overlays after a sibling write.

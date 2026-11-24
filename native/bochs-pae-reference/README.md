@@ -127,3 +127,19 @@ execute layer at its wrapped low alias. Each Bochs owner saves or observes its
 untouched checkpoint before substituting the high byte in reference RAM and
 stepping one instruction. The paired test compares the full original and
 substituted windows, the stopped addresses, and the relative change in ESI.
+
+### Compare writes to overlaid bytes on dirty pages
+
+Select the [dirty-page QEMU candidate](../qemu-dirty-overlay/README.md) and the
+same Bochs reference. Run the three high-memory cases locally with
+
+```sh
+python -m pytest -q tests/test_qemu_dirty_execute_overlay_pae_native.py
+```
+
+The guest writes to a sibling on the watched 4 KiB physical subpage, then
+writes the overlaid byte. The next instruction writes a sentinel. Bochs
+steps the original guest to supply the independent PC, page-table walk and
+physical RAM values. QEMU runs through the two stores in a single debugger
+call. Both engines repeat the sequence from their own native checkpoints in
+fresh processes.

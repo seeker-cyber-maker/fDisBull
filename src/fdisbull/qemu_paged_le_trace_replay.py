@@ -6,7 +6,7 @@ import json
 from .event_search import _artifact, _capture_sequence
 from .qemu_paged_le_capture import (
     _cpu, _ram_limits, _ram_extent, _compatible_producer, _supports_extended_walks,
-    _supports_high_ram, _supports_pse36, _pse36, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS,
+    _supports_high_ram, _supports_pse36, _pse36, _replay_qemu_image, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS,
 )
 from .qemu_paged_le_observation import replay
 from .qemu_dos_source_admission import _source
@@ -128,7 +128,7 @@ def analyze_trace(project, artifact):
             checked = replay(
                 image, row['version'], witness,
                 legacy_producer=not _supports_extended_walks(doc['producer']),
-                qemu_image_sha256=doc['native_inputs'].get('qemu_image'), high_ram_end=high_end,
+                qemu_image_sha256=_replay_qemu_image(doc['producer'], current_producer, doc['native_inputs'].get('qemu_image')), high_ram_end=high_end,
                 pse36=_supports_pse36(doc['producer'], current_producer, doc['native_inputs'].get('qemu_image')) and _pse36(meta['machine_configuration'], doc['native_inputs'].get('qemu_image')),
             )
             if (

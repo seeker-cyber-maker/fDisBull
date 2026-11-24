@@ -152,9 +152,9 @@ def test_qemu_pdpte_accessed_bit_requires_exact_native_hash_including_offline_re
                                    qemu_image_sha256=QEMU_TCG_PAE_ACCESSED_IMAGE)
     assert data == b'q'
     assert walks[0]['entries'][0]['qemu_tcg_accessed'] is True
-    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE
-    assert translate_linear(context, 0, 1, reader(memory),
-                            qemu_image_sha256=QEMU_TCG_PHYSICAL64_IMAGE)[0] == b'q'
+    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE
+    for image in (QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE):
+        assert translate_linear(context, 0, 1, reader(memory), qemu_image_sha256=image)[0] == b'q'
     assert walks[0]['entries'][0]['raw'] == (0x2021).to_bytes(8, 'little').hex()
 
     # Replaying the retained exact physical reads with a forged profile digest
@@ -298,3 +298,39 @@ def test_pre_physical64_producer_retains_exact_high_replay_manifest():
     prior['le.py'] = '0' * 64
     assert not _compatible_producer(prior, current) and not _supports_high_ram(prior, current)
     assert not _supports_pse36(prior, current, QEMU_TCG_PAE_ACCESSED_IMAGE)
+
+
+def test_overlay_write_image_admission_preserves_exact_physical64_producer():
+    from fdisbull.qemu_le_translation import (QEMU_TCG_QUALIFIED_IMAGE,
+        QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE)
+    from fdisbull.qemu_paged_le_capture import (_producer, _compatible_producer,
+        _supports_high_ram, _supports_pse36, _pse36, _replay_qemu_image)
+    config = {'memory_mib': 64, 'cpu': 'max', 'max_ram_below_4g_mib': 32}
+    current = _producer()
+    prior = dict(current, **{
+        'qemu_le_translation.py': '264bd620cf88d782d2a5dbb5650b014b1b257400f3cdae30e8868d3a0a29cb44',
+        'qemu_paged_le_capture.py': '2581302612566a4c03bbc8df8d1280a33d6eb4eb782fa7f4e7adf168ae4bbc19'})
+    assert _compatible_producer(prior, current) and _supports_high_ram(prior, current)
+    for image in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE):
+        assert _supports_pse36(prior, current, image)
+        assert _replay_qemu_image(prior, current, image) == image
+    assert _pse36(config, QEMU_TCG_OVERLAY_WRITE_IMAGE)
+    assert _supports_pse36(current, current, QEMU_TCG_OVERLAY_WRITE_IMAGE)
+    assert _replay_qemu_image(current, current, QEMU_TCG_OVERLAY_WRITE_IMAGE) == QEMU_TCG_OVERLAY_WRITE_IMAGE
+    assert not _supports_pse36(prior, current, QEMU_TCG_OVERLAY_WRITE_IMAGE)
+    assert _replay_qemu_image(prior, current, QEMU_TCG_OVERLAY_WRITE_IMAGE) is None
+    assert not _pse36(config, 'f' * 64)
+    prior['le.py'] = '0' * 64
+    assert not _compatible_producer(prior, current)
+    assert not _supports_high_ram(prior, current)
+    assert not _supports_pse36(prior, current, QEMU_TCG_PHYSICAL64_IMAGE)
+    from fdisbull.qemu_paged_le_tracking import _paged_producer
+    tracking = _paged_producer()
+    prior_tracking = dict(tracking, **{
+        'qemu_le_translation.py': '264bd620cf88d782d2a5dbb5650b014b1b257400f3cdae30e8868d3a0a29cb44',
+        'qemu_paged_le_capture.py': '2581302612566a4c03bbc8df8d1280a33d6eb4eb782fa7f4e7adf168ae4bbc19'})
+    assert _compatible_producer(prior_tracking, tracking, tracking=True)
+    assert _supports_pse36(prior_tracking, tracking, QEMU_TCG_PHYSICAL64_IMAGE)
+    prior_tracking['qemu_paged_le_tracking.py'] = '0' * 64
+    assert not _compatible_producer(prior_tracking, tracking, tracking=True)
+    assert not _supports_pse36(prior_tracking, tracking, QEMU_TCG_PHYSICAL64_IMAGE)

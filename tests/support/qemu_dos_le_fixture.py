@@ -178,7 +178,8 @@ protected_jump:
         source_view='embedded-le', carrier='mz-bw-mz-le')
 
 
-def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=False, paging_mode="legacy-4k"):
+def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=False,
+                            paging_mode="legacy-4k", dirty_overlay_writes=False):
     """Build a bounded MZ/BW/MZ/LE carrier with paging and an LDT CS.
 
     The protected-mode loader optionally copies the LE logical pages to three
@@ -215,6 +216,8 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
     if pse36:
         remap_a |= 0x2000
         remap_b |= 0x2000
+    if dirty_overlay_writes and not tracking:
+        raise ValueError('dirty overlay write witness requires tracking')
     if tracking and not (paging and ldt):
         raise ValueError('tracking mode requires paging and the LDT')
 
@@ -248,16 +251,33 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
         code[PAGED_TRACKING_TARGET:PAGED_TRACKING_TARGET + 2] = b'\x46\xcb'  # inc esi; retf
         code[PAGED_TRACKING_TARGET + 2:PAGED_TRACKING_TARGET + 2 + PAGED_TRACKING_SIGNATURE_SIZE] = bytes(
             (i * 73 + 19) & 0xff for i in range(PAGED_TRACKING_SIGNATURE_SIZE))
-        controller = bytearray()
-        controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)
-        controller += b'\xc7\x05' + struct.pack('<II', remap_address, remap_b)
-        controller += bytes.fromhex('0f20d8 0f22d8')
-        controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)
-        controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_TRACKING_SELECTOR_B)
-        controller += b'\xc7\x05' + struct.pack('<II', remap_address, remap_a)
-        controller += bytes.fromhex('0f20d8 0f22d8')
-        controller += b'\x9a' + struct.pack('<IH', OUTSIDE_BASE, 8)
-        controller += b'\xeb' + struct.pack('b', -(len(controller) + 2))
+        if dirty_overlay_writes:
+            # Both stores use the same linear alias and backing 4K page. The
+            # first dirties that page; the second overlaps an execute layer.
+            # The watched byte and its sibling writes are on logical page 1,
+            # separate from the executing controller on logical page 2.
+            watched = code_base + 0x1f01
+            unrelated = code_base + 0x1f10
+            sentinel = code_base + 0x1f11
+            controller = bytearray(b'\xc6\x05' + struct.pack('<I', unrelated) + b'\xa5')
+            controller += b'\xc6\x05' + struct.pack('<I', watched) + b'\x5a'
+            controller += b'\xc6\x05' + struct.pack('<I', sentinel) + b'\xcc\xeb\xfe'
+            dirty_write_offsets = dict(watched=watched, unrelated=unrelated,
+                                       sentinel=sentinel, overlay_page=watched & ~0xfff,
+                                       unrelated_store=code_base + PAGED_TRACKING_CONTROLLER,
+                                       watched_store=code_base + PAGED_TRACKING_CONTROLLER + 7,
+                                       sentinel_store=code_base + PAGED_TRACKING_CONTROLLER + 14)
+        else:
+            controller = bytearray()
+            controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)
+            controller += b'\xc7\x05' + struct.pack('<II', remap_address, remap_b)
+            controller += bytes.fromhex('0f20d8 0f22d8')
+            controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)
+            controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_TRACKING_SELECTOR_B)
+            controller += b'\xc7\x05' + struct.pack('<II', remap_address, remap_a)
+            controller += bytes.fromhex('0f20d8 0f22d8')
+            controller += b'\x9a' + struct.pack('<IH', OUTSIDE_BASE, 8)
+            controller += b'\xeb' + struct.pack('b', -(len(controller) + 2))
         code[PAGED_TRACKING_CONTROLLER:PAGED_TRACKING_CONTROLLER + len(controller)] = controller
         signature_start = PAGED_TRACKING_CONTROLLER + len(controller)
         code[signature_start:signature_start + PAGED_TRACKING_SIGNATURE_SIZE] = bytes(
@@ -622,6 +642,7 @@ protected_jump:
                 tracking_selector_b=PAGED_TRACKING_SELECTOR_B if tracking else None,
                 tracking_steps=19 if tracking else None,
                 tracking_signature_size=PAGED_TRACKING_SIGNATURE_SIZE if tracking else None,
+                dirty_write_offsets=dirty_write_offsets if dirty_overlay_writes else None,
                 tracking_milestones=((PAGED_LDT_CODE_SELECTOR, PAGED_TRACKING_CONTROLLER, code_physical[2] + (PAGED_TRACKING_CONTROLLER & 0xfff)),
                     (PAGED_LDT_CODE_SELECTOR, PAGED_TRACKING_TARGET, code_physical[1] + (PAGED_TRACKING_TARGET & 0xfff)),
                     (PAGED_LDT_CODE_SELECTOR, PAGED_TRACKING_TARGET, tracking_physical + (PAGED_TRACKING_TARGET & 0xfff)),

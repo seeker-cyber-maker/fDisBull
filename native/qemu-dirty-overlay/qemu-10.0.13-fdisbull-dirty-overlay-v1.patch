@@ -1,0 +1,277 @@
+diff --git a/accel/tcg/cputlb.c b/accel/tcg/cputlb.c
+--- a/accel/tcg/cputlb.c
++++ b/accel/tcg/cputlb.c
+@@ -1091,7 +1091,8 @@
+         if (prot & PAGE_WRITE) {
+             if (section->readonly) {
+                 write_flags |= TLB_DISCARD_WRITE;
+-            } else if (cpu_physical_memory_is_clean(iotlb)) {
++            } else if (fdisbull_layers_watch_page(iotlb) ||
++                       cpu_physical_memory_is_clean(iotlb)) {
+                 write_flags |= TLB_NOTDIRTY;
+             }
+         }
+@@ -1341,20 +1342,36 @@
+ }
+ 
+ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
+-                           CPUTLBEntryFull *full, uintptr_t retaddr)
++                           CPUTLBEntryFull *full, uintptr_t retaddr,
++                           bool observe_write)
+ {
+     ram_addr_t ram_addr = mem_vaddr + full->xlat_section;
+ 
+     trace_memory_notdirty_write_access(mem_vaddr, ram_addr, size);
+ 
++    if (observe_write && fdisbull_layers_write_overlaps(ram_addr, size)) {
++        TranslationBlock *tb = retaddr ? tcg_tb_lookup(retaddr) : NULL;
++        if (tb && (tb_cflags(tb) & CF_COUNT_MASK) != 1) {
++            /* Replay just the writing instruction, as for watchpoints. */
++            mmap_lock();
++            tb_check_watchpoint(cpu, retaddr);
++            cpu->cflags_next_tb = 1 | CF_NOIRQ | curr_cflags(cpu);
++            mmap_unlock();
++            cpu_loop_exit_noexc(cpu);
++        }
++        if (!tb) {
++            /* No recoverable TB: fail closed before the access. */
++            fdisbull_layers_note_guest_write(ram_addr, size);
++            cpu->exception_index = EXCP_DEBUG;
++            cpu_loop_exit_restore(cpu, retaddr);
++        }
++        fdisbull_layers_note_guest_write(ram_addr, size);
++        bql_lock();
++        cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
++        bql_unlock();
++    }
+     if (!cpu_physical_memory_get_dirty_flag(ram_addr, DIRTY_MEMORY_CODE)) {
+ #ifndef CONFIG_USER_ONLY
+-        if (fdisbull_layers_note_guest_write(ram_addr, size)) {
+-            /* Stop at the first boundary after a layer backing is modified. */
+-            bql_lock();
+-            cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
+-            bql_unlock();
+-        }
+         if (fdisbull_task_private_note_guest_write(ram_addr, size)) {
+             bql_lock();
+             cpu_interrupt(cpu, CPU_INTERRUPT_DEBUG);
+@@ -1371,7 +1388,8 @@
+     cpu_physical_memory_set_dirty_range(ram_addr, size, DIRTY_CLIENTS_NOCODE);
+ 
+     /* We remove the notdirty callback only if the code has been flushed. */
+-    if (!cpu_physical_memory_is_clean(ram_addr)) {
++    if (!fdisbull_layers_watch_page(ram_addr) &&
++        !cpu_physical_memory_is_clean(ram_addr)) {
+         trace_memory_notdirty_set_dirty(mem_vaddr);
+         tlb_set_dirty(cpu, mem_vaddr);
+     }
+@@ -1443,7 +1461,7 @@
+     /* Handle clean RAM pages.  */
+     if (unlikely(flags & TLB_NOTDIRTY)) {
+         int dirtysize = size == 0 ? 1 : size;
+-        notdirty_write(env_cpu(env), addr, dirtysize, *pfull, retaddr);
++        notdirty_write(env_cpu(env), addr, dirtysize, *pfull, retaddr, size != 0);
+         flags &= ~TLB_NOTDIRTY;
+     }
+ 
+@@ -1467,7 +1485,7 @@
+     /* Handle clean RAM pages.  */
+     if (unlikely(flags & TLB_NOTDIRTY)) {
+         int dirtysize = size == 0 ? 1 : size;
+-        notdirty_write(env_cpu(env), addr, dirtysize, *pfull, 0);
++        notdirty_write(env_cpu(env), addr, dirtysize, *pfull, 0, size != 0);
+         flags &= ~TLB_NOTDIRTY;
+     }
+ 
+@@ -1490,7 +1508,7 @@
+     /* Handle clean RAM pages. */
+     if (unlikely(flags & TLB_NOTDIRTY)) {
+         int dirtysize = size == 0 ? 1 : size;
+-        notdirty_write(env_cpu(env), addr, dirtysize, full, retaddr);
++        notdirty_write(env_cpu(env), addr, dirtysize, full, retaddr, size != 0);
+         flags &= ~TLB_NOTDIRTY;
+     }
+ 
+@@ -1526,7 +1544,7 @@
+ 
+         /* Handle clean RAM pages.  */
+         if (flags & TLB_NOTDIRTY) {
+-            notdirty_write(env_cpu(env), addr, size, full, retaddr);
++            notdirty_write(env_cpu(env), addr, size, full, retaddr, true);
+         }
+     }
+ 
+@@ -1741,7 +1759,7 @@
+ 
+     /* Note that notdirty is only set for writes. */
+     if (flags & TLB_NOTDIRTY) {
+-        notdirty_write(cpu, addr, size, full, ra);
++        notdirty_write(cpu, addr, size, full, ra, true);
+         flags &= ~TLB_NOTDIRTY;
+     }
+     data->flags = flags;
+@@ -1904,7 +1922,7 @@
+     full = &cpu->neg.tlb.d[mmu_idx].fulltlb[index];
+ 
+     if (unlikely(tlb_addr & TLB_NOTDIRTY)) {
+-        notdirty_write(cpu, addr, size, full, retaddr);
++        notdirty_write(cpu, addr, size, full, retaddr, true);
+     }
+ 
+     if (unlikely(tlb_addr & TLB_FORCE_SLOW)) {
+diff --git a/include/system/fdisbull-layers.h b/include/system/fdisbull-layers.h
+--- a/include/system/fdisbull-layers.h
++++ b/include/system/fdisbull-layers.h
+@@ -9,6 +9,9 @@
+ #include "exec/cpu-common.h"
+ 
+ void fdisbull_layers_copy_code(void *dest, const void *host, size_t length);
++bool fdisbull_layers_active(void);
++bool fdisbull_layers_watch_page(ram_addr_t address);
++bool fdisbull_layers_write_overlaps(ram_addr_t address, size_t length);
+ bool fdisbull_layers_note_guest_write(ram_addr_t address, size_t length);
+ 
+ #endif
+diff --git a/system/fdisbull-layers.c b/system/fdisbull-layers.c
+--- a/system/fdisbull-layers.c
++++ b/system/fdisbull-layers.c
+@@ -27,6 +27,8 @@
+     QemuMutex lock;
+     GHashTable *execute;
+     GHashTable *expected;
++    GHashTable *pages;
++    bool active;
+     uint64_t generation;
+     char *fault;
+ } LayerState;
+@@ -49,6 +51,7 @@
+         layers.execute = g_hash_table_new_full(g_int64_hash, g_int64_equal,
+                                                g_free, NULL);
+         layers.expected = byte_map_new();
++        layers.pages = byte_map_new();
+         layers.generation = 0;
+         g_once_init_leave(&layers_initialized, 1);
+     }
+@@ -284,6 +287,7 @@
+     g_autoptr(GHashTable) ram_after_internal = byte_map_new();
+     g_autoptr(GHashTable) expected_internal = byte_map_new();
+     g_autoptr(GHashTable) replacement = byte_map_new();
++    g_autoptr(GHashTable) pages = byte_map_new();
+     FdisbullLayerConfigureInfo *result;
+     size_t ram_total = 0, exec_total = 0;
+     bool faulted;
+@@ -356,6 +360,12 @@
+             uint64_t *copy = g_new(uint64_t, 1);
+             *copy = resolved.ram_addr;
+             g_hash_table_insert(replacement, copy, value);
++            uint64_t page = resolved.ram_addr & ~(uint64_t)(LAYER_X86_PAGE_SIZE - 1);
++            if (!g_hash_table_contains(pages, &page)) {
++                uint64_t *page_copy = g_new(uint64_t, 1);
++                *page_copy = page;
++                g_hash_table_insert(pages, page_copy, GUINT_TO_POINTER(1));
++            }
+         }
+     }
+ 
+@@ -391,6 +401,9 @@
+     layers.execute = g_steal_pointer(&replacement);
+     g_hash_table_unref(layers.expected);
+     layers.expected = g_steal_pointer(&expected_internal);
++    g_hash_table_unref(layers.pages);
++    layers.pages = g_steal_pointer(&pages);
++    qatomic_set(&layers.active, g_hash_table_size(layers.execute) != 0);
+     if (faulted && !g_hash_table_size(exec_after)) {
+         g_clear_pointer(&layers.fault, g_free);
+     }
+@@ -517,6 +530,8 @@
+                 layers.fault = g_strdup("underlying execute byte changed before fetch");
+                 g_hash_table_remove_all(layers.execute);
+                 g_hash_table_remove_all(layers.expected);
++                g_hash_table_remove_all(layers.pages);
++                qatomic_set(&layers.active, false);
+                 output[i] = input[i];
+             } else {
+                 output[i] = value;
+@@ -525,6 +540,41 @@
+     }
+     qemu_mutex_unlock(&layers.lock);
+     fdisbull_task_private_copy_code(dest, host, length);
++}
++
++bool fdisbull_layers_active(void)
++{
++    return qatomic_read(&layers.active);
++}
++
++bool fdisbull_layers_watch_page(ram_addr_t address)
++{
++    bool found;
++    uint64_t page = address & ~(uint64_t)(LAYER_X86_PAGE_SIZE - 1);
++    if (!fdisbull_layers_active()) {
++        return false;
++    }
++    qemu_mutex_lock(&layers.lock);
++    found = g_hash_table_contains(layers.pages, &page);
++    qemu_mutex_unlock(&layers.lock);
++    return found;
++}
++
++bool fdisbull_layers_write_overlaps(ram_addr_t address, size_t length)
++{
++    bool found = false;
++    if (!fdisbull_layers_active()) {
++        return false;
++    }
++    qemu_mutex_lock(&layers.lock);
++    for (size_t i = 0; i < length; i++) {
++        if (g_hash_table_contains(layers.execute, &(uint64_t){ address + i })) {
++            found = true;
++            break;
++        }
++    }
++    qemu_mutex_unlock(&layers.lock);
++    return found;
+ }
+ 
+ bool fdisbull_layers_note_guest_write(ram_addr_t address, size_t length)
+@@ -540,6 +590,8 @@
+             layers.fault = g_strdup("guest self-modified an execution-layer backing byte");
+             g_hash_table_remove_all(layers.execute);
+             g_hash_table_remove_all(layers.expected);
++            g_hash_table_remove_all(layers.pages);
++            qatomic_set(&layers.active, false);
+             invalidated = true;
+             break;
+         }
+diff --git a/target/i386/tcg/access.c b/target/i386/tcg/access.c
+--- a/target/i386/tcg/access.c
++++ b/target/i386/tcg/access.c
+@@ -6,6 +6,9 @@
+ #include "exec/cpu_ldst.h"
+ #include "exec/exec-all.h"
+ #include "access.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-layers.h"
++#endif
+ 
+ 
+ void access_prepare_mmu(X86Access *ret, CPUX86State *env,
+@@ -28,6 +31,18 @@
+     ret->env = env;
+     ret->ra = ra;
+ 
++#ifndef CONFIG_USER_ONLY
++    if (type == MMU_DATA_STORE && fdisbull_layers_active()) {
++        /* Preparation checks permissions; the later individual stores are
++         * the actual accesses.  Do not turn a speculative span into a
++         * guest-write notification or bypass observation with a host ptr. */
++        probe_access(env, vaddr, 0, type, mmu_idx, ra);
++        if (size2) {
++            probe_access(env, vaddr + size1, 0, type, mmu_idx, ra);
++        }
++        return;
++    }
++#endif
+     haddr1 = probe_access(env, vaddr, size1, type, mmu_idx, ra);
+     ret->haddr1 = haddr1;
+ 
