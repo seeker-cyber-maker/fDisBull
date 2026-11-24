@@ -29,14 +29,14 @@ static bool run_slot(ScummScheduler *s,unsigned n,ScummSchedRun run,void *opaque
 int scumm_sched_start(ScummScheduler *s,uint16_t id,uint8_t scope,uint16_t owner,uint16_t room,const uint16_t *locals,uint8_t count,ScummSchedRun run,void *opaque,uint32_t budget)
 {
  if(!s||!id||scope<SCUMM_SCOPE_GLOBAL||scope>SCUMM_SCOPE_OBJECT||count>SCUMM_SCHED_MAX_LOCALS||(count&&!locals))return -1;
- if(scope==SCUMM_SCOPE_ROOM&&room!=s->current_room)return -1;if(scope==SCUMM_SCOPE_GLOBAL)room=0;
+ if(scope==SCUMM_SCOPE_ROOM&&room!=s->current_room)return -1;
+ if(scope==SCUMM_SCOPE_GLOBAL)room=0;
  unsigned n;for(n=0;n<s->slot_capacity;n++)if(s->slots[n].status==SCUMM_SLOT_FREE||s->slots[n].status==SCUMM_SLOT_STOPPED)break;
  if(n==s->slot_capacity)return -1;
- ScummSchedSlot *p=&s->slots[n];clear_slot(p);p->status=SCUMM_SLOT_RUNNABLE;p->scope=scope;p->script_id=id;
- p->owner_id=owner;p->room_id=room;p->locals_count=count;if(count)memcpy(p->locals,locals,count*sizeof(*locals));
- ++p->starts;emit(s,n,SCUMM_EVENT_START);
- /* startScript enters immediately; callback owns the interpreter context. */
- run_slot(s,n,run,opaque,budget);return (int)n;
+ ScummSchedSlot *p=&s->slots[n];uint64_t generation=p->starts+1;clear_slot(p);p->starts=generation;
+ p->status=SCUMM_SLOT_RUNNABLE;p->scope=scope;p->script_id=id;p->owner_id=owner;p->room_id=room;p->locals_count=count;
+ if(count)memcpy(p->locals,locals,count*sizeof(*locals));
+ emit(s,n,SCUMM_EVENT_START);run_slot(s,n,run,opaque,budget);return (int)n;
 }
 bool scumm_sched_stop(ScummScheduler *s,uint16_t slot)
 {
@@ -47,9 +47,9 @@ bool scumm_sched_chain(ScummScheduler *s,uint16_t slot,uint16_t id,ScummSchedRun
 {
  if(!s||slot>=s->slot_capacity||!id)return false;ScummSchedSlot *p=&s->slots[slot];
  if(p->status==SCUMM_SLOT_FREE||p->status==SCUMM_SLOT_STOPPED)return false;
- p->script_id=id;p->pc=0;p->call_depth=0;p->locals_count=0;
- memset(p->locals,0,sizeof(p->locals));memset(p->stack,0,sizeof(p->stack));
- p->status=SCUMM_SLOT_RUNNABLE;emit(s,slot,SCUMM_EVENT_CHAIN);run_slot(s,slot,run,opaque,budget);return true;
+ p->script_id=id;p->pc=0;p->call_depth=0;p->locals_count=0;memset(p->locals,0,sizeof(p->locals));
+ memset(p->stack,0,sizeof(p->stack));p->status=SCUMM_SLOT_RUNNABLE;emit(s,slot,SCUMM_EVENT_CHAIN);
+ run_slot(s,slot,run,opaque,budget);return true;
 }
 bool scumm_sched_push(ScummScheduler *s,uint16_t slot,uint16_t script,uint32_t entry,const uint16_t *locals,uint8_t count)
 {

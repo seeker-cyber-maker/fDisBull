@@ -33,6 +33,8 @@ int main(void)
  p.next[1]=SCUMM_RUN_YIELD;scumm_sched_init(&s,1,1,1);
  assert(scumm_sched_start(&s,1,SCUMM_SCOPE_GLOBAL,0,0,NULL,0,run,&p,1)==0);
  assert(scumm_sched_start(&s,2,SCUMM_SCOPE_GLOBAL,0,0,NULL,0,run,&p,1)==-1);
- assert(s.event_count==1&&s.dropped>0);
+ assert(s.event_count==1&&s.dropped>0);p.next[1]=SCUMM_RUN_RETURN;assert(scumm_sched_stop(&s,0));
+ assert(scumm_sched_start(&s,1,SCUMM_SCOPE_GLOBAL,0,0,NULL,0,run,&p,1)==0);
+ assert(s.slots[0].starts==2&&s.slots[0].status==SCUMM_SLOT_STOPPED);
  puts("SCUMM scheduler model checks passed");return 0;
 }

@@ -33,9 +33,10 @@ int scumm_sched_start(ScummScheduler *s,uint16_t id,uint8_t scope,uint16_t owner
  if(scope==SCUMM_SCOPE_GLOBAL)room=0;
  unsigned n;for(n=0;n<s->slot_capacity;n++)if(s->slots[n].status==SCUMM_SLOT_FREE||s->slots[n].status==SCUMM_SLOT_STOPPED)break;
  if(n==s->slot_capacity)return -1;
- ScummSchedSlot *p=&s->slots[n];clear_slot(p);p->status=SCUMM_SLOT_RUNNABLE;p->scope=scope;p->script_id=id;
- p->owner_id=owner;p->room_id=room;p->locals_count=count;if(count)memcpy(p->locals,locals,count*sizeof(*locals));
- ++p->starts;emit(s,n,SCUMM_EVENT_START);run_slot(s,n,run,opaque,budget);return (int)n;
+ ScummSchedSlot *p=&s->slots[n];uint64_t generation=p->starts+1;clear_slot(p);p->starts=generation;
+ p->status=SCUMM_SLOT_RUNNABLE;p->scope=scope;p->script_id=id;p->owner_id=owner;p->room_id=room;p->locals_count=count;
+ if(count)memcpy(p->locals,locals,count*sizeof(*locals));
+ emit(s,n,SCUMM_EVENT_START);run_slot(s,n,run,opaque,budget);return (int)n;
 }
 bool scumm_sched_stop(ScummScheduler *s,uint16_t slot)
 {
