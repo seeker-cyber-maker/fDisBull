@@ -23,11 +23,21 @@ flags. QEMU starts its receiving process in real mode with paging, PAE and
 PSE off and restores the active layer with the checkpoint. Bochs starts a
 fresh process directly from its own saved state.
 
-The unlocked cases passed both phases in all three modes. The locked 4 KiB
-PAE case also passed both phases. The larger-page locked cases use the same
-nonparallel lowering and have separate rows in the native test. The
-predecessor raised the conflict at the mismatch in all three mappings, with
-or without LOCK. A separate real-mode control covered byte, word and
+All six paging-mode and prefix combinations passed live and after unprimed
+cold restore. The final local run completed the locked 2 MiB PAE and 4 MiB
+PSE-36 comparisons on the frozen candidate. In each phase, a mismatch left
+the layer active and RAM at `90`. A changed-value match and a same-value
+match each stopped after the instruction, with RAM at `5a`, ZF set, and
+the following sentinel at `90`.
+
+For locked instructions, the stopped linear PCs were `0x402133` after the
+changed-value match and `0x402146` after the same-value match in every paging
+mode. The arithmetic flags were `0x885` after the failed comparison and
+`0x44` after each matched comparison. Bochs independently reproduced these
+flags, the high physical mapping and both stop PCs before and after restore.
+
+The predecessor raised the conflict at the mismatch in all three mappings,
+with or without LOCK. A separate real-mode control covered byte, word and
 doubleword comparisons, including same-value matches for both prefixes.
 
 See the [native patch and scope](../native/qemu-cmpxchg-overlay/README.md) and

@@ -37,7 +37,7 @@
     "command": "ninja -j4 qemu-system-x86_64",
     "candidate_sha256": "a25557c5d811fc2aa83abcd0eb472291bac72a593ac7862396691012501f7a87",
     "frozen_executable": "/Volumes/GitHub/GitHub/fDisBull-private/cmpxchg-overlay-20261124.kH4Epn/frozen/qemu-system-x86_64-a25557c5d811fc2a",
-    "qualification": "Local runtime comparison and limits are recorded in docs/DOS_QEMU_HANDOFF.md."
+    "qualification": "Local Bochs comparison passed for scalar byte CMPXCHG on high-backed 4 KiB PAE, 2 MiB PAE and 4 MiB PSE-36, LOCK and unlocked, live and after unprimed cold restore. Real-mode byte/word/dword controls also passed. See docs/DOS_QEMU_HANDOFF.md for scope and separate qualification boundaries."
   },
   "base_producer_sha256": "71bdaef65a9241d2d4ff451fbd3e44a9a5cc93cb437b4adc51026ad211db8bd1"
 }
