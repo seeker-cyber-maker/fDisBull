@@ -15,10 +15,12 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 from functools import wraps
 
 from .dosbox_rpc import DebuggerError
 from .qemu_control import QemuControl
+from .qemu_diagnostics import QemuInspectionMixin
 from .qemu_transport import PipeChannel, create_fifo_pair, open_fifo_pair
 from .memory_search_runtime import MemorySearchSessionMixin
 from .memory_rules import MemoryRuleSessionMixin
@@ -279,14 +281,16 @@ class QemuMachine:
                  checkpoint_tool=None, _checkpoint_image=None, frame_key_repeat_profile=None,
                  video_source_profile=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
+        self.inspection_target='x86_64'
         self._qemu_image_proof=None;self._admission_guest=None
         self._admission_guest_pidfd=None
         self.operation_deadline=None;self.close_observer=None
         self.transport=transport;self._channels=[];self._serial_channel=None
         self.lock=threading.RLock()
+        self._diagnostic_id=uuid.uuid4().hex
         self.observation_authority=ObservationAuthority(self)
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-vm-')
-        root=Path(self.temporary.name);self.log_path=root/'boot.log';self.gdb_path=root/'gdb.sock';self.rpc_path=root/'rpc.sock'
+        root=Path(self.temporary.name);self.log_path=root/'boot.log';self.qemu_log_path=root/'qemu.log';self.gdb_path=root/'gdb.sock';self.rpc_path=root/'rpc.sock'
         try:
             if on_spawn is not None and not callable(on_spawn):raise ValueError('Expected an internal process ownership callback')
             if transport not in ('unix','pipe'):raise ValueError('QEMU transport must be unix or pipe')
@@ -433,7 +437,7 @@ class QemuMachine:
             environment={key:value for key,value in os.environ.items()
                          if not key.startswith(('FDB_HOSTCALL_','FDB_LAYER_'))}
             remaining()
-            with (root/'qemu.log').open('wb') as log:
+            with self.qemu_log_path.open('wb') as log:
                 self.process=subprocess.Popen(command,cwd=root,stdin=subprocess.PIPE if transport=='pipe' else subprocess.DEVNULL,
                                               stdout=subprocess.PIPE if transport=='pipe' else log,stderr=log,bufsize=0,env=environment)
             if on_spawn is not None:on_spawn(self.process)
@@ -1144,7 +1148,7 @@ def machine_step_operation(function):
     return invoke
 
 
-class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
+class MachineContext(QemuInspectionMixin, QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClockMixin, QemuClockSyncMixin,
                      QemuSurfaceMixin, QemuAudioMixin, QemuMixerMixin, QemuDisplayMixin, QemuVideoControlMixin, QemuFrameStepMixin, QemuFrameContractMixin, QemuVideoFrameMixin, QemuVideoFrameStateMixin, QemuRetraceMixin, QemuVgaConfigurationMixin,
                      QemuWaitMixin, DesqviewSessionMixin, MemoryRuleSessionMixin, MemorySearchSessionMixin):
     """A machine CPU context, never confused with a process or DOSBox CPU."""
@@ -1242,6 +1246,8 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
         session_revision(vm)
         virtual=getattr(vm,'machine_configuration',{}).get('clock_profile',{}).get('profile')=='virtual'
         self.capabilities=dict(context='machine',address_spaces=['physical','virtual'],
+            qemu_diagnostics=True,
+            native_cpu_inventory=None,
             execution_breakpoints=True,data_watchpoints=True,register_edit=True,save_states=False,
             call_step_over=True,call_step_over_scope='real16-direct-near-call-v1; mode=over,count=1',
             code_layers=(isinstance(self,QemuLayerSessionMixin)
@@ -1323,6 +1329,7 @@ class MachineContext(QemuPhysicalInputMixin, QemuScheduledInputMixin, MachineClo
     @machine_status_operation
     def status(self):
         from .debug_semantics import contract
+        self._refresh_inspection_capability()
         retained=getattr(self,'_frame_read_session_owner',None)
         if retained is not None:retained.check_owner()
         vm=retained.vm if retained is not None else self.vm
@@ -2096,7 +2103,9 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
         # DOS process owners retain their separate _on_machine_closed observer.
         with self.vm.lock:
             _tracking(self,'close','native-machine-owner-closed')
-    def contexts(self):return dict(run=self.run_id,selected='machine',contexts=[dict(id='machine',kind='machine',capabilities=self.capabilities)])
+    def contexts(self):
+        self._refresh_inspection_capability()
+        return dict(run=self.run_id,selected='machine',contexts=[dict(id='machine',kind='machine',capabilities=self.capabilities)])
     def context(self,name):
         if name!='machine':raise ValueError('This session owns only the machine context')
         return self

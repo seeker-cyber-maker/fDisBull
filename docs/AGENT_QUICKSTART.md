@@ -89,6 +89,26 @@ observed PSP, source map and exit/TSR lifecycle. Read the maintained
 `dosbox-qemu` still runs DOSBox inside Linux/QEMU. DOSBox remains the default
 and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
 fixture; actual DOS, driver and game qualification are separate gates.
+For an owned QEMU machine or CHIP-8 session, `debug-diagnostics` reads a bounded
+range of the private native diagnostic log. Start with `run` and optionally
+`limit` (1..16384 bytes); continue with the returned `next_cursor` as `cursor`
+and the returned `identity`. The response contains exact bytes in `hex`, the
+observed file `size`, and the native exit code when available. The identity is
+required for a nonzero cursor and changes when the owner is replaced. This is
+native process output, not a guest execution trace; depending on the transport
+it may also include QEMU stdout. Treat its contents as private. A closed owner
+may have already removed its temporary log. The optional `timeout_ms` bounds
+owner-lock admission and the read; the default is 10000 ms.
+
+`debug-cpu-inventory` inspects QMP's target, CPU inventory and machine status
+for the same backends, with an optional `timeout_ms`. It gates target-enum
+queries against the producer schema and can use an exact-type QOM CPU child
+fallback. It returns observed CPU paths and producer fields without inferring
+registers or architecture-specific address semantics. Its queries are
+sequential, not an atomic snapshot of a running machine. The
+`native_cpu_inventory` capability starts as null, records the result of an
+inspection and returns to null when the owner is replaced.
+
 The [timing guide](DOS_QEMU_TIMING.md) covers explicit host clock auto-sync,
 modeled retrace waits, generation-checked input at the next retrace edge,
 native single-chord `keyboard.press` under `virtual_keyboard_press`,

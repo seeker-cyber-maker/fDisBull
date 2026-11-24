@@ -196,6 +196,34 @@ scene-2 only. Source presence and these authored passes do not establish
 contract parity. All 143 surface obligations and seven campaigns remain open,
 with DOSBox retained as the default and fallback.
 
+## Native CPU inspection across targets
+
+`MachineContext` and `Chip8DebugSession` share `QemuInspectionMixin` in
+`qemu_diagnostics.py`; `cpu_inventory()` delegates to
+`native_cpu.inspect_native_cpu` over the owned QMP client. Before standard
+queries, the helper follows `query-target.return.arch` and
+`query-cpus-fast.return.element.target` in `query-qmp-schema`. It calls the CPU
+query only when both fields reference the same enum ID containing the
+caller-declared target. Otherwise it uses one bounded `/machine/unattached`
+`qom-list`, accepting only the session's exact CPU type. Both routes expose
+observed `cpu_paths` and retain raw producer fields. Generic inventory supplies
+no register set; target capabilities remain unknown until observed.
+
+New targets reuse the QEMU owner, QMP transport, deadlines, status and mixin.
+Target code owns its CPU model, decoder, QOM state and GDB register description.
+For example, `MachineContext.registers()` reads GDB registers and compares them
+with QMP HMP `info registers`; generic inventory does not claim those values.
+
+The experimental QEMU AGI target is separate from `scummvm-agi`. Its overlay
+registers `agi` in `SysEmuTarget`, enabling the same standard schema gate after
+an AGI build. Qualification uses the opt-in
+`tests/test_qemu_agi_inspection_native.py` with `FDISBULL_QEMU_AGI`, an authored
+input and owned QMP session. Separately verify its one 32-bit GDB `pc`, QOM
+controls, `agi-state-json`, bounded `agi-decode-json` and deterministic state /
+visual-plane evidence against the exact binary identity. These target-specific
+checks do not establish original-game behavior, resource writing, UIL output or
+DOS parity; retain their receipts with results.
+
 ## FreeDOS and directory layers
 
 The optional checkpointed FreeDOS `C:` and private FAT workspace `D:` path,

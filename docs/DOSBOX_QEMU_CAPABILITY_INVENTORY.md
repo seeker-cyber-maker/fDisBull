@@ -320,7 +320,7 @@ qualification.
 | RPC methods | Slice | Existing native seam and remaining distinction |
 | --- | --- | --- |
 | `agent.capabilities` | Core | Machine capability metadata exists; advertise only implemented, admitted operations and distinguish availability from qualification |
-| `debug.output.read` | Core | Cursor-paged diagnostic output has no equivalent public QEMU cursor; owner logs and event artifacts need an explicit consumer/retention disposition |
+| `debug.output.read` | Core | `debug-diagnostics` pages owner-bound QEMU process-log bytes; DOSBox's ordered diagnostic records, cursor expiry and retention remain unqualified |
 | `debugger.execute_command` | Core | Stopped `HELP`/`CPU`/`PIC` only. The protected source matcher has a bounded QEMU CPU/GDT alternative; raw/parsed replies, HELP/PIC and rejection semantics remain unqualified |
 | `session.start` | DOS process | Native COM/MZ adapter now uses actual DOS EXEC, verifies PSP/MCB, ordered relocations and exact loader writes, then stops at entry; protected/V86 and full DOSBox launch parity remain unqualified |
 | `session.status`, `session.stop` | Core / DOS process | Machine status/cleanup exist; machine stop or process reaping is not selected DOS process termination |

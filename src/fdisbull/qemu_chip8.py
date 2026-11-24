@@ -20,6 +20,7 @@ import uuid
 from .dosbox_rpc import DebuggerError
 from .gdb_rpc import GDBRemote
 from .qemu_control import QemuControl
+from .qemu_diagnostics import QemuInspectionMixin
 from .debugger import stamp
 from .chip8_layers import Chip8LayerMixin, LAYER_MODEL
 from .chip8_cpu_deltas import Chip8CpuDeltaMixin
@@ -141,10 +142,11 @@ def _attach_native_diagnostics(error, owner):
 
 class _Owner:
     def __init__(self, executable, rom_bytes, identity, *, timeout_ms=30000, checkpoint_tool=None, checkpoint_data=None, on_spawn=None):
-        self.process=None;self.qmp=None;self.gdb=None;self.lock=threading.RLock();self.closed=False
+        self.process=None;self.qmp=None;self.gdb=None;self.lock=threading.RLock();self.closed=False;self.qmp_commands=None
+        self._diagnostic_id=uuid.uuid4().hex
         self.history_epoch=uuid.uuid4().hex;self._chip8_key_owner=None
         self.temporary=tempfile.TemporaryDirectory(prefix='fdisbull-chip8-')
-        root=Path(self.temporary.name);self.qmp_path=root/'qmp.sock';self.gdb_path=root/'gdb.sock';self.log_path=root/'qemu.log'
+        root=Path(self.temporary.name);self.qmp_path=root/'qmp.sock';self.gdb_path=root/'gdb.sock';self.log_path=root/'qemu.log';self.qemu_log_path=self.log_path
         self.rom_path=root/'rom.ch8';self.rom_path.write_bytes(rom_bytes)
         if _sha(self.rom_path.read_bytes())!=identity['source_sha256']:
             self.close();raise ValueError('Private CHIP-8 ROM copy differs')
@@ -175,6 +177,8 @@ class _Owner:
             self.gdb=GDBRemote(self.gdb_path,self.process,deadline)
             self.qmp.operation_deadline=None;self.gdb.operation_deadline=None
             if self.gdb.architecture!='chip8':raise DebuggerError('QEMU target did not advertise CHIP-8')
+            self.inspection_target='chip8'
+            self.inspection_qom_cpu_type='chip8-cpu'
             expected={**{f'v{i:x}':1 for i in range(16)},'i':2,'pc':2,'sp':1,
                       **{f'stack{i}':2 for i in range(16)}}
             actual={item['name']:item['size'] for item in self.gdb.register_description}
@@ -185,6 +189,7 @@ class _Owner:
             if self.cpu_subset in DEVICE_MODELS:
                 commands=self.qmp.call('query-commands',timeout_ms=_remaining(deadline))
                 names={item.get('name') for item in commands if isinstance(item,dict)} if isinstance(commands,list) else set()
+                self.qmp_commands=frozenset(names)
                 if not {'query-chip8-environment','x-chip8-set-keys','x-chip8-debug-ticks'}<=names:
                     raise DebuggerError('CHIP-8 device command set is incomplete')
                 if self.cpu_subset in (CLASSIC_SUBSET,LAYERS_SUBSET,FRAMES_SUBSET,KEY_SUBSET) and 'x-chip8-seed-rng' not in names:
@@ -233,7 +238,7 @@ class _Owner:
 
 
 @bind_history_mutations
-class Chip8DebugSession(Chip8ExperimentMixin,Chip8CpuDeltaMixin,Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
+class Chip8DebugSession(QemuInspectionMixin,Chip8ExperimentMixin,Chip8CpuDeltaMixin,Chip8KeysMixin,Chip8FramesMixin,Chip8HistoryMixin,Chip8LayerMixin,Chip8HookMixin):
     """One stopped-at-boundaries CHIP-8 machine bound to one immutable FDB ROM."""
     backend_id=BACKEND
     capabilities={'registers':True,'memory':True,'run':True,'step':True,'breakpoints':True,
@@ -282,6 +287,7 @@ class Chip8DebugSession(Chip8ExperimentMixin,Chip8CpuDeltaMixin,Chip8KeysMixin,C
         self.rpc=self.vm
         try:
             self.identity['cpu_subset']=getattr(self.vm,'cpu_subset',CPU_SUBSET)
+            self.capabilities.update(qemu_diagnostics=True, native_cpu_inventory=None)
             if self.identity['cpu_subset'] in DEVICE_MODELS:
                 self.identity['env_model']=DEVICE_MODELS[self.identity['cpu_subset']]
                 self.capabilities.update(frame=True,input=True,timers=True,audio=False)
@@ -398,12 +404,16 @@ class Chip8DebugSession(Chip8ExperimentMixin,Chip8CpuDeltaMixin,Chip8KeysMixin,C
                 return result
             finally:self._rpc_deadline=previous
 
-    def contexts(self):return dict(run=self.run_id,selected='machine',contexts=[dict(id='machine',kind='machine',capabilities=self.capabilities)])
+    def contexts(self):
+        self._refresh_inspection_capability()
+        return dict(run=self.run_id,selected='machine',contexts=[dict(id='machine',kind='machine',capabilities=self.capabilities)])
+
     def context(self,name):
         if name!='machine':raise ValueError('Unknown CHIP-8 machine context')
         return self
 
     def status(self):
+        self._refresh_inspection_capability()
         if self.closed:return dict(context='machine',run=self.run_id,state='exited',capabilities=self.capabilities)
         with self.vm.lock:
             native=self.vm.qmp.call('query-status')

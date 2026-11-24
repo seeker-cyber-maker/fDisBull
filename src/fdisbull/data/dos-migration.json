@@ -58,7 +58,7 @@
         "Raw native QEMU exposes one machine context. dosbox-qemu exposes a DOS CPU plus its surrounding Linux machine; those are different CPUs and cannot be renamed into one native DOS context.",
         "The legacy public DOS route intentionally refuses direct writes (use RAM layers, runtime bindings or edited checkpoints); machine context already permits explicit guarded edits. Preserve legacy refusal and expose new context semantics explicitly.",
         "qemu-machine has its own explicit bounded script grammar and operation set. The full legacy DOS script vocabulary is not supported merely because script() exists.",
-        "Read-only DOSBox diagnostic output cursors and HELP/CPU/PIC commands remain unqualified. The existing native CPU/GDT source-matching consumer is only a partial alternative; no diagnostic route or removal acceptance is implied."
+        "QEMU exposes an owner-bound process-log byte cursor; DOSBox diagnostic record cursors and HELP/CPU/PIC replies remain unqualified. Native CPU inventory and CPU/GDT source matching are partial alternatives, not removal acceptance."
       ]
     },
     {
@@ -546,8 +546,8 @@
       "method": "debug.output.read",
       "slice": "core",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": "No public QEMU diagnostic-output cursor equivalent; retained owner logs and ordinary event artifacts have different ownership, ordering and retention contracts.",
+      "current_status": "partial",
+      "native_route": "debug-diagnostics reads byte ranges of the owned QEMU process log with an owner-bound cursor. This is not the DOSBox ordered diagnostic-record stream and has different retention and expiry semantics.",
       "qualification": "unqualified",
       "consumers": [
         "DOSBoxRPC.call",

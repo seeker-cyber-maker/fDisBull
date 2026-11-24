@@ -1212,7 +1212,7 @@
       "remaining_work": [
         "Compare remaining legacy continue/pause/wait, breakpoint-list and reply-schema obligations; the existing paired COM covers registers, memory, one breakpoint/step and exit only.",
         "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation. Counted native step-stop composition has a bounded Python/JSON/script route and five historical authored raw-vCPU native passes at 0ea542e; see docs/QEMU_STEP_COUNT_GATE.md. Separate DOS process/lifecycle, paired DOSBox step-over and reply-schema obligations still require direct evidence; the raw counted-stop slice does not qualify them.",
-        "Qualify or explicitly disposition diagnostic output cursors and stopped HELP/CPU/PIC replies, including the existing protected CPU/GDT source-matching consumer. QEMU internal monitor reads do not establish the complete public diagnostic contract."
+        "Qualify or explicitly disposition DOSBox diagnostic record cursors and stopped HELP/CPU/PIC replies. QEMU debug-diagnostics pages owner-bound process-log bytes, and CPU inventory and protected CPU/GDT source matching are partial alternatives; none establish the complete legacy diagnostic contract."
       ],
       "minimum_acceptance": [
         "Same original COM/MZ bytes and immutable source/disk inputs; correct context, widths, stop cause and selected-process lifecycle.",

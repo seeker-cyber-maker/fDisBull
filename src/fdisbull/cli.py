@@ -282,6 +282,8 @@ METHODS = {
     "debug-dos-task-scheduler-disable": "Disable the native DOS task scheduler at a supported stop; run",
     "debug-dos-task-preemption": "Configure native PIC timer/IRQ preemption after real guest EOI; run,[enabled,irq,quantum]",
     "debug-registers": "Live CPU registers with project address mapping; run",
+    "debug-diagnostics": "Read bounded owned QEMU diagnostic bytes by cursor; run,[cursor,limit,identity,timeout_ms,context]",
+    "debug-cpu-inventory": "Read architecture-neutral QEMU target, CPU and status inventory; run,[timeout_ms,context]",
     "debug-layer": "Save an immutable guarded RAM or execution layer; name,kind,patches,[version]",
     "debug-layer-info": "Inspect an immutable layer definition; layer",
     "debug-layers": "List saved layers for a static version; [version]",

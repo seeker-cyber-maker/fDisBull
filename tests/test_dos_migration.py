@@ -106,7 +106,9 @@ def test_diagnostic_rpc_consumers_remain_unqualified_until_dispositioned():
     output = migration_status(surface='debug.output.read')['rpc_methods'][0]
     diagnostic = migration_status(surface='debugger.execute_command')['rpc_methods'][0]
     assert output['qualification'] == diagnostic['qualification'] == 'unqualified'
-    assert output['current_status'] == 'pending'
+    assert output['current_status'] == 'partial'
+    assert 'debug-diagnostics' in output['native_route']
+    assert 'not the DOSBox ordered diagnostic-record stream' in output['native_route']
     assert diagnostic['current_status'] == 'partial'
     assert diagnostic['legacy_contract']['allowed_commands'] == ['HELP', 'CPU', 'PIC']
     assert diagnostic['legacy_contract']['requires_stopped'] is True
