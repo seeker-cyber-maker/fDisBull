@@ -1,5 +1,53 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Doom save/load pixels at matching animation phases (2026-11-23)
+
+The previous E1M1 comparison reported seven changed pixels out of 29,376
+logical pixels (0.023829%). This was the same change within each engine
+between its selected reference and loaded views. The original capture
+selector used the closer of two reference frames. It chose the settled
+pre-save frame for QEMU and the named save frame for DOSBox-X. Using QEMU's
+named save frame alone gives ten changed pixels, including three on a second
+barrel. All coordinates below are in the original 320 × 200 raster.
+
+The seven common changes are accounted for by the original Doom animations.
+The five green pixels at x263–267, y97 come from the same sprite texels in
+BAR1A0 and BAR1B0. The two dark pixels at (143,92) and (89,93) come from
+armor bonus sprites. Projecting the placed actors into the starting view
+and applying Doom's lighting and the original WAD palette reproduces the
+observed values. Both original reference crops are identical across the
+engines in six-bit VGA DAC values, and both original loaded crops are
+identical at their different animation phase.
+[Original Doom animation states](https://github.com/id-Software/DOOM/blob/a77dfb96cb91780ca334d0d4cfd86957558007e0/linuxdoom-1.10/info.c#L942-L963)
+
+The revised comparison samples 24 stationary frames after the game save
+and 24 after the game load on each engine, requesting 28 ms of guest execution
+per sample. It identifies phases by ten projected sprite pixels and compares the
+entire original 288 × 102 crop for every pair with the same key. No crop
+pixels are masked. The verifier checks QEMU's 2 × 2 pixel duplication and
+checks each renderer's eight-bit expansion for DAC channel `u`. QEMU uses
+`(u << 2) | (3 * (u & 1))`, and DOSBox-X uses `(u << 2) | (u >> 4)`. The
+cross-engine check compares six-bit DAC channels. The within-engine check
+compares raw RGB.
+
+| Comparison | Exact pairs | Largest difference |
+| --- | ---: | ---: |
+| QEMU save versus load, matching phase | 58 / 58 | 0 pixels |
+| DOSBox-X save versus load, matching phase | 132 / 132 | 0 pixels |
+| QEMU versus DOSBox-X, matching phase and save/load side | 145 / 145 | 0 pixels |
+
+Each run used the original E1M1 keyboard route with sound and mouse disabled,
+exited to DOS with code 0, and passed input identity and process cleanup
+checks. The result is exact for these matched viewport samples. The original
+comparison between unmatched phases remains in the record. Timing, the rest of the frame and
+full replacement parity retain their separate acceptance checks.
+
+| Private receipt | SHA-256 |
+| --- | --- |
+| QEMU stationary samples | `026f471ad5986774ac88b3df7f05df29a9815b53717c3bcb4bb3f45fb50ee34a` |
+| DOSBox-X stationary samples | `e0bebd3f1e94853fb6b735c25b78c92e93f988736c87efab40d6a81cba2b43f3` |
+| Combined phase comparison | `5311723302defb6eebc6a2e446d439bd4c89b952646d0d9a7317e9f954d2979c` |
+
 ## Paired DOS lifecycle and fallback rehearsal (2026-11-23)
 
 Both engines booted the same FreeDOS floppy and ran the same authored
