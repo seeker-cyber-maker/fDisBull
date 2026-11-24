@@ -34,17 +34,23 @@ Run the native harness from the checkout, keeping its output outside the repo:
 
 ```sh
 python3 native/qemu-scumm/test_native.py --qemu /private/scumm-build/qemu-system-scumm --output /private/scumm-native.json
+python3 native/qemu-scumm/test_observation_native.py --qemu /private/scumm-build/qemu-system-scumm --output /private/scumm-observations.json
+python3 -m unittest discover -s native/qemu-scumm -p test_processor_scene.py
 /private/scumm-build/qemu-system-scumm -M scumm-test,version=1 -accel tcg,thread=single -kernel /private/raw-script.bin -S -display none -serial none -monitor none -nodefaults -no-user-config -qmp stdio
 ```
 
 ## Stopped QMP controls
 
 `query-cpus-fast` supplies the CPU QOM path. Controls require one stopped TCG
-CPU. Set `scumm-observation-mask` (DISASM=1, SCENE=2),
-`scumm-observation-capacity` (0..4096), `scumm-step-budget`, and
-`scumm-decode-pc`. Read `scumm-state-json`, `scumm-decode-json` (up to 64
-sequential records), and `scumm-events-json`. `scumm-restart=true` clears
-execution state and the event journal while retaining the configured controls.
+CPU. Set `scumm-observation-mask` (off=0, DISASM=1, SCENE=2, both=3),
+`scumm-observation-capacity` (0..4096), and `scumm-step-budget` (1..1 billion).
+The independent static listing selectors are `scumm-decode-pc` and
+`scumm-decode-limit` (1..64). Read `scumm-state-json`, `scumm-decode-json`,
+`scumm-events-json`, and `scumm-scene-json` for a coherent snapshot of the
+supported scene model. `scumm-observation-clear=true` clears the journal and
+advances its epoch without changing guest state or last-run accounting.
+`scumm-restart=true` clears execution state and the journal while retaining
+the configured controls and static listing selectors.
 QMP `system_reset` now reaches the CPU's registered reset hook and has the same
 execution/journal reset behavior.
 
@@ -63,10 +69,19 @@ there is no script scheduler.
 Operand tuples contain kind/value/width: kind 0 is immediate, 1 variable,
 2 destination. Conditional branches use the relative target when the condition
 is false. Unknown or truncated instructions stop static listing. Event channel
-0 records retirement; channel 1 records changes to the bounded actor model.
-These model changes do not establish an original game scene. Source SHA-256 and
-retained instruction bytes identify the script. The bounded journal drops new
-records when full and reports eligible/dropped counts, including at capacity 0.
+0 records retirement and historical operand values; channel 1 records committed
+actor, default-talk-color, resource residency/lock, and cursor/cutscene control
+changes. Full actor deltas include palette membership and exact source-bound
+name bytes. These model changes do not establish a rendered game scene.
+Source SHA-256, catalog identity and retained instruction bytes identify the
+execution inputs. The bounded journal drops new records when full and reports
+eligible/stored/dropped counts per channel, including at capacity 0.
+
+[Observation modes](OBSERVATION_MODES.md) specifies the AGI-aligned control,
+epoch, generation, generated-code and record contracts. The
+[scene consumer](SCENE_CONSUMER.md) validates native records against exact
+code bytes and produces a stateless packet without claiming complete history
+or inventing rendered output.
 
 ## Verified scope
 
@@ -82,9 +97,19 @@ passed after that correction.
 The additional v2 runtime suite passes source-binding/rejection tests, effect
 budget accounting, full runtime observation invariance and both reset paths.
 Its 22 rejected startups require clean validation exits. Portable runtime tests
-have 1,499 assertions; 11 intake tests use authored OFS/resource inputs. Review
+have 1,774 assertions; 11 intake tests use authored OFS/resource inputs. Review
 also found and fixed missing CPU registration in the system reset graph, and
 the harness now requires normal child teardown for a successful test.
+
+All **16 additional native observation case groups** pass. They cover complete
+actor/global/resource/control facts, historical operands in all three versions,
+all four masks at capacities 0/1/64, capacity growth after loss, cached mode
+switches, clear/reset generations and epochs, query purity, blocked effects,
+and native scene-packet consumption. Eight generated-TCG configurations verify
+the optional observer calls and the mandatory semantic helper separately.
+The retained earlier binary fails the same suite because it lacks the new
+public observation contract. This is a before/after contract check, not a claim
+of sixteen distinct prior execution defects.
 
 Portable original/extended fixtures and the 60,000-pair randomized batch passed
 with AddressSanitizer and UndefinedBehaviorSanitizer. LeakSanitizer was disabled
@@ -107,8 +132,12 @@ variables and 32 actor slots (slot 0 is invalid for placement), with v1/v2 read
 indirection for variables 14..16. Sixteen-bit wrapping and actor/system-variable
 behavior remain a pilot model, not an independently qualified original engine.
 
-Each TB invokes one bounded semantic helper; no opcode-specific TCG lowering is
-claimed. The opt-in v2 profile adds verified resource availability, logical
+Each TB invokes one bounded semantic helper; enabled observation variants can
+also invoke a separate observer. Mask zero generates no observer call and
+passes no diagnostic capture buffer to the semantic helper. SCENE-only scalar
+instructions likewise need no observer. The mode is part of the TB key;
+changing it selects a matching cached variant without a blanket flush.
+No opcode-specific TCG lowering is claimed. The opt-in v2 profile adds verified resource availability, logical
 residency/locks, cutscene entry and cursor/control state. Script scheduling,
 room transitions, object semantics, verb dispatch, timers, rendered UI, audio
 and save migration remain unimplemented. Original

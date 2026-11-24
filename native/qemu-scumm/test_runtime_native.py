@@ -91,7 +91,8 @@ def resource_transactions(binary: Path, timeout: float) -> dict[str, Any]:
                 if index >= 4:
                     expect(resource(current, "script", 4)["resident"], True, "script bank residency")
                 expect(current["code_sha256"], digest(code), "loading cannot replace code")
-            expect([event["pc"] for event in q.trace()], [0, 3, 6, 9, 12], "exactly-once retirement")
+            expect([event["pc"] for event in q.trace() if event["channel"] == 0],
+                   [0, 3, 6, 9, 12], "exactly-once retirement")
             q.reset()
             expect(runtime(q), initial, "system reset clears runtime and preserves catalog")
             expect((q.run()["pc"], resource(runtime(q), "sound", 3)["locked"]),

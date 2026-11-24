@@ -109,9 +109,15 @@ static void resource_commands(void)
             expect_success(code, sizeof(code), &s, &r);
             CHECK(s.pc == 3 && s.status == S_RUNNING && s.retired == 1);
             CHECK(memcmp(&r, &expected, sizeof(r)) == 0);
-            CHECK(trace->count == 1 && trace->eligible[0] == 1 && trace->eligible[1] == 0);
+            unsigned scene_changes = actions[low] == NO_ACTION ? 0 : 1;
+            CHECK(trace->count == 1 + scene_changes);
+            CHECK(trace->eligible[0] == 1 && trace->eligible[1] == scene_changes);
             CHECK(trace->events[0].channel == 0 && trace->events[0].size == 3);
             CHECK(memcmp(trace->events[0].bytes, code, sizeof(code)) == 0);
+            if (scene_changes) {
+                CHECK(trace->events[1].channel == 1 && trace->events[1].kind == S_EVENT_RESOURCE);
+                CHECK(trace->events[1].resource_type == type && trace->events[1].resource_id == 3);
+            }
         }
     }
     context = "invalid resource types are no-ops before index validation";
@@ -237,7 +243,8 @@ static void cursor_controls(void)
         expect_success(code, sizeof(code), &s, &r);
         CHECK(s.vars[21] == cases[n].value);
         CHECK(memcmp(&r, &expected, sizeof(r)) == 0);
-        CHECK(trace->count == 1 && trace->eligible[1] == 0);
+        CHECK(trace->count == 2 && trace->eligible[1] == 1);
+        CHECK(trace->events[1].kind == S_EVENT_CONTROL);
     }
 
     context = "cursor variable uses full word and read indirection";
@@ -372,11 +379,27 @@ static void observations_and_reset(void)
             if (mask == 0 && c == 0) { baseline = s; baseline_r = r; }
             CHECK(memcmp(&s, &baseline, sizeof(s)) == 0);
             CHECK(memcmp(&r, &baseline_r, sizeof(r)) == 0);
-            unsigned eligible = (mask & 1) ? 5 : 0;
-            unsigned retained = eligible < capacities[c] ? eligible : capacities[c];
+            /* Load, lock, cursor and cutscene each commit a scene change;
+             * stop contributes only its retirement. One shared drop-new
+             * journal retains this independently specified event order. */
+            static const unsigned channels[] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
+            unsigned eligible[2] = {(mask & 1) ? 5 : 0, (mask & 2) ? 4 : 0};
+            unsigned stored[2] = {0}, retained = 0;
+            for (unsigned event = 0; event < sizeof(channels) / sizeof(channels[0]); ++event) {
+                unsigned channel = channels[event];
+                if ((mask & (1u << channel)) && retained < capacities[c]) {
+                    CHECK(trace->events[retained].channel == channel);
+                    ++stored[channel];
+                    ++retained;
+                }
+            }
             CHECK(trace->count == retained);
-            CHECK(trace->eligible[0] == eligible && trace->eligible[1] == 0);
-            CHECK(trace->dropped[0] == eligible - retained && trace->dropped[1] == 0);
+            CHECK(trace->helper_calls == ((mask & 1) ? 5 : (mask & 2) ? 4 : 0));
+            for (unsigned channel = 0; channel < 2; ++channel) {
+                CHECK(trace->eligible[channel] == eligible[channel]);
+                CHECK(trace->stored[channel] == stored[channel]);
+                CHECK(trace->dropped[channel] == eligible[channel] - stored[channel]);
+            }
         }
     }
     context = "runtime reset preserves catalog and binds only current script residency";

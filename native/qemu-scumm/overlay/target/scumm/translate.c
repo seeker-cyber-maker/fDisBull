@@ -24,8 +24,13 @@ static void insn(DisasContextBase *db,CPUState *cs)
  for(unsigned n=0;n<size;n++) {
   translator_ldub(&cpu->env,db,db->pc_next+n);
  }
- /* Single semantic-helper TB; static decode and runtime share one authority. */
- gen_helper_scumm_step(tcg_env);
+ /* Mode variants share canonical semantics. Mask zero emits no observer and
+  * passes no capture buffer; SCENE-only scalar instructions do the same.
+  * Mode is part of the TB key, so stopped changes reuse the correct variant. */
+ unsigned mask=db->tb->flags&SCUMM_OBS_MASK;
+ if(!(mask&SCUMM_OBS_DISASM)&&(!ok||!scumm_scene_op(decoded.op)))mask=0;
+ gen_helper_scumm_step(tcg_env,tcg_constant_i32(mask));
+ if(mask)gen_helper_scumm_observe(tcg_env);
  db->pc_next+=size;db->is_jmp=DISAS_TOO_MANY;
 }
 static void stop(DisasContextBase *db,CPUState *cs){tcg_gen_exit_tb(NULL,0);}

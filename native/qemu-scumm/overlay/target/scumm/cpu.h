@@ -20,7 +20,8 @@ struct ArchCPU {
  ScummTrace *trace;
  ScummRuntime runtime;
  ScummResourceBank *bank;
- uint32_t decode_pc;
+ uint32_t decode_pc,decode_limit;
+ ScummEvent observation_pending;
 };
 struct ScummCPUClass {
  CPUClass parent_class;

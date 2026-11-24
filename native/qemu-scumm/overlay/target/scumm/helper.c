@@ -11,13 +11,25 @@ static G_NORETURN void pause_cpu(CPUArchState *env)
 }
 void helper_scumm_fetch_fault(CPUArchState *env)
 {env->state.status=S_FAULT;env->state.fault=S_BAD_PC;pause_cpu(env);}
-void helper_scumm_step(CPUArchState *env)
+static void finish_step(CPUArchState *env)
 {
- ScummCPU *cpu=SCUMM_CPU(env_cpu(env));
- if(!scumm_step_runtime(env->version,cpu->code,env->code_size,&env->state,
-                        env->mask?cpu->trace:NULL,&cpu->runtime))
-  pause_cpu(env);
- ++env->run_retired;
  if(env->state.status==S_RETURN||env->state.status==S_WAIT)pause_cpu(env);
  if(env->run_retired>=env->budget){env->state.status=S_BUDGET;pause_cpu(env);}
+}
+void helper_scumm_step(CPUArchState *env,uint32_t mask)
+{
+ ScummCPU *cpu=SCUMM_CPU(env_cpu(env));
+ if(!scumm_execute_runtime(env->version,cpu->code,env->code_size,&env->state,
+                          mask,mask?&cpu->observation_pending:NULL,&cpu->runtime))
+  pause_cpu(env);
+ ++env->run_retired;
+ /* Enabled variants commit observations before pausing at yield, return, or
+  * budget. Faults and blocked effects exit above and can never be observed. */
+ if(!mask)finish_step(env);
+}
+void helper_scumm_observe(CPUArchState *env)
+{
+ ScummCPU *cpu=SCUMM_CPU(env_cpu(env));
+ scumm_observe(cpu->trace,&cpu->observation_pending,cpu->code);
+ finish_step(env);
 }
