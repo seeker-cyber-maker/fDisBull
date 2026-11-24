@@ -45,6 +45,14 @@ CPU. Set `scumm-observation-mask` (DISASM=1, SCENE=2),
 `scumm-decode-pc`. Read `scumm-state-json`, `scumm-decode-json` (up to 64
 sequential records), and `scumm-events-json`. `scumm-restart=true` clears
 execution state and the event journal while retaining the configured controls.
+QMP `system_reset` now reaches the CPU's registered reset hook and has the same
+execution/journal reset behavior.
+
+For the optional source-bound Amiga v2 resource bank, cutscene entry and cursor
+state, see [the isolated v2 runtime](V2_RUNTIME.md). It adds a startup-only
+`resource-manifest` machine option and a stopped `scumm-runtime-json` getter.
+The profile explicitly declares one active global script and zero initial
+controls; it does not claim authentic game boot state.
 
 Status values are **0 ready, 1 running, 2 budget, 3 return, 4 yield, 5 fault,
 6 blocked effect**. A subsequent `cont` resumes after a budget stop or yield.
@@ -63,27 +71,25 @@ records when full and reports eligible/dropped counts, including at capacity 0.
 ## Verified scope
 
 The clean QEMU 10.0.13 target built and ran on Debian 13 x86_64 with GCC 14.2,
-GLib 2.84.4, Pixman 0.44.0 and Ninja 1.12.1. All **19 authored native tests**
+GLib 2.84.4, Pixman 0.44.0 and Ninja 1.12.1. All **22 authored native tests**
 passed: versions 0/1/2, scalar execution, budget/yield resume, restart, sticky
 terminal states, observation invariance, capacity-zero journals, decode/control
-bounds, 513-byte instructions and 4 KiB page crossings. The page-crossing tests
+bounds, global system reset, 513-byte instructions and 4 KiB page crossings. The page-crossing tests
 also require QEMU `in_asm` to retrieve every translated byte. They failed before
 the translator registered its instruction reads through `translator_ldub` and
 passed after that correction.
+
+The additional v2 runtime suite passes source-binding/rejection tests, effect
+budget accounting, full runtime observation invariance and both reset paths.
+Its 22 rejected startups require clean validation exits. Portable runtime tests
+have 1,499 assertions; 11 intake tests use authored OFS/resource inputs. Review
+also found and fixed missing CPU registration in the system reset graph, and
+the harness now requires normal child teardown for a successful test.
 
 Portable original/extended fixtures and the 60,000-pair randomized batch passed
 with AddressSanitizer and UndefinedBehaviorSanitizer. LeakSanitizer was disabled
 with `ASAN_OPTIONS=detect_leaks=0` after LeakSanitizer reported a ptrace
 incompatibility; leak checking remains unverified.
-
-All **317 private Amiga v2 script probes** (169 Maniac Mansion, 148 Zak McKracken)
-matched the portable core's summaries and counters with native observations
-enabled. Each script's full exposed architectural state also matched between
-native observation masks 0 and 3. All 634 native processes exited and were
-reaped normally, with no timeouts. These are isolated, zero-initialized script
-runs through a shared core, demonstrating integration rather than independent
-language validation or original game boot behavior. See
-[Amiga v2 intake](AMIGA_V2_INTAKE.md) for source identity, stop results and limits.
 
 Optional TCG plugins are disabled in this build. Upstream QEMU 10.0.13 stores
 plugin instruction lengths in an 8-bit field, which cannot represent every
@@ -91,7 +97,7 @@ admitted SCUMM instruction. Plugin compatibility is not qualified.
 
 ## Processor model and remaining work
 
-The core executes bounded scalar arithmetic, comparisons, branches, range
+The default core executes bounded scalar arithmetic, comparisons, branches, range
 assignments, actor placement and synthetic actor metadata changes. It also
 decodes selected resource, script, room, cutscene, verb, print and animation
 intents, stopping before their unimplemented effects. Version 0 immediate word
@@ -102,9 +108,12 @@ indirection for variables 14..16. Sixteen-bit wrapping and actor/system-variable
 behavior remain a pilot model, not an independently qualified original engine.
 
 Each TB invokes one bounded semantic helper; no opcode-specific TCG lowering is
-claimed. Resource loading, script scheduling, object semantics, verb dispatch,
-timers, UI, rendering, audio and save migration remain unimplemented. Original
+claimed. The opt-in v2 profile adds verified resource availability, logical
+residency/locks, cutscene entry and cursor/control state. Script scheduling,
+room transitions, object semantics, verb dispatch, timers, rendered UI, audio
+and save migration remain unimplemented. Original
 game equivalence and complete gameplay remain unverified, and supplied real
 assets cover only Amiga v2. Local results do not establish hosted CI or release
-qualification. Next work is resource/effect completion, scheduler and cutscene
-state, room/object geometry, and independent original-engine comparisons.
+qualification. Next work is room/object and verb behavior, scheduling and
+cutscene exit, and independent original-engine comparisons. Private target
+results are retained separately from this authored-source contribution.

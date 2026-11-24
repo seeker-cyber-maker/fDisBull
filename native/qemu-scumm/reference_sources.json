@@ -1,0 +1,98 @@
+{
+  "repository": "https://github.com/scummvm/scummvm",
+  "tag": "v2.9.0",
+  "tag_object": "509833d62bd3f766f1d44114ab652956339a4d8e",
+  "commit": "38af1883a2eb7a622c31bfc3708888bbcc47db48",
+  "files": [
+    {
+      "file": "engines/scumm/script_v2.cpp",
+      "sha256": "41f59ce1631eedd41704ce07b370ead262447abb1c05e50b7506033974c41432",
+      "bytes": 47023,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/script_v2.cpp"
+    },
+    {
+      "file": "engines/scumm/script_v5.cpp",
+      "sha256": "ec5e3a55a952380ffa13c289f00317878a872454bdee797d9d1f9d9a5984a9b6",
+      "bytes": 114892,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/script_v5.cpp"
+    },
+    {
+      "file": "engines/scumm/script.cpp",
+      "sha256": "e8bf986286ed9aee19eb863d9206cb078e4fd1d79eec87a71e9317bf64c61e5c",
+      "bytes": 49086,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/script.cpp"
+    },
+    {
+      "file": "engines/scumm/script.h",
+      "sha256": "1234cf7d11b511a85a8a320e51d8aae0171be4e4a855e3d8bf376e42cb1d9677",
+      "bytes": 3333,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/script.h"
+    },
+    {
+      "file": "engines/scumm/scumm_v2.h",
+      "sha256": "902d168444945735dfe5cea43fe18789cbadac78281e05ee31687973bc646bdb",
+      "bytes": 5219,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/scumm_v2.h"
+    },
+    {
+      "file": "engines/scumm/scumm.h",
+      "sha256": "20458acdf897ef3f67e51004cf0f336d9410a722f0eb35ecfd6cc7bfe7604ed1",
+      "bytes": 63381,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/scumm.h"
+    },
+    {
+      "file": "engines/scumm/vars.cpp",
+      "sha256": "16621150f8b6d4d3999bbc7239025f535133e33ef21bfda99e9e77f84f8fad22",
+      "bytes": 21102,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/vars.cpp"
+    },
+    {
+      "file": "engines/scumm/resource.cpp",
+      "sha256": "5eccfc9b756517d448823eac8dd8ad16b0c1407b21fba7ddfc9e4fea7c519f7b",
+      "bytes": 58426,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/resource.cpp"
+    },
+    {
+      "file": "engines/scumm/resource.h",
+      "sha256": "fc5cb86f565eb1f438cb7baf0d375fa27c39e93c8327a8b67c0157318ecef337",
+      "bytes": 6596,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/resource.h"
+    },
+    {
+      "file": "engines/scumm/scumm.cpp",
+      "sha256": "8f2059fc75525a170ca18df53da0a87e7e4dcb8f37dace577ee83037a5ae8fcc",
+      "bytes": 132912,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/scumm.cpp"
+    },
+    {
+      "file": "engines/scumm/resource_v2.cpp",
+      "sha256": "f3757112fd061180c8562fd0de68f19f1d482a9deb9f903513128c4246c1d7d1",
+      "bytes": 6078,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/resource_v2.cpp"
+    },
+    {
+      "file": "engines/scumm/scumm_v5.h",
+      "sha256": "49e9f824abb0dd3d54c64de6f61b4d93841c57304cda2b80aa0167f3b71530bb",
+      "bytes": 5025,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/scumm_v5.h"
+    },
+    {
+      "file": "engines/scumm/resource_v4.cpp",
+      "sha256": "e7038124b1210a86ab4ae0aec7d9446fa053c6a005a6e1b61951cb8dae14f3c7",
+      "bytes": 8187,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/resource_v4.cpp"
+    },
+    {
+      "file": "engines/scumm/camera.cpp",
+      "sha256": "24b04151255585c79eb207f9c23dd3d8412cc72ec35dd87afc00f259e5adb73c",
+      "bytes": 9906,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/camera.cpp"
+    },
+    {
+      "file": "engines/scumm/scumm_v3.h",
+      "sha256": "ce9f57680a125b165a471c1c3d0f9c4c27abb110afa8cd70fa32f4b9a35c2f25",
+      "bytes": 2036,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/scumm_v3.h"
+    }
+  ]
+}

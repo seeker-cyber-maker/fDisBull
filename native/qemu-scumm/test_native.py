@@ -67,9 +67,10 @@ class QMP:
     """One owned, time-bounded QEMU child and its line-delimited QMP stream."""
 
     def __init__(self, binary: Path, version: int, code: bytes, timeout: float,
-                 *, log_in_asm: bool = False):
+                 *, log_in_asm: bool = False, resource_manifest: Path | None = None):
         self.binary, self.version, self.code = binary, version, code
         self.timeout = timeout
+        self.resource_manifest = resource_manifest
         self.temporary = tempfile.TemporaryDirectory(prefix="scumm-native-")
         self.stderr = tempfile.TemporaryFile()
         self.selector = selectors.DefaultSelector()
@@ -84,7 +85,10 @@ class QMP:
         script = Path(self.temporary.name) / "authored.bin"
         script.write_bytes(self.code)
         try:
-            arguments = [str(self.binary), "-M", f"scumm-test,version={self.version}",
+            machine = f"scumm-test,version={self.version}"
+            if self.resource_manifest is not None:
+                machine += ",resource-manifest=" + str(self.resource_manifest).replace(",", ",,")
+            arguments = [str(self.binary), "-M", machine,
                  "-accel", "tcg,thread=single", "-kernel", str(script), "-S",
                  "-display", "none", "-serial", "none", "-monitor", "none",
                  "-nodefaults", "-no-user-config", "-qmp", "stdio"]
@@ -199,29 +203,48 @@ class QMP:
                 raise CheckFailure("guest did not stop within its deadline")
             time.sleep(0.005)
 
-    def close(self) -> None:
+    def reset(self) -> dict[str, Any]:
+        """Observe the asynchronous system reset and the cleared CPU state."""
+        self.events = [event for event in self.events if event.get("event") != "RESET"]
+        deadline = time.monotonic() + self.timeout
+        self.command("system_reset", deadline=deadline)
+        while time.monotonic() < deadline:
+            state = self.state()
+            if (any(event.get("event") == "RESET" for event in self.events)
+                    and (state["status"], state["pc"], state["retired"]) == (READY, 0, 0)):
+                return state
+            time.sleep(0.005)
+        raise CheckFailure("system_reset did not reset the CPU within its deadline")
+
+    def close(self, *, require_clean: bool = False) -> None:
         process = self.process
+        cleanup_problem = None
         if process is not None:
             if process.poll() is None:
                 try:
                     self.command("quit", deadline=time.monotonic() + 1)
                     process.wait(timeout=1)
-                except (OSError, ValueError, CheckFailure, subprocess.TimeoutExpired):
+                except (OSError, ValueError, CheckFailure, subprocess.TimeoutExpired) as exc:
+                    cleanup_problem = f"QEMU needed forced teardown: {type(exc).__name__}: {exc}"
                     process.terminate()
                     try:
                         process.wait(timeout=1)
                     except subprocess.TimeoutExpired:
                         process.kill()
                         process.wait(timeout=2)
+            if process.returncode != 0 and cleanup_problem is None:
+                cleanup_problem = f"QEMU exited with status {process.returncode}: {self._stderr_text()}"
             for stream in (process.stdin, process.stdout):
                 if stream is not None:
                     stream.close()
         self.selector.close()
         self.stderr.close()
         self.temporary.cleanup()
+        if require_clean and cleanup_problem is not None:
+            raise CheckFailure(cleanup_problem)
 
     def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
-        self.close()
+        self.close(require_clean=exc_type is None)
 
 
 def scalar(binary: Path, version: int, timeout: float) -> dict[str, Any]:
@@ -261,6 +284,29 @@ def scalar(binary: Path, version: int, timeout: float) -> dict[str, Any]:
         expect(qmp.get("scumm-observation-capacity"), 4, "restart preserves capacity")
         expect(architecture(qmp.run()), architecture(state), "restarted scalar result")
         return state_summary(state)
+
+
+def system_reset(binary: Path, version: int, timeout: float) -> dict[str, Any]:
+    code = (bytes([0x1a, 20, 7, 0x00]) if version == 0
+            else bytes([0x1a, 20, 7, 0, 0x00]))
+    with QMP(binary, version, code, timeout) as qmp:
+        qmp.set("scumm-observation-mask", 3)
+        qmp.set("scumm-observation-capacity", 8)
+        qmp.set("scumm-step-budget", 100)
+        initial = qmp.state()
+        result = qmp.run()
+        expect((result["status"], result["retired"], result["vars"][20]),
+               (RETURN, 2, 7), "pre-reset execution")
+        reset = qmp.reset()
+        expect(architecture(reset), architecture(initial), "system reset architecture")
+        expect((reset["eligible"], reset["dropped"], reset["run_retired"]),
+               ([0, 0], [0, 0], 0), "system reset observations")
+        expect(qmp.trace(), [], "system reset clears journal")
+        expect(qmp.get("scumm-observation-mask"), 3, "system reset preserves mask")
+        expect(qmp.get("scumm-observation-capacity"), 8, "system reset preserves capacity")
+        expect(qmp.get("scumm-step-budget"), 100, "system reset preserves budget")
+        expect(architecture(qmp.run()), architecture(result), "execution after system reset")
+        return {"reset_event_observed": True, "final": state_summary(result)}
 
 
 def budget_and_yield(binary: Path, version: int, timeout: float) -> dict[str, Any]:
@@ -478,6 +524,7 @@ def main() -> int:
     cases: list[tuple[str, Callable[..., dict[str, Any]], int]] = []
     for version in range(3):
         cases.extend([(f"scalar_v{version}", scalar, version),
+                      (f"system_reset_v{version}", system_reset, version),
                       (f"budget_yield_v{version}", budget_and_yield, version),
                       (f"sticky_boundaries_v{version}", sticky_fault_and_block, version),
                       (f"observations_v{version}", observations, version),
@@ -496,7 +543,7 @@ def main() -> int:
         "platform": platform.platform(), "python": platform.python_version(),
         "qemu": str(binary), "harness_sha256": sha256_file(Path(__file__)),
         "scope": "Authored early-SCUMM native QMP fixtures; independent expected scalar and control results.",
-        "unverified": ["Original-game equivalence and gameplay", "Resource and scheduler implementation",
+        "unverified": ["Original-game equivalence and gameplay", "Full resource manager and script scheduler",
                        "Rendering, audio, save migration", "Performance and all opcode semantics",
                        "Optional TCG plugins (upstream instruction lengths are limited to 255 bytes)",
                        "Hosted CI and release qualification"],

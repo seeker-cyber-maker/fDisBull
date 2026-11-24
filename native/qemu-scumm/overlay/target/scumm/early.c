@@ -167,11 +167,45 @@ static void emit(ScummTrace *t,unsigned ch,const ScummInsn *i,const uint8_t *cod
  e->opcode=i->opcode;e->size=i->size;e->channel=ch;e->actor=actor;
  e->before=before;e->after=after;memcpy(e->bytes,code+i->pc,i->size);
 }
-bool scumm_step(unsigned version,const uint8_t *code,size_t len,ScummState *s,ScummTrace *t)
+const char *scumm_block_reason(unsigned reason)
+{
+ static const char *const reasons[]={"none","unimplemented_effect",
+  "resource_bytes_unavailable","room_mapper_required","nested_cutscene",
+  "sentence_script_owner"};
+ return reasons[reason<=S_BLOCK_SENTENCE_OWNER?reason:S_BLOCK_UNIMPLEMENTED];
+}
+void scumm_runtime_reset(ScummRuntime *r)
+{
+ if(!r)return;
+ for(unsigned type=0;type<SCUMM_RESOURCE_TYPES;type++)
+  for(unsigned id=0;id<SCUMM_RESOURCE_SLOTS;id++){
+   r->resources[type][id].resident=0;
+   r->resources[type][id].locked=0;
+  }
+ memset((uint8_t *)r+offsetof(ScummRuntime,user_state),0,
+        sizeof(*r)-offsetof(ScummRuntime,user_state));
+ if(r->enabled&&r->script_id<SCUMM_RESOURCE_SLOTS&&
+    r->resources[S_RES_SCRIPT][r->script_id].available)
+  r->resources[S_RES_SCRIPT][r->script_id].resident=1;
+}
+static void set_user_state(ScummRuntime *r,unsigned flags)
+{
+ if(flags&4)r->user_state=flags&0xe0;
+ if(flags&2)r->user_put=r->cursor_visible=(flags&0x10)!=0;
+ /* Freeze/unfreeze operates on an empty set of other slots in this profile.
+  * The sole current global script is excluded by the v2 freeze operation. */
+}
+bool scumm_step_runtime(unsigned version,const uint8_t *code,size_t len,
+                       ScummState *s,ScummTrace *t,ScummRuntime *runtime)
 {
  ScummInsn i;uint16_t a=0,b=0,c=0;unsigned dest=0,actor=0;
  ScummActor before={0},after={0};bool scene=false,cond=true;uint32_t next;
+ ScummRuntime *r=runtime&&runtime->enabled?runtime:NULL;
  if(s->status==S_RETURN||s->status==S_FAULT||s->status==S_BLOCKED)return false;
+ if(r&&version!=2){
+  s->status=S_FAULT;s->fault=S_BAD_VERSION;s->fault_opcode=0;return false;
+ }
+ if(r)r->blocked_reason=S_BLOCK_NONE;
  if(!scumm_decode(version,code,len,s->pc,&i))goto fault;
  next=i.next;
  if(i.count&&i.arg[0].kind==S_DEST)dest=i.arg[0].value;
@@ -223,11 +257,54 @@ bool scumm_step(unsigned version,const uint8_t *code,size_t len,ScummState *s,Sc
   default:i.fault=S_OPCODE;goto fault;
   }
   s->actors[actor]=after;scene=memcmp(&before,&after,sizeof(before))!=0;break;
- case S_RESOURCE:case S_START_SCRIPT:case S_STOP_SCRIPT:case S_CHAIN_SCRIPT:
- case S_LOAD_ROOM:case S_ACTOR_ROOM:case S_CUTSCENE:case S_CURSOR:
+ case S_RESOURCE:{
+  if(!r)goto blocked;
+  unsigned command=b&15,type=SCUMM_RESOURCE_TYPES;
+  switch(b>>4){
+  case 2:type=S_RES_COSTUME;break;
+  case 3:type=S_RES_ROOM;break;
+  case 5:type=S_RES_SCRIPT;break;
+  case 6:type=S_RES_SOUND;break;
+  default:break; /* Invalid resource kinds are deliberate v2 no-ops. */
+  }
+  if(type==SCUMM_RESOURCE_TYPES)break;
+  if(!command)break;
+  if(command==1&&type==S_RES_ROOM&&a>127){
+   r->blocked_reason=S_BLOCK_ROOM_MAPPER;goto blocked;
+  }
+  if(command==1&&a==0)break;
+  if(a>=r->counts[type]||a>=SCUMM_RESOURCE_SLOTS){i.fault=S_BAD_RESOURCE;goto fault;}
+  if(command==1){
+   if(!r->resources[type][a].available){r->blocked_reason=S_BLOCK_RESOURCE_MISSING;goto blocked;}
+   r->resources[type][a].resident=1;
+  }else{
+   /* Lock/unlock validates the directory slot, but never loads its bytes. */
+   r->resources[type][a].locked=command&1;
+  }
+  break;}
+ case S_CUTSCENE:
+  if(!r||!i.subop)goto blocked; /* Exit requires camera/room semantics. */
+  if(r->cutscene_active){r->blocked_reason=S_BLOCK_CUTSCENE_NESTED;goto blocked;}
+  if(r->script_id==2){r->blocked_reason=S_BLOCK_SENTENCE_OWNER;goto blocked;}
+  r->saved_user_state=r->user_state|(r->user_put?0x10:0);
+  r->saved_cursor=s->vars[21];r->saved_room=r->current_room;
+  r->saved_camera_mode=r->camera_mode;r->cutscene_active=1;
+  s->vars[21]=200;set_user_state(r,0x0f);
+  r->sentence_count=0;
+  /* Sentence script 2 is absent: this profile has only the bound current
+   * script, and entry from script 2 was rejected before any mutation. */
+  s->vars[26]=s->vars[38];s->vars[27]=s->vars[28]=s->vars[29]=0;
+  r->override_pc=0;++r->ui_revision;
+  break;
+ case S_CURSOR:
+  if(!r)goto blocked;
+  if(a&255)s->vars[21]=a&255;
+  set_user_state(r,a>>8);++r->ui_revision;
+  break;
+ case S_START_SCRIPT:case S_STOP_SCRIPT:case S_CHAIN_SCRIPT:
+ case S_LOAD_ROOM:case S_ACTOR_ROOM:
  case S_LIGHTS:case S_ANIMATE:case S_WALK:case S_PRINT:case S_VERB:case S_OVERRIDE:
-  /* Decoded external effects are not committed or retired without a runtime. */
-  s->status=S_BLOCKED;s->fault_opcode=i.opcode;return false;
+  goto blocked;
  case S_NOP:break;
  case S_PLACE:
   if(a==0||a>=SCUMM_ACTORS){i.fault=S_BAD_ACTOR;goto fault;}
@@ -244,6 +321,14 @@ bool scumm_step(unsigned version,const uint8_t *code,size_t len,ScummState *s,Sc
  emit(t,0,&i,code,s,0,(ScummActor){0},(ScummActor){0});
  if(scene)emit(t,1,&i,code,s,actor,before,after);
  return true;
+blocked:
+ if(r&&!r->blocked_reason)r->blocked_reason=S_BLOCK_UNIMPLEMENTED;
+ s->status=S_BLOCKED;s->fault_opcode=i.opcode;return false;
 badvar:i.fault=S_BAD_VAR;
 fault:s->status=S_FAULT;s->fault=i.fault;s->fault_opcode=i.opcode;return false;
+}
+bool scumm_step(unsigned version,const uint8_t *code,size_t len,
+                ScummState *s,ScummTrace *t)
+{
+ return scumm_step_runtime(version,code,len,s,t,NULL);
 }

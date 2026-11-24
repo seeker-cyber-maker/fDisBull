@@ -4,6 +4,7 @@
 #include "cpu-qom.h"
 #include "exec/cpu-defs.h"
 #include "early.h"
+#include "resources.h"
 #define CPU_RESOLVING_TYPE TYPE_SCUMM_CPU
 #define MMU_USER_IDX 0
 typedef struct CPUArchState {
@@ -17,6 +18,8 @@ struct ArchCPU {
  uint8_t code[SCUMM_CODE_MAX+1];
  char sha256[65];
  ScummTrace *trace;
+ ScummRuntime runtime;
+ ScummResourceBank *bank;
  uint32_t decode_pc;
 };
 struct ScummCPUClass {

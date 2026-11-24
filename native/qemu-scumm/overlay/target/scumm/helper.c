@@ -14,7 +14,8 @@ void helper_scumm_fetch_fault(CPUArchState *env)
 void helper_scumm_step(CPUArchState *env)
 {
  ScummCPU *cpu=SCUMM_CPU(env_cpu(env));
- if(!scumm_step(env->version,cpu->code,env->code_size,&env->state,env->mask?cpu->trace:NULL))
+ if(!scumm_step_runtime(env->version,cpu->code,env->code_size,&env->state,
+                        env->mask?cpu->trace:NULL,&cpu->runtime))
   pause_cpu(env);
  ++env->run_retired;
  if(env->state.status==S_RETURN||env->state.status==S_WAIT)pause_cpu(env);

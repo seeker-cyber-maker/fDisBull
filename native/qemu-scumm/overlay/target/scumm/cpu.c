@@ -38,6 +38,7 @@ static void set_uint(Object *obj,Visitor *v,const char *name,void *opaque,Error 
 static void restart(ScummCPU *c)
 {
  memset(&c->env.state,0,sizeof(c->env.state));c->env.run_retired=0;
+ scumm_runtime_reset(&c->runtime);
  memset(c->trace->eligible,0,sizeof(c->trace->eligible));
  memset(c->trace->dropped,0,sizeof(c->trace->dropped));c->trace->count=0;c->trace->sequence=0;
 }
@@ -72,6 +73,42 @@ static char *get_state(Object *obj,Error **errp)
   }
   g_string_append(j,"]}");
  }
+ g_string_append(j,"]}");return g_string_free(j,false);
+}
+static char *get_runtime(Object *obj,Error **errp)
+{
+ if(!stopped(obj,errp))return NULL;
+ ScummCPU *c=SCUMM_CPU(obj);ScummRuntime *r=&c->runtime;
+ const char *types[]={"costume","room","script","sound"};
+ GString *j=g_string_new(NULL);
+ g_string_append_printf(j,"{\"schema\":\"fdisbull-scumm-v2-runtime-1\","
+  "\"enabled\":%s,\"profile\":\"%s\",\"code_sha256\":\"%s\","
+  "\"manifest_sha256\":\"%s\",\"source_receipt_sha256\":\"%s\","
+  "\"script_id\":%u,\"blocked_reason\":\"%s\",\"counts\":{",
+  r->enabled?"true":"false",r->enabled?"amiga-v2-isolated":"none",c->sha256,
+  c->bank?c->bank->manifest_sha256:"",c->bank?c->bank->source_receipt_sha256:"",
+  r->script_id,scumm_block_reason(r->blocked_reason));
+ for(unsigned type=0;type<SCUMM_RESOURCE_TYPES;type++)
+  g_string_append_printf(j,"%s\"%s\":%u",type?",":"",types[type],r->counts[type]);
+ g_string_append_printf(j,"},\"control\":{\"user_state\":%u,\"user_put\":%u,"
+  "\"cursor_visible\":%u,\"current_room\":%u,\"camera_mode\":%u,"
+  "\"cutscene_active\":%u,\"saved_user_state\":%u,\"saved_cursor\":%u,"
+  "\"saved_room\":%u,\"saved_camera_mode\":%u,\"override_pc\":%u,"
+  "\"override_script\":%u,\"sentence_count\":%u,\"ui_revision\":%" PRIu64 "},\"resources\":[",
+  r->user_state,r->user_put,r->cursor_visible,r->current_room,r->camera_mode,
+  r->cutscene_active,r->saved_user_state,r->saved_cursor,r->saved_room,
+  r->saved_camera_mode,r->override_pc,r->override_script,r->sentence_count,r->ui_revision);
+ bool comma=false;
+ for(unsigned type=0;type<SCUMM_RESOURCE_TYPES;type++)
+  for(unsigned id=0;id<r->counts[type];id++){
+   ScummResource *e=&r->resources[type][id];
+   if(!e->available&&!e->resident&&!e->locked)continue;
+   g_string_append_printf(j,"%s{\"type\":\"%s\",\"id\":%u,\"size\":%u,"
+    "\"available\":%s,\"resident\":%s,\"locked\":%s,\"sha256\":\"%s\"}",
+    comma?",":"",types[type],id,e->size,e->available?"true":"false",
+    e->resident?"true":"false",e->locked?"true":"false",c->bank?c->bank->sha256[type][id]:"");
+   comma=true;
+  }
  g_string_append(j,"]}");return g_string_free(j,false);
 }
 static char *get_decode(Object *obj,Error **errp)
@@ -165,8 +202,10 @@ static void instance_init(Object *obj)
  object_property_add_str(obj,"scumm-state-json",get_state,NULL);
  object_property_add_str(obj,"scumm-decode-json",get_decode,NULL);
  object_property_add_str(obj,"scumm-events-json",get_events,NULL);
+ object_property_add_str(obj,"scumm-runtime-json",get_runtime,NULL);
 }
-static void instance_finalize(Object *obj){g_free(SCUMM_CPU(obj)->trace);}
+static void instance_finalize(Object *obj)
+{ScummCPU *c=SCUMM_CPU(obj);g_free(c->trace);scumm_resource_bank_free(c->bank);}
 static const struct SysemuCPUOps sysemu_ops={.has_work=has_work,.get_phys_page_debug=phys_debug};
 static const TCGCPUOps tcg_ops={.initialize=scumm_tcg_init,.translate_code=scumm_cpu_translate_code,
  .synchronize_from_tb=sync_tb,.restore_state_to_opc=restore,.cpu_exec_enter=enter,.cpu_exec_exit=leave,

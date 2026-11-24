@@ -109,7 +109,147 @@ def read_index(raw):
     return b[4:4+count], tables
 
 
-def inspect_archive(archive, output):
+def check_runtime_output(output, runtime_output):
+    """Keep the optional private catalog disjoint from the ordinary intake."""
+    if '..' in runtime_output.parts:
+        raise ValueError('runtime output must not contain parent traversal')
+    target, ordinary = runtime_output.absolute(), output.resolve()
+    if target.is_symlink() or target.exists():
+        raise ValueError('runtime output already exists')
+    if any(parent.is_symlink() for parent in target.parents):
+        raise ValueError('runtime output has a symlink ancestor')
+    target = target.resolve()
+    if target == ordinary or target in ordinary.parents or ordinary in target.parents:
+        raise ValueError('runtime and ordinary output directories must be disjoint')
+
+
+def write_runtime_catalog(runtime_output, script_id, output, receipt, rooms, tables):
+    """Materialize opaque, source-bound old-bundle spans; no resource execution."""
+    check_runtime_output(output, runtime_output)
+    if type(script_id) is not int or not 1 <= script_id < min(256, len(tables['script'])):
+        raise ValueError('runtime script ID is outside the declared script table')
+    receipt_bytes = (output / 'receipt.json').read_bytes()
+    if json.loads(receipt_bytes) != receipt:
+        raise ValueError('source receipt changed before runtime materialization')
+    if any(item['error'] == 'conflicting LFL within disk' for item in receipt['issues']):
+        raise ValueError('conflicting readable LFL copies cannot bind a runtime')
+    disks = {item['member']: item['sha256'] for item in receipt['disks']}
+    if len(disks) != len(receipt['disks']):
+        raise ValueError('ambiguous duplicate ADF member names')
+    files = {item['id']: item for item in receipt['room_files']}
+    for rid, raw in rooms.items():
+        if (rid not in files or len(raw) != files[rid]['size'] or
+                sha(raw) != files[rid]['sha256']):
+            raise ValueError('LFL source identity changed before materialization')
+
+    planned, unavailable = [], []
+
+    def add(kind, rid, lfl_id, offset, size, expected_sha256=None):
+        raw = rooms[lfl_id]
+        if offset < 0 or size < 4 or offset + size > len(raw):
+            raise ValueError('runtime resource span is outside its source LFL')
+        encoded = raw[offset:offset+size]
+        decoded = decode_bytes(encoded)
+        if int.from_bytes(decoded[:2], 'little') != size:
+            raise ValueError('runtime resource length header changed')
+        digest = sha(decoded)
+        if expected_sha256 is not None and digest != expected_sha256:
+            raise ValueError('runtime resource identity changed')
+        rec = {'type': kind, 'id': rid, 'size': size, 'sha256': digest,
+               'path': f'resources/{kind}/{rid:03}.bin',
+               'source': {'lfl_id': lfl_id, 'offset': offset,
+                          'lfl_sha256': files[lfl_id]['sha256'],
+                          'raw_sha256': sha(encoded),
+                          'adfs': [{'member': name, 'sha256': disks[name]}
+                                   for name in files[lfl_id]['sources']]}}
+        planned.append((rec, decoded))
+
+    for rec in receipt['resources']:
+        kind, rid, lfl_id = rec['kind'], rec['id'], rec['room']
+        if rec['status'] != 'bounded' or not 1 <= lfl_id <= 127:
+            unavailable.append({'type': kind, 'id': rid, 'status': rec['status'],
+                                'room': lfl_id, 'offset': rec['offset']})
+            continue
+        add(kind, rid, lfl_id, rec['offset'], rec['size'], rec['sha256'])
+
+    # A room resource is the first old-bundle span in the matching LFL file.
+    # The directory selector is a disk hint, not a containing LFL identifier.
+    for rid, (selector, directory_offset) in enumerate(tables['room']):
+        reason = None
+        if rid == 0:
+            reason = 'reserved_index'
+        elif rid > 127:
+            reason = 'unresolved_room_mapper'
+        elif rid not in rooms:
+            reason = 'missing_lfl'
+        else:
+            raw = rooms[rid]
+            size = int.from_bytes(decode_bytes(raw[:2]), 'little')
+            if len(raw) < 4 or size < 4 or size > len(raw):
+                reason = 'invalid_size'
+            else:
+                add('room', rid, rid, 0, size)
+        if reason is not None:
+            unavailable.append({'type': 'room', 'id': rid, 'status': reason,
+                                'selector': selector, 'offset': directory_offset})
+
+    selected = next((payload for rec, payload in planned
+                     if rec['type'] == 'script' and rec['id'] == script_id), None)
+    if selected is None or len(selected) <= 4:
+        raise ValueError('runtime script must have a bound, nonempty code view')
+    code = selected[4:]
+    if (output / 'scripts' / f'{script_id:03}.bin').read_bytes() != code:
+        raise ValueError('runtime script differs from its extracted code view')
+    index = decode_bytes(rooms[0])
+    position = 4 + len(receipt['objects'])
+    directory_evidence = {}
+    for kind in ('room', 'costume', 'script', 'sound'):
+        size = 1 + 3 * len(tables[kind])
+        directory_evidence[kind] = {
+            'decoded_index_offset': position, 'size': size,
+            'sha256': sha(index[position:position+size]),
+            'entries': [{'selector': selector, 'offset': offset}
+                        for selector, offset in tables[kind]],
+        }
+        position += size
+    manifest = {
+        'schema': 'fdisbull-scumm-v2-resources-1',
+        'profile': 'amiga-v2-isolated',
+        'source_receipt_sha256': sha(receipt_bytes),
+        'script_id': script_id, 'code_sha256': sha(code),
+        'counts': {kind: len(tables[kind])
+                   for kind in ('costume', 'room', 'script', 'sound')},
+        'resources': [rec for rec, _ in sorted(
+            planned, key=lambda pair: (pair[0]['type'], pair[0]['id']))],
+        'archive_sha256': receipt['archive_sha256'],
+        'index_sha256': receipt['index_sha256'],
+        'transformation': 'xor-ff',
+        'directory_evidence': directory_evidence,
+        'unavailable_resources': unavailable,
+    }
+    runtime_output.mkdir(mode=0o700, parents=True, exist_ok=False)
+    (runtime_output / 'resources').mkdir(mode=0o700)
+    for kind in ('costume', 'room', 'script', 'sound'):
+        (runtime_output / 'resources' / kind).mkdir(mode=0o700)
+    for rec, payload in planned:
+        path = runtime_output / rec['path']
+        with path.open('xb') as stream:
+            stream.write(payload)
+        path.chmod(0o600)
+        if sha(path.read_bytes()) != rec['sha256']:
+            raise ValueError('materialized resource verification failed')
+    # Write the manifest only after payload verification. A partial JSON write
+    # is rejected by the runtime loader rather than admitting incomplete data.
+    path = runtime_output / 'manifest.json'
+    with path.open('x') as stream:
+        stream.write(json.dumps(manifest, indent=2) + '\n')
+    path.chmod(0o600)
+    return manifest
+
+
+def inspect_archive(archive, output, *, runtime_output=None, runtime_script=1):
+    if runtime_output is not None:
+        check_runtime_output(output, runtime_output)
     output.mkdir(parents=True, exist_ok=False)
     rooms, origins, disks, issues = {}, {}, [], []
     with zipfile.ZipFile(archive) as z:
@@ -160,6 +300,8 @@ def inspect_archive(archive, output):
                'room_files': [{'id': i, 'size': len(b), 'sha256': sha(b), 'sources': origins[i]} for i,b in sorted(rooms.items())],
                'directories': {k: len(v) for k,v in tables.items()}, 'resources': resources}
     (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+    if runtime_output is not None:
+        write_runtime_catalog(runtime_output, runtime_script, output, receipt, rooms, tables)
     return receipt
 
 
@@ -167,8 +309,13 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('archive', type=Path)
     p.add_argument('output', type=Path)
+    p.add_argument('--runtime-output', type=Path,
+                   help='new private directory for an isolated v2 resource catalog')
+    p.add_argument('--runtime-script', type=int, default=1,
+                   help='bound global script for the isolated runtime (default: 1)')
     a = p.parse_args()
-    r = inspect_archive(a.archive, a.output)
+    r = inspect_archive(a.archive, a.output, runtime_output=a.runtime_output,
+                        runtime_script=a.runtime_script)
     print(json.dumps({'room_files': len(r['room_files']), 'objects': r['object_count'],
                       'index_md5': r['index_md5'], 'issues': r['issues'],
                       'bounded_scripts': sum(x['kind'] == 'script' and x['status'] == 'bounded' for x in r['resources'])}))

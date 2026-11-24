@@ -8,6 +8,8 @@
 #define SCUMM_ACTORS 32u
 #define SCUMM_EVENT_MAX 4096u
 #define SCUMM_INSN_MAX 514u
+#define SCUMM_RESOURCE_TYPES 4u
+#define SCUMM_RESOURCE_SLOTS 256u
 enum ScummOp { S_STOP,S_YIELD,S_MOVE,S_ADD,S_SUB,S_INC,S_DEC,S_JUMP,
  S_EQ,S_NE,S_ZERO,S_NONZERO,S_GE,S_LE,S_LT,S_GT,S_PLACE,S_RANGE,S_ACTOR_CONFIG,S_RESOURCE,S_START_SCRIPT,
  S_STOP_SCRIPT,S_CHAIN_SCRIPT,S_LOAD_ROOM,S_ACTOR_ROOM,S_NOP,
@@ -15,7 +17,11 @@ enum ScummOp { S_STOP,S_YIELD,S_MOVE,S_ADD,S_SUB,S_INC,S_DEC,S_JUMP,
  S_MOVE_IND,S_ADD_IND,S_SUB_IND,S_UNKNOWN };
 enum ScummStatus { S_READY,S_RUNNING,S_BUDGET,S_RETURN,S_WAIT,S_FAULT,S_BLOCKED };
 enum ScummFault { S_OK,S_OPCODE,S_TRUNCATED,S_BAD_VERSION,S_BAD_PC,
- S_BAD_VAR,S_BAD_ACTOR,S_BAD_BRANCH };
+ S_BAD_VAR,S_BAD_ACTOR,S_BAD_BRANCH,S_BAD_RESOURCE };
+enum ScummResourceType { S_RES_COSTUME,S_RES_ROOM,S_RES_SCRIPT,S_RES_SOUND };
+enum ScummBlockReason { S_BLOCK_NONE,S_BLOCK_UNIMPLEMENTED,
+ S_BLOCK_RESOURCE_MISSING,S_BLOCK_ROOM_MAPPER,S_BLOCK_CUTSCENE_NESTED,
+ S_BLOCK_SENTENCE_OWNER };
 enum ScummOperand { S_IMM,S_VAR,S_DEST };
 typedef struct ScummArg { uint16_t value; uint8_t kind,width; } ScummArg;
 typedef struct ScummInsn {
@@ -39,6 +45,28 @@ typedef struct ScummState {
  uint8_t default_talk_color;
  uint64_t retired;
 } ScummState;
+/* A declared, isolated Amiga v2 context. Only this global script is active;
+ * there are no other script slots or queued sentences. It is not boot state.
+ * Available bytes are immutable and verified by the embedding byte bank.
+ * Logical residency and locking are independent of physical bank storage. */
+typedef struct ScummResource {
+ uint32_t size;
+ uint8_t available,resident,locked;
+} ScummResource;
+typedef struct ScummRuntime {
+ uint8_t enabled;
+ uint16_t script_id,counts[SCUMM_RESOURCE_TYPES];
+ ScummResource resources[SCUMM_RESOURCE_TYPES][SCUMM_RESOURCE_SLOTS];
+ /* Reset clears from user_state onward, preserving the immutable catalog. */
+ uint8_t user_state,user_put,cursor_visible,current_room,camera_mode;
+ uint8_t cutscene_active,saved_user_state,saved_room,saved_camera_mode;
+ uint16_t saved_cursor;
+ uint32_t override_pc;
+ uint16_t override_script,sentence_count;
+ /* A UI invalidation revision, not a count of rendered frames or callbacks. */
+ uint64_t ui_revision;
+ uint32_t blocked_reason;
+} ScummRuntime;
 typedef struct ScummEvent {
  uint64_t seq,retired;
  uint32_t pc,next;
@@ -56,4 +84,8 @@ bool scumm_decode(unsigned version,const uint8_t *code,size_t len,
                   uint32_t pc,ScummInsn *out);
 bool scumm_step(unsigned version,const uint8_t *code,size_t len,
                 ScummState *s,ScummTrace *trace);
+void scumm_runtime_reset(ScummRuntime *runtime);
+const char *scumm_block_reason(unsigned reason);
+bool scumm_step_runtime(unsigned version,const uint8_t *code,size_t len,
+                       ScummState *s,ScummTrace *trace,ScummRuntime *runtime);
 #endif
