@@ -1,5 +1,45 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Real-mode DOS code captures and offline analysis (2026-11-24)
+
+The public QEMU DOS debugger can promote a stopped source-addressed RAM
+or instruction-fetch capture from a verified FreeDOS COM or MZ process into
+a separate analysis version. The previous wheel executed the overlaid MZ
+instruction but refused its capture at `debug-promote-code`. The new artifact
+retains its QEMU kind, native producer, source mapping, load segment, CS:IP,
+layer hashes and byte hash. [Runtime code workflow](RUNTIME_CODE.md)
+
+- **Authored COM.** DOSBox-X and QEMU both fetched `MOV AX,BEEFh` through
+  the execute layer. The guest's next instruction read `1234h` from the same
+  immediate as data into BX. After reopening the project, each backend's RAM
+  and execute captures produced separate child versions. Promoting an existing
+  capture again reused its child. The parent's instruction remained `MOV AX,1234h`.
+- **Relocated MZ.** Both engines ran the same DOS executable with its entry
+  two paragraphs above the load segment. They loaded different runtime segment
+  immediates. Offline analysis normalized both to the same project instruction
+  `B8 07 10`. Both guests stored `CAFEh` with the execute layer active and
+  exited with code 42. The original analysis kept the `BEEFh` immediate.
+  Both backends refused a capture that split the relocation word. QEMU also
+  refused offline promotion of physical and linear observations.
+- **Original Tic-Tac-Toe COM.** On both engines the JSON debugger followed
+  the original entry jump to file offset 1,238 and captured matching bytes at
+  both locations. A fresh QEMU process restored the checkpoint at the jump
+  destination and produced the same disassembly. Its new capture was promoted
+  offline in another CLI process. The fixture SHA-256 is
+  `b582a31d28d9a265c38d29ed09dffe0396f47e6bf4497569766c036f6674fc43`.
+- **Producer dependency.** A separate Tic-Tac-Toe gameplay checkpoint after
+  a timed keypress passed on DOSBox-X and QEMU `863b36b0`. QEMU `54773e16`
+  refused the export with a pending native input schedule on both the preceding
+  wheel and this source. It passed the paired COM and MZ code-capture tests.
+
+The QEMU producers were
+`54773e161f54f5c356bb1626b6c82f5cb1362e77329ce8c7001aea892ebfe19a`
+and `863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25`.
+The DOSBox-X executable was
+`df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e`.
+Protected-mode LE and task-private captures remain open for offline promotion.
+The default remains DOSBox-X.
+
 ## Ordinary Doom with mouse and Sound Blaster audio (2026-11-23)
 
 The original Doom 1.9 executable and WAD ran E1M1 on both engines with

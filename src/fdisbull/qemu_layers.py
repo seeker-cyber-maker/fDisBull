@@ -357,28 +357,49 @@ class QemuLayerSessionMixin:
             if bits == 16:
                 segment = state['segments'].get('cs') or {}
                 segment_base = int(segment.get('base') or '0x0', 16)
+                selector = None
                 if static is not None:
                     _, selector = self.project._dos_parse_address(address, cs)
                     if selector is not None:
                         segment_base = (selector << 4) + linear - static
-                if not 0 <= linear - segment_base < 0x10000:
+                if selector is None and state['cpu_mode'] == 'real':
+                    delta = linear - static if static is not None else 0
+                    def representable(base):
+                        return (base & 15 == 0 and 0 <= base <= 0xffff0
+                                and 0 <= linear - base and linear - base + length <= 0x10000
+                                and (static is None or 0 <= base - delta <= 0xffff0
+                                     and (base - delta) & 15 == 0))
+                    if not representable(segment_base):
+                        segment_base = min(linear, 0xffff0,
+                                           0xffff0 + delta if static is not None else 0xffff0) & ~15
+                        if not representable(segment_base):
+                            raise ValueError('Code view has no representable 16-bit real-mode CS')
+                elif selector is None and not 0 <= linear - segment_base < 0x10000:
                     segment_base = linear & ~0xf
                 ip = linear - segment_base
-                if ip + length > 0x10000:
+                if ip < 0 or ip + length > 0x10000:
                     raise ValueError('Code view crosses a 16-bit segment boundary')
                 if state['cpu_mode'] == 'real':
+                    if segment_base & 15 or not 0 <= segment_base >> 4 <= 0xffff:
+                        raise ValueError('Code view has no representable 16-bit real-mode CS')
                     runtime_cs = hex(segment_base >> 4)
                     if static is not None:
-                        project_cs = hex((segment_base - linear + static) >> 4)
+                        project_base = segment_base - linear + static
+                        if project_base & 15 or not 0 <= project_base >> 4 <= 0xffff:
+                            raise ValueError('Code view has no representable 16-bit project CS')
+                        project_cs = hex(project_base >> 4)
             for instruction in Decoder(bits, bytes(observed), ip=ip):
                 if instruction.is_invalid:
                     break
                 offset = (instruction.ip - ip) & ((1 << bits) - 1)
-                instructions.append(dict(runtime_address=hex(linear + offset),
+                item = dict(runtime_address=hex(linear + offset),
                     project_address=hex(static + offset) if static is not None else None,
                     ip=hex(instruction.ip), size=instruction.len,
                     bytes=bytes(observed[offset:offset + instruction.len]).hex(),
-                    instruction=formatter.format(instruction)))
+                    instruction=formatter.format(instruction))
+                if runtime_cs is not None:
+                    item['cs'] = runtime_cs
+                instructions.append(item)
         return dict(hex=observed.hex(), sha256=hashlib.sha256(observed).hexdigest(), length=length,
                     view=view, space=space, runtime_address=hex(linear),
                     project_address=hex(static) if static is not None else None, instructions=instructions,
@@ -393,6 +414,12 @@ class QemuLayerSessionMixin:
         result = self.code(address, cs=cs, length=length, view=view, space=space)
         metadata = {key: result[key] for key in ('view', 'space', 'project_address', 'generation', 'active_layers')}
         metadata['static_promotion'] = 'unqualified'
+        if result['space'] == 'source':
+            from .qemu_runtime_capture import qualify_qemu_source_capture
+            qualified = qualify_qemu_source_capture(self, result)
+            if qualified is not None:
+                result = qualified
+                metadata['static_promotion'] = 'qualified-source-capture'
         return self._artifact(name, 'qemu-code-snapshot', json.dumps(result, indent=2).encode(), metadata)
 
     def _layer_base_bytes(self, address, length):

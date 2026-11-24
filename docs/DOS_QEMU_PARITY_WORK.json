@@ -125,6 +125,15 @@
         "FDISBULL_REQUIRE_QEMU_LAYERS": "1"
       }
     },
+    "paired-code-layers": {
+      "extends": ["dosbox"],
+      "inputs": [
+        "FDISBULL_QEMU_DOS", "FDISBULL_QEMU_LAYERS", "FDISBULL_QEMU_DOS_FIRMWARE",
+        "FDISBULL_QEMU_DOS_BOOT_IMAGE", "FDISBULL_QEMU_DOS_MCOPY", "FDISBULL_QEMU_IMG"
+      ],
+      "require": {"FDISBULL_REQUIRE_QEMU_DOS_OS": "1", "FDISBULL_REQUIRE_QEMU_LAYERS": "1"},
+      "note": "Select the same layer-capable QEMU executable for both QEMU selectors."
+    },
     "native-clock": {
       "extends": [
         "native-layers"
@@ -538,6 +547,8 @@
         "pytest",
         "-q",
         "tests/test_qemu_hooks.py",
+        "tests/test_qemu_code_inspection.py",
+        "tests/test_qemu_runtime_capture_admission.py",
         "tests/test_qemu_trial_observations.py",
         "tests/test_qemu_experiment_admission.py",
         "tests/test_qemu_experiments_public.py"
@@ -560,6 +571,16 @@
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "real-mode-code-paired": {
+      "environment_profile": "paired-code-layers",
+      "argv": [
+        "python", "-m", "pytest", "-q", "--require-native",
+        "tests/test_qemu_dos_code_views_native.py",
+        "tests/test_qemu_dos_code_relocation_native.py"
+      ],
+      "execution": "local-paired-COM-and-native-MZ",
+      "scope": "Paired stopped RAM/fetch inspection, independent execution and offline promotion. The MZ relocation case uses the layer-capable QEMU executable, matching firmware, FreeDOS boot image, mcopy and qemu-img."
     },
     "layers-legacy": {
       "environment_profile": "dosbox",
@@ -1563,6 +1584,7 @@
         "layers-host",
         "layers-native",
         "layers-legacy",
+        "real-mode-code-paired",
         "protected-source-native"
       ],
       "remaining_work": [

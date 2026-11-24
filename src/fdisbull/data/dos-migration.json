@@ -888,7 +888,7 @@
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuLayerSessionMixin.capture_code; native capture without static promotion",
+      "native_route": "QemuLayerSessionMixin.capture_code; offline temporal children for verified real-mode COM/MZ source captures, with loader fixup normalization. Physical, linear and task-private captures stay observational.",
       "qualification": "unqualified"
     },
     {
@@ -924,7 +924,7 @@
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuLayerSessionMixin.code; verified native RAM and fetch views",
+      "native_route": "QemuLayerSessionMixin.code; verified native RAM and fetch views with real-mode source and runtime CS:IP.",
       "qualification": "unqualified"
     },
     {

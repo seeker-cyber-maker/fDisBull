@@ -150,13 +150,18 @@ class RuntimeCodeMixin:
         budget = integer(max_instructions, 'max_instructions', 1, 1000000)
         if type(defer) is not bool or not isinstance(label, str) or not label.strip() or len(label) > 256:
             raise ValueError('Promotion requires a boolean defer and a 1..256 character label')
-        row = self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?', (artifact,)).fetchone()
-        if row is None or row['kind'] != 'code-snapshot':
+        row = self.db.execute('SELECT a.*,r.version,r.metadata AS run_metadata FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?', (artifact,)).fetchone()
+        if row is None or row['kind'] not in ('code-snapshot', 'qemu-code-snapshot'):
             raise ValueError('Promotion requires a runtime code snapshot')
         data = bytes(row['data'])
         if hashlib.sha256(data).hexdigest() != row['sha256']:
             raise ValueError('Runtime code snapshot hash mismatch')
         observation = json.loads(data)
+        if row['kind'] == 'qemu-code-snapshot':
+            from .qemu_runtime_capture import ADMISSION, validate_qemu_source_capture
+            if not isinstance(observation, dict) or observation.get('qemu_source_admission') != ADMISSION:
+                raise ValueError('QEMU capture lacks qualified source mapping; capture again before promotion')
+            validate_qemu_source_capture(observation, json.loads(row['run_metadata']))
         if observation.get('format') != 'fdisbull-runtime-code-1':
             raise ValueError('Legacy code capture lacks qualified mapping identity; capture again before promotion')
         identity = observation['identity']; parent = self.version(row['version'])

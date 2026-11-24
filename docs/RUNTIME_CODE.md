@@ -15,9 +15,23 @@ project.runtime_version_info(version)
 ```
 
 PE64 uses flat project addresses and omits `cs`. Promotion supports real-mode
-MZ and x86-64 PE, requires an executable mapped span, and verifies the capture's
+COM/MZ and x86-64 PE, requires an executable mapped span, and verifies the capture's
 source/version, run, mapping, CPU mode, byte hash and immutable active-layer
 identities. Earlier captures without the qualified identity must be recaptured.
+
+For a selected FreeDOS COM or MZ process on QEMU, use a project address and
+`space="source"` with `debug-code` or `debug-capture-code`. Select `view="ram"`
+for guest data bytes or `view="execute"` for the bytes fetched with active
+instruction layers. At a stopped real-mode CPU, decoded instructions include
+their runtime CS and IP. A source address may include an explicit project CS.
+
+A QEMU capture with `metadata.static_promotion="qualified-source-capture"`
+can be passed to `debug-promote-code` after the session closes. It must cover
+ordinary, unpaged RAM inside the selected process's original verified module.
+Promotion checks the loader mapping, producer, active layers, and stored byte
+extent before creating a child. A capture that splits or changes a relocation
+cannot be normalized. Physical, linear, task-private and older QEMU captures
+remain available as observation artifacts.
 
 The child is a mapped-byte interpretation, not a reconstructed executable.
 It retains the original container in its parent and has no replacement disk
