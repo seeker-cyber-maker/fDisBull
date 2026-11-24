@@ -1,5 +1,43 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Large-page and PAE protected LE tracking (2026-11-24)
+
+An authored guest rewrote its own page tables, reloaded CR3 and switched
+between LDT code selectors. QEMU tracked LE object 1 offset `0x1400` through
+three visits in each paging mode. The checkpoint was taken at the second
+visit to the instruction, while the alternate page was mapped.
+
+| Mode | First visit, CS 000c | After remap, CS 000c | After selector change, CS 001c |
+| --- | --- | --- | --- |
+| Legacy PSE, 4 MiB | 0x801400 | 0xc01400 | 0xc01400 |
+| PAE, 4 KiB | 0x801400 | 0x810400 | 0x810400 |
+| PAE, 2 MiB | 0x801400 | 0xa01400 | 0xa01400 |
+
+Each hot trace covered 39 stopped boundaries over two cycles. A fresh QEMU
+process loaded its checkpoint, rebound the original LE and reproduced the 32
+remaining boundaries. Four of the hot stops were outside the LE. The trace
+withheld attribution there and reacquired it on return. The offline reader
+repeated the walks using the original source and retained physical reads.
+
+The installed DOSBox-X reference advertised PSE in CPUID leaf 1 (EDX
+`0x00000009`). Its 4 MiB hot trace matched the QEMU locations, instruction
+bytes and walked backing. At an unprepared fresh-process restore, CR4 read
+`0x00000000` against saved `0x00000010`. The verifier rejected the restore.
+A separate fresh receiver ran the guest's PSE initialization before loading
+the same checkpoint and reproduced all 32 remaining boundaries. Returning
+that receiver to the unprepared DOS entry checkpoint also failed its CPU
+context check. These observations keep unassisted DOSBox-X 4 MiB checkpoint
+restore open.
+
+The same reference had CPUID.PAE clear. A guest attempt to enable PAE ended
+the debugger channel before the first tracked boundary. Its legacy 4 KiB
+guest provides a separate comparison for the source-level sequence and ESI
+changes. Native PAE page-table and checkpoint evidence is from QEMU alone.
+The test uses the original QEMU and DOSBox-X executables with SHA-256 prefixes
+`863b36b07648` and `df2080bcd2e6`. DOSBox-X remains the default.
+
+[Tracking API and evidence limits](QEMU_DOS_PROTECTED_SOURCE.md#tracking-paged-code-and-ldt-selectors)
+
 ## Tracking protected LE code across guest remaps (2026-11-24)
 
 On an authored 32-bit LE carrier, QEMU and DOSBox-X followed 39 instruction

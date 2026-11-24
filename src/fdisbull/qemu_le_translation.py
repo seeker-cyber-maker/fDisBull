@@ -6,6 +6,8 @@ establish process ownership, a stable snapshot, access rights, or source identit
 """
 import re
 
+QEMU_TCG_PAE_ACCESSED_IMAGE = '863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25'
+
 
 def _u32(value, name):
     if type(value) is not int or not 0 <= value < 2**32:
@@ -50,9 +52,9 @@ def _mode(context):
         raise ValueError('Requires protected mode')
     if not cr0 & 0x80000000:
         return False
-    if cr4 & ((1 << 5) | (1 << 12)) or efer & ((1 << 8) | (1 << 10)):
-        raise ValueError('PAE and long mode are unsupported')
-    if cr3 & 0xfe7:
+    if cr4 & (1 << 12) or efer & ((1 << 8) | (1 << 10)):
+        raise ValueError('Long mode is unsupported')
+    if not cr4 & 0x20 and cr3 & 0xfe7:
         raise ValueError('Unsupported CR3 reserved bits')
     return True
 
@@ -64,7 +66,76 @@ def _read(reader, address, length):
     return data
 
 
-def translate_linear(context, address, length, read_physical, read_linear=None):
+def _extended_walk(context, linear, reader, qemu_image_sha256=None):
+    """Walk bounded 32-bit physical PSE/PAE mappings without guessing CPU width."""
+    cr0, cr3, cr4, efer = (context[k] for k in ('cr0', 'cr3', 'cr4', 'efer'))
+    pae = bool(cr4 & 0x20)
+    entries = []
+
+    def entry(kind, address, size):
+        raw = _read(reader, address, size)
+        value = int.from_bytes(raw, 'little')
+        entries.append(dict(kind=kind, physical_address=address, value=value, raw=raw.hex()))
+        if not value & 1:
+            raise ValueError(('PAE ' if pae else '') + 'Page entry is not present')
+        if size == 8:
+            if value & 0x7fffffff00000000:
+                raise ValueError('Unsupported PAE high physical address or reserved bits')
+            if value & (1 << 63) and not efer & (1 << 11):
+                raise ValueError('NX bit requires EFER.NXE')
+        return value
+
+    if pae:
+        pdpt = entry('pdpt', (cr3 & 0xffffffe0) + (linear >> 30) * 8, 8)
+        qemu_accessed = qemu_image_sha256 == QEMU_TCG_PAE_ACCESSED_IMAGE and bool(pdpt & 0x20)
+        if pdpt & (0x1c6 if qemu_accessed else 0x1e6) or pdpt & (1 << 63):
+            raise ValueError('Unsupported PAE PDPTE reserved bits')
+        if qemu_accessed:
+            entries[-1]['qemu_tcg_accessed'] = True
+        pde = entry('directory', (pdpt & 0xfffff000) + ((linear >> 21) & 0x1ff) * 8, 8)
+        large = bool(pde & 0x80)
+        if large:
+            if pde & 0x1fe000:
+                raise ValueError('Unsupported PAE large-page reserved bits')
+            size, physical = 0x200000, (pde & 0xffe00000) | (linear & 0x1fffff)
+            leaf = pde
+        else:
+            leaf = entry('table', (pde & 0xfffff000) + ((linear >> 12) & 0x1ff) * 8, 8)
+            size, physical = 4096, (leaf & 0xfffff000) | (linear & 0xfff)
+        attrs = dict(writable=bool(pde & leaf & 2), user=bool(pde & leaf & 4),
+                     supervisor_write_protect=bool(cr0 & 0x10000),
+                     execute_disable=bool((pde | leaf) & (1 << 63)))
+        mode = 'pae'
+    else:
+        pde = entry('directory', (cr3 & 0xfffff000) + (linear >> 22) * 4, 4)
+        if not pde & 0x80:
+            return None
+        if not cr4 & 0x10:
+            raise ValueError('Large PDE requires CR4.PSE')
+        if pde & 0x3fe000:
+            raise ValueError('PSE-36 or reserved large-page bits are unsupported')
+        size, physical = 0x400000, (pde & 0xffc00000) | (linear & 0x3fffff)
+        attrs = dict(writable=bool(pde & 2), user=bool(pde & 4),
+                     supervisor_write_protect=bool(cr0 & 0x10000))
+        mode = 'legacy-32'
+    return dict(physical=physical, page_size=size, paging_mode=mode,
+                entries=entries, page_attributes=attrs,
+                translation_scope='stopped table walk; active backing identity is not proven')
+
+
+def require_executable_walks(walks, length):
+    """Reject an NX mapping only for the bytes of the current instruction."""
+    for walk in walks:
+        if length <= 0:
+            break
+        if walk.get('page_attributes', {}).get('execute_disable'):
+            raise ValueError('Current instruction is mapped execute-disabled')
+        length -= walk['length']
+    if length > 0:
+        raise ValueError('Incomplete instruction page walks')
+
+
+def translate_linear(context, address, length, read_physical, read_linear=None, *, qemu_image_sha256=None):
     """Return bytes and 4 KiB walk evidence, optionally checking QEMU linear bytes."""
     paging = _mode(context)
     from .dos_memory import translate_386_page
@@ -78,9 +149,6 @@ def translate_linear(context, address, length, read_physical, read_linear=None):
     while offset < length:
         linear = address + offset
         count = min(length - offset, 4096 - (linear & 0xfff))
-        observed = translate_386_page(linear, state, read_physical)
-        if observed['status'] != 'mapped' or (paging and observed.get('page_size') != 4096):
-            raise ValueError(observed.get('reason', 'Unsupported page translation'))
         if not paging:
             data = _read(read_physical, linear, count)
             if read_linear is not None and _read(read_linear, linear, count) != data:
@@ -89,6 +157,32 @@ def translate_linear(context, address, length, read_physical, read_linear=None):
             walks.append(dict(linear=linear, length=count, physical=linear, paging=False))
             offset += count
             continue
+        initial = {}
+        def first_read(a, n):
+            data = read_physical(a, n)
+            if not initial:
+                initial[a, n] = data
+            return data
+
+        extended = _extended_walk(context, linear, first_read, qemu_image_sha256)
+        if extended is not None:
+            physical = extended['physical']
+            data = _read(read_physical, physical, count)
+            if read_linear is not None and _read(read_linear, linear, count) != data:
+                raise ValueError('Linear and translated physical bytes differ')
+            result.append(data)
+            walks.append(dict(linear=linear, length=count, paging=True, **extended))
+            offset += count
+            continue
+        def legacy_read(a, n):
+            key = (a, n)
+            if key in initial:
+                return initial.pop(key)
+            return read_physical(a, n)
+
+        observed = translate_386_page(linear, state, legacy_read)
+        if observed['status'] != 'mapped' or observed.get('page_size') != 4096:
+            raise ValueError(observed.get('reason', 'Unsupported page translation'))
         directory_entry, table_entry = observed['entries']
         pde_address = int(directory_entry['physical_address'], 16)
         pte_address = int(table_entry['physical_address'], 16)

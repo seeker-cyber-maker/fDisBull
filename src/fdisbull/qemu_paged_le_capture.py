@@ -9,7 +9,7 @@ from .qemu_machine import machine_trace_operation
 
 from iced_x86 import Decoder
 
-from .qemu_le_translation import parse_hmp, translate_linear, observe_descriptor
+from .qemu_le_translation import parse_hmp, translate_linear, observe_descriptor, require_executable_walks
 from .qemu_paged_le_match import match
 from .qemu_dos_source_admission import _source, _integer
 from .qemu_runtime_capture import _qemu_input_hashes
@@ -55,6 +55,19 @@ def _producer():
             'le.py',
         )
     }
+
+
+def _compatible_producer(recorded, current, *, tracking=False):
+    """Accept this producer or the exact pre-extension producer manifest."""
+    if recorded == current:
+        return True
+    legacy = dict(current)
+    legacy['qemu_le_translation.py'] = '61ff7f0bde924f6cc741dfcbf94a7ddde2ae561c6ebadb7df84fdcf072b31f38'
+    legacy['qemu_paged_le_capture.py'] = '5d9200b640fc26ea48034aac3d004de9edf85ee0bbeb3bc69829a77eff19ced6'
+    if tracking:
+        legacy['qemu_paged_le_observation.py'] = '342b6b8e06c17deb280c32fa74621d1463043dd586a844dd0a711b579f5aa265'
+        legacy['qemu_paged_le_tracking.py'] = '56e5313387d1a84ce008ac3bb60922efa4b5a72d5123364983ab73efd937cd71'
+    return recorded == legacy
 
 
 def _cpu(registers, context):
@@ -105,7 +118,7 @@ def _backing(walks):
     return [dict(physical_address=hex(w['physical']), length=w['length']) for w in walks]
 
 
-def _interpret(image, cpu, context, read):
+def _interpret(image, cpu, context, read, *, observed_walks=None):
     descriptor = observe_descriptor(context, cpu['cs'], read)
     result = match(image, cpu, descriptor, read)
     if result is None:
@@ -127,6 +140,8 @@ def _interpret(image, cpu, context, read):
     if ins.is_invalid or source.is_invalid or source.len != ins.len:
         raise ValueError('Current source instruction shape differs')
     size = ins.len
+    if observed_walks is not None:
+        require_executable_walks(observed_walks[cpu['cs_base'] + cpu['ip'], available], size)
     if not _file_backed(image, index, offset, size):
         raise ValueError('Current instruction is not fully file backed')
     placements = {index: placement}
@@ -286,6 +301,9 @@ def _qualify(session, observed):
     linear_reads = {}
     memory_mib = session.vm.machine_configuration['memory_mib']
     ram_end = _ram_end(memory_mib)
+    inputs = _qemu_input_hashes(session.metadata['runtime_inputs'])
+    if hasattr(session.vm, 'inputs') and _qemu_input_hashes(session.vm.inputs) != inputs:
+        raise ValueError('Paged LE native input identity differs')
     if session.metadata['machine_configuration']['memory_mib'] != memory_mib:
         raise ValueError('Guest RAM configuration differs from run metadata')
     retained_bytes = 0
@@ -319,7 +337,8 @@ def _qualify(session, observed):
             len(linear_reads) >= MAX_WITNESS_ROWS or walk_count + expected_walks > MAX_WITNESS_ROWS
         ):
             raise ValueError('Paged LE walk witness budget exceeded')
-        data, walks = translate_linear(context, a, n, physical, virtual)
+        data, walks = translate_linear(context, a, n, physical, virtual,
+                                       qemu_image_sha256=inputs.get('qemu_image'))
         if key in linear_reads and linear_reads[key] != walks:
             raise ValueError('Page walks changed')
         if key not in linear_reads:
@@ -327,14 +346,15 @@ def _qualify(session, observed):
         linear_reads[key] = walks
         return data
 
-    interpretation = _interpret(image, cpu, context, read)
+    interpretation = _interpret(image, cpu, context, read, observed_walks=linear_reads)
     start = int(observed['runtime_address'], 16)
     length = observed['length']
     raw = bytes.fromhex(observed['hex'])
     location, selector_offset = _capture_extent(image, cpu, interpretation, start, length)
     data = read(start, length)
     walks = linear_reads[start, length]
-    _check_decoded_span(observed, raw, start, selector_offset)
+    instruction_size = _check_decoded_span(observed, raw, start, selector_offset)
+    require_executable_walks(walks, instruction_size)
     if (
         len(raw) != length
         or data != raw
@@ -343,7 +363,8 @@ def _qualify(session, observed):
     ):
         raise ValueError('Capture extent or native backing differs')
     for (a, n), walks_before in list(linear_reads.items()):
-        _, walks_after = translate_linear(context, a, n, physical, virtual)
+        _, walks_after = translate_linear(context, a, n, physical, virtual,
+                                          qemu_image_sha256=inputs.get('qemu_image'))
         if walks_after != walks_before:
             raise ValueError('Page walks changed during capture')
     for (a, n), b in list(reads.items()):
@@ -366,6 +387,8 @@ def _qualify(session, observed):
         or _producer() != producer
         or session.vm.machine_configuration['memory_mib'] != memory_mib
         or session.metadata['machine_configuration']['memory_mib'] != memory_mib
+        or _qemu_input_hashes(session.metadata['runtime_inputs']) != inputs
+        or hasattr(session.vm, 'inputs') and _qemu_input_hashes(session.vm.inputs) != inputs
     ):
         raise ValueError('CPU or process changed during capture')
     inputs = _qemu_input_hashes(session.metadata['runtime_inputs'])
@@ -412,6 +435,7 @@ def validate(project, observation, run_metadata, *, run, version):
     from .le import load_runtime_le_carrier
 
     try:
+        current_producer = _producer()
         proof = observation['paged_le_capture']
         ident = observation['identity']
         selected = project.version(version)
@@ -441,7 +465,7 @@ def validate(project, observation, run_metadata, *, run, version):
             or not ident['process_epoch'].startswith(run + ':process:')
             or not ident['process_epoch'][len(run + ':process:') :].isdigit()
             or int(ident['process_epoch'][len(run + ':process:') :]) < 1
-            or proof['producer'] != _producer()
+            or not _compatible_producer(proof['producer'], current_producer)
         ):
             raise ValueError('Paged LE capture identity differs')
         session = SimpleNamespace(project=project, version=selected, metadata=run_metadata)
@@ -495,18 +519,22 @@ def validate(project, observation, run_metadata, *, run, version):
             return reads[key]
 
         def read(a, n):
-            data, actual = translate_linear(context, a, n, physical)
+            data, actual = translate_linear(context, a, n, physical,
+                                            qemu_image_sha256=ident['runtime_inputs'].get('qemu_image'))
+            if proof['producer'] != current_producer and any('page_size' in walk for walk in actual):
+                raise ValueError('Legacy producer cannot attest an extended page walk')
             if walks.get((a, n)) != actual:
                 raise ValueError('Retained page walk differs')
             used_walks.add((a, n))
             return data
 
-        interpretation = _interpret(image, cpu, context, read)
+        interpretation = _interpret(image, cpu, context, read, observed_walks=walks)
         start = int(observation['runtime_address'], 16)
         length = observation['length']
         location, selector_offset = _capture_extent(image, cpu, interpretation, start, length)
         raw = read(start, length)
         instruction_size = _check_decoded_span(observation, raw, start, selector_offset)
+        require_executable_walks(walks[start, length], instruction_size)
         if (
             raw.hex() != observation['hex']
             or _sha(raw) != observation['sha256']

@@ -32,8 +32,10 @@ sidecars. Restore verifies a fresh machine before replacing the old owner. The
 saved guest disk is restored; host files are untouched.
 
 Admission requires one observed vCPU, real/protected/V86 mode, supported
-non-PAE address translation, and code/stack witness pages in conventional or
-extended RAM. ROM and unsupported address contexts refuse. These are bounded
+address translation, and code/stack witness pages in conventional or extended
+RAM below the PC memory hole. Protected-mode witnesses also support 4 MiB
+PSE pages and 4 KiB or 2 MiB PAE pages. Restore repeats the page walks and
+compares their evidence and the code and stack bytes. ROM and unsupported address contexts refuse. These are bounded
 machine checks, separate from executable allocation or source-lifetime proof.
 
 Explicit native physical/linear RAM and fetch layers and linear hooks with

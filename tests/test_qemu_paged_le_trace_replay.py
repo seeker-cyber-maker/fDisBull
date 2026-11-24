@@ -82,7 +82,7 @@ def setup_case(monkeypatch):
     monkeypatch.setattr(
         module,
         'replay',
-        lambda *a: dict(qualification=q, mapping_identity={'selector': 8}, witness=witness),
+        lambda *a, **kw: dict(qualification=q, mapping_identity={'selector': 8}, witness=witness),
     )
     import fdisbull.le
 

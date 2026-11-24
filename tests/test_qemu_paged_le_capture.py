@@ -17,6 +17,11 @@ def test_paged_interpretation_rechecks_complete_relocated_instruction():
     assert result['descriptor']['table'] == 'gdt'
     assert result['source_location']['object_offset'] == 0
     assert result['instruction_size'] == 5
+    # Capturing elsewhere in the CS still requires an executable current instruction.
+    with pytest.raises(ValueError, match='execute-disabled'):
+        _interpret(image, cpu, context, read, observed_walks={
+            (cpu['cs_base'] + cpu['ip'], 15): [dict(length=15, page_attributes={'execute_disable': True})]
+        })
     assert result['placements'][1]['runtime_base'] == 0x70000
     changed = bytearray(memory[0][1]); changed[1] ^= 1
     memory.append((0x50000, bytes(changed)))
@@ -82,6 +87,12 @@ def test_stopped_capture_offline_replay_and_tamper_refusal(monkeypatch):
     assert proof['source_location']['object_offset'] == 0
     assert proof['address_translation']['selector_table'] == 'gdt'
     assert proof['address_translation']['paging'] is False
+    with pytest.raises(ValueError, match='identity'):
+        capture.validate(project, result, metadata, run='another-run', version=1)
+    tampered_walk = deepcopy(result)
+    tampered_walk['paged_le_capture']['linear_walks'][0]['walks'][0]['physical'] += 1
+    with pytest.raises(ValueError):
+        capture.validate(project, tampered_walk, metadata, run='run', version=1)
     # The stopped PC remains at the first relocated instruction, while the
     # requested capture starts at a different source-backed instruction.
     other = deepcopy(observed)

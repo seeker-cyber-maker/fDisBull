@@ -172,7 +172,12 @@ class QemuPagedLETrackingMixin:
             def virtual(a, n):
                 return remote.memory(a, n, space='virtual', timeout_ms=self._remaining())
 
-            result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual)
+            from .qemu_le_translation import QEMU_TCG_PAE_ACCESSED_IMAGE
+            if binding['native_inputs'].get('qemu_image') == QEMU_TCG_PAE_ACCESSED_IMAGE:
+                result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual,
+                                 qemu_image_sha256=QEMU_TCG_PAE_ACCESSED_IMAGE)
+            else:
+                result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual)
             from .qemu_runtime_capture import _qemu_input_hashes
 
             if (

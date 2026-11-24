@@ -28,7 +28,7 @@ CPU mode and qualified address context belong to each candidate's identity.
 The native `qemu-dos` process adapter also supports initial real-mode COM/MZ
 source boundaries and explicitly bound protected32 LE source views. Its virtual
 profile adds clock-qualified source observations;
-see [native QEMU migration](dos-qemu-migration.md#relate-source-boundaries-to-virtual-time)
+see [the source timing workflow](#relate-source-boundaries-to-virtual-time)
 for its distinct debugger-step and input contracts.
 
 Reuse an existing named scene action or known input route to establish the
@@ -229,6 +229,145 @@ restore an LE handle. Existing checkpoints/layers/hooks do not gain LE source
 authorization from these traces. DOSBox-X remains default and retained, and
 this slice introduces no CI. Native evidence belongs to exact candidate
 receipts; this contract and host checks alone are not native qualification.
+
+## Stopped protected source admission
+
+`dos_source_admit(expected_source_sha256=...)` / `debug-dos-source-admit`
+records historical LE evidence at a stopped unpaged protected32 CPU. It checks
+A20, CS/GDT, original-source identity and stable physical/linear readback;
+active layers/task-private views refuse. Comparison is at most 512 KiB and
+scan at most 16 MiB, under a bounded host deadline. Complete masked matching
+refuses ambiguity; excluded fixups and a symbolic bridge do not prove execution.
+Its receipt retains `lifetime_qualified: false`, `live_mapping_installed: false`
+and the unchanged MZ mapping. Re-admit after execution, mutation or restore.
+
+## Owned protected source binding and traces
+
+`dos_source_bind(expected_source_sha256=...)` makes a fresh admission and
+installs an owned recipe. Inspect with `dos_source_binding()` or validate again
+with `refresh=True`; `dos_source_unbind()` removes it. JSON routes use the
+`debug-dos-source-` prefix and owned `run`.
+
+`trace` / `trace_until` select an installed handle by default.
+`source_view='embedded-le'` requires it; `initial-dos` overrides it with existing
+real16 rules. There is no implicit bind or fallback. LE count traces accept
+`bits=32`. Runs validate stopped endpoints; traces validate each retained
+boundary, without retirement or OS/task lifetime claims. Whole instructions
+need proved fixups and stable source/CS/GDT/readback. Mutation/restore/owner
+drift retires the recipe; checkpoints do not restore it or authorize LE
+layers/hooks. LE object sites remain separate from MZ project addresses.
+
+Use the [LE capture guide](#capture-owned-protected-le-boundaries)
+for APIs, scripts, bounds, lifecycle and cold queries. DOSBox-X remains default;
+no CI is introduced. Native evidence belongs to exact candidate receipts.
+
+For legacy 4 KiB/4 MiB or PAE 4 KiB/2 MiB pages and LDT changes, opt in with
+`dos_source_bind(tracking='paged', expected_source_sha256=...)`. Each stopped
+boundary is independently re-matched and `dos_source_binding()` exposes the
+current table walk only while qualified. The addressed physical bytes must match
+the virtual read. PAE receipts identify physical entries in observed low RAM.
+CPU translation caches and physical RAM above the PC hole remain outside this check. Count traces retain a distinct
+paged evidence format; predicate traces are not supported. Use
+`save_machine_state`, then bind again after restore; the old binding never
+survives restore. This is stopped-boundary evidence, not task lifetime proof.
+
+## Capture register and execution events
+
+On a live COM/MZ process with the initial-DOS view, `debug-trace` preserves the existing bounded-count
+artifact route. `debug-trace-until` accepts the shared register, PC-range,
+mnemonic, region-change and nonsequential predicates. For example:
+
+```json
+{"method":"debug-trace-until","params":{"run":"RETURNED_RUN","until":{"kind":"register","register":"ax","equals":7},"max_steps":100,"timeout_ms":10000,"name":"ax-seven.json"}}
+```
+
+Budgets count stopped QEMU debugger intervals. A stop can follow a fault or
+partial REP progress; it does not certify instruction retirement. Artifacts
+retain actual IRQ/timer stepping policy, full register observations, linear
+and segmented PCs, verified source sites and the initial capture epoch.
+Source-site hashes account for DOS relocation separately from observed byte
+hashes, so independent launches can be compared at the same project site.
+
+Use the returned `trace_artifact` with `event-trace-query`, `event-search-start`
+and `event-search-refine`. Ordered entry/artifact receipts and source bytes are
+rechecked after session close or project reopening. Only a closed qualified
+window can narrow candidates. Self-modification, source/module departure,
+allocation/epoch or mode changes stop the source binding; unbound boundaries
+never acquire a source site. Inspect `source_window_closed`, `outcome` and
+`error`, even if an explicit runtime predicate matched the final boundary.
+
+Queued `action` input inside `trace-until` is refused before mutation. Dispatch
+physical input with a bounded natural run, then start a separate trace at an
+explicit breakpoint; the prior run is an unobserved interval, not contiguous
+source-trace evidence or proof of input causation.
+Raw-disk machine tracing remains separate and supplies no process source map.
+
+### Relate source boundaries to virtual time
+
+An initial COM/MZ process launched with `qemu_clock='virtual'` advertises
+`source_trace_clock`. Its source trace events automatically retain a
+`fdisbull-source-clock-1` clock with `domain='QEMU_CLOCK_VIRTUAL'`, the owned
+`run`, host `epoch`, native `native_epoch`, `virtual_ns`, separate `icount`,
+and compact `before`/`after` samples. The complete ownership, register and
+instruction read must be bracketed by unchanged native time/counter/epoch.
+The sequences share `clock_observe()`'s epoch; sampling does not add a separate
+clock journal event for each side. Standard/instruction-profile source traces
+and raw machine traces remain clockless.
+
+Use a predicate with exact fields:
+
+```python
+observed = debug.clock_observe()
+interval = {
+    'kind': 'virtual-time-range', 'run': observed['run'],
+    'epoch': observed['epoch'],
+    'native_epoch': observed['virtual_clock']['native']['epoch'],
+    'start_ns': observed['virtual_ns'],
+    'end_ns': observed['virtual_ns'] + 1,
+}
+captured = debug.trace_until(interval, max_steps=0, timeout_ms=3000)
+rows = project.event_trace_query(captured['trace_artifact'], predicate=interval)
+```
+
+This example observes the current stopped boundary without executing it. Bounds
+are integer nanoseconds, `0 <= start_ns < end_ns <= 2**63`, with an excluded
+end. A future live range is tested at each debugger stop, so it can be skipped;
+it does not install a clock timer. Always bound steps and host time.
+
+Query rows and search witness samples retain clocks after project reopen.
+An optional query `endpoint_clock` preserves the final count endpoint from
+`collector.current_stop.clock`, without adding an N+1 event to `trace(count=N)`.
+Candidate site identities remain independent of time. Missing clocks or
+foreign identities are unknown offline; malformed brackets are rejected even
+when the query concerns only a register. Historical clockless records remain
+supported.
+
+For the initial-DOS view, a time predicate may match the observed final boundary
+after leaving the source binding. Its source site stays unknown and its open
+source window cannot narrow an event search. The embedded-LE view instead ends
+at an unqualified source boundary before evaluating its predicate.
+
+Live and saved-script predicates must match the current run and both epochs.
+Every nested clock leaf is checked before execution, including before earlier
+script writes. Saved trace-until parameters remain literal: use identity from
+an earlier request, not `$` interpolation from a step in the same script.
+An unstable native clock closes ownership while preserving any already known
+stop in the result.
+
+Compare these timestamps with input `dispatch_ns`, renderer `published_ns` or
+audio callback timestamps only within the same run and both epochs. Ordering
+does not prove input consumption or causation, completed guest frames or
+natural instruction latency. Equal timestamps do not establish callback order.
+The actual GDB IRQ/timer step policy still applies, and instruction count is
+never converted into elapsed virtual time. Host auto-sync is a separate,
+explicit mapping; it does not reinterpret source-event timestamps.
+
+One host deadline now includes trace lock admission, observations, stepping
+and persistence, intersecting script/session/native-channel bounds. If it
+expires before publication, `ExecutionTraceError.result` can contain the
+partial stop with no artifact. A slow synchronous write may already have
+committed an artifact or journal; its post-check still reports failure and
+preserves any available IDs. Inspect the result instead of replaying the trace.
 
 ## Define predicates and regions
 

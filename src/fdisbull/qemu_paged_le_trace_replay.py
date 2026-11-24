@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import json
 
 from .event_search import _artifact, _capture_sequence
-from .qemu_paged_le_capture import _cpu, _ram_end, _ram_extent, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS
+from .qemu_paged_le_capture import _cpu, _ram_end, _ram_extent, _compatible_producer, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS
 from .qemu_paged_le_observation import replay
 from .qemu_dos_source_admission import _source
 from .qemu_paged_le_tracking import _paged_producer
@@ -26,6 +26,7 @@ def analyze_trace(project, artifact):
         binding_id = receipt['artifact']
         brow, bdoc = _artifact(project, binding_id, 'dos-source-binding')
         epoch = binding['capture_epoch']
+        current_producer = _paged_producer()
         if (
             doc['format'] != 'fdisbull-paged-le-trace-1'
             or bdoc != dict(format='fdisbull-paged-le-tracking-binding-1', recipe=binding)
@@ -42,7 +43,7 @@ def analyze_trace(project, artifact):
             or not epoch.startswith(row['run'] + ':process:')
             or not epoch[len(row['run'] + ':process:') :].isdigit()
             or int(epoch[len(row['run'] + ':process:') :]) < 1
-            or doc['producer'] != _paged_producer()
+            or not _compatible_producer(doc['producer'], current_producer, tracking=True)
             or doc['native_inputs'] != _qemu_input_hashes(meta['runtime_inputs'])
             or _capture_sequence(project, brow) >= _capture_sequence(project, row)
         ):
@@ -116,7 +117,11 @@ def analyze_trace(project, artifact):
                     raise ValueError('Paged LE witness byte budget exceeded')
             if _cpu(event['registers'], witness['context']) != witness['cpu']:
                 raise ValueError('Paged LE CPU witness differs')
-            checked = replay(image, row['version'], witness)
+            checked = replay(
+                image, row['version'], witness,
+                legacy_producer=doc['producer'] != current_producer,
+                qemu_image_sha256=doc['native_inputs'].get('qemu_image'),
+            )
             if (
                 not checked['qualification']['qualified']
                 or checked['qualification'] != q

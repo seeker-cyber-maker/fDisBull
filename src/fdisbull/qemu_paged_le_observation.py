@@ -8,7 +8,7 @@ from copy import deepcopy
 from hashlib import sha256
 
 from .dosbox_rpc import DebuggerError
-from .qemu_le_translation import translate_linear
+from .qemu_le_translation import translate_linear, require_executable_walks
 from .qemu_paged_le_capture import _interpret, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS
 
 
@@ -28,7 +28,8 @@ def _unknown(error):
     )
 
 
-def observe(image, source_version, cpu, context, read_physical, read_virtual):
+def observe(image, source_version, cpu, context, read_physical, read_virtual, *, legacy_producer=False,
+            qemu_image_sha256=None):
     """Re-match the current boundary and retain the reads needed for replay.
 
     A failed observation has no source or mapping identity. Readers must restrict
@@ -64,12 +65,19 @@ def observe(image, source_version, cpu, context, read_physical, read_virtual):
         return sample('virtual', read_virtual, a, n)
 
     def linear(a, n):
-        return translate_linear(context, a, n, physical, virtual)[0]
+        data, walks = translate_linear(context, a, n, physical, virtual, qemu_image_sha256=qemu_image_sha256)
+        if legacy_producer and any('page_size' in walk for walk in walks):
+            raise ValueError('Legacy producer cannot attest an extended page walk')
+        return data
 
     try:
         result = _interpret(image, cpu, context, linear)
         address = cpu['cs_base'] + cpu['ip']
-        data, walks = translate_linear(context, address, result['instruction_size'], physical, virtual)
+        data, walks = translate_linear(context, address, result['instruction_size'], physical, virtual,
+                                       qemu_image_sha256=qemu_image_sha256)
+        if legacy_producer and any('page_size' in walk for walk in walks):
+            raise ValueError('Legacy producer cannot attest an extended page walk')
+        require_executable_walks(walks, result['instruction_size'])
         # Recheck every exact read, including page tables and descriptor material.
         for (space, address_, length), expected in list(rows.items()):
             reader = read_physical if space == 'physical' else read_virtual
@@ -108,7 +116,7 @@ def observe(image, source_version, cpu, context, read_physical, read_virtual):
         return _unknown(error)
 
 
-def replay(image, source_version, witness):
+def replay(image, source_version, witness, *, legacy_producer=False, qemu_image_sha256=None):
     """Recompute an observation from retained exact stopped-read evidence."""
     try:
         rows = {}
@@ -149,6 +157,8 @@ def replay(image, source_version, witness):
             witness['context'],
             reader('physical'),
             reader('virtual'),
+            legacy_producer=legacy_producer,
+            qemu_image_sha256=qemu_image_sha256,
         )
     except DebuggerError:
         raise

@@ -73,7 +73,9 @@ def observation(debug):
         if not paging:
             return linear
         pde = int.from_bytes(physical((cr3 & 0xFFFFF000) + (linear >> 22) * 4, 4), 'little')
-        assert pde & 1 and not pde & 0x80
+        assert pde & 1
+        if pde & 0x80:
+            return (pde & 0xffc00000) + (linear & 0x3fffff)
         pte = int.from_bytes(physical((pde & 0xFFFFF000) + ((linear >> 12) & 1023) * 4, 4), 'little')
         assert pte & 1
         return (pte & 0xFFFFF000) + (linear & 4095)
@@ -136,7 +138,7 @@ def observation(debug):
     )
 
 
-def run(stage, phase):
+def run(stage, phase, *, assisted=False):
     stage = Path(stage)
     assert phase in ('before', 'after')
     cfg = json.loads((stage / 'config.json').read_text())
@@ -144,6 +146,20 @@ def run(stage, phase):
     count, checkpoint_index = integer(cfg['boundaries']), integer(cfg['checkpoint_index'])
     assert 0 <= checkpoint_index < count
     owners = []
+    def observed_load(debug, artifact, label):
+        observed = []
+        original = debug.registers
+        def capture(*args, **kwargs):
+            value = original(*args, **kwargs)
+            observed.append(value.get('address_context'))
+            return value
+        debug.registers = capture
+        try:
+            return debug.load_state(artifact)
+        finally:
+            debug.registers = original
+            (stage / f'dosbox-{phase}-{label}-{'guest-primed' if assisted else 'unassisted'}-observed.json').write_text(
+                json.dumps(observed, indent=2))
     with (
         Project.create(stage / 'dosbox.fdb', source, image='mz')
         if phase == 'before'
@@ -152,6 +168,7 @@ def run(stage, phase):
         with project.debugger(
             os.environ['FDISBULL_DOSBOX'], source.parent, _on_spawn=owners.append
         ) as debug:
+            entry_context = debug.registers().get('address_context')
             entry = debug.save_state('dos-entry.sav')['artifact']
             if phase == 'before':
                 _reach_start(debug, cfg)
@@ -159,16 +176,23 @@ def run(stage, phase):
                 start, checkpoint = 0, None
             else:
                 checkpoint = json.loads((stage / 'dosbox-before.json').read_text())['checkpoint']
-                debug.load_state(checkpoint)
+                if assisted:
+                    _reach_start(debug, cfg)  # Assisted setup before checkpoint restore.
+                observed_load(debug, checkpoint, 'checkpoint')
                 start = checkpoint_index
             events = []
             for index in range(start, count):
                 if phase == 'before' and index == checkpoint_index:
+                    checkpoint_context = debug.registers().get('address_context')
                     checkpoint = debug.save_state()['artifact']
                 events.append(observation(debug))
                 if index + 1 < count:
                     debug.call('execution.step', {'mode': 'into'})
-            debug.load_state(entry)
+            # Preserve observed boundaries even if the subsequent shutdown restore fails.
+            probe = read(debug, 'physical', 0x1f0000, 8).hex() if cfg.get('paging_mode') == 'legacy-4m' else None
+            partial = dict(checkpoint=checkpoint, events=events, status='before-shutdown-restore', cpu_probe=probe, entry_context=entry_context, checkpoint_context=checkpoint_context if phase == 'before' else None)
+            (stage / ('dosbox-' + phase + '-partial.json')).write_text(json.dumps(partial, indent=2))
+            observed_load(debug, entry, 'entry')
             assert debug.registers()['cpu_mode'] == 'real'
     exits = [owner.poll() for owner in owners]
     assert exits and all(code == 0 for code in exits), exits
@@ -178,4 +202,4 @@ def run(stage, phase):
 
 
 if __name__ == '__main__':
-    run(Path(sys.argv[1]), sys.argv[2])
+    run(Path(sys.argv[1]), sys.argv[2], assisted=len(sys.argv) == 4 and sys.argv[3] == 'guest-paging')

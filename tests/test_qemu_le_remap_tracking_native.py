@@ -16,11 +16,11 @@ from support.qemu_dos_le_fixture import build_paged_ldt_fixture
 from test_qemu_dos_process_native import process_runtime as process_runtime
 
 
-def prepare(stage, runtime):
+def prepare(stage, runtime, paging_mode="legacy-4k"):
     stage = Path(stage)
     build = stage / 'build'
     build.mkdir(parents=True)
-    f = build_paged_ldt_fixture(build, runtime['nasm'], tracking=True)
+    f = build_paged_ldt_fixture(build, runtime['nasm'], tracking=True, paging_mode=paging_mode)
     game = stage / 'game'
     game.mkdir()
     source = game / 'REMAP.EXE'
@@ -34,6 +34,7 @@ def prepare(stage, runtime):
     # Save on the second visit to the target: same CS/IP, new physical page.
     cfg = dict(
         source=str(source),
+        paging_mode=paging_mode,
         sha256=f['sha256'],
         start_pc=f['entry_address'],
         start_ip=f['entry_ip'],
@@ -105,3 +106,109 @@ def test_tracking_observes_guest_remaps_selectors_and_cold_restore(tmp_path, pro
         assert [e['qualified'] for e in events[base + 16 : base + 19]] == [False, False, True]
         assert events[base + cfg['cycle']]['esi'] == (events[base]['esi'] + 3) & 0xFFFFFFFF
     assert hashlib.sha256(Path(cfg['source']).read_bytes()).hexdigest() == cfg['sha256']
+
+
+@pytest.mark.parametrize('paging_mode', ['legacy-4m', 'pae-4k', 'pae-2m'])
+def test_native_large_and_pae_remap_cold_restore(tmp_path, process_runtime, paging_mode):  # noqa: F811
+    if not os.environ.get('FDISBULL_QEMU_IMG'):
+        pytest.skip('Select QEMU machine checkpoint profile')
+    cfg = prepare(tmp_path, process_runtime, paging_mode)
+    hot, cold = phases(tmp_path, 'qemu')
+    assert hot['checkpoint'] == cold['checkpoint']
+    assert hot['events'][cfg['checkpoint_index']:] == cold['events']
+    assert hot['binding_id'] != cold['binding_id'] and hot['epoch'] != cold['epoch']
+    events = hot['events']
+    for base in (0, cfg['cycle']):
+        visits = [e for e in events[base:base + cfg['cycle']] if e['ip'] == cfg['target_ip']]
+        assert [(e['cs'], e['backing'][0]) for e in visits] == [
+            (cfg['start_cs'], cfg['first_target']),
+            (cfg['start_cs'], cfg['second_target']),
+            (cfg['selector_b'], cfg['second_target']),
+        ]
+        assert all(e['qualified'] and e['hex'] == '46' for e in visits)
+        expected_size = {'legacy-4m': 0x400000, 'pae-4k': 0x1000, 'pae-2m': 0x200000}[paging_mode]
+        for event in visits:
+            assert event['page_size'] == expected_size
+            assert event['paging_mode'] == ('legacy-32' if paging_mode == 'legacy-4m' else 'pae')
+            assert event['entries'] and event['page_attributes']
+        assert events[base + cfg['cycle']]['esi'] == (events[base]['esi'] + 3) & 0xffffffff
+    assert hashlib.sha256(Path(cfg['source']).read_bytes()).hexdigest() == cfg['sha256']
+
+
+def test_dosbox_large_page_cold_restore_observations(tmp_path, process_runtime):  # noqa: F811
+    """Unassisted refusal and separately labelled guest-assisted observation."""
+    if not os.environ.get('FDISBULL_DOSBOX'):
+        pytest.skip('Select DOSBox-X')
+    cfg = prepare(tmp_path, process_runtime, 'legacy-4m')
+    helper = Path(__file__).parent / 'support' / 'le_remap_dosbox.py'
+    env = {**os.environ, 'PYTHONPATH': os.pathsep.join(str(p) for p in sys.path if p)}
+
+    def invoke(phase, assisted=False):
+        args = [sys.executable, str(helper), str(tmp_path), phase]
+        if assisted:
+            args.append('guest-paging')
+        return subprocess.run(args, env=env, capture_output=True, text=True, timeout=180)
+
+    before = invoke('before')
+    partial = json.loads((tmp_path / 'dosbox-before-partial.json').read_text())
+    assert partial['status'] == 'before-shutdown-restore'
+    cpuid = bytes.fromhex(partial['cpu_probe'])
+    assert int.from_bytes(cpuid[:4], 'little') & 8
+    assert int.from_bytes(cpuid[4:], 'little') == 0
+    (tmp_path / 'dosbox-before.json').write_text(json.dumps(partial))
+    cold = invoke('after')
+    if before.returncode == 0 and cold.returncode == 0:
+        after = json.loads((tmp_path / 'dosbox-after.json').read_text())
+        assert after['events'] == partial['events'][cfg['checkpoint_index']:]
+    else:
+        # This exception is accepted only for the exact measured reference image.
+        binary = Path(os.environ['FDISBULL_DOSBOX'])
+        assert hashlib.sha256(binary.read_bytes()).hexdigest() == (
+            'df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e')
+        assert not int.from_bytes(cpuid[:4], 'little') & 64
+        assert before.returncode != 0 and cold.returncode != 0
+        assert all('Restored CPU differs from saved state: address_context' in r.stderr
+                   for r in (before, cold))
+        saved = partial['checkpoint_context']
+        observed = json.loads((tmp_path / 'dosbox-after-checkpoint-unassisted-observed.json').read_text())
+        assert len(observed) == 1 and saved != observed[0]
+        assert saved['cr4'] == '0x00000010' and observed[0]['cr4'] == '0x00000000'
+        assisted = invoke('after', assisted=True)
+        assert assisted.returncode != 0 and 'Restored CPU differs from saved state: address_context' in assisted.stderr
+        after = json.loads((tmp_path / 'dosbox-after-partial.json').read_text())
+        assert after['events'] == partial['events'][cfg['checkpoint_index']:]
+        assert after['cpu_probe'] == partial['cpu_probe']
+    if os.environ.get('FDISBULL_QEMU_IMG'):
+        native, native_cold = phases(tmp_path, 'qemu')
+        assert native['events'][cfg['checkpoint_index']:] == native_cold['events']
+        for q, d in zip(native['events'], partial['events'], strict=True):
+            assert (q['cs'], q['ip'], q['pc']) == (d['cs'], d['ip'], d['pc'])
+            if q['qualified']:
+                for field in ('hex', 'backing', 'cs_base', 'cs_limit'):
+                    assert q[field] == d[field]
+
+
+def test_pae_semantics_against_restored_legacy_reference(tmp_path, process_runtime):  # noqa: F811
+    """Compare common source-level behavior, not unlike page-table formats."""
+    if not os.environ.get('FDISBULL_DOSBOX') or not os.environ.get('FDISBULL_QEMU_IMG'):
+        pytest.skip('Select DOSBox-X and QEMU machine checkpoint profile')
+    reference_dir = tmp_path / 'reference'
+    reference_dir.mkdir()
+    ref_cfg = prepare(reference_dir, process_runtime)
+    ref, ref_cold = phases(reference_dir, 'dosbox')
+    assert ref['events'][ref_cfg['checkpoint_index']:] == ref_cold['events']
+    for mode in ('pae-4k', 'pae-2m'):
+        stage = tmp_path / mode
+        stage.mkdir()
+        cfg = prepare(stage, process_runtime, mode)
+        native, cold = phases(stage, 'qemu')
+        assert native['events'][cfg['checkpoint_index']:] == cold['events']
+        def normalized(events, initial):
+            return [(e['cs'], e['ip'], (e['esi'] - initial) & 0xffffffff) for e in events]
+        assert normalized(native['events'], native['events'][0]['esi']) == normalized(
+            ref['events'], ref['events'][0]['esi'])
+        assert normalized(cold['events'], native['events'][0]['esi']) == normalized(
+            ref_cold['events'], ref['events'][0]['esi'])
+        native_targets = [e['hex'] for e in native['events'] if e['ip'] == cfg['target_ip']]
+        ref_targets = [e['hex'] for e in ref['events'] if e['ip'] == ref_cfg['target_ip']]
+        assert native_targets == ref_targets and all(value == '46' for value in native_targets)

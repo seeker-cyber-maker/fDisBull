@@ -144,9 +144,26 @@ Use `save_machine_state()` for a checkpoint. After `load_machine_state(id)`,
 call `dos_source_bind(tracking="paged", ...)` again at a qualifying stop.
 The new binding has its own run and epoch identity. Prior traces can still
 be reopened against their original source and receipts. This mode covers
-counted traces, ordinary steps and run endpoints on a single stopped CPU
-using ordinary RAM and legacy 4 KiB translations. Predicate traces, active
-overlay attribution, PAE and large pages remain outside this mode.
+counted traces, ordinary steps and run endpoints on a single stopped CPU.
+It supports legacy 4 KiB and 4 MiB pages (PSE) and protected-mode PAE with
+4 KiB or 2 MiB pages. Each selector, paging structure and instruction must be
+readable in ordinary guest RAM below the PC memory hole. Source attribution
+for active overlays, predicate traces, PSE-36 and high physical RAM remains open.
+
+For large pages and PAE, each `instruction_backing` segment includes the
+hardware page size, the entries read in walk order and their raw bytes. A
+segment ends at a 4 KiB boundary even inside a larger page. The debugger
+compares the addressed physical bytes with the virtual read and rechecks the
+evidence while stopped. Equal bytes at two aliases cannot distinguish cached
+CPU translations. The receipt identifies the mapping observed in the page
+tables. A PAE mapping marked execute-disabled cannot qualify an instruction.
+
+The locally verified QEMU 10.0.13 TCG build sets bit 5 in an in-memory PAE
+directory-pointer entry during its walk. A receipt retains that raw bit and
+marks it `qemu_tcg_accessed` when the recorded native executable matches the
+verified build. Other executables use the architectural reserved-bit check.
+Intel documents the directory-pointer register reload rules and bit layout
+in volume 3A, section 5.4.1. [Intel system programming guide](https://cdrdv2-public.intel.com/843836/325384-sdm-vol-3abcd-dec-24.pdf)
 
 ## Revalidated endpoints and instruction boundaries
 

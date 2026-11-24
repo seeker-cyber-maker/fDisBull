@@ -34,8 +34,12 @@ def summarize(event):
     data = bytes.fromhex(q['execution_bytes'])
     backing = [w['physical'] + i for w in mapping['instruction_backing'] for i in range(w['length'])]
     assert len(data) == len(backing) == q['instruction_size']
+    extended = {}
+    if mapping['instruction_backing'] and 'page_size' in mapping['instruction_backing'][0]:
+        row = mapping['instruction_backing'][0]
+        extended = {key: row[key] for key in ('page_size', 'paging_mode', 'entries', 'page_attributes')}
     return dict(
-        **result,
+        **result, **extended,
         hex=data.hex(),
         backing=backing,
         obj=q['source_location']['object_index'],

@@ -290,6 +290,8 @@ def _helper(session, origin, vm=None):
 def _ram(vm, registers):
     """Observe two architectural RAM pages without claiming source ownership."""
     from .dos_memory import translate_386_page
+    from .qemu_le_translation import translate_linear, require_executable_walks
+    from .qemu_dos_source_admission import _integer
     state = registers['address_state']
     if state.get('machine_vcpus') != 1 or state.get('register_context_match') is not True:
         raise ValueError('Owned machine RAM fences require one observed CPU')
@@ -317,9 +319,24 @@ def _ram(vm, registers):
     for page in pages:
         translation = translate_386_page(page, state, read)
         if translation.get('status') != 'mapped':
-            raise ValueError('Owned machine RAM page translation is unsupported')
-        backing = int(translation['physical_address'], 0)
-        physical = read(backing, 4096)
+            if registers.get('cpu_mode') != 'protected' or state.get('a20') is not True:
+                raise ValueError('Owned machine RAM page translation is unsupported')
+            try:
+                context = {key.lower(): _integer(state['control'][key]) for key in ('CR0', 'CR3', 'CR4', 'EFER')}
+            except (KeyError, TypeError, ValueError):
+                raise ValueError('Owned machine RAM paging controls are unavailable') from None
+            from .qemu_runtime_capture import _qemu_input_hashes
+            physical, walks = translate_linear(context, page, 4096, read,
+                qemu_image_sha256=_qemu_input_hashes(getattr(vm, 'inputs', {})).get('qemu_image'))
+            if page == int(registers['linear_pc'], 0) & ~4095:
+                require_executable_walks(walks, 4096)
+            backing = walks[0]['physical']
+            translation = dict(status='mapped', physical_address=hex(backing),
+                               page_size=walks[0]['page_size'], walk=walks[0],
+                               scope='stopped table walk and byte comparison; active backing identity is not proven')
+        else:
+            backing = int(translation['physical_address'], 0)
+            physical = read(backing, 4096)
         if remote.memory(page, 4096, space='virtual') != physical:
             raise ValueError('Owned machine physical and virtual RAM fences differ')
         result.append(dict(linear=page, physical=backing, length=4096,
