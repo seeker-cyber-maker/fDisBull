@@ -420,6 +420,12 @@ class QemuLayerSessionMixin:
             if qualified is not None:
                 result = qualified
                 metadata['static_promotion'] = 'qualified-source-capture'
+        elif result['space'] == 'linear' and getattr(self, '_le_source', None) is not None:
+            from .qemu_runtime_capture import qualify_qemu_le_capture
+            qualified = qualify_qemu_le_capture(self, result)
+            if qualified is not None:
+                result = qualified
+                metadata['offline_analysis'] = 'qualified-le-source-capture'
         return self._artifact(name, 'qemu-code-snapshot', json.dumps(result, indent=2).encode(), metadata)
 
     def _layer_base_bytes(self, address, length):

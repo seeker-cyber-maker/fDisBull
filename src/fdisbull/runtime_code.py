@@ -48,6 +48,85 @@ def qualify_capture(session, observed):
 
 
 class RuntimeCodeMixin:
+    def debug_analyze_le_code(self, artifact):
+        """Decode one source-bound protected LE observation without creating a version."""
+        from iced_x86 import Decoder, Formatter, FormatterSyntax
+        from .event_search import _capture_sequence
+        from .qemu_runtime_capture import validate_qemu_le_capture
+
+        row = self.db.execute('SELECT a.*,r.version,r.metadata AS run_metadata FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?', (artifact,)).fetchone()
+        if row is None or row['kind'] != 'qemu-code-snapshot':
+            raise ValueError('LE analysis requires a qualified QEMU code snapshot')
+        data = bytes(row['data'])
+        if hashlib.sha256(data).hexdigest() != row['sha256']:
+            raise ValueError('Runtime code snapshot hash mismatch')
+        try:
+            observation = json.loads(data)
+            proof = validate_qemu_le_capture(self, observation, json.loads(row['run_metadata']),
+                                             run=row['run'], version=row['version'])
+            if _capture_sequence(self, dict(row, size=len(data))) <= proof['source_receipt_sequence']:
+                raise ValueError('LE capture predates its source binding')
+            image, recipe, location, raw = (proof[k] for k in ('image', 'recipe', 'source_location', 'raw'))
+            obj = next(o for o in image.metadata['le']['objects'] if o['index'] == location['object_index'])
+            region = next(r for r in image.regions if r.start == obj['virtual_address'])
+            offset = location['object_offset']; address = location['preferred_address']
+            instruction = Decoder(32, raw, ip=address).decode()
+            if instruction.is_invalid or not 1 <= instruction.len <= len(raw):
+                raise ValueError('LE capture does not contain a complete decodable instruction')
+            size = instruction.len
+            canonical = bytearray(raw[:size]); corrections = []; touched = set()
+            placements = {p['object_index']: p for p in recipe['placements']}
+            for fixup in image.metadata['le']['fixups']:
+                low, high = fixup['source_offset'], fixup['source_offset'] + fixup['width']
+                if fixup['source_object'] != obj['index'] or low >= offset + size or high <= offset:
+                    continue
+                if low < offset or high > offset + size:
+                    raise ValueError('LE instruction cuts through a loader fixup')
+                if fixup.get('duplicate_of') is not None:
+                    continue
+                positions = set(range(low, high))
+                if touched & positions:
+                    raise ValueError('Overlapping LE fixups cannot be normalized safely')
+                touched.update(positions)
+                target = placements.get(fixup['target_object'])
+                if fixup['source_type'] != 'offset32' or fixup['width'] != 4 or fixup.get('addend') is not None or target is None:
+                    raise ValueError('LE instruction has an unsupported or unproved loader fixup')
+                value = target['runtime_base'] + fixup['target_offset']
+                if not 0 <= value < 2**32:
+                    raise ValueError('LE runtime fixup exceeds 32 bits')
+                observed = raw[low-offset:high-offset]
+                if observed != value.to_bytes(4, 'little'):
+                    raise ValueError('Modified LE runtime fixup has no verified static counterpart')
+                original = region.data[low:high]
+                canonical[low-offset:high-offset] = original
+                corrections.append(dict(address=hex(obj['virtual_address'] + low), width=4,
+                                        runtime_hex=observed.hex(), project_hex=original.hex(),
+                                        target_object=fixup['target_object'], target_offset=fixup['target_offset'],
+                                        record_file_offset=fixup['record_file_offset'],
+                                        source_file_fragments=fixup['file_fragments']))
+            decoded = Decoder(32, bytes(canonical), ip=address).decode()
+            if decoded.is_invalid or decoded.len != size:
+                raise ValueError('Normalized LE instruction shape differs')
+            formatter = Formatter(FormatterSyntax.INTEL)
+            selector_offset = proof['selector_offset']
+            runtime_instruction = Decoder(32, raw[:size], ip=selector_offset).decode()
+            cpu = proof['cpu']
+            return dict(artifact=artifact, artifact_sha256=row['sha256'], run=row['run'],
+                        source_version=row['version'], source_location=location,
+                        selector=cpu, runtime_address=observation['runtime_address'],
+                        instruction_selector_offset=hex(selector_offset),
+                        stopped_pc=dict(selector=hex(cpu['cs']), offset=hex(cpu['ip']),
+                                        linear=hex(cpu['cs_base'] + cpu['ip'])),
+                        runtime_bytes=raw[:size].hex(), canonical_bytes=bytes(canonical).hex(),
+                        instruction=formatter.format(decoded), runtime_instruction=formatter.format(runtime_instruction),
+                        runtime_instruction_address_basis='selector-offset',
+                        size=size, fixups=corrections,
+                        source_sha256=recipe['source_sha256'], application_source_sha256=recipe['application_source_sha256'],
+                        execution_proven=False,
+                        scope='Offline source-bound stopped-byte interpretation; no version, execution or lifetime claim')
+        except (KeyError, TypeError, IndexError, StopIteration) as error:
+            raise ValueError('Malformed LE runtime capture') from error
+
     def _runtime_record(self, version):
         row = self.db.execute('SELECT * FROM runtime_versions WHERE version=?', (version,)).fetchone()
         if row is None:
@@ -158,7 +237,9 @@ class RuntimeCodeMixin:
             raise ValueError('Runtime code snapshot hash mismatch')
         observation = json.loads(data)
         if row['kind'] == 'qemu-code-snapshot':
-            from .qemu_runtime_capture import ADMISSION, validate_qemu_source_capture
+            from .qemu_runtime_capture import ADMISSION, LE_ADMISSION, validate_qemu_source_capture
+            if isinstance(observation, dict) and observation.get('qemu_le_source_admission') == LE_ADMISSION:
+                raise ValueError('Analyze embedded LE coordinates with debug-analyze-le-code')
             if not isinstance(observation, dict) or observation.get('qemu_source_admission') != ADMISSION:
                 raise ValueError('QEMU capture lacks qualified source mapping; capture again before promotion')
             validate_qemu_source_capture(observation, json.loads(row['run_metadata']))

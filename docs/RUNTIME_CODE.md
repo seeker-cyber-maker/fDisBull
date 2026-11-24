@@ -30,8 +30,39 @@ can be passed to `debug-promote-code` after the session closes. It must cover
 ordinary, unpaged RAM inside the selected process's original verified module.
 Promotion checks the loader mapping, producer, active layers, and stored byte
 extent before creating a child. A capture that splits or changes a relocation
-cannot be normalized. Physical, linear, task-private and older QEMU captures
-remain available as observation artifacts.
+cannot be normalized. Real-mode linear, physical, task-private and older QEMU
+captures remain available as observation artifacts.
+
+### Protected-mode DOS LE instructions
+
+For a stopped 32-bit LE application inside a DOS carrier, bind the original
+source and capture the instruction at a guest linear address. After closing
+the guest, reopen the same project and analyze the artifact offline.
+
+```python
+debug.dos_source_bind(expected_source_sha256=doom_exe_sha256)
+pc = int(debug.registers()["linear_pc"], 16)
+capture = debug.capture_code(pc, space="linear", view="execute", length=15)
+# Later, with the original project and its private source store:
+with Project(database) as project:
+    decoded = project.debug_analyze_le_code(capture["artifact"])
+```
+
+The one-shot command is `fdisbull debug-analyze-le-code PROJECT CAPTURE_ID`.
+It decodes the first complete instruction in the capture. The result identifies
+the LE application, object and offset, the CS selector and its descriptor, and
+the instruction in both runtime and preferred-address coordinates. Each
+normalized offset32 operand includes its target object and offset and the
+fixup record's position in the original carrier. The original MZ disassembly
+and version history stay intact.
+
+Capture requires a live protected-source binding, an unpaged 32-bit code
+segment and file-backed executable bytes in ordinary RAM. A complete internal
+offset32 fixup must point into a target object with a verified runtime
+placement. A changed relocation operand, a truncated instruction, or an
+unsupported fixup stops analysis. Each capture retains the evidence from its
+own run and checkpoint epoch. To take a new capture after a cold restore, use
+the fresh binding returned by `load_le_source_state`.
 
 The child is a mapped-byte interpretation, not a reconstructed executable.
 It retains the original container in its parent and has no replacement disk

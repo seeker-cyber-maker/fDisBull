@@ -134,6 +134,15 @@
       "require": {"FDISBULL_REQUIRE_QEMU_DOS_OS": "1", "FDISBULL_REQUIRE_QEMU_LAYERS": "1"},
       "note": "Select the same layer-capable QEMU executable for both QEMU selectors."
     },
+    "protected-doom-code": {
+      "extends": ["dosbox"],
+      "inputs": [
+        "FDISBULL_QEMU_DOS", "FDISBULL_QEMU_DOS_FIRMWARE", "FDISBULL_QEMU_IMG",
+        "FDISBULL_QEMU_DOS_BOOT_IMAGE", "FDISBULL_QEMU_DOS_MCOPY", "FDISBULL_DOOM_LE_SOURCE"
+      ],
+      "require": {"FDISBULL_REQUIRE_DOOM_LE_PAIRED": "1"},
+      "note": "Use a prepared DOS boot image, the private pinned Doom game directory, and a QEMU producer with virtual clock, SB16/OPL, precise retrace and instruction-fetch observation."
+    },
     "native-clock": {
       "extends": [
         "native-layers"
@@ -581,6 +590,12 @@
       ],
       "execution": "local-paired-COM-and-native-MZ",
       "scope": "Paired stopped RAM/fetch inspection, independent execution and offline promotion. The MZ relocation case uses the layer-capable QEMU executable, matching firmware, FreeDOS boot image, mcopy and qemu-img."
+    },
+    "protected-doom-code-paired": {
+      "environment_profile": "protected-doom-code",
+      "argv": ["python", "-m", "pytest", "-q", "--require-native", "tests/test_doom_le_paired_public_native.py"],
+      "execution": "local-original-doom-before-and-after-cold-restore",
+      "scope": "Offline QEMU instruction decode and complete internal offset32 fixup compared with the original LE record and independent DOSBox-X selector, segment translation and loaded operand."
     },
     "layers-legacy": {
       "environment_profile": "dosbox",
@@ -1585,6 +1600,7 @@
         "layers-native",
         "layers-legacy",
         "real-mode-code-paired",
+        "protected-doom-code-paired",
         "protected-source-native"
       ],
       "remaining_work": [

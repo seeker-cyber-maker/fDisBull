@@ -178,6 +178,7 @@ METHODS = {
     "debug-wait": "Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]",
     "debug-trace-view": "Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version",
     "doctor": "Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms,qemu_transport,qemu_firmware]",
+    "debug-analyze-le-code": "Revalidate a stored protected-mode LE instruction, selector and fixups offline; artifact",
     "debug-promote-code": "Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]",
     "runtime-version-info": "Inspect temporal capture/edit provenance for a byte version; [version]",
     "debug-controls": "Inspect owned breakpoint/watch/hook definitions and layer controls for experiment capture; run",
@@ -1131,6 +1132,7 @@ def invoke(method, params, debugger=None):
         "debug-events",
         "debug-experiments",
         "debug-experiment-info",
+        "debug-analyze-le-code",
         "debug-promote-code",
         "debug-trace-view",
     ):
@@ -1205,6 +1207,7 @@ def invoke(method, params, debugger=None):
             "debug-events",
             "debug-experiments",
             "debug-experiment-info",
+            "debug-analyze-le-code",
             "debug-promote-code",
             "debug-trace-view",
             "runtime-version-info",
@@ -2465,13 +2468,14 @@ def parser():
         "debug-fork-state",
         "debug-experiments",
         "debug-experiment-info",
+        "debug-analyze-le-code",
         "debug-promote-code",
         "debug-trace-view",
         "runtime-version-info",
     ):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("project")
-        if name in ("debug-state-info", "debug-anchor-stone-info", "debug-experiment-info"):
+        if name in ("debug-state-info", "debug-anchor-stone-info", "debug-experiment-info", "debug-analyze-le-code"):
             c.add_argument("artifact")
         elif name == "debug-trace-view":
             c.add_argument("artifact")

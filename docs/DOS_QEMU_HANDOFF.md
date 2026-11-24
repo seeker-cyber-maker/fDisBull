@@ -1,5 +1,32 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Offline protected-mode Doom LE instruction analysis (2026-11-24)
+
+The public QEMU-DOS debugger can reopen a private capture and decode an
+instruction in the embedded application's address space. The capture records
+its source binding, CS descriptor and stopped CPU, object placement and byte
+extent. The offline query rechecks this evidence and resolves complete internal
+offset32 fixups against the original carrier. [Agent workflow](RUNTIME_CODE.md#protected-mode-dos-le-instructions)
+
+On the original Doom 1.9 EXE (SHA-256
+`4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4`),
+both engines stopped at the level-time increment in `le:1+0x33120`.
+QEMU read the instruction at `0170:0017b120`, and DOSBox-X read it at
+`0170:001eb120`. Both descriptors had base zero and a 32-bit limit of
+`ffffffff`. DOSBox-X's segmented read agreed with its linear and physical
+reads. The EXE's fixup record at file offset 235260 targets `le:3+0x2d354`.
+The loaded counters were at `0x1bd354` and `0x22d354`, respectively. Both
+yielded the preferred operand `0x9d354`.
+
+Each engine retained the same selector, instruction and operand through its
+own checkpoint and a new host process. QEMU issued a fresh source binding and
+capture epoch. The one-shot offline CLI revalidated both QEMU captures after
+all guests closed. DOSBox-X supplied the independent native reference through
+its GDTR diagnostic, segmented memory and checkpoint APIs. The comparison is
+at the same source instruction during the two runs. It qualifies neither
+equal gameplay timing nor source-addressed protected-mode layers and hooks.
+DOSBox-X remains the default.
+
 ## Real-mode DOS code captures and offline analysis (2026-11-24)
 
 The public QEMU DOS debugger can promote a stopped source-addressed RAM

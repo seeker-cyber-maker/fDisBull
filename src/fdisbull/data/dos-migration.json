@@ -888,7 +888,7 @@
       "slice": "layers-hooks",
       "legacy_status": "available_with_profile_guards",
       "current_status": "partial",
-      "native_route": "QemuLayerSessionMixin.capture_code; offline temporal children for verified real-mode COM/MZ source captures, with loader fixup normalization. Physical, linear and task-private captures stay observational.",
+      "native_route": "QemuLayerSessionMixin.capture_code supports temporal children for verified real-mode COM/MZ source captures. With a fresh protected LE binding, debug-analyze-le-code decodes a linear capture offline and normalizes verified internal offset32 operands in LE object coordinates.",
       "qualification": "unqualified"
     },
     {
