@@ -278,7 +278,8 @@
         "pytest",
         "-q",
         "--require-native",
-        "tests/test_qemu_dosbox_parity_native.py"
+        "tests/test_qemu_dosbox_parity_native.py",
+        "tests/test_qemu_dos_boot_driver_native.py"
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
@@ -1962,8 +1963,11 @@
         "core-paired",
         "protected-source-native"
       ],
+      "historical_records": [
+        "docs/DOS_QEMU_HANDOFF.md#paired-dos-lifecycle-and-fallback-rehearsal-2026-11-23"
+      ],
       "missing_checks": [
-        "Paired MZ/PSP/MCB/relocation, nested EXEC, TSR and authored SYS driver semantics beyond the existing paired COM controls/exit."
+        "The paired native batch covers normal/high-load MZ relocation, PSP/MCB, nested EXEC/TSR, and an authored CONFIG.SYS character driver with real raw input. Extend direct JSON and saved-script coverage from the normal MZ fixture and simple exit/TSR to nested EXEC and callable resident children."
       ],
       "accept": [
         "Original COM and MZ enter with independently verified bytes/registers, complete child/parent/TSR outcomes, source isolation and cleanup.",
@@ -2036,11 +2040,12 @@
       "historical_records": [
         "docs/evidence/qemu-doom-ordinary-startup-2026-11-14/verification.json",
         "docs/evidence/qemu-le-source-history-2026-11-15/verification.json",
-        "docs/evidence/qemu-dosbox-doom-audio-2026-11-16/verification.json"
+        "docs/evidence/qemu-dosbox-doom-audio-2026-11-16/verification.json",
+        "docs/DOS_QEMU_HANDOFF.md#paired-dos-lifecycle-and-fallback-rehearsal-2026-11-23"
       ],
       "missing_checks": [
-        "Reproduce a declared protected real-game route with ordinary startup, consumed keyboard/mouse, graphics/audio, gameplay, save/load, cold replay and guest exit.",
-        "Tic-Tac-Toe has paired full-round/replay/reset/exit tests; Five Dice and Snake add source-assisted complete-game/RNG and keyboard/growth/clock/exit. These assetless fixtures do not cover protected games, file assets, INT33 mouse coordinates or broad audio fidelity."
+        "The original Doom E1M1 ordinary keyboard startup, gameplay, guest save/readback/load and exit now pass on both engines with sound and mouse disabled. Compose consumed mouse, audio and cold replay under one declared protected-game run, and compare ordinary game timing and media at common application boundaries.",
+        "Tic-Tac-Toe verifies fresh full-round/reset/exit and cold restore at a guest instruction on both engines. The retained DOSBox-X callback-stop restore still fails. Five Dice and Snake add source-assisted complete-game/RNG and keyboard/growth/clock/exit, without qualifying asset I/O, protected modes, relative mouse or game audio."
       ],
       "accept": [
         "Use the same hash-pinned original program/assets and declared input route on both backends; compare application/state outcomes and independently justified media metrics.",
@@ -2107,9 +2112,11 @@
         "window-legacy",
         "fallback-dosbox-qemu"
       ],
+      "historical_records": [
+        "docs/DOS_QEMU_HANDOFF.md#paired-dos-lifecycle-and-fallback-rehearsal-2026-11-23"
+      ],
       "missing_checks": [
-        "Run explicit backend selection in a clean installed kit for dosbox, dosbox-qemu and qemu-dos using the same authorized target; include doctor/setup failure and normal cleanup.",
-        "Existing paired tests plus the required tests/test_dos_qemu.py lane exercise all three backend families, but a clean installed/offline package and explicit failure/fallback-selection rehearsal remain required."
+        "The pinned local macOS wheel passed explicit three-backend selection, checkpoint compatibility, doctor/setup refusal and clean exit on an authored COM. A separate uncertain-dispatch check and rehearsal on the final delivery kit remain open."
       ],
       "accept": [
         "Both retained selectors remain usable; no automatic retry/fallback after an uncertain action.",

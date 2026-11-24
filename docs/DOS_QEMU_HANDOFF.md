@@ -1,5 +1,88 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Paired DOS lifecycle and fallback rehearsal (2026-11-23)
+
+Both engines booted the same FreeDOS floppy and ran the same authored
+character driver and census COM. The COM opened the registered device,
+selected raw input via IOCTL, requested six bytes, received four, and closed
+the handle. Both returned A6h, 00h, 1Ah and 7Fh, preserved four following
+sentinel bytes, and reported exactly one command 04h packet with status 0100h.
+With the driver file still on disk and the DEVICE directive omitted, both
+reported an absent device and DOS error 2 at open.
+[Paired FreeDOS witness](../tests/test_qemu_dos_boot_driver_native.py)
+
+The same normal MZ fixture now runs through direct JSON requests and a script
+saved by ID on each backend. The witness independently computes the relocated
+module from the observed load segment, checks the guest write and stop PC,
+observes exit 42 and verifies the reaped owners and persisted run and script
+identities. The existing Python MZ witness also checks PSP, MCB and high-load
+requests. Nested EXEC and resident children still have separate Python checks.
+[Paired DOS lifecycle witnesses](../tests/test_qemu_dosbox_parity_native.py)
+
+At test commit `6b72c4b7507467f06edef82a0c32a7efc650e973`, the combined native
+run passed 24 cases. This included the new witnesses, Five Dice, Snake, VBE
+BIOS and protected-mode calls, Mode 13h reapply, VGA timeline restore, overdue
+keyboard repeat, IRQ/task-layer history, and a cross-session open guest file.
+The strict Tic-Tac-Toe callback-stop restore reproduced the retained DOSBox-X
+failure at the winning move: the game state reached the win but the BDA read
+mode 0 and 40 columns. The test and failure were kept. The separate native
+guest-instruction checkpoint passed for both engines, and the fresh paired
+round passed through reset and guest exit. The selected host suite passed 361
+cases with five optional skips.
+
+On the same native producer, a fresh original Doom E1M5 timed checkpoint
+reproduced the protected CPU boundary, all 200 timed rows and the PCM frontier
+across forward, hot and separate Python process execution. Original input
+hashes and clean owner exit were checked.
+
+The same original Doom executable and WAD ran the ordinary keyboard menu
+route from the attract demo into E1M1 on both engines, with `-nosound` and
+`-nomouse`. Both visibly created and loaded slot 0 with the chosen PARITY
+label. The host-mounted DOSBox-X directory and a QEMU owned-machine snapshot
+of its checkpointed DOS disk independently supplied the game-written
+`DOOMSAV0.DSG`. The two 25,638-byte files agree on version 109, default skill,
+episode 1, map 1, one active player and the end marker. They retain distinct
+saved level times (QEMU 29 and DOSBox-X 19) and different file digests.
+Turning right changed about 72.35% of a viewport crop in each run. The
+game's Load Game menu restored that crop to within 0.024% of its own saved
+view on each engine. Both reported DOS exit 0, reaped their owned process
+with return code 0, and verified the original inputs and producers.
+
+The QEMU workspace snapshot served file readback. Doom itself loaded the
+save, so this is paired game save/load evidence with keyboard and VGA.
+It does not cover cold emulator restore of the ordinary run, mouse, sound,
+cross-engine save interchange or equal gameplay cadence. The controller
+keeps earlier incomplete attempts and uses palette-aware menu checks and
+bounded observation through the level transition and quit sequence.
+
+A clean private installation of the tool wheel built from
+`b8d778c3016353ca421d87ee7084a72cbbf88e0f` repeated the three backend fallback
+rehearsal on macOS. Explicit `dosbox`, `dosbox-qemu` and `qemu-dos` each
+launched the same authored COM, restored its own checkpoint, observed exit 42
+and reaped the owner. Missing-input preflight cases spawned zero owners.
+Native QEMU refused the DOSBox state while preserving the active session and
+its CPU state. Reopening the project showed three exited runs. The wheel
+reports `default_backend=dosbox`. The rehearsal did not inject an uncertain
+dispatch or qualify a release kit on other platforms.
+
+| Local evidence | SHA-256 |
+| --- | --- |
+| QEMU producer | `863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25` |
+| DOSBox-X reference | `df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e` |
+| FreeDOS input floppy | `552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc` |
+| Combined native result, including callback failure | `9496d745375a460c6d6fb10d556a18a3dac7981b1f86077fb22330bd90c440d0` |
+| Separate guest-instruction and fresh-game result | `13a3ddd65518b3e16be7b86dfb58f70a60e8995f38361039c97fac87de9769a6` |
+| Selected host result | `8b3fc64dd13a448c38ab75f5a535323fe96f06087a2ca27e87feb255e8751dbb` |
+| Doom forward and hot checkpoint | `f88f6cb6d0c8f5ac891bcd8d7818cecde7b3d1155f8bf3f522f89db39697dfa7` |
+| Doom fresh-process checkpoint | `b3ca173de3539fb61a1b08a1afe2d00155786f8c0ba175cc4d6bacda1152678f` |
+| Ordinary Doom save/load/exit result on QEMU | `ca330ae245fcebfea956e762e2de977e6931f03a75aa7a972778bd4e6a5b421f` |
+| Ordinary Doom save/load/exit result on DOSBox-X | `1c7bbe85f6c7eabd9763c7c131e2ec4a7615e66f6a14f96bc9fbe486830229d3` |
+| Private wheel | `698f23d62a18fb1d787f5aeba430bb38e1989d9586b8d96c7549d84f7ee0f09c` |
+| Fallback preflight | `370d7d5f953070a726c74c49332e010b4cb572749e0c8382b3a7db676baaad51` |
+| Fallback direct DOSBox-X | `5f9fde676da152010fc356cf507a392d445851080751d31b4c5ae18757545409` |
+| Fallback native QEMU | `15babe29cc124f2688371af38a431a064bcb49ba2fbad5dbef3e2a2d61fa0680` |
+| Fallback DOSBox-X under QEMU | `ed430ea3ed90502502608f72b04e6dbb715448584ff03ae0056a99e6c47264d7` |
+
 ## VBE 101h controller and control-call compatibility (2026-11-23)
 
 The opt-in `vga-640x480-vbe-compat` profile selects a distinct
