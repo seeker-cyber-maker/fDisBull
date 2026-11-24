@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 import sys
 
+from fdisbull.cli import public_addresses
 from fdisbull.project import Project
 from support.le_translation_native import integer, register
 
@@ -161,7 +162,7 @@ def run(stage, phase):
             )
             assert exported['ok']
             reply = json.loads(path.read_bytes())
-        assert reply['ok'] and reply['result'] == verified
+        assert reply['ok'] and reply['result'] == public_addresses(verified)
     assert hashlib.sha256(source.read_bytes()).hexdigest() == cfg['sha256']
     result = dict(
         checkpoint=state,
