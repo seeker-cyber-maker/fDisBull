@@ -140,12 +140,14 @@
         "tests/test_qemu_trace_identity.py",
         "tests/test_qemu_dos_le_trace.py",
         "tests/test_qemu_dos_le_trace_native.py",
-        "tests/test_qemu_dos_le_events.py"
+        "tests/test_qemu_dos_le_events.py",
+        "tests/test_qemu_le_remap_tracking_native.py"
       ],
       "scope_limits": [
         "QEMU records stopped native intervals with the observed read-only IRQ/timer stepping policy. Faults and partial REP can return normal debug stops; architectural retirement remains unknown.",
         "Original real-mode COM/MZ captures verify instruction bytes, PSP/MCB ownership and the initial epoch. Canonical source sites account for ordered MZ relocations and exact loader writes; persistent event searches rederive identity from original source and ordered entry/artifact receipts.",
         "Unsupported source bytes, module departures, allocation/epoch or mode changes stop the source binding. An unbound final observation cannot close a source window or narrow absence. Live overlay rebinding, protected/V86 tasks, input-to-source-trace causality and whole-program timing remain unqualified.",
+        "Opt-in paged LE tracking revalidates selectors and code backing at each observed stop. Counted traces retain independently replayable source matches, leave unmatched stops unbound and can reacquire the source. Full machine restore requires fresh binding in the current epoch.",
         "Raw machine traces remain separately available and do not acquire a DOS process source map. Streaming fetch capture/cursors are not supplied by bounded stopped observations.",
         "Explicit source_view=embedded-le now uses stopped LE source revalidation for trace and trace-until, with retained source/event identity. This is a code relation, not DOS allocation/task lifetime, streaming before-fetch capture or whole-program parity."
       ]

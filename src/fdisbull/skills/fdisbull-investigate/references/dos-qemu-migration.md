@@ -162,6 +162,14 @@ Use the [LE capture guide](execution-event-search.md#capture-owned-protected-le-
 for APIs, scripts, bounds, lifecycle and cold queries. DOSBox-X remains default;
 no CI is introduced. Native evidence belongs to exact candidate receipts.
 
+For legacy 4 KiB paging and LDT changes, opt in with
+`dos_source_bind(tracking='paged', expected_source_sha256=...)`. Each stopped
+boundary is independently re-matched and `dos_source_binding()` exposes the
+current physical mapping only while qualified. Count traces retain a distinct
+paged evidence format; predicate traces are not supported. Use
+`save_machine_state`, then bind again after restore; the old binding never
+survives restore. This is stopped-boundary evidence, not task lifetime proof.
+
 ## Checkpoint histories
 
 The first native DOS Histories slice is in progress: `rewind_start`,

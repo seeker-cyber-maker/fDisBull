@@ -26,6 +26,11 @@ PAGED_CODE_PHYSICAL = (0x200000, 0x205000, 0x20a000)
 PAGED_DATA_PHYSICAL = 0x210000
 PAGED_ENTRY_OFFSET = 4094
 PAGED_LDT_CODE_SELECTOR = 0x0c  # LDT index 1, ring 0; GDT CS is 0x08.
+PAGED_TRACKING_SELECTOR_B = 0x1c  # LDT index 3, ring 0.
+PAGED_TRACKING_CONTROLLER = 0x2100
+PAGED_TRACKING_TARGET = 0x1400
+PAGED_TRACKING_PHYSICAL = 0x215000
+PAGED_TRACKING_SIGNATURE_SIZE = 128
 
 
 def build_fixture(directory, nasm):
@@ -173,7 +178,7 @@ protected_jump:
         source_view='embedded-le', carrier='mz-bw-mz-le')
 
 
-def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True):
+def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=False):
     """Build a bounded MZ/BW/MZ/LE carrier with paging and an LDT CS.
 
     The protected-mode loader optionally copies the LE logical pages to three
@@ -185,6 +190,9 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True):
     """
     from test_le_loader import le_file
     from test_le_runtime_carrier import bound_le
+
+    if tracking and not (paging and ldt):
+        raise ValueError('tracking mode requires paging and the LDT')
 
     directory = Path(directory)
     # The first instruction starts at the last two bytes of page zero.  Its
@@ -208,11 +216,34 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True):
         struct.pack('<BBhBH', 7, 0, site - 2 * 4096, 2, i * 4)
         for i, site in enumerate(witness_sites)
     )
+    if tracking:
+        # The stable controller runs on logical page 2. It calls the same
+        # LE target before and after changing logical page 1's PTE, then calls
+        # it through a second LDT code selector before restoring the PTE.
+        # The alternate page is copied from the fully relocated original.
+        code[PAGED_TRACKING_TARGET:PAGED_TRACKING_TARGET + 2] = b'\x46\xcb'  # inc esi; retf
+        code[PAGED_TRACKING_TARGET + 2:PAGED_TRACKING_TARGET + 2 + PAGED_TRACKING_SIGNATURE_SIZE] = bytes(
+            (i * 73 + 19) & 0xff for i in range(PAGED_TRACKING_SIGNATURE_SIZE))
+        controller = bytearray()
+        controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)
+        controller += b'\xc7\x05' + struct.pack('<II', 0x301484, PAGED_TRACKING_PHYSICAL | 3)
+        controller += bytes.fromhex('0f20d8 0f22d8')
+        controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)
+        controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_TRACKING_SELECTOR_B)
+        controller += b'\xc7\x05' + struct.pack('<II', 0x301484, PAGED_CODE_PHYSICAL[1] | 3)
+        controller += bytes.fromhex('0f20d8 0f22d8')
+        controller += b'\x9a' + struct.pack('<IH', OUTSIDE_BASE, 8)
+        controller += b'\xeb' + struct.pack('b', -(len(controller) + 2))
+        code[PAGED_TRACKING_CONTROLLER:PAGED_TRACKING_CONTROLLER + len(controller)] = controller
+        signature_start = PAGED_TRACKING_CONTROLLER + len(controller)
+        code[signature_start:signature_start + PAGED_TRACKING_SIGNATURE_SIZE] = bytes(
+            (i * 109 + 41) & 0xff for i in range(PAGED_TRACKING_SIGNATURE_SIZE))
+    entry_offset = PAGED_TRACKING_CONTROLLER if tracking else PAGED_ENTRY_OFFSET
     application = le_file(code=bytes(code), data=bytes(data),
                           fixups=[fixup, duplicate, witness_records, b''],
                           object_sizes=(len(code), len(data)),
                           object_bases=(0x10000, 0x20000),
-                          entry_offset=PAGED_ENTRY_OFFSET)
+                          entry_offset=entry_offset)
     carrier = bytearray(bound_le(application))
     # Reserve a second outer MZ sector so the larger protected bootstrap fits
     # without changing the inner LE byte coordinates.  The declared BW link
@@ -282,11 +313,19 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True):
         paging_setup = ''
     ldt_setup = '    mov ax,0x18\n    lldt ax\n' if ldt else ''
     jump_selector = PAGED_LDT_CODE_SELECTOR if ldt else 8
-    entry_ip = PAGED_ENTRY_OFFSET if ldt else CODE_BASE + PAGED_ENTRY_OFFSET
+    entry_ip = entry_offset if ldt else CODE_BASE + entry_offset
     patches = '\n'.join(
         f'    mov dword [{CODE_BASE + site:#x}],{DATA_BASE + target:#x}'
         for site, target in [(PAGED_ENTRY_OFFSET + 1, COUNTER_OFFSET)] +
                             [(site, i * 4) for i, site in enumerate(witness_sites)])
+    tracking_clone = f'''
+    mov esi,{PAGED_CODE_PHYSICAL[1]:#x}
+    mov edi,{PAGED_TRACKING_PHYSICAL:#x}
+    mov ecx,0x1000
+    rep movsb
+''' if tracking else ''
+    outside_init = f'    mov word [{OUTSIDE_BASE:#x}],0xcb47\n' if tracking else ''
+    ldt_extra = '    dq 0x00cf9a120000ffff\n' if tracking else ''
     source = f'''
 bits 16
 org 0
@@ -370,7 +409,8 @@ protected_entry:
     mov edi,{runtime_data:#x}
     mov ecx,{len(data)}
     rep movsb
-{paging_setup}{patches}
+{outside_init}
+{paging_setup}{patches}{tracking_clone}
 {ldt_setup}
     jmp dword {jump_selector}:{entry_ip:#x}
 align 8
@@ -384,6 +424,7 @@ ldt:
     dq 0
     dq 0x00cf9a120000ffff
     dq 0x00cf92000000ffff
+{ldt_extra.rstrip()}
 ldt_end:
 gdtr:
     dw gdt_end-gdt-1
@@ -405,8 +446,8 @@ protected_jump:
     pages = image.metadata['le']['pages']
     return dict(path=target, sha256=hashlib.sha256(carrier).hexdigest(), size=len(carrier),
                 bootstrap_size=len(bootstrap), code_base=CODE_BASE,
-                data_base=DATA_BASE, entry_offset=PAGED_ENTRY_OFFSET, entry_ip=entry_ip,
-                entry_address=CODE_BASE + PAGED_ENTRY_OFFSET,
+                data_base=DATA_BASE, entry_offset=entry_offset, entry_ip=entry_ip,
+                entry_address=CODE_BASE + entry_offset,
                 data_physical=runtime_data,
                 code_physical=runtime_code_pages,
                 ldt_code_selector=PAGED_LDT_CODE_SELECTOR if ldt else None,
@@ -416,4 +457,19 @@ protected_jump:
                 cross_page_fixup_offsets=(PAGED_ENTRY_OFFSET + 1, -1),
                 counter_address=DATA_BASE + COUNTER_OFFSET, paging=paging, ldt=ldt,
                 carrier='mz-bw-mz-le-' + suffix,
-                source_view='embedded-le')
+                source_view='embedded-le', tracking=tracking,
+                tracking_start_cs=PAGED_LDT_CODE_SELECTOR if tracking else None,
+                tracking_start_ip=entry_offset if tracking else None,
+                tracking_start_pc=CODE_BASE + entry_offset if tracking else None,
+                tracking_controller=PAGED_TRACKING_CONTROLLER if tracking else None,
+                tracking_target=PAGED_TRACKING_TARGET if tracking else None,
+                tracking_target_physical=(PAGED_CODE_PHYSICAL[1] + (PAGED_TRACKING_TARGET & 0xfff)) if tracking else None,
+                tracking_alternate_physical=(PAGED_TRACKING_PHYSICAL + (PAGED_TRACKING_TARGET & 0xfff)) if tracking else None,
+                tracking_selector_b=PAGED_TRACKING_SELECTOR_B if tracking else None,
+                tracking_steps=19 if tracking else None,
+                tracking_signature_size=PAGED_TRACKING_SIGNATURE_SIZE if tracking else None,
+                tracking_milestones=((PAGED_LDT_CODE_SELECTOR, PAGED_TRACKING_CONTROLLER, PAGED_CODE_PHYSICAL[2] + (PAGED_TRACKING_CONTROLLER & 0xfff)),
+                    (PAGED_LDT_CODE_SELECTOR, PAGED_TRACKING_TARGET, PAGED_CODE_PHYSICAL[1] + (PAGED_TRACKING_TARGET & 0xfff)),
+                    (PAGED_LDT_CODE_SELECTOR, PAGED_TRACKING_TARGET, PAGED_TRACKING_PHYSICAL + (PAGED_TRACKING_TARGET & 0xfff)),
+                    (PAGED_TRACKING_SELECTOR_B, PAGED_TRACKING_TARGET, PAGED_TRACKING_PHYSICAL + (PAGED_TRACKING_TARGET & 0xfff)),
+                    (8, OUTSIDE_BASE, OUTSIDE_BASE)) if tracking else ())

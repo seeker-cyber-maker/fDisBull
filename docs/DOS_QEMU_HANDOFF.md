@@ -1,5 +1,30 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Tracking protected LE code across guest remaps (2026-11-24)
+
+On an authored 32-bit LE carrier, QEMU and DOSBox-X followed 39 instruction
+boundaries over two mapping cycles. The guest changed a PTE and reloaded CR3
+from a separate code page. LE object 1 offset `0x1400` executed `INC ESI` on
+each of the following visits.
+
+| CS:EIP | Physical instruction address |
+| --- | --- |
+| `000c:00001400` | `0x205400` |
+| `000c:00001400` | `0x215400` |
+| `001c:00001400` | `0x215400` |
+
+Both engines checkpointed the second visit. A fresh host process for each
+engine reproduced the remaining 32 boundaries, including the selector switch,
+return to the original mapping and an excursion into non-LE code. QEMU
+reported the two outside instructions without a source location and reacquired
+the LE on return. The DOSBox-X reference independently checked CS descriptors,
+instruction bytes, physical backing and the change in ESI. Each qualified
+QEMU location also replayed offline from its trace. The checkpoint restored
+guest state, and QEMU issued a fresh source binding in the new epoch.
+
+This comparison covers the authored guest with legacy 4 KiB pages. DOSBox-X
+remains the default. [Public tracking workflow](QEMU_DOS_PROTECTED_SOURCE.md#tracking-paged-code-and-ldt-selectors)
+
 ## Protected LE captures with paging and LDT selectors (2026-11-24)
 
 A local authored LE carrier exercised paged GDT, unpaged LDT and paged LDT

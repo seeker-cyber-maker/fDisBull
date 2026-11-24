@@ -115,6 +115,39 @@ proven object placements, GDT material and producer identities. `binding_id`
 identifies this owned recipe; it is not an OS task ID. Reopening/exporting an
 artifact does not reinstall a live handle or reconnect its owner.
 
+## Tracking paged code and LDT selectors
+
+At a protected 32-bit stop inside the original LE, select paged tracking on
+the public binding. A counted trace records the instruction about to execute
+at each observed boundary.
+
+```python
+bound = debug.dos_source_bind(tracking="paged", expected_source_sha256=exe_sha256)
+trace = debug.trace(count=32, bits=32, source_view="embedded-le")
+with Project(database) as offline:
+    report = offline.debug_analyze_le_tracking_trace(trace["artifact"])
+```
+
+The offline CLI is `fdisbull debug-analyze-le-tracking-trace PROJECT ARTIFACT`.
+Use `output-export` when a long trace returns an output artifact reference.
+For each qualified event, `qualification.source_location` identifies the LE
+object and offset. `mapping_identity` records the actual CS descriptor and
+the physical segments backing the instruction. The debugger reads the live
+selector and page tables at each stop. This allows the same source instruction
+to move to a new physical page, and a new LDT CS to select those same bytes.
+If the current bytes have no unique match, the event has no source or mapping
+identity. A later independently matched boundary can resume tracking.
+The trace describes stopped instruction boundaries and distinguishes them
+from the unobserved interval between the endpoints of an ordinary run.
+
+Use `save_machine_state()` for a checkpoint. After `load_machine_state(id)`,
+call `dos_source_bind(tracking="paged", ...)` again at a qualifying stop.
+The new binding has its own run and epoch identity. Prior traces can still
+be reopened against their original source and receipts. This mode covers
+counted traces, ordinary steps and run endpoints on a single stopped CPU
+using ordinary RAM and legacy 4 KiB translations. Predicate traces, active
+overlay attribution, PAE and large pages remain outside this mode.
+
 ## Revalidated endpoints and instruction boundaries
 
 Current source authority is withdrawn before an owned `run` or `step`.

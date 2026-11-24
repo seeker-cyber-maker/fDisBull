@@ -603,6 +603,12 @@
       "execution": "local-authored-before-and-after-cold-restore",
       "scope": "Requires NASM and a plain FreeDOS boot image. Compares paged GDT, unpaged LDT and paged LDT source and physical backing on an instruction and offset32 operand spanning two pages."
     },
+    "protected-remap-tracking-paired": {
+      "environment_profile": "paired-code-layers",
+      "argv": ["python", "-m", "pytest", "-q", "--require-native", "tests/test_qemu_le_remap_tracking_native.py"],
+      "execution": "local-authored-tracking-before-and-after-cold-restore",
+      "scope": "NASM, FreeDOS and the two native engines. Compare recurring LE instructions across guest PTE writes, CR3 reloads and LDT far calls, including a checkpoint on the alternate backing."
+    },
     "layers-legacy": {
       "environment_profile": "dosbox",
       "argv": [
@@ -1608,6 +1614,7 @@
         "real-mode-code-paired",
         "protected-doom-code-paired",
         "protected-paged-le-code-paired",
+        "protected-remap-tracking-paired",
         "protected-source-native"
       ],
       "remaining_work": [

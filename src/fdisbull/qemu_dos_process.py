@@ -26,6 +26,7 @@ from .qemu_dos_checkpoint import process_save_operation
 from .qemu_machine import (MachineContext, MachineDebugSession, QemuMachine,
                            machine_operation, machine_trace_operation)
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
+from .qemu_paged_le_tracking import QemuPagedLETrackingMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
 from .qemu_dos_task_views import QemuDOSTaskViewMixin, COMMANDS as TASK_VIEW_COMMANDS
 from .qemu_dos_scheduler import QemuDOSSchedulerMixin, COMMANDS as SCHEDULER_COMMANDS
@@ -188,7 +189,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuPagedLETrackingMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -468,6 +469,7 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
             self.capabilities['owned_machine_checkpoint_scope'] = (
                 'owned VM and private disk; original DOS source binding is retired on restore')
             self.capabilities['dos_protected_source_admission'] = True
+            self.capabilities['dos_paged_le_tracking'] = True
             self.capabilities['runtime_scene_observation'] = bool(self.capabilities.get('virtual_clock_budget'))
             self.capabilities['runtime_scene_wait'] = bool(self.capabilities.get('virtual_clock_budget'))
             self.capabilities['runtime_scene_act'] = bool(self.capabilities.get('virtual_clock_budget')
@@ -845,6 +847,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
     @machine_operation
     def save_le_source_state(self, name='dos-le-source.json', *, max_bytes=None, timeout_ms=60000):
         """Persist a qualified LE descriptor joined to a complete machine state."""
+        if (getattr(self, '_le_source', None) or {}).get('tracking') == 'paged':
+            raise ValueError('Paged LE tracking requires save_machine_state and a fresh bind after restore')
         from .qemu_dos_le_checkpoint import save_le_source_state
         return save_le_source_state(self, name, max_bytes=max_bytes, timeout_ms=timeout_ms)
 
@@ -868,6 +872,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                                      node=node, timeout_ms=timeout_ms)
 
     def _le_history_call(self, operation, budget_ms, **parameters):
+        if (getattr(self, '_le_source', None) or {}).get('tracking') == 'paged':
+            raise ValueError('Paged LE tracking does not support LE source history; use machine state and fresh bind')
         # Provider/guard installation is part of the same stable owner lock
         # and deadline as the operation, including replacement on restore.
         from .qemu_dos_le_history import get_provider

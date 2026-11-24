@@ -87,8 +87,9 @@ Use `save_machine_state` and `load_machine_state` for a machine checkpoint,
 then take a fresh capture in the restored session. Each capture establishes
 its own translation. Analysis requires one stopped CPU, A20 enabled and
 ordinary RAM with no active overlay or task-private view. PAE, large pages
-and long mode are outside this path. The result grants no continuing source
-binding for tracing or execution control.
+and long mode are outside this path. For a counted trace that follows remaps and selector
+changes, select the separate paged source tracking mode.
+[Tracking and checkpoint workflow](QEMU_DOS_PROTECTED_SOURCE.md#tracking-paged-code-and-ldt-selectors)
 
 ### Promoted runtime versions
 

@@ -48,6 +48,11 @@ def qualify_capture(session, observed):
 
 
 class RuntimeCodeMixin:
+    def debug_analyze_le_tracking_trace(self, artifact):
+        """Replay an owned paged LE tracking trace from retained evidence."""
+        from .qemu_paged_le_trace_replay import analyze_trace
+        return analyze_trace(self, artifact)
+
     def debug_analyze_le_code(self, artifact):
         """Decode one source-bound protected LE observation without creating a version."""
         from iced_x86 import Decoder, Formatter, FormatterSyntax
