@@ -152,8 +152,8 @@ def test_qemu_pdpte_accessed_bit_requires_exact_native_hash_including_offline_re
                                    qemu_image_sha256=QEMU_TCG_PAE_ACCESSED_IMAGE)
     assert data == b'q'
     assert walks[0]['entries'][0]['qemu_tcg_accessed'] is True
-    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE
-    for image in (QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE):
+    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE
+    for image in (QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE):
         assert translate_linear(context, 0, 1, reader(memory), qemu_image_sha256=image)[0] == b'q'
     assert walks[0]['entries'][0]['raw'] == (0x2021).to_bytes(8, 'little').hex()
 
@@ -334,3 +334,32 @@ def test_overlay_write_image_admission_preserves_exact_physical64_producer():
     prior_tracking['qemu_paged_le_tracking.py'] = '0' * 64
     assert not _compatible_producer(prior_tracking, tracking, tracking=True)
     assert not _supports_pse36(prior_tracking, tracking, QEMU_TCG_PHYSICAL64_IMAGE)
+
+
+def test_retained_dirty_overlay_producer_keeps_only_its_image_allowances():
+    from fdisbull.qemu_le_translation import (QEMU_TCG_QUALIFIED_IMAGE,
+        QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE)
+    from fdisbull.qemu_paged_le_capture import (_producer, _compatible_producer,
+        _supports_high_ram, _supports_pse36, _replay_qemu_image, _pse36)
+    from fdisbull.qemu_paged_le_tracking import _paged_producer
+
+    for current, tracking in ((_producer(), False), (_paged_producer(), True)):
+        old = dict(current, **{
+            'qemu_le_translation.py': 'ea9c38415d4cf1d9a3ec1cad12a3057bb43200b251bec89bac12e5aaa2cf3624',
+            'qemu_paged_le_capture.py': 'deace5bf098d1511943a48d2d93e5328683976bbb681eefae3b341aecea22a3f'})
+        assert _compatible_producer(old, current, tracking=tracking)
+        assert _supports_high_ram(old, current)
+        for image in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE):
+            assert _supports_pse36(old, current, image)
+            assert _replay_qemu_image(old, current, image) == image
+        assert not _supports_pse36(old, current, 'f' * 64)
+        config = {'memory_mib': 64, 'cpu': 'max', 'max_ram_below_4g_mib': 32}
+        assert _pse36(config, QEMU_TCG_CMPXCHG_IMAGE)
+        assert _supports_pse36(current, current, QEMU_TCG_CMPXCHG_IMAGE)
+        assert _replay_qemu_image(current, current, QEMU_TCG_CMPXCHG_IMAGE) == QEMU_TCG_CMPXCHG_IMAGE
+        assert not _supports_pse36(old, current, QEMU_TCG_CMPXCHG_IMAGE)
+        assert _replay_qemu_image(old, current, QEMU_TCG_CMPXCHG_IMAGE) is None
+        old['le.py'] = '0' * 64
+        assert not _compatible_producer(old, current, tracking=tracking)
+        assert not _supports_high_ram(old, current)
+        assert not _supports_pse36(old, current, QEMU_TCG_OVERLAY_WRITE_IMAGE)

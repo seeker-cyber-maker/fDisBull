@@ -143,3 +143,21 @@ steps the original guest to supply the independent PC, page-table walk and
 physical RAM values. QEMU runs through the two stores in a single debugger
 call. Both engines repeat the sequence from their own native checkpoints in
 fresh processes.
+
+### Compare CMPXCHG outcomes on dirty pages
+
+Select the [CMPXCHG candidate](../qemu-cmpxchg-overlay/README.md) and the same
+Bochs reference. Run the six combinations locally with
+
+```sh
+python -m pytest -q tests/test_qemu_dirty_overlay_cmpxchg_pae_native.py
+```
+
+Each variant dirties the physical subpage via a sibling write and performs
+three scalar compares with either all locked or all unlocked instructions.
+The guest records the failed compare's accumulator, RAM byte and arithmetic
+flags. QEMU runs past the failure and stops just after the changed-value
+match. After rebinding to the new backing value, QEMU must also stop after a
+same-value match. Bochs steps the same guest and supplies independent status
+flags, bytes, addresses and post-instruction PCs. Both engines load their
+own checkpoints in fresh processes before repeating the sequence.

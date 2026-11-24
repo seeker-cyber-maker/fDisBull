@@ -1,0 +1,43 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_manifest": "../qemu-dirty-overlay/source-manifest.json",
+  "base_source_tree_sha256": "530d6ebe0d984b83dcf46c40ccd7fec6a1a8d165bcfbff28cf0467a3ac8bd188",
+  "composition": "Apply to exact qemu-dirty-overlay source; verify each preimage hash and git apply --check.",
+  "patch": "qemu-10.0.13-fdisbull-cmpxchg-overlay-v1.patch",
+  "patch_bytes": 12912,
+  "patch_sha256": "5837b2c98d2e2f462f9b766d3ff22092284e3f70e81336286211c4c033559691",
+  "files": [
+    {
+      "path": "accel/tcg/cputlb.c",
+      "base_bytes": 96631,
+      "base_sha256": "d05fe5bbdb25a1b38f82c06352ab51efe37cd5dd0cae7719bda36d46a81e7c9f",
+      "patched_bytes": 98793,
+      "patched_sha256": "df05fba5b8baf879bcd422ca876c74125114804506514113d25f231e29dd1f39"
+    },
+    {
+      "path": "target/i386/helper.h",
+      "base_bytes": 8025,
+      "base_sha256": "d3defa6895ab948ac3c9dfad54b3cfebc0e5b376df998b08d0948e7258f41657",
+      "patched_bytes": 8093,
+      "patched_sha256": "7723dd6b13257ea153ef30cd5c3cc8c98e3323aad85b3b90e7223eded63f7d42"
+    },
+    {
+      "path": "target/i386/tcg/emit.c.inc",
+      "base_bytes": 152152,
+      "base_sha256": "f11f7c47e63c27a2d8ddf530e270f0e57830f0d9f3c317a1e4f4173bdb8e0b42",
+      "patched_bytes": 152941,
+      "patched_sha256": "bbc2265e479166fc3b1d5c3a3a82a22593ab3b065ba8d1f11097caf81d8df36b"
+    }
+  ],
+  "scope": "x86 single-vCPU nonparallel scalar CMPXCHG memory operands, LOCK and unlocked. Other atomics and CF_PARALLEL retain predecessor behavior.",
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "command": "ninja -j4 qemu-system-x86_64",
+    "candidate_sha256": "a25557c5d811fc2aa83abcd0eb472291bac72a593ac7862396691012501f7a87",
+    "frozen_executable": "/Volumes/GitHub/GitHub/fDisBull-private/cmpxchg-overlay-20261124.kH4Epn/frozen/qemu-system-x86_64-a25557c5d811fc2a",
+    "qualification": "Local runtime comparison and limits are recorded in docs/DOS_QEMU_HANDOFF.md."
+  },
+  "base_producer_sha256": "71bdaef65a9241d2d4ff451fbd3e44a9a5cc93cb437b4adc51026ad211db8bd1"
+}

@@ -179,7 +179,8 @@ protected_jump:
 
 
 def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=False,
-                            paging_mode="legacy-4k", dirty_overlay_writes=False):
+                            paging_mode="legacy-4k", dirty_overlay_writes=False,
+                            dirty_overlay_cmpxchg=False, cmpxchg_lock=False):
     """Build a bounded MZ/BW/MZ/LE carrier with paging and an LDT CS.
 
     The protected-mode loader optionally copies the LE logical pages to three
@@ -218,6 +219,8 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
         remap_b |= 0x2000
     if dirty_overlay_writes and not tracking:
         raise ValueError('dirty overlay write witness requires tracking')
+    if dirty_overlay_cmpxchg and not dirty_overlay_writes:
+        raise ValueError('CMPXCHG overlay witness requires dirty overlay writes')
     if tracking and not (paging and ldt):
         raise ValueError('tracking mode requires paging and the LDT')
 
@@ -260,13 +263,51 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
             unrelated = code_base + 0x1f10
             sentinel = code_base + 0x1f11
             controller = bytearray(b'\xc6\x05' + struct.pack('<I', unrelated) + b'\xa5')
-            controller += b'\xc6\x05' + struct.pack('<I', watched) + b'\x5a'
+            if dirty_overlay_cmpxchg:
+                # Record the failed compare's architectural accumulator and flags
+                # before the changed-value success reaches the dirty execute byte.
+                result_al = code_base + 0x1f20
+                result_flags = code_base + 0x1f21
+                lock = b'\xf0' if cmpxchg_lock else b''
+                compare = lock + b'\x0f\xb0\x1d' + struct.pack('<I', watched)  # [watched], BL
+                controller += b'\xb0\x44\xb3\x5a'  # AL mismatch, BL replacement
+                failed_pc = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += compare
+                controller += b'\xa2' + struct.pack('<I', result_al)
+                controller += b'\x9c\x58\xa3' + struct.pack('<I', result_flags)
+                result_ram = code_base + 0x1f2d
+                controller += b'\xa0' + struct.pack('<I', watched)
+                controller += b'\xa2' + struct.pack('<I', result_ram)
+                # AL now holds the original RAM byte. This successful compare
+                # changes it to BL and must report the overlay conflict after
+                # the instruction has committed to guest RAM.
+                controller += b'\xb0\x90'
+                succeeded_pc = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += compare
+                controller += b'\x9c\x58\xa3' + struct.pack('<I', result_flags + 4)
+                # After the changed-value write, compare against the same
+                # byte without changing RAM; this succeeds and sets ZF.
+                controller += b'\xb0\x5a\xb3\x5a'
+                same_pc = code_base + PAGED_TRACKING_CONTROLLER + len(controller)
+                controller += compare
+                controller += b'\x9c\x58\xa3' + struct.pack('<I', result_flags + 8)
+                cmp_failed, cmp_succeeded = failed_pc, succeeded_pc
+            else:
+                controller += b'\xc6\x05' + struct.pack('<I', watched) + b'\x5a'
+                cmp_failed = cmp_succeeded = None
             controller += b'\xc6\x05' + struct.pack('<I', sentinel) + b'\xcc\xeb\xfe'
+            sentinel_store = code_base + PAGED_TRACKING_CONTROLLER + len(controller) - 9
             dirty_write_offsets = dict(watched=watched, unrelated=unrelated,
                                        sentinel=sentinel, overlay_page=watched & ~0xfff,
                                        unrelated_store=code_base + PAGED_TRACKING_CONTROLLER,
                                        watched_store=code_base + PAGED_TRACKING_CONTROLLER + 7,
-                                       sentinel_store=code_base + PAGED_TRACKING_CONTROLLER + 14)
+                                       sentinel_store=sentinel_store)
+            if dirty_overlay_cmpxchg:
+                dirty_write_offsets.update(cmp_failed=cmp_failed, cmp_succeeded=cmp_succeeded,
+                                           cmp_result_al=result_al, cmp_result_flags=result_flags,
+                                           cmp_result_ram=result_ram,
+                                           cmp_same=same_pc,
+                                           cmpxchg_lock=cmpxchg_lock)
         else:
             controller = bytearray()
             controller += b'\x9a' + struct.pack('<IH', PAGED_TRACKING_TARGET, PAGED_LDT_CODE_SELECTOR)

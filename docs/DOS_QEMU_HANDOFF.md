@@ -1,5 +1,39 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Scalar CMPXCHG overlay notification on dirty high pages (2026-11-24)
+
+The native nonparallel x86 path preserves CMPXCHG's writeback cycle on a
+failed comparison. It suppresses execute-layer notification for that one
+writeback. A matching comparison uses the ordinary observed store, even
+when the replacement equals the current RAM value.
+
+The fixture dirties the watched physical subpage with a sibling store,
+then compares against the overlaid byte at linear `0x401f01` and physical
+`0x100801f01`. A mismatch loads `90` into AL, leaves RAM at `90`, and clears
+ZF. The next comparison writes `5a` and sets ZF. QEMU reports the layer fault
+just after the matched instruction. Clearing the fault and rebinding the
+overlay lets the guest attempt a same-value match, which reports the same
+fault with RAM still at `5a`. The following sentinel is unchanged at either
+notification boundary.
+
+The paired test covers 4 KiB PAE, 2 MiB PAE, and 4 MiB PSE-36 with both
+locked and unlocked scalar memory instructions. Bochs supplies independent
+post-instruction PCs, physical translation, visible RAM and arithmetic
+flags. QEMU starts its receiving process in real mode with paging, PAE and
+PSE off and restores the active layer with the checkpoint. Bochs starts a
+fresh process directly from its own saved state.
+
+The unlocked cases passed both phases in all three modes. The locked 4 KiB
+PAE case also passed both phases. The larger-page locked cases use the same
+nonparallel lowering and have separate rows in the native test. The
+predecessor raised the conflict at the mismatch in all three mappings, with
+or without LOCK. A separate real-mode control covered byte, word and
+doubleword comparisons, including same-value matches for both prefixes.
+
+See the [native patch and scope](../native/qemu-cmpxchg-overlay/README.md) and
+the [Bochs test procedure](../native/bochs-pae-reference/README.md#compare-cmpxchg-outcomes-on-dirty-pages).
+DOSBox-X remains the default.
+
 ## Immediate overlay write stops on dirty high pages (2026-11-24)
 
 The guest wrote a sibling byte and then the byte covered by an execute

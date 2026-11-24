@@ -89,23 +89,63 @@ def run(stage, phase):
             checkpoint.mkdir()
             saved = debug.cmd(f'restore "__save_state__" "{checkpoint}"')
             assert 'native save state' in saved and ': OK' in saved, saved
-        debug.cmd('s')
-        second = _observation(debug, offsets, offsets['watched_store'], cfg['paging_mode'])
-        assert {k: v['hex'] for k, v in second['values'].items()} == {
-            'unrelated': 'a5', 'watched': '90', 'sentinel': '90'}
-        debug.cmd('s')
-        third = _observation(debug, offsets, offsets['sentinel_store'], cfg['paging_mode'])
-        assert {k: v['hex'] for k, v in third['values'].items()} == {
-            'unrelated': 'a5', 'watched': '5a', 'sentinel': '90'}
-        if phase == 'after':
-            assert [first, second, third] == prior['observations']
+        if 'cmp_failed' in offsets:
+            # Run native guest instructions without host intervention until
+            # the sentinel store. Bochs has no execution overlay; this records
+            # ordinary x86 RAM, accumulator, and flag semantics independently.
+            pc = offsets['unrelated_store']
+            compare_sites = {
+                offsets['cmp_failed']: 'failed',
+                offsets['cmp_succeeded']: 'changed',
+                offsets['cmp_same']: 'same',
+            }
+            steps = {}
+            for _ in range(32):
+                if pc == offsets['sentinel_store']:
+                    break
+                compare = compare_sites.get(pc)
+                debug.cmd('s')
+                context = debug.context()
+                pc = context['cs_base'] + context['ip']
+                if compare:
+                    steps[compare] = dict(pc=pc, ram=debug.read(offsets['watched'], 1).hex(),
+                                          sentinel=debug.read(offsets['sentinel'], 1).hex())
+            assert pc == offsets['sentinel_store'], hex(pc)
+            assert list(steps) == ['failed', 'changed', 'same']
+            final = _observation(debug, offsets, offsets['sentinel_store'], cfg['paging_mode'])
+            assert {k: v['hex'] for k, v in final['values'].items()} == {
+                'unrelated': 'a5', 'watched': '5a', 'sentinel': '90'}
+            raw = debug.read(offsets['cmp_result_flags'], 12)
+            flags = [int.from_bytes(raw[i:i + 4], 'little') for i in (0, 4, 8)]
+            failed_al = debug.read(offsets['cmp_result_al'], 1)[0]
+            failed_ram = debug.read(offsets['cmp_result_ram'], 1)[0]
+            assert failed_al == 0x90
+            assert failed_ram == 0x90
+            assert flags[0] & (1 << 6) == 0, flags
+            assert flags[1] & (1 << 6) and flags[2] & (1 << 6), flags
+            observation = dict(final=final, failed_al=failed_al, failed_ram=failed_ram, flags=flags,
+                               steps=steps)
+            if phase == 'after':
+                assert observation == prior['observations']
+        else:
+            debug.cmd('s')
+            second = _observation(debug, offsets, offsets['watched_store'], cfg['paging_mode'])
+            assert {k: v['hex'] for k, v in second['values'].items()} == {
+                'unrelated': 'a5', 'watched': '90', 'sentinel': '90'}
+            debug.cmd('s')
+            third = _observation(debug, offsets, offsets['sentinel_store'], cfg['paging_mode'])
+            assert {k: v['hex'] for k, v in third['values'].items()} == {
+                'unrelated': 'a5', 'watched': '5a', 'sentinel': '90'}
+            observation = [first, second, third]
+            if phase == 'after':
+                assert observation == prior['observations']
     except BaseException:
         debug.abort()
         raise
     else:
         debug.close()
     result = dict(phase=phase, checkpoint=str(checkpoint), checkpoint_context=first['context'],
-                  observations=[first, second, third], initial_context=initial_context,
+                  observations=observation, initial_context=initial_context,
                   restore_before_guest_execution=phase == 'after', paging_mode=cfg['paging_mode'], binary_sha256=_hash(binary),
                   media_sha256=_hash(disk), source_sha256=_hash(source), pid=debug.proc.pid,
                   exit_code=debug.proc.returncode)
