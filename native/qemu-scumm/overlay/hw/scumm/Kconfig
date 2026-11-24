@@ -1,0 +1,4 @@
+config SCUMM_TEST_MACHINE
+    bool
+    default y
+    depends on SCUMM

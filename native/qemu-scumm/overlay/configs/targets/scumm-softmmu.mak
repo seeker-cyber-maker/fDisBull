@@ -1,0 +1,3 @@
+TARGET_ARCH=scumm
+TARGET_XML_FILES=gdb-xml/scumm-core.xml
+TARGET_LONG_BITS=32
