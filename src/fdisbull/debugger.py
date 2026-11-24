@@ -1401,7 +1401,7 @@ class DebugWorkspace:
             raise ValueError('Pause or collect the outstanding asynchronous run before another operation')
         if method=='debug-run-async':
             return self._start_async(session,params)
-        methods = {'debug-agi-scene-observe':'scene_observe', 'debug-diagnostics':'diagnostics','debug-cpu-inventory':'cpu_inventory','debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
+        methods = {'debug-agi-scene-observe':'scene_observe', 'debug-agi-reply':'reply_host', 'debug-diagnostics':'diagnostics','debug-cpu-inventory':'cpu_inventory','debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
                    'debug-memory-snapshot':'memory_snapshot','debug-memory-apply':'memory_apply',
                    'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
                    'debug-desqview-observe':'desqview_observe',

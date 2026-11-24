@@ -46,7 +46,8 @@ def checkpoint_capabilities(owner, deadline, *, runtime):
         value = owner.qmp.call('qom-get', {'path': owner.cpu_path, 'property': STOP_SUPPORT},
                                timeout_ms=_remaining(deadline))
         can_save_runtime_stops = value == 'pending-fault-quit-1'
-    return dict(save_states=can_save, save_states_runtime_stops=can_save_runtime_stops)
+    return dict(save_states=can_save, save_states_runtime_stops=can_save_runtime_stops,
+                agi_host_replies=runtime and 'agi-runtime-command' in string_properties)
 
 
 def _snapshot(owner, deadline):
@@ -204,6 +205,8 @@ class AGICheckpointMixin:
                 caps = checkpoint_capabilities(candidate, deadline, runtime=self._runtime_package is not None)
                 if not caps['save_states']:
                     raise ValueError('AGI candidate lacks native checkpoint interface')
+                if self.capabilities.get('agi_host_replies') and not caps['agi_host_replies']:
+                    raise ValueError('AGI candidate lacks native host reply interface')
                 if _sha(self._executable.read_bytes()) != self.identity['qemu_sha256']:
                     raise ValueError('AGI native binary changed during restore')
                 candidate.qmp.call('qom-set', {'path': candidate.cpu_path, 'property': PROPERTY,

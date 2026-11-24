@@ -557,7 +557,7 @@ def test_v1_checkpoint_candidate_still_refuses_pending_capture_without_owner_los
     (bytes((156, 2, 157, 3, 5, 158, 161)), "menu", {"accepted": True, "number": 5}),
     (bytes((126,)), "restore", {"accepted": False}),
 ])
-def test_restored_pending_ticket_completes_exactly_once(tmp_path, body, reply, answer):
+def test_restored_pending_ticket_completes_exactly_once(tmp_path, body, reply, answer, monkeypatch):
     executable = _stopped_checkpoint_executable()
     code = bytes((29,)) + body + bytes((0,))
     project, _, _ = _project(tmp_path, code)
@@ -568,7 +568,8 @@ def test_restored_pending_ticket_completes_exactly_once(tmp_path, body, reply, a
             _runtime_command(original, {"action": "seed", "flags": {"14": 1}})
             assert original.step()["outcome"] == "pending"
             assert original.state()["guest"]["pending_effect"]["id"] == 1
-            _runtime_command(original, {"action": "complete", "id": 1, "accepted": True})
+            first_ticket = original.state()["guest"]["pending_effect"]["id"]
+            original.reply_host(first_ticket, accepted=False)
             for _ in range(8):
                 outcome = original.step()["outcome"]
                 if outcome == "pending":
@@ -587,14 +588,62 @@ def test_restored_pending_ticket_completes_exactly_once(tmp_path, body, reply, a
         with project.debugger(str(executable), backend="qemu-agi", agi_runtime_package=str(package)) as restored:
             assert restored.load_state(saved["artifact"])["verified"] is True
             assert restored.state() == before
-            completion = {"action": "complete", "id": 2, **answer}
-            _runtime_command(restored, completion)
+            # The restored owner is the only authority allowed to answer this
+            # durable request.  Use the public host-reply API; the private QMP
+            # runtime command remains a fixture-seeding mechanism only.
+            ticket = pending["id"]
+            with pytest.raises((TypeError, ValueError, DebuggerError)):
+                restored.reply_host(ticket, accepted="yes")
+            assert restored.state() == before
+            with pytest.raises((ValueError, DebuggerError)):
+                restored.reply_host(first_ticket, accepted=True)
+            assert restored.state() == before
+            if reply == "menu":
+                owner = restored.vm
+                with pytest.raises(ValueError):
+                    restored.reply_host(ticket, accepted=True, number=4)
+                assert restored.vm is owner and owner.process.poll() is None
+                assert restored.state() == before
+            owner = restored.vm
+            gdb_calls = []
+            with monkeypatch.context() as blocker:
+                blocker.setattr(owner.gdb, "execute", lambda *args, **kwargs: gdb_calls.append(args))
+                reply_result = restored.reply_host(ticket, **answer)
+                assert reply_result["verified"] is True
+                with pytest.raises((ValueError, DebuggerError)):
+                    restored.reply_host(ticket, **answer)
+                assert gdb_calls == []
+            assert reply_result["format"] == "fdisbull-qemu-agi-host-reply-1"
+            assert reply_result["ticket"] == ticket
+            assert reply_result["before"] == {
+                "status": before["guest"]["status"],
+                "pending_effect": pending,
+                "retired": before["guest"]["retired"],
+                "logic": before["guest"]["logic"],
+                "pc": before["guest"]["pc"],
+            }
+            assert reply_result["after"] == {
+                "status": "quit" if reply == "choice" else "ready",
+                "pending_effect": None,
+                "retired": before["guest"]["retired"] + 1,
+                "logic": before["guest"]["logic"],
+                "pc": pending["next_pc"],
+            }
+            assert reply_result["accepted"] is answer["accepted"]
+            assert reply_result["verified"] is True
             completed = restored.state()
             assert completed["guest"]["pending_effect"] is None
             assert completed["guest"]["retired"] == before["guest"]["retired"] + 1
             assert completed["guest"]["status"] == ("quit" if reply == "choice" else "ready")
-            with pytest.raises(DebuggerError, match="completion id does not match"):
-                _runtime_command(restored, completion)
+            # A saved checkpoint is an independent branch: replaying its
+            # pending ticket is valid after rewind, even though the prior
+            # branch already consumed that ticket once.
+            prior_owner = restored.vm.process
+            assert restored.load_state(saved["artifact"])["verified"] is True
+            assert prior_owner.poll() is not None
+            assert restored.state() == before
+            branch_reply = restored.reply_host(ticket, **answer)
+            assert branch_reply["after"] == reply_result["after"]
             assert restored.state() == completed
             if reply == "choice":
                 quit_saved = restored.save_state("confirmed-quit.bin")
@@ -628,6 +677,148 @@ def test_cli_returns_typed_agi_checkpoint_failure_receipt(monkeypatch, method, r
     assert reply["id"] == 19
     assert reply["error"]["type"] == "RuntimeError"
     assert reply["error"]["result"] == receipt
+
+
+def test_json_reply_uses_the_restored_run_and_consumes_one_ticket(tmp_path):
+    executable = _stopped_checkpoint_executable()
+    code = bytes((118, 1, 3, 0))  # get.num(message 1, v3), return
+    project, database, _ = _project(tmp_path, code)
+    with project:
+        package = _stop_package(tmp_path, code, ["Choose a number"])
+    workspace = DebugWorkspace()
+    policy = OutputPolicy(1024 * 1024, tmp_path / "json-output")
+
+    def call(method, **params):
+        with output_policy_context(policy):
+            return respond({"id": 23, "method": method, "params": params},
+                           default_project=str(database), debugger=workspace)
+
+    def invoke(method, **params):
+        response = call(method, **params)
+        assert response["ok"], response
+        return response["result"]
+
+    launch = dict(executable=str(executable), backend="qemu-agi", agi_runtime_package=str(package))
+    try:
+        first = invoke("debug-launch", **launch)["run"]
+        assert invoke("debug-step", run=first)["outcome"] == "pending"
+        saved = invoke("debug-save-state", run=first, name="number.bin")
+        assert invoke("debug-stop", run=first)["process_reaped"]
+        second = invoke("debug-launch", **launch)["run"]
+        assert second != first
+        stop = invoke("debug-load-state", run=second, artifact=saved["artifact"])["observation"]["runtime_stop"]
+        answer = dict(run=second, ticket=stop["pending_effect"]["id"], accepted=True, number=42)
+        receipt = invoke("debug-agi-reply", **answer)
+        assert receipt["verified"] and receipt["after"]["retired"] == receipt["before"]["retired"] + 1
+        assert receipt["after"]["pc"] == 3
+        duplicate = call("debug-agi-reply", **answer)
+        assert duplicate["id"] == 23 and not duplicate["ok"]
+        assert workspace.sessions[second].state()["guest"]["variables"][3] == 42
+    finally:
+        workspace.close()
+
+
+def test_public_restore_reply_uses_bound_guest_snapshot_without_resuming(tmp_path):
+    executable = _stopped_checkpoint_executable()
+    code = bytes((3, 5, 1, 126, 0))  # assignn(v5, 1), restore.game, return
+    target_dir = tmp_path / "target"
+    target_dir.mkdir()
+    project, _, _ = _project(target_dir, code)
+    target_package = _stop_package(target_dir, code)
+    decoy_dir = tmp_path / "decoy"
+    decoy_dir.mkdir()
+    decoy_code = bytes((3, 5, 2, 126, 0))
+    decoy_project, _, _ = _project(decoy_dir, decoy_code)
+    decoy_package = _stop_package(decoy_dir, decoy_code)
+    with project, decoy_project:
+        with project.debugger(str(executable), backend="qemu-agi",
+                              agi_runtime_package=str(target_package)) as debug:
+            assert debug.capabilities["agi_host_replies"] is True
+            assert debug.step()["outcome"] == "step"
+            saved_guest = debug.state()["guest"]
+            assert saved_guest["pc"] == 3
+            target_snapshot = debug.vm.qmp.call("qom-get", {
+                "path": debug.cpu_path, "property": "agi-runtime-snapshot-hex"})
+            assert isinstance(target_snapshot, str) and target_snapshot
+            assert debug.step()["outcome"] == "pending"
+            before = debug.state()
+            pending = before["guest"]["pending_effect"]
+            assert pending["reply"] == "restore"
+            ticket = pending["id"]
+            owner = debug.vm
+
+            with decoy_project.debugger(str(executable), backend="qemu-agi",
+                                        agi_runtime_package=str(decoy_package)) as decoy:
+                decoy_snapshot = decoy.vm.qmp.call("qom-get", {
+                    "path": decoy.cpu_path, "property": "agi-runtime-snapshot-hex"})
+            assert isinstance(decoy_snapshot, str) and decoy_snapshot != target_snapshot
+            with pytest.raises(DebuggerError) as rejected:
+                debug.reply_host(ticket, accepted=True, snapshot_hex=decoy_snapshot)
+            assert rejected.value.result["disposition"] == "native rejection"
+            assert rejected.value.result["do_not_replay"] is False
+            assert debug.vm is owner and owner.process.poll() is None
+            assert debug.state() == before
+
+            receipt = debug.reply_host(ticket, accepted=True, snapshot_hex=target_snapshot)
+            restored = debug.state()["guest"]
+            assert receipt["reply_type"] == "restore" and receipt["verified"] is True
+            assert receipt["snapshot"]["size"] > 0
+            assert restored["status"] in ("ready", "return")
+            assert restored["pending_effect"] is None
+            assert restored["pc"] == saved_guest["pc"]
+            assert restored["logic"] == saved_guest["logic"]
+            assert restored["retired"] == saved_guest["retired"]
+            assert restored["flags"][12] == 1
+            assert receipt["after"]["restored_flag"] == 1
+            assert debug.vm is owner and owner.process.poll() is None
+            with pytest.raises((ValueError, DebuggerError)):
+                debug.reply_host(ticket, accepted=True, snapshot_hex=target_snapshot)
+            assert debug.state()["guest"] == restored
+
+
+def test_host_reply_lost_ack_is_not_replayed_and_records_uncertainty(tmp_path):
+    executable = _stopped_checkpoint_executable()
+    code = bytes((101, 1, 0))  # print, then return
+    project, _, _ = _project(tmp_path, code)
+    package = _stop_package(tmp_path, code, ["Press a key"])
+    with project:
+        with project.debugger(str(executable), backend="qemu-agi",
+                              agi_runtime_package=str(package)) as debug:
+            assert debug.step()["outcome"] == "pending"
+            pending = debug.state()["guest"]["pending_effect"]
+            ticket = pending["id"]
+            owner = debug.vm
+            original_call = owner.qmp.call
+            setters = []
+            committed = []
+
+            def commit_then_drop_ack(command, *args, **kwargs):
+                if (command == "qom-set" and args and
+                        args[0].get("property") == "agi-runtime-command"):
+                    setters.append(args[0]["value"])
+                    original_call(command, *args, **kwargs)
+                    committed.append(debug._state()["guest"])
+                    raise TimeoutError("injected lost host-reply acknowledgement")
+                return original_call(command, *args, **kwargs)
+
+            owner.qmp.call = commit_then_drop_ack
+            with pytest.raises(TimeoutError) as uncertain:
+                debug.reply_host(ticket, accepted=True)
+            assert len(setters) == 1
+            assert committed and committed[0]["pending_effect"] is None
+            assert uncertain.value.result["do_not_replay"] is True
+            assert uncertain.value.result["owner_closed"] is True
+            assert owner.process.poll() is not None
+            history = project.db.execute(
+                "SELECT operation,evidence FROM debug_events WHERE run=? ORDER BY sequence",
+                (debug.run_id,),
+            ).fetchall()
+            evidence = [(operation, json.loads(payload)) for operation, payload in history]
+            assert any(operation == "agi-host-reply-uncertain" and
+                       record.get("do_not_replay") is True
+                       for operation, record in evidence)
+            assert not any(operation == "agi-host-reply" for operation, _ in evidence)
+
 
 if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "--checkpoint-child":
     _child(sys.argv[2])

@@ -113,3 +113,49 @@ Both `step()` and `run()` return the restored stop with zero retired instruction
 The request stays outstanding until the host handles it. A partially elapsed print
 window keeps its remaining guest ticks. Checkpoints are limited to 16 MiB and
 are bound to the exact native executable and resource package.
+
+## Reply to a restored host request
+
+Resource-backed runs advertise `agi_host_replies` when the native CPU supports
+host replies. After loading a debugger checkpoint, use the pending request from
+the restore receipt. This example answers a numeric prompt and checks that the
+guest consumed it.
+
+```python
+restored = debug.load_state(artifact)
+request = restored["observation"]["runtime_stop"]["pending_effect"]
+assert request["reply"] == "number"
+receipt = debug.reply_host(request["id"], accepted=True, number=42)
+assert receipt["verified"] and receipt["after"]["pending_effect"] is None
+```
+
+The equivalent JSON method takes the current run ID, the positive 64-bit ticket
+from the request, an explicit Boolean `accepted`, and an optional `timeout_ms`.
+
+```json
+{"id":"reply","method":"debug-agi-reply","params":{"run":"<RUN>","ticket":123,"accepted":true,"number":42}}
+```
+
+| Native request | Payload when accepting |
+| --- | --- |
+| `ack`, `choice` | Omit payload fields. |
+| `text` | Supply `text` in CP437, up to the prompt limit and at most 40 encoded bytes. NUL is invalid. |
+| `number`, `menu` | Supply `number` from 0 to 255. Menu selection uses the enabled item's controller number. |
+| `restore` | Supply `snapshot_hex`, a caller-owned native AGI guest save from the same build and resource package. |
+
+Decline any request with `accepted=false` and omit the payload fields.
+Acknowledging a save prompt records the host's answer. The caller manages the
+guest save data and its storage. A debugger checkpoint has its own format and
+loads through `debug-load-state`.
+
+A successful reply leaves the machine stopped. An ordinary completion retires
+the pending instruction exactly once. Accepting a guest restore reinstates the
+saved guest state and its retirement count. The receipt records the before and
+after observations. A repeated answer on the current timeline is refused.
+Explicitly loading an earlier pending checkpoint starts a new timeline on which
+the caller can make a fresh choice.
+
+If the native command refuses an answer, its `native rejection` receipt leaves
+the ticket pending. If the result is uncertain, the error carries
+`error.result.do_not_replay=true` and indicates whether the owner was closed.
+Retain that receipt and avoid resending the request.

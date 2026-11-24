@@ -12,6 +12,10 @@ from .dosbox_rpc import DebuggerError
 from .qemu_observation_authority import check_transport, transport_operation
 
 
+class QMPCommandError(DebuggerError):
+    """A correlated QMP command returned an error response."""
+
+
 class QemuControl:
     def __init__(self,path,process,deadline,*,channel=None):
         self.socket=channel if channel is not None else socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
@@ -92,7 +96,7 @@ class QemuControl:
                     if ('error' in reply)==('return' in reply):raise DebuggerError('Invalid QMP result envelope')
                     completed=True
                     control.reply=reply
-                    if 'error' in reply:raise DebuggerError('QMP '+method+': '+json.dumps(reply['error']))
+                    if 'error' in reply:raise QMPCommandError('QMP '+method+': '+json.dumps(reply['error']))
                     return reply['return']
             except BaseException:
                 # A dispatched cont/stop/edit may already have taken effect. Close

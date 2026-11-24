@@ -127,7 +127,8 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
     capabilities = dict(registers=True, step=True, run=True, qemu_diagnostics=True,
                         native_cpu_inventory=None, memory=False, breakpoints=False,
                         runtime_scene_observation=True, scene_planes=False,
-                        save_states=False, save_states_runtime_stops=False, input=False)
+                        save_states=False, save_states_runtime_stops=False, input=False,
+                        agi_host_replies=False)
 
     def __init__(self, project, executable, *, version=None, timeout_ms=30000, runtime_package=None, _on_spawn=None):
         _timeout(timeout_ms)
@@ -187,6 +188,7 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
                                 and type(source.get('logic_id')) is int and 0 <= source['logic_id'] <= 255)
             if not source_valid:
                 raise DebuggerError('QEMU AGI source identity differs')
+            self._runtime_entry_logic = source.get('logic_id') if package_data is not None else None
             if _sha(executable.read_bytes()) != binary_sha:
                 raise ValueError('QEMU binary changed during startup')
             with project.transaction(True):
@@ -285,6 +287,12 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
         with self._budget(self.vm, time.monotonic()+timeout_ms/1000):
             self._stopped()
             return self._events()
+
+    def reply_host(self, ticket, *, accepted, text=None, number=None, snapshot_hex=None, timeout_ms=10000):
+        """Complete one current native host request without resuming execution."""
+        from .qemu_agi_reply import reply_host
+        return reply_host(self, ticket, accepted=accepted, text=text, number=number,
+                          snapshot_hex=snapshot_hex, timeout_ms=timeout_ms)
 
     def scene_observe(self, *, timeout_ms=10000):
         from .qemu_agi_scene import observe
