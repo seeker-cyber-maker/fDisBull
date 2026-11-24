@@ -62,6 +62,16 @@ static char *get_state(Object *obj,Error **errp)
  g_string_append(j,"],\"actor_placement_model\":[");
  for(unsigned k=0;k<SCUMM_ACTORS;k++)g_string_append_printf(j,"%s[%u,%u,%u,%u]",k?",":"",k,
   s->actors[k].bound,s->actors[k].x,s->actors[k].y);
+ g_string_append_printf(j,"],\"default_talk_color\":%u,\"actor_metadata\":[",s->default_talk_color);
+ for(unsigned k=0;k<SCUMM_ACTORS;k++){
+  ScummActor *a=&s->actors[k];
+  g_string_append_printf(j,"%s{\"actor\":%u,\"costume\":%u,\"sound\":%u,\"talk_color\":%u,\"name_pc\":%u,\"name_size\":%u,\"palette\":[",k?",":"",k,a->costume,a->sound,a->talk_color,a->name_pc,a->name_size);
+  for(unsigned p=0;p<32;p++) {
+   if(a->palette_known[p])g_string_append_printf(j,"%s%u",p?",":"",a->palette[p]);
+   else g_string_append(j,p?",null":"null");
+  }
+  g_string_append(j,"]}");
+ }
  g_string_append(j,"]}");return g_string_free(j,false);
 }
 static char *get_decode(Object *obj,Error **errp)
@@ -73,8 +83,8 @@ static char *get_decode(Object *obj,Error **errp)
  for(unsigned n=0;n<64&&pc<c->env.code_size;n++){
   ScummInsn i;bool ok=scumm_decode(c->env.version,c->code,c->env.code_size,pc,&i);
   g_string_append_printf(j,"%s{\"pc\":%u,\"opcode\":%u,\"op\":\"%s\",\"fault\":%u,"
-   "\"size\":%u,\"next\":%u,\"branch\":%d,\"conditional\":%u,\"args\":[",
-   n?",":"",i.pc,i.opcode,scumm_op_name(i.op),i.fault,i.size,i.next,i.target,i.conditional);
+   "\"size\":%u,\"next\":%u,\"branch\":%d,\"conditional\":%u,\"subop\":%u,\"payload_pc\":%u,\"payload_size\":%u,\"args\":[",
+   n?",":"",i.pc,i.opcode,scumm_op_name(i.op),i.fault,i.size,i.next,i.target,i.conditional,i.subop,i.payload_pc,i.payload_size);
   for(unsigned k=0;k<i.count;k++)g_string_append_printf(j,"%s[%u,%u,%u]",k?",":"",
    i.arg[k].kind,i.arg[k].value,i.arg[k].width);
   g_string_append(j,"]}");if(!ok||!i.size)break;pc=i.next;
@@ -93,8 +103,10 @@ static char *get_events(Object *obj,Error **errp)
    ",\"channel\":%u,\"pc\":%u,\"next\":%u,\"opcode\":%u,\"bytes\":\"",
    n?",":"",e->seq,e->retired,e->channel,e->pc,e->next,e->opcode);
   for(unsigned k=0;k<e->size;k++)g_string_append_printf(j,"%02x",e->bytes[k]);
-  g_string_append_printf(j,"\",\"actor\":%u,\"before\":[%u,%u,%u],\"after\":[%u,%u,%u]}",
-   e->actor,e->before.bound,e->before.x,e->before.y,e->after.bound,e->after.x,e->after.y);
+  g_string_append_printf(j,"\",\"actor\":%u,\"before\":[%u,%u,%u],\"after\":[%u,%u,%u],\"before_metadata\":[%u,%u,%u,%u,%u],\"after_metadata\":[%u,%u,%u,%u,%u]}",
+   e->actor,e->before.bound,e->before.x,e->before.y,e->after.bound,e->after.x,e->after.y,
+   e->before.costume,e->before.sound,e->before.talk_color,e->before.name_pc,e->before.name_size,
+   e->after.costume,e->after.sound,e->after.talk_color,e->after.name_pc,e->after.name_size);
  }
  g_string_append(j,"]}");return g_string_free(j,false);
 }
@@ -116,7 +128,8 @@ static bool tlb_fill(CPUState *cs,vaddr addr,int size,MMUAccessType access,int i
 static void enter(CPUState *cs)
 {
  CPUArchState *e=cpu_env(cs);
- if(e->state.status==S_RETURN||e->state.status==S_FAULT){
+ if(e->state.status==S_RETURN||e->state.status==S_FAULT||e->state.status==S_BLOCKED){
+  e->run_retired=0;
   vm_stop(RUN_STATE_PAUSED);cs->exception_index=EXCP_INTERRUPT;return;}
  if(e->state.status!=S_RUNNING){e->run_retired=0;e->state.status=S_RUNNING;}
 }

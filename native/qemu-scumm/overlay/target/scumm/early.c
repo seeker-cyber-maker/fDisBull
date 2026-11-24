@@ -5,7 +5,10 @@
 static const char *const names[]={
  "stop","yield","move","add","subtract","increment","decrement","jump",
  "equal","not_equal","zero","nonzero","greater_equal","less_equal","less",
- "greater","place_actor","unknown"
+ "greater","place_actor","set_var_range","actor_config","resource_operation",
+ "start_script","stop_script","chain_script","load_room","actor_room","nop",
+ "cutscene","cursor","lights","animate_actor","walk_actor","print","verb_op","override",
+ "move_indirect","add_indirect","sub_indirect","unknown"
 };
 const char *scumm_op_name(unsigned op){return names[op<=S_UNKNOWN?op:S_UNKNOWN];}
 static bool arg(const uint8_t *c,size_t len,size_t *p,ScummInsn *i,unsigned kind,unsigned width)
@@ -33,6 +36,26 @@ bool scumm_decode(unsigned version,const uint8_t *code,size_t len,uint32_t pc,Sc
  case 0x10:case 0x80:if(i->opcode==(version?0x80:0x10))i->op=S_YIELD;break;
  case 0x18:i->op=S_JUMP;branch=true;break;
  case 0x46:case 0xc6:i->op=i->opcode==0x46?S_INC:S_DEC;ok=arg(code,len,&p,i,S_DEST,1);break;
+ case 0x40:case 0xc0:
+  if(version){i->op=S_CUTSCENE;i->subop=(i->opcode==0x40)?1:0;}break;
+ case 0x58:
+  if(!version)break;
+  i->op=S_OVERRIDE;
+  if(p>len||len-p<3)ok=false;
+  else if(code[p]!=0x18){i->fault=S_OPCODE;return false;}
+  else{i->payload_pc=p;i->payload_size=3;p+=3;}break;
+ case 0xd8:
+  if(!version)break;
+  i->op=S_PRINT;goto print_text;
+ case 0x26:case 0xa6:
+  if(!version)break;
+  i->op=S_RANGE;
+  ok=arg(code,len,&p,i,S_DEST,1)&&arg(code,len,&p,i,S_IMM,1);
+  if(ok){unsigned count=i->arg[1].value,w=(i->opcode&0x80)?2:1;
+   i->subop=w;i->payload_pc=p;i->payload_size=count*w;
+   if(!count){i->fault=S_BAD_VAR;return false;}
+   if(i->payload_size>len-p)ok=false;else p+=i->payload_size;}
+  break;
  case 0x2c:
   if(!version)break;
   i->op=S_MOVE;ok=arg(code,len,&p,i,S_DEST,1)&&arg(code,len,&p,i,S_IMM,1);break;
@@ -40,7 +63,70 @@ bool scumm_decode(unsigned version,const uint8_t *code,size_t len,uint32_t pc,Sc
   i->op=i->opcode==0x28?S_ZERO:S_NONZERO;i->conditional=1;branch=true;
   ok=arg(code,len,&p,i,S_VAR,1);break;
  default:
-  if((i->opcode&0x1f)==1){
+  if(version && (base==0x14)){
+   i->op=S_PRINT;ok=val(code,len,&p,i,0x80,1);
+print_text:
+   if(ok){i->payload_pc=p;
+    while(p<len&&p-i->pc<SCUMM_INSN_MAX){
+     unsigned ch=code[p++];
+     if(!ch){i->payload_size=p-i->payload_pc;break;}
+     unsigned low=ch&127;
+     if(low>=4&&low<8){if(p>=len){ok=false;break;}++p;}
+    }
+    if(!i->payload_size)ok=false;
+   }
+  }else if(version&&base==0x7a){
+   i->op=S_VERB;ok=arg(code,len,&p,i,S_IMM,1);
+   if(ok){unsigned verb=i->arg[0].value;
+    if(!verb)ok=val(code,len,&p,i,0x80,1);
+    else if(verb==255)ok=arg(code,len,&p,i,S_IMM,1)&&arg(code,len,&p,i,S_IMM,1);
+    else{
+     /* New verb layout: x, y, slot, preposition, NUL-terminated name.
+      * Keep raw payload for static consumption; no verb effects executed. */
+     i->payload_pc=p;
+     if(len-p<4)ok=false;else{
+      p+=4;
+      while(p<len&&p-i->pc<SCUMM_INSN_MAX&&code[p])++p;
+      if(p>=len||code[p])ok=false;else{++p;i->payload_size=p-i->payload_pc;}
+     }
+    }
+   }
+  }else if(version&&base==0x60){
+   i->op=S_CURSOR;ok=val(code,len,&p,i,0x80,word);
+  }else if(version&&base==0x70){
+   i->op=S_LIGHTS;ok=val(code,len,&p,i,0x80,1)&&arg(code,len,&p,i,S_IMM,1)&&arg(code,len,&p,i,S_IMM,1);
+  }else if(version&&(i->opcode&0x3f)==0x11){
+   i->op=S_ANIMATE;ok=val(code,len,&p,i,0x80,1)&&val(code,len,&p,i,0x40,1);
+  }else if((i->opcode&0x1f)==0x1e){
+   i->op=S_WALK;ok=val(code,len,&p,i,0x80,1)&&val(code,len,&p,i,0x40,1)&&val(code,len,&p,i,0x20,1);
+  }else if(version&&(base==0x0a||base==0x2a||base==0x6a)){
+   i->op=base==0x0a?S_MOVE_IND:base==0x2a?S_ADD_IND:S_SUB_IND;
+   ok=arg(code,len,&p,i,S_DEST,1)&&val(code,len,&p,i,0x80,word);
+  }else if(version && (i->opcode&0x3f)==0x13){
+   i->op=S_ACTOR_CONFIG;
+   ok=val(code,len,&p,i,0x80,1)&&val(code,len,&p,i,0x40,1)&&arg(code,len,&p,i,S_IMM,1);
+   if(ok){i->subop=i->arg[2].value;
+    if(i->subop<1||i->subop>5){i->fault=S_OPCODE;return false;}
+    if(i->subop==2&&version==2){
+     i->payload_pc=p;i->payload_size=1;if(p>=len)ok=false;else ++p;
+    }else if(i->subop==3){
+     i->payload_pc=p;
+     while(p<len&&p-i->payload_pc<SCUMM_INSN_MAX-5&&code[p])++p;
+     if(p>=len||code[p])ok=false;else{i->payload_size=p-i->payload_pc;++p;}
+    }
+   }
+  }else if(version && base==0x0c){
+   i->op=S_RESOURCE;ok=val(code,len,&p,i,0x80,1)&&arg(code,len,&p,i,S_IMM,1);
+  }else if(base==0x42||base==0x62||(version&&base==0x4a)){
+   i->op=base==0x42?S_START_SCRIPT:base==0x62?S_STOP_SCRIPT:S_CHAIN_SCRIPT;
+   ok=val(code,len,&p,i,0x80,1);
+  }else if(version&&base==0x72){
+   i->op=S_LOAD_ROOM;ok=val(code,len,&p,i,0x80,1);
+  }else if((i->opcode&0x3f)==0x2d){
+   i->op=S_ACTOR_ROOM;ok=val(code,len,&p,i,0x80,1)&&val(code,len,&p,i,0x40,1);
+  }else if(version&&(base==0x5c||base==0x6b||base==0x6e)){
+   i->op=S_NOP;
+  }else if((i->opcode&0x1f)==1){
    i->op=S_PLACE;
    ok=val(code,len,&p,i,0x80,1)&&val(code,len,&p,i,0x40,1)&&val(code,len,&p,i,0x20,1);
   }else if(base==0x1a||base==0x5a||base==0x3a){
@@ -59,7 +145,8 @@ bool scumm_decode(unsigned version,const uint8_t *code,size_t len,uint32_t pc,Sc
        i->target=(int32_t)p+(raw<32768?(int32_t)raw:(int32_t)raw-65536);}
  }
  if(!ok){i->fault=S_TRUNCATED;return false;}
- i->next=(uint32_t)p;i->size=(uint8_t)(p-pc);return true;
+ if(p-pc>SCUMM_INSN_MAX){i->fault=S_TRUNCATED;return false;}
+ i->next=(uint32_t)p;i->size=(uint16_t)(p-pc);return true;
 }
 static bool value(unsigned version,const ScummState *s,const ScummArg *a,uint16_t *v)
 {
@@ -84,7 +171,7 @@ bool scumm_step(unsigned version,const uint8_t *code,size_t len,ScummState *s,Sc
 {
  ScummInsn i;uint16_t a=0,b=0,c=0;unsigned dest=0,actor=0;
  ScummActor before={0},after={0};bool scene=false,cond=true;uint32_t next;
- if(s->status==S_RETURN||s->status==S_FAULT)return false;
+ if(s->status==S_RETURN||s->status==S_FAULT||s->status==S_BLOCKED)return false;
  if(!scumm_decode(version,code,len,s->pc,&i))goto fault;
  next=i.next;
  if(i.count&&i.arg[0].kind==S_DEST)dest=i.arg[0].value;
@@ -108,9 +195,43 @@ bool scumm_step(unsigned version,const uint8_t *code,size_t len,ScummState *s,Sc
  case S_LE:cond=b<=a;break;
  case S_LT:cond=b<a;break;
  case S_GT:cond=b>a;break;
+ case S_MOVE_IND:case S_ADD_IND:case S_SUB_IND:
+  dest=s->vars[dest];if(dest>=256)goto badvar;
+  s->vars[dest]=i.op==S_MOVE_IND?b:i.op==S_ADD_IND?(uint16_t)(s->vars[dest]+b):(uint16_t)(s->vars[dest]-b);
+  break;
+ case S_RANGE:{
+  unsigned count=i.arg[1].value;
+  if(count>256-dest)goto badvar;
+  for(unsigned k=0;k<count;k++){
+   unsigned pos=i.payload_pc+k*i.subop;
+   uint16_t x=code[pos];if(i.subop==2)x|=(uint16_t)code[pos+1]<<8;
+   s->vars[dest+k]=x;
+  }
+  break;}
+ case S_ACTOR_CONFIG:
+  if(a==0&&i.subop==5&&b<=255){s->default_talk_color=(uint8_t)b;break;}
+  if(a==0||a>=SCUMM_ACTORS||b>255){i.fault=S_BAD_ACTOR;goto fault;}
+  actor=a;before=s->actors[actor];after=before;
+  switch(i.subop){
+  case 1:after.sound=(uint8_t)b;break;
+  case 2:{unsigned slot=version==1?a:code[i.payload_pc];
+   if(slot>=32){i.fault=S_BAD_ACTOR;goto fault;}
+   after.palette[slot]=(uint8_t)b;after.palette_known[slot]=1;break;}
+  case 3:after.name_pc=i.payload_pc;after.name_size=i.payload_size;break;
+  case 4:after.costume=(uint8_t)b;break;
+  case 5:after.talk_color=(uint8_t)b;break;
+  default:i.fault=S_OPCODE;goto fault;
+  }
+  s->actors[actor]=after;scene=memcmp(&before,&after,sizeof(before))!=0;break;
+ case S_RESOURCE:case S_START_SCRIPT:case S_STOP_SCRIPT:case S_CHAIN_SCRIPT:
+ case S_LOAD_ROOM:case S_ACTOR_ROOM:case S_CUTSCENE:case S_CURSOR:
+ case S_LIGHTS:case S_ANIMATE:case S_WALK:case S_PRINT:case S_VERB:case S_OVERRIDE:
+  /* Decoded external effects are not committed or retired without a runtime. */
+  s->status=S_BLOCKED;s->fault_opcode=i.opcode;return false;
+ case S_NOP:break;
  case S_PLACE:
   if(a==0||a>=SCUMM_ACTORS){i.fault=S_BAD_ACTOR;goto fault;}
-  actor=a;before=s->actors[actor];after=(ScummActor){b,c,1};
+  actor=a;before=s->actors[actor];after=before;after.x=b;after.y=c;after.bound=1;
   s->actors[actor]=after;scene=before.x!=after.x||before.y!=after.y||before.bound!=after.bound;break;
  case S_STOP:case S_YIELD:break;
  default:i.fault=S_OPCODE;goto fault;
