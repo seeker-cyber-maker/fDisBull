@@ -81,6 +81,17 @@ class QemuLayerSessionMixin:
         if not (0 <= address < end <= 0xa0000 or 0x100000 <= address < end <= ram_end):
             raise ValueError('Layer backing must be conventional or extended PC RAM')
 
+    def _layer_execute_extent(self, address, length):
+        """Admit low RAM or capability-backed high RAM for execute overlays."""
+        from .qemu_ram import high_ram_end
+        high_end = high_ram_end(self.vm.machine_configuration)
+        if (type(address) is int and type(length) is int and length > 0
+                and high_end is not None and 2**32 <= address < address + length <= high_end):
+            if 'x-fdisbull-layer-observe-physical64' not in getattr(self.vm, 'qmp_commands', ()):
+                raise ValueError('High execution layers require native physical64 support')
+            return
+        self._layer_ram_extent(address, length)
+
     def _layer_spans(self, address, length, space, cs=None):
         if type(length) is not int or not 1 <= length <= MAX_BYTES:
             raise ValueError('Layer length must be 1..65536')
@@ -192,7 +203,11 @@ class QemuLayerSessionMixin:
         return linear, None, spans, registers['address_state'], verify, baseline
 
     def _layer_native_observe(self, **extent):
-        result = self.vm.qmp.call('x-fdisbull-layer-observe', extent or None)
+        physical64 = extent.get('address', 0) >= 2**32
+        if physical64 and 'x-fdisbull-layer-observe-physical64' not in getattr(self.vm, 'qmp_commands', ()):
+            raise ValueError('High execution observation requires native physical64 support')
+        command = 'x-fdisbull-layer-observe-physical64' if physical64 else 'x-fdisbull-layer-observe'
+        result = self.vm.qmp.call(command, extent or None)
         valid_fault = isinstance(result, dict) and isinstance(result.get('fault'), str) and result['fault']
         expected_count = 0 if valid_fault else len(self._layer_exec)
         if (not isinstance(result, dict) or type(result.get('generation')) is not int
@@ -269,6 +284,11 @@ class QemuLayerSessionMixin:
         for definition in definitions:
             for patch in definition['patches']:
                 addresses = self._layer_positions(definition, patch)
+                if any(a >= 2**32 for a in addresses):
+                    if definition['kind'] != 'execute':
+                        raise ValueError('High RAM layer writes are unsupported')
+                    for span in groups(addresses):
+                        self._layer_execute_extent(span[0], len(span))
                 before = bytes.fromhex(patch['expected_hex'])
                 after = bytes.fromhex(patch['data_hex'])
                 if len(addresses) != len(before) or len(before) != len(after):
@@ -363,7 +383,16 @@ class QemuLayerSessionMixin:
             raise ValueError('A layer cannot resize memory')
         if space is None:
             space = 'source' if hasattr(self, '_process') else 'linear'
-        linear, static, spans, _ = self._layer_spans(address, len(before), space)
+        try:
+            linear, static, spans, _ = self._layer_spans(address, len(before), space)
+        except _UnsupportedLayerMapping:
+            if not (kind == 'execute' and space == 'linear' and self.backend_id == 'qemu-dos'
+                    and 'x-fdisbull-layer-observe-physical64' in self.vm.qmp_commands):
+                raise
+            linear, static, spans, _, verify, _ = self._capture_linear_spans(address, len(before), None)
+            for start, count in spans:
+                self._layer_execute_extent(start, count)
+            verify()
         patch = dict(address=hex(linear if static is None else static), expected_hex=before.hex(), data_hex=after.hex())
         if space == 'source':
             result = self.project.debug_layer(name, kind=kind, patches=[patch], version=self.version['id'])
@@ -401,7 +430,16 @@ class QemuLayerSessionMixin:
                 raise
             linear, static, spans, state, verify, baseline = self._capture_linear_spans(address, length, cs)
         empty_overlay_witness = None
-        if verify is not None and view == 'execute' and any(start >= 2**32 for start, _ in spans):
+        high_native = (verify is not None and view == 'execute'
+                       and any(start >= 2**32 for start, _ in spans)
+                       and 'x-fdisbull-layer-observe-physical64' in getattr(self.vm, 'qmp_commands', ()))
+        if high_native:
+            from .qemu_runtime_capture import _qemu_input_hashes
+            empty_overlay_witness = dict(method='native-physical64-execution-overlay',
+                                         generation=initial_layers['generation'],
+                                         execution_bytes=initial_layers['execution-bytes'],
+                                         qemu_image_sha256=_qemu_input_hashes(self.vm.inputs).get('qemu_image'))
+        if not high_native and verify is not None and view == 'execute' and any(start >= 2**32 for start, _ in spans):
             from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE
             from .qemu_runtime_capture import _qemu_input_hashes
 
@@ -428,7 +466,7 @@ class QemuLayerSessionMixin:
             ram = remote.memory(start, count, space='physical')
             if baseline is not None and ram != baseline[len(observed):len(observed) + count]:
                 raise ValueError('Paged capture RAM changed during observation')
-            if view == 'ram' or (empty_overlay_witness is not None and start >= 2**32):
+            if view == 'ram' or (empty_overlay_witness is not None and not high_native and start >= 2**32):
                 observed.extend(ram)
                 continue
             expected = bytearray(ram)
@@ -444,7 +482,7 @@ class QemuLayerSessionMixin:
             observed.extend(expected)
         if verify is not None:
             verify()
-        if empty_overlay_witness is not None and self._layer_native_observe() != initial_layers:
+        if (empty_overlay_witness is not None or high_native) and self._layer_native_observe() != initial_layers:
             raise DebuggerError('Native execution overlay changed during capture')
         bits = state['code_bits']
         instructions = []

@@ -21,6 +21,9 @@ def run(stage, phase):
     rt = os.environ
 
     owners = []
+    overlay_ids = []
+    view_bytes = {}
+    native_overlay_reads = {}
     with Project.create(database, source, image="mz") if phase == "before" else Project(database) as project:
         with project.debugger(
             rt["FDISBULL_QEMU_DOS"], source.parent, _on_spawn=owners.append, **options
@@ -39,6 +42,37 @@ def run(stage, phase):
                 debug.delete_breakpoint(bp)
                 for _ in range(cfg["checkpoint_index"]):
                     assert debug.step()["outcome"] == "step"
+                overlay_ids = []
+                if cfg.get("active_high_overlay"):
+                    target = cfg["second_target"]
+                    high = debug.vm.debugger().memory(target, 2, space="physical")
+                    assert high == b"\x46\xcb"
+                    target_pc = int(debug.registers()["linear_pc"], 16)
+                    patched = debug.layer_patch(
+                        "High-backed execute overlay", hex(target_pc), expected_hex="46",
+                        data_hex="4e", kind="execute", space="linear",
+                    )
+                    spans = patched["native_binding"]["spans"]
+                    assert spans == [(target, 1)] or spans == [[target, 1]]
+                    overlay_ids.append(patched["layer"])
+                    low_address = cfg.get(
+                        "low_overlay_address", cfg["second_target"] & 0xFFFFFFFF
+                    )
+                    low_before = debug.vm.debugger().memory(low_address, 1, space="physical")
+                    low_after = bytes((low_before[0] ^ 0xFF,))
+                    low = debug.layer_patch(
+                        "Wrapped low physical execute overlay", hex(low_address),
+                        expected_hex=low_before.hex(), data_hex=low_after.hex(),
+                        kind="execute", space="physical",
+                    )
+                    overlay_ids.append(low["layer"])
+                    assert debug.layers()["active"] == overlay_ids
+                    assert debug.vm.debugger().memory(low_address, 1, space="physical") == low_before
+                    low_ram = debug.code(low_address, length=1, view="ram", space="physical")
+                    assert low_ram["hex"] == low_before.hex()
+                    low_execute = debug.code(low_address, length=1, view="execute", space="physical")
+                    assert low_execute["hex"] == low_after.hex()
+                    assert low_execute["active_layers"] == overlay_ids
                 checkpoint = debug.save_machine_state()["artifact"]
             else:
                 previous = json.loads((stage / "qemu-capture-before.json").read_text())
@@ -46,6 +80,51 @@ def run(stage, phase):
                 restored = debug.load_machine_state(checkpoint, timeout_ms=60000)
                 assert restored["machine_state_restored"]
                 assert not restored["protected_source_rebound"]
+                saved_overlay_ids = previous.get("overlay_ids", [])
+                layer_map = restored.get("controls", {}).get("layers", {})
+                overlay_ids = [layer_map[layer] for layer in saved_overlay_ids]
+                # First stopped observation after direct cold restore: no layer reapply.
+                assert debug.layers()["active"] == overlay_ids
+
+            if cfg.get("active_high_overlay"):
+                low_address = cfg.get(
+                    "low_overlay_address", cfg["second_target"] & 0xFFFFFFFF
+                )
+                low_base = debug.vm.debugger().memory(low_address, 1, space="physical")
+                low_info = debug.layers()
+                low_layer = next(
+                    layer for layer in low_info["layers"] if layer["id"] == overlay_ids[1]
+                )
+                assert low_layer["patches"][0]["expected_hex"] == low_base.hex()
+                assert low_layer["patches"][0]["data_hex"] == bytes((low_base[0] ^ 0xFF,)).hex()
+                assert debug.vm.debugger().memory(low_address, 1, space="physical") == low_base
+                low_ram = debug.code(low_address, length=1, view="ram", space="physical")
+                assert low_ram["hex"] == low_base.hex()
+                low_execute = debug.code(low_address, length=1, view="execute", space="physical")
+                assert low_execute["hex"] == low_layer["patches"][0]["data_hex"]
+                assert low_execute["active_layers"] == overlay_ids
+                def native_observe(address, length):
+                    return debug.vm.qmp.call(
+                        "x-fdisbull-layer-observe-physical64",
+                        {"address": address, "length": length},
+                    )
+
+                high_native = native_observe(cfg["second_target"], 2)
+                wrapped_native = native_observe(
+                    cfg["second_target"] & 0xFFFFFFFF, 2
+                )
+                low_native = native_observe(low_address, 1)
+                assert high_native["data-hex"] == "4ecb"
+                assert wrapped_native["data-hex"] == "f00b"
+                assert low_native["data-hex"] == low_layer["patches"][0]["data_hex"]
+                for observed in (high_native, wrapped_native, low_native):
+                    assert observed["generation"] == low_info["generation"]
+                    assert observed["execution-bytes"] == 2
+                native_overlay_reads = dict(
+                    high=high_native,
+                    poisoned_wrapped_low=wrapped_native,
+                    wrapped_low_overlay=low_native,
+                )
 
             assert not debug.dos_source_binding()["live"]
             before = debug.registers()
@@ -71,6 +150,14 @@ def run(stage, phase):
             after = debug.registers()
             assert after == before
             assert not debug.dos_source_binding()["live"]
+            trial = trial_registers = None
+            if cfg.get("active_high_overlay"):
+                trial = debug.step()
+                assert trial["outcome"] == "step"
+                trial_registers = debug.registers()
+                esi_before = integer(before["registers"]["rsi"]) & 0xFFFFFFFF
+                esi_after = integer(trial_registers["registers"]["rsi"]) & 0xFFFFFFFF
+                assert esi_after == (esi_before - 1) & 0xFFFFFFFF
 
     exit_codes = [owner.poll() for owner in owners]
     assert exit_codes and all(code == 0 for code in exit_codes), exit_codes
@@ -82,13 +169,33 @@ def run(stage, phase):
     export_receipts = {}
     with Project(database) as offline:
         for view, artifact in captures.items():
-            analyses[view] = offline.debug_analyze_le_code(artifact)
+            analyses[view] = (
+                None if cfg.get("active_high_overlay")
+                else offline.debug_analyze_le_code(artifact)
+            )
             exported = stage / f"{phase}-{view}-capture-export.json"
             receipt = offline.debug_export(artifact, exported)
             assert receipt["artifact"] == artifact and receipt["size"] > 0
             assert receipt["sha256"] == hashlib.sha256(exported.read_bytes()).hexdigest()
             payloads[view] = json.loads(exported.read_bytes())
             export_receipts[view] = receipt
+        if cfg.get("active_high_overlay"):
+            for view in ("ram", "execute"):
+                assert payloads[view]["active_layers"] == overlay_ids
+                assert payloads[view]["space"] == "linear"
+                view_bytes[view] = payloads[view]["hex"][:4]
+            assert view_bytes == {"ram": "46cb", "execute": "4ecb"}
+            assert all(
+                capture_metadata[view].get("static_promotion") == "unqualified"
+                for view in ("ram", "execute")
+            )
+            for artifact in captures.values():
+                try:
+                    offline.debug_promote_code(artifact)
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("Active-layer high capture was promoted to source")
         assert len(offline.versions()) == 1
     result = dict(
         checkpoint=checkpoint,
@@ -103,6 +210,14 @@ def run(stage, phase):
         target_pc=target_pc,
         source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
         restored_in_fresh_process=phase == "after",
+        overlay_ids=overlay_ids,
+        view_bytes=view_bytes,
+        native_overlay_reads=native_overlay_reads,
+        overlay_step=(dict(
+            outcome=trial["outcome"],
+            esi_before=integer(before["registers"]["rsi"]) & 0xFFFFFFFF,
+            esi_after=integer(trial_registers["registers"]["rsi"]) & 0xFFFFFFFF,
+        ) if cfg.get("active_high_overlay") else None),
     )
     assert result["source_sha256"] == cfg["sha256"]
     (stage / f"qemu-capture-{phase}.json").write_text(json.dumps(result, indent=2))

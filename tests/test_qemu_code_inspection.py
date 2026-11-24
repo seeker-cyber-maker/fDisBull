@@ -278,3 +278,63 @@ def test_low_execute_still_observes_each_native_extent():
     session._layer_native_observe = observe
     session.capture_code('0fff:0110', length=3, view='execute')
     assert calls == [{}, {'address': 0x20100, 'length': 3}]
+
+
+def test_high_execute_reads_native_overlay_with_active_low_and_high_bytes():
+    import json
+    session = HighPAESession()
+    session.vm.qmp_commands = {'x-fdisbull-layer-observe-physical64'}
+    session._layer_exec = {0x1234: 0xcc, 0x100001fff: 0xcc}
+    session._layer_exec_base = {0x1234: 0x90, 0x100001fff: 0x90}
+    original = session.qmp_call
+    def qmp(command, extent=None):
+        if command != 'x-fdisbull-layer-observe-physical64':
+            return original(command, extent)
+        data = bytearray(session.memory(extent['address'], extent['length'], space='physical'))
+        for i in range(len(data)):
+            data[i] = session._layer_exec.get(extent['address'] + i, data[i])
+        return {'generation': 4, 'execution-bytes': 2, 'data-hex': data.hex()}
+    session.vm.qmp.call = qmp
+    result = session.capture_code(0x40000ffe, length=4, space='linear')
+    payload = json.loads(result[2])
+    assert payload['hex'] == '90cc90c3'
+    assert payload['execute_view_witness'] == {
+        'method': 'native-physical64-execution-overlay', 'generation': 4,
+        'execution_bytes': 2, 'qemu_image_sha256': session.vm.inputs['qemu_image']['sha256']}
+    session.vm.qmp.call = lambda command, extent=None: (
+        {'generation': 4, 'execution-bytes': 2, 'data-hex': '9090'}
+        if command == 'x-fdisbull-layer-observe-physical64' else original(command, extent))
+    from fdisbull.dosbox_rpc import DebuggerError
+    with pytest.raises(DebuggerError, match='effective instruction fetch'):
+        session.capture_code(0x40000ffe, length=4, space='linear')
+    assert len(session.artifacts) == 1
+
+
+def test_high_execute_observes_with_only_low_overlay_active():
+    import json
+    session = HighPAESession()
+    session.vm.qmp_commands = {'x-fdisbull-layer-observe-physical64'}
+    session._layer_exec = {0x1234: 0xcc}
+    session._layer_exec_base = {0x1234: 0x90}
+    original = session.qmp_call
+    def qmp(command, extent=None):
+        if command == 'x-fdisbull-layer-observe-physical64':
+            return {'generation': 4, 'execution-bytes': 1,
+                    'data-hex': session.memory(extent['address'], extent['length'], space='physical').hex()}
+        return original(command, extent)
+    session.vm.qmp.call = qmp
+    assert json.loads(session.capture_code(0x40000ffe, length=4, space='linear')[2])['hex'] == '909090c3'
+
+
+def test_high_translated_execute_patch_binds_checked_physical_spans():
+    session = HighPAESession()
+    session.vm.qmp_commands = {'x-fdisbull-layer-observe-physical64'}
+    session.run_id = 'run'
+    session.version = {'id': 'version'}
+    session.project._store_debug_layer = lambda name, version, definition: definition
+    definition = session.layer_patch('high', 0x40000ffe, expected_hex='909090c3',
+                                     data_hex='90cc90c3', kind='execute', activate=False, space='linear')
+    assert definition['native_binding']['spans'] == [(0x100001ffe, 2), (0x100003000, 2)]
+    with pytest.raises(ValueError, match='unsupported'):
+        session.layer_patch('high', 0x40000ffe, expected_hex='909090c3',
+                            data_hex='90cc90c3', kind='ram', activate=False, space='linear')

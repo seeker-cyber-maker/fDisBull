@@ -1,0 +1,211 @@
+--- a/system/fdisbull-layers.c
++++ b/system/fdisbull-layers.c
+@@ -90,13 +90,13 @@
+     return true;
+ }
+ 
+-static bool resolve_ram_byte(uint64_t physical, ResolvedByte *resolved,
+-                             Error **errp)
++static bool resolve_ram_byte_mode(uint64_t physical, ResolvedByte *resolved,
++                                  bool allow_high, Error **errp)
+ {
+     MemoryRegion *mr;
+     hwaddr offset, length = 1;
+ 
+-    if (physical > 0xffffffff) {
++    if (!allow_high && physical > 0xffffffff) {
+         layer_precondition(errp, "only 32-bit guest physical RAM is supported");
+         return false;
+     }
+@@ -115,6 +115,12 @@
+     return true;
+ }
+ 
++static bool resolve_ram_byte(uint64_t physical, ResolvedByte *resolved, Error **errp)
++{
++    return resolve_ram_byte_mode(physical, resolved, false, errp);
++}
++
++
+ static bool parse_hex(const char *hex, GByteArray **bytes, Error **errp)
+ {
+     size_t length;
+@@ -143,7 +149,7 @@
+ }
+ 
+ static bool parse_patches(FdisbullLayerPatchList *patches, GHashTable *before,
+-                          GHashTable *after, size_t *total, Error **errp)
++                          GHashTable *after, size_t *total, bool allow_high, Error **errp)
+ {
+     unsigned count = 0;
+ 
+@@ -178,7 +184,7 @@
+         }
+         for (size_t i = 0; i < old_bytes->len; i++) {
+             ResolvedByte resolved;
+-            if (!resolve_ram_byte(patch->address + i, &resolved, errp) ||
++            if (!resolve_ram_byte_mode(patch->address + i, &resolved, allow_high, errp) ||
+                 !byte_map_put(before, patch->address + i, old_bytes->data[i], errp) ||
+                 !byte_map_put(after, patch->address + i, new_bytes->data[i], errp)) {
+                 return false;
+@@ -214,7 +220,7 @@
+ }
+ 
+ static bool patch_preflight(GHashTable *before, GHashTable *ram_after,
+-                            Error **errp)
++                            bool allow_high, Error **errp)
+ {
+     GHashTableIter iter;
+     gpointer key, value;
+@@ -226,7 +232,7 @@
+         ResolvedByte resolved;
+         uint8_t replacement, actual;
+ 
+-        if (!resolve_ram_byte(address, &resolved, errp)) {
++        if (!resolve_ram_byte_mode(address, &resolved, allow_high, errp)) {
+             return false;
+         }
+         actual = *resolved.host;
+@@ -287,8 +293,8 @@
+     if (!cpu_stopped_single_tcg(&single_cpu, errp)) {
+         return NULL;
+     }
+-    if (!parse_patches(ram, ram_before, ram_after, &ram_total, errp) ||
+-        !parse_patches(execute, exec_before, exec_after, &exec_total, errp)) {
++    if (!parse_patches(ram, ram_before, ram_after, &ram_total, false, errp) ||
++        !parse_patches(execute, exec_before, exec_after, &exec_total, true, errp)) {
+         return NULL;
+     }
+ 
+@@ -322,7 +328,7 @@
+         while (g_hash_table_iter_next(&iter, &key, &value)) {
+             ResolvedByte resolved;
+             uint64_t physical = *(uint64_t *)key;
+-            if (!resolve_ram_byte(physical, &resolved, errp) ||
++            if (!resolve_ram_byte_mode(physical, &resolved, true, errp) ||
+                 !byte_map_put(expected_internal, resolved.ram_addr,
+                               GPOINTER_TO_UINT(value) - 1, errp)) {
+                 qemu_mutex_unlock(&layers.lock);
+@@ -330,8 +336,8 @@
+             }
+         }
+     }
+-    if (!patch_preflight(ram_before, NULL, errp) ||
+-        !patch_preflight(exec_before, ram_after_internal, errp)) {
++    if (!patch_preflight(ram_before, NULL, false, errp) ||
++        !patch_preflight(exec_before, ram_after_internal, true, errp)) {
+         qemu_mutex_unlock(&layers.lock);
+         return NULL;
+     }
+@@ -343,7 +349,7 @@
+         while (g_hash_table_iter_next(&iter, &key, &value)) {
+             ResolvedByte resolved;
+             uint64_t physical = *(uint64_t *)key;
+-            if (!resolve_ram_byte(physical, &resolved, errp)) {
++            if (!resolve_ram_byte_mode(physical, &resolved, true, errp)) {
+                 qemu_mutex_unlock(&layers.lock);
+                 return NULL;
+             }
+@@ -361,7 +367,7 @@
+         while (g_hash_table_iter_next(&iter, &key, NULL)) {
+             ResolvedByte resolved;
+             uint64_t physical = *(uint64_t *)key;
+-            g_assert(resolve_ram_byte(physical, &resolved, NULL));
++            g_assert(resolve_ram_byte_mode(physical, &resolved, true, NULL));
+             memory_region_reset_dirty(resolved.mr,
+                                       resolved.offset & ~(LAYER_X86_PAGE_SIZE - 1),
+                                       LAYER_X86_PAGE_SIZE, DIRTY_MEMORY_CODE);
+@@ -374,7 +380,7 @@
+         while (g_hash_table_iter_next(&iter, &key, NULL)) {
+             ResolvedByte resolved;
+             uint64_t physical = *(uint64_t *)key;
+-            g_assert(resolve_ram_byte(physical, &resolved, NULL));
++            g_assert(resolve_ram_byte_mode(physical, &resolved, true, NULL));
+             tlb_reset_dirty(single_cpu,
+                             resolved.ram_addr & ~(LAYER_X86_PAGE_SIZE - 1),
+                             LAYER_X86_PAGE_SIZE);
+@@ -402,9 +408,9 @@
+     return result;
+ }
+ 
+-FdisbullLayerObserveInfo *qmp_x_fdisbull_layer_observe(
++static FdisbullLayerObserveInfo *layer_observe(
+     bool has_address, uint64_t address, bool has_length, uint16_t length,
+-    Error **errp)
++    bool allow_high, Error **errp)
+ {
+     FdisbullLayerObserveInfo *result;
+     g_autofree char *hex = NULL;
+@@ -421,12 +427,16 @@
+         layer_precondition(errp, "observe requires both address and length from 1..4096");
+         return NULL;
+     }
++    if (has_length && address > UINT64_MAX - (length - 1)) {
++        layer_precondition(errp, "observe address overflows");
++        return NULL;
++    }
+     if (has_length) {
+         resolved = g_new0(ResolvedByte, length);
+         data = g_malloc(length);
+         for (unsigned i = 0; i < length; i++) {
+             if (address > UINT64_MAX - i ||
+-                !resolve_ram_byte(address + i, &resolved[i], errp)) {
++                !resolve_ram_byte_mode(address + i, &resolved[i], allow_high, errp)) {
+                 g_free(resolved);
+                 g_free(data);
+                 return NULL;
+@@ -442,6 +452,16 @@
+         for (unsigned i = 0; i < length; i++) {
+             uint8_t value;
+             if (byte_map_get(layers.execute, resolved[i].ram_addr, &value)) {
++                uint8_t expected;
++                if (allow_high &&
++                    (!byte_map_get(layers.expected, resolved[i].ram_addr, &expected) ||
++                     data[i] != expected)) {
++                    qemu_mutex_unlock(&layers.lock);
++                    g_free(resolved);
++                    g_free(data);
++                    layer_precondition(errp, "underlying execute byte changed before observation");
++                    return NULL;
++                }
+                 data[i] = value;
+             }
+             hex[i * 2] = digits[data[i] >> 4];
+@@ -464,6 +484,19 @@
+     return result;
+ }
+ 
++FdisbullLayerObserveInfo *qmp_x_fdisbull_layer_observe(
++    bool has_address, uint64_t address, bool has_length, uint16_t length,
++    Error **errp)
++{
++    return layer_observe(has_address, address, has_length, length, false, errp);
++}
++
++FdisbullLayerObserveInfo *qmp_x_fdisbull_layer_observe_physical64(
++    uint64_t address, uint16_t length, Error **errp)
++{
++    return layer_observe(true, address, true, length, true, errp);
++}
++
+ void fdisbull_layers_copy_code(void *dest, const void *host, size_t length)
+ {
+     uint8_t *output = dest;
+--- a/qapi/fdisbull-layers.json
++++ b/qapi/fdisbull-layers.json
+@@ -65,3 +65,15 @@
+ { 'command': 'x-fdisbull-layer-observe',
+   'data': { '*address': 'uint64', '*length': 'uint16' },
+   'returns': 'FdisbullLayerObserveInfo' }
++
++##
++# @x-fdisbull-layer-observe-physical64:
++# Read the effective fetch bytes from direct RAM at a physical address.
++# This command also advertises high-address execute-layer configuration.
++#
++# @address: guest physical start address
++# @length: byte count, from 1 through 4096
++##
++{ 'command': 'x-fdisbull-layer-observe-physical64',
++  'data': { 'address': 'uint64', 'length': 'uint16' },
++  'returns': 'FdisbullLayerObserveInfo' }

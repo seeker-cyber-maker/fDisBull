@@ -1,5 +1,41 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## High-backed execute capture with active overlays (2026-11-24)
+
+The physical64 QEMU candidate captured an active execute overlay at the
+stopped LE instruction `000c:1400` while a different overlay was active at
+its wrapped 32-bit alias. The three fixtures placed the instruction at
+`0x100810400` (4 KiB PAE), `0x100a01400` (2 MiB PAE), and `0x100c01400`
+(4 MiB PSE-36). Each execute layer was bound by translating the guest linear
+address to its physical backing before activation.
+
+| Stopped observation | High instruction | Wrapped low alias |
+| --- | --- | --- |
+| Underlying RAM | `46 cb` | `0f 0b` |
+| Native execute view | `4e cb` | `f0 0b` |
+
+For each mapping, the public debugger exported 15 bytes from both views before
+and after unprimed cold restore. All 12 captures matched the independent Bochs
+comparison. Bochs's original CPU, page tables and saved RAM supplied the raw
+reference. After saving the raw state, each Bochs owner substituted `4e` at
+the high physical byte in its own RAM. QEMU and Bochs both executed `DEC ESI`
+and decremented ESI by one in all six paired instruction steps.
+
+Each receiving QEMU process started in real mode with paging, PSE and PAE off.
+Restoring the checkpoint reconstructed both execution layers before the first
+capture, with fresh layer IDs bound to the receiver's epoch. The stopped
+registers matched the producer's. Each layered artifact records its active
+layer IDs, and the execute view identifies the native observer, binary,
+generation and override count. These artifacts are runtime observations.
+
+The native command refused stale backing, a read outside the high RAM bank,
+and a wrapping address range. A separate control confirmed high RAM layer
+writes are still refused. Eager notification of every guest write to an
+already-dirty page remains unqualified. The previous QEMU binary retains
+its empty-overlay capture path. DOSBox-X remains the default. See the
+[local reference procedure](../native/bochs-pae-reference/README.md#compare-active-execute-overlays)
+and the [native candidate manifest](../native/qemu-high-execute/source-manifest.json).
+
 ## One-shot high-backed LE capture (2026-11-24)
 
 The public QEMU-DOS debugger captured a 15-byte linear extent from the same

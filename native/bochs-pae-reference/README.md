@@ -111,3 +111,19 @@ entries with Bochs's debugger and saved state. The low 32-bit aliases contain
 a distinct instruction. Keep the private guest images, project databases and
 native checkpoints outside Git. See the [verified scope and overlay
 limits](../../docs/DOS_QEMU_HANDOFF.md#one-shot-high-backed-le-capture-2026-11-24).
+
+### Compare active execute overlays
+
+Select the QEMU binary built with the [physical64 extension](../qemu-high-execute/README.md)
+and the Bochs reference above. To run just the three active-overlay comparisons,
+use the following command.
+
+```sh
+python -m pytest -q tests/test_qemu_dos_capture_code_pae_bochs_native.py -k high_execute_overlay
+```
+
+QEMU installs an execute layer at the instruction's high backing and a second
+execute layer at its wrapped low alias. Each Bochs owner saves or observes its
+untouched checkpoint before substituting the high byte in reference RAM and
+stepping one instruction. The paired test compares the full original and
+substituted windows, the stopped addresses, and the relative change in ESI.

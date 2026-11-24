@@ -178,3 +178,96 @@ def test_one_shot_capture_code_matches_bochs_saved_high_checkpoint(
         assert all(address & 0xFFFFFFFF in cfg["low_aliases"] for address in backed)
 
     assert hashlib.sha256(Path(cfg["source"]).read_bytes()).hexdigest() == cfg["sha256"]
+
+
+@pytest.mark.parametrize(("paging_mode", "expected_page_size"), MODES)
+def test_high_execute_overlay_and_native_views_survive_unprimed_cold_restore(
+    tmp_path, process_runtime, paging_mode, expected_page_size
+):
+    """Keep RAM, execute overlay, PAE/PSE-36 backing, and Bochs evidence distinct."""
+    if not all(
+        os.environ.get(name)
+        for name in ("FDISBULL_BOCHS", "FDISBULL_QEMU_DOS", "FDISBULL_QEMU_IMG")
+    ):
+        pytest.skip("Select independent Bochs and QEMU machine checkpoint profiles")
+    assert Path(os.environ["FDISBULL_BOCHS"]).resolve() != Path(
+        os.environ["FDISBULL_QEMU_DOS"]
+    ).resolve()
+
+    cfg = prepare(tmp_path, process_runtime, paging_mode)
+    cfg.update(
+        boundaries=cfg["checkpoint_index"] + 1,
+        active_high_overlay=True,
+        low_overlay_address=cfg["second_target"] & 0xFFFFFFFF,
+    )
+    (tmp_path / "config.json").write_text(json.dumps(cfg, indent=2))
+    assert hashlib.sha256(Path(cfg["source"]).read_bytes()).hexdigest() == cfg["sha256"]
+
+    # Preserve independent, unmodified Bochs observations before doing the
+    # reference-only RAM substitution trial.
+    bochs, bochs_cold = phases(tmp_path, "bochs", timeout=300)
+    before, after = capture_phases(tmp_path)
+    verify_saved_high_checkpoint(
+        tmp_path, cfg, bochs, bochs_cold, captures=(before, after), views=("ram",)
+    )
+    assert bochs["events"][cfg["checkpoint_index"]] == bochs_cold["events"][0]
+    assert bochs_cold["events"][0]["page_size"] == expected_page_size
+    assert before["checkpoint"] == after["checkpoint"]
+    assert before["stopped_registers"] == after["stopped_registers"]
+    assert set(before["overlay_ids"]).isdisjoint(after["overlay_ids"])
+
+    for result in (before, after):
+        assert result["source_sha256"] == cfg["sha256"]
+        assert result["restored_in_fresh_process"] is (result is after)
+        assert result["overlay_ids"] and len(result["overlay_ids"]) == 2
+        assert result["view_bytes"] == {"ram": "46cb", "execute": "4ecb"}
+        native_witness = result["payloads"]["execute"]["execute_view_witness"]
+        assert native_witness["method"] == "native-physical64-execution-overlay"
+        assert native_witness["execution_bytes"] == 2
+        assert native_witness["qemu_image_sha256"] == hashlib.sha256(
+            Path(os.environ["FDISBULL_QEMU_DOS"]).resolve().read_bytes()
+        ).hexdigest()
+        assert result["native_overlay_reads"]["high"]["data-hex"] == "4ecb"
+        assert result["native_overlay_reads"]["poisoned_wrapped_low"]["data-hex"] == "f00b"
+        assert result["native_overlay_reads"]["wrapped_low_overlay"]["data-hex"] == "f0"
+        assert result["overlay_step"]["esi_after"] == (
+            result["overlay_step"]["esi_before"] - 1
+        ) & 0xFFFFFFFF
+        assert result["alias_reads"] == [
+            {"address": address, "high": "46cb", "low": "0f0b"}
+            for address in (cfg["first_target"], cfg["second_target"])
+        ]
+        assert set(result["artifacts"]) == {"execute", "ram"}
+        for view in ("execute", "ram"):
+            payload = result["payloads"][view]
+            assert payload["active_layers"] == result["overlay_ids"]
+            assert payload["length"] == 15
+            assert result["capture_metadata"][view]["static_promotion"] == "unqualified"
+            assert "offline_analysis" not in result["capture_metadata"][view]
+            assert payload["hex"][:4] == result["view_bytes"][view]
+            assert any(
+                int(row["physical_address"], 16) > 0xFFFFFFFF
+                for row in payload["backing"]
+            )
+        assert result["payloads"]["ram"]["hex"][:4] == "46cb"
+        assert result["payloads"]["execute"]["hex"][:4] == "4ecb"
+
+    for result in (bochs, bochs_cold):
+        event = result["events"][cfg["checkpoint_index"]] if result is bochs else result["events"][0]
+        assert event["hex"] == "46"
+        assert event["capture_window"]["hex"].startswith("46cb")
+        assert any(page["physical"] > 0xFFFFFFFF for page in event["mmu_pages"])
+
+    # Bochs performs reference-only setpmem trials in each original owner after
+    # collecting its untouched checkpoint observation.
+    reference_trials = [bochs["overlay_trial"], bochs_cold["overlay_trial"]]
+    assert all(trial["reference_only"] for trial in reference_trials)
+    assert all(trial["esi_delta"] == 0xFFFFFFFF for trial in reference_trials)
+    for trial, qemu_result in zip(reference_trials, (before, after), strict=True):
+        assert trial["original_window"] == bochs["events"][cfg["checkpoint_index"]]["capture_window"]["hex"]
+        assert trial["substituted_window"] == qemu_result["payloads"]["execute"]["hex"]
+        assert trial["esi_delta"] == (
+            qemu_result["overlay_step"]["esi_after"]
+            - qemu_result["overlay_step"]["esi_before"]
+        ) & 0xFFFFFFFF
+    assert hashlib.sha256(Path(cfg["source"]).read_bytes()).hexdigest() == cfg["sha256"]

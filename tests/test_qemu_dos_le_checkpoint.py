@@ -310,3 +310,33 @@ def test_second_completion_event_failure_rolls_back_both_events_and_never_thaws(
         checkpoint.load_le_source_state(s, prepared['artifact'])
     assert s.closed and s.thawed == 0 and o.spawned[0].closed
     assert o.project.db.execute("SELECT count(*) FROM debug_events WHERE operation IN ('load-machine-state','load-le-source-state')").fetchone()[0] == 0
+
+
+def test_exact_baseline_companion_restores_with_current_reader(source, monkeypatch):
+    o, s = source, source.session
+    current = checkpoint._producer()
+    with monkeypatch.context() as previous:
+        previous.setattr(checkpoint, '_producer', lambda: deepcopy(checkpoint._BASELINE_PRODUCER))
+        saved = checkpoint.save_le_source_state(s)
+    prepared = checkpoint.read_le_source_state(s, saved['artifact'])
+    assert prepared['document']['producer'] == checkpoint._BASELINE_PRODUCER
+    assert prepared['reader_producer'] == current
+    result = checkpoint.load_le_source_state(s, saved['artifact'])
+    assert result['le_source_checkpoint_restored'] is True
+    new = checkpoint.save_le_source_state(s)
+    assert checkpoint.read_le_source_state(s, new['artifact'])['document']['producer'] == current
+    modified = deepcopy(checkpoint._BASELINE_PRODUCER)
+    modified['le.py'] = '0' * 64
+    assert not checkpoint._compatible_producer(modified, current)
+
+
+def test_baseline_companion_restore_rejects_reader_drift(source, monkeypatch):
+    o, s = source, source.session
+    with monkeypatch.context() as previous:
+        previous.setattr(checkpoint, '_producer', lambda: deepcopy(checkpoint._BASELINE_PRODUCER))
+        saved = checkpoint.save_le_source_state(s)
+    prepared = checkpoint.read_le_source_state(s, saved['artifact'])
+    changed = dict(checkpoint._producer(), **{'le.py': '0' * 64})
+    monkeypatch.setattr(checkpoint, '_producer', lambda: changed)
+    with pytest.raises(ValueError, match='producer changed before restore'):
+        checkpoint.complete_le_restore(s, prepared, {'live': True})

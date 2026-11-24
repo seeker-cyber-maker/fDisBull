@@ -152,6 +152,9 @@ def test_qemu_pdpte_accessed_bit_requires_exact_native_hash_including_offline_re
                                    qemu_image_sha256=QEMU_TCG_PAE_ACCESSED_IMAGE)
     assert data == b'q'
     assert walks[0]['entries'][0]['qemu_tcg_accessed'] is True
+    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE
+    assert translate_linear(context, 0, 1, reader(memory),
+                            qemu_image_sha256=QEMU_TCG_PHYSICAL64_IMAGE)[0] == b'q'
     assert walks[0]['entries'][0]['raw'] == (0x2021).to_bytes(8, 'little').hex()
 
     # Replaying the retained exact physical reads with a forged profile digest
@@ -270,6 +273,8 @@ def test_pse36_runtime_profile_is_exact_and_previous_manifest_is_retained():
     from fdisbull.qemu_paged_le_capture import _pse36, _producer, _compatible_producer, _supports_high_ram
     config = {'memory_mib': 64, 'cpu': 'max', 'max_ram_below_4g_mib': 32}
     assert _pse36(config, QEMU_TCG_PAE_ACCESSED_IMAGE)
+    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE
+    assert _pse36(config, QEMU_TCG_PHYSICAL64_IMAGE)
     assert not _pse36(config, 'f' * 64)
     assert not _pse36({'memory_mib': 64}, QEMU_TCG_PAE_ACCESSED_IMAGE)
     current = _producer()
@@ -278,3 +283,18 @@ def test_pse36_runtime_profile_is_exact_and_previous_manifest_is_retained():
     assert _compatible_producer(old, current) and _supports_high_ram(old, current)
     old['le.py'] = '0' * 64
     assert not _compatible_producer(old, current) and not _supports_high_ram(old, current)
+
+
+def test_pre_physical64_producer_retains_exact_high_replay_manifest():
+    from fdisbull.qemu_paged_le_capture import _producer, _compatible_producer, _supports_high_ram, _supports_pse36
+    from fdisbull.qemu_le_translation import QEMU_TCG_PHYSICAL64_IMAGE
+    current = _producer()
+    prior = dict(current, **{
+        'qemu_le_translation.py': 'd25de015b988de444bd70bf53dfd4be64e3ed8651373748b05d679ba6f8c536f',
+        'qemu_paged_le_capture.py': '497050af45d0361b56db8015e68ad9503f6983c726afa9e6bb2eac53230a6fba'})
+    assert _compatible_producer(prior, current) and _supports_high_ram(prior, current)
+    assert _supports_pse36(prior, current, QEMU_TCG_PAE_ACCESSED_IMAGE)
+    assert not _supports_pse36(prior, current, QEMU_TCG_PHYSICAL64_IMAGE)
+    prior['le.py'] = '0' * 64
+    assert not _compatible_producer(prior, current) and not _supports_high_ram(prior, current)
+    assert not _supports_pse36(prior, current, QEMU_TCG_PAE_ACCESSED_IMAGE)

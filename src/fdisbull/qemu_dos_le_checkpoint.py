@@ -40,6 +40,24 @@ def _producer():
              'qemu_dos_source_admission.py', 'qemu_dos_le_match.py', 'le.py', 'qemu_machine.py', 'qemu_ram.py')}
 
 
+# Exact c3857f1c companion producer; no mixed or partially matching manifests.
+_BASELINE_PRODUCER = {
+    'qemu_dos_le_checkpoint.py': '656d2278e07f21fe5c5e1fb297ca4d9b3339c0a5690c4187e2bdbeac3e7c7ae7',
+    'qemu_owned_checkpoint.py': '5d916479343f96a48e0f6352ffa3a347c9eefc582d66d80fb0b4a18cb4f1b81c',
+    'qemu_dos_le_binding.py': '9934f5b537b1bc52aaedf732f5f838b8b53a6526886e9d8d9014bb7f6b153f00',
+    'qemu_dos_le_identity.py': '44cd61c9921eca81a6d79afc252818d87e68336ff5cce86f41f4d83663599ab0',
+    'qemu_dos_source_admission.py': '1008a2933daead5469e92b6dd9af0dd40c68b00ab281e8c18d9817c1a8c1594c',
+    'qemu_dos_le_match.py': 'fffeb298ab43572c5320886e8ee25045fcb1c8d621f4a6a06ac659b4a5fa4d43',
+    'le.py': 'b97ea8142b88a0aecc968880ad5308a748ad73cf695bb4f6a1e4872752c53298',
+    'qemu_machine.py': '3f2e9c669a60427a57564cb407de3b12adb55d7dde4ca67846078c3793b6aaa8',
+    'qemu_ram.py': '19cb041cbbd8f2c46573c7c8396b44aaa40f8f9f22a6ecf0f93aff6005578103',
+}
+
+
+def _compatible_producer(recorded, current):
+    return recorded == current or recorded == _BASELINE_PRODUCER
+
+
 def _reference(project, reference, kind, version, *, maximum=None):
     _require(isinstance(reference, dict) and set(reference) == {'artifact', 'sha256', 'size'}
              and isinstance(reference['artifact'], str) and bool(reference['artifact'])
@@ -102,7 +120,7 @@ def _validate_source(session, document):
     _require(document.get('format') == FORMAT and document.get('source_view') == 'embedded-le'
              and document.get('source_scope') == SCOPE
              and document.get('lifetime_qualified') is False and document.get('source_binding_restored') is False
-             and document.get('producer') == _producer(), 'LE checkpoint scope or producer identity differs')
+             and _compatible_producer(document.get('producer'), _producer()), 'LE checkpoint scope or producer identity differs')
     raw, identity = _source(session, document.get('source_sha256'))
     _require(type(document.get('version')) is int
              and all(document.get(k) == value for k, value in identity.items()),
@@ -253,7 +271,9 @@ def _read_le_source_state(session, artifact, *, full_machine=True):
     _require(0 < len(data) <= MAX_DESCRIPTOR and _sha(data) == row['sha256'],
              'LE source checkpoint bytes differ')
     document = json.loads(data); metadata = json.loads(row['metadata'])
+    reader_producer = _producer()
     source = _validate_source(session, document)
+    _require(reader_producer == _producer(), 'LE checkpoint producer changed during read')
     _require(row['run'] == document['run'], 'LE checkpoint capture run differs')
     machine_row, machine_bytes, machine_metadata = _reference(session.project, document['machine'],
         owned.KIND, session.version['id'], maximum=MAX_STATE)
@@ -281,7 +301,8 @@ def _read_le_source_state(session, artifact, *, full_machine=True):
     _require(source['source_receipt_sequence'] < machine_created < companion_created < completed,
              'LE checkpoint capture completion ordering differs')
     result = dict(artifact=artifact, sha256=row['sha256'], size=len(data), charged_size=charged,
-                  machine=deepcopy(document['machine']), document=document, metadata=metadata)
+                  machine=deepcopy(document['machine']), document=document, metadata=metadata,
+                  reader_producer=reader_producer)
     if full_machine:
         _, _, _, bundle = owned._read_artifact(session.project, document['machine']['artifact'], session.version['id'])
         _require(bundle['registers'] == document['registers']
@@ -319,7 +340,9 @@ def complete_le_restore(session, prepared, protected_binding):
     _require(isinstance(protected_binding, dict) and protected_binding.get('live') is True,
              'LE source checkpoint restore requires fresh source admission')
     saved = prepared['document']
-    _require(saved['producer'] == _producer(), 'LE checkpoint producer changed before restore completion')
+    current = _producer()
+    _require(prepared.get('reader_producer') == current and _compatible_producer(saved['producer'], current),
+             'LE checkpoint producer changed before restore completion')
     fresh = _observe(session)
     _require(fresh['recipe']['binding_id'] != saved['recipe']['binding_id']
              and fresh['recipe']['capture_epoch'] == session._runtime_epoch != saved['capture_epoch']

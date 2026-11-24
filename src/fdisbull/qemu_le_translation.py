@@ -8,6 +8,8 @@ import re
 
 QEMU_TCG_QUALIFIED_IMAGE = '863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25'
 QEMU_TCG_PAE_ACCESSED_IMAGE = QEMU_TCG_QUALIFIED_IMAGE
+QEMU_TCG_PHYSICAL64_IMAGE = '7a9f04b14e74caf83d74c1ebb160f0f3d130b04a3b094a176091ad33a50b7f1e'
+QEMU_TCG_QUALIFIED_IMAGES = frozenset((QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE))
 
 
 def _u32(value, name):
@@ -90,7 +92,7 @@ def _extended_walk(context, linear, reader, qemu_image_sha256, high_ram_end, pse
 
     if pae:
         pdpt = entry('pdpt', (cr3 & 0xffffffe0) + (linear >> 30) * 8, 8)
-        qemu_accessed = qemu_image_sha256 == QEMU_TCG_PAE_ACCESSED_IMAGE and bool(pdpt & 0x20)
+        qemu_accessed = qemu_image_sha256 in QEMU_TCG_QUALIFIED_IMAGES and bool(pdpt & 0x20)
         if pdpt & (0x1c6 if qemu_accessed else 0x1e6) or pdpt & (1 << 63):
             raise ValueError('Unsupported PAE PDPTE reserved bits')
         if qemu_accessed:

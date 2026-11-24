@@ -1,0 +1,74 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_producer_sha256": "863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25",
+  "base_manifest": "../qemu-video-vbe101-lfb/source-manifest.json",
+  "base_source_description": "Exact local native-source used to build base producer; copied after all local producer patches. This manifest does not independently establish a clean upstream archive replay.",
+  "base_source_tree_sha256": "be69b547852bc13d316d8c2097ea25ee32ec547f33b8ba76c0c00d5014093d0f",
+  "patched_source_tree_sha256": "5038e862dfd203345391e294eb0d93870a423a4a4d161e723ad981f8ca7482cc",
+  "source_tree_digest": "SHA256 over recursive os.walk records, each directory name list and file name list sorted separately, no symlink traversal; each file or symlink record is kind NUL relative POSIX path NUL octal permission bits NUL symlink target or file SHA256 newline; directories omitted",
+  "composition": "Apply after the complete source used for qemu-video-vbe101-lfb, including all later changes in that producer; verify both exact preimages. Use git apply --whitespace=error from the QEMU source root.",
+  "scope": "Stopped single-vCPU TCG physical-64 fetch readback and execute-only overlays. Real RAM writes remain 32-bit physical.",
+  "patch": "qemu-10.0.13-fdisbull-high-execute-v1.patch",
+  "patch_bytes": 8165,
+  "patch_sha256": "c8fe7836cd1091c9385eb5c97ac4361f2eacd13ffa774cabfe70d4403c2fe6fd",
+  "files": [
+    {
+      "path": "system/fdisbull-layers.c",
+      "base_bytes": 17120,
+      "base_sha256": "9148e8e8531132536a8f6c7f81f070e22b4c405bbefd6841eb8d05650fc09408",
+      "patched_bytes": 18539,
+      "patched_sha256": "75e5bbfac3d77f0583360a139094a3a7672b87809a422de570b4c3810f372f38",
+      "mode": "100644"
+    },
+    {
+      "path": "qapi/fdisbull-layers.json",
+      "base_bytes": 2340,
+      "base_sha256": "8fca76717ee015d2c4423e914e607592ab3cc79fb7a37f7f247d44bb720a25b8",
+      "patched_bytes": 2767,
+      "patched_sha256": "8aa3461385274ee5efc0a66093a454d64376e8b2a834c66d74f39266e704c8ab",
+      "mode": "100644"
+    }
+  ],
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "configure_argv": [
+      "--target-list=x86_64-softmmu",
+      "--without-default-features",
+      "--enable-system",
+      "--enable-tcg",
+      "--enable-pixman",
+      "--disable-user",
+      "--enable-tools",
+      "--disable-docs",
+      "--disable-guest-agent",
+      "--disable-containers",
+      "--disable-download",
+      "--disable-install-blobs",
+      "--disable-debug-info",
+      "--disable-qom-cast-debug",
+      "--audio-drv-list=",
+      "--firmwarepath=/Volumes/HIKSEMI/.fdisbull-vbe101-lfb-Ja20vq9x/native-source/pc-bios",
+      "--prefix=/Volumes/GitHub/GitHub/fDisBull-private/high-overlay-native-20261124/install",
+      "--ninja=/Users/tiga/miniconda/bin/ninja",
+      "--python=/Users/tiga/miniconda/bin/python3"
+    ],
+    "command": "ninja -j4 qemu-system-x86_64",
+    "candidate_sha256": "7a9f04b14e74caf83d74c1ebb160f0f3d130b04a3b094a176091ad33a50b7f1e",
+    "qualification": "Local stopped readback and one-instruction trials in 4 KiB and 2 MiB PAE and 4 MiB PSE-36 high RAM before and after unprimed cold restore; see docs/DOS_QEMU_HANDOFF.md. Eager guest-write notification timing remains open.",
+    "tools": {
+      "c_compiler": "Apple clang 21.0.0 (clang-2100.4.1.1)",
+      "linker": "ld64 27106.1",
+      "meson": "1.5.0",
+      "ninja": "1.11.1.git.kitware.jobserver-1",
+      "python": "3.13.13"
+    }
+  },
+  "recorded_upstream_archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+  "prerequisite_patch_manifests": [
+    "../qemu-layers/source-manifest.json",
+    "../qemu-task-private/source-manifest.json",
+    "../qemu-video-vbe101-lfb/source-manifest.json"
+  ]
+}

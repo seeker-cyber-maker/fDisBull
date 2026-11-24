@@ -357,7 +357,7 @@ def _cpu_equal(actual, expected):
 
 
 def _validate_controls(project, controls, version, machine):
-    from .qemu_checkpoint_controls import _unpack, _derive
+    from .qemu_checkpoint_controls import _unpack_layer_maps, _derive
     _filter_controls(controls)
     if ('task_identity' in controls or controls.get('pending_task') is not None
             or any('task_identity' in item for item in controls['hooks'])):
@@ -377,8 +377,7 @@ def _validate_controls(project, controls, version, machine):
     maps = controls.get('maps')
     if not isinstance(maps, dict) or set(maps) != {'ram_base', 'ram_applied', 'exec_base', 'exec'}:
         raise ValueError('Invalid owned machine control maps')
-    decoded = {name: _unpack(rows) for name, rows in maps.items()}
-    observed = _unpack(controls.get('observed'))
+    decoded, observed = _unpack_layer_maps(controls, machine)
     if (decoded['ram_base'].keys() != decoded['ram_applied'].keys()
             or decoded['exec_base'].keys() != decoded['exec'].keys()
             or observed.keys() != decoded['ram_applied'].keys() | decoded['exec'].keys()):
@@ -388,7 +387,12 @@ def _validate_controls(project, controls, version, machine):
         if not (0 <= address < end <= 0xa0000
                 or 0x100000 <= address < end <= low_ram_end(machine)):
             raise ValueError('Owned machine control extent is outside supported RAM')
-    bounds = SimpleNamespace(_layer_ram_extent=extent, _dos_task_binding=None)
+    def execute_extent(address, length):
+        high_end = high_ram_end(machine)
+        if high_end is None or not 1 << 32 <= address < address + length <= high_end:
+            raise ValueError('Owned machine execute layer is outside the high RAM bank')
+    bounds = SimpleNamespace(_layer_ram_extent=extent, _layer_execute_extent=execute_extent,
+                             _dos_task_binding=None)
     for identifier in definitions:
         _derive(bounds, [identifier], definitions, controls['run'], controls['epoch'])
     expected, ram, execute = _derive(bounds, active, definitions, controls['run'], controls['epoch'])

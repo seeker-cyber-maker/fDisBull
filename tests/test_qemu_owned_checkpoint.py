@@ -718,3 +718,36 @@ def test_owned_rebind_failure_closes_replacement_without_thaw(runtime, monkeypat
     assert session._process['source_mapping']['live'] is False
     assert session._owned_machine_restored is True
     assert [operation for operation, _ in runtime.snapshots] == ['save','load']
+
+
+@pytest.mark.parametrize(('kind', 'address', 'split', 'valid'), [
+    ('execute', 0x100c01400, True, True),
+    ('ram', 0x100c01400, True, False),
+    ('execute', 0x102000000, True, False),
+    ('execute', 0x100c01400, False, False),
+])
+def test_owned_high_control_maps_require_execute_kind_and_real_bank(runtime, kind, address, split, valid):
+    from fdisbull.qemu_checkpoint_controls import capture_controls
+
+    session = runtime.session
+    controls = capture_controls(session)
+    patch = dict(address=hex(address), expected_hex='46', data_hex='4e')
+    binding = dict(space='physical', spans=[[address, 1]], run=controls['run'], epoch=controls['epoch'])
+    version = session.version['id']
+    result = runtime.project._store_debug_layer('high', version, dict(
+        kind=kind, patches=[patch], native_binding=binding))
+    layer = result['layer']
+    controls['active'] = [layer]
+    controls['definitions'][layer] = runtime.project.debug_layer_info(layer)
+    base, applied = ('exec_base', 'exec') if kind == 'execute' else ('ram_base', 'ram_applied')
+    controls['maps'][base] = [[address, 0x46]]
+    controls['maps'][applied] = [[address, 0x4e]]
+    controls['observed'] = [[address, 0x46 if kind == 'execute' else 0x4e]]
+    machine = dict(cpu='max', memory_mib=64)
+    if split:
+        machine['max_ram_below_4g_mib'] = 32
+    if valid:
+        owned._validate_controls(runtime.project, controls, version, machine)
+    else:
+        with pytest.raises(ValueError):
+            owned._validate_controls(runtime.project, controls, version, machine)

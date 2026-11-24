@@ -179,10 +179,10 @@ class QemuPagedLETrackingMixin:
             def virtual(a, n):
                 return remote.memory(a, n, space='virtual', timeout_ms=self._remaining())
 
-            from .qemu_le_translation import QEMU_TCG_PAE_ACCESSED_IMAGE
+            from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGES
             options = {}
-            if binding['native_inputs'].get('qemu_image') == QEMU_TCG_PAE_ACCESSED_IMAGE:
-                options['qemu_image_sha256'] = QEMU_TCG_PAE_ACCESSED_IMAGE
+            if binding['native_inputs'].get('qemu_image') in QEMU_TCG_QUALIFIED_IMAGES:
+                options['qemu_image_sha256'] = binding['native_inputs']['qemu_image']
             if high_end is not None:
                 options['high_ram_end'] = high_end
             if _pse36(self.vm.machine_configuration, binding['native_inputs'].get('qemu_image')):

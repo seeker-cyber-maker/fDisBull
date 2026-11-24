@@ -24,6 +24,16 @@ A layered COM/MZ program that exits or
 becomes resident closes its owned machine because DOS can release or reuse
 the underlying allocation.
 
+On the split-RAM QEMU-DOS profile, the [physical64 extension](../native/qemu-high-execute/README.md)
+also accepts execute layers for high-backed PAE or PSE-36 code. Create the
+layer at a stopped guest **linear** address. The checked page walk binds it to
+the physical backing at creation. Read the same linear address with
+`capture_code(..., space='linear', view='ram')` and `view='execute'` to compare
+the original bytes with TCG's fetch view. The execute artifact records the
+native binary, layer generation and override count. For active layers these
+are runtime observations. Offline source promotion requires a separate
+unlayered capture. High-address RAM layer writes remain unsupported.
+
 Use `debug.hook` with a source address or a linear machine address. The
 QEMU debugger dispatches only an identified owned breakpoint or watchpoint.
 The actions can replace the layer stack, apply checked registers or redirect

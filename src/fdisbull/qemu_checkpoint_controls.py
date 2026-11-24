@@ -35,14 +35,14 @@ def _pack(values):
     return [[key, values[key]] for key in sorted(values)]
 
 
-def _unpack(rows):
+def _unpack(rows, *, address_limit=1 << 32):
     if not isinstance(rows, list) or len(rows) > _MAX_MAP:
         raise ValueError('Invalid checkpoint control byte map')
     result = {}
     previous = -1
     for pair in rows:
         if (not isinstance(pair, list) or len(pair) != 2 or type(pair[0]) is not int
-                or type(pair[1]) is not int or not 0 <= pair[0] <= 0xffffffff
+                or type(pair[1]) is not int or not 0 <= pair[0] < address_limit
                 or not 0 <= pair[1] <= 255 or pair[0] <= previous):
             raise ValueError('Invalid checkpoint control byte map entry')
         previous = pair[0]
@@ -50,11 +50,27 @@ def _unpack(rows):
     return result
 
 
+def _unpack_layer_maps(controls, configuration):
+    from .qemu_ram import high_ram_end
+
+    high_limit = high_ram_end(configuration) or 1 << 32
+    maps = controls['maps']
+    decoded = {key: _unpack(maps[key]) for key in ('ram_base', 'ram_applied')}
+    for key in ('exec_base', 'exec'):
+        decoded[key] = _unpack(maps[key], address_limit=high_limit)
+    # Observations cover both maps. The caller binds their exact key set to
+    # the checked layer definitions before issuing physical reads.
+    return decoded, _unpack(controls['observed'], address_limit=high_limit)
+
+
 def _read(session, addresses):
     remote = session._stopped()
     result = {}
     for span in groups(addresses):
-        session._layer_ram_extent(span[0], len(span))
+        if span[0] >= 1 << 32:
+            session._layer_execute_extent(span[0], len(span))
+        else:
+            session._layer_ram_extent(span[0], len(span))
         data = remote.memory(span[0], len(span), space='physical')
         if not isinstance(data, bytes) or len(data) != len(span):
             raise DebuggerError('Incomplete checkpoint control backing read')
@@ -125,7 +141,10 @@ def _derive(session, active, definitions, origin_run, origin_epoch):
                         or type(span[0]) is not int or type(span[1]) is not int
                         or not 1 <= span[1] <= _MAX_MAP):
                     raise ValueError('Invalid checkpoint layer span')
-                session._layer_ram_extent(span[0], span[1])
+                if kind == 'execute' and span[0] >= 1 << 32:
+                    session._layer_execute_extent(*span)
+                else:
+                    session._layer_ram_extent(*span)
                 if len(addresses) + span[1] > _MAX_MAP:
                     raise ValueError('Checkpoint layer extent exceeds budget')
                 addresses.extend(range(span[0], span[0] + span[1]))
@@ -380,8 +399,7 @@ def restore_controls(session, controls, old_epoch, *, private_layer_ids=None):
     if _definitions(session, set(definitions)) != definitions:
         raise ValueError('Checkpoint layer definitions or identities changed')
     _validate_definition_tasks(definitions, current_task)
-    maps = {key: _unpack(controls['maps'][key]) for key in ('ram_base', 'ram_applied', 'exec_base', 'exec')}
-    observed = _unpack(controls['observed'])
+    maps, observed = _unpack_layer_maps(controls, getattr(session.vm, 'machine_configuration', {}))
     expected, ram, execution = _derive(session, active, definitions, controls['run'], old_epoch)
     if (maps['ram_applied'] != ram or maps['exec'] != execution
             or maps['ram_base'] != {a: expected[a] for a in ram}

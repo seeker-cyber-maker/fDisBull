@@ -228,7 +228,7 @@ def observation(debug, *, capture_window=False):
     }
 
 
-def verify_saved_high_checkpoint(stage, cfg, hot, cold, captures=()):
+def verify_saved_high_checkpoint(stage, cfg, hot, cold, captures=(), views=("execute", "ram")):
     """Read the native Bochs CPU and sparse RAM files without starting Bochs."""
     assert cfg["paging_mode"] in ("pae-4k-high", "pae-2m-high", "pse36-4m-high")
     checkpoint = Path(hot["checkpoint"])
@@ -357,7 +357,7 @@ def verify_saved_high_checkpoint(stage, cfg, hot, cold, captures=()):
             native_pages = {page["linear"]: page["physical"] for page in window["mmu_pages"]}
             assert window["linear"] == event["pc"] and window["length"] == 15
             assert len(bytes.fromhex(window["hex"])) == window["length"]
-            for view in ("execute", "ram"):
+            for view in views:
                 payload = receipt["payloads"][view]
                 assert int(payload["runtime_address"], 16) == event["pc"]
                 captured = bytes.fromhex(payload["hex"])
@@ -483,6 +483,42 @@ debug: action=ignore
         )
         if pse36_cpuid_edx is not None:
             assert pse36_cpuid_edx & ((1 << 3) | (1 << 17)) == ((1 << 3) | (1 << 17))
+        overlay_trial = None
+        if cfg.get("active_high_overlay"):
+            event = events[-1]
+            context = debug.context()
+            assert context["cs"] == event["cs"] and context["ip"] == event["ip"]
+            window = event["capture_window"]
+            assert window["length"] == 15 and event["backing"][0] == cfg["second_target"]
+            original = b"".join(
+                debug.read(span["physical"], span["length"], True)
+                for span in window["spans"]
+            )
+            assert original.hex() == window["hex"] and original[:2] == b"\x46\xcb"
+            # Bochs has no execute-only layer. This RAM substitution occurs in
+            # the same owner after its untouched checkpoint evidence; the saved
+            # state on disk remains raw and independently inspectable.
+            patch_output = debug.cmd(f"setpmem {cfg['second_target']:#x} 1 0x4e")
+            assert "error" not in patch_output.lower(), patch_output
+            substituted = b"".join(
+                debug.read(span["physical"], span["length"], True)
+                for span in window["spans"]
+            )
+            assert substituted == b"\x4e" + original[1:]
+            debug.cmd("s")
+            after = debug.context()
+            delta = (after["esi"] - context["esi"]) & 0xFFFFFFFF
+            assert delta == 0xFFFFFFFF
+            overlay_trial = dict(
+                reference_only=True,
+                method="Bochs setpmem physical RAM substitution",
+                physical_address=cfg["second_target"],
+                original_window=original.hex(),
+                substituted_window=substituted.hex(),
+                esi_before=context["esi"],
+                esi_after=after["esi"],
+                esi_delta=delta,
+            )
     except BaseException:
         debug.abort()
         raise
@@ -507,6 +543,8 @@ debug: action=ignore
     }
     if cfg["paging_mode"] == "pse36-4m-high":
         result["pse36_cpuid_edx"] = pse36_cpuid_edx
+    if cfg.get("active_high_overlay"):
+        result["overlay_trial"] = overlay_trial
     (stage / f"bochs-{phase}.json").write_text(json.dumps(result, indent=2))
     return result
 
