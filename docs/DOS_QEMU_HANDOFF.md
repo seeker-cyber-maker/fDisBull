@@ -1,5 +1,41 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Unprimed DOSBox-X restore for 4 MiB protected LE code (2026-11-24)
+
+The [separate DOSBox-X candidate](../native/dosbox-pse-checkpoint/README.md)
+saves CR4 with the CPU checkpoint and restores the engine's derived PSE
+flag after the paging loader clears cached translations. The installed
+DOSBox-X default remains the frozen reference described below.
+
+The paired local test starts a fresh process for each engine and loads the
+protected checkpoint directly. The DOSBox-X receiver first records its DOS
+entry state for a second restore at shutdown. The first
+candidate check reproduced the frozen reference failure on return to DOS,
+where CR4 retained `0x10`. This caught a reader that used `peek()` on
+the native ZIP stream, which implements bulk reads. The corrected reader
+validates the length and version of the CPU extension using a bulk read.
+
+The verified macOS arm64 candidate has SHA-256
+`ac27edcf960767550058e8cb0862b20d619d0c9ef72956be2e99d83bfdcdf439`.
+Across two guest cycles it matched QEMU on all 39 hot stops and all 32
+remaining stops after fresh-process restore. LE object 1 at offset `0x1400`
+moved from physical `0x801400` to `0xc01400` under selector `000c`,
+then kept the new backing under `001c`. QEMU attributed 35 hot and 28
+restored stops to the LE and withheld attribution on the four stops in
+selector `0008` in each trace.
+
+The fresh DOSBox-X receiver started with CR4 zero. Loading the protected
+checkpoint restored CR4 to `0x10` without executing guest paging setup.
+Both DOSBox-X sessions then reloaded their entry state, verified its
+address context including CR4 zero, and stepped in real mode. The CPU ZIP
+member ended in `5053453110000000` for the protected state and
+`5053453100000000` at entry. The native format tests loaded the versioned
+and legacy layouts and rejected an unknown marker, a short extension,
+trailing data and a short historical prefix. The local preservation batch
+also passed for code/RAM layers, hooks, 4 KiB remap and LDT restore, and
+the original Doom LE selector and fixup before and after restore. Native
+PAE reference parity and a default-backend change remain open.
+
 ## Large-page and PAE protected LE tracking (2026-11-24)
 
 An authored guest rewrote its own page tables, reloaded CR3 and switched

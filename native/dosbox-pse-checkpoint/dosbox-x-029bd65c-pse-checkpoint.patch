@@ -1,0 +1,51 @@
+--- a/src/cpu/cpu.cpp
++++ b/src/cpu/cpu.cpp
+@@ -5003,6 +5003,10 @@
+ 
+     POD_Save_CPU_Flags(stream);
+ 	POD_Save_CPU_Paging(stream);
++
++    // Versioned CPU extension; legacy readers consume only the original prefix.
++    const uint32_t cr4_extension[2] = { 0x31455350u, (uint32_t)cpu.cr4 };
++    stream.write(reinterpret_cast<const char *>(cr4_extension), sizeof(cr4_extension));
+ }
+ 
+ void setBytes(std::istream& stream) override
+@@ -5060,6 +5064,24 @@
+ 
+     POD_Load_CPU_Flags(stream);
+ 	POD_Load_CPU_Paging(stream);
++
++    // Never mask an error in the original CPU component prefix.
++    if (stream.fail()) return;
++
++    // zip_istreambuf implements bulk extraction, not underflow/peek. Read one
++    // byte beyond the extension so an unknown suffix cannot be accepted.
++    uint32_t cr4_extension[3] = {};
++    const std::streamsize extension_size = stream.rdbuf()->sgetn(
++            reinterpret_cast<char *>(cr4_extension), 9);
++    if (extension_size == 0) {
++        // Exact legacy entry: retain its historical CR4 behavior.
++    } else if (extension_size != 8 || cr4_extension[0] != 0x31455350u) {
++        stream.setstate(std::ios::failbit);
++    } else {
++        // Paging load has already invalidated cached translations.
++        cpu.cr4 = cr4_extension[1];
++        do_pse = enable_pse && ((cpu.cr4 & 0x10u) != 0);
++    }
+ 
+     //*******************************************
+     //*******************************************
+--- a/src/misc/savestates.cpp
++++ b/src/misc/savestates.cpp
+@@ -792,7 +792,10 @@
+ 
+ 		i->second.comp.setBytes(ss);
+ 
++        // CPU extension errors must not be reported as a successful load.
++        const bool invalid_cpu = i->first == "CPU" && ss.fail();
+ 		if ((err=zis.close()) != ZIP_OK) { load_err=true; goto done; }
++        if (invalid_cpu) { load_err=true; goto done; }
+ 	}
+ 
+ done:

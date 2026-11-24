@@ -1,0 +1,26 @@
+{
+  "format": "fdisbull-dosbox-x-native-delta-1",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "base_dosbox_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+  "base_layers_patch_sha256": "069fba0afbc7f8d0fad3a8e204362d4a2ed26877d28cec0298471aa50f0e3a41",
+  "base_layers_manifest_sha256": "09a4ab52f363253bff57459500a9613dd981a5c2fcb92d26ec73d77bbda712ef",
+  "patch": "dosbox-x-029bd65c-pse-checkpoint.patch",
+  "patch_bytes": 1842,
+  "patch_sha256": "e56dc7e4c6dac518433d31cde04dec00aeb377cc3b940c0df842cffd9489eb5e",
+  "files": [
+    {
+      "path": "src/cpu/cpu.cpp",
+      "base_bytes": 169667,
+      "base_sha256": "67b910f86c27f9b14d07269ca8cd4639fcdf7edd11774f38266c04a2bc4671bf",
+      "patched_bytes": 170716,
+      "patched_sha256": "6cc02da0ab8c912304743fbeb20136859552acc078a90bd04b1988be3725c085"
+    },
+    {
+      "path": "src/misc/savestates.cpp",
+      "base_bytes": 32489,
+      "base_sha256": "7828e82d90fe8998633d8f1f5a42846c3f606883510fcb17755d8452db082338",
+      "patched_bytes": 32684,
+      "patched_sha256": "8f1754c80864dadb2e3b9070f8043bdd75741e4b3ef176ec72fd3f5f27d358bb"
+    }
+  ]
+}

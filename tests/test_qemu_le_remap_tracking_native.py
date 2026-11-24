@@ -212,3 +212,68 @@ def test_pae_semantics_against_restored_legacy_reference(tmp_path, process_runti
         native_targets = [e['hex'] for e in native['events'] if e['ip'] == cfg['target_ip']]
         ref_targets = [e['hex'] for e in ref['events'] if e['ip'] == ref_cfg['target_ip']]
         assert native_targets == ref_targets and all(value == '46' for value in native_targets)
+
+
+def test_dosbox_large_page_candidate_paired_unassisted(tmp_path, process_runtime):  # noqa: F811
+    """Require a cold, unprimed large-page restore on the explicitly selected candidate."""
+    candidate = os.environ.get('FDISBULL_DOSBOX_LARGE_PAGE_CANDIDATE')
+    if not candidate:
+        pytest.skip('Select DOSBox-X large-page restore candidate')
+    assert Path(candidate).is_file()
+    assert os.environ.get('FDISBULL_QEMU_IMG'), 'Paired acceptance requires QEMU'
+    cfg = prepare(tmp_path, process_runtime, 'legacy-4m')
+    helper = Path(__file__).parent / 'support' / 'le_remap_dosbox.py'
+    env = {**os.environ, 'FDISBULL_DOSBOX': candidate,
+           'FDISBULL_REQUIRE_DOSBOX_LARGE_PAGE_RESTORE': '1',
+           'PYTHONPATH': os.pathsep.join(str(p) for p in sys.path if p)}
+    for phase in ('before', 'after'):
+        subprocess.run([sys.executable, str(helper), str(tmp_path), phase],
+                       env=env, check=True, timeout=180)
+    ref, cold = [json.loads((tmp_path / f'dosbox-{phase}.json').read_text())
+                 for phase in ('before', 'after')]
+    assert len(ref['events']) == 39 and len(cold['events']) == 32
+    assert ref['events'][cfg['checkpoint_index']:] == cold['events']
+    assert ref['checkpoint'] == cold['checkpoint']
+    for phase, result in (('before', ref), ('after', cold)):
+        assert int(result['entry_context']['cr4'], 16) == 0
+        assert result['entry_context'] == result['restored_entry_context']
+        observed = json.loads((tmp_path / f'dosbox-{phase}-entry-unassisted-observed.json').read_text())
+        assert observed and observed[-1] == result['entry_context']
+    checkpoint = json.loads((tmp_path / 'dosbox-before-partial.json').read_text())['checkpoint_context']
+    observed = json.loads((tmp_path / 'dosbox-after-checkpoint-unassisted-observed.json').read_text())
+    assert checkpoint['cr4'] == '0x00000010' and observed and observed[-1] == checkpoint
+    qemu, qemu_cold = phases(tmp_path, 'qemu')
+    assert qemu['events'][cfg['checkpoint_index']:] == qemu_cold['events']
+    img = load_runtime_le_carrier(Path(cfg['source']).read_bytes())
+    for qevents, expected_qualified in ((qemu['events'], 35), (qemu_cold['events'], 28)):
+        assert sum(event['qualified'] for event in qevents) == expected_qualified
+        assert sum(not event['qualified'] for event in qevents) == 4
+    for base in (0, cfg['cycle']):
+        visits = [event for event in qemu['events'][base:base + cfg['cycle']]
+                  if event['ip'] == cfg['target_ip']]
+        assert [(event['cs'], event['backing'][0]) for event in visits] == [
+            (cfg['start_cs'], cfg['first_target']),
+            (cfg['start_cs'], cfg['second_target']),
+            (cfg['selector_b'], cfg['second_target']),
+        ]
+    for qevents, devents in ((qemu['events'], ref['events']), (qemu_cold['events'], cold['events'])):
+        for i, (q, d) in enumerate(zip(qevents, devents, strict=True)):
+            assert (q['cs'], q['ip'], q['pc']) == (d['cs'], d['ip'], d['pc']), i
+            assert (q['esi'] - qemu['events'][0]['esi']) & 0xffffffff == (
+                d['esi'] - ref['events'][0]['esi']) & 0xffffffff, i
+            if not q['qualified']:
+                assert q['cs'] == 8 and 'obj' not in q
+                continue
+            assert q['obj'] == 1 and q['offset'] == d['ip']
+            data = img.regions[0].data[q['offset']:q['offset'] + len(q['backing'])]
+            assert data.hex() == d['hex']
+            assert hashlib.sha256(data).hexdigest() == q['source_instruction_sha256']
+            for field in ('hex', 'backing', 'cs_base', 'cs_limit'):
+                assert q[field] == d[field], (i, field)
+            qdesc, ddesc = bytes.fromhex(q['descriptor']), bytes.fromhex(d['descriptor'])
+            assert qdesc[:5] == ddesc[:5] and qdesc[6:] == ddesc[6:]
+            assert qdesc[5] & ~1 == ddesc[5] & ~1
+            assert d['paging'] and d['ldtr_selector'] == 0x18
+            assert q['page_size'] == 0x400000
+            assert q['paging_mode'] == 'legacy-32'
+    assert hashlib.sha256(Path(cfg['source']).read_bytes()).hexdigest() == cfg['sha256']

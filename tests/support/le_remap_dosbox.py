@@ -193,10 +193,18 @@ def run(stage, phase, *, assisted=False):
             partial = dict(checkpoint=checkpoint, events=events, status='before-shutdown-restore', cpu_probe=probe, entry_context=entry_context, checkpoint_context=checkpoint_context if phase == 'before' else None)
             (stage / ('dosbox-' + phase + '-partial.json')).write_text(json.dumps(partial, indent=2))
             observed_load(debug, entry, 'entry')
-            assert debug.registers()['cpu_mode'] == 'real'
+            restored_entry = debug.registers()
+            assert restored_entry['cpu_mode'] == 'real'
+            if os.environ.get('FDISBULL_REQUIRE_DOSBOX_LARGE_PAGE_RESTORE'):
+                assert restored_entry['address_context'] == entry_context
+                debug.call('execution.step', {'mode': 'into'})
+                assert debug.registers()['cpu_mode'] == 'real'
     exits = [owner.poll() for owner in owners]
     assert exits and all(code == 0 for code in exits), exits
-    result = dict(checkpoint=checkpoint, events=events, owners=exits)
+    result = dict(
+        checkpoint=checkpoint, events=events, owners=exits,
+        entry_context=entry_context, restored_entry_context=restored_entry['address_context'],
+    )
     (stage / ('dosbox-' + phase + '.json')).write_text(json.dumps(result, indent=2))
     return result
 
