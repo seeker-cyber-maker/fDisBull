@@ -17,7 +17,7 @@ The phases are deliberately distinct:
 11. Run global script 5 when available for this v1/v2 path.
 12. Mark the transition complete.
 
-A missing entry/exit script is an explicit optional phase, not an inferred successful execution. A phase receipt must be ordered, tied to the exact plan hash, and carry all expected evidence. Missing phases never count as complete. The plan marks that movement is not implied and native execution has not occurred.
+A missing entry/exit script is an explicit optional phase, not an inferred successful execution. A phase receipt must be ordered, tied to the exact plan hash, and carry all expected evidence. The plan digest is recomputed during receipt validation to reject modified phase definitions. Missing phases never count as complete. The plan marks that movement is not implied and native execution has not occurred.
 
 The source reference is ScummVM v2.9.0 commit 38af1883a2eb7a622c31bfc3708888bbcc47db48. The phase model must be rechecked against exact v2 behavior before being translated into native CPU state transitions. Do not reuse this old-bundle v2 contract for v3+ room formats.
 

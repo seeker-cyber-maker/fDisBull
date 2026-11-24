@@ -61,6 +61,10 @@ class TransitionTests(unittest.TestCase):
             rt.plan_room_transition(current_room=None, target_room=new,
                 target_resource_sha256=new["room"]["sha256"],
                 source={"version": 1, "profile": "amiga-v2-isolated"}, global_script_5_available=False)
+    def test_tampered_plan_definition_is_rejected(self):
+        p = self.plan()
+        p["phases"][3]["evidence_contract"]["room_id"] = 99
+        with self.assertRaises(rt.TransitionError): rt.validate_phase_receipts(p, [])
     def test_old_room_must_share_version_profile(self):
         old = room(1); old["source"] = {"version": 1, "profile": "amiga-v2-isolated"}
         with self.assertRaises(rt.TransitionError): self.plan(old=old)

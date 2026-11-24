@@ -7,6 +7,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 from __future__ import annotations
 from copy import deepcopy
 from hashlib import sha256
+import json
 import re
 
 SCHEMA = "fdisbull-scumm-v2-room-transition-1"
@@ -24,6 +25,11 @@ class TransitionError(ValueError):
 def _require(ok: bool, message: str) -> None:
     if not ok:
         raise TransitionError(message)
+
+def _plan_digest(payload: dict) -> str:
+    material = {k: v for k, v in payload.items() if k != "plan_sha256"}
+    encoded = json.dumps(material, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    return sha256(encoded).hexdigest()
 
 def _digest(value: object, name: str) -> str:
     _require(type(value) is str and re.fullmatch(r"[0-9a-f]{64}", value) is not None,
@@ -97,7 +103,7 @@ def plan_room_transition(*, current_room: dict | None, target_room: dict,
                  "current_room_changes_at": "publish_current_room",
                  "entry_script_runs_after_room_publish": True,
                  "movement_is_not_implied": True, "native_execution_performed": False}}
-    payload["plan_sha256"] = sha256(repr(payload).encode()).hexdigest()
+    payload["plan_sha256"] = _plan_digest(payload)
     return payload
 
 def validate_phase_receipts(plan: dict, receipts: list[dict]) -> dict:
@@ -106,6 +112,14 @@ def validate_phase_receipts(plan: dict, receipts: list[dict]) -> dict:
     phases = plan.get("phases")
     _require(type(phases) is list and len(phases) == len(PHASES),
              "transition phase inventory is incomplete")
+    _require(plan.get("plan_sha256") == _plan_digest(plan),
+             "transition plan content does not match its digest")
+    for index, (phase, expected_name) in enumerate(zip(phases, PHASES)):
+        _require(type(phase) is dict and phase.get("index") == index
+                 and phase.get("phase") == expected_name
+                 and type(phase.get("required")) is bool
+                 and type(phase.get("evidence_contract")) is dict,
+                 "transition phase definition is invalid or reordered")
     _require(type(receipts) is list, "phase receipts must be a list")
     by_index = {p.get("index"): p for p in phases if type(p) is dict}
     _require(len(by_index) == len(PHASES), "duplicate or missing phase indices")
