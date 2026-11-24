@@ -21,6 +21,7 @@ from fdisbull.le import load_runtime_le_carrier
         ("pae-2m", 0x200000),
         ("pae-4k-high", 0x1000),
         ("pae-2m-high", 0x200000),
+        ("pse36-4m-high", 0x400000),
     ],
 )
 def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
@@ -58,9 +59,16 @@ def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
     assert set(qemu["artifacts"]).isdisjoint(qemu_cold["artifacts"])
     for result in (qemu, qemu_cold):
         entry = result["pae_cpu_context"]["entry"]
-        assert entry["mode"] == "real" and not entry["paging"] and not entry["cr4"] & 0x20
+        assert entry["mode"] == "real" and not entry["paging"]
+        assert not entry["cr4"] & 0x20
+        if paging_mode == "pse36-4m-high":
+            assert not entry["cr4"] & 0x10
     checkpoint_context = qemu["pae_cpu_context"]["checkpoint"]
-    assert checkpoint_context["paging"] and checkpoint_context["cr4"] & 0x20
+    assert checkpoint_context["paging"] and checkpoint_context["cr0"] & 0x80000001 == 0x80000001
+    if paging_mode == "pse36-4m-high":
+        assert checkpoint_context["cr4"] & 0x10 and not checkpoint_context["cr4"] & 0x20
+    else:
+        assert checkpoint_context["cr4"] & 0x20
     assert qemu_cold["pae_cpu_context"]["restored"] == checkpoint_context
 
     # The cold phases start separate engine processes and restore directly from
@@ -86,6 +94,12 @@ def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
             assert set(result["low_alias_markers"]) == expected_aliases
             assert set(result["low_alias_markers"].values()) == {"0f0b"}
             assert result["max_native_mmu_physical"] > 0xFFFFFFFF
+    if paging_mode == "pse36-4m-high":
+        feature_bits = (1 << 3) | (1 << 17)
+        assert bochs["pse36_cpuid_edx"] == bochs_cold["pse36_cpuid_edx"]
+        assert bochs["pse36_cpuid_edx"] & feature_bits == feature_bits
+        assert qemu["pse36_cpuid_edx"] == qemu_cold["pse36_cpuid_edx"]
+        assert qemu["pse36_cpuid_edx"] & feature_bits == feature_bits
     assert bochs["checkpoint_context"] == bochs_cold["initial_context"]
     checkpoint_clock = bochs["checkpoint_context"]["clock"]
     assert bochs["events"][cfg["checkpoint_index"]]["clock"] == checkpoint_clock
@@ -105,11 +119,11 @@ def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
                 continue
             if is_qemu:
                 assert event["page_size"] == expected_page_size
-                assert event["paging_mode"] == "pae"
+                assert event["paging_mode"] == ("legacy-32" if paging_mode == "pse36-4m-high" else "pae")
                 assert event["entries"] and event["page_attributes"]
             else:
                 assert event["page_size"] == expected_page_size
-                assert event["paging_mode"] == "pae"
+                assert event["paging_mode"] == ("legacy-32" if paging_mode == "pse36-4m-high" else "pae")
                 assert event["paging"]
                 assert event["walks"]
 

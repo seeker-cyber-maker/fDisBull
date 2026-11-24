@@ -92,14 +92,17 @@ def run(stage, phase):
     owners, ids = [], []
     pae_context = {}
     aliases = []
+    pse36_cpuid_edx = None
     check_pae = cfg.get('paging_mode', '').startswith('pae-')
+    check_pse36 = cfg.get('paging_mode') == 'pse36-4m-high'
+    check_control = check_pae or check_pse36
     with Project.create(db, source, image='mz') if phase == 'before' else Project(db) as project:
         with project.debugger(
             rt['FDISBULL_QEMU_DOS'], source.parent, _on_spawn=owners.append, **options
         ) as debug:
-            if check_pae:
+            if check_control:
                 entry = pae_cpu_context(debug.registers())
-                assert entry['mode'] == 'real' and not entry['paging'] and not (entry['cr4'] & 0x20)
+                assert entry['mode'] == 'real' and not entry['paging'] and not (entry['cr0'] & 0x80000000) and not (entry['cr4'] & 0x20)
                 pae_context['entry'] = entry
             if phase == 'before':
                 bp = debug.breakpoint(cfg['start_pc'])['breakpoint_id']
@@ -114,11 +117,15 @@ def run(stage, phase):
                 state = before['checkpoint']
                 restore = debug.load_machine_state(state, timeout_ms=60000)
                 assert restore['machine_state_restored'] and not restore['protected_source_rebound']
-                if check_pae:
+                if check_control:
                     restored = pae_cpu_context(debug.registers())
                     assert restored == before['pae_cpu_context']['checkpoint']
                     pae_context['restored'] = restored
                 assert not debug.dos_source_binding()['live']
+            if check_pse36 and phase == 'after':
+                pse36_cpuid_edx = int.from_bytes(debug.vm.debugger().memory(0x1f0000, 4, space='physical'), 'little')
+                assert pse36_cpuid_edx & (1 << 3) and pse36_cpuid_edx & (1 << 17)
+                assert pse36_cpuid_edx == before['pse36_cpuid_edx']
             if cfg.get('high_physical') and phase == 'after':
                 assert debug.vm.machine_configuration['max_ram_below_4g_mib'] == 32
                 aliases = high_alias_reads(debug, cfg)
@@ -134,14 +141,20 @@ def run(stage, phase):
                 )
                 ids.append(first['artifact'])
                 regs = debug.registers()
-                if check_pae:
+                if check_control:
                     checkpoint = pae_cpu_context(regs)
-                    assert checkpoint['mode'] == 'protected' and checkpoint['paging'] and checkpoint['cr4'] & 0x20
+                    assert checkpoint['mode'] == 'protected' and checkpoint['paging'] and checkpoint['cr0'] & 0x80000000
+                    assert bool(checkpoint['cr4'] & 0x20) == check_pae
+                    if check_pse36:
+                        assert checkpoint['cr4'] & 0x10
                     pae_context['checkpoint'] = checkpoint
                 assert integer(regs['instruction_pointer']) == cfg['target_ip']
                 assert integer(regs['registers']['cs']) == cfg['start_cs']
                 mapping = debug.dos_source_binding()['mapping_identity']
                 assert mapping['instruction_backing'][0]['physical'] == cfg['second_target']
+                if check_pse36:
+                    pse36_cpuid_edx = int.from_bytes(debug.vm.debugger().memory(0x1f0000, 4, space='physical'), 'little')
+                    assert pse36_cpuid_edx & (1 << 3) and pse36_cpuid_edx & (1 << 17)
                 if cfg.get('high_physical'):
                     assert debug.vm.machine_configuration['max_ram_below_4g_mib'] == 32
                     aliases = high_alias_reads(debug, cfg)
@@ -219,9 +232,11 @@ def run(stage, phase):
         epoch=binding['capture_epoch'],
         binding_id=binding['binding_id'],
     )
+    if check_pse36:
+        result['pse36_cpuid_edx'] = pse36_cpuid_edx
     if cfg.get('high_physical'):
         result['high_alias_reads'] = aliases
-    if check_pae:
+    if check_control:
         result['pae_cpu_context'] = pae_context
     (stage / ('qemu-' + phase + '.json')).write_text(json.dumps(result, indent=2))
 

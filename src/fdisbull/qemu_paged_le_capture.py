@@ -70,6 +70,18 @@ def _compatible_producer(recorded, current, *, tracking=False):
     """Accept only exact manifests for current and retained supported producers."""
     if recorded == current:
         return True
+    previous = dict(current)
+    previous.update({
+        'qemu_le_translation.py': '6e40403e81266323e8e96a978a3c73764b7bc337724880835bc968206ea13ee6',
+        'qemu_paged_le_capture.py': '33e589a44d2e2a8be59c4bd46f814d213cbf7883009b3cd6ef0dfaafe7ae8d44',
+    })
+    if tracking:
+        previous.update({
+            'qemu_paged_le_observation.py': 'e67420f21005435602945c25ed8aa586a04e34d6d18958786bfb82814dba3243',
+            'qemu_paged_le_tracking.py': '5e25bb801f0f78a6d3c9eb5ceeccae63341435632d9dab51c124e8a547e2048c',
+        })
+    if recorded == previous:
+        return True
     extended = dict(current)
     extended.pop('qemu_ram.py', None)
     extended.update({
@@ -100,7 +112,16 @@ def _supports_extended_walks(recorded):
 
 
 def _supports_high_ram(recorded, current):
-    return recorded == current
+    return recorded == current or (
+        recorded.get('qemu_le_translation.py') == '6e40403e81266323e8e96a978a3c73764b7bc337724880835bc968206ea13ee6'
+        and _compatible_producer(recorded, current, tracking='qemu_paged_le_tracking.py' in current)
+    )
+
+
+def _pse36(configuration, image_hash):
+    from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE
+
+    return _ram_limits(configuration)[1] is not None and image_hash == QEMU_TCG_QUALIFIED_IMAGE
 
 
 def _cpu(registers, context):
@@ -372,7 +393,8 @@ def _qualify(session, observed):
         ):
             raise ValueError('Paged LE walk witness budget exceeded')
         data, walks = translate_linear(context, a, n, physical, virtual,
-                                       qemu_image_sha256=inputs.get('qemu_image'), high_ram_end=high_end)
+                                       qemu_image_sha256=inputs.get('qemu_image'), high_ram_end=high_end,
+                                       pse36=_pse36(session.vm.machine_configuration, inputs.get('qemu_image')))
         if key in linear_reads and linear_reads[key] != walks:
             raise ValueError('Page walks changed')
         if key not in linear_reads:
@@ -398,7 +420,8 @@ def _qualify(session, observed):
         raise ValueError('Capture extent or native backing differs')
     for (a, n), walks_before in list(linear_reads.items()):
         _, walks_after = translate_linear(context, a, n, physical, virtual,
-                                          qemu_image_sha256=inputs.get('qemu_image'), high_ram_end=high_end)
+                                          qemu_image_sha256=inputs.get('qemu_image'), high_ram_end=high_end,
+                                       pse36=_pse36(session.vm.machine_configuration, inputs.get('qemu_image')))
         if walks_after != walks_before:
             raise ValueError('Page walks changed during capture')
     for (a, n), b in list(reads.items()):
@@ -561,7 +584,8 @@ def validate(project, observation, run_metadata, *, run, version):
 
         def read(a, n):
             data, actual = translate_linear(context, a, n, physical,
-                                            qemu_image_sha256=ident['runtime_inputs'].get('qemu_image'), high_ram_end=high_end)
+                                            qemu_image_sha256=ident['runtime_inputs'].get('qemu_image'), high_ram_end=high_end,
+                                            pse36=proof['producer'] == current_producer and _pse36(run_metadata['machine_configuration'], ident['runtime_inputs'].get('qemu_image')))
             if not _supports_extended_walks(proof['producer']) and any('page_size' in walk for walk in actual):
                 raise ValueError('Legacy producer cannot attest an extended page walk')
             if walks.get((a, n)) != actual:

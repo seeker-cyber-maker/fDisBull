@@ -115,7 +115,7 @@ class QemuPagedLETrackingMixin:
         return self._paged_observe(binding, sequence, clocked=clocked)
 
     def _paged_observe(self, binding, sequence, *, clocked=False):
-        from .qemu_paged_le_capture import _cpu, _ram_limits, _ram_extent
+        from .qemu_paged_le_capture import _cpu, _ram_limits, _ram_extent, _pse36
         from .qemu_le_translation import parse_hmp
         from .qemu_paged_le_observation import observe, _unknown
         from .qemu_dos_trace import _clock_sample, _clock_bracket
@@ -185,6 +185,8 @@ class QemuPagedLETrackingMixin:
                 options['qemu_image_sha256'] = QEMU_TCG_PAE_ACCESSED_IMAGE
             if high_end is not None:
                 options['high_ram_end'] = high_end
+            if _pse36(self.vm.machine_configuration, binding['native_inputs'].get('qemu_image')):
+                options['pse36'] = True
             result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual, **options)
             from .qemu_runtime_capture import _qemu_input_hashes
 

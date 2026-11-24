@@ -114,11 +114,21 @@ class Bochs:
 
 def observation(debug):
     ctx = debug.context()
-    assert ctx["cr0"] & 0x80000001 == 0x80000001 and ctx["cr4"] & 0x20
+    assert ctx["cr0"] & 0x80000001 == 0x80000001
+    pae = bool(ctx["cr4"] & 0x20)
     pc = ctx["cs_base"] + ctx["ip"]
 
     def walk(linear):
         levels = []
+
+        if not pae:
+            address = (ctx["cr3"] & 0xFFFFF000) + ((linear >> 22) & 1023) * 4
+            value = int.from_bytes(debug.read(address, 4, True), "little")
+            assert value & 1 and value & 0x80, ("legacy-4m-pde", address, value)
+            levels.append({"level": "pde", "address": address, "value": value})
+            # PSE-36 carries physical address bits 32..39 in PDE bits 13..20.
+            base = (value & 0xFFC00000) | ((value & 0x001FE000) << 19)
+            return base + (linear & 0x3FFFFF), 0x400000, levels
 
         def entry(level, address):
             value = int.from_bytes(debug.read(address, 8, True), "little")
@@ -173,7 +183,7 @@ def observation(debug):
         "descriptor": descriptor.hex(),
         "ldtr_selector": ctx["ldtr_selector"],
         "paging": True,
-        "paging_mode": "pae",
+        "paging_mode": "pae" if pae else "legacy-32",
         "page_size": walks[0][1],
         "hex": data.hex(),
         "backing": [w[0] for w in walks],
@@ -184,7 +194,7 @@ def observation(debug):
 
 def verify_saved_high_checkpoint(stage, cfg, hot, cold):
     """Read the native Bochs CPU and sparse RAM files without starting Bochs."""
-    assert cfg["paging_mode"] in ("pae-4k-high", "pae-2m-high")
+    assert cfg["paging_mode"] in ("pae-4k-high", "pae-2m-high", "pse36-4m-high")
     checkpoint = Path(hot["checkpoint"])
     assert checkpoint.resolve() == (Path(stage) / "bochs-state").resolve()
     cpu_path = checkpoint / "cpu0"
@@ -244,24 +254,39 @@ def verify_saved_high_checkpoint(stage, cfg, hot, cold):
         assert len(data) == count, (hex(address), count)
         return data
 
-    def entry(level, address):
-        value = struct.unpack("<Q", physical_read(address, 8))[0]
+    if cfg["paging_mode"] == "pse36-4m-high":
+        saved_cpuid = struct.unpack("<I", physical_read(0x1F0000, 4))[0]
+        assert saved_cpuid == hot["pse36_cpuid_edx"] == cold["pse36_cpuid_edx"]
+        assert saved_cpuid & ((1 << 3) | (1 << 17)) == ((1 << 3) | (1 << 17))
+
+    def entry(level, address, width=8):
+        value = int.from_bytes(physical_read(address, width), "little")
         assert value & 1, (level, hex(address), hex(value))
         return {"level": level, "address": address, "value": value}
 
     frame_mask = 0x000FFFFFFFFFF000
-    pdpte = entry("pdpte", (cr3 & ~31) + ((linear >> 30) & 3) * 8)
-    pde = entry("pde", (pdpte["value"] & frame_mask) + ((linear >> 21) & 511) * 8)
-    entries = [pdpte, pde]
-    if pde["value"] & 0x80:
-        page_size = 0x200000
-        page_base = pde["value"] & 0x000FFFFFFFE00000
+    if cfg["paging_mode"] == "pse36-4m-high":
+        assert not cr4 & 0x20 and cr4 & 0x10
+        pde = entry("pde", (cr3 & 0xFFFFF000) + ((linear >> 22) & 1023) * 4, 4)
+        assert pde["value"] & 0x80
+        page_size = 0x400000
+        page_base = (pde["value"] & 0xFFC00000) | ((pde["value"] & 0x001FE000) << 19)
+        entries = [pde]
     else:
-        page_size = 0x1000
-        pte = entry("pte", (pde["value"] & frame_mask) + ((linear >> 12) & 511) * 8)
-        entries.append(pte)
-        page_base = pte["value"] & frame_mask
-    expected_size = 0x1000 if cfg["paging_mode"] == "pae-4k-high" else 0x200000
+        assert cr4 & 0x20
+        pdpte = entry("pdpte", (cr3 & ~31) + ((linear >> 30) & 3) * 8)
+        pde = entry("pde", (pdpte["value"] & frame_mask) + ((linear >> 21) & 511) * 8)
+        entries = [pdpte, pde]
+        if pde["value"] & 0x80:
+            page_size = 0x200000
+            page_base = pde["value"] & 0x000FFFFFFFE00000
+        else:
+            page_size = 0x1000
+            pte = entry("pte", (pde["value"] & frame_mask) + ((linear >> 12) & 511) * 8)
+            entries.append(pte)
+            page_base = pte["value"] & frame_mask
+    expected_size = {"pse36-4m-high": 0x400000, "pae-4k-high": 0x1000,
+                     "pae-2m-high": 0x200000}[cfg["paging_mode"]]
     assert page_size == expected_size
     backing = page_base + (linear & (page_size - 1))
     assert backing == cfg["second_target"]
@@ -380,6 +405,13 @@ debug: action=ignore
             str(address): debug.read(address, 2, True).hex()
             for address in cfg.get("low_aliases", [])
         }
+        pse36_cpuid_edx = (
+            int.from_bytes(debug.read(0x1F0000, 4, True), "little")
+            if cfg["paging_mode"] == "pse36-4m-high"
+            else None
+        )
+        if pse36_cpuid_edx is not None:
+            assert pse36_cpuid_edx & ((1 << 3) | (1 << 17)) == ((1 << 3) | (1 << 17))
     except BaseException:
         debug.abort()
         raise
@@ -402,6 +434,8 @@ debug: action=ignore
             page["physical"] for event in events for page in event["mmu_pages"]
         ),
     }
+    if cfg["paging_mode"] == "pse36-4m-high":
+        result["pse36_cpuid_edx"] = pse36_cpuid_edx
     (stage / f"bochs-{phase}.json").write_text(json.dumps(result, indent=2))
     return result
 

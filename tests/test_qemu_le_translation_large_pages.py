@@ -243,3 +243,38 @@ def test_split_ram_witness_excludes_the_pci_hole_and_bank_end():
     assert _ram_extent(2**32, 1, low_end, high_end)
     assert _ram_extent(high_end - 1, 1, low_end, high_end)
     assert not _ram_extent(2**32, 1, *_ram_limits({'memory_mib': 64}))
+
+
+def test_pse36_high_leaf_requires_capability_and_preserves_reserved_bits():
+    high = 1 << 32
+    end = high + 32 * 2**20
+    values = {0x1000: (0x800000 | 0x2000 | 0x83).to_bytes(4, 'little'),
+              high + 0x800ffe: b'ab', high + 0x801000: b'cd'}
+    read = lambda a, n: values[a]
+    with pytest.raises(ValueError, match='PSE-36'):
+        translate_linear(legacy_context(), 0xffe, 4, read, high_ram_end=end)
+    data, walks = translate_linear(legacy_context(), 0xffe, 4, read, high_ram_end=end, pse36=True)
+    assert data == b'abcd'
+    assert [w['physical'] for w in walks] == [high + 0x800ffe, high + 0x801000]
+    assert all(w['page_size'] == 0x400000 and w['paging_mode'] == 'legacy-32' for w in walks)
+    for bit in (14, 20, 21):
+        values[0x1000] = (0x800000 | 0x2000 | 0x83 | (1 << bit)).to_bytes(4, 'little')
+        with pytest.raises(ValueError, match='reserved'):
+            translate_linear(legacy_context(), 0xffe, 4, read, high_ram_end=end, pse36=True)
+    values[0x1000] = (0x2000000 | 0x2000 | 0x83).to_bytes(4, 'little')
+    with pytest.raises(ValueError, match='high RAM extent'):
+        translate_linear(legacy_context(), 0, 1, read, high_ram_end=end, pse36=True)
+
+
+def test_pse36_runtime_profile_is_exact_and_previous_manifest_is_retained():
+    from fdisbull.qemu_paged_le_capture import _pse36, _producer, _compatible_producer, _supports_high_ram
+    config = {'memory_mib': 64, 'cpu': 'max', 'max_ram_below_4g_mib': 32}
+    assert _pse36(config, QEMU_TCG_PAE_ACCESSED_IMAGE)
+    assert not _pse36(config, 'f' * 64)
+    assert not _pse36({'memory_mib': 64}, QEMU_TCG_PAE_ACCESSED_IMAGE)
+    current = _producer()
+    old = dict(current, **{'qemu_le_translation.py': '6e40403e81266323e8e96a978a3c73764b7bc337724880835bc968206ea13ee6',
+                          'qemu_paged_le_capture.py': '33e589a44d2e2a8be59c4bd46f814d213cbf7883009b3cd6ef0dfaafe7ae8d44'})
+    assert _compatible_producer(old, current) and _supports_high_ram(old, current)
+    old['le.py'] = '0' * 64
+    assert not _compatible_producer(old, current) and not _supports_high_ram(old, current)

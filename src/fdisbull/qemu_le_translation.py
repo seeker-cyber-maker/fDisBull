@@ -6,7 +6,8 @@ establish process ownership, a stable snapshot, access rights, or source identit
 """
 import re
 
-QEMU_TCG_PAE_ACCESSED_IMAGE = '863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25'
+QEMU_TCG_QUALIFIED_IMAGE = '863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25'
+QEMU_TCG_PAE_ACCESSED_IMAGE = QEMU_TCG_QUALIFIED_IMAGE
 
 
 def _u32(value, name):
@@ -66,7 +67,7 @@ def _read(reader, address, length):
     return data
 
 
-def _extended_walk(context, linear, reader, qemu_image_sha256, high_ram_end):
+def _extended_walk(context, linear, reader, qemu_image_sha256, high_ram_end, pse36):
     """Walk PSE/PAE tables, admitting bit 32 only inside the verified high RAM bank."""
     cr0, cr3, cr4, efer = (context[k] for k in ('cr0', 'cr3', 'cr4', 'efer'))
     pae = bool(cr4 & 0x20)
@@ -114,9 +115,9 @@ def _extended_walk(context, linear, reader, qemu_image_sha256, high_ram_end):
             return None
         if not cr4 & 0x10:
             raise ValueError('Large PDE requires CR4.PSE')
-        if pde & 0x3fe000:
+        if pde & 0x3fc000 or (pde & 0x2000 and not pse36):
             raise ValueError('PSE-36 or reserved large-page bits are unsupported')
-        size, physical = 0x400000, (pde & 0xffc00000) | (linear & 0x3fffff)
+        size, physical = 0x400000, (pde & 0xffc00000) | ((pde & 0x2000) << 19) | (linear & 0x3fffff)
         attrs = dict(writable=bool(pde & 2), user=bool(pde & 4),
                      supervisor_write_protect=bool(cr0 & 0x10000))
         mode = 'legacy-32'
@@ -138,12 +139,14 @@ def require_executable_walks(walks, length):
 
 
 def translate_linear(context, address, length, read_physical, read_linear=None, *,
-                     qemu_image_sha256=None, high_ram_end=None):
+                     qemu_image_sha256=None, high_ram_end=None, pse36=False):
     """Return bytes and 4 KiB walk evidence, optionally checking QEMU linear bytes."""
     if high_ram_end is not None and (
         type(high_ram_end) is not int or not 2**32 < high_ram_end <= 2**33 or high_ram_end % 4096
     ):
         raise ValueError('Invalid PAE high RAM extent')
+    if type(pse36) is not bool or (pse36 and high_ram_end is None):
+        raise ValueError('Invalid PSE-36 capability')
     paging = _mode(context)
     from .dos_memory import translate_386_page
     state = dict(control={key.upper(): context[key] for key in ('cr0', 'cr3', 'cr4', 'efer')},
@@ -171,11 +174,11 @@ def translate_linear(context, address, length, read_physical, read_linear=None, 
                 initial[a, n] = data
             return data
 
-        extended = _extended_walk(context, linear, first_read, qemu_image_sha256, high_ram_end)
+        extended = _extended_walk(context, linear, first_read, qemu_image_sha256, high_ram_end, pse36)
         if extended is not None:
             physical = extended['physical']
             if physical >= 2**32 and physical + count > high_ram_end:
-                raise ValueError('PAE physical read exceeds high RAM extent')
+                raise ValueError('Physical read exceeds high RAM extent')
             data = _read(read_physical, physical, count)
             if read_linear is not None and _read(read_linear, linear, count) != data:
                 raise ValueError('Linear and translated physical bytes differ')

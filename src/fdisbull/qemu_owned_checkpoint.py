@@ -329,9 +329,11 @@ def _ram(vm, registers):
             except (KeyError, TypeError, ValueError):
                 raise ValueError('Owned machine RAM paging controls are unavailable') from None
             from .qemu_runtime_capture import _qemu_input_hashes
+            from .qemu_paged_le_capture import _pse36
+            image_hash = _qemu_input_hashes(getattr(vm, 'inputs', {})).get('qemu_image')
             physical, walks = translate_linear(context, page, 4096, read,
-                qemu_image_sha256=_qemu_input_hashes(getattr(vm, 'inputs', {})).get('qemu_image'),
-                high_ram_end=high_end)
+                qemu_image_sha256=image_hash, high_ram_end=high_end,
+                pse36=_pse36(vm.machine_configuration, image_hash))
             if page == int(registers['linear_pc'], 0) & ~4095:
                 require_executable_walks(walks, 4096)
             backing = walks[0]['physical']

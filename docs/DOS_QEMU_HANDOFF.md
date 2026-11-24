@@ -1,5 +1,42 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## High physical backing for 4 MiB PSE-36 LE tracking (2026-11-24)
+
+The QEMU-DOS debugger and Bochs 3.1 independently executed a FreeDOS LE
+fixture using legacy 4 MiB pages. The guest enabled CR4.PSE, left CR4.PAE
+clear, and wrote both code copies above 4 GiB. CPUID leaf 1 reported PSE and
+PSE-36 in both engines. QEMU used the qualified TCG binary and the opt-in PC
+profile with a 32 MiB high RAM bank.
+
+| Guest stop | Physical instruction address | 32-bit PDE at `0x300004` |
+| --- | --- | --- |
+| First visit at `000c:1400` | `0x100801400` | `0x008020a3` |
+| Same selector and offset after remap, at checkpoint | `0x100c01400` | `0x00c020a3` |
+| Subsequent visit at `001c:1400` | `0x100c01400` | `0x00c020a3` |
+
+In these PDEs bit 13 supplies physical address bit 32, as specified in the
+[Intel system programming manual, §4.3](https://www.intel.la/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf).
+Both engines matched on the raw PDE, native instruction bytes and physical
+backing at all 35
+source-bound hot stops and 28 source-bound restored stops. Four stops per
+phase were outside the LE. The full 39-stop hot sequence included two remap
+cycles. After cold restore each engine reproduced the entire 32-stop suffix.
+
+The fresh QEMU receiver entered DOS with paging disabled and CR4 zero. At
+the first restored stop, CR3 was `0x300000`, CR4 was `0x10`, and execution
+was at `000c:1400`. A separate walk of the saved Bochs CPU and sparse RAM
+files recovered the same PDE and instruction address. The high addresses
+contained `46 cb`. Their low aliases contained `0f 0b` (UD2). The previously
+observed LDT descriptor accessed bit differed between engines (`9a` in QEMU
+and `9b` in Bochs).
+
+This run qualifies the two guest-authored mappings inside the tested high
+bank. In a separate cold receiver, the public one-shot `capture_code` call at
+the same instruction raised `Layer requires an observed RAM mapping: unsupported`.
+That operation uses the generic 4 KiB layer walker. One-shot capture for
+PSE-36, other high address bits and full DOSBox-X replacement remain open.
+DOSBox-X remains the default. See the [local test procedure](../native/bochs-pae-reference/README.md).
+
 ## High physical backing for PAE LE tracking (2026-11-24)
 
 QEMU and Bochs 3.1 ran the same guest-authored FreeDOS remap twice and
@@ -30,8 +67,8 @@ LDT code descriptor. Directory and leaf entries agreed exactly.
 QEMU's opt-in 64 MiB PC profile places 32 MiB below 4 GiB and 32 MiB
 starting at 4 GiB. The adapter verifies both banks against QEMU's memory map
 on launch and restore. This qualifies the tested mappings in that high bank.
-Wider guest physical addressing, PSE-36 and full DOSBox-X replacement remain
-open. DOSBox-X remains the default. See the [local test procedure](../native/bochs-pae-reference/README.md).
+The 4 MiB PSE-36 follow-up appears above. Wider physical addressing and
+full DOSBox-X replacement remain open. DOSBox-X remains the default. See the [local test procedure](../native/bochs-pae-reference/README.md).
 
 ## Independent PAE reference for protected LE tracking (2026-11-24)
 

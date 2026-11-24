@@ -191,10 +191,11 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
     from test_le_loader import le_file
     from test_le_runtime_carrier import bound_le
 
-    high_physical = paging_mode in ('pae-4k-high', 'pae-2m-high')
-    base_mode = paging_mode.removesuffix('-high')
+    high_physical = paging_mode in ('pae-4k-high', 'pae-2m-high', 'pse36-4m-high')
+    pse36 = paging_mode == 'pse36-4m-high'
+    base_mode = 'legacy-4m' if pse36 else paging_mode.removesuffix('-high')
     if paging_mode not in ('legacy-4k', 'legacy-4m', 'pae-4k', 'pae-2m',
-                           'pae-4k-high', 'pae-2m-high'):
+                           'pae-4k-high', 'pae-2m-high', 'pse36-4m-high'):
         raise ValueError('unknown paging mode')
     if paging_mode != 'legacy-4k' and not tracking:
         raise ValueError('large and PAE modes require tracking')
@@ -211,6 +212,9 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
                'pae-4k': code_physical[1] | 3, 'pae-2m': 0x800083}[paging_mode]
     remap_b = {'legacy-4k': tracking_physical | 3, 'legacy-4m': 0xc00083,
                'pae-4k': tracking_physical | 3, 'pae-2m': 0xa00083}[paging_mode]
+    if pse36:
+        remap_a |= 0x2000
+        remap_b |= 0x2000
     if tracking and not (paging and ldt):
         raise ValueError('tracking mode requires paging and the LDT')
 
@@ -415,7 +419,7 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
     # The carrier is first copied and relocated through the ordinary mappings;
     # all high backing is then populated by guest instructions before use.
     high_setup = ''
-    if high_physical:
+    if high_physical and not pse36:
         second_copy = ("mov esi,0x401000\n    mov edi,0x610000\n    mov ecx,0x1000"
                        if paging_mode == 'pae-4k' else
                        "mov dword [0x301018],0xa00083\n    mov eax,cr3\n    mov cr3,eax\n"
@@ -441,6 +445,35 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
     mov eax,cr3
     mov cr3,eax
 """
+    if pse36:
+        high_setup = '''
+    ; PSE-36 PDE bit 13 carries physical address bit 32.
+    mov dword [0x30000c],0x802083
+    mov eax,cr3
+    mov cr3,eax
+    mov esi,0x400000
+    mov edi,0xc00000
+    mov ecx,0x400000
+    rep movsb
+    mov dword [0x300008],0xc00083
+    mov dword [0x30000c],0xc02083
+    mov eax,cr3
+    mov cr3,eax
+    mov esi,0x800000
+    mov edi,0xc00000
+    mov ecx,0x400000
+    rep movsb
+    mov dword [0x300008],0x800083
+    mov dword [0x30000c],0xc00083
+    mov eax,cr3
+    mov cr3,eax
+    mov word [0x801400],0x0b0f
+    mov word [0xc01400],0x0b0f
+    mov dword [0x300004],0x802083
+    mov eax,cr3
+    mov cr3,eax
+'''
+    if high_physical:
         code_physical = tuple(phys + 0x100000000 for phys in code_physical)
         tracking_physical += 0x100000000
         runtime_code_pages = code_physical

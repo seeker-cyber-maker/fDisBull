@@ -1,10 +1,10 @@
-# Optional Bochs PAE reference
+# Optional Bochs PAE and PSE-36 reference
 
 This private, opt-in reference uses Bochs 3.1's independent x86 full-machine
 emulation and debugger. The only source change is [the debugger bridge](save-bridge.patch),
 which calls Bochs's own `SIM->save_state` at the debugger stop. CPU, MMU and
-restore implementations are upstream. The paired test runs both PAE page sizes
-on FreeDOS and compares the stopped instructions before and after restore.
+restore implementations are upstream. The paired test runs 4 KiB and 2 MiB
+PAE pages and a 4 MiB PSE-36 page on FreeDOS. It compares the stopped instructions before and after restore.
 Keep guest disks, checkpoints and Bochs build products outside Git.
 
 ## Build
@@ -51,8 +51,9 @@ stages the LE carrier on a private copy of the FreeDOS floppy and keeps its
 checkpoint and traces in its own test directory. See the
 [local results](../../docs/DOS_QEMU_HANDOFF.md#independent-pae-reference-for-protected-le-tracking-2026-11-24).
 
-The four cases cover low and high backing for 4 KiB and 2 MiB PAE pages.
-To rerun the high cases alone, add `-k high` to the pytest command above.
+Four cases cover low and high backing for 4 KiB and 2 MiB PAE pages.
+A fifth covers 4 MiB PSE-36 pages backed above 4 GiB. Use `-k pse36` to run
+the PSE-36 comparison alone or `-k high` to run all three high-backed cases.
 The tests select a 64 MiB QEMU PC with 32 MiB in each bank. To generate
 that same profile for a caller-owned boot image, use
 
@@ -72,7 +73,8 @@ location, instruction bytes, page-table entries and selector state across the
 two engines. It checks Bochs's native debugger translation and reads high and
 low physical memory through the debuggers. Each receiving process restores
 its engine's own snapshot. The [high-address results](../../docs/DOS_QEMU_HANDOFF.md#high-physical-backing-for-pae-le-tracking-2026-11-24)
-include the tested addresses and stop counts.
+include the tested PAE addresses and stop counts. The [PSE-36 results](../../docs/DOS_QEMU_HANDOFF.md#high-physical-backing-for-4-mib-pse-36-le-tracking-2026-11-24)
+include both high addresses and the raw 32-bit page-directory entries.
 
 ## Native checkpoint commands
 
