@@ -1,5 +1,39 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## One-shot high-backed LE capture (2026-11-24)
+
+The public QEMU-DOS debugger captured a 15-byte linear extent from the same
+stopped LE instruction at `000c:1400` (linear `0x401400`) in three native
+FreeDOS fixtures. The adapter checked the stopped CPU, verified the launch RAM
+topology and native input identities, walked the page tables, and compared
+QEMU's physical and virtual reads. It repeated the observations before saving
+the artifact.
+
+| Paging mode | Physical address of the first capture byte |
+| --- | --- |
+| PAE, 4 KiB | `0x100810400` |
+| PAE, 2 MiB | `0x100a01400` |
+| PSE-36, 4 MiB | `0x100c01400` |
+
+All 12 RAM and execute captures matched Bochs 3.1 over the full 15 bytes, both
+at the original stop and after unprimed cold restore. Each QEMU receiver
+started in real mode with paging, PSE and PAE disabled. It restored its own
+checkpoint with no live LE binding. Both engines read `46 cb` at the high
+code addresses and `0f 0b` at their wrapped 32-bit aliases. A separate walk
+of Bochs's saved CPU and RAM confirmed the backing. After each QEMU process
+exited, offline analysis resolved the stopped instruction to LE object 1,
+offset `0x1400`. The capture left the stopped registers intact. The PAE
+comparison retains the known QEMU TCG accessed bit in the PDPTE.
+
+The pinned QEMU binary accepts 32-bit addresses in its execution-overlay
+observer. For a high execute capture the adapter checks the native overlay
+generation, override count and fault status before and after reading the
+bytes. A nonempty or faulted execution overlay prevents that capture. Offline
+analysis can recheck the stored bytes and translations. The overlay status is
+a live observation. Writable high-address layers and general DOSBox-X parity
+remain open. DOSBox-X remains the default. See the
+[local test procedure](../native/bochs-pae-reference/README.md#one-shot-high-backed-capture).
+
 ## High physical backing for 4 MiB PSE-36 LE tracking (2026-11-24)
 
 The QEMU-DOS debugger and Bochs 3.1 independently executed a FreeDOS LE
@@ -33,8 +67,8 @@ and `9b` in Bochs).
 This run qualifies the two guest-authored mappings inside the tested high
 bank. In a separate cold receiver, the public one-shot `capture_code` call at
 the same instruction raised `Layer requires an observed RAM mapping: unsupported`.
-That operation uses the generic 4 KiB layer walker. One-shot capture for
-PSE-36, other high address bits and full DOSBox-X replacement remain open.
+At that time the operation used the generic 4 KiB layer walker. The one-shot
+capture result above supersedes that failure for the three tested mappings. Other high address bits and full DOSBox-X replacement remain open.
 DOSBox-X remains the default. See the [local test procedure](../native/bochs-pae-reference/README.md).
 
 ## High physical backing for PAE LE tracking (2026-11-24)

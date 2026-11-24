@@ -18,6 +18,11 @@ LAYER_COMMANDS = frozenset(('x-fdisbull-layer-configure', 'x-fdisbull-layer-obse
 MAX_BYTES = 65536
 
 
+class _UnsupportedLayerMapping(ValueError):
+    """The legacy layer walker cannot interpret this mapping."""
+
+
+
 def _chunks(before, after):
     return [
         {'address': span[0], 'before': bytes(before[a] for a in span).hex(),
@@ -114,7 +119,8 @@ class QemuLayerSessionMixin:
             count = min(4096 - (start & 4095), linear + length - start)
             mapping = translate_386_page(start, state, read_table)
             if mapping['status'] != 'mapped':
-                raise ValueError('Layer requires an observed RAM mapping: ' + mapping['status'])
+                error = _UnsupportedLayerMapping if mapping['status'] == 'unsupported' else ValueError
+                raise error('Layer requires an observed RAM mapping: ' + mapping['status'])
             backing = int(mapping['physical_address'], 16)
             self._layer_ram_extent(backing, count)
             if remote.memory(start, count, space='virtual') != remote.memory(backing, count, space='physical'):
@@ -122,6 +128,68 @@ class QemuLayerSessionMixin:
             spans.append((backing, count))
             start += count
         return linear, static, spans, state
+
+    def _capture_linear_spans(self, address, length, cs):
+        """Resolve a stopped linear capture through independently checked page walks."""
+        from .qemu_le_translation import parse_hmp, translate_linear
+        from .qemu_paged_le_capture import _cpu, _ram_limits, _ram_extent, _pse36
+        from .qemu_runtime_capture import _qemu_input_hashes
+
+        if getattr(self, '_dos_task_monitor', None) or getattr(self, '_dos_task_binding', None):
+            raise ValueError('Extended capture does not admit task-private views')
+        if cs is not None or type(length) is not int or not 1 <= length <= MAX_BYTES:
+            raise ValueError('Invalid capture extent')
+        linear = int(address, 0) if isinstance(address, str) else address
+        if type(linear) is not int or not 0 <= linear <= 0x100000000 - length:
+            raise ValueError('Capture extent must fit a 32-bit address space')
+        registers = self.registers()
+        context = parse_hmp(self.vm.qmp.call('human-monitor-command', {'command-line': 'info registers'}))
+        _cpu(registers, context)
+        config = deepcopy(self.vm.machine_configuration)
+        ram_end, high_end = _ram_limits(config)
+        recorded = deepcopy(self.metadata['machine_configuration'])
+        if _ram_limits(recorded) != (ram_end, high_end) or recorded['memory_mib'] != config['memory_mib']:
+            raise ValueError('Guest RAM configuration differs from run metadata')
+        inputs = _qemu_input_hashes(self.metadata['runtime_inputs'])
+        if hasattr(self.vm, 'inputs') and _qemu_input_hashes(self.vm.inputs) != inputs:
+            raise ValueError('Paged capture native input identity differs')
+        remote = self._stopped()
+        reads = {}
+
+        def physical(address, size):
+            if not _ram_extent(address, size, ram_end, high_end):
+                raise ValueError('Paged capture witness is outside RAM')
+            data = remote.memory(address, size, space='physical')
+            key = address, size
+            if key in reads and reads[key] != data:
+                raise ValueError('Paged capture witness changed')
+            reads[key] = data
+            return data
+
+        def virtual(address, size):
+            return remote.memory(address, size, space='virtual')
+
+        image_hash = inputs.get('qemu_image')
+        pse36 = _pse36(config, image_hash)
+
+        def walk():
+            return translate_linear(context, linear, length, physical, virtual,
+                                    qemu_image_sha256=image_hash, high_ram_end=high_end, pse36=pse36)
+
+        baseline, walks = walk()
+
+        def verify():
+            _, after = walk()
+            current = parse_hmp(self.vm.qmp.call('human-monitor-command', {'command-line': 'info registers'}))
+            if (self.vm.machine_configuration != config
+                    or self.metadata['machine_configuration'] != recorded
+                    or _qemu_input_hashes(self.metadata['runtime_inputs']) != inputs
+                    or (hasattr(self.vm, 'inputs') and _qemu_input_hashes(self.vm.inputs) != inputs)
+                    or walks != after or self.registers() != registers or current != context):
+                raise ValueError('Paged capture context, identity, or mapping changed')
+
+        spans = [(entry['physical'], entry['length']) for entry in walks]
+        return linear, None, spans, registers['address_state'], verify, baseline
 
     def _layer_native_observe(self, **extent):
         result = self.vm.qmp.call('x-fdisbull-layer-observe', extent or None)
@@ -313,15 +381,38 @@ class QemuLayerSessionMixin:
 
     @_locked
     def code(self, address, *, cs=None, length=32, view='execute', space=None):
+        return self._code(address, cs=cs, length=length, view=view, space=space)
+
+    def _code(self, address, *, cs=None, length=32, view='execute', space=None, capture=False):
         from iced_x86 import Decoder, Formatter, FormatterSyntax
 
         self._layer_preflight()
-        self._layer_native_observe()
+        initial_layers = self._layer_native_observe()
         if view not in ('ram', 'execute'):
             raise ValueError('view must be ram or execute')
         if space is None:
             space = 'source' if hasattr(self, '_process') else 'linear'
-        linear, static, spans, state = self._layer_spans(address, length, space, cs)
+        verify = None
+        baseline = None
+        try:
+            linear, static, spans, state = self._layer_spans(address, length, space, cs)
+        except _UnsupportedLayerMapping:
+            if not (capture and space == 'linear' and self.backend_id == 'qemu-dos'):
+                raise
+            linear, static, spans, state, verify, baseline = self._capture_linear_spans(address, length, cs)
+        empty_overlay_witness = None
+        if verify is not None and view == 'execute' and any(start >= 2**32 for start, _ in spans):
+            from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE
+            from .qemu_runtime_capture import _qemu_input_hashes
+
+            if _qemu_input_hashes(self.vm.inputs).get('qemu_image') == QEMU_TCG_QUALIFIED_IMAGE:
+                # This binary's addressed overlay observer accepts 32-bit addresses.
+                # With zero native overrides the effective fetch view equals the
+                # independently observed RAM. Bracket that fact across the read.
+                if initial_layers.get('fault') or initial_layers.get('execution-bytes') != 0:
+                    raise ValueError('High-backed execute capture requires an empty, fault-free native execution overlay')
+                empty_overlay_witness = dict(method='native-empty-execution-overlay',
+                                             generation=initial_layers['generation'], execution_bytes=0)
         remote = self._stopped()
         observed = bytearray()
         task_view = None
@@ -335,7 +426,9 @@ class QemuLayerSessionMixin:
                 observed.extend(data)
                 continue
             ram = remote.memory(start, count, space='physical')
-            if view == 'ram':
+            if baseline is not None and ram != baseline[len(observed):len(observed) + count]:
+                raise ValueError('Paged capture RAM changed during observation')
+            if view == 'ram' or (empty_overlay_witness is not None and start >= 2**32):
                 observed.extend(ram)
                 continue
             expected = bytearray(ram)
@@ -349,6 +442,10 @@ class QemuLayerSessionMixin:
             if native.get('fault') or native.get('data-hex') != expected.hex():
                 raise DebuggerError('QEMU did not verify the effective instruction fetch view')
             observed.extend(expected)
+        if verify is not None:
+            verify()
+        if empty_overlay_witness is not None and self._layer_native_observe() != initial_layers:
+            raise DebuggerError('Native execution overlay changed during capture')
         bits = state['code_bits']
         instructions = []
         runtime_cs = project_cs = None
@@ -408,7 +505,8 @@ class QemuLayerSessionMixin:
                     generation=self._layer_generation if task_view is None else task_view['generation'],
                     active_layers=list(self._layer_active if task_view is None else task_view['active']),
                     backing=[dict(physical_address=hex(a), length=n) for a, n in spans],
-                    evidence='stopped native backing bytes and guarded instruction overlay')
+                    evidence='stopped native backing bytes and guarded instruction overlay',
+                    **({'execute_view_witness': empty_overlay_witness} if empty_overlay_witness is not None else {}))
 
     def _needs_translated_le_capture(self):
         from .qemu_dos_source_admission import _integer
@@ -425,7 +523,7 @@ class QemuLayerSessionMixin:
 
     @_locked
     def capture_code(self, address, *, cs=None, length=64, view='execute', space=None, name='code-view.json'):
-        result = self.code(address, cs=cs, length=length, view=view, space=space)
+        result = self._code(address, cs=cs, length=length, view=view, space=space, capture=True)
         metadata = {key: result[key] for key in ('view', 'space', 'project_address', 'generation', 'active_layers')}
         metadata['static_promotion'] = 'unqualified'
         if result['space'] == 'source':

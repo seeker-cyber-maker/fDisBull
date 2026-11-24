@@ -70,14 +70,12 @@ def high_alias_reads(debug, cfg):
     return observed
 
 
-def run(stage, phase):
-    cfg = json.loads((stage / 'config.json').read_text())
-    source = Path(cfg['source'])
-    db = stage / 'qemu.fdb'
+def qemu_dos_options(stage, cfg):
+    """Return the shared native QEMU-DOS launch profile for this fixture."""
     rt = os.environ
     options = dict(
         backend='qemu-dos',
-        dos_boot_image=str(stage / 'boot.img'),
+        dos_boot_image=str(Path(stage) / 'boot.img'),
         dos_mcopy=rt['FDISBULL_QEMU_DOS_MCOPY'],
         dos_startup_batch='FDAUTO.BAT',
         qemu_transport='pipe',
@@ -86,8 +84,18 @@ def run(stage, phase):
     )
     if cfg.get('high_physical'):
         from fdisbull.qemu_dos import prepare_dos_profile
-        options['guest_profile'] = prepare_dos_profile(stage / 'boot.img', cpu='max', memory_mib=64,
-                                                      max_ram_below_4g_mib=32)
+        options['guest_profile'] = prepare_dos_profile(
+            Path(stage) / 'boot.img', cpu='max', memory_mib=64,
+            max_ram_below_4g_mib=32)
+    return options
+
+
+def run(stage, phase):
+    cfg = json.loads((stage / 'config.json').read_text())
+    source = Path(cfg['source'])
+    db = stage / 'qemu.fdb'
+    rt = os.environ
+    options = qemu_dos_options(stage, cfg)
     checkpoints_at = cfg['checkpoint_index']
     owners, ids = [], []
     pae_context = {}

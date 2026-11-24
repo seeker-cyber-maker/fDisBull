@@ -91,3 +91,23 @@ Keep the matching disk image available to the receiver because the snapshot
 references its configured floppy. Bochs documents the debugger and the native
 startup restore option in its [debugger manual](https://bochs.sourceforge.io/doc/docbook/user/internal-debugger.html)
 and [save and restore guide](https://bochs.sourceforge.io/doc/docbook/user/using-save-restore.html).
+
+## One-shot high-backed capture
+
+With the native profile and `FDISBULL_BOCHS` configured as above, run the
+paired test locally.
+
+```sh
+python -m pytest -q tests/test_qemu_dos_capture_code_pae_bochs_native.py
+```
+
+The test captures a 15-byte extent at the guest's remapped LE instruction
+in 4 KiB PAE, 2 MiB PAE and 4 MiB PSE-36 fixtures. For each mapping Bochs
+saves a native checkpoint and observes its first restored stop in a new
+process. QEMU captures RAM and execute views on either side of its own cold
+restore. The test reopens the project after each QEMU owner exits, exports
+the captures, and compares their bytes, instruction, backing and page-table
+entries with Bochs's debugger and saved state. The low 32-bit aliases contain
+a distinct instruction. Keep the private guest images, project databases and
+native checkpoints outside Git. See the [verified scope and overlay
+limits](../../docs/DOS_QEMU_HANDOFF.md#one-shot-high-backed-le-capture-2026-11-24).

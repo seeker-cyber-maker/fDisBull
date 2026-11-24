@@ -112,7 +112,7 @@ class Bochs:
         }
 
 
-def observation(debug):
+def observation(debug, *, capture_window=False):
     ctx = debug.context()
     assert ctx["cr0"] & 0x80000001 == 0x80000001
     pae = bool(ctx["cr4"] & 0x20)
@@ -143,7 +143,8 @@ def observation(debug):
         pte = entry("pte", (pde & 0x000FFFFFFFFFF000) + ((linear >> 12) & 511) * 8)
         return (pte & 0x000FFFFFFFFFF000) + (linear & 4095), 0x1000, levels
 
-    data = debug.read(pc, 15)
+    window = debug.read(pc, 15) if capture_window else None
+    data = window if window is not None else debug.read(pc, 15)
     decoded = Decoder(32, data, ip=ctx["ip"]).decode()
     assert not decoded.is_invalid
     data = data[: decoded.len]
@@ -163,6 +164,40 @@ def observation(debug):
             assert observed_linear == page
             mmu_pages[page] = observed_physical
         assert mmu_pages[page] + (linear & 0xFFF) == physical
+    capture_observation = None
+    if window is not None:
+        spans = []
+        window_mmu_pages = []
+        offset = 0
+        while offset < len(window):
+            linear = pc + offset
+            page = linear & ~0xFFF
+            count = min(len(window) - offset, 0x1000 - (linear & 0xFFF))
+            if page == (pc & ~0xFFF) and linear == pc:
+                physical, page_size, entries = walks[0]
+            else:
+                physical, page_size, entries = walk(linear)
+            if page not in mmu_pages:
+                output = debug.cmd(f"page {linear:#x}")
+                found = re.search(
+                    r"linear page 0x([0-9a-fA-F]+) maps to physical page 0x([0-9a-fA-F]+)",
+                    output,
+                )
+                assert found, output
+                observed_linear, observed_physical = (int(v, 16) for v in found.groups())
+                assert observed_linear == page
+                mmu_pages[page] = observed_physical
+            native_physical = mmu_pages[page] + (linear & 0xFFF)
+            assert native_physical == physical
+            data_span = debug.read(physical, count, True)
+            expected_span = window[offset : offset + count]
+            assert data_span == expected_span
+            spans.append(dict(linear=linear, physical=physical, length=count,
+                              hex=data_span.hex(), page_size=page_size, entries=entries))
+            window_mmu_pages.append(dict(linear=page, physical=mmu_pages[page]))
+            offset += count
+        capture_observation = dict(linear=pc, length=len(window), hex=window.hex(),
+                                   spans=spans, mmu_pages=window_mmu_pages)
     selector = ctx["cs"]
     if selector & 4:
         ldt_desc = debug.read(ctx["gdtr_base"] + (ctx["ldtr_selector"] & ~7), 8)
@@ -189,10 +224,11 @@ def observation(debug):
         "backing": [w[0] for w in walks],
         "walks": [w[2] for w in walks],
         "mmu_pages": [{"linear": k, "physical": v} for k, v in mmu_pages.items()],
+        **({"capture_window": capture_observation} if capture_observation else {}),
     }
 
 
-def verify_saved_high_checkpoint(stage, cfg, hot, cold):
+def verify_saved_high_checkpoint(stage, cfg, hot, cold, captures=()):
     """Read the native Bochs CPU and sparse RAM files without starting Bochs."""
     assert cfg["paging_mode"] in ("pae-4k-high", "pae-2m-high", "pse36-4m-high")
     checkpoint = Path(hot["checkpoint"])
@@ -312,6 +348,39 @@ def verify_saved_high_checkpoint(stage, cfg, hot, cold):
     descriptor_address = ldt["base"] + (cs["selector"] & ~7)
     assert physical_read(descriptor_address, 8).hex() == checkpoint_event["descriptor"]
 
+    # Bind every byte in each QEMU one-shot capture to Bochs' native MMU and
+    # the RAM bytes actually present in the independently saved checkpoint.
+    if captures:
+        for receipt, event in zip(captures, (checkpoint_event, restored_event), strict=True):
+            assert receipt["target_pc"] == event["pc"]
+            window = event["capture_window"]
+            native_pages = {page["linear"]: page["physical"] for page in window["mmu_pages"]}
+            assert window["linear"] == event["pc"] and window["length"] == 15
+            assert len(bytes.fromhex(window["hex"])) == window["length"]
+            for view in ("execute", "ram"):
+                payload = receipt["payloads"][view]
+                assert int(payload["runtime_address"], 16) == event["pc"]
+                captured = bytes.fromhex(payload["hex"])
+                assert payload["length"] == 15 and len(captured) == payload["length"]
+                assert captured == bytes.fromhex(window["hex"][: 2 * payload["length"]])
+                capture_backing = [
+                    int(span["physical_address"], 16) + offset
+                    for span in payload["backing"]
+                    for offset in range(span["length"])
+                ]
+                expected_backing = [
+                    span["physical"] + offset
+                    for span in window["spans"]
+                    for offset in range(span["length"])
+                ][: payload["length"]]
+                assert capture_backing == expected_backing
+                for index, (physical, observed) in enumerate(zip(capture_backing, captured, strict=True)):
+                    linear = event["pc"] + index
+                    page = linear & ~0xFFF
+                    assert page in native_pages
+                    assert native_pages[page] + (linear & 0xFFF) == physical
+                    assert physical_read(physical, 1) == bytes((observed,))
+
 
 def run(stage, phase):
     stage = Path(stage).resolve()
@@ -398,7 +467,9 @@ debug: action=ignore
                 checkpoint.mkdir()
                 out = debug.cmd(f'restore "__save_state__" "{checkpoint}"')
                 assert "native save state" in out and ": OK" in out, out
-            events.append(observation(debug))
+            events.append(
+                observation(debug, capture_window=index == cfg["checkpoint_index"])
+            )
             if index + 1 < cfg["boundaries"]:
                 debug.cmd("s")
         low_alias_markers = {
