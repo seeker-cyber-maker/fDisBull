@@ -131,7 +131,7 @@ def _catalog():
         _entry('debug.qemu-agi', 'partial', ['agi'],
                ['cli:debug --backend qemu-agi', 'json:debug-launch', 'json:debug-agi-scene-observe'],
                ['qemu_agi.py', 'qemu_agi_scene.py'], ['qemu-system-agi'],
-               'Raw LOGIC or resource package: stopped actor state, bounded events and runtime scene planes. No complete-game equivalence.', maturity='experimental'),
+               'Raw LOGIC or resource package. Stopped actors, bounded events, runtime planes. Checkpoint build supports cold restore.', maturity='experimental'),
         _entry('debug.qemm-guest', 'partial', ['x86-16', 'x86-32'],
                ['cli:qemm-config', 'cli:qemm-profile', 'cli:debug --backend qemu-machine --guest-profile qemm',
                 'json:debug-memory-translation', 'json:debug-qemm-observe'],

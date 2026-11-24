@@ -319,7 +319,7 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
 
     def debug_state_info(self, artifact):
         import zipfile
-        row = self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
+        row = self.db.execute('SELECT a.kind,a.metadata,a.sha256,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
                               (artifact,)).fetchone()
         if row is not None and row['kind']=='machine-state':
             from .qemu_owned_checkpoint import inspect_owned_machine_state
@@ -329,10 +329,13 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             return inspect_le_source_state(self, artifact)
         if row is None or row['kind']!='state':
             raise ValueError('Unknown native state artifact')
-        data = bytes(row['data'])
+        metadata=json.loads(row['metadata'])
+        if metadata.get('format') == 'fdisbull-qemu-agi-state-1':
+            from .qemu_agi_checkpoint import inspect_agi_state
+            return inspect_agi_state(self, artifact)
+        data = bytes(self.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (artifact,)).fetchone()[0])
         if hashlib.sha256(data).hexdigest()!=row['sha256']:
             raise ValueError('Stored state hash mismatch')
-        metadata=json.loads(row['metadata'])
         if metadata.get('format')=='scummvm-agi-native-slot-v1':
             return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
                     'metadata':metadata,'exact_vm_checkpoint':False}
@@ -375,6 +378,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         info = self.debug_state_info(artifact)
         if info['metadata'].get('format')=='scummvm-agi-native-slot-v1':
             raise ValueError('ScummVM native save slots do not support DOS memory/register forks')
+        if info['metadata'].get('format') == 'fdisbull-qemu-agi-state-1':
+            raise ValueError('Native AGI checkpoints support direct restore only')
         if info['metadata'].get('format') in ('fdisbull-qemu-raw-qcow2-v1', 'fdisbull-qemu-dos-entry-qcow2-v1', 'fdisbull-qemu-dos-process-qcow2-v2', 'fdisbull-qemu-dos-workspace-qcow2-v1', 'fdisbull-qemu-owned-machine-qcow2-v1', 'fdisbull-qemu-dos-le-checkpoint-1'):
             raise ValueError('Native QEMU checkpoints do not yet support state forks')
         memory = [] if memory is None else memory

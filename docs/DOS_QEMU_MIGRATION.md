@@ -221,7 +221,10 @@ A bound resource package also supplies the visual and priority planes.
 Set `FDISBULL_QEMU_AGI` to the target executable to run
 `tests/test_qemu_agi_inspection_native.py` and `tests/test_qemu_agi_public_native.py`.
 They exercise the shared inspection path and the public debugger with authored
-inputs. DOS replacement qualification remains a separate gate.
+inputs. With a checkpoint-capable executable, the AGI debugger also restores
+the active LOGIC, stack, scene planes and retained journal across processes.
+The local cold-restore test compares subsequent steps with an uninterrupted run.
+DOS replacement qualification remains a separate gate.
 
 ## FreeDOS and directory layers
 

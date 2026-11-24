@@ -17,6 +17,8 @@ from .gdb_rpc import GDBRemote
 from .native_cpu import inspect_native_cpu
 from .qemu_control import QemuControl
 from .qemu_diagnostics import QemuInspectionMixin
+from .qemu_agi_checkpoint import AGICheckpointMixin, checkpoint_available
+from .anchor_stones import AnchorStoneSessionMixin
 
 BACKEND = 'qemu-agi'
 EXECUTION_ERROR_FORMAT = 'fdisbull-qemu-agi-execution-error-1'
@@ -119,7 +121,7 @@ class _Owner:
                 self.temporary.cleanup()
 
 
-class AGIQemuSession(QemuInspectionMixin):
+class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspectionMixin):
     """One live AGI machine, bound to a retained original raw source."""
     backend_id = BACKEND
     capabilities = dict(registers=True, step=True, run=True, qemu_diagnostics=True,
@@ -160,6 +162,7 @@ class AGIQemuSession(QemuInspectionMixin):
         version_line = subprocess.check_output([str(executable), '--version'], text=True,
                     stderr=subprocess.STDOUT, timeout=_remaining(deadline)/1000).splitlines()[0]
         self.project, self.version = project, selected
+        self._executable, self._source_data, self._runtime_package = executable, data, package_data
         self.identity = dict(source_sha256=_sha(data), version_sha256=selected['sha256'],
                              qemu_sha256=binary_sha, qemu_version=version_line,
                              machine='agi-test', source_size=len(data),
@@ -172,6 +175,7 @@ class AGIQemuSession(QemuInspectionMixin):
         self.rpc = self.vm
         self.cpu_path = self.vm.cpu_path
         try:
+            self.capabilities['save_states'] = checkpoint_available(self.vm, deadline)
             state = self._state()
             source = state.get('source', {})
             if package_data is None:

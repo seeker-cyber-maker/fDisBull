@@ -65,3 +65,45 @@ fdisbull output-export out-<sha256> /private/scene-response.json
 The exported response holds the observation under `result`. Use the same
 output artifact directory as the server. To retrieve selected fields or ranges
 from the retained response, see [bounded replies](OUTPUT_LIMITS.md).
+
+## Save a checkpoint and continue in another session
+
+Use a checkpoint-capable `qemu-system-agi` for both sessions. The debugger
+reports `save_states` in its per-run capabilities after it inspects the CPU.
+The earlier AGI executable still supports ordinary inspection and stepping.
+See the [native build instructions](../native/qemu-agi-checkpoint/README.md).
+
+The checkpoint is an artifact in the private project. Keep its ID and reopen
+the same project with the same native executable, original LOGIC and, for a
+resource-backed session, the identical package. This example saves inside a
+called LOGIC and restores in a new process.
+
+```python
+from fdisbull.project import Project
+
+options = dict(backend="qemu-agi", agi_runtime_package=package_path)
+with Project(project_path) as project, project.debugger(executable, **options) as first:
+    first.step()  # The entry instruction in this example calls another LOGIC.
+    saved = first.save_state("inside-room.agi")
+    artifact = saved["artifact"]
+
+with Project(project_path) as project, project.debugger(executable, **options) as second:
+    restored = second.load_state(artifact)
+    assert restored["verified"]
+    position = second.registers()["logical_position"]
+    scene = second.scene_observe()
+    next_step = second.step()
+```
+
+For JSON, use `debug-save-state` with the original run ID, then
+`debug-load-state` with the new run ID and the saved `artifact`. To inspect
+the saved identity and component size offline, run
+`fdisbull debug-state-info PROJECT ARTIFACT`.
+
+A restore loads a fresh stopped owner and compares the native checkpoint bytes,
+registers, guest state and scene projection before replacing the active owner.
+This preserves the current LOGIC and offset, call stack and retained scene events.
+Resource-backed checkpoints also retain the visual and priority planes.
+Ordinary stopped instruction boundaries and root returns are supported.
+Resource-backed pending host requests, faults and quit stops reject capture.
+Checkpoints are limited to 16 MiB and are specific to the native executable.

@@ -1,0 +1,472 @@
+--- a/target/agi/cpu.c
++++ b/target/agi/cpu.c
+@@ -719,6 +719,15 @@
+     CPU(obj)->halted = 0;
+ }
+
++static char *agi_get_debug_checkpoint(Object *obj, Error **errp)
++{
++    return agi_require_stopped(obj, errp) ? agi_debug_checkpoint_get(AGI_CPU(obj), errp) : NULL;
++}
++static void agi_set_debug_checkpoint(Object *obj, const char *value, Error **errp)
++{
++    if (agi_require_stopped(obj, errp)) agi_debug_checkpoint_set(AGI_CPU(obj), value, errp);
++}
++
+ static void agi_instance_init(Object *obj)
+ {
+     AgiCPU *cpu = AGI_CPU(obj);
+@@ -744,6 +753,7 @@
+     object_property_add_str(obj, "agi-decode-json", agi_get_decode, NULL);
+     object_property_add(obj, "agi-decode-logic", "uint64", agi_get_decode_logic,
+                          agi_set_decode_logic, NULL, NULL);
++    object_property_add_str(obj, "agi-debug-checkpoint-hex", agi_get_debug_checkpoint, agi_set_debug_checkpoint);
+     object_property_add_str(obj, "agi-runtime-scene-json", agi_get_runtime_scene, NULL);
+     object_property_add_str(obj, "agi-runtime-snapshot-hex", agi_get_runtime_snapshot, NULL);
+     object_property_add_str(obj, "agi-runtime-sound-json", agi_get_runtime_sound, NULL);
+--- a/target/agi/cpu.h
++++ b/target/agi/cpu.h
+@@ -100,6 +100,7 @@
+     AgiRuntime *runtime;
+     /* Immutable machine selection, restored to env at every guest restart. */
+     bool draw_intent;
++    bool debug_checkpoint_loaded;
+     /* Host-only static query selectors; restarting the guest preserves them. */
+     uint32_t decode_pc, decode_limit, decode_logic;
+ };
+@@ -110,6 +111,8 @@
+     ResettablePhases parent_phases;
+ };
+
++char *agi_debug_checkpoint_get(AgiCPU *cpu, Error **errp);
++bool agi_debug_checkpoint_set(AgiCPU *cpu, const char *hex, Error **errp);
+ void agi_tcg_init(void);
+ void agi_cpu_translate_code(CPUState *cs, TranslationBlock *tb,
+                             int *max_insns, vaddr pc, void *host_pc);
+--- a/target/agi/meson.build
++++ b/target/agi/meson.build
+@@ -1,5 +1,5 @@
+ agi_ss = ss.source_set()
+-agi_ss.add(files('cpu.c', 'helper.c', 'translate.c', 'catalog.c', 'decode.c',
++agi_ss.add(files('cpu.c', 'debug_checkpoint.c', 'helper.c', 'translate.c', 'catalog.c', 'decode.c',
+                  'runtime.c', 'runtime_actor.c', 'runtime_scene.c', 'runtime_sound.c',
+                  'runtime_qom.c', 'runtime_devices.c'))
+ target_arch += {'agi': agi_ss}
+--- /dev/null
++++ b/target/agi/debug_checkpoint.c
+@@ -0,0 +1,207 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/* Stopped, same-ABI debugger checkpoints. Private data, not game saves. */
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "cpu.h"
++#include "runtime_qom.h"
++
++#define AGI_DEBUG_LIMIT (16u * 1024u * 1024u)
++typedef struct AgiDebugHeader {
++    char magic[8], source[65];
++    uint32_t version, endian, env_size, event_size, count, runtime_size;
++} AgiDebugHeader;
++
++static bool position_actor(const AgiActor *a)
++{
++    AgiActor clean = {0};
++    if (a->x > 255 || a->y > 255 || a->prev_x > 255 || a->prev_y > 255) {
++        return false;
++    }
++    clean.x = a->x;
++    clean.y = a->y;
++    clean.prev_x = a->prev_x;
++    clean.prev_y = a->prev_y;
++    return !memcmp(a, &clean, sizeof(clean));
++}
++
++static bool valid_env(const AgiCPU *cpu, const CPUArchState *e, const AgiEvent *events)
++{
++    uint32_t i;
++    if (e->timer_active || e->segment_start_ns || e->code_size != cpu->env.code_size ||
++        e->pc > e->code_size || e->status > AGI_EFFECT ||
++        (!cpu->runtime && e->status == AGI_EFFECT) ||
++        e->fault_code > AGI_FAULT_CONTEXTUAL_LAYOUT ||
++        e->fault_pc > e->code_size || e->fault_opcode > 255 || e->obs_mask != 2 ||
++        e->obs_capacity != 4096 || e->obs_count > e->obs_capacity ||
++        !e->step_budget || e->step_budget > 1000000000 || e->binding_profile ||
++        e->draw_intent || e->pending_kind || e->runtime_profile != (cpu->runtime != NULL) ||
++        e->obs_eligible[0] || e->obs_stored[0] || e->obs_dropped[0] ||
++        e->obs_stored[1] != e->obs_count || e->obs_dropped[1] > e->obs_eligible[1] ||
++        e->obs_stored[1] != e->obs_eligible[1] - e->obs_dropped[1] ||
++        e->run_retired > e->retired || e->control_generation == UINT64_MAX ||
++        e->trace_epoch == UINT64_MAX) {
++        return false;
++    }
++    for (i = 0; i < 256; i++) {
++        if (e->v[i] > 255 || e->f[i] > 1 || e->loaded_views[i]) {
++            return false;
++        }
++    }
++    for (i = 0; i < AGI_ACTORS; i++) {
++        if (!position_actor(&e->actors[i])) {
++            return false;
++        }
++    }
++    if (!position_actor(&e->observed_actor) || e->observed_loaded || e->horizon) {
++        return false;
++    }
++    if (cpu->runtime && (e->pc != 0 || e->obs_count || e->obs_eligible[1])) {
++        return false;
++    }
++    for (i = 0; i < e->obs_count; i++) {
++        const AgiEvent *v = &events[i];
++        if (v->kind != AGI_EVENT_POSITION || v->actor >= AGI_ACTORS || v->seq != (uint64_t)i + 1 ||
++            !v->retired || v->retired > e->retired || v->control_generation > e->control_generation ||
++            v->pc >= e->code_size || v->length != 4 || v->length > e->code_size - v->pc ||
++            v->next_pc != v->pc + v->length || v->opcode != cpu->code[v->pc] ||
++            (v->opcode != 37 && v->opcode != 38) || v->actor != cpu->code[v->pc + 1] ||
++            !position_actor(&v->before) || !position_actor(&v->after) ||
++            v->resolved_value || v->resolved_x || v->resolved_y ||
++            v->before_loaded || v->after_loaded) {
++            return false;
++        }
++    }
++    return true;
++}
++
++char *agi_debug_checkpoint_get(AgiCPU *cpu, Error **errp)
++{
++    AgiDebugHeader h = {0};
++    CPUArchState env = cpu->env;
++    g_autoptr(GBytes) runtime = NULL;
++    g_autofree uint8_t *bytes = NULL;
++    const uint8_t *runtime_data = NULL;
++    size_t runtime_size = 0, event_size, size, i;
++    char *hex;
++    if (env.timer_active) {
++        goto invalid;
++    }
++    /* A stopped clock has no live segment. Its old host timestamp cannot
++     * carry meaning across owners; keep the serialized field canonical. */
++    env.segment_start_ns = 0;
++    if (!valid_env(cpu, &env, cpu->events)) {
++        goto invalid;
++    }
++    if (cpu->runtime) {
++        runtime = agi_debug_runtime_save(cpu->runtime, errp);
++        if (!runtime) {
++            return NULL;
++        }
++        runtime_data = g_bytes_get_data(runtime, &runtime_size);
++    }
++    event_size = (size_t)env.obs_count * sizeof(AgiEvent);
++    if (runtime_size > AGI_DEBUG_LIMIT ||
++        sizeof(h) + sizeof(env) + event_size > AGI_DEBUG_LIMIT - runtime_size) {
++        goto invalid;
++    }
++    size = sizeof(h) + sizeof(env) + event_size + runtime_size;
++    memcpy(h.magic, "FDBAGIC1", 8);
++    memcpy(h.source, cpu->source_sha256, sizeof(h.source));
++    h.version = 1;
++    h.endian = 0x01020304;
++    h.env_size = sizeof(env);
++    h.event_size = sizeof(AgiEvent);
++    h.count = env.obs_count;
++    h.runtime_size = runtime_size;
++    bytes = g_malloc(size);
++    memcpy(bytes, &h, sizeof(h));
++    memcpy(bytes + sizeof(h), &env, sizeof(env));
++    memcpy(bytes + sizeof(h) + sizeof(env), cpu->events, event_size);
++    if (runtime_size) {
++        memcpy(bytes + sizeof(h) + sizeof(env) + event_size, runtime_data, runtime_size);
++    }
++    hex = g_malloc(size * 2 + 1);
++    for (i = 0; i < size; i++) {
++        static const char digits[] = "0123456789abcdef";
++        hex[i * 2] = digits[bytes[i] >> 4];
++        hex[i * 2 + 1] = digits[bytes[i] & 15];
++    }
++    hex[size * 2] = 0;
++    return hex;
++invalid:
++    error_setg(errp, "AGI_DEBUG_CHECKPOINT: unsupported CPU state");
++    return NULL;
++}
++
++bool agi_debug_checkpoint_set(AgiCPU *cpu, const char *hex, Error **errp)
++{
++    AgiDebugHeader h;
++    CPUArchState env;
++    g_autofree uint8_t *bytes = NULL;
++    g_autofree AgiEvent *events = NULL;
++    size_t n, size, event_size, i;
++    if (!hex || cpu->debug_checkpoint_loaded || cpu->env.invocation || cpu->env.retired ||
++        cpu->env.status != AGI_READY || cpu->env.control_generation != 2 || cpu->env.trace_epoch != 1 ||
++        cpu->env.obs_mask != 2 || cpu->env.obs_capacity != 4096 ||
++        cpu->catalog || cpu->draw_intent) {
++        goto invalid;
++    }
++    n = strlen(hex);
++    if (!n || n % 2 || n > 2 * AGI_DEBUG_LIMIT) {
++        goto invalid;
++    }
++    size = n / 2;
++    if (size < sizeof(h) + sizeof(env)) {
++        goto invalid;
++    }
++    bytes = g_malloc(size);
++    for (i = 0; i < size; i++) {
++        char first = hex[2 * i];
++        char second = hex[2 * i + 1];
++        int hi = g_ascii_xdigit_value(first);
++        int lo = g_ascii_xdigit_value(second);
++        if (hi < 0 || lo < 0 || (first >= 'A' && first <= 'F') ||
++            (second >= 'A' && second <= 'F')) {
++            goto invalid;
++        }
++        bytes[i] = (hi << 4) | lo;
++    }
++    memcpy(&h, bytes, sizeof(h));
++    if (memcmp(h.magic, "FDBAGIC1", 8) || memcmp(h.source, cpu->source_sha256, 65) ||
++        h.version != 1 || h.endian != 0x01020304 || h.env_size != sizeof(env) ||
++        h.event_size != sizeof(AgiEvent) || h.count > 4096 ||
++        (!!h.runtime_size != !!cpu->runtime)) {
++        goto invalid;
++    }
++    event_size = (size_t)h.count * sizeof(AgiEvent);
++    if (size != sizeof(h) + sizeof(env) + event_size + h.runtime_size ||
++        bytes[sizeof(h) + offsetof(CPUArchState, timer_active)] != 0) {
++        goto invalid;
++    }
++    memcpy(&env, bytes + sizeof(h), sizeof(env));
++    if (env.obs_count != h.count) {
++        goto invalid;
++    }
++    events = g_malloc0(event_size ? event_size : 1);
++    memcpy(events, bytes + sizeof(h) + sizeof(env), event_size);
++    /* Validate the whole outer envelope before the atomic runtime load. The
++     * host still verifies native readback before adopting this fresh owner. */
++    if (!valid_env(cpu, &env, events)) {
++        goto invalid;
++    }
++    if (cpu->runtime &&
++        !agi_debug_runtime_load(cpu->runtime,
++                                bytes + sizeof(h) + sizeof(env) + event_size,
++                                h.runtime_size, env.retired, env.run_retired, errp)) {
++        return false;
++    }
++    cpu->env = env;
++    memcpy(cpu->events, events, event_size);
++    cpu->debug_checkpoint_loaded = true;
++    CPU(cpu)->exception_index = -1;
++    CPU(cpu)->halted = 0;
++    return true;
++invalid:
++    error_setg(errp, "AGI_DEBUG_CHECKPOINT: invalid checkpoint or nonfresh owner");
++    return false;
++}
+--- a/target/agi/runtime.c
++++ b/target/agi/runtime.c
+@@ -1460,6 +1460,17 @@
+     for (i = 0; i < AGI_RUNTIME_PLANE_BYTES; i++) if (s->picture_visual[i] > 15 || s->picture_priority[i] > 15) return false;
+     return true;
+ }
++/* Validate without normalizing the persisted state. Pending effects, faults and
++ * terminal quit need separate qualification and are deliberately refused. */
++bool agi_runtime_debug_state_valid(const AgiRuntime *r, const AgiRuntimeState *s)
++{
++    AgiRuntimeState checked = *s;
++    if (s->status == AGI_RT_RUNNING || s->status == AGI_RT_BUDGET)
++        checked.status = AGI_RT_READY;
++    else if (s->status != AGI_RT_READY && s->status != AGI_RT_RETURN)
++        return false;
++    return valid_snapshot(r, &checked);
++}
+ bool agi_runtime_restore(AgiRuntime *r, uint64_t id, const void *snapshot, size_t size)
+ {
+     AgiRuntimeSnapshotHeader header;
+--- a/target/agi/runtime.h
++++ b/target/agi/runtime.h
+@@ -172,6 +172,7 @@
+ bool agi_runtime_controller(AgiRuntime *runtime, uint8_t controller);
+ bool agi_runtime_complete(AgiRuntime *runtime, uint64_t id,
+                           bool accepted, const char *text, uint32_t number);
++bool agi_runtime_debug_state_valid(const AgiRuntime *runtime, const AgiRuntimeState *state);
+ bool agi_runtime_restore(AgiRuntime *runtime, uint64_t id,
+                          const void *snapshot, size_t size);
+ size_t agi_runtime_snapshot_size(void);
+--- a/target/agi/runtime_qom.c
++++ b/target/agi/runtime_qom.c
+@@ -1487,3 +1487,159 @@
+     qobject_unref(root);
+     return success;
+ }
++
++/* Private same-ABI debugger checkpoint. Resource storage and host pointers
++ * remain owned by the new runtime. Only retained events are serialized. */
++typedef struct AgiDebugRuntimeHeader {
++    char magic[8], resource_sha256[65];
++    uint32_t endian, version, state_size, event_size, count;
++    uint32_t mask, capacity, limit;
++    uint64_t eligible[2], dropped[2], calls, epoch, run_retired;
++    AgiSoundJournalState sound;
++    AgiRuntimeState state;
++} AgiDebugRuntimeHeader;
++
++static bool agi_debug_events_valid(const AgiRuntime *r,
++    const AgiRuntimeEvent *events, uint32_t count, const uint64_t eligible[2],
++    const uint64_t dropped[2])
++{
++    uint64_t stored[2] = {0, 0}, previous = 0, total;
++    uint32_t i;
++    if (UINT64_MAX - eligible[0] < eligible[1]) return false;
++    total = eligible[0] + eligible[1];
++    for (i = 0; i < count; i++) {
++        const AgiRuntimeEvent *e = &events[i];
++        const AgiRuntimeBlob *code, *next;
++        if (e->channel > 1 || e->size == 0 || e->size > AGI_DECODE_BYTES_MAX ||
++            e->logic > 255 || e->next_logic > 255 || e->kind > 1 ||
++            (e->kind == 1 ? e->actor >= 256 : e->actor > 256) ||
++            !e->seq || e->seq <= previous || e->seq > total) return false;
++        code = &r->resources->logics[e->logic].code;
++        next = &r->resources->logics[e->next_logic].code;
++        if (!code->data || !next->data || e->pc > code->size ||
++            e->size > code->size - e->pc || e->next_pc > next->size ||
++            memcmp(e->bytes, code->data + e->pc, e->size) ||
++            e->opcode != e->bytes[0]) return false;
++        stored[e->channel]++;
++        previous = e->seq;
++    }
++    for (i = 0; i < 2; i++) {
++        if (UINT64_MAX - stored[i] < dropped[i] ||
++            stored[i] + dropped[i] != eligible[i]) return false;
++    }
++    return true;
++}
++
++static bool agi_debug_sound_valid(const AgiSoundJournalState *j,
++                                  const AgiCapturedSound *events)
++{
++    uint32_t i;
++    uint64_t previous = 0;
++    if (j->count > AGI_RUNTIME_SOUND_CAPACITY ||
++        UINT64_MAX - j->count < j->dropped ||
++        j->eligible != (uint64_t)j->count + j->dropped) return false;
++    for (i = 0; i < j->count; i++) {
++        const AgiCapturedSound *c = &events[i];
++        const AgiRuntimeSoundEvent *e = &c->event;
++        if (!c->seq || c->seq <= previous || c->seq > j->last_seq ||
++            c->native_epoch > j->native_epoch || !e->sequence ||
++            e->kind < AGI_SOUND_SPEAKER || e->kind > AGI_SOUND_COMMAND ||
++            e->channel >= AGI_SOUND_CHANNELS || e->enabled > 1 ||
++            e->value > (e->kind == AGI_SOUND_SPEAKER ? 12276u : 255u)) return false;
++        previous = c->seq;
++    }
++    return true;
++}
++
++GBytes *agi_debug_runtime_save(const AgiRuntime *r, Error **errp)
++{
++    AgiOwnedRuntime *owned = sound_owner(r);
++    AgiDebugRuntimeHeader h = {0};
++    g_autofree uint8_t *out = NULL;
++    size_t size;
++    if (!runtime_valid(r, errp)) return NULL;
++    if (!owned || !owned->sound_storage || !agi_debug_sound_valid(&owned->sound_journal, owned->sound_storage) ||
++        !agi_runtime_debug_state_valid(r, &r->state) || r->obs_mask > 3 ||
++        !agi_debug_events_valid(r, r->events, r->obs_count, r->obs_eligible, r->obs_dropped)) {
++        error_setg(errp, "AGI_DEBUG_CHECKPOINT: unsupported runtime state or sound journal");
++        return NULL;
++    }
++    memcpy(h.magic, "FDBAGID1", 8);
++    memcpy(h.resource_sha256, r->resources->sha256, 65);
++    h.endian = 0x01020304; h.version = 1;
++    h.state_size = sizeof(h.state); h.event_size = sizeof(AgiRuntimeEvent);
++    h.count = r->obs_count; h.mask = r->obs_mask;
++    h.capacity = r->obs_capacity; h.limit = r->obs_limit;
++    memcpy(h.eligible, r->obs_eligible, sizeof(h.eligible));
++    memcpy(h.dropped, r->obs_dropped, sizeof(h.dropped));
++    h.calls = r->obs_calls; h.epoch = r->epoch; h.run_retired = r->run_retired;
++    h.sound = owned->sound_journal; h.state = r->state;
++    size = sizeof(h) + (size_t)h.count * sizeof(AgiRuntimeEvent) +
++           (size_t)h.sound.count * sizeof(AgiCapturedSound);
++    if (size > 16u * 1024u * 1024u) {
++        error_setg(errp, "AGI_DEBUG_CHECKPOINT: runtime checkpoint exceeds limit");
++        return NULL;
++    }
++    out = g_try_malloc(size);
++    if (!out) { error_setg(errp, "AGI_DEBUG_CHECKPOINT: allocation failed"); return NULL; }
++    memcpy(out, &h, sizeof(h));
++    if (h.count) memcpy(out + sizeof(h), r->events, (size_t)h.count * sizeof(AgiRuntimeEvent));
++    if (h.sound.count) memcpy(out + sizeof(h) + (size_t)h.count * sizeof(AgiRuntimeEvent),
++                              owned->sound_storage, (size_t)h.sound.count * sizeof(AgiCapturedSound));
++    return g_bytes_new_take(g_steal_pointer(&out), size);
++}
++
++bool agi_debug_runtime_load(AgiRuntime *r, const uint8_t *data, size_t size,
++                            uint64_t expected_retired, uint64_t expected_run_retired,
++                            Error **errp)
++{
++    AgiOwnedRuntime *owned = sound_owner(r);
++    g_autofree AgiDebugRuntimeHeader *h = NULL;
++    g_autofree AgiRuntimeEvent *events = NULL;
++    g_autofree AgiCapturedSound *sound = NULL;
++    size_t event_bytes, sound_bytes;
++    if (!runtime_valid(r, errp)) return false;
++    if (!owned || !owned->sound_storage || !data || size < sizeof(*h)) goto invalid;
++    h = g_try_malloc(sizeof(*h));
++    if (!h) goto invalid;
++    memcpy(h, data, sizeof(*h));
++    if (memcmp(h->magic, "FDBAGID1", 8) || h->endian != 0x01020304 ||
++        h->version != 1 || h->state_size != sizeof(h->state) ||
++        h->event_size != sizeof(AgiRuntimeEvent) ||
++        memcmp(h->resource_sha256, r->resources->sha256, 65) ||
++        h->limit != r->obs_limit || h->limit > AGI_RT_EVENTS_MAX ||
++        h->capacity > h->limit || h->count > h->capacity || h->mask > 3 ||
++        h->capacity != r->obs_capacity || h->mask != r->obs_mask ||
++        h->sound.count > AGI_RUNTIME_SOUND_CAPACITY ||
++        h->state.retired != expected_retired || h->run_retired != expected_run_retired ||
++        !agi_runtime_debug_state_valid(r, &h->state)) goto invalid;
++    event_bytes = (size_t)h->count * sizeof(AgiRuntimeEvent);
++    sound_bytes = (size_t)h->sound.count * sizeof(AgiCapturedSound);
++    if (size > 16u * 1024u * 1024u || size != sizeof(*h) + event_bytes + sound_bytes) goto invalid;
++    if (event_bytes) {
++        events = g_try_malloc(event_bytes);
++        if (!events) goto invalid;
++        memcpy(events, data + sizeof(*h), event_bytes);
++
++    }
++    if (sound_bytes) {
++        sound = g_try_malloc(sound_bytes);
++        if (!sound) goto invalid;
++        memcpy(sound, data + sizeof(*h) + event_bytes, sound_bytes);
++    }
++    if (!agi_debug_events_valid(r, events, h->count, h->eligible, h->dropped) ||
++        !agi_debug_sound_valid(&h->sound, sound)) goto invalid;
++    /* No mutations before all validation succeeds. */
++    r->state = h->state; r->obs_mask = h->mask; r->obs_capacity = h->capacity;
++    r->obs_count = h->count;
++    memcpy(r->obs_eligible, h->eligible, sizeof(h->eligible));
++    memcpy(r->obs_dropped, h->dropped, sizeof(h->dropped));
++    r->obs_calls = h->calls; r->epoch = h->epoch; r->run_retired = h->run_retired;
++    owned->sound_journal = h->sound;
++    if (event_bytes) memcpy(r->events, events, event_bytes);
++    if (sound_bytes) memcpy(owned->sound_storage, sound, sound_bytes);
++    return true;
++invalid:
++    error_setg(errp, "AGI_DEBUG_CHECKPOINT: invalid or unsupported runtime checkpoint");
++    return false;
++}
+--- a/target/agi/runtime_qom.h
++++ b/target/agi/runtime_qom.h
+@@ -34,6 +34,13 @@
+  * {action:"sound-clear",epoch:<epoch>,through:<last_seq>}. Stale clears fail. */
+ char *agi_runtime_sound_json(const AgiRuntime *runtime, Error **errp);
+
++/* Same-ABI private debugger state. The caller binds the QEMU binary and
++ * installs only into a stopped, fresh owner. Neither routine runs the guest. */
++GBytes *agi_debug_runtime_save(const AgiRuntime *r, Error **errp);
++bool agi_debug_runtime_load(AgiRuntime *r, const uint8_t *data, size_t size,
++                            uint64_t expected_retired, uint64_t expected_run_retired,
++                            Error **errp);
++
+ /* Strict command parsing and core preconditions; failure leaves runtime
+  * state and observer bookkeeping unchanged. No implicit execution/run. */
+ bool agi_runtime_command_json(AgiRuntime *runtime, const char *text, Error **errp);

@@ -1,0 +1,56 @@
+{
+  "format": "fdisbull-qemu-native-source-manifest-1",
+  "feature": "AGI cross-session debugger checkpoints",
+  "base": {
+    "qemu_version": "10.0.13",
+    "archive_sha256": "4a59b74dac7ead8b162a7c4595dcbbeebe989b90c89cfe6bb4dec5447342f6fa",
+    "agi_overlay_commit": "63d233502b04e55355fda837c22d3b621b54b6a7",
+    "agi_overlay_identity": "b2eb253247007d0f0663f2c754aaa6161476ab0400d0febd7b98d2abbb1b785f"
+  },
+  "patch": {
+    "path": "qemu-10.0.13-fdisbull-agi-checkpoint-v1.patch",
+    "sha256": "ba4c2e65f238ba5b17cf635da16602fb90e0a614d000038bdc8d431bc48bfd31",
+    "files": [
+      {
+        "path": "target/agi/cpu.c",
+        "before_sha256": "02d9925682f8dca97e0f208026705b8fe538fabe41d644263b0f3866abff7837",
+        "after_sha256": "fa4962d98d01c759ca8df7c5f13a341e1d38c233102c63ff8b53327e537b5127"
+      },
+      {
+        "path": "target/agi/cpu.h",
+        "before_sha256": "2ed43687b96b3cb762fe337035c5450f522140c2b520bce297c10c393946f887",
+        "after_sha256": "589934e3729e2c89cad4e114e404ea2341218eb5f42884414724970a0e10914a"
+      },
+      {
+        "path": "target/agi/meson.build",
+        "before_sha256": "9f56a7bc7861001a329e8873141957f3b95f6853ddb0763c35dc96b828302c2a",
+        "after_sha256": "73713c559a934220a0ff9aa891002be64b219c58090523044b033a3da3b89634"
+      },
+      {
+        "path": "target/agi/debug_checkpoint.c",
+        "before_sha256": null,
+        "after_sha256": "5fc4cef1d1850681691cbd21c629bcfa6064184dfa75ff86da7e0318b21fbea4"
+      },
+      {
+        "path": "target/agi/runtime.c",
+        "before_sha256": "4fb1028e95eb92eba2c5627928be7d7780ba7b1c1dd7d2e4e803308b68067410",
+        "after_sha256": "db7add31ff8bb0c9d07c4595c53f3b04e7f57b844c306815548bb2973a2d1888"
+      },
+      {
+        "path": "target/agi/runtime.h",
+        "before_sha256": "b9146c354f27a0dba41ee51c776d37629bb52b23cbac20492c47465a9e0c115e",
+        "after_sha256": "7fe133ffa9e2a9c8a9750035be9aa1d4ca2800559bd5faac10a642560b29ea95"
+      },
+      {
+        "path": "target/agi/runtime_qom.c",
+        "before_sha256": "03e3705e1018440c4b7a78e609525453159e5d2efb4295a6ab4f301f6244d4e2",
+        "after_sha256": "34b09c35de1e12597a6578dcd7ce4e896808ac790d793f72e3fd4389f36072b9"
+      },
+      {
+        "path": "target/agi/runtime_qom.h",
+        "before_sha256": "8bb190612c55803fabcc54eaa550c4aa0183bd80288d0d94fd7dcb1268b867ab",
+        "after_sha256": "2e8738aee76b3669d2a25135f562fd18f61ecf1e58340e9852a7e4572bbd0367"
+      }
+    ]
+  }
+}

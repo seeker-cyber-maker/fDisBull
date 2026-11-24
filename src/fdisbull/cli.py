@@ -1567,6 +1567,10 @@ def respond(request, default_project=None, debugger=None):
         agi_execution_error = (isinstance(request, dict) and request.get('method') in ('debug-step', 'debug-run')
                                and isinstance(observed, dict)
                                and observed.get('format') == 'fdisbull-qemu-agi-execution-error-1')
+        agi_checkpoint_error = (isinstance(request, dict) and request.get('method') in
+                                ('debug-save-state', 'debug-load-state', 'debug-save-anchor-stone',
+                                 'debug-load-anchor-stone') and isinstance(observed, dict)
+                                and observed.get('format') == 'fdisbull-qemu-agi-checkpoint-error-1')
         scene_wait_result = getattr(e, "scene_wait_result", None)
         coordinate_click = getattr(e, "coordinate_click", observed)
         coordinate_click_error = (isinstance(request, dict)
@@ -1611,7 +1615,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(script_result, dict)
                                and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error or agi_execution_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error or agi_execution_error or agi_checkpoint_error):
             raise
         value = {
             "id": request_id,
@@ -1624,7 +1628,7 @@ def respond(request, default_project=None, debugger=None):
         from .execution_trace import ExecutionTraceError
         if isinstance(e, ExecutionTraceError):
             value["error"]["result"] = e.result
-        if step_sequence_error or agi_execution_error:
+        if step_sequence_error or agi_execution_error or agi_checkpoint_error:
             value["error"]["result"] = observed
         if coordinate_click_error:
             value["error"]["coordinate_click"] = coordinate_click
