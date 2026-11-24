@@ -17,9 +17,16 @@ static void insn(DisasContextBase *db,CPUState *cs)
 {
  ScummCPU *cpu=SCUMM_CPU(cs);ScummInsn decoded;
  bool ok=scumm_decode(cpu->env.version,cpu->code,cpu->env.code_size,db->pc_next,&decoded);
+ unsigned size=ok?decoded.size:1;
+ /* The canonical decoder reads the immutable script copy. Register its bytes
+  * with QEMU too, including a second page for long instructions, so TB page
+  * tracking and diagnostic disassembly cover the entire instruction. */
+ for(unsigned n=0;n<size;n++) {
+  translator_ldub(&cpu->env,db,db->pc_next+n);
+ }
  /* Single semantic-helper TB; static decode and runtime share one authority. */
  gen_helper_scumm_step(tcg_env);
- db->pc_next+=ok?decoded.size:1;db->is_jmp=DISAS_TOO_MANY;
+ db->pc_next+=size;db->is_jmp=DISAS_TOO_MANY;
 }
 static void stop(DisasContextBase *db,CPUState *cs){tcg_gen_exit_tb(NULL,0);}
 static const TranslatorOps ops={.init_disas_context=init,.tb_start=start,.insn_start=insn_start,

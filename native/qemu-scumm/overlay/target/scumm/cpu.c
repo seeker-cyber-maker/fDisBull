@@ -121,7 +121,8 @@ static hwaddr phys_debug(CPUState *cs,vaddr addr){return addr<SCUMM_CODE_MAX?add
 static bool tlb_fill(CPUState *cs,vaddr addr,int size,MMUAccessType access,int idx,bool probe,uintptr_t retaddr)
 {
  if(addr>=SCUMM_CODE_MAX||size<1||(vaddr)size>SCUMM_CODE_MAX-addr||access==MMU_DATA_STORE){
-  if(!probe)helper_scumm_fetch_fault(cpu_env(cs));return false;}
+  if(!probe){helper_scumm_fetch_fault(cpu_env(cs));}
+  return false;}
  tlb_set_page(cs,addr&TARGET_PAGE_MASK,addr&TARGET_PAGE_MASK,PAGE_READ|PAGE_EXEC,idx,TARGET_PAGE_SIZE);
  return true;
 }
@@ -144,7 +145,8 @@ static const char *gdb_arch(CPUState *cs){return "scumm";}
 static void reset_hold(Object *obj,ResetType type)
 {
  ScummCPUClass *cc=SCUMM_CPU_GET_CLASS(obj);
- if(cc->parent_phases.hold)cc->parent_phases.hold(obj,type);restart(SCUMM_CPU(obj));
+ if(cc->parent_phases.hold){cc->parent_phases.hold(obj,type);}
+ restart(SCUMM_CPU(obj));
 }
 static void realize(DeviceState *dev,Error **errp)
 {
