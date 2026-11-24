@@ -1,0 +1,266 @@
+--- a/target/agi/cpu.c
++++ b/target/agi/cpu.c
+@@ -714,6 +714,7 @@
+     env->pc = 0;
+     env->status = AGI_READY;
+     env->retired = runtime->state.retired;
++    env->run_retired = runtime->run_retired;
+     env->control_generation++;
+     CPU(obj)->exception_index = -1;
+     CPU(obj)->halted = 0;
+@@ -722,6 +723,10 @@
+ static char *agi_get_debug_checkpoint(Object *obj, Error **errp)
+ {
+     return agi_require_stopped(obj, errp) ? agi_debug_checkpoint_get(AGI_CPU(obj), errp) : NULL;
++}
++static char *agi_get_debug_checkpoint_stop_support(Object *obj, Error **errp)
++{
++    return g_strdup("pending-fault-quit-1");
+ }
+ static void agi_set_debug_checkpoint(Object *obj, const char *value, Error **errp)
+ {
+@@ -754,6 +759,7 @@
+     object_property_add(obj, "agi-decode-logic", "uint64", agi_get_decode_logic,
+                          agi_set_decode_logic, NULL, NULL);
+     object_property_add_str(obj, "agi-debug-checkpoint-hex", agi_get_debug_checkpoint, agi_set_debug_checkpoint);
++    object_property_add_str(obj, "agi-debug-checkpoint-stop-support", agi_get_debug_checkpoint_stop_support, NULL);
+     object_property_add_str(obj, "agi-runtime-scene-json", agi_get_runtime_scene, NULL);
+     object_property_add_str(obj, "agi-runtime-snapshot-hex", agi_get_runtime_snapshot, NULL);
+     object_property_add_str(obj, "agi-runtime-sound-json", agi_get_runtime_sound, NULL);
+--- a/target/agi/debug_checkpoint.c
++++ b/target/agi/debug_checkpoint.c
+@@ -192,7 +192,8 @@
+     if (cpu->runtime &&
+         !agi_debug_runtime_load(cpu->runtime,
+                                 bytes + sizeof(h) + sizeof(env) + event_size,
+-                                h.runtime_size, env.retired, env.run_retired, errp)) {
++                                h.runtime_size, env.retired, env.run_retired,
++                                env.status, errp)) {
+         return false;
+     }
+     cpu->env = env;
+--- a/target/agi/runtime.c
++++ b/target/agi/runtime.c
+@@ -1379,7 +1379,7 @@
+     memcpy((uint8_t *)out + sizeof(header), &state, sizeof(state));
+     return true;
+ }
+-static bool valid_snapshot(const AgiRuntime *r, const AgiRuntimeState *s)
++static bool valid_snapshot_common(const AgiRuntime *r, const AgiRuntimeState *s, bool debug)
+ {
+     uint32_t i;
+     AgiRuntimePending empty_pending = {0};
+@@ -1387,7 +1387,7 @@
+     uint8_t views[256] = {0}, pictures[256] = {0};
+     if (!logic_exists(r, s->logic) || s->pc > r->resources->logics[s->logic].code.size ||
+         (s->status != AGI_RT_READY && s->status != AGI_RT_RETURN) ||
+-        (s->status == AGI_RT_READY && s->pc == r->resources->logics[s->logic].code.size) ||
++        (!debug && s->status == AGI_RT_READY && s->pc == r->resources->logics[s->logic].code.size) ||
+         (s->status == AGI_RT_RETURN && (s->stack_depth || s->cycle_active)) ||
+         memcmp(&s->pending, &empty_pending, sizeof(empty_pending)) || s->stack_depth > AGI_RT_STACK ||
+         s->parsed_count > AGI_RT_WORDS || s->key_count > 256 ||
+@@ -1432,12 +1432,13 @@
+             (s->loaded_sounds[i] && !r->resources->sounds[i].data) ||
+             (s->world.loaded_views[i] && !r->resources->views[i].data) ||
+             views[i] != s->world.loaded_views[i] || pictures[i] != s->loaded_pictures[i] ||
+-            (s->scan_start[i] && (!logic_exists(r, i) || s->scan_start[i] >= r->resources->logics[i].code.size)) ||
++            (s->scan_start[i] && (!logic_exists(r, i) || (debug ? s->scan_start[i] > r->resources->logics[i].code.size : s->scan_start[i] >= r->resources->logics[i].code.size))) ||
+             (i >= s->view_order_count && s->view_order[i]) ||
+             (i >= s->picture_order_count && s->picture_order[i])) return false;
+     }
+     for (i = 0; i < s->stack_depth; i++) if (!logic_exists(r, s->stack[i].logic) ||
+-        s->stack[i].pc >= r->resources->logics[s->stack[i].logic].code.size) return false;
++        (debug ? s->stack[i].pc > r->resources->logics[s->stack[i].logic].code.size :
++                 s->stack[i].pc >= r->resources->logics[s->stack[i].logic].code.size)) return false;
+     for (i = 0; i < AGI_RT_STRINGS; i++) if (!memchr(s->strings[i], 0, AGI_RT_STRING_BYTES)) return false;
+     for (i = 0; i < AGI_RT_WORDS; i++) if (!memchr(s->parsed_words[i], 0, AGI_RT_STRING_BYTES)) return false;
+     for (i = 0; i < AGI_RT_MENUS; i++) if (!memchr(s->menus[i].text, 0, AGI_RT_STRING_BYTES) ||
+@@ -1460,16 +1461,106 @@
+     for (i = 0; i < AGI_RUNTIME_PLANE_BYTES; i++) if (s->picture_visual[i] > 15 || s->picture_priority[i] > 15) return false;
+     return true;
+ }
+-/* Validate without normalizing the persisted state. Pending effects, faults and
+- * terminal quit need separate qualification and are deliberately refused. */
++static bool valid_snapshot(const AgiRuntime *r, const AgiRuntimeState *s)
++{
++    return valid_snapshot_common(r, s, false);
++}
++/* Debug checkpoints retain the original bytes; the temporary projection only
++ * allows the game-save validator to check the common structural invariants. */
++static bool debug_pending_valid(const AgiRuntime *r, const AgiRuntimeState *s)
++{
++    const AgiRuntimePending *p = &s->pending;
++    const AgiRuntimeBlob *code = &r->resources->logics[s->logic].code;
++    AgiDecodedInstruction insn;
++    uint32_t reply;
++    static const uint8_t zeros[7] = {0};
++    if (!p->id || p->id == UINT64_MAX || p->id + 1 != s->next_effect_id ||
++        p->logic != s->logic || p->pc != s->pc ||
++        !memchr(p->text, 0, sizeof(p->text)) ||
++        !agi_decode(code_read, (void *)code, code->size, p->pc,
++                    AGI_DECODE_RUNTIME, AGI_DECODE_STRUCTURAL, &insn) ||
++        insn.opcode != p->opcode || insn.size < 1 || insn.size > 8 ||
++        p->argc != insn.size - 1 || p->next_pc != p->pc + insn.size ||
++        memcmp(p->args, insn.bytes + 1, p->argc) ||
++        memcmp(p->args + p->argc, zeros, sizeof(p->args) - p->argc)) return false;
++    switch (p->opcode) {
++    case 101: case 102: case 151: case 152:
++        reply = AGI_RT_REPLY_ACK;
++        if (!s->window_open || s->window_ticks_remaining > 2550) return false;
++        break;
++    case 115:
++        reply = AGI_RT_REPLY_TEXT;
++        if (p->args[0] >= AGI_RT_STRINGS) return false;
++        break;
++    case 118: reply = AGI_RT_REPLY_NUMBER; break;
++    case 124:
++        /* Actor or sound completion during a pending request can set f13. */
++        if (p->reply != AGI_RT_REPLY_ACK && p->reply != AGI_RT_REPLY_NUMBER) return false;
++        if (p->reply == AGI_RT_REPLY_NUMBER && !s->f[13]) return false;
++        reply = p->reply; break;
++    case 126: reply = AGI_RT_REPLY_RESTORE; break;
++    case 128: case 134:
++        reply = AGI_RT_REPLY_CHOICE;
++        if (p->opcode == 134 && p->args[0] == 1) return false;
++        break;
++    case 161:
++        reply = AGI_RT_REPLY_MENU;
++        if (!s->f[14] || !s->menu_submitted) return false;
++        break;
++    case 29: case 110: case 125: case 129: case 133: case 135:
++    case 136: case 139: case 141: case 144: case 162:
++        reply = AGI_RT_REPLY_ACK; break;
++    default: return false;
++    }
++    if (p->reply != reply ||
++        (s->window_ticks_remaining && !pending_print(s))) return false;
++    if (p->opcode == 135 && strcmp(p->text, "Native AGI bounded resource memory")) return false;
++    if (p->opcode == 141 && strcmp(p->text, "AGI 2.917 / fDisBull native runtime 1")) return false;
++    if (p->opcode != 101 && p->opcode != 102 && p->opcode != 151 &&
++        p->opcode != 152 && p->opcode != 115 && p->opcode != 118 &&
++        p->opcode != 144 && p->opcode != 135 && p->opcode != 141 && p->text[0]) return false;
++    return true;
++}
++
+ bool agi_runtime_debug_state_valid(const AgiRuntime *r, const AgiRuntimeState *s)
+ {
+     AgiRuntimeState checked = *s;
+-    if (s->status == AGI_RT_RUNNING || s->status == AGI_RT_BUDGET)
++    AgiRuntimePending empty_pending = {0};
++    const AgiRuntimeBlob *code;
++    AgiDecodedInstruction insn;
++    if (!logic_exists(r, s->logic) || s->stack_depth > AGI_RT_STACK || s->cycle_active > 1) return false;
++    code = &r->resources->logics[s->logic].code;
++    if (s->status == AGI_RT_PENDING) {
++        if (s->fault || s->fault_detail || s->fault_logic || s->fault_pc) return false;
++        if (!debug_pending_valid(r, s)) return false;
++        memset(&checked.pending, 0, sizeof(checked.pending));
++        checked.window_ticks_remaining = 0;
+         checked.status = AGI_RT_READY;
+-    else if (s->status != AGI_RT_READY && s->status != AGI_RT_RETURN)
+-        return false;
+-    return valid_snapshot(r, &checked);
++    } else {
++        if (memcmp(&s->pending, &empty_pending, sizeof(empty_pending))) return false;
++        if (s->status == AGI_RT_FAULT) {
++            if (!s->fault || s->fault > AGI_RT_UNIMPLEMENTED ||
++                s->fault_logic != s->logic || s->fault_pc != s->pc || s->pc > code->size)
++                return false;
++            if (s->fault == AGI_RT_DECODE &&
++                (agi_decode(code_read, (void *)code, code->size, s->pc,
++                            AGI_DECODE_RUNTIME, AGI_DECODE_STRUCTURAL, &insn) ||
++                 s->fault_detail != insn.fault)) return false;
++        } else if (s->fault || s->fault_detail || s->fault_logic || s->fault_pc) {
++            return false;
++        }
++        if (s->status == AGI_RT_QUIT) {
++            if (s->pc < 2 || s->pc > code->size || code->data[s->pc - 2] != 134 ||
++                !agi_decode(code_read, (void *)code, code->size, s->pc - 2,
++                            AGI_DECODE_RUNTIME, AGI_DECODE_STRUCTURAL, &insn) ||
++                insn.opcode != 134 || insn.size != 2) return false;
++        } else if (s->status != AGI_RT_READY && s->status != AGI_RT_RETURN &&
++                   s->status != AGI_RT_RUNNING && s->status != AGI_RT_BUDGET &&
++                   s->status != AGI_RT_FAULT) return false;
++        if (s->status == AGI_RT_RETURN) checked.status = AGI_RT_RETURN;
++        else checked.status = AGI_RT_READY;
++    }
++    return valid_snapshot_common(r, &checked, true);
+ }
+ bool agi_runtime_restore(AgiRuntime *r, uint64_t id, const void *snapshot, size_t size)
+ {
+--- a/target/agi/runtime_qom.c
++++ b/target/agi/runtime_qom.c
+@@ -10,6 +10,7 @@
+ #include "qobject/qnum.h"
+ #include "qobject/qstring.h"
+ #include "runtime_qom.h"
++#include "cpu.h"
+
+ typedef struct AgiCapturedSound {
+     uint64_t seq, native_epoch;
+@@ -1510,16 +1511,27 @@
+     for (i = 0; i < count; i++) {
+         const AgiRuntimeEvent *e = &events[i];
+         const AgiRuntimeBlob *code, *next;
+-        if (e->channel > 1 || e->size == 0 || e->size > AGI_DECODE_BYTES_MAX ||
++        if (e->channel > 1 || e->size > AGI_DECODE_BYTES_MAX ||
+             e->logic > 255 || e->next_logic > 255 || e->kind > 1 ||
+             (e->kind == 1 ? e->actor >= 256 : e->actor > 256) ||
+             !e->seq || e->seq <= previous || e->seq > total) return false;
+         code = &r->resources->logics[e->logic].code;
+         next = &r->resources->logics[e->next_logic].code;
+         if (!code->data || !next->data || e->pc > code->size ||
+-            e->size > code->size - e->pc || e->next_pc > next->size ||
+-            memcmp(e->bytes, code->data + e->pc, e->size) ||
+-            e->opcode != e->bytes[0]) return false;
++            e->size > code->size - e->pc || e->next_pc > next->size) return false;
++        if (!e->size) {
++            /* advance_time emits one scene observation without an instruction. */
++            static const uint8_t zero_bytes[AGI_DECODE_BYTES_MAX] = {0};
++            static const uint32_t zero_resolved[7] = {0};
++            static const AgiRuntimeActor zero_actor = {0};
++            if (e->channel != 1 || e->opcode != 256 || e->kind || e->actor != 256 ||
++                e->logic != e->next_logic || e->pc != e->next_pc ||
++                memcmp(e->bytes, zero_bytes, sizeof(e->bytes)) ||
++                memcmp(e->resolved, zero_resolved, sizeof(e->resolved)) ||
++                memcmp(&e->before_actor, &zero_actor, sizeof(zero_actor)) ||
++                memcmp(&e->after_actor, &zero_actor, sizeof(zero_actor))) return false;
++        } else if (memcmp(e->bytes, code->data + e->pc, e->size) ||
++                   e->opcode != e->bytes[0]) return false;
+         stored[e->channel]++;
+         previous = e->seq;
+     }
+@@ -1591,7 +1603,7 @@
+
+ bool agi_debug_runtime_load(AgiRuntime *r, const uint8_t *data, size_t size,
+                             uint64_t expected_retired, uint64_t expected_run_retired,
+-                            Error **errp)
++                            uint32_t expected_status, Error **errp)
+ {
+     AgiOwnedRuntime *owned = sound_owner(r);
+     g_autofree AgiDebugRuntimeHeader *h = NULL;
+@@ -1612,6 +1624,13 @@
+         h->capacity != r->obs_capacity || h->mask != r->obs_mask ||
+         h->sound.count > AGI_RUNTIME_SOUND_CAPACITY ||
+         h->state.retired != expected_retired || h->run_retired != expected_run_retired ||
++        (expected_status != AGI_READY &&
++         !((expected_status == AGI_RUNNING && h->state.status == AGI_RT_RUNNING) ||
++           (expected_status == AGI_EFFECT && h->state.status == AGI_RT_PENDING) ||
++           (expected_status == AGI_FAULT && h->state.status == AGI_RT_FAULT) ||
++           (expected_status == AGI_RETURN && (h->state.status == AGI_RT_RETURN || h->state.status == AGI_RT_QUIT)) ||
++           ((expected_status == AGI_EXTERNAL || expected_status == AGI_BUDGET) &&
++            (h->state.status == AGI_RT_RUNNING || h->state.status == AGI_RT_BUDGET)))) ||
+         !agi_runtime_debug_state_valid(r, &h->state)) goto invalid;
+     event_bytes = (size_t)h->count * sizeof(AgiRuntimeEvent);
+     sound_bytes = (size_t)h->sound.count * sizeof(AgiCapturedSound);
+--- a/target/agi/runtime_qom.h
++++ b/target/agi/runtime_qom.h
+@@ -39,7 +39,7 @@
+ GBytes *agi_debug_runtime_save(const AgiRuntime *r, Error **errp);
+ bool agi_debug_runtime_load(AgiRuntime *r, const uint8_t *data, size_t size,
+                             uint64_t expected_retired, uint64_t expected_run_retired,
+-                            Error **errp);
++                            uint32_t expected_status, Error **errp);
+
+ /* Strict command parsing and core preconditions; failure leaves runtime
+  * state and observer bookkeeping unchanged. No implicit execution/run. */

@@ -52,5 +52,37 @@
         "after_sha256": "2e8738aee76b3669d2a25135f562fd18f61ecf1e58340e9852a7e4572bbd0367"
       }
     ]
+  },
+  "stop_patch": {
+    "path": "qemu-10.0.13-fdisbull-agi-stop-checkpoints-v2.patch",
+    "sha256": "7bf12d88c9af096dfc5cf2de909d7c99ff44021e973442992b3606684328ea00",
+    "requires_patch_sha256": "ba4c2e65f238ba5b17cf635da16602fb90e0a614d000038bdc8d431bc48bfd31",
+    "files": [
+      {
+        "path": "target/agi/cpu.c",
+        "before_sha256": "fa4962d98d01c759ca8df7c5f13a341e1d38c233102c63ff8b53327e537b5127",
+        "after_sha256": "bdc47c606c51c283cb43e93f9bc1db4f5a9225ac1a95dbff1233a787eb0727cf"
+      },
+      {
+        "path": "target/agi/debug_checkpoint.c",
+        "before_sha256": "5fc4cef1d1850681691cbd21c629bcfa6064184dfa75ff86da7e0318b21fbea4",
+        "after_sha256": "9540b9d8686b2ac37051737410e9be28d924b86ee646b95824e41a6f4a439144"
+      },
+      {
+        "path": "target/agi/runtime.c",
+        "before_sha256": "db7add31ff8bb0c9d07c4595c53f3b04e7f57b844c306815548bb2973a2d1888",
+        "after_sha256": "f43776ac59c6d6ddb90d3d88c834f1f9f83a410227ec307c55116adbb9b75573"
+      },
+      {
+        "path": "target/agi/runtime_qom.c",
+        "before_sha256": "34b09c35de1e12597a6578dcd7ce4e896808ac790d793f72e3fd4389f36072b9",
+        "after_sha256": "8cdf1e843413da09dcdceb31bd6046ba93e17aa221ce9f290a919f8fa50bc7be"
+      },
+      {
+        "path": "target/agi/runtime_qom.h",
+        "before_sha256": "2e8738aee76b3669d2a25135f562fd18f61ecf1e58340e9852a7e4572bbd0367",
+        "after_sha256": "157314e67f706388359afaecec643486c19266e137ad904121f109c81094e2cf"
+      }
+    ]
   }
 }

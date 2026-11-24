@@ -104,6 +104,12 @@ A restore loads a fresh stopped owner and compares the native checkpoint bytes,
 registers, guest state and scene projection before replacing the active owner.
 This preserves the current LOGIC and offset, call stack and retained scene events.
 Resource-backed checkpoints also retain the visual and priority planes.
-Ordinary stopped instruction boundaries and root returns are supported.
-Resource-backed pending host requests, faults and quit stops reject capture.
-Checkpoints are limited to 16 MiB and are specific to the native executable.
+Ordinary instruction boundaries and root returns work with the original checkpoint
+build. When a resource-backed session advertises `save_states_runtime_stops`,
+you can also capture a pending host request, fault, or quit. Inspect
+`restored["observation"]["runtime_stop"]` for the status, pending request
+(including ticket, operands and expected reply), or fault code, detail and location.
+Both `step()` and `run()` return the restored stop with zero retired instructions.
+The request stays outstanding until the host handles it. A partially elapsed print
+window keeps its remaining guest ticks. Checkpoints are limited to 16 MiB and
+are bound to the exact native executable and resource package.

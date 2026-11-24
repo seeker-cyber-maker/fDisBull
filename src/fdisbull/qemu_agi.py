@@ -17,7 +17,7 @@ from .gdb_rpc import GDBRemote
 from .native_cpu import inspect_native_cpu
 from .qemu_control import QemuControl
 from .qemu_diagnostics import QemuInspectionMixin
-from .qemu_agi_checkpoint import AGICheckpointMixin, checkpoint_available
+from .qemu_agi_checkpoint import AGICheckpointMixin, checkpoint_capabilities
 from .anchor_stones import AnchorStoneSessionMixin
 
 BACKEND = 'qemu-agi'
@@ -127,7 +127,7 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
     capabilities = dict(registers=True, step=True, run=True, qemu_diagnostics=True,
                         native_cpu_inventory=None, memory=False, breakpoints=False,
                         runtime_scene_observation=True, scene_planes=False,
-                        save_states=False, input=False)
+                        save_states=False, save_states_runtime_stops=False, input=False)
 
     def __init__(self, project, executable, *, version=None, timeout_ms=30000, runtime_package=None, _on_spawn=None):
         _timeout(timeout_ms)
@@ -175,7 +175,7 @@ class AGIQemuSession(AGICheckpointMixin, AnchorStoneSessionMixin, QemuInspection
         self.rpc = self.vm
         self.cpu_path = self.vm.cpu_path
         try:
-            self.capabilities['save_states'] = checkpoint_available(self.vm, deadline)
+            self.capabilities.update(checkpoint_capabilities(self.vm, deadline, runtime=package_data is not None))
             state = self._state()
             source = state.get('source', {})
             if package_data is None:

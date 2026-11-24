@@ -9,6 +9,7 @@ from .dosbox_rpc import DebuggerError
 FORMAT = 'fdisbull-qemu-agi-state-1'
 ERROR_FORMAT = 'fdisbull-qemu-agi-checkpoint-error-1'
 PROPERTY = 'agi-debug-checkpoint-hex'
+STOP_SUPPORT = 'agi-debug-checkpoint-stop-support'
 LIMIT = 16 * 1024 * 1024
 
 
@@ -32,12 +33,20 @@ def _timeout(value):
         raise ValueError('AGI checkpoint timeout must be 1..600000 ms')
 
 
-def checkpoint_available(owner, deadline):
+def checkpoint_capabilities(owner, deadline, *, runtime):
     entries = owner.qmp.call('qom-list', {'path': owner.cpu_path}, timeout_ms=_remaining(deadline))
     if not isinstance(entries, list):
         raise DebuggerError('Invalid AGI QOM property inventory')
-    return any(isinstance(item, dict) and item.get('name') == PROPERTY and item.get('type') == 'string'
-               for item in entries)
+    string_properties = {item['name'] for item in entries
+                         if isinstance(item, dict) and isinstance(item.get('name'), str)
+                         and item.get('type') == 'string'}
+    can_save = PROPERTY in string_properties
+    can_save_runtime_stops = False
+    if can_save and runtime and STOP_SUPPORT in string_properties:
+        value = owner.qmp.call('qom-get', {'path': owner.cpu_path, 'property': STOP_SUPPORT},
+                               timeout_ms=_remaining(deadline))
+        can_save_runtime_stops = value == 'pending-fault-quit-1'
+    return dict(save_states=can_save, save_states_runtime_stops=can_save_runtime_stops)
 
 
 def _snapshot(owner, deadline):
@@ -61,7 +70,7 @@ def _read_json(owner, property_name, deadline):
     return result
 
 
-def _observation(owner, runtime, deadline):
+def _observation(owner, runtime, deadline, stop_support=False):
     state = _read_json(owner, 'agi-state-json', deadline)
     if not isinstance(state.get('source'), dict) or not isinstance(state.get('guest'), dict):
         raise DebuggerError('Incomplete AGI native checkpoint observation')
@@ -78,9 +87,16 @@ def _observation(owner, runtime, deadline):
             not isinstance(logic_sha, str) or re.fullmatch('[0-9a-f]{64}', logic_sha) is None):
         raise DebuggerError('Invalid AGI checkpoint logical position')
     position = dict(logic_id=logic_id, pc=pc, source_sha256=logic_sha)
-    return dict(source=source, guest_sha256=_digest(guest), registers=registers,
-                logical_position=position,
-                scene_sha256=_digest(scene) if scene is not None else None)
+    observation = dict(source=source, guest_sha256=_digest(guest), registers=registers,
+                       logical_position=position,
+                       scene_sha256=_digest(scene) if scene is not None else None)
+    if runtime and stop_support:
+        status = guest.get('status')
+        if status not in ('ready', 'running', 'budget', 'return', 'pending', 'fault', 'quit'):
+            raise DebuggerError('Invalid AGI checkpoint runtime status')
+        observation['runtime_stop'] = dict(status=status, pending_effect=guest.get('pending_effect'),
+                                           fault=guest.get('fault'))
+    return observation
 
 
 def _artifact_data(project, artifact):
@@ -143,9 +159,10 @@ class AGICheckpointMixin:
         try:
             with self._budget(owner, deadline):
                 self._agi_checkpoint_admit()
-                before = _observation(owner, self._runtime_package is not None, deadline)
+                stop_support = self.capabilities.get('save_states_runtime_stops', False)
+                before = _observation(owner, self._runtime_package is not None, deadline, stop_support)
                 data = _snapshot(owner, deadline)
-                after = _observation(owner, self._runtime_package is not None, deadline)
+                after = _observation(owner, self._runtime_package is not None, deadline, stop_support)
                 if before != after:
                     raise DebuggerError('AGI state changed during checkpoint capture')
                 if len(data) > (max_bytes or LIMIT):
@@ -184,14 +201,16 @@ class AGICheckpointMixin:
                                    runtime_package=self._runtime_package)
                 candidate.qmp.operation_deadline = deadline
                 candidate.gdb.operation_deadline = deadline
-                if not checkpoint_available(candidate, deadline):
+                caps = checkpoint_capabilities(candidate, deadline, runtime=self._runtime_package is not None)
+                if not caps['save_states']:
                     raise ValueError('AGI candidate lacks native checkpoint interface')
                 if _sha(self._executable.read_bytes()) != self.identity['qemu_sha256']:
                     raise ValueError('AGI native binary changed during restore')
                 candidate.qmp.call('qom-set', {'path': candidate.cpu_path, 'property': PROPERTY,
                                               'value': data.hex()}, timeout_ms=_remaining(deadline))
                 if (_snapshot(candidate, deadline) != data or
-                        _observation(candidate, self._runtime_package is not None, deadline)
+                        _observation(candidate, self._runtime_package is not None, deadline,
+                                     caps['save_states_runtime_stops'])
                         != metadata['observation']):
                     raise DebuggerError('Restored AGI native checkpoint readback differs')
                 _remaining(deadline)

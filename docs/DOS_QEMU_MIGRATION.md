@@ -223,7 +223,9 @@ Set `FDISBULL_QEMU_AGI` to the target executable to run
 They exercise the shared inspection path and the public debugger with authored
 inputs. With a checkpoint-capable executable, the AGI debugger also restores
 the active LOGIC, stack, scene planes and retained journal across processes.
-The local cold-restore test compares subsequent steps with an uninterrupted run.
+Local cold-restore tests compare subsequent steps with an uninterrupted run and,
+on the extended AGI build, verify that pending host requests, faults and quit
+remain stopped across new sessions with the same journal and retirement count.
 DOS replacement qualification remains a separate gate.
 
 ## FreeDOS and directory layers

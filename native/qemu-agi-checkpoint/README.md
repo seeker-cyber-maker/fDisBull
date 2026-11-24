@@ -21,7 +21,9 @@ paths. Apply the overlays in order and build in a fresh directory.
 ```sh
 python3 "$agi_base/native/qemu-agi/apply_overlay.py" "$qemu_src"
 (cd "$qemu_src" && git apply --check "$checkpoint_dir/qemu-10.0.13-fdisbull-agi-checkpoint-v1.patch" &&
- git apply "$checkpoint_dir/qemu-10.0.13-fdisbull-agi-checkpoint-v1.patch")
+ git apply "$checkpoint_dir/qemu-10.0.13-fdisbull-agi-checkpoint-v1.patch" &&
+ git apply --check "$checkpoint_dir/qemu-10.0.13-fdisbull-agi-stop-checkpoints-v2.patch" &&
+ git apply "$checkpoint_dir/qemu-10.0.13-fdisbull-agi-stop-checkpoints-v2.patch")
 mkdir agi-checkpoint-build && cd agi-checkpoint-build
 "$qemu_src/configure" --target-list=agi-softmmu --without-default-features \
   --enable-system --enable-tcg --enable-pixman --disable-user --disable-tools \
@@ -31,7 +33,11 @@ mkdir agi-checkpoint-build && cd agi-checkpoint-build
 ninja -j2 qemu-system-agi
 ```
 
-Set `FDISBULL_QEMU_AGI_CHECKPOINT` to the resulting executable for
-`tests/test_qemu_agi_checkpoint_native.py`. Set `FDISBULL_QEMU_AGI_LEGACY` to the
-earlier unpatched AGI executable to exercise compatibility with it in the
-same batch. See [the debugger guide](../../docs/QEMU_AGI.md) for the public API.
+Set both `FDISBULL_QEMU_AGI_CHECKPOINT` and `FDISBULL_QEMU_AGI_CHECKPOINT_STOPS`
+to the resulting executable for `tests/test_qemu_agi_checkpoint_native.py`.
+The second patch adds the read-only `agi-debug-checkpoint-stop-support` marker
+and validates outstanding requests and terminal stops when capturing or restoring.
+For compatibility checks in the same batch, set `FDISBULL_QEMU_AGI_CHECKPOINT_V1`
+to the executable built with the first patch alone and `FDISBULL_QEMU_AGI_LEGACY`
+to the earlier unpatched executable. See [the debugger guide](../../docs/QEMU_AGI.md)
+for the public API.
