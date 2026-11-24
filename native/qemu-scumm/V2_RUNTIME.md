@@ -1,14 +1,14 @@
 # Source-bound isolated Amiga v2 runtime
 
 The optional `amiga-v2-isolated` profile executes bounded resource operations,
-cutscene entry, and cursor/control changes against a verified immutable byte
+cutscene entry, cursor/control changes, and authored text-verb state against a verified immutable byte
 bank. It declares exactly one active global script and no other running script
 slots or queued sentences. Variables, room, camera and controls begin at zero.
 This is a reproducible analysis context, **not authentic game boot state**.
 
 Default raw-script execution retains its earlier closed behavior. Select this
 profile explicitly with a startup resource manifest. Version 0/1 machines cannot
-use it. Script switching, room transitions, end-cutscene, verbs, rendering and
+use it. Script switching, room transitions, end-cutscene, verb interaction, rendering and
 audio remain outside the profile.
 
 ## Prepare and run
@@ -111,15 +111,62 @@ invalidated UI state, **not rendered frames or reference-engine draw-call
 counts**. End-cutscene remains blocked before restoration: v2 must follow ego,
 which requires actor validation, camera bounds/position, potential room
 transition and redraws. Equal saved/current room is insufficient. Script
-start/stop/chain, verbs and other missing effects remain non-retiring boundaries.
+start/stop/chain and other missing effects remain non-retiring boundaries.
+
+## Authored verb slots
+
+The profile models 100 verb slots, including reserved slot zero, following the
+pinned reference's allocation. It implements the three `7a`/`fa` forms:
+
+| Form | Accepted state change |
+| --- | --- |
+| Delete (`0`) | Resolve the selector, add one, clear ID/mode/save ID and remove the name; preserve the other authored fields |
+| Mode (`ff`) | Find the lowest slot 1..99 with the literal ID and save ID zero, or use slot zero when absent; retain the full literal mode byte |
+| Create/replace | Resolve selector plus one, set the literal ID and supplied position/preposition/name, and apply the profile's text-verb defaults |
+
+Create/delete accept slots 1..99. Variable selectors keep their full resolved
+16-bit value, including the existing v2 indirection at variable indices 14..16;
+validation occurs before narrowing. An invalid result faults with
+`S_BAD_VERB` (9) before any slot, UI, PC, retirement or journal mutation.
+Duplicate IDs are not rejected: the mode form selects the first matching slot.
+An ID-zero lookup can therefore select an empty ordinary slot.
+
+Created positions use encoded X and Y multiplied by eight, in UI pixels. This
+is distinct from the X×8/Y×2 actor-unit geometry in [room navigation](NAVIGATION.md).
+New text verbs have color 2, highlight 14, dim color 8, charset 0, mode 1,
+and the pinned slot-specific keyboard mapping for slots 1..15. Reset slots
+instead have color 2 and charset 1; the remaining modeled fields are zero.
+These are explicit non-demo Amiga-v2 defaults, not universal platform defaults.
+
+Names retain their original encoded source span, excluding the final terminator.
+An `ff` escape consumes a command and, except for commands 1/2/3/8, two argument
+bytes; zero argument bytes do not end the string. The canonical decoder bounds
+the entire instruction to 514 bytes, allowing at most 507 encoded name bytes.
+Missing terminators, truncated escapes and excessive lengths fail before effects.
+An absent name has `pc=0,size=0`; an assigned empty name has nonzero PC and zero
+size. Neither is decoded as UTF-8 or rendered text. This bounded escape scan
+is shared by canonical v1/v2 verb decoding; execution remains v2-only and the
+earlier actor-name model is unchanged.
+
+Every accepted verb operation increments `ui_revision` once, including a
+repeated delete or unchanged mode. Its single SCENE record contains the selected
+slot before/after and both UI revisions. It records an invalidation request;
+font metrics, rendered rectangles, mouseover, hit testing and verb dispatch
+remain unimplemented. Mode 2 and other nonzero modes are retained distinctly;
+the model does not infer clickability from them.
+
+The retirement counter and the UI revisions required by cursor, cutscene-entry
+and verb effects are checked before mutation. Exhaustion faults with
+`S_COUNTER_EXHAUSTED` (10), rather than wrapping those counters.
 
 ## Stopped QMP state and reset
 
 Read `scumm-runtime-json` on the CPU path from `query-cpus-fast`. Schema
 `fdisbull-scumm-v2-runtime-1` exposes profile enablement, code/catalog/receipt
-digests, script ID, counts, controls, block reason, and available/resident/locked
-records. Absent unmodified slots are implicit in the counts. This read-only
-getter requires the single CPU to be stopped and returns no payload bytes.
+digests, script ID, counts, controls, block reason, all 100 verb slots, and
+available/resident/locked records. Absent unmodified resource slots are implicit
+in the counts. The getter requires the single CPU to be stopped. Verb names
+include raw encoded code bytes; use the same private handling as other captures.
 
 Each accepted effect retires once through the scalar core's accounting path.
 A rejection does not advance PC or emit retirement. No generic acknowledge/skip
@@ -127,7 +174,7 @@ interface exists. The startup-bound bank requires no asynchronous completion
 protocol in this slice. The existing optional, lossy trace owns no effects.
 
 Both `scumm-restart=true` and QMP `system_reset` clear variables, controls,
-cutscene state, residency/locks, counters and the journal. They retain the bank,
+cutscene and verb state, residency/locks, counters and the journal. They retain the bank,
 source identity and configured observation/budget controls, and mark only the
 selected script resident again. Explicit CPU registration in QEMU's reset graph
 fixes an earlier build that emitted RESET without invoking the unattached CPU's
@@ -146,15 +193,29 @@ python3 native/qemu-scumm/test_native.py \
   --qemu /private/build/qemu-system-scumm --output /private/native.json
 python3 native/qemu-scumm/test_runtime_native.py \
   --qemu /private/build/qemu-system-scumm --output /private/runtime-native.json
+python3 native/qemu-scumm/test_verbs_native.py \
+  --qemu /private/build/qemu-system-scumm --output /private/verbs-native.json
 ```
 
-There are 1,499 independent portable assertions and 11 authored OFS/index tests.
+The portable runtime suite includes independently authored verb, resource and
+control expectations; 11 intake tests use authored OFS/index inputs.
 The native runtime suite checks effect budgets, locks versus residency, full
 state invariance across 12 mask/capacity configurations, seven non-retiring
 boundaries, both resets, immutable retained bytes, and 22 startup rejections
 requiring clean validation exits. Existing native tests gain global reset checks
 for versions 0/1/2, bringing that suite to 22 cases. LeakSanitizer cannot run
 under this environment's ptrace instrumentation; ASan/UBSan remain enabled.
+
+The verb native suite covers the three forms, duplicate and missing IDs,
+variable indirection, slot boundaries, escaped names, deletion versus empty
+names, mode-byte preservation, all four masks at capacities 0/1/64, failed
+instruction atomicity, query purity, clear/reset, and a 514-byte instruction
+crossing a 4 KiB code-page boundary. Its packet round trip retains the exact
+authored state while leaving rendering and hit testing unqualified.
+
+Read-only room inspection and table-driven route proposals are a separate
+host capability described in [NAVIGATION.md](NAVIGATION.md). They do not retire
+`load_room` or `walk_actor_to`, initialize a room, or tick actors.
 
 Private target probes are recorded separately. This isolated zero-state
 context omits authentic game initialization. Original-engine equivalence,

@@ -508,7 +508,7 @@ def cached_mode_changes(binary: Path, timeout: float) -> dict[str, Any]:
 def blocked_effects(binary: Path, timeout: float) -> dict[str, Any]:
     cases = [("room", bytes([0x72, 1, 0]), BLOCKED),
              ("walk", bytes([0x1e, 2, 5, 6, 0]), BLOCKED),
-             ("verb", bytes([0x7a, 1, 2, 3, 4, 5, 65, 0, 0]), BLOCKED),
+             ("script_start", bytes([0x42, 4, 0]), BLOCKED),
              ("invalid_actor", bytes([0x01, 0, 5, 6, 0]), FAULT),
              ("missing_resource", bytes([0x0c, 3, 0x21, 0]), BLOCKED)]
     for name, code, expected_status in cases:
@@ -526,6 +526,7 @@ def blocked_effects(binary: Path, timeout: float) -> dict[str, Any]:
                 expect(snapshot["actors"], initial["actors"], "blocked operation does not move actors")
                 expect(snapshot["resources"], initial["resources"], "blocked operation does not alter resources")
                 expect(snapshot["control"], initial["control"], "blocked operation does not apply UI state")
+                expect(snapshot["verbs"], initial["verbs"], "blocked operation does not alter verb slots")
                 expect_accounting(qmp, [0, 0], [0, 0], 0)
                 expect(journal(qmp)["records"], [], "blocked intent is never a committed observation")
                 qmp.run()

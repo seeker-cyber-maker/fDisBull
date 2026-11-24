@@ -93,6 +93,60 @@
       "sha256": "ce9f57680a125b165a471c1c3d0f9c4c27abb110afa8cd70fa32f4b9a35c2f25",
       "bytes": 2036,
       "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/scumm_v3.h"
+    },
+    {
+      "file": "engines/scumm/boxes.cpp",
+      "bytes": 37753,
+      "sha256": "c011ef23fca0797a8b64e81ddc7971a13313cfa06e3a8fcb1f364b9c71ccee58",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/boxes.cpp"
+    },
+    {
+      "file": "engines/scumm/actor.cpp",
+      "bytes": 123401,
+      "sha256": "316395ecad531b653525cd370734e9a370aecc0adee8298bcefea725ebd95606",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/actor.cpp"
+    },
+    {
+      "file": "engines/scumm/actor.h",
+      "bytes": 11390,
+      "sha256": "bd9b27dd2d45113954084760d1c95f76d5d8ae6a80df75a1bfeb5e0aebecce04",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/actor.h"
+    },
+    {
+      "file": "engines/scumm/boxes.h",
+      "bytes": 1493,
+      "sha256": "b8b80587bcb7d228ae329d5c4f9bed6d3321400f07181149bca25c6d7f78f431",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/boxes.h"
+    },
+    {
+      "file": "engines/scumm/room.cpp",
+      "bytes": 26003,
+      "sha256": "d38cc1bf0bfe4e7f1feb5fac28837691511cc937cbc0984ca8fa14856a587e0a",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/room.cpp"
+    },
+    {
+      "file": "engines/scumm/util.h",
+      "bytes": 1432,
+      "sha256": "a4f942fdf110138613989270d93600d190cc385a6fcc2df3bb001219d1b4f3e6",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/util.h"
+    },
+    {
+      "file": "engines/scumm/script_v3.cpp",
+      "bytes": 2393,
+      "sha256": "3d5a690c3de0e4bab868401f2fb739f539a49e984e5efd06fd6ddd646ce10d0a",
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/script_v3.cpp"
+    },
+    {
+      "file": "engines/scumm/verbs.cpp",
+      "sha256": "9f166b78407081c410707e03574281c108a1101e5be29eda380cbc29246278be",
+      "bytes": 39892,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/verbs.cpp"
+    },
+    {
+      "file": "engines/scumm/verbs.h",
+      "sha256": "58ac9507b4b259a8b2997cc556f575072f9527f06c55d1a03895e1ba314dcd68",
+      "bytes": 2092,
+      "url": "https://raw.githubusercontent.com/scummvm/scummvm/38af1883a2eb7a622c31bfc3708888bbcc47db48/engines/scumm/verbs.h"
     }
   ]
 }

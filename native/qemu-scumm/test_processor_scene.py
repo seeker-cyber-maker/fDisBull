@@ -152,7 +152,104 @@ def runtime_fixture():
     return {"code": code, "scene": scene, "events": events, "decode_pages": pages_for(scene, rows)}
 
 
+def blank_verb(slot):
+    fields = ("id", "x", "y", "hicolor", "dimcolor", "type", "mode", "saveid",
+              "key", "center", "imgindex", "prep")
+    return {**dict.fromkeys(fields, 0), "slot": slot, "color": 2, "charset": 1,
+            "name": {"pc": 0, "size": 0, "bytes": ""}}
+
+
+def verb_fixture(text=b"A\xff\x04\x00\x00B\xff\x01C"):
+    code = b"\x7a\x05\x01\x02\x00\x04" + text + b"\0\0"
+    scene = scene_for(code)
+    scene["source"].update(profile="amiga-v2-isolated", script_id=1,
+                           manifest_sha256=sha256(b"authored verb manifest").hexdigest(),
+                           source_receipt_sha256=sha256(b"authored verb receipt").hexdigest())
+    script = (len(code) + 4).to_bytes(2, "little") + b"\0\0" + code
+    scene["resources"]["counts"]["script"] = 2
+    scene["resources"]["entries"] = [{"type": "script", "id": 1, "size": len(script),
+                                        "available": True, "resident": True, "locked": False,
+                                        "sha256": sha256(script).hexdigest()}]
+    scene["verbs"] = [blank_verb(i) for i in range(100)]
+    before = blank_verb(1)
+    after = {**before, "id": 5, "x": 8, "y": 16, "hicolor": 14, "dimcolor": 8,
+             "charset": 0, "mode": 1, "key": ord("q"), "prep": 4,
+             "name": {"pc": 6, "size": len(text), "bytes": text.hex()}}
+    scene["verbs"][1] = deepcopy(after)
+    scene["control"]["ui_revision"] = 1
+    scene["checkpoint"].update(retired=2, pc=len(code), status=3)
+    rows = [instruction(code, 0, len(code) - 1, "verb_op", ((0, 5, 1), (0, 0, 1), (0, 4, 1)),
+                        payload_pc=2, payload_size=len(code) - 3),
+            instruction(code, len(code) - 1, 1, "stop")]
+    events = envelope(scene, [record(rows[0], 1), record(rows[0], 1, kind="verb",
+                            before_verb=before, after_verb=deepcopy(after),
+                            before_ui_revision=0, after_ui_revision=1), record(rows[1], 2)])
+    return {"code": code, "scene": scene, "events": events, "decode_pages": pages_for(scene, rows)}
+
+
 class ProcessorSceneTests(unittest.TestCase):
+    def test_verb_snapshot_escaped_text_and_detached_change(self):
+        fixture = verb_fixture()
+        original = deepcopy(fixture)
+        packet = build_scene_packet(**fixture)
+        self.assertEqual(packet["verbs"], fixture["scene"]["verbs"])
+        self.assertEqual(packet["committed_changes"][0]["after_verb"], packet["verbs"][1])
+        self.assertEqual(packet["verbs"][1]["name"]["bytes"], "41ff04000042ff0143")
+        self.assertTrue(packet["qualification"]["verb_state"])
+        self.assertFalse(packet["qualification"]["verb_rendering"])
+        self.assertFalse(packet["qualification"]["verb_hit_testing"])
+        packet["verbs"][1]["mode"] = 255
+        packet["committed_changes"][0]["after_verb"]["id"] = 99
+        self.assertEqual(fixture, original)
+
+    def test_verb_name_absent_empty_and_invalidation_only(self):
+        fixture = verb_fixture(b"")
+        packet = build_scene_packet(**fixture)
+        self.assertEqual(packet["verbs"][1]["name"], {"pc": 6, "size": 0, "bytes": ""})
+        self.assertEqual(packet["verbs"][2]["name"], {"pc": 0, "size": 0, "bytes": ""})
+        event = fixture["events"]["records"][1]
+        event["before_verb"] = deepcopy(event["after_verb"])
+        self.assertEqual(len(build_scene_packet(**fixture)["committed_changes"]), 1)
+        # A repeated accepted redraw request is a revision change, not a draw.
+        event["after_ui_revision"] = 0
+        with self.assertRaises(SceneInputError):
+            build_scene_packet(**fixture)
+
+    def test_verb_inventory_bounds_and_malformed_text(self):
+        mutations = [
+            lambda f: f["scene"]["verbs"].pop(),
+            lambda f: f["scene"]["verbs"][1].update(slot=0),
+            lambda f: f["scene"]["verbs"][1].update(mode=True),
+            lambda f: f["scene"]["verbs"][1].update(mode=256),
+            lambda f: f["scene"]["verbs"][1].update(x=-1),
+            lambda f: f["scene"]["verbs"][1]["name"].update(size=2, bytes="41ff"),
+            lambda f: f["scene"]["verbs"][1]["name"].update(size=3, bytes="41ff04"),
+            lambda f: f["scene"]["verbs"][1]["name"].update(pc=0, size=1, bytes="7a"),
+            lambda f: f["scene"]["verbs"][1]["name"].update(size=508),
+            lambda f: f["scene"].pop("verbs"),
+            lambda f: f["events"]["records"][1]["after_verb"].update(slot=2),
+            lambda f: f["events"]["records"][1].update(before_ui_revision=1),
+            lambda f: f["events"]["records"][1].update(after_ui_revision=2),
+            lambda f: f["events"]["records"][1].update(before_ui_revision=True),
+        ]
+        for index, mutate in enumerate(mutations):
+            with self.subTest(index=index):
+                fixture = verb_fixture()
+                mutate(fixture)
+                with self.assertRaises(SceneInputError):
+                    build_scene_packet(**fixture)
+        # A zero outside escape arguments cannot be hidden within the name span.
+        with self.assertRaises(SceneInputError):
+            build_scene_packet(**verb_fixture(b"A\0B"))
+        for short in (b"A\xff", b"A\xff\x04", b"A\xff\x04\x00"):
+            with self.subTest(short=short), self.assertRaises(SceneInputError):
+                build_scene_packet(**verb_fixture(short))
+
+    def test_older_snapshot_does_not_invent_verb_inventory(self):
+        packet = build_scene_packet(**raw_fixture())
+        self.assertNotIn("verbs", packet)
+        self.assertFalse(packet["qualification"]["verb_state"])
+
     def test_full_actor_facts_and_detached_outputs(self):
         fixture = raw_fixture()
         original = deepcopy(fixture)

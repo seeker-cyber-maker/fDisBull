@@ -19,7 +19,7 @@ The caller supplies exact immutable kernel bytes and these native JSON values:
 
 | Input | Schema | Requirement |
 | --- | --- | --- |
-| `scene` | `fdisbull-scumm-scene-1` | Required stopped actor/resource/control snapshot |
+| `scene` | `fdisbull-scumm-scene-1` | Required stopped actor/resource/control snapshot; newer captures also include authored verb slots |
 | `events` | `fdisbull-scumm-events-2` | Optional retained DISASM and SCENE records from the same checkpoint |
 | `decode_pages` | `fdisbull-scumm-early-decode-1` | Optional consecutive static pages with the additive source, extent and stop fields |
 
@@ -63,11 +63,12 @@ changes; omitting static pages leaves static coverage unqualified.
 | `checkpoint` | Trace epoch, control generation, retirement, PC, guest status/fault and block reason |
 | `observation` | Mask, capacity, retained count, eligible sequence, per-channel eligible/stored/dropped counts and observer calls |
 | `actors` | All 32 supported actor states, including placement, room, metadata, indexed palette and raw name span |
+| `verbs` | All 100 authored verb slots when supplied by the native snapshot; absent in older captures |
 | `resources` | Declared slot counts and explicit available/resident/locked entries |
 | `control` | Supported UI/cutscene state, global talk color and selected control-related variables |
 | `disassembly.static_pages` | Canonical native static records and explicit listing boundaries |
 | `disassembly.retirements` | Retained instructions that actually retired, with historical resolved operands and actual successors |
-| `committed_changes` | Retained actor, global-color, resource and control deltas |
+| `committed_changes` | Retained actor, global-color, resource, control and verb deltas |
 | `evidence` | SHA-256 of code and deterministic JSON input representations |
 | `qualification` | Explicit snapshot, history and presentation scope |
 
@@ -81,6 +82,14 @@ The bytes exclude the terminating NUL and are not assumed to be UTF-8.
 has a nonzero `pc` and zero size, so the two facts remain distinct. The consumer
 checks the supplied bytes and terminator against the immutable kernel.
 
+Verb names have the same source-span representation, with an escape-aware
+extent check. Commands after `ff` may include two argument bytes containing
+zero. The consumer preserves those encoded bytes without rendering or
+substituting variables. It distinguishes absent names after deletion from
+assigned empty names, and validates the complete 100-slot inventory when it
+is present. An older snapshot remains readable without inventing that inventory;
+`qualification.verb_state` records whether the facts were supplied.
+
 Resource availability, logical residency and locking are independent. A declared
 slot can be locked without available bytes. Untouched unavailable slots are
 implicit in the declared counts. The selected active script must retain its
@@ -93,6 +102,12 @@ cutscene records retain their before/after values, but ordinary scalar
 instructions can also write these variables. The consumer therefore does not
 assert that successive control deltas form their entire history.
 `ui_revision` records UI invalidation, not rendered frames or draw calls.
+Verb events contain `before_verb`, `after_verb`, `before_ui_revision` and
+`after_ui_revision`. An accepted verb operation produces one SCENE record,
+even if only the invalidation revision changes. It does not also produce a
+second control record. The consumer checks the selected slot, encoded names
+and revision increment, without claiming that retained verb rows form a
+complete history across disabled or dropped observations.
 
 ## DISASM, SCENE and loss
 
@@ -149,6 +164,7 @@ The packet explicitly leaves these facts unqualified:
 - Actor visibility or draw order.
 - Room background decoding, room transitions and room rendering.
 - Costume decoding or animation composition.
+- Verb text rendering, mouseover and hit testing.
 - Completed screen presentation.
 
 These limits preserve the current native subset. A consumer may build a later
@@ -179,11 +195,13 @@ The authored standard-library tests require no emulator or original game data:
 python3 native/qemu-scumm/test_processor_scene.py -v
 ```
 
-Their 16 test groups cover all masks, zero/full capacity, growth after dropped
+Their 20 test groups cover all masks, zero/full capacity, growth after dropped
 records, identity/epoch/counter rejection, palettes and raw names, runtime
 resource bindings, scalar writes between control events, exact bytes and
 successors, static fault boundaries, blocked room intent, detached outputs and
-CLI overwrite refusal.
+CLI overwrite refusal. Verb-specific checks include the complete inventory,
+escaped and empty names, invalidation-only changes, detached output,
+malformed/tampered event rejection and compatibility with older captures.
 
 `test_observation_native.py --case native_scene_consumer` additionally captures
 an authored native program through QMP and passes the coherent snapshot,
@@ -191,3 +209,7 @@ journal and decode page into this consumer. It verifies eight retirements,
 seven committed changes, palette and non-ASCII name bytes, resource residency,
 cursor state and unchanged inputs. The snapshot and these retained facts pass;
 full-game execution, presentation and history remain unqualified.
+
+`test_verbs_native.py` also passes native verb snapshots and their journal
+through this consumer. A packet can then bind the independent, read-only
+[room navigation](NAVIGATION.md) planner; neither consumer executes movement.

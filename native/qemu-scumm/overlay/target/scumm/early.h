@@ -6,6 +6,7 @@
 #include <stdint.h>
 #define SCUMM_CODE_MAX 65536u
 #define SCUMM_ACTORS 32u
+#define SCUMM_VERBS 100u
 #define SCUMM_EVENT_MAX 4096u
 #define SCUMM_INSN_MAX 514u
 #define SCUMM_RESOURCE_TYPES 4u
@@ -20,7 +21,8 @@ enum ScummOp { S_STOP,S_YIELD,S_MOVE,S_ADD,S_SUB,S_INC,S_DEC,S_JUMP,
  S_MOVE_IND,S_ADD_IND,S_SUB_IND,S_UNKNOWN };
 enum ScummStatus { S_READY,S_RUNNING,S_BUDGET,S_RETURN,S_WAIT,S_FAULT,S_BLOCKED };
 enum ScummFault { S_OK,S_OPCODE,S_TRUNCATED,S_BAD_VERSION,S_BAD_PC,
- S_BAD_VAR,S_BAD_ACTOR,S_BAD_BRANCH,S_BAD_RESOURCE };
+ S_BAD_VAR,S_BAD_ACTOR,S_BAD_BRANCH,S_BAD_RESOURCE,S_BAD_VERB,
+ S_COUNTER_EXHAUSTED };
 enum ScummResourceType { S_RES_COSTUME,S_RES_ROOM,S_RES_SCRIPT,S_RES_SOUND };
 enum ScummBlockReason { S_BLOCK_NONE,S_BLOCK_UNIMPLEMENTED,
  S_BLOCK_RESOURCE_MISSING,S_BLOCK_ROOM_MAPPER,S_BLOCK_CUTSCENE_NESTED,
@@ -56,6 +58,15 @@ typedef struct ScummResource {
  uint32_t size;
  uint8_t available,resident,locked;
 } ScummResource;
+/* Authored Amiga-v2 verb state. Coordinates are the requested text origin;
+ * rendered rectangles, hover state and hit testing are not modeled. Names
+ * retain their encoded source extent, excluding the terminating zero. */
+typedef struct ScummVerb {
+ uint16_t id,x,y,saveid,imgindex;
+ uint8_t color,hicolor,dimcolor,type,charset,mode,key,center,prep;
+ uint32_t name_pc;
+ uint16_t name_size;
+} ScummVerb;
 typedef struct ScummRuntime {
  uint8_t enabled;
  uint16_t script_id,counts[SCUMM_RESOURCE_TYPES];
@@ -69,6 +80,8 @@ typedef struct ScummRuntime {
  /* A UI invalidation revision, not a count of rendered frames or callbacks. */
  uint64_t ui_revision;
  uint32_t blocked_reason;
+ /* Slot zero is reserved for the v2 lookup-miss mode operation. */
+ ScummVerb verbs[SCUMM_VERBS];
 } ScummRuntime;
 /* Observer-only snapshots. None of these fields drive guest execution. */
 typedef struct ScummControl {
@@ -82,7 +95,7 @@ typedef struct ScummControl {
  uint16_t vars[6];
 } ScummControl;
 enum ScummEventKind { S_EVENT_RETIRE,S_EVENT_ACTOR,S_EVENT_DEFAULT_COLOR,
- S_EVENT_RESOURCE,S_EVENT_CONTROL };
+ S_EVENT_RESOURCE,S_EVENT_CONTROL,S_EVENT_VERB };
 typedef struct ScummEvent {
  uint64_t seq,retired,control_generation;
  uint32_t pc,next;
@@ -97,6 +110,9 @@ typedef struct ScummEvent {
  uint16_t resource_id;
  ScummResource before_resource,after_resource;
  ScummControl before_control,after_control;
+ uint8_t verb_slot;
+ ScummVerb before_verb,after_verb;
+ uint64_t before_ui_revision,after_ui_revision;
 } ScummEvent;
 typedef struct ScummTrace {
  uint32_t mask,capacity,count;

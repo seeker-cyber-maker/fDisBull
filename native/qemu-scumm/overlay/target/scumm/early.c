@@ -24,6 +24,26 @@ static bool val(const uint8_t *c,size_t len,size_t *p,ScummInsn *i,unsigned bit,
  bool variable=(i->opcode&bit)!=0;
  return arg(c,len,p,i,variable?S_VAR:S_IMM,variable?1:width);
 }
+/* v2 verb resources copy encoded strings, not plain C strings. A 0xff
+ * escape consumes its command and, except for 1/2/3/8, two argument bytes
+ * which may themselves be zero. The caller retains this exact source span. */
+static bool verb_name_end(const uint8_t *code,size_t len,size_t *p,uint32_t pc)
+{
+ size_t end=(size_t)pc+SCUMM_INSN_MAX;
+ if(end>len)end=len;
+ while(*p<end){
+  unsigned ch=code[(*p)++];
+  if(!ch)return true;
+  if(ch!=0xff)continue;
+  if(*p==end)return false;
+  unsigned command=code[(*p)++];
+  if(command!=1&&command!=2&&command!=3&&command!=8){
+   if(end-*p<2)return false;
+   *p+=2;
+  }
+ }
+ return false;
+}
 bool scumm_decode(unsigned version,const uint8_t *code,size_t len,uint32_t pc,ScummInsn *i)
 {
  size_t p=pc;unsigned word=version?2:1,base;bool ok=true,branch=false;
@@ -81,13 +101,14 @@ print_text:
     if(!verb)ok=val(code,len,&p,i,0x80,1);
     else if(verb==255)ok=arg(code,len,&p,i,S_IMM,1)&&arg(code,len,&p,i,S_IMM,1);
     else{
-     /* New verb layout: x, y, slot, preposition, NUL-terminated name.
-      * Keep raw payload for static consumption; no verb effects executed. */
+     /* Keep the complete x/y/selector/preposition/name payload while also
+      * exposing the variable-aware selector and literal prep as operands. */
      i->payload_pc=p;
      if(len-p<4)ok=false;else{
-      p+=4;
-      while(p<len&&p-i->pc<SCUMM_INSN_MAX&&code[p])++p;
-      if(p>=len||code[p])ok=false;else{++p;i->payload_size=p-i->payload_pc;}
+      p+=2;
+      ok=val(code,len,&p,i,0x80,1)&&arg(code,len,&p,i,S_IMM,1)&&
+         verb_name_end(code,len,&p,i->pc);
+      if(ok)i->payload_size=p-i->payload_pc;
      }
     }
    }
@@ -159,7 +180,7 @@ static bool value(unsigned version,const ScummState *s,const ScummArg *a,uint16_
 bool scumm_scene_op(unsigned op)
 {
  return op==S_PLACE||op==S_ACTOR_CONFIG||op==S_RESOURCE||
-        op==S_CURSOR||op==S_CUTSCENE;
+        op==S_CURSOR||op==S_CUTSCENE||op==S_VERB;
 }
 void scumm_trace_clear(ScummTrace *t)
 {
@@ -218,6 +239,10 @@ void scumm_runtime_reset(ScummRuntime *r)
   }
  memset((uint8_t *)r+offsetof(ScummRuntime,user_state),0,
         sizeof(*r)-offsetof(ScummRuntime,user_state));
+ for(unsigned slot=0;slot<SCUMM_VERBS;slot++){
+  r->verbs[slot].color=2;
+  r->verbs[slot].charset=1;
+ }
  if(r->enabled&&r->script_id<SCUMM_RESOURCE_SLOTS&&
     r->resources[S_RES_SCRIPT][r->script_id].available)
   r->resources[S_RES_SCRIPT][r->script_id].resident=1;
@@ -244,6 +269,9 @@ bool scumm_execute_runtime(unsigned version,const uint8_t *code,size_t len,
  }
  if(r)r->blocked_reason=S_BLOCK_NONE;
  if(!scumm_decode(version,code,len,s->pc,&i))goto fault;
+ /* Retirement is a mandatory architectural counter, independent of the
+  * optional journal. Reject its overflow before executing any effect. */
+ if(s->retired==UINT64_MAX){i.fault=S_COUNTER_EXHAUSTED;goto fault;}
  if(capture&&((mask&SCUMM_OBS_DISASM)||
               ((mask&SCUMM_OBS_SCENE)&&scumm_scene_op(i.op)))){
   obs=capture;memset(obs,0,sizeof(*obs));
@@ -353,6 +381,7 @@ bool scumm_execute_runtime(unsigned version,const uint8_t *code,size_t len,
   if(!r||!i.subop)goto blocked; /* Exit requires camera/room semantics. */
   if(r->cutscene_active){r->blocked_reason=S_BLOCK_CUTSCENE_NESTED;goto blocked;}
   if(r->script_id==2){r->blocked_reason=S_BLOCK_SENTENCE_OWNER;goto blocked;}
+  if(r->ui_revision==UINT64_MAX){i.fault=S_COUNTER_EXHAUSTED;goto fault;}
   if(obs&&(mask&SCUMM_OBS_SCENE))scumm_control_snapshot(s,r,&obs->before_control);
   r->saved_user_state=r->user_state|(r->user_put?0x10:0);
   r->saved_cursor=s->vars[21];r->saved_room=r->current_room;
@@ -369,6 +398,7 @@ bool scumm_execute_runtime(unsigned version,const uint8_t *code,size_t len,
   break;
  case S_CURSOR:
   if(!r)goto blocked;
+  if(r->ui_revision==UINT64_MAX){i.fault=S_COUNTER_EXHAUSTED;goto fault;}
   if(obs&&(mask&SCUMM_OBS_SCENE))scumm_control_snapshot(s,r,&obs->before_control);
   if(a&255)s->vars[21]=a&255;
   set_user_state(r,a>>8);++r->ui_revision;
@@ -376,9 +406,52 @@ bool scumm_execute_runtime(unsigned version,const uint8_t *code,size_t len,
    obs->kind=S_EVENT_CONTROL;scumm_control_snapshot(s,r,&obs->after_control);
   }
   break;
+ case S_VERB:{
+  if(!r)goto blocked;
+  unsigned slot=0;
+  if(a==255){
+   /* Mode lookup deliberately falls back to reserved slot zero, and ID
+    * zero may match the first ordinary empty slot. Saved slots do not match. */
+   for(unsigned k=1;k<SCUMM_VERBS;k++)
+    if(r->verbs[k].id==b&&!r->verbs[k].saveid){slot=k;break;}
+  }else{
+   /* Resolve the full variable value before adding one; never narrow an
+    * invalid selector to a byte or let UINT16_MAX wrap into slot zero. */
+   if(b>=SCUMM_VERBS-1){i.fault=S_BAD_VERB;goto fault;}
+   slot=(unsigned)b+1;
+  }
+  if(r->ui_revision==UINT64_MAX){i.fault=S_COUNTER_EXHAUSTED;goto fault;}
+  if(obs&&(mask&SCUMM_OBS_SCENE)){
+   obs->kind=S_EVENT_VERB;obs->verb_slot=slot;
+   obs->before_verb=r->verbs[slot];obs->before_ui_revision=r->ui_revision;
+  }
+  ScummVerb *verb=&r->verbs[slot];
+  if(!a){
+   verb->id=0;verb->mode=0;verb->saveid=0;
+   verb->name_pc=0;verb->name_size=0;
+  }else if(a==255){
+   verb->mode=(uint8_t)c;
+  }else{
+   static const uint8_t keys[]="qwertasdfgzxcvb";
+   verb->id=a;
+   verb->x=(uint16_t)code[i.payload_pc]*8;
+   verb->y=(uint16_t)code[i.payload_pc+1]*8;
+   verb->color=2;verb->hicolor=14;verb->dimcolor=8;
+   verb->type=0;verb->charset=0;verb->mode=1;
+   verb->saveid=0;verb->key=slot<sizeof(keys)?keys[slot-1]:0;
+   verb->center=0;verb->imgindex=0;verb->prep=(uint8_t)c;
+   verb->name_pc=i.payload_pc+4;verb->name_size=i.payload_size-5;
+  }
+  /* Every accepted verb operation invalidates the authored UI once, even
+   * if its slot fields were already equal. No drawing or hover is implied. */
+  ++r->ui_revision;
+  if(obs&&(mask&SCUMM_OBS_SCENE)){
+   obs->after_verb=*verb;obs->after_ui_revision=r->ui_revision;
+  }
+  break;}
  case S_START_SCRIPT:case S_STOP_SCRIPT:case S_CHAIN_SCRIPT:
  case S_LOAD_ROOM:case S_ACTOR_ROOM:
- case S_LIGHTS:case S_ANIMATE:case S_WALK:case S_PRINT:case S_VERB:case S_OVERRIDE:
+ case S_LIGHTS:case S_ANIMATE:case S_WALK:case S_PRINT:case S_OVERRIDE:
   goto blocked;
  case S_NOP:break;
  case S_PLACE:

@@ -115,11 +115,18 @@ SCENE emits typed committed changes:
   residency and locking. Loading bytes and logical residency remain distinct.
 - `control`: cursor, user/interface, saved cutscene and override state, UI
   invalidation revision, and the exact relevant variable values at the operation.
+- `verb`: one complete authored slot before/after, its encoded source-bound name,
+  and before/after UI invalidation revisions. The runtime and current scene also
+  expose all 100 slots when observations are disabled.
 
 An unchanged actor, default-color or resource assignment produces no SCENE
 row. An accepted cursor operation increments the model's UI invalidation
 revision even when its flags repeat, so it produces a control row. This
 revision does not count rendered frames or draw calls.
+Every accepted verb operation likewise increments that revision once, including
+an unchanged repeated delete or mode request. It produces one verb row rather
+than a verb row plus a control row, preserving at most one SCENE record per
+retired instruction. An absent name and an assigned empty name remain distinct.
 
 The control snapshot's variable keys are 21, 26, 27, 28, 29 and 38. General
 scalar instructions may write those variables without being a scene operation;
@@ -130,5 +137,11 @@ endpoint. Missing, cleared, disabled or dropped history is not reconstructed.
 Actor placement binding does not prove visibility. Room IDs do not prove a
 rendered room or a completed room transition. Costume IDs and indexed palette
 metadata do not establish decoded pixels or RGB colors. Script scheduling,
-room/object rendering, walking, verbs, audio and cutscene exit remain outside
+room/object rendering, native walking, verb interaction/rendering, audio and cutscene exit remain outside
 this implementation's completed execution subset.
+
+The separate [room navigation](NAVIGATION.md) host planner consumes a captured
+packet and exact room bytes. Its inspection, route proposals and checks emit
+no CPU events, retire no instructions and do not advance actors. Event schema
+2 describes instruction retirements; a future native actor-tick journal needs
+an explicit execution-phase contract rather than invented script retirements.

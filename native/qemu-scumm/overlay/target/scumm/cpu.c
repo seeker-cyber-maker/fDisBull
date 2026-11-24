@@ -15,7 +15,7 @@
 #include "cpu.h"
 static const char *const resource_types[] = {"costume", "room", "script", "sound"};
 static const char *const event_kinds[] = {
- "retire", "actor", "default_talk_color", "resource", "control"
+ "retire", "actor", "default_talk_color", "resource", "control", "verb"
 };
 static bool stopped(Object *obj,Error **errp)
 {
@@ -117,6 +117,28 @@ static void json_actor(GString *j,const ScummCPU *c,const ScummActor *a,unsigned
  }
  g_string_append(j,"]}");
 }
+static void json_verb(GString *j,const ScummCPU *c,const ScummVerb *v,unsigned slot)
+{
+ g_assert(slot<SCUMM_VERBS&&v->name_pc<=c->env.code_size&&
+          v->name_size<=c->env.code_size-v->name_pc);
+ g_string_append_printf(j,"{\"slot\":%u,\"id\":%u,\"x\":%u,\"y\":%u,"
+  "\"color\":%u,\"hicolor\":%u,\"dimcolor\":%u,\"type\":%u,\"charset\":%u,"
+  "\"mode\":%u,\"saveid\":%u,\"key\":%u,\"center\":%u,\"imgindex\":%u,\"prep\":%u,"
+  "\"name\":{\"pc\":%u,\"size\":%u,\"bytes\":",slot,v->id,v->x,v->y,v->color,
+  v->hicolor,v->dimcolor,v->type,v->charset,v->mode,v->saveid,v->key,v->center,
+  v->imgindex,v->prep,v->name_pc,v->name_size);
+ json_bytes(j,c->code+v->name_pc,v->name_size);
+ g_string_append(j,"}}");
+}
+static void json_verbs(GString *j,const ScummCPU *c)
+{
+ g_string_append_c(j,'[');
+ for(unsigned slot=0;slot<SCUMM_VERBS;slot++){
+  if(slot)g_string_append_c(j,',');
+  json_verb(j,c,&c->runtime.verbs[slot],slot);
+ }
+ g_string_append_c(j,']');
+}
 static void json_control(GString *j,const ScummControl *r,const ScummState *state)
 {
  static const unsigned variable_ids[]={21,26,27,28,29,38};
@@ -207,6 +229,7 @@ static char *get_scene(Object *obj,Error **errp)
   json_actor(j,c,&s->actors[id],id);
  }
  g_string_append(j,"],\"resources\":");json_resources(j,c);
+ g_string_append(j,",\"verbs\":");json_verbs(j,c);
  scumm_control_snapshot(s,&c->runtime,&control);
  g_string_append(j,",\"control\":");json_control(j,&control,s);
  g_string_append_c(j,'}');return g_string_free(j,false);
@@ -245,7 +268,8 @@ static char *get_runtime(Object *obj,Error **errp)
     e->resident?"true":"false",e->locked?"true":"false",c->bank?c->bank->sha256[type][id]:"");
    comma=true;
   }
- g_string_append(j,"]}");return g_string_free(j,false);
+ g_string_append(j,"],\"verbs\":");json_verbs(j,c);
+ g_string_append_c(j,'}');return g_string_free(j,false);
 }
 static void json_args(GString *j,const ScummInsn *i)
 {
@@ -341,6 +365,11 @@ static char *get_events(Object *obj,Error **errp)
   case S_EVENT_CONTROL:
    g_string_append(j,",\"before_control\":");json_control(j,&e->before_control,NULL);
    g_string_append(j,",\"after_control\":");json_control(j,&e->after_control,NULL);break;
+  case S_EVENT_VERB:
+   g_string_append(j,",\"before_verb\":");json_verb(j,c,&e->before_verb,e->verb_slot);
+   g_string_append(j,",\"after_verb\":");json_verb(j,c,&e->after_verb,e->verb_slot);
+   g_string_append_printf(j,",\"before_ui_revision\":%" PRIu64
+    ",\"after_ui_revision\":%" PRIu64,e->before_ui_revision,e->after_ui_revision);break;
   default:break;
   }
   g_string_append_c(j,'}');

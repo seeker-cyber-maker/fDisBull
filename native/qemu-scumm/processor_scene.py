@@ -149,6 +149,38 @@ def _actor(actor, code):
                  and 0 not in code[pc:pc + size], "Assigned actor name lacks its bounded terminator")
 
 
+def _verb(verb, code):
+    """Check authored slot facts and encoded text, without interpreting a font."""
+    byte_fields = ("color", "hicolor", "dimcolor", "type", "charset", "mode", "key", "center", "prep")
+    word_fields = ("id", "x", "y", "saveid", "imgindex")
+    _object(verb, ("slot", "name") + byte_fields + word_fields, "verb")
+    _integer(verb["slot"], 0, 99, "verb.slot")
+    for fields, high in ((byte_fields, 255), (word_fields, 65535)):
+        for key in fields:
+            _integer(verb[key], 0, high, "verb." + key)
+    _integer(verb["center"], 0, 1, "verb.center")
+    name = _object(verb["name"], ("pc", "size", "bytes"), "verb.name")
+    pc = _integer(name["pc"], 0, len(code), "verb.name.pc")
+    size = _integer(name["size"], 0, 507, "verb.name.size")
+    _require(pc + size <= len(code) and type(name["bytes"]) is str
+             and name["bytes"] == code[pc:pc + size].hex(), "Verb name bytes/extent differ from code")
+    if pc == 0:
+        _require(size == 0, "An absent verb name must have an empty extent")
+        return
+    _require(pc + size < len(code) and code[pc + size] == 0,
+             "Assigned verb name lacks its bounded terminator")
+    cursor, end = pc, pc + size
+    while cursor < end:
+        value = code[cursor]
+        cursor += 1
+        _require(value != 0, "Verb name extent includes an unescaped terminator")
+        if value == 255:
+            _require(cursor < end, "Verb name ends inside an escape")
+            command = code[cursor]
+            cursor += 1 if command in (1, 2, 3, 8) else 3
+            _require(cursor <= end, "Verb name ends inside escape arguments")
+
+
 def _control(control, *, snapshot):
     byte_fields = ("user_state", "current_room", "camera_mode", "saved_user_state",
                    "saved_room", "saved_camera_mode")
@@ -205,7 +237,7 @@ def _scene(scene, code):
         _integer(checkpoint[key], 0, U64_MAX, "checkpoint." + key)
     _integer(checkpoint["pc"], 0, len(code), "checkpoint.pc")
     _integer(checkpoint["status"], 0, 6, "checkpoint.status")
-    _integer(checkpoint["fault"], 0, 8, "checkpoint.fault")
+    _integer(checkpoint["fault"], 0, 10, "checkpoint.fault")
     _integer(checkpoint["fault_opcode"], 0, 255, "checkpoint.fault_opcode")
     _require((checkpoint["status"] == 5) == (checkpoint["fault"] != 0),
              "Fault code and endpoint status disagree")
@@ -217,6 +249,12 @@ def _scene(scene, code):
     for actor in actors:
         _actor(actor, code)
     _require({actor["id"] for actor in actors} == set(range(32)), "Actor inventory has duplicates or omissions")
+    if "verbs" in scene:
+        verbs = _array(scene["verbs"], 100, 100, "verbs")
+        for verb in verbs:
+            _verb(verb, code)
+        _require({verb["slot"] for verb in verbs} == set(range(100)),
+                 "Verb inventory has duplicates or omissions")
     _control(scene["control"], snapshot=True)
     resources = _object(scene["resources"], ("counts", "entries"), "resources")
     counts = _object(resources["counts"], RESOURCE_TYPES, "resource counts", exact=True)
@@ -293,7 +331,7 @@ def _pages(pages, source, code):
             _integer(row["pc"], 0, len(code) - 1, "static instruction.pc")
             _integer(row["opcode"], 0, 255, "static instruction.opcode")
             _require(row["pc"] == cursor and row["opcode"] == code[cursor], "Static listing location differs")
-            _integer(row["fault"], 0, 8, "static instruction.fault")
+            _integer(row["fault"], 0, 10, "static instruction.fault")
             if row["fault"]:
                 _integer(row["size"], 0, 514, "failed instruction.size")
                 _decoded(row, cursor, row["size"], code, success=False)
@@ -363,6 +401,21 @@ def _scene_change(row, scene, code, resources):
         _require(row["before_control"] != row["after_control"], "Unchanged control cannot be a committed delta")
         # Generic scalar instructions can write these same variables. Comparing
         # successive control records as if they were a complete chain is wrong.
+    elif kind == "verb":
+        _require(scene["source"]["profile"] == "amiga-v2-isolated" and "verbs" in scene,
+                 "Verb event requires the v2 profile and an authored-slot snapshot")
+        _object(row, ("before_verb", "after_verb", "before_ui_revision", "after_ui_revision"), "verb event")
+        _verb(row["before_verb"], code)
+        _verb(row["after_verb"], code)
+        _require(row["before_verb"]["slot"] == row["after_verb"]["slot"],
+                 "Verb event changes its selected slot")
+        _require(row["decoded"]["op"] == "verb_op", "Verb event does not describe a verb operation")
+        before = _integer(row["before_ui_revision"], 0, U64_MAX - 1, "before_ui_revision")
+        after = _integer(row["after_ui_revision"], 1, U64_MAX, "after_ui_revision")
+        _require(after == before + 1 <= scene["control"]["ui_revision"],
+                 "Verb invalidation revision is inconsistent with the stopped snapshot")
+        # An accepted redraw request can leave its authored slot unchanged.
+        # This is an invalidation witness, not proof of drawn text or hit boxes.
     else:
         raise SceneInputError("Unknown committed scene kind")
 
@@ -460,6 +513,7 @@ def build_scene_packet(*, code, scene, events=None, decode_pages=()):
     return deepcopy({
         "schema": SCHEMA, "source": scene["source"], "checkpoint": scene["checkpoint"],
         "observation": scene["observation"], "actors": scene["actors"],
+        **({"verbs": scene["verbs"]} if "verbs" in scene else {}),
         "resources": scene["resources"], "control": scene["control"],
         "disassembly": {"static_pages": list(decode_pages), "retirements": retirements,
                         "static_listing_complete": listing_complete, "static_reachability_qualified": False},
@@ -467,6 +521,8 @@ def build_scene_packet(*, code, scene, events=None, decode_pages=()):
         "qualification": {"current_snapshot": True, "snapshot_scope": "implemented_native_model",
                           "history_scope": "retained_native_records" if events is not None else "not_supplied",
                           "history_complete": False, "control_variable_history_complete": False,
+                          "verb_state": "verbs" in scene, "verb_rendering": False,
+                          "verb_hit_testing": False,
                           "actor_visibility": False, "room_rendering": False,
                           "costume_decode": False, "screen_presentation": False},
     })
