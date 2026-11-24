@@ -1,5 +1,71 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## VBE 101h controller and control-call compatibility (2026-11-23)
+
+The opt-in `vga-640x480-vbe-compat` profile selects a distinct
+SeaVGABIOS ROM with the existing QEMU linear/banked 101h device and
+checkpoint format 14. It leaves the preceding ROMs and DOSBox-X default
+unchanged. An independent source-patch rebuild produced the tested ROM
+byte-for-byte. [Patch and source manifest](../native/qemu-video-vbe101-compat/README.md)
+
+One authored COM ran on the pinned DOSBox-X S3 BIOS and QEMU. Both
+returned success for legacy and `VBE2` controller queries, 101h mode
+info, mode selection, bank 2 set/get and a two-entry primary palette
+set/get. Both reported 16 MiB, 640 × 480 × 8 geometry, 640-byte pitch,
+50 additional image pages and the same palette readback. Sentinels
+after the standard 256/512-byte controller blocks, 256-byte mode block
+and palette data remained unchanged on both. QEMU's `VBE2` OEM pointers
+resolved to strings inside the caller's 512-byte block.
+The new QEMU profile also saved and hot-restored a format 14 checkpoint
+at the guest's completed call sequence, retaining the controller and
+mode blocks, selected bank, palette readback and VGA configuration.
+
+The paired reference also exposed BIOS differences. QEMU reports VBE
+3.0, software revision 0100h, 50 banked and linear pages and a 640-byte
+linear stride. DOSBox-X reports VBE 2.0, revision 0200h and zero for
+the latter VBE 3.0 fields. Its mode attribute word is 009Bh; QEMU's is
+00BBh. On bank 256, beyond the advertised 16 MiB range, QEMU returns
+`014Fh` and leaves bank 2 active. This DOSBox-X build returns `004Fh`
+and wraps to bank zero. QEMU returns the VBE `024Fh` unsupported status
+for secondary palette requests; this DOSBox-X build returns `0109h`.
+These are measured exceptions to exact BIOS response parity.
+
+The ROM checks full caller segment extents for 4F00h, 4F01h and 4F09h
+before writing the buffer or touching the DAC. The local guest witness
+uses ordinary supported buffers and verifies their adjacent sentinels;
+it does not establish behavior for every possible guest pointer.
+
+The combined local native batch passed 35 cases, including the paired
+compatibility witness, VBE 4F04h guest save/restore, prior banked and
+linear checkpoints, protected-mode VBE calls, timed VGA, Mode 13h
+reapply and keyboard-repeat restore. Focused host routing, checkpoint
+and retrace checks passed 342 cases with five optional skips. CI was
+not run.
+
+An exploratory repository-wide host collection found 19,040 cases.
+The run was stopped after roughly 53% because agent-skill, ELF fixture,
+LLDB and AppKit tests had already failed outside the changed VBE paths.
+The first agent-skill failure also reproduces at the unchanged parent
+commit `542e44be`; the ELF fixture fails during a local `/usr/bin/gcc`
+build. The other broad-suite failures remain untriaged, so this slice
+does not claim a repository-wide host pass.
+
+On the unchanged QEMU producer and canonical Doom firmware, the private
+Doom witness reproduced the protected CPU landmark, 200-row raster and
+SB16/OPL frontier across forward, hot and fresh-process replay. Its
+original inputs remained hash-identical and both owned emulator
+processes exited cleanly.
+
+| Local evidence | SHA-256 |
+| --- | --- |
+| Authored paired COM | `9d1a5e666b5caea72c35c457ebf5538d3aa63ec3352212e4562c1014702450d6` |
+| Existing QEMU producer | `863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25` |
+| VBE compatibility SeaVGABIOS ROM | `8184519d242d868f4eaa3e97f9683be0f833e9e80b654e30ec387cae21672d14` |
+| Paired DOSBox-X and QEMU report with hot restore | `6b4f0406c1452c631d5204496b795be6b150ee0ed45b3181f54bf8088b5e0e92` |
+| Combined native preservation batch | `7e72f875744a7b83fbea58da5ebd0fa7946ca3545f152a934b0eb5cce75a21fd` |
+| Doom forward and hot restore | `5db0c3e4546533fdc291a91af6e0bcd8cafa4646715e89c87d7bd136de353f83` |
+| Doom fresh-process restore | `1cf2901038b407bd751922236f14fd20ce38c7b2d3511dfc647a987b48eb321a` |
+
 ## VBE 101h guest display-state save and restore (2026-11-23)
 
 The opt-in `vga-640x480-vbe-state` profile uses a distinct SeaVGABIOS

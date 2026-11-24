@@ -109,6 +109,30 @@ def test_vbe101_profile_owns_the_selected_firmware_copy(tmp_path, selection):
         _video_source_launch_arguments(profile, admitted, runtime)
 
 
+def test_vbe101_compat_profile_uses_its_rom_and_existing_lfb_device(tmp_path):
+    from fdisbull.qemu_machine import _video_source_launch_arguments, firmware_identity
+    from fdisbull.qemu_video_checkpoint import (
+        VGA480_COMPAT_PROFILE, VGA480_LFB_MODEL, VBE101_COMPAT_ROM,
+        VIDEO_SOURCE_PROFILES,
+    )
+
+    firmware, runtime = tmp_path / 'firmware', tmp_path / 'runtime'
+    firmware.mkdir()
+    runtime.mkdir()
+    (firmware / 'bios.bin').write_bytes(b'authored base ROM')
+    assert VIDEO_SOURCE_PROFILES[VGA480_COMPAT_PROFILE] == (
+        VGA480_LFB_MODEL, 'VGA.x-fdisbull-vbe101-lfb=on')
+    with pytest.raises(ValueError, match=f'requires {VBE101_COMPAT_ROM}'):
+        _video_source_launch_arguments(VGA480_COMPAT_PROFILE, firmware_identity(firmware), runtime)
+    (firmware / VBE101_COMPAT_ROM).write_bytes(b'authored VBE compatibility ROM')
+    selected = firmware_identity(firmware)
+    assert _video_source_launch_arguments(VGA480_COMPAT_PROFILE, selected, runtime) == [
+        '-global', 'VGA.x-fdisbull-vbe101-lfb=on',
+        '-global', f'VGA.romfile={runtime / VBE101_COMPAT_ROM}',
+    ]
+    assert (runtime / VBE101_COMPAT_ROM).read_bytes() == b'authored VBE compatibility ROM'
+
+
 def boot_sector():
     # cli; DS/SS=0; SP=7c00; ES=b800; print FD; DS=0; counter=7;
     # inc word [5000]; nop; jmp back to inc.  No disk or OS dependency.

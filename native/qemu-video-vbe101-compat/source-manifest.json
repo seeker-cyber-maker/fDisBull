@@ -1,0 +1,47 @@
+{
+  "format": "fdisbull-seabios-native-patch-1",
+  "composition": "Apply after the SeaVGABIOS delta in native/qemu-video-vbe101-state.",
+  "base_host_commit": "542e44be4a64507a6c3fa07d58f03f9355bc4610",
+  "scope": "VBE 4F00h, 4F01h, 4F05h and 4F09h compatibility in a separate 101h ROM.",
+  "qemu": {
+    "version": "10.0.13",
+    "source_manifest": "../qemu-video-vbe101-lfb/source-manifest.json",
+    "tested_producer_sha256": "863b36b07648d55f52f8d0bf8df6a592a46f1deed21415527a0f89f912329d25",
+    "tested_checkpoint_tool_sha256": "4b60500fd28759b9bec46300b649f3bbeeef1653fafe3f08192c96f5df50afd1"
+  },
+  "firmware": {
+    "version": "rel-1.16.3-0-ga6ed6b70",
+    "source_path": "roms/seabios",
+    "composition": "Apply after the SeaVGABIOS delta in native/qemu-video-vbe101-state.",
+    "base_rom_sha256": "2adaebc70e0bd1930cf7f8605a12258b6216694ae3f6d5a757024f9abaf30f1b",
+    "config_sha256": "ca7367ae57665fa01e0ebb741ba5823d646f4b65a9a87657ea163cc9f362a8a8",
+    "resolved_config_sha256": "9e6ea13d2295d574dc7c1f9fdfedae2f1d3abfdc76c834b91200d0a0c2200a34",
+    "rom_name": "fdisbull-vgabios-vbe101-compat.bin",
+    "tested_rom_bytes": 42496,
+    "tested_rom_sha256": "8184519d242d868f4eaa3e97f9683be0f833e9e80b654e30ec387cae21672d14",
+    "tested_compiler": "i686-elf GCC 16.2.0",
+    "tested_binutils": "2.47.20260726",
+    "build_extraversion": "-fdisbull-vbe101-compat",
+    "patch": "seabios-1.16.3-fdisbull-vbe101-compat.patch",
+    "patch_bytes": 4987,
+    "patch_sha256": "f8cccca6ca1bfc8c1224d1143527514574ffd2e27d915882f04b88895eec62b6",
+    "files": [
+      {
+        "path": "vgasrc/bochsvga.c",
+        "base_bytes": 17103,
+        "base_sha256": "ead989be0621598559e6903791fc2d0d3752031befc20b0a2208e666544ddc8c",
+        "patched_bytes": 17307,
+        "patched_sha256": "08032b42c1b13c2110645d598f468ca36f00eace71066167ed0728b5a679d46b",
+        "mode": "100644"
+      },
+      {
+        "path": "vgasrc/vbe.c",
+        "base_bytes": 17519,
+        "base_sha256": "19981fdd4db8ae0147ed779f9cb1ecad7d574915cf29e7839eecbf5d3348ab55",
+        "patched_bytes": 18582,
+        "patched_sha256": "ebb4772b1a89be121545ba1417174fce292e4b507f4a71ea5bacb117372f362f",
+        "mode": "100644"
+      }
+    ]
+  }
+}

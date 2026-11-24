@@ -259,6 +259,13 @@ configuration. Guest 4F04h preserves the current framebuffer bytes.
 After a guest restore changes video configuration, explicitly start
 a new source stream.
 
+Select `vga-640x480-vbe-compat` with the separate
+`fdisbull-vgabios-vbe101-compat.bin` for the bounded VBE 4F00h, 4F01h,
+4F05h and 4F09h fixes. It uses the same banked and linear device model,
+timed source capture, and checkpoint format 14 as the preceding profile.
+The ROM is part of machine identity; a checkpoint must restore with
+the same selected firmware.
+
 To save a script with literal coordinates outside the standard 320 × 200
 source, give the script an explicit `qemu-machine` or `qemu-dos` backend and
 the selected `video_source_profile`. The script must match the owner's launch

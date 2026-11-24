@@ -1,0 +1,132 @@
+--- a/vgasrc/bochsvga.c
++++ b/vgasrc/bochsvga.c
+@@ -108,6 +108,10 @@
+     if (!bochsvga_dispi_enabled())
+         return stdvga_set_window(vmode_g, window, val);
+     if (window != 0)
++        return -1;
++    // DISPI masks bank writes. Refuse an invalid bank before changing it.
++    if (bochsvga_fdisbull_palette_available()
++        && val >= dispi_read(VBE_DISPI_INDEX_VIDEO_MEMORY_64K))
+         return -1;
+     dispi_write(VBE_DISPI_INDEX_BANK, val);
+     if (dispi_read(VBE_DISPI_INDEX_BANK) != val)
+--- a/vgasrc/vbe.c
++++ b/vgasrc/vbe.c
+@@ -20,6 +20,9 @@
+ #define VBE_VENDOR_STRING "SeaBIOS Developers"
+ #define VBE_PRODUCT_STRING "SeaBIOS VBE Adapter"
+ #define VBE_REVISION_STRING "Rev. 1"
++#define VBE_OEM_DATA VBE_OEM_STRING "\0" VBE_VENDOR_STRING "\0" \
++                     VBE_PRODUCT_STRING "\0" VBE_REVISION_STRING
++#define VBE_OEM_SOFTWARE_REVISION 0x0100
+ 
+ u32 VBE_total_memory VAR16 = 256 * 1024;
+ u32 VBE_capabilities VAR16;
+@@ -33,15 +36,14 @@
+     u16 seg = regs->es;
+     struct vbe_info *info = (void*)(regs->di+0);
+ 
+-    if (GET_FARVAR(seg, info->signature) == VBE2_SIGNATURE) {
+-        dprintf(4, "Get VBE Controller: VBE2 Signature found\n");
+-    } else if (GET_FARVAR(seg, info->signature) == VESA_SIGNATURE) {
+-        dprintf(4, "Get VBE Controller: VESA Signature found\n");
+-    } else {
+-        dprintf(4, "Get VBE Controller: Invalid Signature\n");
+-    }
+-
+-    memset_far(seg, info, 0, sizeof(*info));
++    // The legacy block is 256 bytes. Only VBE2 callers supply the OEM tail.
++    if ((u32)regs->di + sizeof(*info) > 0x10000)
++        goto fail;
++    int extended = GET_FARVAR(seg, info->signature) == VBE2_SIGNATURE;
++    u32 size = sizeof(*info) + (extended ? 256 : 0);
++    if ((u32)regs->di + size > 0x10000)
++        goto fail;
++    memset_far(seg, info, 0, size);
+ 
+     SET_FARVAR(seg, info->signature, VESA_SIGNATURE);
+ 
+@@ -59,18 +61,28 @@
+     SET_FARVAR(seg, info->total_memory
+                , GET_GLOBAL(VBE_total_memory) / (64*1024));
+ 
+-    SET_FARVAR(seg, info->oem_vendor_string,
+-            SEGOFF(get_global_seg(), (u32)VBE_VENDOR_STRING));
+-    SET_FARVAR(seg, info->oem_product_string,
+-            SEGOFF(get_global_seg(), (u32)VBE_PRODUCT_STRING));
+-    SET_FARVAR(seg, info->oem_revision_string,
+-            SEGOFF(get_global_seg(), (u32)VBE_REVISION_STRING));
++    if (extended) {
++        u8 *oem = (void*)(info + 1);
++        u8 *vendor = oem + sizeof(VBE_OEM_STRING);
++        u8 *product = vendor + sizeof(VBE_VENDOR_STRING);
++        u8 *revision = product + sizeof(VBE_PRODUCT_STRING);
++        memcpy_far(seg, oem, get_global_seg(), VBE_OEM_DATA, sizeof(VBE_OEM_DATA));
++
++        SET_FARVAR(seg, info->oem_string, SEGOFF(seg, (u32)oem));
++        SET_FARVAR(seg, info->oem_revision, VBE_OEM_SOFTWARE_REVISION);
++        SET_FARVAR(seg, info->oem_vendor_string, SEGOFF(seg, (u32)vendor));
++        SET_FARVAR(seg, info->oem_product_string, SEGOFF(seg, (u32)product));
++        SET_FARVAR(seg, info->oem_revision_string, SEGOFF(seg, (u32)revision));
++    }
+ 
+     /* Fill list of modes */
+     u16 *last = (void*)&info->reserved[sizeof(info->reserved)];
+     vgahw_list_modes(seg, destmode, last - 1);
+ 
+     regs->ax = 0x004f;
++    return;
++fail:
++    regs->ax = 0x014f;
+ }
+ 
+ static void
+@@ -82,6 +94,10 @@
+ 
+     dprintf(1, "VBE mode info request: %x\n", mode);
+ 
++    if ((u32)regs->di + sizeof(*info) > 0x10000) {
++        regs->ax = 0x014f;
++        return;
++    }
+     struct vgamode_s *vmode_g = vgahw_find_mode(mode & ~MF_VBEFLAGS);
+     if (! vmode_g) {
+         dprintf(1, "VBE mode %x not found\n", mode);
+@@ -159,6 +175,8 @@
+     SET_FARVAR(seg, info->mode_attributes, mode_attr);
+     SET_FARVAR(seg, info->planes, planes);
+     SET_FARVAR(seg, info->pages, pages - 1);
++    if ((mode & ~MF_VBEFLAGS) == 0x101)
++        SET_FARVAR(seg, info->bank_pages, pages - 1);
+     SET_FARVAR(seg, info->banks, banks);
+ 
+     // Pixel color breakdown
+@@ -194,7 +212,8 @@
+         SET_FARVAR(seg, info->reserved1, 0);
+         SET_FARVAR(seg, info->reserved2, 0);
+         SET_FARVAR(seg, info->linear_bytes_per_scanline, linesize);
+-        SET_FARVAR(seg, info->linear_pages, 0);
++        if ((mode & ~MF_VBEFLAGS) == 0x101)
++            SET_FARVAR(seg, info->linear_pages, pages - 1);
+         SET_FARVAR(seg, info->linear_red_size, r_size);
+         SET_FARVAR(seg, info->linear_red_pos, r_pos);
+         SET_FARVAR(seg, info->linear_green_size, g_size);
+@@ -434,9 +453,16 @@
+ static void
+ vbe_104f09(struct bregs *regs)
+ {
++    if (regs->bl == 0x02 || regs->bl == 0x03) {
++        // This controller has no secondary palette.
++        regs->ax = 0x024f;
++        return;
++    }
+     unsigned first = regs->dx;
+     unsigned count = regs->cx;
+-    if (first >= 256 || count > 256 - first)
++    // The caller supplies all four bytes of each BGRX entry in ES.
++    if (first >= 256 || count > 256 - first
++        || (u32)regs->di + count * 4u > 0x10000u)
+         goto fail;
+ 
+     u16 seg = regs->es;
