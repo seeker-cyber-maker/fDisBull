@@ -51,12 +51,12 @@ def prepare(stage, runtime, paging_mode="legacy-4k"):
     return cfg
 
 
-def phases(stage, backend):
+def phases(stage, backend, *, timeout=180):
     helper = Path(__file__).parent / 'support' / f'le_remap_{backend}.py'
     env = {**os.environ, 'PYTHONPATH': os.pathsep.join(str(p) for p in sys.path if p)}
     for phase in ('before', 'after'):
         subprocess.run(
-            [sys.executable, str(helper), str(stage), phase], env=env, check=True, timeout=180
+            [sys.executable, str(helper), str(stage), phase], env=env, check=True, timeout=timeout
         )
     return [json.loads((stage / f'{backend}-{phase}.json').read_text()) for phase in ('before', 'after')]
 

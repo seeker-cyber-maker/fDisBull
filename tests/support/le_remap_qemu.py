@@ -51,6 +51,14 @@ def summarize(event):
     )
 
 
+def pae_cpu_context(registers):
+    state = registers['address_state']
+    control = state['control']
+    return dict(mode=registers['cpu_mode'], paging=state['paging'],
+                cr0=integer(control['CR0']), cr3=integer(control['CR3']), cr4=integer(control['CR4']),
+                cs=integer(registers['registers']['cs']), ip=integer(registers['instruction_pointer']))
+
+
 def run(stage, phase):
     cfg = json.loads((stage / 'config.json').read_text())
     source = Path(cfg['source'])
@@ -67,10 +75,16 @@ def run(stage, phase):
     )
     checkpoints_at = cfg['checkpoint_index']
     owners, ids = [], []
+    pae_context = {}
+    check_pae = cfg.get('paging_mode') in ('pae-4k', 'pae-2m')
     with Project.create(db, source, image='mz') if phase == 'before' else Project(db) as project:
         with project.debugger(
             rt['FDISBULL_QEMU_DOS'], source.parent, _on_spawn=owners.append, **options
         ) as debug:
+            if check_pae:
+                entry = pae_cpu_context(debug.registers())
+                assert entry['mode'] == 'real' and not entry['paging'] and not (entry['cr4'] & 0x20)
+                pae_context['entry'] = entry
             if phase == 'before':
                 bp = debug.breakpoint(cfg['start_pc'])['breakpoint_id']
                 stop = debug.run(timeout_ms=10000)
@@ -84,6 +98,10 @@ def run(stage, phase):
                 state = before['checkpoint']
                 restore = debug.load_machine_state(state, timeout_ms=60000)
                 assert restore['machine_state_restored'] and not restore['protected_source_rebound']
+                if check_pae:
+                    restored = pae_cpu_context(debug.registers())
+                    assert restored == before['pae_cpu_context']['checkpoint']
+                    pae_context['restored'] = restored
                 assert not debug.dos_source_binding()['live']
             binding = debug.dos_source_bind(tracking='paged', expected_source_sha256=cfg['sha256'])
             assert binding['live'] and binding['tracking'] == 'paged'
@@ -97,6 +115,10 @@ def run(stage, phase):
                 )
                 ids.append(first['artifact'])
                 regs = debug.registers()
+                if check_pae:
+                    checkpoint = pae_cpu_context(regs)
+                    assert checkpoint['mode'] == 'protected' and checkpoint['paging'] and checkpoint['cr4'] & 0x20
+                    pae_context['checkpoint'] = checkpoint
                 assert integer(regs['instruction_pointer']) == cfg['target_ip']
                 assert integer(regs['registers']['cs']) == cfg['start_cs']
                 mapping = debug.dos_source_binding()['mapping_identity']
@@ -175,6 +197,8 @@ def run(stage, phase):
         epoch=binding['capture_epoch'],
         binding_id=binding['binding_id'],
     )
+    if check_pae:
+        result['pae_cpu_context'] = pae_context
     (stage / ('qemu-' + phase + '.json')).write_text(json.dumps(result, indent=2))
 
 

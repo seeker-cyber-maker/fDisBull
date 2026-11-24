@@ -1,5 +1,42 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Independent PAE reference for protected LE tracking (2026-11-24)
+
+The opt-in local comparison uses [Bochs 3.1](../native/bochs-pae-reference/README.md)
+and the QEMU-DOS debugger. Both execute the same authored LE carrier on
+FreeDOS. Bochs observes its own control registers, LDT, instruction bytes
+and physical memory. A debugger-only command invokes the upstream snapshot
+writer at the stopped instruction. The Bochs receiver starts another process
+with the native restore option and reads its state before the first step.
+The QEMU receiver starts with paging disabled at DOS program entry, restores
+its own machine checkpoint and binds the original LE in a new capture epoch.
+
+| PAE code page | First visit at `000c:1400` | Checkpoint at `000c:1400` | Next visit at `001c:1400` |
+| --- | --- | --- | --- |
+| 4 KiB | `0x801400` | `0x810400` | `0x810400` |
+| 2 MiB | `0x801400` | `0xa01400` | `0xa01400` |
+
+Each engine recorded 39 hot stops across two remap cycles, then reproduced
+all 32 remaining stops in a fresh process. At the 35 hot and 28 restored
+LE stops, both agreed on the instruction bytes, linear address and physical
+backing. Four stops in each trace were outside the LE and had no source
+attribution. Bochs's own `page` translation and physical memory reads
+confirmed the backing even where the two mapped pages held identical bytes.
+
+Both QEMU receivers started with CR4 zero and restored `CR3=0x300000`,
+`CR4=0x30` and `CS:EIP=000c:1400`. Each Bochs receiver's first debugger
+observation had the producer's register context and clock. Reading the saved
+Bochs CPU and RAM files independently reproduced the PAE translation to the
+checkpoint address and the instruction bytes `46 cb` there.
+
+Two raw accessed-bit differences were consistent across all 63 source-bound
+comparisons per page size. The guest's directory-pointer entry was
+`0x301021` in QEMU and `0x301001` in Bochs. The LDT code descriptor access
+byte was `0x9a` in QEMU and `0x9b` in Bochs. All directory and leaf entry
+bits matched. The qualification covers stopped LE source tracking on these
+two authored mappings. Physical addresses above 4 GiB and whole-game
+replacement remain open. DOSBox-X remains the default.
+
 ## Unprimed DOSBox-X restore for 4 MiB protected LE code (2026-11-24)
 
 The [separate DOSBox-X candidate](../native/dosbox-pse-checkpoint/README.md)
