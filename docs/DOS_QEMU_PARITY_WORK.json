@@ -2041,10 +2041,11 @@
         "docs/evidence/qemu-doom-ordinary-startup-2026-11-14/verification.json",
         "docs/evidence/qemu-le-source-history-2026-11-15/verification.json",
         "docs/evidence/qemu-dosbox-doom-audio-2026-11-16/verification.json",
+        "docs/DOS_QEMU_HANDOFF.md#ordinary-doom-with-mouse-and-sound-blaster-audio-2026-11-23",
         "docs/DOS_QEMU_HANDOFF.md#paired-dos-lifecycle-and-fallback-rehearsal-2026-11-23"
       ],
       "missing_checks": [
-        "The original Doom E1M1 ordinary keyboard startup, gameplay, guest save/readback/load and exit now pass on both engines with sound and mouse disabled. Compose consumed mouse, audio and cold replay under one declared protected-game run, and compare ordinary game timing and media at common application boundaries.",
+        "Original Doom E1M1 now passes paired ordinary startup, a consumed mouse shot, game save/readback/load, identifiable pistol PCM and normal exit with mouse, SB16 effects and AdLib music enabled. QEMU reproduces an active-media checkpoint and the next physical shot from a separate Python process. The retained DOSBox-X cold restore reproduces the CPU state but does not reproduce consumed input at the tested protected cut. Compare both engines at common audio and game timing boundaries, including mixer and music fidelity. DOSBox-X's retained absolute RPC and QEMU's physical relative path are distinct.",
         "Tic-Tac-Toe verifies fresh full-round/reset/exit and cold restore at a guest instruction on both engines. The retained DOSBox-X callback-stop restore still fails. Five Dice and Snake add source-assisted complete-game/RNG and keyboard/growth/clock/exit, without qualifying asset I/O, protected modes, relative mouse or game audio."
       ],
       "accept": [

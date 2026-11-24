@@ -1,5 +1,77 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Ordinary Doom with mouse and Sound Blaster audio (2026-11-23)
+
+The original Doom 1.9 executable and WAD ran E1M1 on both engines with
+the same private setup file enabling mouse, SB16 effects and AdLib music.
+QEMU used the FreeDOS boot derivative with CuteMouse in PS/2 mode.
+Both engines saved the original 50-round state, fired one pistol round
+using a left-button press and release, then loaded the original game save
+and observed 50 rounds again. The ammunition readback used Doom's original
+WAD status-bar digit templates. Both saves had the same name, map, skill,
+version and active player. Both games exited to DOS with code 0 and reaped
+their owned process. The selected original inputs verified unchanged.
+
+QEMU's relative PS/2 movement turned the camera. DOSBox-X's retained
+agent RPC moved the absolute INT33 cursor from (320,100) to (600,100),
+and the viewport comparison changed just five pixels due to animation.
+Its separate keyboard turn changed the view. The retained RPC lacks
+relative mickey injection, so the paired input gate covers the physical
+button and game reaction. The two turn routes remain distinct.
+
+QEMU captured 32 kHz signed 16-bit stereo with zero dropped frames.
+Its separate prefire and first-shot windows retained 18,908 and 19,174
+frames. Native readback identified active AdLib and SB16 software voices.
+DOSBox-X finalized a 48 kHz signed 16-bit stereo WAV with 1,547,952 frames
+and no samples at the PCM rails. These windows start at different acquisition
+boundaries and their sample counts do not compare elapsed game time.
+
+An independent waveform search used the original WAD's pistol PCM at its
+declared rate, omitting the 16 guard samples at either end. The QEMU
+prefire control scored 0.075. The first 4,100 samples of the effect scored
+0.980 after QEMU's click. The original 600 ms window ends before the full
+effect finishes, so a fresh process restored the same post-load checkpoint,
+reproduced its 600 ms result, and observed another 400 ms without another
+input. The complete reference scored 0.967 there. The DOSBox-X capture
+segment near the observed button action scored 0.960. Its WAV origin is
+not anchored to the guest clock, and this test does not establish equal
+onset, gain, music mix or sample timing.
+
+QEMU's checkpoint was taken after the ordinary game load with a live
+stereo capture and neutral input. A separate Python process restored the
+same game-save bytes, protected CPU and virtual clock, RGB and 9,441
+retained PCM frames. It then replayed one new click and a 600 ms interval.
+The result matched forward execution exactly through the CPU, RGB, ammo
+50→49, save file and 28,482 retained PCM frames. The extra 400 ms diagnostic
+preserved that PCM prefix. The native INT33 and combined SB16/OPL checkpoint
+regressions also passed on the same producer.
+
+The retained DOSBox-X cold control reproduced a separate input failure.
+The checkpoint was taken at Doom's verified protected-mode increment of
+the world clock, with no keys or buttons held. A 125 ms mouse hold and
+350 ms release interval fired one round in the original session. A new
+Python process and DOSBox-X owner restored the exact exposed CPU and
+instruction bytes at leveltime 42. The RPC reported left-button state
+1 while pressed and held, then 0 after release. Doom advanced ten world
+tics while retaining 50 rounds. Independent cold runs also saw neither
+a Ctrl fire nor the usual Escape menu. Both input controls were admitted
+by the RPC. The original game files and checkpoint bytes verified.
+This establishes a cold input failure at the tested protected boundary.
+The failing boundary and original forward pass are retained for diagnosis.
+
+| Local evidence | SHA-256 |
+| --- | --- |
+| QEMU ordinary media route | `f3e0b9d10e33f73f56d4f5bcc168ec643d494ec322e8d58f741cd72e3a52c9c9` |
+| QEMU fresh Python media continuation | `3d180eb03667a10364df7548946d749b87fa57d9f2fdfa07632d30cc2bac0bc0` |
+| QEMU extended-pistol replay | `e2665e9c0e5772dc12fbb15783d3f5e3f7223abcc921e2d5226eea56bdeb455c` |
+| DOSBox-X ordinary media route | `28dbe97c538f9c9aa61be9e91d08a98633bf47aa990121e0b43b14c8fa4677dc` |
+| Paired pistol waveform diagnostic | `f14d498dd06c2e03bdd177eeb0fa9d9cced06316946ed11da0a76285c3f5a7f6` |
+| Native INT33 and SB16/OPL regression result | `38423cada6f7986eae564cfdbdc7a1465c2c2b749c07f07c5de1897c8321da58` |
+| DOSBox-X protected checkpoint, forward shot | `acc13ea51cd63110546aa01f339fa3f2f943ca0e83f4df92b5cef4ad0f6767c3` |
+| DOSBox-X failed cold shot | `d806c477755335d22f5b6d2b4b07f98025724085f980f4c009a4d9a17e951d7c` |
+| DOSBox-X cold mouse-state and Ctrl control | `4ec166cd5e40926c50e148b9fb08ade2efc03a19add667390c29cb290367daad` |
+| DOSBox-X cold mouse-state and Escape control | `a21c9d755d396e801e2b2be52ae84679a0ccfec03ca07f28f60d9bf82851affa` |
+
 ## Doom save/load pixels at matching animation phases (2026-11-23)
 
 The previous E1M1 comparison reported seven changed pixels out of 29,376

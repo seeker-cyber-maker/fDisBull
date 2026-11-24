@@ -7,6 +7,11 @@ restore witness. A QMP input acknowledgment or a nonempty audio file alone
 does not establish application behavior or parity. DOSBox-X remains the default
 backend and is retained. These procedures dispatch no CI.
 
+The newer [paired E1M1 media run](DOS_QEMU_HANDOFF.md#ordinary-doom-with-mouse-and-sound-blaster-audio-2026-11-23)
+documents the SB16 and AdLib profile, actual pistol input on both engines,
+DOSBox-X's native WAV capture, and QEMU's active audio and mouse cold
+continuation. The PC-speaker procedure below records the earlier profile.
+
 This page defines the reproducible inputs, procedure and claim ceiling. Dated
 results, exact candidate identities and sanitized receipts belong in the
 [handoff log](DOS_QEMU_HANDOFF.md) and GitLab !117. The root controller publishes
