@@ -1,4 +1,4 @@
-"""Paired CONFIG.SYS device initialization on actual FreeDOS floppy boot.
+"""Paired CONFIG.SYS initialization and character device I/O in FreeDOS.
 
 Select both executables and original FreeDOS via the paired DOS environment.
 This boots the operating system in DOSBox-X and QEMU without using either
@@ -20,8 +20,19 @@ from support.dos_process_fixture import (
 from test_qemu_dosbox_parity_native import _native_inputs
 
 
-def _driver_census(directory, nasm, marker_offset):
-    return assemble(directory, "device-census", f"%define INIT_MARKER {marker_offset}\n" + r"""
+HEADER = b"FDBSYS2"
+FOOTER = b"END2"
+CENSUS = struct.Struct("<BHHHH")
+DOS_IO = struct.Struct("<BBHH8s")
+DRIVER_INPUT = struct.Struct("<HBBHHH")
+
+
+def _driver_census(directory, nasm, symbols):
+    definitions = (
+        f"%define INIT_MARKER {symbols['init_seen']}\n"
+        f"%define INPUT_RECORD {symbols['read_request']}\n"
+    )
+    return assemble(directory, "device-census", definitions + r"""
 bits 16
 org 100h
     cld
@@ -58,13 +69,65 @@ next_device:
     mov [interrupt],ax
     mov ax,[es:bx+INIT_MARKER]
     mov [marker],ax
-    jmp output
+    mov [driver_header],bx
+    mov [driver_header+2],es
+    jmp open_device
 follow:
     les bx,[es:bx]
     loop next_device
     jmp output
 absent:
     mov byte [state],0
+open_device:
+    mov dx,device_name
+    mov ax,3d00h
+    int 21h
+    jc io_failed
+    mov [handle],ax
+    mov byte [io_stage],1
+    mov bx,ax
+    mov ax,4400h
+    int 21h
+    jc io_failed
+    mov al,dl
+    and al,80h             ; Distinguish a character device from a disk file.
+    mov [device_bit],al
+    jz observe_input
+    or dl,20h              ; Raw mode: one INPUT packet and no Ctrl-Z handling.
+    xor dh,dh
+    mov ax,4401h
+    int 21h
+    jc io_failed
+    mov byte [io_stage],2
+    mov ah,3fh
+    mov bx,[handle]
+    mov cx,6               ; Expect a short four-byte response.
+    mov dx,read_buffer
+    int 21h
+    jc io_failed
+    mov [read_count],ax
+    mov byte [io_stage],3
+    mov ah,3eh
+    mov bx,[handle]
+    int 21h
+    jc io_failed
+    mov byte [io_stage],4
+    jmp observe_input
+io_failed:
+    mov [dos_error],ax
+observe_input:
+    cmp byte [state],1
+    jne output
+    push ds
+    lds si,[driver_header]
+    add si,INPUT_RECORD
+    push cs
+    pop es
+    mov di,input_record
+    mov cx,(input_record_end-input_record)/2
+    cld
+    rep movsw
+    pop ds
 output:
     ; COM1, 9600 baud 8N1. The host bounds progress and reads the complete record.
     mov dx,3fbh
@@ -95,8 +158,14 @@ transmit:
     loop transmit
     mov ax,4c00h
     int 21h
+device_name:
+    db 'FDBTEST$',0
+handle:
+    dw 0
+driver_header:
+    dd 0
 report:
-    db 'FDBSYS1'
+    db 'FDBSYS2'
 state:
     db 2                   ; Incomplete or invalid chain unless observed below.
 attribute:
@@ -107,7 +176,20 @@ interrupt:
     dw 0
 marker:
     dw 0
-    db 'END1'
+io_stage:
+    db 0
+device_bit:
+    db 0
+dos_error:
+    dw 0
+read_count:
+    dw 0
+read_buffer:
+    times 8 db 0a5h
+input_record:
+    times 10 db 0
+input_record_end:
+    db 'END2'
 report_end:
 """, nasm)
 
@@ -156,7 +238,7 @@ def _boot_readback(directory, runtime, disk, *, qemu):
         try:
             deadline = time.monotonic() + 15
             while time.monotonic() < deadline:
-                if serial.is_file() and serial.read_bytes().endswith(b"END1"):
+                if serial.is_file() and serial.read_bytes().endswith(FOOTER):
                     break
                 if process.poll() is not None:
                     break
@@ -171,7 +253,8 @@ def _boot_readback(directory, runtime, disk, *, qemu):
                 process.wait(timeout=2)
     assert digest(image) == disk["prepared_sha256"]
     data = serial.read_bytes() if serial.is_file() else b""
-    assert len(data) == 20 and data.startswith(b"FDBSYS1") and data.endswith(b"END1"), (
+    expected_size = len(HEADER) + CENSUS.size + DOS_IO.size + DRIVER_INPUT.size + len(FOOTER)
+    assert len(data) == expected_size and data.startswith(HEADER) and data.endswith(FOOTER), (
         data.hex(), process.returncode, log.read_text(errors="replace")[-3000:])
     return data
 
@@ -188,21 +271,29 @@ def test_paired_freedos_config_sys_initializes_authored_character_driver(tmp_pat
     driver, symbols = character_driver(tmp_path, nasm)
     init = symbols["init_seen"]
     assert driver[init:init + 2] == b"\x00\x00"
-    census = _driver_census(tmp_path, nasm, init)
+    read_request = symbols["read_request"]
+    assert driver[read_request:read_request + DRIVER_INPUT.size] == bytes(DRIVER_INPUT.size)
+    census = _driver_census(tmp_path, nasm, symbols)
     config = (b"DEVICE=A:\\FDBTEST.SYS\r\n" if enabled else b"") + BASELINE_CONFIG
     disk = prepare_dos_baseline(
         runtime["boot_image"], tmp_path / "driver.img", runtime["mcopy"], config=config,
         batch=BASELINE_BATCH + b"A:\\CENSUS.COM\r\n",
         extra_files={"FDBTEST.SYS": driver, "CENSUS.COM": census})
-    observations = (
-        (1, 0x8000, symbols["strategy"], symbols["interrupt"], 0xa55a) if enabled else (0, 0, 0, 0, 0)
-    )
-    expected = b"FDBSYS1" + struct.pack("<BHHHH", *observations) + b"END1"
+    if enabled:
+        observations = (1, 0x8000, symbols["strategy"], symbols["interrupt"], 0xa55a)
+        dos_io = (4, 0x80, 0, 4, b"\xa6\x00\x1a\x7f" + b"\xa5" * 4)
+        driver_input = (1, 4, 0, 6, 4, 0x0100)
+    else:
+        observations = (0, 0, 0, 0, 0)
+        dos_io = (0, 0, 2, 0, b"\xa5" * 8)  # DOS file-not-found on open.
+        driver_input = (0, 0, 0, 0, 0, 0)
+    expected = (HEADER + CENSUS.pack(*observations) + DOS_IO.pack(*dos_io)
+                + DRIVER_INPUT.pack(*driver_input) + FOOTER)
     for qemu in (False, True):
         name = "qemu" if qemu else "dosbox-x"
         data = _boot_readback(tmp_path / name, runtime, disk, qemu=qemu)
         record_property(f"{name}_serial", data.hex())
-        assert data == expected
+        assert data == expected, name
     record_property("prepared_floppy_sha256", disk["prepared_sha256"])
     assert digest(disk["image"]) == disk["prepared_sha256"]
     assert digest(runtime["boot_image"]) == disk["source_sha256"]

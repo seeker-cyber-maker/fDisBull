@@ -392,12 +392,7 @@ child_status:
 
 
 def character_driver(directory, nasm):
-    """A minimal authored character SYS driver with an observable INIT write.
-
-    Successful registration does not qualify useful device I/O: commands other
-    than INIT deliberately return the DOS unknown-command error. The marker is
-    zero in the source and changes only when DOS submits its INIT request.
-    """
+    """A character SYS driver with observable INIT and raw INPUT requests."""
     code = assemble(directory, "character-driver", r"""
 bits 16
 org 0
@@ -409,6 +404,10 @@ request:
     dw 0,0
 init_seen:
     dw 0
+read_request:
+    dw 0                   ; Number of INPUT requests processed.
+    db 0,0                 ; Command and unit.
+    dw 0,0,0               ; Requested count, transferred count and status.
 strategy:
     mov [cs:request],bx
     mov [cs:request+2],es
@@ -416,34 +415,64 @@ strategy:
 interrupt:
     push ax
     push bx
+    push di
     push ds
     push es
     push cs
     pop ds
     les bx,[request]
     cmp byte [es:bx+2],0
-    jne unsupported
+    jne check_read
     mov word [es:bx+0eh],resident_end
     mov ax,cs
     mov [es:bx+10h],ax
     mov word [init_seen],0a55ah
     mov word [es:bx+3],0100h
     jmp complete
+check_read:
+    cmp byte [es:bx+2],4
+    jne unsupported
+    cmp byte [es:bx],14h    ; INPUT packet must include the transfer count.
+    jb unsupported
+    cmp byte [es:bx+1],0
+    jne unsupported
+    cmp word [es:bx+0eh],0fffch
+    ja unsupported
+    mov ax,[es:bx+12h]
+    cmp ax,4
+    jb unsupported
+    inc word [read_request]
+    mov [read_request+4],ax
+    mov ax,[es:bx+1]
+    xchg al,ah             ; Record command before unit.
+    mov [read_request+2],ax
+    push es
+    les di,[es:bx+0eh]
+    mov dword [es:di],7f1a00a6h
+    pop es
+    mov word [es:bx+12h],4
+    mov ax,0100h           ; Done, with no error.
+    mov [es:bx+3],ax
+    mov word [read_request+6],4
+    mov [read_request+8],ax
+    jmp complete
 unsupported:
     mov word [es:bx+3],8103h
 complete:
     pop es
     pop ds
+    pop di
     pop bx
     pop ax
     retf
 resident_end:
     db 'SYM1'
-    dw strategy,interrupt,init_seen,resident_end
+    dw strategy,interrupt,init_seen,resident_end,read_request
 """, nasm)
-    if code[-12:-8] != b"SYM1":
+    if code[-14:-10] != b"SYM1":
         raise ValueError("Authored character-driver symbol footer is missing")
-    strategy, interrupt, marker, resident_end = struct.unpack_from(
-        "<HHHH", code, len(code) - 8)
+    strategy, interrupt, marker, resident_end, read_request = struct.unpack_from(
+        "<HHHHH", code, len(code) - 10)
     return code, {"name": "FDBTEST$", "strategy": strategy, "interrupt": interrupt,
-                  "init_seen": marker, "resident_end": resident_end}
+                  "init_seen": marker, "resident_end": resident_end,
+                  "read_request": read_request}

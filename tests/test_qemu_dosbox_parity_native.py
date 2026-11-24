@@ -443,6 +443,101 @@ def test_paired_authored_mz_relocation_psp_mcb_write_and_exit(
     assert hashlib.sha256(parity_inputs["boot_image"].read_bytes()).hexdigest() == parity_inputs["boot_sha256"]
 
 
+def test_paired_mz_relocation_write_and_exit_through_json_and_saved_script(tmp_path, parity_inputs):
+    from fdisbull.cli import respond
+    from fdisbull.debugger import DebugWorkspace
+
+    code, authored = mz_exit()
+    game = tmp_path / "game"
+    game.mkdir()
+    source = game / "TARGET.EXE"
+    source.write_bytes(code)
+    database = tmp_path / "mz-route-parity.fdb"
+    with Project.create(database, source) as project:
+        project.analyze(max_instructions=64)
+
+    workspace = DebugWorkspace()
+
+    def invoke(method, **params):
+        reply = respond({"method": method, "params": {"project": str(database), **params}},
+                        debugger=workspace)
+        assert reply["ok"], reply
+        return reply["result"]
+
+    scripts = {}
+    finished_runs = set()
+    try:
+        for backend in ("dosbox", "qemu-dos"):
+            qemu = backend == "qemu-dos"
+            launch_options = _qemu_launch_options(parity_inputs) if qemu else {"backend": backend}
+            run_options = {"timeout_ms": 5000, **({} if qemu else {"fast_forward": True})}
+            executable = parity_inputs["qemu" if qemu else "dosbox"]
+            for scripted in (False, True):
+                launch = invoke("debug-launch", executable=str(executable), game_dir=str(game), **launch_options)
+                run = launch["run"]
+                assert invoke("debug-contexts", run=run)["selected"] == ("machine" if qemu else "dos-cpu")
+                initial = invoke("debug-registers", run=run)
+                load = _word(initial, "cs") - authored["relative_cs"]
+                assert _ip(initial) == authored["entry_ip"]
+                assert _word(initial, "ss") - load == authored["relative_ss"]
+                assert _word(initial, "sp", "esp", "rsp") == authored["sp"]
+
+                # DOSBox maps project addresses into the module. QEMU's default
+                # machine memory view takes physical addresses, so bind to CS.
+                base = 16 * (load if qemu else launch["mapping"]["static_load_segment"])
+                module = {"address": base, "length": authored["module_size"]}
+                marker = {"address": base + authored["written_offset"], "length": 2}
+                after_store = base + 16 * authored["relative_cs"] + 12
+                if scripted:
+                    steps = [
+                        {"op": "memory", **module},
+                        {"op": "breakpoint", "address": after_store, "as": "point"},
+                        {"op": "run", "expect": "breakpoint", **run_options},
+                        {"op": "registers"},
+                        {"op": "memory", **marker},
+                        {"op": "delete-breakpoint", "breakpoint_id": "$point.breakpoint_id"},
+                        {"op": "run", "expect": "guest_exit", **run_options},
+                    ]
+                    script = {"format": "fdisbull-script-1", "steps": steps}
+                    if qemu:
+                        script["backend"] = backend
+                    saved = invoke("debug-save-script", name=f"{backend}-mz.json", script=script)
+                    scripts[saved["script_id"]] = saved["sha256"]
+                    report = invoke("debug-script", run=run, script_id=saved["script_id"], timeout_ms=15000)
+                    assert report["ok"] and report["completed_steps"] == len(steps), report
+                    before, _, stopped, registers, written, _, exited = (
+                        row["result"] for row in report["steps"]
+                    )
+                else:
+                    before = invoke("debug-memory", run=run, **module)
+                    point = invoke("debug-breakpoint", run=run, address=after_store)
+                    stopped = invoke("debug-run", run=run, **run_options)
+                    registers = invoke("debug-registers", run=run)
+                    written = invoke("debug-memory", run=run, **marker)
+                    invoke("debug-delete-breakpoint", run=run, breakpoint_id=point["breakpoint_id"])
+                    exited = invoke("debug-run", run=run, **run_options)
+
+                assert bytes.fromhex(before["hex"]) == relocated_module(authored, load)
+                assert stopped["outcome"] == "breakpoint", stopped
+                assert (_word(registers, "cs"), _ip(registers)) == (load + authored["relative_cs"], 12)
+                assert _word(registers, "ds") == load + 7
+                assert written["hex"] == "efbe"
+                assert _exit_code(exited, qemu=qemu) == authored["exit_code"]
+                assert invoke("debug-stop", run=run)["process_reaped"]
+                finished_runs.add(run)
+    finally:
+        workspace.close()
+
+    with Project(database) as reopened:
+        runs = reopened.debug_runs()["runs"]
+        assert {row["id"] for row in runs if row["state"] == "exited"} == finished_runs
+        assert {row["id"]: row["sha256"] for row in reopened.debug_scripts()["scripts"]} == scripts
+        assert all(row["metadata"]["source_sha256"] == digest(source) for row in runs)
+    assert source.read_bytes() == code
+    assert digest(parity_inputs["boot"]["image"]) == parity_inputs["boot"]["prepared_sha256"]
+    assert digest(parity_inputs["boot_image"]) == parity_inputs["boot_sha256"]
+
+
 def _observe_exec(project, runtime, directory, symbols, *, qemu):
     session = (_launch_qemu(project, runtime, directory) if qemu
                else project.debugger(str(runtime["dosbox"]), directory))
