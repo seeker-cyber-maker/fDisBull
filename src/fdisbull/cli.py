@@ -67,6 +67,7 @@ METHODS = {
     "debug-step": "Step with the selected backend contract; native QEMU counts observed stops; mode=over admits one bounded real16 near CALL or ordinary NEXT; run,[count,mode,timeout_ms]",
     "debug-spectator": "Read or enable the owned watch-only Windows dot-mode viewer; run,[enabled]",
     "debug-spectator-frame": "Capture one native paused Windows frame for the watch-only viewer; run",
+    "debug-agi-scene-observe": "Read coherent stopped AGI actor state and native observation journal; run,[timeout_ms]",
     "debug-engine-state": "Read paused engine VM state with its own address context; run",
     "debug-write-engine-state": "Apply a checked engine state edit; run,kind,index,value,[expected,width,signed,endian]",
     "debug-read-variable": "Read a typed engine variable at a byte offset; run,offset,[width,signed,endian]",
@@ -190,7 +191,7 @@ METHODS = {
     "debug-chip8-tick": "Apply explicit stopped CHIP-8 timer ticks without advancing CPU or virtual time; run,ticks",
     "debug-pause": "Request a pause in a supported execution context; run,[context,timeout_ms]",
     "debug-resume": "Resume a supported execution context with its declared budgets; run,[context,timeout_ms,guest_ms,max_instructions]",
-    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,qemu_key_repeat_profile,qemu_video_source_profile,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
+    "debug-launch": "Launch a project-bound DOS, Windows, machine or experimental ScummVM backend; executable,[game_dir,version,backend,guest_profile,qemu_transport,qemu_firmware,qemu_clock,qemu_audio,qemu_retrace,qemu_checkpoint_tool,qemu_key_repeat_profile,qemu_video_source_profile,agi_runtime_package,dos_boot_image,dos_mcopy,dos_startup_batch,dos_arguments,freedos_runtime,dos_directory,dos_file_mode,dos_generation,game_id,language,platform,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,dot_mode,memory_mib,spatial_mode,fair_play]",
     "debug-clock-observe": "Observe a stopped QEMU clock profile; run (instruction and native virtual clocks stay distinct)",
     "debug-clock-advance": "Continue once with a native QEMU virtual timer; run,delta_ns,[timeout_ms] (requires virtual profile and clock extension)",
     "debug-capture-surface": "Capture a stopped QEMU display and CPU/clock bracket; run,[name] (not a completed guest frame)",
@@ -1387,7 +1388,8 @@ def invoke(method, params, debugger=None):
 def public_addresses(value, field=None):
     # This receipt has typed physical-RAM selections shared by Python, JSON
     # and nested scripts. Keep its observed evidence unchanged on every route.
-    if isinstance(value,dict) and value.get("format") == "fdisbull-source-raster-state-observation-1":
+    if (isinstance(value, dict) and (value.get("format") == "fdisbull-source-raster-state-observation-1"
+            or value.get("schema") == "fdisbull-qemu-agi-scene-observation-1")):
         return value
     address_fields = {
         "address",
@@ -1562,6 +1564,9 @@ def respond(request, default_project=None, debugger=None):
         step_sequence_error = (isinstance(request, dict) and request.get("method") == "debug-step"
                                and isinstance(observed, dict)
                                and observed.get("format") in (STEP_SEQUENCE_FORMAT,STEP_OVER_FORMAT))
+        agi_execution_error = (isinstance(request, dict) and request.get('method') in ('debug-step', 'debug-run')
+                               and isinstance(observed, dict)
+                               and observed.get('format') == 'fdisbull-qemu-agi-execution-error-1')
         scene_wait_result = getattr(e, "scene_wait_result", None)
         coordinate_click = getattr(e, "coordinate_click", observed)
         coordinate_click_error = (isinstance(request, dict)
@@ -1606,7 +1611,7 @@ def respond(request, default_project=None, debugger=None):
                                and isinstance(script_result, dict)
                                and script_result.get("format") == "fdisbull-script-result-1")
         if not isinstance(e, (ValueError, TypeError, KeyError, OSError, sqlite3.Error,
-                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error):
+                              OverflowError, AttributeError, RecursionError)) and not (step_sequence_error or scene_wait_error or scene_act_error or checkpoint_script_error or action_script_error or video_frame_error or video_frame_state_error or native_stopped_control_error or coordinate_click_error or agi_execution_error):
             raise
         value = {
             "id": request_id,
@@ -1619,7 +1624,7 @@ def respond(request, default_project=None, debugger=None):
         from .execution_trace import ExecutionTraceError
         if isinstance(e, ExecutionTraceError):
             value["error"]["result"] = e.result
-        if step_sequence_error:
+        if step_sequence_error or agi_execution_error:
             value["error"]["result"] = observed
         if coordinate_click_error:
             value["error"]["coordinate_click"] = coordinate_click
@@ -2372,7 +2377,7 @@ def parser():
     )
     c.add_argument("project")
     c.add_argument("--executable", required=True)
-    c.add_argument("--game-dir", help="Target directory; qemu-dos defaults to the captured caller workspace")
+    c.add_argument("--game-dir", help="Target directory; qemu-dos defaults to the captured caller workspace; qemu-agi uses its bound source")
     c.add_argument("--memory-mib", type=int, help="Owned Windows or explicit DOSBox/QEMU guest RAM, up to 8192 MiB")
     c.add_argument("--version", type=int)
     c.add_argument("--guest-profile", choices=["dos", "dos-pc-v1", "qemm", "qemm-386-v1", "desqview", "desqview-386-v1"],
@@ -2393,6 +2398,7 @@ def parser():
                    help="Explicit native VGA retrace profile; precise requires virtual clock and retrace extension")
     c.add_argument("--qemu-checkpoint-tool",
                    help="Explicit qemu-img executable for native machine and DOS process checkpoints")
+    c.add_argument("--agi-runtime-package", help="Private native AGI runtime package bound to the imported entry LOGIC")
     c.add_argument("--dos-boot-image", help="Separate caller-owned DOS disk for native COM/MZ launch; original disk is preserved")
     c.add_argument("--dos-mcopy", help="mcopy executable used to stage a private native DOS process disk")
     c.add_argument("--dos-startup-batch", help="Existing guest startup batch to append the loader to, default FDAUTO.BAT")
@@ -2403,7 +2409,7 @@ def parser():
     c.add_argument("--dos-generation", help="Activate a retained staged workspace generation at cold launch")
     c.add_argument(
         "--backend",
-        choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "qemu-chip8", "wine-ne",
+        choices=["dosbox", "dosbox-qemu", "qemu-dos", "wine-qemu", "ida-wine-qemu", "qemu-machine", "qemu-chip8", "qemu-agi", "wine-ne",
                  "scummvm-agi", "scummvm-gob", "scummvm-kyra"],
     )
     c.add_argument("--game-id", help="Explicit ScummVM engine/game ID, for example agi:kq1, gob:lit, kyra:kyra1 or kyra:lol")
@@ -2716,7 +2722,7 @@ def parser():
     )
     c.add_argument(
         "--arch",
-        choices=["x86", "arm64", "thumb", "chip8"],
+        choices=["x86", "arm64", "thumb", "chip8", "agi"],
         help="explicit raw mode (bypasses executable loader)",
     )
     c.add_argument("--bits", type=int, choices=[16, 32, 64])

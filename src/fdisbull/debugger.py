@@ -112,9 +112,9 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                  guest_profile=None, qemu_transport=None, qemu_firmware=None, qemu_clock=None, qemu_audio=None, qemu_retrace=None,
                  qemu_checkpoint_tool=None, qemu_key_repeat_profile=None, qemu_video_source_profile=None,
                  dos_boot_image=None, dos_mcopy=None, dos_startup_batch=None, dos_arguments=None,
-                 dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None):
+                 dos_directory=None, dos_file_mode=None, freedos_runtime=None, dos_generation=None, agi_runtime_package=None):
         if game_dir is None:
-            if backend != 'qemu-dos':
+            if backend not in ('qemu-dos', 'qemu-agi'):
                 raise ValueError('This backend requires an explicit game_dir')
             game_dir = str(Path.cwd().resolve())
         if qemu_key_repeat_profile is not None and (
@@ -129,6 +129,18 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                                dos_directory, dos_file_mode, freedos_runtime, dos_generation)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
             raise ValueError('DOS process boot/staging options require backend=qemu-dos')
+        if agi_runtime_package is not None and backend != 'qemu-agi':
+            raise ValueError('agi_runtime_package requires backend=qemu-agi')
+        if backend == 'qemu-agi':
+            if (any(value is not None for value in
+                    (kernel, initramfs, files, state, remote_server, spatial_mode,
+                     memory_mib, dot_mode, game_id, language, platform, guest_profile,
+                     qemu_transport, qemu_firmware, qemu_clock, qemu_audio, qemu_retrace,
+                     qemu_checkpoint_tool, qemu_key_repeat_profile, qemu_video_source_profile))
+                    or window or fair_play):
+                raise ValueError('qemu-agi uses its explicit headless raw LOGIC profile without DOS/PC or device options')
+            from .qemu_agi import AGIQemuSession
+            return AGIQemuSession(self, executable=executable, version=version, timeout_ms=boot_timeout_ms, runtime_package=agi_runtime_package, _on_spawn=_on_spawn)
         if backend == 'qemu-chip8':
             if (any(value is not None for value in
                     (kernel, initramfs, files, state, remote_server, spatial_mode,
@@ -140,6 +152,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
             return Chip8DebugSession(self, executable, rom=Path(game_dir) / self.meta['filename'],
                 version=version, timeout_ms=boot_timeout_ms,
                 checkpoint_tool=qemu_checkpoint_tool, _on_spawn=_on_spawn)
+        if self.meta.get('arch') == 'agi':
+            raise ValueError('AGI execution requires explicit backend=qemu-agi')
         if self.meta.get('arch') == 'chip8':
             raise ValueError('CHIP-8 execution requires explicit backend=qemu-chip8')
         if guest_profile is not None and backend not in ('qemu-machine','qemu-dos'):
@@ -1382,7 +1396,7 @@ class DebugWorkspace:
             raise ValueError('Pause or collect the outstanding asynchronous run before another operation')
         if method=='debug-run-async':
             return self._start_async(session,params)
-        methods = {'debug-diagnostics':'diagnostics','debug-cpu-inventory':'cpu_inventory','debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
+        methods = {'debug-agi-scene-observe':'scene_observe', 'debug-diagnostics':'diagnostics','debug-cpu-inventory':'cpu_inventory','debug-spectator':'dot_mode','debug-spectator-frame':'spectator_frame',
                    'debug-memory-snapshot':'memory_snapshot','debug-memory-apply':'memory_apply',
                    'debug-memory-rule-tick':'memory_rule_tick','debug-memory-rule-run':'memory_rule_run',
                    'debug-desqview-observe':'desqview_observe',

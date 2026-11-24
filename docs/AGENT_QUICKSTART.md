@@ -89,6 +89,9 @@ observed PSP, source map and exit/TSR lifecycle. Read the maintained
 `dosbox-qemu` still runs DOSBox inside Linux/QEMU. DOSBox remains the default
 and a retained fallback. `doctor --backend qemu-dos` exercises an authored boot
 fixture; actual DOS, driver and game qualification are separate gates.
+For the explicit native `qemu-agi` raw LOGIC and resource-package pilot, see
+[QEMU AGI](QEMU_AGI.md) for import, JSON observation and its evidence limits.
+It is separate from `scummvm-agi`.
 For an owned QEMU machine or CHIP-8 session, `debug-diagnostics` reads a bounded
 range of the private native diagnostic log. Start with `run` and optionally
 `limit` (1..16384 bytes); continue with the returned `next_cursor` as `cursor`

@@ -198,7 +198,7 @@ with DOSBox retained as the default and fallback.
 
 ## Native CPU inspection across targets
 
-`MachineContext` and `Chip8DebugSession` share `QemuInspectionMixin` in
+`MachineContext`, `Chip8DebugSession` and `AGIQemuSession` share `QemuInspectionMixin` in
 `qemu_diagnostics.py`; `cpu_inventory()` delegates to
 `native_cpu.inspect_native_cpu` over the owned QMP client. Before standard
 queries, the helper follows `query-target.return.arch` and
@@ -214,15 +214,14 @@ Target code owns its CPU model, decoder, QOM state and GDB register description.
 For example, `MachineContext.registers()` reads GDB registers and compares them
 with QMP HMP `info registers`; generic inventory does not claim those values.
 
-The experimental QEMU AGI target is separate from `scummvm-agi`. Its overlay
-registers `agi` in `SysEmuTarget`, enabling the same standard schema gate after
-an AGI build. Qualification uses the opt-in
-`tests/test_qemu_agi_inspection_native.py` with `FDISBULL_QEMU_AGI`, an authored
-input and owned QMP session. Separately verify its one 32-bit GDB `pc`, QOM
-controls, `agi-state-json`, bounded `agi-decode-json` and deterministic state /
-visual-plane evidence against the exact binary identity. These target-specific
-checks do not establish original-game behavior, resource writing, UIL output or
-DOS parity; retain their receipts with results.
+The experimental QEMU AGI target registers `agi` in `SysEmuTarget`.
+The public [AGI debugger](QEMU_AGI.md) reads the GDB register and the current
+LOGIC position, steps the CPU, and captures actor state and scene events.
+A bound resource package also supplies the visual and priority planes.
+Set `FDISBULL_QEMU_AGI` to the target executable to run
+`tests/test_qemu_agi_inspection_native.py` and `tests/test_qemu_agi_public_native.py`.
+They exercise the shared inspection path and the public debugger with authored
+inputs. DOS replacement qualification remains a separate gate.
 
 ## FreeDOS and directory layers
 

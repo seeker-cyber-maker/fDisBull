@@ -24,6 +24,8 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
         raise ValueError("instruction address must fit in an unsigned 64-bit integer")
     if not data:
         return None
+    if arch == 'agi':
+        raise ValueError('AGI static decoding is unavailable; use the explicit native AGI backend')
     if arch == 'chip8':
         if bits != 16:
             raise ValueError('CHIP-8 decoding requires 16-bit instruction words')

@@ -104,6 +104,19 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     base = _address(0 if base is None else base, "base address")
     if entry is not None:
         entry = _address(entry, "entry address")
+    if arch == 'agi':
+        if len(data) > 65536:
+            raise ValueError('AGI raw LOGIC must fit in 65536 bytes')
+        if (bits not in (None, 32) or base != 0 or entry not in (None, 0)
+                or profile is not None or image is not None or slice_arch is not None
+                or module or vector_count is not None or load_segment != 0x1000):
+            raise ValueError('AGI raw LOGIC requires 32 bits, base and entry zero, and no container/profile options')
+        return Image('raw', 'agi', 32, 0, [Region('agi-logic', 0, data, True)],
+                     [Seed(0, 'entry', 'entry')],
+                     dict(mapping='flat', filename=path.name,
+                          source_sha256=hashlib.sha256(data).hexdigest(),
+                          file_mappings=[dict(virtual_address=0, file_offset=0, file_size=len(data))]),
+                     source_bytes=data)
     from .chip8 import PROFILE as CHIP8_PROFILE, MEMORY_SIZE, ROM_BASE, MAX_ROM_SIZE
     if arch == 'chip8' or profile == CHIP8_PROFILE:
         if (arch not in (None, 'chip8') or bits not in (None, 16)
