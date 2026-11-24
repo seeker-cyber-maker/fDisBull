@@ -11,6 +11,7 @@ import pty
 import re
 import select
 import shutil
+import struct
 import subprocess
 import sys
 import termios
@@ -181,10 +182,117 @@ def observation(debug):
     }
 
 
+def verify_saved_high_checkpoint(stage, cfg, hot, cold):
+    """Read the native Bochs CPU and sparse RAM files without starting Bochs."""
+    assert cfg["paging_mode"] in ("pae-4k-high", "pae-2m-high")
+    checkpoint = Path(hot["checkpoint"])
+    assert checkpoint.resolve() == (Path(stage) / "bochs-state").resolve()
+    cpu_path = checkpoint / "cpu0"
+    cpu = cpu_path.read_text()
+
+    def field(name):
+        match = re.search(r"^  " + re.escape(name) + r" = (\w+)$", cpu, re.MULTILINE)
+        assert match, (name, cpu_path)
+        return int(match.group(1), 0)
+
+    def segment(name):
+        match = re.search(
+            r"^  " + re.escape(name) + r" = \{\n(.*?)^  \}", cpu, re.MULTILINE | re.DOTALL
+        )
+        assert match, (name, cpu_path)
+        return {
+            key: int(value, 0)
+            for key, value in re.findall(
+                r"^    (selector|base|limit_scaled) = (\w+)$", match.group(1), re.MULTILINE
+            )
+        }
+
+    cs, ldt = segment("CS"), segment("LDTR")
+    ip, cr0, cr3, cr4 = (field(name) for name in ("RIP", "CR0", "CR3", "CR4"))
+    context = hot["checkpoint_context"]
+    assert (cs["selector"], cs["base"], ldt["selector"], ip) == (
+        context["cs"], context["cs_base"], context["ldtr_selector"], context["ip"]
+    )
+    assert (cr0, cr3, cr4) == (context["cr0"], context["cr3"], context["cr4"])
+    assert field("RSI") & 0xFFFFFFFF == context["esi"]
+    linear = cs["base"] + ip
+    assert linear == hot["events"][cfg["checkpoint_index"]]["pc"]
+
+    config = (checkpoint / "config").read_text()
+    assert "guest=4120" in config
+    block_kib = int(re.search(r"^memory:.*block_size=(\d+)", config, re.MULTILINE)[1])
+    assert block_kib == 2048
+    memory_meta = (checkpoint / "memory").read_text()
+    assert "ram = memory.ram" in memory_meta
+    allocation = {
+        int(block): int(location)
+        for block, location in re.findall(r"^    blk(\d+) = (-?\d+)$", memory_meta, re.MULTILINE)
+    }
+    ram_path = checkpoint / "memory.ram"
+
+    def physical_read(address, count):
+        assert not 0xC0000000 <= address < 0x100000000
+        offset = address - 0x40000000 if address >= 0x100000000 else address
+        block_bytes = block_kib * 1024
+        block = offset // block_bytes
+        assert offset // block_bytes == (offset + count - 1) // block_bytes
+        location = allocation.get(block, -1)
+        assert location >= 0, (hex(address), block, location)
+        with ram_path.open("rb") as ram:
+            ram.seek(offset)
+            data = ram.read(count)
+        assert len(data) == count, (hex(address), count)
+        return data
+
+    def entry(level, address):
+        value = struct.unpack("<Q", physical_read(address, 8))[0]
+        assert value & 1, (level, hex(address), hex(value))
+        return {"level": level, "address": address, "value": value}
+
+    frame_mask = 0x000FFFFFFFFFF000
+    pdpte = entry("pdpte", (cr3 & ~31) + ((linear >> 30) & 3) * 8)
+    pde = entry("pde", (pdpte["value"] & frame_mask) + ((linear >> 21) & 511) * 8)
+    entries = [pdpte, pde]
+    if pde["value"] & 0x80:
+        page_size = 0x200000
+        page_base = pde["value"] & 0x000FFFFFFFE00000
+    else:
+        page_size = 0x1000
+        pte = entry("pte", (pde["value"] & frame_mask) + ((linear >> 12) & 511) * 8)
+        entries.append(pte)
+        page_base = pte["value"] & frame_mask
+    expected_size = 0x1000 if cfg["paging_mode"] == "pae-4k-high" else 0x200000
+    assert page_size == expected_size
+    backing = page_base + (linear & (page_size - 1))
+    assert backing == cfg["second_target"]
+
+    high_bytes = {
+        address: physical_read(address, 2).hex()
+        for address in (cfg["first_target"], cfg["second_target"])
+    }
+    aliases = {address & 0xFFFFFFFF for address in high_bytes}
+    assert aliases == set(cfg["low_aliases"])
+    low_markers = {address: physical_read(address, 2).hex() for address in aliases}
+    assert len(high_bytes) == len(low_markers) == 2
+    assert set(high_bytes.values()) == {"46cb"} and set(low_markers.values()) == {"0f0b"}
+    assert hot["low_alias_markers"] == cold["low_alias_markers"] == {
+        str(address): marker for address, marker in low_markers.items()
+    }
+
+    checkpoint_event = hot["events"][cfg["checkpoint_index"]]
+    restored_event = cold["events"][0]
+    assert checkpoint_event == restored_event
+    assert checkpoint_event["backing"][0] == backing
+    assert checkpoint_event["walks"][0] == entries
+    descriptor_address = ldt["base"] + (cs["selector"] & ~7)
+    assert physical_read(descriptor_address, 8).hex() == checkpoint_event["descriptor"]
+
+
 def run(stage, phase):
     stage = Path(stage).resolve()
     assert phase in ("before", "after")
     cfg = json.loads((stage / "config.json").read_text())
+    high_memory = cfg.get("paging_mode", "").endswith("-high")
     source = Path(cfg["source"])
     assert hashlib.sha256(source.read_bytes()).hexdigest() == cfg["sha256"]
     binary = Path(os.environ["FDISBULL_BOCHS"]).resolve(strict=True)
@@ -210,7 +318,12 @@ def run(stage, phase):
                 timeout=15,
             )
         config = stage / "bochsrc"
-        config.write_text(f'''megs: 32
+        memory = (
+            "memory: guest=4120, host=32, block_size=2048"
+            if high_memory
+            else "megs: 32"
+        )
+        config.write_text(f'''{memory}
 romimage: file="{share / "BIOS-bochs-latest"}"
 vgaromimage: file="{share / "VGABIOS-lgpl-latest.bin"}"
 display_library: nogui
@@ -263,6 +376,10 @@ debug: action=ignore
             events.append(observation(debug))
             if index + 1 < cfg["boundaries"]:
                 debug.cmd("s")
+        low_alias_markers = {
+            str(address): debug.read(address, 2, True).hex()
+            for address in cfg.get("low_aliases", [])
+        }
     except BaseException:
         debug.abort()
         raise
@@ -279,6 +396,11 @@ debug: action=ignore
         "checkpoint_context": saved_context,
         "media_sha256": media_hash,
         "binary_sha256": binary_hash,
+        "memory_topology": "high-ram-over-4g-sparse" if high_memory else "32m",
+        "low_alias_markers": low_alias_markers,
+        "max_native_mmu_physical": max(
+            page["physical"] for event in events for page in event["mmu_pages"]
+        ),
     }
     (stage / f"bochs-{phase}.json").write_text(json.dumps(result, indent=2))
     return result

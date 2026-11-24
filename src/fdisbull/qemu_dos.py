@@ -18,12 +18,15 @@ MAX_IMAGE = 64 * 1024 * 1024
 _FLOPPY_SIZES = frozenset(size * 1024 for size in (160, 180, 320, 360, 720, 1200, 1440, 2880))
 
 
-def prepare_dos_profile(boot_image, *, cpu='486', memory_mib=32):
+def prepare_dos_profile(boot_image, *, cpu='486', memory_mib=32, max_ram_below_4g_mib=None):
     """Read and identify one raw PC disk without modifying or booting it."""
     if cpu not in ('486', 'max'):
         raise ValueError('Native DOS CPU must be 486 or max')
     if type(memory_mib) is not int or not 16 <= memory_mib <= 8192:
         raise ValueError('Native DOS memory_mib must be an integer in 16..8192')
+    if max_ram_below_4g_mib is not None and (type(max_ram_below_4g_mib) is not int or
+            max_ram_below_4g_mib != 32 or memory_mib != 64 or cpu != 'max'):
+        raise ValueError('Split high RAM requires max CPU, 64 MiB RAM and 32 MiB below 4 GiB')
     path = Path(boot_image).expanduser().resolve(strict=True)
     if not path.is_file() or not 512 <= path.stat().st_size <= MAX_IMAGE:
         raise ValueError('Native DOS boot image requires 512-byte sectors, at most 64 MiB')
@@ -35,6 +38,8 @@ def prepare_dos_profile(boot_image, *, cpu='486', memory_mib=32):
     machine = dict(cpu=cpu, memory_mib=memory_mib, cpus=1, network='none',
                    disk='private-verified-copy-and-snapshot',
                    boot_device='floppy' if floppy else 'ide', boot_drive='A:' if floppy else 'C:')
+    if max_ram_below_4g_mib is not None:
+        machine['max_ram_below_4g_mib'] = max_ram_below_4g_mib
     identity = dict(schema=1, profile=PROFILE, machine=machine,
                     boot_image=dict(size=len(data), sha256=hashlib.sha256(data).hexdigest()))
     digest = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
@@ -64,7 +69,8 @@ def admit_dos_profile(profile, boot_image):
     machine = profile.get('machine')
     if not isinstance(machine, dict):
         raise ValueError('Native DOS machine configuration is missing')
-    current = prepare_dos_profile(boot_image, cpu=machine.get('cpu'), memory_mib=machine.get('memory_mib'))
+    current = prepare_dos_profile(boot_image, cpu=machine.get('cpu'), memory_mib=machine.get('memory_mib'),
+                                  max_ram_below_4g_mib=machine.get('max_ram_below_4g_mib'))
     if machine != current['machine']:
         raise ValueError('Native DOS machine configuration differs')
     recorded = profile.get('boot_image')

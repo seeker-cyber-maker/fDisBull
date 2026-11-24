@@ -5,6 +5,7 @@ socket/descriptor use, independent controllers and native/device mutations are
 explicitly outside this authority. One observation holds the existing VM lock.
 """
 from __future__ import annotations
+from .qemu_ram import low_ram_end
 
 from contextlib import contextmanager
 from copy import deepcopy
@@ -61,8 +62,7 @@ def _state(context, vm):
 def _ranges(vm, values):
     if type(values) not in (tuple, list) or len(values) > 64:
         raise ValueError('Observation RAM ranges must be a bounded sequence')
-    ram_end = min(getattr(vm, 'machine_configuration', {}).get('memory_mib', 0) << 20,
-                  0xc0000000)
+    ram_end = low_ram_end(getattr(vm, 'machine_configuration', {}))
     result = []
     total = 0
     for value in values:

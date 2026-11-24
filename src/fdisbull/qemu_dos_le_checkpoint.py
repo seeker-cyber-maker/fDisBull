@@ -37,7 +37,7 @@ def _producer():
     return {name: _sha((root/name).read_bytes()) for name in
             ('qemu_dos_le_checkpoint.py', 'qemu_owned_checkpoint.py',
              'qemu_dos_le_binding.py', 'qemu_dos_le_identity.py',
-             'qemu_dos_source_admission.py', 'qemu_dos_le_match.py', 'le.py', 'qemu_machine.py')}
+             'qemu_dos_source_admission.py', 'qemu_dos_le_match.py', 'le.py', 'qemu_machine.py', 'qemu_ram.py')}
 
 
 def _reference(project, reference, kind, version, *, maximum=None):

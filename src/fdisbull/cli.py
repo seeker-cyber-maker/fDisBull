@@ -234,7 +234,7 @@ METHODS = {
     "debug-input-schedule-observe": "Read the owned native input dispatch/cancellation receipt; run (not guest consumption)",
     "debug-input-schedule-retrace": "Arm queued physical input for the strictly next precise VGA retrace edge; run,[edge,timeout_ms] (timing changes cancel before delivery)",
     "debug-input-cancel-pending": "Cancel only unsent QEMU edges; run (accepted holds remain owned)",
-    "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib]; does not boot or qualify DOS",
+    "dos-profile": "Pin a caller-owned raw DOS/PC boot image for native QEMU; boot_image,[cpu,memory_mib,max_ram_below_4g_mib]; does not boot or qualify DOS",
     "dos-migration": "Inspect DOSBox-to-QEMU capability slices and retained fallback; [details,surface,slice]; no runtime execution",
     "le-driver-inspect": "Inspect mixed-width LE driver objects and symbolic fixups without process loading; path",
     "le-driver-disasm": "Bounded object-relative LE driver view; path,object_number,[offset,max_instructions,abi]",
@@ -2145,6 +2145,7 @@ def parser():
     c.add_argument("boot_image")
     c.add_argument("--cpu", choices=["486", "max"], default="486")
     c.add_argument("--memory-mib", type=int, default=32)
+    c.add_argument("--max-ram-below-4g-mib", type=int)
     c = sub.add_parser("dos-migration", help=METHODS["dos-migration"])
     c.add_argument("--details", action="store_true")
     c.add_argument("--surface")

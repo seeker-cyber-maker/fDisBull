@@ -29,7 +29,7 @@ def _unknown(error):
 
 
 def observe(image, source_version, cpu, context, read_physical, read_virtual, *, legacy_producer=False,
-            qemu_image_sha256=None):
+            qemu_image_sha256=None, high_ram_end=None):
     """Re-match the current boundary and retain the reads needed for replay.
 
     A failed observation has no source or mapping identity. Readers must restrict
@@ -65,7 +65,7 @@ def observe(image, source_version, cpu, context, read_physical, read_virtual, *,
         return sample('virtual', read_virtual, a, n)
 
     def linear(a, n):
-        data, walks = translate_linear(context, a, n, physical, virtual, qemu_image_sha256=qemu_image_sha256)
+        data, walks = translate_linear(context, a, n, physical, virtual, qemu_image_sha256=qemu_image_sha256, high_ram_end=high_ram_end)
         if legacy_producer and any('page_size' in walk for walk in walks):
             raise ValueError('Legacy producer cannot attest an extended page walk')
         return data
@@ -74,7 +74,7 @@ def observe(image, source_version, cpu, context, read_physical, read_virtual, *,
         result = _interpret(image, cpu, context, linear)
         address = cpu['cs_base'] + cpu['ip']
         data, walks = translate_linear(context, address, result['instruction_size'], physical, virtual,
-                                       qemu_image_sha256=qemu_image_sha256)
+                                       qemu_image_sha256=qemu_image_sha256, high_ram_end=high_ram_end)
         if legacy_producer and any('page_size' in walk for walk in walks):
             raise ValueError('Legacy producer cannot attest an extended page walk')
         require_executable_walks(walks, result['instruction_size'])
@@ -116,7 +116,7 @@ def observe(image, source_version, cpu, context, read_physical, read_virtual, *,
         return _unknown(error)
 
 
-def replay(image, source_version, witness, *, legacy_producer=False, qemu_image_sha256=None):
+def replay(image, source_version, witness, *, legacy_producer=False, qemu_image_sha256=None, high_ram_end=None):
     """Recompute an observation from retained exact stopped-read evidence."""
     try:
         rows = {}
@@ -158,7 +158,7 @@ def replay(image, source_version, witness, *, legacy_producer=False, qemu_image_
             reader('physical'),
             reader('virtual'),
             legacy_producer=legacy_producer,
-            qemu_image_sha256=qemu_image_sha256,
+            qemu_image_sha256=qemu_image_sha256, high_ram_end=high_ram_end,
         )
     except DebuggerError:
         raise

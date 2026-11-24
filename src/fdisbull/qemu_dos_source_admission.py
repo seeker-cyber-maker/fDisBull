@@ -1,4 +1,5 @@
 """Fresh stopped embedded-LE evidence, separate from the MZ launch binding."""
+from .qemu_ram import low_ram_end
 from copy import deepcopy
 from functools import partial
 import hashlib
@@ -83,7 +84,7 @@ def _gdt(session):
 def _producer():
     from pathlib import Path
     root=Path(__file__).parent
-    return {p:_sha((root/p).read_bytes()) for p in ('qemu_dos_source_admission.py','qemu_dos_le_match.py','le.py')}
+    return {p:_sha((root/p).read_bytes()) for p in ('qemu_dos_source_admission.py','qemu_dos_le_match.py','le.py','qemu_ram.py')}
 
 
 def _public_observation(result):
@@ -124,7 +125,7 @@ class QemuDOSSourceAdmissionMixin:
         raw,identity=_source(self,expected_source_sha256);producer=_producer()
         image=load_runtime_le_carrier(raw)
         before=self.registers();cpu=_context(before);table=_gdt(self)
-        reads={};ram_end=min(self.vm.machine_configuration['memory_mib']<<20,0xc0000000)
+        reads={};ram_end=low_ram_end(self.vm.machine_configuration)
         def read_linear(address,length):
             self._remaining()
             if (type(address) is not int or type(length) is not int or not 1<=length<=524288

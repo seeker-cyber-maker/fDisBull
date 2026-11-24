@@ -191,10 +191,14 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
     from test_le_loader import le_file
     from test_le_runtime_carrier import bound_le
 
-    if paging_mode not in ('legacy-4k', 'legacy-4m', 'pae-4k', 'pae-2m'):
+    high_physical = paging_mode in ('pae-4k-high', 'pae-2m-high')
+    base_mode = paging_mode.removesuffix('-high')
+    if paging_mode not in ('legacy-4k', 'legacy-4m', 'pae-4k', 'pae-2m',
+                           'pae-4k-high', 'pae-2m-high'):
         raise ValueError('unknown paging mode')
     if paging_mode != 'legacy-4k' and not tracking:
         raise ValueError('large and PAE modes require tracking')
+    paging_mode = base_mode
     code_base = CODE_BASE if paging_mode == 'legacy-4k' else 0x400000
     code_physical = (PAGED_CODE_PHYSICAL if paging_mode == 'legacy-4k'
                      else (0x800000, 0x801000, 0x802000))
@@ -407,6 +411,39 @@ def build_paged_ldt_fixture(directory, nasm, *, paging=True, ldt=True, tracking=
         clone_size = 0x400000 if paging_mode == 'legacy-4m' else 0x200000
         clone_target = 0xc00000 if paging_mode == 'legacy-4m' else 0xa00000
         tracking_clone = f"\n mov esi,0x400000\n mov edi,{clone_target:#x}\n mov ecx,{clone_size:#x}\n rep movsb\n"
+    # A temporary 2 MiB linear window at 0x600000 addresses RAM above 4 GiB.
+    # The carrier is first copied and relocated through the ordinary mappings;
+    # all high backing is then populated by guest instructions before use.
+    high_setup = ''
+    if high_physical:
+        second_copy = ("mov esi,0x401000\n    mov edi,0x610000\n    mov ecx,0x1000"
+                       if paging_mode == 'pae-4k' else
+                       "mov dword [0x301018],0xa00083\n    mov eax,cr3\n    mov cr3,eax\n"
+                       "    mov esi,0x400000\n    mov edi,0x600000\n    mov ecx,0x200000")
+        final_entries = ("mov dword [0x302004],1\n    mov dword [0x30200c],1\n"
+                         "    mov dword [0x302014],1" if paging_mode == 'pae-4k'
+                         else "mov dword [0x301014],1")
+        high_setup = f"""
+    mov dword [0x301018],0x800083
+    mov dword [0x30101c],1
+    mov eax,cr3
+    mov cr3,eax
+    mov esi,0x400000
+    mov edi,0x600000
+    mov ecx,{'0x3000' if paging_mode == 'pae-4k' else '0x200000'}
+    rep movsb
+    {second_copy}
+    rep movsb
+    ; Poison the low aliases after copying, to detect physical truncation.
+    mov word [0x801400],0x0b0f
+    mov word [{tracking_physical + (PAGED_TRACKING_TARGET & 0xfff):#x}],0x0b0f
+    {final_entries}
+    mov eax,cr3
+    mov cr3,eax
+"""
+        code_physical = tuple(phys + 0x100000000 for phys in code_physical)
+        tracking_physical += 0x100000000
+        runtime_code_pages = code_physical
     outside_init = f'    mov word [{OUTSIDE_BASE:#x}],0xcb47\n' if tracking else ''
     descriptor = '0x00cf9a400000ffff' if paging_mode != 'legacy-4k' else '0x00cf9a120000ffff'
     ldt_extra = f'    dq {descriptor}\n' if tracking else ''
@@ -494,7 +531,7 @@ protected_entry:
     mov ecx,{len(data)}
     rep movsb
 {outside_init}
-{paging_setup}{patches}{tracking_clone}
+{paging_setup}{patches}{tracking_clone}{high_setup}
 {ldt_setup}
     jmp dword {jump_selector}:{entry_ip:#x}
 align 8

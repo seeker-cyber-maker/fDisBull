@@ -64,6 +64,10 @@ class QemuPagedLETrackingMixin:
         )
         from .qemu_runtime_capture import _qemu_input_hashes
 
+        from .qemu_paged_le_capture import _ram_limits
+        _, high_end = _ram_limits(self.vm.machine_configuration)
+        if high_end is not None:
+            recipe['high_ram_end'] = high_end
         inputs = _qemu_input_hashes(self.metadata.get('runtime_inputs', {}))
         if hasattr(self.vm, 'inputs') and _qemu_input_hashes(self.vm.inputs) != inputs:
             raise ValueError('Paged LE native input identity differs')
@@ -111,7 +115,7 @@ class QemuPagedLETrackingMixin:
         return self._paged_observe(binding, sequence, clocked=clocked)
 
     def _paged_observe(self, binding, sequence, *, clocked=False):
-        from .qemu_paged_le_capture import _cpu, _ram_end, _ram_extent
+        from .qemu_paged_le_capture import _cpu, _ram_limits, _ram_extent
         from .qemu_le_translation import parse_hmp
         from .qemu_paged_le_observation import observe, _unknown
         from .qemu_dos_trace import _clock_sample, _clock_bracket
@@ -161,11 +165,14 @@ class QemuPagedLETrackingMixin:
             memory_mib = self.vm.machine_configuration['memory_mib']
             if self.metadata['machine_configuration']['memory_mib'] != memory_mib:
                 raise ValueError('Guest RAM configuration changed')
-            end = _ram_end(memory_mib)
+            end, high_end = _ram_limits(self.vm.machine_configuration)
+            if (binding['recipe'].get('high_ram_end') != high_end or
+                    _ram_limits(self.metadata['machine_configuration']) != (end, high_end)):
+                raise ValueError('Guest RAM topology changed')
             remote = self._stopped()
 
             def physical(a, n):
-                if not _ram_extent(a, n, end):
+                if not _ram_extent(a, n, end, high_end):
                     raise ValueError('Paged LE witness is outside RAM')
                 return remote.memory(a, n, space='physical', timeout_ms=self._remaining())
 
@@ -173,15 +180,18 @@ class QemuPagedLETrackingMixin:
                 return remote.memory(a, n, space='virtual', timeout_ms=self._remaining())
 
             from .qemu_le_translation import QEMU_TCG_PAE_ACCESSED_IMAGE
+            options = {}
             if binding['native_inputs'].get('qemu_image') == QEMU_TCG_PAE_ACCESSED_IMAGE:
-                result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual,
-                                 qemu_image_sha256=QEMU_TCG_PAE_ACCESSED_IMAGE)
-            else:
-                result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual)
+                options['qemu_image_sha256'] = QEMU_TCG_PAE_ACCESSED_IMAGE
+            if high_end is not None:
+                options['high_ram_end'] = high_end
+            result = observe(binding['image'], identity['version'], cpu, ctx, physical, virtual, **options)
             from .qemu_runtime_capture import _qemu_input_hashes
 
             if (
-                self.registers() != registers
+                _ram_limits(self.vm.machine_configuration) != (end, high_end)
+                or _ram_limits(self.metadata['machine_configuration']) != (end, high_end)
+                or self.registers() != registers
                 or context() != ctx
                 or not self._le_source_owner_valid(binding)
                 or _source(self, identity['source_sha256'])[1] != identity

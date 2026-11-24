@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import pytest
+from support.le_remap_bochs import verify_saved_high_checkpoint
 from test_qemu_dos_process_native import (
     process_runtime as process_runtime,  # noqa: PLC0414 - expose the shared pytest fixture
 )
@@ -15,7 +16,12 @@ from fdisbull.le import load_runtime_le_carrier
 
 @pytest.mark.parametrize(
     ("paging_mode", "expected_page_size"),
-    [("pae-4k", 0x1000), ("pae-2m", 0x200000)],
+    [
+        ("pae-4k", 0x1000),
+        ("pae-2m", 0x200000),
+        ("pae-4k-high", 0x1000),
+        ("pae-2m-high", 0x200000),
+    ],
 )
 def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
     tmp_path, process_runtime, paging_mode, expected_page_size
@@ -63,6 +69,23 @@ def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
     assert bochs["owners"] == [0] and bochs_cold["owners"] == [0]
     assert bochs["binary_sha256"] == bochs_cold["binary_sha256"]
     assert bochs["media_sha256"] == bochs_cold["media_sha256"]
+    high_memory = paging_mode.endswith("-high")
+    if high_memory:
+        verify_saved_high_checkpoint(tmp_path, cfg, bochs, bochs_cold)
+        expected_reads = [
+            {"address": address, "high": "46cb", "low": "0f0b"}
+            for address in (cfg["first_target"], cfg["second_target"])
+        ]
+        assert qemu["high_alias_reads"] == qemu_cold["high_alias_reads"] == expected_reads
+        for result in (bochs, bochs_cold):
+            assert result["memory_topology"] == "high-ram-over-4g-sparse"
+            expected_aliases = {
+                str(cfg["first_target"] & 0xFFFFFFFF),
+                str(cfg["second_target"] & 0xFFFFFFFF),
+            }
+            assert set(result["low_alias_markers"]) == expected_aliases
+            assert set(result["low_alias_markers"].values()) == {"0f0b"}
+            assert result["max_native_mmu_physical"] > 0xFFFFFFFF
     assert bochs["checkpoint_context"] == bochs_cold["initial_context"]
     checkpoint_clock = bochs["checkpoint_context"]["clock"]
     assert bochs["events"][cfg["checkpoint_index"]]["clock"] == checkpoint_clock
@@ -124,6 +147,11 @@ def test_pae_tracking_matches_independent_bochs_through_unprimed_cold_restore(
             assert q["obj"] == 1 and q["offset"] == b["ip"]
             assert q["hex"] == b["hex"]
             assert q["backing"] == b["backing"]
+            if high_memory:
+                # This is Bochs' native MMU translation at the stopped guest
+                # instruction, not a translation inferred from the page walk.
+                assert any(page["physical"] > 0xFFFFFFFF for page in b["mmu_pages"]), index
+                assert any(address > 0xFFFFFFFF for address in b["backing"]), index
             native_pages = {page["linear"]: page["physical"] for page in b["mmu_pages"]}
             assert native_pages
             for offset, physical in enumerate(b["backing"]):

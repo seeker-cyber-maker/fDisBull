@@ -198,3 +198,48 @@ def test_legacy_non_pae_four_kib_capture_dictionary_remains_byte_for_byte_stable
     assert walks == [dict(linear=0x7fff, length=1, physical=0x7fff, paging=True,
         pde_address=0x1000, pde=0x2003, pde_bytes='03200000',
         pte_address=0x201c, pte=0x7003, pte_bytes='03700000')]
+
+
+@pytest.mark.parametrize(('large', 'expected'), [(False, 4096), (True, 2**21)])
+def test_pae_high_frames_keep_address_bit_32_and_replay_exact_reads(large, expected):
+    high = 2**32
+    end = high + 32 * 2**20
+    # Keep both table and code pointers above 4 GiB. The wrapped addresses
+    # contain different bytes so truncating an intermediate read cannot pass.
+    tables = {0x1000: (high + 0x2001).to_bytes(8, 'little')}
+    if large:
+        tables[high + 0x2000] = (high + 0x800083).to_bytes(8, 'little')
+    else:
+        tables[high + 0x2000] = (high + 0x3003).to_bytes(8, 'little')
+        tables[high + 0x3000] = (high + 0x800003).to_bytes(8, 'little')
+    tables[high + 0x800005] = b'LE'
+    tables[0x800005] = b'xx'
+    reads = []
+
+    def physical(a, n):
+        reads.append((a, n))
+        return tables[a]
+
+    result, walks = translate_linear(pae_context(), 5, 2, physical, high_ram_end=end)
+    assert result == b'LE' and walks[0]['physical'] == high + 0x800005
+    assert walks[0]['page_size'] == expected
+    assert [a for a, _ in reads] == [entry['physical_address'] for entry in walks[0]['entries']] + [high + 0x800005]
+    with pytest.raises(ValueError, match='high physical'):
+        translate_linear(pae_context(), 5, 2, physical)
+    with pytest.raises(ValueError, match='high physical'):
+        translate_linear(pae_context(), 5, 2, physical, high_ram_end=high + 0x800000)
+    tables[0x1000] = (2 * high + 0x2001).to_bytes(8, 'little')
+    with pytest.raises(ValueError, match='high physical'):
+        translate_linear(pae_context(), 5, 2, physical, high_ram_end=end)
+
+
+def test_split_ram_witness_excludes_the_pci_hole_and_bank_end():
+    from fdisbull.qemu_paged_le_capture import _ram_limits, _ram_extent
+
+    low_end, high_end = _ram_limits({'memory_mib': 64, 'cpu': 'max', 'max_ram_below_4g_mib': 32})
+    assert low_end == 32 * 2**20 and high_end == 2**32 + low_end
+    for address, length in [(low_end, 1), (low_end - 1, 2), (2**32 - 1, 2), (high_end, 1), (high_end - 1, 2)]:
+        assert not _ram_extent(address, length, low_end, high_end)
+    assert _ram_extent(2**32, 1, low_end, high_end)
+    assert _ram_extent(high_end - 1, 1, low_end, high_end)
+    assert not _ram_extent(2**32, 1, *_ram_limits({'memory_mib': 64}))

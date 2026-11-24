@@ -46,6 +46,10 @@ def prepare(stage, runtime, paging_mode="legacy-4k"):
         selector_b=f['tracking_selector_b'],
         first_target=f['tracking_target_physical'],
         second_target=f['tracking_alternate_physical'],
+        **({'high_physical': True, 'low_alias_marker': '0f0b',
+            'low_aliases': [f['tracking_target_physical'] & 0xffffffff,
+                            f['tracking_alternate_physical'] & 0xffffffff]}
+           if paging_mode.endswith('-high') else {}),
     )
     (stage / 'config.json').write_text(json.dumps(cfg, indent=2))
     return cfg

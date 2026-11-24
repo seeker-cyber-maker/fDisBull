@@ -4,6 +4,7 @@ This admits only the currently observed single CPU address space. It neither
 identifies a scheduler task nor establishes arbitrary protected-mode mappings.
 """
 from __future__ import annotations
+from .qemu_ram import low_ram_end
 
 import hashlib
 import re
@@ -46,7 +47,7 @@ class DosAddressSpace:
         self.pages = {}
 
     def _read_table(self, address, length):
-        ram_end = min(self.vm.machine_configuration['memory_mib'] << 20, 0xc0000000)
+        ram_end = low_ram_end(self.vm.machine_configuration)
         end = address + length
         if not (0 <= address < end <= 0xa0000 or 0x100000 <= address < end <= ram_end):
             raise ValueError('DOS page table must reside in conventional or extended PC RAM')

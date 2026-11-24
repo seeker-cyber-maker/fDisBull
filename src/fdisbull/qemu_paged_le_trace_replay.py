@@ -4,7 +4,10 @@ from types import SimpleNamespace
 import json
 
 from .event_search import _artifact, _capture_sequence
-from .qemu_paged_le_capture import _cpu, _ram_end, _ram_extent, _compatible_producer, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS
+from .qemu_paged_le_capture import (
+    _cpu, _ram_limits, _ram_extent, _compatible_producer, _supports_extended_walks,
+    _supports_high_ram, MAX_WITNESS_BYTES, MAX_WITNESS_ROWS,
+)
 from .qemu_paged_le_observation import replay
 from .qemu_dos_source_admission import _source
 from .qemu_paged_le_tracking import _paged_producer
@@ -62,7 +65,11 @@ def analyze_trace(project, artifact):
         if any(binding[k] != v for k, v in identity.items()):
             raise ValueError('Paged LE source identity differs')
         image = load_runtime_le_carrier(source)
-        end = _ram_end(meta['machine_configuration']['memory_mib'])
+        end, high_end = _ram_limits(meta['machine_configuration'])
+        if binding.get('high_ram_end') != high_end or (
+            high_end is not None and not _supports_high_ram(doc['producer'], current_producer)
+        ):
+            raise ValueError('Paged LE trace RAM topology differs from binding or producer')
         events = doc['events']
         if not isinstance(events, list) or len(events) > 10000:
             raise ValueError('Invalid paged LE trace event count')
@@ -104,12 +111,13 @@ def analyze_trace(project, artifact):
                 if (
                     type(a) is not int
                     or type(n) is not int
-                    or not 0 <= a < a + n <= 2**32
+                    or n <= 0
+                    or (space == 'virtual' and not 0 <= a < a + n <= 2**32)
                     or n > 524288
                     or space not in ('physical', 'virtual')
                     or not isinstance(h, str)
                     or len(h) != n * 2
-                    or (space == 'physical' and not _ram_extent(a, n, end))
+                    or (space == 'physical' and not _ram_extent(a, n, end, high_end))
                 ):
                     raise ValueError('Invalid paged LE witness row')
                 total += n
@@ -119,8 +127,8 @@ def analyze_trace(project, artifact):
                 raise ValueError('Paged LE CPU witness differs')
             checked = replay(
                 image, row['version'], witness,
-                legacy_producer=doc['producer'] != current_producer,
-                qemu_image_sha256=doc['native_inputs'].get('qemu_image'),
+                legacy_producer=not _supports_extended_walks(doc['producer']),
+                qemu_image_sha256=doc['native_inputs'].get('qemu_image'), high_ram_end=high_end,
             )
             if (
                 not checked['qualification']['qualified']

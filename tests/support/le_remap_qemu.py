@@ -59,6 +59,17 @@ def pae_cpu_context(registers):
                 cs=integer(registers['registers']['cs']), ip=integer(registers['instruction_pointer']))
 
 
+def high_alias_reads(debug, cfg):
+    reader = debug.vm.debugger()
+    observed = []
+    for address in (cfg['first_target'], cfg['second_target']):
+        high = reader.memory(address, 2, space='physical')
+        low = reader.memory(address & 0xffffffff, 2, space='physical')
+        assert address >= 2**32 and high.hex() == '46cb' and low.hex() == cfg['low_alias_marker']
+        observed.append(dict(address=address, high=high.hex(), low=low.hex()))
+    return observed
+
+
 def run(stage, phase):
     cfg = json.loads((stage / 'config.json').read_text())
     source = Path(cfg['source'])
@@ -73,10 +84,15 @@ def run(stage, phase):
         qemu_firmware=rt['FDISBULL_QEMU_DOS_FIRMWARE'],
         qemu_checkpoint_tool=rt['FDISBULL_QEMU_IMG'],
     )
+    if cfg.get('high_physical'):
+        from fdisbull.qemu_dos import prepare_dos_profile
+        options['guest_profile'] = prepare_dos_profile(stage / 'boot.img', cpu='max', memory_mib=64,
+                                                      max_ram_below_4g_mib=32)
     checkpoints_at = cfg['checkpoint_index']
     owners, ids = [], []
     pae_context = {}
-    check_pae = cfg.get('paging_mode') in ('pae-4k', 'pae-2m')
+    aliases = []
+    check_pae = cfg.get('paging_mode', '').startswith('pae-')
     with Project.create(db, source, image='mz') if phase == 'before' else Project(db) as project:
         with project.debugger(
             rt['FDISBULL_QEMU_DOS'], source.parent, _on_spawn=owners.append, **options
@@ -103,6 +119,9 @@ def run(stage, phase):
                     assert restored == before['pae_cpu_context']['checkpoint']
                     pae_context['restored'] = restored
                 assert not debug.dos_source_binding()['live']
+            if cfg.get('high_physical') and phase == 'after':
+                assert debug.vm.machine_configuration['max_ram_below_4g_mib'] == 32
+                aliases = high_alias_reads(debug, cfg)
             binding = debug.dos_source_bind(tracking='paged', expected_source_sha256=cfg['sha256'])
             assert binding['live'] and binding['tracking'] == 'paged'
             if phase == 'before':
@@ -123,6 +142,9 @@ def run(stage, phase):
                 assert integer(regs['registers']['cs']) == cfg['start_cs']
                 mapping = debug.dos_source_binding()['mapping_identity']
                 assert mapping['instruction_backing'][0]['physical'] == cfg['second_target']
+                if cfg.get('high_physical'):
+                    assert debug.vm.machine_configuration['max_ram_below_4g_mib'] == 32
+                    aliases = high_alias_reads(debug, cfg)
                 state = debug.save_machine_state()['artifact']
             else:
                 assert (
@@ -197,6 +219,8 @@ def run(stage, phase):
         epoch=binding['capture_epoch'],
         binding_id=binding['binding_id'],
     )
+    if cfg.get('high_physical'):
+        result['high_alias_reads'] = aliases
     if check_pae:
         result['pae_cpu_context'] = pae_context
     (stage / ('qemu-' + phase + '.json')).write_text(json.dumps(result, indent=2))

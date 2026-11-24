@@ -1,5 +1,6 @@
 """Stopped QEMU layer transitions keyed by physical RAM backing."""
 from __future__ import annotations
+from .qemu_ram import low_ram_end
 
 from copy import deepcopy
 import hashlib
@@ -70,7 +71,7 @@ class QemuLayerSessionMixin:
         raise ValueError('Source layer extent is outside the verified DOS module')
 
     def _layer_ram_extent(self, address, length):
-        ram_end = min(self.vm.machine_configuration['memory_mib'] << 20, 0xc0000000)
+        ram_end = low_ram_end(self.vm.machine_configuration)
         end = address + length
         if not (0 <= address < end <= 0xa0000 or 0x100000 <= address < end <= ram_end):
             raise ValueError('Layer backing must be conventional or extended PC RAM')

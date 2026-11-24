@@ -66,8 +66,8 @@ def _read(reader, address, length):
     return data
 
 
-def _extended_walk(context, linear, reader, qemu_image_sha256=None):
-    """Walk bounded 32-bit physical PSE/PAE mappings without guessing CPU width."""
+def _extended_walk(context, linear, reader, qemu_image_sha256, high_ram_end):
+    """Walk PSE/PAE tables, admitting bit 32 only inside the verified high RAM bank."""
     cr0, cr3, cr4, efer = (context[k] for k in ('cr0', 'cr3', 'cr4', 'efer'))
     pae = bool(cr4 & 0x20)
     entries = []
@@ -80,7 +80,9 @@ def _extended_walk(context, linear, reader, qemu_image_sha256=None):
             raise ValueError(('PAE ' if pae else '') + 'Page entry is not present')
         if size == 8:
             if value & 0x7fffffff00000000:
-                raise ValueError('Unsupported PAE high physical address or reserved bits')
+                frame = value & 0x7ffffffffffff000
+                if high_ram_end is None or frame >= high_ram_end:
+                    raise ValueError('Unsupported PAE high physical address or reserved bits')
             if value & (1 << 63) and not efer & (1 << 11):
                 raise ValueError('NX bit requires EFER.NXE')
         return value
@@ -92,16 +94,16 @@ def _extended_walk(context, linear, reader, qemu_image_sha256=None):
             raise ValueError('Unsupported PAE PDPTE reserved bits')
         if qemu_accessed:
             entries[-1]['qemu_tcg_accessed'] = True
-        pde = entry('directory', (pdpt & 0xfffff000) + ((linear >> 21) & 0x1ff) * 8, 8)
+        pde = entry('directory', (pdpt & 0x1fffff000) + ((linear >> 21) & 0x1ff) * 8, 8)
         large = bool(pde & 0x80)
         if large:
             if pde & 0x1fe000:
                 raise ValueError('Unsupported PAE large-page reserved bits')
-            size, physical = 0x200000, (pde & 0xffe00000) | (linear & 0x1fffff)
+            size, physical = 0x200000, (pde & 0x1ffe00000) | (linear & 0x1fffff)
             leaf = pde
         else:
-            leaf = entry('table', (pde & 0xfffff000) + ((linear >> 12) & 0x1ff) * 8, 8)
-            size, physical = 4096, (leaf & 0xfffff000) | (linear & 0xfff)
+            leaf = entry('table', (pde & 0x1fffff000) + ((linear >> 12) & 0x1ff) * 8, 8)
+            size, physical = 4096, (leaf & 0x1fffff000) | (linear & 0xfff)
         attrs = dict(writable=bool(pde & leaf & 2), user=bool(pde & leaf & 4),
                      supervisor_write_protect=bool(cr0 & 0x10000),
                      execute_disable=bool((pde | leaf) & (1 << 63)))
@@ -135,8 +137,13 @@ def require_executable_walks(walks, length):
         raise ValueError('Incomplete instruction page walks')
 
 
-def translate_linear(context, address, length, read_physical, read_linear=None, *, qemu_image_sha256=None):
+def translate_linear(context, address, length, read_physical, read_linear=None, *,
+                     qemu_image_sha256=None, high_ram_end=None):
     """Return bytes and 4 KiB walk evidence, optionally checking QEMU linear bytes."""
+    if high_ram_end is not None and (
+        type(high_ram_end) is not int or not 2**32 < high_ram_end <= 2**33 or high_ram_end % 4096
+    ):
+        raise ValueError('Invalid PAE high RAM extent')
     paging = _mode(context)
     from .dos_memory import translate_386_page
     state = dict(control={key.upper(): context[key] for key in ('cr0', 'cr3', 'cr4', 'efer')},
@@ -164,9 +171,11 @@ def translate_linear(context, address, length, read_physical, read_linear=None, 
                 initial[a, n] = data
             return data
 
-        extended = _extended_walk(context, linear, first_read, qemu_image_sha256)
+        extended = _extended_walk(context, linear, first_read, qemu_image_sha256, high_ram_end)
         if extended is not None:
             physical = extended['physical']
+            if physical >= 2**32 and physical + count > high_ram_end:
+                raise ValueError('PAE physical read exceeds high RAM extent')
             data = _read(read_physical, physical, count)
             if read_linear is not None and _read(read_linear, linear, count) != data:
                 raise ValueError('Linear and translated physical bytes differ')

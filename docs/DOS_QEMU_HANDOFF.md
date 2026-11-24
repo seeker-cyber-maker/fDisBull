@@ -1,5 +1,38 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## High physical backing for PAE LE tracking (2026-11-24)
+
+QEMU and Bochs 3.1 ran the same guest-authored FreeDOS remap twice and
+restored the checkpoint in separate, unprimed processes. On each visit the
+LE object and offset stayed the same while the guest changed the mapping.
+
+| PAE code page | First visit at `000c:1400` | Checkpoint at `000c:1400` | Next visit at `001c:1400` |
+| --- | --- | --- | --- |
+| 4 KiB | `0x100801400` | `0x100810400` | `0x100810400` |
+| 2 MiB | `0x100801400` | `0x100a01400` | `0x100a01400` |
+
+For each page size, the two engines matched on 39 hot stops and all 32
+remaining stops after cold restore. The 35 hot and 28 restored LE stops
+matched on instruction bytes and guest physical backing, including the
+Bochs debugger's native MMU translation. Four stops in each phase fell
+outside the LE. Both engines read `46 cb` at both high code addresses and
+`0f 0b` at both wrapped 32-bit addresses. QEMU started the restore session
+in real mode with CR4 zero and restored protected execution with
+`CR3=0x300000` and `CR4=0x30`. The first Bochs observation after restore
+matched its saved CPU context and clock.
+
+An independent walk from the Bochs saved CPU and RAM recovered each
+checkpoint address and its code bytes. The readback used the saved allocation
+map and accounted for the 3–4 GiB PCI gap in the sparse RAM file. The two
+previously observed accessed-bit differences persisted in the raw PDPTE and
+LDT code descriptor. Directory and leaf entries agreed exactly.
+
+QEMU's opt-in 64 MiB PC profile places 32 MiB below 4 GiB and 32 MiB
+starting at 4 GiB. The adapter verifies both banks against QEMU's memory map
+on launch and restore. This qualifies the tested mappings in that high bank.
+Wider guest physical addressing, PSE-36 and full DOSBox-X replacement remain
+open. DOSBox-X remains the default. See the [local test procedure](../native/bochs-pae-reference/README.md).
+
 ## Independent PAE reference for protected LE tracking (2026-11-24)
 
 The opt-in local comparison uses [Bochs 3.1](../native/bochs-pae-reference/README.md)
@@ -34,8 +67,7 @@ comparisons per page size. The guest's directory-pointer entry was
 `0x301021` in QEMU and `0x301001` in Bochs. The LDT code descriptor access
 byte was `0x9a` in QEMU and `0x9b` in Bochs. All directory and leaf entry
 bits matched. The qualification covers stopped LE source tracking on these
-two authored mappings. Physical addresses above 4 GiB and whole-game
-replacement remain open. DOSBox-X remains the default.
+two low-memory mappings. The high-memory follow-up appears above.
 
 ## Unprimed DOSBox-X restore for 4 MiB protected LE code (2026-11-24)
 

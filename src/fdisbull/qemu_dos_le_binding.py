@@ -1,4 +1,5 @@
 """Owned LE source recipes with fresh stopped relations, never task lifetimes."""
+from .qemu_ram import low_ram_end
 from copy import deepcopy
 from functools import partial
 import hashlib
@@ -23,7 +24,7 @@ def _producer():
     root = Path(__file__).parent
     return {name: _sha((root/name).read_bytes()) for name in
             ('le.py', 'qemu_dos_le_match.py', 'qemu_dos_source_admission.py',
-             'qemu_dos_le_identity.py', 'qemu_dos_le_binding.py', 'qemu_machine.py')}
+             'qemu_dos_le_identity.py', 'qemu_dos_le_binding.py', 'qemu_machine.py', 'qemu_ram.py')}
 
 
 class QemuDOSLEBindingMixin:
@@ -253,7 +254,7 @@ class QemuDOSLEBindingMixin:
             if any(table[k]!=seed_table[k] for k in ('base','limit')):
                 raise ValueError('Protected LE GDT placement changed')
             cpu.update(gdtr_base=table['base'], gdtr_limit=table['limit'])
-            ram_end = min(self.vm.machine_configuration['memory_mib']<<20, 0xc0000000)
+            ram_end = low_ram_end(self.vm.machine_configuration)
             def read(address, length):
                 self._remaining()
                 if (type(address) is not int or type(length) is not int or not 1<=length<=65536

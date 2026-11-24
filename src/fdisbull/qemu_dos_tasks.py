@@ -5,6 +5,7 @@ optional FDBTASK1 anchor is an explicit cooperating-monitor protocol, not a
 decoder for undocumented QEMM or DESQview scheduler structures.
 """
 from __future__ import annotations
+from .qemu_ram import low_ram_end
 
 from copy import deepcopy
 import hashlib
@@ -67,7 +68,7 @@ def read_task_context(vm, binding=None):
     if binding is not None:
         task_key(binding)
         address = binding['anchor_address']
-        ram_end = min(vm.machine_configuration['memory_mib'] << 20, 0xc0000000)
+        ram_end = low_ram_end(vm.machine_configuration)
         if not (0 <= address < address + 56 <= 0xa0000
                 or 0x100000 <= address < address + 56 <= ram_end):
             raise ValueError('Task anchor must reside in conventional or extended PC RAM')

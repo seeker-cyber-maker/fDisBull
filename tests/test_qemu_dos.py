@@ -182,3 +182,23 @@ def test_dos_script_completion_preserves_backend_grammar(outcome):
     for backend in ('qemu-machine', 'qemu-chip8', 'wine-qemu'):
         with pytest.raises(ValueError, match='supported run outcome'):
             validate_script(dict(legacy, backend=backend))
+
+
+def test_split_high_ram_profile_is_opt_in_and_identity_bound(tmp_path):
+    from fdisbull.qemu_dos import prepare_dos_profile, admit_dos_profile
+    path = image(tmp_path, 512)
+    ordinary = prepare_dos_profile(path, cpu='max', memory_mib=64)
+    split = prepare_dos_profile(path, cpu='max', memory_mib=64, max_ram_below_4g_mib=32)
+    assert 'max_ram_below_4g_mib' not in ordinary['machine']
+    assert split['machine']['max_ram_below_4g_mib'] == 32
+    assert split['profile_sha256'] != ordinary['profile_sha256']
+    assert admit_dos_profile(split, path) == split
+    tampered = deepcopy(split)
+    tampered['machine'].pop('max_ram_below_4g_mib')
+    with pytest.raises(ValueError, match='identity'):
+        admit_dos_profile(tampered, path)
+    for options in ({'cpu': '486', 'memory_mib': 64, 'max_ram_below_4g_mib': 32},
+                    {'cpu': 'max', 'memory_mib': 32, 'max_ram_below_4g_mib': 32},
+                    {'cpu': 'max', 'memory_mib': 64, 'max_ram_below_4g_mib': True}):
+        with pytest.raises(ValueError, match='Split high RAM'):
+            prepare_dos_profile(path, **options)

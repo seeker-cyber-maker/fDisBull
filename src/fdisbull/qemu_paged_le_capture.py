@@ -19,13 +19,17 @@ MAX_WITNESS_BYTES = 2 * 1024 * 1024
 MAX_WITNESS_ROWS = 8192
 
 
-def _ram_end(memory_mib):
-    if type(memory_mib) is not int or not 16 <= memory_mib <= 8192:
+def _ram_limits(configuration):
+    """Bounds for ordinary low memory and the optional launch-verified high bank."""
+    from .qemu_ram import low_ram_end, high_ram_end
+
+    total = configuration['memory_mib']
+    if type(total) is not int or not 16 <= total <= 8192:
         raise ValueError('Invalid captured guest RAM configuration')
-    return min(memory_mib << 20, 0xC0000000)
+    return low_ram_end(configuration), high_ram_end(configuration)
 
 
-def _ram_extent(address, length, ram_end):
+def _ram_extent(address, length, ram_end, high_end=None):
     return (
         type(address) is int
         and type(length) is int
@@ -33,6 +37,7 @@ def _ram_extent(address, length, ram_end):
         and (
             0 <= address < address + length <= 0xA0000
             or 0x100000 <= address < address + length <= ram_end
+            or high_end is not None and 2**32 <= address < address + length <= high_end
         )
     )
 
@@ -51,23 +56,51 @@ def _producer():
             'qemu_dos_le_match.py',
             'qemu_le_translation.py',
             'qemu_dos_source_admission.py',
+            'qemu_ram.py',
             'dos_memory.py',
             'le.py',
         )
     }
 
 
+_PRE_EXTENDED_TRANSLATION = '61ff7f0bde924f6cc741dfcbf94a7ddde2ae561c6ebadb7df84fdcf072b31f38'
+
+
 def _compatible_producer(recorded, current, *, tracking=False):
-    """Accept this producer or the exact pre-extension producer manifest."""
+    """Accept only exact manifests for current and retained supported producers."""
     if recorded == current:
         return True
-    legacy = dict(current)
-    legacy['qemu_le_translation.py'] = '61ff7f0bde924f6cc741dfcbf94a7ddde2ae561c6ebadb7df84fdcf072b31f38'
+    extended = dict(current)
+    extended.pop('qemu_ram.py', None)
+    extended.update({
+        'qemu_le_translation.py': 'b96f47b9cdcd226e85a21d3d1ec760d47225a0f202597489f90df1668887ccb4',
+        'qemu_paged_le_capture.py': '48d5d2cf273e84fa4dd83a95f7847352eeb32ae4441bea7a88b562a7b349472a',
+        'qemu_dos_source_admission.py': '44bc7dbb7c10aa9b52d592a86e8053e5d93975c16c25bb723e2537094b519e58',
+    })
+    if tracking:
+        extended.update({
+            'qemu_machine.py': 'dd9ab60db3d67f955573dce4a10cdf5ce99711c6539c4499b6a101c85049c44c',
+            'qemu_dos_le_binding.py': 'a2a61a1bf573267a846fcb9b47c99d3e0fbb14d3dfd7f33418aaae75cd7e90c2',
+            'qemu_paged_le_observation.py': '5ba7074e4ff62f68452cb72c6f6ae1afd70f86c79cf49c2d215cf916a902d37b',
+            'qemu_paged_le_tracking.py': 'aec5a489ade007dc3e5a1a230b4beef54020f60188857a2a94c89bdd07225e57',
+        })
+    if recorded == extended:
+        return True
+    legacy = dict(extended)
+    legacy['qemu_le_translation.py'] = _PRE_EXTENDED_TRANSLATION
     legacy['qemu_paged_le_capture.py'] = '5d9200b640fc26ea48034aac3d004de9edf85ee0bbeb3bc69829a77eff19ced6'
     if tracking:
         legacy['qemu_paged_le_observation.py'] = '342b6b8e06c17deb280c32fa74621d1463043dd586a844dd0a711b579f5aa265'
         legacy['qemu_paged_le_tracking.py'] = '56e5313387d1a84ce008ac3bb60922efa4b5a72d5123364983ab73efd937cd71'
     return recorded == legacy
+
+
+def _supports_extended_walks(recorded):
+    return recorded.get('qemu_le_translation.py') != _PRE_EXTENDED_TRANSLATION
+
+
+def _supports_high_ram(recorded, current):
+    return recorded == current
 
 
 def _cpu(registers, context):
@@ -300,18 +333,19 @@ def _qualify(session, observed):
     reads = {}
     linear_reads = {}
     memory_mib = session.vm.machine_configuration['memory_mib']
-    ram_end = _ram_end(memory_mib)
+    ram_end, high_end = _ram_limits(session.vm.machine_configuration)
     inputs = _qemu_input_hashes(session.metadata['runtime_inputs'])
     if hasattr(session.vm, 'inputs') and _qemu_input_hashes(session.vm.inputs) != inputs:
         raise ValueError('Paged LE native input identity differs')
-    if session.metadata['machine_configuration']['memory_mib'] != memory_mib:
+    if (_ram_limits(session.metadata['machine_configuration']) != (ram_end, high_end)
+            or session.metadata['machine_configuration']['memory_mib'] != memory_mib):
         raise ValueError('Guest RAM configuration differs from run metadata')
     retained_bytes = 0
     walk_count = 0
 
     def physical(a, n):
         nonlocal retained_bytes
-        if not _ram_extent(a, n, ram_end):
+        if not _ram_extent(a, n, ram_end, high_end):
             raise ValueError('Paged LE witness is outside RAM')
         key = (a, n)
         if key not in reads:
@@ -338,7 +372,7 @@ def _qualify(session, observed):
         ):
             raise ValueError('Paged LE walk witness budget exceeded')
         data, walks = translate_linear(context, a, n, physical, virtual,
-                                       qemu_image_sha256=inputs.get('qemu_image'))
+                                       qemu_image_sha256=inputs.get('qemu_image'), high_ram_end=high_end)
         if key in linear_reads and linear_reads[key] != walks:
             raise ValueError('Page walks changed')
         if key not in linear_reads:
@@ -364,7 +398,7 @@ def _qualify(session, observed):
         raise ValueError('Capture extent or native backing differs')
     for (a, n), walks_before in list(linear_reads.items()):
         _, walks_after = translate_linear(context, a, n, physical, virtual,
-                                          qemu_image_sha256=inputs.get('qemu_image'))
+                                          qemu_image_sha256=inputs.get('qemu_image'), high_ram_end=high_end)
         if walks_after != walks_before:
             raise ValueError('Page walks changed during capture')
     for (a, n), b in list(reads.items()):
@@ -385,6 +419,8 @@ def _qualify(session, observed):
         or session._runtime_epoch != process['capture_epoch']
         or _source(session, None)[1] != identity
         or _producer() != producer
+        or _ram_limits(session.vm.machine_configuration) != (ram_end, high_end)
+        or _ram_limits(session.metadata['machine_configuration']) != (ram_end, high_end)
         or session.vm.machine_configuration['memory_mib'] != memory_mib
         or session.metadata['machine_configuration']['memory_mib'] != memory_mib
         or _qemu_input_hashes(session.metadata['runtime_inputs']) != inputs
@@ -420,6 +456,7 @@ def _qualify(session, observed):
             interpretation=interpretation,
             capture_location=location,
             memory_mib=memory_mib,
+            **({'high_ram_end': high_end} if high_end is not None else {}),
             physical_reads=[
                 dict(address=a, length=n, hex=b.hex()) for (a, n), b in sorted(reads.items())
             ],
@@ -473,7 +510,11 @@ def validate(project, observation, run_metadata, *, run, version):
         image = load_runtime_le_carrier(source)
         context = proof['context']
         cpu = _cpu(observation['capture_registers'], context)
-        ram_end = _ram_end(proof['memory_mib'])
+        ram_end, high_end = _ram_limits(run_metadata['machine_configuration'])
+        if high_end is not None and not _supports_high_ram(proof['producer'], current_producer):
+            raise ValueError('Retained producer cannot attest high physical RAM')
+        if proof.get('high_ram_end') != high_end:
+            raise ValueError('Retained high RAM extent differs from run metadata')
         if run_metadata['machine_configuration']['memory_mib'] != proof['memory_mib']:
             raise ValueError('Retained guest RAM configuration differs from run metadata')
         if (
@@ -488,7 +529,7 @@ def validate(project, observation, run_metadata, *, run, version):
         for row in proof['physical_reads']:
             a, n = row['address'], row['length']
             if (
-                not _ram_extent(a, n, ram_end)
+                not _ram_extent(a, n, ram_end, high_end)
                 or (a, n) in reads
                 or retained_bytes + n > MAX_WITNESS_BYTES
                 or not isinstance(row['hex'], str)
@@ -520,8 +561,8 @@ def validate(project, observation, run_metadata, *, run, version):
 
         def read(a, n):
             data, actual = translate_linear(context, a, n, physical,
-                                            qemu_image_sha256=ident['runtime_inputs'].get('qemu_image'))
-            if proof['producer'] != current_producer and any('page_size' in walk for walk in actual):
+                                            qemu_image_sha256=ident['runtime_inputs'].get('qemu_image'), high_ram_end=high_end)
+            if not _supports_extended_walks(proof['producer']) and any('page_size' in walk for walk in actual):
                 raise ValueError('Legacy producer cannot attest an extended page walk')
             if walks.get((a, n)) != actual:
                 raise ValueError('Retained page walk differs')

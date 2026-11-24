@@ -1,5 +1,6 @@
 """One owned offline machine, shared by DOS, PE and boot-debugging profiles."""
 from __future__ import annotations
+from .qemu_ram import low_ram_end
 
 import hashlib
 import json
@@ -279,7 +280,7 @@ class QemuMachine:
                  cpu_model='max', boot_image_sha256=None, boot_device='ide', transport='unix', firmware=None,
                  clock_profile='standard', audio_profile='off', retrace_profile='standard',
                  checkpoint_tool=None, _checkpoint_image=None, frame_key_repeat_profile=None,
-                 video_source_profile=None):
+                 video_source_profile=None, max_ram_below_4g_mib=None):
         self.process=None;self.qmp=None;self.gdb=None;self.machine_stopped=bool(paused)
         self.inspection_target='x86_64'
         self._qemu_image_proof=None;self._admission_guest=None
@@ -303,6 +304,9 @@ class QemuMachine:
                 return value
             if type(memory_mib) is not int or not 16<=memory_mib<=8192 or type(cpus) is not int or not 1<=cpus<=8:
                 raise ValueError('Machine memory must be 16..8192 MiB and CPUs 1..8')
+            if max_ram_below_4g_mib is not None and (type(max_ram_below_4g_mib) is not int or
+                    max_ram_below_4g_mib != 32 or memory_mib != 64 or cpu_model != 'max' or boot_image is None):
+                raise ValueError('Split high RAM requires a PC boot image, max CPU, 64 MiB RAM and 32 MiB below 4 GiB')
             selected_clock=machine_clock_configuration(clock_profile,cpus)
             selected_audio=machine_audio_configuration(audio_profile,clock_profile)
             selected_retrace=machine_retrace_configuration(retrace_profile,clock_profile)
@@ -359,6 +363,8 @@ class QemuMachine:
                                             retrace_profile=selected_retrace,
                                             firmware='explicit-directory' if firmware is not None else 'QEMU default search path; not pinned',
                                             hostcalls='not configured; experimental FDB_HOSTCALL_/FDB_LAYER_ selectors removed')
+            if max_ram_below_4g_mib is not None:
+                self.machine_configuration['max_ram_below_4g_mib'] = max_ram_below_4g_mib
             if video_source_profile is not None:
                 self.machine_configuration['video_source_profile'] = video_source_profile
             selected_boot=paths.get('boot_image')
@@ -394,6 +400,7 @@ class QemuMachine:
                     raise ValueError('Checkpoint disk must be standalone qcow2')
                 self.machine_configuration['disk']='private-standalone-qcow2'
             machine='pc' if boot_image else 'q35'
+            if max_ram_below_4g_mib is not None:machine+=',max-ram-below-4g=32M'
             if audio_profile=='pc-speaker':machine+=',pcspk-audiodev=fdisbull-pc'
             command=[str(paths['qemu']),*machine_clock_arguments(clock_profile),'-machine',machine,'-cpu',cpu_model,
                      '-smp',str(cpus),'-m',str(memory_mib)+'M','-nic','none','-display','none','-monitor','none','-no-reboot',
@@ -451,6 +458,12 @@ class QemuMachine:
             self._qemu_image_proof=qemu_image.admit(self,deadline)
             self.inputs['qemu_image']=dict(self._qemu_image_proof.identity)
             self.qmp_commands=frozenset(item['name'] for item in self.qmp.call('query-commands',timeout_ms=max(1,int(remaining()*1000))))
+            if max_ram_below_4g_mib is not None:
+                mtree = self.qmp.call('human-monitor-command', {'command-line':'info mtree'})
+                if not isinstance(mtree, str) or not re.search(
+                        r'(?m)^\s*0000000000000000-0000000001ffffff \(prio 0, ram\): alias ram-below-4g @pc\.ram 0000000000000000-0000000001ffffff\s*$', mtree) or not re.search(
+                        r'(?m)^\s*0000000100000000-0000000101ffffff \(prio 0, ram\): alias ram-above-4g @pc\.ram 0000000002000000-0000000003ffffff\s*$', mtree):
+                    raise DebuggerError('QEMU split high RAM map differs from the admitted topology')
             if checkpoint_tool is not None and clock_profile == 'virtual':
                 from .qemu_instrumented_checkpoint import require_commands
                 require_commands(self)
@@ -1432,7 +1445,7 @@ class MachineContext(QemuInspectionMixin, QemuPhysicalInputMixin, QemuScheduledI
         remote=self._stopped()
         registers=self.registers()
         if length is not None:
-            ram_end=min(self.vm.machine_configuration['memory_mib']<<20,0xc0000000)
+            ram_end=low_ram_end(self.vm.machine_configuration)
         def read_table(location,count):
             if length is not None and not (location+count<=0xa0000 or 0x100000<=location<=ram_end-count):
                 raise ValueError('Page table is outside the qualified RAM range')
@@ -2061,6 +2074,8 @@ class MachineDebugSession(QemuHookSessionMixin, QemuLayerSessionMixin, MachineCo
             self.guest_profile = self._admit_guest_profile(guest_profile,image)
             if self.guest_profile['boot_image']['sha256']!=source_hash:
                 raise ValueError('Guest profile boot image differs from the admitted project source')
+            if 'max_ram_below_4g_mib' in self.guest_profile['machine']:
+                options['max_ram_below_4g_mib'] = self.guest_profile['machine']['max_ram_below_4g_mib']
             options.update(cpu_model=self.guest_profile['machine']['cpu'],
                            boot_device=self.guest_profile['machine']['boot_device'])
         memory_mib=self.guest_profile['machine']['memory_mib'] if self.guest_profile else 128

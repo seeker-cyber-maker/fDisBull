@@ -348,6 +348,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
                 timeout_ms=self._remaining(), transport=transport, firmware=firmware,
                 clock_profile=clock_profile, audio_profile=audio_profile,
                 retrace_profile=retrace_profile, checkpoint_tool=checkpoint_tool)
+            if 'max_ram_below_4g_mib' in profile['machine']:
+                self._checkpoint_launch['max_ram_below_4g_mib'] = profile['machine']['max_ram_below_4g_mib']
             if frame_key_repeat_profile is not None:
                 self._checkpoint_launch['frame_key_repeat_profile'] = frame_key_repeat_profile
             if video_source_profile is not None:

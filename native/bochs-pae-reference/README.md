@@ -16,6 +16,7 @@ apply this repository's patch with `patch -p1` and build to a private prefix.
 
 ```sh
 ./configure --prefix="$BOCHS_PREFIX" --enable-debugger --enable-x86-64 \
+  --enable-long-phy-address --enable-large-ramfile \
   --with-nogui --disable-debugger-gui
 make -j4
 make install
@@ -49,6 +50,29 @@ Use `FDISBULL_BOCHS_SHARE` for another matching firmware directory. Each test
 stages the LE carrier on a private copy of the FreeDOS floppy and keeps its
 checkpoint and traces in its own test directory. See the
 [local results](../../docs/DOS_QEMU_HANDOFF.md#independent-pae-reference-for-protected-le-tracking-2026-11-24).
+
+The four cases cover low and high backing for 4 KiB and 2 MiB PAE pages.
+To rerun the high cases alone, add `-k high` to the pytest command above.
+The tests select a 64 MiB QEMU PC with 32 MiB in each bank. To generate
+that same profile for a caller-owned boot image, use
+
+```sh
+fdisbull dos-profile "$FDISBULL_QEMU_DOS_BOOT_IMAGE" --cpu max --memory-mib 64 --max-ram-below-4g-mib 32
+```
+
+The high cases request `memory: guest=4120, host=32, block_size=2048` in Bochs
+(guest and host sizes in MiB, block size in KiB). Keep the sparse native
+checkpoint on a filesystem that supports sparse files. In the saved Bochs
+RAM file, physical addresses above 4 GiB use offsets reduced by the 1 GiB
+PCI gap. The saved memory metadata identifies allocated blocks.
+
+The guest writes executable bytes above 4 GiB and puts `UD2` at the
+corresponding low 32-bit addresses. The test compares the stopped source
+location, instruction bytes, page-table entries and selector state across the
+two engines. It checks Bochs's native debugger translation and reads high and
+low physical memory through the debuggers. Each receiving process restores
+its engine's own snapshot. The [high-address results](../../docs/DOS_QEMU_HANDOFF.md#high-physical-backing-for-pae-le-tracking-2026-11-24)
+include the tested addresses and stop counts.
 
 ## Native checkpoint commands
 

@@ -5,6 +5,7 @@ is a completion-channel observer, not proof of the child's allocation lifetime.
 Only explicitly native machine controls can cross this recovery boundary.
 """
 from __future__ import annotations
+from .qemu_ram import high_ram_end, low_ram_end
 
 from contextlib import contextmanager
 from copy import deepcopy
@@ -306,10 +307,12 @@ def _ram(vm, registers):
     stack = int(segment['base'], 0) + (int(sp, 0) & ((1 << stack_bits) - 1))
     pages = sorted({int(registers['linear_pc'], 0) & ~4095, stack & ~4095})
     remote = vm.debugger()
-    ram_end = min(vm.machine_configuration['memory_mib'] << 20, 0xc0000000)
+    ram_end = low_ram_end(vm.machine_configuration)
+    high_end = high_ram_end(vm.machine_configuration)
     def read(address, length):
         if not (0 <= address < address + length <= 0xa0000
-                or 0x100000 <= address < address + length <= ram_end):
+                or 0x100000 <= address < address + length <= ram_end
+                or high_end is not None and 0x100000000 <= address < address + length <= high_end):
             raise ValueError('Owned machine RAM fence is outside conventional or extended RAM')
         data = remote.memory(address, length, space='physical')
         if not isinstance(data, bytes) or len(data) != length:
@@ -327,7 +330,8 @@ def _ram(vm, registers):
                 raise ValueError('Owned machine RAM paging controls are unavailable') from None
             from .qemu_runtime_capture import _qemu_input_hashes
             physical, walks = translate_linear(context, page, 4096, read,
-                qemu_image_sha256=_qemu_input_hashes(getattr(vm, 'inputs', {})).get('qemu_image'))
+                qemu_image_sha256=_qemu_input_hashes(getattr(vm, 'inputs', {})).get('qemu_image'),
+                high_ram_end=high_end)
             if page == int(registers['linear_pc'], 0) & ~4095:
                 require_executable_walks(walks, 4096)
             backing = walks[0]['physical']
@@ -350,7 +354,7 @@ def _cpu_equal(actual, expected):
             raise DebuggerError('Owned machine CPU differs: ' + field)
 
 
-def _validate_controls(project, controls, version, memory_mib):
+def _validate_controls(project, controls, version, machine):
     from .qemu_checkpoint_controls import _unpack, _derive
     _filter_controls(controls)
     if ('task_identity' in controls or controls.get('pending_task') is not None
@@ -380,7 +384,7 @@ def _validate_controls(project, controls, version, memory_mib):
     def extent(address, length):
         end = address + length
         if not (0 <= address < end <= 0xa0000
-                or 0x100000 <= address < end <= min(memory_mib << 20, 0xc0000000)):
+                or 0x100000 <= address < end <= low_ram_end(machine)):
             raise ValueError('Owned machine control extent is outside supported RAM')
     bounds = SimpleNamespace(_layer_ram_extent=extent, _dos_task_binding=None)
     for identifier in definitions:
@@ -481,7 +485,7 @@ def _read_artifact(project, artifact, version=None):
     memory_mib = bundle['runtime']['machine'].get('memory_mib')
     if type(memory_mib) is not int or not 1 <= memory_mib <= 4096:
         raise ValueError('Invalid owned machine RAM size')
-    _validate_controls(project, bundle['controls'], selected['id'], memory_mib)
+    _validate_controls(project, bundle['controls'], selected['id'], bundle['runtime']['machine'])
     cpu = bundle['registers']; state = cpu.get('address_state')
     if (cpu.get('cpu_mode') not in ('real', 'protected', 'v86') or not isinstance(state, dict)
             or state.get('machine_vcpus') != 1 or state.get('register_context_match') is not True
@@ -489,11 +493,18 @@ def _read_artifact(project, artifact, version=None):
         raise ValueError('Unsupported saved owned machine CPU')
     if not 1 <= len(bundle['ram']) <= 2:
         raise ValueError('Invalid owned machine RAM fence count')
+    machine_config = bundle['runtime']['machine']
+    ram_end = low_ram_end(machine_config)
+    high_end = high_ram_end(machine_config)
     for fence in bundle['ram']:
         if (not isinstance(fence, dict) or type(fence.get('linear')) is not int
                 or type(fence.get('physical')) is not int or fence.get('length') != 4096
                 or not 0 <= fence['linear'] <= 0xfffff000 or fence['linear'] & 4095
-                or not 0 <= fence['physical'] <= 0xfffff000 or fence['physical'] & 4095
+                or fence['physical'] & 4095
+                or not (0 <= fence['physical'] < fence['physical'] + 4096 <= 0xa0000
+                        or 0x100000 <= fence['physical'] < fence['physical'] + 4096 <= ram_end
+                        or high_end is not None and 0x100000000 <= fence['physical']
+                        < fence['physical'] + 4096 <= high_end)
                 or not isinstance(fence.get('hex'), str) or len(fence['hex']) != 8192
                 or _sha(bytes.fromhex(fence['hex'])) != fence.get('sha256')
                 or not isinstance(fence.get('translation'), dict)):

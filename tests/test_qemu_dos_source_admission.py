@@ -135,7 +135,7 @@ def test_public_admission_pins_complete_source_and_keeps_initial_mz_mapping(owne
     public['identity_evidence']['excluded_loader_fixup_count'] = len(public['identity_evidence'].pop('excluded_loader_fixups'))
     public['full_observation_in_artifact'] = True
     assert public == reply['observation'] and not doc['initial_mz_mapping_changed']
-    assert set(doc['producer']) == {'le.py', 'qemu_dos_le_match.py', 'qemu_dos_source_admission.py'}
+    assert set(doc['producer']) == {'le.py', 'qemu_dos_le_match.py', 'qemu_dos_source_admission.py', 'qemu_ram.py'}
     assert all(any(a == address and n == length and space == kind for a, n, space in owned.peer.reads)
                for address, length in [(r['address'], r['length']) for r in doc['readback']]
                for kind in ('physical', 'virtual'))
