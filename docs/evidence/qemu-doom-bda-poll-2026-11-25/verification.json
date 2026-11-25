@@ -1,0 +1,94 @@
+{
+  "format": "fdisbull-doom-bda-poll-sanitized-verification-1",
+  "scope": "Four bounded source-bound Doom E1M1 windows; sanitized counters and clock intervals only.",
+  "requested_window_ms": 1800,
+  "runs": [
+    {
+      "id": "b1",
+      "start_tic": 65,
+      "dosbox_poll_wait_ms": 10,
+      "dosbox_pic_elapsed_ms": 1802,
+      "dosbox_overshoot_ms": 2,
+      "dosbox_bda_delta": 36,
+      "dosbox_doom_leveltime_delta": 57,
+      "qemu_virtual_elapsed_ns": 1800000000,
+      "qemu_bda_delta": 36,
+      "qemu_doom_leveltime_delta": 64,
+      "dosbox_minus_qemu_bda_ticks": 0,
+      "dosbox_minus_qemu_doom_tics": -7,
+      "dosbox_owner_returncode": 0,
+      "qemu_owner_returncodes": [
+        0
+      ]
+    },
+    {
+      "id": "b2-p50",
+      "start_tic": 65,
+      "dosbox_poll_wait_ms": 50,
+      "dosbox_pic_elapsed_ms": 1843,
+      "dosbox_overshoot_ms": 43,
+      "dosbox_bda_delta": 37,
+      "dosbox_doom_leveltime_delta": 59,
+      "qemu_virtual_elapsed_ns": 1800000000,
+      "qemu_bda_delta": 36,
+      "qemu_doom_leveltime_delta": 64,
+      "dosbox_minus_qemu_bda_ticks": 1,
+      "dosbox_minus_qemu_doom_tics": -5,
+      "dosbox_owner_returncode": 0,
+      "qemu_owner_returncodes": [
+        0
+      ]
+    },
+    {
+      "id": "b3-p100",
+      "start_tic": 65,
+      "dosbox_poll_wait_ms": 100,
+      "dosbox_pic_elapsed_ms": 1882,
+      "dosbox_overshoot_ms": 82,
+      "dosbox_bda_delta": 38,
+      "dosbox_doom_leveltime_delta": 60,
+      "qemu_virtual_elapsed_ns": 1800000000,
+      "qemu_bda_delta": 36,
+      "qemu_doom_leveltime_delta": 64,
+      "dosbox_minus_qemu_bda_ticks": 2,
+      "dosbox_minus_qemu_doom_tics": -4,
+      "dosbox_owner_returncode": 0,
+      "qemu_owner_returncodes": [
+        0
+      ]
+    },
+    {
+      "id": "b4-t70-p10",
+      "start_tic": 70,
+      "dosbox_poll_wait_ms": 10,
+      "dosbox_pic_elapsed_ms": 1806,
+      "dosbox_overshoot_ms": 6,
+      "dosbox_bda_delta": 37,
+      "dosbox_doom_leveltime_delta": 59,
+      "qemu_virtual_elapsed_ns": 1800000000,
+      "qemu_bda_delta": 36,
+      "qemu_doom_leveltime_delta": 63,
+      "dosbox_minus_qemu_bda_ticks": 1,
+      "dosbox_minus_qemu_doom_tics": -4,
+      "dosbox_owner_returncode": 0,
+      "qemu_owner_returncodes": [
+        0
+      ],
+      "dosbox_pre_window_acquisition": {
+        "from_tic": 65,
+        "to_tic": 70,
+        "ordinary_speed": true,
+        "elapsed_pic_guest_ms": 817
+      }
+    }
+  ],
+  "uncertainty": [
+    "DOSBox-X threshold observation uses RPC polling followed by pause and is non-atomic; pause/RPC latency contributes to elapsed time.",
+    "QEMU virtual time and DOSBox-X PIC guest milliseconds are separate clock domains; no common-clock claim is made.",
+    "BDA tick endpoint phase is independent and uncalibrated; the recorded tick period is 54925493 ns.",
+    "No audio was captured; no audio timing or delivery claim is made.",
+    "These bounded windows do not establish general timing parity, failure, or a calibrated timing rate.",
+    "The first three runs start at pre-increment tic 65. B4 starts at tic 70 after ordinary-speed acquisition from tic 65, so the start state differs."
+  ],
+  "private_artifact_exclusion": "No game media, project database/FDB, screenshot, audio, or VM state is included here."
+}

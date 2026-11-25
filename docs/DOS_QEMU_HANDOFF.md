@@ -8865,6 +8865,18 @@ engine-local measurements, not equivalent clocks. The nominal 54,925,493 ns
 BDA tick reference has not been calibrated to the observed deltas; BDA mapping
 and cross-engine timing equivalence remain open.
 
+Four further bounded 1,800 ms windows varied DOSBox-X's threshold poll wait;
+the [sanitized poll-window record](evidence/qemu-doom-bda-poll-2026-11-25/README.md)
+lists all counters and endpoints. Across poll waits of 10, 50, 100 and 10 ms,
+DOSBox-X PIC elapsed was 1,802, 1,843, 1,882 and 1,806 ms, with BDA/Doom
+deltas +36/+57, +37/+59, +38/+60 and +37/+59. QEMU recorded 1.8 billion
+virtual ns in each window, with BDA/Doom deltas +36/+64, +36/+64, +36/+64
+and +36/+63. The first three windows began at tic 65; the fourth began at
+tic 70 after ordinary-speed acquisition. DOSBox polling then pause is
+non-atomic, and its PIC milliseconds and QEMU virtual nanoseconds are separate
+clock domains. These additional observations establish neither timing parity
+nor a failure; BDA endpoint phase and general timing equivalence remain open.
+
 Harness corrections included distinct source-binding export names for the
 origin and cold child, the settled post-load save observation, and removal of
 a stale timing breakpoint. Initial timer-stop CPU divergence remains recorded.

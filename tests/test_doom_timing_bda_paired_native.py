@@ -30,7 +30,6 @@ from test_doom_leveltime_paired_native import (
 
 START_TIC = 64
 BUDGET_MS = 1800
-BUDGET_NS = BUDGET_MS * 1_000_000
 BDA_TICKS_PER_DAY = 0x1800B0
 BDA_TICKS_PHYSICAL = 0x46C
 QEMU_GAME_ARGUMENTS = "-warp 1 1 -skill 2 -nomonsters -config D:\\DEFAULT.CFG"
@@ -57,7 +56,10 @@ def _bda_ticks_qemu(debug) -> int:
 
 
 def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
-                  target_start_tic: int) -> dict:
+                  target_start_tic: int, *, budget_ms: int = BUDGET_MS) -> dict:
+    if type(budget_ms) is not int or not 1 <= budget_ms <= 60_000:
+        raise ValueError("QEMU timing budget_ms must be an integer in 1..60000")
+    budget_ns = budget_ms * 1_000_000
     stage = tmp_path / "qemu"
     stage.mkdir()
     game = stage_game(stage, source)
@@ -84,11 +86,11 @@ def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
 
             # The native clock budget owns one uninterrupted continue and its
             # timer stop; no repeated execution breakpoint targets the INC.
-            stopped = debug.clock_advance(BUDGET_NS,
+            stopped = debug.clock_advance(budget_ns,
                                           timeout_ms=QEMU_WINDOW_DEADLINE_MS)
             budget = stopped["clock_budget"]
             assert budget["deadline_reached"], stopped
-            assert budget["elapsed_ns"] >= BUDGET_NS, stopped
+            assert budget["elapsed_ns"] >= budget_ns, stopped
             assert stopped["outcome"] not in ("guest_exit", "guest_tsr", "exited"), stopped
             end_tic = int.from_bytes(bytes.fromhex(debug.memory(
                 counter, length=4, space="virtual")["hex"]), "little")
@@ -110,7 +112,7 @@ def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
                 engine_clock=dict(unit="QEMU_CLOCK_VIRTUAL_nanoseconds",
                                   start=start_clock, end=end_clock,
                                   delta=end_clock - start_clock),
-                guest_time_budget=dict(unit="nanoseconds", requested=BUDGET_NS,
+                guest_time_budget=dict(unit="nanoseconds", requested=budget_ns,
                                        elapsed=budget["elapsed_ns"],
                                        overshoot=budget["overshoot_ns"]),
                 intermediate_execution_breakpoints=0,
@@ -142,7 +144,26 @@ class _DOSBoxSessionView:
         return result
 
 
-def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
+def _dosbox_measure(
+    tmp_path: Path,
+    source: Path,
+    executable: Path,
+    *,
+    poll_wait_ms: int = 100,
+    max_window_overshoot_ms: int = DOSBOX_MAX_WINDOW_OVERSHOOT_MS,
+    target_start_tic: int | None = None,
+    budget_ms: int = BUDGET_MS,
+) -> dict:
+    if type(budget_ms) is not int or not 1 <= budget_ms <= 60_000:
+        raise ValueError("DOSBox-X timing budget_ms must be an integer in 1..60000")
+    if type(poll_wait_ms) is not int or not 1 <= poll_wait_ms <= 100:
+        raise ValueError("DOSBox-X timing poll_wait_ms must be an integer in 1..100")
+    if (type(max_window_overshoot_ms) is not int
+            or not 0 <= max_window_overshoot_ms <= 5_000):
+        raise ValueError("DOSBox-X max_window_overshoot_ms must be an integer in 0..5000")
+    if target_start_tic is not None and (
+            type(target_start_tic) is not int or not START_TIC <= target_start_tic <= 200):
+        raise ValueError("DOSBox-X target_start_tic must be None or an integer in 64..200")
     stage = tmp_path / "dosbox"
     game = stage / "game"
     game.mkdir(parents=True)
@@ -195,9 +216,10 @@ def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
             last_tic = int.from_bytes(dosbox_read(view, "linear", counter, 4), "little")
             return last_tic
 
-        def wait_for_tic(breakpoint_id: str, operation_id: str) -> None:
-            deadline = min(total_deadline,
-                           time.monotonic() + DOSBOX_WINDOW_DEADLINE_SECONDS)
+        def wait_for_tic(breakpoint_id: str, operation_id: str,
+                         *, deadline: float | None = None) -> None:
+            deadline = min(total_deadline, deadline or (
+                time.monotonic() + DOSBOX_WINDOW_DEADLINE_SECONDS))
             while time.monotonic() < deadline:
                 stopped = session_call("execution.wait", dict(
                     operation_id=operation_id, timeout_ms=100), timeout_ms=1_000)
@@ -254,6 +276,64 @@ def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
         assert settle_end["guest_ticks"] - settle_start["guest_ticks"] >= DOSBOX_SPEED_SETTLE_MS
 
         start_tic = settle_tic
+        post_settle_acquisition = dict(
+            requested_target_tic=target_start_tic,
+            start_tic=settle_tic,
+            end_tic=settle_tic,
+            source_site_hits=0,
+            ordinary_speed=True,
+            endpoint="not_requested",
+            elapsed_pic_guest_ms=0)
+        if target_start_tic is not None:
+            assert settle_tic <= target_start_tic, (
+                "DOSBox-X passed the requested post-settle Doom tic before acquisition: "
+                f"settle={settle_tic}, target={target_start_tic}")
+            acquisition_start_clock = session_call("execution.timing")["guest_ticks"]
+            acquisition_deadline = min(
+                total_deadline,
+                time.monotonic() + DOSBOX_WINDOW_DEADLINE_SECONDS)
+            previous_tic = None
+            hits = 0
+            tic = settle_tic
+            while True:
+                if time.monotonic() >= acquisition_deadline:
+                    raise TimeoutError(
+                        f"DOSBox-X did not reach source-bound Doom tic {target_start_tic} "
+                        "after ordinary-speed settling")
+                point = session_call("breakpoints.create", dict(
+                    kind="execution", once=True, address=address))
+                operation = session_call("execution.continue")
+                wait_for_tic(point["breakpoint_id"], operation["operation_id"],
+                             deadline=acquisition_deadline)
+                tic = tic_at_stop()
+                hits += 1
+                assert tic <= target_start_tic, (
+                    "DOSBox-X passed the requested source-bound start tic: "
+                    f"observed={tic}, target={target_start_tic}")
+                if previous_tic is not None:
+                    assert tic > previous_tic, (
+                        "Doom leveltime did not advance between ordinary-speed "
+                        f"source-site hits: {previous_tic} -> {tic}")
+                previous_tic = tic
+                if tic == target_start_tic:
+                    break
+                if hits > target_start_tic - settle_tic + 3:
+                    raise AssertionError(
+                        "DOSBox-X exceeded the bounded source-site hit count while "
+                        "acquiring the requested start tic")
+            start_tic = tic
+            acquisition_end_clock = session_call("execution.timing")["guest_ticks"]
+            post_settle_acquisition = dict(
+                requested_target_tic=target_start_tic,
+                start_tic=settle_tic,
+                end_tic=start_tic,
+                source_site_hits=hits,
+                ordinary_speed=True,
+                endpoint="source-site pre-increment breakpoint",
+                elapsed_pic_guest_ms=(acquisition_end_clock
+                                      - acquisition_start_clock),
+                start_pic_guest_ticks=acquisition_start_clock,
+                end_pic_guest_ticks=acquisition_end_clock)
         start_bda = int.from_bytes(
             dosbox_read(view, "physical", BDA_TICKS_PHYSICAL, 4), "little")
         start_clock = session_call("execution.timing")["guest_ticks"]
@@ -262,14 +342,15 @@ def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
                               time.monotonic() + DOSBOX_WINDOW_DEADLINE_SECONDS)
         while time.monotonic() < window_deadline:
             timing = session_call("execution.timing")
-            if timing["guest_ticks"] - start_clock >= BUDGET_MS:
+            if timing["guest_ticks"] - start_clock >= budget_ms:
                 break
             pending = session_call("execution.wait", dict(
-                operation_id=operation["operation_id"], timeout_ms=100),
+                operation_id=operation["operation_id"], timeout_ms=poll_wait_ms),
                 timeout_ms=1_000)
             assert pending.get("running"), pending
         else:
-            raise TimeoutError("DOSBox-X did not reach its 1800 ms guest-time budget")
+            raise TimeoutError(
+                f"DOSBox-X did not reach its {budget_ms} ms guest-time budget")
 
         pause = session_call("execution.pause")
         stopped = session_call("execution.wait", dict(
@@ -281,7 +362,16 @@ def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
         end_clock = session_call("execution.timing")["guest_ticks"]
         end_tic = tic_at_stop()
         assert end_tic > start_tic, end_tic
-        assert BUDGET_MS <= end_clock - start_clock <= BUDGET_MS + DOSBOX_MAX_WINDOW_OVERSHOOT_MS, (
+        (stage / "dosbox-window-endpoint.json").write_text(json.dumps(dict(
+            source_sha256=PINS["DOOM.EXE"], start_tic=start_tic,
+            end_tic=end_tic, start_bda=start_bda, end_bda=end_bda,
+            start_guest_ticks=start_clock, end_guest_ticks=end_clock,
+            requested_guest_ms=budget_ms,
+            observed_overshoot_ms=end_clock - start_clock - budget_ms,
+            poll_wait_ms=poll_wait_ms,
+            maximum_accepted_overshoot_ms=max_window_overshoot_ms,
+            endpoint_atomic=False), sort_keys=True, indent=2) + "\n")
+        assert budget_ms <= end_clock - start_clock <= budget_ms + max_window_overshoot_ms, (
             start_clock, end_clock)
         result = dict(
             backend="dosbox", start_tic=start_tic, end_tic=end_tic,
@@ -299,9 +389,12 @@ def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
             engine_clock=dict(unit="PIC_Ticks_milliseconds",
                               start=start_clock, end=end_clock,
                               delta=end_clock - start_clock),
-            guest_time_budget=dict(unit="milliseconds", requested=BUDGET_MS,
+            guest_time_budget=dict(unit="milliseconds", requested=budget_ms,
                                    elapsed=end_clock - start_clock,
-                                   overshoot=end_clock - start_clock - BUDGET_MS),
+                                   overshoot=end_clock - start_clock - budget_ms,
+                                   poll_wait_ms=poll_wait_ms,
+                                   max_overshoot_ms=max_window_overshoot_ms,
+                                   endpoint_atomic=False),
             pre_window_acquisition=dict(
                 initial_fast_forward=initial_timing["fast_forward"],
                 acquisition_fast_forward=acquisition_start["fast_forward"],
@@ -313,6 +406,7 @@ def _dosbox_measure(tmp_path: Path, source: Path, executable: Path) -> dict:
                 settle_elapsed_guest_ticks=(settle_end["guest_ticks"]
                                             - settle_start["guest_ticks"]),
                 settle_start_tic=START_TIC, settle_end_tic=settle_tic),
+            post_settle_target_acquisition=post_settle_acquisition,
             end_stop=stopped["stop_reason"]["kind"],
             intermediate_execution_breakpoints=0,
             uninterrupted_guest_continues=1, audio_capture=False,
