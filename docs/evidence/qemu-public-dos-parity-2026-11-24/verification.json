@@ -1,0 +1,79 @@
+{
+  "format": "fdisbull-local-paired-dos-route-1",
+  "date": "2026-11-24",
+  "host": "macOS arm64",
+  "source_parent_commit": "5d63dc7e8d78254905f7d2b15e1b115fb4358177",
+  "inputs": {
+    "qemu_sha256": "7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e",
+    "selected_qemu_sb16_c_sha256": "b0b31159f2a7cb87fe2f8bf27bc4050541435ddd24759ab11dd9250576b845f0",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "private_freedos_boot_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+    "firmware_bios_sha256": "3dfd946d0c03ab0e022f84f10c3eb5f1dd507761f73e7d8067511ba35a10f776",
+    "mcopy_sha256": "85734a24e6d9159b2e95384460e3ddd587d319dd95eaeabf1faf99aa938604c2",
+    "nasm_sha256": "5d22db7ed80aee4eb0e1cb5ff8a87e40294012f6ddf943601556922d5128b725"
+  },
+  "accepted_native": [
+    {
+      "tests": "tests/test_qemu_dosbox_parity_native.py::test_paired_nested_resident_child_through_public_json_and_saved_script (initial AH=31h case before parameter expansion)",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "private_junit_sha256": "338b469217ce8943f4693e2ffe237de781ae124b0031ff8fcedf3804c4c46aa5"
+    },
+    {
+      "tests": "tests/test_qemu_dosbox_parity_native.py -k 'nested_exec or nested_resident or nested_child_through_public or mz_relocation_write_and_exit_through_json'",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "replays_previous_ah31_workload": true,
+      "private_junit_sha256": "0c3a2782559ddda37b9d1714c072ee87f933b2e14ce2c0d897844277307bde72"
+    },
+    {
+      "tests": "tests/test_qemu_dosbox_parity_native.py -k nested_child_through_public",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "includes_final_parent_marker_assertion": true,
+      "overlaps_clean_seven_case_batch": true,
+      "private_junit_sha256": "d5153d0b5f0709f72a7d7e81aa520506f1b0d338d6d088e39e9dc12eca85c1b8"
+    },
+    {
+      "tests": "tests/test_qemu_sb16_count_native.py -k u8",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "private_junit_sha256": "d9822838f90c69652dd24c5259128d86d995d9cd0e2804e43497796e9213bd15"
+    }
+  ],
+  "setup_attempt": {
+    "failure": "QEMU firmware must be a directory",
+    "correction": "Use installed share/qemu directory",
+    "accepted_smoke": "paired original COM exit passed"
+  },
+  "host_validation": {
+    "full_mac_suite": {
+      "passed": 18062,
+      "skipped": 1248,
+      "failed": 10,
+      "errors": 23,
+      "subtests_passed": 2379,
+      "private_log_sha256": "e7f87725b569a4dc67da270fb8bf8a815f289ae0db2de7d40fcf645965a5129",
+      "private_junit_sha256": "35010322c8a3af2f2c3cac4373d35b773f3863c066719a1990b586f622deb89e",
+      "failure_categories": "Eight child Python imports lacked PYTHONPATH; two failures and 23 setup errors used Linux ELF fixtures on macOS"
+    },
+    "subprocess_path_rerun": {
+      "passed": 8,
+      "failed": 0,
+      "environment": "PYTHONPATH=src:tests",
+      "private_junit_sha256": "c65f454a6869b1a659b38c1d05c81132b500baaba45ba47b13568c21583b5beb"
+    },
+    "agi_import_suite": "2299 passed, 7 skipped after tests package/path fix",
+    "focused_migration_frame_spatial_agi": "105 passed"
+  },
+  "qualifications_added": {
+    "surfaces": 0,
+    "campaigns": 0
+  },
+  "default_backend": "dosbox",
+  "ci": false
+}

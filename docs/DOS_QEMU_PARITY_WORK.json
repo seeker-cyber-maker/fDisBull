@@ -2019,7 +2019,7 @@
         "docs/DOS_QEMU_HANDOFF.md#paired-dos-lifecycle-and-fallback-rehearsal-2026-11-23"
       ],
       "missing_checks": [
-        "The paired native batch covers normal/high-load MZ relocation, PSP/MCB, nested EXEC/TSR, and an authored CONFIG.SYS character driver with real raw input. Extend direct JSON and saved-script coverage from the normal MZ fixture and simple exit/TSR to nested EXEC and callable resident children."
+        "The paired native batch covers normal/high-load MZ relocation, PSP/MCB, nested EXEC/TSR, and an authored CONFIG.SYS character driver with real raw input. Direct JSON and saved scripts now cover a nonresident nested child, a callable AH=31h resident child and a callable INT27h child at the selected parent's return, including child status, handler result where applicable and parent exit. Vector, handler and MCB observations remain in paired direct Python because DOSBox public debug-memory is source-mapped rather than an arbitrary raw-memory read. Complete the broader core, source, trace and layer group obligations before campaign qualification."
       ],
       "accept": [
         "Original COM and MZ enter with independently verified bytes/registers, complete child/parent/TSR outcomes, source isolation and cleanup.",

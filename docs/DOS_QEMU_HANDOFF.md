@@ -1,5 +1,29 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## Public nested DOS/TSR route and current SB16 count (2026-11-24)
+
+The paired authored parent now runs a nonresident child, an AH=31h resident
+child and an INT 27h resident child through saved scripts to the parent
+continuation. Public JSON then observes each child's DOS status, the callable
+INT 60h handler result in AX for resident cases and the selected parent's
+normal exit. Both DOSBox-X and QEMU pass with the same parent/child bytes and
+original boot image preserved. The existing direct-Python pair independently
+checks the resident vector, handler bytes and MCB owner. Seven related paired
+native cases pass on the selected macOS binaries, with zero failures or skips.
+The separate COM exit smoke test passes. This advances public route coverage,
+but a DOSBox arbitrary-memory JSON read and broader group contracts remain open.
+
+The current QEMU source tree contains the corrected SB16 Bx/Cx stereo count
+arithmetic, and four paired unsigned 8-bit mono/stereo FIFO count cases pass on
+its selected executable. Signed 16-bit count and actual Doom audio fidelity on
+this producer remain separate acceptance work. The [local evidence](evidence/qemu-public-dos-parity-2026-11-24/README.md)
+pins binaries, inputs and private JUnit receipts. The broad macOS host run is
+retained as failed: eight child-process import failures pass when the source
+path is exported, while two failures and 23 setup errors require Linux ELF
+tooling. This slice does not claim a full-suite pass. Every formal surface and
+campaign remains unqualified; DOSBox-X stays default. No CI, merge, release or
+shared installation occurred.
+
 ## High-backed CMPXCHG16B layer binding (2026-11-24)
 
 The same DOS MZ long-mode witness now maps its linear 16-byte operand at

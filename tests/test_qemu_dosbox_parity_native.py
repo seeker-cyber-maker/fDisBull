@@ -307,6 +307,122 @@ def test_paired_saved_script_reports_selected_dos_completion(tmp_path, parity_in
     assert digest(parity_inputs["boot_image"]) == parity_inputs["boot_sha256"]
 
 
+@pytest.mark.parametrize("child_kind", ["exit", "ah31", "int27"],
+                         ids=["child-exit", "resident-ah31", "resident-int27"])
+def test_paired_nested_child_through_public_json_and_saved_script(
+        tmp_path, parity_inputs, child_kind):
+    """Public routes retain the parent after normal or resident nested EXEC."""
+    from fdisbull.cli import respond
+    from fdisbull.debugger import DebugWorkspace
+
+    nasm = os.environ.get("NASM") or shutil.which("nasm")
+    if not nasm:
+        message = "Paired resident EXEC requires an explicit NASM executable"
+        if os.environ.get("FDISBULL_REQUIRE_QEMU_DOS_OS") == "1":
+            pytest.fail(message)
+        pytest.skip(message)
+    resident_child = child_kind != "exit"
+    parent_code, symbols = nested_exec(tmp_path, nasm, resident=resident_child)
+    if resident_child:
+        child_code, resident = resident_com(interrupt27=child_kind == "int27")
+    else:
+        child_code, resident = com_exit(37), None
+    game = tmp_path / "public-game"
+    game.mkdir()
+    parent = game / "PARENT.COM"
+    child = game / ("RESIDENT.COM" if resident_child else "CHILD.COM")
+    parent.write_bytes(parent_code)
+    child.write_bytes(child_code)
+    boot = tmp_path / "public-resident-boot"
+    boot.mkdir()
+    disk = prepare_dos_baseline(parity_inputs["boot_image"], boot / "baseline.img",
+                                parity_inputs["mcopy"],
+                                extra_files={child.name: child_code} if resident_child else None)
+    runtime = dict(parity_inputs, boot=disk)
+    database = tmp_path / "resident-public-parity.fdb"
+    source_hash = hashlib.sha256(parent_code).hexdigest()
+    with Project.create(database, parent, image="com") as project:
+        project.analyze(max_instructions=128)
+
+    workspace = DebugWorkspace()
+
+    def invoke(method, **params):
+        reply = respond({"method": method, "params": {"project": str(database), **params}},
+                       debugger=workspace)
+        assert reply["ok"], reply
+        return reply["result"]
+
+    saved_ids = {}
+    try:
+        for backend in ("dosbox", "qemu-dos"):
+            qemu = backend == "qemu-dos"
+            executable = runtime["qemu" if qemu else "dosbox"]
+            launch_options = _qemu_launch_options(runtime) if qemu else {"backend": backend}
+            launch = invoke("debug-launch", executable=str(executable), game_dir=str(game),
+                            **launch_options)
+            run = launch["run"]
+            initial = invoke("debug-registers", run=run)
+            psp = _word(initial, "cs")
+            assert psp == _word(initial, "ds")
+            base_segment = psp if qemu else launch["mapping"]["static_load_segment"]
+            base = 16 * base_segment
+            after_child = base + symbols["after_child_ip"]
+            script = {
+                "format": "fdisbull-script-1",
+                "steps": [
+                    {"op": "breakpoint", "address": after_child, "as": "parent"},
+                    {"op": "run", "expect": "breakpoint", "timeout_ms": 5000,
+                     **({} if qemu else {"fast_forward": True})},
+                ],
+            }
+            if qemu:
+                script["backend"] = backend
+            saved = invoke("debug-save-script", name=f"{backend}-nested-{child_kind}.json", script=script)
+            saved_ids[backend] = saved["script_id"]
+            report = invoke("debug-script", run=run, script_id=saved["script_id"], timeout_ms=12000)
+            assert report["ok"] and report["completed_steps"] == len(script["steps"]), report
+            stopped = report["steps"][1]["result"]
+            assert stopped["outcome"] == "breakpoint", stopped
+            registers = invoke("debug-registers", run=run)
+            assert (_word(registers, "cs"), _ip(registers)) == (psp, symbols["after_child_ip"])
+            if resident_child:
+                assert _word(registers, "ax", "eax", "rax") == 0x6a5b
+            status = invoke("debug-memory", run=run,
+                            address=base + symbols["child_status_ip"], length=2)
+            status_bytes = bytes.fromhex(status["hex"])
+            marker = invoke("debug-memory", run=run,
+                            address=base + symbols["marker_ip"], length=2)
+            assert bytes.fromhex(marker["hex"]) == b"\xef\xbe"
+            if resident_child:
+                assert status_bytes[1] == 3
+                if resident["exit_code"] is not None:
+                    assert status_bytes[0] == resident["exit_code"]
+            else:
+                assert status_bytes == bytes((37, 0))
+            invoke("debug-delete-breakpoint", run=run,
+                   breakpoint_id=report["steps"][0]["result"]["breakpoint_id"])
+            exited = invoke("debug-run", run=run, timeout_ms=5000,
+                            **({} if qemu else {"fast_forward": True}))
+            assert _exit_code(exited, qemu=qemu) == 17
+            if qemu:
+                assert int(str(exited["process"]["psp_segment"]), 0) == psp
+            else:
+                assert int(exited["session"]["stop_reason"]["guest_exit"]["psp"], 16) == psp
+            assert invoke("debug-stop", run=run)["process_reaped"]
+        with Project(database) as reopened:
+            assert reopened.meta["source_sha256"] == source_hash
+            scripts = {row["id"]: row for row in reopened.debug_scripts()["scripts"]}
+            for backend, script_id in saved_ids.items():
+                assert scripts[script_id]["sha256"]
+            runs = reopened.debug_runs()["runs"]
+            assert len(runs) == 2 and all(row["metadata"]["source_sha256"] == source_hash for row in runs)
+    finally:
+        workspace.close()
+    assert parent.read_bytes() == parent_code and child.read_bytes() == child_code
+    assert digest(disk["image"]) == disk["prepared_sha256"]
+    assert digest(parity_inputs["boot_image"]) == parity_inputs["boot_sha256"]
+
+
 def _run_exit_dosbox(project, runtime, directory):
     source_hash = project.meta["source_sha256"]
     with project.debugger(str(runtime["dosbox"]), directory) as debug:

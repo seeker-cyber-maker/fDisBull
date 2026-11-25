@@ -117,6 +117,19 @@ def test_diagnostic_rpc_consumers_remain_unqualified_until_dispositioned():
     assert migration_status()['default_switch_gate']['eligible'] is False
 
 
+def test_retained_raster_input_routes_are_partial_but_unqualified():
+    report = migration_status(details=True)
+    rows = {row.get('method'): row for key in ('rpc_methods', 'public_methods')
+            for row in report[key]}
+    for method in ('input.mouse.click', 'debug-click', 'debug-click-frame',
+                   'debug-frame-probe'):
+        assert rows[method]['current_status'] == 'partial'
+        assert rows[method]['qualification'] == 'unqualified'
+        assert rows[method]['native_route']
+    assert report['default_backend'] == 'dosbox'
+    assert report['default_switch_gate']['eligible'] is False
+
+
 def test_work_plan_partitions_every_inventory_obligation_once():
     report = migration_status(details=True)
     plan = json.loads((ROOT / 'docs/DOS_QEMU_PARITY_WORK.json').read_text())

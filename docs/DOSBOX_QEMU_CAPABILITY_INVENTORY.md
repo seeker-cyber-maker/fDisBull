@@ -236,9 +236,13 @@ requires explicit suffix cancellation and release. No movement is requested;
 prior accumulators, external button state, disabled/remote mode and FIFO
 capacity remain unnormalized. Callback/sync evidence does not establish device
 acceptance, guest consumption or cursor position. This narrowly extends the
-physical `input.mouse.button` route; pixel `input.mouse.click`, `debug-click`
-and `debug-click-frame` remain open. General `timed_input`, `absolute_mouse`,
-`guest_time_control` and `completed_guest_frames` remain false.
+physical `input.mouse.button` route. Separately, `input.mouse.click`,
+`debug-click` and `debug-click-frame` have an opt-in `delivery=observed-int33`
+path for retained source-raster coordinates, verified target motion and
+observed press/hold/release. These routes remain partial: other DOS drivers,
+modes and legacy behavior are unqualified. General `timed_input`,
+`absolute_mouse`, `guest_time_control` and `completed_guest_frames` remain
+false.
 
 Virtual-profile COM/MZ source traces now retain stable stopped clock brackets
 under `source_trace_clock`. A `virtual-time-range` predicate binds the exact run,
@@ -280,11 +284,13 @@ before earlier effects and resolved values validate again. One intersected host
 deadline covers I/O and persistence. Invalid native evidence or failed/late
 persistence closes with available evidence and no retry.
 
-This adds a sparse renderer observation prerequisite. `video.probe` and
-`debug-frame-probe` remain pending: their legacy mode/frame/state identities are
-not supplied by a renderer update. Coordinate clicks, INT33 mapping, application
-readiness and completed guest frames remain separate. Full pixel hashes still
-come from `capture_display()`. All 143 promotion qualifications remain open.
+This adds a sparse renderer observation prerequisite. `debug-frame-probe` also
+has a partial retained-source-raster route through the QEMU frame contract,
+which supplies session/mode/frame identity for RGB samples; `video.probe` and
+its broader legacy mode/frame/state contract remain open. Coordinate clicks,
+INT33 mapping beyond the opt-in observed path, application readiness and
+completed guest frames remain separate. Full pixel hashes still come from
+`capture_display()`. All 143 promotion qualifications remain open.
 
 The bounded [public DESQview raw-checkpoint witness](DOS_QEMU_HANDOFF.md#public-desqview-checkpoints-and-fresh-physical-qualification-2026-11-14) now composes an attached automatic observer with standard raw save/load. Save suspends only its verified native control while paused; restore replaces the owner/epoch and requires fresh snapshot/certificate authority. Two original-guest endpoint pairs and eleven preservation cases passed locally. User/hook breakpoints, active raw layers, pending lifecycle stops and unreleased input still refuse. The original selected RAM window was unchanged before restore, so this is saved-window preservation; changed-RAM recovery has separate authored witnesses. Broader parity and default-switch gates remain open.
 
@@ -366,10 +372,10 @@ dispatch are outside this router dictionary.
 | Memory investigations and driver context | `debug-memory-snapshot`, `debug-memory-apply`, `debug-memory-rule-tick`, `debug-desqview-observe`, `debug-bind-runtime-memory`, `debug-runtime-memory`, `debug-write-runtime-memory` | Snapshot, one-shot edit/rule and report code has machine paths; live runtime bindings and source/task identity need qualification |
 | Periodic memory rules | `debug-memory-rule-run` | Partial explicit QEMU virtual-clock route with guarded native RAM views, owned overlays and hook-aware stops; ten bounded authored native cases and a 1,159-test bounded regression passed; broader parity remains unqualified |
 | Trace and predicates | `debug-trace`, `debug-trace-until` | Raw stopped-boundary traces; verified COM/MZ or explicitly bound embedded-LE source, register/PC/region predicates and saved event searches. Virtual profile adds stopped clock brackets and run/epoch-bound time ranges. LE code relation supplies no allocation/task authority; streaming and general action causality remain open |
-| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes and opt-in native timed chords/text have partial support; legacy waits, coordinate clicks, guest layout and frame contracts remain open |
-| Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored surfaces, renderer publication advancement and owned frame-key edges exist. Legacy frame-probe/raw RGBA and completed-guest-frame equivalence remain open |
+| Waits and input | `debug-wait`, `debug-keyboard-press`, `debug-keyboard-type`, `debug-keyboard-state`, `debug-keyboard-down`, `debug-keyboard-up`, `debug-click`, `debug-click-frame` | Owned make/break/state routes and opt-in native timed chords/text have partial support; coordinate clicks have a guarded observed-INT33 profile. Legacy waits, other drivers/modes and guest layout remain open |
+| Frames | `debug-screenshot`, `debug-frame-probe`, `debug-frame-advance`, `debug-frame-inputs` | Stored surfaces, renderer publication advancement, owned frame-key edges and retained-source RGB probes exist. Legacy raw RGBA and completed-guest-frame equivalence remain open |
 | Checkpoints and Anchor Stones | `debug-save-state`, `debug-load-state`, `debug-save-anchor-stone`, `debug-load-anchor-stone` | Native serializers, admitted source/disk/control identity and fresh-process restore exist. Raw, COM/MZ, owned-machine and LE authority remain separate; broader device/workload qualification is open |
-| Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Bounded RAM/fetch/source layers, code views, hooks and experiment control receipts exist. The screenshot-hooks adapter remains absent; source/task/mapping and preparation/capture composition need qualification |
+| Layers, code and controls | `debug-layer-stack`, `debug-layer-enable`, `debug-layer-patch`, `debug-code`, `debug-capture-code`, `debug-branch`, `debug-cave`, `debug-hook`, `debug-hooks`, `debug-delete-hook`, `debug-controls`, `debug-screenshot-hooks` | Bounded RAM/fetch/source layers, code views, hooks and experiment control receipts exist. Screenshot hooks admit a bounded stopped-surface preparation profile; fresh-frame and execution preparation, source/task/mapping and capture composition need qualification |
 | Reproducible trials | `debug-save-experiment`, `debug-restore-experiment`, `debug-compare-experiment` | Bounded full-checkpoint baseline/candidate trials and final recovery exist. Incomplete/misaligned observations cannot prove equality; file/media/workload composition remains open |
 | Checkpoint rewind | `debug-rewind-start`, `debug-rewind-status`, `debug-rewind-record`, `debug-rewind` | Native bounded checkpoint histories, branches and cold restore exist; separate stopped LE capture history does not broaden ordinary MZ authority |
 | CPU/RAM deltas | `debug-delta-start`, `debug-delta-status`, `debug-delta-record`, `debug-delta-rewind`, `debug-delta-recover` | Native selected projections, guarded inverse, frozen partial-state boundary and full recovery exist. Hidden CPU/device rollback and continued execution from a partial inverse are not claimed |

@@ -708,8 +708,8 @@
       "method": "input.mouse.click",
       "slice": "clock-media-input",
       "legacy_profile": "stable_and_layers",
-      "current_status": "pending",
-      "native_route": "Related prerequisites: MachineContext.mouse_button_click and mouse_move_mapped provide timed physical buttons and caller-scaled relative movement; no legacy absolute coordinate/INT33 cursor contract.",
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.call('input.mouse.click') -> click(); explicit delivery=observed-int33 coordinates use retained source-raster/session/mode/frame guards, verified target motion and observed press/hold/release. Other legacy coordinate/INT33 behavior remains unqualified.",
       "qualification": "unqualified"
     },
     {
@@ -909,8 +909,8 @@
       "operation": "click",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.click(); explicit delivery=observed-int33 and retained raster identity, verified small motion packets, observed target landing and press/hold/release. Qualification is limited to this opt-in profile.",
       "qualification": "unqualified"
     },
     {
@@ -918,8 +918,8 @@
       "operation": "click_frame",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuDOSProcessSession.click_frame(); captures/marks the retained source raster, then uses the guarded observed-int33 coordinate-click path. Qualification is limited to this opt-in profile.",
       "qualification": "unqualified"
     },
     {
@@ -1053,8 +1053,8 @@
       "operation": "frame_probe",
       "slice": "clock-media-input",
       "legacy_status": "available_with_profile_guards",
-      "current_status": "pending",
-      "native_route": null,
+      "current_status": "partial",
+      "native_route": "QemuMachine.frame_probe via QemuFrameContractMixin; samples an explicitly retained QEMU source raster with session/mode/frame identity and host-projected RGB samples. Application-frame completion and DOSBox phase/state equivalence remain unqualified.",
       "qualification": "unqualified"
     },
     {
