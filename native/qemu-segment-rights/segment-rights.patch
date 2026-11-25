@@ -1,0 +1,94 @@
+--- a/target/i386/helper.h
++++ b/target/i386/helper.h
+@@ -40 +40 @@
+-DEF_HELPER_4(check_seg_access, void, env, tl, int, int)
++DEF_HELPER_5(check_seg_access, void, env, tl, int, int, int)
+--- a/target/i386/tcg/seg_helper.c
++++ b/target/i386/tcg/seg_helper.c
+@@ -179 +179 @@
+-                             int seg_reg, int size)
++                             int seg_reg, int size, int is_write)
+@@ -194 +194 @@
+-    if (!(env->hflags & HF_PE_MASK)) {
++    if (!(env->hflags & HF_PE_MASK) || (env->hflags & HF_VM_MASK)) {
+@@ -198,0 +199,11 @@
++        raise_exception_err_ra(env,
++                               seg_reg == R_SS ? EXCP0C_STACK : EXCP0D_GPF,
++                               0, GETPC());
++    }
++
++    /* A cached code segment is never writable; a data segment needs W. */
++    if (!(seg->flags & DESC_S_MASK) ||
++        (is_write && ((seg->flags & DESC_CS_MASK) ||
++                      !(seg->flags & DESC_W_MASK))) ||
++        (!is_write && (seg->flags & DESC_CS_MASK) &&
++         !(seg->flags & DESC_R_MASK))) {
+--- a/target/i386/tcg/translate.c
++++ b/target/i386/tcg/translate.c
+@@ -711,3 +711,3 @@
+-                                     int reg, MemOp ot)
+-{
+-    if (PE(s) && !CODE64(s)) {
++                                     int reg, MemOp ot, bool is_write)
++{
++    if (PE(s) && !VM86(s) && !CODE64(s)) {
+@@ -718 +718,2 @@
+-                                    tcg_constant_i32(1 << ot));
++                                    tcg_constant_i32(1 << ot),
++                                    tcg_constant_i32(is_write));
+@@ -849 +850 @@
+-                             R_ESI, ot);
++                             R_ESI, ot, false);
+@@ -852 +853 @@
+-    gen_check_string_segment(s, R_ES, R_EDI, ot);
++    gen_check_string_segment(s, R_ES, R_EDI, ot, true);
+@@ -1262 +1263 @@
+-    gen_check_string_segment(s, R_ES, R_EDI, ot);
++    gen_check_string_segment(s, R_ES, R_EDI, ot, true);
+@@ -1271 +1272 @@
+-                             R_ESI, ot);
++                             R_ESI, ot, false);
+@@ -1280 +1281 @@
+-    gen_check_string_segment(s, R_ES, R_EDI, ot);
++    gen_check_string_segment(s, R_ES, R_EDI, ot, false);
+@@ -1293 +1294 @@
+-    gen_check_string_segment(s, R_ES, R_EDI, ot);
++    gen_check_string_segment(s, R_ES, R_EDI, ot, false);
+@@ -1297 +1298 @@
+-                             R_ESI, ot);
++                             R_ESI, ot, false);
+@@ -1325 +1326 @@
+-    gen_check_string_segment(s, R_ES, R_EDI, ot);
++    gen_check_string_segment(s, R_ES, R_EDI, ot, true);
+@@ -1342 +1343 @@
+-                             R_ESI, ot);
++                             R_ESI, ot, false);
+@@ -1871 +1872 @@
+-                                  MemOp ot)
++                                  MemOp ot, bool is_write)
+@@ -1878 +1879 @@
+-    if (!PE(s) || CODE64(s)) {
++    if (!PE(s) || VM86(s) || CODE64(s)) {
+@@ -1896 +1897,2 @@
+-                                tcg_constant_i32(1 << ot));
++                                tcg_constant_i32(1 << ot),
++                                tcg_constant_i32(is_write));
+@@ -1926 +1928 @@
+-        gen_check_mem_segment(s, decode, ot);
++        gen_check_mem_segment(s, decode, ot, false);
+@@ -1943 +1945 @@
+-        gen_check_mem_segment(s, decode, ot);
++        gen_check_mem_segment(s, decode, ot, true);
+--- a/target/i386/tcg/emit.c.inc
++++ b/target/i386/tcg/emit.c.inc
+@@ -279 +279 @@
+-            gen_check_mem_segment(s, decode, op->ot);
++            gen_check_mem_segment(s, decode, op->ot, false);
+@@ -360 +360 @@
+-            gen_check_mem_segment(s, decode, op->ot);
++            gen_check_mem_segment(s, decode, op->ot, true);
+--- a/target/i386/tcg/decode-new.c.inc
++++ b/target/i386/tcg/decode-new.c.inc
+@@ -2864 +2864 @@
+-        gen_check_mem_segment(s, &decode, decode.op[0].ot);
++        gen_check_mem_segment(s, &decode, decode.op[0].ot, true);

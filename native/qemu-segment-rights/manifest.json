@@ -1,0 +1,40 @@
+{
+  "format": "fDisBull private native candidate incremental source patch",
+  "qemu_version": "10.0.13",
+  "composition": {
+    "preimage": "native/qemu-segment-access/manifest.json post_sha256 entries",
+    "postimage": "fDisBull-private/qemu-segment-limit-20261124-source (access-rights edits)",
+    "relationship": "Exact five-file incremental delta from the committed segment-access postimage; source trees were not modified during packaging."
+  },
+  "patch": {
+    "path": "segment-rights.patch",
+    "sha256": "5d44450ef63c887ca2c34041467a91733e83b6269084948e976ef649d8f55aef"
+  },
+  "files": [
+    {
+      "path": "target/i386/helper.h",
+      "pre_sha256": "5d5c5a1253412b05e6d45ab26bb4089003a8fd4fe20884bae0258ecfeab53418",
+      "post_sha256": "ca34aad2043f23d924e5f3464bff7a8b26b8bb77652fa3fb03defdaf4d0d7bdc"
+    },
+    {
+      "path": "target/i386/tcg/seg_helper.c",
+      "pre_sha256": "b66c93996c277820444b3c4704d9dc8e7c0b6ca269faf216cea7f24cae5699d5",
+      "post_sha256": "b31a9ba5aaf9c35723475e72851af5b17e32b959f13f8ad58ad6b54cd7f79464"
+    },
+    {
+      "path": "target/i386/tcg/translate.c",
+      "pre_sha256": "919a518b24d689bfcfa60751c4377196a4f349bc37e87659415302d33e3e1aa2",
+      "post_sha256": "456ef1068e86ecd4fee8c3ce106906f65484b273e60e68facb3d0ee7d45e81f5"
+    },
+    {
+      "path": "target/i386/tcg/emit.c.inc",
+      "pre_sha256": "f1bfe0ff4599ec4ef7a4d723f04bdce39b021a27c96fc5cc60794ea52ed57ef7",
+      "post_sha256": "5ce813e7fb73a2479da573c357e2d2e009b7ec785f49fa067c1684a4b5ea996b"
+    },
+    {
+      "path": "target/i386/tcg/decode-new.c.inc",
+      "pre_sha256": "00825ae5fb17fbdeae4aaed9de9f36cf781ff6b11b17ae75e90d2ea283d83b9a",
+      "post_sha256": "2e735c5f1b2db51fe96d369e1b2b6191edb7e7525246293063f53835ca47ee9a"
+    }
+  ]
+}

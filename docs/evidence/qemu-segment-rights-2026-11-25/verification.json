@@ -1,0 +1,46 @@
+{
+  "format": "fdisbull-qemu-segment-rights-1",
+  "date": "2026-11-25",
+  "scope": "bounded local native protected-mode segment access rights and selected regressions",
+  "candidate_inputs": {
+    "qemu_version": "10.0.13",
+    "qemu_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "parent_qemu_sha256": "ca120486202d939c984bbce2c25b4b476bd429979edd7096c64904d786109d06",
+    "incremental_patch_sha256": "5d44450ef63c887ca2c34041467a91733e83b6269084948e976ef649d8f55aef",
+    "patch_manifest": "native/qemu-segment-rights/manifest.json"
+  },
+  "runs": [
+    {
+      "name": "selected local native batch after fixture data-segment correction",
+      "selection": "the 11 files in qemu-segment-access-2026-11-25/verification.json plus tests/test_qemu_dos_segment_rights_native.py",
+      "result": {"tests": 30, "passed": 29, "failed": 1, "errors": 0, "skipped": 0},
+      "failure": "The IRQ fixture generator's exact template still expected inc word [cs:scratch] after the source-layer fixture changed to use writable DS. It failed before launching that case's VM.",
+      "private_junit_sha256": "0ff844880c04320682c27b4e0350656685da2e0a4048c92201947fbbd744ebca"
+    },
+    {
+      "name": "affected mode/checkpoint and rights witness after data-segment correction",
+      "result": {"tests": 7, "passed": 7, "failed": 0, "errors": 0, "skipped": 0},
+      "private_junit_sha256": "d8ee32b4c64879b2763187a8535614450eb6d194cf473701f65b7bf02d3294a7"
+    },
+    {
+      "name": "targeted IRQ checkpoint/history after exact template repair",
+      "result": {"tests": 1, "passed": 1, "failed": 0, "errors": 0, "skipped": 0},
+      "private_junit_sha256": "04c4ec21f2a1e882ddd188144d9ecdb162c2c49633575f17c97308b50e1c0e59"
+    }
+  ],
+  "observations": {
+    "read_only_ds_write": "QEMU enters #GP before the dword store through read-only DS, preserves the authored backing and fault frame, then retries once after the handler reloads writable DS. Frozen DOSBox-X reaches completion with DS=0x20, no handler marker and the dword stored. This is a reference divergence, not a paired parity pass.",
+    "checkpoint_fixture": "The earlier fixture wrote through CS after setting CR0.PE. The new QEMU rights check rejected that protected-mode code-segment write. The fixture now writes the same PSP scratch location through its writable DS; the six mode/checkpoint cases passed in the focused seven-case run.",
+    "regression_scope": "The selected 30-case run yielded 29 passes and one fixture-template mismatch; the changed IRQ generator passed its targeted rerun on the same binary. These are separate runs, not one clean 30-case batch."
+  },
+  "qualification": {
+    "overall_qemu_dosbox_parity": "not qualified",
+    "dosbox_default": true,
+    "dotbox_changed": false,
+    "ci_run": false,
+    "release_or_install": false,
+    "native_vm_tests_executed_locally": true,
+    "private_inputs_committed": false
+  }
+}

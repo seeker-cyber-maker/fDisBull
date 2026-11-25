@@ -152,7 +152,7 @@ fetch_site:
     mov cx,2
 hook_site:
     nop
-    inc word [cs:scratch]
+    inc word [scratch]
     loop hook_site
 %if MODE_V86
     mov eax,cr0               ; VM86 #GP enters authored monitor below
