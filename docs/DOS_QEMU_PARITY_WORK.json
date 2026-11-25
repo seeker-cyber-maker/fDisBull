@@ -1355,12 +1355,17 @@
         "trace.stop"
       ],
       "qualification": "unqualified",
-      "implementation": "implemented_bounded_traces_streaming_rpc_gap",
+      "implementation": "implemented_bounded_traces_and_persistent_qemu_before_fetch_rpc",
       "source_paths": [
         "src/fdisbull/qemu_dos_trace.py",
         "src/fdisbull/qemu_dos_le_binding.py",
-        "src/fdisbull/execution_events.py"
+        "src/fdisbull/execution_events.py",
+        "src/fdisbull/qemu_fetch_trace.py",
+        "src/fdisbull/qemu_dos_process.py",
+        "tests/test_qemu_fetch_trace.py",
+        "tests/test_qemu_dos_before_fetch_trace_native.py"
       ],
+      "evidence": "docs/evidence/qemu-instruction-trace-2026-11-24/verification.json",
       "depends_on": [
         "source-and-protected-dos"
       ],
@@ -1372,11 +1377,13 @@
       ],
       "remaining_work": [
         "Qualify paired event predicates and semantic differences for faults, partial REP, IRQ/timer policy, overlays and departure from admitted COM/MZ or explicit embedded-LE source.",
-        "Supply the persistent before-fetch trace/cursor contract required by trace.start/read/stop; a bounded stopped trace is not that streaming primitive."
+        "Extend exact-candidate paired qualification beyond the authored COM loop and selected regressions, including checkpoint restoration and producer epoch invalidation under live guest execution.",
+        "Per-event instruction bytes, CPU mode, segment context, and canonical source identity remain unavailable; breakpoint-pre-dispatch and TCG-dispatch origins remain distinct, and completion/retirement remains unknown."
       ],
       "minimum_acceptance": [
-        "Observed instruction bytes, canonical source identity, mode and epochs survive artifact reopening without manufacturing retirement or absence.",
-        "Unknown completion and unbound endpoints remain unknown; exact event/action and clock identities are validated before execution."
+        "Persistent trace cursors remain bound to the native producer epoch and owned machine/source epoch; bounded pages preserve sequence continuity and explicit loss/failure evidence.",
+        "Unknown completion, unavailable per-event bytes/mode/source identity, and unbound endpoints remain unknown; trace events do not manufacture retirement or absence.",
+        "The final candidate identity and paired/native results are read back on the same exact executable before qualification changes."
       ]
     },
     {

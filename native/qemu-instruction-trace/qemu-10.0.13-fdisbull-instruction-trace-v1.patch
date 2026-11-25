@@ -1,0 +1,567 @@
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -36,6 +36,7 @@
+ #include "exec/cpu-all.h"
+ #ifndef CONFIG_USER_ONLY
+ #include "system/fdisbull-task-private.h"
++#include "system/fdisbull-instruction-trace.h"
+ #endif
+ #include "system/cpu-timers.h"
+ #include "exec/replay-core.h"
+@@ -344,6 +345,16 @@
+             }
+ 
+             if (match_bp) {
++#ifndef CONFIG_USER_ONLY
++                /* GDB stops before the TCG instruction callback at this PC.
++                 * Preserve the native fetch-trace ordering by recording the
++                 * breakpoint instruction before raising EXCP_DEBUG. */
++                if (fdisbull_instruction_trace_active()) {
++                    fdisbull_instruction_trace_record(
++                        cpu->cpu_index, pc,
++                        FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH);
++                }
++#endif
+                 cpu->exception_index = EXCP_DEBUG;
+                 return true;
+             }
+--- a/accel/tcg/plugin-gen.c
++++ b/accel/tcg/plugin-gen.c
+@@ -27,8 +27,13 @@
+ #include "tcg/tcg-temp-internal.h"
+ #include "tcg/tcg-op.h"
+ #include "exec/exec-all.h"
++#include "accel/tcg/getpc.h"
++#include "exec/cpu-all.h"
++#include "qemu/main-loop.h"
+ #include "exec/plugin-gen.h"
+ #include "exec/translator.h"
++#include "system/cpus.h"
++#include "system/fdisbull-instruction-trace.h"
+ 
+ enum plugin_gen_from {
+     PLUGIN_GEN_FROM_TB,
+@@ -36,6 +41,19 @@
+     PLUGIN_GEN_AFTER_INSN,
+     PLUGIN_GEN_AFTER_TB,
+ };
++
++static void fdisbull_instruction_trace_plugin_cb(unsigned int vcpu_index,
++                                                 void *userp)
++{
++#ifndef CONFIG_USER_ONLY
++    if (fdisbull_instruction_trace_record(vcpu_index, (uintptr_t)userp,
++                                          FDISBULL_TRACE_TCG_DISPATCH)) {
++        cpu_stop_current();
++        qemu_notify_event();
++        cpu_loop_exit_restore(current_cpu, GETPC());
++    }
++#endif
++}
+ 
+ /* called before finishing a TB with exit_tb, goto_tb or goto_ptr */
+ void plugin_gen_disable_mem_helpers(void)
+@@ -387,8 +405,10 @@
+ bool plugin_gen_tb_start(CPUState *cpu, const DisasContextBase *db)
+ {
+     struct qemu_plugin_tb *ptb;
+-
+-    if (!test_bit(QEMU_PLUGIN_EV_VCPU_TB_TRANS,
++    bool trace_enabled = fdisbull_instruction_trace_active();
++
++    if (!trace_enabled &&
++        !test_bit(QEMU_PLUGIN_EV_VCPU_TB_TRANS,
+                   cpu->plugin_state->event_mask)) {
+         return false;
+     }
+@@ -444,6 +464,12 @@
+     pc = db->pc_next;
+     insn->vaddr = pc;
+ 
++    if (fdisbull_instruction_trace_active()) {
++        qemu_plugin_register_vcpu_insn_exec_cb(
++            insn, fdisbull_instruction_trace_plugin_cb, QEMU_PLUGIN_CB_NO_REGS,
++            (void *)(uintptr_t)pc);
++    }
++
+     tcg_gen_plugin_cb(PLUGIN_GEN_FROM_INSN);
+ }
+ 
+--- /dev/null
++++ b/qapi/fdisbull-instruction-trace.json
+@@ -0,0 +1,86 @@
++##
++# Bounded TCG instruction dispatch trace.
++##
++
++##
++# @FdisbullInstructionTraceEvent:
++# One pre-instruction boundary observation. The origin distinguishes normal
++# TCG instruction dispatch from a debugger breakpoint before TB dispatch.
++# Neither origin attests instruction completion or retirement.
++#
++# @sequence: Monotonic sequence within the current producer epoch.
++# @vcpu: vCPU index.
++# @pc: Guest virtual instruction address.
++# @origin: tcg-dispatch or breakpoint-pre-dispatch; the latter records a
++#     matched breakpoint boundary reached before TB dispatch.
++# @reason: Always "before-execution".
++##
++{ 'struct': 'FdisbullInstructionTraceEvent',
++  'data': { 'sequence': 'uint64', 'vcpu': 'uint32', 'pc': 'uint64', 'origin': 'str',
++            'reason': 'str' } }
++
++##
++# @FdisbullInstructionTraceInfo:
++# Bounded trace status and one page of retained dispatch events.
++#
++# @epoch: Producer generation; changes on start and invalidation.
++# @instruction-count: Requested exact dispatch limit.
++# @capacity: Number of retained events, capped at 65536.
++# @active: Whether callbacks are still recording.
++# @stopped-reason: recording, instruction-count, user-stop, or invalidation cause.
++# @captured-count: Total records captured in this epoch.
++# @oldest-sequence: Oldest retained sequence, or zero when empty.
++# @next-sequence: Next sequence that would be assigned.
++# @dropped-count: Number of overwritten records.
++# @events: One bounded page of events after the supplied cursor.
++##
++{ 'struct': 'FdisbullInstructionTraceInfo',
++  'data': { 'epoch': 'uint64', 'instruction-count': 'uint64',
++            'capacity': 'uint32', 'active': 'bool', 'stopped-reason': 'str',
++            'captured-count': 'uint64', 'oldest-sequence': 'uint64',
++            'next-sequence': 'uint64', 'dropped-count': 'uint64',
++            'events': ['FdisbullInstructionTraceEvent'] } }
++
++##
++# @x-fdisbull-trace-start:
++# Begin a bounded trace on a stopped, single-vCPU system-mode TCG machine.
++#
++# @instruction-count: Exact number of callbacks to capture before stopping.
++# The trace records instruction dispatch callbacks before instruction bodies.
++# The callback can observe a faulting instruction; records do not attest
++# completion or retirement. Exactly @instruction-count boundaries are recorded
++# before a stop is requested. The retained ring is capped at 65536 records.
++##
++{ 'command': 'x-fdisbull-trace-start',
++  'data': { 'instruction-count': 'uint64' },
++  'returns': 'FdisbullInstructionTraceInfo' }
++
++##
++# @x-fdisbull-trace-read:
++# Read at most @max-events records with sequence greater than
++# @after-sequence. A stale cursor is accepted; compare it with
++# @oldest-sequence and @dropped-count to detect overwritten records. The
++# returned @next-sequence is the next sequence that would be assigned.
++#
++# @epoch: Producer epoch returned by start.
++# @after-sequence: Exclusive sequence cursor.
++# @max-events: Maximum number of events to return, from 1 through 4096.
++##
++{ 'command': 'x-fdisbull-trace-read',
++  'data': { 'epoch': 'uint64', 'after-sequence': 'uint64',
++            'max-events': 'uint32' },
++  'returns': 'FdisbullInstructionTraceInfo' }
++
++##
++# @x-fdisbull-trace-stop:
++# Stop recording and return one bounded page, using the same cursor semantics
++# as x-fdisbull-trace-read.
++#
++# @epoch: Producer epoch returned by start.
++# @after-sequence: Exclusive sequence cursor.
++# @max-events: Maximum number of events to return, from 1 through 4096.
++##
++{ 'command': 'x-fdisbull-trace-stop',
++  'data': { 'epoch': 'uint64', 'after-sequence': 'uint64',
++            'max-events': 'uint32' },
++  'returns': 'FdisbullInstructionTraceInfo' }
+--- a/qapi/meson.build
++++ b/qapi/meson.build
+@@ -71,6 +71,7 @@
+     'fdisbull-vga-configuration',
+     'fdisbull-layers',
+   'fdisbull-dos-checkpoint',
++  'fdisbull-instruction-trace',
+   'fdisbull-instrumented-checkpoint',
+   'fdisbull-task-context',
+     'fdisbull-task-private',
+--- a/qapi/qapi-schema.json
++++ b/qapi/qapi-schema.json
+@@ -74,6 +74,7 @@
+ { 'include': 'fdisbull-stopped-control.json' }
+ { 'include': 'fdisbull-layers.json' }
+ { 'include': 'fdisbull-dos-checkpoint.json' }
++{ 'include': 'fdisbull-instruction-trace.json' }
+ { 'include': 'fdisbull-instrumented-checkpoint.json' }
+ { 'include': 'fdisbull-task-context.json' }
+ { 'include': 'fdisbull-task-private.json' }
+--- /dev/null
++++ b/system/fdisbull-instruction-trace.c
+@@ -0,0 +1,272 @@
++/* Bounded before-execution TCG instruction dispatch trace. */
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#include "qemu/osdep.h"
++#include "qapi/error.h"
++#include "qapi/qapi-commands-fdisbull-instruction-trace.h"
++#include "qemu/thread.h"
++#include "qemu/main-loop.h"
++#include "exec/tb-flush.h"
++#include "hw/core/cpu.h"
++#include "system/cpus.h"
++#include "system/runstate.h"
++#include "system/tcg.h"
++#include "system/fdisbull-instruction-trace.h"
++
++#define TRACE_MAX_CAPACITY 65536
++#define TRACE_MAX_PAGE 4096
++
++typedef struct TraceRecord {
++    uint64_t sequence;
++    uint32_t vcpu;
++    uint64_t pc;
++    FdisbullTraceOrigin origin;
++} TraceRecord;
++
++typedef struct InstructionTrace {
++    QemuMutex lock;
++    TraceRecord *records;
++    uint64_t epoch;
++    uint64_t requested;
++    uint64_t count;
++    uint32_t capacity;
++    bool active;
++    bool stop_pending;
++    char *stopped_reason;
++} InstructionTrace;
++
++static InstructionTrace trace;
++static gsize trace_initialized;
++
++static void instruction_trace_init(void)
++{
++    if (g_once_init_enter(&trace_initialized)) {
++        qemu_mutex_init(&trace.lock);
++        trace.epoch = 1;
++        g_once_init_leave(&trace_initialized, 1);
++    }
++}
++
++bool fdisbull_instruction_trace_active(void)
++{
++    bool active;
++
++    instruction_trace_init();
++    qemu_mutex_lock(&trace.lock);
++    active = trace.active;
++    qemu_mutex_unlock(&trace.lock);
++    return active;
++}
++
++bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
++                                       FdisbullTraceOrigin origin)
++{
++    bool stop = false;
++
++    instruction_trace_init();
++    qemu_mutex_lock(&trace.lock);
++    if (trace.active) {
++        TraceRecord *record = &trace.records[trace.count % trace.capacity];
++        record->sequence = trace.count + 1;
++        record->vcpu = vcpu;
++        record->pc = pc;
++        record->origin = origin;
++        trace.count++;
++        if (trace.count == trace.requested) {
++            trace.active = false;
++            trace.stop_pending = true;
++            g_free(trace.stopped_reason);
++            trace.stopped_reason = g_strdup("instruction-count");
++            stop = true;
++        }
++    }
++    qemu_mutex_unlock(&trace.lock);
++    return stop;
++}
++
++void fdisbull_instruction_trace_handle_stop_request(void)
++{
++    instruction_trace_init();
++    assert(bql_locked());
++    qemu_mutex_lock(&trace.lock);
++    if (trace.stop_pending) {
++        trace.stop_pending = false;
++        qemu_mutex_unlock(&trace.lock);
++        if (runstate_is_running()) {
++            vm_stop(RUN_STATE_PAUSED);
++        }
++        return;
++    }
++    qemu_mutex_unlock(&trace.lock);
++}
++
++void fdisbull_instruction_trace_invalidate(const char *reason)
++{
++    instruction_trace_init();
++    qemu_mutex_lock(&trace.lock);
++    trace.active = false;
++    trace.stop_pending = false;
++    trace.count = 0;
++    if (trace.epoch != UINT64_MAX) {
++        trace.epoch++;
++    }
++    g_free(trace.stopped_reason);
++    trace.stopped_reason = g_strdup(reason ? reason : "invalidated");
++    qemu_mutex_unlock(&trace.lock);
++}
++
++static void trace_precondition(Error **errp)
++{
++    CPUState *cpu;
++    unsigned count = 0;
++
++#ifndef CONFIG_PLUGIN
++    error_setg(errp, "instruction trace requires a QEMU build with TCG plugins");
++    return;
++#endif
++    if (!tcg_enabled() || (runstate_get() != RUN_STATE_PAUSED &&
++                           runstate_get() != RUN_STATE_DEBUG &&
++                           runstate_get() != RUN_STATE_PRELAUNCH)) {
++        error_setg(errp, "instruction trace requires stopped system-mode TCG");
++        return;
++    }
++    CPU_FOREACH(cpu) {
++        count++;
++        if (count > 1 || !cpu->stopped) {
++            error_setg(errp, "instruction trace requires one stopped vCPU");
++            return;
++        }
++    }
++    if (count != 1) {
++        error_setg(errp, "instruction trace requires one stopped vCPU");
++    }
++}
++
++static FdisbullInstructionTraceInfo *trace_info(uint64_t epoch,
++                                                uint64_t after,
++                                                uint32_t max_events,
++                                                Error **errp)
++{
++    FdisbullInstructionTraceInfo *info;
++    uint64_t oldest, first, end, seq;
++
++    instruction_trace_init();
++    if (max_events == 0 || max_events > TRACE_MAX_PAGE) {
++        error_setg(errp, "max-events must be between 1 and %u", TRACE_MAX_PAGE);
++        return NULL;
++    }
++    qemu_mutex_lock(&trace.lock);
++    if (epoch != trace.epoch) {
++        qemu_mutex_unlock(&trace.lock);
++        error_setg(errp, "instruction trace epoch mismatch");
++        return NULL;
++    }
++    if (after > trace.count) {
++        qemu_mutex_unlock(&trace.lock);
++        error_setg(errp, "instruction trace cursor is ahead of the producer");
++        return NULL;
++    }
++
++    oldest = trace.count > trace.capacity ? trace.count - trace.capacity + 1 :
++                                            (trace.count ? 1 : 0);
++    first = MAX(after + 1, oldest);
++    end = MIN(trace.count + 1, first + max_events);
++    info = g_new0(FdisbullInstructionTraceInfo, 1);
++    info->epoch = trace.epoch;
++    info->instruction_count = trace.requested;
++    info->capacity = trace.capacity;
++    info->active = trace.active;
++    info->stopped_reason = g_strdup(trace.stopped_reason ? trace.stopped_reason : "none");
++    info->captured_count = trace.count;
++    info->oldest_sequence = oldest;
++    info->next_sequence = trace.count + 1;
++    info->dropped_count = trace.count > trace.capacity ? trace.count - trace.capacity : 0;
++    info->events = NULL;
++    for (seq = end; seq > first; ) {
++        seq--;
++        TraceRecord *record = &trace.records[(seq - 1) % trace.capacity];
++        FdisbullInstructionTraceEventList *node =
++            g_new0(FdisbullInstructionTraceEventList, 1);
++        node->value = g_new0(FdisbullInstructionTraceEvent, 1);
++        node->value->sequence = record->sequence;
++        node->value->vcpu = record->vcpu;
++        node->value->pc = record->pc;
++        node->value->reason = g_strdup("before-execution");
++        node->value->origin = g_strdup(
++            record->origin == FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH ?
++            "breakpoint-pre-dispatch" : "tcg-dispatch");
++        node->next = info->events;
++        info->events = node;
++    }
++    qemu_mutex_unlock(&trace.lock);
++    return info;
++}
++
++FdisbullInstructionTraceInfo *qmp_x_fdisbull_trace_start(
++    uint64_t instruction_count, Error **errp)
++{
++    trace_precondition(errp);
++    if (errp && *errp) {
++        return NULL;
++    }
++    if (instruction_count == 0 || instruction_count > UINT64_C(10000000)) {
++        error_setg(errp, "instruction-count must be between 1 and 10000000");
++        return NULL;
++    }
++    instruction_trace_init();
++    qemu_mutex_lock(&trace.lock);
++    if (trace.active || trace.stop_pending) {
++        qemu_mutex_unlock(&trace.lock);
++        error_setg(errp, "instruction trace is already active or awaiting stop");
++        return NULL;
++    }
++    if (trace.epoch == UINT64_MAX) {
++        qemu_mutex_unlock(&trace.lock);
++        error_setg(errp, "instruction trace epoch exhausted");
++        return NULL;
++    }
++    g_free(trace.records);
++    trace.capacity = MIN(instruction_count, TRACE_MAX_CAPACITY);
++    trace.records = g_new0(TraceRecord, trace.capacity);
++    trace.epoch++;
++    trace.requested = instruction_count;
++    trace.count = 0;
++    trace.active = true;
++    trace.stop_pending = false;
++    g_free(trace.stopped_reason);
++    trace.stopped_reason = g_strdup("recording");
++    qemu_mutex_unlock(&trace.lock);
++
++    tb_flush(first_cpu);
++    return trace_info(trace.epoch, 0, 1, errp);
++}
++
++FdisbullInstructionTraceInfo *qmp_x_fdisbull_trace_read(
++    uint64_t epoch, uint64_t after_sequence, uint32_t max_events,
++    Error **errp)
++{
++    return trace_info(epoch, after_sequence, max_events, errp);
++}
++
++FdisbullInstructionTraceInfo *qmp_x_fdisbull_trace_stop(
++    uint64_t epoch, uint64_t after_sequence, uint32_t max_events,
++    Error **errp)
++{
++    trace_precondition(errp);
++    if (errp && *errp) {
++        return NULL;
++    }
++    instruction_trace_init();
++    qemu_mutex_lock(&trace.lock);
++    if (epoch != trace.epoch) {
++        qemu_mutex_unlock(&trace.lock);
++        error_setg(errp, "instruction trace epoch mismatch");
++        return NULL;
++    }
++    trace.active = false;
++    if (g_strcmp0(trace.stopped_reason, "recording") == 0) {
++        g_free(trace.stopped_reason);
++        trace.stopped_reason = g_strdup("user-stop");
++    }
++    qemu_mutex_unlock(&trace.lock);
++    return trace_info(epoch, after_sequence, max_events, errp);
++}
+--- /dev/null
++++ b/system/fdisbull-instruction-trace.h
+@@ -0,0 +1,27 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#ifndef SYSTEM_FDISBULL_INSTRUCTION_TRACE_H
++#define SYSTEM_FDISBULL_INSTRUCTION_TRACE_H
++
++#include <stdint.h>
++
++typedef enum FdisbullTraceOrigin {
++    FDISBULL_TRACE_TCG_DISPATCH,
++    FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH,
++} FdisbullTraceOrigin;
++
++#ifdef CONFIG_USER_ONLY
++static inline bool fdisbull_instruction_trace_active(void) { return false; }
++static inline bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
++                                                       FdisbullTraceOrigin origin)
++{ return false; }
++static inline void fdisbull_instruction_trace_handle_stop_request(void) { }
++static inline void fdisbull_instruction_trace_invalidate(const char *reason) { }
++#else
++bool fdisbull_instruction_trace_active(void);
++bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
++                                                       FdisbullTraceOrigin origin);
++void fdisbull_instruction_trace_handle_stop_request(void);
++void fdisbull_instruction_trace_invalidate(const char *reason);
++#endif
++
++#endif
+--- a/system/fdisbull-instrumented-checkpoint.c
++++ b/system/fdisbull-instrumented-checkpoint.c
+@@ -28,6 +28,7 @@
+ #include "qobject/qjson.h"
+ #include "qobject/qobject.h"
+ #include "system/fdisbull-instrumented-checkpoint.h"
++#include "system/fdisbull-instruction-trace.h"
+ #include "system/fdisbull-frame-keys.h"
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-video-frame.h"
+@@ -370,6 +371,9 @@
+ void fdisbull_instrumented_checkpoint_snapshot_load_complete(bool success)
+ {
+     assert(bql_locked());
++    if (success) {
++        fdisbull_instruction_trace_invalidate("checkpoint-load");
++    }
+     if (!success) {
+         restore_pending = false;
+     }
+@@ -542,6 +546,7 @@
+         return NULL;
+     }
+     fdisbull_frame_key_repeat_checkpoint_restore(state->frame_key_repeat);
++    fdisbull_instruction_trace_invalidate("checkpoint-import");
+     receipt = g_new0(FdisbullInstrumentedCheckpointReceipt, 1);
+     receipt->format = g_strdup(has_source ? state->format :
+         FDISBULL_INSTRUMENTED_CHECKPOINT_FORMAT_V2);
+--- a/system/meson.build
++++ b/system/meson.build
+@@ -23,6 +23,7 @@
+   'fdisbull-frame-keys.c',
+   'fdisbull-layers.c',
+   'fdisbull-dos-checkpoint.c',
++  'fdisbull-instruction-trace.c',
+   'fdisbull-instrumented-checkpoint.c',
+   'fdisbull-task-context.c',
+   'globals.c',
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -53,6 +53,7 @@
+ #include "qom/object_interfaces.h"
+ #include "system/cpus.h"
+ #include "system/fdisbull-clock.h"
++#include "system/fdisbull-instruction-trace.h"
+ #include "system/fdisbull-dos-save-stop.h"
+ #include "system/fdisbull-display.h"
+ #include "system/fdisbull-video-frame.h"
+@@ -544,6 +545,7 @@
+ 
+     fdisbull_stopped_control_lifetime("system-reset");
+     fdisbull_clock_on_reset();
++    fdisbull_instruction_trace_invalidate("system-reset");
+     mc = current_machine ? MACHINE_GET_CLASS(current_machine) : NULL;
+ 
+     cpu_synchronize_all_states();
+@@ -817,6 +819,7 @@
+         vm_stop(RUN_STATE_DEBUG);
+     }
+     fdisbull_clock_handle_stop_request();
++    fdisbull_instruction_trace_handle_stop_request();
+     fdisbull_display_frame_handle_stop_request();
+     if (dos_save_stop_handler) {
+         dos_save_stop_handler();

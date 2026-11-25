@@ -1,0 +1,91 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_manifest": "../qemu-cmpxchg16b-fault-retry/source-manifest.json",
+  "base_producer_sha256": "7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e",
+  "composition": "Apply after the exact CMPXCHG16B fault-retry candidate; verify each preimage hash and git apply --check. Requires QEMU configured with -Dplugins=true.",
+  "patch": "qemu-10.0.13-fdisbull-instruction-trace-v1.patch",
+  "patch_bytes": 19480,
+  "patch_sha256": "5fb3f5e667d974f11409495c31ecec3acca48f4668011d266638a2031e5bd339",
+  "files": [
+    {
+      "path": "accel/tcg/cpu-exec.c",
+      "base_bytes": 35264,
+      "base_sha256": "c9005cf15c3fcb24427eaf38d89f95566f4c9d407605a8bfe3fa64c1363b85b8",
+      "patched_bytes": 35810,
+      "patched_sha256": "f900caa797b5be6450a2ce6d694232a362a7aca65f0360d32a055856f700ba48"
+    },
+    {
+      "path": "accel/tcg/plugin-gen.c",
+      "base_bytes": 14675,
+      "base_sha256": "d7b3c63d298b055f568882268123b590defba582f86577368da2cbf1e4c1bc69",
+      "patched_bytes": 15571,
+      "patched_sha256": "05c3bf32a85ddc21dfd3fd588d6e02fd522f3c55ad404a99bebc3f917950b25b"
+    },
+    {
+      "path": "qapi/fdisbull-instruction-trace.json",
+      "base_bytes": null,
+      "base_sha256": null,
+      "patched_bytes": 3611,
+      "patched_sha256": "e916094293bffe5248ad301926c950c6e1fc6e0afaf14f26476b347a44212940"
+    },
+    {
+      "path": "qapi/meson.build",
+      "base_bytes": 3784,
+      "base_sha256": "9f035b69aa760d661938b3de2e6e86997702a5f425d313ef3618a6e538d7965f",
+      "patched_bytes": 3816,
+      "patched_sha256": "38856e67f730b6780cd785a4bb4e8c0561833e5e8fcc83f2d6c2df0127b9a3ad"
+    },
+    {
+      "path": "qapi/qapi-schema.json",
+      "base_bytes": 2867,
+      "base_sha256": "dae36f47a27178a073fa86cecc806be7170aced75f5e94b627a1beaf95953da1",
+      "patched_bytes": 2916,
+      "patched_sha256": "70ce42163d3a53d458c264721edeb461788119d734c1086ab7fb29993257a919"
+    },
+    {
+      "path": "system/fdisbull-instruction-trace.c",
+      "base_bytes": null,
+      "base_sha256": null,
+      "patched_bytes": 8505,
+      "patched_sha256": "5214032498d66f16237c7427246ce30dc5d9eae1f3cb44d7a62a8365ad0cb941"
+    },
+    {
+      "path": "system/fdisbull-instruction-trace.h",
+      "base_bytes": null,
+      "base_sha256": null,
+      "patched_bytes": 1075,
+      "patched_sha256": "f5826b5c93a4ee7a9d92864a2e070f4b101839fb25c67e6ff94e22d64a0fa34f"
+    },
+    {
+      "path": "system/fdisbull-instrumented-checkpoint.c",
+      "base_bytes": 24378,
+      "base_sha256": "dda418afd27e25e812e10361befc90e205167e5474ababd04420eb26c4a509f7",
+      "patched_bytes": 24580,
+      "patched_sha256": "cb271ad97706d34eee2848148b5bac9e4f1fe6069fdd2a2fef3a9c7a069d9869"
+    },
+    {
+      "path": "system/meson.build",
+      "base_bytes": 1289,
+      "base_sha256": "50c293906cc820405331b68e5b48338af0d098dcc685fd4e6aa1f641c233b652",
+      "patched_bytes": 1323,
+      "patched_sha256": "26dbb0478621effd8e4be524a2d508b37de279a6600c0923fd19d27c51fcdb0b"
+    },
+    {
+      "path": "system/runstate.c",
+      "base_bytes": 29382,
+      "base_sha256": "e4858269d588546ac238a8c221fbee5c3373b54457d009c9131eae3b2439ab87",
+      "patched_bytes": 29542,
+      "patched_sha256": "83063f56890186bb830a85024c926c46a0c107a9874e2699acbdb1f060364d9d"
+    }
+  ],
+  "scope": "Bounded single-vCPU system-mode TCG instruction-boundary trace. TCG events are execution-time dispatch observations; breakpoint-pre-dispatch events are matched breakpoint boundaries (GDB or architectural) before TB dispatch. Event PC is guest virtual address. Neither event origin proves decode, completion, or retirement. On Nth event, for TCG dispatch, restore state and request a GDB-visible stop at that PC; a GDB breakpoint boundary is already stopped by EXCP_DEBUG. Resuming after a TCG count stop retries the Nth instruction after recording is inactive. Reset and instrumented checkpoint load/import invalidate the ring and advance epoch. Code bytes and x86 mode are omitted.",
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "command": "ninja -j1 qemu-system-x86_64 (Meson -Dplugins=true)",
+    "exit_code": 0,
+    "candidate_sha256": "105a9ecbd5f2d52a63da4f68608df6fbba2cf79b9a07f1d2a7c2c1d868059c58",
+    "qualification": "Plugin-enabled local build passed. Paired QMP trace cases passed 2/2, including exact count and GDB breakpoint ordering; native regression passed 5/5. Tests were run on the same executable SHA after the final source build."
+  }
+}

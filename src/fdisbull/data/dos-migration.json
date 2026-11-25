@@ -813,7 +813,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "Stored machine trace artifact (no streaming cursor equivalent)",
+      "native_route": "QemuDOSProcessSession.call('trace.read') uses the bounded native QMP before-execution ring with epoch-bound opaque cursors; raw dispatch observations retain unknown instruction completion and are not source-normalized",
       "qualification": "unqualified"
     },
     {
@@ -821,7 +821,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.trace() or QemuDOSProcessSession.trace() (bounded stopped observations; not streaming fetch capture)",
+      "native_route": "QemuDOSProcessSession.call('trace.start') arms the native QMP before-execution ring for one owned DOS process epoch; MachineContext.trace() remains the separate stopped-step artifact API",
       "qualification": "unqualified"
     },
     {
@@ -829,7 +829,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "Machine trace call ends at count, stop, or deadline (no persistent trace control)",
+      "native_route": "QemuDOSProcessSession.call('trace.stop') stops and drains the native QMP ring tail under the same producer epoch; qualification and full DOSBox parity remain open",
       "qualification": "unqualified"
     },
     {

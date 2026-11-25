@@ -25,6 +25,7 @@ from .qemu_dos import QemuDOSSession
 from .qemu_dos_checkpoint import process_save_operation
 from .qemu_machine import (MachineContext, MachineDebugSession, QemuMachine,
                            machine_operation, machine_trace_operation)
+from .qemu_fetch_trace import QemuFetchTraceMixin
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_paged_le_tracking import QemuPagedLETrackingMixin
 from .qemu_dos_tasks import QemuDOSTaskMixin
@@ -189,7 +190,7 @@ def observe_devices(read, segment, offset, *, maximum=64):
     return dict(status='incomplete', reason='Device header budget exhausted', headers=headers, scope=scope)
 
 
-class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuPagedLETrackingMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
+class QemuDOSProcessSession(QemuFetchTraceMixin, QemuScreenshotHookMixin, QemuSceneObservationMixin, QemuMovementMixin, QemuSpatialPolicyMixin, QemuProofMixin, QemuRuntimeMemoryMixin, QemuMacroSessionMixin, QemuPagedLETrackingMixin, QemuDOSLEBindingMixin, QemuDOSSourceAdmissionMixin, QemuWorkspaceMixin, QemuExperimentMixin, QemuCpuDeltaMixin, QemuFrameKeysMixin, QemuDOSFramesMixin, QemuDOSHistoryMixin, QemuDOSSchedulerMixin, QemuDOSTaskViewMixin, QemuDOSTaskMixin, QemuDOSSourceTraceMixin, MachineDebugSession):
     """One source-bound DOS process and its still-owned machine, per cold boot.
 
     All controls retain machine address semantics and a single breakpoint
@@ -215,6 +216,8 @@ class QemuDOSProcessSession(QemuScreenshotHookMixin, QemuSceneObservationMixin, 
         click_frame, label='QEMU captured coordinate click', parameter_validator=validate_coordinate_click_frame)
 
     def call(self, method, params=None):
+        if method in ("trace.start", "trace.read", "trace.stop"):
+            return self._trace_rpc(method, params)
         if method != 'input.mouse.click':
             return super().call(method, params)
         if type(params) is not dict:

@@ -1,0 +1,97 @@
+{
+  "format": "fdisbull-qemu-instruction-trace-evidence-1",
+  "date": "2026-11-24",
+  "status": "final-executable-verified-in-local-batch; full-parity-open",
+  "candidate_2": {
+    "sha256": "105a9ecbd5f2d52a63da4f68608df6fbba2cf79b9a07f1d2a7c2c1d868059c58",
+    "paired_dosbox_qemu_cases": {
+      "passed": 2,
+      "total": 2,
+      "evidence_status": "reported-by-native-owner"
+    },
+    "native_regression_cases": {
+      "passed": 5,
+      "total": 5,
+      "evidence_status": "reported-by-native-owner"
+    },
+    "plugin_enabled_x86_system_build": {
+      "status": "passed",
+      "evidence_status": "reported-by-native-owner"
+    }
+  },
+  "final_candidate": {
+    "sha256": "105a9ecbd5f2d52a63da4f68608df6fbba2cf79b9a07f1d2a7c2c1d868059c58",
+    "build_result": "native owner reported plugin-enabled x86 system build pass; root verified executable SHA-256 after rebuild",
+    "paired_result": "2 passed on this exact executable",
+    "native_regression_result": "5 passed on this exact executable",
+    "combined_local_batch": {
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 19.49,
+      "junit_private_path": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-trace-20261124/final-batch-reviewed.xml",
+      "junit_sha256": "3cfe50c99647e6a47e5384b3cda5e803da9a7bdf28f0cbc32555591e713f5950"
+    }
+  },
+  "followup_checks": {
+    "paired_origin_assertions": {
+      "passed": 2,
+      "failed": 0,
+      "junit_private_path": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-trace-20261124/origin-batch.xml",
+      "junit_sha256": "866027a97e5cf5ba11fd74f0843ea270e2b9ffbfc0de2c548adcec65b3f76bb4"
+    },
+    "macos_full_suite": {
+      "passed": 18075,
+      "failed": 11,
+      "errors": 23,
+      "skipped": 1250,
+      "status": "not_green; Linux ELF fixture setup and subprocess environment failures remain"
+    },
+    "failed_non_elf_cases_with_explicit_pythonpath": {
+      "passed": 9,
+      "failed": 0,
+      "environment": "PYTHONPATH=src:tests"
+    }
+  },
+  "breakpoint_boundary": {
+    "initial_observation": "seven QEMU events versus eight DOSBox-X events",
+    "cause": "TCG callbacks do not execute for the GDB breakpoint PC before translated-block dispatch",
+    "correction": "Emit a distinct breakpoint-pre-dispatch event before EXCP_DEBUG and preserve its origin separately from tcg-dispatch",
+    "expected_paired_offsets": [
+      "0x0100",
+      "0x0103",
+      "0x0104",
+      "0x0103",
+      "0x0104",
+      "0x0103",
+      "0x0104",
+      "0x0106"
+    ],
+    "completion_and_retirement": "unknown"
+  },
+  "event_scope": {
+    "fields": [
+      "sequence",
+      "vcpu",
+      "pc",
+      "reason",
+      "origin"
+    ],
+    "address_space": "guest virtual",
+    "origins": [
+      "tcg-dispatch",
+      "breakpoint-pre-dispatch"
+    ],
+    "instruction_bytes": "not supplied per event",
+    "cpu_mode_and_segment_context": "not supplied per event",
+    "canonical_source_identity": "not supplied per event",
+    "full_dosbox_parity": "not established"
+  },
+  "sources": [
+    "native/qemu-instruction-trace/README.md",
+    "native/qemu-instruction-trace/source-manifest.json",
+    "tests/test_qemu_dos_before_fetch_trace_native.py",
+    "tests/test_qemu_fetch_trace.py"
+  ],
+  "provenance_note": "The root agent independently reran the paired and regression cases on the final executable SHA after rebuild. Build and patch replay checks were reported by the native owner; root independently hashed the packaged patch and final executable. Private JUnit output remains outside Git."
+}
