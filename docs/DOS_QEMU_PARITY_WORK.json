@@ -1369,11 +1369,14 @@
         "native/qemu-instruction-trace/source-manifest.json",
         "native/qemu-instruction-context/qemu-10.0.13-fdisbull-instruction-context-v2.patch",
         "native/qemu-instruction-context/source-manifest.json",
+        "native/qemu-rep-terminal-step/0001-i386-tcg-rep-terminal-step.patch",
+        "native/qemu-rep-terminal-step/manifest.json",
         "tests/test_qemu_trace_serial_admission_native.py",
         "tests/test_qemu_dos_divide_fault_frame_native.py",
-        "tests/test_qemu_dos_rep_trace_boundary_native.py"
+        "tests/test_qemu_dos_rep_trace_boundary_native.py",
+        "tests/test_qemu_dos_rep_terminal_cases_native.py"
       ],
-      "evidence": "docs/evidence/qemu-fault-rep-trace-2026-11-24/verification.json",
+      "evidence": "docs/evidence/qemu-rep-terminal-step-2026-11-24/verification.json",
       "depends_on": [
         "source-and-protected-dos"
       ],
@@ -1384,7 +1387,7 @@
         "protected-source-native"
       ],
       "remaining_work": [
-        "Resolve the observed terminal REP step/fetch boundary: QEMU remains at REP with CX=0 and fetches it once more, while DOSBox-X advances to the following instruction. The authored divide-fault pair matches at fault/handler fetches and CPU frame; broader fault classes, IRQ/timer policy, overlays and departure from admitted COM/MZ or explicit embedded-LE source remain open.",
+        "Extend the patched candidate's bounded REP result to paired REPNE, address-size masks, TF/icount, fault retry, IRQ and overlay cases. The authored paired COM MOVSB now reaches the following JMP with CX=0 and destination ABC on both engines; QEMU-only zero/one/three-count MOVSB, conditional REPE termination and cold mid-REP restore passed. Broader fault classes and behavior beyond admitted COM/MZ or explicit embedded-LE source remain open.",
         "Extend exact-candidate paired qualification beyond the authored COM loop, self-modifying COM case, divide-fault witness and partial-REP witness. The bounded QEMU host checkpoint-cursor test covers hot and fresh-session cold restore plus producer epoch invalidation; that test is QEMU-only and does not establish paired DOSBox-X checkpoint behavior.",
         "The v2 ring supplies translated-TB bytes for TCG dispatches and observed x86 code context when valid; breakpoint-pre-dispatch bytes are explicitly unavailable. Parallel TCG trace capture is refused to preserve descriptor lifetime. These observations do not establish canonical source identity or per-event DOSBox byte parity. Completion and retirement remain unknown."
       ],

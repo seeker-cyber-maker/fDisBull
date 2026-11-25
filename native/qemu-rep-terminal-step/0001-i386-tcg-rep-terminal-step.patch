@@ -1,0 +1,8 @@
+--- a/target/i386/tcg/translate.c
++++ b/target/i386/tcg/translate.c
+@@ -1412,2 +1412,5 @@
+         tcg_gen_brcondi_tl(TCG_COND_TSTEQ, cx_next, cx_mask, last);
++    } else {
++        /* When looping is disabled, retire the final iteration here. */
++        tcg_gen_brcondi_tl(TCG_COND_TSTEQ, cx_next, cx_mask, done);
+     }

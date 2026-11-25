@@ -1,0 +1,27 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "composition": "Apply to the already-patched v2 QEMU source with the exact translate.c preimage hash. The patch changes only the non-looping x86 REP terminal iteration.",
+  "patch": "0001-i386-tcg-rep-terminal-step.patch",
+  "patch_sha256": "8d46773679d61c8e2f7365e1e3636c6c31f1a654ac8f68fa4bc92a6118864b25",
+  "files": [
+    {
+      "path": "target/i386/tcg/translate.c",
+      "base_sha256": "a27c91cb721c90bcac5442448b62f8ab1b5b004cb0b07fcd73ac39e98a29cb41",
+      "patched_sha256": "3d16f3482ceaf0d956dc3723176d36c6cae711c9e4f3ad8cdd8e7c890617d0d7"
+    }
+  ],
+  "patch_application": {
+    "forward_postimage_hash_match": true,
+    "reverse_preimage_hash_match": true
+  },
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "plugins": true,
+    "command": "ninja -j1 --quiet qemu-system-x86_64",
+    "exit_code": 0,
+    "candidate_sha256": "59683968db1641a19caaf5c588e5936c67ba5382e233108a9cfdac7e2202f4c8"
+  },
+  "qualification": "Bounded local native comparisons and regressions passed; see docs/evidence/qemu-rep-terminal-step-2026-11-24/verification.json. Overall QEMU/DOSBox-X parity remains unqualified."
+}

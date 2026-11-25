@@ -1,4 +1,4 @@
-"""Paired partial-REP progress and an explicit terminal step difference.
+"""Paired partial-REP progress and terminal step parity.
 
 The private DOS boot image and selected native executables come from the
 existing paired trace fixture. Fetch records do not certify retirement.
@@ -84,7 +84,7 @@ def _next_fetch(debug, *, qemu, runtime_base=None):
             for event in page["events"]]
 
 
-def test_dosbox_qemu_partial_rep_fetch_progress_and_terminal_step_difference(paired_runtime, tmp_path):
+def test_dosbox_qemu_partial_rep_fetch_progress_and_terminal_step_parity(paired_runtime, tmp_path):
     source = tmp_path / "REP.COM"
     source.write_bytes(PROGRAM)
     with Project.create(tmp_path / "rep.fdb", source, image="com") as project:
@@ -119,14 +119,14 @@ def test_dosbox_qemu_partial_rep_fetch_progress_and_terminal_step_difference(pai
         dict(ip=REP_IP, cx=1, si=0x110, di=0x113, destination="414200"),
     ]
     assert qemu["progress"][:2] == dosbox["progress"][:2] == shared_progress
-    # Both copied the third byte, but QEMU's GDB step still reports the REP
-    # address at CX=0; DOSBox-X reports the following JMP address. This is an
-    # observed stop boundary difference, not a completed-instruction claim.
+    # The third step must stop at the following JMP on both engines. Fetch
+    # records alone do not certify completion; the debugger stop and CPU/RAM
+    # state establish this bounded step parity.
     terminal = dict(cx=0, si=0x111, di=0x114, destination="414243")
-    assert qemu["progress"][2] == dict(ip=REP_IP, **terminal)
+    assert qemu["progress"][2] == dict(ip=0x10C, **terminal)
     assert dosbox["progress"][2] == dict(ip=0x10C, **terminal)
     assert qemu_tail == dict(ip=0x10C, **terminal)
-    assert qemu_next_fetch == [REP_IP]
+    assert qemu_next_fetch == [0x10C]
     assert dosbox_next_fetch == [0x10C]
     assert qemu["offsets"] == dosbox["offsets"] == [REP_IP] * 3
     assert qemu["trace_version"] == 2

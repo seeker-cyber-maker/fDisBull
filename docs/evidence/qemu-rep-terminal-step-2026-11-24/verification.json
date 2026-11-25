@@ -1,0 +1,78 @@
+{
+  "format": "fdisbull-qemu-rep-terminal-step-1",
+  "date": "2026-11-24",
+  "scope": "bounded local native observations; trace-events remains unqualified",
+  "candidate_inputs": {
+    "qemu_sha256": "59683968db1641a19caaf5c588e5936c67ba5382e233108a9cfdac7e2202f4c8",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "qemu_rep_terminal_patch_sha256": "8d46773679d61c8e2f7365e1e3636c6c31f1a654ac8f68fa4bc92a6118864b25"
+  },
+  "accepted_runs": [
+    {
+      "name": "native batch",
+      "selection": [
+        "tests/test_qemu_fetch_trace.py",
+        "tests/test_qemu_dos_before_fetch_trace_native.py",
+        "tests/test_qemu_dos_trace_checkpoint_epoch_native.py",
+        "tests/test_qemu_trace_semantics_native.py",
+        "tests/test_qemu_dos_divide_fault_frame_native.py",
+        "tests/test_qemu_dos_rep_trace_boundary_native.py",
+        "tests/test_qemu_dos_rep_terminal_cases_native.py",
+        "tests/test_qemu_dos_checkpoint_sessions_native.py::test_native_midprogram_cross_session_checkpoint_layers_and_hook",
+        "tests/test_qemu_dos_alias_task_layers_native.py::test_native_aliased_task_layers_cold_restore",
+        "tests/test_qemu_dos_irq_preemption_quantum_native.py::test_irq0_quantum_three_cold_restore_preserves_inflight_phase"
+      ],
+      "result": {"passed": 41, "failed": 0, "skipped": 0},
+      "private_junit_sha256": "04e5c6d428f19d126305648a6bba19b27911a796fd192576e6669d18d22c8cad"
+    },
+    {
+      "name": "cold restore from mid-REP",
+      "selection": ["tests/test_qemu_dos_rep_terminal_cases_native.py::test_qemu_mid_rep_cross_session_cold_restore_resumes_remaining_iterations"],
+      "result": {"passed": 1, "failed": 0, "skipped": 0},
+      "private_junit_sha256": "5c818136c2bfe8a01a20f8969b0c44d4a540ba78737b8789cca5b1a0adb0640e",
+      "scope": "QEMU-only"
+    },
+    {
+      "name": "history cases",
+      "selection": [
+        "tests/test_qemu_dos_history_native.py::test_native_irq_checkpoint_history_rewinds_branches_and_cold_restores",
+        "tests/test_qemu_dos_history_native.py::test_native_history_default_single_step_and_rewind_routes"
+      ],
+      "result": {"passed": 4, "failed": 0, "skipped": 0},
+      "private_junit_sha256": "32fc7b50422f417ef9fb93b4870edd6f73a78c236af5802227355863889b654c"
+    },
+    {
+      "name": "host trial observations",
+      "selection": ["tests/test_qemu_trial_observations.py"],
+      "result": {"passed": 13, "failed": 0, "skipped": 0},
+      "receipt": "trial observations; no JUnit digest supplied"
+    }
+  ],
+  "observations": {
+    "paired_rep_movsb": {
+      "program": "authored COM; CX=3; source ABC; destination initially zero",
+      "dosbox_x_terminal": {"ip": "010C", "cx": 0, "destination_hex": "414243"},
+      "qemu_terminal": {"ip": "010C", "cx": 0, "destination_hex": "414243"},
+      "qemu_next_fetch_ip": "010C",
+      "trace_fetch_ips_for_iterations": ["010A", "010A", "010A"],
+      "claim": "bounded terminal step parity observed for this authored probe"
+    },
+    "qemu_only_terminal_cases": [
+      "REP MOVSB count zero",
+      "REP MOVSB count one",
+      "REP MOVSB count three",
+      "REPE CMPSB termination at the second, mismatching comparison"
+    ],
+    "qemu_only_cold_restore": "mid-REP checkpoint restored and resumed in the accepted one-case run"
+  },
+  "qualification": {
+    "trace_events_workgroup": "unqualified",
+    "overall_qemu_dosbox_parity": "not qualified",
+    "dosbox_default": true,
+    "dotbox_changed": false,
+    "ci_run": false,
+    "release_or_install": false,
+    "native_vm_tests_executed_locally": true,
+    "historical_divergence_evidence": "docs/evidence/qemu-fault-rep-trace-2026-11-24/verification.json"
+  }
+}
