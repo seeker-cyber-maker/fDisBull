@@ -1,0 +1,52 @@
+{
+  "format": "fdisbull-qemu-segment-access-1",
+  "date": "2026-11-25",
+  "scope": "bounded local native protected-mode segment access and selected regressions",
+  "candidate_inputs": {
+    "qemu_version": "10.0.13",
+    "qemu_sha256": "ca120486202d939c984bbce2c25b4b476bd429979edd7096c64904d786109d06",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "parent_qemu_sha256": "59683968db1641a19caaf5c588e5936c67ba5382e233108a9cfdac7e2202f4c8",
+    "qemu_segment_access_patch_sha256": "70d580efb4109fe761e114f602d7c7db26901b01eb5bc21bc8f27ea6ee12cda1",
+    "patch_manifest": "native/qemu-segment-access/manifest.json",
+    "prior_evidence": "docs/evidence/qemu-rep-terminal-step-2026-11-24/verification.json"
+  },
+  "accepted_run": {
+    "name": "exact-candidate local native batch",
+    "selection": [
+      "tests/test_qemu_dos_rep_fault_retry_native.py",
+      "tests/test_qemu_dos_rep_fault_checkpoint_native.py",
+      "tests/test_qemu_dos_scalar_limit_native.py",
+      "tests/test_qemu_dos_atomic_limit_native.py",
+      "tests/test_qemu_dos_rep_terminal_cases_native.py",
+      "tests/test_qemu_dos_repne_pair_native.py",
+      "tests/test_qemu_dos_rep_address_size_native.py",
+      "tests/test_qemu_dos_le_checkpoint_native.py",
+      "tests/test_qemu_dos_divide_fault_frame_native.py",
+      "tests/test_qemu_dos_history_native.py",
+      "tests/test_qemu_dos_modes_checkpoint_native.py"
+    ],
+    "result": {"passed": 29, "failed": 0, "skipped": 0},
+    "private_junit_sha256": "69b1c187641e5f610db99a4f7306022d94b1ddabaef7cb9bd337ad96bf9caa6b"
+  },
+  "observations": {
+    "paired_rep_movsb_partial_fault_retry": "Both engines enter the authored #GP handler after copying AB with ECX=2, ESI=0x10000 and EDI=0x2002; handler widens DS and retries to ABCD.",
+    "paired_scalar_limit": [
+      "Both engines fault before a dword read beginning at DS:0x10000, then repair and retry.",
+      "Both engines fault before a dword read beginning at DS:0xFFFE whose final bytes cross the 0xFFFF limit, then repair and retry."
+    ],
+    "qemu_only_cold_restore": "At the first REP #GP handler after AB, QEMU saved, closed and restored into a fresh process, retained the frame and partial state, then retried once to ABCD.",
+    "lock_cmpxchg_reference_difference": "QEMU faults before the atomic update and retries after repair. DOSBox-X reaches completion with DS=0x20, no handler marker, EAX=0x13579BDF and memory replaced with 0x2468ACE0.",
+    "null_ds_reference_difference": "QEMU faults on null DS and retries after repair. DOSBox-X reaches completion with DS=0, no handler marker and a read from the null-based address rather than the authored buffer value."
+  },
+  "qualification": {
+    "overall_qemu_dosbox_parity": "not qualified",
+    "trace_events_workgroup": "unqualified",
+    "dosbox_default": true,
+    "dotbox_changed": false,
+    "ci_run": false,
+    "release_or_install": false,
+    "native_vm_tests_executed_locally": true,
+    "private_inputs_committed": false
+  }
+}

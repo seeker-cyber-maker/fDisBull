@@ -1,0 +1,131 @@
+--- a/target/i386/helper.h
++++ b/target/i386/helper.h
+@@ -39,0 +40 @@
++DEF_HELPER_4(check_seg_access, void, env, tl, int, int)
+--- a/target/i386/tcg/seg_helper.c
++++ b/target/i386/tcg/seg_helper.c
+@@ -174,0 +175,42 @@
++}
++
++/* Check one legacy-mode data access before its memory operation. */
++void helper_check_seg_access(CPUX86State *env, target_ulong offset,
++                             int seg_reg, int size)
++{
++    SegmentCache *seg = &env->segs[seg_reg];
++    uint64_t first = offset;
++    uint64_t last = first + size - 1;
++    bool expand_down = (seg->flags & DESC_S_MASK) &&
++        !(seg->flags & DESC_CS_MASK) &&
++        (seg->flags & DESC_E_MASK);
++
++#ifdef TARGET_X86_64
++    /* Segment limits are ignored in 64-bit submode. */
++    if (env->hflags & HF_CS64_MASK) {
++        return;
++    }
++#endif
++    if (!(env->hflags & HF_PE_MASK)) {
++        return;
++    }
++
++    if ((seg->selector & 0xfffc) == 0 || !(seg->flags & DESC_P_MASK)) {
++        raise_exception_err_ra(env,
++                               seg_reg == R_SS ? EXCP0C_STACK : EXCP0D_GPF,
++                               0, GETPC());
++    }
++
++    if (expand_down) {
++        uint64_t upper = (seg->flags & DESC_B_MASK) ? UINT32_MAX : UINT16_MAX;
++
++        if (first <= seg->limit || last > upper) {
++            raise_exception_err_ra(env,
++                                   seg_reg == R_SS ? EXCP0C_STACK : EXCP0D_GPF,
++                                   0, GETPC());
++        }
++    } else if (last > seg->limit) {
++        raise_exception_err_ra(env,
++                               seg_reg == R_SS ? EXCP0C_STACK : EXCP0D_GPF,
++                               0, GETPC());
++    }
+--- a/target/i386/tcg/translate.c
++++ b/target/i386/tcg/translate.c
+@@ -709,0 +710,12 @@
++static void gen_check_string_segment(DisasContext *s, int seg_reg,
++                                     int reg, MemOp ot)
++{
++    if (PE(s) && !CODE64(s)) {
++        TCGv offset = gen_ext_tl(NULL, cpu_regs[reg], s->aflag, false);
++
++        gen_helper_check_seg_access(tcg_env, offset,
++                                    tcg_constant_i32(seg_reg),
++                                    tcg_constant_i32(1 << ot));
++    }
++}
++
+@@ -835,0 +848,2 @@
++    gen_check_string_segment(s, s->override >= 0 ? s->override : R_DS,
++                             R_ESI, ot);
+@@ -837,0 +852 @@
++    gen_check_string_segment(s, R_ES, R_EDI, ot);
+@@ -1246,0 +1262 @@
++    gen_check_string_segment(s, R_ES, R_EDI, ot);
+@@ -1253,0 +1270,2 @@
++    gen_check_string_segment(s, s->override >= 0 ? s->override : R_DS,
++                             R_ESI, ot);
+@@ -1261,0 +1280 @@
++    gen_check_string_segment(s, R_ES, R_EDI, ot);
+@@ -1273,0 +1293 @@
++    gen_check_string_segment(s, R_ES, R_EDI, ot);
+@@ -1275,0 +1296,2 @@
++    gen_check_string_segment(s, s->override >= 0 ? s->override : R_DS,
++                             R_ESI, ot);
+@@ -1302,0 +1325 @@
++    gen_check_string_segment(s, R_ES, R_EDI, ot);
+@@ -1317,0 +1341,2 @@
++    gen_check_string_segment(s, s->override >= 0 ? s->override : R_DS,
++                             R_ESI, ot);
+@@ -1843,0 +1869,30 @@
++/* Check the segment-relative offset for one scalar memory operand. */
++static void gen_check_mem_segment(DisasContext *s, X86DecodedInsn *decode,
++                                  MemOp ot)
++{
++    int seg_reg;
++    bool seg_added;
++    TCGv ea;
++    TCGv offset;
++
++    if (!PE(s) || CODE64(s)) {
++        return;
++    }
++
++    seg_reg = s->override >= 0 ? s->override : decode->mem.def_seg;
++    seg_added = s->override >= 0 || ADDSEG(s);
++    if (s->aflag == MO_64 && s->override < 0) {
++        seg_added = false;
++    }
++    if (seg_added) {
++        ea = tcg_temp_new();
++        tcg_gen_sub_tl(ea, s->A0, cpu_seg_base[seg_reg]);
++    } else {
++        ea = s->A0;
++    }
++    offset = gen_ext_tl(NULL, ea, s->aflag, false);
++    gen_helper_check_seg_access(tcg_env, offset,
++                                tcg_constant_i32(seg_reg),
++                                tcg_constant_i32(1 << ot));
++}
++
+@@ -1870,0 +1926 @@
++        gen_check_mem_segment(s, decode, ot);
+@@ -1886,0 +1943 @@
++        gen_check_mem_segment(s, decode, ot);
+--- a/target/i386/tcg/emit.c.inc
++++ b/target/i386/tcg/emit.c.inc
+@@ -278,0 +279 @@
++            gen_check_mem_segment(s, decode, op->ot);
+@@ -358,0 +360 @@
++            gen_check_mem_segment(s, decode, op->ot);
+--- a/target/i386/tcg/decode-new.c.inc
++++ b/target/i386/tcg/decode-new.c.inc
+@@ -2863,0 +2864 @@
++        gen_check_mem_segment(s, &decode, decode.op[0].ot);

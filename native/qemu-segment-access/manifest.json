@@ -1,0 +1,44 @@
+{
+  "format": "fDisBull private native candidate incremental source patch",
+  "qemu_version": "10.0.13",
+  "composition": {
+    "preimage": "fDisBull-private/qemu-rep-terminal-20261124/source",
+    "postimage": "fDisBull-private/qemu-segment-limit-20261124-source",
+    "relationship": "Exact five-file incremental delta; no source tree modified during packaging."
+  },
+  "patch": {
+    "path": "segment-access.patch",
+    "sha256": "70d580efb4109fe761e114f602d7c7db26901b01eb5bc21bc8f27ea6ee12cda1"
+  },
+  "candidate_binary": {
+    "sha256": "ca120486202d939c984bbce2c25b4b476bd429979edd7096c64904d786109d06",
+    "verification_note": "The coordinating native run independently hashed this frozen macOS arm64 candidate and executed the selected local batch on the same SHA; see docs/evidence/qemu-segment-access-2026-11-25/verification.json."
+  },
+  "files": [
+    {
+      "path": "target/i386/helper.h",
+      "pre_sha256": "f93c861ca0e5a122919c6cf834bbd02f0e0c643783d56b88f4d1a22331d16044",
+      "post_sha256": "5d5c5a1253412b05e6d45ab26bb4089003a8fd4fe20884bae0258ecfeab53418"
+    },
+    {
+      "path": "target/i386/tcg/seg_helper.c",
+      "pre_sha256": "0be315dc057e02519716a35e66fafc8383da973bcc42b54726cb878f5fa57b3f",
+      "post_sha256": "b66c93996c277820444b3c4704d9dc8e7c0b6ca269faf216cea7f24cae5699d5"
+    },
+    {
+      "path": "target/i386/tcg/translate.c",
+      "pre_sha256": "3d16f3482ceaf0d956dc3723176d36c6cae711c9e4f3ad8cdd8e7c890617d0d7",
+      "post_sha256": "919a518b24d689bfcfa60751c4377196a4f349bc37e87659415302d33e3e1aa2"
+    },
+    {
+      "path": "target/i386/tcg/emit.c.inc",
+      "pre_sha256": "95b42d1cee889a391d6c981680df89739ca7f51a37539fecf4b87b4d32171cbe",
+      "post_sha256": "f1bfe0ff4599ec4ef7a4d723f04bdce39b021a27c96fc5cc60794ea52ed57ef7"
+    },
+    {
+      "path": "target/i386/tcg/decode-new.c.inc",
+      "pre_sha256": "9b548753b92a28be12c53960962c9f269179574f76f57e3e2b4f23afdc40b110",
+      "post_sha256": "00825ae5fb17fbdeae4aaed9de9f36cf781ff6b11b17ae75e90d2ea283d83b9a"
+    }
+  ]
+}

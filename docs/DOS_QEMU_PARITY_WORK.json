@@ -1371,14 +1371,24 @@
         "native/qemu-instruction-context/source-manifest.json",
         "native/qemu-rep-terminal-step/0001-i386-tcg-rep-terminal-step.patch",
         "native/qemu-rep-terminal-step/manifest.json",
+        "native/qemu-segment-access/segment-access.patch",
+        "native/qemu-segment-access/manifest.json",
+        "native/qemu-segment-access/README.md",
         "tests/test_qemu_trace_serial_admission_native.py",
         "tests/test_qemu_dos_divide_fault_frame_native.py",
         "tests/test_qemu_dos_rep_trace_boundary_native.py",
         "tests/test_qemu_dos_rep_terminal_cases_native.py",
         "tests/test_qemu_dos_repne_pair_native.py",
-        "tests/test_qemu_dos_rep_address_size_native.py"
+        "tests/test_qemu_dos_rep_address_size_native.py",
+        "tests/support/rep_fault_fixture.py",
+        "tests/support/scalar_limit_fixture.py",
+        "tests/support/atomic_limit_fixture.py",
+        "tests/test_qemu_dos_rep_fault_retry_native.py",
+        "tests/test_qemu_dos_rep_fault_checkpoint_native.py",
+        "tests/test_qemu_dos_scalar_limit_native.py",
+        "tests/test_qemu_dos_atomic_limit_native.py"
       ],
-      "evidence": "docs/evidence/qemu-rep-terminal-step-2026-11-24/verification.json",
+      "evidence": "docs/evidence/qemu-segment-access-2026-11-25/verification.json",
       "depends_on": [
         "source-and-protected-dos"
       ],
@@ -1389,7 +1399,7 @@
         "protected-source-native"
       ],
       "remaining_work": [
-        "Extend the patched candidate's bounded REP result to paired TF/icount, partial-progress fault retry, IRQ and overlay cases. Authored paired MOVSB, REPNE SCASB, 16-bit count masking with nonzero ECX high word, and 32-bit address-size MOVSB now have matching stopped outcomes; QEMU-only zero/one/three-count MOVSB, conditional REPE termination, cold mid-REP restore and virtual-clock normal run passed. Broader fault classes and behavior beyond admitted COM/MZ or explicit embedded-LE source remain open.",
+        "The patched candidate now has bounded paired REP MOVSB partial-progress #GP/retry and scalar DS limit/straddle witnesses, plus QEMU-only cold restore at the REP fault handler. LOCK CMPXCHG across that limit and null-DS offset-zero reads are explicit DOSBox-X reference differences: QEMU faults, DOSBox-X completes. Paired TF/icount, IRQ, overlay, access-rights, vector and implicit-stack cases remain open, as does behavior beyond admitted COM/MZ or explicit embedded-LE source.",
         "Extend exact-candidate paired qualification beyond the authored COM loop, self-modifying COM case, divide-fault witness and partial-REP witness. The bounded QEMU host checkpoint-cursor test covers hot and fresh-session cold restore plus producer epoch invalidation; that test is QEMU-only and does not establish paired DOSBox-X checkpoint behavior.",
         "The v2 ring supplies translated-TB bytes for TCG dispatches and observed x86 code context when valid; breakpoint-pre-dispatch bytes are explicitly unavailable. Parallel TCG trace capture is refused to preserve descriptor lifetime. These observations do not establish canonical source identity or per-event DOSBox byte parity. Completion and retirement remain unknown."
       ],
