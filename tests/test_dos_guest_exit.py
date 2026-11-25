@@ -1,19 +1,29 @@
 """Selected DOS process completion, independently of emulator/session cleanup."""
 import json
+import hashlib
 import os
 from pathlib import Path
+import threading
+from types import SimpleNamespace
 
 import pytest
 
 from fdisbull.project import Project
+from fdisbull.debugger import DebugSession, _native_dos_process_identity
+from fdisbull.dosbox_rpc import DebuggerError
 from test_dos_loader import mz_file
 from native_fixture import prepare_native_fixture
+
+
+REQUIRE_COLD_PROCESS_IDENTITY = 'FDISBULL_REQUIRE_COLD_DOS_GUEST_EXIT_IDENTITY'
 
 
 @pytest.fixture
 def emulator():
     value=os.environ.get('FDISBULL_DOSBOX')
     if not value:
+        if os.environ.get(REQUIRE_COLD_PROCESS_IDENTITY)=='1':
+            pytest.fail(f'Set FDISBULL_DOSBOX with {REQUIRE_COLD_PROCESS_IDENTITY}=1')
         pytest.skip('Set FDISBULL_DOSBOX for real DOS guest-exit acceptance')
     return str(Path(value).resolve(strict=True))
 
@@ -25,6 +35,100 @@ def create_project(directory, code, *, mz=False):
     with Project.create(database,binary,**({} if mz else {'image':'com'})) as project:
         project.analyze(max_instructions=100)
     return database
+
+
+def test_saved_dos_process_identity_requires_exact_state_hash_and_valid_psp():
+    data = b'authored native state bytes'
+    identity = dict(sha256=hashlib.sha256(data).hexdigest(), psp=0x0814)
+    assert _native_dos_process_identity(None, data) is None
+    assert _native_dos_process_identity(identity, data) == identity
+    with pytest.raises(ValueError, match='does not match native state bytes'):
+        _native_dos_process_identity(dict(identity, sha256='0' * 64), data)
+    for psp in (0, -1, 0x10000, True, '0x814'):
+        with pytest.raises(ValueError, match='PSP'):
+            _native_dos_process_identity(dict(identity, psp=psp), data)
+    with pytest.raises(ValueError, match='Invalid saved DOS process identity'):
+        _native_dos_process_identity(dict(identity, extra='ignored?'), data)
+
+
+class _NativeCheckpointHarness:
+    def __init__(self, *, identity_bound=True, load_error=None):
+        self.data = b'authored native state bytes'
+        self.identity = dict(sha256=hashlib.sha256(self.data).hexdigest(), psp=0x0814)
+        self.identity_bound = identity_bound
+        self.load_error = load_error
+        self.loaded_params = None
+        self.closed = False
+        self.metadata = dict(source_sha256='source', version_sha256='version',
+            emulator_sha256='backend', runtime_load_segment=0x1000,
+            runtime_profile='dos', game_dir='/private/game')
+        self.rpc = SimpleNamespace(capabilities={'save_states': True}, lock=threading.RLock())
+
+    def call(self, method, params=None):
+        if method == 'input.mouse.state':
+            return {'mouse': {}}
+        if method == 'state.save':
+            Path(params['path']).write_bytes(self.data)
+            return {'dos_process_identity': dict(self.identity)}
+        if method == 'state.load':
+            self.loaded_params = dict(params)
+            if self.load_error is not None:
+                raise DebuggerError(self.load_error)
+            return ({} if self.identity_bound is None else
+                    {'dos_process_identity_bound': self.identity_bound})
+        raise AssertionError(method)
+
+    def _disk_manifest(self):
+        return []
+
+    def _layer_state(self):
+        return {'active': []}
+
+    def registers(self):
+        return {'cpu_mode': 'real', 'general': {}, 'segments': {},
+                'instruction_pointer': 0, 'flags': 0}
+
+    def _restore_layer_state(self, _state):
+        pass
+
+    def _invalidate_runtime_bindings(self):
+        pass
+
+    def _event(self, *_args):
+        pass
+
+    def close(self):
+        self.closed = True
+
+
+def test_cold_native_checkpoint_carries_only_bridge_issued_identity():
+    harness = _NativeCheckpointHarness()
+    checkpoint = DebugSession._capture_native_checkpoint(harness)
+    assert checkpoint['metadata']['dos_process_identity'] == harness.identity
+    restored = DebugSession._restore_native_checkpoint(harness, checkpoint)
+    assert restored['sha256'] == harness.identity['sha256']
+    assert harness.loaded_params['dos_process_identity'] == harness.identity
+
+
+@pytest.mark.parametrize('bridge_reply', [False, None])
+def test_cold_native_checkpoint_forged_psp_fails_closed_when_bridge_rejects(bridge_reply):
+    harness = _NativeCheckpointHarness(identity_bound=bridge_reply)
+    checkpoint = DebugSession._capture_native_checkpoint(harness)
+    forged = dict(checkpoint)
+    forged['metadata'] = dict(checkpoint['metadata'],
+                              dos_process_identity=dict(harness.identity, psp=0x0815))
+    with pytest.raises(DebuggerError, match='did not confirm the saved DOS process identity'):
+        DebugSession._restore_native_checkpoint(harness, forged)
+    assert harness.loaded_params['dos_process_identity']['psp'] == 0x0815
+    assert harness.closed
+
+
+def test_cold_native_checkpoint_state_load_error_closes_session():
+    harness = _NativeCheckpointHarness(load_error='Native state bytes changed during restore')
+    checkpoint = DebugSession._capture_native_checkpoint(harness)
+    with pytest.raises(DebuggerError, match='Native state bytes changed during restore'):
+        DebugSession._restore_native_checkpoint(harness, checkpoint)
+    assert harness.closed
 
 
 @pytest.mark.parametrize('code,exit_code,resident,mz',[
@@ -142,16 +246,104 @@ def test_native_state_restore_retains_selected_process_identity(tmp_path,emulato
         assert result['session']['stop_reason']['guest_exit']['psp']==psp
 
 
-def test_foreign_session_snapshot_does_not_guess_target_process(tmp_path,emulator):
+def test_cold_session_restore_uses_only_saved_process_identity(tmp_path,emulator):
+    path=create_project(tmp_path,bytes.fromhex('b82a4ccd21'))
+    with Project(path) as project:
+        with project.debugger(emulator,tmp_path) as first:
+            prepare_native_fixture(first)
+            entry_psp=first.registers()['segments']['ds']
+            state=first.save_state()
+            saved=json.loads(project.db.execute(
+                'SELECT metadata FROM debug_artifacts WHERE id=?',(state['artifact'],)).fetchone()['metadata'])
+            identity=saved.get('dos_process_identity')
+            if os.environ.get(REQUIRE_COLD_PROCESS_IDENTITY)=='1':
+                assert identity is not None, f'{REQUIRE_COLD_PROCESS_IDENTITY}=1 requires bridge-issued process identity'
+            if identity is not None:
+                artifact=project.db.execute(
+                    'SELECT sha256 FROM debug_artifacts WHERE id=?',(state['artifact'],)).fetchone()
+                assert identity['sha256']==artifact['sha256']
+                assert type(identity['psp']) is int and 1 <= identity['psp'] <= 0xffff
+                assert identity['psp']==int(entry_psp,16)
+        with project.debugger(emulator,tmp_path) as second:
+            second.load_state(state['artifact'])
+            if identity is None:
+                # Legacy native payloads carry no trusted selected-target
+                # identity, so restoring their current PSP must not adopt it.
+                result=second.run(timeout_ms=3000,guest_ms=30,fast_forward=True)
+                assert result['outcome']=='guest_time',result
+                assert 'guest_exit' not in result['session']['stop_reason']
+            else:
+                result=second.run(timeout_ms=3000,fast_forward=True)
+                assert result['outcome']=='guest_exit',result
+                info=result['session']['stop_reason']['guest_exit']
+                assert info['requested_exit_code']==42 and not info['resident']
+                assert int(info['psp'],16)==identity['psp']
+
+
+@pytest.mark.skipif(os.environ.get(REQUIRE_COLD_PROCESS_IDENTITY)!='1',
+                    reason=f'Set {REQUIRE_COLD_PROCESS_IDENTITY}=1 for candidate identity-negative acceptance')
+def test_cold_restore_rejects_forged_process_identity_psp(tmp_path,emulator):
     path=create_project(tmp_path,bytes.fromhex('b82a4ccd21'))
     with Project(path) as project:
         with project.debugger(emulator,tmp_path) as first:
             prepare_native_fixture(first)
             state=first.save_state()
+            original=project.db.execute(
+                'SELECT * FROM debug_artifacts WHERE id=?',(state['artifact'],)).fetchone()
+            metadata=json.loads(original['metadata'])
+            identity=metadata.get('dos_process_identity')
+            assert identity is not None, f'{REQUIRE_COLD_PROCESS_IDENTITY}=1 requires bridge-issued process identity'
+            forged_psp=identity['psp'] ^ 1
+            if forged_psp==0:
+                forged_psp=2
+            assert forged_psp!=identity['psp']
+            forged_metadata=dict(metadata,
+                dos_process_identity=dict(identity,psp=forged_psp))
+            forged=project._debug_artifact(state['run'],'forged-process-identity.sav','state',
+                                           bytes(original['data']),forged_metadata)
+            preserved=project.db.execute(
+                'SELECT * FROM debug_artifacts WHERE id=?',(state['artifact'],)).fetchone()
+            assert preserved['sha256']==original['sha256']
+            assert bytes(preserved['data'])==bytes(original['data'])
+            assert preserved['metadata']==original['metadata']
         with project.debugger(emulator,tmp_path) as second:
-            second.load_state(state['artifact'])
-            # Native bytes alone do not carry the previous host session's
-            # selected-target binding. No current child PSP may be adopted.
-            result=second.run(timeout_ms=3000,guest_ms=30,fast_forward=True)
-            assert result['outcome']=='guest_time',result
-            assert 'guest_exit' not in result['session']['stop_reason']
+            run_id=second.run_id
+            process=second.rpc.process
+            with pytest.raises(DebuggerError,match='did not confirm the saved DOS process identity'):
+                second.load_state(forged['artifact'])
+            assert second.closed and process.poll() is not None
+            runs=[json.loads(row['evidence']) for row in project.db.execute(
+                "SELECT evidence FROM debug_events WHERE run=? AND operation='run'",(run_id,))]
+            assert not any('guest_exit' in item.get('session',{}).get('stop_reason',{}) for item in runs)
+
+
+@pytest.mark.skipif(os.environ.get(REQUIRE_COLD_PROCESS_IDENTITY)!='1',
+                    reason=f'Set {REQUIRE_COLD_PROCESS_IDENTITY}=1 for candidate native failure acceptance')
+def test_direct_native_state_load_failure_retires_stopped_session(tmp_path,emulator):
+    path=create_project(tmp_path,bytes.fromhex('ebfe'))
+    missing_state=tmp_path/'missing-native-state.sav'
+    assert not missing_state.exists()
+    with Project(path) as project:
+        with project.debugger(emulator,tmp_path) as debug:
+            stopped=debug.run(timeout_ms=3000,guest_ms=30,fast_forward=True)
+            assert stopped['outcome']=='guest_time' and stopped['session']['state']=='stopped',stopped
+            run_id=debug.run_id
+            process=debug.rpc.process
+
+            # Use the native RPC directly: the Python load wrapper would close
+            # the owner itself and conceal whether the bridge retired the session.
+            with pytest.raises(DebuggerError,match=r'STATE_FAILED'):
+                debug.call('state.load',{'path':str(missing_state)})
+
+            status=debug.status()
+            assert status['state']=='failed',status
+            assert 'guest_exit' not in status.get('last_stop',{}),status
+            with pytest.raises(DebuggerError):
+                debug.call('execution.continue')
+        assert debug.closed and process.poll() is not None
+
+        run_events=[json.loads(row['evidence']) for row in project.db.execute(
+            "SELECT evidence FROM debug_events WHERE run=? AND operation='run'",(run_id,))]
+        assert run_events
+        assert not any('guest_exit' in item.get('session',{}).get('stop_reason',{})
+                       for item in run_events)

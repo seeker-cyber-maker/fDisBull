@@ -5,8 +5,9 @@ before the branch back to the poll. Each backend captures its own native
 checkpoint. The checkpoint is consumed once in the originating Python owner
 and once from a fresh Python/backend owner. This is a bounded authored COM
 checkpoint/input witness, not DOSBox/QEMU state-format or Doom parity. Fresh
-DOSBox-X restores stop at the pre-exit boundary because its guest-exit tracking
-does not retain the selected PSP across an unrecognized owner restore.
+DOSBox-X restores stop at the pre-exit boundary by default for compatibility
+with installed binaries. An explicit candidate gate also requires cold DOSBox-X
+to observe the authored guest exit.
 """
 from __future__ import annotations
 
@@ -34,6 +35,7 @@ _POLL_RETURN_IP = 0x104
 _EXIT_IP = 0x12A
 _KEY_OFFSET = 0x40
 _MARKER = 0xA5
+_REQUIRE_DOSBOX_COLD_EXIT = "FDISBULL_REQUIRE_DOSBOX_COLD_COM_GUEST_EXIT"
 
 
 def _runtime():
@@ -197,16 +199,16 @@ def _fresh_child(control_path):
             if control["backend"] == "qemu":
                 assert debug.vm.process is not fresh_owner and fresh_owner.poll() is not None
             breakpoint = _break_at(debug, control["backend"], _EXIT_IP)
-            # The DOSBox bridge only retains selected-PSP exit tracking for an
-            # exact save identity known to this native owner. A fresh owner can
-            # prove restored input and pre-exit state, but not guest-exit status.
+            strict_dosbox_exit = os.environ.get(_REQUIRE_DOSBOX_COLD_EXIT) == "1"
             result = _verify_after_input(debug, control["backend"], breakpoint,
-                                         verify_exit=control["backend"] == "qemu")
+                verify_exit=(control["backend"] == "qemu" or
+                             (control["backend"] == "dosbox" and strict_dosbox_exit)))
             owner = _owner(debug, control["backend"])
             owner_pid = owner.pid
     assert owner.poll() is not None
     print(json.dumps(dict(passed=True, backend=control["backend"], pid=os.getpid(),
-                          owner_pid=owner_pid, **result), sort_keys=True))
+                          owner_pid=owner_pid, owner_returncode=owner.returncode,
+                          **result), sort_keys=True))
 
 
 def _capture_and_hot_restore(project, runtime, game, disk, backend):
@@ -234,7 +236,8 @@ def _capture_and_hot_restore(project, runtime, game, disk, backend):
         origin_pid = origin_owner.pid
     assert final_owner.poll() is not None
     return dict(artifact=saved["artifact"], sha256=saved["sha256"],
-                origin_owner_pid=origin_pid, result=result)
+                origin_owner_pid=origin_pid, owner_returncode=final_owner.returncode,
+                result=result)
 
 
 def test_paired_authored_com_hot_and_fresh_owner_checkpoint_input(tmp_path):
@@ -272,6 +275,7 @@ def test_paired_authored_com_hot_and_fresh_owner_checkpoint_input(tmp_path):
     env = os.environ.copy()
     source_root = str(Path(__file__).resolve().parents[1] / "src")
     env["PYTHONPATH"] = source_root + os.pathsep + env.get("PYTHONPATH", "")
+    children = []
     for control_path in controls:
         completed = subprocess.run([sys.executable, str(Path(__file__).resolve()),
                                      "--checkpoint-child", str(control_path)],
@@ -282,8 +286,33 @@ def test_paired_authored_com_hot_and_fresh_owner_checkpoint_input(tmp_path):
         assert child["passed"] and child["pid"] != os.getpid()
         assert child["key_byte"] == ord("k") and child["marker"] == _MARKER
         assert child["exit_boundary_reached"]
-        assert child["guest_exit_observed"] == (child["backend"] == "qemu")
-        assert child["guest_exit_code"] == (37 if child["backend"] == "qemu" else None)
+        cold_exit_expected = (child["backend"] == "qemu" or
+                              (child["backend"] == "dosbox" and
+                               os.environ.get(_REQUIRE_DOSBOX_COLD_EXIT) == "1"))
+        assert child["guest_exit_observed"] == cold_exit_expected
+        assert child["guest_exit_code"] == (37 if cold_exit_expected else None)
+        children.append(child)
+
+    receipt = dict(
+        format="fdisbull-paired-com-cold-input-process-identity-1",
+        source_sha256=source_hash,
+        runtime_sha256={name: digest(runtime[name]) for name in
+                        ("dosbox", "qemu", "boot_image", "mcopy", "qemu_img")},
+        strict_dosbox_cold_exit=os.environ.get(_REQUIRE_DOSBOX_COLD_EXIT) == "1",
+        hot={backend: dict(guest_exit_observed=value["result"]["guest_exit_observed"],
+                           guest_exit_code=value["result"]["guest_exit_code"],
+                           owner_returncode=value["owner_returncode"],
+                           checkpoint_sha256=value["sha256"])
+             for backend, value in observations.items()},
+        cold={child["backend"]: dict(guest_exit_observed=child["guest_exit_observed"],
+                                    guest_exit_code=child["guest_exit_code"],
+                                    owner_returncode=child["owner_returncode"],
+                                    exit_boundary_reached=child["exit_boundary_reached"],
+                                    key_byte=child["key_byte"], marker=child["marker"])
+              for child in children},
+        limits="Authored COM only; each engine retains its own native checkpoint format")
+    (Path(tmp_path) / "paired-com-cold-identity.json").write_text(
+        json.dumps(receipt, sort_keys=True, indent=2) + "\n")
 
 
 if __name__ == "__main__" and len(sys.argv) == 3 and sys.argv[1] == "--checkpoint-child":

@@ -42,6 +42,14 @@ kernel cleanup, with separate resident-program and debugger-shutdown outcomes.
 See [DOS termination verification](../../docs/VERIFICATION-DOS-TERMINATION.md)
 for the tested source, cloud rerun, and compatibility limits. A rebuild is required.
 
+The selected-PSP cold identity candidate is qualified only for the bounded
+authored COM route. Identity metadata is trusted only inside a compatible
+fDisBull project artifact and is not cryptographically authenticated. If a
+parent PSP is selected while a child PSP is current at cold restore, guest-exit
+tracking fails closed on the selected/current PSP mismatch; that route remains
+unsupported. The [candidate evidence](../../docs/evidence/dosbox-cold-psp-candidate-2026-11-25/README.md)
+does not establish arbitrary child-process handling or DOSBox/QEMU parity.
+
 - `recovered-work.patch`: original unfinished archive checkpoint, preserved unchanged.
 - `headless-agent.patch`: complete current patch against the baseline, including recovered cloud changes and local fixes. Apply this patch alone to the clean baseline.
 - `source-manifest.json`: hashes for the complete patch and all 37 resulting source files; see [spectator verification](../../docs/VERIFICATION-SPECTATOR-CLOUD.md) for the earlier bounded build and test evidence.

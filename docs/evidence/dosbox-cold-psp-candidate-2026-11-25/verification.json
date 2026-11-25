@@ -1,0 +1,145 @@
+{
+  "format": "fdisbull-dosbox-cold-selected-psp-candidate-verification-1",
+  "date_utc": "2026-11-25",
+  "scope": "Bounded selected-PSP identity and cold authored-COM continuation evidence for a separate DOSBox-X candidate.",
+  "candidate_identity": {
+    "source_patch_sha256": "b009952403f86c52bfe404ef16d0bb2b567c8df8a3f2078d6e35ed932aa5cd15",
+    "rebuilt_arm64_executable_sha256": "b9c1e0510b413032cab5e034573c3845dbe1e6ed6ba66001dc49bb15b998fa36"
+  },
+  "build_history": [
+    {
+      "attempt": "guarded-four-worker",
+      "result": "denied before compiler launch by memory guard"
+    },
+    {
+      "attempt": "single-worker-01",
+      "result": "failed in agent_server.cpp: Session::state_changed member error"
+    },
+    {
+      "attempt": "single-worker-incremental-02",
+      "result": "built arm64 candidate after one-line source/regen correction"
+    }
+  ],
+  "candidate_native_tests": [
+    {
+      "attempt": "01",
+      "result": "harness comparison failure",
+      "detail": "PSP integer was compared with its hexadecimal representation; this does not establish a candidate behavior failure."
+    },
+    {
+      "attempt": "02",
+      "result": "3 passed",
+      "elapsed_seconds": 2.79
+    },
+    {
+      "attempt": "03",
+      "result": "16 passed",
+      "scope": "full candidate test file",
+      "elapsed_seconds": 5.49
+    },
+    {
+      "attempt": "05",
+      "result": "1 passed",
+      "scope": "direct native state.load missing-file failure and session retirement",
+      "elapsed_seconds": 0.78,
+      "postconditions": {
+        "failure_source": "missing absolute native state file",
+        "rpc_surface": "direct state.load",
+        "session_state": "Failed",
+        "execution_continue_resumed": false,
+        "guest_exit_observed": false,
+        "owner_reaped": true
+      },
+      "private_junit": {
+        "basename": "native-pytest.xml",
+        "sha256": "136805645ce0651a9835fa0942c2e9da520d7b4c29172e09d7e687abcdefaf1e"
+      }
+    },
+    {
+      "attempt": "06",
+      "result": "17 passed",
+      "scope": "full tests/test_dos_guest_exit.py",
+      "elapsed_seconds": 5.8,
+      "private_junit": {
+        "basename": "native-pytest.xml",
+        "sha256": "642e7efbad6bdbf88539851ca431c0fbe87ce1f658195d5dd4e6e4386bbf839a"
+      }
+    }
+  ],
+  "old_installed_binary_legacy_checks": {
+    "result": "2 native legacy checks passed",
+    "candidate_installation_verified": false
+  },
+  "paired_authored_com": {
+    "strict_candidate_attempt_02": {
+      "result": "1 passed",
+      "elapsed_seconds": 9.95,
+      "hot": {
+        "dosbox_guest_exit_code": 37,
+        "qemu_guest_exit_code": 37,
+        "owner_return_codes": [0, 0]
+      },
+      "cold": {
+        "dosbox": {
+          "key_byte": 107,
+          "marker": 165,
+          "guest_exit_observed": true,
+          "guest_exit_code": 37,
+          "owner_return_code": 0
+        },
+        "qemu": {
+          "key_byte": 107,
+          "marker": 165,
+          "guest_exit_observed": true,
+          "guest_exit_code": 37,
+          "owner_return_code": 0
+        }
+      },
+      "private_receipt": {
+        "basename": "paired-com-cold-identity.json",
+        "sha256": "d28c7cc5f8fd4028faf7fb88151356f629c75b39ece2010d825313d77f2685d5"
+      }
+    },
+    "legacy_attempt_03": {
+      "result": "1 passed",
+      "elapsed_seconds": 9.62,
+      "binary_role": "old DOSBox-X binary",
+      "hot": {
+        "dosbox_guest_exit_code": 37,
+        "qemu_guest_exit_code": 37,
+        "owner_return_codes": [0, 0]
+      },
+      "cold": {
+        "dosbox": {
+          "exit_boundary_reached": true,
+          "guest_exit_observed": false,
+          "guest_exit_code": null,
+          "owner_return_code": 0
+        },
+        "qemu": {
+          "exit_boundary_reached": true,
+          "guest_exit_observed": true,
+          "guest_exit_code": 37,
+          "owner_return_code": 0
+        }
+      },
+      "private_receipt": {
+        "basename": "paired-com-cold-identity.json",
+        "sha256": "c0283d792461102cd7a4866a7b0e7d1bfedb1d7e14e64c4a07bec9893e3f2582"
+      }
+    }
+  },
+  "limits": [
+    "Authored COM route only; each engine uses its own native checkpoint format.",
+    "A selected parent PSP with a child PSP current at cold restore remains unsupported; candidate tracking fails closed on selected/current PSP mismatch.",
+    "Identity metadata is trusted only in a compatible fDisBull project artifact and is not cryptographically authenticated.",
+    "The missing-file native failure does not demonstrate behavior after partial or mid-load state corruption.",
+    "No general DOSBox/QEMU parity or arbitrary child-process compatibility claim follows.",
+    "No default backend change, CI, release, or installation activation is claimed."
+  ],
+  "private_evidence": {
+    "raw_receipts_in_repository": false,
+    "manifest_basename": "cold-psp-candidate-manifest.json",
+    "manifest_sha256": "1ef074feb006fccafc74a9fa21452f6a5084abd9f66e2693df480492e3cda1af"
+  }
+}

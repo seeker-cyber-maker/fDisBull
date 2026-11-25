@@ -62,6 +62,23 @@ def bounded(value, name, low, high):
     return value
 
 
+def _native_dos_process_identity(value, data):
+    """Validate a bridge-issued selected-PSP identity against exact state bytes."""
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) != {'sha256', 'psp'}:
+        raise ValueError('Invalid saved DOS process identity')
+    digest = value['sha256']
+    psp = value['psp']
+    if (not isinstance(digest, str) or len(digest) != 64 or
+            any(c not in '0123456789abcdef' for c in digest) or
+            digest != hashlib.sha256(data).hexdigest()):
+        raise ValueError('Saved DOS process identity does not match native state bytes')
+    if type(psp) is not int or not 1 <= psp <= 0xffff:
+        raise ValueError('Invalid saved DOS process PSP')
+    return {'sha256': digest, 'psp': psp}
+
+
 def _parse_dosbox_arguments(value):
     """Parse target argv without passing text through a shell."""
     if value is None:
@@ -989,6 +1006,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             if path.stat().st_size > (max_bytes or 256*1024*1024):
                 raise ValueError('Native state exceeds remaining rewind byte budget')
             data = path.read_bytes()
+        process_identity = _native_dos_process_identity(
+            saved.get('dos_process_identity'), data)
         if max_bytes is not None and len(data)>max_bytes:
             raise ValueError('Native state exceeds remaining rewind byte budget')
         if before != self._disk_manifest():
@@ -997,6 +1016,8 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
                     'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state,
                     'checkpoint_scope':'full native machine; CPU mode/descriptor state belongs to the serializer',
                     'register_verification':'exposed registers, CPU mode and observed address context'}
+        if process_identity is not None:
+            metadata['dos_process_identity'] = process_identity
         if self.rpc.capabilities.get('frame_timeline'):
             metadata['frame_keys'] = saved.get('frame_keys', [])
         if hasattr(self,'_state_provenance'):
@@ -1052,9 +1073,19 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             path = Path(directory)/'state.sav'; path.write_bytes(data)
             try:
                 params = {'path':str(path)}
+                # This is trusted only as provenance carried by a compatible
+                # fDisBull artifact; the bridge must confirm it against the
+                # restored guest before process-exit tracking is enabled.
+                process_identity = _native_dos_process_identity(
+                    metadata.get('dos_process_identity'), data)
+                if process_identity is not None:
+                    params['dos_process_identity'] = process_identity
                 if self.rpc.capabilities.get('frame_timeline'):
                     params['frame_keys'] = frame_keys
                 result = self.call('state.load',params)
+                if (process_identity is not None and
+                        result.get('dos_process_identity_bound') is not True):
+                    raise DebuggerError('Native state did not confirm the saved DOS process identity')
                 if self.rpc.capabilities.get('frame_timeline') and result.get('frame_keys') != frame_keys:
                     raise DebuggerError('Restored frame input ownership differs from saved state')
                 _require_released_mouse(self.call('input.mouse.state').get('mouse', {}))

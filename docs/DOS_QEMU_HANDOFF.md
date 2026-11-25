@@ -9028,3 +9028,35 @@ uncalibrated. There is one interval per arm per trial, so full parity, causality
 and general replacement remain unqualified. Attempt 02's tic-74 settle beyond
 tic 70 was a setup miss with no measurement and no QEMU launch. DOSBox-X stays
 default; no CI ran.
+
+## DOSBox-X cold selected-PSP candidate (2026-11-25 UTC)
+
+The [sanitized candidate record](evidence/dosbox-cold-psp-candidate-2026-11-25/README.md)
+preserves build history and separates candidate from legacy evidence. A guarded
+four-worker build was denied before compiler launch; single-worker build
+attempt 01 failed at `Session::state_changed`; after a one-line source/regen
+correction, incremental attempt 02 built the arm64 candidate. Candidate native
+test attempt 01 had an integer/hex PSP harness comparison failure; attempt 02
+passed 3 tests and attempt 03 passed 16. The direct native missing-state-file
+failure gate passed at attempt 05 (1 test, 0.78 s); full
+`tests/test_dos_guest_exit.py` attempt 06 passed 17 tests in 5.80 s. Attempt
+03 remains a separate 16-test run. Two native legacy checks passed on the old
+installed binary.
+
+The direct RPC failure moved the stopped session to `Failed`, prevented resume,
+produced no `guest_exit`, and reaped its owner. It covers a missing absolute
+state-file path before load begins; partial or mid-load corruption remains
+untested.
+
+Strict paired authored COM attempt 02 passed hot and cold on both engines:
+cold DOSBox-X and QEMU each observed key 107, marker 165, guest exit 37, and
+owner code 0. This uses each engine's own checkpoint format. Separate legacy
+paired attempt 03 passed, but after cold restore DOSBox-X reached only the
+pre-exit boundary while QEMU observed exit 37. The candidate patch and rebuilt
+binary hashes are recorded in the evidence.
+
+Qualification is limited to the authored COM route. A selected parent PSP with
+a child PSP current at cold restore remains unsupported; metadata is trusted
+only in a compatible fDisBull project artifact and is not cryptographically
+authenticated. No general parity, default backend change, CI, release, or
+installation activation follows. DOSBox-X remains the default.
