@@ -8813,6 +8813,29 @@ The tests join the [parity work plan](DOS_QEMU_PARITY_WORK.json) as opt-in
 private selections; no surface or campaign is qualified. DOSBox-X remains
 the default and is retained for DotBox. No CI or release was run.
 
+A separate sound-enabled paired E1M1 test checks a no-shot tic 64–84 control,
+one Ctrl shot at tic 84, and the shot-associated WAD `DSPISTOL` correlation
+through tic 114 on each backend. Both ammo sequences decode as 50 before and
+after the control, then 49 after the shot; both correlations pass the bounded
+per-engine threshold. QEMU exports finalized 32 kHz stereo PCM with zero
+dropped frames. DOSBox-X's 48 kHz post-stop payload retains a zero-size RIFF
+placeholder header and unknown capture completeness. Its terminal wait reply
+reports `state=failed`, `stop_reason.kind=fault` at `bp-88`, although its
+owner is reaped with code 0; shutdown lifecycle remains open. The [pistol-SFX
+evidence](evidence/qemu-doom-pistol-sfx-2026-11-25/README.md) gives hashes and
+limits. This is not sound-call attribution, calibrated onset timing, normal
+Doom guest exit, byte-identical PCM, or broad parity.
+
+A separate one-way application route [loads a DOSBox-X-created E1M1 save into
+QEMU and fires one pistol shot](evidence/qemu-doom-crossload-sfx-2026-11-25/README.md).
+QEMU read back the exact 24,702-byte save, restored WAD-derived ammo to 50,
+kept 50 through a no-shot control, then dispatched one Ctrl press and observed
+ammo 49 with a bounded `DSPISTOL` correlation of 0.9703. The QEMU capture
+reported zero dropped frames; both owners were reaped with code 0. The
+reverse-direction combined route, guest exit, mixer/music fidelity, calibrated
+audio timing and broad parity remain open. No commercial save or capture bytes
+are in Git.
+
 ## Doom E1M1 cold restore, saves and BDA timing (2026-11-25 UTC)
 
 These host receipts are dated 2026-11-25 UTC; the corresponding client-facing

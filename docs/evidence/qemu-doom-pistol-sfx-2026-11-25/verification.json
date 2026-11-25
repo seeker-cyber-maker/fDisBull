@@ -1,0 +1,79 @@
+{
+  "format": "fdisbull-qemu-doom-pistol-sfx-verification-1",
+  "date_utc": "2026-11-25",
+  "test": "tests/test_doom_pistol_sfx_paired_native.py::test_paired_original_doom_e1m1_pistol_sfx_at_shared_leveltime_landmarks",
+  "execution": {
+    "mode": "guarded local native QA",
+    "selection_result": "passed as first test in sequential -x batch",
+    "private_opt_in": "FDISBULL_REQUIRE_DOOM_PISTOL_SFX_PAIRED=1",
+    "ci": "not run"
+  },
+  "scope": {
+    "target": "pinned private original Doom 1.9 E1M1",
+    "landmarks": {
+      "pre_increment_start_tic": 64,
+      "control_end_tic": 84,
+      "single_ctrl_shot_tic": 84,
+      "observation_end_tic": 114
+    },
+    "reference": "Pinned WAD DSPISTOL sample, searched independently per backend",
+    "correlation_threshold": 0.55,
+    "ammunition": {
+      "qemu": {"start": 50, "control": 50, "after_shot": 49},
+      "dosbox_x": {"control": 50, "after_shot": 49}
+    },
+    "audio": {
+      "qemu": {
+        "rate_hz": 32000,
+        "channels": 2,
+        "sample_format": "signed 16-bit PCM",
+        "control_frames": 16645,
+        "control_correlation": 0.13371822207098075,
+        "shot_frames": 28884,
+        "shot_correlation": 0.9311262585736235,
+        "dropped_frames": 0,
+        "owner_reaped": true,
+        "owner_return_codes": [0]
+      },
+      "dosbox_x": {
+        "rate_hz": 48000,
+        "channels": 2,
+        "sample_format": "signed 16-bit PCM",
+        "control_live_frames": 98304,
+        "control_correlation": 0.2241471881011029,
+        "shot_live_window_frames": 49152,
+        "shot_search_start_frame": 921888,
+        "shot_search_end_live_frontier_frame": 983040,
+        "shot_correlation": 0.9566901480693709,
+        "available_post_stop_payload_frames": 1703936,
+        "excluded_post_frontier_payload_frames": 720896,
+        "riff_header_form": "zero_size_placeholder",
+        "riff_header_finalized": false,
+        "capture_completeness": "unknown",
+        "session_stop_reply": {
+          "state": "failed",
+          "stop_reason_kind": "fault",
+          "breakpoint_id": "bp-88"
+        },
+        "owner_reaped": true,
+        "owner_return_code": 0,
+        "dropped_frames": null
+      }
+    }
+  },
+  "claim_limits": [
+    "Shot-associated WAD sample correlation only; no sound-call instruction attribution.",
+    "DOSBox-X analysis is restricted to the observed live frontiers; later available payload is excluded.",
+    "DOSBox-X session.stop ended with a fault reply, so its shutdown lifecycle is not qualified.",
+    "The DOSBox-X zero-size placeholder RIFF header does not establish a finalized WAV or complete capture.",
+    "No byte-identical PCM, calibrated onset time, normal Doom guest exit, or broad parity claim.",
+    "Engine clocks and raw BDA counts remain separate; BDA counts are not converted to milliseconds."
+  ],
+  "retained_private_artifacts": {
+    "paired-doom-pistol-sfx.json": "22610a6361fe8e92f3518ddfdc292a8f54b85067fe7e899ede4dc79756f16fd9",
+    "dosbox-audio-diagnostic.json": "84ee017e42809cc08f1d877c428630f7a86f1e338ecad6a5ec7a1e07f405023d",
+    "qemu-no-shot.wav": "6d60a75cf4103e64ad43188a4e05858cff956e9a40138a83ff16433ab8d25e85",
+    "qemu-shot.wav": "8ad14d3be6c347784fb32e3747b0c418b70b5b5aed9be88c7d0ad5e0b5496300",
+    "dosbox-post-stop-payload.wav": "2a9d9efd186df5643ef0b7f189873db8d3a8584c5cb7eb3e6e0e086527cb31ce"
+  }
+}

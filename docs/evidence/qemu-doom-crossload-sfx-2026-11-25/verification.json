@@ -1,0 +1,126 @@
+{
+  "format": "fdisbull-doom-crossload-sfx-verification-1",
+  "date": "2026-11-25",
+  "test": "tests/test_doom_crossload_pistol_sfx_native.py::test_original_doom_cross_engine_save_load_then_pistol_sfx",
+  "result": {
+    "status": "passed",
+    "passed": 1,
+    "failed": 0,
+    "elapsed_seconds": 66.72,
+    "no_retry": true,
+    "ci": "not_run",
+    "guard": {
+      "kind": "qa",
+      "peak_bytes": 2147483648,
+      "state": "completed",
+      "job_exit_code": 0
+    }
+  },
+  "scope": {
+    "route": "one DOSBox-X-created original Doom 1.9 E1M1 save loaded by QEMU, followed by a no-shot control and one Ctrl keyboard pistol shot",
+    "source_pins": {
+      "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+      "AUD512.LMP": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+      "DEFAULT.CFG": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d"
+    },
+    "runtimes": {
+      "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+      "qemu_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+      "qemu_dos_boot_image_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc",
+      "qemu_firmware_tree_sha256": "2139f3f0eab3e27ce0b5e49167845e00dbdea8a4aa69c40fd79085a6c28bd49f",
+      "qemu_firmware_tree_file_count": 178,
+      "qemu_firmware_tree_hash_method": "SHA-256 over sorted relative-path NUL file-SHA-256 LF records",
+      "mcopy_sha256": "85734a24e6d9159b2e95384460e3ddd587d319dd95eaeabf1faf99aa938604c2",
+      "qemu_img_sha256": "f04beba959b1576c2955924a4f7a5189292537a172301e05df61da8af994e3f2"
+    },
+    "save_interchange": {
+      "producer": "DOSBox-X",
+      "destination": "QEMU",
+      "bytes": 24702,
+      "save_sha256": "d5a3983da612d9d959801188a9823b104c600bb3bcd868a13aa399c349bca475",
+      "workspace_readback_sha256": "d5a3983da612d9d959801188a9823b104c600bb3bcd868a13aa399c349bca475",
+      "load_menu_changed_pixels": 20158,
+      "ammo_after_load": 50
+    },
+    "no_shot_control": {
+      "ammo": 50,
+      "dspistol_correlation": 0.18962136171784036,
+      "capture_frames": 12523
+    },
+    "shot": {
+      "input": "Ctrl press and release; two scheduled edges observed dispatched",
+      "ammo_before": 50,
+      "ammo_after": 49,
+      "dspistol_correlation": 0.9703215098790139,
+      "correlation_threshold": 0.55,
+      "best_pitch_ratio": 1.0,
+      "capture_rate_hz": 32000,
+      "capture_channels": 2,
+      "capture_frames": 38071,
+      "dropped_frames": 0,
+      "onset_frame_in_capture": 7949,
+      "onset_clock_calibrated": false
+    },
+    "reference_sample": {
+      "wad_lump": "DSPISTOL",
+      "sha256_after_guard_removal": "200187590ded8999c5b9c405ce3772367a38cec97da9f165021a4c1c2d116114",
+      "rate_hz": 11025,
+      "guard_samples_removed_per_end": 16
+    },
+    "owner_cleanup": {
+      "dosbox_x_save_owner": {
+        "status": "reaped_only",
+        "returncodes": [0]
+      },
+      "qemu_load_and_shot_owner": {
+        "status": "reaped_only",
+        "returncodes": [0]
+      }
+    },
+    "limitations": [
+      "No combined QEMU-save to DOSBox-X-load shot/audio route was tested.",
+      "No general Doom save compatibility or broader game compatibility is established.",
+      "No cross-engine PCM identity, calibrated onset latency, game-time equivalence, mixer/music fidelity, or campaign parity is established.",
+      "No inventory surface or campaign qualification is added."
+    ]
+  },
+  "private_evidence": {
+    "retained_outside_git": true,
+    "files": [
+      {
+        "file": "crossload-pistol-sfx-progress.json",
+        "bytes": 16060,
+        "sha256": "d654c3c6bc58951cb6af404df1587dab9c1cfcb943c55d8574e0e08f2d5bfa11"
+      },
+      {
+        "file": "qemu-load-and-shot/crossload-progress.json",
+        "bytes": 14618,
+        "sha256": "f3f03e509404309f5e09fa7c2f8a16c15fc3990f9566017f9d5bddbb36bfc00a"
+      },
+      {
+        "file": "pytest-guard.log",
+        "bytes": 688,
+        "sha256": "01fb776a56d016ea5f7e59ba249dd6f5c822f8a24c1fb55d6bfa27863cab30bf"
+      },
+      {
+        "file": "no-shot-control.wav",
+        "bytes": 50136,
+        "sha256": "7b9a7279470b25683a5ecb934015dc5cf5ff06989309db7411276f92ea79eeb0"
+      },
+      {
+        "file": "crossloaded-shot.wav",
+        "bytes": 152328,
+        "sha256": "2b61b37ec6e7b3395279a7d3f4526a9a839a8a012009467eb19f8ec049b1ff31"
+      },
+      {
+        "file": "DOOMSAV0.DSG",
+        "bytes": 24702,
+        "sha256": "d5a3983da612d9d959801188a9823b104c600bb3bcd868a13aa399c349bca475"
+      }
+    ],
+    "copy_manifest": "private COPY-MANIFEST.json; all copied SHA-256 values verified against the accepted run",
+    "copy_manifest_sha256": "6707d9717feb329ff43f24999724cd50d333a6eb6d2e3295a4759069612fb6a2"
+  },
+  "non_inclusion": "No commercial media, save bytes, screenshots, WAV bytes, VM states, or byte-retaining databases are included in this repository evidence."
+}
