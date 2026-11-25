@@ -10,6 +10,7 @@ import struct
 import time
 import uuid
 import tempfile
+import shlex
 
 from .dosbox_rpc import DOSBoxRPC, DebuggerError
 from .dos_launch import LaunchAlias, guest_name
@@ -59,6 +60,29 @@ def bounded(value, name, low, high):
     if type(value) is not int or not low <= value <= high:
         raise ValueError(f'{name} must be an integer in {low}..{high}')
     return value
+
+
+def _parse_dosbox_arguments(value):
+    """Parse target argv without passing text through a shell."""
+    if value is None:
+        return []
+    if not isinstance(value, str) or any(c in value for c in '\0\r\n'):
+        raise ValueError('dos_arguments must be a single-line string without NUL')
+    try:
+        lexer = shlex.shlex(value, posix=True)
+        lexer.whitespace_split = True
+        lexer.commenters = ''
+        lexer.escape = ''
+        arguments = list(lexer)
+    except ValueError as error:
+        raise ValueError('dos_arguments has invalid quoting') from error
+    try:
+        tail = ' '.join(arguments).encode('cp437')
+    except UnicodeEncodeError as error:
+        raise ValueError('dos_arguments must use CP437 characters') from error
+    if len(tail) > 126:
+        raise ValueError('dos_arguments exceeds the 126-byte DOS command tail')
+    return arguments
 
 
 def stamp():
@@ -125,10 +149,17 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
                 raise ValueError('qemu_video_source_profile requires a native DOS COM/MZ process')
             from .qemu_video_checkpoint import validate_video_source_profile
             validate_video_source_profile(qemu_video_source_profile, qemu_clock, qemu_retrace)
-        dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch, dos_arguments,
+        dos_process_options = (dos_boot_image, dos_mcopy, dos_startup_batch,
                                dos_directory, dos_file_mode, freedos_runtime, dos_generation)
         if any(value is not None for value in dos_process_options) and backend != 'qemu-dos':
             raise ValueError('DOS process boot/staging options require backend=qemu-dos')
+        if dos_arguments is not None and backend not in (None, 'dosbox', 'qemu-dos'):
+            raise ValueError('dos_arguments requires the DOSBox-X or native QEMU DOS backend')
+        if dos_arguments is not None and backend in (None, 'dosbox') and self.meta['format'] not in ('COM', 'MZ'):
+            raise ValueError('dos_arguments requires an original DOS COM/MZ target')
+        if dos_arguments is not None and backend == 'qemu-dos' and self.meta['format'] not in ('COM', 'MZ'):
+            raise ValueError('dos_arguments requires a native DOS COM/MZ target')
+        dosbox_arguments = _parse_dosbox_arguments(dos_arguments) if backend in (None, 'dosbox') else None
         if agi_runtime_package is not None and backend != 'qemu-agi':
             raise ValueError('agi_runtime_package requires backend=qemu-agi')
         if backend == 'qemu-agi':
@@ -281,7 +312,8 @@ class DebugProjectMixin(EventSearchProjectMixin, MemoryRuleProjectMixin, MemoryS
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
-                            spatial_mode=spatial_mode, fair_play=fair_play)
+                            spatial_mode=spatial_mode, fair_play=fair_play,
+                            dos_arguments=dosbox_arguments)
 
     def debug_runs(self, version=None):
         v = self.version(version)['id']
@@ -484,7 +516,7 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
 
     """One explicitly owned emulator; closing the project also closes sessions."""
     def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None,
-                 spatial_mode=None, fair_play=False):
+                 spatial_mode=None, fair_play=False, dos_arguments=None):
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
         self._spatial_mode, self._fair_play = spatial_mode, fair_play
@@ -522,7 +554,7 @@ class DebugSession(ExecutionTraceSessionMixin, DesqviewSessionMixin, MemoryRuleS
             self._prepare_launch_target(target, source_data)
             self.rpc = self._open_rpc(executable,self.game_dir)
             self.metadata.update(self._transport_metadata())
-            result = self.rpc.call('session.start',{'target':{'command':target,'arguments':[]},
+            result = self.rpc.call('session.start',{'target':{'command':target,'arguments':dos_arguments or []},
                 'mounts':[{'drive':'C','host_path':str(self.game_dir)}],'break_at':'entry'})
             self.session_id = result['session_id']
             regs = self.call('state.get_registers')

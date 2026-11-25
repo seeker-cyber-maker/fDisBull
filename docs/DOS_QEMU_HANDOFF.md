@@ -8791,3 +8791,24 @@ its actual public/native witness is still being completed. The reconciled
 [work plan](DOS_QEMU_PARITY_WORK.json) distinguishes this source availability
 from pending movement/proof and frame/scene contracts. No migration row,
 campaign, default-switch or DOSBox retirement gate is promoted by these totals.
+
+## Paired Doom E1M1 input and leveltime landmarks (2026-11-25)
+
+On current pinned macOS binaries, a new opt-in private original-Doom test
+launched E1M1 directly on DOSBox-X and QEMU with the same keyboard-only args.
+The pinned WAD's status-number patches decoded each stored HUD sequence as
+50 rounds, 50 after a no-input control, and 49 after physical Ctrl. Both
+emulator owners closed cleanly. The public DOSBox-X debugger now forwards
+bounded `dos_arguments` to its native session; DOSBox-X's own safe-token
+validation remains in force.
+
+A separate sound-enabled test independently located Doom's protected LE
+`leveltime` increment and matched pre-increment ticks 64 and 128 on both
+engines. It recorded QEMU virtual time and complete 32 kHz stereo frames,
+and DOSBox-X PIC guest ticks and live 48 kHz WAV growth. Those frontiers do
+not establish matched audio or gameplay speed. The scoped observations,
+binary/input identities and private-receipt hashes are in the
+[paired-landmark evidence](evidence/qemu-doom-paired-landmarks-2026-11-25/README.md).
+The tests join the [parity work plan](DOS_QEMU_PARITY_WORK.json) as opt-in
+private selections; no surface or campaign is qualified. DOSBox-X remains
+the default and is retained for DotBox. No CI or release was run.

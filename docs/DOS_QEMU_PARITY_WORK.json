@@ -143,6 +143,24 @@
       "require": {"FDISBULL_REQUIRE_DOOM_LE_PAIRED": "1"},
       "note": "Use a prepared DOS boot image, the private pinned Doom game directory, and a QEMU producer with virtual clock, SB16/OPL, precise retrace and instruction-fetch observation."
     },
+    "private-doom-gameplay": {
+      "extends": ["dosbox"],
+      "inputs": [
+        "FDISBULL_QEMU_DOS", "FDISBULL_QEMU_DOS_BOOT_IMAGE",
+        "FDISBULL_QEMU_DOS_MCOPY", "FDISBULL_QEMU_DOS_FIRMWARE", "FDISBULL_DOOM_LE_SOURCE"
+      ],
+      "require": {"FDISBULL_REQUIRE_DOOM_GAMEPLAY_PAIRED": "1"},
+      "note": "Private hash-pinned Doom E1M1 keyboard shot with sound and mouse disabled; no full gameplay or audio qualification."
+    },
+    "private-doom-leveltime": {
+      "extends": ["dosbox"],
+      "inputs": [
+        "FDISBULL_QEMU_DOS", "FDISBULL_QEMU_DOS_BOOT_IMAGE", "FDISBULL_QEMU_DOS_MCOPY",
+        "FDISBULL_QEMU_DOS_FIRMWARE", "FDISBULL_QEMU_IMG", "FDISBULL_DOOM_LE_SOURCE"
+      ],
+      "require": {"FDISBULL_REQUIRE_DOOM_LEVELTIME_PAIRED": "1"},
+      "note": "Private paired Doom LE leveltime 64-to-128 measurement with distinct 32 kHz and 48 kHz audio capture frontiers; no waveform or cadence parity claim."
+    },
     "native-clock": {
       "extends": [
         "native-layers"
@@ -822,6 +840,22 @@
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "doom-gameplay-paired": {
+      "environment_profile": "private-doom-gameplay",
+      "argv": [
+        "python", "-m", "pytest", "-q", "tests/test_doom_gameplay_paired_native.py"
+      ],
+      "execution": "local_native_pass_2026-11-25",
+      "scope": "The original E1M1 direct-start keyboard control and WAD-derived ammo 50-to-49 observation passed once on pinned local binaries; private frames remain outside Git."
+    },
+    "doom-leveltime-paired": {
+      "environment_profile": "private-doom-leveltime",
+      "argv": [
+        "python", "-m", "pytest", "-q", "tests/test_doom_leveltime_paired_native.py"
+      ],
+      "execution": "local_native_pass_2026-11-25",
+      "scope": "The original E1M1 pre-increment leveltime 64-to-128 and separate audio frontiers passed once on pinned local binaries; no elapsed-time or waveform equivalence is asserted."
     },
     "audio-host": {
       "environment_profile": "host",
@@ -2128,7 +2162,9 @@
       ],
       "existing_test_sets": [
         "real-game-paired",
-        "audio-paired"
+        "audio-paired",
+        "doom-gameplay-paired",
+        "doom-leveltime-paired"
       ],
       "historical_records": [
         "docs/evidence/qemu-doom-ordinary-startup-2026-11-14/verification.json",

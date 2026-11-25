@@ -1162,6 +1162,14 @@ and `dos_arguments`. The source filename in `game_dir` must still match the
 project's original SHA-256. Patched project versions and secondary-format
 executable stubs are refused by this initial process path.
 
+For original DOS COM/MZ targets, `Project.debugger(..., dos_arguments="...")`
+also accepts arguments with the default or explicit `dosbox` backend. That
+route passes a bounded CP437 argument vector to DOSBox-X; omission still
+passes an empty vector. The installed DOSBox-X RPC applies its own DOS-safe
+token check and rejects drive-qualified config paths, so use a relative
+filename such as `DEFAULT.CFG` from the mounted game directory. The
+boot-image and staging options above remain specific to `qemu-dos`.
+
 Staging copies the selected disk, preserves its configuration and existing
 startup bytes, adds the source and an authored loader, and appends the loader
 invocation. Existing shell setup executes first. Assets and drivers must

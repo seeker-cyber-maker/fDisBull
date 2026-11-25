@@ -1,0 +1,58 @@
+{
+  "format": "fdisbull-qemu-doom-paired-landmarks-1",
+  "parent_commit": "002bd137e88b269c5d57fe1d783577f7198300fa",
+  "scope": "original Ultimate Doom E1M1 direct-start keyboard observation and separate protected leveltime/audio-frontier measurement",
+  "private_inputs_sha256": {
+    "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+    "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+    "AUD512.LMP": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+    "DEFAULT.CFG": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+    "freedos_boot_image": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc"
+  },
+  "native_binaries_sha256": {
+    "qemu_dos": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+    "dosbox_x": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e"
+  },
+  "direct_start": {
+    "arguments": "-warp 1 1 -skill 2 -nomonsters -nosound -nomouse",
+    "input": "one physical Ctrl hold after a no-input control",
+    "dosbox_x_ammunition": [50, 50, 49],
+    "qemu_dos_ammunition": [50, 50, 49],
+    "control_changed_pixels_each": 0,
+    "ammo_crop_changed_pixels_each": 300,
+    "gameplay_guest_exit_observed": false,
+    "both_emulator_owners_reaped_returncode": 0,
+    "private_receipt_sha256": "ba4a3debf1ee46546d969b595f703c0e022a8eb4c5e62f1931d07a0bb0d1461a",
+    "junit_sha256": "28b63840f0c61a3383d8bb5f317a4c117316f3d1db094aed23977f1496a14082"
+  },
+  "protected_leveltime": {
+    "preincrement_tics_each": [64, 128],
+    "qemu_virtual_nanoseconds": 1755663360,
+    "qemu_s16_stereo_sample_rate": 32000,
+    "qemu_retained_frames": 52563,
+    "qemu_dropped_frames": 0,
+    "dosbox_pic_guest_ticks": 2299,
+    "dosbox_s16_stereo_sample_rate": 48000,
+    "dosbox_live_wav_growth_bytes": 458752,
+    "dosbox_live_wav_finalized_at_endpoint": false,
+    "both_emulator_owners_reaped": true,
+    "private_receipt_sha256": "f4c847337eb7faca20927d99a32eb4878122f32a66459dc2730e72220649ac5d",
+    "junit_sha256": "59069a5547f6df2309be05dfa53fd3e1b6c4154df1d0c1bfc55019b27be54e27"
+  },
+  "selected_regression_junit_sha256": {
+    "dos_arguments_host_28_passed": "24034e6d9fdcd28f6efaed2cc80fb142281fe039c7ee0ee05fdc84206de94669",
+    "paired_tic_tac_toe_one_move_1_passed": "77d15a52d4b558e4b116299d421ded8f586c4bd3b85d5779e86738b91eec38f5",
+    "paired_tic_tac_toe_round_and_dice_4_passed": "2a54cc29afb0e3303ed851cc18e6bfdb130f1335ed65c7d0a98553da7bf2d3fc",
+    "paired_doom_le_1_passed": "f0ed7bf362c2b4ae8f44c681906984858f7038bb131f14729495cf3dfe16af65"
+  },
+  "limits": [
+    "Separate bounded cases do not qualify a complete Doom session or one-to-one replacement parity.",
+    "Different audio sample rates and acquisition frontiers do not establish waveform, onset, mixer-gain or sample-timing equivalence.",
+    "DOSBox-X PIC guest ticks and QEMU virtual nanoseconds are distinct measures; debugger control and buffering affect interpretation.",
+    "Original commercial media, screenshots, audio, databases and states are private and absent from Git.",
+    "No CI, release, merge, shared activation or default-backend change was performed."
+  ],
+  "default_backend": "dosbox",
+  "inventory_surfaces_qualified_by_this_evidence": 0,
+  "required_campaigns_qualified_by_this_evidence": 0
+}
