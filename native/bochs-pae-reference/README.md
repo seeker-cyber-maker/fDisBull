@@ -194,8 +194,11 @@ operand read-only before each comparison. Its guest fault handler records
 error code, CR2, saved RIP, register values and old memory, then clears the
 write restriction and retries. Bochs and QEMU independently save and
 restore their own machine checkpoints before running both plain and LOCK
-variants. QEMU's public owned checkpoint carries an active physical
-execute layer; the receiving session starts in real mode. The receipt
+variants with low and high physical backing. The high case maps linear
+`0x130000` to physical `0x100802000` and marks both low aliases
+separately. Bochs uses sparse high RAM and checks its page translation;
+QEMU binds an active execute layer through the linear address. The
+receiving QEMU session starts in real mode. The receipt
 records the exact QEMU and Bochs binary hashes, guest source hash, three
 faults and the full observed outcomes.
 

@@ -30,7 +30,7 @@
       "patched_sha256": "95b42d1cee889a391d6c981680df89739ca7f51a37539fecf4b87b4d32171cbe"
     }
   ],
-  "scope": "Nonparallel x86 CMPXCHG16B qualified locally for low-physical four-level long mode with guest page-fault retry, active overlay and unprimed cold restore. Cross-page x86 GDB watchpoint ordering has only an observational preservation trial. Parallel TCG and later device faults remain unqualified.",
+  "scope": "Nonparallel x86 CMPXCHG16B qualified locally for low and high physical 4 KiB operand backing in four-level long mode with guest page-fault retry, active overlay and unprimed cold restore. High backing requires host wheel 84ee5c22f73521074bfb0f671cd0e730b9229596cc97a59ba2460614148149d3. Cross-page x86 GDB watchpoint ordering has only an observational preservation trial. Parallel TCG and later device faults remain unqualified.",
   "build": {
     "host": "macOS arm64",
     "target": "x86_64-softmmu",
@@ -38,6 +38,6 @@
     "exit_code": 0,
     "candidate_sha256": "7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e",
     "frozen_executable": "/Volumes/GitHub/GitHub/fDisBull-private/cmpxchg16b-fault-retry-20261124.Fmlamg/frozen/qemu-system-x86_64-7b086a0a6e580114",
-    "qualification": "Local paired Bochs plain/LOCK CMPXCHG16B page-fault retry and active-overlay cold restore passed. High PAE cross-page GDB watchpoint preservation passed; predecessor was observationally identical. No CI."
+    "qualification": "Local paired Bochs plain/LOCK CMPXCHG16B page-fault retry and active-overlay cold restore passed for low and high 4 KiB operand backing. High PAE cross-page GDB watchpoint preservation passed; predecessor was observationally identical. No CI."
   }
 }

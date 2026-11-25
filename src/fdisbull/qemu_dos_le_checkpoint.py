@@ -58,9 +58,16 @@ _ATOMIC_BATCH_PRODUCER = dict(_BASELINE_PRODUCER, **{
     'qemu_owned_checkpoint.py': 'cf8db2d53401c367fd253d2c76b188ef935fccea19175fd3206e01110dce7623',
 })
 
+_CMPXCHG16B_PRODUCER = dict(_BASELINE_PRODUCER, **{
+    'qemu_dos_le_checkpoint.py': '9f4953ddb60fdecd257297cb5a6917a210c665c9e0323705f161e9ebf8aa90de',
+    'qemu_owned_checkpoint.py': '3d615c980d600ff0740ca0bd2c78573db2f04ea41dcb848d2e7ed4db2ff187a8',
+    'qemu_long_mode_fence.py': '023637781b36e41b4a2fd92313eca9feba4b3e9408f32fc067715941bf170348',
+})
+
 
 def _compatible_producer(recorded, current):
-    return recorded == current or recorded in (_BASELINE_PRODUCER, _ATOMIC_BATCH_PRODUCER)
+    return recorded == current or recorded in (
+        _BASELINE_PRODUCER, _ATOMIC_BATCH_PRODUCER, _CMPXCHG16B_PRODUCER)
 
 
 def _reference(project, reference, kind, version, *, maximum=None):

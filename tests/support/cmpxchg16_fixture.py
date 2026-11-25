@@ -8,6 +8,8 @@ from support.dos_process_fixture import assemble
 
 CODE = 0x120000
 TARGET = 0x130000
+HIGH_TARGET = 0x100802000
+LOW_ALIAS = HIGH_TARGET & 0xffffffff
 REPORT = 0x131000
 PML4 = 0x140000
 PTE = 0x143000 + (TARGET >> 12) * 8
@@ -19,10 +21,22 @@ FIELDS = ("entry", "cmp_failed", "failed_after", "cmp_changed",
           "changed_after", "cmp_same", "same_after", "done", "handler")
 
 
-def build(directory, nasm, *, locked=False):
+def build(directory, nasm, *, locked=False, high_backing=False):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     prefix = "lock " if locked else ""
+    high_pte = (f"    mov dword [{PTE:#x}],{(HIGH_TARGET & 0xffffffff) | 3:#x}\n"
+                f"    mov dword [{PTE+4:#x}],{HIGH_TARGET >> 32:#x}") if high_backing else ""
+    low_alias_marker = ("".join(
+        f"    mov dword [{base+offset:#x}],0x0b0f0b0f\n"
+        for base in (TARGET, LOW_ALIAS) for offset in (0, 4, 8, 12))) if high_backing else ""
+    target_protect = "" if high_backing else f"    and dword [{PTE:#x}],~2"
+    high_initial = (f"    mov rax,0x0102030405060708\n"
+                    f"    mov [abs {TARGET:#x}],rax\n"
+                    f"    mov rax,0x1112131415161718\n"
+                    f"    mov [abs {TARGET+8:#x}],rax\n"
+                    f"    and qword [abs {PTE:#x}],~2\n"
+                    f"    invlpg [abs {TARGET:#x}]") if high_backing else ""
     table = "\n".join(f"    dd {CODE:#x}+{label}-payload" for label in FIELDS)
     source = f"""
 bits 16
@@ -77,6 +91,7 @@ map_page:
     add edi,4
     add eax,0x1000
     loop map_page
+{high_pte}
     mov edi,{REPORT:#x}
     xor eax,eax
     mov ecx,1024
@@ -86,7 +101,8 @@ map_page:
     mov dword [{TARGET+4:#x}],0x01020304
     mov dword [{TARGET+8:#x}],0x15161718
     mov dword [{TARGET+12:#x}],0x11121314
-    and dword [{PTE:#x}],~2
+{low_alias_marker}
+{target_protect}
     mov edi,{IDT:#x}
     xor eax,eax
     mov ecx,1024
@@ -131,6 +147,7 @@ long_entry:
     mov ss,ax
     mov rsp,{STACK:#x}
     lidt [rel long_idtr]
+{high_initial}
     xor eax,eax
     xor edx,edx
     mov rbx,0x8877665544332211
@@ -231,5 +248,8 @@ payload_end:
     path = directory / "REMAP.EXE"
     path.write_bytes(bytes(header) + module)
     return dict(path=path, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
-                locked=locked, target=TARGET, report=REPORT, sentinel=REPORT+0x200,
+                locked=locked, high_backing=high_backing, target=TARGET,
+                target_physical=HIGH_TARGET if high_backing else TARGET,
+                low_alias=LOW_ALIAS if high_backing else None,
+                report=REPORT, sentinel=REPORT+0x200,
                 pte=PTE, code=CODE, stack=STACK, **dict(zip(FIELDS, addresses)))

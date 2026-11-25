@@ -128,12 +128,18 @@ class QemuLayerSessionMixin:
         start = linear
         while start < linear + length:
             count = min(4096 - (start & 4095), linear + length - start)
-            mapping = translate_386_page(start, state, read_table)
-            if mapping['status'] != 'mapped':
-                error = _UnsupportedLayerMapping if mapping['status'] == 'unsupported' else ValueError
-                raise error('Layer requires an observed RAM mapping: ' + mapping['status'])
-            backing = int(mapping['physical_address'], 16)
-            self._layer_ram_extent(backing, count)
+            if state['cpu_mode'] == 'long':
+                from .qemu_long_mode_fence import walk
+                mapping = walk(state, start & ~4095, read_table, allow_high=True)
+                backing = int(mapping['physical_address'], 16) + (start & 4095)
+                self._layer_execute_extent(backing, count)
+            else:
+                mapping = translate_386_page(start, state, read_table)
+                if mapping['status'] != 'mapped':
+                    error = _UnsupportedLayerMapping if mapping['status'] == 'unsupported' else ValueError
+                    raise error('Layer requires an observed RAM mapping: ' + mapping['status'])
+                backing = int(mapping['physical_address'], 16)
+                self._layer_ram_extent(backing, count)
             if remote.memory(start, count, space='virtual') != remote.memory(backing, count, space='physical'):
                 raise DebuggerError('Native virtual read differs from the selected layer backing')
             spans.append((backing, count))
@@ -393,6 +399,8 @@ class QemuLayerSessionMixin:
             for start, count in spans:
                 self._layer_execute_extent(start, count)
             verify()
+        if kind == 'ram' and any(start >= 2**32 for start, _ in spans):
+            raise ValueError('High RAM layer writes are unsupported')
         patch = dict(address=hex(linear if static is None else static), expected_hex=before.hex(), data_hex=after.hex())
         if space == 'source':
             result = self.project.debug_layer(name, kind=kind, patches=[patch], version=self.version['id'])

@@ -15,7 +15,8 @@ def digest(path):
 
 
 def snapshot(read, registers, cfg):
-    target = read(cfg["target"], 16)
+    target_address = cfg.get("target_physical", cfg["target"])
+    target = read(target_address, 16)
     count = int.from_bytes(read(cfg["report"], 8), "little")
     assert 0 <= count <= 3
     faults = []
@@ -37,8 +38,9 @@ def run(stage, phase):
     share = Path(os.environ["FDISBULL_BOCHS_SHARE"])
     saved = stage/"cx16-bochs-state"
     disk = stage/"cx16-bochs.img"
+    high_backing = cfg.get("high_backing", False)
     if phase == "before":
-        disk, config = prepare_bochs_media(stage, source, share, False,
+        disk, config = prepare_bochs_media(stage, source, share, high_backing,
             disk_name=disk.name, batch_name="cx16-bochs-auto.bat",
             config_name="cx16-bochsrc", log_name="cx16-bochs.log")
         with config.open("a") as stream:
@@ -71,8 +73,26 @@ def run(stage, phase):
         control = debug.cmd("creg")
         efer = int(re.search(r"^EFER=0x([0-9a-fA-F]+)", control, re.M)[1], 16)
         assert efer & 0x500 == 0x500
+        target_physical = cfg.get("target_physical", cfg["target"])
         assert debug.read(cfg["target"],16).hex() == "08070605040302011817161514131211"
-        assert int.from_bytes(debug.read(cfg["pte"],8,physical=True),"little") & 2 == 0
+        assert debug.read(target_physical,16,physical=True).hex() == "08070605040302011817161514131211"
+        pte = int.from_bytes(debug.read(cfg["pte"],8,physical=True),"little")
+        assert pte & 2 == 0
+        if high_backing:
+            assert cfg["target"] == 0x130000 and target_physical == 0x100802000
+            assert all(cfg[name] < 0x100000000 for name in ("code", "report", "stack"))
+            assert pte & 0x000FFFFFFFFFF000 == target_physical & 0x000FFFFFFFFFF000
+            mapping = debug.cmd(f"page {cfg['target']:#x}")
+            found = re.search(
+                r"linear page 0x([0-9a-fA-F]+) maps to physical page 0x([0-9a-fA-F]+)", mapping
+            )
+            assert found, mapping
+            assert tuple(int(value, 16) for value in found.groups()) == (
+                cfg["target"] & ~0xFFF, target_physical & ~0xFFF
+            ), mapping
+            assert target_physical & ~0xFFF != cfg["target"] & ~0xFFF
+            assert debug.read(cfg["target"],16,physical=True).hex() != "08070605040302011817161514131211"
+            assert debug.read(cfg["low_alias"],16,physical=True).hex() == "0f0b" * 8
         if phase == "before":
             saved.mkdir()
             result = debug.cmd(f'restore "__save_state__" "{saved}"')
@@ -86,7 +106,10 @@ def run(stage, phase):
             flags = int(re.search(r"^eflags:\s*0x([0-9a-fA-F]+)",raw,re.M)[1],16)
             observations[key] = snapshot(lambda a,n: debug.read(a,n,physical=True),
                 dict(pc=reg("rip"),rax=reg("rax"),rdx=reg("rdx"),flags=flags),cfg)
-            assert debug.read(cfg["target"],16)==debug.read(cfg["target"],16,physical=True)
+            assert debug.read(cfg["target"],16)==debug.read(target_physical,16,physical=True)
+            if high_backing:
+                assert debug.read(cfg["low_alias"],16,physical=True).hex() == "0f0b" * 8
+                assert debug.read(cfg["target"],16,physical=True).hex() == "0f0b" * 8
         if phase == "after":
             assert observations == prior["observations"]
     except BaseException:

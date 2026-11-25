@@ -349,3 +349,11 @@ def test_atomic_batch_companion_manifest_is_exactly_retained():
     assert checkpoint._compatible_producer(old, current)
     old['qemu_owned_checkpoint.py'] = '0' * 64
     assert not checkpoint._compatible_producer(old, current)
+
+
+def test_cmpxchg16b_companion_manifest_is_exactly_retained():
+    current = checkpoint._producer()
+    old = dict(checkpoint._CMPXCHG16B_PRODUCER)
+    assert checkpoint._compatible_producer(old, current)
+    old['qemu_long_mode_fence.py'] = '0' * 64
+    assert not checkpoint._compatible_producer(old, current)

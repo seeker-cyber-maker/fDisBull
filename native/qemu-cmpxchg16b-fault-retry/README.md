@@ -23,8 +23,18 @@ observationally identical for that trial because x86 GDB watchpoints stop
 after access. Stop-before-access watchpoint behavior is therefore still
 source-level only.
 
-The checked long-mode checkpoint path is limited to canonical four-level
-mapping and physical RAM below 4 GiB. Parallel TCG, high-backed 16-byte
-operands, and arbitrary later MMIO/device failures are outside this
-qualification. The dirty callback still precedes the actual store.
-DOSBox-X remains the default.
+The owned checkpoint's RIP/RSP fence uses canonical four-level mapping and
+physical RAM below 4 GiB. Parallel TCG and arbitrary later MMIO/device
+failures are outside this qualification. The dirty callback still precedes
+the actual store. DOSBox-X remains the default.
+
+The later host adapter qualifies this same frozen native image with an
+operand backed at physical `0x100802000`, selected through a low linear
+address in four-level long mode. Its opt-in layer walk permits 40-bit
+physical leaf addresses while the owned checkpoint's RIP/RSP fence remains
+low-physical by default. The plain and LOCK high-backed cases matched
+Bochs live and after unprimed cold restore with the active layer. This
+qualification requires the local host wheel SHA-256
+`84ee5c22f73521074bfb0f671cd0e730b9229596cc97a59ba2460614148149d3`.
+The high-backed runtime test uses a 4 KiB leaf; wider leaf sizes have
+offline walk coverage only.

@@ -1,5 +1,46 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## High-backed CMPXCHG16B layer binding (2026-11-24)
+
+The same DOS MZ long-mode witness now maps its linear 16-byte operand at
+`0x130000` to physical `0x100802000`, above 4 GiB. It marks both low
+physical aliases with `0f0b` bytes so an accidental 32-bit wrap or
+identity-map selection cannot satisfy the comparison. Bochs independently
+checked the guest PTE and its `page` mapping in sparse high RAM. QEMU
+checked virtual bytes against the high physical backing.
+
+The public QEMU layer adapter can now bind a long-mode linear execute
+layer through a bounded four-level walk to a high physical page. This path
+requires a native physical64 layer observer and a declared high RAM bank.
+The walk permits physical address bits 32–39; wider or reserved entries
+fail closed. High RAM layer writes remain refused. Owned checkpoint
+RIP/RSP fences still use their low-physical default, so this change does
+not claim high-backed code or stack checkpoint admission.
+
+Plain and LOCK CMPXCHG16B matched Bochs at low and high backing, live and
+after each engine's unprimed cold restore. Every case retained the three
+guest write faults, failed-compare overlay preservation, matched-store
+notification, complete 16-byte RAM and unchanged low aliases. The
+receiving QEMU session began in real mode with paging off and restored
+its high-backed active layer. A prior low-backed owned checkpoint made
+by the earlier tool package also restored and continued under the new
+package with identical observations and a fresh layer ID.
+
+The frozen native QEMU image remains SHA-256
+`7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e`.
+The new local host wheel is
+`84ee5c22f73521074bfb0f671cd0e730b9229596cc97a59ba2460614148149d3`.
+Five paired/preservation native cases and 228 focused host checks passed.
+The package also replayed 12 earlier code captures and nine traces.
+Only a 4 KiB high operand page was exercised natively; 2 MiB and 1 GiB
+high leaf handling has offline walker tests. Parallel TCG, later device
+faults and full DOSBox-X replacement parity remain open. DOSBox-X stays
+the default. No CI was run.
+
+See the [paired test](../tests/test_qemu_cmpxchg16b_fault_retry_native.py),
+the [native candidate](../native/qemu-cmpxchg16b-fault-retry/README.md)
+and the [Bochs procedure](../native/bochs-pae-reference/README.md#compare-cmpxchg16b-page-fault-retry-and-cross-page-watchpoints).
+
 ## CMPXCHG16B and page-fault retry with active overlays (2026-11-24)
 
 The nonparallel x86 TCG candidate now handles the full 16-byte failed
@@ -35,8 +76,9 @@ second-page GDB watchpoint committed its complete DWORD and stopped with
 the sentinel untouched, live and after cold restore, matching Bochs. The
 predecessor produced the same visible result because the x86 GDB watchpoint
 stops after access; this trial establishes preservation, not a distinct
-stop-before-access improvement. Later MMIO or device faults, parallel TCG,
-and high-backed 16-byte operands remain unqualified.
+stop-before-access improvement. This initial trial used low physical
+backing; the later high-backed qualification is recorded above. Later
+MMIO or device faults and parallel TCG remain unqualified.
 
 The frozen QEMU image is SHA-256
 `7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e`;

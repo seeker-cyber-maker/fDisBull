@@ -30,6 +30,35 @@ def test_four_level_fence_walk_and_canonical_addresses():
         walk(state, 0x800000000000, _reader(memory))
 
 
+@pytest.mark.parametrize(('level', 'linear', 'entry', 'expected', 'size'), [
+    ('table', 0x5000, 0x100802003, 0x100802000, 0x1000),
+    ('directory', 0x5000, 0x100800083, 0x100805000, 0x200000),
+    ('pdpt', 0x40005000, 0x100000083, 0x100005000, 0x40000000),
+])
+def test_high_physical_leaf_addresses_are_opt_in(level, linear, entry, expected, size):
+    state, memory = _tables()
+    address = {'pdpt': 0x2008, 'directory': 0x3000, 'table': 0x4028}[level]
+    memory[address:address + 8] = entry.to_bytes(8, 'little')
+    with pytest.raises(ValueError):
+        walk(state, linear, _reader(memory))
+    result = walk(state, linear, _reader(memory), allow_high=True)
+    assert result['physical_address'] == hex(expected)
+    assert result['walk']['physical'] == expected
+    assert result['page_size'] == size
+
+
+@pytest.mark.parametrize(('address', 'linear', 'entry'), [
+    (0x4028, 0x5000, (1 << 40) | 0x6003),
+    (0x4028, 0x5000, (1 << 52) | 0x6003),
+    (0x3000, 0x5000, 0x100802083),
+])
+def test_high_physical_walk_rejects_out_of_width_and_reserved_bits(address, linear, entry):
+    state, memory = _tables()
+    memory[address:address + 8] = entry.to_bytes(8, 'little')
+    with pytest.raises(ValueError):
+        walk(state, linear, _reader(memory), allow_high=True)
+
+
 @pytest.mark.parametrize('value,access', [(0x6001, {'write': True}),
                                           (0x8000000000006003, {'execute': True}),
                                           (0x100000006003, {}), (0, {})])
