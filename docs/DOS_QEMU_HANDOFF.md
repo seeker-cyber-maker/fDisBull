@@ -8870,3 +8870,37 @@ origin and cold child, the settled post-load save observation, and removal of
 a stale timing breakpoint. Initial timer-stop CPU divergence remains recorded.
 No CI ran; DOSBox-X remains the default; no 143 surfaces or 7 campaigns are
 qualified by these gates.
+
+## Original Doom pistol endpoint followed by QEMU guest exit (2026-11-25 UTC)
+
+The opt-in [QEMU guest-exit gate](evidence/qemu-doom-guest-exit-2026-11-25/README.md)
+reached the pinned original Doom E1M1 tic 64–84 no-shot control and tic 84–114
+pistol endpoint. WAD-derived ammo changed from 50 to 49 and the 32 kHz stereo
+shot capture matched `DSPISTOL` at correlation 0.9493, with no dropped frames.
+After F10 and Y input dispatch, the public process observation reported a
+normal, nonresident DOS `guest_exit` with code 0. QEMU was still alive at guest
+return; its owner was then reaped with code 0. The two frames around F10 differ
+by 3,002 normalized pixels, without OCR or prompt classification. Input dispatch
+does not establish exclusive causation or guest consumption. The pinned source
+and staged files were unchanged, including `DEFAULT.CFG`.
+
+The independent [DOSBox-X normal-quit gate](evidence/qemu-doom-dosbox-quit-2026-11-25/README.md)
+also reached source-bound tics 64, 84 and 114. It observed ammo 50→49 and a
+`DSPISTOL` correlation of 0.9560 in the shot window. F10 produced a 2,890-pixel
+normalized frame difference; after Y, the public API reported a nonresident
+`DOS_Terminate` guest exit with code 0 after process cleanup. The 48 kHz signed
+16-bit stereo WAV had exact, stable RIFF/data extents of 4,746,668 bytes before
+owner close; the owner was then reaped with code 0. This verifies file
+finalization for that normal-exit route, not completeness of every emulator-side
+audio sample or PCM equivalence across engines. The staged and original pinned
+files were unchanged, including `DEFAULT.CFG`.
+
+Three earlier DOSBox-X attempts remain failed. The first sampled the HUD before
+the stable source-bound start. The second paused at tic 98 and timed out waiting
+for the next source breakpoint. The third reached tic 114, but its 350 ms F10
+window showed only one changed pixel. The fourth run retained per-stop source traces
+and used a 120 ms F10 press with a 500 ms guest-time observation window. The
+earlier paired pistol test's `session.stop` fault and placeholder WAV remain as
+separate forced-stop limitations. Neither independent normal-exit gate proves
+cross-engine quit timing, complete audio equivalence or a campaign. No 143
+surfaces or seven campaigns are promoted; DOSBox-X stays the default. No CI ran.

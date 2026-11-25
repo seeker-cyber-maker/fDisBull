@@ -1,0 +1,112 @@
+{
+  "format": "fdisbull-qemu-doom-guest-exit-evidence-1",
+  "test": {
+    "path": "tests/test_doom_qemu_pistol_guest_exit_native.py",
+    "node": "test_qemu_doom_e1m1_pistol_endpoint_then_normal_guest_exit",
+    "opt_in": "FDISBULL_REQUIRE_DOOM_QEMU_PISTOL_EXIT=1",
+    "result": "passed",
+    "scope": "One pinned original Doom E1M1 QEMU run; gameplay/audio endpoint followed by F10 and Y input dispatch and public DOS guest exit."
+  },
+  "inputs": {
+    "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+    "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+    "AUD512.LMP": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+    "DEFAULT.CFG": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+    "qemu_runtime_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+    "boot_image_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc"
+  },
+  "gameplay_audio_endpoint": {
+    "source_qualified_leveltime_pre_increment_tics": {
+      "start": 64,
+      "no_shot_control_end": 84,
+      "shot_end": 114
+    },
+    "ammo": {
+      "before": 50,
+      "after": 49,
+      "decoder_wad_sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+    },
+    "audio": {
+      "format": "signed 16-bit stereo PCM",
+      "sample_rate_hz": 32000,
+      "shot_frames": 29103,
+      "dropped_frames": 0,
+      "no_shot_control_correlation": 0.1290783397,
+      "shot_dspistol_correlation": 0.9492656885,
+      "shot_pitch_ratio": 1.0,
+      "shot_onset_frame": 11963,
+      "onset_unit": "capture frames; not calibrated to guest milliseconds"
+    },
+    "clock_anchors": {
+      "domain": "QEMU_CLOCK_VIRTUAL nanoseconds",
+      "start": 51168661272,
+      "shot": 51708023064,
+      "endpoint": 52637806232
+    },
+    "bda_anchors": {
+      "address": "0x46c",
+      "unit": "raw guest tick count; no tick-period conversion",
+      "start": 659925,
+      "shot": 659936,
+      "endpoint": 659955
+    }
+  },
+  "quit_and_exit": {
+    "f10_input": {
+      "state": "dispatched",
+      "edges": 2,
+      "down_up": true
+    },
+    "f10_frame_change": {
+      "normalized_size": [
+        320,
+        200
+      ],
+      "changed_pixels": 3002,
+      "threshold_exceeded": 500,
+      "classification": "frame difference only; no OCR or quit-prompt classification"
+    },
+    "y_input": {
+      "state": "dispatched",
+      "edges": 2,
+      "down_up": true
+    },
+    "causation_limit": "F10 and Y dispatch preceded guest_exit; the records do not prove guest consumption or exclusive causation.",
+    "guest_process": {
+      "outcome": "guest_exit",
+      "state": "exited",
+      "termination_type": "normal",
+      "dos_exit_code": 0,
+      "resident": false,
+      "qemu_alive_at_guest_return": true
+    },
+    "qemu_owner": {
+      "reaped": true,
+      "return_code": 0
+    }
+  },
+  "configuration_side_effects": {
+    "staged_file_count": 4,
+    "changed_staged_files": [],
+    "default_cfg_before_sha256": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+    "default_cfg_after_sha256": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+    "source_pins_unchanged": true
+  },
+  "private_artifacts": {
+    "directory": "qemu-doom-guest-exit-20261125",
+    "files": {
+      "receipt.json": "de3d6b0f3f05cd4f2c546cb5f47d773ba71a218e394caf8ccd911cb67f624d9a",
+      "qemu-no-shot.wav": "df875a57f0914a9fe733a3ed7bfdbc6e852526b611cbe771a3d10ec2b99c0562",
+      "qemu-shot.wav": "ad29be0c7dba288f59bf795134402d607e601b07a8f33d3065e8ca698e941376",
+      "before-quit.png": "8b2064a16a8e8ad593e594b73f88cf0c8f60b9706f0084be37a3b15e6fb5173a",
+      "quit-prompt.png": "0d020f48b7d938a1d6fdba49d48b796084bfc1cac9e92e600c12bbc597e87b4a"
+    },
+    "copy_hashes_verified": true
+  },
+  "claim_limits": [
+    "QEMU-only observation; no cross-engine or normal DOSBox-X exit claim.",
+    "Input dispatch records are not proof of guest consumption or exclusive causation.",
+    "The changed-pixel count is not image classification.",
+    "No cross-engine clock, audio, or full gameplay parity claim."
+  ]
+}

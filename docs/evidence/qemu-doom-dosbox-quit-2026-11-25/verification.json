@@ -1,0 +1,125 @@
+{
+  "claim_ceiling": [
+    "One original Doom E1M1 DOSBox-X run only.",
+    "Guest-reported normal DOS termination and owner cleanup were observed.",
+    "The WAV RIFF and data extents were finalized for this captured file; complete capture coverage is not claimed.",
+    "No QEMU execution, cross-engine parity, or broad compatibility claim."
+  ],
+  "format": "fdisbull-doom-dosbox-quit-evidence-1",
+  "observations": {
+    "ammo": {
+      "after_shot": 49,
+      "before_shot": 50,
+      "no_shot_control": 50
+    },
+    "audio": {
+      "capture_completeness": "not_claimed",
+      "capture_tail_frames_after_shot_frontier": 154464,
+      "channels": 2,
+      "correlation_threshold": 0.55,
+      "data_bytes": 4746624,
+      "dspistol_reference": {
+        "guard_samples_removed_per_end": 16,
+        "lump": "DSPISTOL",
+        "sample_rate_hz": 11025,
+        "sha256": "200187590ded8999c5b9c405ce3772367a38cec97da9f165021a4c1c2d116114"
+      },
+      "format": "signed 16-bit PCM",
+      "frames": 1186656,
+      "header_finalized": true,
+      "no_shot_control_correlation": 0.19822892303882347,
+      "riff_bytes": 4746668,
+      "riff_declared_bytes": 4746668,
+      "sample_rate_hz": 48000,
+      "shot_correlation": 0.9559789431984805,
+      "shot_match_onset_frame_within_window": 28433,
+      "shot_match_pitch_ratio": 1.0,
+      "shot_window_frames": [
+        933888,
+        1032192
+      ]
+    },
+    "config": {
+      "after_guest_exit_sha256": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+      "after_owner_close_sha256": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+      "before_sha256": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+      "path": "DEFAULT.CFG"
+    },
+    "leveltime": {
+      "control_end_tic": 84,
+      "prepared_preincrement_tic": 64,
+      "quit_prompt_tic": 118,
+      "shot_end_tic": 114,
+      "shot_start_tic": 84
+    },
+    "quit": {
+      "changed_pixel_count_is_not_prompt_classification": true,
+      "f10_prompt_frame_changed_pixels": 2890,
+      "guest_exit": {
+        "kind": "guest_exit",
+        "psp": "0x0814",
+        "requested_exit_code": 0,
+        "resident": false,
+        "source": "DOS_Terminate",
+        "stage": "after-process-cleanup",
+        "state": "exited"
+      },
+      "owner_cleanup": {
+        "reaped": true,
+        "returncode": 0
+      },
+      "sequence": "F10 then Y"
+    }
+  },
+  "private_artifacts": {
+    "files": {
+      "before-quit.png": {
+        "bytes": 35866,
+        "meaning": "frame before F10",
+        "sha256": "e09d5d761181874fcb8393b05f206aef9de9e613bb58d821af926db0338ed4fd"
+      },
+      "doom-dosbox-quit-capture-result.json": {
+        "bytes": 4398,
+        "sha256": "4fd955aff416d27f341e86496031ce11497e0a95c6648bc8f55c01075e597c27"
+      },
+      "doom-final.wav": {
+        "bytes": 4746668,
+        "sha256": "64e9c11233aabbb92cc0e53b8160447cd700564c34d572d1582d737baf02fc00"
+      },
+      "quit-capture-progress.json": {
+        "bytes": 12982,
+        "sha256": "a0b45adfd4f4b366e5a2b5cd822b29d8fd0e3f8325646f22ecd318587ca12489"
+      },
+      "quit-prompt.png": {
+        "bytes": 35915,
+        "meaning": "frame after F10 and before Y confirmation; not a post-exit frame",
+        "sha256": "8fb287ca7c78024e3220d8a70297a2a5732e8e37707741dba1627bd1b245d599"
+      }
+    },
+    "storage": "outside Git at /Volumes/GitHub/GitHub/fDisBull-private/qemu-doom-dosbox-quit-20261125/"
+  },
+  "run": {
+    "elapsed_seconds": 20.6,
+    "outcome": "passed",
+    "test_node": "tests/test_doom_dosbox_quit_capture_native.py::test_original_doom_dosbox_quit_finalizes_pistol_capture",
+    "test_source_sha256": "195b0d6f195bb5ce94aee320fdbc5a7aefe144ac55a193fbd07846efe026ae36",
+    "tests_passed": 1
+  },
+  "source_receipt_sha256": {
+    "progress": "a0b45adfd4f4b366e5a2b5cd822b29d8fd0e3f8325646f22ecd318587ca12489",
+    "top_result": "4fd955aff416d27f341e86496031ce11497e0a95c6648bc8f55c01075e597c27"
+  },
+  "status": "one_bounded_native_run_passed",
+  "target": {
+    "backend": "DOSBox-X",
+    "game": "original Doom",
+    "level": "E1M1",
+    "private_inputs_sha256": {
+      "AUD512.LMP": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+      "DEFAULT.CFG": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d",
+      "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+    },
+    "runtime_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e"
+  }
+}
