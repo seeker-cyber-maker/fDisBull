@@ -46,6 +46,16 @@
       "selection": ["tests/test_qemu_trial_observations.py"],
       "result": {"passed": 13, "failed": 0, "skipped": 0},
       "receipt": "trial observations; no JUnit digest supplied"
+    },
+    {
+      "name": "REP edge paired and virtual-clock extension",
+      "selection": [
+        "tests/test_qemu_dos_repne_pair_native.py",
+        "tests/test_qemu_dos_rep_address_size_native.py",
+        "tests/test_qemu_dos_rep_terminal_cases_native.py::test_qemu_virtual_clock_rep_movsb_normal_run_reaches_following_breakpoint"
+      ],
+      "result": {"passed": 4, "failed": 0, "skipped": 0},
+      "private_junit_sha256": "875049196208b9b8a55b09a83b4a42a9727b095c8488abbda60bbc56bedfd645"
     }
   ],
   "observations": {
@@ -63,7 +73,13 @@
       "REP MOVSB count three",
       "REPE CMPSB termination at the second, mismatching comparison"
     ],
-    "qemu_only_cold_restore": "mid-REP checkpoint restored and resumed in the accepted one-case run"
+    "qemu_only_cold_restore": "mid-REP checkpoint restored and resumed in the accepted one-case run",
+    "paired_repne_scasb": "Both engines step from REPNE with CX=3/DI at ABC through the first nonmatch at the REP IP with CX=2 and ZF clear, then stop at the following instruction after matching B with CX=1 and ZF set; the next fetch is the following instruction.",
+    "paired_rep_address_sizes": [
+      "Default 16-bit address size with ECX=12340001h copies one byte and stops at the following instruction with ECX=12340000h on both engines.",
+      "67h 32-bit address size with ECX=1 copies one byte and stops at the following instruction with ECX=0 on both engines."
+    ],
+    "qemu_only_virtual_clock": "A normal virtual-clock run of count-three REP MOVSB stops at a breakpoint on the following instruction with CX=0 and destination ABC."
   },
   "qualification": {
     "trace_events_workgroup": "unqualified",

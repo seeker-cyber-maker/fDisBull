@@ -217,3 +217,34 @@ def test_qemu_mid_rep_cross_session_cold_restore_resumes_remaining_iterations(
             assert terminal["di"] == DEST_IP + 3, terminal
             assert terminal["destination"] == "414243", terminal
     assert source.read_bytes() == program
+
+
+def test_qemu_virtual_clock_rep_movsb_normal_run_reaches_following_breakpoint(
+        tmp_path, process_runtime, process_disk):
+    # Authored count=3 MOVSB fixture. Run without manual stepping under the
+    # virtual/icount clock profile to cover translated normal execution.
+    program = bytes.fromhex("be0e01bf1101b90300fcf3a4ebfe414243000000")
+    source = tmp_path / "REPVIRTUAL.COM"
+    source.write_bytes(program)
+    with Project.create(tmp_path / "rep-virtual.fdb", source, image="com") as project:
+        project.analyze(max_instructions=64)
+        qemu_dir = tmp_path / "qemu-virtual"
+        qemu_dir.mkdir()
+        (qemu_dir / source.name).write_bytes(program)
+        with project.debugger(
+            str(process_runtime["executable"]), qemu_dir,
+            **launch_options(process_runtime, process_disk, qemu_clock="virtual"),
+        ) as debug:
+            info = process_record(debug)
+            breakpoint = debug.breakpoint(com_address(info, NEXT_IP))
+            stopped = debug.run(timeout_ms=10000)
+            assert stopped["outcome"] == "breakpoint", stopped
+            assert breakpoint["breakpoint_id"] in stopped["session"]["stop_reason"][
+                "breakpoint_ids"], stopped
+            terminal = _state(debug, info)
+
+    assert terminal["ip"] == NEXT_IP, terminal
+    assert terminal["cx"] == 0, terminal
+    assert terminal["si"] == SOURCE_IP + 3 and terminal["di"] == DEST_IP + 3, terminal
+    assert terminal["destination"] == "414243", terminal
+    assert source.read_bytes() == program

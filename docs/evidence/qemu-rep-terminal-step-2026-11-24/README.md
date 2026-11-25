@@ -15,6 +15,13 @@ skips, the one-case cold-restore run, and four history tests. Thirteen host
 trial observations passed. Exact executable and patch identities, test
 selectors, receipt hashes, and result scope are recorded in the JSON file.
 
+A follow-up batch on the same frozen QEMU candidate passed four more local
+cases: paired `REPNE SCASB` early match, paired 16-bit count masking with a
+nonzero ECX upper word, paired 32-bit address-size `REP MOVSB`, and QEMU's
+virtual-clock normal-run path. The paired cases compare stopped CPU state,
+next fetches where observed, and copied bytes for MOVSB. The virtual-clock
+case stops at the next guest instruction after three copies.
+
 The `trace-events` workgroup remains unqualified. This result does not qualify
 overall QEMU/DOSBox parity. DOSBox remains the default backend; DotBox is
 unchanged. Native VM tests ran locally; CI, release and installation did not.
