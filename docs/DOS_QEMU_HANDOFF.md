@@ -9060,3 +9060,24 @@ a child PSP current at cold restore remains unsupported; metadata is trusted
 only in a compatible fDisBull project artifact and is not cryptographically
 authenticated. No general parity, default backend change, CI, release, or
 installation activation follows. DOSBox-X remains the default.
+
+## Bounded parent/child cold restore and QEMU shrink checkpoint (2026-11-25 UTC)
+
+The [sanitized evidence](evidence/qemu-dos-parent-child-cold-2026-11-25/README.md)
+adds a passed paired authored nested-EXEC cold restore on the separate DOSBox-X
+candidate and QEMU: selected parent preserved while its child was current,
+child returned through the parent's wait, and parent exited 17 under its
+original PSP. The existing paired authored COM fresh-owner checkpoint/input
+regression also passed. QEMU's separate owned-machine slice passed two
+in-place DOS allocation-shrink recoveries, and four COM/MZ source/backing-layer
+checkpoint-hook cases passed. These are bounded authored workloads using each
+engine's own state format, not full parity.
+
+The final candidate executable and source patch hashes are recorded in the
+sanitized evidence. The installed DOSBox-X binary is unchanged and remains the
+default. The final affected host selection was 108 passed, 35 opt-in skips, and
+one expected duplicate ZIP-name warning; skips are not native passes. Native
+state sizes remain bounded at 128 MiB in DOSBox-X and 256 MiB in Python, with
+main-MCB-chain validation and a 32-link parent-ancestry limit. Direct RPC
+artifact metadata is not cryptographically authenticated, partial state-load
+corruption is untested, and no CI, release, merge, or activation occurred.

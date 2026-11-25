@@ -262,6 +262,74 @@ def _decode_origin(session, origin):
     return nonce, ready_bytes, tail, vectors, helper, ready
 
 
+def _mcb_snapshot_valid(block):
+    if not isinstance(block, dict):
+        return False
+    integer_fields = ('mcb_segment', 'segment', 'owner_psp', 'paragraphs', 'start', 'end')
+    if any(type(block.get(key)) is not int for key in integer_fields):
+        return False
+    if type(block.get('terminal')) is not bool:
+        return False
+    mcb = block['mcb_segment']
+    paragraphs = block['paragraphs']
+    return (1 <= mcb < 0xffff and 0 <= block['owner_psp'] <= 0xffff
+            and paragraphs >= 0 and block['segment'] == mcb + 1
+            and block['start'] == (mcb + 1) * 16
+            and block['end'] == (mcb + paragraphs + 1) * 16
+            and block['end'] <= 0x100000)
+
+
+def _verify_process_allocation(allocation, blocks, process_psp, mapping, psp, cpu_mode):
+    """Validate stable primary MCB identity and live source/stack containment."""
+    if not _mcb_snapshot_valid(allocation):
+        raise ValueError('Recorded DOS process allocation is malformed')
+    if (not isinstance(blocks, list) or not blocks
+            or any(not _mcb_snapshot_valid(block) for block in blocks)
+            or not blocks[-1]['terminal']
+            or any(block['terminal'] for block in blocks[:-1])
+            or any(left['mcb_segment'] + left['paragraphs'] + 1 != right['mcb_segment']
+                   for left, right in zip(blocks, blocks[1:]))):
+        raise ValueError('Observed DOS MCB chain is malformed')
+    matches = [block for block in blocks if block['mcb_segment'] == allocation['mcb_segment']]
+    if len(matches) != 1:
+        raise ValueError('DOS process primary MCB is missing or duplicated in the observed chain')
+    current = matches[0]
+    if (current['segment'] != allocation['segment']
+            or current['start'] != allocation['start']
+            or current['owner_psp'] != process_psp
+            or allocation['owner_psp'] != process_psp):
+        raise ValueError('DOS process primary MCB identity or owner changed')
+
+    changed = current != allocation
+    if changed:
+        # DOS AH=4Ah may split an owned allocation in place. Accept only a
+        # real-mode monotonic shrink; observe_mcbs has already verified the
+        # resulting M/Z chain, including any successor allocation.
+        if (cpu_mode != 'real'
+                or current['paragraphs'] >= allocation['paragraphs']
+                or current['end'] >= allocation['end']):
+            raise ValueError('DOS process allocation changed outside an in-place real-mode shrink')
+    else:
+        startup_stack = mapping.get('stack_linear')
+        if type(startup_stack) is not int or not current['start'] <= startup_stack <= current['end']:
+            raise ValueError('Recorded startup stack is outside the process allocation')
+
+    start = mapping.get('runtime_base')
+    module_size = mapping.get('module_size')
+    if (type(start) is not int or type(module_size) is not int or module_size <= 0
+            or not current['start'] <= start < start + module_size <= current['end']):
+        raise ValueError('Checkpoint source extent is outside the current process allocation')
+    if changed:
+        if not isinstance(psp, bytes) or len(psp) < 0x32 or psp[:2] != b'\xcd\x20':
+            raise ValueError('DOS process PSP is invalid for saved-stack validation')
+        stack_offset = int.from_bytes(psp[0x2e:0x30], 'little')
+        stack_segment = int.from_bytes(psp[0x30:0x32], 'little')
+        stack_linear = stack_segment * 16 + stack_offset
+        if not current['start'] <= stack_linear <= stack_linear + 18 <= current['end']:
+            raise ValueError('Saved DOS return stack frame is outside the current process allocation')
+    return current
+
+
 def _verify_process(session, process, origin, vm=None, memory=None, task_binding=_CURRENT_TASK,
                     private_views=_CURRENT_TASK):
     from .qemu_dos_process import observe_mcbs, relocated_source
@@ -304,9 +372,6 @@ def _verify_process(session, process, origin, vm=None, memory=None, task_binding
     read = ((lambda address, length: _read(vm, address, length)) if private_read is None else private_read) if space is None else space.read
     blocks = observe_mcbs(read, ready['first_mcb_segment'])
     allocation = process['allocation']
-    current = next((block for block in blocks if block['mcb_segment'] == allocation['mcb_segment']), None)
-    if current != allocation or current['owner_psp'] != process['psp_segment']:
-        raise ValueError('DOS process allocation ownership changed')
     helper_block = next((block for block in blocks if block['segment'] == ready['helper_psp']
                          and block['owner_psp'] == ready['helper_psp']), None)
     if helper_block is None:
@@ -316,6 +381,8 @@ def _verify_process(session, process, origin, vm=None, memory=None, task_binding
             or psp[0x80:0x82 + len(tail)] != bytes([len(tail)]) + tail + b'\r'):
         raise ValueError('DOS process PSP, parent or command tail changed')
     original, mapping = relocated_source(_source(session), session.dos, session.project.meta['format'], ready)
+    _verify_process_allocation(allocation, blocks, process['psp_segment'],
+                               mapping, psp, registers['cpu_mode'])
     recorded = process['source_mapping']
     if (any(recorded.get(key) != value for key, value in mapping.items())
             or recorded.get('source_sha256') != session.metadata['source_sha256']
@@ -323,8 +390,6 @@ def _verify_process(session, process, origin, vm=None, memory=None, task_binding
             or not recorded.get('live')):
         raise ValueError('Checkpoint source mapping differs from its DOS relocation identity')
     start = mapping['runtime_base']
-    if not allocation['start'] <= start < start + len(original) <= allocation['end']:
-        raise ValueError('Checkpoint source extent is outside its allocation')
     if space is not None:
         pc = registers.get('linear_pc')
         if pc is None or not start <= int(pc, 16) < start + len(original):

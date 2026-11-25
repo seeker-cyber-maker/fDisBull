@@ -17,6 +17,7 @@ import pytest
 
 from fdisbull.cli import invoke
 from fdisbull.project import Project
+from fdisbull.qemu_dos_checkpoint import FORMAT as SOURCE_CHECKPOINT_FORMAT
 from support.dos_process_fixture import assemble, digest, prepare_dos_baseline
 from test_qemu_dos_checkpoint_sessions_native import _inputs, _open_debug
 
@@ -241,8 +242,8 @@ def test_native_shrunk_allocation_machine_recovery_hot_and_cold(tmp_path, reside
             assert launch['entry']['ss'] == launch['entry']['cs']
             entry_anchor = None
             if not resident:
-                # A separately verified source checkpoint remains stronger
-                # than subsequent machine recovery and can restore authority.
+                # A separately verified source checkpoint before shrink remains
+                # available to restore the original allocation and source authority.
                 entry_anchor = debug.save_state('source-entry-before-shrink.qcow2')['artifact']
             _stop_at(debug, base + symbols['save'])
             mcb_size = _word(debug, base - 16 + 3)
@@ -251,8 +252,8 @@ def test_native_shrunk_allocation_machine_recovery_hot_and_cold(tmp_path, reside
             saved_epoch = debug.dos_process_info()['capture_epoch']
             saved_cpu = debug.registers()
             owner = debug.vm.process
-            with pytest.raises(ValueError, match='allocation ownership changed'):
-                debug.save_state()
+            shrunken_source = debug.save_state('source-after-shrink.qcow2')
+            assert shrunken_source['metadata']['format'] == SOURCE_CHECKPOINT_FORMAT
             assert debug.vm.process is owner and owner.poll() is None
             assert debug.registers()['registers'] == saved_cpu['registers']
 

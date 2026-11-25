@@ -1324,10 +1324,10 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..747e356 100644
+index 29363cf..b8a55da 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
-@@ -5,6 +5,15 @@
+@@ -5,6 +5,17 @@
  #include "agent/debugger_adapter.h"
  #include "agent/debugger_output_parser.h"
  #include "agent/trace_store.h"
@@ -1336,6 +1336,8 @@ index 29363cf..747e356 100644
 +#include "dosbox.h"
 +#include "pic.h"
 +#include "debug.h"
++#include "dos_mcb.h"
++#include "mem.h"
 +#include <zlib.h>
 +#if defined(C_DOSBOX_AGENT_ZSTD)
 +#include <zstd.h>
@@ -1343,7 +1345,7 @@ index 29363cf..747e356 100644
  #include "../transport/rpc_transport.h"
  
  #include <algorithm>
-@@ -14,6 +23,7 @@
+@@ -14,13 +25,16 @@
  #include <condition_variable>
  #include <deque>
  #include <functional>
@@ -1351,7 +1353,8 @@ index 29363cf..747e356 100644
  #include <iomanip>
  #include <limits>
  #include <map>
-@@ -21,6 +31,7 @@
++#include <set>
+ #include <memory>
  #include <mutex>
  #include <sstream>
  #include <utility>
@@ -1359,11 +1362,12 @@ index 29363cf..747e356 100644
  #include <vector>
  #include <thread>
  
-@@ -31,6 +42,11 @@
+@@ -31,6 +45,12 @@
  #include <unistd.h>
  #endif
  
-+extern bool AGENT_StateFile(const std::string&, bool, std::string*);
++extern bool AGENT_StateFile(const std::string&, bool, std::string*, bool);
++extern void DOS_UpdatePSPName();
 +extern bool ChangeRegister(char* const);
 +extern bool ticksLocked;
 +extern void DOSBOX_UnlockSpeed2(bool pressed);
@@ -1371,7 +1375,7 @@ index 29363cf..747e356 100644
  namespace dosbox_agent {
  namespace {
  
-@@ -445,9 +461,14 @@ static bool IsKnownMethod(const std::string& method)
+@@ -445,9 +465,14 @@ static bool IsKnownMethod(const std::string& method)
             method == "session.stop" ||
             method == "execution.continue" ||
             method == "execution.pause" ||
@@ -1387,7 +1391,7 @@ index 29363cf..747e356 100644
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -506,6 +527,13 @@ public:
+@@ -506,6 +531,13 @@ public:
      };
  
      struct AdapterOperation {
@@ -1401,7 +1405,7 @@ index 29363cf..747e356 100644
          std::mutex mutex;
          std::condition_variable completed;
          bool done = false;
-@@ -518,6 +546,14 @@ public:
+@@ -518,6 +550,14 @@ public:
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
@@ -1416,20 +1420,18 @@ index 29363cf..747e356 100644
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +589,12 @@ public:
+@@ -553,6 +593,10 @@ public:
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
 +        JsonValue last_data_access;
 +        JsonValue guest_exit;
 +        std::uint16_t target_psp = 0;
-+        std::map<std::string, std::uint16_t> saved_state_psps;
-+        std::deque<std::string> saved_state_psp_order;
 +        bool stop_requested = false;
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -601,6 +643,7 @@ public:
+@@ -601,6 +645,7 @@ public:
      virtual std::uint64_t SubmitAfter(std::uint32_t delay_ms, Command command) = 0;
      virtual bool IsReadyForTargetStart() const = 0;
      virtual std::uint64_t EntryBreakpointSequence() const = 0;
@@ -1437,7 +1439,7 @@ index 29363cf..747e356 100644
      virtual bool Continue(std::string* error) const = 0;
      virtual bool Pause(std::string* error) const = 0;
      virtual bool StartTargetAtEntry(const std::string& command,
-@@ -658,6 +701,7 @@ public:
+@@ -658,6 +703,7 @@ public:
      signature override { DebuggerAdapter adapter; return adapter.method args; }
      AGENT_RUNTIME_FORWARD(IsReadyForTargetStart, bool IsReadyForTargetStart() const, ())
      AGENT_RUNTIME_FORWARD(EntryBreakpointSequence, std::uint64_t EntryBreakpointSequence() const, ())
@@ -1445,7 +1447,7 @@ index 29363cf..747e356 100644
      AGENT_RUNTIME_FORWARD(Continue, bool Continue(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(Pause, bool Pause(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(StartTargetAtEntry, bool StartTargetAtEntry(const std::string& command, const std::vector<std::string>& arguments, const std::string& workdir, std::string* error) const, (command, arguments, workdir, error))
-@@ -692,6 +736,7 @@ public:
+@@ -692,6 +738,7 @@ public:
  
      bool IsReadyForTargetStart() const override { return true; }
      std::uint64_t EntryBreakpointSequence() const override { return 0; }
@@ -1453,7 +1455,7 @@ index 29363cf..747e356 100644
  
      bool Continue(std::string*) const override { return true; }
  
-@@ -941,6 +986,9 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
+@@ -941,6 +988,9 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -1463,7 +1465,7 @@ index 29363cf..747e356 100644
      if (!session.last_stop_breakpoint_id.empty())
          Add(&stop, "breakpoint_id", String(session.last_stop_breakpoint_id));
      if (session.has_last_stop_breakpoint_address) {
-@@ -981,6 +1029,9 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
+@@ -981,6 +1031,9 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
      JsonValue result = Object();
      Add(&result, "sequence", Number(event.sequence));
      Add(&result, "address", EncodeMemoryAddress(event.sample.address));
@@ -1473,7 +1475,7 @@ index 29363cf..747e356 100644
      std::string instruction = event.sample.instruction;
      if (detail == "csip")
          instruction = Hex16(event.sample.address.segment) + ":" + Hex32(event.sample.address.offset);
-@@ -1021,6 +1072,20 @@ static JsonValue RegistersResult(const RegisterSnapshot& registers,
+@@ -1021,6 +1074,20 @@ static JsonValue RegistersResult(const RegisterSnapshot& registers,
      Add(&result, "instruction_pointer", String(Hex32(registers.instruction_pointer)));
      Add(&result, "flags", String(Hex32(registers.flags)));
      Add(&result, "cpu_mode", String(registers.cpu_mode));
@@ -1494,7 +1496,7 @@ index 29363cf..747e356 100644
      return result;
  }
  
-@@ -1185,15 +1250,248 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1185,15 +1252,318 @@ static void CacheResponse(AgentServer::Impl::Session* session,
      }
  }
  
@@ -1673,9 +1675,79 @@ index 29363cf..747e356 100644
 +
 +// State files are bounded to the project native-state artifact limit. The
 +// byte hash identifies the native state; the bridge checks the restored PSP
-+// before trusting the saved process identity in a new host session.
-+// This deliberately fails closed when a selected parent differs from the
-+// current child PSP after restore.
++// before enabling selected-process exit tracking. A selected process may be
++// the current PSP or a validated ancestor while a child is running.
++static bool DosPspIsInMainMcbChain(const std::uint16_t psp_segment,
++                                   std::set<std::uint16_t>* valid_psps)
++{
++    if (psp_segment == 0 || valid_psps == NULL)
++        return false;
++    const std::uint64_t memory_bytes = static_cast<std::uint64_t>(MEM_TotalPages()) * MEM_PAGESIZE;
++    const std::uint32_t psp_address = static_cast<std::uint32_t>(psp_segment) << 4;
++    if (psp_address + 256u > memory_bytes)
++        return false;
++
++    std::set<std::uint16_t> seen_mcb_segments;
++    std::uint32_t segment = dos.firstMCB;
++    bool terminated = false;
++    for (std::size_t count = 0; count < 4096; ++count) {
++        const std::uint64_t mcb_address = static_cast<std::uint64_t>(segment) << 4;
++        if (segment == 0 || segment > 0xffffu || mcb_address + 16u > memory_bytes ||
++            !seen_mcb_segments.insert(static_cast<std::uint16_t>(segment)).second)
++            return false;
++        DOS_MCB mcb(static_cast<std::uint16_t>(segment));
++        if (!mcb.isValid())
++            return false;
++        const std::uint32_t size = mcb.GetSize();
++        const std::uint32_t end_segment = segment + size + 1u;
++        const std::uint64_t end_address = static_cast<std::uint64_t>(end_segment) << 4;
++        if (end_segment <= segment || end_segment > 0x10000u || end_address > memory_bytes)
++            return false;
++        if (segment + 1u == psp_segment && mcb.GetPSPSeg() == psp_segment && size >= 16u)
++            valid_psps->insert(psp_segment);
++        if (mcb.isLastMCB()) {
++            terminated = true;
++            break;
++        }
++        segment = end_segment;
++    }
++    if (!terminated || valid_psps->count(psp_segment) == 0)
++        return false;
++
++    const PhysPt psp_address_phys = PhysMake(psp_segment, 0);
++    std::uint8_t signature[2] = {};
++    MEM_BlockRead(psp_address_phys, signature, sizeof(signature));
++    return signature[0] == 0xcd && signature[1] == 0x20;
++}
++
++static bool DosPspIsCurrentOrAncestor(const std::uint16_t selected_psp,
++                                      const std::uint16_t current_psp)
++{
++    if (selected_psp == 0 || current_psp == 0)
++        return false;
++    std::set<std::uint16_t> valid_psps;
++    if (!DosPspIsInMainMcbChain(selected_psp, &valid_psps) ||
++        !DosPspIsInMainMcbChain(current_psp, &valid_psps))
++        return false;
++
++    std::set<std::uint16_t> visited;
++    std::uint16_t cursor = current_psp;
++    for (std::size_t depth = 0; depth < 32; ++depth) {
++        if (cursor == 0 || valid_psps.count(cursor) == 0 || !visited.insert(cursor).second)
++            return false;
++        if (cursor == selected_psp)
++            return true;
++        DOS_PSP psp(cursor);
++        const std::uint16_t parent = psp.GetParent();
++        if (parent == cursor || parent == 0)
++            return false;
++        if (!DosPspIsInMainMcbChain(parent, &valid_psps))
++            return false;
++        cursor = parent;
++    }
++    return false;
++}
++
 +static std::string StateFileHash(const std::string& path)
 +{
 +    std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -1743,7 +1815,7 @@ index 29363cf..747e356 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1502,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1574,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1751,7 +1823,7 @@ index 29363cf..747e356 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1282,6 +1581,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1282,6 +1653,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1761,7 +1833,7 @@ index 29363cf..747e356 100644
  
      if (!impl->transport->Start(config, [state](const std::string& request) {
              return HandleJsonRpcImpl(state, request);
-@@ -1291,6 +1593,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1291,6 +1665,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
          impl->started = false;
          impl->stopping = false;
          AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1769,7 +1841,7 @@ index 29363cf..747e356 100644
          return false;
      }
      return true;
-@@ -1330,6 +1633,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
+@@ -1330,6 +1705,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1779,7 +1851,7 @@ index 29363cf..747e356 100644
      return true;
  }
  
-@@ -1355,6 +1661,7 @@ void AgentServer::Stop()
+@@ -1355,6 +1733,7 @@ void AgentServer::Stop()
      // The callback may already have been copied by the emulation thread. It
      // holds shared state and observes stopping, rather than touching this.
      AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1787,7 +1859,7 @@ index 29363cf..747e356 100644
      if (transport)
          transport->Stop();
  
-@@ -1754,6 +2061,543 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +2133,549 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2092,7 +2164,7 @@ index 29363cf..747e356 100644
 +
 +            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
 +            const std::string session_id = session->id;
-+            if (SubmitEmulationCommandLocked(impl, [impl, session_id, operation, load, path, frame_keys, identity_present, identity_hash, identity_psp, saved_psp](const std::uint64_t) {
++            if (SubmitEmulationCommandLocked(impl, [impl, session_id, operation, load, path, frame_keys, identity_present, identity_hash, identity_psp](const std::uint64_t) {
 +                    std::string error;
 +                    if(load && !AGENT_KeyboardFrameKeys(frame_keys,false,&error)) {
 +                        std::lock_guard<std::mutex> guard(operation->mutex);
@@ -2105,14 +2177,20 @@ index 29363cf..747e356 100644
 +                    if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
 +                    AgentKeyboardState keyboard; AGENT_KeyboardGetState(&keyboard);
 +                    const std::string before_hash = load ? StateFileHash(path) : std::string();
++                    // Identity metadata is compatible fDisBull-artifact provenance,
++                    // not issuer authentication. Direct RPC callers must not use
++                    // caller-invented identity metadata to request this allowance.
++                    const bool allow_program_mismatch = load && identity_present &&
++                        !before_hash.empty() && before_hash==identity_hash;
 +                    const bool ok = (!load && (keyboard.pending_events || keyboard.owned_keys))
 +                        ? (error="Run until pending keyboard input completes before saving",false)
-+                        : ((!load && !AGENT_KeyboardCheckpointReady(&error)) ? false : AGENT_StateFile(path, load, &error));
++                        : ((!load && !AGENT_KeyboardCheckpointReady(&error)) ? false :
++                           AGENT_StateFile(path, load, &error, allow_program_mismatch));
 +                    if(ok && load) AGENT_KeyboardFrameKeys(frame_keys,true,&error);
 +                    AGENT_KeyboardGetState(&keyboard);
 +                    const std::string after_hash = ok ? StateFileHash(path) : std::string();
 +                    const bool state_bytes_valid = !load || (!before_hash.empty() && before_hash==after_hash);
-+                    const bool operation_ok = ok && state_bytes_valid;
++                    bool operation_ok = ok && state_bytes_valid;
 +                    if(load && !operation_ok) {
 +                        // A failed native load may already have replaced part
 +                        // of the machine state; retire this session instead
@@ -2126,17 +2204,36 @@ index 29363cf..747e356 100644
 +                        }
 +                    }
 +                    std::uint16_t restored_target_psp=0;
-+                    if(operation_ok && load && identity_present && before_hash==identity_hash && after_hash==identity_hash) {
-+                        bool saved_here=false;
-+                        {
-+                            std::lock_guard<std::mutex> identity_lock(impl->mutex);
-+                            if(impl->session && impl->session->id==session_id) {
-+                                const auto saved=impl->session->saved_state_psps.find(identity_hash);
-+                                saved_here=saved!=impl->session->saved_state_psps.end() && saved->second==identity_psp;
++                    if(operation_ok && load) {
++                        std::uint16_t candidate_psp=0;
++                        bool candidate_present=false;
++                        if(identity_present) {
++                            candidate_present=true;
++                            if(before_hash==identity_hash && after_hash==identity_hash)
++                                candidate_psp=identity_psp;
++                        }
++                        if(candidate_present) {
++                            const std::uint16_t observed_psp=impl->runtime->CurrentDosPsp();
++                            // Exact artifact metadata supplies the selected PSP;
++                            // the restored guest must independently validate it
++                            // against the current PSP or bounded ancestry.
++                            if (candidate_psp != 0 && DosPspIsCurrentOrAncestor(candidate_psp, observed_psp)) {
++                                restored_target_psp=candidate_psp;
++                                // Derive the display/program name from the
++                                // validated current PSP MCB, never from ZIP text.
++                                DOS_UpdatePSPName();
++                            } else {
++                                operation_ok=false;
++                                error="Restored DOS PSP identity is invalid or not current/a validated ancestor";
++                                std::lock_guard<std::mutex> identity_lock(impl->mutex);
++                                if(impl->session && impl->session->id==session_id) {
++                                    impl->session->target_psp=0;
++                                    impl->session->state=Impl::SessionState::Failed;
++                                    impl->session->failure_message=error;
++                                    impl->state_changed.notify_all();
++                                }
 +                            }
 +                        }
-+                        const std::uint16_t observed_psp=impl->runtime->CurrentDosPsp();
-+                        if(saved_here || observed_psp==identity_psp) restored_target_psp=identity_psp;
 +                    }
 +                    if (load) { DEBUG_AgentClearLastBreakpoint(); dosbox_agent::AGENT_EnableFrameCapture(true); }
 +                    std::lock_guard<std::mutex> guard(operation->mutex);
@@ -2164,27 +2261,8 @@ index 29363cf..747e356 100644
 +                        return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
 +                    Impl::Session& active = *impl->session;
 +                    if (!operation->success) return Error(response_id, kErrorCapabilityUnavailable, operation->error, "STATE_FAILED");
-+                    if (!operation->state_hash.empty()) {
-+                        if (!load && saved_psp) {
-+                            if (!active.saved_state_psps.count(operation->state_hash)) {
-+                                // Frequent frame snapshots must not grow trust
-+                                // metadata without bound across history restarts.
-+                                while (active.saved_state_psps.size() >= 8192) {
-+                                    active.saved_state_psps.erase(active.saved_state_psp_order.front());
-+                                    active.saved_state_psp_order.pop_front();
-+                                }
-+                                active.saved_state_psp_order.push_back(operation->state_hash);
-+                            }
-+                            active.saved_state_psps[operation->state_hash] = saved_psp;
-+                        }
-+                        if (load) {
-+                            if(identity_present) active.target_psp=operation->restored_target_psp;
-+                            else {
-+                                const auto saved = active.saved_state_psps.find(operation->state_hash);
-+                                if (saved != active.saved_state_psps.end()) active.target_psp = saved->second;
-+                            }
-+                        }
-+                    }
++                    if (!operation->state_hash.empty() && load && identity_present)
++                        active.target_psp=operation->restored_target_psp;
 +                    ++active.state_revision;
 +                    active.last_stop_kind = "pause";
 +                    active.last_data_access = JsonValue();
@@ -2331,7 +2409,7 @@ index 29363cf..747e356 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1865,9 +2709,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1865,9 +2787,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "session.stop") {
@@ -2350,7 +2428,7 @@ index 29363cf..747e356 100644
              response = AGENT_MakeJsonRpcResult(parsed.id, result);
          } else if (session->state == Impl::SessionState::Starting ||
                     session->state == Impl::SessionState::Failed) {
-@@ -1934,6 +2786,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1934,6 +2864,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      }
                  }) == 0) {
                  session->operations.erase(operation_id);
@@ -2358,7 +2436,7 @@ index 29363cf..747e356 100644
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
                                   "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
              } else {
-@@ -1955,7 +2808,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2886,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -2367,7 +2445,7 @@ index 29363cf..747e356 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2823,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2901,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -2376,7 +2454,7 @@ index 29363cf..747e356 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2835,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2913,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -2385,7 +2463,7 @@ index 29363cf..747e356 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2153,9 +3006,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2153,9 +3084,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2398,7 +2476,7 @@ index 29363cf..747e356 100644
              response = InvalidParams(parsed.id, "execution.step requires mode=into or mode=over");
          } else if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -2169,12 +3023,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2169,12 +3101,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              operation->registers.reset(new Impl::AdapterOperation());
              const StepMode step_mode = mode == "into" ? StepMode::Into : StepMode::Over;
              const std::string session_id = session->id;
@@ -2418,7 +2496,7 @@ index 29363cf..747e356 100644
                  if (success && !continued)
                      success = adapter.GetRegisters(&registers, &adapter_error);
                  {
-@@ -2190,7 +3049,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2190,7 +3127,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (impl->session && impl->session->id == session_id &&
                          impl->session->state == Impl::SessionState::Stopped) {
                          impl->session->state = Impl::SessionState::Running;
@@ -2427,7 +2505,7 @@ index 29363cf..747e356 100644
                          impl->state_changed.notify_all();
                      }
                  }
-@@ -2203,7 +3062,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2203,7 +3140,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  Impl::DeferredRequest pending;
                  pending.request = parsed;
                  pending.fingerprint = parsed.fingerprint;
@@ -2436,7 +2514,7 @@ index 29363cf..747e356 100644
                      {
                          std::unique_lock<std::mutex> dispatch_lock(operation->dispatch->mutex);
                          if (!operation->dispatch->completed.wait_for(dispatch_lock, std::chrono::milliseconds(timeout_ms),
-@@ -2223,7 +3082,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2223,7 +3160,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                          })) {
                              return false;
                          }
@@ -2446,7 +2524,7 @@ index 29363cf..747e356 100644
                              return true;
                      }
  
-@@ -2235,16 +3095,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2235,16 +3173,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                              submit_registers = true;
                          }
                      }
@@ -2470,7 +2548,7 @@ index 29363cf..747e356 100644
                                  operation->registers->done = true;
                              }
                              operation->registers->completed.notify_all();
-@@ -2260,7 +3125,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2260,7 +3203,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      return operation->registers->completed.wait_for(registers_lock, std::chrono::milliseconds(timeout_ms),
                                                                      [operation]() { return operation->registers->done; });
                  };
@@ -2479,7 +2557,7 @@ index 29363cf..747e356 100644
                      bool dispatch_success = false;
                      bool continued = false;
                      std::string dispatch_error;
-@@ -2280,6 +3145,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2280,6 +3223,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (!impl->session || impl->session->id != session_id)
                          return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
                      Impl::Session& active = *impl->session;
@@ -2491,7 +2569,7 @@ index 29363cf..747e356 100644
                      if (!continued) {
                          active.last_stop_kind = "step";
                          active.last_stop_breakpoint_id.clear();
-@@ -2314,6 +3184,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2314,6 +3262,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      JsonValue result = SessionResult(active);
                      Add(&result, "stop_reason", StopReason(active));
                      Add(&result, "registers", RegistersResult(registers, active));
@@ -2507,7 +2585,7 @@ index 29363cf..747e356 100644
                      return AGENT_MakeJsonRpcResult(response_id, result);
                  };
                  if (parsed.has_id && parsed.id.type != JsonType::Null)
-@@ -2856,6 +3735,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3813,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2515,7 +2593,7 @@ index 29363cf..747e356 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2888,6 +3768,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2888,6 +3846,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
          return;
      }
  
@@ -2537,7 +2615,7 @@ index 29363cf..747e356 100644
      {
          std::lock_guard<std::mutex> command_lock(impl->mutex);
          if (impl->stopping || !impl->session || impl->session->id != session_id ||
-@@ -2930,6 +3825,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3903,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2545,7 +2623,7 @@ index 29363cf..747e356 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2998,6 +3894,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2998,6 +3972,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
      impl->state_changed.notify_all();
  }
  
@@ -2593,7 +2671,7 @@ index 29363cf..747e356 100644
  void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
                                      const std::uint64_t generation,
                                      const std::uint16_t segment,
-@@ -3008,6 +3945,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +4023,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -2602,7 +2680,7 @@ index 29363cf..747e356 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,6 +3976,20 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,6 +4054,20 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -2623,7 +2701,7 @@ index 29363cf..747e356 100644
      impl->session->last_stop_kind = startup ? "startup" :
              (native_breakpoint != 0 ? "breakpoint" :
               (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
-@@ -3058,8 +4011,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3058,8 +4089,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              break;
          }
      }
@@ -4679,10 +4757,10 @@ index 84ada2d..e0e39d3 100644
      call_mouse_bd=CALLBACK_Allocate();
      CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
 diff --git a/src/misc/savestates.cpp b/src/misc/savestates.cpp
-index 27545af..496d1d2 100644
+index 27545af..f3c8112 100644
 --- a/src/misc/savestates.cpp
 +++ b/src/misc/savestates.cpp
-@@ -1,935 +1,987 @@
+@@ -1,935 +1,1003 @@
 -#include <stdio.h>
 -#include <stdlib.h>
 -#include <sys/stat.h>
@@ -5212,6 +5290,7 @@ index 27545af..496d1d2 100644
 +
 +#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
 +static bool agent_state_active = false;
++static bool agent_allow_program_mismatch = false;
 +static std::string agent_state_error;
 +#endif
 +
@@ -5892,7 +5971,11 @@ index 27545af..496d1d2 100644
 +std::string loadstate_detail_current;
 +bool loadstateconfirm(int ind) {
 +#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
-+    if (agent_state_active) { agent_state_error = "State compatibility mismatch"; return false; }
++    if (agent_state_active) {
++        if (ind == 1 && agent_allow_program_mismatch) return true;
++        agent_state_error = "State compatibility mismatch";
++        return false;
++    }
 +#endif
 +	if (ind<0||ind>4) return false;
 +	confres=true;
@@ -6316,12 +6399,19 @@ index 27545af..496d1d2 100644
 +			buffer[length]='\0';
 +			loadstate_detail_saved = length ? std::string(buffer) : std::string("(none)");
 +			loadstate_detail_current = RunningProgram.empty() ? std::string("(none)") : RunningProgram;
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++            const bool agent_deferred_program_name = agent_state_active && agent_allow_program_mismatch;
++#else
++            const bool agent_deferred_program_name = false;
++#endif
 +			if(!force_load_state&&!loadstateconfirm(1)) {
 +				LOG_MSG("Aborted. Check your program name: %s",buffer);
 +				load_err=true;
 +				goto done;
 +			}
-+			if (length<9) {
++			// The agent validates the loaded bytes and restored PSP ancestry
++			// before deriving RunningProgram from the current PSP's MCB.
++			if (!agent_deferred_program_name && length<9) {
 +				static char pname[9];
 +				if (length) {
 +					strncpy(pname,buffer,length);
@@ -6572,7 +6662,8 @@ index 27545af..496d1d2 100644
 +}
 +
 +#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
-+bool AGENT_StateFile(const std::string& path, bool load, std::string* error) {
++bool AGENT_StateFile(const std::string& path, bool load, std::string* error,
++                     bool allow_program_name_mismatch) {
 +    // Until the pending register-driven mode change has executed, the old
 +    // frame's line handler cannot be reconstructed from the new registers.
 +    // Refuse before touching the destination or global save/load controls.
@@ -6582,14 +6673,17 @@ index 27545af..496d1d2 100644
 +    }
 +    const bool old_file = use_save_file, old_remark = noremark_save_state;
 +    const bool old_force = force_load_state;
++    const bool old_program_mismatch = agent_allow_program_mismatch;
 +    const std::string old_name = savefilename;
 +    use_save_file = true; noremark_save_state = true; force_load_state = false;
++    agent_allow_program_mismatch = load && allow_program_name_mismatch;
 +    savefilename = path; agent_state_error.clear(); agent_state_active = true;
 +    try {
 +        if (load) SaveState::instance().load(0); else SaveState::instance().save(0);
 +    } catch (const std::string& e) { agent_state_error = e; }
 +      catch (...) { agent_state_error = "Native state serialization failed"; }
 +    agent_state_active = false;
++    agent_allow_program_mismatch = old_program_mismatch;
 +    use_save_file = old_file; noremark_save_state = old_remark;
 +    force_load_state = old_force; savefilename = old_name;
 +    if (error) *error = agent_state_error;

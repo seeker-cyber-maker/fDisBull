@@ -281,6 +281,64 @@ def test_cold_session_restore_uses_only_saved_process_identity(tmp_path,emulator
 
 
 @pytest.mark.skipif(os.environ.get(REQUIRE_COLD_PROCESS_IDENTITY)!='1',
+                    reason=f'Set {REQUIRE_COLD_PROCESS_IDENTITY}=1 for cold parent/child acceptance')
+def test_cold_parent_restore_tracks_ancestor_while_child_is_current(tmp_path,emulator):
+    # Authored COM launches CHILD.COM. Checkpoint the parent-selected process
+    # while the child is current and paused immediately before INT 21h/4Ch.
+    code=bytearray.fromhex('0e1f0e078cc8a38401a38801a38c01bc0004bb8000b44acd21')
+    failures=[]
+    failures.append(len(code));code.extend(b'\x72\0')
+    code.extend(bytes.fromhex('baa001bb8001b8004bcd21'))
+    failures.append(len(code));code.extend(b'\x72\0')
+    code.extend(bytes.fromhex('b8efbea3b001'))
+    after_child=0x100+len(code)
+    code.extend(bytes.fromhex('b8114ccd21'))
+    failure=len(code);code.extend(bytes.fromhex('b87f4ccd21'))
+    for offset in failures:
+        code[offset+1]=failure-offset-2
+    code.extend(bytes(0x80-len(code)))
+    code.extend(bytes.fromhex('0000900100005c0000006c000000'))
+    code.extend(bytes(0x90-len(code)));code.extend(b'\0\r')
+    code.extend(bytes(0xa0-len(code)));code.extend(b'CHILD.COM\0')
+    code.extend(bytes(0xb2-len(code)))
+    path=create_project(tmp_path,bytes(code))
+    (tmp_path/'CHILD.COM').write_bytes(bytes.fromhex('ba2000b9ffff4975fd4a75f7b8254ccd21'))
+    with Project(path) as project:
+        with project.debugger(emulator,tmp_path) as first:
+            prepare_native_fixture(first)
+            parent_psp=int(first.registers()['segments']['ds'],16)
+            stopped=first.run(timeout_ms=3000,guest_ms=30,fast_forward=True)
+            assert stopped['outcome']=='guest_time',stopped
+            child_regs=first.registers()
+            child_psp=int(child_regs['segments']['ds'],16)
+            child_cs=int(child_regs['segments']['cs'],16)
+            assert child_psp!=parent_psp
+            child_exit=first.call('breakpoints.create',{'kind':'execution','address':{'space':'segmented','segment':f'0x{child_cs:04X}','offset':'0x0000010F'},'once':False})
+            stopped=first.run(timeout_ms=5000,fast_forward=True)
+            assert stopped['outcome']=='breakpoint',stopped
+            state=first.save_state()
+            metadata=json.loads(project.db.execute(
+                'SELECT metadata FROM debug_artifacts WHERE id=?',(state['artifact'],)).fetchone()['metadata'])
+            identity=metadata.get('dos_process_identity')
+            assert identity is not None, f'{REQUIRE_COLD_PROCESS_IDENTITY}=1 requires bridge-issued process identity'
+            assert identity['psp']==parent_psp
+            first.call('breakpoints.delete',{'breakpoint_id':child_exit['breakpoint_id']})
+        with project.debugger(emulator,tmp_path) as second:
+            second.load_state(state['artifact'])
+            parent_exit=second.breakpoint(f'1000:{after_child:04x}')
+            child_result=second.run(timeout_ms=3000,fast_forward=True)
+            assert child_result['outcome']=='breakpoint',child_result
+            assert 'guest_exit' not in child_result['session']['stop_reason']
+            assert second.memory('1000:01b0',length=2)['hex']=='efbe'
+            second.delete_breakpoint(parent_exit['breakpoint_id'])
+            parent_result=second.run(timeout_ms=3000,fast_forward=True)
+            assert parent_result['outcome']=='guest_exit',parent_result
+            info=parent_result['session']['stop_reason']['guest_exit']
+            assert int(info['psp'],16)==parent_psp
+            assert info['requested_exit_code']==17
+
+
+@pytest.mark.skipif(os.environ.get(REQUIRE_COLD_PROCESS_IDENTITY)!='1',
                     reason=f'Set {REQUIRE_COLD_PROCESS_IDENTITY}=1 for candidate identity-negative acceptance')
 def test_cold_restore_rejects_forged_process_identity_psp(tmp_path,emulator):
     path=create_project(tmp_path,bytes.fromhex('b82a4ccd21'))
@@ -309,7 +367,7 @@ def test_cold_restore_rejects_forged_process_identity_psp(tmp_path,emulator):
         with project.debugger(emulator,tmp_path) as second:
             run_id=second.run_id
             process=second.rpc.process
-            with pytest.raises(DebuggerError,match='did not confirm the saved DOS process identity'):
+            with pytest.raises(DebuggerError,match='Restored DOS PSP identity is invalid or not current/a validated ancestor'):
                 second.load_state(forged['artifact'])
             assert second.closed and process.poll() is not None
             runs=[json.loads(row['evidence']) for row in project.db.execute(

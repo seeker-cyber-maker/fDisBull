@@ -1,0 +1,121 @@
+{
+  "format": "fdisbull-qemu-dos-parent-child-cold-verification-1",
+  "date_utc": "2026-11-25",
+  "scope": "Bounded native DOSBox-X candidate and QEMU parent/child cold restore, plus QEMU owned-machine recovery after in-place DOS allocation shrink.",
+  "candidate": {
+    "backend_role": "separate DOSBox-X arm64 candidate; not installed or activated",
+    "source_patch_sha256": "93997f19c73174b31cdef9c000d33bda7a30ebf4b17bdbb4befd4c6fd2f9ea349",
+    "candidate_executable_sha256": "bab81ba19db7014236ca8ee729f44d3d5624d8f18c30281e2a9fcebb345a2fda",
+    "installed_dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "installed_dosbox_x_unchanged": true,
+    "remains_default": true
+  },
+  "paired_parent_child_cold_restore": {
+    "candidate_attempt": "10",
+    "result": "1 passed",
+    "elapsed_seconds_junit": 10.474,
+    "behavior": {
+      "selected_parent_retained_while_child_current": true,
+      "child_returned_through_parent_wait": true,
+      "parent_child_status_and_marker_observed": true,
+      "parent_exit_code": 17,
+      "original_parent_psp_preserved": true,
+      "both_engine_owners_reaped": true,
+      "engine_native_checkpoint_formats_compared": false
+    },
+    "engines": ["DOSBox-X candidate", "QEMU"],
+    "qemu_boot": "pinned FreeDOS boot image; source-image full hash is retained privately",
+    "qualification": "one authored nested EXEC program; common behavior only"
+  },
+  "paired_com_regression": {
+    "attempt": "01",
+    "result": "1 passed",
+    "elapsed_seconds_junit": 10.654,
+    "scope": "Existing authored COM hot/fresh-owner checkpoint and input gate with the candidate DOSBox-X and QEMU; the authored guest and its receipt remain private."
+  },
+  "qemu_owned_machine_shrink": {
+    "attempt": "02",
+    "result": "2 passed",
+    "elapsed_seconds_junit": 13.959,
+    "cases": ["physical exit after shrink", "TSR return after shrink"],
+    "witnesses": [
+      "real DOS AH=4Ah in-place allocation shrink",
+      "open guest file handle and AA-to-BB readback across cold restore",
+      "CPU and RAM recovery",
+      "physical-fetch and linear executable layers",
+      "linear hook recovery",
+      "prior source mapping retired; source_binding_restored=false"
+    ]
+  },
+  "qemu_com_mz_layer_hook_recovery": {
+    "attempt": "01",
+    "result": "4 passed",
+    "elapsed_seconds_junit": 25.946,
+    "cases": ["source COM", "source MZ", "backing COM", "backing MZ"],
+    "scope": "Cold QEMU checkpoint with native layers and linear hook."
+  },
+  "candidate_native_regression": {
+    "attempt": "06",
+    "result": "18 passed",
+    "elapsed_seconds_junit": 7.195,
+    "scope": "tests/test_dos_guest_exit.py"
+  },
+  "affected_host_selection": {
+    "result": "108 passed, 35 opt-in skips",
+    "elapsed_seconds": 3.55,
+    "expected_warning": "one duplicate ZIP-name warning",
+    "selection_included": [
+      "DOS guest exit",
+      "QEMU checkpoint payload, owned, native and session gates",
+      "paired parent-child and paired COM default skips",
+      "DOSBox source census and companion",
+      "QEMU breakpoint host tests"
+    ],
+    "native_passes_inferred_from_skips": false
+  },
+  "retained_attempt_history": {
+    "candidate_native": [
+      {"attempt": "01", "result": "source-mapped breakpoint was outside the original module; harness addressing failure"},
+      {"attempt": "02", "result": "bounded run timed out before the selected child boundary"},
+      {"attempt": "03", "result": "Program_Name/state compatibility failure retained"},
+      {"attempt": "04", "result": "1 passed"},
+      {"attempt": "05", "result": "full-file run failed a regex expectation"},
+      {"attempt": "06", "result": "18 passed"}
+    ],
+    "paired_parent_child": [
+      {"attempt": "01", "result": "child BIOS stop had CS=BIOS while DS identified the child PSP"},
+      {"attempt": "02", "result": "raw breakpoint address format failure"},
+      {"attempt": "03", "result": "DOSBox allocation ownership assertion failed"},
+      {"attempt": "04", "result": "DOSBox allocation ownership assertion failed"},
+      {"attempt": "05", "result": "memory-lock admission denied before guest launch; no JUnit report"},
+      {"attempt": "06", "result": "QEMU timed keyboard/profile mismatch"},
+      {"attempt": "07", "result": "interrupted scheduled input required reschedule or cancel"},
+      {"attempt": "08", "result": "scheduled-input endpoint assertion failed"},
+      {"attempt": "09", "result": "test fixture key error"},
+      {"attempt": "10", "result": "1 passed"}
+    ],
+    "qemu_owned_shrink": [
+      {"attempt": "01", "result": "asserted previous checkpoint format instead of owned-machine format"},
+      {"attempt": "02", "result": "2 passed"}
+    ]
+  },
+  "bounds_and_limits": {
+    "dosbox_native_state_max_bytes": 134217728,
+    "python_native_state_max_bytes": 268435456,
+    "qemu_mcb_chain_observation_max_blocks": 512,
+    "dosbox_main_mcb_chain_max_blocks": 4096,
+    "dosbox_selected_parent_ancestry_max_depth": 32,
+    "direct_rpc_artifact_metadata_cryptographically_authenticated": false,
+    "partial_or_mid_load_state_corruption_tested": false,
+    "full_dosbox_qemu_parity": false,
+    "dosbox_x_default_changed": false,
+    "candidate_installed_or_activated": false,
+    "ci_run": false,
+    "release_or_merge": false
+  },
+  "private_evidence": {
+    "raw_private_inputs_in_repository": false,
+    "manifest_basename": "cold-parent-child-manifest.json",
+    "manifest_sha256": "19a8675962eb7268cf0cadbb7deb5992f78044d0dfa0d29f41ed27b67a0e8787"
+  }
+}

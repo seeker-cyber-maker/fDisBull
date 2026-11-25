@@ -199,3 +199,72 @@ def test_reconstructed_delta_hash_mismatch_is_rejected_before_restore(
 
     assert instance.db.execute("SELECT count(*) FROM debug_artifacts WHERE kind='state'").fetchone()[0] == 0
     assert session.closed is False
+
+
+def _allocation(mcb_segment, paragraphs, owner_psp, *, terminal):
+    segment = mcb_segment + 1
+    following = mcb_segment + paragraphs + 1
+    return dict(mcb_segment=mcb_segment, segment=segment, owner_psp=owner_psp,
+        paragraphs=paragraphs, start=segment * 16, end=following * 16,
+        terminal=terminal)
+
+
+def _saved_psp_stack(segment, offset):
+    psp = bytearray(256)
+    psp[:2] = b'\xcd\x20'
+    psp[0x2e:0x32] = offset.to_bytes(2, 'little') + segment.to_bytes(2, 'little')
+    return bytes(psp)
+
+
+def test_checkpoint_allocation_accepts_unchanged_and_in_place_shrink():
+    verify = checkpoint._verify_process_allocation
+    owner = 0x101
+    original = _allocation(0x100, 0x100, owner, terminal=True)
+    mapping = dict(runtime_base=0x1100, module_size=0x100, stack_linear=0x1800)
+    unchanged = [original]
+    assert verify(original, unchanged, owner, mapping, b'', 'real') == original
+
+    current = _allocation(0x100, 0x40, owner, terminal=False)
+    successor = _allocation(0x141, 0x10, 0, terminal=True)
+    psp = _saved_psp_stack(0x120, 0x100)  # 0x1300, including 18-byte frame
+    observed = verify(original, [current, successor], owner, mapping, psp, 'real')
+    assert observed == current
+    assert mapping['stack_linear'] > current['end']  # immutable entry stack is historical
+
+
+def test_checkpoint_allocation_rejects_foreign_owner_rebase_and_growth():
+    verify = checkpoint._verify_process_allocation
+    owner = 0x101
+    original = _allocation(0x100, 0x100, owner, terminal=True)
+    mapping = dict(runtime_base=0x1100, module_size=0x100, stack_linear=0x1800)
+    psp = _saved_psp_stack(0x120, 0x100)
+
+    foreign = _allocation(0x100, 0x40, owner + 1, terminal=False)
+    tail = _allocation(0x141, 0x10, 0, terminal=True)
+    with pytest.raises(ValueError, match='identity or owner'):
+        verify(original, [foreign, tail], owner, mapping, psp, 'real')
+
+    moved = _allocation(0x101, 0x40, owner, terminal=True)
+    with pytest.raises(ValueError, match='missing or duplicated'):
+        verify(original, [moved], owner, mapping, psp, 'real')
+
+    small = _allocation(0x100, 0x40, owner, terminal=False)
+    grown = _allocation(0x100, 0x80, owner, terminal=False)
+    grown_tail = _allocation(0x181, 0x10, 0, terminal=True)
+    with pytest.raises(ValueError, match='outside an in-place real-mode shrink'):
+        verify(small, [grown, grown_tail], owner, mapping, psp, 'real')
+
+
+def test_checkpoint_allocation_rejects_bad_saved_return_frame_and_nonreal_shrink():
+    verify = checkpoint._verify_process_allocation
+    owner = 0x101
+    original = _allocation(0x100, 0x100, owner, terminal=True)
+    current = _allocation(0x100, 0x40, owner, terminal=False)
+    successor = _allocation(0x141, 0x10, 0, terminal=True)
+    mapping = dict(runtime_base=0x1100, module_size=0x100, stack_linear=0x1800)
+    too_high = _saved_psp_stack(0x140, 0x8)  # 18-byte frame crosses current end
+    with pytest.raises(ValueError, match='return stack frame'):
+        verify(original, [current, successor], owner, mapping, too_high, 'real')
+    with pytest.raises(ValueError, match='outside an in-place real-mode shrink'):
+        verify(original, [current, successor], owner, mapping,
+               _saved_psp_stack(0x120, 0x100), 'protected')

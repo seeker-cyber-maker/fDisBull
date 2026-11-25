@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "b009952403f86c52bfe404ef16d0bb2b567c8df8a3f2078d6e35ed932aa5cd15",
+  "patch_sha256": "93997f19c73174b31cdef9c000d33bda7a30ebf4b17bdb4befd4c6fd2f9ea349",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -94,8 +94,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "5d7c3b89818c60ec029d13854292f1734072dd64ae206000fed68f77094b9152",
-      "size": 220763
+      "sha256": "e71383af51697dc19f575c003d643605071a3676f9f5296419f8bdf986058a76",
+      "size": 223989
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -169,8 +169,8 @@
     },
     {
       "path": "src/misc/savestates.cpp",
-      "sha256": "7828e82d90fe8998633d8f1f5a42846c3f606883510fcb17755d8452db082338",
-      "size": 32489
+      "sha256": "6071482ecfcc6ec37b0d3da2c98690d9f1994c55a171bd9257b56e533fd14eb7",
+      "size": 33270
     },
     {
       "path": "tests/agent_headless/MOUSEVID.asm",
