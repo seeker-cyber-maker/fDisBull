@@ -1,0 +1,30 @@
+{
+  "format": "fdisbull-qemu-segment-ss-1",
+  "date": "2026-11-25",
+  "scope": "bounded paired protected-mode stack-segment limit fault and in-range control",
+  "candidate_inputs": {
+    "fdisbull_parent_commit": "3e943c225a8eb43c16e6d139a36f5098b170e142",
+    "qemu_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "prior_evidence": "docs/evidence/qemu-segment-rmw-2026-11-25/verification.json"
+  },
+  "accepted_run": {
+    "selection": ["tests/test_qemu_dos_segment_ss_native.py"],
+    "result": {"tests": 2, "passed": 2, "failed": 0, "errors": 0, "skipped": 0},
+    "private_junit_sha256": "e3b5fe0cf999d8a3f857f175941cdfa02c7f53dae2d068b5b5a36aacd4267165"
+  },
+  "observations": {
+    "outside_ss_limit": "An authored 32-bit EBP-based dword read uses a present writable SS with limit 0x1fff and EBP=0x2100. ESP=0x1800 leaves the 16-byte #SS frame at 0x17f0..0x17ff inside the limit. QEMU entered the vector-12 handler with error 0 and fault EIP at the read, unchanged target RAM and general registers, then reloaded wide SS and retried once to completion. Frozen DOSBox-X completed the out-of-limit read with SS=0x18 and no handler marker. This is a reference divergence, not paired parity.",
+    "in_range_control": "With the same small SS but EBP=0x1000, both engines completed the read with no handler marker and the expected target value.",
+    "test_harness": "Both fixture variants were assembled from authored source. The final native test pins the observed DOSBox-X completion path; temporary diagnostic property warnings were removed before the accepted run."
+  },
+  "qualification": {
+    "overall_qemu_dosbox_parity": "not qualified",
+    "dosbox_default": true,
+    "dotbox_changed": false,
+    "ci_run": false,
+    "release_or_install": false,
+    "native_vm_tests_executed_locally": true,
+    "private_inputs_committed": false
+  }
+}
