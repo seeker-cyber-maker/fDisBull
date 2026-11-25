@@ -1369,9 +1369,11 @@
         "native/qemu-instruction-trace/source-manifest.json",
         "native/qemu-instruction-context/qemu-10.0.13-fdisbull-instruction-context-v2.patch",
         "native/qemu-instruction-context/source-manifest.json",
-        "tests/test_qemu_trace_serial_admission_native.py"
+        "tests/test_qemu_trace_serial_admission_native.py",
+        "tests/test_qemu_dos_divide_fault_frame_native.py",
+        "tests/test_qemu_dos_rep_trace_boundary_native.py"
       ],
-      "evidence": "docs/evidence/qemu-trace-checkpoint-2026-11-24/verification.json",
+      "evidence": "docs/evidence/qemu-fault-rep-trace-2026-11-24/verification.json",
       "depends_on": [
         "source-and-protected-dos"
       ],
@@ -1382,8 +1384,8 @@
         "protected-source-native"
       ],
       "remaining_work": [
-        "Qualify paired event predicates and semantic differences for faults, partial REP, IRQ/timer policy, overlays and departure from admitted COM/MZ or explicit embedded-LE source.",
-        "Extend exact-candidate paired qualification beyond the authored COM loop and self-modifying COM case. The bounded QEMU host checkpoint-cursor test now covers hot and fresh-session cold restore plus producer epoch invalidation; the checkpoint-epoch test is QEMU-only and does not establish paired DOSBox-X checkpoint behavior.",
+        "Resolve the observed terminal REP step/fetch boundary: QEMU remains at REP with CX=0 and fetches it once more, while DOSBox-X advances to the following instruction. The authored divide-fault pair matches at fault/handler fetches and CPU frame; broader fault classes, IRQ/timer policy, overlays and departure from admitted COM/MZ or explicit embedded-LE source remain open.",
+        "Extend exact-candidate paired qualification beyond the authored COM loop, self-modifying COM case, divide-fault witness and partial-REP witness. The bounded QEMU host checkpoint-cursor test covers hot and fresh-session cold restore plus producer epoch invalidation; that test is QEMU-only and does not establish paired DOSBox-X checkpoint behavior.",
         "The v2 ring supplies translated-TB bytes for TCG dispatches and observed x86 code context when valid; breakpoint-pre-dispatch bytes are explicitly unavailable. Parallel TCG trace capture is refused to preserve descriptor lifetime. These observations do not establish canonical source identity or per-event DOSBox byte parity. Completion and retirement remain unknown."
       ],
       "minimum_acceptance": [

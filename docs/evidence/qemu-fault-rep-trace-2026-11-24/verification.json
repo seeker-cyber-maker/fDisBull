@@ -1,0 +1,69 @@
+{
+  "format": "fdisbull-qemu-fault-rep-trace-evidence-1",
+  "date": "2026-11-24",
+  "status": "bounded-local-test-passed; trace-workgroup-unqualified",
+  "candidates": {
+    "qemu": {
+      "variant": "QEMU v2",
+      "sha256": "6f969d1bbe8f8e4398412bcd3ee24e88984f2e6be869267450b0bb5523bcc641"
+    },
+    "dosbox_x": {
+      "sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e"
+    }
+  },
+  "test_selection": [
+    "tests/test_qemu_fetch_trace.py",
+    "tests/test_qemu_dos_before_fetch_trace_native.py",
+    "tests/test_qemu_dos_trace_checkpoint_epoch_native.py",
+    "tests/test_qemu_trace_semantics_native.py",
+    "tests/test_qemu_dos_divide_fault_frame_native.py",
+    "tests/test_qemu_dos_rep_trace_boundary_native.py"
+  ],
+  "selection_scope": "Host trace, three prior paired COM trace tests, QEMU-only checkpoint epoch, QEMU fault and REP step semantics, and paired divide-fault frame and partial-REP boundary witnesses.",
+  "local_batch": {
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 21.76,
+    "junit_sha256": "f6ba27fd51de3bb6c0727d611aea251a358967c4361baf2a53c8aadf2ab0e74d",
+    "junit_private": true
+  },
+  "observations": {
+    "divide_fault": {
+      "program": "Authored COM installs INT 0 then divides by zero with DIV BL.",
+      "qemu_and_dosbox_x": {
+        "fetch_offsets_hex": ["010D", "0111"],
+        "ax_before_and_at_handler_hex": "1234",
+        "stack_pointer_decrement_bytes": 6,
+        "cpu_frame_saved_ip_hex": "010D",
+        "cpu_frame_contains_code_segment": true
+      }
+    },
+    "partial_rep_movsb": {
+      "program": "Authored COM copies ABC with REP MOVSB and initial CX=3.",
+      "first_two_steps_match": true,
+      "first_two_step_cx": [2, 1],
+      "first_two_step_rep_offset_hex": "010A",
+      "third_step_both_cx_hex": "0000",
+      "third_step_both_destination_hex": "414243",
+      "third_step_qemu_stopped_ip_hex": "010A",
+      "third_step_dosbox_x_stopped_ip_hex": "010C",
+      "next_qemu_step_fetch_offsets_hex": ["010A"],
+      "next_dosbox_x_step_fetch_offsets_hex": ["010C"],
+      "interpretation": "Observed stop-boundary difference; not a parity pass.",
+      "before_fetch_proves_instruction_completion": false
+    }
+  },
+  "qualification": {
+    "trace_workgroup": "unqualified",
+    "default_backend": "dosbox",
+    "dotbox_changed": false,
+    "hosted_ci": false,
+    "release": false,
+    "installation": false
+  },
+  "privacy": {
+    "private_junit_in_git": false,
+    "guest_media_or_runtime_payload_in_git": false
+  }
+}
