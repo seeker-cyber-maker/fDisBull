@@ -25,6 +25,7 @@ from .qemu_dos import QemuDOSSession
 from .qemu_dos_checkpoint import process_save_operation
 from .qemu_machine import (MachineContext, MachineDebugSession, QemuMachine,
                            machine_operation, machine_trace_operation)
+from .debug_timeline import timeline_locked
 from .qemu_fetch_trace import QemuFetchTraceMixin
 from .qemu_dos_trace import QemuDOSSourceTraceMixin
 from .qemu_paged_le_tracking import QemuPagedLETrackingMixin
@@ -218,11 +219,107 @@ class QemuDOSProcessSession(QemuFetchTraceMixin, QemuScreenshotHookMixin, QemuSc
     def call(self, method, params=None):
         if method in ("trace.start", "trace.read", "trace.stop"):
             return self._trace_rpc(method, params)
+        if method == 'breakpoints.list':
+            return self._list_owned_breakpoints(params)
         if method != 'input.mouse.click':
             return super().call(method, params)
         if type(params) is not dict:
             raise ValueError('QEMU coordinate click requires an object with its retained frame identity')
         return self.click(**params)
+
+    @timeline_locked
+    def _list_owned_breakpoints(self, params=None):
+        """Read the aliases owned by this stopped machine without native enumeration."""
+        from .qemu_machine import _machine_operation_guard
+
+        if params is not None and (type(params) is not dict or params):
+            raise ValueError('QEMU breakpoint listing accepts only empty parameters')
+        if self.closed or self.vm is None:
+            raise DebuggerError('QEMU DOS machine is closed')
+        for hook in ('_cpu_delta_before_call', '_rewind_before_call', '_timeline_before_call'):
+            callback = getattr(self, hook, None)
+            if callback is not None:
+                callback('breakpoints.list', params) if hook == '_cpu_delta_before_call' else callback('breakpoints.list')
+        owner = self.vm
+        lock = owner.lock
+        def deadlines():
+            return [getattr(self, '_rpc_deadline', None), getattr(self, '_deadline', None),
+                    getattr(owner, 'operation_deadline', None),
+                    *(getattr(channel, 'operation_deadline', None) for channel in
+                      (getattr(owner, 'qmp', None), getattr(owner, 'gdb', None))
+                      if channel is not None)]
+        inherited = [value for value in deadlines() if value is not None]
+        remaining = 10.0 if not inherited else min(10.0, min(inherited) - time.monotonic())
+        if remaining <= 0:
+            raise TimeoutError('Breakpoint listing deadline expired before machine lock admission')
+        if not lock.acquire(timeout=remaining):
+            raise TimeoutError('Breakpoint listing could not acquire the machine before its deadline')
+        try:
+            qmp = owner.qmp
+            process = owner.process
+            aliases = self.breakpoints
+            capture_epoch = getattr(self, '_runtime_epoch', None)
+            epoch_number = getattr(self, '_epoch_number', None)
+            run_id = self.run_id
+            current_deadlines = [value for value in deadlines() if value is not None]
+            if current_deadlines and time.monotonic() >= min(current_deadlines):
+                raise TimeoutError('Breakpoint listing deadline expired during machine lock admission')
+            _machine_operation_guard(owner, 'breakpoints_list')
+            if self.vm is not owner or owner.qmp is not qmp or owner.process is not process:
+                raise DebuggerError('QEMU DOS machine owner changed before breakpoint listing')
+            if (self.breakpoints is not aliases or self.run_id != run_id
+                    or getattr(self, '_runtime_epoch', None) != capture_epoch
+                    or getattr(self, '_epoch_number', None) != epoch_number):
+                raise DebuggerError('QEMU DOS breakpoint ownership changed before listing')
+            if process is not None and process.poll() is not None:
+                raise DebuggerError('QEMU DOS machine has exited')
+            status = qmp.call('query-status')
+            if type(status) is not dict or type(status.get('running')) is not bool:
+                raise DebuggerError('QEMU status did not report native running state')
+            if status['running']:
+                raise ValueError('Pause the machine context before inspecting breakpoints')
+            if (self.vm is not owner or owner.qmp is not qmp or owner.process is not process
+                    or self.breakpoints is not aliases or self.run_id != run_id
+                    or getattr(self, '_runtime_epoch', None) != capture_epoch
+                    or getattr(self, '_epoch_number', None) != epoch_number):
+                raise DebuggerError('QEMU DOS breakpoint ownership changed during listing')
+            if process is not None and process.poll() is not None:
+                raise DebuggerError('QEMU DOS machine exited during breakpoint listing')
+            rows = []
+            for identifier, record in sorted(aliases.items()):
+                if (type(identifier) is not str or not identifier or type(record) is not dict
+                        or type(record.get('kind')) is not int
+                        or record.get('kind') not in (1, 2, 3, 4)
+                        or type(record.get('address')) is not int
+                        or type(record.get('length')) is not int
+                        or type(record.get('access')) is not str
+                        or record.get('access') not in ('x', 'r', 'w', 'rw')
+                        or type(record.get('owner')) is not str or not record['owner']):
+                    raise DebuggerError('QEMU DOS breakpoint alias registry is malformed')
+                rows.append(dict(
+                    breakpoint_id=identifier,
+                    kind='execution' if record['kind'] == 1 else 'watchpoint',
+                    enabled=True,
+                    once=False,
+                    address=dict(space='linear', offset=hex(record['address'])),
+                    access=record['access'],
+                    length=record['length'],
+                    address_space='selected-vCPU virtual address',
+                    owner=record['owner'],
+                ))
+            from .qemu_session_revision import session_revision
+            return dict(context='machine', state='stopped',
+                        **session_revision(owner).snapshot(), breakpoints=rows)
+        except BaseException:
+            qmp = getattr(owner, 'qmp', None)
+            gdb = getattr(owner, 'gdb', None)
+            qmp_failed = qmp is not None and hasattr(qmp, 'socket') and qmp.socket is None
+            gdb_failed = gdb is not None and hasattr(gdb, 'socket') and gdb.socket is None
+            if (qmp_failed or gdb_failed) and not getattr(owner, '_fdisbull_control_quarantine', None):
+                owner.close()
+            raise
+        finally:
+            lock.release()
 
     def __init__(self, project, executable, game_dir, *, boot_image=None, mcopy=None,
                  startup_batch='FDAUTO.BAT', arguments='', version=None,

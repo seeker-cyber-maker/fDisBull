@@ -8968,3 +8968,34 @@ The shared scene evaluator and frame-probe schema have 391 focused host passes, 
 One guarded paired native test passed (`1 passed in 6.32s`) for identical authored COM input. Both backends reached a source-relative breakpoint, resumed and paused with the selected guest still active, and returned guest exit code 37 from a separate identical exit COM. Their emulator owners were reaped with code 0. The [sanitized core-control record](evidence/qemu-core-control-paired-2026-11-25/README.md) keeps the fixture and runtime identities outside the claim.
 
 DOSBox-X supplied its legacy `execution.wait` and `breakpoints.list` replies. QEMU supplied its public breakpoint alias map and distinct resume/pause surface; it does not implement the legacy `breakpoints.list` RPC. This gate therefore leaves matching reply schema, diagnostics, step-over, MZ/child/TSR and full core-control parity open. DOSBox-X remains the default; no CI.
+
+## QEMU breakpoint listing and paired COM checkpoint input (2026-11-25 UTC)
+
+The next candidate adds a bounded QEMU-DOS `breakpoints.list` route over its
+session-owned alias registry. It checks the live QEMU owner, stopped native
+state, run and epoch before returning aliases. Execution addresses use the
+existing linear address object accepted by the trace consumer; QEMU watchpoint
+access, length and ownership remain explicit. Host checks cover aliases,
+deletion, restored-owner clearing, deadline admission, consumer acceptance,
+and preservation of live history, selected CPU/RAM undo and cooperative
+revision. A poisoned QMP status channel closes the owner. A guarded paired
+native core-control rerun passed (`1 passed in 6.14s`) with
+both DOSBox-X and QEMU listing the authored execution breakpoint. Their
+watchpoint and operation-control reply contracts still differ.
+
+The [bounded checkpoint/input record](evidence/qemu-breakpoint-com-cold-input-2026-11-25/README.md)
+also covers a guarded paired authored COM gate (`1 passed in 9.68s`). Both
+engines saved the no-key BIOS poll, then restored it in the original owner and
+in a fresh Python/backend owner. In each continuation, a physical `k` press
+reached the guest's pre-exit instruction after storing `k` and a marker. Both
+hot restorations and the QEMU fresh-owner restoration reported selected DOS
+exit code 37. The DOSBox-X fresh-owner continuation was stopped at the
+pre-exit instruction: its native bridge only retains selected-PSP guest-exit
+tracking for an exact save identity known to that live owner. A prior attempt
+which required a cold DOSBox-X guest-exit receipt timed out later in BIOS;
+that stop cannot establish whether guest termination occurred. The earlier
+test-harness flags-key failure is recorded separately.
+
+These gates do not qualify full checkpoint, input, debugger or real-game
+parity. The current migration inventory remains unqualified, DOSBox-X stays
+the default, and no CI ran.

@@ -543,7 +543,7 @@
       "slice": "core",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "MachineContext.breakpoints (no matching RPC wrapper)",
+      "native_route": "QemuDOSProcessSession.call('breakpoints.list') returns stopped, owner-checked aliases; QEMU watchpoint semantics remain distinct",
       "qualification": "unqualified"
     },
     {

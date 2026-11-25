@@ -46,10 +46,13 @@ def _observe_controls(runtime, directory, *, qemu):
                 source_base = debug.static_base
             point = debug.breakpoint(source_base + 0x0A)
             if qemu:
-                # QEMU's supported public listing is its session alias map.
-                # The legacy breakpoints.list RPC route is not implemented.
-                assert point["breakpoint_id"] in debug.breakpoints
-                listing_surface = "public session breakpoint alias map"
+                listed = debug.call("breakpoints.list")
+                assert listed["context"] == "machine" and listed["state"] == "stopped"
+                assert any(row["breakpoint_id"] == point["breakpoint_id"]
+                           and row["kind"] == "execution"
+                           and row["address"] == {"space": "linear", "offset": hex(source_base + 0x0A)}
+                           for row in listed["breakpoints"]), listed
+                listing_surface = "bounded QEMU breakpoint alias reply"
             else:
                 listed = debug.call("breakpoints.list")
                 assert isinstance(listed["breakpoints"], list)
@@ -120,10 +123,10 @@ def _observe_exit(runtime, directory, *, qemu):
 def test_paired_authored_com_core_control_and_selected_process_exit(tmp_path, parity_inputs):
     dosbox = _observe_controls(parity_inputs, tmp_path / "dosbox", qemu=False)
     qemu = _observe_controls(parity_inputs, tmp_path / "qemu", qemu=True)
-    # Compare common observations only. Listing and operation schemas remain
-    # backend-specific; QEMU's legacy listing RPC gap is explicit.
+    # Compare common observations only. The two listing reply schemas retain
+    # backend-specific watchpoint and address-space details.
     assert dosbox["listing_surface"] == "legacy breakpoints.list reply"
-    assert qemu["listing_surface"] == "public session breakpoint alias map"
+    assert qemu["listing_surface"] == "bounded QEMU breakpoint alias reply"
     assert dosbox["stop"] == qemu["stop"] == "breakpoint"
     assert dosbox["paused_ip"] == qemu["paused_ip"] == 0x10A
 

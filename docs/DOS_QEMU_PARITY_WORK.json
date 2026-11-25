@@ -2553,6 +2553,7 @@
     "docs/QEMU_STEP_COUNT_GATE.md",
     "docs/evidence/qemu-input-schedule-observation-2026-11-21/verification.json",
     "docs/QEMU_FRAME_CONTRACT.md",
-    "docs/evidence/qemu-doom-bda-window-2026-11-25/verification.json"
+    "docs/evidence/qemu-doom-bda-window-2026-11-25/verification.json",
+    "docs/evidence/qemu-breakpoint-com-cold-input-2026-11-25/verification.json"
   ]
 }

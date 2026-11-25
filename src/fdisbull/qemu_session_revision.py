@@ -25,6 +25,7 @@ _PASSIVE_PUBLIC = frozenset({
     'screenshot', 'capture_surface', 'hooks', 'code', 'capture_code',
     'dos_process_info', 'runtime_memory', 'dos_source_binding', 'observe_int33_mouse',
     'rewind_status', 'cpu_delta_status', 'timeline_status', 'le_rewind_status',
+    'breakpoints_list',
 })
 # Exact schemas, not a query-* naming convention. Unknown commands count as
 # effects even when their names look observational.

@@ -1,0 +1,119 @@
+{
+  "format": "fdisbull-qemu-breakpoint-com-cold-input-evidence-1",
+  "date": "2026-11-25",
+  "status": "bounded local validation",
+  "test_source_hashes": {
+    "src/fdisbull/qemu_dos_process.py": "7cecc42e33ae9e60eca526f3c788ca24d815a504c7fba80552f6b6e8ee23abe7",
+    "src/fdisbull/qemu_session_revision.py": "64a273fd6cb76dc4f979ca012c2d15e7193b574da9f8e7fc9c740f3f3ea059bb",
+    "src/fdisbull/qemu_dos_history.py": "9cef92bd7f5eae4f5f6d10a638fbf6e362f7f81237f2c12e63d3ce4aa128d7bf",
+    "src/fdisbull/qemu_cpu_undo_guard.py": "6998fa7df120cb1267d443935b9ed0038374509bccea649a46f7c2a7254d378f",
+    "tests/test_paired_com_checkpoint_input_native.py": "d09cb5fb57c37f8734848cf039811f3c37076128207c512b719c5b292b8a3b4d",
+    "tests/test_qemu_dos_breakpoints_host.py": "dd5a8b78f62b78df507cd4a0a8d3e58f460e0c1bd301bc7d84e65bedf67146bd",
+    "tests/test_qemu_core_control_paired_native.py": "d69c914be8579716b593674d7528b852404c431598508140171674eb136cceca"
+  },
+  "test_runs": [
+    {
+      "selection": "Final combined local host, migration, history and selected-undo selection including both opt-in native nodes in skipped state",
+      "passed": 268,
+      "skipped": 13,
+      "failed": 0,
+      "note": "The guarded native runs below were separate attempts."
+    },
+    {
+      "selection": [
+        "tests/test_qemu_dos_breakpoints_host.py",
+        "tests/test_paired_com_checkpoint_input_native.py",
+        "tests/test_execution_trace.py"
+      ],
+      "passed": 40,
+      "skipped": 1,
+      "failed": 0,
+      "note": "Host selection; one opt-in skip."
+    },
+    {
+      "selection": [
+        "tests/test_qemu_dos_process.py",
+        "tests/test_qemu_machine.py",
+        "tests/test_debug_timeline.py",
+        "tests/test_debug_rewind.py",
+        "tests/test_qemu_session_revision.py"
+      ],
+      "passed": 140,
+      "skipped": 5,
+      "failed": 0,
+      "source_state": "Before final address-shape fix"
+    },
+    {
+      "selection": [
+        "tests/test_qemu_dos_breakpoints_host.py",
+        "tests/test_execution_trace.py",
+        "tests/test_qemu_dos_process_lifecycle.py",
+        "tests/test_qemu_checkpoint.py",
+        "tests/test_debug_rewind.py",
+        "tests/test_qemu_session_revision.py"
+      ],
+      "passed": 125,
+      "skipped": 6,
+      "failed": 0,
+      "source_state": "After final address-shape fix"
+    },
+    {
+      "selection": "QEMU adapter host alias list/epoch/deadline/consumer, preservation and poisoned transport tests",
+      "passed": 18,
+      "skipped": 0,
+      "failed": 0
+    }
+  ],
+  "runtime_inputs": {
+    "qemu_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "freedos_boot_image_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc"
+  },
+  "native_attempts": [
+    {
+      "gate": "paired authored COM checkpoint input",
+      "attempt": "attempt-04",
+      "result": {"passed": 1, "failed": 0, "skipped": 0, "duration_seconds": 9.68},
+      "input": {"name": "CHECK.COM", "bytes": 66, "sha256": "c804e4c42917a142c116ac7ec0d0ca2447a9a286e28e3d7bb0dbba1223332be4", "copies_identical": true},
+      "observations": {
+        "hot_restore": {
+          "dosbox_x": {"consumed_key": "k", "marker": "A5", "exit_code": 37},
+          "qemu": {"consumed_key": "k", "marker": "A5", "exit_code": 37}
+        },
+        "fresh_process_cold_restore": {
+          "dosbox_x": {"consumed_key": "k", "marker": "A5", "pre_exit_ax": "4C25", "guest_exit_exercised": false},
+          "qemu": {"consumed_key": "k", "marker": "A5", "pre_exit_ax": "4C25", "exit_code": 37}
+        }
+      },
+      "limits": [
+        "DOSBox-X cold guest exit was not exercised because the native bridge loses selected-PSP tracking across an unrecognized owner restore.",
+        "A diagnostic DOSBox-X post-INT 21h timeout at BIOS does not establish guest exit.",
+        "Earlier attempt-01 failed on a harness flags key; attempt-02 failed by requiring DOSBox-X cold guest_exit; diagnostic QEMU cold run passed."
+      ]
+    },
+    {
+      "gate": "paired authored COM core control and breakpoint listing",
+      "attempt": "attempt-03",
+      "result": {"passed": 1, "failed": 0, "skipped": 0, "duration_seconds": 6.14},
+      "observations": {
+        "qemu_breakpoints_list": "Included the owned execution breakpoint and source-relative stop.",
+        "dosbox_x_breakpoints_list": "Included the owned execution breakpoint and source-relative stop.",
+        "watchpoint_and_operation_control_schemas": "Remain distinct.",
+        "passive_list_preservation": "Host tests show live history, selected CPU/RAM undo and cooperative session revision remain unchanged.",
+        "poisoned_qmp_transport": "Host test shows the owner is closed after a QMP status transport failure."
+      }
+    }
+  ],
+  "private_evidence": {
+    "manifest_filename": "private-attempt-manifest-verified.json",
+    "manifest_sha256": "ef277303d746eca63e985b5697ef2d3a37ac60520a0f73e7f90c3484962349ce",
+    "private_paths_or_payloads_included": false
+  },
+  "qualification_limits": [
+    "Bounded authored-COM, host adapter, and named test selections only.",
+    "No broad DOSBox-X/QEMU parity or migration qualification.",
+    "No DOSBox-X cold guest-exit parity claim.",
+    "Breakpoint, watchpoint, and operation-control reply schemas are not fully equivalent.",
+    "No CI qualification or default-backend switch."
+  ]
+}
