@@ -1,0 +1,152 @@
+{
+  "format": "fdisbull-doom-cycles-trials-sanitized-verification-2",
+  "date_utc": "2026-11-25",
+  "scope": "Two passed guarded native three-arm observations of source-bound original Doom E1M1, one 900 ms interval per arm at pre-increment tic 80.",
+  "common_contract": {
+    "requested_guest_ms": 900,
+    "dosbox_poll_wait_ms": 10,
+    "dosbox_maximum_accepted_overshoot_ms": 20,
+    "dosbox_intermediate_execution_breakpoints": 0,
+    "uninterrupted_guest_continues_per_arm": 1,
+    "all_owners_reaped_each_attempt": true,
+    "all_owner_return_codes_each_attempt": [0, 0, 0]
+  },
+  "attempts": [
+    {
+      "attempt": "03",
+      "native_result": "passed",
+      "arms": [
+        {
+          "arm": "dosbox_default_cycles_not_verified_auto",
+          "requested_profile": null,
+          "profile_application_verified": false,
+          "clock": "PIC_Ticks_milliseconds",
+          "elapsed": 908,
+          "overshoot_ms": 8,
+          "bda_delta": 19,
+          "doom_leveltime_delta": 31,
+          "end_tic": 111
+        },
+        {
+          "arm": "dosbox_fixed_requested",
+          "requested_profile": "cpu cycles=fixed 157600",
+          "profile_application_verified": false,
+          "clock": "PIC_Ticks_milliseconds",
+          "elapsed": 906,
+          "overshoot_ms": 6,
+          "bda_delta": 18,
+          "doom_leveltime_delta": 32,
+          "end_tic": 112
+        },
+        {
+          "arm": "qemu_unchanged",
+          "clock": "QEMU_CLOCK_VIRTUAL_nanoseconds",
+          "elapsed": 900000000,
+          "overshoot_ns": 0,
+          "bda_delta": 18,
+          "doom_leveltime_delta": 30,
+          "end_tic": 110
+        }
+      ],
+      "pairwise_observations": {
+        "dosbox_default_cycles_minus_fixed": {
+          "doom_leveltime_tics": -1,
+          "bda_ticks": 1
+        },
+        "dosbox_fixed_minus_qemu": {
+          "doom_leveltime_tics": 2,
+          "bda_ticks": 0
+        }
+      }
+    },
+    {
+      "attempt": "04",
+      "native_result": "passed",
+      "arms": [
+        {
+          "arm": "dosbox_auto_requested",
+          "requested_profile": "cpu cycles=auto",
+          "profile_application_verified": false,
+          "clock": "PIC_Ticks_milliseconds",
+          "elapsed": 904,
+          "overshoot_ms": 4,
+          "bda_delta": 18,
+          "doom_leveltime_delta": 20,
+          "end_tic": 100
+        },
+        {
+          "arm": "dosbox_fixed_requested",
+          "requested_profile": "cpu cycles=fixed 157600",
+          "profile_application_verified": false,
+          "clock": "PIC_Ticks_milliseconds",
+          "elapsed": 905,
+          "overshoot_ms": 5,
+          "bda_delta": 18,
+          "doom_leveltime_delta": 32,
+          "end_tic": 112
+        },
+        {
+          "arm": "qemu_unchanged",
+          "clock": "QEMU_CLOCK_VIRTUAL_nanoseconds",
+          "elapsed": 900000000,
+          "overshoot_ns": 0,
+          "bda_delta": 18,
+          "doom_leveltime_delta": 30,
+          "end_tic": 110,
+          "whole_machine_query_replay_icount": {
+            "delta": 7031250,
+            "unit": "instructions",
+            "scope": "whole machine",
+            "interpretation_limit": "not Doom-only, not retired instructions, and not hardware cycles"
+          }
+        }
+      ],
+      "pairwise_observations": {
+        "dosbox_auto_requested_minus_fixed": {
+          "doom_leveltime_tics": -12,
+          "bda_ticks": 0
+        },
+        "dosbox_fixed_minus_qemu": {
+          "doom_leveltime_tics": 2,
+          "bda_ticks": 0
+        }
+      }
+    }
+  ],
+  "cross_attempt_observation": {
+    "fixed_dosbox_doom_leveltime_delta": [32, 32],
+    "qemu_doom_leveltime_delta": [30, 30],
+    "attempt03_default_dosbox_doom_leveltime_delta": 31,
+    "attempt04_auto_requested_dosbox_doom_leveltime_delta": 20,
+    "conclusion": "Fixed and QEMU deltas repeated, while the default-cycle and explicitly requested auto observations differed. The auto setting's application was not verified; do not attribute the difference to the setting or infer a rate or parity."
+  },
+  "endpoint_and_claim_limits": [
+    "DOSBox-X PIC guest milliseconds and QEMU virtual nanoseconds are independent clock domains and were not subtracted.",
+    "DOSBox-X detects the elapsed threshold by polling then requests pause; its endpoint is non-atomic. QEMU stops on its virtual-clock timer contract.",
+    "There is one interval per arm per attempt; no full timing parity, causality, or general DOSBox-X replacement claim follows.",
+    "DOSBox cycles profiles are requested only; effective profile readback is unavailable.",
+    "BDA phases and rate are uncalibrated; matching BDA deltas do not establish elapsed-time equivalence.",
+    "Attempt 02 was a setup miss at tic 74 beyond the tic-70 target, with no measurement and no QEMU launch."
+  ],
+  "proposed_next_test": "Verify active DOSBox cycles configuration through a read-only engine-side query, then run repeated tic-80, 900 ms three-arm rounds with rotated arm order and per-round Doom/BDA deltas.",
+  "private_evidence": {
+    "raw_receipts_in_repository": false,
+    "manifests": [
+      {
+        "attempt": "03",
+        "basename": "receipt-manifest.json",
+        "sha256": "e3bd8c67f940599f16739ee798d0999017bdf9b67650fef8521f0e33e7008cf8"
+      },
+      {
+        "attempt": "04",
+        "basename": "receipt-manifest.json",
+        "sha256": "b76b976f461a1bee8a4182e191cdf78e95a6980f1c429e434602729f6971381f"
+      }
+    ],
+    "private_inputs_or_media_in_repository": false
+  },
+  "release_state": {
+    "dosbox_default_retained": true,
+    "ci_ran": false
+  }
+}

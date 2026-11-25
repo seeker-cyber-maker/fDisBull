@@ -8999,3 +8999,32 @@ test-harness flags-key failure is recorded separately.
 These gates do not qualify full checkpoint, input, debugger or real-game
 parity. The current migration inventory remains unqualified, DOSBox-X stays
 the default, and no CI ran.
+
+## Original Doom cycles timing observations (2026-11-25 UTC)
+
+The [sanitized two-attempt record](evidence/qemu-doom-fixed-cycles-2026-11-25/README.md)
+covers two passed guarded native three-arm intervals per trial, all at
+pre-increment tic 80 with a requested 900 ms budget. Attempt 03 used the bare
+DOSBox-X binary; relabel it **default cycles, not verified auto**. It recorded
+DOSBox default +31 Doom tics/+19 BDA ticks in 908 PIC ms, requested fixed
+157600 +32/+18 in 906 PIC ms, and unchanged QEMU +30/+18 in 900,000,000 virtual
+ns. Attempt 04 explicitly requested `cpu cycles=auto` and `cpu cycles=fixed
+157600`: auto recorded +20/+18 in 904 PIC ms, fixed +32/+18 in 905 PIC ms, and
+unchanged QEMU again +30/+18 in 900,000,000 virtual ns. All owners returned
+code 0.
+
+The fixed DOSBox and QEMU Doom deltas repeated (+32/+30), while attempt 03's
+default-cycle and attempt 04's explicitly requested auto values differed
+(+31/+20). Neither requested profile's effective application was verified, so
+do not attribute the change to the setting or infer a rate or parity. Attempt
+04 also recorded a whole-machine QEMU `query-replay.icount` delta of 7,031,250
+instructions; it is not a Doom-only count, retired-instruction count, or
+hardware cycle count.
+
+DOSBox-X PIC milliseconds and QEMU virtual nanoseconds are independent clock
+domains. DOSBox-X polls the threshold then requests pause, giving a non-atomic
+endpoint; QEMU uses its virtual-clock timer stop. BDA phase/rate are
+uncalibrated. There is one interval per arm per trial, so full parity, causality
+and general replacement remain unqualified. Attempt 02's tic-74 settle beyond
+tic 70 was a setup miss with no measurement and no QEMU launch. DOSBox-X stays
+default; no CI ran.

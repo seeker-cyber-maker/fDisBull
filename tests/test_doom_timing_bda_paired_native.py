@@ -55,6 +55,48 @@ def _bda_ticks_qemu(debug) -> int:
     return int.from_bytes(raw, "little")
 
 
+def _qemu_machine_counter_interval(start: dict, end: dict) -> dict:
+    """Retain whole-machine QEMU icount endpoints without a cycle claim."""
+    for observation in (start, end):
+        if type(observation) is not dict:
+            raise ValueError("QEMU counter diagnostic requires stopped virtual-clock observations")
+        profile = observation.get("clock_profile")
+        session = observation.get("session")
+        if (type(profile) is not dict or profile.get("profile") != "virtual"
+                or type(session) is not dict or session.get("state") != "stopped"):
+            raise ValueError("QEMU counter diagnostic requires stopped virtual-clock observations")
+        counter = observation.get("counter")
+        if (type(counter) is not dict or counter.get("state") != "observed"
+                or counter.get("source") != "query-replay.icount"
+                or counter.get("unit") != "instructions"
+                or type(counter.get("value")) is not int or counter["value"] < 0):
+            raise ValueError("QEMU whole-machine instruction counter is unsupported")
+        if type(observation.get("virtual_ns")) is not int or observation["virtual_ns"] < 0:
+            raise ValueError("QEMU counter diagnostic requires observed virtual nanoseconds")
+    if (type(start.get("epoch")) is not str or not start["epoch"]
+            or type(end.get("epoch")) is not str or not end["epoch"]
+            or start["epoch"] != end["epoch"]):
+        raise ValueError("QEMU counter diagnostic cannot span machine clock epochs")
+
+    count_delta = end["counter"]["value"] - start["counter"]["value"]
+    virtual_delta = end["virtual_ns"] - start["virtual_ns"]
+    if count_delta < 0 or virtual_delta <= 0:
+        raise ValueError("QEMU counter diagnostic regressed or has an empty interval")
+    return dict(
+        scope="whole QEMU machine",
+        source="query-replay.icount",
+        unit="instructions",
+        start=start["counter"]["value"],
+        end=end["counter"]["value"],
+        delta=count_delta,
+        virtual_ns_start=start["virtual_ns"],
+        virtual_ns_end=end["virtual_ns"],
+        virtual_ns_delta=virtual_delta,
+        interpretation_limit=("execution instruction count only; not retired instructions "
+                              "or hardware cycles"),
+    )
+
+
 def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
                   target_start_tic: int, *, budget_ms: int = BUDGET_MS) -> dict:
     if type(budget_ms) is not int or not 1 <= budget_ms <= 60_000:
@@ -81,7 +123,8 @@ def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
                 debug, pc, counter, start_breakpoint, target_start_tic)
             binding = _qemu_rebind_at_endpoint(debug, pc, counter, target_start_tic)
             start_bda = _bda_ticks_qemu(debug)
-            start_clock = debug.clock_observe()["virtual_ns"]
+            start_clock_observation = debug.clock_observe()
+            start_clock = start_clock_observation["virtual_ns"]
             debug.delete_breakpoint(start_breakpoint)
 
             # The native clock budget owns one uninterrupted continue and its
@@ -95,7 +138,10 @@ def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
             end_tic = int.from_bytes(bytes.fromhex(debug.memory(
                 counter, length=4, space="virtual")["hex"]), "little")
             end_bda = _bda_ticks_qemu(debug)
-            end_clock = debug.clock_observe()["virtual_ns"]
+            end_clock_observation = debug.clock_observe()
+            end_clock = end_clock_observation["virtual_ns"]
+            machine_counter_interval = _qemu_machine_counter_interval(
+                start_clock_observation, end_clock_observation)
             assert end_tic > start_tic, (stopped, end_tic)
 
             result = dict(
@@ -112,6 +158,7 @@ def _qemu_measure(tmp_path: Path, source: Path, runtime: dict,
                 engine_clock=dict(unit="QEMU_CLOCK_VIRTUAL_nanoseconds",
                                   start=start_clock, end=end_clock,
                                   delta=end_clock - start_clock),
+                machine_counter_interval=machine_counter_interval,
                 guest_time_budget=dict(unit="nanoseconds", requested=budget_ns,
                                        elapsed=budget["elapsed_ns"],
                                        overshoot=budget["overshoot_ns"]),
