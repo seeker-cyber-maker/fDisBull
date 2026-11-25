@@ -1,0 +1,458 @@
+diff --git a/accel/tcg/cpu-exec.c b/accel/tcg/cpu-exec.c
+index d8c29c9..5813803 100644
+--- a/accel/tcg/cpu-exec.c
++++ b/accel/tcg/cpu-exec.c
+@@ -352,7 +352,7 @@ static bool check_for_breakpoints_slow(CPUState *cpu, vaddr pc,
+                 if (fdisbull_instruction_trace_active()) {
+                     fdisbull_instruction_trace_record(
+                         cpu->cpu_index, pc,
+-                        FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH);
++                        FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH, NULL, cpu);
+                 }
+ #endif
+                 cpu->exception_index = EXCP_DEBUG;
+diff --git a/accel/tcg/plugin-gen.c b/accel/tcg/plugin-gen.c
+index 4c5c33a..e342996 100644
+--- a/accel/tcg/plugin-gen.c
++++ b/accel/tcg/plugin-gen.c
+@@ -46,8 +46,27 @@ static void fdisbull_instruction_trace_plugin_cb(unsigned int vcpu_index,
+                                                  void *userp)
+ {
+ #ifndef CONFIG_USER_ONLY
+-    if (fdisbull_instruction_trace_record(vcpu_index, (uintptr_t)userp,
+-                                          FDISBULL_TRACE_TCG_DISPATCH)) {
++    const FdisbullTracePayload *payload = userp;
++
++    if (fdisbull_instruction_trace_record(vcpu_index, payload->pc,
++                                          FDISBULL_TRACE_TCG_DISPATCH,
++                                          payload, current_cpu)) {
++        cpu_stop_current();
++        qemu_notify_event();
++        cpu_loop_exit_restore(current_cpu, GETPC());
++    }
++#endif
++}
++
++static void fdisbull_instruction_trace_pc_only_cb(unsigned int vcpu_index,
++                                                  void *userp)
++{
++#ifndef CONFIG_USER_ONLY
++    uint64_t pc = (uintptr_t)userp;
++
++    if (fdisbull_instruction_trace_record(vcpu_index, pc,
++                                          FDISBULL_TRACE_TCG_DISPATCH,
++                                          NULL, current_cpu)) {
+         cpu_stop_current();
+         qemu_notify_event();
+         cpu_loop_exit_restore(current_cpu, GETPC());
+@@ -464,12 +483,6 @@ void plugin_gen_insn_start(CPUState *cpu, const DisasContextBase *db)
+     pc = db->pc_next;
+     insn->vaddr = pc;
+ 
+-    if (fdisbull_instruction_trace_active()) {
+-        qemu_plugin_register_vcpu_insn_exec_cb(
+-            insn, fdisbull_instruction_trace_plugin_cb, QEMU_PLUGIN_CB_NO_REGS,
+-            (void *)(uintptr_t)pc);
+-    }
+-
+     tcg_gen_plugin_cb(PLUGIN_GEN_FROM_INSN);
+ }
+ 
+@@ -493,10 +506,40 @@ void plugin_gen_tb_end(CPUState *cpu, size_t num_insns)
+ {
+     struct qemu_plugin_tb *ptb = tcg_ctx->plugin_tb;
+ 
++    const DisasContextBase *db = tcg_ctx->plugin_db;
++    size_t i;
++
+     /* translator may have removed instructions, update final count */
+     g_assert(num_insns <= ptb->n);
+     ptb->n = num_insns;
+ 
++    /* tb->size is final here, so translator_st can safely copy retained bytes. */
++    if (fdisbull_instruction_trace_active()) {
++        for (i = 0; i < ptb->n; i++) {
++            struct qemu_plugin_insn *insn = g_ptr_array_index(ptb->insns, i);
++            uint8_t bytes[FDISBULL_TRACE_MAX_INSN_BYTES];
++            bool bytes_valid = insn->len > 0 &&
++                               insn->len <= sizeof(bytes) &&
++                               translator_st(db, bytes, insn->vaddr, insn->len);
++            const char *why = insn->len > sizeof(bytes) ?
++                              "instruction-too-long" :
++                              "translation-copy-failed";
++            FdisbullTracePayload *payload =
++                fdisbull_instruction_trace_payload_new(
++                    insn->vaddr, insn->len, bytes, bytes_valid, why);
++
++            if (payload) {
++                qemu_plugin_register_vcpu_insn_exec_cb(
++                    insn, fdisbull_instruction_trace_plugin_cb,
++                    QEMU_PLUGIN_CB_NO_REGS, payload);
++            } else {
++                qemu_plugin_register_vcpu_insn_exec_cb(
++                    insn, fdisbull_instruction_trace_pc_only_cb,
++                    QEMU_PLUGIN_CB_NO_REGS, (void *)(uintptr_t)insn->vaddr);
++            }
++        }
++    }
++
+     /* collect instrumentation requests */
+     qemu_plugin_tb_trans_cb(cpu, ptb);
+ 
+diff --git a/qapi/fdisbull-instruction-trace.json b/qapi/fdisbull-instruction-trace.json
+index f4c534e..4f70551 100644
+--- a/qapi/fdisbull-instruction-trace.json
++++ b/qapi/fdisbull-instruction-trace.json
+@@ -14,17 +14,31 @@
+ # @origin: tcg-dispatch or breakpoint-pre-dispatch; the latter records a
+ #     matched breakpoint boundary reached before TB dispatch.
+ # @reason: Always "before-execution".
++# @code-bytes: Lowercase hex for exact bytes copied from the translated TB.
++# @code-byte-count: Number of copied bytes (0 when unavailable).
++# @code-bytes-valid: Whether code bytes are available.
++# @code-bytes-source: translated-tb or none.
++# @code-bytes-unavailable-reason: Empty when valid; otherwise a bounded reason.
++# @x86-context-valid: Whether x86 code mode and CS fields were available.
++# @code-bits: 16, 32, 64, or zero when unavailable.
++# @cs-selector: CS selector, or zero when context is unavailable.
++# @cs-base: Effective CS base (zero in 64-bit mode), or zero when unavailable.
++#     These are runtime x86 segment-cache values, not source identity.
+ ##
+ { 'struct': 'FdisbullInstructionTraceEvent',
+   'data': { 'sequence': 'uint64', 'vcpu': 'uint32', 'pc': 'uint64', 'origin': 'str',
+-            'reason': 'str' } }
++            'reason': 'str', 'code-bytes': 'str', 'code-byte-count': 'uint8',
++            'code-bytes-valid': 'bool', 'code-bytes-source': 'str',
++            'code-bytes-unavailable-reason': 'str', 'x86-context-valid': 'bool',
++            'code-bits': 'uint8', 'cs-selector': 'uint16', 'cs-base': 'uint64' } }
+ 
+ ##
+ # @FdisbullInstructionTraceInfo:
+ # Bounded trace status and one page of retained dispatch events.
+ #
++# @trace-version: Event schema version (2).
+ # @epoch: Producer generation; changes on start and invalidation.
+-# @instruction-count: Requested exact dispatch limit.
++# @instruction-count: Requested exact boundary limit.
+ # @capacity: Number of retained events, capped at 65536.
+ # @active: Whether callbacks are still recording.
+ # @stopped-reason: recording, instruction-count, user-stop, or invalidation cause.
+@@ -35,7 +49,7 @@
+ # @events: One bounded page of events after the supplied cursor.
+ ##
+ { 'struct': 'FdisbullInstructionTraceInfo',
+-  'data': { 'epoch': 'uint64', 'instruction-count': 'uint64',
++  'data': { 'trace-version': 'uint32', 'epoch': 'uint64', 'instruction-count': 'uint64',
+             'capacity': 'uint32', 'active': 'bool', 'stopped-reason': 'str',
+             'captured-count': 'uint64', 'oldest-sequence': 'uint64',
+             'next-sequence': 'uint64', 'dropped-count': 'uint64',
+@@ -43,12 +57,12 @@
+ 
+ ##
+ # @x-fdisbull-trace-start:
+-# Begin a bounded trace on a stopped, single-vCPU system-mode TCG machine.
++# Begin a bounded trace on a stopped, single-vCPU serial system-mode TCG machine.
+ #
+-# @instruction-count: Exact number of callbacks to capture before stopping.
+-# The trace records instruction dispatch callbacks before instruction bodies.
+-# The callback can observe a faulting instruction; records do not attest
+-# completion or retirement. Exactly @instruction-count boundaries are recorded
++# @instruction-count: Exact number of pre-instruction boundaries to capture.
++# The trace records boundaries before instruction bodies.
++# The TCG callback can observe a faulting instruction; records do not attest
++# completion or retirement. Exactly @instruction-count records are recorded
+ # before a stop is requested. The retained ring is capped at 65536 records.
+ ##
+ { 'command': 'x-fdisbull-trace-start',
+diff --git a/system/fdisbull-instruction-trace.c b/system/fdisbull-instruction-trace.c
+index 4b09b0e..debd3bb 100644
+--- a/system/fdisbull-instruction-trace.c
++++ b/system/fdisbull-instruction-trace.c
+@@ -6,6 +6,7 @@
+ #include "qemu/thread.h"
+ #include "qemu/main-loop.h"
+ #include "exec/tb-flush.h"
++#include "exec/translation-block.h"
+ #include "hw/core/cpu.h"
+ #include "system/cpus.h"
+ #include "system/runstate.h"
+@@ -14,17 +15,28 @@
+ 
+ #define TRACE_MAX_CAPACITY 65536
+ #define TRACE_MAX_PAGE 4096
++#define TRACE_PAYLOAD_CAPACITY 65536
+ 
+ typedef struct TraceRecord {
+     uint64_t sequence;
+     uint32_t vcpu;
+     uint64_t pc;
+     FdisbullTraceOrigin origin;
++    uint8_t byte_count;
++    bool bytes_valid;
++    char bytes_unavailable_reason[48];
++    uint8_t bytes[FDISBULL_TRACE_MAX_INSN_BYTES];
++    bool x86_context_valid;
++    uint8_t code_bits;
++    uint16_t cs_selector;
++    uint64_t cs_base;
+ } TraceRecord;
+ 
+ typedef struct InstructionTrace {
+     QemuMutex lock;
+     TraceRecord *records;
++    FdisbullTracePayload *payloads;
++    uint32_t payload_count;
+     uint64_t epoch;
+     uint64_t requested;
+     uint64_t count;
+@@ -36,6 +48,13 @@ typedef struct InstructionTrace {
+ 
+ static InstructionTrace trace;
+ static gsize trace_initialized;
++static FdisbullTraceContextProvider context_provider;
++
++void fdisbull_instruction_trace_set_context_provider(
++    FdisbullTraceContextProvider provider)
++{
++    context_provider = provider;
++}
+ 
+ static void instruction_trace_init(void)
+ {
+@@ -57,8 +76,46 @@ bool fdisbull_instruction_trace_active(void)
+     return active;
+ }
+ 
++FdisbullTracePayload *fdisbull_instruction_trace_payload_new(
++    uint64_t pc, uint8_t byte_count, const uint8_t *bytes, bool bytes_valid,
++    const char *unavailable_reason)
++{
++    FdisbullTracePayload *payload = NULL;
++
++    instruction_trace_init();
++    qemu_mutex_lock(&trace.lock);
++    if (trace.active && trace.payload_count < TRACE_PAYLOAD_CAPACITY) {
++        payload = &trace.payloads[trace.payload_count++];
++        payload->pc = pc;
++        payload->byte_count = bytes_valid ? byte_count : 0;
++        payload->bytes_valid = bytes_valid;
++        payload->bytes_unavailable_reason = bytes_valid ? "" :
++            (unavailable_reason ? unavailable_reason : "translation-copy-failed");
++        if (bytes_valid && byte_count > 0 &&
++            byte_count <= FDISBULL_TRACE_MAX_INSN_BYTES) {
++            memcpy(payload->bytes, bytes, byte_count);
++        } else if (bytes_valid) {
++            payload->bytes_valid = false;
++            payload->byte_count = 0;
++            payload->bytes_unavailable_reason = "instruction-too-long";
++        }
++    }
++    qemu_mutex_unlock(&trace.lock);
++    return payload;
++}
++
++static void instruction_trace_context(CPUState *cpu, TraceRecord *record)
++{
++    if (context_provider) {
++        record->x86_context_valid = context_provider(
++            cpu, &record->code_bits, &record->cs_selector, &record->cs_base);
++    }
++}
++
+ bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
+-                                       FdisbullTraceOrigin origin)
++                                       FdisbullTraceOrigin origin,
++                                       const FdisbullTracePayload *payload,
++                                       CPUState *cpu)
+ {
+     bool stop = false;
+ 
+@@ -66,10 +123,25 @@ bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
+     qemu_mutex_lock(&trace.lock);
+     if (trace.active) {
+         TraceRecord *record = &trace.records[trace.count % trace.capacity];
++        memset(record, 0, sizeof(*record));
+         record->sequence = trace.count + 1;
+         record->vcpu = vcpu;
+-        record->pc = pc;
++        record->pc = payload ? payload->pc : pc;
+         record->origin = origin;
++        instruction_trace_context(cpu, record);
++        if (origin == FDISBULL_TRACE_TCG_DISPATCH && payload &&
++            payload->bytes_valid) {
++            record->bytes_valid = true;
++            record->byte_count = payload->byte_count;
++            memcpy(record->bytes, payload->bytes, payload->byte_count);
++        } else {
++            const char *why = origin == FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH ?
++                "breakpoint-pre-dispatch-no-translation" :
++                (payload ? payload->bytes_unavailable_reason :
++                 "translation-descriptor-capacity");
++            g_strlcpy(record->bytes_unavailable_reason, why,
++                      sizeof(record->bytes_unavailable_reason));
++        }
+         trace.count++;
+         if (trace.count == trace.requested) {
+             trace.active = false;
+@@ -131,6 +203,10 @@ static void trace_precondition(Error **errp)
+     }
+     CPU_FOREACH(cpu) {
+         count++;
++        if (tcg_cflags_has(cpu, CF_PARALLEL)) {
++            error_setg(errp, "instruction trace requires serial TCG (CF_PARALLEL disabled)");
++            return;
++        }
+         if (count > 1 || !cpu->stopped) {
+             error_setg(errp, "instruction trace requires one stopped vCPU");
+             return;
+@@ -172,6 +248,7 @@ static FdisbullInstructionTraceInfo *trace_info(uint64_t epoch,
+     end = MIN(trace.count + 1, first + max_events);
+     info = g_new0(FdisbullInstructionTraceInfo, 1);
+     info->epoch = trace.epoch;
++    info->trace_version = 2;
+     info->instruction_count = trace.requested;
+     info->capacity = trace.capacity;
+     info->active = trace.active;
+@@ -191,6 +268,21 @@ static FdisbullInstructionTraceInfo *trace_info(uint64_t epoch,
+         node->value->vcpu = record->vcpu;
+         node->value->pc = record->pc;
+         node->value->reason = g_strdup("before-execution");
++        node->value->code_bytes_valid = record->bytes_valid;
++        node->value->code_byte_count = record->byte_count;
++        node->value->code_bytes_source = g_strdup(record->bytes_valid ?
++                                                   "translated-tb" : "none");
++        node->value->code_bytes_unavailable_reason = g_strdup(
++            record->bytes_valid ? "" : record->bytes_unavailable_reason);
++        GString *hex = g_string_sized_new(record->byte_count * 2);
++        for (unsigned i = 0; i < record->byte_count && record->bytes_valid; i++) {
++            g_string_append_printf(hex, "%02x", record->bytes[i]);
++        }
++        node->value->code_bytes = g_string_free(hex, false);
++        node->value->x86_context_valid = record->x86_context_valid;
++        node->value->code_bits = record->code_bits;
++        node->value->cs_selector = record->cs_selector;
++        node->value->cs_base = record->cs_base;
+         node->value->origin = g_strdup(
+             record->origin == FDISBULL_TRACE_BREAKPOINT_PRE_DISPATCH ?
+             "breakpoint-pre-dispatch" : "tcg-dispatch");
+@@ -224,6 +316,11 @@ FdisbullInstructionTraceInfo *qmp_x_fdisbull_trace_start(
+         error_setg(errp, "instruction trace epoch exhausted");
+         return NULL;
+     }
++    /* Flush every TB before releasing payloads referenced by generated callbacks. */
++    tb_flush(first_cpu);
++    g_free(trace.payloads);
++    trace.payloads = g_new0(FdisbullTracePayload, TRACE_PAYLOAD_CAPACITY);
++    trace.payload_count = 0;
+     g_free(trace.records);
+     trace.capacity = MIN(instruction_count, TRACE_MAX_CAPACITY);
+     trace.records = g_new0(TraceRecord, trace.capacity);
+diff --git a/system/fdisbull-instruction-trace.h b/system/fdisbull-instruction-trace.h
+index 7360189..b1ae4d5 100644
+--- a/system/fdisbull-instruction-trace.h
++++ b/system/fdisbull-instruction-trace.h
+@@ -3,6 +3,24 @@
+ #define SYSTEM_FDISBULL_INSTRUCTION_TRACE_H
+ 
+ #include <stdint.h>
++#include <stdbool.h>
++#include <stddef.h>
++
++struct CPUState;
++typedef bool (*FdisbullTraceContextProvider)(struct CPUState *cpu,
++                                             uint8_t *code_bits,
++                                             uint16_t *cs_selector,
++                                             uint64_t *cs_base);
++
++#define FDISBULL_TRACE_MAX_INSN_BYTES 15
++
++typedef struct FdisbullTracePayload {
++    uint64_t pc;
++    uint8_t byte_count;
++    bool bytes_valid;
++    const char *bytes_unavailable_reason;
++    uint8_t bytes[FDISBULL_TRACE_MAX_INSN_BYTES];
++} FdisbullTracePayload;
+ 
+ typedef enum FdisbullTraceOrigin {
+     FDISBULL_TRACE_TCG_DISPATCH,
+@@ -11,15 +29,28 @@ typedef enum FdisbullTraceOrigin {
+ 
+ #ifdef CONFIG_USER_ONLY
+ static inline bool fdisbull_instruction_trace_active(void) { return false; }
+-static inline bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
+-                                                       FdisbullTraceOrigin origin)
++static inline void fdisbull_instruction_trace_set_context_provider(
++    FdisbullTraceContextProvider provider) { }
++static inline FdisbullTracePayload *fdisbull_instruction_trace_payload_new(
++    uint64_t pc, uint8_t byte_count, const uint8_t *bytes, bool bytes_valid,
++    const char *unavailable_reason)
++{ return NULL; }
++static inline bool fdisbull_instruction_trace_record(
++    uint32_t vcpu, uint64_t pc, FdisbullTraceOrigin origin,
++    const FdisbullTracePayload *payload, struct CPUState *cpu)
+ { return false; }
+ static inline void fdisbull_instruction_trace_handle_stop_request(void) { }
+ static inline void fdisbull_instruction_trace_invalidate(const char *reason) { }
+ #else
++void fdisbull_instruction_trace_set_context_provider(
++    FdisbullTraceContextProvider provider);
+ bool fdisbull_instruction_trace_active(void);
+-bool fdisbull_instruction_trace_record(uint32_t vcpu, uint64_t pc,
+-                                                       FdisbullTraceOrigin origin);
++FdisbullTracePayload *fdisbull_instruction_trace_payload_new(
++    uint64_t pc, uint8_t byte_count, const uint8_t *bytes, bool bytes_valid,
++    const char *unavailable_reason);
++bool fdisbull_instruction_trace_record(
++    uint32_t vcpu, uint64_t pc, FdisbullTraceOrigin origin,
++    const FdisbullTracePayload *payload, struct CPUState *cpu);
+ void fdisbull_instruction_trace_handle_stop_request(void);
+ void fdisbull_instruction_trace_invalidate(const char *reason);
+ #endif
+diff --git a/target/i386/cpu.c b/target/i386/cpu.c
+index 6559d17..d356787 100644
+--- a/target/i386/cpu.c
++++ b/target/i386/cpu.c
+@@ -49,6 +49,9 @@
+ 
+ #include "disas/capstone.h"
+ #include "cpu-internal.h"
++#ifndef CONFIG_USER_ONLY
++#include "system/fdisbull-instruction-trace.h"
++#endif
+ 
+ static void x86_cpu_realizefn(DeviceState *dev, Error **errp);
+ static void x86_cpu_get_supported_cpuid(uint32_t func, uint32_t index,
+@@ -8951,6 +8954,22 @@ static const struct SysemuCPUOps i386_sysemu_ops = {
+ #endif
+ 
+ 
++#ifndef CONFIG_USER_ONLY
++static bool x86_fdisbull_trace_context(CPUState *cpu, uint8_t *code_bits,
++                                       uint16_t *cs_selector,
++                                       uint64_t *cs_base)
++{
++    X86CPU *x86_cpu = X86_CPU(cpu);
++    CPUX86State *env = &x86_cpu->env;
++
++    *code_bits = (env->hflags & HF_CS64_MASK) ? 64 :
++                 (env->hflags & HF_CS32_MASK) ? 32 : 16;
++    *cs_selector = env->segs[R_CS].selector;
++    *cs_base = *code_bits == 64 ? 0 : env->segs[R_CS].base;
++    return true;
++}
++#endif
++
+ static void x86_cpu_common_class_init(ObjectClass *oc, void *data)
+ {
+     X86CPUClass *xcc = X86_CPU_CLASS(oc);
+@@ -8959,6 +8978,9 @@ static void x86_cpu_common_class_init(ObjectClass *oc, void *data)
+     ResettableClass *rc = RESETTABLE_CLASS(oc);
+     FeatureWord w;
+ 
++#ifndef CONFIG_USER_ONLY
++    fdisbull_instruction_trace_set_context_provider(x86_fdisbull_trace_context);
++#endif
+     device_class_set_parent_realize(dc, x86_cpu_realizefn,
+                                     &xcc->parent_realize);
+     device_class_set_parent_unrealize(dc, x86_cpu_unrealizefn,

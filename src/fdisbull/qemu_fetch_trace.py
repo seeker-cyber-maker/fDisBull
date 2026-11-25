@@ -19,6 +19,7 @@ MAX_TRACE_EVENTS = 10_000
 MAX_TRACE_PAGE = 4_096
 DETAILS = frozenset(("short", "normal", "long", "csip"))
 _CURSOR = re.compile(r"qtrace:([0-9a-f]{32}):(\d+):(\d+)\Z")
+_HEX = re.compile(r"(?:[0-9a-fA-F]{2})*\Z")
 
 
 def _trace_operation(label):
@@ -31,6 +32,73 @@ def _uint(value, label, maximum=(1 << 64) - 1):
     if type(value) is not int or not 0 <= value <= maximum:
         raise DebuggerError("QEMU trace producer returned invalid " + label)
     return value
+
+
+def _trace_version(result):
+    if "trace-version" not in result:
+        return 1
+    value = result["trace-version"]
+    if type(value) is not int or value not in (1, 2):
+        raise DebuggerError("QEMU trace producer returned an unsupported trace version")
+    return value
+
+
+def _fetch_context(event, version):
+    """Validate and project translation/runtime context without inference."""
+    if version == 1:
+        # V1 did not report these facts. Keep them unknown instead of turning
+        # absent fields into an explicit unavailable observation.
+        return None
+    byte_keys = ("code-bytes", "code-byte-count", "code-bytes-valid",
+                 "code-bytes-unavailable-reason", "code-bytes-source")
+    x86_keys = ("code-bits", "cs-selector", "cs-base", "x86-context-valid")
+    if any(key not in event for key in byte_keys + x86_keys):
+        raise DebuggerError("QEMU trace v2 event omitted per-event context validity")
+
+    raw_hex = event["code-bytes"]
+    count = _uint(event["code-byte-count"], "code-byte-count", 255)
+    valid = event["code-bytes-valid"]
+    reason = event["code-bytes-unavailable-reason"]
+    source = event["code-bytes-source"]
+    if type(raw_hex) is not str or _HEX.fullmatch(raw_hex) is None:
+        raise DebuggerError("QEMU trace producer returned malformed translated bytes")
+    if type(valid) is not bool or type(reason) is not str:
+        raise DebuggerError("QEMU trace producer returned malformed byte validity")
+    if valid:
+        if (not 1 <= count <= 15 or len(raw_hex) != count * 2
+                or source != "translated-tb" or reason != ""
+                or event["origin"] == "breakpoint-pre-dispatch"):
+            raise DebuggerError("QEMU trace translated-byte evidence is inconsistent")
+        translated_bytes = dict(valid=True, hex=raw_hex, count=count,
+                                 source=source, unavailable_reason=None)
+    else:
+        if (count != 0 or raw_hex != "" or source != "none"
+                or not reason):
+            raise DebuggerError("QEMU trace unavailable-byte evidence is inconsistent")
+        if (event["origin"] == "breakpoint-pre-dispatch"
+                and reason != "breakpoint-pre-dispatch-no-translation"):
+            raise DebuggerError("QEMU breakpoint event has an invalid byte-unavailable reason")
+        translated_bytes = dict(valid=False, hex=None, count=0,
+                                source="none", unavailable_reason=reason)
+
+    context_valid = event["x86-context-valid"]
+    code_bits = _uint(event["code-bits"], "code-bits", 64)
+    selector = _uint(event["cs-selector"], "cs-selector", 0xffff)
+    cs_base = _uint(event["cs-base"], "cs-base")
+    if type(context_valid) is not bool:
+        raise DebuggerError("QEMU trace producer returned malformed x86 context validity")
+    if context_valid:
+        if code_bits not in (16, 32, 64):
+            raise DebuggerError("QEMU trace valid x86 context has invalid code bits")
+        x86_context = dict(valid=True, code_bits=code_bits,
+                           cs_selector=selector, cs_base=cs_base)
+    else:
+        if (code_bits != 0 or selector != 0 or cs_base != 0):
+            raise DebuggerError("QEMU trace unavailable x86 context must use zero fields")
+        x86_context = dict(valid=False, code_bits=None,
+                           cs_selector=None, cs_base=None)
+    return dict(version=version, translated_bytes=translated_bytes,
+                x86=x86_context)
 
 
 def _owner(session):
@@ -75,6 +143,8 @@ def _native_page(session, capture, after, limit, *, stop=False, cleanup=False):
     raw = owner["qmp"].call(command, arguments)
     if not isinstance(raw, dict):
         raise DebuggerError("QEMU trace producer returned an invalid page")
+    if _trace_version(raw) != capture["trace_version"]:
+        raise DebuggerError("QEMU trace producer version changed during capture")
     if raw.get("epoch") != capture["producer_epoch"]:
         raise DebuggerError("QEMU trace producer epoch changed")
     for key in ("instruction-count", "captured-count", "oldest-sequence", "next-sequence", "dropped-count"):
@@ -114,15 +184,24 @@ def _native_page(session, capture, after, limit, *, stop=False, cleanup=False):
             raise DebuggerError("QEMU trace event belongs to an unselected vCPU")
         if event["sequence"] != previous + 1:
             raise DebuggerError("QEMU trace producer omitted a before-fetch event")
-        native = {key: event[key] for key in ("sequence", "vcpu", "pc", "reason", "origin")}
-        normalized.append(dict(sequence=sequence,
+        native_keys = ["sequence", "vcpu", "pc", "reason", "origin"]
+        if capture["trace_version"] == 2:
+            native_keys.extend(("code-bytes", "code-byte-count", "code-bytes-valid",
+                "code-bytes-unavailable-reason", "code-bytes-source", "code-bits",
+                "cs-selector", "cs-base", "x86-context-valid"))
+        native = {key: event[key] for key in native_keys if key in event}
+        normalized_event = dict(sequence=sequence,
             address={"space": "virtual", "offset": f"0x{event['pc']:X}"},
             native=native,
             observation={"registers_stage": "before-instruction",
                          "instruction_completed": None,
                          "evidence": ("native QEMU breakpoint pre-dispatch stop"
                                       if event["origin"] == "breakpoint-pre-dispatch"
-                                      else "native QEMU TCG pre-execution dispatch")}))
+                                      else "native QEMU TCG pre-execution dispatch")})
+        fetch_context = _fetch_context(event, capture["trace_version"])
+        if fetch_context is not None:
+            normalized_event["fetch_context"] = fetch_context
+        normalized.append(normalized_event)
         previous = sequence
     if normalized and normalized[0]["sequence"] <= after:
         raise DebuggerError("QEMU trace page did not advance its cursor")
@@ -182,6 +261,7 @@ class QemuFetchTraceMixin:
             if not isinstance(raw, dict):
                 raise DebuggerError("QEMU trace producer returned an invalid start receipt")
             epoch = _uint(raw.get("epoch"), "producer epoch")
+            trace_version = _trace_version(raw)
             if (raw.get("instruction-count") != instruction_count
                     or raw.get("active") is not True):
                 raise DebuggerError("QEMU trace producer did not admit the requested capture")
@@ -190,6 +270,7 @@ class QemuFetchTraceMixin:
             if capacity != instruction_count or first_sequence < 1:
                 raise DebuggerError("QEMU trace producer ring cannot retain the requested capture")
             capture.update(state="active", producer_epoch=epoch, capacity=capacity,
+                           trace_version=trace_version,
                            captured_count=0, last_sequence=first_sequence - 1,
                            available_sequence=first_sequence - 1)
         except BaseException as error:
@@ -201,7 +282,7 @@ class QemuFetchTraceMixin:
             raise
         return dict(active=True, detail=detail, instruction_count=instruction_count,
                     trace_id=capture["trace_id"], epoch=epoch, capacity=capacity,
-                    next_sequence=first_sequence,
+                    trace_version=trace_version, next_sequence=first_sequence,
                     cursor=f"qtrace:{capture['trace_id']}:{epoch}:{first_sequence - 1}")
 
     @_trace_operation("QEMU before-fetch trace read")
@@ -245,7 +326,8 @@ class QemuFetchTraceMixin:
         next_cursor = current_cursor if more else None
         return dict(active=active, events=events, next_cursor=next_cursor,
                     cursor=current_cursor, trace_id=capture["trace_id"],
-                    epoch=capture["producer_epoch"], requested_count=capture["instruction_count"],
+                    epoch=capture["producer_epoch"], trace_version=capture["trace_version"],
+                    requested_count=capture["instruction_count"],
                     captured_count=capture["captured_count"],
                     dropped_count=0)
 
@@ -290,6 +372,7 @@ class QemuFetchTraceMixin:
             raise
         return dict(active=False, event_count=raw["captured-count"], events=tail,
                     trace_id=capture["trace_id"], epoch=capture["producer_epoch"],
+                    trace_version=capture["trace_version"],
                     requested_count=capture["instruction_count"], dropped_count=0)
 
     @staticmethod

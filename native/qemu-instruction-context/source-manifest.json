@@ -1,0 +1,63 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_manifest": "../qemu-instruction-trace/source-manifest.json",
+  "base_producer_sha256": "105a9ecbd5f2d52a63da4f68608df6fbba2cf79b9a07f1d2a7c2c1d868059c58",
+  "composition": "Apply after exact qemu-instruction-trace v1 source, verifying each preimage hash and git apply --check. Requires QEMU configured with -Dplugins=true.",
+  "patch": "qemu-10.0.13-fdisbull-instruction-context-v2.patch",
+  "patch_bytes": 19436,
+  "patch_sha256": "3dc2ecb6c2cacd3ed1d179eb4a06552064f2510e81deeb9534f25dbf96829fd1",
+  "files": [
+    {
+      "path": "accel/tcg/cpu-exec.c",
+      "base_bytes": 35810,
+      "base_sha256": "f900caa797b5be6450a2ce6d694232a362a7aca65f0360d32a055856f700ba48",
+      "patched_bytes": 35821,
+      "patched_sha256": "75bcc212f887fb87a38036cb0092801e64b4533682a3efa50770238caf9a1f06"
+    },
+    {
+      "path": "accel/tcg/plugin-gen.c",
+      "base_bytes": 15571,
+      "base_sha256": "05c3bf32a85ddc21dfd3fd588d6e02fd522f3c55ad404a99bebc3f917950b25b",
+      "patched_bytes": 17338,
+      "patched_sha256": "62c2f6574cb592688aea1a2eecd00c3f6802363b1a391fd81eb07e262e4cc5e4"
+    },
+    {
+      "path": "qapi/fdisbull-instruction-trace.json",
+      "base_bytes": 3611,
+      "base_sha256": "e916094293bffe5248ad301926c950c6e1fc6e0afaf14f26476b347a44212940",
+      "patched_bytes": 4612,
+      "patched_sha256": "f0cda734de89331a2231b91d4bb5166b88e9453ef4d535dff8d41cc77fb7d380"
+    },
+    {
+      "path": "system/fdisbull-instruction-trace.c",
+      "base_bytes": 8505,
+      "base_sha256": "5214032498d66f16237c7427246ce30dc5d9eae1f3cb44d7a62a8365ad0cb941",
+      "patched_bytes": 12703,
+      "patched_sha256": "b4fb90d6505a25afa2f2f96a408a8b50e870cb3f47e4cbdcdb88d97305f16ce9"
+    },
+    {
+      "path": "system/fdisbull-instruction-trace.h",
+      "base_bytes": 1075,
+      "base_sha256": "f5826b5c93a4ee7a9d92864a2e070f4b101839fb25c67e6ff94e22d64a0fa34f",
+      "patched_bytes": 2280,
+      "patched_sha256": "f88a097b38c0bb39d7f66bbb3de8d561a3c71d3cc2e74e184e04729f3f83cc13"
+    },
+    {
+      "path": "target/i386/cpu.c",
+      "base_bytes": 357318,
+      "base_sha256": "8f5bf53b7dca5d01c1a1c38086fbfe66be68ecff7adb0b47f98ec2e8112a4f27",
+      "patched_bytes": 358048,
+      "patched_sha256": "0ee4955acf9650bd7f3bf6564a36eaedad18438f252b120dbae51607068720ec"
+    }
+  ],
+  "scope": "Schema v2 adds translation-bound x86 TCG code bytes (up to 15) with explicit availability and runtime x86 code-bits/CS selector/effective CS base where the target provider is available. Breakpoint-pre-dispatch has no bytes because no translation has occurred. Bytes are copied after final TB size is set in plugin_gen_tb_end using translator_st over bytes retained by that TB translation; each callback points to an immutable payload in a bounded 65,536-entry slab retained until a stopped-start TB flush. Capture admission requires serial TCG (CF_PARALLEL disabled), so tb_flush completion is synchronous before freeing or replacing the slab, including on machines with max_cpus greater than one. The event remains a pre-execution boundary and makes no decode, completion, or retirement claim. Copy failures, oversized instructions, and exhausted descriptors produce an event with explicit unavailable reason. Non-x86 builds report x86 context unavailable. Reset/checkpoint invalidation clears observations and advances epoch.",
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "command": "ninja -j1 qemu-system-x86_64 (Meson -Dplugins=true)",
+    "exit_code": 0,
+    "candidate_sha256": "6f969d1bbe8f8e4398412bcd3ee24e88984f2e6be869267450b0bb5523bcc641",
+    "qualification": "Plugin-enabled local build passed. Root-owned final-candidate host/native selection passed 38/38 with no skips, including three paired DOSBox-X/QEMU authored COM cases, five native process/trace regressions, and serial-TCG admission refusal on one active vCPU with max_cpus=2. Private JUnit SHA-256 b4446f88da27b95c8d4424e5cf15df36ed4dcb9fba7fccd383642c47413671ce. Broader parity remains unqualified."
+  }
+}

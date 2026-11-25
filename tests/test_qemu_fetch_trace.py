@@ -22,6 +22,7 @@ class FakeQMP:
         self.fail_start = False
         self.drop_count = 0
         self.sequence_gap = False
+        self.trace_version = 1
 
     def call(self, method, arguments=None):
         arguments = dict(arguments or {})
@@ -32,8 +33,11 @@ class FakeQMP:
                 raise TimeoutError("lost start response")
             self.epoch += 1
             self.trace = dict(active=True, count=arguments["instruction-count"], events=[])
-            return dict(epoch=self.epoch, **{"instruction-count": self.trace["count"],
+            result = dict(epoch=self.epoch, **{"instruction-count": self.trace["count"],
                 "capacity": self.trace["count"], "active": True, "next-sequence": 1})
+            if self.trace_version == 2:
+                result["trace-version"] = 2
+            return result
         if self.trace is None or arguments.get("epoch") != self.epoch:
             raise DebuggerError("wrong fake trace epoch")
         if method in ("x-fdisbull-trace-read", "x-fdisbull-trace-stop"):
@@ -47,11 +51,14 @@ class FakeQMP:
             next_sequence = len(self.trace["events"]) + 1
             if self.sequence_gap and events:
                 events[0]["sequence"] += 1
-            return {"epoch": self.epoch, "active": self.trace["active"],
+            result = {"epoch": self.epoch, "active": self.trace["active"],
                 "stopped-reason": "count" if not self.trace["active"] else None,
                 "instruction-count": self.trace["count"], "captured-count": len(self.trace["events"]),
                 "oldest-sequence": oldest, "next-sequence": next_sequence,
                 "dropped-count": self.drop_count, "events": events}
+            if self.trace_version == 2:
+                result["trace-version"] = 2
+            return result
         raise AssertionError(method)
 
     def dispatch(self, count):
@@ -61,9 +68,24 @@ class FakeQMP:
                 self.trace["active"] = False
                 break
             pc = 0x1000 + (sequence - 1)
-            self.trace["events"].append({"sequence": sequence, "vcpu": 0,
-                "pc": pc, "reason": "before-execution",
-                "origin": "tcg-dispatch" if sequence % 2 else "breakpoint-pre-dispatch"})
+            origin = "tcg-dispatch" if sequence % 2 else "breakpoint-pre-dispatch"
+            event = {"sequence": sequence, "vcpu": 0, "pc": pc,
+                     "reason": "before-execution", "origin": origin}
+            if self.trace_version == 2:
+                available = origin == "tcg-dispatch"
+                event.update({
+                    "code-bytes": "40" if available else "",
+                    "code-byte-count": 1 if available else 0,
+                    "code-bytes-valid": available,
+                    "code-bytes-unavailable-reason": "" if available else
+                        "breakpoint-pre-dispatch-no-translation",
+                    "code-bytes-source": "translated-tb" if available else "none",
+                    "code-bits": 16,
+                    "cs-selector": 0x1000,
+                    "cs-base": 0x10000,
+                    "x86-context-valid": True,
+                })
+            self.trace["events"].append(event)
             if sequence == self.trace["count"]:
                 self.trace["active"] = False
 
@@ -190,6 +212,55 @@ def test_trace_cursor_is_strict_and_stopped_read_retains_cached_events():
         session.call("trace.read", {"cursor": "trace-1", "limit": 1})
     page = session.call("trace.read", {"cursor": started["cursor"], "limit": 2})
     assert [event["sequence"] for event in page["events"]] == [1, 2]
+
+
+def test_v1_producer_keeps_new_context_unknown_for_backward_compatibility():
+    session = Session()
+    started = session.call("trace.start", {"detail": "normal", "instruction_count": 1})
+    assert started["trace_version"] == 1
+    session.vm.qmp.dispatch(1)
+    page = session.call("trace.read", {"cursor": started["cursor"], "limit": 1})
+    assert page["trace_version"] == 1
+    assert "fetch_context" not in page["events"][0]
+    assert "code-bytes-valid" not in page["events"][0]["native"]
+
+
+def test_v2_projects_translation_bytes_and_explicit_breakpoint_unavailability():
+    session = Session()
+    session.vm.qmp.trace_version = 2
+    started = session.call("trace.start", {"detail": "normal", "instruction_count": 2})
+    session.vm.qmp.dispatch(2)
+    page = session.call("trace.read", {"cursor": started["cursor"], "limit": 2})
+    assert started["trace_version"] == page["trace_version"] == 2
+    tcg, breakpoint = page["events"]
+    assert tcg["native"]["code-bytes"] == "40"
+    assert tcg["fetch_context"]["translated_bytes"] == {
+        "valid": True, "hex": "40", "count": 1,
+        "source": "translated-tb", "unavailable_reason": None}
+    assert tcg["fetch_context"]["x86"] == {
+        "valid": True, "code_bits": 16, "cs_selector": 0x1000, "cs_base": 0x10000}
+    assert breakpoint["fetch_context"]["translated_bytes"] == {
+        "valid": False, "hex": None, "count": 0, "source": "none",
+        "unavailable_reason": "breakpoint-pre-dispatch-no-translation"}
+    assert breakpoint["fetch_context"]["x86"]["valid"] is True
+    assert "cpu_mode" not in breakpoint
+    assert all(event["observation"]["instruction_completed"] is None for event in page["events"])
+
+
+@pytest.mark.parametrize("mutation", [
+    lambda event: event.update({"code-byte-count": 2}),
+    lambda event: event.update({"code-bytes-source": "none"}),
+    lambda event: event.update({"code-bits": 17}),
+    lambda event: event.update({"x86-context-valid": False}),
+])
+def test_v2_malformed_context_is_rejected_without_inference(mutation):
+    session = Session()
+    session.vm.qmp.trace_version = 2
+    started = session.call("trace.start", {"detail": "normal", "instruction_count": 1})
+    session.vm.qmp.dispatch(1)
+    mutation(session.vm.qmp.trace["events"][0])
+    with pytest.raises(DebuggerError):
+        session.call("trace.read", {"cursor": started["cursor"], "limit": 1})
 
 
 def test_stop_disables_capture_and_drains_unread_tail_across_native_pages():

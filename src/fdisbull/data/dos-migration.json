@@ -813,7 +813,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.call('trace.read') uses the bounded native QMP before-execution ring with epoch-bound opaque cursors; raw dispatch observations retain unknown instruction completion and are not source-normalized",
+      "native_route": "QemuDOSProcessSession.call('trace.read') pages v2 native before-execution events through epoch-bound opaque cursors; TCG events may carry translation-bound bytes and valid x86 code context, while breakpoint-pre-dispatch bytes are explicitly unavailable; source identity, completion, and retirement remain unknown",
       "qualification": "unqualified"
     },
     {
@@ -821,7 +821,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.call('trace.start') arms the native QMP before-execution ring for one owned DOS process epoch; MachineContext.trace() remains the separate stopped-step artifact API",
+      "native_route": "QemuDOSProcessSession.call('trace.start') arms the bounded v2 native QMP ring for one owned DOS process epoch; MachineContext.trace() remains the separate stopped-step artifact API",
       "qualification": "unqualified"
     },
     {
@@ -829,7 +829,7 @@
       "slice": "trace-events",
       "legacy_profile": "stable_and_layers",
       "current_status": "partial",
-      "native_route": "QemuDOSProcessSession.call('trace.stop') stops and drains the native QMP ring tail under the same producer epoch; qualification and full DOSBox parity remain open",
+      "native_route": "QemuDOSProcessSession.call('trace.stop') stops and drains the v2 native QMP ring under the same producer epoch; qualification and full DOSBox parity remain open",
       "qualification": "unqualified"
     },
     {

@@ -1,0 +1,92 @@
+{
+  "format": "fdisbull-qemu-instruction-context-evidence-1",
+  "date": "2026-11-24",
+  "status": "bounded-local-v2-witness-passed; trace-parity-unqualified",
+  "candidate": {
+    "qemu_sha256": "6f969d1bbe8f8e4398412bcd3ee24e88984f2e6be869267450b0bb5523bcc641",
+    "native_patch_sha256": "3dc2ecb6c2cacd3ed1d179eb4a06552064f2510e81deeb9534f25dbf96829fd1",
+    "candidate_identity_verified_by": "root"
+  },
+  "paired_witness": {
+    "test": "tests/test_qemu_dos_before_fetch_trace_native.py::test_native_dosbox_qemu_smc_translation_bound_bytes_and_context",
+    "result": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "evidence_status": "reported-by-root"
+    },
+    "expected_offsets": [
+      "0x0100",
+      "0x0103",
+      "0x0104",
+      "0x0109",
+      "0x0103",
+      "0x0104",
+      "0x0109",
+      "0x010B"
+    ],
+    "qemu_tcg_translated_instruction_bytes": [
+      "b90200",
+      "40",
+      "c606030143",
+      "e2f8",
+      "43",
+      "c606030143",
+      "e2f8"
+    ],
+    "breakpoint_pre_dispatch": {
+      "offset": "0x010B",
+      "origin": "breakpoint-pre-dispatch",
+      "code_bytes_valid": false,
+      "unavailable_reason": "breakpoint-pre-dispatch-no-translation"
+    },
+    "dosbox_evidence": "PC order and stopped guest bytes only; no per-event DOSBox byte comparison"
+  },
+  "combined_local_selection": {
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0,
+    "elapsed_seconds": 22.27,
+    "junit_sha256": "b4446f88da27b95c8d4424e5cf15df36ed4dcb9fba7fccd383642c47413671ce",
+    "evidence_status": "reported-by-root"
+  },
+  "serial_tcg_admission": {
+    "test": "tests/test_qemu_trace_serial_admission_native.py::test_trace_start_rejects_parallel_capable_vm_without_killing_qemu",
+    "result": "passed on final candidate in combined selection",
+    "machine": "one active vCPU, max_cpus=2, paused/prelaunch, no guest media",
+    "expected_error": "instruction trace requires serial TCG (CF_PARALLEL disabled)",
+    "qemu_remained_alive": true,
+    "scope": "parallel TCG trace capture is refused before changing capture state"
+  },
+  "v1_compatibility": {
+    "binary_sha256": "105a9ecbd5f2d52a63da4f68608df6fbba2cf79b9a07f1d2a7c2c1d868059c58",
+    "paired_original_loop_cases_passed": 2,
+    "junit_sha256": "57399728dc8fcbc98f1604dfa091c55d19fb94ee28480bc11bb07e8bf194882b",
+    "scope": "host adapter preserves v1 events without inventing unavailable v2 context"
+  },
+  "v2_byte_capture_correction": {
+    "earlier_sampling_point": "translator_st before final TB size",
+    "observed_limit": "incomplete multi-byte translated instruction bytes",
+    "corrected_sampling_point": "plugin_gen_tb_end after final TB size",
+    "qualification_applies_to": "candidate QEMU SHA above"
+  },
+  "schema_scope": {
+    "trace_version": 2,
+    "tcg_bytes_source": "translated-tb",
+    "breakpoint_bytes_source": "none",
+    "x86_code_context": "validated 16-bit width, CS selector and CS base for this authored real-mode COM witness",
+    "canonical_source_identity": "not supplied",
+    "cpu_mode_claim": "not generalized beyond the observed code context",
+    "instruction_completion": "unknown",
+    "retirement": "unknown"
+  },
+  "limits": [
+    "This is one authored self-modifying COM comparison, not broad DOSBox/QEMU parity.",
+    "Translation-bound bytes are not per-event guest-memory rereads.",
+    "The DOSBox comparison does not assert per-event byte records.",
+    "Parallel TCG trace capture is refused to preserve synchronous translation-block flush and descriptor lifetime.",
+    "Fault, partial REP, IRQ/timer, overlay, source-departure, checkpoint and live epoch-invalidation cases remain open.",
+    "The broad full suite was not rerun on this v2 candidate.",
+    "Hosted CI was not run; DOSBox-X remains the default backend; no parity qualification was changed."
+  ]
+}

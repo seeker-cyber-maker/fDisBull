@@ -23,11 +23,16 @@ from test_qemu_dos_process_native import (
 )
 
 
-# MOV CX,3; INC AX; LOOP back to INC; JMP $.
-# The breakpoint is at 0106h. DOSBox-X records the before-fetch callback at
-# that breakpoint before reporting the stop, giving eight records total.
+# Original LOOP fixture stays unchanged for breakpoint and exact-count cases.
 PROGRAM = bytes.fromhex("b9030040e2fdebfe")
 EXPECTED_OFFSETS = [0x100, 0x103, 0x104, 0x103, 0x104, 0x103, 0x104, 0x106]
+# Separate self-modifying COM: MOV CX,2; INC AX; rewrite INC AX as INC BX;
+# LOOP twice; JMP $. The second visit to 0103h must bind translated byte 43h.
+SMC_PROGRAM = bytes.fromhex("b9020040c606030143e2f8ebfe")
+SMC_PATCHED_PROGRAM = bytes.fromhex("b9020043c606030143e2f8ebfe")
+SMC_EXPECTED_OFFSETS = [0x100, 0x103, 0x104, 0x109, 0x103, 0x104, 0x109, 0x10b]
+SMC_TRANSLATED_BYTES = ["b90200", "40", "c606030143", "e2f8",
+                        "43", "c606030143", "e2f8", None]
 TRACE_BUDGET = 10
 TRACE_COUNT = len(EXPECTED_OFFSETS)
 PAGE_SIZE = 2
@@ -99,10 +104,46 @@ def _page_all(call, *, limit=PAGE_SIZE):
         cursor = next_cursor
 
 
-def _qemu_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
-    directory = tmp_path / f"qemu-{budget}"
+def _assert_qemu_fetch_context(result, expected_bytes):
+    assert len(result["events"]) == len(expected_bytes)
+    cs_base = result["runtime_base"] - 0x100
+    cs_selector = cs_base // 16
+    for event, expected in zip(result["events"], expected_bytes):
+        native = event["native"]
+        context = event["fetch_context"]
+        translated = context["translated_bytes"]
+        x86 = context["x86"]
+        assert native["x86-context-valid"] is True, event
+        assert native["code-bits"] == 16, event
+        assert native["cs-selector"] == cs_selector, event
+        assert native["cs-base"] == cs_base, event
+        assert x86 == dict(valid=True, code_bits=16, cs_selector=cs_selector,
+                           cs_base=cs_base), event
+        if expected is None:
+            reason = "breakpoint-pre-dispatch-no-translation"
+            assert native["code-bytes-valid"] is False, event
+            assert native["code-byte-count"] == 0, event
+            assert native["code-bytes"] == "", event
+            assert native["code-bytes-source"] == "none", event
+            assert native["code-bytes-unavailable-reason"] == reason, event
+            assert translated == dict(valid=False, hex=None, count=0,
+                                      source="none", unavailable_reason=reason), event
+        else:
+            count = len(bytes.fromhex(expected))
+            assert native["code-bytes-valid"] is True, event
+            assert native["code-byte-count"] == count, event
+            assert native["code-bytes"] == expected, event
+            assert native["code-bytes-source"] == "translated-tb", event
+            assert native["code-bytes-unavailable-reason"] == "", event
+            assert translated == dict(valid=True, hex=expected, count=count,
+                                      source="translated-tb", unavailable_reason=None), event
+
+
+def _qemu_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106,
+                program=PROGRAM, breakpoint_ip=0x106, expected_guest_code=None):
+    directory = tmp_path / f"qemu-{budget}-{breakpoint_ip}"
     directory.mkdir()
-    binary, project = create_project(directory, PROGRAM)
+    binary, project = create_project(directory, program)
     with project:
         with project.debugger(str(runtime["qemu"]), directory,
                               **launch_options({"executable": str(runtime["qemu"]),
@@ -114,7 +155,7 @@ def _qemu_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
             info = process_record(debug)
             entry = _num(info["entry"]["ip"])
             assert entry == 0x100, info["entry"]
-            breakpoint = debug.breakpoint(com_address(info, 0x106))
+            breakpoint = debug.breakpoint(com_address(info, breakpoint_ip))
             started = debug.call("trace.start", {"detail": "normal",
                                                   "instruction_count": budget})
             assert started.get("active") is True, started
@@ -122,28 +163,31 @@ def _qemu_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
             assert run["outcome"] != "timeout", run
             registers = debug.registers()
             assert _num(registers["instruction_pointer"]) == stop_ip, (run, registers)
-            if stop_ip == 0x106:
+            if stop_ip == breakpoint_ip:
                 assert run["outcome"] == "breakpoint", run
                 assert breakpoint["breakpoint_id"] in run["session"]["stop_reason"]["breakpoint_ids"]
 
             pages = []
             events, pages = _page_all(debug.call)
             stopped = debug.call("trace.stop")
-            code = bytes.fromhex(debug.memory(com_address(info, 0x100), length=len(PROGRAM),
+            code = bytes.fromhex(debug.memory(com_address(info, 0x100), length=len(program),
                                               space="physical")["hex"])
-            assert code == PROGRAM
+            expected_code = program if expected_guest_code is None else expected_guest_code
+            assert code == expected_code
             return dict(events=events, pages=pages, stopped=stopped,
                         producer_sha256=hashlib.sha256(runtime["qemu"].read_bytes()).hexdigest(),
                         runtime_base=com_address(info, 0x100), code=code,
+                        trace_version=started.get("trace_version"),
                         stop_ip=_num(registers["instruction_pointer"]), budget=budget,
                         source_sha256=hashlib.sha256(binary.read_bytes()).hexdigest())
 
 
-def _dosbox_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
-    game = tmp_path / f"dosbox-{budget}"
+def _dosbox_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106,
+                  program=PROGRAM, breakpoint_ip=0x106, expected_guest_code=None):
+    game = tmp_path / f"dosbox-{budget}-{breakpoint_ip}"
     game.mkdir()
     binary = game / "TRACE.COM"
-    binary.write_bytes(PROGRAM)
+    binary.write_bytes(program)
     with closing(DOSBoxRPC(runtime["dosbox"], game)) as rpc:
         start = rpc.call("session.start", {
             "target": {"command": binary.name, "arguments": []},
@@ -163,7 +207,7 @@ def _dosbox_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
         breakpoint = call("breakpoints.create", {
             "kind": "execution", "once": False,
             "address": {"space": "segmented", "segment": f"0x{cs:04x}",
-                        "offset": "0x00000106"},
+                        "offset": f"0x{breakpoint_ip:08x}"},
         })
         started = call("trace.start", {"detail": "normal",
                                        "instruction_count": budget})
@@ -177,7 +221,7 @@ def _dosbox_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
                                             "timeout_ms": min(250, remaining)})
             if not stop.get("running"):
                 break
-        if stop_ip == 0x106:
+        if stop_ip == breakpoint_ip:
             assert stop["stop_reason"]["breakpoint_id"] == breakpoint["breakpoint_id"], stop
         stopped_registers = call("state.get_registers")
         stopped_ip_value = stopped_registers.get("instruction_pointer")
@@ -191,12 +235,13 @@ def _dosbox_trace(runtime, tmp_path, *, budget=TRACE_BUDGET, stop_ip=0x106):
         stopped = call("trace.stop")
         memory = call("memory.read", {
             "address": {"space": "physical", "offset": f"0x{cs * 16 + 0x100:08x}"},
-            "length": len(PROGRAM),
+            "length": len(program),
         })
         import base64
         import hashlib as _hashlib
         code = base64.b64decode(memory["data_base64"], validate=True)
-        assert code == PROGRAM
+        expected_code = program if expected_guest_code is None else expected_guest_code
+        assert code == expected_code
         return dict(events=events, pages=pages, stopped=stopped,
                     producer_sha256=_hashlib.sha256(runtime["dosbox"].read_bytes()).hexdigest(),
                     runtime_base=cs * 16 + 0x100, code=code,
@@ -208,10 +253,8 @@ def test_native_dosbox_qemu_breakpoint_trace_pagination_parity(paired_runtime, t
     qemu = _qemu_trace(paired_runtime, tmp_path)
     dosbox = _dosbox_trace(paired_runtime, tmp_path)
 
-    # Both producers loaded the same authored COM bytes and captured the same
-    # eight instruction fetches in order. QEMU currently publishes native PC
-    # records without instruction bytes, so the bytes are independently
-    # confirmed from each stopped guest's unmodified COM image.
+    # This preserves the original loop fixture and its eight-PC breakpoint
+    # witness. DOSBox contributes only PC order here.
     qemu_offsets = [_event_offset(event, runtime_base=qemu["runtime_base"])
                     for event in qemu["events"]]
     dosbox_offsets = [_event_offset(event) for event in dosbox["events"]]
@@ -228,22 +271,8 @@ def test_native_dosbox_qemu_breakpoint_trace_pagination_parity(paired_runtime, t
     assert all(event.get("observation", {}).get("instruction_completed") is None
                and event.get("observation", {}).get("registers_stage") == "before-instruction"
                for event in qemu["events"])
-    expected_bytes = [PROGRAM[index:index + (3 if index == 0 else 2 if index in (4, 6) else 1)].hex()
-                      for index in (offset - 0x100 for offset in EXPECTED_OFFSETS)]
     assert qemu["code"] == dosbox["code"] == PROGRAM
     assert qemu["source_sha256"] == dosbox["source_sha256"] == hashlib.sha256(PROGRAM).hexdigest()
-    fetched_bytes = [PROGRAM[index:index + length].hex() for index, length in
-                     ((0, 3), (3, 1), (4, 2), (3, 1), (4, 2), (3, 1), (4, 2), (6, 2))]
-    assert fetched_bytes == expected_bytes
-    # If DOSBox-X supplies captured instruction bytes, bind those records too.
-    for event, raw in zip(qemu["events"], expected_bytes):
-        captured = event.get("execution_bytes", event.get("bytes"))
-        if captured is not None:
-            assert captured.startswith(raw), event
-    for event, raw in zip(dosbox["events"], expected_bytes):
-        captured = event.get("execution_bytes", event.get("bytes"))
-        if captured is not None:
-            assert captured.startswith(raw), event
 
     assert len(qemu["pages"]) == len(dosbox["pages"]) == 4
     assert [len(page["events"]) for page in qemu["pages"]] == [2, 2, 2, 2]
@@ -277,3 +306,27 @@ def test_native_dosbox_qemu_exact_count_stops_before_third_instruction(paired_ru
         assert result["stopped"].get("dropped_count", 0) == 0
         assert result["stop_ip"] == 0x104 and result["budget"] == 3
         assert result["source_sha256"] == hashlib.sha256(PROGRAM).hexdigest()
+
+
+def test_native_dosbox_qemu_smc_translation_bound_bytes_and_context(paired_runtime, tmp_path):
+    qemu = _qemu_trace(paired_runtime, tmp_path, program=SMC_PROGRAM,
+                       breakpoint_ip=0x10b, stop_ip=0x10b,
+                       expected_guest_code=SMC_PATCHED_PROGRAM)
+    dosbox = _dosbox_trace(paired_runtime, tmp_path, program=SMC_PROGRAM,
+                           breakpoint_ip=0x10b, stop_ip=0x10b,
+                           expected_guest_code=SMC_PATCHED_PROGRAM)
+    qemu_offsets = [_event_offset(event, runtime_base=qemu["runtime_base"])
+                    for event in qemu["events"]]
+    dosbox_offsets = [_event_offset(event) for event in dosbox["events"]]
+    assert qemu_offsets == dosbox_offsets == SMC_EXPECTED_OFFSETS
+    assert [event.get("native", {}).get("origin") for event in qemu["events"]] == [
+        "tcg-dispatch",
+    ] * 7 + ["breakpoint-pre-dispatch"]
+    assert qemu["trace_version"] == 2
+    _assert_qemu_fetch_context(qemu, SMC_TRANSLATED_BYTES)
+    assert qemu["code"] == dosbox["code"] == SMC_PATCHED_PROGRAM
+    assert qemu["source_sha256"] == dosbox["source_sha256"] == hashlib.sha256(SMC_PROGRAM).hexdigest()
+    assert qemu["stopped"].get("event_count") == len(SMC_EXPECTED_OFFSETS)
+    assert qemu["stopped"].get("trace_version") == 2
+    assert all(page.get("trace_version") == 2 for page in qemu["pages"])
+    assert dosbox["stopped"].get("event_count") == len(SMC_EXPECTED_OFFSETS)
