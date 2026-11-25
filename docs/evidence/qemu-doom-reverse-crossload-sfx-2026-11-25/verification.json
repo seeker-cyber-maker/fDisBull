@@ -1,0 +1,138 @@
+{
+  "format": "fdisbull-doom-reverse-crossload-sfx-verification-1",
+  "date": "2026-11-25",
+  "test": "tests/test_doom_reverse_crossload_pistol_sfx_native.py::test_original_doom_qemu_save_load_then_dosbox_pistol_sfx",
+  "result": {
+    "status": "passed",
+    "passed": 1,
+    "failed": 0,
+    "elapsed_seconds": 58.12,
+    "execution_attribution": "Native run summary reported by the run owner; accepted receipt and retained artifacts independently inspected and hash-verified for this evidence record.",
+    "ci": "not_run",
+    "vm_started_for_evidence_authoring": false
+  },
+  "scope": {
+    "route": "QEMU-created pinned original Doom 1.9 E1M1 save, admitted as host bytes while the DOSBox-X guest was stopped after a pre-load shot, then loaded by DOSBox-X",
+    "save_admission": "Exact 24,702-byte save hash was verified after staging. This records stopped-guest host file admission, not a live cross-engine transfer protocol.",
+    "source_pins": {
+      "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+      "AUD512.LMP": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+      "DEFAULT.CFG": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d"
+    },
+    "runtimes": {
+      "qemu_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+      "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+      "qemu_dos_boot_image_sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc"
+    },
+    "preload_landmark": {
+      "source_bound": true,
+      "preincrement_tics": [64, 84, 114],
+      "runtime_pc": 2011424,
+      "runtime_counter": 2282324,
+      "instruction_bytes": "ff0554d32200",
+      "ammo_original": 50,
+      "ammo_no_shot_control": 50,
+      "ammo_before_save_load": 49,
+      "ammo_after_save_load": 50,
+      "keyboard_after_shot": "no owned keys or pending events observed"
+    },
+    "postload_shot": {
+      "input": "one queued Ctrl press/release, followed by the bounded 1,200 ms capture window",
+      "ammo_before": 50,
+      "ammo_after": 49,
+      "ammo_decoder_wad_sha256": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f"
+    },
+    "save": {
+      "producer": "QEMU DOS",
+      "consumer": "DOSBox-X",
+      "bytes": 24702,
+      "sha256": "54f72060c0dd89b837d45b561a58028dde72b3679a9061111f19b836b34407f7",
+      "qemu_owner_cleanup": {
+        "status": "reaped_only",
+        "returncodes": [0]
+      }
+    },
+    "audio": {
+      "reference": {
+        "wad_lump": "DSPISTOL",
+        "sample_sha256_after_guard_removal": "200187590ded8999c5b9c405ce3772367a38cec97da9f165021a4c1c2d116114",
+        "sample_rate_hz": 11025,
+        "guard_samples_removed_per_end": 16
+      },
+      "control": {
+        "correlation": 0.15374692882009744,
+        "threshold": 0.55,
+        "capture_frame_window": [1245184, 1261568]
+      },
+      "shot": {
+        "correlation": 0.9663761117363717,
+        "threshold": 0.55,
+        "pitch_ratio": 1.0,
+        "onset_frame_within_search_slice": 28230,
+        "template_frames": 24507,
+        "search_frame_window": [1249568, 1327104],
+        "shot_frontier_window": [1261568, 1327104]
+      },
+      "capture": {
+        "sha256": "0bd894c9745fc58c82f1ee213d32f3a28f386da4401c405b7a5e24d232ce3cfa",
+        "bytes": 8192044,
+        "rate_hz": 48000,
+        "channels": 2,
+        "completeness": "unknown",
+        "overflow_counter": null,
+        "dropped_frame_counter": null
+      }
+    },
+    "dosbox_x_stop_and_cleanup": {
+      "session_stop_reply": {
+        "operation_id": "op-122"
+      },
+      "terminal_wait_state": "failed",
+      "terminal_wait_stop_reason": "fault",
+      "owner_cleanup": {
+        "status": "reaped",
+        "returncode": 0
+      },
+      "normal_doom_guest_exit_observed": false,
+      "audio_analysis_source": "retained post-stop payload bytes"
+    },
+    "limitations": [
+      "One QEMU-created save was host-staged into DOSBox-X while its guest was stopped; no live transfer route or general save compatibility is established.",
+      "The pre-load control shot and post-load shot establish only the recorded WAD-derived ammo sequence for this pinned run.",
+      "The DSPISTOL match is bounded to the retained capture windows; it does not establish sound-call instruction attribution, guest-time calibrated onset, PCM identity, mixer/music fidelity, or engine parity.",
+      "DOSBox-X session.stop terminal wait reported state=failed with stop_reason.kind=fault despite process-owner cleanup return code 0; no normal Doom guest exit is claimed.",
+      "DX-CAPTURE exposes no native overflow or dropped-frame counter; capture completeness is unknown.",
+      "No campaign, inventory, full-game, release, CI, or installation qualification is added."
+    ]
+  },
+  "attempt_history": {
+    "b1": "Retained outside Git; its progress receipt remained at staged and contains no accepted destination result.",
+    "b2": "Retained outside Git; preload Ctrl was queued but ammo remained 50 at the tic-114 observation.",
+    "b3": "Retained outside Git; preload Ctrl was queued but ammo remained 50 at the tic-114 observation.",
+    "b4": "The run owner identified a setup environment typo; this is not a native result. No accepted b4 artifact was present in the inspected directory.",
+    "b4c": "Accepted bounded native result recorded above; earlier attempts were not overwritten."
+  },
+  "private_evidence": {
+    "retained_outside_git": true,
+    "artifact_root": "fDisBull-private/qemu-doom-reverse-crossload-sfx-20261125",
+    "copy_manifest_sha256": "6fd47e774d683613a4a165a321882285b1e7c0cb430d6f7cd276c7c716fc7119",
+    "files": [
+      {"file": "receipts/reverse-crossload-pistol-sfx-progress.json", "bytes": 14181, "sha256": "15698983f8e6bf2b693d34556f301bc9e839f158653c66f3e3404e0a5506515b"},
+      {"file": "receipts/dosbox-load-and-shot/reverse-crossload-progress.json", "bytes": 12955, "sha256": "34ab0a5d6fbcc682e0d379171aef1f3451a11d4b72d3ad14684fad56a0d12e87"},
+      {"file": "save/DOOMSAV0.DSG", "bytes": 24702, "sha256": "54f72060c0dd89b837d45b561a58028dde72b3679a9061111f19b836b34407f7"},
+      {"file": "captures/dosbox-crossloaded-shot.wav", "bytes": 8192044, "sha256": "0bd894c9745fc58c82f1ee213d32f3a28f386da4401c405b7a5e24d232ce3cfa"},
+      {"file": "captures/no-shot-start-frontier.wav", "bytes": 4980780, "sha256": "4d65de42598b988ab822fdd592b10d5236716dc5aad0d9d9a9f3ba5c1acd18a4"},
+      {"file": "captures/no-shot-end-frontier.wav", "bytes": 5046316, "sha256": "2be091c206106fac6007b90bfeba3cc72b8c6d8c9411e2be01c9545fe5370571"},
+      {"file": "captures/shot-start-frontier.wav", "bytes": 5046316, "sha256": "2be091c206106fac6007b90bfeba3cc72b8c6d8c9411e2be01c9545fe5370571"},
+      {"file": "captures/shot-end-frontier.wav", "bytes": 5308460, "sha256": "c2e90c0e4db93342121937a6c4510641f90f8c09fb875412267551c0b0f70094"},
+      {"file": "captures/load-menu.png", "bytes": 31950, "sha256": "2c3cdd611548fcad6d2404d01e564e3001c11ae3f4ae4180ea437f3bb005bdf4"},
+      {"file": "captures/preload-tic114-after-shot.png", "bytes": 35866, "sha256": "e09d5d761181874fcb8393b05f206aef9de9e613bb58d821af926db0338ed4fd"},
+      {"file": "captures/qemu-save-start.png", "bytes": 41109, "sha256": "41faaafed4015b09b859c94c13734ffac9d63080ebc007c5e67588908700d0c2"},
+      {"file": "captures/qemu-save-start-statusbar.png", "bytes": 819, "sha256": "4edd77ae1f19f952e7036d59c3798a16934a527a0138ea91dae4437eaac7f5e4"},
+      {"file": "captures/qemu-save-after.png", "bytes": 41629, "sha256": "bc0823b5123a19a7819df7c0fc8aab68cec31a8f170ad7cbdc053daa9ac7bb65"},
+      {"file": "captures/qemu-save-after-statusbar.png", "bytes": 819, "sha256": "4edd77ae1f19f952e7036d59c3798a16934a527a0138ea91dae4437eaac7f5e4"}
+    ]
+  },
+  "non_inclusion": "No commercial game media, staged game directory, project database, emulator state, or raw private asset is included in Git."
+}

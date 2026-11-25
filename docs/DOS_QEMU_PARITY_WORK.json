@@ -355,6 +355,16 @@
       "inputs": ["FDISBULL_DOOM_LE_SOURCE"],
       "require": {"FDISBULL_REQUIRE_DOOM_DOSBOX_QUIT_CAPTURE": "1"},
       "note": "Opt-in pinned original Doom E1M1 DOSBox-X pistol endpoint, F10/Y quit, normal DOS guest exit, and finalized DX-CAPTURE RIFF/data extents. DOSBox-X binary must be supplied by FDISBULL_DOSBOX."
+    },
+    "private-doom-reverse-crossload-sfx": {
+      "extends": ["dosbox"],
+      "inputs": [
+        "FDISBULL_QEMU_DOS", "FDISBULL_QEMU_DOS_FIRMWARE",
+        "FDISBULL_QEMU_DOS_BOOT_IMAGE", "FDISBULL_QEMU_DOS_MCOPY",
+        "FDISBULL_QEMU_IMG", "FDISBULL_DOOM_LE_SOURCE"
+      ],
+      "require": {"FDISBULL_REQUIRE_DOOM_REVERSE_CROSSLOAD_SFX": "1"},
+      "note": "Opt-in QEMU-created original Doom E1M1 save admitted to a stopped DOSBox-X guest after a baseline shot, then loaded and followed by one sound-enabled Ctrl shot. Audio completeness remains unknown."
     }
   },
   "test_sets": {
@@ -1386,6 +1396,12 @@
       "environment_profile": "private-doom-dosbox-quit-capture",
       "execution": "Fourth guarded native attempt passed on 2026-11-25 UTC after a pinned E1M1 tic64/84/114 pistol endpoint: ammo 50 to 49, WAD DSPISTOL correlation 0.9560, F10 frame delta 2890, public DOS_Terminate guest_exit code 0/nonresident, finalized 4,746,668-byte RIFF/WAVE and owner reaped code 0. Earlier attempts sampled the HUD too early, timed out after a tic98 source stop, or observed only one changed pixel in a shorter F10 window; all failed receipts remain retained.",
       "scope": "One hash-pinned DOSBox-X Doom E1M1 quit and finalized WAV route. The file has exact RIFF/data extents; completeness of every emulator-side audio sample and cross-engine PCM/timing equivalence are not claimed. No broad game/campaign qualification."
+    },
+    "doom-reverse-crossload-sfx-native": {
+      "argv": ["python", "-m", "pytest", "-q", "tests/test_doom_reverse_crossload_pistol_sfx_native.py::test_original_doom_qemu_save_load_then_dosbox_pistol_sfx"],
+      "environment_profile": "private-doom-reverse-crossload-sfx",
+      "execution": "One guarded native case passed on 2026-11-25 UTC (58.12s). QEMU produced a 24,702-byte E1M1 save. DOSBox-X consumed a baseline round at source-bound tic84/114, admitted the exact QEMU save while stopped, restored ammo 49 to 50, then fired another round to 49. Its post-load no-shot/shot WAD DSPISTOL correlations were 0.1537/0.9664; both owners reaped code 0. The DOSBox-X session.stop wait itself reported failed/fault, and its capture completeness remains unknown. Three earlier native attempts failed before the load when a pre-staged save or long startup settle left the baseline shot unconsumed; a separate setup path typo launched no guest.",
+      "scope": "One hash-pinned QEMU-save to stopped DOSBox-X admission and load plus bounded sound-enabled pistol response. DOSBox-X stopped WAV completeness, general startup-save behavior, other saves/titles, normal guest exit, cross-engine PCM/timing and campaign qualification remain unproved."
     }
   },
   "work_groups": [

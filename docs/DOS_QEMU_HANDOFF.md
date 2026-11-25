@@ -8904,3 +8904,27 @@ earlier paired pistol test's `session.stop` fault and placeholder WAV remain as
 separate forced-stop limitations. Neither independent normal-exit gate proves
 cross-engine quit timing, complete audio equivalence or a campaign. No 143
 surfaces or seven campaigns are promoted; DOSBox-X stays the default. No CI ran.
+
+## QEMU save admitted into DOSBox-X with sound (2026-11-25 UTC)
+
+The [reverse combined E1M1 gate](evidence/qemu-doom-reverse-crossload-sfx-2026-11-25/README.md)
+produced a 24,702-byte original-Doom save in QEMU and read it back by SHA-256.
+In DOSBox-X, the same pinned source first consumed one round at the
+source-bound tic 84–114 pistol endpoint (ammo 50→49). While that guest was
+stopped, the QEMU save was placed in its mounted directory and its SHA-256 was
+read back. Doom's load menu then restored ammo 49→50; another physical Ctrl
+shot reduced it to 49 and produced a bounded WAD `DSPISTOL` correlation of
+0.9664. The post-load no-shot control scored 0.1537, below the 0.55 threshold.
+The QEMU save owner and DOSBox-X owner were reaped with code 0. DOSBox-X's
+`session.stop` wait reported `state=failed`, `stop_reason.kind=fault`; its
+48 kHz stereo post-stop capture remains of unknown completeness. This test
+does not claim a normal guest exit or byte-identical audio.
+
+Three earlier native attempts did not reach the foreign-save load because the
+pre-load Ctrl press left ammo at 50; starting from the accepted source-bound
+tic landmark alone did not resolve that. Admitting the QEMU save only after
+the stopped guest's baseline shot yielded the accepted route. That is a
+bounded host admission procedure and should not be generalized to arbitrary
+save-file presence at startup. Reverse-direction combined save/audio is now
+observed once; timing, mixer/music fidelity, other titles and full parity
+remain open. DOSBox-X stays default, with no CI or campaign promotion.
