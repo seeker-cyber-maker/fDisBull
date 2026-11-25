@@ -15,10 +15,26 @@ def _admit(session):
         raise ValueError('Passive QEMU scene checks require the explicit native virtual clock')
 
 
-def preflight(session, scene, *, object=None, compact=False, allow_references=False):
+def preflight(session, scene, *, object=None, compact=False, allow_references=False,
+              allow_frame_wait=False):
     validate_parameters(scene, object=object, compact=compact, allow_references=allow_references)
     _admit(session)
     if not (allow_references and scene.startswith('$')):
+        if allow_frame_wait:
+            info = session.project.debug_scene_info(scene, version=session.version['id'])
+            if info['definition'].get('format') == 'fdisbull-scene-1':
+                from .qemu_observation_authority import ObservationAuthority
+                if (not session.capabilities.get('frame_contract')
+                        or not session.capabilities.get('frame_probe')
+                        or not isinstance(getattr(session.vm, 'observation_authority', None), ObservationAuthority)):
+                    raise ValueError('QEMU frame scene waits require the owned retained-frame observation contract')
+                unresolved_object = (allow_references and isinstance(object, str)
+                                     and object.startswith('$'))
+                if object is not None and not unresolved_object:
+                    found = [item for item in info['definition']['objects']
+                             if object in (item['id'], item['name'], *item['aliases'])]
+                    if len(found) != 1: raise ValueError('Unknown scene object')
+                return
         target = None if allow_references and isinstance(object, str) and object.startswith('$') else object
         info, _ = select(session.project, scene, session.version['id'], target)
         companions(session.project, info, session.version['id'])

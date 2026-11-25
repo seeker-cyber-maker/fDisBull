@@ -1,8 +1,8 @@
-"""Bounded scene-2 RAM waits on one owned QEMU virtual clock.
+"""Bounded QEMU waits for frame-backed or runtime-memory scene predicates.
 
-The scene profile remains passive RAM predicates. This operation may execute
-the guest to observe them later; it supplies no frame, geometry or action
-authority, and never continues beyond the first nonordinary native stop.
+The wait supplies no geometry or action authority and never continues beyond
+the first nonordinary native stop. Frame predicates use SceneHandle's shared
+frame evaluator and the retained QEMU source-raster owner contract.
 """
 from contextlib import contextmanager
 from copy import deepcopy
@@ -38,13 +38,27 @@ def preflight(session, scene, *, object=None, guest_ms=5000, timeout_ms=5000,
     from .qemu_scenes import preflight as scene_preflight
     validate_parameters(scene, object=object, guest_ms=guest_ms, timeout_ms=timeout_ms,
                         slice_ms=slice_ms, compact=compact, allow_references=allow_references)
-    scene_preflight(session, scene, object=object, compact=compact, allow_references=allow_references)
+    scene_preflight(session, scene, object=object, compact=compact, allow_references=allow_references,
+                    allow_frame_wait=True)
     reference = lambda value: allow_references and isinstance(value, str) and value.startswith('$')
     if not reference(scene):
-        info, _ = select(session.project, scene, session.version['id'],
-                         None if reference(object) else object)
-        if info['definition']['format'] != 'fdisbull-scene-2':
-            raise ValueError('QEMU scene waits require the explicit passive scene-2 profile')
+        target = None if reference(object) else object
+        info = session.project.debug_scene_info(scene, version=session.version['id'])
+        if info['definition']['format'] == 'fdisbull-scene-1':
+            if target is not None and not any(target in (item['id'], item['name'], *item['aliases'])
+                                              for item in info['definition']['objects']):
+                raise ValueError('Unknown scene object')
+        else:
+            info, _ = select(session.project, scene, session.version['id'], target)
+        profile = info['definition']['format']
+        if profile == 'fdisbull-scene-1':
+            from .qemu_observation_authority import ObservationAuthority
+            if (not session.capabilities.get('frame_contract')
+                    or not session.capabilities.get('frame_probe')
+                    or not isinstance(getattr(session.vm, 'observation_authority', None), ObservationAuthority)):
+                raise ValueError('QEMU frame scene waits require the owned retained-frame observation contract')
+        elif profile != 'fdisbull-scene-2':
+            raise ValueError('QEMU scene waits require an explicit scene-1 frame or scene-2 runtime-memory profile')
     # Unknown reference values defer only their own constraints. One millisecond
     # is the smallest possible poll tail; actual resolved admission is repeated.
     validate_qemu_wait_session(session, guest_ms=None if reference(guest_ms) else guest_ms,
@@ -131,6 +145,156 @@ def _publication_identity(session, seed, stop):
     return tuple(normalized) == seed
 
 
+def _wait_frame_scene(session, scene, object, guest_ms, timeout_ms, slice_ms,
+                      compact, started, deadline, owner, seed, project):
+    """Wait on scene-1 using the public shared frame predicate evaluator."""
+    from .qemu_scenes import _identity
+    from .scenes import SceneHandle
+    handle = SceneHandle(session, scene)
+    info = handle.info
+    pins = _pins(info, companions(project, info, session.version['id']))
+    journal = dict(format='fdisbull-scene-wait-1', clock_domain='QEMU_CLOCK_VIRTUAL',
+        requested_guest_ms=guest_ms, requested_virtual_ns=guest_ms * 1_000_000,
+        guest_elapsed_ns=0, guest_elapsed_ms=0, outcome='incomplete', polls=[], runs=[],
+        input_plan=None,
+        scope='Declared scene-1 predicates evaluated on owned retained source-raster observations.')
+    touched = False
+    result = None
+    def check_evidence():
+        journal['evidence_limit_bytes'] = MAX_EVIDENCE_BYTES
+        size = -1
+        while True:
+            current = len(encoded(dict(result or {}, wait=journal)))
+            if current == size: break
+            size = current
+            journal['evidence_bytes'] = size
+        if size > MAX_EVIDENCE_BYTES:
+            raise ValueError('Frame scene wait exceeds its 8 MiB persisted evidence budget')
+    try:
+        with _scope(session, owner, seed, deadline, (scene,), dict(object=object,
+                guest_ms=guest_ms, timeout_ms=timeout_ms, slice_ms=slice_ms, compact=compact)) as deadline:
+            def stable():
+                if time.monotonic() >= deadline:
+                    raise TimeoutError('Scene wait host deadline expired')
+                if session.vm is not owner or _identity(session) != seed:
+                    raise ValueError('Scene wait owner/source/restore epoch changed')
+                from .qemu_scenes import preflight as scene_preflight
+                scene_preflight(session, scene, object=object, compact=compact, allow_frame_wait=True)
+                fresh = project.debug_scene_info(scene, version=session.version['id'])
+                if _pins(fresh, companions(project, fresh, session.version['id'])) != pins:
+                    raise ValueError('Scene wait selected or companion manifest changed')
+
+            stable()
+            plan = _input_plan(session, guest_ms=guest_ms, slice_ms=slice_ms)
+            journal['input_plan'] = plan
+            if plan is not None:
+                observed = session.input_schedule_observe()
+                stable()
+                current = _input_plan(session, guest_ms=guest_ms, slice_ms=slice_ms,
+                                      now=observed['observed_ns'])
+                if current != plan:
+                    raise ValueError('Frame scene wait owned input arm changed before execution')
+                plan['observed_input'] = observed
+            clock = session.clock_observe()
+            stable()
+            clock_epoch, clock_ns = clock['epoch'], clock['virtual_ns']
+            journal['initial_clock'] = deepcopy(clock)
+            while True:
+                stable()
+                if (getattr(session, '_automatic_internal_pending', None) is not None
+                        or clock.get('virtual_clock', {}).get('native', {}).get('pending-stop')):
+                    result = dict(status='stopped', complete=False, scene_revision=handle.revision)
+                    journal['outcome'] = 'pending_stop'
+                    break
+                result = handle._observe(object)
+                stable()
+                journal['polls'].append(dict(frame_id=result.get('frame', {}).get('frame_id'),
+                                             status=result.get('status')))
+                check_evidence()
+                if result.get('status') == 'matched' and journal['guest_elapsed_ns'] <= journal['requested_virtual_ns']:
+                    journal['outcome'] = 'predicate'
+                    break
+                if result.get('status') in ('ambiguous', 'unavailable', 'blocked'):
+                    journal['outcome'] = result['status']
+                    break
+                if journal['guest_elapsed_ns'] >= journal['requested_virtual_ns']:
+                    result.update(status='timeout', complete=False)
+                    journal['outcome'] = 'guest_budget'
+                    break
+                if len(journal['polls']) >= MAX_POLLS:
+                    result.update(status='timeout', complete=False)
+                    journal['outcome'] = 'poll_budget'
+                    break
+                remaining = int((deadline - time.monotonic()) * 1000)
+                if remaining <= 0:
+                    raise TimeoutError('Scene wait host deadline expired')
+                delta = min(slice_ms * 1_000_000,
+                            journal['requested_virtual_ns'] - journal['guest_elapsed_ns'])
+                if plan is not None and not journal['runs']:
+                    delta = plan['effective_first_slice_ns']
+                    plan['first_slice_attempted'] = True
+                touched = True
+                run = session._clock_advance_with_hooks(delta, timeout_ms=remaining)
+                if plan is not None and not journal['runs']:
+                    plan['first_slice_result_observed'] = True
+                journal['runs'].append(run)
+                check_evidence()
+                budget = run.get('clock_budget', {})
+                ordinary = not run.get('hook_hits') and clock_timer_stop_is_ordinary(run)
+                measured = (budget.get('epoch') == clock_epoch and budget.get('start_ns') == clock_ns
+                    and type(budget.get('stopped_ns')) is int and budget['stopped_ns'] > clock_ns)
+                if measured:
+                    clock_ns = budget['stopped_ns']
+                    journal['guest_elapsed_ns'] = clock_ns - journal['initial_clock']['virtual_ns']
+                    journal['guest_elapsed_ms'] = journal['guest_elapsed_ns'] / 1_000_000
+                    journal['final_clock'] = dict(domain='QEMU_CLOCK_VIRTUAL', epoch=clock_epoch,
+                        virtual_ns=clock_ns, source='native-clock-budget', native=budget.get('native'))
+                if run.get('hook_hits') or not clock_timer_stop_is_ordinary(run):
+                    result.update(status='stopped', complete=False, stop=run)
+                    journal.update(outcome='hook' if run.get('hook_hits') else run.get('outcome', 'stopped'), stop=run)
+                    break
+                if not measured:
+                    raise ValueError('Frame scene wait lacks measured forward native clock progress')
+            journal['host_elapsed_ms'] = round((time.monotonic()-started)*1000, 3)
+            check_evidence()
+            result['wait'] = deepcopy(journal)
+            if session.vm is not owner or _identity(session) != seed:
+                raise ValueError('Scene wait owner/source/restore epoch changed before publication')
+            # Diagnostic storage captures another screenshot; after a native
+            # stop that would violate stop precedence and risk stale authority.
+            result = handle._store(result, diagnostic=False)
+            if compact:
+                result = compact_result(result)
+    except BaseException as error:
+        partial = dict(result or {}, status='unavailable', complete=False)
+        if 'observation' in partial:
+            partial['retained_observation'] = partial.pop('observation')
+        outcome = ('evidence_budget' if isinstance(error, ValueError)
+                   and '8 MiB persisted evidence budget' in str(error) else 'error')
+        partial['wait'] = dict(journal, outcome=outcome,
+                               error=dict(type=type(error).__name__, message=str(error)))
+        error.scene_wait_result = partial
+        if getattr(error, 'result', None) is None:
+            error.result = partial
+        poisoned = any(channel is not None and hasattr(channel, 'socket') and channel.socket is None
+                       for channel in (getattr(owner, 'qmp', None), getattr(owner, 'gdb', None)))
+        if touched or poisoned:
+            owner._fdisbull_control_quarantine = (getattr(owner, '_fdisbull_control_quarantine', None)
+                                                  or 'failed frame scene wait')
+            try:
+                if session.vm is owner: session.close()
+                else: owner.close()
+            except BaseException as cleanup_error:
+                error.scene_wait_cleanup_error = type(cleanup_error).__name__
+                try: owner.close()
+                except BaseException as owner_error:
+                    error.scene_wait_owner_cleanup_error = type(owner_error).__name__
+        raise
+    if result['status'] != 'matched' or not result['complete']:
+        raise SceneError(result)
+    return result
+
+
 def wait(session, scene, *, object=None, guest_ms=5000, timeout_ms=5000,
          slice_ms=100, compact=False):
     from .qemu_scenes import _identity, _observe
@@ -141,6 +305,10 @@ def wait(session, scene, *, object=None, guest_ms=5000, timeout_ms=5000,
     owner, seed, project = session.vm, _identity(session), session.project
     preflight(session, scene, object=object, guest_ms=guest_ms, timeout_ms=timeout_ms,
               slice_ms=slice_ms, compact=compact)
+    info = project.debug_scene_info(scene, version=session.version['id'])
+    if info['definition']['format'] == 'fdisbull-scene-1':
+        return _wait_frame_scene(session, scene, object, guest_ms, timeout_ms,
+                                 slice_ms, compact, started, deadline, owner, seed, project)
     info, selected = select(project, scene, session.version['id'], object)
     pinned = _pins(info, companions(project, info, session.version['id']))
     result = observation_result(session, info, selected)

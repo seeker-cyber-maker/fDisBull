@@ -1,0 +1,100 @@
+{
+  "format": "fdisbull-doom-paired-exit-audio-evidence-1",
+  "status": "one_bounded_native_run_passed",
+  "test": {
+    "path": "tests/test_doom_paired_exit_audio_native.py",
+    "node": "test_paired_doom_pistol_audio_then_normal_guest_exit",
+    "result": "passed",
+    "tests_passed": 1,
+    "elapsed_seconds": 66.49,
+    "guard": {
+      "kind": "qa",
+      "peak_bytes": 2147483648,
+      "state": "completed",
+      "job_exit_code": 0
+    }
+  },
+  "target": {
+    "game": "original Doom",
+    "level": "E1M1",
+    "source_pins_sha256": {
+      "DOOM.EXE": "4970b0d1fefa45836a5723777d2bb41e7932965782678aca6c2bbeec705b38d4",
+      "DOOM.WAD": "6fdf361847b46228cfebd9f3af09cd844282ac75f3edbb61ca4cb27103ce2e7f",
+      "AUD512.LMP": "47978643dcc56e0aaec7c234c12e5d9e0f8800b2aab643338d2899be2e9bd213",
+      "DEFAULT.CFG": "a5fb4d6791aa01ccb704f7cb6370cff9d69d0b898c30832295e91c53a33baa9d"
+    },
+    "runtime_sha256": {
+      "qemu": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+      "dosbox_x": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+      "qemu_boot_image": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc"
+    }
+  },
+  "landmarks": {
+    "unit": "source-qualified pre-increment Doom leveltime tics",
+    "start": 64,
+    "control_end": 84,
+    "shot_end": 114
+  },
+  "outcomes": {
+    "qemu": {
+      "ammo_before_shot": 50,
+      "ammo_after_shot": 49,
+      "shot_dspistol_correlation": 0.9095671839,
+      "control_correlation": 0.1879892382,
+      "capture": {
+        "format": "32 kHz signed 16-bit stereo PCM",
+        "shot_frames": 28987,
+        "dropped_frames": 0
+      },
+      "guest_exit": {
+        "type": "normal",
+        "code": 0,
+        "resident": false
+      },
+      "owner_cleanup": {
+        "return_codes": [0]
+      }
+    },
+    "dosbox_x": {
+      "ammo_before_shot": 50,
+      "ammo_after_shot": 49,
+      "shot_dspistol_correlation": 0.9728292783,
+      "capture": {
+        "format": "48 kHz signed 16-bit stereo PCM",
+        "riff_bytes": 4473260,
+        "data_bytes": 4473216,
+        "frames": 1118304,
+        "riff_finalized": true
+      },
+      "guest_exit": {
+        "kind": "guest_exit",
+        "source": "DOS_Terminate",
+        "requested_exit_code": 0,
+        "resident": false,
+        "stage": "after-process-cleanup"
+      },
+      "owner_cleanup": {
+        "reaped": true,
+        "returncode": 0
+      }
+    }
+  },
+  "claim_limits": [
+    "One bounded run per engine; not broad compatibility or repeatability evidence.",
+    "DSPISTOL correlation is evaluated independently within each engine capture.",
+    "No PCM waveform parity, audio onset parity, or cross-engine timing parity is claimed.",
+    "Input dispatch before guest exit does not establish guest consumption or exclusive causation.",
+    "Private media, FDB, emulator state, screenshots and WAV files are excluded from Git."
+  ],
+  "private_artifacts": {
+    "directory": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-doom-paired-exit-audio-20261125/",
+    "manifest": "manifest.json",
+    "files": {
+      "doom-paired-exit-audio.json": "eea0952872f90900faa633bd290fa14eb99b4c46490dc598f32f44b504a763ef",
+      "qemu/qemu-doom-pistol-guest-exit.json": "e34234307d6012aa31b74698ccb1ddac001175e72ec735efac37377ac0a7a4f9",
+      "dosbox/quit-capture-progress.json": "58b7940a6fdd043a52691e8d8d3a67a51c14bc33ebb3d645d5c74af2ad9dc85d",
+      "qemu/qemu-shot.wav": "42f792d0cfe10449466a668d146f6590cfd61a38579666ab1f1f2aee8c3800df",
+      "dosbox/doom-final.wav": "1624d9abc23c42c1f29176f1649bb596f610caa1892fa028137f7c21684a0a18"
+    }
+  }
+}

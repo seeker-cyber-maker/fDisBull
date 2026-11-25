@@ -8947,3 +8947,24 @@ remain open. DOSBox-X stays default, with no CI or campaign promotion.
 The [sanitized 300/900 ms timing record](evidence/qemu-doom-bda-window-2026-11-25/README.md) covers two passed guarded native paired cases, both beginning at pre-increment tic 70. At 300 ms DOSBox-X measured 301 PIC guest ms with BDA/Doom deltas +6/+14, while QEMU measured 300 million virtual ns with +6/+12. At 900 ms the measurements were 902 PIC ms with +18/+35 and 900 million virtual ns with +18/+30. Each engine owner returned code 0; the test reported 2 passed in 104.67 seconds.
 
 The DOSBox−QEMU Doom delta is +2 at 300 ms and +5 at 900 ms, versus −4 in the earlier 1800 ms tic-70 observation. This is a sign reversal across window lengths, not a stable fixed offset or timing rate. DOSBox-X polling followed by pause is non-atomic; DOSBox PIC milliseconds and QEMU virtual nanoseconds are distinct clock domains; BDA endpoint phases remain independent and uncalibrated. Input and prepared-state history remain bounded, and no audio was captured. No general parity or failure conclusion follows. Raw JSON receipts and DOSBox endpoint records remain in the private evidence area; sanitized repository evidence contains no media, FDB, VM state, screenshot or audio.
+
+
+## Paired original Doom pistol audio and normal exit (2026-11-25 UTC)
+
+The [sanitized paired capture record](evidence/qemu-doom-paired-exit-audio-2026-11-25/README.md) covers one passed guarded native case (`1 passed in 66.49s`) at source-bound Doom E1M1 tics 64, 84 and 114. Both engines observed ammo 50→49 and a normal nonresident guest return with code 0. QEMU retained 28,987 shot-window PCM frames with no drops; DOSBox-X finalized a 4,473,260-byte RIFF with 1,118,304 frames. Both emulator owners were reaped with return code 0. The two captures independently correlated with the pinned WAD `DSPISTOL` reference.
+
+This qualifies that bounded outcome and finite engine-local capture only. The different capture rates and extents do not provide waveform, onset or cross-engine timing equivalence. Input dispatch before the guest return does not prove exclusive causation. The raw receipts and WAVs remain in a private manifest-backed evidence area; no media, FDB, VM state or WAV was added to Git. DOSBox-X remains the default; no CI or general parity claim follows.
+
+
+## QEMU scene-1 retained-frame wait (2026-11-25 UTC)
+
+The [native authored VGA evidence](evidence/qemu-scene1-frame-wait-2026-11-25/README.md) records one passed guarded case. A saved scene-1 pixel predicate matched QEMU's retained source raster immediately with no guest clock run. A second deliberately mismatching scene waited one measured slice, then preserved the first native dispatch breakpoint without another frame probe. The final test reported `1 passed in 1.23s`; the owner fixture reaped its captured process. Three prior invocations failed during test setup or before the full two-part gate, and remain distinct in the sanitized record and private manifest.
+
+The shared scene evaluator and frame-probe schema have 391 focused host passes, including a simulated outer DOS runtime scope and fixed-input first-slice admission. The native pass qualifies only the authored QEMU VGA predicate and first-stop behavior on the earlier adapter source. A later guarded rerun after fixed-input and failure-cleanup edits was refused for memory pressure before VM launch, so current-source native recheck remains pending. This does not compare DOSBox-X frame phase, prove application-frame completion, or qualify scene actions/navigation or broader game parity. DOSBox-X remains default; no CI.
+
+
+## Paired authored COM core control (2026-11-25 UTC)
+
+One guarded paired native test passed (`1 passed in 6.32s`) for identical authored COM input. Both backends reached a source-relative breakpoint, resumed and paused with the selected guest still active, and returned guest exit code 37 from a separate identical exit COM. Their emulator owners were reaped with code 0. The [sanitized core-control record](evidence/qemu-core-control-paired-2026-11-25/README.md) keeps the fixture and runtime identities outside the claim.
+
+DOSBox-X supplied its legacy `execution.wait` and `breakpoints.list` replies. QEMU supplied its public breakpoint alias map and distinct resume/pause surface; it does not implement the legacy `breakpoints.list` RPC. This gate therefore leaves matching reply schema, diagnostics, step-over, MZ/child/TSR and full core-control parity open. DOSBox-X remains the default; no CI.

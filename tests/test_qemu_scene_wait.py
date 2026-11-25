@@ -325,15 +325,144 @@ def test_false_predicate_exhausts_virtual_budget_without_extra_run(scene_waiting
     assert result['wait']['guest_elapsed_ns'] == 20_000_000 and len(o.runs) == 2
 
 
-def test_unsupported_frame_scene_refuses_before_native_io(scene_waiting):
+def test_frame_scene_refuses_without_owned_qemu_frame_contract(scene_waiting):
     from test_scene_domain_integration import scene as frame_definition
     o = scene_waiting
     legacy = o.project.debug_save_scene('legacy', frame_definition(o.project))
     before = (len(o.reads), len(o.peer.qmp_calls))
-    with pytest.raises(ValueError, match='scene-2'):
+    with pytest.raises(ValueError, match='owned retained-frame'):
         o.session.scene_wait(legacy['id'])
     assert before == (len(o.reads), len(o.peer.qmp_calls))
     assert not o.runs and not o.writes
+
+
+def test_frame_wait_preflight_defers_script_object_reference(scene_waiting, monkeypatch):
+    from fdisbull import qemu_scene_wait
+    import fdisbull.qemu_observation_authority as authority
+    from test_scene_domain_integration import scene as frame_definition
+    class HostAuthority: pass
+    o = scene_waiting
+    saved = o.project.debug_save_scene('frame-reference-preflight', frame_definition(o.project))
+    monkeypatch.setattr(authority, 'ObservationAuthority', HostAuthority)
+    o.session.vm.observation_authority = HostAuthority()
+    o.session.capabilities.update(frame_contract=True, frame_probe=True)
+    qemu_scene_wait.preflight(o.session, saved['id'], object='$prior.object_id',
+                              allow_references=True)
+    with pytest.raises(ValueError, match='Unknown scene object'):
+        qemu_scene_wait.preflight(o.session, saved['id'], object='missing-object')
+
+
+@pytest.mark.parametrize(('terminal', 'expected'), [
+    (['mismatch', 'matched'], 'matched'),
+    (['mismatch'], 'timeout'),
+    (['mismatch'], 'stopped'),
+])
+def test_frame_wait_uses_shared_predicate_observer_and_stops_on_native_stop(
+        scene_waiting, monkeypatch, terminal, expected):
+    from fdisbull import qemu_scene_wait, qemu_scenes
+    from fdisbull.scenes import SceneHandle
+    from test_scene_domain_integration import scene as frame_definition
+    o = scene_waiting
+    saved = o.project.debug_save_scene('frame-wait', frame_definition(o.project))
+    original = SceneHandle._observe
+    statuses = iter(terminal)
+    calls = []
+    def observe(handle, target=None):
+        status = next(statuses, terminal[-1])
+        calls.append(status)
+        return dict(status=status, complete=status not in ('unavailable', 'ambiguous'),
+                    frame=dict(frame_id=len(calls)), scene_revision=handle.revision)
+    monkeypatch.setattr(SceneHandle, '_observe', observe)
+    monkeypatch.setattr(qemu_scene_wait, 'preflight', lambda *a, **k: None)
+    monkeypatch.setattr(qemu_scenes, 'preflight', lambda *a, **k: None)
+    if expected == 'timeout':
+        with pytest.raises(SceneError) as error:
+            o.session.scene_wait(saved['id'], guest_ms=1, slice_ms=1, timeout_ms=3000)
+        assert error.value.result['status'] == 'timeout'
+    else:
+        if expected == 'stopped':
+            o.session._clock_advance_with_hooks = lambda delta, *, timeout_ms: dict(
+                outcome='breakpoint', hook_hits=[], clock_budget=dict(start_ns=o.now,
+                    stopped_ns=o.now+delta, epoch='host-test'))
+            with pytest.raises(SceneError) as error:
+                o.session.scene_wait(saved['id'], guest_ms=10, slice_ms=1, timeout_ms=3000)
+            assert error.value.result['status'] == 'stopped'
+            assert calls == ['mismatch']
+        else:
+            o.ready_after = 1
+            result = o.session.scene_wait(saved['id'], guest_ms=10, slice_ms=1, timeout_ms=3000)
+            assert result['status'] == 'matched' and result['wait']['outcome'] == 'predicate'
+            assert calls == ['mismatch', 'matched']
+    assert len(calls) <= 2
+
+
+def test_frame_wait_refuses_stale_runtime_epoch_before_advancing(scene_waiting, monkeypatch):
+    from fdisbull import qemu_scene_wait, qemu_scenes
+    from fdisbull.scenes import SceneHandle
+    from test_scene_domain_integration import scene as frame_definition
+    o = scene_waiting
+    saved = o.project.debug_save_scene('stale-frame-wait', frame_definition(o.project))
+    def stale_observe(handle, target=None):
+        o.session._runtime_epoch = 'replaced-after-frame-observation'
+        return dict(status='mismatch', complete=True, frame=dict(frame_id=1),
+                    scene_revision=handle.revision)
+    monkeypatch.setattr(SceneHandle, '_observe', stale_observe)
+    monkeypatch.setattr(qemu_scene_wait, 'preflight', lambda *a, **k: None)
+    monkeypatch.setattr(qemu_scenes, 'preflight', lambda *a, **k: None)
+    with pytest.raises(ValueError, match='owner/source/restore epoch changed'):
+        o.session.scene_wait(saved['id'], guest_ms=10, slice_ms=1, timeout_ms=3000)
+    assert not o.runs and not o.writes
+
+
+def test_frame_wait_failure_retains_observation_and_wait_prefix(scene_waiting, monkeypatch):
+    from fdisbull import qemu_scene_wait, qemu_scenes
+    from fdisbull.scenes import SceneHandle
+    from test_scene_domain_integration import scene as frame_definition
+    o = scene_waiting
+    saved = o.project.debug_save_scene('failed-frame-wait', frame_definition(o.project))
+    monkeypatch.setattr(qemu_scene_wait, 'preflight', lambda *a, **k: None)
+    monkeypatch.setattr(qemu_scenes, 'preflight', lambda *a, **k: None)
+    monkeypatch.setattr(SceneHandle, '_observe', lambda handle, target=None: dict(
+        status='mismatch', complete=True, frame=dict(frame_id=1),
+        scene_revision=handle.revision))
+    def failed_advance(delta, *, timeout_ms):
+        raise RuntimeError('native clock transport failed')
+    o.session._clock_advance_with_hooks = failed_advance
+    with pytest.raises(RuntimeError, match='native clock transport failed') as raised:
+        o.session.scene_wait(saved['id'], guest_ms=10, slice_ms=1, timeout_ms=3000)
+    partial = raised.value.scene_wait_result
+    assert raised.value.result is partial
+    assert partial['status'] == 'unavailable' and partial['complete'] is False
+    assert partial['wait']['outcome'] == 'error'
+    assert partial['wait']['polls'] == [dict(frame_id=1, status='mismatch')]
+    assert partial['wait']['runs'] == []
+    assert partial['wait']['error']['type'] == 'RuntimeError'
+    assert o.closed
+
+
+def test_frame_wait_coalesces_owned_fixed_input_before_second_probe(scene_waiting, monkeypatch):
+    from fdisbull import qemu_scene_wait, qemu_scenes
+    from fdisbull.scenes import SceneHandle
+    from test_scene_domain_integration import scene as frame_definition
+    o = scene_waiting
+    saved = o.project.debug_save_scene('armed-frame-wait', frame_definition(o.project))
+    lease = arm_fixed(o)
+    statuses = iter(('mismatch', 'matched'))
+    def observe(handle, target=None):
+        status = next(statuses)
+        return dict(status=status, complete=True,
+                    frame=dict(frame_id=1 if status == 'mismatch' else 2),
+                    scene_revision=handle.revision)
+    monkeypatch.setattr(SceneHandle, '_observe', observe)
+    monkeypatch.setattr(qemu_scene_wait, 'preflight', lambda *a, **k: None)
+    monkeypatch.setattr(qemu_scenes, 'preflight', lambda *a, **k: None)
+    result = o.session.scene_wait(saved['id'], guest_ms=100, slice_ms=10, timeout_ms=3000)
+    assert result['status'] == 'matched' and result['wait']['outcome'] == 'predicate'
+    assert result['wait']['input_plan']['effective_first_slice_ns'] == 30_000_000
+    assert result['wait']['input_plan']['first_slice_attempted']
+    assert result['wait']['input_plan']['first_slice_result_observed']
+    assert result['wait']['guest_elapsed_ns'] == 30_000_000
+    assert len(result['wait']['runs']) == 1 and lease in o.session.input_state()['leases']
 
 
 def test_public_signature_matches_existing_scene_wait(scene_waiting):
@@ -379,7 +508,7 @@ def test_literal_frame_profile_refuses_before_prior_script_write(scene_waiting):
     script = dict(format='fdisbull-script-1', backend='qemu-dos', steps=[
         dict(op='write-runtime-memory', binding='move-state', offset=2, data_hex='00', expected_hex='01'),
         dict(op='scene-wait', scene='legacy')])
-    with pytest.raises(ValueError, match='scene-2'):
+    with pytest.raises(ValueError, match='owned retained-frame'):
         o.session.script(script)
     assert not o.writes and not o.runs
 

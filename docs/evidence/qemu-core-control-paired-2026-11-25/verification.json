@@ -1,0 +1,81 @@
+{
+  "format": "fdisbull-paired-authored-com-core-control-evidence-1",
+  "date": "2026-11-25",
+  "attempt": "attempt-01",
+  "test_node": "tests/test_qemu_core_control_paired_native.py::test_paired_authored_com_core_control_and_selected_process_exit",
+  "result": {
+    "exit_code": 0,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 6.32
+  },
+  "test_source": {
+    "sha256": "af4c8939732abf6b9d57a568f397901a5479072edb08e7db90503adc26d015ec"
+  },
+  "runtime_inputs": {
+    "qemu": {
+      "bytes": 24768952,
+      "sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c"
+    },
+    "dosbox_x": {
+      "bytes": 19145944,
+      "sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e"
+    },
+    "freedos_boot_image": {
+      "bytes": 1474560,
+      "sha256": "552f7cbb0625960c050a3e682a4d2121cc2ffdfa9dc9d592ccd49edf179333dc"
+    },
+    "mcopy": {
+      "bytes": 196408,
+      "sha256": "85734a24e6d9159b2e95384460e3ddd587d319dd95eaeabf1faf99aa938604c2"
+    },
+    "prepared_freedos_baseline": {
+      "bytes": 1474560,
+      "sha256": "8ca1abcd1ae6ab87ad586139c521b8ff1a908705827443ef3a334160f482612e"
+    }
+  },
+  "authored_inputs": {
+    "control_com": {
+      "bytes": 34,
+      "sha256": "d17f9ef6005c1d408d37746e7629d28ca7fd7b1c54d3618cae82d9e164531cf0",
+      "copies_equal": true
+    },
+    "normal_exit_com": {
+      "bytes": 5,
+      "sha256": "d74a915350782b5fb255c155c3902c42f25a62262d6aa9d1241fb437595e7774",
+      "copies_equal": true,
+      "requested_dos_exit_code": 37
+    }
+  },
+  "observations": {
+    "dosbox_x": {
+      "breakpoint_listing": "legacy breakpoints.list RPC reply contained the owned breakpoint",
+      "continue_pause_wait": "execution.continue, execution.wait, execution.pause, execution.wait completed; final state stopped at IP 0x010A"
+    },
+    "qemu": {
+      "breakpoint_listing": "public debug.breakpoints session alias map contained the owned breakpoint",
+      "continue_pause_wait": "public resume, status, and pause completed; final state stopped at IP 0x010A",
+      "guest_active_after_pause": true,
+      "legacy_breakpoints_list_rpc": "unsupported; not exercised"
+    },
+    "selected_process_exit": {
+      "dosbox_x": {"outcome": "guest_exit", "code": 37},
+      "qemu": {"outcome": "guest_exit", "code": 37}
+    }
+  },
+  "cleanup": {
+    "dosbox_x_owner_reaped": true,
+    "dosbox_x_process_exit_code": 0,
+    "qemu_owner_reaped": true,
+    "qemu_process_exit_code": 0,
+    "post_attempt_process_scan": "no matching QEMU or DOSBox-X process"
+  },
+  "limits": [
+    "One authored looping COM control fixture and one authored normal-exit COM fixture only.",
+    "QEMU public breakpoint aliases and DOSBox-X legacy list replies are distinct surfaces; reply-schema parity is not established.",
+    "QEMU legacy breakpoints.list remains an explicit unsupported gap.",
+    "No MZ, child, TSR, diagnostic, step-over, vendor software, broad migration, or DOSBox-X retirement qualification."
+  ],
+  "private_attempt_manifest": "Private CACHE attempt-01 manifest retains exact input paths, file sizes, hashes, and sanitized console receipt."
+}

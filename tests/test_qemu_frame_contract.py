@@ -6,6 +6,8 @@ from copy import deepcopy
 import base64
 import hashlib
 import io
+import time
+from contextlib import contextmanager
 
 from PIL import Image
 import pytest
@@ -24,6 +26,55 @@ def prepared(o):
     o.session.video_frame_start()
     o.wire.publish()
     return o.session.video_frame_observe()
+
+
+def test_scene_wait_shared_pixel_evaluator_uses_owned_probe(video, monkeypatch):
+    from PIL import Image
+    from fdisbull import qemu_scene_wait, qemu_scenes
+    from test_scene_domain_integration import scene as frame_definition
+    o = video
+    o.wire.rgb = bytes(320 * 200 * 3)
+    prepared(o)
+    frame = o.session.frame_probe([])
+    output = io.BytesIO()
+    Image.new('RGB', (320, 200), 'black').save(output, format='PNG')
+    artifact = o.project._debug_artifact(o.session.run_id, 'qemu-frame-reference.png',
+        'screenshot', output.getvalue(), frame)
+    definition = frame_definition(o.project)
+    definition.update(width=frame['width'], height=frame['height'], mode_id=frame['mode_id'],
+        reference=artifact['artifact'],
+        match={'pixels': {'samples': [dict(x=0, y=0, rgb=[4, 85, 170])]}})
+    saved = o.project.debug_save_scene('qemu-frame-wait', definition)
+
+    # Isolate only the outer DOS runtime scope. SceneHandle._observe and the
+    # QEMU frame_probe/schema/ObservationAuthority path remain real.
+    o.session._runtime_epoch = 'host-scene-epoch'
+    o.session._runtime_lifetime = lambda: dict(epoch=o.session._runtime_epoch)
+    monkeypatch.setattr(qemu_scenes, '_identity', lambda session: ('stable-owner',))
+    monkeypatch.setattr(qemu_scenes, 'preflight', lambda *a, **k: None)
+    @contextmanager
+    def scope(session, owner, seed, deadline, *args, **kwargs):
+        yield deadline
+    monkeypatch.setattr(qemu_scene_wait, '_scope', scope)
+    o.session.clock_observe = lambda: dict(epoch='frame-clock', virtual_ns=o.wire.receipt['virtual-ns'],
+                                            virtual_clock=dict(native={}))
+    def advance(delta, *, timeout_ms):
+        start = o.wire.receipt['virtual-ns']
+        o.wire.rgb = bytes([4, 85, 170]) * (320 * 200)
+        o.wire.receipt['virtual-ns'] += delta
+        o.wire.publish()
+        return dict(outcome='stopped', timed_out=False, hook_hits=[],
+            clock_budget=dict(epoch='frame-clock', start_ns=start,
+                stopped_ns=start+delta, deadline_reached=True),
+            session=dict(state='stopped', stop_reason=dict(kind='stopped',
+                breakpoint_ids=[], native_reply='T02thread:1;')))
+    o.session._clock_advance_with_hooks = advance
+    result = qemu_scene_wait._wait_frame_scene(o.session, saved['id'], None, 10, 3000,
+        1, False, time.monotonic(), time.monotonic()+3, o.vm, ('stable-owner',), o.project)
+    assert result['status'] == 'matched'
+    assert result['wait']['polls'] == [dict(frame_id=1, status='mismatch'),
+                                       dict(frame_id=2, status='matched')]
+    assert [call[0] for call in o.wire.calls].count('x-fdisbull-probe-video-frame') == 2
 
 
 def test_public_frame_consumers_keep_one_session_revision_and_true_source(video):

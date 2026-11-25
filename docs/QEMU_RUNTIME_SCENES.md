@@ -12,7 +12,8 @@ Its executing contract is described below; check/assert remain passive.
 
 Check/assert also passively accept the separate
 [scene-3 named keyboard-action profile](QEMU_NAMED_KEYBOARD_ACTIONS.md), without
-arming its action. `scene_wait` remains scene-2 only. The scene-2 definition
+arming its action. `scene_wait` accepts scene-2 runtime-memory and scene-1
+frame predicates; it does not accept scene-3. The scene-2 definition
 below continues to reject action fields; scene-3 requires its own explicit
 action profile and bounded declaration.
 
@@ -82,7 +83,7 @@ only its own unknown scalar value and is revalidated at actual dispatch. Whole
 scene references cannot prove unknown content during script admission.
 
 Frame/action consumers reject this profile, including ordinary `SceneHandle`,
-click/act/navigation and the legacy frame-scene wait, movement scene contexts, assisted travel, spatial map
+click/act/navigation, movement scene contexts, assisted travel, spatial map
 contexts, workflow actions and text projections. Screenshot overlays, coordinate
 domain audits and scene-1 bundle import/export also refuse it. QEMU exposes no
 generic scene handle through this extension. The separate scene-3
@@ -106,9 +107,9 @@ result = debug.scene_wait(
 
 The Python signature matches the existing scene wait. JSON uses
 `debug-scene-wait`; saved scripts use `scene-wait`. The QEMU route requires
-`runtime_scene_wait`, the native virtual-clock extension, one active owned DOS
-process, an explicit scene-2 runtime-memory manifest and current RAM witnesses.
-Frame-backed scene-1 remains refused. `guest_ms` is an integer in 1..120000,
+`runtime_scene_wait`, the native virtual-clock extension and one active owned DOS
+process. Scene-2 additionally requires current RAM witnesses; the separate
+scene-1 frame wait contract is described below. `guest_ms` is an integer in 1..120000,
 `timeout_ms` in 1..60000 and `slice_ms` in 1..1000; Boolean values are refused.
 Known invalid literals or profiles in a script are refused before earlier
 script effects. Resolved values are revalidated before timeout clamping.
@@ -210,3 +211,27 @@ DOS scene-2 RAM waits, including public routes, first stops, restore witness
 invalidation and real exit/TSR evidence. Frame-probe, absolute clicks, scene-1,
 actions/navigation and the broader DOSBox replacement campaign remain open;
 the migration row remains partial/unqualified and DOSBox remains the default.
+
+## Frame-backed scene-1 wait candidate
+
+The scene-1 QEMU route requires `frame_contract`, `frame_probe`, the owned
+`ObservationAuthority`, an active DOS process and the native virtual clock.
+It evaluates saved scene-1 predicates through the shared `SceneHandle` observer
+on retained source-raster frames. It rechecks the owner, restore epoch and
+selected/competing manifests before each poll. The first native stop wins over
+another frame read. A completed mismatch permits a bounded clock interval;
+ambiguous, unavailable and blocked observations stop the wait. At most 1,000
+polls and 8 MiB of persisted evidence are allowed.
+
+The focused host selection passed 391 tests on this candidate, including a
+production frame-probe/schema and shared pixel-evaluator transition, plus
+stop, timeout, stale-epoch, failure-prefix, fixed-input and script-reference admission cases. The outer DOS
+runtime scope in that pixel test is simulated. A separately guarded
+[native authored VGA gate](evidence/qemu-scene1-frame-wait-2026-11-25/README.md)
+passed one case: an immediate retained-frame match with no guest advancement,
+then a mismatch ending at the first native breakpoint without another probe.
+Three earlier test-setup failures remain recorded. DOSBox-X sampling-phase
+comparison has not been run for this route. This is bounded source-raster
+qualification, not completed-frame or cross-engine parity. Later fixed-input
+and failure-cleanup source changes passed focused host checks; their native
+recheck was refused by the memory guard before VM launch and remains pending.

@@ -24,11 +24,14 @@
     "raster_prerequisite": "Opt-in chain-4 complete-source raster proof integrated atfa7c146;9 compiled source probes,4 authored and9 unchanged adjacent native cases pass on exact04447Linux producer. No video cadence, frame ordinal, legacy frame adapter or migration qualification.",
     "rpc_census": "2026-11-19 complete pinned server reconstruction includes debug.output.read and debugger.execute_command;37 RPC rows/143 total surfaces, no newly qualified surface or campaign.",
     "runtime_scene_wait": "Bounded scene-2 RAM wait implemented through Python, JSON and saved scripts. At c1e5e208 on 2026-11-20, the final host selection passed 85 cases and separately admitted native attempt 06 passed all 10 authored DOS cases with 11 VMs and 22 complete logs. Exact runtime/media identities and five earlier failed attempts are recorded in docs/QEMU_SCENE_WAIT_GATE.md. No scene-1, action/navigation or migration qualification.",
+    "runtime_frame_scene_wait_candidate": "QEMU scene-1 frame waits use the shared SceneHandle predicate evaluator and owned retained-frame probe, with owner/epoch/manifest checks, native-clock progress, first-stop precedence, owned fixed-input coalescing and bounded evidence. Focused host selection passed 391 cases, including a real frame-probe/schema pixel transition, failure-prefix retention, fixed-input admission and script-reference validation; its outer DOS runtime scope was simulated. One guarded native authored VGA gate passed on earlier adapter source: immediate retained-frame match with zero guest advancement, then a first-breakpoint stop after one mismatch poll. See docs/evidence/qemu-scene1-frame-wait-2026-11-25/verification.json; three earlier setup failures remain recorded. A guarded recheck after fixed-input and failure-cleanup edits was denied before VM launch for memory pressure. DOSBox-X sampling-phase, current-source native recheck, application-frame completion and game-level migration parity remain unqualified.",
+    "paired_core_control_candidate": "One guarded authored COM paired core-control case passed on 2026-11-25 (1 passed in 6.32 s): both backends reached a source-relative breakpoint, continued/paused with the selected guest active, and returned normal guest exit code 37 for identical authored exit bytes; owners reaped code 0. DOSBox-X legacy execution.wait and breakpoints.list replies were checked, while QEMU used its distinct public breakpoint alias map and resume/pause surface. See docs/evidence/qemu-core-control-paired-2026-11-25/verification.json. QEMU's legacy breakpoints.list RPC and full reply-schema parity remain unsupported; the core-control group stays unqualified.",
     "checkpoint_scripts": "Full native DOS saved-script checkpoint verbs and exact Anchor Stone aliases implemented. The final affected host selection passed 573 at 7690e534 (including 72 focused and four ledger checks). At 74866e9 on 2026-11-20, separately admitted native attempt 02 passed two cases with four reaped VMs/eight complete logs, exact CPU/RAM rewind and post-restore INC, cold persistence and complete public JSON/export equality. 11,275 files/six trees were unchanged. Attempt 01 failed a test-only cleanup assertion and remains preserved; the raw-storage reader correction was independently reviewed before attempt 02. See docs/QEMU_CHECKPOINT_SCRIPT_GATE.md. No broader checkpoint or retirement qualification.",
     "runtime_scene_act": "Explicit scene-3 named physical keyboard actions implemented through Python, JSON and saved scripts. Final affected host selection passed 1,090 with 10 explicit optional native skips, including 62 focused action cases. Native attempt 02 passed two cases at 3cb9628178577689c22b8a8e12b21fd2d8dc9fa2 on 2026-11-20 with two reaped owners/four complete logs and 11,284 files/six trees unchanged. Attempt 01 failed controller bookkeeping after its first fixture passed; second fixture was unrun, and the failed attempt remains preserved. Native acceptance is limited to the authored IRQ1/RAM guest; see docs/QEMU_SCENE_ACT_GATE.md. No frame/pointer/navigation/actual-game or retirement qualification.",
     "counted_step": "Historical native attempt 02 passed five authored raw single-vCPU cases at 0ea542e1322cf84ae6e104f9748d0cfeae93a95b on 2026-11-20 UTC (2026-11-19 America/New_York): Python/JSON/saved-script counted stops and first breakpoint/watchpoint preservation, five reaped owners and ten complete logs. The exact integrated host selection passed 249 cases. Attempt 01 failed constructor admission before any VM; it remains failed. See docs/QEMU_STEP_COUNT_GATE.md. This reconciliation runs no native test and does not qualify DOS process/lifecycle, step-over, retirement or the current head.",
     "private_doom_bda_timing": "Four additional guarded paired native original Doom E1M1 windows were recorded on 2026-11-25; see docs/evidence/qemu-doom-bda-poll-2026-11-25/README.md. Each requested 1800 ms, with DOSBox-X poll waits 10/50/100/10 ms and PIC elapsed 1802/1843/1882/1806 ms (overshoot +2/+43/+82/+6); DOSBox BDA/Doom deltas were +36/+57, +37/+59, +38/+60, +37/+59, versus QEMU virtual-time BDA/Doom deltas +36/+64, +36/+64, +36/+64, +36/+63. The first three began at tic 65; the fourth began at tic 70 after ordinary-speed acquisition. Clock domains and endpoints are separate/non-atomic; no parity or failure conclusion, calibrated BDA mapping, or general timing claim follows.",
     "private_doom_bda_window_sweep": "Two guarded native paired original Doom E1M1 cases passed on 2026-11-25 (2 passed, 104.67 s); see docs/evidence/qemu-doom-bda-window-2026-11-25/README.md and verification.json. Both started at pre-increment tic 70. At 300 ms, DOSBox-X measured 301 PIC ms with BDA/Doom deltas +6/+14; QEMU measured 300,000,000 virtual ns with +6/+12. At 900 ms, DOSBox-X measured 902 PIC ms with +18/+35; QEMU measured 900,000,000 virtual ns with +18/+30. Both owners returned code 0. Compared with the earlier 1800 ms start-tic-70 observation (+59 vs +63 Doom tics), the observed DOSBox−QEMU Doom delta changes from −4 to +2 at 300 ms and +5 at 900 ms. This sign reversal across lengths is not a stable fixed offset or rate. Separate clocks, non-atomic endpoints, independent uncalibrated BDA phases and bounded input/state histories remain limitations; no audio, parity, failure or general timing claim follows.",
+    "private_doom_paired_exit_audio": "One guarded paired native original Doom E1M1 case passed on 2026-11-25 (1 passed in 66.49 s); both engines showed source-bound pistol ammo 50→49 and normal nonresident guest exit, with owner cleanup code 0. QEMU retained 28,987 shot-capture frames with zero drops; DOSBox-X finalized a 4,473,260-byte RIFF capture. See docs/evidence/qemu-doom-paired-exit-audio-2026-11-25/verification.json. Engine-local captures support the outcome and finite-delivery claim only; waveform/onset equivalence, cross-engine timing and broad parity remain unverified.",
     "private_doom_cross_engine_save": "One guarded native original Doom E1M1 save interchange case passed on 2026-11-25: each engine-created save was loaded by the other, with exact save admission/readback and bounded menu/frame plus WAD-derived ammo 49-to-50 observations. This does not establish general save compatibility or qualify a campaign.",
     "private_doom_fresh_checkpoint": "One guarded native fresh-process QEMU checkpoint continuation passed for original Doom E1M1 on 2026-11-25. It verifies one matched leveltime landmark, full owned-machine restore, new protected-source binding and a bounded post-restore shot; it does not qualify DOSBox-X checkpoints, general cold durability or any campaign."
   },
@@ -468,6 +471,12 @@
       ],
       "execution": "not_run_by_this_reconciliation",
       "scope": "Run the listed existing checks; a pass covers only their asserted cases."
+    },
+    "core-control-paired-native": {
+      "environment_profile": "paired-dos",
+      "argv": ["python", "-m", "pytest", "-q", "--require-native", "--maxfail=1", "tests/test_qemu_core_control_paired_native.py"],
+      "execution": "One guarded native authored COM case passed on 2026-11-25 (1 passed in 6.32 s); see docs/evidence/qemu-core-control-paired-2026-11-25/verification.json. Both owners reaped code 0.",
+      "scope": "A source-relative breakpoint, backend-specific list/continue/pause/wait surfaces and normal selected-process exit 37. QEMU legacy breakpoints.list RPC, matching reply schemas, MZ/child/TSR, diagnostics, step-over and broad parity remain unqualified."
     },
     "source-host": {
       "environment_profile": "host",
@@ -1275,6 +1284,12 @@
       "evidence": "docs/QEMU_SCENE_WAIT_GATE.md",
       "phase_result_sha256": "0cc58fd5216fd0c8ef005eee2c712d44246092011924333862aafc3d94837390"
     },
+    "runtime-scene1-frame-wait-native": {
+      "environment_profile": "native-clock",
+      "argv": ["python", "-m", "pytest", "-q", "tests/test_qemu_scene1_frame_wait_native.py"],
+      "execution": "One guarded authored QEMU VGA case passed on 2026-11-25 (1 passed in 1.23 s), after three retained setup failures; see docs/evidence/qemu-scene1-frame-wait-2026-11-25/verification.json.",
+      "scope": "Saved scene-1 pixel predicate matched one retained native source raster without guest advancement, then a deliberately mismatching predicate stopped at its first dispatch breakpoint without another frame probe. DOSBox-X phase comparison, application-frame completion, game-level action/navigation and migration parity remain unqualified."
+    },
     "screenshot-hooks-host": {
       "environment_profile": "host",
       "argv": [
@@ -1464,8 +1479,8 @@
         "-q",
         "tests/test_doom_paired_exit_audio_native.py::test_paired_doom_pistol_audio_then_normal_guest_exit"
       ],
-      "execution": "Host py_compile, pytest collection and default opt-in skip passed. Native case NOT RUN.",
-      "scope": "Opt-in paired original Doom E1M1 pistol SFX observation and normal nonresident DOS guest exits with bounded engine-local capture evidence; host checks do not qualify audio, exit or parity behavior."
+      "execution": "One guarded native case passed on 2026-11-25 (1 passed in 66.49 s), with both QEMU and DOSBox-X owners reaped code 0. See docs/evidence/qemu-doom-paired-exit-audio-2026-11-25/verification.json. Both backends recorded ammo 50→49 and normal nonresident guest exit; QEMU captured 28,987 shot frames with zero drops and DOSBox-X finalized its 4,473,260-byte RIFF file.",
+      "scope": "One bounded source-bound original Doom E1M1 paired pistol outcome, finite engine-local capture and normal nonresident guest exit. It does not establish PCM waveform/onset equivalence, a shared timing clock, other games or general DOSBox-X replacement parity."
     },
     "doom-crossload-sfx-native": {
       "argv": ["python", "-m", "pytest", "-q", "tests/test_doom_crossload_pistol_sfx_native.py::test_original_doom_cross_engine_save_load_then_pistol_sfx"],
@@ -1540,10 +1555,11 @@
         "inventory-and-public-host",
         "core-native",
         "core-paired",
+        "core-control-paired-native",
         "core-legacy"
       ],
       "remaining_work": [
-        "Compare remaining legacy continue/pause/wait, breakpoint-list and reply-schema obligations; the existing paired COM covers registers, memory, one breakpoint/step and exit only.",
+        "A guarded paired authored COM now covers a source-relative breakpoint, backend-specific continue/pause/wait, selected guest active state and normal exit 37. QEMU uses a public breakpoint alias map while legacy breakpoints.list RPC and matching reply schemas remain unqualified; compare the remaining obligations directly.",
         "Keep legacy direct-write refusals distinct from explicitly guarded machine-context writes; complete saved-script vocabulary admission per operation. Counted native step-stop composition has a bounded Python/JSON/script route and five historical authored raw-vCPU native passes at 0ea542e; see docs/QEMU_STEP_COUNT_GATE.md. Separate DOS process/lifecycle, paired DOSBox step-over and reply-schema obligations still require direct evidence; the raw counted-stop slice does not qualify them.",
         "Qualify or explicitly disposition DOSBox diagnostic record cursors and stopped HELP/CPU/PIC replies. QEMU debug-diagnostics pages owner-bound process-log bytes, and CPU inventory and protected CPU/GDT source matching are partial alternatives; none establish the complete legacy diagnostic contract."
       ],
@@ -2176,11 +2192,12 @@
         "runtime-scenes-native",
         "runtime-scene-wait-host",
         "runtime-scene-wait-native",
+        "runtime-scene1-frame-wait-native",
         "runtime-scene-act-host",
         "runtime-scene-act-native"
       ],
       "remaining_work": [
-        "Implement frame-backed scene actions, pointer actions, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; scene-2 RAM observations/waits and scene-3 named keyboard actions retain separate explicit profiles.",
+        "The bounded scene-1 retained-raster wait has one authored native pass on earlier adapter source and a pending current-source native recheck. Implement frame-backed scene actions, pointer actions, navigation, text and workflow adapters after their actual frame/input/source/control prerequisites; scene-2 RAM observations/waits and scene-3 named keyboard actions retain separate explicit profiles.",
         "Create native source-bound scene scenarios with actual readiness, named input, text/spatial observation, progression and failure recovery; compare the same goals/observables under DOSBox."
       ],
       "minimum_acceptance": [
