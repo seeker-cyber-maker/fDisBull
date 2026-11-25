@@ -528,6 +528,7 @@ class QemuDOSProcessSession(QemuFetchTraceMixin, QemuScreenshotHookMixin, QemuSc
     def _advance_epoch(self):
         from .qemu_session_revision import session_revision
         session_revision(self.vm).effect()
+        self._invalidate_trace_for_machine_epoch()
         self._le_source_retire('DOS capture epoch changed')
         self._epoch_number = getattr(self, '_epoch_number', 1) + 1
         run_id = self.run_id or self._runtime_epoch.split(':', 1)[0]

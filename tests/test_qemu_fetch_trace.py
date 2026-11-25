@@ -303,3 +303,35 @@ def test_producer_epoch_change_rejects_old_trace_before_native_read():
     with pytest.raises(DebuggerError, match="wrong fake trace epoch"):
         session.call("trace.read", {"cursor": None, "limit": 2})
     assert len(session.vm.qmp.calls) == before + 1
+
+
+def test_machine_replacement_invalidates_old_cursor_and_allows_fresh_capture(monkeypatch):
+    from fdisbull import qemu_session_revision
+    from fdisbull.qemu_dos_process import QemuDOSProcessSession
+
+    session = Session()
+    session.run_id = "run-A"
+    started = session.call("trace.start", {"detail": "normal", "instruction_count": 3})
+    old_vm = session.vm
+    replacement = SimpleNamespace(lock=threading.RLock(), qmp=FakeQMP(),
+        process=FakeProcess(), qmp_commands={"x-fdisbull-trace-start"}, close_count=0)
+    replacement.close = lambda: setattr(replacement, "close_count", replacement.close_count + 1)
+    session.vm = replacement
+    session._le_source_retire = lambda _reason: None
+    monkeypatch.setattr(qemu_session_revision, "session_revision",
+                        lambda _vm: SimpleNamespace(effect=lambda: None))
+
+    QemuDOSProcessSession._advance_epoch(session)
+
+    assert session._qemu_fetch_trace["state"] == "invalidated"
+    assert session._qemu_fetch_trace["invalidation_reason"] == "machine-replaced"
+    old_calls = len(old_vm.qmp.calls)
+    with pytest.raises(DebuggerError, match="invalidated by machine replacement"):
+        session.call("trace.read", {"cursor": started["cursor"], "limit": 1})
+    assert len(old_vm.qmp.calls) == old_calls
+
+    fresh = session.call("trace.start", {"detail": "normal", "instruction_count": 2})
+    assert fresh["trace_id"] != started["trace_id"]
+    assert fresh["epoch"] == 41
+    assert [method for method, _ in old_vm.qmp.calls].count("x-fdisbull-trace-start") == 1
+    assert [method for method, _ in replacement.qmp.calls].count("x-fdisbull-trace-start") == 1

@@ -1,0 +1,64 @@
+{
+  "format": "fdisbull-qemu-trace-checkpoint-epoch-evidence-1",
+  "date": "2026-11-24",
+  "status": "bounded-local-test-passed; trace-workgroup-unqualified",
+  "candidate": {
+    "variant": "QEMU v2",
+    "sha256": "6f969d1bbe8f8e4398412bcd3ee24e88984f2e6be869267450b0bb5523bcc641"
+  },
+  "test_selection": [
+    "tests/test_qemu_fetch_trace.py",
+    "tests/test_qemu_dos_before_fetch_trace_native.py",
+    "tests/test_qemu_dos_trace_checkpoint_epoch_native.py"
+  ],
+  "local_batch": {
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 14.91,
+    "junit_sha256": "e1f61c08bf6a6a0e1cca0bd946fec1d87a97d6d2ace6e8f953ac5a71378781a5",
+    "junit_private": true
+  },
+  "related_host_regression": {
+    "selection": [
+      "tests/test_qemu_dos_process.py",
+      "tests/test_qemu_dos_le_checkpoint.py",
+      "tests/test_qemu_fetch_trace.py"
+    ],
+    "passed": 66,
+    "failed": 0,
+    "skipped": 0
+  },
+  "observations": {
+    "saved_trace_survives_save": true,
+    "hot_restore_replaces_vm_and_invalidates_old_host_cursor": true,
+    "new_trace_after_hot_restore": {
+      "restored_fetch": "INC",
+      "translated_byte_hex": "40",
+      "cpu_context": "16-bit CS"
+    },
+    "cold_restore_in_fresh_session_repeats_observation": true,
+    "old_cursor_aliases_fresh_capture": false,
+    "checkpoint_epoch_test_backend": "QEMU only",
+    "paired_dosbox_x_three_com_cases_in_broader_batch": true
+  },
+  "native_producer_audit": {
+    "reset_invalidates_epoch": true,
+    "snapshot_load_invalidates_epoch": true,
+    "import_invalidates_epoch": true,
+    "successful_load_can_increment_twice": true,
+    "native_patch_needed": false
+  },
+  "qualification": {
+    "trace_workgroup": "unqualified",
+    "default_backend": "dosbox",
+    "broad_suite_run": false,
+    "hosted_ci": false,
+    "release": false,
+    "installation": false
+  },
+  "privacy": {
+    "private_junit_in_git": false,
+    "guest_media_or_runtime_payload_in_git": false
+  }
+}

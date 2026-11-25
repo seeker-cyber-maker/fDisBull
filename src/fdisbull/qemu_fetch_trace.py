@@ -215,6 +215,14 @@ class QemuFetchTraceMixin:
 
     _qemu_fetch_trace = None
 
+    def _invalidate_trace_for_machine_epoch(self):
+        """Retire a capture whose owning machine was replaced by restore."""
+        capture = self._qemu_fetch_trace
+        if (isinstance(capture, dict)
+                and capture.get("owner", {}).get("vm") is not self.vm):
+            capture["state"] = "invalidated"
+            capture["invalidation_reason"] = "machine-replaced"
+
     def _trace_rpc(self, method, params):
         if params is not None and type(params) is not dict:
             raise ValueError("QEMU trace parameters must be an object")
@@ -291,6 +299,8 @@ class QemuFetchTraceMixin:
             raise ValueError("Trace limit must be 1..4096")
         capture = self._qemu_fetch_trace
         if not isinstance(capture, dict) or capture.get("state") not in ("active", "stopped"):
+            if isinstance(capture, dict) and capture.get("state") == "invalidated":
+                raise DebuggerError("QEMU trace was invalidated by machine replacement")
             raise DebuggerError("No QEMU before-fetch trace has been started")
         if cursor is None:
             after = 0
