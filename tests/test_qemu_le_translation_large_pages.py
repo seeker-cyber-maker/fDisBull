@@ -369,7 +369,7 @@ def test_retained_cmpxchg_producer_preserves_only_its_image_allowances():
     from fdisbull.qemu_le_translation import (
         QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE,
         QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE,
-        QEMU_TCG_ATOMIC_BATCH_IMAGE)
+        QEMU_TCG_ATOMIC_BATCH_IMAGE, QEMU_TCG_CMPXCHG16B_IMAGE)
     from fdisbull.qemu_paged_le_capture import (
         _producer, _compatible_producer, _supports_high_ram,
         _supports_pse36, _replay_qemu_image, _pse36)
@@ -389,6 +389,8 @@ def test_retained_cmpxchg_producer_preserves_only_its_image_allowances():
             assert _replay_qemu_image(old, current, image) == image
         assert not _supports_pse36(old, current, 'f' * 64)
         assert not _supports_pse36(old, current, QEMU_TCG_ATOMIC_BATCH_IMAGE)
+        assert not _supports_pse36(old, current, QEMU_TCG_CMPXCHG16B_IMAGE)
+        assert _replay_qemu_image(old, current, QEMU_TCG_CMPXCHG16B_IMAGE) is None
         assert _replay_qemu_image(old, current, QEMU_TCG_ATOMIC_BATCH_IMAGE) is None
         assert _pse36({'memory_mib': 64, 'max_ram_below_4g_mib': 32, 'cpu': 'max'}, QEMU_TCG_ATOMIC_BATCH_IMAGE)
         assert _replay_qemu_image(current, current, QEMU_TCG_ATOMIC_BATCH_IMAGE) == QEMU_TCG_ATOMIC_BATCH_IMAGE
@@ -397,3 +399,35 @@ def test_retained_cmpxchg_producer_preserves_only_its_image_allowances():
         assert not _supports_high_ram(old, current)
         assert not _supports_pse36(old, current, QEMU_TCG_CMPXCHG_IMAGE)
         assert _replay_qemu_image(old, current, QEMU_TCG_CMPXCHG_IMAGE) is None
+
+
+def test_retained_atomic_batch_producer_preserves_its_image_allowances():
+    from fdisbull.qemu_le_translation import (
+        QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE,
+        QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE,
+        QEMU_TCG_ATOMIC_BATCH_IMAGE, QEMU_TCG_CMPXCHG16B_IMAGE)
+    from fdisbull.qemu_paged_le_capture import (
+        _producer, _compatible_producer, _supports_high_ram,
+        _supports_pse36, _replay_qemu_image)
+    from fdisbull.qemu_paged_le_tracking import _paged_producer
+
+    for current, tracking in ((_producer(), False), (_paged_producer(), True)):
+        old = dict(current, **{
+            'qemu_le_translation.py': '83aaaeea4a9f6eebb5d094ba1af2b98c44d6c262dab46cdc3b426aabbfdcfefd',
+            'qemu_paged_le_capture.py': 'bed75f1738d99a186bbf20ffd2f7965f3b83e17e39cbc654c2c94e591136a2b8',
+        })
+        assert _compatible_producer(old, current, tracking=tracking)
+        assert _supports_high_ram(old, current)
+        for image in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE,
+                      QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE,
+                      QEMU_TCG_ATOMIC_BATCH_IMAGE):
+            assert _supports_pse36(old, current, image)
+            assert _replay_qemu_image(old, current, image) == image
+        assert not _supports_pse36(old, current, 'f' * 64)
+        assert not _supports_pse36(old, current, QEMU_TCG_CMPXCHG16B_IMAGE)
+        assert _replay_qemu_image(old, current, QEMU_TCG_CMPXCHG16B_IMAGE) is None
+        assert _replay_qemu_image(current, current, QEMU_TCG_CMPXCHG16B_IMAGE) == QEMU_TCG_CMPXCHG16B_IMAGE
+        old['qemu_paged_le_match.py'] = 'f' * 64
+        assert not _compatible_producer(old, current, tracking=tracking)
+        assert not _supports_high_ram(old, current)
+        assert _replay_qemu_image(old, current, QEMU_TCG_ATOMIC_BATCH_IMAGE) is None

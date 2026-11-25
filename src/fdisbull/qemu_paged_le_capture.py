@@ -70,6 +70,14 @@ def _compatible_producer(recorded, current, *, tracking=False):
     """Accept only exact manifests for current and retained supported producers."""
     if recorded == current:
         return True
+    # Retain the atomic-batch producer as an exact complete manifest.
+    atomic_batch = dict(current)
+    atomic_batch.update({
+        'qemu_le_translation.py': '83aaaeea4a9f6eebb5d094ba1af2b98c44d6c262dab46cdc3b426aabbfdcfefd',
+        'qemu_paged_le_capture.py': 'bed75f1738d99a186bbf20ffd2f7965f3b83e17e39cbc654c2c94e591136a2b8',
+    })
+    if recorded == atomic_batch:
+        return True
     # Retain the CMPXCHG producer as an exact complete manifest.
     cmpxchg = dict(current)
     cmpxchg.update({
@@ -149,6 +157,7 @@ def _supports_extended_walks(recorded):
 def _supports_high_ram(recorded, current):
     return recorded == current or (
         recorded.get('qemu_le_translation.py') in (
+            '83aaaeea4a9f6eebb5d094ba1af2b98c44d6c262dab46cdc3b426aabbfdcfefd',
             '4491743cf9a05dd0ed49b4c06ff529fe748666b48584ea06e699c33273d80225',
             'ea9c38415d4cf1d9a3ec1cad12a3057bb43200b251bec89bac12e5aaa2cf3624',
             '264bd620cf88d782d2a5dbb5650b014b1b257400f3cdae30e8868d3a0a29cb44',
@@ -160,12 +169,14 @@ def _supports_high_ram(recorded, current):
 
 def _supports_pse36(recorded, current, image_hash):
     # A historical producer may only use images that it itself admitted.
-    from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE
+    from .qemu_le_translation import QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE, QEMU_TCG_ATOMIC_BATCH_IMAGE
     if recorded == current:
         return True
     if not _compatible_producer(recorded, current, tracking='qemu_paged_le_tracking.py' in current):
         return False
     translation = recorded.get('qemu_le_translation.py')
+    if translation == '83aaaeea4a9f6eebb5d094ba1af2b98c44d6c262dab46cdc3b426aabbfdcfefd':
+        return image_hash in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE, QEMU_TCG_ATOMIC_BATCH_IMAGE)
     if translation == '4491743cf9a05dd0ed49b4c06ff529fe748666b48584ea06e699c33273d80225':
         return image_hash in (QEMU_TCG_QUALIFIED_IMAGE, QEMU_TCG_PHYSICAL64_IMAGE, QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE)
     if translation == 'ea9c38415d4cf1d9a3ec1cad12a3057bb43200b251bec89bac12e5aaa2cf3624':
@@ -178,8 +189,11 @@ def _supports_pse36(recorded, current, image_hash):
 
 def _replay_qemu_image(recorded, current, image_hash):
     """Do not give historical producers new native-image allowances."""
-    from .qemu_le_translation import QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE, QEMU_TCG_ATOMIC_BATCH_IMAGE
-    if recorded != current and image_hash == QEMU_TCG_ATOMIC_BATCH_IMAGE:
+    from .qemu_le_translation import QEMU_TCG_OVERLAY_WRITE_IMAGE, QEMU_TCG_CMPXCHG_IMAGE, QEMU_TCG_ATOMIC_BATCH_IMAGE, QEMU_TCG_CMPXCHG16B_IMAGE
+    if recorded != current and image_hash == QEMU_TCG_CMPXCHG16B_IMAGE:
+        return None
+    if (recorded != current and image_hash == QEMU_TCG_ATOMIC_BATCH_IMAGE
+            and not _supports_pse36(recorded, current, image_hash)):
         return None
     if (recorded != current and image_hash == QEMU_TCG_CMPXCHG_IMAGE
             and not _supports_pse36(recorded, current, image_hash)):

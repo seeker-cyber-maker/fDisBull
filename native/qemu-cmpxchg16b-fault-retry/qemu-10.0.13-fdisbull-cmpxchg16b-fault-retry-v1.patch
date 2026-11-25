@@ -1,0 +1,142 @@
+--- a/accel/tcg/cputlb.c
++++ b/accel/tcg/cputlb.c
+@@ -1746,7 +1746,8 @@
+  * record writes to protected clean pages.
+  */
+ static void mmu_watch_or_dirty(CPUState *cpu, MMULookupPageData *data,
+-                               MMUAccessType access_type, uintptr_t ra, bool observe_layer_write)
++                               MMUAccessType access_type, uintptr_t ra,
++                               bool check_watch, bool observe_layer_write)
+ {
+     CPUTLBEntryFull *full = data->full;
+     vaddr addr = data->addr;
+@@ -1754,14 +1755,14 @@
+     int size = data->size;
+ 
+     /* On watchpoint hit, this will longjmp out.  */
+-    if (flags & TLB_WATCHPOINT) {
++    if (check_watch && (flags & TLB_WATCHPOINT)) {
+         int wp = access_type == MMU_DATA_STORE ? BP_MEM_WRITE : BP_MEM_READ;
+         cpu_check_watchpoint(cpu, addr, size, full->attrs, wp, ra);
+         flags &= ~TLB_WATCHPOINT;
+     }
+ 
+     /* Note that notdirty is only set for writes. */
+-    if (flags & TLB_NOTDIRTY) {
++    if (!check_watch && (flags & TLB_NOTDIRTY)) {
+         notdirty_write(cpu, addr, size, full, ra, observe_layer_write);
+         flags &= ~TLB_NOTDIRTY;
+     }
+@@ -1804,7 +1805,8 @@
+ 
+         flags = l->page[0].flags;
+         if (unlikely(flags & (TLB_WATCHPOINT | TLB_NOTDIRTY))) {
+-            mmu_watch_or_dirty(cpu, &l->page[0], type, ra, observe_layer_write);
++            mmu_watch_or_dirty(cpu, &l->page[0], type, ra, true, observe_layer_write);
++            mmu_watch_or_dirty(cpu, &l->page[0], type, ra, false, observe_layer_write);
+         }
+         if (unlikely(flags & TLB_BSWAP)) {
+             l->memop ^= MO_BSWAP;
+@@ -1827,8 +1829,11 @@
+ 
+         flags = l->page[0].flags | l->page[1].flags;
+         if (unlikely(flags & (TLB_WATCHPOINT | TLB_NOTDIRTY))) {
+-            mmu_watch_or_dirty(cpu, &l->page[0], type, ra, observe_layer_write);
+-            mmu_watch_or_dirty(cpu, &l->page[1], type, ra, observe_layer_write);
++            /* Check both pages before either dirty callback can invalidate an overlay. */
++            mmu_watch_or_dirty(cpu, &l->page[0], type, ra, true, observe_layer_write);
++            mmu_watch_or_dirty(cpu, &l->page[1], type, ra, true, observe_layer_write);
++            mmu_watch_or_dirty(cpu, &l->page[0], type, ra, false, observe_layer_write);
++            mmu_watch_or_dirty(cpu, &l->page[1], type, ra, false, observe_layer_write);
+         }
+ 
+         /*
+@@ -2910,8 +2915,8 @@
+ }
+ #endif
+ 
+-static void do_st16_mmu(CPUState *cpu, vaddr addr, Int128 val,
+-                        MemOpIdx oi, uintptr_t ra)
++static void do_st16_mmu_impl(CPUState *cpu, vaddr addr, Int128 val,
++                             MemOpIdx oi, uintptr_t ra, bool observe_layer_write)
+ {
+     MMULookupLocals l;
+     bool crosspage;
+@@ -2919,7 +2924,7 @@
+     int first;
+ 
+     cpu_req_mo(TCG_MO_LD_ST | TCG_MO_ST_ST);
+-    crosspage = mmu_lookup(cpu, addr, oi, ra, MMU_DATA_STORE, &l, true);
++    crosspage = mmu_lookup(cpu, addr, oi, ra, MMU_DATA_STORE, &l, observe_layer_write);
+     if (likely(!crosspage)) {
+         if (unlikely(l.page[0].flags & TLB_MMIO)) {
+             if ((l.memop & MO_BSWAP) != MO_LE) {
+@@ -2968,6 +2973,27 @@
+     }
+ }
+ 
++
++static void do_st16_mmu(CPUState *cpu, vaddr addr, Int128 val,
++                        MemOpIdx oi, uintptr_t ra)
++{
++    do_st16_mmu_impl(cpu, addr, val, oi, ra, true);
++}
++
++#ifdef TARGET_I386
++void HELPER(fdisbull_cmpxchg16b_failed_store)(CPUArchState *env,
++                                             target_ulong addr, Int128 val,
++                                             uint32_t oi)
++{
++    CPUState *cpu = env_cpu(env);
++    do_st16_mmu_impl(cpu, addr, val, oi, GETPC(), false);
++    if (cpu_plugin_mem_cbs_enabled(cpu)) {
++        qemu_plugin_vcpu_mem_cb(cpu, addr, int128_getlo(val), int128_gethi(val),
++                                oi, QEMU_PLUGIN_MEM_W);
++    }
++}
++#endif
++
+ #include "ldst_common.c.inc"
+ 
+ /*
+--- a/target/i386/helper.h
++++ b/target/i386/helper.h
+@@ -48,6 +48,7 @@
+ #ifndef CONFIG_USER_ONLY
+ DEF_HELPER_4(fdisbull_cmpxchg_failed_store, void, env, tl, tl, i32)
+ DEF_HELPER_4(fdisbull_cmpxchg8b_failed_store, void, env, tl, i64, i32)
++DEF_HELPER_4(fdisbull_cmpxchg16b_failed_store, void, env, tl, i128, i32)
+ DEF_HELPER_FLAGS_3(set_dr, TCG_CALL_NO_WG, void, env, int, tl)
+ DEF_HELPER_FLAGS_2(get_dr, TCG_CALL_NO_WG, tl, env, int)
+ #endif /* !CONFIG_USER_ONLY */
+--- a/target/i386/tcg/emit.c.inc
++++ b/target/i386/tcg/emit.c.inc
+@@ -1827,6 +1827,28 @@
+     tcg_gen_concat_i64_i128(cmp, cpu_regs[R_EAX], cpu_regs[R_EDX]);
+     tcg_gen_concat_i64_i128(val, cpu_regs[R_EBX], cpu_regs[R_ECX]);
+ 
++    /* Preserve failed write cycles without invalidating the execute overlay. */
++#ifndef CONFIG_USER_ONLY
++    if (!(tb_cflags(s->base.tb) & CF_PARALLEL)) {
++        TCGLabel *failed = gen_new_label();
++        TCGLabel *done = gen_new_label();
++        TCGv_i128 old = tcg_temp_new_i128();
++        TCGv_i64 lo = tcg_temp_new_i64();
++        TCGv_i64 hi = tcg_temp_new_i64();
++        tcg_gen_qemu_ld_i128(old, s->A0, s->mem_index, mop);
++        tcg_gen_extr_i128_i64(lo, hi, old);
++        tcg_gen_brcond_i64(TCG_COND_NE, lo, cpu_regs[R_EAX], failed);
++        tcg_gen_brcond_i64(TCG_COND_NE, hi, cpu_regs[R_EDX], failed);
++        tcg_gen_qemu_st_i128(val, s->A0, s->mem_index, mop);
++        tcg_gen_br(done);
++        gen_set_label(failed);
++        gen_helper_fdisbull_cmpxchg16b_failed_store(
++            tcg_env, s->A0, old,
++            tcg_constant_i32(make_memop_idx(mop, s->mem_index)));
++        gen_set_label(done);
++        tcg_gen_mov_i128(val, old);
++    } else
++#endif
+     /* Only require atomic with LOCK; non-parallel handled in generator. */
+     if (s->prefix & PREFIX_LOCK) {
+         tcg_gen_atomic_cmpxchg_i128(val, s->A0, cmp, val, s->mem_index, mop);

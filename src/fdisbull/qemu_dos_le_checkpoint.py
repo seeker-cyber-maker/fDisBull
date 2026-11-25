@@ -35,7 +35,7 @@ def _require(condition, message):
 def _producer():
     root = Path(__file__).parent
     return {name: _sha((root/name).read_bytes()) for name in
-            ('qemu_dos_le_checkpoint.py', 'qemu_owned_checkpoint.py',
+            ('qemu_dos_le_checkpoint.py', 'qemu_owned_checkpoint.py', 'qemu_long_mode_fence.py',
              'qemu_dos_le_binding.py', 'qemu_dos_le_identity.py',
              'qemu_dos_source_admission.py', 'qemu_dos_le_match.py', 'le.py', 'qemu_machine.py', 'qemu_ram.py')}
 
@@ -53,9 +53,14 @@ _BASELINE_PRODUCER = {
     'qemu_ram.py': '19cb041cbbd8f2c46573c7c8396b44aaa40f8f9f22a6ecf0f93aff6005578103',
 }
 
+_ATOMIC_BATCH_PRODUCER = dict(_BASELINE_PRODUCER, **{
+    'qemu_dos_le_checkpoint.py': '2bfad50a1bbab85af69faceebf3f3b72ab6f7feff30a9346a4013e30355c4174',
+    'qemu_owned_checkpoint.py': 'cf8db2d53401c367fd253d2c76b188ef935fccea19175fd3206e01110dce7623',
+})
+
 
 def _compatible_producer(recorded, current):
-    return recorded == current or recorded == _BASELINE_PRODUCER
+    return recorded == current or recorded in (_BASELINE_PRODUCER, _ATOMIC_BATCH_PRODUCER)
 
 
 def _reference(project, reference, kind, version, *, maximum=None):

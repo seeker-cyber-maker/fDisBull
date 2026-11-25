@@ -299,13 +299,22 @@ def _ram(vm, registers):
     stack_bits = state.get('stack_bits')
     segment = state.get('segments', {}).get('ss', {})
     values = registers['registers']
-    if stack_bits not in (16, 32) or 'base' not in segment:
+    long_mode = registers.get('cpu_mode') == 'long'
+    if long_mode:
+        from .qemu_long_mode_fence import canonical
+        if stack_bits != 64 or state.get('code_bits') != 64 or state.get('a20') is not True:
+            raise ValueError('Owned machine long-mode stack context is unsupported')
+    elif stack_bits not in (16, 32) or 'base' not in segment:
         raise ValueError('Owned machine RAM fences require a supported observed stack')
     sp = values.get('rsp', values.get('esp'))
     if sp is None or registers.get('linear_pc') is None:
         raise ValueError('Owned machine RAM fence addresses are unavailable')
-    stack = int(segment['base'], 0) + (int(sp, 0) & ((1 << stack_bits) - 1))
-    pages = sorted({int(registers['linear_pc'], 0) & ~4095, stack & ~4095})
+    stack = int(sp, 0) if long_mode else int(segment['base'], 0) + (int(sp, 0) & ((1 << stack_bits) - 1))
+    pc = int(registers['linear_pc'], 0)
+    rip = values.get('rip') if long_mode else None
+    if long_mode and (rip is None or not canonical(stack) or not canonical(pc) or int(rip, 0) != pc):
+        raise ValueError('Owned machine RIP and RSP must be canonical')
+    pages = sorted({pc & ~4095, stack & ~4095})
     remote = vm.debugger()
     ram_end = low_ram_end(vm.machine_configuration)
     high_end = high_ram_end(vm.machine_configuration)
@@ -320,8 +329,15 @@ def _ram(vm, registers):
         return data
     result = []
     for page in pages:
-        translation = translate_386_page(page, state, read)
-        if translation.get('status') != 'mapped':
+        if long_mode:
+            from .qemu_long_mode_fence import walk
+            translation = walk(state, page, read, execute=page == pc & ~4095,
+                               write=page == stack & ~4095)
+            backing = int(translation['physical_address'], 0)
+            physical = read(backing, 4096)
+        else:
+            translation = translate_386_page(page, state, read)
+        if not long_mode and translation.get('status') != 'mapped':
             if registers.get('cpu_mode') != 'protected' or state.get('a20') is not True:
                 raise ValueError('Owned machine RAM page translation is unsupported')
             try:
@@ -340,7 +356,7 @@ def _ram(vm, registers):
             translation = dict(status='mapped', physical_address=hex(backing),
                                page_size=walks[0]['page_size'], walk=walks[0],
                                scope='stopped table walk and byte comparison; active backing identity is not proven')
-        else:
+        elif not long_mode:
             backing = int(translation['physical_address'], 0)
             physical = read(backing, 4096)
         if remote.memory(page, 4096, space='virtual') != physical:
@@ -493,19 +509,24 @@ def _read_artifact(project, artifact, version=None):
         raise ValueError('Invalid owned machine RAM size')
     _validate_controls(project, bundle['controls'], selected['id'], bundle['runtime']['machine'])
     cpu = bundle['registers']; state = cpu.get('address_state')
-    if (cpu.get('cpu_mode') not in ('real', 'protected', 'v86') or not isinstance(state, dict)
+    if (cpu.get('cpu_mode') not in ('real', 'protected', 'v86', 'long') or not isinstance(state, dict)
             or state.get('machine_vcpus') != 1 or state.get('register_context_match') is not True
-            or state.get('stack_bits') not in (16, 32) or not isinstance(cpu.get('registers'), dict)):
+            or (state.get('stack_bits') != 64 or state.get('code_bits') != 64
+                if cpu.get('cpu_mode') == 'long' else state.get('stack_bits') not in (16, 32))
+            or not isinstance(cpu.get('registers'), dict)):
         raise ValueError('Unsupported saved owned machine CPU')
     if not 1 <= len(bundle['ram']) <= 2:
         raise ValueError('Invalid owned machine RAM fence count')
     machine_config = bundle['runtime']['machine']
     ram_end = low_ram_end(machine_config)
     high_end = high_ram_end(machine_config)
+    from .qemu_long_mode_fence import canonical
     for fence in bundle['ram']:
         if (not isinstance(fence, dict) or type(fence.get('linear')) is not int
                 or type(fence.get('physical')) is not int or fence.get('length') != 4096
-                or not 0 <= fence['linear'] <= 0xfffff000 or fence['linear'] & 4095
+                or (not canonical(fence['linear'])
+                    if cpu.get('cpu_mode') == 'long' else not 0 <= fence['linear'] <= 0xfffff000)
+                or fence['linear'] & 4095
                 or fence['physical'] & 4095
                 or not (0 <= fence['physical'] < fence['physical'] + 4096 <= 0xa0000
                         or 0x100000 <= fence['physical'] < fence['physical'] + 4096 <= ram_end
@@ -523,6 +544,8 @@ def _read_artifact(project, artifact, version=None):
     if instrumentation is not None:
         _decode(instrumentation)
     native_task = bundle['native_task']
+    if cpu.get('cpu_mode') == 'long' and native_task is not None:
+        raise ValueError('Long-mode owned checkpoint cannot carry task context')
     if native_task is not None:
         from .qemu_dos_tasks import COMMAND, read_task_context, validate_register_context
         if not isinstance(native_task, dict) or any(k in native_task for k in ('anchor-address', 'anchor-hex')):
@@ -604,7 +627,9 @@ def _capture(session, name, max_bytes, deadline):
     controls = _filter_controls(capture_controls(session))
     registers = session.registers()
     ram = _ram(session.vm, registers)
-    native_task = capture_task_checkpoint(session)
+    # This path forbids task ownership in _preflight. The task receipt API is
+    # scoped to DOS modes, so long-mode owned snapshots carry no task receipt.
+    native_task = None if registers['cpu_mode'] == 'long' else capture_task_checkpoint(session)
     instrumentation, token = capture(session)
     _remaining(deadline)
     tag = 'fdb-owned-' + uuid.uuid4().hex
@@ -623,7 +648,8 @@ def _capture(session, name, max_bytes, deadline):
         if (_ram(session.vm, registers) != ram or _helper(session, origin)[0] != helper
                 or _serial_idle(session) != serial or _disk_identity(session.vm) != disk
                 or _native_idle(session.vm) != native_idle
-                or capture_controls(session) != controls or capture_task_checkpoint(session) != native_task):
+                or capture_controls(session) != controls
+                or (registers['cpu_mode'] != 'long' and capture_task_checkpoint(session) != native_task)):
             raise DebuggerError('Owned machine state changed during checkpoint capture')
         verify_saved(session, instrumentation)
         with session.vm.checkpoint_disk.open('rb') as stream:

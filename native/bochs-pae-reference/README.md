@@ -177,3 +177,30 @@ comparisons. After rebinding the execute layer, a separate DWORD write spans
 two physical 4 KiB subpages and overlaps an override only on the second one.
 Both engines repeat the sequence after cold restore. The test compares the
 complete operands, accumulator pair, ZF, stopped PCs and untouched sentinel.
+
+### Compare CMPXCHG16B page-fault retry and cross-page watchpoints
+
+Select the [CMPXCHG16B candidate](../qemu-cmpxchg16b-fault-retry/README.md)
+as `FDISBULL_QEMU_DOS` and the independent Bochs reference as
+`FDISBULL_BOCHS`. With the existing FreeDOS, firmware and tool paths set,
+run the local paired batch:
+
+```sh
+python -m pytest -q tests/test_qemu_cmpxchg16b_fault_retry_native.py tests/test_qemu_cross_page_watch_retry_native.py
+```
+
+The first authored MZ enters long mode and makes the aligned 16-byte
+operand read-only before each comparison. Its guest fault handler records
+error code, CR2, saved RIP, register values and old memory, then clears the
+write restriction and retries. Bochs and QEMU independently save and
+restore their own machine checkpoints before running both plain and LOCK
+variants. QEMU's public owned checkpoint carries an active physical
+execute layer; the receiving session starts in real mode. The receipt
+records the exact QEMU and Bochs binary hashes, guest source hash, three
+faults and the full observed outcomes.
+
+The second case uses a high-backed PAE split DWORD store with an execute
+layer on the first page and a GDB write watchpoint on the second. It checks
+the committed word and untouched sentinel before and after restore.
+Because x86 GDB watchpoints stop after access, this case alone does not
+qualify stop-before-access retry ordering.

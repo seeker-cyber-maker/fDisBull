@@ -1,5 +1,56 @@
 # DOSBox-X to QEMU: migration plan and handoff log
 
+## CMPXCHG16B and page-fault retry with active overlays (2026-11-24)
+
+The nonparallel x86 TCG candidate now handles the full 16-byte failed
+`CMPXCHG16B` writeback without reporting an execute-layer write. A successful
+comparison uses the ordinary observed store, including when the replacement
+equals the current value. The authored DOS MZ guest enters four-level long
+mode, makes its aligned operand read-only before each compare, records the
+guest page fault, changes the PTE, invalidates the translation and retries.
+The target is at physical `0x130000`, below 4 GiB.
+
+For both unlocked and LOCK-prefixed instructions, QEMU and independent Bochs
+observed three write faults with error code 3 and CR2 `0x130000`. The failed
+compare left the initial 16 bytes intact, cleared ZF and kept the execute
+layer active. The changed-value and same-value matches set ZF and reported
+the layer conflict after the instruction, with the following sentinel still
+untouched. Clearing the layer let execution reach the sentinel. The full
+register, memory and guest fault observations matched Bochs before and after
+each engine's unprimed cold restore. Each receiving QEMU process began in
+real mode without paging, then restored the active layer from the public
+owned-machine checkpoint. The older QEMU candidate instead reported an
+execute-layer conflict at the failed comparison.
+
+The owned checkpoint now fences canonical RIP and RSP pages in four-level
+long mode using a bounded page-table walk and physical/virtual byte
+comparison. This permits the active-layer test through the public DOS
+process debugger. It admits low physical RAM only, refuses unsupported
+long-mode features and task context, and does not claim active backing
+identity beyond the compared pages.
+
+The native patch also checks both sides of a cross-page access for watchpoints
+before either dirty callback. A high-backed 4 KiB PAE split store with a
+second-page GDB watchpoint committed its complete DWORD and stopped with
+the sentinel untouched, live and after cold restore, matching Bochs. The
+predecessor produced the same visible result because the x86 GDB watchpoint
+stops after access; this trial establishes preservation, not a distinct
+stop-before-access improvement. Later MMIO or device faults, parallel TCG,
+and high-backed 16-byte operands remain unqualified.
+
+The frozen QEMU image is SHA-256
+`7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e`;
+the independent Bochs reference is
+`06a966b0eb29f20540b8e17956d426a222f3ff15e64dfdb5554e61ab841c0641`.
+The final bound local batch passed all three paired native cases, eight
+selected native preservation cases and 500 host checks. The packaged host
+modules matched source byte-for-byte and replayed 12 earlier code captures
+plus nine traces from six isolated database copies. No CI was run.
+
+See the [native candidate](../native/qemu-cmpxchg16b-fault-retry/README.md)
+and the [authored paired test](../tests/test_qemu_cmpxchg16b_fault_retry_native.py).
+DOSBox-X remains the default.
+
 ## CMPXCHG8B and second-page store overlays (2026-11-24)
 
 The nonparallel native x86 path now treats the failed CMPXCHG8B writeback

@@ -1,0 +1,43 @@
+{
+  "format": "fdisbull-qemu-native-patch-1",
+  "qemu_version": "10.0.13",
+  "base_manifest": "../qemu-atomic-overlay-batch/source-manifest.json",
+  "base_producer_sha256": "7e4573a3d97a55fdcabfe139de0ac928bb8529b5208d84a80e94562ef260c0de",
+  "composition": "Apply after exact atomic overlay batch source, verifying each preimage hash and git apply --check.",
+  "patch": "qemu-10.0.13-fdisbull-cmpxchg16b-fault-retry-v1.patch",
+  "patch_bytes": 5791,
+  "patch_sha256": "667e8db7bc62a0c0fe42a1390d333d8a30c764cc0496264d2ab924b0b24c1c51",
+  "files": [
+    {
+      "path": "accel/tcg/cputlb.c",
+      "base_bytes": 99286,
+      "base_sha256": "eb06bc1434f034705c41af281e077e495c77ba7b519740d83a4b18db25995130",
+      "patched_bytes": 100474,
+      "patched_sha256": "2f4bfbff1150d21169fb7d52695835de7f8c3e2cbea9eafb3c775c3f5c050b8e"
+    },
+    {
+      "path": "target/i386/helper.h",
+      "base_bytes": 8164,
+      "base_sha256": "2751009a79bfc6c8ab8f5b8ced2dc67e6de99377c35be19649cb1eaa8071a767",
+      "patched_bytes": 8237,
+      "patched_sha256": "f93c861ca0e5a122919c6cf834bbd02f0e0c643783d56b88f4d1a22331d16044"
+    },
+    {
+      "path": "target/i386/tcg/emit.c.inc",
+      "base_bytes": 153550,
+      "base_sha256": "d05ce083cc2e41e8e48501c64e29bfa4adea32ee055101e07cddc002f24ceeb2",
+      "patched_bytes": 154519,
+      "patched_sha256": "95b42d1cee889a391d6c981680df89739ca7f51a37539fecf4b87b4d32171cbe"
+    }
+  ],
+  "scope": "Nonparallel x86 CMPXCHG16B qualified locally for low-physical four-level long mode with guest page-fault retry, active overlay and unprimed cold restore. Cross-page x86 GDB watchpoint ordering has only an observational preservation trial. Parallel TCG and later device faults remain unqualified.",
+  "build": {
+    "host": "macOS arm64",
+    "target": "x86_64-softmmu",
+    "command": "memory-run --kind cpu --peak-bytes 2147483648 -- ninja -j1 qemu-system-x86_64",
+    "exit_code": 0,
+    "candidate_sha256": "7b086a0a6e580114852fe2d27fedcd04a82e4401380263037bce110111ccb79e",
+    "frozen_executable": "/Volumes/GitHub/GitHub/fDisBull-private/cmpxchg16b-fault-retry-20261124.Fmlamg/frozen/qemu-system-x86_64-7b086a0a6e580114",
+    "qualification": "Local paired Bochs plain/LOCK CMPXCHG16B page-fault retry and active-overlay cold restore passed. High PAE cross-page GDB watchpoint preservation passed; predecessor was observationally identical. No CI."
+  }
+}
