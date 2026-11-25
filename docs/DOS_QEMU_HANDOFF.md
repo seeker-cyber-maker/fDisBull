@@ -8812,3 +8812,38 @@ binary/input identities and private-receipt hashes are in the
 The tests join the [parity work plan](DOS_QEMU_PARITY_WORK.json) as opt-in
 private selections; no surface or campaign is qualified. DOSBox-X remains
 the default and is retained for DotBox. No CI or release was run.
+
+## Doom E1M1 cold restore, saves and BDA timing (2026-11-25 UTC)
+
+These host receipts are dated 2026-11-25 UTC; the corresponding client-facing
+date in America/New_York is 2026-11-24. Three opt-in native gates add bounded
+evidence for cold checkpoint continuation, cross-engine game saves, and each
+engine's own timing counters. The [sanitized evidence record](evidence/qemu-doom-cold-save-timing-2026-11-25/README.md)
+links private receipts by hash. Commercial Doom inputs, saves, states, captures
+and byte-containing databases remain outside Git.
+
+The QEMU fresh-process test restores a full workspace snapshot, applies the
+same Ctrl input in the origin and child, then compares at the shared Doom
+`leveltime` pre-increment site at tic 352. Source bytes, exposed CPU/address
+state, bounded stack slice, normalized frame and ammo agree at that landmark.
+The earlier 700 ms timer-stop frontier had CPU differences despite matching
+frame and ammo; matching at a later source landmark bounds that observation,
+but does not prove all-RAM equality or deterministic replay.
+
+The cross-engine save gate loads each engine's E1M1 save in the other engine.
+Both directions restore ammo 49 to 50, and all four emulator owners are
+reaped with return code 0; this gate does not exercise Doom's in-game exit.
+A bounded 2,000 guest-ms settle after the single Enter allowed the
+post-load frame and status-bar crop to stabilize before WAD-based ammo decoding.
+The timing gate starts each engine at Doom tic 70 and advances for its own
+1,800 ms request: DOSBox-X ends at tic 137 after 1,890 ms with BDA +38; QEMU
+ends at tic 134 after 1.8 billion virtual ns with BDA +36. These are separate
+engine-local measurements, not equivalent clocks. The nominal 54,925,493 ns
+BDA tick reference has not been calibrated to the observed deltas; BDA mapping
+and cross-engine timing equivalence remain open.
+
+Harness corrections included distinct source-binding export names for the
+origin and cold child, the settled post-load save observation, and removal of
+a stale timing breakpoint. Initial timer-stop CPU divergence remains recorded.
+No CI ran; DOSBox-X remains the default; no 143 surfaces or 7 campaigns are
+qualified by these gates.

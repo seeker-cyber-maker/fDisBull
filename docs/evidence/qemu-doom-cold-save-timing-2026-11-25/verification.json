@@ -1,0 +1,67 @@
+{
+  "evidence_date": "2026-11-25 UTC",
+  "client_local_date": "2026-11-24 America/New_York",
+  "scope": "Three bounded opt-in native observations for original Doom E1M1; commercial inputs and runtime artifacts remain private.",
+  "checkpoint": {
+    "engine": "QEMU",
+    "result": "passed",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "comparison_landmark": {
+      "leveltime_tic": 352,
+      "site": "same Doom leveltime pre-increment source site",
+      "compared": ["source instruction bytes and site", "exposed CPU and address fields", "bounded 64-byte stack slice", "normalized frame", "decoded ammo"],
+      "outcome": "all listed fields matched between origin and fresh-process cold restore"
+    },
+    "earlier_timer_stop": "CPU-frontier differences remained at the 700 ms timer stop while frame and ammo matched; this is not an instruction-budget boundary.",
+    "private_result": {
+      "path": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-doom-e1m1-cold-20261125/matched-landmark-result.json",
+      "sha256": "bd74f99ea0b7631f929fab5785eb36652169b02ce756ad90a7a13fb79712b55c"
+    },
+    "junit": {
+      "path": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-doom-e1m1-cold-20261125/matched-landmark-junit.xml",
+      "sha256": "f79b497e732fec13a09dcd468250b282df719d7568e1ba5a6c8530473361da86"
+    }
+  },
+  "cross_engine_save": {
+    "result": "passed in both directions",
+    "ammo": "49 to 50 after cross-loading",
+    "save_size_bytes": 24702,
+    "dosbox_x_save_sha256": "d9b131be1983109f85e6c81999377cb75df7916f579f5c4b8269bca5132a08f3",
+    "qemu_save_sha256": "22f864d4b4200c6f137af726f9263faa3976480bc2e21a09ad7200b5a6f87e0b",
+    "post_load_changed_pixels": {"qemu": 20472, "dosbox_x": 20546},
+    "reaped_owner_returncodes_zero": 4,
+    "settle_after_single_enter_guest_ms": 2000,
+    "private_receipt": {
+      "path": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-doom-save-interchange-20261125/cross-engine-save-progress.json",
+      "sha256": "4dc84412a95b1dbe8b02c4c9975ed8b6f69b3bc169cb52518d733ceb4e9cb8b8"
+    }
+  },
+  "paired_bda_timing": {
+    "starting_leveltime_tic": 70,
+    "dosbox_x": {"requested_pic_guest_ms": 1800, "elapsed_ms": 1890, "ending_leveltime_tic": 137, "tic_delta": 67, "bda_delta": 38},
+    "qemu": {"requested_virtual_clock_ms": 1800, "requested_virtual_ns": 1800000000, "ending_leveltime_tic": 134, "tic_delta": 64, "bda_delta": 36},
+    "nominal_bda_tick_period_ns": 54925493,
+    "bda_mapping": "open; nominal period is not calibrated to observed deltas",
+    "equivalence_claim": "none; backend-specific clock contracts are not equivalent timing evidence",
+    "private_receipt": {
+      "path": "/Volumes/GitHub/GitHub/fDisBull-private/qemu-doom-timing-bda-20261125/paired-bda-timing.json",
+      "sha256": "48a4326103f161b43e7beb1ee4001924c753316705aee5536c30c0ccde2f4ce9"
+    }
+  },
+  "harness_corrections": [
+    "Use distinct source-binding export filenames for origin and cold child.",
+    "Wait 2000 guest ms after the single Enter before post-load frame and ammo observation.",
+    "Remove the stale timing breakpoint before the accepted timing observation."
+  ],
+  "qualification": {
+    "ci": "not run",
+    "default_engine": "DOSBox-X",
+    "surfaces_qualified": 0,
+    "campaigns_qualified": 0,
+    "releases_or_installations": "none claimed",
+    "limits": ["No all-RAM equality claim.", "No general deterministic replay or broad emulator parity claim.", "No cross-engine BDA calibration or timing equivalence claim.", "No CI, release, merge, or shared installation/activation."]
+  }
+}
