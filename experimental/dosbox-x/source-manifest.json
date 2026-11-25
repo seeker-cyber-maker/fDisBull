@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "93997f19c73174b31cdef9c000d33bda7a30ebf4b17bdb4befd4c6fd2f9ea349",
+  "patch_sha256": "a9d31f59e0a53fb795dd5567c290f7dd47d2e74a5ad9f0c920a0287db751f7d3",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -94,8 +94,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "e71383af51697dc19f575c003d643605071a3676f9f5296419f8bdf986058a76",
-      "size": 223989
+      "sha256": "450793ca0ce6391a2c81b1e0c90a8c95921907c2667a855b4487153597f171d1",
+      "size": 225005
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -242,5 +242,16 @@
     "native_regression": "tests/test_dosbox_pause_native.py",
     "native_verification": "Pending a rebuilt exact producer; previous stock stopped-clock failures remain preserved",
     "verification_document": "docs/DOS_PAUSE_QUIESCENCE_FIX.md"
+  },
+  "timing_cycle_readback": {
+    "method": "execution.timing",
+    "fields": [
+      "cpu_cycle_max",
+      "cpu_cycle_auto_adjust",
+      "cpu_cycle_auto_detect",
+      "cpu_cycle_auto_adjust_skipped"
+    ],
+    "boundary": "emulation-thread snapshot when queried",
+    "scope": "Read-only effective CPU cycle state; stopped-boundary samples do not prove mode throughout an uninterrupted interval."
   }
 }

@@ -383,7 +383,8 @@ def _dosbox_measure(
                 end_pic_guest_ticks=acquisition_end_clock)
         start_bda = int.from_bytes(
             dosbox_read(view, "physical", BDA_TICKS_PHYSICAL, 4), "little")
-        start_clock = session_call("execution.timing")["guest_ticks"]
+        start_timing = session_call("execution.timing")
+        start_clock = start_timing["guest_ticks"]
         operation = session_call("execution.continue")
         window_deadline = min(total_deadline,
                               time.monotonic() + DOSBOX_WINDOW_DEADLINE_SECONDS)
@@ -406,7 +407,8 @@ def _dosbox_measure(
         assert stopped["stop_reason"]["kind"] == "pause", stopped
         end_bda = int.from_bytes(
             dosbox_read(view, "physical", BDA_TICKS_PHYSICAL, 4), "little")
-        end_clock = session_call("execution.timing")["guest_ticks"]
+        end_timing = session_call("execution.timing")
+        end_clock = end_timing["guest_ticks"]
         end_tic = tic_at_stop()
         assert end_tic > start_tic, end_tic
         (stage / "dosbox-window-endpoint.json").write_text(json.dumps(dict(
@@ -459,6 +461,12 @@ def _dosbox_measure(
             uninterrupted_guest_continues=1, audio_capture=False,
             runtime_sha256=_sha(executable),
             source_image_sha256=_sha(game / "DOOM.EXE"))
+        cycle_keys = ("cpu_cycle_max", "cpu_cycle_auto_adjust",
+                      "cpu_cycle_auto_detect", "cpu_cycle_auto_adjust_skipped")
+        if all(key in start_timing and key in end_timing for key in cycle_keys):
+            result["cpu_cycle_readback"] = dict(
+                start={key: start_timing[key] for key in cycle_keys},
+                end={key: end_timing[key] for key in cycle_keys})
     finally:
         rpc.close()
     assert owner.poll() is not None and owner.returncode == 0

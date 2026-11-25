@@ -9081,3 +9081,22 @@ state sizes remain bounded at 128 MiB in DOSBox-X and 256 MiB in Python, with
 main-MCB-chain validation and a 32-link parent-ancestry limit. Direct RPC
 artifact metadata is not cryptographically authenticated, partial state-load
 corruption is untested, and no CI, release, merge, or activation occurred.
+
+## Doom cycle-mode readback and rotated window (2026-11-25 UTC)
+
+A separate DOSBox-X [readback candidate](evidence/qemu-doom-cycle-readback-2026-11-25/README.md)
+adds effective CPU cycle fields to the read-only `execution.timing` response.
+An authored COM entry probe passed. Two original Doom E1M1 three-arm native
+trials passed, with the arm order rotated in the second: fixed DOSBox-X was
+157600 at both boundaries and advanced 32 Doom tics in each approximately
+900 ms guest interval; unchanged QEMU advanced 30, with 18 BDA ticks in both
+engines in both trials. The auto request entered adaptive max mode at the
+sampled boundaries and advanced 33 then 34 tics. The readback does not prove
+the mode throughout the running interval; the two clock domains and stop
+mechanisms remain different. These trials isolate a repeatable bounded
+observation, not its cause or full timing parity.
+
+The new candidate also passed 19 native DOS exit/parent-child checkpoint
+regressions. Source/companion and timing host selection reported 22 passed and
+17 opt-in skips; the skips are not native passes. The installed DOSBox-X remains
+default and unchanged. No CI, merge, release, or activation occurred.

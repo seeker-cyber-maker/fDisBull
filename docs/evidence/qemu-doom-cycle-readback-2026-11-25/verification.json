@@ -1,0 +1,62 @@
+{
+  "format": "fdisbull-doom-cycle-readback-verification-1",
+  "source_parent_commit": "e794453e89098c21dcc38ed26f858e223f9c5e40",
+  "candidate": {
+    "role": "separate DOSBox-X arm64 readback candidate",
+    "source_patch_sha256": "a9d31f59e0a53fb795dd5567c290f7dd47d2e74a5ad9f0c920a0287db751f7d3",
+    "executable_sha256": "065b47d4d6a83e08c10a60401b7563e8f6a4cca1203629d96783775613525bb8",
+    "installed_or_activated": false,
+    "default_changed": false
+  },
+  "authored_com_readback": {
+    "result": "1 native test passed",
+    "auto": {"cpu_cycle_max": 3000, "cpu_cycle_auto_adjust": false, "cpu_cycle_auto_detect": true, "cpu_cycle_auto_adjust_skipped": false},
+    "fixed": {"cpu_cycle_max": 157600, "cpu_cycle_auto_adjust": false, "cpu_cycle_auto_detect": false, "cpu_cycle_auto_adjust_skipped": false},
+    "raw_receipt_sha256": "ed8e1d77bb7634a3b99f6c5bbeaa491ae47c77ce884227bcf83a7fe0c137534d",
+    "junit_sha256": "6d689b1c21a9c8581e5021cf284a3874754d9a8f2c684955608101da41e38196"
+  },
+  "doom_trials": [
+    {
+      "attempt": "03", "result": "1 native test passed", "order": ["auto", "fixed", "qemu"],
+      "auto": {"pic_ms": 911, "bda_ticks": 19, "doom_tics": 33, "cpu_cycle_max_start": 4140, "cpu_cycle_max_end": 26124, "adaptive_max_at_boundaries": true},
+      "fixed": {"pic_ms": 903, "bda_ticks": 18, "doom_tics": 32, "cpu_cycle_max_start": 157600, "cpu_cycle_max_end": 157600, "fixed_at_boundaries": true},
+      "qemu": {"virtual_ms": 900, "bda_ticks": 18, "doom_tics": 30},
+      "raw_receipt_sha256": "aea478222abbd108adacb5e213c09dc5a560b2aed431745a858c2e35b08c59a8",
+      "junit_sha256": "d27e6ba642607b44dd521489c425fdd0d2349bf0f443c4d748403dea7815722e"
+    },
+    {
+      "attempt": "04", "result": "1 native test passed", "order": ["fixed", "qemu", "auto"],
+      "auto": {"pic_ms": 901, "bda_ticks": 18, "doom_tics": 34, "cpu_cycle_max_start": 5906, "cpu_cycle_max_end": 25153, "adaptive_max_at_boundaries": true},
+      "fixed": {"pic_ms": 900, "bda_ticks": 18, "doom_tics": 32, "cpu_cycle_max_start": 157600, "cpu_cycle_max_end": 157600, "fixed_at_boundaries": true},
+      "qemu": {"virtual_ms": 900, "bda_ticks": 18, "doom_tics": 30},
+      "raw_receipt_sha256": "4453992700015813fd0994ee457c782df7808ed03f07007a14ecf97380380f9f",
+      "junit_sha256": "5fcba8e8ddfd15f06c32d1276f397a1184869aa03a029fdd88593e7dc7ab63ed"
+    }
+  ],
+  "regressions": {
+    "native_dos_exit_and_paired_parent_child": "19 passed",
+    "junit_sha256": "09fb28102610e34e32f07c7ad65e15ec1fe9374bc620cd9513f99b91c709900e",
+    "affected_host": "22 passed, 17 opt-in skips"
+  },
+  "retained_attempt_history": {
+    "01": "guard lock denied before guest",
+    "02": "pytest base temp parent missing before guest",
+    "03": "three-arm Doom trial passed",
+    "04": "rotated three-arm Doom trial passed",
+    "05": "authored COM readback passed",
+    "06": "checkpoint regressions passed"
+  },
+  "limits": {
+    "boundary_readback_proves_interval_mode": false,
+    "shared_clock_domain": false,
+    "dosbox_endpoint_atomic": false,
+    "bda_phase_calibrated": false,
+    "timing_causality_established": false,
+    "full_dosbox_qemu_parity": false,
+    "formal_surface_qualifications_open": 143,
+    "compatibility_campaigns_open": 7,
+    "ci_run": false
+  },
+  "private_manifest_basename": "cycle-readback-manifest.json",
+  "private_manifest_sha256": "67814393eee8a8848b4eb479221e207a0f00fc6d5d3e50aeb153e715f427952e"
+}

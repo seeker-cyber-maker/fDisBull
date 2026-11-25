@@ -2,8 +2,9 @@
 
 Attempt 02 of the earlier fixed-cycle run settled at tic 74, beyond its tic-70
 target, so it produced no measurement and did not launch QEMU. This trial moves
-all arms to tic 80. Effective cycle readback remains unavailable; the receipt
-records both requested profiles, not proof that the engine applied either one.
+all arms to tic 80. A readback-capable candidate can now report the cycle mode
+at both interval boundaries; the mode during the running interval remains
+unobserved.
 """
 from __future__ import annotations
 
@@ -91,16 +92,46 @@ def test_paired_doom_timing_bda_fixed_dosbox_cycles(tmp_path):
     fixed_stage.mkdir()
     qemu_stage.mkdir()
 
-    auto_result = _dosbox_measure(
-        auto_stage, source, auto_launcher, poll_wait_ms=POLL_WAIT_MS,
-        max_window_overshoot_ms=MAX_OVERSHOOT_MS,
-        target_start_tic=START_TIC, budget_ms=BUDGET_MS)
-    fixed_result = _dosbox_measure(
-        fixed_stage, source, launcher, poll_wait_ms=POLL_WAIT_MS,
-        max_window_overshoot_ms=MAX_OVERSHOOT_MS,
-        target_start_tic=START_TIC, budget_ms=BUDGET_MS)
-    qemu_result = _qemu_measure(
-        qemu_stage, source, qemu_runtime, START_TIC, budget_ms=BUDGET_MS)
+    order = tuple(item.strip() for item in os.environ.get(
+        "FDISBULL_DOOM_FIXED_CYCLES_ORDER", "auto,fixed,qemu").split(","))
+    if len(order) != 3 or set(order) != {"auto", "fixed", "qemu"}:
+        pytest.fail("FDISBULL_DOOM_FIXED_CYCLES_ORDER must permute auto,fixed,qemu")
+    arms = {}
+    for arm in order:
+        if arm == "auto":
+            arms[arm] = _dosbox_measure(
+                auto_stage, source, auto_launcher, poll_wait_ms=POLL_WAIT_MS,
+                max_window_overshoot_ms=MAX_OVERSHOOT_MS,
+                target_start_tic=START_TIC, budget_ms=BUDGET_MS)
+        elif arm == "fixed":
+            arms[arm] = _dosbox_measure(
+                fixed_stage, source, launcher, poll_wait_ms=POLL_WAIT_MS,
+                max_window_overshoot_ms=MAX_OVERSHOOT_MS,
+                target_start_tic=START_TIC, budget_ms=BUDGET_MS)
+        else:
+            arms[arm] = _qemu_measure(
+                qemu_stage, source, qemu_runtime, START_TIC, budget_ms=BUDGET_MS)
+    auto_result, fixed_result, qemu_result = (arms[key] for key in ("auto", "fixed", "qemu"))
+
+    def boundary_modes(result, *, fixed):
+        observations = result.get("cpu_cycle_readback")
+        if not observations:
+            return False
+        for boundary in ("start", "end"):
+            sample = observations[boundary]
+            if fixed:
+                if (sample["cpu_cycle_max"] != 157600
+                        or sample["cpu_cycle_auto_adjust"]
+                        or sample["cpu_cycle_auto_detect"]):
+                    return False
+            elif not (sample["cpu_cycle_auto_adjust"] or sample["cpu_cycle_auto_detect"]):
+                return False
+        return True
+
+    auto_boundary_mode_verified = boundary_modes(auto_result, fixed=False)
+    fixed_boundary_mode_verified = boundary_modes(fixed_result, fixed=True)
+    if os.environ.get("FDISBULL_REQUIRE_DOSBOX_CYCLE_READBACK") == "1":
+        assert auto_boundary_mode_verified and fixed_boundary_mode_verified
 
     assert auto_result["start_tic"] == fixed_result["start_tic"] == qemu_result["start_tic"] == START_TIC
     assert auto_result["owner_reaped"] and fixed_result["owner_reaped"] and qemu_result["owner_reaped"]
@@ -137,12 +168,15 @@ def test_paired_doom_timing_bda_fixed_dosbox_cycles(tmp_path):
         source_sha256=PINS["DOOM.EXE"],
         private_input_sha256=PINS,
         requested_guest_ms=BUDGET_MS,
+        arm_order=list(order),
         start=dict(kind="pre-increment Doom leveltime", tic=START_TIC),
         dosbox_auto_requested_profile=REQUESTED_DOSBOX_AUTO_CYCLES,
         dosbox_auto_effective_profile_verified=False,
+        dosbox_auto_boundary_mode_verified=auto_boundary_mode_verified,
         dosbox_auto_launcher_sha256=auto_launcher_sha256,
         dosbox_requested_profile=REQUESTED_DOSBOX_CYCLES,
         dosbox_effective_profile_verified=False,
+        dosbox_fixed_boundary_mode_verified=fixed_boundary_mode_verified,
         dosbox_launcher_sha256=launcher_sha256,
         dosbox_underlying_binary_sha256=original_dosbox_sha256,
         dosbox_poll_wait_ms=POLL_WAIT_MS,
@@ -179,7 +213,7 @@ def test_paired_doom_timing_bda_fixed_dosbox_cycles(tmp_path):
                  "mapping or causality inference is made.")),
         claims=dict(shared_clock="none", causality="none", timing_parity="none"),
         limitations=[
-            "Both DOSBox settings are requested on launcher command lines; effective cycle readback is unavailable.",
+            "DOSBox cycle readback, when available, samples stopped interval boundaries only; transitions during the running interval are unobserved.",
             "Attempt 02 was a setup miss and produced no timing values; the auto-cycle arm in this receipt is measured in this attempt.",
             "The two engine clocks are separate domains and are reported independently.",
             "A single interval per engine does not establish general timing parity or causality.",

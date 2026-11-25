@@ -1324,16 +1324,17 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..b8a55da 100644
+index 29363cf..6857d8c 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
-@@ -5,6 +5,17 @@
+@@ -5,6 +5,18 @@
  #include "agent/debugger_adapter.h"
  #include "agent/debugger_output_parser.h"
  #include "agent/trace_store.h"
 +#include "agent/video_adapter.h"
 +#include "agent/input_adapter.h"
 +#include "dosbox.h"
++#include "cpu.h"
 +#include "pic.h"
 +#include "debug.h"
 +#include "dos_mcb.h"
@@ -1345,7 +1346,7 @@ index 29363cf..b8a55da 100644
  #include "../transport/rpc_transport.h"
  
  #include <algorithm>
-@@ -14,13 +25,16 @@
+@@ -14,13 +26,16 @@
  #include <condition_variable>
  #include <deque>
  #include <functional>
@@ -1362,7 +1363,7 @@ index 29363cf..b8a55da 100644
  #include <vector>
  #include <thread>
  
-@@ -31,6 +45,12 @@
+@@ -31,6 +46,12 @@
  #include <unistd.h>
  #endif
  
@@ -1375,7 +1376,7 @@ index 29363cf..b8a55da 100644
  namespace dosbox_agent {
  namespace {
  
-@@ -445,9 +465,14 @@ static bool IsKnownMethod(const std::string& method)
+@@ -445,9 +466,14 @@ static bool IsKnownMethod(const std::string& method)
             method == "session.stop" ||
             method == "execution.continue" ||
             method == "execution.pause" ||
@@ -1391,7 +1392,7 @@ index 29363cf..b8a55da 100644
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -506,6 +531,13 @@ public:
+@@ -506,6 +532,13 @@ public:
      };
  
      struct AdapterOperation {
@@ -1405,7 +1406,7 @@ index 29363cf..b8a55da 100644
          std::mutex mutex;
          std::condition_variable completed;
          bool done = false;
-@@ -518,6 +550,14 @@ public:
+@@ -518,6 +551,18 @@ public:
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
@@ -1415,12 +1416,16 @@ index 29363cf..b8a55da 100644
 +        bool stale_frame = false;
 +        std::uint64_t guest_ticks = 0;
 +        bool fast_forward = false;
++        std::int64_t cpu_cycle_max = 0;
++        bool cpu_cycle_auto_adjust = false;
++        bool cpu_cycle_auto_detect = false;
++        bool cpu_cycle_auto_adjust_skipped = false;
 +        bool timing_changed = false;
 +        bool frame_step_completed = false;
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +593,10 @@ public:
+@@ -553,6 +598,10 @@ public:
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
@@ -1431,7 +1436,7 @@ index 29363cf..b8a55da 100644
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -601,6 +645,7 @@ public:
+@@ -601,6 +650,7 @@ public:
      virtual std::uint64_t SubmitAfter(std::uint32_t delay_ms, Command command) = 0;
      virtual bool IsReadyForTargetStart() const = 0;
      virtual std::uint64_t EntryBreakpointSequence() const = 0;
@@ -1439,7 +1444,7 @@ index 29363cf..b8a55da 100644
      virtual bool Continue(std::string* error) const = 0;
      virtual bool Pause(std::string* error) const = 0;
      virtual bool StartTargetAtEntry(const std::string& command,
-@@ -658,6 +703,7 @@ public:
+@@ -658,6 +708,7 @@ public:
      signature override { DebuggerAdapter adapter; return adapter.method args; }
      AGENT_RUNTIME_FORWARD(IsReadyForTargetStart, bool IsReadyForTargetStart() const, ())
      AGENT_RUNTIME_FORWARD(EntryBreakpointSequence, std::uint64_t EntryBreakpointSequence() const, ())
@@ -1447,7 +1452,7 @@ index 29363cf..b8a55da 100644
      AGENT_RUNTIME_FORWARD(Continue, bool Continue(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(Pause, bool Pause(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(StartTargetAtEntry, bool StartTargetAtEntry(const std::string& command, const std::vector<std::string>& arguments, const std::string& workdir, std::string* error) const, (command, arguments, workdir, error))
-@@ -692,6 +738,7 @@ public:
+@@ -692,6 +743,7 @@ public:
  
      bool IsReadyForTargetStart() const override { return true; }
      std::uint64_t EntryBreakpointSequence() const override { return 0; }
@@ -1455,7 +1460,7 @@ index 29363cf..b8a55da 100644
  
      bool Continue(std::string*) const override { return true; }
  
-@@ -941,6 +988,9 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
+@@ -941,6 +993,9 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -1465,7 +1470,7 @@ index 29363cf..b8a55da 100644
      if (!session.last_stop_breakpoint_id.empty())
          Add(&stop, "breakpoint_id", String(session.last_stop_breakpoint_id));
      if (session.has_last_stop_breakpoint_address) {
-@@ -981,6 +1031,9 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
+@@ -981,6 +1036,9 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
      JsonValue result = Object();
      Add(&result, "sequence", Number(event.sequence));
      Add(&result, "address", EncodeMemoryAddress(event.sample.address));
@@ -1475,7 +1480,7 @@ index 29363cf..b8a55da 100644
      std::string instruction = event.sample.instruction;
      if (detail == "csip")
          instruction = Hex16(event.sample.address.segment) + ":" + Hex32(event.sample.address.offset);
-@@ -1021,6 +1074,20 @@ static JsonValue RegistersResult(const RegisterSnapshot& registers,
+@@ -1021,6 +1079,20 @@ static JsonValue RegistersResult(const RegisterSnapshot& registers,
      Add(&result, "instruction_pointer", String(Hex32(registers.instruction_pointer)));
      Add(&result, "flags", String(Hex32(registers.flags)));
      Add(&result, "cpu_mode", String(registers.cpu_mode));
@@ -1496,7 +1501,7 @@ index 29363cf..b8a55da 100644
      return result;
  }
  
-@@ -1185,15 +1252,318 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1185,15 +1257,318 @@ static void CacheResponse(AgentServer::Impl::Session* session,
      }
  }
  
@@ -1815,7 +1820,7 @@ index 29363cf..b8a55da 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1574,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1579,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1823,7 +1828,7 @@ index 29363cf..b8a55da 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1282,6 +1653,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1282,6 +1658,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1833,7 +1838,7 @@ index 29363cf..b8a55da 100644
  
      if (!impl->transport->Start(config, [state](const std::string& request) {
              return HandleJsonRpcImpl(state, request);
-@@ -1291,6 +1665,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
+@@ -1291,6 +1670,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
          impl->started = false;
          impl->stopping = false;
          AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1841,7 +1846,7 @@ index 29363cf..b8a55da 100644
          return false;
      }
      return true;
-@@ -1330,6 +1705,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
+@@ -1330,6 +1710,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1851,7 +1856,7 @@ index 29363cf..b8a55da 100644
      return true;
  }
  
-@@ -1355,6 +1733,7 @@ void AgentServer::Stop()
+@@ -1355,6 +1738,7 @@ void AgentServer::Stop()
      // The callback may already have been copied by the emulation thread. It
      // holds shared state and observes stopping, rather than touching this.
      AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1859,7 +1864,7 @@ index 29363cf..b8a55da 100644
      if (transport)
          transport->Stop();
  
-@@ -1754,6 +2133,549 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +2138,558 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2368,6 +2373,11 @@ index 29363cf..b8a55da 100644
 +                    std::lock_guard<std::mutex> guard(operation->mutex);
 +                    operation->guest_ticks = PIC_Ticks;
 +                    operation->fast_forward = ticksLocked;
++                    operation->cpu_cycle_max = CPU_CycleMax;
++                    operation->cpu_cycle_auto_adjust = CPU_CycleAutoAdjust;
++                    operation->cpu_cycle_auto_detect =
++                        (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CYCLES) != 0;
++                    operation->cpu_cycle_auto_adjust_skipped = CPU_SkipCycleAutoAdjust;
 +                    operation->timing_changed = changed;
 +                    operation->done = true;
 +                    operation->completed.notify_all();
@@ -2390,6 +2400,10 @@ index 29363cf..b8a55da 100644
 +                    JsonValue result = SessionResult(active);
 +                    Add(&result, "guest_ticks", Number(operation->guest_ticks));
 +                    Add(&result, "fast_forward", JsonValue::Bool(operation->fast_forward));
++                    Add(&result, "cpu_cycle_max", JsonValue::Number(std::to_string(operation->cpu_cycle_max)));
++                    Add(&result, "cpu_cycle_auto_adjust", JsonValue::Bool(operation->cpu_cycle_auto_adjust));
++                    Add(&result, "cpu_cycle_auto_detect", JsonValue::Bool(operation->cpu_cycle_auto_detect));
++                    Add(&result, "cpu_cycle_auto_adjust_skipped", JsonValue::Bool(operation->cpu_cycle_auto_adjust_skipped));
 +                    return AGENT_MakeJsonRpcResult(response_id, result);
 +                };
 +                if (parsed.has_id && parsed.id.type != JsonType::Null) session->deferred_requests[parsed.id_key] = pending;
@@ -2409,7 +2423,7 @@ index 29363cf..b8a55da 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1865,9 +2787,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1865,9 +2801,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "session.stop") {
@@ -2428,7 +2442,7 @@ index 29363cf..b8a55da 100644
              response = AGENT_MakeJsonRpcResult(parsed.id, result);
          } else if (session->state == Impl::SessionState::Starting ||
                     session->state == Impl::SessionState::Failed) {
-@@ -1934,6 +2864,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1934,6 +2878,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      }
                  }) == 0) {
                  session->operations.erase(operation_id);
@@ -2436,7 +2450,7 @@ index 29363cf..b8a55da 100644
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
                                   "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
              } else {
-@@ -1955,7 +2886,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2900,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -2445,7 +2459,7 @@ index 29363cf..b8a55da 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2901,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2915,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -2454,7 +2468,7 @@ index 29363cf..b8a55da 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2913,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2927,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -2463,7 +2477,7 @@ index 29363cf..b8a55da 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2153,9 +3084,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2153,9 +3098,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -2476,7 +2490,7 @@ index 29363cf..b8a55da 100644
              response = InvalidParams(parsed.id, "execution.step requires mode=into or mode=over");
          } else if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -2169,12 +3101,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2169,12 +3115,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              operation->registers.reset(new Impl::AdapterOperation());
              const StepMode step_mode = mode == "into" ? StepMode::Into : StepMode::Over;
              const std::string session_id = session->id;
@@ -2496,7 +2510,7 @@ index 29363cf..b8a55da 100644
                  if (success && !continued)
                      success = adapter.GetRegisters(&registers, &adapter_error);
                  {
-@@ -2190,7 +3127,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2190,7 +3141,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (impl->session && impl->session->id == session_id &&
                          impl->session->state == Impl::SessionState::Stopped) {
                          impl->session->state = Impl::SessionState::Running;
@@ -2505,7 +2519,7 @@ index 29363cf..b8a55da 100644
                          impl->state_changed.notify_all();
                      }
                  }
-@@ -2203,7 +3140,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2203,7 +3154,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  Impl::DeferredRequest pending;
                  pending.request = parsed;
                  pending.fingerprint = parsed.fingerprint;
@@ -2514,7 +2528,7 @@ index 29363cf..b8a55da 100644
                      {
                          std::unique_lock<std::mutex> dispatch_lock(operation->dispatch->mutex);
                          if (!operation->dispatch->completed.wait_for(dispatch_lock, std::chrono::milliseconds(timeout_ms),
-@@ -2223,7 +3160,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2223,7 +3174,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                          })) {
                              return false;
                          }
@@ -2524,7 +2538,7 @@ index 29363cf..b8a55da 100644
                              return true;
                      }
  
-@@ -2235,16 +3173,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2235,16 +3187,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                              submit_registers = true;
                          }
                      }
@@ -2548,7 +2562,7 @@ index 29363cf..b8a55da 100644
                                  operation->registers->done = true;
                              }
                              operation->registers->completed.notify_all();
-@@ -2260,7 +3203,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2260,7 +3217,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      return operation->registers->completed.wait_for(registers_lock, std::chrono::milliseconds(timeout_ms),
                                                                      [operation]() { return operation->registers->done; });
                  };
@@ -2557,7 +2571,7 @@ index 29363cf..b8a55da 100644
                      bool dispatch_success = false;
                      bool continued = false;
                      std::string dispatch_error;
-@@ -2280,6 +3223,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2280,6 +3237,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (!impl->session || impl->session->id != session_id)
                          return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
                      Impl::Session& active = *impl->session;
@@ -2569,7 +2583,7 @@ index 29363cf..b8a55da 100644
                      if (!continued) {
                          active.last_stop_kind = "step";
                          active.last_stop_breakpoint_id.clear();
-@@ -2314,6 +3262,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -2314,6 +3276,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      JsonValue result = SessionResult(active);
                      Add(&result, "stop_reason", StopReason(active));
                      Add(&result, "registers", RegistersResult(registers, active));
@@ -2585,7 +2599,7 @@ index 29363cf..b8a55da 100644
                      return AGENT_MakeJsonRpcResult(response_id, result);
                  };
                  if (parsed.has_id && parsed.id.type != JsonType::Null)
-@@ -2856,6 +3813,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3827,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2593,7 +2607,7 @@ index 29363cf..b8a55da 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2888,6 +3846,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2888,6 +3860,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
          return;
      }
  
@@ -2615,7 +2629,7 @@ index 29363cf..b8a55da 100644
      {
          std::lock_guard<std::mutex> command_lock(impl->mutex);
          if (impl->stopping || !impl->session || impl->session->id != session_id ||
-@@ -2930,6 +3903,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3917,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2623,7 +2637,7 @@ index 29363cf..b8a55da 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2998,6 +3972,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2998,6 +3986,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
      impl->state_changed.notify_all();
  }
  
@@ -2671,7 +2685,7 @@ index 29363cf..b8a55da 100644
  void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
                                      const std::uint64_t generation,
                                      const std::uint16_t segment,
-@@ -3008,6 +4023,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +4037,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -2680,7 +2694,7 @@ index 29363cf..b8a55da 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,6 +4054,20 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,6 +4068,20 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -2701,7 +2715,7 @@ index 29363cf..b8a55da 100644
      impl->session->last_stop_kind = startup ? "startup" :
              (native_breakpoint != 0 ? "breakpoint" :
               (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
-@@ -3058,8 +4089,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3058,8 +4103,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              break;
          }
      }
