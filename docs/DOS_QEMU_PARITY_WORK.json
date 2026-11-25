@@ -28,6 +28,7 @@
     "runtime_scene_act": "Explicit scene-3 named physical keyboard actions implemented through Python, JSON and saved scripts. Final affected host selection passed 1,090 with 10 explicit optional native skips, including 62 focused action cases. Native attempt 02 passed two cases at 3cb9628178577689c22b8a8e12b21fd2d8dc9fa2 on 2026-11-20 with two reaped owners/four complete logs and 11,284 files/six trees unchanged. Attempt 01 failed controller bookkeeping after its first fixture passed; second fixture was unrun, and the failed attempt remains preserved. Native acceptance is limited to the authored IRQ1/RAM guest; see docs/QEMU_SCENE_ACT_GATE.md. No frame/pointer/navigation/actual-game or retirement qualification.",
     "counted_step": "Historical native attempt 02 passed five authored raw single-vCPU cases at 0ea542e1322cf84ae6e104f9748d0cfeae93a95b on 2026-11-20 UTC (2026-11-19 America/New_York): Python/JSON/saved-script counted stops and first breakpoint/watchpoint preservation, five reaped owners and ten complete logs. The exact integrated host selection passed 249 cases. Attempt 01 failed constructor admission before any VM; it remains failed. See docs/QEMU_STEP_COUNT_GATE.md. This reconciliation runs no native test and does not qualify DOS process/lifecycle, step-over, retirement or the current head.",
     "private_doom_bda_timing": "Four additional guarded paired native original Doom E1M1 windows were recorded on 2026-11-25; see docs/evidence/qemu-doom-bda-poll-2026-11-25/README.md. Each requested 1800 ms, with DOSBox-X poll waits 10/50/100/10 ms and PIC elapsed 1802/1843/1882/1806 ms (overshoot +2/+43/+82/+6); DOSBox BDA/Doom deltas were +36/+57, +37/+59, +38/+60, +37/+59, versus QEMU virtual-time BDA/Doom deltas +36/+64, +36/+64, +36/+64, +36/+63. The first three began at tic 65; the fourth began at tic 70 after ordinary-speed acquisition. Clock domains and endpoints are separate/non-atomic; no parity or failure conclusion, calibrated BDA mapping, or general timing claim follows.",
+    "private_doom_bda_window_sweep": "Two guarded native paired original Doom E1M1 cases passed on 2026-11-25 (2 passed, 104.67 s); see docs/evidence/qemu-doom-bda-window-2026-11-25/README.md and verification.json. Both started at pre-increment tic 70. At 300 ms, DOSBox-X measured 301 PIC ms with BDA/Doom deltas +6/+14; QEMU measured 300,000,000 virtual ns with +6/+12. At 900 ms, DOSBox-X measured 902 PIC ms with +18/+35; QEMU measured 900,000,000 virtual ns with +18/+30. Both owners returned code 0. Compared with the earlier 1800 ms start-tic-70 observation (+59 vs +63 Doom tics), the observed DOSBox−QEMU Doom delta changes from −4 to +2 at 300 ms and +5 at 900 ms. This sign reversal across lengths is not a stable fixed offset or rate. Separate clocks, non-atomic endpoints, independent uncalibrated BDA phases and bounded input/state histories remain limitations; no audio, parity, failure or general timing claim follows.",
     "private_doom_cross_engine_save": "One guarded native original Doom E1M1 save interchange case passed on 2026-11-25: each engine-created save was loaded by the other, with exact save admission/readback and bounded menu/frame plus WAD-derived ammo 49-to-50 observations. This does not establish general save compatibility or qualify a campaign.",
     "private_doom_fresh_checkpoint": "One guarded native fresh-process QEMU checkpoint continuation passed for original Doom E1M1 on 2026-11-25. It verifies one matched leveltime landmark, full owned-machine restore, new protected-source binding and a bounded post-restore shot; it does not qualify DOSBox-X checkpoints, general cold durability or any campaign."
   },
@@ -1451,8 +1452,8 @@
         "-q",
         "tests/test_doom_timing_bda_window_sweep_native.py"
       ],
-      "execution": "Host py_compile, pytest collection and default opt-in skip passed. Native 300/900 ms cases NOT RUN: memory-run refused with a memory-pressure warning; no VM launched.",
-      "scope": "Opt-in paired original Doom E1M1 300 and 900 ms windows at pre-increment leveltime 70. Host checks do not qualify native behavior; native evidence remains unrun."
+      "execution": "Two guarded native cases passed on 2026-11-25 (2 passed in 104.67 s); see docs/evidence/qemu-doom-bda-window-2026-11-25/verification.json. At 300/900 ms from tic 70, DOSBox-X recorded 301/902 PIC ms and BDA/Doom deltas +6/+14 and +18/+35; QEMU recorded 300/900 million virtual ns and +6/+12 and +18/+30. Both owners returned code 0. Compared with the earlier 1800 ms tic-70 result, the Doom delta difference reverses sign across lengths; no fixed offset/rate or parity claim.",
+      "scope": "Two bounded paired source-bound original Doom E1M1 windows at pre-increment leveltime tic 70. DOSBox-X PIC guest milliseconds and QEMU virtual nanoseconds are separate clock domains. Poll-then-pause and QEMU stop endpoints are non-atomic; BDA phases are independent and uncalibrated. The observed Doom delta difference reverses sign across 300, 900 and prior 1800 ms observations; this does not establish a stable offset/rate, timing parity or failure."
     },
     "doom-paired-exit-audio-native": {
       "environment_profile": "private-doom-paired-exit-audio",
@@ -2534,6 +2535,7 @@
     "docs/QEMU_SCENE_ACT_GATE.md",
     "docs/QEMU_STEP_COUNT_GATE.md",
     "docs/evidence/qemu-input-schedule-observation-2026-11-21/verification.json",
-    "docs/QEMU_FRAME_CONTRACT.md"
+    "docs/QEMU_FRAME_CONTRACT.md",
+    "docs/evidence/qemu-doom-bda-window-2026-11-25/verification.json"
   ]
 }

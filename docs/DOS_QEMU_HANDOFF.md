@@ -8940,3 +8940,10 @@ bounded host admission procedure and should not be generalized to arbitrary
 save-file presence at startup. Reverse-direction combined save/audio is now
 observed once; timing, mixer/music fidelity, other titles and full parity
 remain open. DOSBox-X stays default, with no CI or campaign promotion.
+
+
+## Original Doom BDA timing window sweep (2026-11-25 UTC)
+
+The [sanitized 300/900 ms timing record](evidence/qemu-doom-bda-window-2026-11-25/README.md) covers two passed guarded native paired cases, both beginning at pre-increment tic 70. At 300 ms DOSBox-X measured 301 PIC guest ms with BDA/Doom deltas +6/+14, while QEMU measured 300 million virtual ns with +6/+12. At 900 ms the measurements were 902 PIC ms with +18/+35 and 900 million virtual ns with +18/+30. Each engine owner returned code 0; the test reported 2 passed in 104.67 seconds.
+
+The DOSBox−QEMU Doom delta is +2 at 300 ms and +5 at 900 ms, versus −4 in the earlier 1800 ms tic-70 observation. This is a sign reversal across window lengths, not a stable fixed offset or timing rate. DOSBox-X polling followed by pause is non-atomic; DOSBox PIC milliseconds and QEMU virtual nanoseconds are distinct clock domains; BDA endpoint phases remain independent and uncalibrated. Input and prepared-state history remain bounded, and no audio was captured. No general parity or failure conclusion follows. Raw JSON receipts and DOSBox endpoint records remain in the private evidence area; sanitized repository evidence contains no media, FDB, VM state, screenshot or audio.

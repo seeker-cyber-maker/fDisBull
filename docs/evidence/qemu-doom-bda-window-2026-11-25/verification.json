@@ -1,0 +1,59 @@
+{
+  "format": "fdisbull-doom-bda-window-sweep-sanitized-verification-1",
+  "date_utc": "2026-11-25",
+  "scope": "Two bounded source-bound original Doom E1M1 timing windows beginning at pre-increment leveltime tic 70; sanitized counters only.",
+  "native_test": {
+    "command": "python -m pytest -q tests/test_doom_timing_bda_window_sweep_native.py",
+    "result": "2 passed",
+    "elapsed_seconds": 104.67,
+    "owner_returncodes": {
+      "dosbox": [
+        0,
+        0
+      ],
+      "qemu": [
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    }
+  },
+  "runs": [
+    {
+      "requested_window_ms": 300,
+      "start_tic": 70,
+      "dosbox_pic_guest_ms": 301,
+      "dosbox_overshoot_ms": 1,
+      "dosbox_bda_delta": 6,
+      "dosbox_doom_leveltime_delta": 14,
+      "qemu_virtual_ns": 300000000,
+      "qemu_bda_delta": 6,
+      "qemu_doom_leveltime_delta": 12,
+      "dosbox_minus_qemu_doom_tics": 2
+    },
+    {
+      "requested_window_ms": 900,
+      "start_tic": 70,
+      "dosbox_pic_guest_ms": 902,
+      "dosbox_overshoot_ms": 2,
+      "dosbox_bda_delta": 18,
+      "dosbox_doom_leveltime_delta": 35,
+      "qemu_virtual_ns": 900000000,
+      "qemu_bda_delta": 18,
+      "qemu_doom_leveltime_delta": 30,
+      "dosbox_minus_qemu_doom_tics": 5
+    }
+  ],
+  "interpretation": "The Doom leveltime delta difference reverses sign relative to the prior 1800 ms start-tic-70 observation (DOSBox-X +59 versus QEMU +63, difference -4): at 300 ms the difference is +2 and at 900 ms it is +5. This is a window-dependent sign reversal across the recorded lengths, not evidence of a stable fixed offset or timing rate.",
+  "uncertainty": [
+    "DOSBox-X threshold detection polls then pauses; endpoints are non-atomic and observed PIC elapsed time includes polling/pause latency.",
+    "DOSBox-X PIC guest milliseconds and QEMU virtual nanoseconds are separate clock domains; no common-clock comparison is claimed.",
+    "BDA endpoints have independent, uncalibrated phases; matching tick deltas do not establish calibrated elapsed-time equivalence.",
+    "Input history and prepared states remain bounded to these runs; no audio was captured.",
+    "Two window lengths and the prior 1800 ms observation do not establish general timing parity, failure, fixed offset, or rate."
+  ],
+  "private_artifact_exclusion": "Raw receipts and two DOSBox endpoint JSON files are preserved in the private evidence area. No game media, FDB, VM state, screenshots or audio are included here."
+}
