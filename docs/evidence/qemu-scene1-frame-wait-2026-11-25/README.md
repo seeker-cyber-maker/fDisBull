@@ -36,5 +36,14 @@ After this native pass, the adapter gained owned fixed-input first-slice
 coalescing and poisoned-channel failure cleanup. The affected local host
 selection passed 400 tests with two optional native skips. A guarded rerun of
 the native scene-1 test on that later source was refused for macOS warning
-memory pressure before VM launch. That later native recheck remains pending;
-the passed native evidence is tied to the earlier adapter source.
+memory pressure before VM launch. That later native recheck was pending at that
+point; the passed native evidence was tied to the earlier adapter source.
+
+The current-source recheck at commit `10f09206922256559c07bc51be7f1bcd48f10725`
+then passed under the QA guard: **1 passed in 1.62 seconds** with no guard
+events. It exercised the same authored VGA immediate match and first-breakpoint
+stop on the adapter that includes the fixed-input and failure-cleanup changes.
+The private `private-recheck-manifest.json` has SHA-256
+`f806086ef1d79afac13d80a804df0193fbc5b98ca718d410bec66d81acd54f0d`
+and inventories nine private output files. The recheck establishes no DOSBox-X
+frame-phase match or broader scene/game parity.

@@ -76,7 +76,19 @@
   "later_source_recheck": {
     "change": "Owned fixed-input first-slice coalescing and poisoned-channel failure cleanup were added after the passed native gate.",
     "affected_host_selection": "400 passed, 2 optional native skips",
-    "native_recheck": "memory guard denied for macOS warning memory pressure before VM launch; native result pending on later source"
+    "first_attempt": "memory guard denied for macOS warning memory pressure before VM launch",
+    "current_source_recheck": {
+      "source_commit": "10f09206922256559c07bc51be7f1bcd48f10725",
+      "test_source_sha256": "585aeb25c041b4ff3f680f6db938ef14480753403e1c3e5c9b7c9eaa588bf344",
+      "scene_wait_source_sha256": "469b66aa1c818b78d9340f937e4cc41137c75d56d51253f15bc07475c5f2163b",
+      "scene_adapter_source_sha256": "0c8eac0ab272d0b9c6dd5b7b53585a348b305fdd5dd639cb8ddda56b7aa4bc3f",
+      "result": "1 passed in 1.62 seconds",
+      "guard_kind": "qa",
+      "guard_events": [],
+      "private_manifest_sha256": "f806086ef1d79afac13d80a804df0193fbc5b98ca718d410bec66d81acd54f0d",
+      "private_output_file_count": 9,
+      "claim": "Bounded authored QEMU retained-raster immediate match and first native stop; no DOSBox-X frame-phase comparison"
+    }
   },
   "limitations": [
     "No DOSBox frame-phase parity was tested or established.",
