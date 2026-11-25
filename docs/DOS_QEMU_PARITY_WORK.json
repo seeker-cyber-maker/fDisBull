@@ -1387,15 +1387,17 @@
         "tests/support/scalar_limit_fixture.py",
         "tests/support/atomic_limit_fixture.py",
         "tests/support/segment_rights_fixture.py",
+        "tests/support/segment_rmw_fixture.py",
         "tests/test_qemu_dos_rep_fault_retry_native.py",
         "tests/test_qemu_dos_rep_fault_checkpoint_native.py",
         "tests/test_qemu_dos_scalar_limit_native.py",
         "tests/test_qemu_dos_atomic_limit_native.py",
         "tests/test_qemu_dos_segment_rights_native.py",
+        "tests/test_qemu_dos_segment_rmw_native.py",
         "tests/test_qemu_dos_modes_checkpoint_native.py",
         "tests/support/qemu_dos_irq_fixture.py"
       ],
-      "evidence": "docs/evidence/qemu-segment-rights-2026-11-25/verification.json",
+      "evidence": "docs/evidence/qemu-segment-rmw-2026-11-25/verification.json",
       "depends_on": [
         "source-and-protected-dos"
       ],
@@ -1406,7 +1408,7 @@
         "protected-source-native"
       ],
       "remaining_work": [
-        "The patched candidate has bounded paired REP MOVSB partial-progress #GP/retry and scalar DS limit/straddle witnesses, plus QEMU-only cold restore at the REP fault handler. LOCK CMPXCHG across that limit, null-DS offset-zero reads, and a read-only DS dword store are explicit DOSBox-X reference differences: QEMU faults, DOSBox-X completes. Selected access-right checking is bounded; paired TF/icount, IRQ, overlay, other access-rights, vector and implicit-stack cases remain open, as does behavior beyond admitted COM/MZ or explicit embedded-LE source.",
+        "The patched candidate has bounded paired REP MOVSB partial-progress #GP/retry and scalar DS limit/straddle witnesses, plus QEMU-only cold restore at the REP fault handler. LOCK CMPXCHG across that limit, null-DS offset-zero reads, a read-only DS dword store, and a read-only DS INC dword RMW are explicit DOSBox-X reference differences: QEMU faults, DOSBox-X completes. The writable INC control completes on both engines. Selected access-right checking is bounded; paired TF/icount, IRQ, overlay, other access-rights, vector and implicit-stack cases remain open, as does behavior beyond admitted COM/MZ or explicit embedded-LE source.",
         "Extend exact-candidate paired qualification beyond the authored COM loop, self-modifying COM case, divide-fault witness and partial-REP witness. The bounded QEMU host checkpoint-cursor test covers hot and fresh-session cold restore plus producer epoch invalidation; that test is QEMU-only and does not establish paired DOSBox-X checkpoint behavior.",
         "The v2 ring supplies translated-TB bytes for TCG dispatches and observed x86 code context when valid; breakpoint-pre-dispatch bytes are explicitly unavailable. Parallel TCG trace capture is refused to preserve descriptor lifetime. These observations do not establish canonical source identity or per-event DOSBox byte parity. Completion and retirement remain unknown."
       ],

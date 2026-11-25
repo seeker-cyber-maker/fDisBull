@@ -1,0 +1,30 @@
+{
+  "format": "fdisbull-qemu-segment-rmw-1",
+  "date": "2026-11-25",
+  "scope": "bounded paired protected-mode read-modify-write access-rights and writable control",
+  "candidate_inputs": {
+    "fdisbull_parent_commit": "c4ad9ae1e49c574514493330d25cf3fc5b9b21d5",
+    "qemu_sha256": "d31111a8e5e501a19c859278774c9abac1f55223a0da1ee9b221d15446bf7a1c",
+    "dosbox_x_sha256": "df2080bcd2e65aa8a8511ca0692d45d9b9f5355d673a83967c4abdab9672c47e",
+    "prior_evidence": "docs/evidence/qemu-segment-rights-2026-11-25/verification.json"
+  },
+  "accepted_run": {
+    "selection": ["tests/test_qemu_dos_segment_rmw_native.py"],
+    "result": {"tests": 2, "passed": 2, "failed": 0, "errors": 0, "skipped": 0},
+    "private_junit_sha256": "4bb7989de0cc3a5e695a1eec92e2ff28db633a4bc09ce6e67b7fe7579aabd5bc"
+  },
+  "observations": {
+    "read_only_ds": "The authored 32-bit INC dword access through read-only DS entered QEMU #GP(0) with fault EIP at INC, unchanged backing and general registers, and pushed EFLAGS matching the seeded pre-state except the QEMU RF bit. The handler loaded writable DS and retried once to completion. Frozen DOSBox-X instead completed the increment with DS=0x20, no handler marker and updated backing. This is a reference divergence, not paired parity.",
+    "writable_control": "With writable DS, both engines completed the same INC without a fault; 0x7fffffff became 0x80000000, CF remained set, OF/SF/AF/PF set, and ZF/IF cleared.",
+    "test_harness": "Initial native attempts exposed only harness issues: API register naming, a missing DOSBox memory-read closure, reading handler-written fields before handler execution, and comparing live EAX after the fixture used AX to record DS. These were corrected before the accepted two-case run; no QEMU source change was made."
+  },
+  "qualification": {
+    "overall_qemu_dosbox_parity": "not qualified",
+    "dosbox_default": true,
+    "dotbox_changed": false,
+    "ci_run": false,
+    "release_or_install": false,
+    "native_vm_tests_executed_locally": true,
+    "private_inputs_committed": false
+  }
+}
